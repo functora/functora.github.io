@@ -17,6 +17,7 @@ in
   };
   home.file = {
     ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
+    ".Xmodmap".source = ../cfg/.Xmodmap;
   };
 }
 

@@ -1,0 +1,98 @@
+!
+! This is where we remap any key's symbols.
+!
+! This is the xmodmap keymap table. This is the structure:
+! keycode XX = A B C D E F
+! XX is the keycode (not the keysym, retrieved by xev)
+! A is the keysym output when just the key is pressed
+! B is the keysym output when the key is pressed + Shift
+! C is the keysym output when the key is pressed + Mode_switch
+! D is the keysym output when the key is pressed + Shift + Mode_switch
+! E is the keysym output when the key is pressed + ISO_Level3_Shift
+! F is the keysym output when the key is pressed + Shift + ISO_Level3_Shift
+!
+
+!!
+!! Natural scrolling
+!!
+!pointer = 1 2 3 5 4 6 7 8 9 10
+
+!
+! Caps_Lock to toggle layers
+!
+clear Lock
+keycode 66 = ISO_Level3_Shift ISO_Level3_Shift
+
+!!
+!! Alt_R and other extra BackSpace and Return
+!!
+!keycode 108 = BackSpace BackSpace BackSpace BackSpace BackSpace BackSpace
+!keycode  27 = r R Cyrillic_ka Cyrillic_KA BackSpace BackSpace
+!keycode  41 = f F Cyrillic_a Cyrillic_A Return Return
+
+!
+! Fn and media keys on numeric row
+!
+keycode 10 = 1 exclam 1 exclam F1 exclamdown
+keycode 11 = 2 at 2 quotedbl F2 dead_doubleacute
+keycode 12 = 3 numbersign 3 numerosign F3 dead_macron
+keycode 13 = 4 dollar 4 semicolon F4 XF86AudioMicMute
+keycode 14 = 5 percent 5 percent F5 dead_cedilla
+keycode 15 = 6 asciicircum 6 colon F6 onequarter
+keycode 16 = 7 ampersand 7 question F7 XF86AudioPrev
+keycode 17 = 8 asterisk 8 asterisk F8 XF86AudioPlay
+keycode 18 = 9 parenleft 9 parenleft F9 XF86AudioNext
+keycode 19 = 0 parenright 0 parenright F10 XF86AudioMute
+keycode 20 = minus underscore minus underscore F11 XF86AudioLowerVolume
+keycode 21 = equal plus equal plus F12 XF86AudioRaiseVolume
+
+!
+! ё/Ё/Grave/Tilde for 60% keyboards
+!
+keycode 51 = backslash bar Cyrillic_io Cyrillic_IO grave asciitilde
+
+!!
+!! Escape for non-60% keyboards
+!!
+!keycode 49 = Escape Escape Escape Escape Escape Escape
+
+!
+! Right super key
+!
+! TODO : use print screen
+!
+!clear Control
+!keycode 105 = Super_R Super_R Super_R Super_R Super_R Super_R
+!keycode 135 = Super_R Super_R Super_R Super_R Super_R Super_R
+!add Control = Control_L
+
+!
+! Right shift into enter
+!
+clear Shift
+add Shift = Shift_L
+keycode 62 = Return Return Return Return Return Return
+
+!
+! Nav and mouse actions on vim keys
+!
+!! Home + Mouse Hold
+!keycode 29 = y Y Cyrillic_en Cyrillic_EN Home KP_Insert
+!! Page Down + Mouse Left Click
+!keycode 30 = u U Cyrillic_ghe Cyrillic_GHE Next u
+!! Page Up + Mouse Right Click
+!keycode 31 = i I Cyrillic_sha Cyrillic_SHA Prior i
+!! End + Mouse Release
+!keycode 32 = o O Cyrillic_shcha Cyrillic_SHCHA End KP_Delete
+! Move Left
+keycode 43 = h H Cyrillic_er Cyrillic_ER Left Home
+! Move Down
+keycode 44 = j J Cyrillic_o Cyrillic_O Down Next
+! Move Up
+keycode 45 = k K Cyrillic_el Cyrillic_EL Up Prior
+! Move Right
+keycode 46 = l L Cyrillic_de Cyrillic_DE Right End
+! Insert + Mouse Scroll Down
+keycode 58 = m M Cyrillic_softsign Cyrillic_SOFTSIGN Insert XF86ScrollDown
+! Mouse Scroll Up
+keycode 59 = comma less Cyrillic_be Cyrillic_BE Delete XF86ScrollUp

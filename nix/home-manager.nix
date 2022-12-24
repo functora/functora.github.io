@@ -7,11 +7,16 @@ in
     vi
     tree
     s-tui
+    alacritty
+    qutebrowser
   ];
   programs.git = {
     enable = true;
     userName = "functora";
     userEmail = "functora@proton.me";
+  };
+  home.file = {
+    ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
   };
 }
 

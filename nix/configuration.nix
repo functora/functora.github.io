@@ -11,6 +11,13 @@ in
     (import "${home-manager}/nixos")
   ];
 
+  environment.variables = {
+    EDITOR = "nvim";
+    VISUAL = "nvim";
+    BROWSER = "qutebrowser";
+    TERMINAL = "alacritty";
+  };
+
   environment.pathsToLink = ["/libexec"];
   services.xserver = {
     layout = "us";

@@ -19,7 +19,7 @@ in
 
   config = {
     #
-    # Env
+    # Misc
     #
     environment.variables = {
       EDITOR = "nvim";
@@ -28,6 +28,8 @@ in
       TERMINAL = "alacritty";
     };
     nixpkgs.config.allowUnfree = true;
+    sound.enable = true;
+    hardware.pulseaudio.enable = true;
     #
     # Home
     #

@@ -39,6 +39,7 @@ in
         s-tui
         alacritty
         qutebrowser
+        (import ./yewtube.nix {inherit pkgs;})
       ];
       programs.git = {
         enable = true;
@@ -46,8 +47,9 @@ in
         userEmail = "functora@proton.me";
       };
       home.file = {
-        ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".Xmodmap".source = ../cfg/.Xmodmap;
+        ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
+        ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
       };
     };
     #

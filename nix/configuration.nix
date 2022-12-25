@@ -1,14 +1,10 @@
 { lib, pkgs, config, ... }:
 let
-  home-manager =
-    builtins.fetchTarball {
-      url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-      sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
-    };
-  home-configs =
-    import ./home-manager.nix {
-      inherit pkgs;
-    };
+  vi = import ./../pkgs/vi/nix/default.nix {};
+  home-manager = builtins.fetchTarball {
+    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+    sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
+  };
 in
 {
   imports = [
@@ -22,21 +18,51 @@ in
   };
 
   config = {
-
+    #
+    # Env
+    #
     environment.variables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
       BROWSER = "qutebrowser";
       TERMINAL = "alacritty";
     };
-
-    home-manager.users.${config.services.functora.userName} = home-configs;
-
+    nixpkgs.config.allowUnfree = true;
+    #
+    # Home
+    #
+    home-manager.users.${config.services.functora.userName} = {
+      home.stateVersion = "22.11";
+      home.packages = with pkgs; [
+        vi
+        tree
+        s-tui
+        alacritty
+        qutebrowser
+      ];
+      programs.git = {
+        enable = true;
+        userName = "functora";
+        userEmail = "functora@proton.me";
+      };
+      home.file = {
+        ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
+        ".Xmodmap".source = ../cfg/.Xmodmap;
+      };
+    };
+    #
+    # XServer
+    #
     environment.pathsToLink = ["/libexec"];
     services.xserver = {
+      #
+      # Keyboard
+      #
       layout = "us";
       xkbVariant = "";
-
+      #
+      # Touchpad
+      #
       libinput = {
         enable = true;
         touchpad = {
@@ -45,7 +71,9 @@ in
           naturalScrolling = true;
         };
       };
-
+      #
+      # GUI
+      #
       enable = true;
       desktopManager = {
         xterm.enable = false;

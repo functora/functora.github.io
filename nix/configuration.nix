@@ -79,7 +79,7 @@ in
           }
           {
             block = "backlight";
-            format = " BLT {brightness}";
+            format = " BRT {brightness}";
             icons_format = "";
           }
           {
@@ -97,7 +97,7 @@ in
           {
             block = "memory";
             display_type = "memory";
-            format_mem = " RAM{mem_used_percents}";
+            format_mem = " RAM {mem_used_percents}";
             clickable = false;
             icons_format = "";
           }

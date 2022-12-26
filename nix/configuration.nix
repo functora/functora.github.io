@@ -1,6 +1,7 @@
 { lib, pkgs, config, ... }:
 let
   vi = import ./../pkgs/vi/nix/default.nix {};
+  xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
     sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
@@ -61,7 +62,6 @@ in
         userEmail = "functora@proton.me";
       };
       home.file = {
-        ".Xmodmap".source = ../cfg/.Xmodmap;
         ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
       };
@@ -74,8 +74,9 @@ in
       #
       # Keyboard
       #
-      layout = "us";
-      xkbVariant = "";
+      layout = "us,ru";
+      xkbVariant = "altgr-intl,";
+      xkbOptions = "grp:alt_space_toggle";
       #
       # Touchpad
       #
@@ -96,6 +97,7 @@ in
       };
       displayManager = {
         defaultSession = "none+i3";
+        sessionCommands = "${pkgs.xorg.xmodmap}/bin/xmodmap ${xkb}";
       };
       windowManager.i3 = {
         enable = true;

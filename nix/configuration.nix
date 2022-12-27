@@ -56,8 +56,6 @@ in
         qutebrowser
         (import ./yewtube.nix {inherit pkgs;})
         xorg.xev
-        dmenu
-        i3lock
       ];
       programs.git = {
         enable = true;
@@ -164,6 +162,15 @@ in
             "XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
             "Mod5+Shift+XF86MonBrightnessDown" = "exec \"${brightnessctl}/bin/brightnessctl s 10-\"";
             "Mod5+Shift+XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
+            "${mod}+h" = "focus left";
+            "${mod}+j" = "focus down";
+            "${mod}+k" = "focus up";
+            "${mod}+l" = "focus right";
+            "${mod}+Shift+h" = "move left";
+            "${mod}+Shift+j" = "move down";
+            "${mod}+Shift+k" = "move up";
+            "${mod}+Shift+l" = "move right";
+            "Ctrl+Mod1+q" = "exec \"${pkgs.i3lock}/bin/i3lock --color=000000\"";
           };
           bars = [{
             statusCommand =

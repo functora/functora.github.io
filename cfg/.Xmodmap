@@ -34,8 +34,8 @@ keycode 66 = ISO_Level3_Shift ISO_Level3_Shift
 ! Fn and media keys on numeric row
 !
 keycode 10 = 1 exclam 1 exclam F1 exclamdown
-keycode 11 = 2 at 2 quotedbl F2 dead_doubleacute
-keycode 12 = 3 numbersign 3 numerosign F3 dead_macron
+keycode 11 = 2 at 2 quotedbl F2 XF86MonBrightnessDown
+keycode 12 = 3 numbersign 3 numerosign F3 XF86MonBrightnessUp
 keycode 13 = 4 dollar 4 semicolon F4 XF86AudioMicMute
 keycode 14 = 5 percent 5 percent F5 dead_cedilla
 keycode 15 = 6 asciicircum 6 colon F6 onequarter

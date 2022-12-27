@@ -160,10 +160,10 @@ in
             "Mod5+Shift+XF86AudioNext" = "exec ${playerctl}/bin/playerctl next";
             "Mod5+Shift+XF86AudioPrev" = "exec ${playerctl}/bin/playerctl previous";
 
-            "XF86MonBrightnessDown" = "exec '${brightnessctl}/bin/brightnessctl s 10-'";
-            "XF86MonBrightnessUp" = "exec '${brightnessctl}/bin/brightnessctl s +10'";
-            "Mod5+Shift+XF86MonBrightnessDown" = "exec '${brightnessctl}/bin/brightnessctl s 10-'";
-            "Mod5+Shift+XF86MonBrightnessUp" = "exec '${brightnessctl}/bin/brightnessctl s +10'";
+            "XF86MonBrightnessDown" = "exec \"${brightnessctl}/bin/brightnessctl s 10-\"";
+            "XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
+            "Mod5+Shift+XF86MonBrightnessDown" = "exec \"${brightnessctl}/bin/brightnessctl s 10-\"";
+            "Mod5+Shift+XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
           };
           bars = [{
             statusCommand =

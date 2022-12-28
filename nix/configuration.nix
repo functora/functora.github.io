@@ -159,40 +159,36 @@ in
                   "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle";
                 cmdMicToggle =
                   "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-            in lib.mkOptionDefault {
-            "XF86AudioRaiseVolume" = newVolChange "+5%";
-            "XF86AudioLowerVolume" = newVolChange "-5%";
-            "XF86AudioMicMute" = cmdMicToggle;
-            "XF86AudioMute" = cmdVolToggle;
-            "Mod5+Shift+XF86AudioRaiseVolume" = newVolChange "+5%";
-            "Mod5+Shift+XF86AudioLowerVolume" = newVolChange "-5%";
-            "Mod5+Shift+XF86AudioMicMute" = cmdMicToggle;
-            "Mod5+Shift+XF86AudioMute" = cmdVolToggle;
-
-            "XF86AudioPlay" = newPlayerCtl "play-pause";
-            "XF86AudioNext" = newPlayerCtl "next";
-            "XF86AudioPrev" = newPlayerCtl "previous";
-            "Mod5+Shift+XF86AudioPlay" = newPlayerCtl "play-pause";
-            "Mod5+Shift+XF86AudioNext" = newPlayerCtl "next";
-            "Mod5+Shift+XF86AudioPrev" = newPlayerCtl "previous";
-
-            "XF86MonBrightnessDown" = newBrightness "10-";
-            "XF86MonBrightnessUp" = newBrightness "+10";
-            "Mod5+Shift+XF86MonBrightnessDown" = newBrightness "10-";
-            "Mod5+Shift+XF86MonBrightnessUp" = newBrightness "+10";
-            "${mod}+Return" = "exec i3-sensible-terminal --class fullscreen";
-            "${mod}+h" = "focus left";
-            "${mod}+j" = "focus down";
-            "${mod}+k" = "focus up";
-            "${mod}+l" = "focus right";
-            "${mod}+Shift+h" = "move left";
-            "${mod}+Shift+j" = "move down";
-            "${mod}+Shift+k" = "move up";
-            "${mod}+Shift+l" = "move right";
-            "Ctrl+Mod1+q" = "exec ${i3lock}/bin/i3lock --color=000000";
-            "${mod}+Shift+p" = newScreenShot "";
-            "${mod}+Shift+n" = newScreenShot "--select";
-          };
+                newMediaKeys = x: {
+                  "${x}XF86MonBrightnessDown" = newBrightness "10-";
+                  "${x}XF86MonBrightnessUp" = newBrightness "+10";
+                  "${x}XF86AudioMicMute" = cmdMicToggle;
+                  "${x}XF86AudioPrev" = newPlayerCtl "previous";
+                  "${x}XF86AudioPlay" = newPlayerCtl "play-pause";
+                  "${x}XF86AudioNext" = newPlayerCtl "next";
+                  "${x}XF86AudioMute" = cmdVolToggle;
+                  "${x}XF86AudioLowerVolume" = newVolChange "-5%";
+                  "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
+                };
+                cfgBasicKeys = {
+                  "Ctrl+Mod1+q" = "exec ${i3lock}/bin/i3lock --color=000000";
+                  "${mod}+Return" = "exec i3-sensible-terminal --class fullscreen";
+                  "${mod}+h" = "focus left";
+                  "${mod}+j" = "focus down";
+                  "${mod}+k" = "focus up";
+                  "${mod}+l" = "focus right";
+                  "${mod}+Shift+h" = "move left";
+                  "${mod}+Shift+j" = "move down";
+                  "${mod}+Shift+k" = "move up";
+                  "${mod}+Shift+l" = "move right";
+                  "${mod}+Shift+p" = newScreenShot "";
+                  "${mod}+Shift+n" = newScreenShot "--select";
+                };
+            in lib.mkOptionDefault (
+                 newMediaKeys "" //
+                 newMediaKeys "Mod5+Shift+" //
+                 cfgBasicKeys
+               );
           bars = [{
             statusCommand =
               "${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";

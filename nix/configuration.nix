@@ -140,7 +140,7 @@ in
       xsession.windowManager.i3 = {
         enable = true;
         extraConfig = ''
-          for_window [class="fullscreen"] fullscreen enable
+          for_window [class="Alacritty"] fullscreen enable
           for_window [class="qutebrowser"] fullscreen enable
         '';
         config = let mod = "Mod4"; in {
@@ -172,7 +172,6 @@ in
                 };
                 cfgBasicKeys = {
                   "Ctrl+Mod1+q" = "exec ${i3lock}/bin/i3lock --color=000000";
-                  "${mod}+Return" = "exec i3-sensible-terminal --class fullscreen";
                   "${mod}+h" = "focus left";
                   "${mod}+j" = "focus down";
                   "${mod}+k" = "focus up";

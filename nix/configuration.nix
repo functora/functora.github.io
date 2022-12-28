@@ -211,8 +211,8 @@ in
     #
     # XServer
     #
-    services.geoclue2.enable = true;
     environment.pathsToLink = ["/libexec"];
+    services.geoclue2.enable = true;
     services.xserver = {
       #
       # Keyboard

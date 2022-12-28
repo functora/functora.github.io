@@ -26,6 +26,10 @@ buildPythonApplication rec {
     yt-dlp
     pip
     #
+    # clipboard
+    #
+    pkgs.xclip
+    #
     # player
     #
     pkgs.mpv

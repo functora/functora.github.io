@@ -25,7 +25,15 @@ buildPythonApplication rec {
     youtube-search-python
     yt-dlp
     pip
+    #
+    # player
+    #
     pkgs.mpv
+    #
+    # mpris
+    #
+    dbus-python
+    pkgs.python310Packages.pygobject3
   ];
   src = fetchPypi {
     inherit pname version;

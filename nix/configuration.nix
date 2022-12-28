@@ -2,6 +2,7 @@
 let
   vi = import ./../pkgs/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
+  yewtube = import ./yewtube.nix {inherit pkgs;};
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
     sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
@@ -54,8 +55,8 @@ in
         s-tui
         alacritty
         qutebrowser
-        (import ./yewtube.nix {inherit pkgs;})
         xorg.xev
+        yewtube
       ];
       programs.git = {
         enable = true;
@@ -125,6 +126,11 @@ in
           }
         ];
       };
+      services.unclutter.enable = true;
+      services.gammastep = {
+        enable = true;
+        provider = "geoclue2";
+      };
       services.screen-locker = {
         enable = true;
         inactiveInterval = 5;
@@ -163,10 +169,10 @@ in
             "Mod5+Shift+XF86AudioNext" = "exec ${playerctl}/bin/playerctl next";
             "Mod5+Shift+XF86AudioPrev" = "exec ${playerctl}/bin/playerctl previous";
 
-            "XF86MonBrightnessDown" = "exec \"${brightnessctl}/bin/brightnessctl s 10-\"";
-            "XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
-            "Mod5+Shift+XF86MonBrightnessDown" = "exec \"${brightnessctl}/bin/brightnessctl s 10-\"";
-            "Mod5+Shift+XF86MonBrightnessUp" = "exec \"${brightnessctl}/bin/brightnessctl s +10\"";
+            "XF86MonBrightnessDown" = "exec ${brightnessctl}/bin/brightnessctl s 10-";
+            "XF86MonBrightnessUp" = "exec ${brightnessctl}/bin/brightnessctl s +10";
+            "Mod5+Shift+XF86MonBrightnessDown" = "exec ${brightnessctl}/bin/brightnessctl s 10-";
+            "Mod5+Shift+XF86MonBrightnessUp" = "exec ${brightnessctl}/bin/brightnessctl s +10";
             "${mod}+h" = "focus left";
             "${mod}+j" = "focus down";
             "${mod}+k" = "focus up";
@@ -175,7 +181,12 @@ in
             "${mod}+Shift+j" = "move down";
             "${mod}+Shift+k" = "move up";
             "${mod}+Shift+l" = "move right";
-            "Ctrl+Mod1+q" = "exec \"${pkgs.i3lock}/bin/i3lock --color=000000\"";
+            "Ctrl+Mod1+q" =
+              "exec ${i3lock}/bin/i3lock --color=000000";
+            "${mod}+Shift+p" =
+              "exec ${maim}/bin/maim | ${xclip}/bin/xclip -selection clipboard -t image/png";
+            "${mod}+Shift+n" =
+              "exec ${maim}/bin/maim --select | ${xclip}/bin/xclip -selection clipboard -t image/png";
           };
           bars = [{
             statusCommand =
@@ -199,6 +210,7 @@ in
     #
     # XServer
     #
+    services.geoclue2.enable = true;
     environment.pathsToLink = ["/libexec"];
     services.xserver = {
       #

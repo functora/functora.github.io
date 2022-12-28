@@ -1968,8 +1968,17 @@ c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"
 c.content.webrtc_ip_handling_policy = "disable-non-proxied-udp"
 
-c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.start_pages = ['about:blank']
+c.url.default_page = 'https://hoogle.haskell.org/'
+c.url.searchengines = {
+        'DEFAULT': 'https://google.com/search?q={}',
+        'google': 'https://google.com/search?q={}',
+        'ddg': 'https://duckduckgo.com/?q={}',
+        'github': 'https://github.com/search?q={}',
+        'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
+        'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
+        'nix': 'https://search.nixos.org/packages?query={}'
+}
 
 config.bind('Q', 'quit')
 config.bind('K', 'tab-next')

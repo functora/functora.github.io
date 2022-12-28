@@ -125,6 +125,11 @@ in
           }
         ];
       };
+      services.screen-locker = {
+        enable = true;
+        inactiveInterval = 5;
+        lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
+      };
       xsession.enable = true;
       xsession.windowManager.i3 = {
         enable = true;

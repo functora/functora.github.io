@@ -139,40 +139,48 @@ in
       xsession.enable = true;
       xsession.windowManager.i3 = {
         enable = true;
+        extraConfig = ''
+          for_window [class="fullscreen"] fullscreen enable
+          for_window [class="qutebrowser"] fullscreen enable
+        '';
         config = let mod = "Mod4"; in {
           modifier = mod;
-          keybindings = with pkgs; lib.mkOptionDefault {
-            "XF86AudioRaiseVolume" =
-              "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%";
-            "Mod5+Shift+XF86AudioRaiseVolume" =
-              "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%";
+          keybindings =
+            with pkgs;
+            let newScreenShot = x:
+                  "exec ${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
+                newBrightness = x:
+                  "exec ${brightnessctl}/bin/brightnessctl s ${x}";
+                newPlayerCtl = x:
+                  "exec ${playerctl}/bin/playerctl ${x}";
+                newVolChange = x:
+                  "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                cmdVolToggle =
+                  "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                cmdMicToggle =
+                  "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+            in lib.mkOptionDefault {
+            "XF86AudioRaiseVolume" = newVolChange "+5%";
+            "XF86AudioLowerVolume" = newVolChange "-5%";
+            "XF86AudioMicMute" = cmdMicToggle;
+            "XF86AudioMute" = cmdVolToggle;
+            "Mod5+Shift+XF86AudioRaiseVolume" = newVolChange "+5%";
+            "Mod5+Shift+XF86AudioLowerVolume" = newVolChange "-5%";
+            "Mod5+Shift+XF86AudioMicMute" = cmdMicToggle;
+            "Mod5+Shift+XF86AudioMute" = cmdVolToggle;
 
-            "XF86AudioLowerVolume" =
-              "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%";
-            "Mod5+Shift+XF86AudioLowerVolume" =
-              "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%";
+            "XF86AudioPlay" = newPlayerCtl "play-pause";
+            "XF86AudioNext" = newPlayerCtl "next";
+            "XF86AudioPrev" = newPlayerCtl "previous";
+            "Mod5+Shift+XF86AudioPlay" = newPlayerCtl "play-pause";
+            "Mod5+Shift+XF86AudioNext" = newPlayerCtl "next";
+            "Mod5+Shift+XF86AudioPrev" = newPlayerCtl "previous";
 
-            "XF86AudioMute" =
-              "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle";
-            "Mod5+Shift+XF86AudioMute" =
-              "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle";
-
-            "XF86AudioMicMute" =
-              "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-            "Mod5+Shift+XF86AudioMicMute" =
-              "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-
-            "XF86AudioPlay" = "exec ${playerctl}/bin/playerctl play-pause";
-            "XF86AudioNext" = "exec ${playerctl}/bin/playerctl next";
-            "XF86AudioPrev" = "exec ${playerctl}/bin/playerctl previous";
-            "Mod5+Shift+XF86AudioPlay" = "exec ${playerctl}/bin/playerctl play-pause";
-            "Mod5+Shift+XF86AudioNext" = "exec ${playerctl}/bin/playerctl next";
-            "Mod5+Shift+XF86AudioPrev" = "exec ${playerctl}/bin/playerctl previous";
-
-            "XF86MonBrightnessDown" = "exec ${brightnessctl}/bin/brightnessctl s 10-";
-            "XF86MonBrightnessUp" = "exec ${brightnessctl}/bin/brightnessctl s +10";
-            "Mod5+Shift+XF86MonBrightnessDown" = "exec ${brightnessctl}/bin/brightnessctl s 10-";
-            "Mod5+Shift+XF86MonBrightnessUp" = "exec ${brightnessctl}/bin/brightnessctl s +10";
+            "XF86MonBrightnessDown" = newBrightness "10-";
+            "XF86MonBrightnessUp" = newBrightness "+10";
+            "Mod5+Shift+XF86MonBrightnessDown" = newBrightness "10-";
+            "Mod5+Shift+XF86MonBrightnessUp" = newBrightness "+10";
+            "${mod}+Return" = "exec i3-sensible-terminal --class fullscreen";
             "${mod}+h" = "focus left";
             "${mod}+j" = "focus down";
             "${mod}+k" = "focus up";
@@ -181,12 +189,9 @@ in
             "${mod}+Shift+j" = "move down";
             "${mod}+Shift+k" = "move up";
             "${mod}+Shift+l" = "move right";
-            "Ctrl+Mod1+q" =
-              "exec ${i3lock}/bin/i3lock --color=000000";
-            "${mod}+Shift+p" =
-              "exec ${maim}/bin/maim | ${xclip}/bin/xclip -selection clipboard -t image/png";
-            "${mod}+Shift+n" =
-              "exec ${maim}/bin/maim --select | ${xclip}/bin/xclip -selection clipboard -t image/png";
+            "Ctrl+Mod1+q" = "exec ${i3lock}/bin/i3lock --color=000000";
+            "${mod}+Shift+p" = newScreenShot "";
+            "${mod}+Shift+n" = newScreenShot "--select";
           };
           bars = [{
             statusCommand =

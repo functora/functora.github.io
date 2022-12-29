@@ -150,20 +150,18 @@ in
             with pkgs;
             let i3ex = x:
                   "exec --no-startup-id ${x}";
-                i3exup = x:
-                  "${i3ex x} && ${killall}/bin/killall -SIGUSR1 i3status";
                 newScreenShot = x:
                   i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
                 newBrightness = x:
-                  i3exup "${brightnessctl}/bin/brightnessctl s ${x}";
+                  i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
                 newPlayerCtl = x:
-                  i3exup "${playerctl}/bin/playerctl ${x}";
+                  i3ex "${playerctl}/bin/playerctl ${x}";
                 newVolChange = x:
-                  i3exup "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                  i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
                 cmdVolToggle =
-                  i3exup "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                  i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
                 cmdMicToggle =
-                  i3exup "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+                  i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
                 newMediaKeys = x: {
                   "${x}XF86MonBrightnessDown" = newBrightness "10-";
                   "${x}XF86MonBrightnessUp" = newBrightness "+10";

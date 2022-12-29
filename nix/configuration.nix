@@ -3,6 +3,7 @@ let
   vi = import ./../pkgs/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   yewtube = import ./yewtube.nix {inherit pkgs;};
+  lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
     sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
@@ -134,7 +135,7 @@ in
       services.screen-locker = {
         enable = true;
         inactiveInterval = 5;
-        lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
+        inherit lockCmd;
       };
       xsession.enable = true;
       xsession.windowManager.i3 = {
@@ -147,18 +148,20 @@ in
           modifier = mod;
           keybindings =
             with pkgs;
-            let newScreenShot = x:
-                  "exec ${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
+            let i3ex = x:
+                  "exec --no-startup-id ${x}";
+                newScreenShot = x:
+                  i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
                 newBrightness = x:
-                  "exec ${brightnessctl}/bin/brightnessctl s ${x}";
+                  i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
                 newPlayerCtl = x:
-                  "exec ${playerctl}/bin/playerctl ${x}";
+                  i3ex "${playerctl}/bin/playerctl ${x}";
                 newVolChange = x:
-                  "exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                  i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
                 cmdVolToggle =
-                  "exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                  i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
                 cmdMicToggle =
-                  "exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+                  i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
                 newMediaKeys = x: {
                   "${x}XF86MonBrightnessDown" = newBrightness "10-";
                   "${x}XF86MonBrightnessUp" = newBrightness "+10";
@@ -171,7 +174,8 @@ in
                   "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
                 };
                 cfgBasicKeys = {
-                  "Ctrl+Mod1+q" = "exec ${i3lock}/bin/i3lock --color=000000";
+                  "Ctrl+Mod1+q" = i3ex lockCmd;
+                  "${mod}+Shift+s" = i3ex "${lockCmd} && systemctl suspend";
                   "${mod}+h" = "focus left";
                   "${mod}+j" = "focus down";
                   "${mod}+k" = "focus up";

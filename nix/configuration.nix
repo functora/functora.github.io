@@ -74,7 +74,7 @@ in
           {
             block = "battery";
             format = " BAT {percentage} {time}";
-            full_format = " BAT: FULL";
+            full_format = " BAT FULL";
             icons_format = "";
           }
           {
@@ -150,18 +150,20 @@ in
             with pkgs;
             let i3ex = x:
                   "exec --no-startup-id ${x}";
+                i3exup = x:
+                  "${i3ex x} && ${killall}/bin/killall -SIGUSR1 i3status";
                 newScreenShot = x:
                   i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
                 newBrightness = x:
-                  i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
+                  i3exup "${brightnessctl}/bin/brightnessctl s ${x}";
                 newPlayerCtl = x:
-                  i3ex "${playerctl}/bin/playerctl ${x}";
+                  i3exup "${playerctl}/bin/playerctl ${x}";
                 newVolChange = x:
-                  i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                  i3exup "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
                 cmdVolToggle =
-                  i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                  i3exup "pactl set-sink-mute @DEFAULT_SINK@ toggle";
                 cmdMicToggle =
-                  i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+                  i3exup "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
                 newMediaKeys = x: {
                   "${x}XF86MonBrightnessDown" = newBrightness "10-";
                   "${x}XF86MonBrightnessUp" = newBrightness "+10";
@@ -172,6 +174,10 @@ in
                   "${x}XF86AudioMute" = cmdVolToggle;
                   "${x}XF86AudioLowerVolume" = newVolChange "-5%";
                   "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
+                };
+                cfgProgrKeys = {
+                  "${mod}+y" = "exec i3-sensible-terminal -e ${yewtube}/bin/yt";
+                  "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
                 };
                 cfgBasicKeys = {
                   "Ctrl+Mod1+q" = i3ex lockCmd;
@@ -188,8 +194,9 @@ in
                   "${mod}+Shift+n" = newScreenShot "--select";
                 };
             in lib.mkOptionDefault (
-                 newMediaKeys "" //
                  newMediaKeys "Mod5+Shift+" //
+                 newMediaKeys "" //
+                 cfgProgrKeys //
                  cfgBasicKeys
                );
           bars = [{

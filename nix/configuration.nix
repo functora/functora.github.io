@@ -196,7 +196,7 @@ in
               };
           in  {
                 modifier = mod;
-                defaultWorkspace = "1";
+                defaultWorkspace = "workspace number 1";
                 keybindings =
                   lib.mkOptionDefault (
                     newMediaKeys "Mod5+Shift+" //
@@ -208,28 +208,6 @@ in
                   statusCommand =
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
-                startup = [
-                  {
-                    workspace = "1";
-                    command = "i3-sensible-terminal";
-                  }
-                  {
-                    workspace = "2";
-                    command = "i3-sensible-terminal";
-                  }
-                  {
-                    workspace = "3";
-                    command = "i3-sensible-terminal";
-                  }
-                  {
-                    workspace = "9";
-                    command = "i3-sensible-terminal -e ${yewtube}/bin/yt";
-                  }
-                  {
-                    workspace = "10";
-                    command = "${qutebrowser}/bin/qutebrowser";
-                  }
-                ];
               };
       };
     };

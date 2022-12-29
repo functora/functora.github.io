@@ -143,77 +143,94 @@ in
         extraConfig = ''
           for_window [class="Alacritty"] fullscreen enable
           for_window [class="qutebrowser"] fullscreen enable
+          for_window [class="mpv"] fullscreen enable
+          assign [class="qutebrowser"] workspace 10
+          assign [class="mpv"] workspace 8
         '';
-        config = let mod = "Mod4"; in {
-          modifier = mod;
-          keybindings =
-            with pkgs;
-            let i3ex = x:
-                  "exec --no-startup-id ${x}";
-                newScreenShot = x:
-                  i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
-                newBrightness = x:
-                  i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
-                newPlayerCtl = x:
-                  i3ex "${playerctl}/bin/playerctl ${x}";
-                newVolChange = x:
-                  i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
-                cmdVolToggle =
-                  i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
-                cmdMicToggle =
-                  i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-                newMediaKeys = x: {
-                  "${x}XF86MonBrightnessDown" = newBrightness "10-";
-                  "${x}XF86MonBrightnessUp" = newBrightness "+10";
-                  "${x}XF86AudioMicMute" = cmdMicToggle;
-                  "${x}XF86AudioPrev" = newPlayerCtl "previous";
-                  "${x}XF86AudioPlay" = newPlayerCtl "play-pause";
-                  "${x}XF86AudioNext" = newPlayerCtl "next";
-                  "${x}XF86AudioMute" = cmdVolToggle;
-                  "${x}XF86AudioLowerVolume" = newVolChange "-5%";
-                  "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
-                };
-                cfgProgrKeys = {
-                  "${mod}+y" = "exec i3-sensible-terminal -e ${yewtube}/bin/yt";
-                  "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
-                };
-                cfgBasicKeys = {
-                  "Ctrl+Mod1+q" = i3ex lockCmd;
-                  "${mod}+Shift+s" = i3ex "${lockCmd} && systemctl suspend";
-                  "${mod}+h" = "focus left";
-                  "${mod}+j" = "focus down";
-                  "${mod}+k" = "focus up";
-                  "${mod}+l" = "focus right";
-                  "${mod}+Shift+h" = "move left";
-                  "${mod}+Shift+j" = "move down";
-                  "${mod}+Shift+k" = "move up";
-                  "${mod}+Shift+l" = "move right";
-                  "${mod}+Shift+p" = newScreenShot "";
-                  "${mod}+Shift+n" = newScreenShot "--select";
-                };
-            in lib.mkOptionDefault (
-                 newMediaKeys "Mod5+Shift+" //
-                 newMediaKeys "" //
-                 cfgProgrKeys //
-                 cfgBasicKeys
-               );
-          bars = [{
-            statusCommand =
-              "${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
-          }];
-          startup = [
-            #{
-            #  command = "exec i3-msg workspace 1";
-            #  always = true;
-            #  notification = false;
-            #}
-            #{
-            #  command = "systemctl --user restart polybar.service";
-            #  always = true;
-            #  notification = false;
-            #}
-          ];
-        };
+        config =
+          with pkgs;
+          let mod =
+                "Mod4";
+              i3ex = x:
+                "exec --no-startup-id ${x}";
+              newScreenShot = x:
+                i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
+              newBrightness = x:
+                i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
+              newPlayerCtl = x:
+                i3ex "${playerctl}/bin/playerctl ${x}";
+              newVolChange = x:
+                i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+              cmdVolToggle =
+                i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+              cmdMicToggle =
+                i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+              newMediaKeys = x: {
+                "${x}XF86MonBrightnessDown" = newBrightness "10-";
+                "${x}XF86MonBrightnessUp" = newBrightness "+10";
+                "${x}XF86AudioMicMute" = cmdMicToggle;
+                "${x}XF86AudioPrev" = newPlayerCtl "previous";
+                "${x}XF86AudioPlay" = newPlayerCtl "play-pause";
+                "${x}XF86AudioNext" = newPlayerCtl "next";
+                "${x}XF86AudioMute" = cmdVolToggle;
+                "${x}XF86AudioLowerVolume" = newVolChange "-5%";
+                "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
+              };
+              cfgProgrKeys = {
+                "${mod}+y" = "exec i3-sensible-terminal -e ${yewtube}/bin/yt";
+                "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
+              };
+              cfgBasicKeys = {
+                "Ctrl+Mod1+q" = i3ex lockCmd;
+                "${mod}+Shift+s" = i3ex "${lockCmd} && systemctl suspend";
+                "${mod}+h" = "focus left";
+                "${mod}+j" = "focus down";
+                "${mod}+k" = "focus up";
+                "${mod}+l" = "focus right";
+                "${mod}+Shift+h" = "move left";
+                "${mod}+Shift+j" = "move down";
+                "${mod}+Shift+k" = "move up";
+                "${mod}+Shift+l" = "move right";
+                "${mod}+Shift+p" = newScreenShot "";
+                "${mod}+Shift+n" = newScreenShot "--select";
+              };
+          in  {
+                modifier = mod;
+                defaultWorkspace = "1";
+                keybindings =
+                  lib.mkOptionDefault (
+                    newMediaKeys "Mod5+Shift+" //
+                    newMediaKeys "" //
+                    cfgProgrKeys //
+                    cfgBasicKeys
+                  );
+                bars = [{
+                  statusCommand =
+                    "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
+                }];
+                startup = [
+                  {
+                    workspace = "1";
+                    command = "i3-sensible-terminal";
+                  }
+                  {
+                    workspace = "2";
+                    command = "i3-sensible-terminal";
+                  }
+                  {
+                    workspace = "3";
+                    command = "i3-sensible-terminal";
+                  }
+                  {
+                    workspace = "9";
+                    command = "i3-sensible-terminal -e ${yewtube}/bin/yt";
+                  }
+                  {
+                    workspace = "10";
+                    command = "${qutebrowser}/bin/qutebrowser";
+                  }
+                ];
+              };
       };
     };
     #

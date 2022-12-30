@@ -6,7 +6,7 @@ let
   lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-    sha256 = "1ws7acpvz3vp5yzn81ilr5405n29xw9y7hk62d53y6ysqc2yjrk2";
+    sha256 = "0wxnhz7q9dhzw9xb9ibab8gm2fbr1nmkdn2dh7hpb015d14fapaj";
   };
 in
 {
@@ -33,7 +33,7 @@ in
     nixpkgs.config.allowUnfree = true;
     swapDevices = [{
       device = "/var/lib/swapfile";
-      size = 4 * 1024;
+      size = 2 * 1024;
     }];
     #
     # Nix

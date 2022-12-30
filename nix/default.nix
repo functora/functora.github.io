@@ -27,6 +27,6 @@ in pkgs.haskell-nix.project {
   };
   # Specify the GHC version to use.
   # Not required for `stack.yaml` based projects.
-  compiler-nix-name = "ghc924";
+  compiler-nix-name = "ghc925";
   projectFileName = "cabal.project";
 }

@@ -32,6 +32,15 @@ in
     };
     nixpkgs.config.allowUnfree = true;
     #
+    # Nix
+    #
+    nix.settings.trusted-public-keys = [
+      "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+    ];
+    nix.settings.substituters = [
+      "https://cache.iog.io"
+    ];
+    #
     # Media
     #
     sound.enable = true;
@@ -58,6 +67,7 @@ in
         qutebrowser
         xorg.xev
         yewtube
+        niv
       ];
       programs.git = {
         enable = true;

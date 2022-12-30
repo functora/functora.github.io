@@ -30,7 +30,6 @@ in
       BROWSER = "qutebrowser";
       TERMINAL = "alacritty";
     };
-    nixpkgs.config.allowUnfree = true;
     swapDevices = [{
       device = "/var/lib/swapfile";
       size = 2 * 1024;

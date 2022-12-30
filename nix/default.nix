@@ -15,10 +15,7 @@ let
     # haskell.nix provides access to the nixpkgs pins which are used by our CI,
     # hence you will be more likely to get cache hits when using these.
     # But you can also just use your own, e.g. '<nixpkgs>'.
-    #
-    # NOTE : It was haskellNix.sources.nixpkgs-unstable by default
-    #
-    haskellNix.sources.nixpkgs
+    haskellNix.sources.nixpkgs-unstable
     # These arguments passed to nixpkgs, include some patches and also
     # the haskell.nix functionality itself as an overlay.
     haskellNix.nixpkgsArgs;
@@ -30,5 +27,6 @@ in pkgs.haskell-nix.project {
   };
   # Specify the GHC version to use.
   # Not required for `stack.yaml` based projects.
-  compiler-nix-name = "ghc902";
+  compiler-nix-name = "ghc924";
+  projectFileName = "cabal.project";
 }

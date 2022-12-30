@@ -31,6 +31,10 @@ in
       TERMINAL = "alacritty";
     };
     nixpkgs.config.allowUnfree = true;
+    swapDevices = [{
+      device = "/var/lib/swapfile";
+      size = 4 * 1024;
+    }];
     #
     # Nix
     #
@@ -40,6 +44,10 @@ in
     nix.settings.substituters = [
       "https://cache.iog.io"
     ];
+    nix.extraOptions = ''
+      keep-outputs = true
+      keep-derivations = true
+    '';
     #
     # Media
     #
@@ -74,6 +82,14 @@ in
         userName = "functora";
         userEmail = "functora@proton.me";
       };
+      #
+      # NOTE : direnv is used to cache nix development shells
+      # and protect them from being removed by the garbadge collector
+      # https://github.com/nix-community/nix-direnv
+      #
+      programs.bash.enable = true;
+      programs.direnv.enable = true;
+      programs.direnv.nix-direnv.enable = true;
       home.file = {
         ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
@@ -98,7 +114,7 @@ in
           {
             block = "disk_space";
             info_type = "available";
-            format = "SSD{available}";
+            format = "SSD {available}";
             alert = 10.0;
             warning = 20.0;
             unit = "GB";
@@ -111,16 +127,13 @@ in
             clickable = false;
             icons_format = "";
           }
-          #
-          # Uncomment if swap is used
-          #
-          #{
-          #  block = "memory";
-          #  display_type = "swap";
-          #  format_swap = " SWP {swap_used_percents}";
-          #  clickable = false;
-          #  icons_format = "";
-          #}
+          {
+            block = "memory";
+            display_type = "swap";
+            format_swap = " SWP {swap_used_percents}";
+            clickable = false;
+            icons_format = "";
+          }
           {
             block = "cpu";
             format = " CPU {utilization}";

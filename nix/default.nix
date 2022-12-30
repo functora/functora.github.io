@@ -1,6 +1,6 @@
 let
   # Read in the Niv sources
-  sources = import ./nix/sources.nix {};
+  sources = import ./sources.nix {};
   # If ./nix/sources.nix file is not found run:
   #   niv init
   #   niv add input-output-hk/haskell.nix -n haskellNix

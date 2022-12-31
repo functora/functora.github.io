@@ -4,6 +4,6 @@
   tools = {
     cabal = "latest";
     hlint = "latest";
-    haskell-language-server = "latest";
+    haskell-language-server = "1.8.0.0";
   };
 }

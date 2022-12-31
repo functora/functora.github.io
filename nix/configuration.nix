@@ -32,7 +32,7 @@ in
     };
     swapDevices = [{
       device = "/var/lib/swapfile";
-      size = 2 * 1024;
+      size = 3 * 1024;
     }];
     #
     # Nix

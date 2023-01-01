@@ -1,0 +1,17 @@
+---
+id: code
+title: Code
+color: black
+fontawesome: "fab fa-git-alt"
+---
+
+<p class="padding-left">Examples of my personal code:</p>
+
+- [src](https://github.com/21it/src) - The most recent monorepo mostly related to Bitcoin and trading. If you want relevant examples of my code, look at this repo.
+- [rentier](https://github.com/21it/rentier) - My first Haskell project which I have used to learn Haskell. The booking system is based on the Yesod web framework. The code is a bit obsolete.
+- [calculus](https://github.com/21it/calculus) - An unorthodox solution to the Elixir encapsulation problem. This is not Haskell code, but there is a good text which explains why I ended up switching to Haskell from other languages.
+
+<p class="padding-left">Examples of other code I am actively working on with other people:</p>
+
+- [btc-lsp](https://github.com/coingaming/src/tree/master/btc-lsp) - Bitcoin Lightning Service Provider.
+- [lnd-client](https://github.com/coingaming/lnd-client) - Lightning Network Daemon (LND) client library for Haskell.

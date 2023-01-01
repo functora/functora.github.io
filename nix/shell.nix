@@ -1,9 +1,12 @@
-(import ./default.nix).shellFor {
+with (import ./project.nix);
+shellFor {
   exactDeps = true;
-  withHoogle = true;
-  tools = {
-    cabal = "latest";
-    hlint = "latest";
-    haskell-language-server = "1.8.0.0";
-  };
+  withHoogle = false;
+  #buildInputs = [
+  #  pkgs.haskell-language-server
+  #];
+  #tools = {
+  #  cabal = "latest";
+  #  hlint = "latest";
+  #};
 }

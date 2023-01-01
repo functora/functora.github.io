@@ -1,0 +1,42 @@
+---
+index: true
+---
+
+<div class="index fluid">
+  <div class="index-title">
+    <h1 class="racing-font">21it</h1>
+  </div>
+
+  <div class="index-summary">
+    <span class="square-font">Hi-end quality software development.<br>Reliable. Functional. Pure.</span>
+  </div>
+  <br>
+</div>
+
+$for(blocks)$
+  <div id="$id$" class="$color$ fluid">
+    <div class="content">
+      $if(formal)$
+      <h2>$title$</h2>
+      <div class="index-block">
+        $body$
+      </div>
+      $else$
+      <h2 class="text-center">$title$</h2>
+      <div class="flex one three-800 index-block">
+        <div class="two-third-800 grow">$body$</div>
+        $if(devicon)$
+          <div class="text-center">
+            <i class="devicons devicons-$devicon$ devicons-logo"></i>
+          </div>
+        $endif$
+        $if(fontawesome)$
+          <div class="text-center">
+            <i class="$fontawesome$ fontawesome-logo"></i>
+          </div>
+        $endif$
+      </div>
+      $endif$
+    </div>
+  </div>
+$endfor$

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure.">
+  <meta name="keywords" content="software,development,outsource,company,haskell,websites">
+  $if(index)$
+    <title>21it</title>
+  $else$
+    <title>21it - $title$</title>
+  $endif$
+  <link rel="stylesheet" href="/fontawesome-free-5.12.1-web/css/all.min.css">
+  <link rel="stylesheet" href="/css/devicons.min.css">
+  <link rel="stylesheet" href="/css/picnic.min.css">
+  <link rel="stylesheet" href="/css/default.css">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+</head>
+
+<body>
+
+  $if(formal)$
+  $else$
+  <nav>
+    <a href="/" class="brand">
+      <h2 class="racing-font">21it</h2>
+    </a>
+
+    <input id="bmenub" type="checkbox" class="show" autocomplete="off" aria-labelledby="bmenul">
+    <label id="bmenul" for="bmenub" class="burger button pseudo">&#8801;</label>
+
+    <div class="menu">
+      <a class="pseudo button" href="/">Home</a>
+      <a class="pseudo button" href="/about.html">About</a>
+      <a class="pseudo button" href="/skills.html">Skills</a>
+      <a class="pseudo button" href="/code.html">Code</a>
+      <a class="pseudo button" href="/blog.html">Blog</a>
+      <a class="pseudo button" href="/contact.html">Contact</a>
+      <a class="pseudo button" href="/cv.pdf">CV</a>
+    </div>
+  </nav>
+  $endif$
+
+  $if(index)$
+    $body$
+  $else$
+    <div class="content page">
+      <h2 class="text-center">$title$</h2>
+      $body$
+    </div>
+  $endif$
+
+</body>
+
+</html>

@@ -40,6 +40,8 @@ in
     #
     # Nix
     #
+    nix.settings.cores = 1;
+    nix.settings.max-jobs = 1;
     nix.settings.trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
     ];
@@ -156,10 +158,6 @@ in
         ];
       };
       services.unclutter.enable = true;
-      services.gammastep = {
-        enable = true;
-        provider = "geoclue2";
-      };
       services.screen-locker = {
         enable = true;
         inactiveInterval = 5;
@@ -243,7 +241,6 @@ in
     # XServer
     #
     environment.pathsToLink = ["/libexec"];
-    services.geoclue2.enable = true;
     services.xserver = {
       #
       # Keyboard

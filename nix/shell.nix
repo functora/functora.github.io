@@ -1,4 +1,6 @@
 with (import ./project.nix);
+let nixpkgs = import ./nixpkgs.nix;
+in
 shellFor {
   exactDeps = true;
   withHoogle = false;

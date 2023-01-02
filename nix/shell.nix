@@ -9,5 +9,6 @@ shellFor {
     pkgs.hpack
     pkgs.hlint
     pkgs.ghcid
+    pkgs.haskell-language-server
   ];
 }

@@ -30,10 +30,13 @@ in
       BROWSER = "qutebrowser";
       TERMINAL = "alacritty";
     };
-    swapDevices = [{
-      device = "/var/lib/swapfile";
-      size = 3 * 1024;
-    }];
+    #
+    # NOTE : enable swap if needed
+    #
+    # swapDevices = [{
+    #   device = "/var/lib/swapfile";
+    #   size = 3 * 1024;
+    # }];
     #
     # Nix
     #
@@ -126,13 +129,16 @@ in
             clickable = false;
             icons_format = "";
           }
-          {
-            block = "memory";
-            display_type = "swap";
-            format_swap = " SWP {swap_used_percents}";
-            clickable = false;
-            icons_format = "";
-          }
+          #
+          # NOTE : enable swap if needed
+          #
+          # {
+          #   block = "memory";
+          #   display_type = "swap";
+          #   format_swap = " SWP {swap_used_percents}";
+          #   clickable = false;
+          #   icons_format = "";
+          # }
           {
             block = "cpu";
             format = " CPU {utilization}";

@@ -23,7 +23,7 @@ in pkgs.haskell-nix.project {
   # 'cleanGit' cleans a source directory based on the files known by git
   src = pkgs.haskell-nix.haskellLib.cleanGit {
     name = "functora";
-    src = ./.;
+    src = ./..;
   };
   # Specify the GHC version to use.
   compiler-nix-name = "ghc925"; # Not required for `stack.yaml` based projects.

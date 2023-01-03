@@ -6,13 +6,14 @@ shellFor {
   withHoogle = false;
   buildInputs = [
     pkgs.cabal-install
+    pkgs.ormolu
     pkgs.hpack
     pkgs.hlint
     pkgs.ghcid
     #
-    # NOTE : takes too much disk space
+    # NOTE : HLS takes too much disk space
     # and time to build, does not worth it.
     #
     # pkgs.haskell-language-server
-  ];
+  ] ++ (import ./tools.nix);
 }

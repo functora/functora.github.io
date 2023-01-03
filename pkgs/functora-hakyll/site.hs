@@ -76,7 +76,7 @@ main = hakyllWith cfg $ do
       pairs <-
         mapM makeItem $
           makePairs $
-            maybe [] id $
+            fromMaybe [] $
               lookupStringList "pairs" meta
       let pairCtx =
             field "left" (return . fst . itemBody)

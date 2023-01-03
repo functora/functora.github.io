@@ -9,6 +9,10 @@ shellFor {
     pkgs.hpack
     pkgs.hlint
     pkgs.ghcid
-    pkgs.haskell-language-server
+    #
+    # NOTE : takes too much disk space
+    # and time to build, does not worth it.
+    #
+    # pkgs.haskell-language-server
   ];
 }

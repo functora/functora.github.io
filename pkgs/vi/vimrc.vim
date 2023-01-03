@@ -33,7 +33,7 @@ source $VIMRUNTIME/menu.vim
 set wildmenu
 
 " Ignore files
-set wildignore=*~,*.o,*.a,*.so,*/.git/*,*/.hg/*,*/.svn/*,*/node_modules/*,*/dist-newstyle/*,*/build/*,*/_build/*,*/_cache/*,*/_site/*
+set wildignore=*~,*.o,*.a,*.so,*/.git/*,*/.hg/*,*/.svn/*,*/node_modules/*,*/dist-newstyle/*,*/build/*,*/_build/*,*/_cache/*,*/_site/*,*/favicon/*,*/fonts/*
 
 "Always show current position
 set ruler
@@ -250,7 +250,7 @@ map <leader>j :CtrlP<cr>
 map <C-b> :CtrlPBuffer<cr>
 
 let g:ctrlp_max_height = 20
-let g:ctrlp_custom_ignore = '^\.git\|^\.hg\|^\.svn\|node_modules\|dist-newstyle\|build\|_build\|_cache\|_site'
+let g:ctrlp_custom_ignore = '^\.git\|^\.hg\|^\.svn\|node_modules\|dist-newstyle\|build\|_build\|_cache\|_site\|favicon\|fonts'
 
 "
 " => lightline

@@ -5,8 +5,8 @@ let
   yewtube = import ./yewtube.nix {inherit pkgs;};
   lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-    sha256 = "0wxnhz7q9dhzw9xb9ibab8gm2fbr1nmkdn2dh7hpb015d14fapaj";
+    url = "https://github.com/nix-community/home-manager/archive/d01e7280ad7d13a5a0fae57355bd0dbfe5b81969.tar.gz";
+    sha256 = "0qh9r3cc8yh434j8n2licf548gvswillzm8x7rfcfys8p7srkvl8";
   };
 in
 {

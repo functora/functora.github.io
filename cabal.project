@@ -1,4 +1,15 @@
 index-state: 2022-12-31T00:00:00Z
+allow-newer: table-layout:base
 packages:
   pkgs/functora-hakyll/
   pkgs/bitfinex-client/
+
+package reanimate-svg
+  ghc-options: -fsimpl-tick-factor=1000000
+
+source-repository-package
+  type: git
+  location: https://github.com/coingaming/src.git
+  tag: afe8a4b3ebd9b0896c0ec7edcf79cd1ded37ba5a
+  --sha256: a5yspTins63xA+rPQHr9ViPSeJ5Y0eKdHBxT1pMyxU4=
+  subdir: generic-pretty-instances

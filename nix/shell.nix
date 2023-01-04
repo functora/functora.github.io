@@ -15,5 +15,6 @@ shellFor {
     # and time to build, does not worth it.
     #
     # pkgs.haskell-language-server
-  ] ++ (import ./tools.nix);
+  ] ++ (import ./tools.nix)
+    ++ (import ./../pkgs/functora-hakyll/nix/tools.nix);
 }

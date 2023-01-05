@@ -1,0 +1,4 @@
+--test=":main --fail-fast --color -f failed-examples"
+--setup="import Main"
+--restart=package.yaml
+--command="hpack && cabal new-repl generic-pretty-instances:test:generic-pretty-instances-test --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j"

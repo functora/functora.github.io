@@ -3,16 +3,7 @@ allow-newer: table-layout:base
 packages:
   pkgs/functora-hakyll/
   pkgs/bitfinex-client/
-
-package generic-pretty-instances
-  default-extensions: FlexibleContexts
-
-source-repository-package
-  type: git
-  location: https://github.com/coingaming/src.git
-  tag: afe8a4b3ebd9b0896c0ec7edcf79cd1ded37ba5a
-  --sha256: a5yspTins63xA+rPQHr9ViPSeJ5Y0eKdHBxT1pMyxU4=
-  subdir: generic-pretty-instances
+  pkgs/generic-pretty-instances/
 
 source-repository-package
   type: git

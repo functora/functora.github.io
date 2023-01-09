@@ -24,7 +24,7 @@ import BitfinexClient.Import.External
 import BitfinexClient.Util
 import qualified Data.Text as T
 import Language.Haskell.TH.Quote
-import Language.Haskell.TH.Syntax as TH (Lift)
+import Language.Haskell.TH.Syntax as TH (Lift, lift)
 
 showError ::
   forall source target.
@@ -55,7 +55,7 @@ mkQQ parser =
         \x0 ->
           case parser x0 of
             Left e -> fail e
-            Right x -> [|x|]
+            Right x -> [|$(TH.lift x)|]
     }
   where
     failure :: Text -> a

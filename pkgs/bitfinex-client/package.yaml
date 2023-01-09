@@ -76,6 +76,7 @@ ghc-options:
 - -Wno-unsafe # Don’t use Safe Haskell warnings
 - -Wno-safe # Don’t use Safe Haskell warnings
 - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
+- -Wno-missing-kind-signatures
 - -fenable-th-splice-warnings
 - -fprint-potential-instances
 
@@ -85,6 +86,7 @@ library:
   dependencies:
   # foundation
   - universum
+  - microlens
   # web
   - http-types
   - http-client

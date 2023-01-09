@@ -24,6 +24,7 @@ import Data.ByteString.Lazy as X (ByteString)
 import Data.Coerce as X (coerce)
 import Data.Fixed as X (Fixed, HasResolution (..), showFixed)
 import Data.List.Extra as X (notNull)
+import Data.Maybe as X (listToMaybe)
 import Data.Metrology.Poly as X
   ( quOf,
     (*|),
@@ -74,10 +75,7 @@ import System.IO.Temp as X (withSystemTempFile)
 import Text.PrettyPrint.GenericPretty as X (Out (..))
 import Text.PrettyPrint.GenericPretty.Import as X
   ( inspect,
-    inspectGenPlain,
     inspectPlain,
-    inspectStr,
-    inspectStrPlain,
   )
 import Universum as X hiding
   ( ByteString,
@@ -85,6 +83,7 @@ import Universum as X hiding
     bracket,
     catch,
     finally,
+    (^?),
   )
 import UnliftIO as X
   ( Handler (..),

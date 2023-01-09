@@ -16,7 +16,6 @@ import Env
     Var,
     header,
     help,
-    keep,
     nonempty,
     parse,
     str,
@@ -76,4 +75,4 @@ sysEnv = do
       <*> var (str <=< nonempty) "BITFINEX_PRV_KEY" op
   where
     op :: Mod Var a
-    op = keep <> help ""
+    op = help mempty

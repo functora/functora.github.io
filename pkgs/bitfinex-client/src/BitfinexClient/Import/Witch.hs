@@ -13,19 +13,36 @@ module BitfinexClient.Import.Witch
     composeTry,
     composeTryRhs,
     composeTryLhs,
+    withSource,
+    withTarget,
   )
 where
 
+import qualified Data.Bifunctor as Bifunctor
+import qualified Data.Coerce as Coerce
 import Data.Type.Equality (type (==))
 import Universum
 import Witch as X
   ( From,
     TryFrom,
     TryFromException (..),
-    withSource,
-    withTarget,
   )
 import qualified Witch
+import Witch.Encoding as X (UTF_8)
+
+withSource ::
+  source2 ->
+  TryFromException source1 t ->
+  TryFromException source2 t
+withSource s (TryFromException _ e) =
+  TryFromException s e
+
+withTarget ::
+  forall target2 source target1.
+  TryFromException source target1 ->
+  TryFromException source target2
+withTarget =
+  Coerce.coerce
 
 from ::
   forall source target.
@@ -95,8 +112,11 @@ composeTry ::
   ) ->
   source ->
   Either (TryFromException source target) target
-composeTry =
-  Witch.composeTry @through @source @target
+composeTry f g s =
+  either
+    (Left . withTarget)
+    (Bifunctor.first (withSource s) . f)
+    $ g s
 
 composeTryRhs ::
   forall through source target.
@@ -115,8 +135,8 @@ composeTryRhs ::
     ( TryFromException source target
     )
     target
-composeTryRhs =
-  Witch.composeTryRhs @through @source @target
+composeTryRhs f g s =
+  Bifunctor.bimap withTarget f $ g s
 
 composeTryLhs ::
   forall through source target.
@@ -135,5 +155,5 @@ composeTryLhs ::
     ( TryFromException source target
     )
     target
-composeTryLhs =
-  Witch.composeTryLhs @through @source @target
+composeTryLhs f g s =
+  Bifunctor.first (withSource s) . f $ g s

@@ -15,6 +15,7 @@ import BitfinexClient.Import.External
 import BitfinexClient.Util
 import Data.Aeson.Lens
 import qualified Data.Map as Map
+import Lens.Micro hiding (at)
 
 parseOrder ::
   ( AsValue a,

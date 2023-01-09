@@ -2,8 +2,11 @@ with (import ./project.nix);
 let nixpkgs = import ./nixpkgs.nix;
 in
 shellFor {
-  exactDeps = true;
+  exactDeps = false;
   withHoogle = false;
+  tools = {
+    hspec-discover = "latest";
+  };
   buildInputs = [
     pkgs.cabal-install
     pkgs.ormolu

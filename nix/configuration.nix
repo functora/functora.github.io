@@ -80,6 +80,7 @@ in
         xorg.xev
         yewtube
         niv
+        unzip
       ];
       programs.git = {
         enable = true;

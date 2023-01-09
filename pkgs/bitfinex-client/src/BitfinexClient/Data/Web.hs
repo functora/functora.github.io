@@ -25,10 +25,12 @@ import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
+import qualified Witch
 import qualified Prelude
 
-newtype PrvKey
-  = PrvKey BS.ByteString
+newtype PrvKey = PrvKey
+  { unPrvKey :: BS.ByteString
+  }
   deriving newtype
     ( Eq,
       Ord,
@@ -38,6 +40,10 @@ newtype PrvKey
 instance From BS.ByteString PrvKey
 
 instance From PrvKey BS.ByteString
+
+instance From (UTF_8 BS.ByteString) PrvKey where
+  from =
+    via @BS.ByteString
 
 instance Prelude.Show PrvKey where
   show =
@@ -58,6 +64,10 @@ newtype ApiKey
 instance From BS.ByteString ApiKey
 
 instance From ApiKey BS.ByteString
+
+instance From (UTF_8 BS.ByteString) ApiKey where
+  from =
+    via @BS.ByteString
 
 instance Prelude.Show ApiKey where
   show =
@@ -167,12 +177,12 @@ epoch =
 parseJsonBs ::
   forall a.
   ( Typeable a,
-    From BS.ByteString a,
-    'False ~ (BS.ByteString == a)
+    From (UTF_8 BS.ByteString) a,
+    'False ~ (UTF_8 BS.ByteString == a)
   ) =>
   A.Value ->
   A.Parser a
 parseJsonBs =
   A.withText (showType @a) $
     pure
-      . via @BS.ByteString
+      . via @(UTF_8 BS.ByteString)

@@ -27,9 +27,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data CurrencyKind
@@ -39,9 +37,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data CurrencyRelation
@@ -50,9 +46,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data MarketRelation
@@ -61,9 +55,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data Location
@@ -72,9 +64,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data ExchangeAction
@@ -83,9 +73,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
 
        data Boundary
@@ -94,9 +82,7 @@ $( singletons
          deriving stock
            ( Eq,
              Ord,
-             Show,
-             Enum,
-             Bounded
+             Show
            )
        |]
  )

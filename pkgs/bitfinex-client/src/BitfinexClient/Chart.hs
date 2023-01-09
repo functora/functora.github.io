@@ -154,7 +154,7 @@ newMmaAsciiTable mma =
       Table.def
       [ Table.rowG
           [ "SYM" :: String,
-            inspectStrPlain $ Mma.mmaSymbol mma
+            inspectPlain $ Mma.mmaSymbol mma
           ],
         Table.rowG
           [ "CMP",
@@ -184,9 +184,9 @@ newMmaAsciiTable mma =
           ],
         Table.rowG
           [ "R/R",
-            inspectStrPlain (denominator r2r)
+            inspectPlain (denominator r2r)
               <> "/"
-              <> inspectStrPlain (numerator r2r)
+              <> inspectPlain (numerator r2r)
           ]
       ]
   where

@@ -20,6 +20,7 @@ import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Vector as V
+import Lens.Micro hiding (at)
 
 class FromRpc (method :: Method) res where
   fromRpc :: RawResponse -> Either Text res

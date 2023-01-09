@@ -46,6 +46,7 @@ default-extensions:
 - DeriveGeneric
 - DerivingStrategies
 - LambdaCase
+- FlexibleContexts
 
 ghc-options:
 # For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html
@@ -65,6 +66,7 @@ when:
     - -Wno-unused-packages # Because of some proto-lens-runtime magic
     - -Wno-prepositive-qualified-module
     - -Wno-missing-safe-haskell-mode
+    - -Wno-missing-kind-signatures
 
 library: {}
 

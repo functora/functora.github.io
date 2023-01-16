@@ -10,6 +10,11 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
+flags:
+  ghcid:
+    manual: true
+    default: false
+
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Data
@@ -17,14 +22,6 @@ extra-source-files:
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
 description:         Please see the README on GitHub at <https://github.com/21it/bitfinex-client#readme>
-
-dependencies:
-# foundation
-- base >= 4.7 && < 5
-# bytes
-- aeson
-# other
-- containers
 
 default-extensions:
 - NoImplicitPrelude
@@ -80,11 +77,10 @@ ghc-options:
 - -fenable-th-splice-warnings
 - -fprint-potential-instances
 
-library:
-  source-dirs:
-  - src
+_deps: &deps
   dependencies:
   # foundation
+  - base >= 4.7 && < 5
   - universum
   - microlens
   # web
@@ -93,6 +89,7 @@ library:
   - http-client-tls
   # bytes
   - text
+  - aeson
   - lens-aeson
   - memory
   - bytestring
@@ -119,21 +116,53 @@ library:
   - template-haskell
   - singletons
   - singletons-base
+  - containers
   # pretty
   - katip
   - pretty
   - GenericPretty
   - generic-pretty-instances
 
+_ghcid: &ghcid
+  when:
+  - condition: flag(ghcid)
+    then:
+      <<: *deps
+      source-dirs:
+      - src
+      ghc-options:
+      - -Wno-unused-packages
+    else:
+      dependencies:
+      - bitfinex-client
+
+_optimized: &optimized
+  ghc-options:
+  - -O2
+  - -optc-O3
+  - -funfolding-use-threshold=16
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
+  - -with-rtsopts=-T
+  - -optl-fuse-ld=gold
+  ld-options:
+  - -fuse-ld=gold
+
+library:
+  <<: *deps
+  source-dirs:
+  - src
+
 tests:
   bitfinex-client-test:
+    <<: *ghcid
     main: Spec.hs
     source-dirs:
     - test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     dependencies:
     - bitfinex-client
     - hspec
+    - base
+    - aeson
+    - containers

@@ -32,7 +32,7 @@ spec = before sysEnv $ do
               currencyPairInitMargin = 30 % 1,
               currencyPairMinMargin = 15,
               currencyPairMaxOrderAmt = [moneyBaseBuy|250000|],
-              currencyPairMinOrderAmt = [moneyBaseBuy|2|]
+              currencyPairMinOrderAmt = [moneyBaseBuy|4|]
             }
   itRight "marketAveragePrice succeeds" . const $ do
     let sym = [currencyPair|ADABTC|]

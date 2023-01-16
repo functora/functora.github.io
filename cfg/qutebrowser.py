@@ -1977,7 +1977,7 @@ c.url.searchengines = {
         'github': 'https://github.com/search?type=code&q={}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
-        'nixos': 'https://search.nixos.org/packages?query={}'
+        'nix': 'https://search.nixos.org/packages?query={}'
 }
 
 config.set('content.images', True, '*://*.openai.com/*')

@@ -158,6 +158,7 @@ in
           }
         ];
       };
+      services.udiskie.enable = true;
       services.unclutter.enable = true;
       services.screen-locker = {
         enable = true;
@@ -238,6 +239,10 @@ in
               };
       };
     };
+    #
+    # Automount
+    #
+    services.udisks2.enable = true;
     #
     # XServer
     #

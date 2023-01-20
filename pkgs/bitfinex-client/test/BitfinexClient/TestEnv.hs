@@ -22,8 +22,8 @@ testAmt ::
   Money 'Base act
 testAmt =
   case sing :: Sing act of
-    SBuy -> [moneyBaseBuy|2.002002|]
-    SSell -> [moneyBaseSell|2.002002|]
+    SBuy -> [moneyBaseBuy|4.004004|]
+    SSell -> [moneyBaseSell|4.004004|]
 
 itRight ::
   ( Show a

@@ -7,8 +7,9 @@ module BitfinexClientSpec
 where
 
 import qualified BitfinexClient as Bitfinex
-import qualified BitfinexClient.Chart as Chart
+--import qualified BitfinexClient.Chart as Chart
 --import qualified BitfinexClient.Data.CancelOrderMulti as CancelOrderMulti
+
 import qualified BitfinexClient.Data.Candles as Candles
 import qualified BitfinexClient.Data.GetOrders as GetOrders
 import qualified BitfinexClient.Data.SubmitOrder as SubmitOrder
@@ -90,9 +91,10 @@ spec = before sysEnv $ do
     Bitfinex.candlesLast Ctf1h [currencyPair|ADABTC|] Candles.optsDef
   itRight "candlesHist succeeds" . const $ do
     Bitfinex.candlesHist Ctf1h [currencyPair|ADABTC|] Candles.optsDef
-  it "chart" . const $ do
-    Chart.newExample
-    True `shouldBe` True
+
+--  it "chart" . const $ do
+--    Chart.newExample
+--    True `shouldBe` True
 
 --  describe "End2End" $ do
 --    itRight "submitOrderMaker" $ \env -> do

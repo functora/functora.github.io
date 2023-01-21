@@ -24,4 +24,4 @@ spec = before sysEnv $
               SubmitOrder.optsPostOnly
       liftIO $
         A.encode req
-          `shouldBe` "{\"amount\":\"2.002002\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"
+          `shouldBe` "{\"amount\":\"4.004004\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"

@@ -1,6 +1,6 @@
 { lib, pkgs, config, ... }:
 let
-  vi = import ./../pkgs/vi/nix/default.nix {};
+  vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   yewtube = import ./yewtube.nix {inherit pkgs;};
   lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";

@@ -2,6 +2,7 @@ index-state: 2022-12-31T00:00:00Z
 allow-newer: table-layout:base
 packages:
   pub/*/*.cabal
+  prv/*/*.cabal
 
 source-repository-package
   type: git
@@ -28,3 +29,9 @@ source-repository-package
   tag: f8cdbc02c6878d4883ce95ed229d9cb09ffe296f
   --sha256: 7XsmUetYu3iCS7eNImHPU0Po3YKE/sGxBHEPT5N6nwU=
   subdir: hgeometry-combinatorial
+
+source-repository-package
+  type: git
+  location: https://github.com/fizruk/telegram-bot-simple
+  tag: a0aa517586fd3bb2324a617d2d185c0b65e56398
+  --sha256: Q9Pe6dCvCuGsRv3wmxqU8mCWhasQhRwDDIKO8XvdpJA=

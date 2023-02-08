@@ -35,3 +35,12 @@ source-repository-package
   location: https://github.com/fizruk/telegram-bot-simple
   tag: a0aa517586fd3bb2324a617d2d185c0b65e56398
   --sha256: Q9Pe6dCvCuGsRv3wmxqU8mCWhasQhRwDDIKO8XvdpJA=
+
+-- Overrive servant with the latest version
+-- to have MonadMask instance for ClientM.
+source-repository-package
+  type: git
+  location: https://github.com/haskell-servant/servant
+  tag: 1fba9dc6048cea6184964032b861b052cd54878c
+  --sha256: 158cqhd5apxh9nz200962wlnm6n8vhiv3q74pd3hbxqmsgrzjc08
+  subdir: servant-client

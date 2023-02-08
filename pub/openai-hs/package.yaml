@@ -14,19 +14,24 @@ category:            Web
 
 description:         Unofficial OpenAI client
 
+build-tools:
+  - cpphs
+
 dependencies:
   - base >= 4.7 && < 5
-  - openai-servant >= 0.2.1  
+  - openai-servant >= 0.2.1
   - aeson
   - casing
   - text
   - servant
   - servant-client
+  - servant-client-core
   - servant-multipart-client
   - http-client
   - bytestring
   - cpphs
   - http-types
+  - attoparsec
 
 ghc-options:
   - -Wall
@@ -47,6 +52,8 @@ default-extensions:
   - ScopedTypeVariables
   - DeriveGeneric
   - DeriveFunctor
+  - LambdaCase
+  - DerivingStrategies
 
 library:
   source-dirs: src

@@ -1,10 +1,8 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 8760d75e39a4a6db941c2503a8e8519a3c82b52bad91dcf39594cdd9258c7f4b
 
 name:           openai-hs
 version:        0.2.2.0
@@ -50,12 +48,12 @@ library
       DeriveFunctor
       LambdaCase
       DerivingStrategies
-      DeriveAnyClass
-      TemplateHaskell
-      RecordWildCards
-  ghc-options: -Wall -Werror -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+  ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+  build-tools:
+      cpphs
   build-depends:
       aeson
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , casing
@@ -65,12 +63,9 @@ library
     , openai-servant >=0.2.1
     , servant
     , servant-client
+    , servant-client-core
     , servant-multipart-client
     , text
-    , wai-extra
-    , attoparsec
-    , servant-client-core
-    , base64-bytestring
   default-language: Haskell2010
 
 test-suite openai-hs-test
@@ -95,9 +90,14 @@ test-suite openai-hs-test
       ScopedTypeVariables
       DeriveGeneric
       DeriveFunctor
+      LambdaCase
+      DerivingStrategies
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates -threaded -rtsopts -with-rtsopts=-N
+  build-tools:
+      cpphs
   build-depends:
       aeson
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , casing

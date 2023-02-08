@@ -15,9 +15,9 @@ shellFor {
     pkgs.ghcid
     #
     # NOTE : HLS takes too much disk space
-    # and time to build, does not worth it.
+    # and time to build, maybe does not worth it.
     #
-    # pkgs.haskell-language-server
+    pkgs.haskell-language-server
   ] ++ (import ./tools.nix)
     ++ (import ./../pub/functora-hakyll/nix/tools.nix)
     ++ (import ./../pub/bitfinex-client/nix/tools.nix);

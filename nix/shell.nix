@@ -20,5 +20,8 @@ shellFor {
     pkgs.haskell-language-server
   ] ++ (import ./tools.nix)
     ++ (import ./../pub/functora-hakyll/nix/tools.nix)
-    ++ (import ./../pub/bitfinex-client/nix/tools.nix);
+    ++ (import ./../pub/bitfinex-client/nix/tools.nix)
+    ++ (pkgs.lib.optional
+         (builtins.pathExists ./../prv/nix/tools.nix)
+         (import ./../prv/nix/tools.nix));
 }

@@ -680,7 +680,7 @@ nnoremap <leader>h :tabfirst<cr>
 nnoremap <leader>l :tablast<cr>
 nnoremap <leader>t :tabnew<cr>
 nnoremap <leader>x :tabclose<cr>
-nnoremap <leader>y :tabonly<cr>
+nnoremap <leader>n :tabonly<cr>
 
 "
 " => Buffer shortcuts
@@ -730,3 +730,11 @@ nnoremap <leader>o :lne<cr>
 
 nnoremap <leader>f :call ToggleOrmolu()<cr>
 xnoremap <leader>b :<c-u>call OrmoluBlock()<cr>
+
+"
+" => System clipboard
+"
+
+vnoremap <leader>y "+y
+nnoremap <leader>y "+y
+nnoremap <leader>yy "+yy

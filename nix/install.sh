@@ -11,5 +11,5 @@ if [ $# -ne 1 ]; then
 fi
 
 echo "==> installing $PKG"
-nix-env -f $CUR/project.nix -iAP $PKG.components.exes.$PKG-exe
+nix-env -f $CUR/project.nix -iA $PKG.components.exes.$PKG-exe
 echo "==> finished $PKG installation"

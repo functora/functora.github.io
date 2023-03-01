@@ -738,3 +738,10 @@ xnoremap <leader>b :<c-u>call OrmoluBlock()<cr>
 vnoremap <leader>y "+y
 nnoremap <leader>y "+y
 nnoremap <leader>yy "+yy
+
+"
+" => Elixir
+"
+
+let g:mix_format_on_save = 1
+let g:mix_format_silent_errors = 1

@@ -82,6 +82,7 @@ let ignore-patterns = ''
             dhall-vim
             psc-ide-vim
             purescript-vim
+            vim-elixir
             #
             # Productivity
             #

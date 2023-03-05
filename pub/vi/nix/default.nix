@@ -83,6 +83,8 @@ let ignore-patterns = ''
             psc-ide-vim
             purescript-vim
             vim-elixir
+            gleam-vim
+            neoformat
             #
             # Productivity
             #

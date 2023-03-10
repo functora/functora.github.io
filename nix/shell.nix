@@ -1,5 +1,5 @@
 with (import ./project.nix);
-let nixpkgs = import ./nixpkgs.nix;
+let unst = import ./nixpkgs-unstable.nix;
 in
 shellFor {
   exactDeps = false;
@@ -13,6 +13,7 @@ shellFor {
     pkgs.hpack
     pkgs.hlint
     pkgs.ghcid
+    unst.gleam
     #
     # NOTE : HLS takes too much disk space
     # and time to build, maybe does not worth it.

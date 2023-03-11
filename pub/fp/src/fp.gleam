@@ -1,7 +1,7 @@
 import gleam/list
 import gleam/result
 import gleam/function
-import gleam/option.{Option}
+import gleam/option.{Option, Some}
 
 //
 // Functors
@@ -12,25 +12,17 @@ pub opaque type FunctorInstance(a, b, fa, fb) {
 }
 
 pub fn fmap(
-  f: fn(a) -> b,
-  x: fa,
+  lhs: fn(a) -> b,
+  rhs: fa,
   instance: fn() -> FunctorInstance(a, b, fa, fb),
 ) -> fb {
-  instance().fmap(f, x)
-}
-
-pub fn fmapf(
-  x: fa,
-  f: fn(a) -> b,
-  instance: fn() -> FunctorInstance(a, b, fa, fb),
-) -> fb {
-  instance().fmap(f, x)
+  instance().fmap(lhs, rhs)
 }
 
 pub fn mkfunctor(
   fmapper: fn(fa, fn(a) -> b) -> fb,
 ) -> FunctorInstance(a, b, fa, fb) {
-  FunctorInstance(fmap: fn(f, x) { fmapper(x, f) })
+  FunctorInstance(fmap: function.flip(fmapper))
 }
 
 pub fn flst() -> FunctorInstance(a, b, List(a), List(b)) {
@@ -55,33 +47,27 @@ pub fn ffun() -> FunctorInstance(a, b, fn(r) -> a, fn(r) -> b) {
 
 pub opaque type ApplicativeInstance(a, b, fa, fb, fab) {
   ApplicativeInstance(
-    functor: FunctorInstance(a, b, fa, fb),
+    functor: fn() -> FunctorInstance(a, b, fa, fb),
+    pure: fn(a) -> fa,
     ap: fn(fab, fa) -> fb,
   )
 }
 
 pub fn ap(
-  f: fab,
-  x: fa,
+  lhs: fab,
+  rhs: fa,
   instance: fn() -> ApplicativeInstance(a, b, fa, fb, fab),
 ) -> fb {
-  instance().ap(f, x)
-}
-
-pub fn apf(
-  x: fa,
-  f: fab,
-  instance: fn() -> ApplicativeInstance(a, b, fa, fb, fab),
-) -> fb {
-  instance().ap(f, x)
+  instance().ap(lhs, rhs)
 }
 
 pub fn alst() -> ApplicativeInstance(a, b, List(a), List(b), List(fn(a) -> b)) {
   ApplicativeInstance(
-    functor: flst(),
-    ap: fn(fab, fa) {
-      fab
-      |> list.flat_map(fn(f) { fmap(f, fa, flst) })
+    functor: flst,
+    pure: fn(x) { [x] },
+    ap: fn(lhs, rhs) {
+      lhs
+      |> list.flat_map(fn(f) { fmap(f, rhs, flst) })
     },
   )
 }
@@ -94,10 +80,11 @@ pub fn aopt() -> ApplicativeInstance(
   Option(fn(a) -> b),
 ) {
   ApplicativeInstance(
-    functor: fopt(),
-    ap: fn(fab, fa) {
-      fab
-      |> option.then(fn(f) { fmap(f, fa, fopt) })
+    functor: fopt,
+    pure: Some,
+    ap: fn(lhs, rhs) {
+      lhs
+      |> option.then(fn(f) { fmap(f, rhs, fopt) })
     },
   )
 }
@@ -110,10 +97,11 @@ pub fn ares() -> ApplicativeInstance(
   Result(fn(a) -> b, e),
 ) {
   ApplicativeInstance(
-    functor: fres(),
-    ap: fn(fab, fa) {
-      fab
-      |> result.then(fn(f) { fmap(f, fa, fres) })
+    functor: fres,
+    pure: Ok,
+    ap: fn(lhs, rhs) {
+      lhs
+      |> result.then(fn(f) { fmap(f, rhs, fres) })
     },
   )
 }

@@ -7,9 +7,11 @@ import gleam/option.{Option, Some}
 // Functors
 //
 
-pub opaque type FunctorInstance(a, b, fa, fb) {
+pub type FunctorInstance(a, b, fa, fb) {
   FunctorInstance(fmap: fn(fn(a) -> b, fa) -> fb)
 }
+
+// Methods
 
 pub fn fmap(
   lhs: fn(a) -> b,
@@ -18,6 +20,8 @@ pub fn fmap(
 ) -> fb {
   instance().fmap(lhs, rhs)
 }
+
+// Instances
 
 pub fn mkfunctor(
   fmapper: fn(fa, fn(a) -> b) -> fb,
@@ -45,12 +49,21 @@ pub fn ffun() -> FunctorInstance(a, b, fn(r) -> a, fn(r) -> b) {
 // Applicatives
 //
 
-pub opaque type ApplicativeInstance(a, b, fa, fb, fab) {
+pub type ApplicativeInstance(a, b, fa, fb, fab) {
   ApplicativeInstance(
     functor: fn() -> FunctorInstance(a, b, fa, fb),
     pure: fn(a) -> fa,
     ap: fn(fab, fa) -> fb,
   )
+}
+
+// Methods
+
+pub fn pure(
+  x: a,
+  instance: fn() -> ApplicativeInstance(a, b, fa, fb, fab),
+) -> fa {
+  instance().pure(x)
 }
 
 pub fn ap(
@@ -60,6 +73,8 @@ pub fn ap(
 ) -> fb {
   instance().ap(lhs, rhs)
 }
+
+// Instances
 
 pub fn alst() -> ApplicativeInstance(a, b, List(a), List(b), List(fn(a) -> b)) {
   ApplicativeInstance(

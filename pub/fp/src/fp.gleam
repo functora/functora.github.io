@@ -79,7 +79,7 @@ pub fn fmap_function(lhs: fn(a) -> b, rhs: fn(r) -> a) -> fn(r) -> b {
 
 pub type ApplicativeInstance(a, b, fa, fb, fab) {
   ApplicativeInstance(
-    functor: fn() -> FunctorInstance(a, b, fa, fb),
+    functor_instance: fn() -> FunctorInstance(a, b, fa, fb),
     pure: fn(a) -> fa,
     ap: fn(fab, fa) -> fb,
   )
@@ -112,7 +112,7 @@ pub fn list_applicative_instance() -> ApplicativeInstance(
   List(fn(a) -> b),
 ) {
   ApplicativeInstance(
-    functor: list_functor_instance,
+    functor_instance: list_functor_instance,
     pure: fn(x) { [x] },
     ap: fn(lhs, rhs) {
       lhs
@@ -129,7 +129,7 @@ pub fn option_applicative_instance() -> ApplicativeInstance(
   Option(fn(a) -> b),
 ) {
   ApplicativeInstance(
-    functor: option_functor_instance,
+    functor_instance: option_functor_instance,
     pure: Some,
     ap: fn(lhs, rhs) {
       lhs
@@ -146,7 +146,7 @@ pub fn result_applicative_instance() -> ApplicativeInstance(
   Result(fn(a) -> b, e),
 ) {
   ApplicativeInstance(
-    functor: result_functor_instance,
+    functor_instance: result_functor_instance,
     pure: Ok,
     ap: fn(lhs, rhs) {
       lhs

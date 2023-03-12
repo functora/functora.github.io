@@ -75,7 +75,7 @@ pub type Wallet {
   Wallet(balance: Int, seed: BitString, info: String)
 }
 
-pub fn example_web_form(
+pub fn applicative_web_form(
   balance: String,
   seed: String,
   info: String,
@@ -88,7 +88,7 @@ pub fn example_web_form(
 }
 
 pub fn example_test() {
-  example_web_form("100", "sRSOkra5qC0=", "Hello!")
+  applicative_web_form("100", "sRSOkra5qC0=", "Hello!")
   |> should.equal(
     Wallet(
       balance: 100,
@@ -97,12 +97,12 @@ pub fn example_test() {
     )
     |> Ok,
   )
-  example_web_form("WORLD!", "sRSOkra5qC0=", "Hello!")
+  applicative_web_form("WORLD!", "sRSOkra5qC0=", "Hello!")
   |> should.equal(Error(Nil))
-  example_web_form("100", "WORLD!", "Hello!")
+  applicative_web_form("100", "WORLD!", "Hello!")
   |> should.equal(Error(Nil))
-  example_web_form("WORLD!", "WORLD!", "Hello!")
+  applicative_web_form("WORLD!", "WORLD!", "Hello!")
   |> should.equal(Error(Nil))
-  example_web_form("WORLD!", "WORLD!", "WORLD!")
+  applicative_web_form("WORLD!", "WORLD!", "WORLD!")
   |> should.equal(Error(Nil))
 }

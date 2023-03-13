@@ -5,12 +5,13 @@ license:             BSD3
 author:              "21it <21it@tuta.io>"
 maintainer:          "21it <21it@tuta.io>"
 copyright:           "2023 Functora <functora@proton.me>"
-synopsis:            Lightning settlement layer
+synopsis:            Haskell to Gleam transpiler
 description:         You can find documentation at
 homepage:            https://github.com/functora/functora.github.io/tree/master/pub/hleam
 category:            Gleam, Erlang, Beam, Transpiler
 
 extra-source-files:
+- ChangeLog.md
 - README.md
 
 flags:
@@ -75,6 +76,7 @@ _deps: &deps
   - extra
   - transformers
   - generic-pretty-instances
+  - ghc-lib-parser >= 9.2.2
 
 _ghcid: &ghcid
   when:
@@ -102,8 +104,6 @@ _optimized: &optimized
   ld-options:
   - -fuse-ld=gold
 
-# The library contains all of our application code. The executable
-# defined below is just a thin wrapper.
 library:
   <<: *deps
   source-dirs:

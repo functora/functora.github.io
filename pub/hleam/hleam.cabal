@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           hleam
 version:        0.1.0.0
-synopsis:       Lightning settlement layer
+synopsis:       Haskell to Gleam transpiler
 description:    You can find documentation at
 category:       Gleam, Erlang, Beam, Transpiler
 homepage:       https://github.com/functora/functora.github.io/tree/master/pub/hleam
@@ -18,6 +18,7 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
+    ChangeLog.md
     README.md
 
 source-repository head
@@ -70,6 +71,7 @@ library
       base
     , extra
     , generic-pretty-instances
+    , ghc-lib-parser >=9.2.2
     , microlens
     , transformers
     , universum
@@ -127,6 +129,7 @@ executable hleam-exe
         base
       , extra
       , generic-pretty-instances
+      , ghc-lib-parser >=9.2.2
       , microlens
       , transformers
       , universum
@@ -190,6 +193,7 @@ test-suite hleam-test
         base
       , extra
       , generic-pretty-instances
+      , ghc-lib-parser >=9.2.2
       , microlens
       , transformers
       , universum

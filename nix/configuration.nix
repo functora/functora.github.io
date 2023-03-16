@@ -3,7 +3,7 @@ let
   vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   yewtube = import ./yewtube.nix {inherit pkgs;};
-  lockCmd = "${pkgs.i3lock}/bin/i3lock --color=000000";
+  lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/d01e7280ad7d13a5a0fae57355bd0dbfe5b81969.tar.gz";
     sha256 = "0qh9r3cc8yh434j8n2licf548gvswillzm8x7rfcfys8p7srkvl8";
@@ -52,11 +52,12 @@ in
       keep-outputs = true
       keep-derivations = true
     '';
+    security.polkit.enable = true;
     #
     # Media
     #
     sound.enable = true;
-    hardware.pulseaudio.enable = true;
+    # hardware.pulseaudio.enable = true;
     hardware.opengl = {
       enable = true;
       extraPackages = with pkgs; [
@@ -81,6 +82,17 @@ in
         yewtube
         niv
         unzip
+        pciutils
+        #
+        # wayland
+        #
+        wlr-randr
+        swaylock
+        swayidle
+        wl-clipboard
+        mako
+        wofi
+        waybar
       ];
       programs.git = {
         enable = true;
@@ -115,6 +127,7 @@ in
           }
           {
             block = "networkmanager";
+            icons_format = "";
           }
           {
             block = "disk_space";
@@ -149,6 +162,7 @@ in
           }
           {
             block = "sound";
+            icons_format = "";
           }
           {
             block = "time";
@@ -159,15 +173,26 @@ in
         ];
       };
       services.udiskie.enable = true;
-      services.unclutter.enable = true;
       services.screen-locker = {
         enable = true;
         inactiveInterval = 5;
         inherit lockCmd;
       };
-      xsession.enable = true;
-      xsession.windowManager.i3 = {
+      services.kanshi = {
         enable = true;
+        profiles = {
+          docked.outputs = [
+            { criteria = "eDP-1"; status = "disable"; }
+            { criteria = "HDMI-A-1"; }
+          ];
+          undocked.outputs = [
+            { criteria = "eDP-1"; status = "enable"; }
+          ];
+        };
+      };
+      wayland.windowManager.sway = {
+        enable = true;
+        wrapperFeatures.gtk = true;
         extraConfig = ''
           for_window [class="Alacritty"] fullscreen enable
           for_window [class="qutebrowser"] fullscreen enable
@@ -179,20 +204,20 @@ in
           with pkgs;
           let mod =
                 "Mod4";
-              i3ex = x:
+              wmEx = x:
                 "exec --no-startup-id ${x}";
               newScreenShot = x:
-                i3ex "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
+                wmEx "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
               newBrightness = x:
-                i3ex "${brightnessctl}/bin/brightnessctl s ${x}";
+                wmEx "${brightnessctl}/bin/brightnessctl s ${x}";
               newPlayerCtl = x:
-                i3ex "${playerctl}/bin/playerctl ${x}";
+                wmEx "${playerctl}/bin/playerctl ${x}";
               newVolChange = x:
-                i3ex "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                wmEx "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
               cmdVolToggle =
-                i3ex "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                wmEx "pactl set-sink-mute @DEFAULT_SINK@ toggle";
               cmdMicToggle =
-                i3ex "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+                wmEx "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
               newMediaKeys = x: {
                 "${x}XF86MonBrightnessDown" = newBrightness "10-";
                 "${x}XF86MonBrightnessUp" = newBrightness "+10";
@@ -205,12 +230,12 @@ in
                 "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
               };
               cfgProgrKeys = {
-                "${mod}+y" = "exec i3-sensible-terminal -e ${yewtube}/bin/yt";
+                "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
                 "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
               };
               cfgBasicKeys = {
-                "Ctrl+Mod1+q" = i3ex lockCmd;
-                "${mod}+Shift+s" = i3ex "${lockCmd} && systemctl suspend";
+                "Ctrl+Mod1+q" = wmEx lockCmd;
+                "${mod}+Shift+s" = wmEx "${lockCmd} && systemctl suspend";
                 "${mod}+h" = "focus left";
                 "${mod}+j" = "focus down";
                 "${mod}+k" = "focus up";
@@ -233,9 +258,13 @@ in
                     cfgBasicKeys
                   );
                 bars = [{
+                  mode = "dock";
+                  position = "bottom";
+                  trayOutput = "none";
                   statusCommand =
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
+                seat = { "*" = { hide_cursor = "2000"; }; };
               };
       };
     };
@@ -269,13 +298,10 @@ in
       # GUI
       #
       enable = true;
-      windowManager.i3.enable = true;
-      desktopManager.xterm.enable = false;
-      displayManager = {
-        defaultSession = "none+i3";
-        sessionCommands = "${pkgs.xorg.xmodmap}/bin/xmodmap ${xkb}";
-      };
+      displayManager.gdm.enable = true;
+      displayManager.gdm.wayland = true;
+      displayManager.sessionPackages = [ pkgs.sway ];
+      displayManager.defaultSession = "sway";
     };
   };
 }
-

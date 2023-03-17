@@ -58,7 +58,22 @@ in
     # Media
     #
     sound.enable = true;
-    # hardware.pulseaudio.enable = true;
+    hardware.pulseaudio.enable = false;
+    security.rtkit.enable = true;
+    services.pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      # If you want to use JACK applications, uncomment this
+      #jack.enable = true;
+
+      # use the example session manager (no others are packaged yet so this is enabled by default,
+      # no need to redefine it in your config for now)
+      #media-session.enable = true;
+    };
+
+
     hardware.opengl = {
       enable = true;
       extraPackages = with pkgs; [
@@ -103,6 +118,7 @@ in
         enable = true;
         settings = {
           font.size = 14;
+          window.startup_mode = "Fullscreen";
         };
       };
       #
@@ -168,6 +184,8 @@ in
           }
           {
             block = "sound";
+            format = " VOL {volume}";
+            show_volume_when_muted = true;
             icons_format = "";
           }
           {
@@ -219,11 +237,11 @@ in
               newPlayerCtl = x:
                 wmEx "${playerctl}/bin/playerctl ${x}";
               newVolChange = x:
-                wmEx "pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+                wmEx "${pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ ${x}";
               cmdVolToggle =
-                wmEx "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+                wmEx "${pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
               cmdMicToggle =
-                wmEx "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+                wmEx "${pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
               newMediaKeys = x: {
                 "${x}XF86MonBrightnessDown" = newBrightness "10-";
                 "${x}XF86MonBrightnessUp" = newBrightness "+10";

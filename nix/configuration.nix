@@ -53,6 +53,7 @@ in
       keep-derivations = true
     '';
     security.polkit.enable = true;
+    security.pam.services.swaylock = {};
     #
     # Media
     #
@@ -76,7 +77,6 @@ in
         vi
         tree
         s-tui
-        alacritty
         qutebrowser
         xorg.xev
         yewtube
@@ -98,6 +98,12 @@ in
         enable = true;
         userName = "functora";
         userEmail = "functora@proton.me";
+      };
+      programs.alacritty = {
+        enable = true;
+        settings = {
+          font.size = 14;
+        };
       };
       #
       # NOTE : direnv is used to cache nix development shells
@@ -230,12 +236,13 @@ in
                 "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
               };
               cfgProgrKeys = {
+                "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
                 "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
                 "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
               };
               cfgBasicKeys = {
                 "Ctrl+Mod1+q" = wmEx lockCmd;
-                "${mod}+Shift+s" = wmEx "${lockCmd} && systemctl suspend";
+                "${mod}+Shift+s" = wmEx "systemctl suspend";
                 "${mod}+h" = "focus left";
                 "${mod}+j" = "focus down";
                 "${mod}+k" = "focus up";

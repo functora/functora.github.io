@@ -98,7 +98,6 @@ in
         niv
         unzip
         pciutils
-        xorg.xkbcomp
         #
         # wayland
         #
@@ -133,6 +132,10 @@ in
       home.file = {
         ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
+        ".xkb" = {
+          source = ./xkb;
+          recursive = true;
+        };
       };
       programs.i3status-rust = {
         enable = true;
@@ -291,12 +294,7 @@ in
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
                 seat = { "*" = { hide_cursor = "2000"; }; };
-                # input = { "*" = {
-                #     xkb_layout = "us,ru";
-                #     xkb_variant = "altgr-intl";
-                #     xkb_options = "grp:ctrls_toggle";
-                #   };
-                # };
+                input = { "*" = { xkb_file = "~/.xkb/keymap/custom"; }; };
               };
       };
     };
@@ -334,10 +332,6 @@ in
       displayManager.gdm.wayland = true;
       displayManager.defaultSession = "sway";
       displayManager.sessionPackages = [ pkgs.sway ];
-      displayManager.sessionCommands = ''
-        ${pkgs.xorg.xkbcomp}/bin/xkbcomp \
-          -w0 -I${./xkb} -R${./xkb} keymap/custom $DISPLAY
-      '';
     };
   };
 }

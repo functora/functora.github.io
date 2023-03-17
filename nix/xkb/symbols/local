@@ -1,0 +1,172 @@
+xkb_symbols "local" {
+  modifier_map Mod3 { ISO_Level5_Shift };
+  modifier_map Mod5 { ISO_Level3_Shift };
+  modifier_map Mod4 { Super_L };
+  key.type = "ONE_LEVEL";
+  key <CAPS> { [ ISO_Level5_Shift ] };
+  key <RTSH> { [ Return ] };
+  key.type = "MEGAMOD";
+  key <TAB> { [
+    Escape, Escape, Escape, Escape,
+    ISO_Level3_Shift, ISO_Level3_Shift, ISO_Level3_Shift
+  ] };
+  key <HELP> { [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Tab, Tab ] };
+  key <SPCE> { actions = [
+    NoAction(),
+    NoAction(),
+    NoAction(),
+    NoAction(),
+    RedirectKey(keycode=<HELP>),
+    RedirectKey(keycode=<HELP>, modifiers=Shift)
+  ] };
+  key <AE01> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F1 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F1 ]
+  };
+  key <AE02> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F2 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F2 ]
+  };
+  key <AE03> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F3, XF86MonBrightnessDown ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F3, XF86MonBrightnessDown ]
+  };
+  key <AE04> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F4, XF86MonBrightnessUp ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F4, XF86MonBrightnessUp ]
+  };
+  key <AE05> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F5, XF86AudioMicMute ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F5, XF86AudioMicMute ]
+  };
+  key <AE06> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F6 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F6 ]
+  };
+  key <AE07> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F7, XF86AudioPrev ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F7, XF86AudioPrev ]
+  };
+  key <AE08> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F8, XF86AudioPlay ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F8, XF86AudioPlay ]
+  };
+  key <AE09> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F9, XF86AudioNext ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F9, XF86AudioNext ]
+  };
+  key <AE10> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F10, XF86AudioMute ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F10, XF86AudioMute ]
+  };
+  key <AE11> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F11, XF86AudioLowerVolume ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F11, XF86AudioLowerVolume ]
+  };
+  key <AE12> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F12, XF86AudioRaiseVolume ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F12, XF86AudioRaiseVolume ]
+  };
+  key <BKSL> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, grave, asciitilde ],
+    symbols[Group2] =
+      [ Cyrillic_io, Cyrillic_IO, NoSymbol, NoSymbol, grave, asciitilde ]
+  };
+  key <AD06> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, KP_Insert ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, KP_Insert ]
+  };
+  key <AD07> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button1 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button1 ]
+  };
+  key <AD08> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button3 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button3 ]
+  };
+  key <AD09> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, KP_Delete ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, KP_Delete ]
+  };
+  key <AC06> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Left, Home, KP_4 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Left, Home, KP_4 ]
+  };
+  key <AC07> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Down, Next, KP_2 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Down, Next, KP_2 ]
+  };
+  key <AC08> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Up, Prior, KP_8 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Up, Prior, KP_8 ]
+  };
+  key <AC09> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Right, End, KP_6 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Right, End, KP_6 ]
+  };
+  key <AB06> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button1 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button1 ]
+  };
+  key <AB07> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Delete, Delete, XF86ScrollDown ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Delete, Delete, XF86ScrollDown ]
+  };
+  key <AB08> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Insert, Insert, XF86ScrollUp ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Insert, Insert, XF86ScrollUp ]
+  };
+  key <AB09> {
+    symbols[Group1] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button3 ],
+    symbols[Group2] =
+      [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, Pointer_Button3 ]
+  };
+};

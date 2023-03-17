@@ -98,6 +98,7 @@ in
         niv
         unzip
         pciutils
+        xorg.xkbcomp
         #
         # wayland
         #
@@ -290,6 +291,12 @@ in
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
                 seat = { "*" = { hide_cursor = "2000"; }; };
+                # input = { "*" = {
+                #     xkb_layout = "us,ru";
+                #     xkb_variant = "altgr-intl";
+                #     xkb_options = "grp:ctrls_toggle";
+                #   };
+                # };
               };
       };
     };
@@ -325,8 +332,12 @@ in
       enable = true;
       displayManager.gdm.enable = true;
       displayManager.gdm.wayland = true;
-      displayManager.sessionPackages = [ pkgs.sway ];
       displayManager.defaultSession = "sway";
+      displayManager.sessionPackages = [ pkgs.sway ];
+      displayManager.sessionCommands = ''
+        ${pkgs.xorg.xkbcomp}/bin/xkbcomp \
+          -w0 -I${./xkb} -R${./xkb} keymap/custom $DISPLAY
+      '';
     };
   };
 }

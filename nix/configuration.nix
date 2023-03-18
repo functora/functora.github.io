@@ -101,33 +101,36 @@ in
     services.kmonad = {
       enable = true;
       package = kmonad-pkg;
-      keyboards.sixty = rec {
+      # extraArgs = [ "--log-level" "debug" ];
+      keyboards.gk61 = {
         device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
+        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
         config = ''
           (deflayer qwerty
             _    _    _    _    _    _    _    _    _    _    _    _    _    _
             _    _    _    _    _    _    _    _    _    _    _    _    _    _
             _    _    _    _    _    _    _    _    _    _    _    _    _
             _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _              _              _    _    _    _
+            _    _    _              _              1    8    9
           )
           (defsrc
             esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
             tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
             caps a    s    d    f    g    h    j    k    l    ;    '    ret
             lsft z    x    c    v    b    n    m    ,    .    /    rsft
-            lctl lmet lalt           spc            ralt rmet cmp  rctl
-          )
-          (defcfg
-            input  (device-file "${device}")
-            output (uinput-sink "kmonad output")
-            cmp-seq ralt
-            cmp-seq-delay 5
-            fallthrough true
-            allow-cmd false
+            lctl lmet lalt           spc            ralt cmp  rctl
           )
         '';
       };
+    };
+
+    users.users.${config.services.functora.userName} = {
+      isNormalUser = true;
+      description = config.services.functora.userName;
+      extraGroups = [ "networkmanager" "wheel" "input" "uinput" ];
+      packages = with pkgs; [
+        firefox
+      ];
     };
 
     #

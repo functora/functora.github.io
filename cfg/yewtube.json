@@ -3,7 +3,7 @@
   "USER_ORDER": "",
   "MAX_RESULTS": 19,
   "CONSOLE_WIDTH": 80,
-  "MAX_RES": 2160,
+  "MAX_RES": 720,
   "PLAYER": "mpv",
   "PLAYERARGS": "--vo=gpu --hwdec=vaapi",
   "ENCODER": 0,

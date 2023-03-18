@@ -10,15 +10,7 @@ xkb_symbols "local" {
     Escape, Escape, Escape, Escape,
     ISO_Level3_Shift, ISO_Level3_Shift, ISO_Level3_Shift
   ] };
-  key <HELP> { [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Tab, Tab ] };
-  key <SPCE> { actions = [
-    NoAction(),
-    NoAction(),
-    NoAction(),
-    NoAction(),
-    RedirectKey(keycode=<HELP>),
-    RedirectKey(keycode=<HELP>, modifiers=Shift)
-  ] };
+  key <SPCE> { [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, Tab, ISO_Left_Tab ] };
   key <AE01> {
     symbols[Group1] =
       [ NoSymbol, NoSymbol, NoSymbol, NoSymbol, F1 ],

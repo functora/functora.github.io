@@ -8,10 +8,24 @@ let
     url = "https://github.com/nix-community/home-manager/archive/d01e7280ad7d13a5a0fae57355bd0dbfe5b81969.tar.gz";
     sha256 = "0qh9r3cc8yh434j8n2licf548gvswillzm8x7rfcfys8p7srkvl8";
   };
+  kmonad-srv = builtins.fetchTarball {
+    url = "https://github.com/kmonad/kmonad/archive/3413f1be996142c8ef4f36e246776a6df7175979.tar.gz";
+    sha256 = "0mm439r5qkkpld51spbkmn0qy27sff6iw8c7mb87x73xk4z5cjxq";
+  };
+  kmonad-src = builtins.fetchTarball {
+    url = "https://github.com/kmonad/kmonad/archive/820af08d1ef1bff417829415d5f673041b67ef4d.tar.gz";
+    sha256 = "0kkayvcc9jmjm1z1rgabkq36hyrpqdkm8z998dsyg6yh05aqpfzz";
+  };
+  kmonad-pkg = (import (
+    fetchTarball {
+      url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
+      sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
+  ) { src = "${kmonad-src}/nix"; }).defaultNix.default;
 in
 {
   imports = [
     (import "${home-manager}/nixos")
+    (import "${kmonad-srv}/nix/nixos-module.nix")
   ];
 
   options.services.functora = with lib; {
@@ -83,6 +97,39 @@ in
         libvdpau-va-gl
       ];
     };
+
+    services.kmonad = {
+      enable = true;
+      package = kmonad-pkg;
+      keyboards.sixty = rec {
+        device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
+        config = ''
+          (deflayer qwerty
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _              _              _    _    _    _
+          )
+          (defsrc
+            esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+            tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+            caps a    s    d    f    g    h    j    k    l    ;    '    ret
+            lsft z    x    c    v    b    n    m    ,    .    /    rsft
+            lctl lmet lalt           spc            ralt rmet cmp  rctl
+          )
+          (defcfg
+            input  (device-file "${device}")
+            output (uinput-sink "kmonad output")
+            cmp-seq ralt
+            cmp-seq-delay 5
+            fallthrough true
+            allow-cmd false
+          )
+        '';
+      };
+    };
+
     #
     # Home
     #
@@ -312,7 +359,7 @@ in
       #
       layout = "us,ru";
       xkbVariant = "altgr-intl,";
-      xkbOptions = "grp:alt_space_toggle";
+      xkbOptions = "grp:alt_space_toggle,compose:ralt";
       #
       # Touchpad
       #

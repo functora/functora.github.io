@@ -1967,6 +1967,7 @@ c.content.autoplay = False
 c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"
 c.content.webrtc_ip_handling_policy = "disable-non-proxied-udp"
+c.content.site_specific_quirks.enabled = True
 
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
@@ -1977,7 +1978,7 @@ c.url.searchengines = {
         'github': 'https://github.com/search?type=code&q={}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
-        'nix': 'https://search.nixos.org/packages?query={}'
+        'nixpkgs': 'https://search.nixos.org/packages?query={}'
 }
 
 config.set('content.images', True, '*://*.openai.com/*')

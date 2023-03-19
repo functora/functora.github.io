@@ -358,6 +358,8 @@ in
                 "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
                 "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
                 "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";
+                "${mod}+0" = "workspace number 10";
+                "${mod}+Shift+0" = "move container to workspace number 10";
               };
           in  {
                 modifier = mod;

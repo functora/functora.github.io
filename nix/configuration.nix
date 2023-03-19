@@ -184,6 +184,7 @@ in
         unzip
         pciutils
         docker-compose
+        htop
         #
         # wayland
         #
@@ -386,11 +387,18 @@ in
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
                 seat = { "*" = { hide_cursor = "2000"; }; };
-                #
-                # NOTE : moved from xkb to kmonad
-                # for better cross-system compatibility
-                #
-                # input = { "*" = { xkb_file = "~/.xkb/keymap/custom"; }; };
+                input = { "*" = {
+                  #
+                  # NOTE : Moved from xkb to kmonad
+                  # for better cross-system compatibility.
+                  # Also can add 'compose:ralt' option if
+                  # advanced symbol composition is needed.
+                  #
+                  # xkb_file = "~/.xkb/keymap/custom";
+                  xkb_layout = "us,ru";
+                  xkb_variant = "altgr-intl,";
+                  xkb_options = "grp:ctrls_toggle";
+                }; };
               };
       };
     };
@@ -403,12 +411,6 @@ in
     #
     environment.pathsToLink = ["/libexec"];
     services.xserver = {
-      #
-      # Keyboard
-      #
-      layout = "us,ru";
-      xkbVariant = "altgr-intl,";
-      xkbOptions = "grp:alt_space_toggle,compose:ralt";
       #
       # Touchpad
       #

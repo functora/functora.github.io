@@ -9,6 +9,3 @@ scroll_up: ,
 buttons: u o i
 drag: y
 grid_keys: h k j l
-
-
-

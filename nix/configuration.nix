@@ -105,13 +105,16 @@ in
       keyboards.gk61 = {
         device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
         defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        #
+        # TODO : no mouse actions support atm,
+        # try to use warpd
+        #
         config = ''
-          (deflayer qwerty
-            _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _              _              1    8    9
+          (defalias
+            fst  (layer-toggle fst-layer)
+            snd  (layer-toggle snd-layer)
+            trd  (layer-toggle trd-layer)
+            ltab (around lsft tab)
           )
           (defsrc
             esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
@@ -119,6 +122,34 @@ in
             caps a    s    d    f    g    h    j    k    l    ;    '    ret
             lsft z    x    c    v    b    n    m    ,    .    /    rsft
             lctl lmet lalt           spc            ralt cmp  rctl
+          )
+          (deflayer qwerty
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            esc  _    _    _    _    _    _    _    _    _    _    _    _    _
+            @fst _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    ret
+            _    _    _              _              _    _    _
+          )
+          (deflayer fst-layer
+            _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _
+            @snd _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    lft  down up   rght _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _              tab            _    _    _
+          )
+          (deflayer snd-layer
+            _    brdn bru  _    _    _    _    prev pp   next mute vold volu _
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    home pgdn pgup end  _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _
+            _    @trd _              @ltab          _    _    _
+          )
+          (deflayer trd-layer
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    sdn  sup  _    _    _
+            _    _    _              _              _    _    _
           )
         '';
       };
@@ -344,7 +375,11 @@ in
                     "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
                 }];
                 seat = { "*" = { hide_cursor = "2000"; }; };
-                input = { "*" = { xkb_file = "~/.xkb/keymap/custom"; }; };
+                #
+                # NOTE : moved from xkb to kmonad
+                # for better cross-system compatibility
+                #
+                # input = { "*" = { xkb_file = "~/.xkb/keymap/custom"; }; };
               };
       };
     };

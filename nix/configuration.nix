@@ -2,6 +2,7 @@
 let
   vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
+  unst = import ./nixpkgs-unstable.nix;
   yewtube = import ./yewtube.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
@@ -105,10 +106,6 @@ in
       keyboards.gk61 = {
         device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
         defcfg = { enable = true; fallthrough = true; allowCommands = false; };
-        #
-        # TODO : no mouse actions support atm,
-        # try to use warpd
-        #
         config = ''
           (defalias
             fst  (layer-toggle fst-layer)
@@ -213,6 +210,7 @@ in
       home.file = {
         ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
+        ".config/warpd/config".source = ../cfg/warpd.txt;
         ".xkb" = {
           source = ./xkb;
           recursive = true;
@@ -356,6 +354,9 @@ in
                 "${mod}+Shift+l" = "move right";
                 "${mod}+Shift+p" = newScreenShot "";
                 "${mod}+Shift+n" = newScreenShot "--select";
+                "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
+                "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
+                "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";
               };
           in  {
                 modifier = mod;

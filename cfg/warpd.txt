@@ -1,0 +1,14 @@
+cursor_color: #FF4500
+grid_color: #1c1c1e
+grid_border_color: #008080
+hint_bgcolor: #1c1c1e
+hint_fgcolor: #a1aba7
+indicator_color: #00ff00
+scroll_down: m
+scroll_up: ,
+buttons: u o i
+drag: y
+grid_keys: h k j l
+
+
+

@@ -153,10 +153,16 @@ in
       };
     };
 
+    virtualisation.docker.enable = true;
+    virtualisation.docker.rootless = {
+      enable = true;
+      setSocketVariable = true;
+    };
+
     users.users.${config.services.functora.userName} = {
       isNormalUser = true;
       description = config.services.functora.userName;
-      extraGroups = [ "networkmanager" "wheel" "input" "uinput" ];
+      extraGroups = [ "networkmanager" "wheel" "input" "uinput" "docker" ];
       packages = with pkgs; [
         firefox
       ];
@@ -177,6 +183,7 @@ in
         niv
         unzip
         pciutils
+        docker-compose
         #
         # wayland
         #

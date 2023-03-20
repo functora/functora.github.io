@@ -153,12 +153,10 @@ in
       };
     };
 
-    networking.useDHCP = false;
     networking.firewall.enable = true;
     networking.firewall.trustedInterfaces = [ "docker0" ];
     virtualisation.docker.enable = true;
     virtualisation.docker.liveRestore = false;
-    virtualisation.docker.extraOptions = "--iptables=false --ip6tables=false";
 
     users.users.${config.services.functora.userName} = {
       isNormalUser = true;

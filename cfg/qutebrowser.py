@@ -1968,6 +1968,11 @@ c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"
 c.content.webrtc_ip_handling_policy = "disable-non-proxied-udp"
 c.content.site_specific_quirks.enabled = True
+c.content.notifications.enabled = False
+c.content.desktop_capture = False
+c.content.geolocation = False
+c.content.mouse_lock = False
+c.content.javascript.can_access_clipboard = True
 
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'

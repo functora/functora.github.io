@@ -184,6 +184,7 @@ in
         pciutils
         docker-compose
         htop
+        lsof
         #
         # wayland
         #

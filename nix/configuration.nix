@@ -28,6 +28,9 @@ in
     (import "${home-manager}/nixos")
     (import "${kmonad-srv}/nix/nixos-module.nix")
   ];
+  #  ++ pkgs.lib.optional
+  #       (builtins.pathExists ./../prv/nix/configuration.nix)
+  #       [import ./../prv/nix/configuration.nix];
 
   options.services.functora = with lib; {
     userName = mkOption {
@@ -154,14 +157,15 @@ in
     };
 
     networking.firewall.enable = true;
-    networking.firewall.trustedInterfaces = [ "docker0" ];
-    virtualisation.docker.enable = true;
-    virtualisation.docker.liveRestore = false;
+    virtualisation.docker.enable = false;
+    virtualisation.podman.enable = true;
+    virtualisation.podman.dockerSocket.enable = true;
+    virtualisation.podman.defaultNetwork.dnsname.enable = true;
 
     users.users.${config.services.functora.userName} = {
       isNormalUser = true;
       description = config.services.functora.userName;
-      extraGroups = [ "networkmanager" "wheel" "input" "uinput" "docker" ];
+      extraGroups = [ "networkmanager" "wheel" "input" "uinput" "docker" "podman" ];
       packages = with pkgs; [
         firefox
       ];
@@ -185,6 +189,7 @@ in
         docker-compose
         htop
         lsof
+        wget
         #
         # wayland
         #

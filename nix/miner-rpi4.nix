@@ -6,6 +6,7 @@ let
   wifiNet = "TODO";
   wifiPwd = "TODO";
   xmrAddr = "TODO";
+  xmrSolo = false;
   machine = "miner-rpi4";
   archive = builtins.fetchTarball {
     url = "https://github.com/NixOS/nixos-hardware/archive/f38f9a4c9b2b6f89a5778465e0afd166a8300680.tar.gz";
@@ -52,7 +53,7 @@ in {
     pools = [{
       url = "pool.hashvault.pro:80";
       coin = "XMR";
-      user = xmrAddr;
+      user = if xmrSolo then "solo:${xmrAddr}" else xmrAddr;
       nicehash = false;
       keepalive = false;
       tls = true;

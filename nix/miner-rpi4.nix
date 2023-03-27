@@ -50,9 +50,13 @@ in {
     cuda = false;
     cpu = true;
     pools = [{
-      url = "xmr-us-east1.nanopool.org:14444";
+      url = "pool.hashvault.pro:80";
       coin = "XMR";
       user = xmrAddr;
+      nicehash = false;
+      keepalive = false;
+      tls = true;
+      tls-fingerprint = "420c7850e09b7c0bdcf748a7da9eb3647daf8515718f36d9ccfdd6b9ff834b14";
     }];
   };
 }

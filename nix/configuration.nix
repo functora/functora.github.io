@@ -340,8 +340,8 @@ in
               cmdMicToggle =
                 wmEx "${pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
               newMediaKeys = x: {
-                "${x}XF86MonBrightnessDown" = newBrightness "10-";
-                "${x}XF86MonBrightnessUp" = newBrightness "+10";
+                "${x}XF86MonBrightnessDown" = newBrightness "1000-";
+                "${x}XF86MonBrightnessUp" = newBrightness "+1000";
                 "${x}XF86AudioMicMute" = cmdMicToggle;
                 "${x}XF86AudioPrev" = newPlayerCtl "previous";
                 "${x}XF86AudioPlay" = newPlayerCtl "play-pause";

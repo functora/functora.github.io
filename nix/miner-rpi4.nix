@@ -47,7 +47,6 @@ in {
     cpu = true;
     opencl = false;
     cuda = false;
-    randomx."1gb-pages" = true;
     pools = [{
       url = "pool.supportxmr.com:3333";
       user = xmrAddr;

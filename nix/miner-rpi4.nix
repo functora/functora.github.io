@@ -50,7 +50,8 @@ in {
     cuda = false;
     cpu = true;
     pools = [{
-      url = "pool.supportxmr.com:3333";
+      url = "xmr-us-east1.nanopool.org:14444";
+      coin = "XMR";
       user = xmrAddr;
     }];
   };

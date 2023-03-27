@@ -41,16 +41,17 @@ in {
   };
 
   environment.systemPackages = with pkgs; [ vim htop ];
+  services.fail2ban.enable = true;
+  services.openssh.enable = true;
   services.xmrig.enable = true;
   services.xmrig.settings = {
     autosave = true;
-    cpu = true;
     opencl = false;
     cuda = false;
+    cpu = true;
     pools = [{
       url = "pool.supportxmr.com:3333";
       user = xmrAddr;
-      keepalive = true;
     }];
   };
 }

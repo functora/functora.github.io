@@ -393,10 +393,11 @@ in
               cfgProgrKeys = {
                 "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
                 "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
-                "${mod}+q" = "exec ${qutebrowser}/bin/qutebrowser";
+                "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
               };
               cfgBasicKeys = {
                 "Ctrl+Mod1+q" = wmEx lockCmd;
+                "Ctrl+${mod}+q" = wmEx lockCmd;
                 "${mod}+Shift+s" = wmEx "systemctl suspend";
                 "${mod}+h" = "focus left";
                 "${mod}+j" = "focus down";

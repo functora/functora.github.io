@@ -41,7 +41,14 @@ in {
     };
   };
 
+  boot.cleanTmpDir = true;
+  nix.settings.auto-optimise-store = true;
   environment.systemPackages = with pkgs; [ vim htop ];
+  services.journald.extraConfig = ''
+    SystemMaxUse=100M
+    MaxFileSec=7day
+  '';
+
   services.fail2ban.enable = true;
   services.openssh.enable = true;
   services.xmrig.enable = true;

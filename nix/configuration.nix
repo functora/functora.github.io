@@ -367,8 +367,6 @@ in
                 "Mod4";
               wmEx = x:
                 "exec --no-startup-id ${x}";
-              newScreenShot = x:
-                wmEx "${maim}/bin/maim ${x} | ${xclip}/bin/xclip -selection clipboard -t image/png";
               newBrightness = x:
                 wmEx "${brightnessctl}/bin/brightnessctl s ${x}";
               newPlayerCtl = x:
@@ -407,8 +405,8 @@ in
                 "${mod}+Shift+j" = "move down";
                 "${mod}+Shift+k" = "move up";
                 "${mod}+Shift+l" = "move right";
-                "${mod}+Shift+p" = newScreenShot "";
-                "${mod}+Shift+n" = newScreenShot "--select";
+                "${mod}+Shift+p" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy output";
+                "${mod}+Shift+n" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy area";
                 "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
                 "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
                 "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";

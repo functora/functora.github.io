@@ -1974,6 +1974,7 @@ c.content.geolocation = False
 c.content.mouse_lock = False
 c.content.javascript.can_access_clipboard = True
 c.content.pdfjs = True
+c.content.blocking.method = "both"
 
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'

@@ -73,9 +73,11 @@ in
     nix.settings.max-jobs = 1;
     nix.settings.trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+      "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
     ];
     nix.settings.substituters = [
       "https://cache.iog.io"
+      "https://nixcache.reflex-frp.org"
     ];
     nix.extraOptions = ''
       keep-outputs = true

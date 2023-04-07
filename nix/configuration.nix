@@ -40,7 +40,7 @@ in
     (import "${kmonad-srv}/nix/nixos-module.nix")
   ] ++ (
     if builtins.pathExists ./../prv/nix/configuration.nix
-    then [ import ./../prv/nix/configuration.nix ]
+    then [ (import ./../prv/nix/configuration.nix) ]
     else [ ]
   );
 

@@ -141,12 +141,12 @@ in
             esc  _    _    _    _    _              _    _    _    _    _    _    _    _         _
             @fst _    _    _    _    _              _    _    _    _    _    _    _              _
             _    _    _    _    _    _              _    _    _    _    _    _    ret       _    _
-            _         _         _         _         _                   _              _    _    _
+            _         _         _         ralt      _                   _              _    _    _
           )
           (deflayer fst-layer
             _    f1   f2   f3   f4   f5   f6             f7   f8   f9   f10  f11  f12  _
             @snd _    _    _    _    _              _    _    _    _    _    _    _    grv       _
-            _    _    _    _    _    _              lft  down up   rght _    _    _              _
+            _    _    _    slck _    _              lft  down up   rght _    _    _              _
             _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
             _         _         tab       _         tab                 _              _    _    _
           )
@@ -455,7 +455,7 @@ in
                   # xkb_file = "~/.xkb/keymap/custom";
                   xkb_layout = "us,ru";
                   xkb_variant = "altgr-intl,";
-                  xkb_options = "grp:ctrls_toggle";
+                  xkb_options = "grp:sclk_toggle";
                 }; };
               };
       };

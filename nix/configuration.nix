@@ -38,10 +38,11 @@ in
   imports = [
     (import "${home-manager}/nixos")
     (import "${kmonad-srv}/nix/nixos-module.nix")
-  ];
-  #  ++ pkgs.lib.optional
-  #       (builtins.pathExists ./../prv/nix/configuration.nix)
-  #       [import ./../prv/nix/configuration.nix];
+  ] ++ (
+    if builtins.pathExists ./../prv/nix/configuration.nix
+    then [ import ./../prv/nix/configuration.nix ]
+    else [ ]
+  );
 
   options.services.functora = with lib; {
     userName = mkOption {

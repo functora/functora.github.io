@@ -22,6 +22,10 @@ let
       url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
       sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
   ) { src = "${kmonad-src}/nix"; }).defaultNix.default;
+  obelisk = import (fetchTarball {
+    url = "https://github.com/obsidiansystems/obelisk/archive/41f97410cfa2e22a4ed9e9344abcd58bbe0f3287.tar.gz";
+    sha256 = "04bpzji7y3nz573ib3g6icb56s5zbj4zxpakhqaql33v2v77hi9g";
+  }){};
   blocked-hosts =
     builtins.concatStringsSep "\n"
       (builtins.map (x: "127.0.0.1 ${x}") [
@@ -254,6 +258,10 @@ in
         mako
         wofi
         waybar
+        #
+        # development
+        #
+        obelisk.command
       ];
       programs.git = {
         enable = true;

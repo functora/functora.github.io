@@ -219,6 +219,8 @@ in
     virtualisation.podman.enable = true;
     virtualisation.podman.dockerSocket.enable = true;
     virtualisation.podman.defaultNetwork.dnsname.enable = true;
+    virtualisation.virtualbox.host.enable = true;
+    users.extraGroups.vboxusers.members = [ config.services.functora.userName ];
 
     users.users.${config.services.functora.userName} = {
       isNormalUser = true;
@@ -383,6 +385,11 @@ in
           for_window [class="mpv"] fullscreen enable
           assign [class="qutebrowser"] workspace 10
           assign [class="mpv"] workspace 8
+
+          bindsym Mod4+Shift+z mode "hotkeygrab"
+          mode "hotkeygrab" {
+            bindsym Mod4+Shift+z mode "default"
+          }
         '';
         config =
           with pkgs;

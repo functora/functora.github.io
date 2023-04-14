@@ -76,6 +76,10 @@ in
     #
     nix.settings.cores = 1;
     nix.settings.max-jobs = 1;
+    nix.settings.trusted-users = [
+      "root"
+      config.services.functora.userName
+    ];
     nix.settings.trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
       "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
@@ -83,6 +87,9 @@ in
     nix.settings.substituters = [
       "https://cache.iog.io"
       "https://nixcache.reflex-frp.org"
+    ];
+    nix.settings.experimental-features = [
+      "nix-command"
     ];
     nix.extraOptions = ''
       keep-outputs = true

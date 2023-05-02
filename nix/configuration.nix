@@ -244,7 +244,6 @@ in
         tree
         s-tui
         qutebrowser
-        chromium
         xorg.xev
         yewtube
         niv
@@ -264,10 +263,6 @@ in
         mako
         wofi
         waybar
-        #
-        # development
-        #
-        obelisk.command
       ];
       programs.git = {
         enable = true;

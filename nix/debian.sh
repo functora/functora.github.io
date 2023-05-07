@@ -119,6 +119,7 @@ sudo apt-get update -y
   log_bundle "apps"
   lazy_install "git"
   lazy_install "brave"
+  lazy_install "ssh-keygen" "openssh"
 )
 
 sudo apt-get autoremove -y

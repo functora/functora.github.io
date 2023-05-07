@@ -46,9 +46,12 @@ log_already_installed () {
 }
 
 lazy_copy () {
-  local DOTFILES_SOURCE="$DOTFILES_SOURCE_DIR/$1"
-  local DOTFILES_TARGET="$2"
-  local DOTFILES_TARGET_DIR="$(dirname "$(readlink -m "$2")")"
+  local DOTFILES_SOURCE
+  local DOTFILES_TARGET
+  local DOTFILES_TARGET_DIR
+  DOTFILES_SOURCE="$DOTFILES_SOURCE_DIR/$1"
+  DOTFILES_TARGET="$2"
+  DOTFILES_TARGET_DIR="$(dirname "$(readlink -m "$2")")"
   if [ -d "$DOTFILES_TARGET_DIR" ]; then
     log_already_exists "$DOTFILES_TARGET_DIR"
   else
@@ -71,7 +74,8 @@ lazy_install () {
   # 1st arg = executable name (required)
   # 2nd arg = pkg name (optional)
   # 3rd arg = installation command (optional)
-  local PKG="$([ -z "$2" ] && echo "$1" || echo "$2")"
+  local PKG
+  PKG="$([ -z "$2" ] && echo "$1" || echo "$2")"
   (command -v "$1" > /dev/null || \
     nix-env -q | grep "$1" > /dev/null || \
     nix-env -q | grep "$PKG" > /dev/null ) && \

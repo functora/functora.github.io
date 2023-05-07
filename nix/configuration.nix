@@ -263,6 +263,10 @@ in
         mako
         wofi
         waybar
+        #
+        # programming
+        #
+        shellcheck
       ];
       programs.git = {
         enable = true;

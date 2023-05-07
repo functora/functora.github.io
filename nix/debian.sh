@@ -112,7 +112,8 @@ sudo apt-get update -y
 )
 
 (
-  log_bundle "web"
+  log_bundle "apps"
+  lazy_install "git"
   lazy_install "brave"
 )
 

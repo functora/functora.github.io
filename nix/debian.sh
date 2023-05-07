@@ -119,6 +119,7 @@ sudo apt-get update -y
   log_bundle "apps"
   lazy_install "git"
   lazy_install "brave"
+  lazy_install "direnv"
   lazy_install "ssh-keygen" "openssh"
   sh -c "$DOTFILES_SOURCE_DIR/../pub/vi/nix/install.sh"
 )

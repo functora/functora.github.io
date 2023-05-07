@@ -227,5 +227,5 @@ bindsym Ctrl+Mod1+q exec "i3lock --color=000000"
 bindsym $mod+Shift+p exec maim | xclip -selection clipboard -t image/png
 bindsym $mod+Shift+n exec maim --select | xclip -selection clipboard -t image/png
 
-for_window [class="termite"] fullscreen enable
-for_window [class="brave"] fullscreen enable
+for_window [class="Termite"] fullscreen enable
+for_window [class="Brave-browser"] fullscreen enable

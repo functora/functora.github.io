@@ -120,6 +120,7 @@ sudo apt-get update -y
   lazy_install "git"
   lazy_install "brave"
   lazy_install "ssh-keygen" "openssh"
+  sh -c "$DOTFILES_SOURCE_DIR/../pub/vi/nix/install.sh"
 )
 
 sudo apt-get autoremove -y

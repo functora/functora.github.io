@@ -49,7 +49,10 @@ bindsym Mod3+Mod5+XF86AudioMicMute exec --no-startup-id pactl set-source-mute @D
 floating_modifier $mod
 
 # start a terminal
-bindsym $mod+Return exec i3-sensible-terminal
+bindsym $mod+Return exec termite
+
+# start a browser
+bindsym $mod+b exec torbrowser
 
 # kill focused window
 bindsym $mod+Shift+q kill
@@ -223,3 +226,6 @@ bindsym Ctrl+Mod1+q exec "i3lock --color=000000"
 # print screen
 bindsym $mod+Shift+p exec maim | xclip -selection clipboard -t image/png
 bindsym $mod+Shift+n exec maim --select | xclip -selection clipboard -t image/png
+
+for_window [class="termite"] fullscreen enable
+for_window [class="brave"] fullscreen enable

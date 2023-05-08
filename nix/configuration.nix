@@ -37,6 +37,38 @@ let
         "telegram.org"
         "discord.com"
       ]);
+  # bash script to let dbus know about important env variables and
+  # propagate them to relevent services run at the end of sway config
+  # see
+  # https://github.com/emersion/xdg-desktop-portal-wlr/wiki/"It-doesn't-work"-Troubleshooting-Checklist
+  # note: this is pretty much the same as  /etc/sway/config.d/nixos.conf but also restarts
+  # some user services to make sure they have the correct environment variables
+  dbus-sway-environment = pkgs.writeShellApplication {
+    name = "dbus-sway-environment";
+    text = ''
+      dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+      systemctl --user stop pipewire xdg-desktop-portal xdg-desktop-portal-wlr
+      systemctl --user start pipewire xdg-desktop-portal xdg-desktop-portal-wlr
+    '';
+  };
+  # currently, there is some friction between sway and gtk:
+  # https://github.com/swaywm/sway/wiki/GTK-3-settings-on-Wayland
+  # the suggested way to set gtk settings is with gsettings
+  # for gsettings to work, we need to tell it where the schemas are
+  # using the XDG_DATA_DIR environment variable
+  # run at the end of sway config
+  configure-gtk = pkgs.writeShellApplication {
+    name = "configure-gtk";
+    text =
+      let
+        schema = pkgs.gsettings-desktop-schemas;
+        datadir = "${schema}/share/gsettings-schemas/${schema.name}";
+      in ''
+        export XDG_DATA_DIRS=${datadir}:$XDG_DATA_DIRS
+        gnome_schema=org.gnome.desktop.interface
+        ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
+      '';
+  };
 in
 {
   imports = [
@@ -217,6 +249,8 @@ in
       };
     };
 
+    services.tor.enable = true;
+    services.tor.client.enable = true;
     networking.firewall.enable = true;
     virtualisation.docker.enable = false;
     virtualisation.podman.enable = true;
@@ -225,13 +259,36 @@ in
     virtualisation.virtualbox.host.enable = true;
     users.extraGroups.vboxusers.members = [ config.services.functora.userName ];
 
+    users.groups.plugdev = {};
     users.users.${config.services.functora.userName} = {
       isNormalUser = true;
       description = config.services.functora.userName;
-      extraGroups = [ "networkmanager" "wheel" "input" "uinput" "docker" "podman" ];
+      extraGroups = [
+        "wheel"
+        "input"
+        "uinput"
+        "docker"
+        "podman"
+        "plugdev"
+        "networkmanager"
+      ];
       packages = with pkgs; [
         firefox
       ];
+    };
+
+    # xdg-desktop-portal works by exposing a series of D-Bus interfaces
+    # known as portals under a well-known name
+    # (org.freedesktop.portal.Desktop) and object path
+    # (/org/freedesktop/portal/desktop).
+    # The portal interfaces include APIs for file access, opening URIs,
+    # printing and others.
+    services.dbus.enable = true;
+    xdg.portal = {
+      enable = true;
+      wlr.enable = true;
+      # gtk portal needed to make gtk apps happy
+      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
     };
 
     #
@@ -263,10 +320,17 @@ in
         mako
         wofi
         waybar
+        dbus-sway-environment
+        configure-gtk
+        xdg-utils
+        glib
+        dracula-theme
+        gnome3.adwaita-icon-theme
         #
-        # programming
+        # apps
         #
         shellcheck
+        chromium
       ];
       programs.git = {
         enable = true;
@@ -393,7 +457,15 @@ in
           mode "hotkeygrab" {
             bindsym Mod4+Shift+z mode "default"
           }
+
+          exec ${dbus-sway-environment}/bin/dbus-sway-environment
+          exec ${configure-gtk}/bin/configure-gtk
         '';
+        #
+        # TODO : need to improve dbus-sway-environment and configure-gtk
+        # because seems like they are giving desired result only
+        # after manual config reload inside the sway session.
+        #
         config =
           with pkgs;
           let mod =

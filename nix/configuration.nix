@@ -252,10 +252,10 @@ in
     services.tor.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
-    virtualisation.docker.enable = false;
-    virtualisation.podman.enable = true;
-    virtualisation.podman.dockerSocket.enable = true;
-    virtualisation.podman.defaultNetwork.dnsname.enable = true;
+    virtualisation.docker.enable = true;
+    virtualisation.podman.enable = false;
+    virtualisation.podman.dockerSocket.enable = false;
+    virtualisation.podman.defaultNetwork.dnsname.enable = false;
     virtualisation.virtualbox.host.enable = true;
     users.extraGroups.vboxusers.members = [ config.services.functora.userName ];
 
@@ -331,6 +331,7 @@ in
         #
         shellcheck
         chromium
+        xournalpp
       ];
       programs.git = {
         enable = true;

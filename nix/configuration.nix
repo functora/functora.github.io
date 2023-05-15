@@ -147,6 +147,7 @@ in
 
     hardware.opengl = {
       enable = true;
+      driSupport32Bit = true;
       extraPackages = with pkgs; [
         intel-media-driver # LIBVA_DRIVER_NAME=iHD
         vaapiIntel         # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
@@ -271,7 +272,7 @@ in
             esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
             @fst _    _    _    _    _    _    _    _    _    _    _    _                          _    _    _
             _    _    _    _    _    _    _    _    _    _    _    ret                  _          _    _    _    _
-            _    _    _              _              _    _    _    _               _    _    _     _    _
+            _    lalt lmet           _              _    _    _    _               _    _    _     _    _
           )
           (deflayer fst-layer
             _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
@@ -279,7 +280,7 @@ in
             @snd _    _    _    _    _    _    _    _    _    _    _    _    grv   _    _    _     _    _    _    _
             _    _    _    slck _    _    lft  down up   rght _    _    _                          _    _    _
             _    _    _    _    _    _    _    _    _    _    _    _                    _          _    _    _    _
-            _    _    _              tab            _    _    _    _               _    _    _     _    _
+            _    ralt _              tab            _    _    _    _               _    _    _     _    _
           )
           (deflayer snd-layer
             _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _

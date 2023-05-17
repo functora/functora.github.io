@@ -753,5 +753,5 @@ let g:mix_format_silent_errors = 1
 
 augroup fmt
   autocmd!
-  autocmd BufWritePre *.gleam undojoin | Neoformat
+  autocmd BufWritePre * undojoin | Neoformat
 augroup end

@@ -377,6 +377,9 @@ in
         shellcheck
         chromium
         xournalpp
+        mate.caja
+        ccrypt
+        awscli2
       ];
       programs.git = {
         enable = true;

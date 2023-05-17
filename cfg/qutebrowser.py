@@ -1991,6 +1991,7 @@ c.url.searchengines = {
 config.set('content.images', True, '*://*.openai.com/*')
 config.set('content.images', True, '*://localhost/*')
 config.set('content.images', True, '*://127.0.0.1/*')
+config.set('content.images', True, 'file:///*')
 
 config.bind('Q', 'quit')
 config.bind('K', 'tab-next')

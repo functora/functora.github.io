@@ -389,7 +389,6 @@ syntax on
 set t_Co=256
 exe 'set background=' . get(g:, "vimBackground", "light")
 exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
-set colorcolumn=67
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
 nnoremap <space> <Nop>
@@ -413,6 +412,7 @@ let g:AutoPairs = {}
 nnoremap <c-a> *``
 nnoremap <c-s> :call AckStr(expand("<cword>"))<CR>
 "autocmd VimEnter * :vs | :startinsert | :te
+"set colorcolumn=67
 
 " Sideways plugin to move text using ALT+[hl]
 nmap <M-h> :SidewaysLeft<cr>

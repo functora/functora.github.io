@@ -1,4 +1,6 @@
-module Hleam.Trans (newMod) where
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
+module Hleam.Transpiler (newMod) where
 
 import qualified Data.Text as T
 import GHC.Hs
@@ -7,7 +9,7 @@ import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
 import GHC.Unit.Module
 import GHC.Utils.Outputable hiding ((<>))
-import Hleam.Gleam
+import Hleam.Ast
 import Hleam.Import
 
 newMod :: HsModule -> Mod
@@ -37,11 +39,11 @@ newFun ::
   [Pat GhcPs] ->
   [GRHS GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))] ->
   [Def]
-newFun (FunRhs fun _ _) args0 [GRHS _ _ expr] =
+newFun (FunRhs fun _ _) args [GRHS _ _ expr] =
   singleton
     . DefFun
-      (Var $ newTxt fun)
-      (newArg <$> args0)
+      (newVar fun)
+      (newArg <$> args)
       (TypVar $ Var "Output")
     . newExp
     $ unLoc expr
@@ -50,18 +52,19 @@ newFun e _ _ =
 
 newArg :: Pat GhcPs -> (Var, Typ)
 newArg = \case
-  VarPat _ x -> (Var $ newTxt x, TypVar $ Var "Input")
+  VarPat _ x -> (newVar x, TypVar $ Var "Input")
   e -> failure "newArg" e
 
 newExp :: HsExpr GhcPs -> Exp
 newExp = \case
-  HsVar _ x -> ExpVar . Var $ newTxt x
+  HsVar _ x -> ExpVar $ newVar x
   HsApp _ lhs rhs -> ExpApp (newExp $ unLoc lhs) [newExp $ unLoc rhs]
   e -> failure "newExp" e
 
-newTxt :: GenLocated a RdrName -> Text
-newTxt =
-  T.pack
+newVar :: GenLocated a RdrName -> Var
+newVar =
+  Var
+    . T.pack
     . occNameString
     . rdrNameOcc
     . unLoc

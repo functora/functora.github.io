@@ -15,6 +15,9 @@ import Data.Fixed as X (Pico)
 import Data.List as X (partition, singleton)
 import Data.List.Extra as X (nubOrd)
 import Data.Ratio as X ((%))
+import Data.Text as X
+  ( intercalate,
+  )
 import Data.Type.Equality as X
   ( TestEquality (..),
     (:~:) (..),
@@ -33,6 +36,7 @@ import Text.PrettyPrint.GenericPretty.Import as X
 import Universum as X hiding
   ( atomically,
     bracket,
+    intercalate,
     on,
     over,
     set,

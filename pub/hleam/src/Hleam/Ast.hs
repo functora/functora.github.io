@@ -1,4 +1,4 @@
-module Hleam.Gleam
+module Hleam.Ast
   ( Mod (..),
     Def (..),
     Typ (..),
@@ -29,12 +29,12 @@ data Typ
 
 data Exp
   = ExpApp Exp [Exp]
-  | ExpInf Exp Var Exp
-  | ExpLet Var Exp
-  | ExpDo [Exp]
-  | ExpIf Exp Exp Exp
-  | ExpLit Lit
-  | ExpVar Var
+  | -- | ExpInf Exp Var Exp
+    -- | ExpLet Var Exp
+    -- | ExpDo [Exp]
+    -- | ExpIf Exp Exp Exp
+    -- | ExpLit Lit
+    ExpVar Var
   | ExpCon Con
   deriving stock (Eq, Ord, Show, Read, Generic)
 

@@ -32,9 +32,10 @@ flag ghcid
 library
   exposed-modules:
       Hleam
-      Hleam.Gleam
+      Hleam.Ast
       Hleam.Import
-      Hleam.Trans
+      Hleam.Renderer
+      Hleam.Transpiler
   other-modules:
       Paths_hleam
   hs-source-dirs:
@@ -124,9 +125,10 @@ executable hleam-exe
   if flag(ghcid)
     other-modules:
         Hleam
-        Hleam.Gleam
+        Hleam.Ast
         Hleam.Import
-        Hleam.Trans
+        Hleam.Renderer
+        Hleam.Transpiler
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages
@@ -191,9 +193,10 @@ test-suite hleam-test
   if flag(ghcid)
     other-modules:
         Hleam
-        Hleam.Gleam
+        Hleam.Ast
         Hleam.Import
-        Hleam.Trans
+        Hleam.Renderer
+        Hleam.Transpiler
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages

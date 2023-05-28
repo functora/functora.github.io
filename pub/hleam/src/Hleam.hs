@@ -1,5 +1,6 @@
 module Hleam (main, runParser) where
 
+import qualified Data.Text as T
 import GHC.Data.EnumSet
 import GHC.Data.FastString
 import GHC.Data.StringBuffer
@@ -16,13 +17,16 @@ import Hleam.Import
 main :: IO ()
 main = pure ()
 
-runParser :: String -> ParseResult (Located HsModule)
+runParser :: Text -> ParseResult (Located HsModule)
 runParser src =
   unP parseModule parseState
   where
-    filename = "<interactive>" :: String
-    location = mkRealSrcLoc (mkFastString filename) 1 1
-    parseState = initParserState parserOpts (stringToStringBuffer src) location
+    filename =
+      "<interactive>" :: String
+    location =
+      mkRealSrcLoc (mkFastString filename) 1 1
+    parseState =
+      initParserState parserOpts (stringToStringBuffer $ T.unpack src) location
 
 parserOpts :: ParserOpts
 parserOpts =

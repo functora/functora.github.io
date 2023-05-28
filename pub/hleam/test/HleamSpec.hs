@@ -11,7 +11,8 @@ import Test.Hspec
 spec :: Spec
 spec =
   it "Trivial parser" $ do
-    case runParser ("module Foo () where\nplus1 :: Int -> String\nplus1 x = show x x" :: String) of
+    src <- readFile "test/LanguageCodes.hs"
+    case runParser src of
       POk _ ast -> do
         putStrLn ("\n======" :: Text)
         putStrLn . show @Text . newMod $ unLoc ast

@@ -4,6 +4,7 @@ module Hleam.Transpiler (newMod) where
 
 import qualified Data.Text as T
 import GHC.Hs
+import GHC.Data.FastString
 import GHC.Types.Name.Occurrence
 import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
@@ -31,6 +32,8 @@ newDef = \case
         failure "newDef" e
   SigD {} ->
     mempty
+  TyClD _ (DataDecl _ sym _args _ _cons) ->
+    singleton $ DefDat (newSym sym) mempty mempty
   e ->
     failure "newDef" e
 
@@ -42,28 +45,93 @@ newFun ::
 newFun (FunRhs fun _ _) args [GRHS _ _ expr] =
   singleton
     . DefFun
-      (newVar fun)
-      (newArg <$> args)
-      (TypVar $ Var "Output")
+      (newSym fun)
+      (((,TypExp . ExpSym $ Sym "Input") . newExpPat) <$> args)
+      (TypExp . ExpSym $ Sym "Output")
     . newExp
     $ unLoc expr
 newFun e _ _ =
   failure "newFun" e
 
-newArg :: Pat GhcPs -> (Var, Typ)
-newArg = \case
-  VarPat _ x -> (newVar x, TypVar $ Var "Input")
-  e -> failure "newArg" e
+newExpPat :: Pat GhcPs -> Exp
+newExpPat = \case
+  VarPat _ x ->
+    ExpSym $ newSym x
+  ParPat _ _ x _ ->
+    ExpPar . newExpPat $ unLoc x
+  ConPat _ x _ ->
+    ExpSym $ newSym x
+  TuplePat _ xs _ ->
+    ExpTuple $ newExpPat . unLoc <$> xs
+  LitPat _ x ->
+    ExpLit $ newLit x
+  WildPat _ ->
+    ExpSym $ Sym "_"
+  e ->
+    failure "newExpPat" e
 
 newExp :: HsExpr GhcPs -> Exp
 newExp = \case
-  HsVar _ x -> ExpVar $ newVar x
-  HsApp _ lhs rhs -> ExpApp (newExp $ unLoc lhs) [newExp $ unLoc rhs]
-  e -> failure "newExp" e
+  HsVar _ x ->
+    ExpSym $ newSym x
+  HsPar _ _ x _ ->
+    ExpPar . newExp $ unLoc x
+  HsApp _ fun0 args0 ->
+    --
+    -- NOTE : simple way to uncurry
+    --
+    let args1 = singleton . newExp $ unLoc args0
+     in case newExp $ unLoc fun0 of
+          ExpApp fun args -> ExpApp fun $ args <> args1
+          fun -> ExpApp fun args1
+  e@(ExplicitTuple _ xs _) ->
+    ExpTuple $
+      fmap
+        ( \case
+            Present _ x -> newExp $ unLoc x
+            _ -> failure "HsExplicitTuple" e
+        )
+        xs
+  HsCase _ exp0 (MG _ cls0 _) ->
+    ExpCase (newExp $ unLoc exp0)
+      . fmap
+        ( \case
+            Match _ CaseAlt [lhs] (GRHSs _ rhs _) ->
+              case unLoc <$> rhs of
+                [GRHS _ _ expr] ->
+                  (newExpPat $ unLoc lhs, newExp $ unLoc expr)
+                _ ->
+                  failure "newExp-5" exp0
+            Match _ e _ (GRHSs _ _ _) ->
+              failure "newExp-4" e
+        )
+      $ unLoc <$> unLoc cls0
+  HsLit _ lit ->
+    ExpLit $ newLit lit
+  e ->
+    failure "newExp-3" e
 
-newVar :: GenLocated a RdrName -> Var
-newVar =
-  Var
+newLit :: HsLit GhcPs -> Lit
+newLit = \case
+  HsChar _ x -> LitChar x
+  HsString _ x -> LitText . T.pack $ unpackFS x
+  e -> failure "newLit" e
+  -- | HsCharPrim (XHsCharPrim x) {- SourceText -} Char
+  -- | HsStringPrim (XHsStringPrim x) {- SourceText -} !ByteString
+  -- | HsInt (XHsInt x)  IntegralLit
+  -- | HsIntPrim (XHsIntPrim x) {- SourceText -} Integer
+  -- | HsWordPrim (XHsWordPrim x) {- SourceText -} Integer
+  -- | HsInt64Prim (XHsInt64Prim x) {- SourceText -} Integer
+  -- | HsWord64Prim (XHsWord64Prim x) {- SourceText -} Integer
+  -- | HsInteger (XHsInteger x) {- SourceText -} Integer Type
+  -- | HsRat (XHsRat x)  FractionalLit Type
+  -- | HsFloatPrim (XHsFloatPrim x)   FractionalLit
+  -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
+
+
+newSym :: GenLocated a RdrName -> Sym
+newSym =
+  Sym
     . T.pack
     . occNameString
     . rdrNameOcc
@@ -72,7 +140,7 @@ newVar =
 failure :: Outputable a => Text -> a -> any
 failure tag =
   error
-    . (mappend $ "Unsupported " <> tag <> " ")
+    . mappend ("Unsupported " <> tag <> " ")
     . T.pack
     . showPprUnsafe
     . ppr

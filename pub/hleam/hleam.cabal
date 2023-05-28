@@ -153,6 +153,7 @@ test-suite hleam-test
   main-is: Spec.hs
   other-modules:
       HleamSpec
+      LanguageCodes
       Paths_hleam
   hs-source-dirs:
       test

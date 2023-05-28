@@ -1,60 +1,51 @@
 module Hleam.Ast
-  ( Mod (..),
-    Def (..),
-    Typ (..),
+  ( Sym (..),
     Exp (..),
+    Typ (..),
+    Def (..),
     Lit (..),
-    Var (..),
-    Con (..),
+    Mod (..),
   )
 where
 
 import Hleam.Import
 
-data Mod = Mod
-  { modName :: Text,
-    modDefs :: [Def]
+newtype Sym = Sym
+  { unSym :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Generic)
 
-data Def
-  = DefFun Var [(Var, Typ)] Typ Exp
+data Exp
+  = ExpSym Sym
+  | ExpPar Exp
+  | ExpApp Exp [Exp]
+  | ExpLit Lit
+  | ExpCase Exp [(Exp, Exp)]
+  | ExpTuple [Exp]
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Typ
-  = TypVar Var
-  | TypCon Con [Typ]
+  = TypExp Exp
   | TypFun [Typ] Typ
+  | TypDat Sym [Typ]
   deriving stock (Eq, Ord, Show, Read, Generic)
 
-data Exp
-  = ExpApp Exp [Exp]
-  | -- | ExpInf Exp Var Exp
-    -- | ExpLet Var Exp
-    -- | ExpDo [Exp]
-    -- | ExpIf Exp Exp Exp
-    -- | ExpLit Lit
-    ExpVar Var
-  | ExpCon Con
+data Def
+  = DefFun Sym [(Exp, Typ)] Typ Exp
+  | DefDat Sym [Typ] [(Sym, [Typ])]
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Lit
   = LitUnit
   | LitBool Bool
   | LitChar Char
-  | LitString Text
-  | LitInt Integer
-  | LitFloat Text
+  | LitText Text
+  | LitIntr Integer
+  | LitFrac Text
   deriving stock (Eq, Ord, Show, Read, Generic)
 
-newtype Var = Var
-  { unVar :: Text
+data Mod = Mod
+  { modName :: Text,
+    modDefs :: [Def]
   }
-  deriving newtype (Eq, Ord, Show, Read)
-  deriving stock (Generic)
-
-newtype Con = Con
-  { unCon :: Text
-  }
-  deriving newtype (Eq, Ord, Show, Read)
-  deriving stock (Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic)

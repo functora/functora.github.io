@@ -17,6 +17,7 @@ import Data.List.Extra as X (nubOrd)
 import Data.Ratio as X ((%))
 import Data.Text as X
   ( intercalate,
+    isPrefixOf,
   )
 import Data.Type.Equality as X
   ( TestEquality (..),
@@ -37,6 +38,7 @@ import Universum as X hiding
   ( atomically,
     bracket,
     intercalate,
+    isPrefixOf,
     on,
     over,
     set,

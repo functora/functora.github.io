@@ -14,6 +14,8 @@ shellFor {
     pkgs.hlint
     pkgs.ghcid
     unst.gleam
+    unst.erlang
+    unst.elixir
     #
     # NOTE : HLS takes too much disk space
     # and time to build, maybe does not worth it.

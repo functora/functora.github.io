@@ -12,7 +12,7 @@ import Control.Monad.Trans.Except as X
 import Data.Coerce as X (coerce)
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
-import Data.List as X (partition)
+import Data.List as X (partition, singleton)
 import Data.List.Extra as X (nubOrd)
 import Data.Ratio as X ((%))
 import Data.Type.Equality as X

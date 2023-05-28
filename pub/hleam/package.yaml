@@ -63,6 +63,7 @@ ghc-options:
 - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
 - -Wno-missing-safe-haskell-mode
 - -Wno-prepositive-qualified-module
+- -Wno-missing-kind-signatures
 - -fenable-th-splice-warnings
 - -fprint-potential-instances
 
@@ -74,6 +75,7 @@ _deps: &deps
   - unliftio
   - microlens
   - extra
+  - text
   - transformers
   - generic-pretty-instances
   - ghc-lib-parser >= 9.2.2

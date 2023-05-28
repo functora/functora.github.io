@@ -32,7 +32,9 @@ flag ghcid
 library
   exposed-modules:
       Hleam
+      Hleam.Gleam
       Hleam.Import
+      Hleam.Trans
   other-modules:
       Paths_hleam
   hs-source-dirs:
@@ -66,13 +68,14 @@ library
       DeriveFunctor
       RankNTypes
       FunctionalDependencies
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances -fwarn-tabs
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -fwarn-tabs
   build-depends:
       base
     , extra
     , generic-pretty-instances
     , ghc-lib-parser >=9.2.2
     , microlens
+    , text
     , transformers
     , universum
     , unliftio
@@ -114,14 +117,16 @@ executable hleam-exe
       DeriveFunctor
       RankNTypes
       FunctionalDependencies
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
   ld-options: -fuse-ld=gold
   build-depends:
       base
   if flag(ghcid)
     other-modules:
         Hleam
+        Hleam.Gleam
         Hleam.Import
+        Hleam.Trans
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages
@@ -131,6 +136,7 @@ executable hleam-exe
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens
+      , text
       , transformers
       , universum
       , unliftio
@@ -177,7 +183,7 @@ test-suite hleam-test
       DeriveFunctor
       RankNTypes
       FunctionalDependencies
-  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
   ld-options: -fuse-ld=gold
   build-depends:
       base
@@ -185,7 +191,9 @@ test-suite hleam-test
   if flag(ghcid)
     other-modules:
         Hleam
+        Hleam.Gleam
         Hleam.Import
+        Hleam.Trans
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages
@@ -195,6 +203,7 @@ test-suite hleam-test
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens
+      , text
       , transformers
       , universum
       , unliftio

@@ -35,7 +35,7 @@ let
         "youtube.com"
         "rumble.com"
         "telegram.org"
-        "discord.com"
+        #"discord.com"
       ]);
   # bash script to let dbus know about important env variables and
   # propagate them to relevent services run at the end of sway config

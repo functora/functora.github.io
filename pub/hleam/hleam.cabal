@@ -76,6 +76,7 @@ library
     , generic-pretty-instances
     , ghc-lib-parser >=9.2.2
     , microlens
+    , process
     , text
     , transformers
     , universum
@@ -138,6 +139,7 @@ executable hleam-exe
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens
+      , process
       , text
       , transformers
       , universum
@@ -207,6 +209,7 @@ test-suite hleam-test
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens
+      , process
       , text
       , transformers
       , universum

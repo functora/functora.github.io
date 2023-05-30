@@ -79,6 +79,7 @@ _deps: &deps
   - transformers
   - generic-pretty-instances
   - ghc-lib-parser >= 9.2.2
+  - process
 
 _ghcid: &ghcid
   when:

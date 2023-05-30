@@ -13,10 +13,15 @@ spec =
   it "Trivial parser" $ do
     src <- readFile "test/LanguageCodes.hs"
     case runParser src of
-      POk _ ast -> do
+      POk _ astHs -> do
+        let astGl = newMod $ unLoc astHs
         putStrLn ("\n======" :: Text)
-        putStrLn . show @Text . newMod $ unLoc ast
+        putStrLn $ show @Text astGl
+        let renGl = renMod astGl
+        putStrLn ("\n======" :: Text)
+        putStrLn renGl
+        res <- fmt renGl
         putStrLn ("======" :: Text)
-        putStrLn . renMod . newMod $ unLoc ast
+        putStrLn $ fromEither res
       PFailed {} -> error "GHC parser failure!"
     True `shouldBe` True

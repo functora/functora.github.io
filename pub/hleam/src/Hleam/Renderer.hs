@@ -1,9 +1,34 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
-
-module Hleam.Renderer (renMod) where
+module Hleam.Renderer (renModFmt, fmt, renMod) where
 
 import Hleam.Ast
 import Hleam.Import
+
+renModFmt :: Mod -> IO (Either Text Text)
+renModFmt =
+  fmt . renMod
+
+fmt :: Text -> IO (Either Text Text)
+fmt src =
+  catch
+    ( fmap
+        ( \case
+            (ExitSuccess, txt, _) ->
+              Right $
+                from @String @Text txt
+            (ExitFailure code, _, txt) ->
+              Left $
+                "EXIT CODE "
+                  <> show code
+                  <> "\n"
+                  <> from @String @Text txt
+        )
+        . readCreateProcessWithExitCode (proc "gleam" ["format", "--stdin"])
+        $ from @Text @String src
+    )
+    $ pure
+      . Left
+      . (mappend "EXCEPTION ")
+      . show @Text @IOException
 
 renMod :: Mod -> Text
 renMod =
@@ -33,11 +58,30 @@ renDef (DefFun name args rtrn expr) =
         <> " {"
         <> renExp expr
         <> "}"
-renDef (DefDat name _ _) =
+renDef (DefDat name args cons) =
   "pub type "
     <> unSym name
-    <> " {\n"
-    <> "  TODO\n}"
+    <> ( if null args
+           then mempty
+           else "(" <> intercalate ", " (renTyp <$> args) <> ")"
+       )
+    <> " {\n  "
+    <> intercalate
+      "\n  "
+      ( fmap
+          ( \(con, typs) ->
+              renSym con
+                <> ( if null typs
+                       then mempty
+                       else
+                         "("
+                           <> intercalate ", " (renTyp <$> typs)
+                           <> ")"
+                   )
+          )
+          cons
+      )
+    <> "\n}"
 
 renSym :: Sym -> Text
 renSym = unSym
@@ -87,7 +131,7 @@ renLit :: Lit -> Text
 renLit = \case
   LitUnit -> "Nil"
   LitBool x -> show x
-  LitChar x -> show x
+  LitChar x -> show $ fromEnum x
   LitText x -> show x
   LitIntr x -> show x
   LitFrac x -> x

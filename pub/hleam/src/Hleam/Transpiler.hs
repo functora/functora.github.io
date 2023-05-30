@@ -1,10 +1,8 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
-
 module Hleam.Transpiler (newMod) where
 
 import qualified Data.Text as T
-import GHC.Hs
 import GHC.Data.FastString
+import GHC.Hs
 import GHC.Types.Name.Occurrence
 import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
@@ -27,22 +25,38 @@ newDef = \case
   ValD _ (FunBind _ _ (MG _ clauses _) _) ->
     case unLoc <$> unLoc clauses of
       [Match _ fun args (GRHSs _ expr _)] ->
-        newFun fun (unLoc <$> args) $ unLoc <$> expr
+        newDefFun fun (unLoc <$> args) $ unLoc <$> expr
       e ->
         failure "newDef" e
   SigD {} ->
     mempty
-  TyClD _ (DataDecl _ sym _args _ _cons) ->
-    singleton $ DefDat (newSym sym) mempty mempty
+  TyClD _ (DataDecl _ sym (HsQTvs _ args) _ (HsDataDefn _ _ _ _ _ cons _)) ->
+    singleton $
+      DefDat
+        (newSym sym)
+        ( fmap
+            ( \case
+                UserTyVar _ _ x -> TypExp . ExpSym $ newSym x
+                e -> failure "newDef-2" e
+            )
+            $ unLoc <$> args
+        )
+        ( fmap
+            ( \case
+                ConDeclH98 _ con _ _ _ _ _ -> (newSym con, mempty)
+                e -> failure "newDef-3" e
+            )
+            $ unLoc <$> cons
+        )
   e ->
     failure "newDef" e
 
-newFun ::
+newDefFun ::
   HsMatchContext GhcPs ->
   [Pat GhcPs] ->
   [GRHS GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))] ->
   [Def]
-newFun (FunRhs fun _ _) args [GRHS _ _ expr] =
+newDefFun (FunRhs fun _ _) args [GRHS _ _ expr] =
   singleton
     . DefFun
       (newSym fun)
@@ -50,8 +64,8 @@ newFun (FunRhs fun _ _) args [GRHS _ _ expr] =
       (TypExp . ExpSym $ Sym "Output")
     . newExp
     $ unLoc expr
-newFun e _ _ =
-  failure "newFun" e
+newDefFun e _ _ =
+  failure "newDefFun" e
 
 newExpPat :: Pat GhcPs -> Exp
 newExpPat = \case
@@ -116,18 +130,18 @@ newLit = \case
   HsChar _ x -> LitChar x
   HsString _ x -> LitText . T.pack $ unpackFS x
   e -> failure "newLit" e
-  -- | HsCharPrim (XHsCharPrim x) {- SourceText -} Char
-  -- | HsStringPrim (XHsStringPrim x) {- SourceText -} !ByteString
-  -- | HsInt (XHsInt x)  IntegralLit
-  -- | HsIntPrim (XHsIntPrim x) {- SourceText -} Integer
-  -- | HsWordPrim (XHsWordPrim x) {- SourceText -} Integer
-  -- | HsInt64Prim (XHsInt64Prim x) {- SourceText -} Integer
-  -- | HsWord64Prim (XHsWord64Prim x) {- SourceText -} Integer
-  -- | HsInteger (XHsInteger x) {- SourceText -} Integer Type
-  -- | HsRat (XHsRat x)  FractionalLit Type
-  -- | HsFloatPrim (XHsFloatPrim x)   FractionalLit
-  -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
 
+-- -- | HsCharPrim (XHsCharPrim x) {- SourceText -} Char
+-- -- | HsStringPrim (XHsStringPrim x) {- SourceText -} !ByteString
+-- -- | HsInt (XHsInt x)  IntegralLit
+-- -- | HsIntPrim (XHsIntPrim x) {- SourceText -} Integer
+-- -- | HsWordPrim (XHsWordPrim x) {- SourceText -} Integer
+-- -- | HsInt64Prim (XHsInt64Prim x) {- SourceText -} Integer
+-- -- | HsWord64Prim (XHsWord64Prim x) {- SourceText -} Integer
+-- -- | HsInteger (XHsInteger x) {- SourceText -} Integer Type
+-- -- | HsRat (XHsRat x)  FractionalLit Type
+-- -- | HsFloatPrim (XHsFloatPrim x)   FractionalLit
+-- -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
 
 newSym :: GenLocated a RdrName -> Sym
 newSym =

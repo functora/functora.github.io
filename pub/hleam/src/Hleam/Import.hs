@@ -2,6 +2,7 @@
 
 module Hleam.Import (module X) where
 
+import Control.Exception as X (IOException)
 import Control.Monad.Extra as X (maybeM)
 import Control.Monad.Trans.Except as X
   ( catchE,
@@ -29,6 +30,14 @@ import Lens.Micro as X
     (^..),
     (^?),
   )
+import System.Exit as X
+  ( ExitCode (..),
+  )
+import System.Process as X
+  ( CreateProcess (..),
+    proc,
+    readCreateProcessWithExitCode,
+  )
 import Text.PrettyPrint.GenericPretty.Import as X
   ( Out (..),
     inspect,
@@ -53,4 +62,4 @@ import UnliftIO as X
     withRunInIO,
     withUnliftIO,
   )
-import Witch as X (unsafeFrom)
+import Witch as X

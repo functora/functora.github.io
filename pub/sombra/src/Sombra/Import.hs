@@ -1,6 +1,6 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-module Hleam.Import (module X) where
+module Sombra.Import (module X) where
 
 import Control.Exception as X (IOException)
 import Control.Monad.Extra as X (maybeM)

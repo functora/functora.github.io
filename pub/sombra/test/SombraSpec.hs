@@ -1,11 +1,11 @@
-module HleamSpec (spec) where
+module SombraSpec (spec) where
 
 import GHC.Parser.Lexer
 import GHC.Types.SrcLoc
-import Hleam
-import Hleam.Import
-import Hleam.Renderer
-import Hleam.Transpiler
+import Sombra
+import Sombra.Import
+import Sombra.Renderer
+import Sombra.Transpiler
 import Test.Hspec
 
 spec :: Spec

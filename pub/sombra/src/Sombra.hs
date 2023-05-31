@@ -1,4 +1,4 @@
-module Hleam (main, runParser) where
+module Sombra (main, runParser) where
 
 import qualified Data.Text as T
 import GHC.Data.EnumSet
@@ -12,12 +12,12 @@ import GHC.Parser.Lexer
 import GHC.Types.SrcLoc
 import GHC.Utils.Error
 import GHC.Utils.Outputable
-import Hleam.Import
-import Hleam.Renderer
-import Hleam.Transpiler
 import Ormolu (PrinterOpts (..))
 import qualified Ormolu
 import qualified Ormolu.Config as Ormolu
+import Sombra.Import
+import Sombra.Renderer
+import Sombra.Transpiler
 
 main :: IO ()
 main = do

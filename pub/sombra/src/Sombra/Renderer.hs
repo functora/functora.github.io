@@ -1,4 +1,4 @@
-module Hleam.Renderer
+module Sombra.Renderer
   ( Tab (..),
     renModFmt,
     fmt,
@@ -6,8 +6,8 @@ module Hleam.Renderer
   )
 where
 
-import Hleam.Ast
-import Hleam.Import
+import Sombra.Ast
+import Sombra.Import
 
 newtype Tab = Tab
   { unTab :: Natural

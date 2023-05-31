@@ -1,4 +1,4 @@
-module Hleam.Transpiler (newMod) where
+module Sombra.Transpiler (newMod) where
 
 import qualified Data.Char as C
 import qualified Data.Text as T
@@ -9,8 +9,8 @@ import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
 import GHC.Unit.Module
 import GHC.Utils.Outputable hiding ((<>))
-import Hleam.Ast
-import Hleam.Import
+import Sombra.Ast
+import Sombra.Import
 import qualified Text.Casing as T
 
 newMod :: HsModule -> Mod

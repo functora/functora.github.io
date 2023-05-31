@@ -1,4 +1,4 @@
-module Hleam.Ast
+module Sombra.Ast
   ( Sym (..),
     Exp (..),
     Typ (..),
@@ -8,7 +8,7 @@ module Hleam.Ast
   )
 where
 
-import Hleam.Import
+import Sombra.Import
 
 newtype Sym = Sym
   { unSym :: Text

@@ -4,12 +4,12 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           hleam
+name:           sombra
 version:        0.1.0.0
 synopsis:       Haskell to Gleam transpiler
 description:    You can find documentation at
 category:       Gleam, Erlang, Beam, Transpiler
-homepage:       https://github.com/functora/functora.github.io/tree/master/pub/hleam
+homepage:       https://github.com/functora/functora.github.io/tree/master/pub/sombra
 bug-reports:    https://github.com/functora/functora.github.io/issues
 author:         21it <21it@tuta.io>
 maintainer:     21it <21it@tuta.io>
@@ -31,13 +31,13 @@ flag ghcid
 
 library
   exposed-modules:
-      Hleam
-      Hleam.Ast
-      Hleam.Import
-      Hleam.Renderer
-      Hleam.Transpiler
+      Sombra
+      Sombra.Ast
+      Sombra.Import
+      Sombra.Renderer
+      Sombra.Transpiler
   other-modules:
-      Paths_hleam
+      Paths_sombra
   hs-source-dirs:
       src
   default-extensions:
@@ -86,10 +86,10 @@ library
     , witch
   default-language: Haskell2010
 
-executable hleam-exe
+executable sombra-exe
   main-is: Main.hs
   other-modules:
-      Paths_hleam
+      Paths_sombra
   hs-source-dirs:
       app
   default-extensions:
@@ -127,11 +127,11 @@ executable hleam-exe
       base
   if flag(ghcid)
     other-modules:
-        Hleam
-        Hleam.Ast
-        Hleam.Import
-        Hleam.Renderer
-        Hleam.Transpiler
+        Sombra
+        Sombra.Ast
+        Sombra.Import
+        Sombra.Renderer
+        Sombra.Transpiler
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages
@@ -151,16 +151,16 @@ executable hleam-exe
       , witch
   else
     build-depends:
-        hleam
+        sombra
   default-language: Haskell2010
 
-test-suite hleam-test
+test-suite sombra-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      HleamSpec
       LanguageCodes
-      Paths_hleam
+      SombraSpec
+      Paths_sombra
   hs-source-dirs:
       test
   default-extensions:
@@ -200,11 +200,11 @@ test-suite hleam-test
     , hspec
   if flag(ghcid)
     other-modules:
-        Hleam
-        Hleam.Ast
-        Hleam.Import
-        Hleam.Renderer
-        Hleam.Transpiler
+        Sombra
+        Sombra.Ast
+        Sombra.Import
+        Sombra.Renderer
+        Sombra.Transpiler
     hs-source-dirs:
         src
     ghc-options: -Wno-unused-packages
@@ -224,5 +224,5 @@ test-suite hleam-test
       , witch
   else
     build-depends:
-        hleam
+        sombra
   default-language: Haskell2010

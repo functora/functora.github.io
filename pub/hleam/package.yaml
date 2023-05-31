@@ -80,6 +80,8 @@ _deps: &deps
   - generic-pretty-instances
   - ghc-lib-parser >= 9.2.2
   - process
+  - casing
+  - fourmolu
 
 _ghcid: &ghcid
   when:
@@ -127,11 +129,11 @@ executables:
 tests:
   hleam-test:
     main: Spec.hs
-    <<: *deps
+    source-dirs:
+    - test
     dependencies:
     - base
     - hspec
-    source-dirs:
-    - test
+    - ghc-lib-parser
     <<: *optimized
     <<: *ghcid

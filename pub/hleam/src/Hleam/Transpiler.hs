@@ -1,5 +1,6 @@
 module Hleam.Transpiler (newMod) where
 
+import qualified Data.Char as C
 import qualified Data.Text as T
 import GHC.Data.FastString
 import GHC.Hs
@@ -10,6 +11,7 @@ import GHC.Unit.Module
 import GHC.Utils.Outputable hiding ((<>))
 import Hleam.Ast
 import Hleam.Import
+import qualified Text.Casing as T
 
 newMod :: HsModule -> Mod
 newMod x =
@@ -144,12 +146,18 @@ newLit = \case
 -- -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
 
 newSym :: GenLocated a RdrName -> Sym
-newSym =
-  Sym
-    . T.pack
-    . occNameString
-    . rdrNameOcc
-    . unLoc
+newSym raw =
+  Sym . T.pack $ case safeHead str of
+    Nothing -> str
+    Just x ->
+      if C.isLower x
+        then T.quietSnake str
+        else T.pascal str
+  where
+    str =
+      occNameString
+        . rdrNameOcc
+        $ unLoc raw
 
 failure :: Outputable a => Text -> a -> any
 failure tag =

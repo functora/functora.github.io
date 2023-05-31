@@ -1,7 +1,27 @@
-module Hleam.Renderer (renModFmt, fmt, renMod) where
+module Hleam.Renderer
+  ( Tab (..),
+    renModFmt,
+    fmt,
+    renMod,
+  )
+where
 
 import Hleam.Ast
 import Hleam.Import
+
+newtype Tab = Tab
+  { unTab :: Natural
+  }
+  deriving newtype (Eq, Ord, Show, Read)
+
+addTab :: Tab -> Tab
+addTab tab =
+  Tab $ 2 + unTab tab
+
+renTab :: Tab -> Text
+renTab tab =
+  mconcat $
+    replicate (unsafeFrom @Natural @Int $ unTab tab) " "
 
 renModFmt :: Mod -> IO (Either Text Text)
 renModFmt =
@@ -33,11 +53,11 @@ fmt src =
 renMod :: Mod -> Text
 renMod =
   intercalate "\n\n"
-    . fmap renDef
+    . fmap (renDef (Tab 0))
     . modDefs
 
-renDef :: Def -> Text
-renDef (DefFun name args rtrn expr) =
+renDef :: Tab -> Def -> Text
+renDef tab (DefFun name args rtrn expr) =
   if null args
     then
       "pub const "
@@ -45,20 +65,21 @@ renDef (DefFun name args rtrn expr) =
         <> ": "
         <> renTyp rtrn
         <> " = "
-        <> renExp expr
+        <> renExp tab expr
     else
       "pub fn "
         <> renSym name
         <> "("
         <> intercalate
           ", "
-          (fmap (\(lhs, rhs) -> renExp lhs <> ": " <> renTyp rhs) args)
+          (fmap (\(lhs, rhs) -> renExp tab lhs <> ": " <> renTyp rhs) args)
         <> ") -> "
         <> renTyp rtrn
-        <> " {"
-        <> renExp expr
+        <> " {\n"
+        <> renTab (addTab tab)
+        <> renExp (addTab tab) expr
         <> "}"
-renDef (DefDat name args cons) =
+renDef _ (DefDat name args cons) =
   "pub type "
     <> unSym name
     <> ( if null args
@@ -89,7 +110,7 @@ renSym = unSym
 renTyp :: Typ -> Text
 renTyp = \case
   TypExp x ->
-    renExp x
+    renExp (Tab 0) x
   TypFun xs x ->
     "fn("
       <> intercalate ", " (renTyp <$> xs)
@@ -101,30 +122,33 @@ renTyp = \case
       <> intercalate ", " (renTyp <$> xs)
       <> ")"
 
-renExp :: Exp -> Text
-renExp = \case
+renExp :: Tab -> Exp -> Text
+renExp tab = \case
   ExpSym x ->
     renSym x
   ExpPar x ->
-    "(" <> renExp x <> ")"
+    "(" <> renExp tab x <> ")"
   ExpApp x xs ->
-    renExp x <> "(" <> intercalate ", " (renExp <$> xs) <> ")"
+    renExp tab x <> "(" <> intercalate ", " (renExp tab <$> xs) <> ")"
   ExpLit x ->
     renLit x
   ExpCase x xs ->
     "case "
-      <> renExp x
+      <> renExp tab x
       <> " {\n"
+      <> renTab (addTab tab)
       <> intercalate
-        "\n"
+        ("\n" <> renTab (addTab tab))
         ( fmap
-            (\(lhs, rhs) -> "  " <> renExp lhs <> " -> " <> renExp rhs)
+            (\(lhs, rhs) -> renExp tab lhs <> " -> " <> renExp tab rhs)
             xs
         )
-      <> "\n}"
+      <> "\n"
+      <> renTab tab
+      <> "}\n"
   ExpTuple xs ->
     "#("
-      <> intercalate ", " (fmap renExp xs)
+      <> intercalate ", " (fmap (renExp tab) xs)
       <> ")"
 
 renLit :: Lit -> Text
@@ -135,7 +159,3 @@ renLit = \case
   LitText x -> show x
   LitIntr x -> show x
   LitFrac x -> x
-
--- pub fn fmap_list(lhs: fn(a) -> b, rhs: List(a)) -> List(b) {
---   fmap(lhs, rhs, list_functor_instance)
--- }

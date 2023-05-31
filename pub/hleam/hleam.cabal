@@ -72,7 +72,9 @@ library
   ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -fwarn-tabs
   build-depends:
       base
+    , casing
     , extra
+    , fourmolu
     , generic-pretty-instances
     , ghc-lib-parser >=9.2.2
     , microlens
@@ -135,7 +137,9 @@ executable hleam-exe
     ghc-options: -Wno-unused-packages
     build-depends:
         base
+      , casing
       , extra
+      , fourmolu
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens
@@ -192,6 +196,7 @@ test-suite hleam-test
   ld-options: -fuse-ld=gold
   build-depends:
       base
+    , ghc-lib-parser
     , hspec
   if flag(ghcid)
     other-modules:
@@ -205,7 +210,9 @@ test-suite hleam-test
     ghc-options: -Wno-unused-packages
     build-depends:
         base
+      , casing
       , extra
+      , fourmolu
       , generic-pretty-instances
       , ghc-lib-parser >=9.2.2
       , microlens

@@ -21,6 +21,7 @@ flags:
 
 default-extensions:
 - NoImplicitPrelude
+- BangPatterns
 - MultiParamTypeClasses
 - LambdaCase
 - OverloadedStrings
@@ -70,6 +71,7 @@ ghc-options:
 _deps: &deps
   dependencies:
   - base
+  - containers
   - universum
   - witch
   - unliftio

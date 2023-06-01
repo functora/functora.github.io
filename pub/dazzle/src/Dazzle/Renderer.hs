@@ -161,6 +161,8 @@ renExp tab = \case
     "#("
       <> intercalate ", " (fmap (renExp tab) xs)
       <> ")"
+  e@ExpArrow {} ->
+    error $ "ExpArrow renderer does not exist " <> show e
 
 renLit :: Lit -> Text
 renLit = \case

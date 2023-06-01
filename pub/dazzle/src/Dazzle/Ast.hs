@@ -22,6 +22,10 @@ data Exp
   | ExpLit Lit
   | ExpCase Exp [(Exp, Exp)]
   | ExpTuple [Exp]
+  | --
+    -- TODO : move into Typ?
+    --
+    ExpArrow Exp Exp
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Typ

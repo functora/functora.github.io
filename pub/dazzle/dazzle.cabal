@@ -42,6 +42,7 @@ library
       src
   default-extensions:
       NoImplicitPrelude
+      BangPatterns
       MultiParamTypeClasses
       LambdaCase
       OverloadedStrings
@@ -73,6 +74,7 @@ library
   build-depends:
       base
     , casing
+    , containers
     , extra
     , fourmolu
     , generic-pretty-instances
@@ -96,6 +98,7 @@ executable dazzle-exe
       app
   default-extensions:
       NoImplicitPrelude
+      BangPatterns
       MultiParamTypeClasses
       LambdaCase
       OverloadedStrings
@@ -140,6 +143,7 @@ executable dazzle-exe
     build-depends:
         base
       , casing
+      , containers
       , extra
       , fourmolu
       , generic-pretty-instances
@@ -169,6 +173,7 @@ test-suite dazzle-test
       test
   default-extensions:
       NoImplicitPrelude
+      BangPatterns
       MultiParamTypeClasses
       LambdaCase
       OverloadedStrings
@@ -215,6 +220,7 @@ test-suite dazzle-test
     build-depends:
         base
       , casing
+      , containers
       , extra
       , fourmolu
       , generic-pretty-instances

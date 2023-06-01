@@ -82,6 +82,8 @@ _deps: &deps
   - process
   - casing
   - fourmolu
+  - unicode-show
+  - with-utf8
 
 _ghcid: &ghcid
   when:

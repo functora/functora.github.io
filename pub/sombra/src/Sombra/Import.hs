@@ -20,6 +20,7 @@ import Data.Text as X
   ( intercalate,
     isPrefixOf,
   )
+import Data.Text.IO.Utf8 as X (readFile)
 import Data.Type.Equality as X
   ( TestEquality (..),
     (:~:) (..),
@@ -30,6 +31,7 @@ import Lens.Micro as X
     (^..),
     (^?),
   )
+import Main.Utf8 as X (withUtf8)
 import System.Exit as X
   ( ExitCode (..),
   )
@@ -43,6 +45,9 @@ import Text.PrettyPrint.GenericPretty.Import as X
     inspect,
     inspectPlain,
   )
+import Text.Show.Unicode as X
+  ( ushow,
+  )
 import Universum as X hiding
   ( atomically,
     bracket,
@@ -50,6 +55,7 @@ import Universum as X hiding
     isPrefixOf,
     on,
     over,
+    readFile,
     set,
     (^.),
     (^..),

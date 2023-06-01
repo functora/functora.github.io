@@ -20,7 +20,7 @@ import Sombra.Renderer
 import Sombra.Transpiler
 
 main :: IO ()
-main = do
+main = withUtf8 $ do
   src <- ormoluFmt =<< readFile "test/LanguageCodes.hs"
   case runParser src of
     POk _ astHs -> do

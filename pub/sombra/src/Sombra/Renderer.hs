@@ -72,7 +72,14 @@ renDef tab (DefFun name args rtrn expr) =
         <> "("
         <> intercalate
           ", "
-          (fmap (\(lhs, rhs) -> renExp tab lhs <> ": " <> renTyp rhs) args)
+          ( fmap
+              ( \(lhs, rhs) ->
+                  renExp tab (unExpPar lhs)
+                    <> ": "
+                    <> renTyp rhs
+              )
+              args
+          )
         <> ") -> "
         <> renTyp rtrn
         <> " {\n"
@@ -127,7 +134,7 @@ renExp tab = \case
   ExpSym x ->
     renSym x
   ExpPar x ->
-    "(" <> renExp tab x <> ")"
+    "{" <> renExp tab x <> "}"
   ExpApp x xs ->
     renExp tab x <> "(" <> intercalate ", " (renExp tab <$> xs) <> ")"
   ExpLit x ->
@@ -140,7 +147,11 @@ renExp tab = \case
       <> intercalate
         ("\n" <> renTab (addTab tab))
         ( fmap
-            (\(lhs, rhs) -> renExp tab lhs <> " -> " <> renExp tab rhs)
+            ( \(lhs, rhs) ->
+                renExp tab (unExpPar lhs)
+                  <> " -> "
+                  <> renExp tab rhs
+            )
             xs
         )
       <> "\n"
@@ -156,6 +167,11 @@ renLit = \case
   LitUnit -> "Nil"
   LitBool x -> show x
   LitChar x -> show $ fromEnum x
-  LitText x -> show x
+  LitText x -> from @String @Text $ ushow x
   LitIntr x -> show x
   LitFrac x -> x
+
+unExpPar :: Exp -> Exp
+unExpPar = \case
+  ExpPar x -> unExpPar x
+  x -> x

@@ -1,0 +1,234 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           dazzle
+version:        0.1.0.0
+synopsis:       Haskell to Gleam transpiler
+description:    You can find documentation at
+category:       Gleam, Erlang, Beam, Transpiler
+homepage:       https://github.com/functora/functora.github.io/tree/master/pub/dazzle
+bug-reports:    https://github.com/functora/functora.github.io/issues
+author:         21it <21it@tuta.io>
+maintainer:     21it <21it@tuta.io>
+copyright:      2023 Functora <functora@proton.me>
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/functora/functora.github.io
+
+flag ghcid
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Dazzle
+      Dazzle.Ast
+      Dazzle.Import
+      Dazzle.Renderer
+      Dazzle.Transpiler
+  other-modules:
+      Paths_dazzle
+  hs-source-dirs:
+      src
+  default-extensions:
+      NoImplicitPrelude
+      MultiParamTypeClasses
+      LambdaCase
+      OverloadedStrings
+      ScopedTypeVariables
+      DeriveGeneric
+      GADTs
+      GeneralizedNewtypeDeriving
+      TupleSections
+      DataKinds
+      DerivingStrategies
+      KindSignatures
+      FlexibleContexts
+      FlexibleInstances
+      StrictData
+      TypeFamilies
+      TypeOperators
+      StandaloneDeriving
+      DeriveLift
+      DerivingVia
+      ExistentialQuantification
+      InstanceSigs
+      TypeApplications
+      AllowAmbiguousTypes
+      ConstraintKinds
+      DeriveFunctor
+      RankNTypes
+      FunctionalDependencies
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -fwarn-tabs
+  build-depends:
+      base
+    , casing
+    , extra
+    , fourmolu
+    , generic-pretty-instances
+    , ghc-lib-parser >=9.2.2
+    , microlens
+    , process
+    , text
+    , transformers
+    , unicode-show
+    , universum
+    , unliftio
+    , witch
+    , with-utf8
+  default-language: Haskell2010
+
+executable dazzle-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_dazzle
+  hs-source-dirs:
+      app
+  default-extensions:
+      NoImplicitPrelude
+      MultiParamTypeClasses
+      LambdaCase
+      OverloadedStrings
+      ScopedTypeVariables
+      DeriveGeneric
+      GADTs
+      GeneralizedNewtypeDeriving
+      TupleSections
+      DataKinds
+      DerivingStrategies
+      KindSignatures
+      FlexibleContexts
+      FlexibleInstances
+      StrictData
+      TypeFamilies
+      TypeOperators
+      StandaloneDeriving
+      DeriveLift
+      DerivingVia
+      ExistentialQuantification
+      InstanceSigs
+      TypeApplications
+      AllowAmbiguousTypes
+      ConstraintKinds
+      DeriveFunctor
+      RankNTypes
+      FunctionalDependencies
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
+  ld-options: -fuse-ld=gold
+  build-depends:
+      base
+  if flag(ghcid)
+    other-modules:
+        Dazzle
+        Dazzle.Ast
+        Dazzle.Import
+        Dazzle.Renderer
+        Dazzle.Transpiler
+    hs-source-dirs:
+        src
+    ghc-options: -Wno-unused-packages
+    build-depends:
+        base
+      , casing
+      , extra
+      , fourmolu
+      , generic-pretty-instances
+      , ghc-lib-parser >=9.2.2
+      , microlens
+      , process
+      , text
+      , transformers
+      , unicode-show
+      , universum
+      , unliftio
+      , witch
+      , with-utf8
+  else
+    build-depends:
+        dazzle
+  default-language: Haskell2010
+
+test-suite dazzle-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      DazzleSpec
+      LanguageCodes
+      Paths_dazzle
+  hs-source-dirs:
+      test
+  default-extensions:
+      NoImplicitPrelude
+      MultiParamTypeClasses
+      LambdaCase
+      OverloadedStrings
+      ScopedTypeVariables
+      DeriveGeneric
+      GADTs
+      GeneralizedNewtypeDeriving
+      TupleSections
+      DataKinds
+      DerivingStrategies
+      KindSignatures
+      FlexibleContexts
+      FlexibleInstances
+      StrictData
+      TypeFamilies
+      TypeOperators
+      StandaloneDeriving
+      DeriveLift
+      DerivingVia
+      ExistentialQuantification
+      InstanceSigs
+      TypeApplications
+      AllowAmbiguousTypes
+      ConstraintKinds
+      DeriveFunctor
+      RankNTypes
+      FunctionalDependencies
+  ghc-options: -Weverything -Werror -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
+  ld-options: -fuse-ld=gold
+  build-depends:
+      base
+    , ghc-lib-parser
+    , hspec
+  if flag(ghcid)
+    other-modules:
+        Dazzle
+        Dazzle.Ast
+        Dazzle.Import
+        Dazzle.Renderer
+        Dazzle.Transpiler
+    hs-source-dirs:
+        src
+    ghc-options: -Wno-unused-packages
+    build-depends:
+        base
+      , casing
+      , extra
+      , fourmolu
+      , generic-pretty-instances
+      , ghc-lib-parser >=9.2.2
+      , microlens
+      , process
+      , text
+      , transformers
+      , unicode-show
+      , universum
+      , unliftio
+      , witch
+      , with-utf8
+  else
+    build-depends:
+        dazzle
+  default-language: Haskell2010

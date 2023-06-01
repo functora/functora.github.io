@@ -1,11 +1,11 @@
-module SombraSpec (spec) where
+module DazzleSpec (spec) where
 
+import Dazzle
+import Dazzle.Import
+import Dazzle.Renderer
+import Dazzle.Transpiler
 import GHC.Parser.Lexer
 import GHC.Types.SrcLoc
-import Sombra
-import Sombra.Import
-import Sombra.Renderer
-import Sombra.Transpiler
 import Test.Hspec
 
 spec :: Spec

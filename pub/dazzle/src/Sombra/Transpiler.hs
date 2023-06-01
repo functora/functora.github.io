@@ -1,7 +1,9 @@
-module Sombra.Transpiler (newMod) where
+module Dazzle.Transpiler (newMod) where
 
 import qualified Data.Char as C
 import qualified Data.Text as T
+import Dazzle.Ast
+import Dazzle.Import
 import GHC.Data.FastString
 import GHC.Hs
 import GHC.Types.Name.Occurrence
@@ -9,8 +11,6 @@ import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
 import GHC.Unit.Module
 import GHC.Utils.Outputable hiding ((<>))
-import Sombra.Ast
-import Sombra.Import
 import qualified Text.Casing as T
 
 newMod :: HsModule -> Mod

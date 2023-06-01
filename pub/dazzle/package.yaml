@@ -1,4 +1,4 @@
-name:                sombra
+name:                dazzle
 version:             0.1.0.0
 github:              "functora/functora.github.io"
 license:             BSD3
@@ -7,7 +7,7 @@ maintainer:          "21it <21it@tuta.io>"
 copyright:           "2023 Functora <functora@proton.me>"
 synopsis:            Haskell to Gleam transpiler
 description:         You can find documentation at
-homepage:            https://github.com/functora/functora.github.io/tree/master/pub/sombra
+homepage:            https://github.com/functora/functora.github.io/tree/master/pub/dazzle
 category:            Gleam, Erlang, Beam, Transpiler
 
 extra-source-files:
@@ -96,7 +96,7 @@ _ghcid: &ghcid
       - -Wno-unused-packages
     else:
       dependencies:
-      - sombra
+      - dazzle
 
 _optimized: &optimized
   ghc-options:
@@ -119,7 +119,7 @@ library:
   - -fwarn-tabs
 
 executables:
-  sombra-exe:
+  dazzle-exe:
     main: Main.hs
     dependencies:
     - base
@@ -129,7 +129,7 @@ executables:
     <<: *ghcid
 
 tests:
-  sombra-test:
+  dazzle-test:
     main: Spec.hs
     source-dirs:
     - test

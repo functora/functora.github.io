@@ -1,6 +1,9 @@
-module Sombra (main, runParser) where
+module Dazzle (main, runParser) where
 
 import qualified Data.Text as T
+import Dazzle.Import
+import Dazzle.Renderer
+import Dazzle.Transpiler
 import GHC.Data.EnumSet
 import GHC.Data.FastString
 import GHC.Data.StringBuffer
@@ -15,9 +18,6 @@ import GHC.Utils.Outputable
 import Ormolu (PrinterOpts (..))
 import qualified Ormolu
 import qualified Ormolu.Config as Ormolu
-import Sombra.Import
-import Sombra.Renderer
-import Sombra.Transpiler
 
 main :: IO ()
 main = withUtf8 $ do

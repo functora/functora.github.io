@@ -1,6 +1,6 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-module Sombra.Import (module X) where
+module Dazzle.Import (module X) where
 
 import Control.Exception as X (IOException)
 import Control.Monad.Extra as X (maybeM)

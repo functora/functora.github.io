@@ -22,7 +22,7 @@ shellFor {
     #
     pkgs.haskell-language-server
   ] ++ (import ./tools.nix)
-    ++ (import ./../pub/sombra/nix/tools.nix)
+    ++ (import ./../pub/dazzle/nix/tools.nix)
     ++ (import ./../pub/functora-hakyll/nix/tools.nix)
     ++ (import ./../pub/bitfinex-client/nix/tools.nix)
     ++ (pkgs.lib.optional

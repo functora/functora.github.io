@@ -1,4 +1,4 @@
-module Sombra.Ast
+module Dazzle.Ast
   ( Sym (..),
     Exp (..),
     Typ (..),
@@ -8,7 +8,7 @@ module Sombra.Ast
   )
 where
 
-import Sombra.Import
+import Dazzle.Import
 
 newtype Sym = Sym
   { unSym :: Text

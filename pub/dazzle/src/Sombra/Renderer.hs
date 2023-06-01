@@ -1,4 +1,4 @@
-module Sombra.Renderer
+module Dazzle.Renderer
   ( Tab (..),
     renModFmt,
     fmt,
@@ -6,8 +6,8 @@ module Sombra.Renderer
   )
 where
 
-import Sombra.Ast
-import Sombra.Import
+import Dazzle.Ast
+import Dazzle.Import
 
 newtype Tab = Tab
   { unTab :: Natural

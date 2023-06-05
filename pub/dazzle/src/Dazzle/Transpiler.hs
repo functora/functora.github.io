@@ -1,6 +1,10 @@
-module Hleam.Transpiler (newMod) where
+module Dazzle.Transpiler (newMod) where
 
+import qualified Data.Char as C
+import qualified Data.Map as Map
 import qualified Data.Text as T
+import Dazzle.Ast
+import Dazzle.Import
 import GHC.Data.FastString
 import GHC.Hs
 import GHC.Types.Name.Occurrence
@@ -8,24 +12,62 @@ import GHC.Types.Name.Reader
 import GHC.Types.SrcLoc
 import GHC.Unit.Module
 import GHC.Utils.Outputable hiding ((<>))
-import Hleam.Ast
-import Hleam.Import
+import qualified Text.Casing as T
+import qualified Universum.Unsafe as Unsafe
 
 newMod :: HsModule -> Mod
 newMod x =
   Mod
     { modName =
-        maybe "unnamed" (T.pack . moduleNameString . unLoc) $ hsmodName x,
+        maybe
+          "unnamed"
+          (T.pack . moduleNameString . unLoc)
+          $ hsmodName x,
       modDefs =
-        hsmodDecls x >>= newDef . unLoc
+        dcs >>= newDef (foldl' newSigMap mempty dcs)
     }
+  where
+    dcs = unLoc <$> hsmodDecls x
 
-newDef :: HsDecl GhcPs -> [Def]
-newDef = \case
+newSigMap :: Map Sym [Exp] -> HsDecl GhcPs -> Map Sym [Exp]
+newSigMap acc = \case
+  SigD _ (TypeSig _ [fun] (HsWC _ args0)) ->
+    Map.insert
+      (newSym fun)
+      ( let HsSig _ _ args1 = unLoc args0
+         in unArrow . newSig $ unLoc args1
+      )
+      acc
+  _ ->
+    acc
+
+newSig :: HsType GhcPs -> Exp
+newSig = \case
+  HsTyVar _ _ x ->
+    ExpSym $ newSym x
+  HsFunTy _ _ lhs rhs ->
+    ExpArrow (newSig $ unLoc lhs) . newSig $ unLoc rhs
+  HsAppTy _ fun args ->
+    ExpApp (newSig $ unLoc fun) . singleton . newSig $ unLoc args
+  HsTupleTy _ _ xs ->
+    ExpTuple $ newSig . unLoc <$> xs
+  e ->
+    failure "newSig" e
+
+--
+-- TODO : not ideal, need to fix this and rederer!!!
+--
+unArrow :: Exp -> [Exp]
+unArrow = \case
+  ExpArrow lhs rhs -> unArrow lhs <> unArrow rhs
+  x -> singleton x
+
+newDef :: Map Sym [Exp] -> HsDecl GhcPs -> [Def]
+newDef sigs = \case
   ValD _ (FunBind _ _ (MG _ clauses _) _) ->
     case unLoc <$> unLoc clauses of
       [Match _ fun args (GRHSs _ expr _)] ->
-        newDefFun fun (unLoc <$> args) $ unLoc <$> expr
+        newDefFun sigs fun (unLoc <$> args) $ unLoc <$> expr
       e ->
         failure "newDef" e
   SigD {} ->
@@ -52,19 +94,35 @@ newDef = \case
     failure "newDef" e
 
 newDefFun ::
+  Map Sym [Exp] ->
   HsMatchContext GhcPs ->
   [Pat GhcPs] ->
   [GRHS GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))] ->
   [Def]
-newDefFun (FunRhs fun _ _) args [GRHS _ _ expr] =
-  singleton
-    . DefFun
-      (newSym fun)
-      (((,TypExp . ExpSym $ Sym "Input") . newExpPat) <$> args)
-      (TypExp . ExpSym $ Sym "Output")
-    . newExp
-    $ unLoc expr
-newDefFun e _ _ =
+newDefFun sigs (FunRhs fun _ _) args [GRHS _ _ expr] =
+  let name = newSym fun
+   in maybe
+        ( error $
+            "Could not find a signature for a " <> show name
+        )
+        ( \typs ->
+            singleton
+              . DefFun
+                name
+                ( fmap
+                    ( \(idx :: Int, pat) ->
+                        ( newExpPat pat,
+                          TypExp $ Unsafe.at idx typs
+                        )
+                    )
+                    $ zip [0 ..] args
+                )
+                (TypExp $ Unsafe.at (length args) typs)
+              . newExp
+              $ unLoc expr
+        )
+        $ Map.lookup name sigs
+newDefFun _ e _ _ =
   failure "newDefFun" e
 
 newExpPat :: Pat GhcPs -> Exp
@@ -144,12 +202,18 @@ newLit = \case
 -- -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
 
 newSym :: GenLocated a RdrName -> Sym
-newSym =
-  Sym
-    . T.pack
-    . occNameString
-    . rdrNameOcc
-    . unLoc
+newSym raw =
+  Sym . T.pack $ case safeHead str of
+    Nothing -> str
+    Just x ->
+      if C.isLower x
+        then T.quietSnake str
+        else T.pascal str
+  where
+    str =
+      occNameString
+        . rdrNameOcc
+        $ unLoc raw
 
 failure :: Outputable a => Text -> a -> any
 failure tag =

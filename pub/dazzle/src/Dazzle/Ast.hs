@@ -1,4 +1,4 @@
-module Hleam.Ast
+module Dazzle.Ast
   ( Sym (..),
     Exp (..),
     Typ (..),
@@ -8,7 +8,7 @@ module Hleam.Ast
   )
 where
 
-import Hleam.Import
+import Dazzle.Import
 
 newtype Sym = Sym
   { unSym :: Text
@@ -22,6 +22,10 @@ data Exp
   | ExpLit Lit
   | ExpCase Exp [(Exp, Exp)]
   | ExpTuple [Exp]
+  | --
+    -- TODO : move into Typ?
+    --
+    ExpArrow Exp Exp
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Typ

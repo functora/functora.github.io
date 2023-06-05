@@ -1,15 +1,18 @@
-module HleamSpec (spec) where
+module DazzleSpec (spec) where
 
+import Dazzle
+import Dazzle.Import
+import Dazzle.Renderer
+import Dazzle.Transpiler
 import GHC.Parser.Lexer
 import GHC.Types.SrcLoc
-import Hleam
-import Hleam.Import
-import Hleam.Renderer
-import Hleam.Transpiler
 import Test.Hspec
 
 spec :: Spec
-spec =
+spec = do
+  focus . it "Main" $ do
+    main
+    True `shouldBe` True
   it "Trivial parser" $ do
     src <- readFile "test/LanguageCodes.hs"
     case runParser src of
@@ -23,5 +26,6 @@ spec =
         res <- fmt renGl
         putStrLn ("======" :: Text)
         putStrLn $ fromEither res
-      PFailed {} -> error "GHC parser failure!"
-    True `shouldBe` True
+        True `shouldBe` True
+      PFailed {} ->
+        error "GHC parser failure!"

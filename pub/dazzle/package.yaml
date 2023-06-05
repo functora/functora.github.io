@@ -1,4 +1,4 @@
-name:                hleam
+name:                dazzle
 version:             0.1.0.0
 github:              "functora/functora.github.io"
 license:             BSD3
@@ -7,7 +7,7 @@ maintainer:          "21it <21it@tuta.io>"
 copyright:           "2023 Functora <functora@proton.me>"
 synopsis:            Haskell to Gleam transpiler
 description:         You can find documentation at
-homepage:            https://github.com/functora/functora.github.io/tree/master/pub/hleam
+homepage:            https://github.com/functora/functora.github.io/tree/master/pub/dazzle
 category:            Gleam, Erlang, Beam, Transpiler
 
 extra-source-files:
@@ -21,6 +21,7 @@ flags:
 
 default-extensions:
 - NoImplicitPrelude
+- BangPatterns
 - MultiParamTypeClasses
 - LambdaCase
 - OverloadedStrings
@@ -70,6 +71,7 @@ ghc-options:
 _deps: &deps
   dependencies:
   - base
+  - containers
   - universum
   - witch
   - unliftio
@@ -80,6 +82,10 @@ _deps: &deps
   - generic-pretty-instances
   - ghc-lib-parser >= 9.2.2
   - process
+  - casing
+  - fourmolu
+  - unicode-show
+  - with-utf8
 
 _ghcid: &ghcid
   when:
@@ -92,7 +98,7 @@ _ghcid: &ghcid
       - -Wno-unused-packages
     else:
       dependencies:
-      - hleam
+      - dazzle
 
 _optimized: &optimized
   ghc-options:
@@ -115,7 +121,7 @@ library:
   - -fwarn-tabs
 
 executables:
-  hleam-exe:
+  dazzle-exe:
     main: Main.hs
     dependencies:
     - base
@@ -125,13 +131,13 @@ executables:
     <<: *ghcid
 
 tests:
-  hleam-test:
+  dazzle-test:
     main: Spec.hs
-    <<: *deps
+    source-dirs:
+    - test
     dependencies:
     - base
     - hspec
-    source-dirs:
-    - test
+    - ghc-lib-parser
     <<: *optimized
     <<: *ghcid

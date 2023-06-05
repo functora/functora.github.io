@@ -21,12 +21,12 @@ import qualified Ormolu.Config as Ormolu
 
 main :: IO ()
 main = withUtf8 $ do
-  src <- ormoluFmt =<< readFile "test/LanguageCodes.hs"
+  src <- ormoluFmt =<< readFile "test/Microlude.hs"
   case runParser src of
     POk _ astHs -> do
       let astGl = newMod $ unLoc astHs
       let renGl = renMod astGl
-      putStrLn renGl
+      putStr renGl
     PFailed {} ->
       error "GHC parser failure!"
 

@@ -11,7 +11,10 @@ import Test.Hspec
 spec :: Spec
 spec = do
   focus . it "Main" $ do
+    putStrLn @Text mempty
+    putStrLn @Text mempty
     main
+    putStrLn @Text mempty
     True `shouldBe` True
   it "Trivial parser" $ do
     src <- readFile "test/LanguageCodes.hs"

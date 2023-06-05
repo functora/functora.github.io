@@ -292,6 +292,54 @@ in
           )
         '';
       };
+      keyboards.a275 = {
+        device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
+        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        config = ''
+          (defalias
+            fst  (layer-toggle fst-layer)
+            snd  (layer-toggle snd-layer)
+            til  (around lsft grv)
+            ltab (around lsft tab)
+          )
+          (defsrc
+            esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  home end  del
+            grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+            tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+            caps a    s    d    f    g    h    j    k    l    ;    '    ret
+            lsft z    x    c    v    b    n    m    ,    .    /    rsft
+            wkup lctl lmet lalt           spc            ralt prnt rctl pgup up   pgdn
+                                                                        left down rght
+          )
+          (deflayer qwerty
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            esc  _    _    _    _    _    _    _    _    _    _    _    _    _
+            esc  _    _    _    _    _    _    _    _    _    _    _    _    _
+            @fst _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    ret
+            lctl _    _    _              _              _    _    _    _    _    _
+                                                                        _    _    _
+          )
+          (deflayer fst-layer
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _
+            @snd _    _    _    _    _    _    _    _    _    _    _    _    grv
+            _    _    _    slck _    _    lft  down up   rght _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    ret
+            _    _    _    ralt           tab            _    _    _    _    _    _
+                                                                        _    _    _
+          )
+          (deflayer snd-layer
+            _    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
+            _    brdn bru  _    _    _    _    prev pp   next mute vold volu _
+            _    _    _    _    _    _    _    _    _    _    _    _    _    @til
+            _    _    _    _    _    _    home pgdn pgup end  _    _    _
+            _    _    _    _    _    _    _    _    _    _    _    _
+            _    _    _    _              @ltab          _    _    _    _    _    _
+                                                                        _    _    _
+          )
+        '';
+      };
     };
 
     services.tor.enable = true;

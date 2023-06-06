@@ -331,7 +331,7 @@ in
           )
           (deflayer snd-layer
             _    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    brdn bru  _    _    _    _    prev pp   next mute vold volu _
+            _    _    _    brdn bru  _    _    prev pp   next mute vold volu _
             _    _    _    _    _    _    _    _    _    _    _    _    _    @til
             _    _    _    _    _    _    home pgdn pgup end  _    _    _
             _    _    _    _    _    _    _    _    _    _    _    _
@@ -580,8 +580,8 @@ in
               cmdMicToggle =
                 wmEx "${pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
               newMediaKeys = x: {
-                "${x}XF86MonBrightnessDown" = newBrightness "1000-";
-                "${x}XF86MonBrightnessUp" = newBrightness "+1000";
+                "${x}XF86MonBrightnessDown" = newBrightness "3-";
+                "${x}XF86MonBrightnessUp" = newBrightness "+3";
                 "${x}XF86AudioMicMute" = cmdMicToggle;
                 "${x}XF86AudioPrev" = newPlayerCtl "previous";
                 "${x}XF86AudioPlay" = newPlayerCtl "play-pause";

@@ -85,13 +85,38 @@ newDef sigs = \case
         )
         ( fmap
             ( \case
-                ConDeclH98 _ con _ _ _ _ _ -> (newSym con, mempty)
-                e -> failure "newDef-3" e
+                ConDeclH98 _ con _ _ _ conArgs _ ->
+                  (newSym con, newCon conArgs)
+                e ->
+                  failure "newDef-3" e
             )
             $ unLoc <$> cons
         )
   e ->
     failure "newDef" e
+
+newCon :: HsConDeclH98Details GhcPs -> [(Maybe Sym, Typ)]
+newCon = \case
+  RecCon rec ->
+    fmap
+      ( \case
+          ConDeclField _ [field] typ _ ->
+            ( Just
+                . newSym
+                . foLabel
+                $ unLoc field,
+              TypExp
+                . newSig
+                $ unLoc typ
+            )
+          e ->
+            failure "newCon" e
+      )
+      $ unLoc <$> unLoc rec
+  PrefixCon _ args ->
+    (\(HsScaled _ typ) -> (Nothing, TypExp . newSig $ unLoc typ)) <$> args
+  _ ->
+    error ("TODO newCon" :: Text)
 
 newDefFun ::
   Map Sym [Exp] ->

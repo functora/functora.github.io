@@ -36,7 +36,7 @@ data Typ
 
 data Def
   = DefFun Sym [(Exp, Typ)] Typ Exp
-  | DefDat Sym [Typ] [(Sym, [Typ])]
+  | DefDat Sym [Typ] [(Sym, [(Maybe Sym, Typ)])]
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Lit

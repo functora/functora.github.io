@@ -87,6 +87,9 @@ renDef tab (DefFun name args rtrn expr) =
         <> renExp (addTab tab) expr
         <> "}"
 renDef _ (DefDat name args cons) =
+  --
+  -- TODO : record accessors
+  --
   "pub type "
     <> unSym name
     <> ( if null args
@@ -97,13 +100,25 @@ renDef _ (DefDat name args cons) =
     <> intercalate
       "\n  "
       ( fmap
-          ( \(con, typs) ->
+          ( \(con, fields) ->
               renSym con
-                <> ( if null typs
+                <> ( if null fields
                        then mempty
                        else
                          "("
-                           <> intercalate ", " (renTyp <$> typs)
+                           <> intercalate
+                             ", "
+                             ( fmap
+                                 ( \(mtag, typ) ->
+                                     ( maybe
+                                         mempty
+                                         (\s -> renSym s <> ": ")
+                                         mtag
+                                     )
+                                       <> renTyp typ
+                                 )
+                                 fields
+                             )
                            <> ")"
                    )
           )

@@ -105,7 +105,7 @@ newCon = \case
                 . newSym
                 . foLabel
                 $ unLoc field,
-              TypExp
+              typFun
                 . newSig
                 $ unLoc typ
             )
@@ -114,9 +114,30 @@ newCon = \case
       )
       $ unLoc <$> unLoc rec
   PrefixCon _ args ->
-    (\(HsScaled _ typ) -> (Nothing, TypExp . newSig $ unLoc typ)) <$> args
+    fmap
+      ( \case
+          HsScaled _ typ ->
+            ( Nothing,
+              typFun
+                . newSig
+                $ unLoc typ
+            )
+      )
+      args
   _ ->
     error ("TODO newCon" :: Text)
+
+typFun :: Exp -> Typ
+typFun expr =
+  case expr of
+    ExpArrow {} ->
+      case reverse $ unArrow expr of
+        ret : lst : args ->
+          TypFun (TypExp <$> reverse (lst : args)) $ TypExp ret
+        _ ->
+          error $ "typFun : " <> show expr
+    _ ->
+      TypExp expr
 
 newDefFun ::
   Map Sym [Exp] ->
@@ -205,6 +226,16 @@ newExp = \case
       $ unLoc <$> unLoc cls0
   HsLit _ lit ->
     ExpLit $ newLit lit
+  HsLam _ (MG _ clauses _) ->
+    case unLoc <$> unLoc clauses of
+      [Match _ LambdaExpr args (GRHSs _ rhs _)] ->
+        case unLoc <$> rhs of
+          [GRHS _ _ expr] ->
+            ExpLam (newExpPat . unLoc <$> args) . newExp $ unLoc expr
+          _ ->
+            failure "newExp-7" clauses
+      e ->
+        failure "newExp-6" e
   e ->
     failure "newExp-3" e
 

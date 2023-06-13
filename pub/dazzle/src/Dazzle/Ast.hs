@@ -19,6 +19,7 @@ data Exp
   = ExpSym Sym
   | ExpPar Exp
   | ExpApp Exp [Exp]
+  | ExpLam [Exp] Exp
   | ExpLit Lit
   | ExpCase Exp [(Exp, Exp)]
   | ExpTuple [Exp]

@@ -152,6 +152,12 @@ renExp tab = \case
     "{" <> renExp tab x <> "}"
   ExpApp x xs ->
     renExp tab x <> "(" <> intercalate ", " (renExp tab <$> xs) <> ")"
+  ExpLam xs x ->
+    "fn("
+      <> intercalate ", " (renExp tab <$> xs)
+      <> ") { "
+      <> renExp tab x
+      <> " }"
   ExpLit x ->
     renLit x
   ExpCase x xs ->

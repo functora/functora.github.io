@@ -29,7 +29,6 @@ in {
   #   };
   # };
 
-  boot.cleanTmpDir = true;
   nix.settings.auto-optimise-store = true;
   environment.systemPackages = with pkgs; [ vim htop ];
   services.journald.extraConfig = ''

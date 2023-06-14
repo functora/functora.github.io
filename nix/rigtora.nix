@@ -13,6 +13,7 @@ in
   ];
 
   options.services.rigtora = with lib; {
+    enable = mkEnableOption "rigtora";
     xmrAddr = mkOption {
       type = types.str;
     };
@@ -20,9 +21,17 @@ in
       type = types.bool;
       default = false;
     };
+    cpuLoad = mkOption {
+      type = types.int;
+      default = 100;
+    };
+    openSsh = mkOption {
+      type = types.bool;
+      default = false;
+    };
   };
 
-  config = {
+  config = lib.mkIf config.services.rigtora.enable {
     # networking = {
     #   hostName = machine;
     #   wireless = {
@@ -41,13 +50,16 @@ in
     '';
 
     services.fail2ban.enable = true;
-    services.openssh.enable = true;
+    services.openssh.enable = config.services.rigtora.openSsh;
     services.xmrig.enable = true;
     services.xmrig.settings = {
-      autosave = true;
+      autosave = false;
       opencl = false;
       cuda = false;
-      cpu = true;
+      cpu = {
+        enabled = true;
+        max-threads-hint = config.services.rigtora.cpuLoad;
+      };
       pools = [{
         url = "pool.hashvault.pro:80";
         coin = "XMR";

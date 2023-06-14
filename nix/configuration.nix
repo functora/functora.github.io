@@ -74,6 +74,7 @@ in
   imports = [
     (import "${home-manager}/nixos")
     (import "${kmonad-srv}/nix/nixos-module.nix")
+    (import ./rigtora.nix)
   ] ++ (
     if builtins.pathExists ./../prv/nix/configuration.nix
     then [ (import ./../prv/nix/configuration.nix) ]

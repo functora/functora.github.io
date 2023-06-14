@@ -1,7 +1,7 @@
 module Dazzle.Ast
   ( Sym (..),
+    Fun (..),
     Exp (..),
-    Typ (..),
     Def (..),
     Lit (..),
     Mod (..),
@@ -15,29 +15,37 @@ newtype Sym = Sym
   }
   deriving stock (Eq, Ord, Show, Read, Generic)
 
+data Fun
+  = FunLam
+  | FunTyp
+  deriving stock (Eq, Ord, Show, Read, Generic)
+
 data Exp
   = ExpSym Sym
   | ExpPar Exp
   | ExpApp Exp [Exp]
-  | ExpLam [Exp] Exp
+  | ExpFun Fun [Exp] Exp
   | ExpLit Lit
   | ExpCase Exp [(Exp, Exp)]
   | ExpTuple [Exp]
   | --
-    -- TODO : move into Typ?
+    -- TODO : remove somehow!!!
     --
     ExpArrow Exp Exp
   deriving stock (Eq, Ord, Show, Read, Generic)
 
-data Typ
-  = TypExp Exp
-  | TypFun [Typ] Typ
-  | TypDat Sym [Typ]
-  deriving stock (Eq, Ord, Show, Read, Generic)
-
 data Def
-  = DefFun Sym [(Exp, Typ)] Typ Exp
-  | DefDat Sym [Typ] [(Sym, [(Maybe Sym, Typ)])]
+  = DefFun
+      { _defFunName :: Sym,
+        _defFunArgs :: [(Exp, Exp)],
+        _defFunRtrn :: Exp,
+        _defFunBody :: Exp
+      }
+  | DefDat
+      { _defDatName :: Sym,
+        _defDatArgs :: [Exp],
+        _defDatCons :: [(Sym, [(Maybe Sym, Exp)])]
+      }
   deriving stock (Eq, Ord, Show, Read, Generic)
 
 data Lit

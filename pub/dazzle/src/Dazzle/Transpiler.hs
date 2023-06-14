@@ -78,7 +78,7 @@ newDef sigs = \case
         (newSym sym)
         ( fmap
             ( \case
-                UserTyVar _ _ x -> TypExp . ExpSym $ newSym x
+                UserTyVar _ _ x -> ExpSym $ newSym x
                 e -> failure "newDef-2" e
             )
             $ unLoc <$> args
@@ -95,7 +95,7 @@ newDef sigs = \case
   e ->
     failure "newDef" e
 
-newCon :: HsConDeclH98Details GhcPs -> [(Maybe Sym, Typ)]
+newCon :: HsConDeclH98Details GhcPs -> [(Maybe Sym, Exp)]
 newCon = \case
   RecCon rec ->
     fmap
@@ -127,17 +127,17 @@ newCon = \case
   _ ->
     error ("TODO newCon" :: Text)
 
-typFun :: Exp -> Typ
+typFun :: Exp -> Exp
 typFun expr =
   case expr of
     ExpArrow {} ->
       case reverse $ unArrow expr of
         ret : lst : args ->
-          TypFun (TypExp <$> reverse (lst : args)) $ TypExp ret
+          ExpFun FunTyp (reverse (lst : args)) ret
         _ ->
           error $ "typFun : " <> show expr
     _ ->
-      TypExp expr
+      expr
 
 newDefFun ::
   Map Sym [Exp] ->
@@ -158,12 +158,13 @@ newDefFun sigs (FunRhs fun _ _) args [GRHS _ _ expr] =
                 ( fmap
                     ( \(idx :: Int, pat) ->
                         ( newExpPat pat,
-                          TypExp $ Unsafe.at idx typs
+                          Unsafe.at idx typs
                         )
                     )
                     $ zip [0 ..] args
                 )
-                (TypExp $ Unsafe.at (length args) typs)
+                ( Unsafe.at (length args) typs
+                )
               . newExp
               $ unLoc expr
         )
@@ -231,7 +232,7 @@ newExp = \case
       [Match _ LambdaExpr args (GRHSs _ rhs _)] ->
         case unLoc <$> rhs of
           [GRHS _ _ expr] ->
-            ExpLam (newExpPat . unLoc <$> args) . newExp $ unLoc expr
+            ExpFun FunLam (newExpPat . unLoc <$> args) . newExp $ unLoc expr
           _ ->
             failure "newExp-7" clauses
       e ->

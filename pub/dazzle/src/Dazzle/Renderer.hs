@@ -63,7 +63,7 @@ renDef tab (DefFun name args rtrn expr) =
       "pub const "
         <> renSym name
         <> ": "
-        <> renTyp rtrn
+        <> renExp tab rtrn
         <> " = "
         <> renExp tab expr
     else
@@ -76,17 +76,17 @@ renDef tab (DefFun name args rtrn expr) =
               ( \(lhs, rhs) ->
                   renExp tab (unExpPar lhs)
                     <> ": "
-                    <> renTyp rhs
+                    <> renExp tab rhs
               )
               args
           )
         <> ") -> "
-        <> renTyp rtrn
+        <> renExp tab rtrn
         <> " {\n"
         <> renTab (addTab tab)
         <> renExp (addTab tab) expr
         <> "}"
-renDef _ (DefDat name args cons) =
+renDef tab (DefDat name args cons) =
   --
   -- TODO : record accessors
   --
@@ -94,7 +94,7 @@ renDef _ (DefDat name args cons) =
     <> unSym name
     <> ( if null args
            then mempty
-           else "(" <> intercalate ", " (renTyp <$> args) <> ")"
+           else "(" <> intercalate ", " (renExp tab <$> args) <> ")"
        )
     <> " {\n  "
     <> intercalate
@@ -115,7 +115,7 @@ renDef _ (DefDat name args cons) =
                                          (\s -> renSym s <> ": ")
                                          mtag
                                      )
-                                       <> renTyp typ
+                                       <> renExp tab typ
                                  )
                                  fields
                              )
@@ -129,21 +129,6 @@ renDef _ (DefDat name args cons) =
 renSym :: Sym -> Text
 renSym = unSym
 
-renTyp :: Typ -> Text
-renTyp = \case
-  TypExp x ->
-    renExp (Tab 0) x
-  TypFun xs x ->
-    "fn("
-      <> intercalate ", " (renTyp <$> xs)
-      <> ") -> "
-      <> renTyp x
-  TypDat x xs ->
-    renSym x
-      <> "("
-      <> intercalate ", " (renTyp <$> xs)
-      <> ")"
-
 renExp :: Tab -> Exp -> Text
 renExp tab = \case
   ExpSym x ->
@@ -152,12 +137,17 @@ renExp tab = \case
     "{" <> renExp tab x <> "}"
   ExpApp x xs ->
     renExp tab x <> "(" <> intercalate ", " (renExp tab <$> xs) <> ")"
-  ExpLam xs x ->
+  ExpFun FunLam xs x ->
     "fn("
       <> intercalate ", " (renExp tab <$> xs)
       <> ") { "
       <> renExp tab x
       <> " }"
+  ExpFun FunTyp xs x ->
+    "fn("
+      <> intercalate ", " (renExp tab <$> xs)
+      <> ") -> "
+      <> renExp tab x
   ExpLit x ->
     renLit x
   ExpCase x xs ->

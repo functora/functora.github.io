@@ -21,6 +21,9 @@ in
       type = types.bool;
       default = false;
     };
+    cpuName = mkOption {
+      type = types.str;
+    };
     cpuLoad = mkOption {
       type = types.int;
       default = 100;
@@ -43,7 +46,10 @@ in
 
     boot.cleanTmpDir = true;
     nix.settings.auto-optimise-store = true;
-    environment.systemPackages = with pkgs; [ vim htop ];
+    #
+    # TODO : script to derive cpuName
+    #
+    environment.systemPackages = with pkgs; [ vim htop cpuid ];
     services.journald.extraConfig = ''
       SystemMaxUse=100M
       MaxFileSec=7day
@@ -64,6 +70,7 @@ in
         url = "pool.hashvault.pro:80";
         coin = "XMR";
         user = if xmrSolo then "solo:${xmrAddr}" else xmrAddr;
+        pass = config.services.rigtora.cpuName;
         nicehash = false;
         keepalive = false;
         tls = true;

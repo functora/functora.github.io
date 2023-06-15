@@ -26,6 +26,8 @@ main = withUtf8 $ do
     POk _ astHs -> do
       let astGl = newMod $ unLoc astHs
       let renGl = renMod astGl
+      --putStrLn $ show @Text astGl
+      --putStrLn (mempty :: Text)
       putStr renGl
     PFailed {} ->
       error "GHC parser failure!"

@@ -1,6 +1,7 @@
 module Dazzle.Transpiler (newMod) where
 
 import qualified Data.Char as C
+import Data.Generics (everywhere, mkT)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import Dazzle.Ast
@@ -24,10 +25,15 @@ newMod x =
           (T.pack . moduleNameString . unLoc)
           $ hsmodName x,
       modDefs =
-        dcs >>= newDef (foldl' newSigMap mempty dcs)
+        everywhere (mkT unApp) $ dcs >>= newDef (foldl' newSigMap mempty dcs)
     }
   where
     dcs = unLoc <$> hsmodDecls x
+
+unApp :: Exp -> Exp
+unApp = \case
+  ExpApp (ExpApp x xs) ys -> unApp . ExpApp (unApp x) $ unApp <$> (xs <> ys)
+  expr -> expr
 
 newSigMap :: Map Sym [Exp] -> HsDecl GhcPs -> Map Sym [Exp]
 newSigMap acc = \case

@@ -13,12 +13,12 @@ import Dazzle.Import
 newtype Sym = Sym
   { unSym :: Text
   }
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
 
 data Fun
   = FunLam
   | FunTyp
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
 
 data Exp
   = ExpSym Sym
@@ -32,7 +32,7 @@ data Exp
     -- TODO : remove somehow!!!
     --
     ExpArrow Exp Exp
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
 
 data Def
   = DefFun
@@ -46,7 +46,7 @@ data Def
         _defDatArgs :: [Exp],
         _defDatCons :: [(Sym, [(Maybe Sym, Exp)])]
       }
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
 
 data Lit
   = LitUnit
@@ -55,10 +55,10 @@ data Lit
   | LitText Text
   | LitIntr Integer
   | LitFrac Text
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)
 
 data Mod = Mod
   { modName :: Text,
     modDefs :: [Def]
   }
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Generic, Data)

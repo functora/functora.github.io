@@ -11,6 +11,7 @@ import Control.Monad.Trans.Except as X
     withExceptT,
   )
 import Data.Coerce as X (coerce)
+import Data.Data as X (Data)
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
 import Data.List as X (partition, singleton)

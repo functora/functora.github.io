@@ -32,8 +32,15 @@ newMod x =
 
 unApp :: Exp -> Exp
 unApp = \case
-  ExpApp (ExpApp x xs) ys -> unApp . ExpApp (unApp x) $ unApp <$> (xs <> ys)
-  expr -> expr
+  ExpApp (ExpApp x xs) ys ->
+    unApp . ExpApp (unApp x) $ unPar . unApp <$> (xs <> ys)
+  x ->
+    x
+
+unPar :: Exp -> Exp
+unPar = \case
+  ExpPar x -> x
+  x -> x
 
 newSigMap :: Map Sym [Exp] -> HsDecl GhcPs -> Map Sym [Exp]
 newSigMap acc = \case
@@ -201,14 +208,8 @@ newExp = \case
     ExpSym $ newSym x
   HsPar _ _ x _ ->
     ExpPar . newExp $ unLoc x
-  HsApp _ fun0 args0 ->
-    --
-    -- NOTE : simple way to uncurry
-    --
-    let args1 = singleton . newExp $ unLoc args0
-     in case newExp $ unLoc fun0 of
-          ExpApp fun args -> ExpApp fun $ args <> args1
-          fun -> ExpApp fun args1
+  HsApp _ lhs rhs ->
+    ExpApp (newExp $ unLoc lhs) [newExp $ unLoc rhs]
   e@(ExplicitTuple _ xs _) ->
     ExpTuple $
       fmap

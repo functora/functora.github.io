@@ -1,21 +1,35 @@
+{-# LANGUAGE OverloadedRecordDot #-}
+
 module Microlude
-  ( Proxy (..),
-    Tagged (..),
-    Lens (..),
-    fst,
+  ( Tagged (..),
+    Foo (..),
+    Bar (..),
+    unFooBar,
   )
 where
 
-data Proxy tags = Proxy
+import Prelude
 
 newtype Tagged tags rep = Tagged
   { unTagged :: rep
   }
 
-data Lens s a = Lens
-  { view :: s -> a,
-    set :: s -> a -> s
-  }
+newtype Foo = Foo {unFoo :: Int}
 
-fst :: Lens (a, b) a
-fst = Lens (\(x, _) -> x) (\(_, y) x -> (x, y))
+newtype Bar = Bar {unBar :: Foo}
+
+unFooBar :: Bar -> Int
+unFooBar x = x.unBar.unFoo
+
+--
+-- TODO : after fix https://github.com/gleam-lang/gleam/issues/2179
+--
+-- data Proxy tags = Proxy
+--
+-- data Lens s a = Lens
+--   { view :: s -> a,
+--     set :: s -> a -> s
+--   }
+--
+-- fst :: Lens (a, b) a
+-- fst = Lens (\(x, _) -> x) (\(_, y) x -> (x, y))

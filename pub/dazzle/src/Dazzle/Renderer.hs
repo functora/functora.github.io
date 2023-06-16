@@ -148,6 +148,10 @@ renExp tab = \case
       <> intercalate ", " (renExp tab <$> xs)
       <> ") -> "
       <> renExp tab x
+  ExpInf lhs mid rhs ->
+    renExp tab lhs
+      <> renExp tab mid
+      <> renExp tab rhs
   ExpLit x ->
     renLit x
   ExpCase x xs ->

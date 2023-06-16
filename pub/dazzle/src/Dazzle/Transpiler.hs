@@ -244,6 +244,8 @@ newExp = \case
             failure "newExp-7" clauses
       e ->
         failure "newExp-6" e
+  OpApp _ lhs mid rhs ->
+    ExpInf (newExp $ unLoc lhs) (newExp $ unLoc mid) (newExp $ unLoc rhs)
   e ->
     failure "newExp-3" e
 
@@ -253,31 +255,31 @@ newLit = \case
   HsString _ x -> LitText . T.pack $ unpackFS x
   e -> failure "newLit" e
 
--- -- | HsCharPrim (XHsCharPrim x) {- SourceText -} Char
--- -- | HsStringPrim (XHsStringPrim x) {- SourceText -} !ByteString
--- -- | HsInt (XHsInt x)  IntegralLit
--- -- | HsIntPrim (XHsIntPrim x) {- SourceText -} Integer
--- -- | HsWordPrim (XHsWordPrim x) {- SourceText -} Integer
--- -- | HsInt64Prim (XHsInt64Prim x) {- SourceText -} Integer
--- -- | HsWord64Prim (XHsWord64Prim x) {- SourceText -} Integer
--- -- | HsInteger (XHsInteger x) {- SourceText -} Integer Type
--- -- | HsRat (XHsRat x)  FractionalLit Type
--- -- | HsFloatPrim (XHsFloatPrim x)   FractionalLit
--- -- | HsDoublePrim (XHsDoublePrim x) FractionalLit
+-- newPrj :: GenLocated a (DotFieldOcc GhcPs) -> Sym
+-- newPrj =
+--   strSym
+--     . unpackFS
+--     . unLoc
+--     . dfoLabel
+--     . unLoc
 
 newSym :: GenLocated a RdrName -> Sym
-newSym raw =
-  Sym . T.pack $ case safeHead str of
-    Nothing -> str
-    Just x ->
-      if C.isLower x
-        then T.quietSnake str
-        else T.pascal str
-  where
-    str =
-      occNameString
-        . rdrNameOcc
-        $ unLoc raw
+newSym =
+  strSym
+    . occNameString
+    . rdrNameOcc
+    . unLoc
+
+strSym :: String -> Sym
+strSym str =
+  Sym
+    . T.pack
+    $ case safeHead str of
+      Nothing -> str
+      Just x ->
+        if C.isLower x
+          then T.quietSnake str
+          else T.pascal str
 
 failure :: Outputable a => Text -> a -> any
 failure tag =

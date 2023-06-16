@@ -25,6 +25,7 @@ data Exp
   | ExpPar Exp
   | ExpApp Exp [Exp]
   | ExpFun Fun [Exp] Exp
+  | ExpInf Exp Exp Exp
   | ExpLit Lit
   | ExpCase Exp [(Exp, Exp)]
   | ExpTuple [Exp]

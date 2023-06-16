@@ -9,7 +9,7 @@ shellFor {
   };
   buildInputs = [
     pkgs.cabal-install
-    pkgs.ormolu
+    unst.ormolu
     pkgs.hpack
     pkgs.hlint
     pkgs.ghcid

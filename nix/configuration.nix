@@ -6,8 +6,8 @@ let
   yewtube = import ./yewtube.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/d01e7280ad7d13a5a0fae57355bd0dbfe5b81969.tar.gz";
-    sha256 = "0qh9r3cc8yh434j8n2licf548gvswillzm8x7rfcfys8p7srkvl8";
+    url = "https://github.com/nix-community/home-manager/archive/a8d549351d4b87ab80665f35e57bee2a04201245.tar.gz";
+    sha256 = "1rhc5zps6b7llxa080khd5f38r607q4pbml1217rz7a8k15gzyb5";
   };
   kmonad-srv = builtins.fetchTarball {
     url = "https://github.com/kmonad/kmonad/archive/3413f1be996142c8ef4f36e246776a6df7175979.tar.gz";
@@ -388,13 +388,53 @@ in
       };
     };
 
+    #
+    # Web eID
+    #
+    # Tell p11-kit to load/proxy opensc-pkcs11.so, providing all available slots
+    # (PIN1 for authentication/decryption, PIN2 for signing).
+    environment.etc."pkcs11/modules/opensc-pkcs11".text = ''
+      module: ${pkgs.opensc}/lib/opensc-pkcs11.so
+    '';
+    services.pcscd.enable = true;
+    #
+    # Firefox
+    #
+    programs.firefox = {
+      enable = true;
+      # nativeMessagingHosts.euwebid = true;
+      policies.SecurityDevices.p11-kit-proxy =
+        "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
+    };
+    #
+    # Chromium
+    #
+    environment.etc."chromium/native-messaging-hosts/eu.webeid.json".source =
+      "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
+    environment.etc."opt/chrome/native-messaging-hosts/eu.webeid.json".source =
+      "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
+    environment.systemPackages = with pkgs; [
+      # Wrapper script to tell to Chrome/Chromium to use p11-kit-proxy to load
+      # security devices, so they can be used for TLS client auth.
+      # Each user needs to run this themselves, it does not work on a system level
+      # due to a bug in Chromium:
+      #
+      # https://bugs.chromium.org/p/chromium/issues/detail?id=16387
+      (pkgs.writeShellScriptBin "setup-browser-eid" ''
+        NSSDB="''${HOME}/.pki/nssdb"
+        mkdir -p ''${NSSDB}
+
+        ${pkgs.nssTools}/bin/modutil -force -dbdir sql:$NSSDB -add p11-kit-proxy \
+          -libfile ${pkgs.p11-kit}/lib/p11-kit-proxy.so
+      '')
+    ];
+
     services.tor.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
     virtualisation.docker.enable = true;
     virtualisation.podman.enable = false;
     virtualisation.podman.dockerSocket.enable = false;
-    virtualisation.podman.defaultNetwork.dnsname.enable = false;
     virtualisation.virtualbox.host.enable = true;
     users.extraGroups.vboxusers.members = [ config.services.functora.userName ];
 
@@ -412,7 +452,7 @@ in
         "networkmanager"
       ];
       packages = with pkgs; [
-        firefox
+
       ];
     };
 
@@ -474,6 +514,7 @@ in
         mate.caja
         ccrypt
         awscli2
+        qdigidoc
       ];
       programs.git = {
         enable = true;
@@ -510,33 +551,32 @@ in
         bars.bottom.blocks = [
           {
             block = "battery";
-            format = " BAT {percentage} {time}";
-            full_format = " BAT FULL";
+            format = " BAT $percentage $time ";
+            full_format = " BAT FULL ";
             icons_format = "";
           }
           {
             block = "backlight";
-            format = " BRT {brightness}";
+            format = " BRT $brightness ";
             icons_format = "";
           }
           {
-            block = "networkmanager";
+            block = "net";
+            format = " $ip ";
             icons_format = "";
           }
           {
             block = "disk_space";
             info_type = "available";
-            format = "SSD {available}";
+            alert_unit = "GB";
             alert = 10.0;
             warning = 20.0;
-            unit = "GB";
+            format = " SSD $available ";
             icons_format = "";
           }
           {
             block = "memory";
-            display_type = "memory";
-            format_mem = " RAM {mem_used_percents}";
-            clickable = false;
+            format = " RAM $mem_used_percents.eng(w:1) ";
             icons_format = "";
           }
           #
@@ -551,18 +591,18 @@ in
           # }
           {
             block = "cpu";
-            format = " CPU {utilization}";
+            format = " CPU $utilization ";
             icons_format = "";
           }
           {
             block = "sound";
-            format = " VOL {volume}";
+            format = " VOL $volume ";
             show_volume_when_muted = true;
             icons_format = "";
           }
           {
             block = "time";
-            format = " %a %Y-%m-%d %R";
+            format = " $timestamp.datetime(f:'%a %Y-%m-%d %R') ";
             interval = 60;
             icons_format = "";
           }

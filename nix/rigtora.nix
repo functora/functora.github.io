@@ -43,8 +43,7 @@ in
     #     interfaces = [ "wlan0" ];
     #   };
     # };
-
-    boot.cleanTmpDir = true;
+    boot.tmp.cleanOnBoot = true;
     nix.settings.auto-optimise-store = true;
     #
     # TODO : script to derive cpuName

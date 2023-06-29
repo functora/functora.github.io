@@ -16,6 +16,7 @@ shellFor {
     unst.gleam
     unst.erlang
     unst.elixir
+    unst.alejandra
     #
     # NOTE : HLS takes too much disk space
     # and time to build, maybe does not worth it.

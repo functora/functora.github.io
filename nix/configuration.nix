@@ -1,5 +1,9 @@
-{ lib, pkgs, config, ... }:
-let
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}: let
   vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   unst = import ./nixpkgs-unstable.nix;
@@ -17,26 +21,30 @@ let
     url = "https://github.com/kmonad/kmonad/archive/820af08d1ef1bff417829415d5f673041b67ef4d.tar.gz";
     sha256 = "0kkayvcc9jmjm1z1rgabkq36hyrpqdkm8z998dsyg6yh05aqpfzz";
   };
-  kmonad-pkg = (import (
-    fetchTarball {
-      url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
-      sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2"; }
-  ) { src = "${kmonad-src}/nix"; }).defaultNix.default;
+  kmonad-pkg =
+    (import (
+      fetchTarball {
+        url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
+        sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2";
+      }
+    ) {src = "${kmonad-src}/nix";})
+    .defaultNix
+    .default;
   obelisk = import (fetchTarball {
     url = "https://github.com/obsidiansystems/obelisk/archive/41f97410cfa2e22a4ed9e9344abcd58bbe0f3287.tar.gz";
     sha256 = "04bpzji7y3nz573ib3g6icb56s5zbj4zxpakhqaql33v2v77hi9g";
-  }){};
+  }) {};
   blocked-hosts =
     builtins.concatStringsSep "\n"
-      (builtins.map (x: "127.0.0.1 ${x}") [
-        "err.ee"
-        "delfi.ee"
-        "postimees.ee"
-        "youtube.com"
-        "rumble.com"
-        "telegram.org"
-        #"discord.com"
-      ]);
+    (builtins.map (x: "127.0.0.1 ${x}") [
+      "err.ee"
+      "delfi.ee"
+      "postimees.ee"
+      "youtube.com"
+      "rumble.com"
+      "telegram.org"
+      #"discord.com"
+    ]);
   # bash script to let dbus know about important env variables and
   # propagate them to relevent services run at the end of sway config
   # see
@@ -59,19 +67,22 @@ let
   # run at the end of sway config
   configure-gtk = pkgs.writeShellApplication {
     name = "configure-gtk";
-    text =
-      let
-        schema = pkgs.gsettings-desktop-schemas;
-        datadir = "${schema}/share/gsettings-schemas/${schema.name}";
-      in ''
-        export XDG_DATA_DIRS=${datadir}:$XDG_DATA_DIRS
-        gnome_schema=org.gnome.desktop.interface
-        ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
-      '';
+    text = let
+      schema = pkgs.gsettings-desktop-schemas;
+      datadir = "${schema}/share/gsettings-schemas/${schema.name}";
+    in ''
+      export XDG_DATA_DIRS=${datadir}:$XDG_DATA_DIRS
+      gnome_schema=org.gnome.desktop.interface
+      ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
+    '';
   };
   mkTkl = dev: {
     device = dev;
-    defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+    defcfg = {
+      enable = true;
+      fallthrough = true;
+      allowCommands = false;
+    };
     config = ''
       (defalias
         fst  (layer-toggle fst-layer)
@@ -113,17 +124,18 @@ let
       )
     '';
   };
-in
-{
-  imports = [
-    (import "${home-manager}/nixos")
-    (import "${kmonad-srv}/nix/nixos-module.nix")
-    (import ./rigtora.nix)
-  ] ++ (
-    if builtins.pathExists ./../prv/nix/configuration.nix
-    then [ (import ./../prv/nix/configuration.nix) ]
-    else [ ]
-  );
+in {
+  imports =
+    [
+      (import "${home-manager}/nixos")
+      (import "${kmonad-srv}/nix/nixos-module.nix")
+      (import ./rigtora.nix)
+    ]
+    ++ (
+      if builtins.pathExists ./../prv/nix/configuration.nix
+      then [(import ./../prv/nix/configuration.nix)]
+      else []
+    );
 
   options.services.functora = with lib; {
     userName = mkOption {
@@ -189,13 +201,12 @@ in
       #media-session.enable = true;
     };
 
-
     hardware.opengl = {
       enable = true;
       driSupport32Bit = true;
       extraPackages = with pkgs; [
         intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        vaapiIntel         # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
         vaapiVdpau
         libvdpau-va-gl
       ];
@@ -208,7 +219,11 @@ in
       keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
       keyboards.alice80 = {
         device = "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
-        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        defcfg = {
+          enable = true;
+          fallthrough = true;
+          allowCommands = false;
+        };
         config = ''
           (defalias
             fst  (layer-toggle fst-layer)
@@ -248,7 +263,11 @@ in
       };
       keyboards.gk61 = {
         device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
-        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        defcfg = {
+          enable = true;
+          fallthrough = true;
+          allowCommands = false;
+        };
         config = ''
           (defalias
             fst  (layer-toggle fst-layer)
@@ -296,7 +315,11 @@ in
       };
       keyboards.k995p = {
         device = "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
-        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        defcfg = {
+          enable = true;
+          fallthrough = true;
+          allowCommands = false;
+        };
         config = ''
           (defalias
             fst  (layer-toggle fst-layer)
@@ -340,7 +363,11 @@ in
       };
       keyboards.a275 = {
         device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
-        defcfg = { enable = true; fallthrough = true; allowCommands = false; };
+        defcfg = {
+          enable = true;
+          fallthrough = true;
+          allowCommands = false;
+        };
         config = ''
           (defalias
             fst  (layer-toggle fst-layer)
@@ -403,16 +430,13 @@ in
     programs.firefox = {
       enable = true;
       # nativeMessagingHosts.euwebid = true;
-      policies.SecurityDevices.p11-kit-proxy =
-        "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
+      policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
     };
     #
     # Chromium
     #
-    environment.etc."chromium/native-messaging-hosts/eu.webeid.json".source =
-      "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
-    environment.etc."opt/chrome/native-messaging-hosts/eu.webeid.json".source =
-      "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
+    environment.etc."chromium/native-messaging-hosts/eu.webeid.json".source = "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
+    environment.etc."opt/chrome/native-messaging-hosts/eu.webeid.json".source = "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
     environment.systemPackages = with pkgs; [
       # Wrapper script to tell to Chrome/Chromium to use p11-kit-proxy to load
       # security devices, so they can be used for TLS client auth.
@@ -436,7 +460,7 @@ in
     virtualisation.podman.enable = false;
     virtualisation.podman.dockerSocket.enable = false;
     virtualisation.virtualbox.host.enable = true;
-    users.extraGroups.vboxusers.members = [ config.services.functora.userName ];
+    users.extraGroups.vboxusers.members = [config.services.functora.userName];
 
     users.groups.plugdev = {};
     users.users.${config.services.functora.userName} = {
@@ -452,7 +476,6 @@ in
         "networkmanager"
       ];
       packages = with pkgs; [
-
       ];
     };
 
@@ -467,7 +490,7 @@ in
       enable = true;
       wlr.enable = true;
       # gtk portal needed to make gtk apps happy
-      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+      extraPortals = [pkgs.xdg-desktop-portal-gtk];
     };
 
     #
@@ -515,6 +538,7 @@ in
         ccrypt
         awscli2
         qdigidoc
+        libreoffice
       ];
       programs.git = {
         enable = true;
@@ -618,11 +642,17 @@ in
         enable = true;
         profiles = {
           docked.outputs = [
-            { criteria = "eDP-1"; status = "disable"; }
-            { criteria = "HDMI-A-1"; }
+            {
+              criteria = "eDP-1";
+              status = "disable";
+            }
+            {criteria = "HDMI-A-1";}
           ];
           undocked.outputs = [
-            { criteria = "eDP-1"; status = "enable"; }
+            {
+              criteria = "eDP-1";
+              status = "enable";
+            }
           ];
         };
       };
@@ -649,89 +679,88 @@ in
         # because seems like they are giving desired result only
         # after manual config reload inside the sway session.
         #
-        config =
-          with pkgs;
-          let mod =
-                "Mod4";
-              wmEx = x:
-                "exec --no-startup-id ${x}";
-              newBrightness = x:
-                wmEx "${brightnessctl}/bin/brightnessctl s ${x}";
-              newPlayerCtl = x:
-                wmEx "${playerctl}/bin/playerctl ${x}";
-              newVolChange = x:
-                wmEx "${pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ ${x}";
-              cmdVolToggle =
-                wmEx "${pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
-              cmdMicToggle =
-                wmEx "${pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-              newMediaKeys = x: {
-                "${x}XF86MonBrightnessDown" = newBrightness "3-";
-                "${x}XF86MonBrightnessUp" = newBrightness "+3";
-                "${x}XF86AudioMicMute" = cmdMicToggle;
-                "${x}XF86AudioPrev" = newPlayerCtl "previous";
-                "${x}XF86AudioPlay" = newPlayerCtl "play-pause";
-                "${x}XF86AudioNext" = newPlayerCtl "next";
-                "${x}XF86AudioMute" = cmdVolToggle;
-                "${x}XF86AudioLowerVolume" = newVolChange "-5%";
-                "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
-              };
-              cfgProgrKeys = {
-                "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
-                "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
-                "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
-              };
-              cfgBasicKeys = {
-                "Ctrl+Mod1+q" = wmEx lockCmd;
-                "Ctrl+${mod}+q" = wmEx lockCmd;
-                "${mod}+Shift+s" = wmEx "systemctl suspend";
-                "${mod}+h" = "focus left";
-                "${mod}+j" = "focus down";
-                "${mod}+k" = "focus up";
-                "${mod}+l" = "focus right";
-                "${mod}+Shift+h" = "move left";
-                "${mod}+Shift+j" = "move down";
-                "${mod}+Shift+k" = "move up";
-                "${mod}+Shift+l" = "move right";
-                "${mod}+Shift+p" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy output";
-                "${mod}+Shift+n" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy area";
-                "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
-                "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
-                "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";
-                "${mod}+0" = "workspace number 10";
-                "${mod}+Shift+0" = "move container to workspace number 10";
-              };
-          in  {
-                modifier = mod;
-                defaultWorkspace = "workspace number 1";
-                keybindings =
-                  lib.mkOptionDefault (
-                    newMediaKeys "Mod5+Shift+" //
-                    newMediaKeys "" //
-                    cfgProgrKeys //
-                    cfgBasicKeys
-                  );
-                bars = [{
-                  mode = "dock";
-                  position = "bottom";
-                  trayOutput = "none";
-                  statusCommand =
-                    "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
-                }];
-                seat = { "*" = { hide_cursor = "2000"; }; };
-                input = { "*" = {
-                  #
-                  # NOTE : Moved from xkb to kmonad
-                  # for better cross-system compatibility.
-                  # Also can add 'compose:ralt' option if
-                  # advanced symbol composition is needed.
-                  #
-                  # xkb_file = "~/.xkb/keymap/custom";
-                  xkb_layout = "us,ru";
-                  xkb_variant = "altgr-intl,";
-                  xkb_options = "grp:sclk_toggle";
-                }; };
-              };
+        config = with pkgs; let
+          mod = "Mod4";
+          wmEx = x: "exec --no-startup-id ${x}";
+          newBrightness = x:
+            wmEx "${brightnessctl}/bin/brightnessctl s ${x}";
+          newPlayerCtl = x:
+            wmEx "${playerctl}/bin/playerctl ${x}";
+          newVolChange = x:
+            wmEx "${pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ ${x}";
+          cmdVolToggle =
+            wmEx "${pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
+          cmdMicToggle =
+            wmEx "${pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+          newMediaKeys = x: {
+            "${x}XF86MonBrightnessDown" = newBrightness "3-";
+            "${x}XF86MonBrightnessUp" = newBrightness "+3";
+            "${x}XF86AudioMicMute" = cmdMicToggle;
+            "${x}XF86AudioPrev" = newPlayerCtl "previous";
+            "${x}XF86AudioPlay" = newPlayerCtl "play-pause";
+            "${x}XF86AudioNext" = newPlayerCtl "next";
+            "${x}XF86AudioMute" = cmdVolToggle;
+            "${x}XF86AudioLowerVolume" = newVolChange "-5%";
+            "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
+          };
+          cfgProgrKeys = {
+            "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
+            "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
+            "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
+          };
+          cfgBasicKeys = {
+            "Ctrl+Mod1+q" = wmEx lockCmd;
+            "Ctrl+${mod}+q" = wmEx lockCmd;
+            "${mod}+Shift+s" = wmEx "systemctl suspend";
+            "${mod}+h" = "focus left";
+            "${mod}+j" = "focus down";
+            "${mod}+k" = "focus up";
+            "${mod}+l" = "focus right";
+            "${mod}+Shift+h" = "move left";
+            "${mod}+Shift+j" = "move down";
+            "${mod}+Shift+k" = "move up";
+            "${mod}+Shift+l" = "move right";
+            "${mod}+Shift+p" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy output";
+            "${mod}+Shift+n" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy area";
+            "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
+            "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
+            "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";
+            "${mod}+0" = "workspace number 10";
+            "${mod}+Shift+0" = "move container to workspace number 10";
+          };
+        in {
+          modifier = mod;
+          defaultWorkspace = "workspace number 1";
+          keybindings = lib.mkOptionDefault (
+            newMediaKeys "Mod5+Shift+"
+            // newMediaKeys ""
+            // cfgProgrKeys
+            // cfgBasicKeys
+          );
+          bars = [
+            {
+              mode = "dock";
+              position = "bottom";
+              trayOutput = "none";
+              statusCommand = "${i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-bottom.toml";
+            }
+          ];
+          seat = {"*" = {hide_cursor = "2000";};};
+          input = {
+            "*" = {
+              #
+              # NOTE : Moved from xkb to kmonad
+              # for better cross-system compatibility.
+              # Also can add 'compose:ralt' option if
+              # advanced symbol composition is needed.
+              #
+              # xkb_file = "~/.xkb/keymap/custom";
+              xkb_layout = "us,ru";
+              xkb_variant = "altgr-intl,";
+              xkb_options = "grp:sclk_toggle";
+            };
+          };
+        };
       };
     };
     #
@@ -761,7 +790,7 @@ in
       displayManager.gdm.enable = true;
       displayManager.gdm.wayland = true;
       displayManager.defaultSession = "sway";
-      displayManager.sessionPackages = [ pkgs.sway ];
+      displayManager.sessionPackages = [pkgs.sway];
     };
   };
 }

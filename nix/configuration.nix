@@ -212,6 +212,16 @@ in {
       ];
     };
 
+    #
+    # TODO : remove when this is fixed
+    # https://github.com/NixOS/nixpkgs/issues/180175
+    #
+    systemd.services.NetworkManager-wait-online = {
+      serviceConfig = {
+        ExecStart = ["" "${pkgs.networkmanager}/bin/nm-online -q"];
+      };
+    };
+
     services.kmonad = {
       enable = true;
       package = kmonad-pkg;

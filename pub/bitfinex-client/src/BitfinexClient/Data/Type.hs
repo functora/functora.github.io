@@ -525,15 +525,15 @@ newCurrencyPair raw =
   case T.splitOn ":" bq0 of
     [bq1]
       | length bq1 == 6 -> do
-        let (b1, q1) = T.splitAt 3 bq1
-        base <- withFirst $ newCurrencyCode b1
-        quote <- withFirst $ newCurrencyCode q1
-        withFirst $ currencyPairCon base quote
+          let (b1, q1) = T.splitAt 3 bq1
+          base <- withFirst $ newCurrencyCode b1
+          quote <- withFirst $ newCurrencyCode q1
+          withFirst $ currencyPairCon base quote
     [b1, q1]
       | length b1 >= 3 && length q1 >= 3 -> do
-        base <- withFirst $ newCurrencyCode b1
-        quote <- withFirst $ newCurrencyCode q1
-        withFirst $ currencyPairCon base quote
+          base <- withFirst $ newCurrencyCode b1
+          quote <- withFirst $ newCurrencyCode q1
+          withFirst $ currencyPairCon base quote
     _ ->
       Left $
         TryFromException raw Nothing

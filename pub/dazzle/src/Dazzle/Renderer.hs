@@ -47,7 +47,7 @@ fmt src =
     )
     $ pure
       . Left
-      . (mappend "EXCEPTION ")
+      . mappend "EXCEPTION "
       . show @Text @IOException
 
 renMod :: Mod -> Text
@@ -110,11 +110,7 @@ renDef tab (DefDat name args cons) =
                              ", "
                              ( fmap
                                  ( \(mtag, typ) ->
-                                     ( maybe
-                                         mempty
-                                         (\s -> renSym s <> ": ")
-                                         mtag
-                                     )
+                                     maybe mempty (\s -> renSym s <> ": ") mtag
                                        <> renExp tab typ
                                  )
                                  fields

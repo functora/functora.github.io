@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
@@ -6,7 +7,7 @@
 module BitfinexClient.Data.QQ
   ( mkTryQQ,
     mkTryRatQQ,
-    --feeRate,
+    -- feeRate,
     feeRateMakerBase,
     feeRateMakerQuote,
     feeRateTakerBase,

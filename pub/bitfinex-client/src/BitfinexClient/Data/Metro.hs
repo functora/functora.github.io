@@ -225,16 +225,16 @@ instance
   where
   tryFrom raw
     | raw > 0 && rounded == raw =
-      Right $
-        SomeMoney (sing :: Sing 'Buy) $
-          mkMoney rounded
+        Right $
+          SomeMoney (sing :: Sing 'Buy) $
+            mkMoney rounded
     | raw < 0 && rounded == raw =
-      Right $
-        SomeMoney (sing :: Sing 'Sell) $
-          mkMoney rounded
+        Right $
+          SomeMoney (sing :: Sing 'Sell) $
+            mkMoney rounded
     | otherwise =
-      Left $
-        TryFromException raw Nothing
+        Left $
+          TryFromException raw Nothing
     where
       rounded =
         roundMoneyRat raw

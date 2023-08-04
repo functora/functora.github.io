@@ -70,7 +70,8 @@ newExample = do
           . GP.plotSync (SVG.cons svgPath)
           $ totalChart mma
       when (svgRes /= ExitSuccess) $
-        error $ "Fatal SVG error " <> show svgRes
+        error $
+          "Fatal SVG error " <> show svgRes
       let tmpPath =
             Reanimate.svgAsPngFile $
               Reanimate.mkImage 16 9 svgPath
@@ -91,7 +92,8 @@ withMmaSvg mma action =
           . GP.plotSync (SVG.cons svgPath)
           $ totalChart mma
       when (svgRes /= ExitSuccess) $
-        error $ "Fatal SVG error " <> show svgRes
+        error $
+          "Fatal SVG error " <> show svgRes
       action svgPath
 
 withMmaPng ::

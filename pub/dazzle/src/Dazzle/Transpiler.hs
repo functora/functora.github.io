@@ -168,13 +168,12 @@ newDefFun sigs (FunRhs fun _ _) args [GRHS _ _ expr] =
             singleton
               . DefFun
                 name
-                ( fmap
-                    ( \(idx :: Int, pat) ->
-                        ( newExpPat pat,
-                          Unsafe.at idx typs
-                        )
-                    )
-                    $ zip [0 ..] args
+                ( ( \(idx :: Int, pat) ->
+                      ( newExpPat pat,
+                        Unsafe.at idx typs
+                      )
+                  )
+                    <$> zip [0 ..] args
                 )
                 ( Unsafe.at (length args) typs
                 )
@@ -228,7 +227,7 @@ newExp = \case
                   (newExpPat $ unLoc lhs, newExp $ unLoc expr)
                 _ ->
                   failure "newExp-5" exp0
-            Match _ e _ (GRHSs _ _ _) ->
+            Match _ e _ GRHSs {} ->
               failure "newExp-4" e
         )
       $ unLoc <$> unLoc cls0

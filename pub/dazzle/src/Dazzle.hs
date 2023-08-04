@@ -26,8 +26,8 @@ main = withUtf8 $ do
     POk _ astHs -> do
       let astGl = newMod $ unLoc astHs
       let renGl = renMod astGl
-      --putStrLn $ show @Text astGl
-      --putStrLn (mempty :: Text)
+      -- putStrLn $ show @Text astGl
+      -- putStrLn (mempty :: Text)
       putStr renGl
     PFailed {} ->
       error "GHC parser failure!"
@@ -51,7 +51,7 @@ parserOpts =
     (mempty :: [String]) -- Supported Languages and Extensions
     (False :: Bool) -- are safe imports on?
     (True :: Bool) -- keeping Haddock comment tokens
-    (True :: Bool) --	keep regular comment tokens
+    (True :: Bool) -- 	keep regular comment tokens
     (True :: Bool) -- If this is enabled, '{-# LINE ... -#}' and '{-# COLUMN ... #-}' update the internal position kept by the parser. Otherwise, those pragmas are lexed as ITline_prag and ITcolumn_prag tokens.
 
 diagOpts :: DiagOpts

@@ -596,7 +596,7 @@ in {
           }
           {
             block = "net";
-            format = " $ip ";
+            format = " $ssid ";
             icons_format = "";
           }
           {

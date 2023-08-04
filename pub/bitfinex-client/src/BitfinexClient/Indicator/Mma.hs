@@ -389,9 +389,9 @@ tryFindExit' _ [] = Nothing
 tryFindExit' entr (x : xs)
   | unQuotePerBase (candleLow x)
       < unStopLoss (tradeEntryStopLoss entr) =
-    Nothing
+      Nothing
   | unQuotePerBase (candleHigh x)
       > unTakeProfit (tradeEntryTakeProfit entr) =
-    pure (entr, TradeExit x)
+      pure (entr, TradeExit x)
   | otherwise =
-    tryFindExit' entr xs
+      tryFindExit' entr xs

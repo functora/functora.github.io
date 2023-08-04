@@ -7,8 +7,8 @@ module BitfinexClientSpec
 where
 
 import qualified BitfinexClient as Bitfinex
---import qualified BitfinexClient.Chart as Chart
---import qualified BitfinexClient.Data.CancelOrderMulti as CancelOrderMulti
+-- import qualified BitfinexClient.Chart as Chart
+-- import qualified BitfinexClient.Data.CancelOrderMulti as CancelOrderMulti
 
 import qualified BitfinexClient.Data.Candles as Candles
 import qualified BitfinexClient.Data.GetOrders as GetOrders

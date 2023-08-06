@@ -9,7 +9,7 @@ executable app
   main-is:
     Main.hs
   build-depends:
-    base, miso
+    base, miso, Crypto
   if !impl(ghcjs)
     build-depends:
        jsaddle, jsaddle-warp, transformers, warp, websockets

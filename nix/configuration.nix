@@ -549,6 +549,7 @@ in {
         awscli2
         qdigidoc
         libreoffice
+        tor-browser-bundle-bin
       ];
       programs.git = {
         enable = true;

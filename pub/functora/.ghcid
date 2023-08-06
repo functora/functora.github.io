@@ -1,0 +1,4 @@
+--restart=.ghcid
+--restart=README.md
+--restart=functora.cabal
+--restart=../../cabal.project

@@ -1,5 +1,3 @@
-with (import ./../../../nix/misc.nix);
-[
-  mkGhcid "functora" "test" null
+with (import ./../../../nix/misc.nix); [
+  (mkGhcid "functora" "test" null)
 ]
-

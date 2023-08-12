@@ -18,7 +18,7 @@ flag ghcid
   manual:  True
   default: False
 
-common shared
+common pkg
   default-language:   Haskell2010
   other-modules:      Paths_functora
   ghc-options:
@@ -71,27 +71,67 @@ common shared
     TypeFamilies
     TypeOperators
 
+common pkg-prelude
+  import:         pkg
+  hs-source-dirs: src/prelude
+  build-depends:
+    , base
+    , base16-bytestring
+    , bytestring
+    , lens
+    , syb
+    , text
+    , universum
+    , witch
+
+common pkg-qr
+  import:         pkg
+  hs-source-dirs: src/qr
+  build-depends:
+    , base
+    , base64-bytestring
+    , bmp
+    , bytestring
+    , qrcode-core
+    , text
+    , vector
+
 library
-  import:          shared
-  exposed-modules: Functora
-  hs-source-dirs:  src
-  build-depends:   base
+  import:          pkg-prelude
+  exposed-modules: Functora.Prelude
+
+library qr
+  import:          pkg-qr
+  exposed-modules: Functora.Qr
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
 
 test-suite functora-test
-  import:         shared
+  import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   hs-source-dirs: test
   build-depends:
     , base
+    , bytestring
     , hspec
+    , qrcode-core
+    , text
+    , universum
 
-  other-modules:  FunctoraSpec
+  other-modules:
+    Functora.PreludeSpec
+    Functora.QrSpec
 
   if flag(ghcid)
-    hs-source-dirs: src
-    ghc-options:    -Wno-unused-packages
-    other-modules:  Functora
+    import:        pkg-prelude, pkg-qr
+    ghc-options:   -Wno-unused-packages
+    other-modules:
+      Functora.Prelude
+      Functora.Qr
 
   else
-    build-depends: functora
+    build-depends:
+      , functora
+      , qr

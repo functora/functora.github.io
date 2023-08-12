@@ -1962,7 +1962,7 @@ config.load_autoconfig(False)
 c.qt.highdpi = True
 c.zoom.default = '130%'
 c.tabs.last_close = "ignore"
-c.content.images = False
+# c.content.images = False
 c.content.autoplay = False
 c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"
@@ -1988,14 +1988,14 @@ c.url.searchengines = {
         'nixpkgs': 'https://search.nixos.org/packages?query={}'
 }
 
-config.set('content.images', True, '*://*.openai.com/*')
-config.set('content.images', True, '*://localhost/*')
-config.set('content.images', True, '*://127.0.0.1/*')
-config.set('content.images', True, 'file:///*')
+# config.set('content.images', True, '*://*.openai.com/*')
+# config.set('content.images', True, '*://localhost/*')
+# config.set('content.images', True, '*://127.0.0.1/*')
+# config.set('content.images', True, 'file:///*')
 
 config.bind('Q', 'quit')
 config.bind('K', 'tab-next')
 config.bind('J', 'tab-prev')
 config.bind('<Ctrl-l>', 'set-cmd-text :open -w {url:pretty}')
 config.bind('F', 'hint all run open -t -r {hint-url}')
-config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')
+# config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')

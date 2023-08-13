@@ -80,6 +80,7 @@ common pkg-prelude
     , bytestring
     , lens
     , syb
+    , tagged
     , text
     , universum
     , witch
@@ -96,6 +97,15 @@ common pkg-qr
     , text
     , vector
 
+common pkg-aes
+  import:         pkg
+  hs-source-dirs: src/aes
+  build-depends:
+    , base
+    , Crypto
+    , cryptohash-sha256
+    , pkcs7
+
 library
   import:          pkg-prelude
   exposed-modules: Functora.Prelude
@@ -103,6 +113,13 @@ library
 library qr
   import:          pkg-qr
   exposed-modules: Functora.Qr
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+
+library aes
+  import:          pkg-aes
+  exposed-modules: Functora.Aes
   build-depends:   functora
   exposed:         True
   visibility:      public
@@ -121,17 +138,20 @@ test-suite functora-test
     , universum
 
   other-modules:
+    Functora.AesSpec
     Functora.PreludeSpec
     Functora.QrSpec
 
   if flag(ghcid)
-    import:        pkg-prelude, pkg-qr
+    import:        pkg-prelude, pkg-qr, pkg-aes
     ghc-options:   -Wno-unused-packages
     other-modules:
+      Functora.Aes
       Functora.Prelude
       Functora.Qr
 
   else
     build-depends:
+      , aes
       , functora
       , qr

@@ -1,12 +1,9 @@
 module Functora.Aes
   ( encrypt,
     decrypt,
-    withWs128,
-    PrvKey,
-    drvPrvKey,
-    drvPrvKeyW128,
-    bsToWs128,
-    ws128ToBs,
+    withBlocks,
+    SomeAesKey,
+    drvSomeAesKey,
   )
 where
 
@@ -17,32 +14,19 @@ import qualified Crypto.Data.PKCS7 as PKCS7
 import qualified Crypto.Hash.SHA256 as SHA256
 import Data.LargeWord
 import Functora.Prelude
+import Type.Reflection
 
-encrypt ::
-  forall a.
-  ( From a ByteString,
-    From ByteString a
-  ) =>
-  PrvKey Word128 ->
-  a ->
-  a
-encrypt prv =
-  withWs128 $
-    Crypto.cbc AES.encrypt 0 (unPrvKey prv)
+encrypt :: forall a. (From a ByteString, From ByteString a) => SomeAesKey -> a -> a
+encrypt (SomeAesKey prv) =
+  withBlocks $
+    Crypto.cbc AES.encrypt 0 prv
 
-decrypt ::
-  forall a.
-  ( From a ByteString,
-    From ByteString a
-  ) =>
-  PrvKey Word128 ->
-  a ->
-  a
-decrypt prv =
-  withWs128 $
-    Crypto.unCbc AES.decrypt 0 (unPrvKey prv)
+decrypt :: forall a. (From a ByteString, From ByteString a) => SomeAesKey -> a -> a
+decrypt (SomeAesKey prv) =
+  withBlocks $
+    Crypto.unCbc AES.decrypt 0 prv
 
-withWs128 ::
+withBlocks ::
   forall a.
   ( From a ByteString,
     From ByteString a
@@ -50,48 +34,16 @@ withWs128 ::
   ([Word128] -> [Word128]) ->
   a ->
   a
-withWs128 expr =
+withBlocks expr =
   from @ByteString @a
-    . ws128ToBs
+    . blocksToBs
     . expr
-    . bsToWs128
+    . bsToBlocks
     . from @a @ByteString
 
-newtype PrvKey a = PrvKey
-  { unPrvKey :: a
-  }
-  deriving newtype (Eq, Ord, Read)
-  deriving (Show) via Redacted (PrvKey a)
-  deriving stock (Data, Generic)
-
-drvPrvKey ::
-  (ByteString -> a) ->
-  Tagged "HkdfLength" Int ->
-  Tagged "HkdfSalt" ByteString ->
-  Tagged "HkdfInfo" ByteString ->
-  Tagged "HkdfIkm" ByteString ->
-  PrvKey a
-drvPrvKey cons size salt info ikm =
-  PrvKey . cons $
-    SHA256.hkdf
-      (unTagged @"HkdfIkm" ikm)
-      (unTagged @"HkdfSalt" salt)
-      (unTagged @"HkdfInfo" info)
-      (unTagged @"HkdfLength" size)
-
-drvPrvKeyW128 ::
-  Tagged "HkdfSalt" ByteString ->
-  Tagged "HkdfInfo" ByteString ->
-  Tagged "HkdfIkm" ByteString ->
-  PrvKey Word128
-drvPrvKeyW128 =
-  drvPrvKey
-    (unsafeWord128 . from @ByteString @[Word8])
-    (Tagged @"HkdfLength" 16)
-
-bsToWs128 :: ByteString -> [Word128]
-bsToWs128 =
-  fmap unsafeWord128
+bsToBlocks :: ByteString -> [Word128]
+bsToBlocks =
+  fmap unsafeWord
     . breakup
     . from @ByteString @[Word8]
     . PKCS7.padBytesN bytesPerBlock
@@ -99,8 +51,8 @@ bsToWs128 =
     breakup [] = []
     breakup xs = (take bytesPerBlock xs) : (breakup $ drop bytesPerBlock xs)
 
-ws128ToBs :: [Word128] -> ByteString
-ws128ToBs =
+blocksToBs :: [Word128] -> ByteString
+blocksToBs =
   fromMaybe (error "PKCS7 unpad failure")
     . PKCS7.unpadBytesN bytesPerBlock
     . from @[Word8] @ByteString
@@ -110,8 +62,50 @@ ws128ToBs =
 bytesPerBlock :: Int
 bytesPerBlock = 16
 
-unsafeWord128 :: [Word8] -> Word128
-unsafeWord128 =
-  fromMaybe (error "Word128 overflow failure")
-    . safeFromIntegral @Integer @Word128
+data SomeAesKey = forall a. (AES.AESKey a, Typeable a) => SomeAesKey a
+
+deriving via (Redacted SomeAesKey) instance Show SomeAesKey
+
+instance Eq SomeAesKey where
+  (SomeAesKey lhs) == (SomeAesKey rhs)
+    | Just HRefl <- typeOf lhs `eqTypeRep` typeOf rhs = lhs == rhs
+    | otherwise = False
+
+type family WordByteSizeFamily word where
+  WordByteSizeFamily Word128 = 16
+  WordByteSizeFamily Word192 = 24
+  WordByteSizeFamily Word256 = 32
+
+type WordByteSize word size =
+  ( KnownNat size,
+    WordByteSizeFamily word ~ size
+  )
+
+drvSomeAesKey ::
+  forall word {size}.
+  ( Bounded word,
+    Typeable word,
+    AES.AESKey word,
+    WordByteSize word size
+  ) =>
+  Tagged "HkdfIkm" ByteString ->
+  Tagged "HkdfSalt" ByteString ->
+  Tagged "HkdfInfo" ByteString ->
+  SomeAesKey
+drvSomeAesKey ikm salt info =
+  SomeAesKey
+    . unsafeWord @word
+    . from @ByteString @[Word8]
+    . SHA256.hkdf
+      (unTagged @"HkdfIkm" ikm)
+      (unTagged @"HkdfSalt" salt)
+      (unTagged @"HkdfInfo" info)
+    . unsafeFrom @Natural @Int
+    . natVal
+    $ Proxy @size
+
+unsafeWord :: forall a. (Integral a, Bounded a) => [Word8] -> a
+unsafeWord =
+  fromMaybe (error "unsafeWord overflow failure")
+    . safeFromIntegral @Integer @a
     . foldl (\acc i -> acc * 256 + toInteger @Word8 i) (0 :: Integer)

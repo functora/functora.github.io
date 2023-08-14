@@ -7,5 +7,5 @@ import Test.Hspec
 spec :: Spec
 spec = do
   it "withBlocks" $ do
-    withWs128 @ByteString id "Hello, World!"
+    withBlocks @ByteString id "Hello, World!"
       `shouldBe` "Hello, World!"

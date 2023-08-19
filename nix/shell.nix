@@ -18,6 +18,7 @@ in
         unst.gleam
         unst.erlang
         unst.elixir
+        unst.ollama
         unst.alejandra
         newpkgs.nodePackages.prettier
         newpkgs.haskellPackages.cabal-fmt

@@ -1987,6 +1987,7 @@ c.url.searchengines = {
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
         'nixpkgs': 'https://search.nixos.org/packages?query={}'
 }
+c.colors.webpage.darkmode.enabled = True
 
 # config.set('content.images', True, '*://*.openai.com/*')
 # config.set('content.images', True, '*://localhost/*')

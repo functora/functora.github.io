@@ -549,7 +549,7 @@ in {
         awscli2
         qdigidoc
         libreoffice
-        tor-browser-bundle-bin
+        (tor-browser-bundle-bin.override {useHardenedMalloc = false;})
       ];
       programs.git = {
         enable = true;

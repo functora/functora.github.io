@@ -3,7 +3,7 @@
 set -e
 
 THIS_DIR="$(dirname "$(realpath "$0")")"
-VIM_BACKGROUND="${VIM_BACKGROUND:-light}"
+VIM_BACKGROUND="${VIM_BACKGROUND:-dark}"
 VIM_COLOR_SCHEME="${VIM_COLOR_SCHEME:-PaperColor}"
 
 nix-shell \

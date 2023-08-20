@@ -387,7 +387,7 @@ endif
 
 syntax on
 set t_Co=256
-exe 'set background=' . get(g:, "vimBackground", "light")
+exe 'set background=' . get(g:, "vimBackground", "dark")
 exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
@@ -561,6 +561,7 @@ if exists("*ToggleBackground") == 0
 
 	command BG call ToggleBackground()
 endif
+map <M-b> :BG<cr>
 
 "
 " => Jump between virtual lines in soft-wrapping mode

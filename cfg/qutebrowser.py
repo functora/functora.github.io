@@ -1957,7 +1957,7 @@ c.content.blocking.hosts.lists = [
 # Custom configs
 #
 
-config.load_autoconfig(False)
+config.load_autoconfig(True)
 
 c.qt.highdpi = True
 c.zoom.default = '130%'
@@ -1987,16 +1987,29 @@ c.url.searchengines = {
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
         'nixpkgs': 'https://search.nixos.org/packages?query={}'
 }
-c.colors.webpage.darkmode.enabled = True
 
 # config.set('content.images', True, '*://*.openai.com/*')
 # config.set('content.images', True, '*://localhost/*')
 # config.set('content.images', True, '*://127.0.0.1/*')
 # config.set('content.images', True, 'file:///*')
+# config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')
 
 config.bind('Q', 'quit')
 config.bind('K', 'tab-next')
 config.bind('J', 'tab-prev')
 config.bind('<Ctrl-l>', 'set-cmd-text :open -w {url:pretty}')
 config.bind('F', 'hint all run open -t -r {hint-url}')
-# config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')
+
+#
+# Themes
+#
+
+if c.colors.webpage.darkmode.enabled:
+    config.set('colors.webpage.preferred_color_scheme', 'dark')
+    config.set('colors.webpage.bg', 'black')
+else:
+    config.set('colors.webpage.preferred_color_scheme', 'light')
+    config.set('colors.webpage.bg', 'white')
+
+config.bind('<Alt-b>', 'config-cycle -p colors.webpage.darkmode.enabled False True ;; config-cycle -p colors.webpage.preferred_color_scheme light dark ;; config-cycle -p colors.webpage.bg white black ;; restart')
+config.bind('<Alt-t>', 'config-cycle -p colors.webpage.darkmode.algorithm lightness-cielab lightness-hsl brightness-rgb ;; restart')

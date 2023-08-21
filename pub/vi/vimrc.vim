@@ -387,7 +387,6 @@ endif
 
 syntax on
 set t_Co=256
-exe 'set background=' . get(g:, "vimBackground", "dark")
 exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
@@ -549,6 +548,12 @@ nnoremap <nowait><expr> <C-h> coc#float#has_scroll() ? coc#float#scroll(1) : "\<
 nnoremap <nowait><expr> <C-l> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-l>"
 inoremap <nowait><expr> <C-h> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
 inoremap <nowait><expr> <C-l> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+
+if strftime("%H") > 7 && strftime("%H") < 18
+  set background=light
+else
+  set background=dark
+endif
 
 if exists("*ToggleBackground") == 0
 	function ToggleBackground()

@@ -36,14 +36,15 @@
   }) {};
   blocked-hosts =
     builtins.concatStringsSep "\n"
-    (builtins.map (x: "127.0.0.1 ${x}") [
+    (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}") [
       "err.ee"
       "delfi.ee"
       "postimees.ee"
       "youtube.com"
       "rumble.com"
       "telegram.org"
-      #"discord.com"
+      "t.me"
+      "discord.com"
     ]);
   # bash script to let dbus know about important env variables and
   # propagate them to relevent services run at the end of sway config
@@ -471,6 +472,7 @@ in {
     virtualisation.podman.dockerSocket.enable = false;
     virtualisation.virtualbox.host.enable = true;
     users.extraGroups.vboxusers.members = [config.services.functora.userName];
+    networking.extraHosts = blocked-hosts;
 
     users.groups.plugdev = {};
     users.users.${config.services.functora.userName} = {

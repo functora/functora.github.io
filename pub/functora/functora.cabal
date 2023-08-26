@@ -134,6 +134,7 @@ test-suite functora-test
     , bytestring
     , hspec
     , qrcode-core
+    , random
     , text
     , universum
 

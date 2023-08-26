@@ -4,11 +4,11 @@ module Functora.Qr
   ( -- * Image
     Border (..),
     Scale (..),
-    qr2Bmp,
+    qrToBmp,
 
     -- * URL
-    qr2BmpDataUrlBL,
-    qr2BmpDataUrlTL,
+    qrToBmpDataUrlBL,
+    qrToBmpDataUrlTL,
   )
 where
 
@@ -42,7 +42,7 @@ x00 :: Word8
 x00 = 0x00
 
 -- | Convert the QR code into an BMP image.
-qr2Bmp ::
+qrToBmp ::
   -- | Border to add around the QR code, recommended is 4 (<0 is treated as 0)
   Border ->
   -- | Factor to scale the image (<1 is treated as 1)
@@ -50,7 +50,7 @@ qr2Bmp ::
   -- | The QRImage
   QRImage ->
   BMP
-qr2Bmp border scale QRImage {..}
+qrToBmp border scale QRImage {..}
   | border <= 0 && scale <= 1 =
       BMP.packRGBA32ToBMP
         qrImageSize
@@ -58,7 +58,7 @@ qr2Bmp border scale QRImage {..}
         . BS.pack
         . (>>= (\x -> [x, x, x, xff]))
         $ map (bool xff x00) (UV.toList qrImageData)
-qr2Bmp border' scale' QRImage {..} =
+qrToBmp border' scale' QRImage {..} =
   let border = border' `max` 0
       scale = scale' `max` 1
       size = (qrImageSize + 2 * (unBorder border)) * (unScale scale)
@@ -95,9 +95,9 @@ qr2Bmp border' scale' QRImage {..} =
         scaleH = concatMap (replicate n)
 
 -- | Convert an QR code into a bytestring-like Uri.
---   Has the same arguments as `qr2Bmp`.
+--   Has the same arguments as `qrToBmp`.
 --   This can be used to display a image in HTML without creating a temporary file.
-qr2BmpDataUrlBL ::
+qrToBmpDataUrlBL ::
   forall a.
   ( From BL.ByteString a
   ) =>
@@ -105,17 +105,17 @@ qr2BmpDataUrlBL ::
   Scale ->
   QRImage ->
   a
-qr2BmpDataUrlBL border scale =
+qrToBmpDataUrlBL border scale =
   from @BL.ByteString @a
     . ("data:image/bmp;base64," <>)
     . B64L.encode
     . BMP.renderBMP
-    . qr2Bmp border scale
+    . qrToBmp border scale
 
 -- | Convert an QR code into a text-like Uri.
---   Has the same arguments as `qr2Bmp`.
+--   Has the same arguments as `qrToBmp`.
 --   This can be used to display a image in HTML without creating a temporary file.
-qr2BmpDataUrlTL ::
+qrToBmpDataUrlTL ::
   forall a.
   ( From TL.Text a
   ) =>
@@ -123,9 +123,9 @@ qr2BmpDataUrlTL ::
   Scale ->
   QRImage ->
   a
-{-# INLINE qr2BmpDataUrlTL #-}
-qr2BmpDataUrlTL border scale =
+{-# INLINE qrToBmpDataUrlTL #-}
+qrToBmpDataUrlTL border scale =
   from @TL.Text @a
     . TL.pack
     . BLC8.unpack
-    . qr2BmpDataUrlBL border scale
+    . qrToBmpDataUrlBL border scale

@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Functora.Aes
   ( encrypt,
     decrypt,
@@ -19,7 +21,8 @@ import Data.LargeWord
 import Functora.Prelude
 import Type.Reflection
 
-encrypt :: forall a. (From a ByteString, From ByteString a) => SomeAesKey -> a -> a
+encrypt ::
+  forall a. (From a ByteString, From ByteString a) => SomeAesKey -> a -> a
 encrypt (SomeAesKey prv) =
   from @ByteString @a
     . blocksToBs
@@ -86,7 +89,7 @@ type WordByteSize word size =
     WordByteSizeFamily word ~ size
   )
 
-drvSomeAesKey ::
+#if __GLASGOW_HASKELL__ >= 901
   forall word {size}.
   ( Bounded word,
     Typeable word,
@@ -100,6 +103,18 @@ drvSomeAesKey ::
   -- The info parameter is an optional context or additional data that you can include to derive keys for specific purposes or to differentiate between different applications of the same IKM. The size of the info parameter depends on your use case and how much context you want to provide. It's usually a good practice to keep this as small as possible to avoid unnecessarily inflating the derived key size.
   Tagged "Info" ByteString ->
   SomeAesKey
+#else
+  forall word size.
+  ( Bounded word,
+    Typeable word,
+    AES.AESKey word,
+    WordByteSize word size
+  ) =>
+  Tagged "IKM" ByteString ->
+  Tagged "Salt" ByteString ->
+  Tagged "Info" ByteString ->
+  SomeAesKey
+#endif
 drvSomeAesKey ikm salt info =
   SomeAesKey
     . unsafeWord @word

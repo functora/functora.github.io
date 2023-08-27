@@ -9,8 +9,30 @@ with pkgs; let
       --ignore-glob=${repoDir}/pub/vi \
       --ignore-glob=${repoDir}/pub/dazzle/test
   '';
+  ormoluUnst = unst.writeShellApplication {
+    name = "ormolu";
+    text = ''
+      ${unst.haskellPackages.fourmolu_0_13_0_0}/bin/fourmolu \
+        --indentation 2 \
+        --column-limit 80 \
+        --function-arrows trailing \
+        --comma-style trailing \
+        --import-export-style trailing \
+        --indent-wheres true \
+        --record-brace-space true \
+        --newlines-between-decls 1 \
+        --haddock-style single-line \
+        --haddock-style-module single-line \
+        --let-style inline \
+        --in-style right-align \
+        --single-constraint-parens always \
+        --unicode never \
+        --respectful false \
+        "$@"
+    '';
+  };
   ormoluTest = pkgs.writeShellScriptBin "ormolu-test" ''
-    ${unst.ormolu}/bin/ormolu --mode check \
+    ${ormoluUnst}/bin/ormolu --mode check \
       $( find ${repoDir}/* \( \
          -path '${repoDir}/frk' \
          -o -path '${repoDir}/pub/vi' \
@@ -24,5 +46,6 @@ with pkgs; let
     ${ormoluTest}/bin/ormolu-test
   '';
 in [
+  ormoluUnst
   styleTest
 ]

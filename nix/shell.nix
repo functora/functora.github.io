@@ -11,7 +11,6 @@ in
     buildInputs =
       [
         pkgs.cabal-install
-        unst.ormolu
         pkgs.hpack
         pkgs.hlint
         pkgs.ghcid

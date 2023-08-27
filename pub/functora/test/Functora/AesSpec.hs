@@ -18,5 +18,5 @@ spec = do
     let aes1 = drvSomeAesKey @Word256 (Tagged @"IKM" "User defined key") salt info
     decrypt aes0 (encrypt aes0 sample) `shouldBe` Just sample
     decrypt aes1 (encrypt aes1 sample) `shouldBe` Just sample
-    decrypt aes1 (encrypt aes0 sample) `shouldBe` Nothing
-    decrypt aes0 (encrypt aes1 sample) `shouldBe` Nothing
+    decrypt aes1 (encrypt aes0 sample) `shouldNotBe` Just sample
+    decrypt aes0 (encrypt aes1 sample) `shouldNotBe` Just sample

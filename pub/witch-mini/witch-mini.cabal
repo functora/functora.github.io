@@ -1,15 +1,17 @@
 cabal-version: 2.2
-name:          witch
+name:          witch-mini
 version:       1.2.0.2
 synopsis:      Convert values from one type into another.
 description:   Witch converts values from one type into another.
 build-type:    Simple
 category:      Data
 license:       MIT
-maintainer:    Taylor Fausak
+maintainer:    Functora
 
 source-repository head
-  location: https://github.com/tfausak/witch
+  location:
+    https://github.com/functora/functora.github.io/tree/master/pub/witch-mini
+
   type:     git
 
 flag pedantic
@@ -39,25 +41,25 @@ common library
 
 common executable
   import:        library
-  build-depends: witch
+  build-depends: witch-mini
   ghc-options:   -rtsopts -threaded
 
 library
   import:          library
   build-depends:   template-haskell >=2.18 && <2.21
   exposed-modules:
-    Witch
-    Witch.Encoding
-    Witch.From
-    Witch.Instances
-    Witch.Lift
-    Witch.TryFrom
-    Witch.TryFromException
-    Witch.Utility
+    Witch.Mini
+    Witch.Mini.Encoding
+    Witch.Mini.From
+    Witch.Mini.Instances
+    Witch.Mini.Lift
+    Witch.Mini.TryFrom
+    Witch.Mini.TryFromException
+    Witch.Mini.Utility
 
   hs-source-dirs:  source/library
 
-test-suite witch-test-suite
+test-suite witch-mini-test-suite
   import:         executable
   build-depends:
     , HUnit         >=1.6.1 && <1.7

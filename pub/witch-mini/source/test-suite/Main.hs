@@ -28,9 +28,9 @@ import qualified Data.Word as Word
 import qualified GHC.Stack as Stack
 import qualified Numeric.Natural as Natural
 import qualified Test.HUnit as HUnit
-import qualified Witch
-import qualified Witch.Encoding as Encoding
-import qualified Witch.Utility as Utility
+import qualified Witch.Mini as Witch
+import qualified Witch.Mini.Encoding as Encoding
+import qualified Witch.Mini.Utility as Utility
 
 main :: IO ()
 main = HUnit.runTestTTAndExit $ specToTest spec

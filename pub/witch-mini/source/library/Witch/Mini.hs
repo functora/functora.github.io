@@ -11,33 +11,33 @@
 --
 -- Please consider reading the blog post that announces this library:
 -- <https://taylor.fausak.me/2021/07/13/witch/>
-module Witch
+module Witch.Mini
   ( -- * Type classes
 
     -- ** From
-    Witch.From.From (from),
-    Witch.Utility.into,
+    Witch.Mini.From.From (from),
+    Witch.Mini.Utility.into,
 
     -- ** TryFrom
-    Witch.TryFrom.TryFrom (tryFrom),
-    Witch.Utility.tryInto,
+    Witch.Mini.TryFrom.TryFrom (tryFrom),
+    Witch.Mini.Utility.tryInto,
 
     -- * Data types
-    Witch.TryFromException.TryFromException (..),
+    Witch.Mini.TryFromException.TryFromException (..),
 
     -- ** Encodings
-    Witch.Encoding.ISO_8859_1,
-    Witch.Encoding.UTF_8,
-    Witch.Encoding.UTF_16LE,
-    Witch.Encoding.UTF_16BE,
-    Witch.Encoding.UTF_32LE,
-    Witch.Encoding.UTF_32BE,
+    Witch.Mini.Encoding.ISO_8859_1,
+    Witch.Mini.Encoding.UTF_8,
+    Witch.Mini.Encoding.UTF_16LE,
+    Witch.Mini.Encoding.UTF_16BE,
+    Witch.Mini.Encoding.UTF_32LE,
+    Witch.Mini.Encoding.UTF_32BE,
 
     -- * Utilities
-    Witch.Utility.via,
-    Witch.Utility.tryVia,
-    Witch.Utility.maybeTryFrom,
-    Witch.Utility.eitherTryFrom,
+    Witch.Mini.Utility.via,
+    Witch.Mini.Utility.tryVia,
+    Witch.Mini.Utility.maybeTryFrom,
+    Witch.Mini.Utility.eitherTryFrom,
 
     -- ** Unsafe
 
@@ -48,8 +48,8 @@ module Witch
     -- 'Witch.TryFrom.tryFrom'. And if you're converting a literal value,
     -- consider using the Template Haskell conversion functions like
     -- 'Witch.Lift.liftedFrom'.
-    Witch.Utility.unsafeFrom,
-    Witch.Utility.unsafeInto,
+    Witch.Mini.Utility.unsafeFrom,
+    Witch.Mini.Utility.unsafeInto,
 
     -- ** Template Haskell
 
@@ -59,8 +59,8 @@ module Witch
     -- variant uses the @$$(...)@ syntax for splices, doubling up on the dollar
     -- signs. Other than that, using typed Template Haskell should be pretty
     -- much the same as using regular Template Haskell.
-    Witch.Lift.liftedFrom,
-    Witch.Lift.liftedInto,
+    Witch.Mini.Lift.liftedFrom,
+    Witch.Mini.Lift.liftedInto,
 
     -- * Notes
 
@@ -269,10 +269,10 @@ module Witch
   )
 where
 
-import qualified Witch.Encoding
-import qualified Witch.From
-import Witch.Instances ()
-import qualified Witch.Lift
-import qualified Witch.TryFrom
-import qualified Witch.TryFromException
-import qualified Witch.Utility
+import qualified Witch.Mini.Encoding
+import qualified Witch.Mini.From
+import Witch.Mini.Instances ()
+import qualified Witch.Mini.Lift
+import qualified Witch.Mini.TryFrom
+import qualified Witch.Mini.TryFromException
+import qualified Witch.Mini.Utility

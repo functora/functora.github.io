@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 
-module Witch.Encoding where
+module Witch.Mini.Encoding where
 
 import qualified Data.Tagged as Tagged
 

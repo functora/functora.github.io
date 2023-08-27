@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Witch.Instances where
+module Witch.Mini.Instances where
 
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
@@ -39,11 +39,11 @@ import qualified GHC.Float as Float
 import qualified Numeric
 import qualified Numeric.Natural as Natural
 import qualified System.IO.Unsafe as Unsafe
-import qualified Witch.Encoding as Encoding
-import qualified Witch.From as From
-import qualified Witch.TryFrom as TryFrom
-import qualified Witch.TryFromException as TryFromException
-import qualified Witch.Utility as Utility
+import qualified Witch.Mini.Encoding as Encoding
+import qualified Witch.Mini.From as From
+import qualified Witch.Mini.TryFrom as TryFrom
+import qualified Witch.Mini.TryFromException as TryFromException
+import qualified Witch.Mini.Utility as Utility
 
 -- | Uses 'id'.
 instance From.From a a where

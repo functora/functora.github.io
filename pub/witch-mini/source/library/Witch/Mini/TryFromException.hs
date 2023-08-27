@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Witch.TryFromException where
+module Witch.Mini.TryFromException where
 
 import qualified Control.Exception as Exception
 import qualified Data.Proxy as Proxy

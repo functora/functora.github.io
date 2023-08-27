@@ -1,15 +1,15 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Witch.Utility where
+module Witch.Mini.Utility where
 
 import qualified Control.Exception as Exception
 import qualified Data.Coerce as Coerce
 import qualified Data.Typeable as Typeable
 import qualified GHC.Stack as Stack
-import qualified Witch.From as From
-import qualified Witch.TryFrom as TryFrom
-import qualified Witch.TryFromException as TryFromException
+import qualified Witch.Mini.From as From
+import qualified Witch.Mini.TryFrom as TryFrom
+import qualified Witch.Mini.TryFromException as TryFromException
 
 -- | This is the same as 'id'. This can be an ergonomic way to pin down a
 -- polymorphic type in a function pipeline. For example:

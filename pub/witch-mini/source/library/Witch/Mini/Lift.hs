@@ -1,11 +1,11 @@
 {-# LANGUAGE ExplicitForAll #-}
 
-module Witch.Lift where
+module Witch.Mini.Lift where
 
 import qualified Data.Typeable as Typeable
 import qualified Language.Haskell.TH.Syntax as TH
-import qualified Witch.TryFrom as TryFrom
-import qualified Witch.Utility as Utility
+import qualified Witch.Mini.TryFrom as TryFrom
+import qualified Witch.Mini.Utility as Utility
 
 -- | This is like 'Utility.unsafeFrom' except that it works at compile time
 -- rather than runtime.

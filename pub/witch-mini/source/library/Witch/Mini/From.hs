@@ -1,7 +1,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Witch.From where
+module Witch.Mini.From where
 
 import qualified Data.Coerce as Coerce
 

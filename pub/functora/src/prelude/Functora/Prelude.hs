@@ -23,7 +23,6 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Typeable as Typeable
 import qualified GHC.TypeLits as TypeLits
-import GHC.Types as X (Symbol)
 import Type.Reflection
 import Universum as X hiding
   ( atomically,

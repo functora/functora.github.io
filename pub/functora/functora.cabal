@@ -78,7 +78,6 @@ common pkg-prelude
     , base
     , base16-bytestring
     , bytestring
-    , ghc-prim
     , lens
     , syb
     , tagged

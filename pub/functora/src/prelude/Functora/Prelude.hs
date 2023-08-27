@@ -41,7 +41,7 @@ import Universum as X hiding
     (^.),
   )
 import qualified Universum
-import Witch as X hiding (over)
+import Witch.Mini as X
 import qualified Prelude
 
 newtype Redacted a = Redacted a

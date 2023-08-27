@@ -83,7 +83,7 @@ common pkg-prelude
     , tagged
     , text
     , universum
-    , witch
+    , witch-mini
 
 common pkg-qr
   import:         pkg

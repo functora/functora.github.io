@@ -1,16 +1,14 @@
-cabal-version:   2.4
-author:          functora
-build-type:      Simple
-category:        Data
-copyright:       functora
-description:     Custom prelude
-extra-doc-files: CHANGELOG.md
-license-file:    LICENSE
-license:         BSD-3-Clause
-maintainer:      functora@proton.me
-name:            functora-acme
-synopsis:        Custom prelude
-version:         0.1.0.0
+cabal-version: 2.4
+author:        functora
+build-type:    Simple
+category:      Data
+copyright:     functora
+description:   Custom prelude
+license:       BSD-3-Clause
+maintainer:    functora@proton.me
+name:          functora-acme
+synopsis:      Custom prelude
+version:       0.1.0.0
 homepage:
   https://github.com/functora/functora.github.io/tree/master/pub/functora
 

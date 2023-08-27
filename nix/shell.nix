@@ -22,6 +22,8 @@ in
         unst.alejandra
         newpkgs.nodePackages.prettier
         newpkgs.haskellPackages.cabal-fmt
+        newpkgs.haskellPackages.cabal2nix
+        newpkgs.nix-prefetch-git
         #
         # NOTE : HLS takes too much disk space
         # and time to build, maybe does not worth it.

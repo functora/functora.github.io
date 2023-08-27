@@ -24,10 +24,6 @@ import qualified Data.Set as Set
 import qualified Data.Tagged as Tagged
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
-import qualified Data.Time as Time
-import qualified Data.Time.Clock.POSIX as Time
-import qualified Data.Time.Clock.System as Time
-import qualified Data.Time.Clock.TAI as Time
 import qualified Data.Word as Word
 import qualified GHC.Stack as Stack
 import qualified Numeric.Natural as Natural
@@ -1889,121 +1885,6 @@ spec = describe "Witch" $ do
         f (LazyText.pack "a") `shouldBe` "a"
         f (LazyText.pack "ab") `shouldBe` "ab"
 
-    describe "From Integer Day" $ do
-      let f = Witch.from @Integer @Time.Day
-      it "works" $ do
-        f 0 `shouldBe` Time.ModifiedJulianDay 0
-
-    describe "From Day Integer" $ do
-      let f = Witch.from @Time.Day @Integer
-      it "works" $ do
-        f (Time.ModifiedJulianDay 0) `shouldBe` 0
-
-    describe "From Day DayOfWeek" $ do
-      let f = Witch.from @Time.Day @Time.DayOfWeek
-      it "works" $ do
-        f (Time.ModifiedJulianDay 0) `shouldBe` Time.Wednesday
-
-    describe "From Rational UniversalTime" $ do
-      let f = Witch.from @Rational @Time.UniversalTime
-      it "works" $ do
-        f 0 `shouldBe` Time.ModJulianDate 0
-
-    describe "From UniversalTime Rational" $ do
-      let f = Witch.from @Time.UniversalTime @Rational
-      it "works" $ do
-        f (Time.ModJulianDate 0) `shouldBe` 0
-
-    describe "From Pico DiffTime" $ do
-      let f = Witch.from @Fixed.Pico @Time.DiffTime
-      it "works" $ do
-        f 0 `shouldBe` 0
-
-    describe "From DiffTime Pico" $ do
-      let f = Witch.from @Time.DiffTime @Fixed.Pico
-      it "works" $ do
-        f 0 `shouldBe` 0
-
-    describe "From Pico NominalDiffTime" $ do
-      let f = Witch.from @Fixed.Pico @Time.NominalDiffTime
-      it "works" $ do
-        f 0 `shouldBe` 0
-
-    describe "From NominalDiffTime Pico" $ do
-      let f = Witch.from @Time.NominalDiffTime @Fixed.Pico
-      it "works" $ do
-        f 0 `shouldBe` 0
-
-    describe "From SystemTime POSIXTime" $ do
-      let f = Witch.from @Time.SystemTime @Time.POSIXTime
-      it "works" $ do
-        f (Time.MkSystemTime 0 0) `shouldBe` 0
-
-    describe "From UTCTime POSIXTime" $ do
-      let f = Witch.from @Time.UTCTime @Time.POSIXTime
-      it "works" $ do
-        f unixEpoch `shouldBe` 0
-
-    describe "From POSIXTime UTCTime" $ do
-      let f = Witch.from @Time.POSIXTime @Time.UTCTime
-      it "works" $ do
-        f 0 `shouldBe` unixEpoch
-
-    describe "From UTCTime SystemTime" $ do
-      let f = Witch.from @Time.UTCTime @Time.SystemTime
-      it "works" $ do
-        f unixEpoch `shouldBe` Time.MkSystemTime 0 0
-
-    describe "From SystemTime AbsoluteTime" $ do
-      let f = Witch.from @Time.SystemTime @Time.AbsoluteTime
-      it "works" $ do
-        f (Time.MkSystemTime -3506716800 0) `shouldBe` Time.taiEpoch
-
-    describe "From SystemTime UTCTime" $ do
-      let f = Witch.from @Time.SystemTime @Time.UTCTime
-      it "works" $ do
-        f (Time.MkSystemTime 0 0) `shouldBe` unixEpoch
-
-    describe "From DiffTime TimeOfDay" $ do
-      let f = Witch.from @Time.DiffTime @Time.TimeOfDay
-      it "works" $ do
-        f 0 `shouldBe` Time.TimeOfDay 0 0 0
-
-    describe "From Rational TimeOfDay" $ do
-      let f = Witch.from @Rational @Time.TimeOfDay
-      it "works" $ do
-        f 0 `shouldBe` Time.TimeOfDay 0 0 0
-
-    describe "From TimeOfDay DiffTime" $ do
-      let f = Witch.from @Time.TimeOfDay @Time.DiffTime
-      it "works" $ do
-        f (Time.TimeOfDay 0 0 0) `shouldBe` 0
-
-    describe "From TimeOfDay Rational" $ do
-      let f = Witch.from @Time.TimeOfDay @Rational
-      it "works" $ do
-        f (Time.TimeOfDay 0 0 0) `shouldBe` 0
-
-    describe "From CalendarDiffDays CalendarDiffTime" $ do
-      let f = Witch.from @Time.CalendarDiffDays @Time.CalendarDiffTime
-      it "works" $ do
-        f (Time.CalendarDiffDays 0 0) `shouldBe` Time.CalendarDiffTime 0 0
-
-    describe "From NominalDiffTime CalendarDiffTime" $ do
-      let f = Witch.from @Time.NominalDiffTime @Time.CalendarDiffTime
-      it "works" $ do
-        f 0 `shouldBe` Time.CalendarDiffTime 0 0
-
-    describe "From ZonedTime UTCTime" $ do
-      let f = Witch.from @Time.ZonedTime @Time.UTCTime
-      it "works" $ do
-        f
-          ( Time.ZonedTime
-              (Time.LocalTime (Time.ModifiedJulianDay 0) (Time.TimeOfDay 0 0 0))
-              Time.utc
-          )
-          `shouldBe` Time.UTCTime (Time.ModifiedJulianDay 0) 0
-
     describe "From a (Tagged t a)" $ do
       let f = Witch.from @Bool @(Tagged.Tagged () Bool)
       it "works" $ do
@@ -2572,6 +2453,3 @@ specToTest = HUnit.TestList . Foldable.toList . Writer.execWriter
 
 testToSpec :: (Stack.HasCallStack) => HUnit.Test -> Spec
 testToSpec = Writer.tell . Seq.singleton
-
-unixEpoch :: Time.UTCTime
-unixEpoch = Time.UTCTime (Time.fromGregorian 1970 1 1) 0

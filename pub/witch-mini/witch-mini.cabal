@@ -52,7 +52,6 @@ library
     Witch.Mini.Encoding
     Witch.Mini.From
     Witch.Mini.Instances
-    Witch.Mini.Lift
     Witch.Mini.TryFrom
     Witch.Mini.TryFromException
     Witch.Mini.Utility

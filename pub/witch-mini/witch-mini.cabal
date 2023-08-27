@@ -46,7 +46,6 @@ common executable
 
 library
   import:          library
-  build-depends:   template-haskell >=2.18 && <2.21
   exposed-modules:
     Witch.Mini
     Witch.Mini.Encoding

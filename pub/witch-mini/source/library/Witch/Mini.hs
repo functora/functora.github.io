@@ -51,17 +51,6 @@ module Witch.Mini
     Witch.Mini.Utility.unsafeFrom,
     Witch.Mini.Utility.unsafeInto,
 
-    -- ** Template Haskell
-
-    -- | This library uses /typed/ Template Haskell, which may be a little
-    -- different than what you're used to. Normally Template Haskell uses the
-    -- @$(...)@ syntax for splicing in things to run at compile time. The typed
-    -- variant uses the @$$(...)@ syntax for splices, doubling up on the dollar
-    -- signs. Other than that, using typed Template Haskell should be pretty
-    -- much the same as using regular Template Haskell.
-    Witch.Mini.Lift.liftedFrom,
-    Witch.Mini.Lift.liftedInto,
-
     -- * Notes
 
     -- ** Motivation
@@ -272,7 +261,6 @@ where
 import qualified Witch.Mini.Encoding
 import qualified Witch.Mini.From
 import Witch.Mini.Instances ()
-import qualified Witch.Mini.Lift
 import qualified Witch.Mini.TryFrom
 import qualified Witch.Mini.TryFromException
 import qualified Witch.Mini.Utility

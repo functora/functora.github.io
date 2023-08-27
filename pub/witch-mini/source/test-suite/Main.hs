@@ -93,15 +93,6 @@ spec = describe "Witch" $ do
         Exception.evaluate (f 128)
           `shouldThrow` anyTryFromException @Int.Int16 @Int.Int8
 
-  describe "Lift" $ do
-    describe "liftedFrom" $ do
-      it "works" $ do
-        $$(Witch.liftedFrom @Int.Int16 @Int.Int8 1) `shouldBe` 1
-
-    describe "liftedInto" $ do
-      it "works" $ do
-        $$(Witch.liftedInto @Int.Int8 @Int.Int16 1) `shouldBe` 1
-
   describe "TryFromException" $ do
     describe "show" $ do
       it "works" $ do

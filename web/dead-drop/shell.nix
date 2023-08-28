@@ -1,10 +1,8 @@
-with (import ./default.nix);
-let
-  reload-script = pkgs.writeScriptBin "reload" ''
-      ${pkgs.haskell.packages.ghc865.ghcid}/bin/ghcid -c \
-        '${pkgs.haskell.packages.ghc865.cabal-install}/bin/cabal new-repl' \
-        -T ':run Main.main'
-'';
-in dev.env.overrideAttrs (old: {
-  buildInputs = old.buildInputs ++ [reload-script];
-})
+with (import ./default.nix); let
+  app-ghcid = pkgs.writeScriptBin "app-ghcid" ''
+    (cd ${builtins.toString ./.} && ${pkgs.ghcid}/bin/ghcid --test=":main" --command="${pkgs.haskell.packages.ghc865.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
+  '';
+in
+  dev.env.overrideAttrs (old: {
+    buildInputs = old.buildInputs ++ [app-ghcid];
+  })

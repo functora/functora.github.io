@@ -552,6 +552,8 @@ in {
         qdigidoc
         libreoffice
         (tor-browser-bundle-bin.override {useHardenedMalloc = false;})
+        kooha
+        mpv
       ];
       programs.git = {
         enable = true;

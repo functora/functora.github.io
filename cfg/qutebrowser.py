@@ -2013,3 +2013,4 @@ else:
 
 config.bind('<Alt-b>', 'config-cycle -p colors.webpage.darkmode.enabled False True ;; config-cycle -p colors.webpage.preferred_color_scheme light dark ;; config-cycle -p colors.webpage.bg white black ;; restart')
 config.bind('<Alt-t>', 'config-cycle -p colors.webpage.darkmode.algorithm lightness-cielab lightness-hsl brightness-rgb ;; restart')
+config.bind('<Alt-a>', "config-cycle -p completion.open_categories ['searchengines','quickmarks','bookmarks','history'] []")

@@ -27,13 +27,21 @@ import qualified Data.Text.Lazy as LazyText
 import qualified Data.Word as Word
 import qualified GHC.Stack as Stack
 import qualified Numeric.Natural as Natural
+import qualified System.Exit as Exit
 import qualified Test.HUnit as HUnit
 import qualified Witch.Mini as Witch
 import qualified Witch.Mini.Encoding as Encoding
 import qualified Witch.Mini.Utility as Utility
 
 main :: IO ()
-main = HUnit.runTestTTAndExit $ specToTest spec
+main = runTestTTAndExit $ specToTest spec
+
+runTestTTAndExit :: HUnit.Test -> IO ()
+runTestTTAndExit tests = do
+  c <- HUnit.runTestTT tests
+  if (HUnit.errors c == 0) && (HUnit.failures c == 0)
+    then Exit.exitSuccess
+    else Exit.exitFailure
 
 spec :: Spec
 spec = describe "Witch" $ do

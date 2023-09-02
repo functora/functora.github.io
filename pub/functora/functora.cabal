@@ -106,6 +106,15 @@ common pkg-aes
     , cryptohash-sha256
     , pkcs7
 
+common pkg-cfg
+  import:         pkg
+  hs-source-dirs: src/cfg
+  build-depends:
+    , aeson
+    , base
+    , bytestring
+    , tomland
+
 library
   import:          pkg-prelude
   exposed-modules: Functora.Prelude
@@ -120,6 +129,13 @@ library qr
 library aes
   import:          pkg-aes
   exposed-modules: Functora.Aes
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+
+library cfg
+  import:          pkg-cfg
+  exposed-modules: Functora.Cfg
   build-depends:   functora
   exposed:         True
   visibility:      public
@@ -144,10 +160,11 @@ test-suite functora-test
     Functora.QrSpec
 
   if flag(ghcid)
-    import:        pkg-prelude, pkg-qr, pkg-aes
+    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
+      Functora.Cfg
       Functora.Prelude
       Functora.Qr
 

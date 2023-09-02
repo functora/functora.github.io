@@ -36,16 +36,21 @@
   }) {};
   blocked-hosts =
     builtins.concatStringsSep "\n"
-    (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}") [
-      "err.ee"
-      "delfi.ee"
-      "postimees.ee"
-      "youtube.com"
-      "rumble.com"
-      "telegram.org"
-      "t.me"
-      "discord.com"
-    ]);
+    (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
+      (
+        if config.services.functora.blockHosts
+        then [
+          "err.ee"
+          "delfi.ee"
+          "postimees.ee"
+          "youtube.com"
+          "rumble.com"
+          "telegram.org"
+          "t.me"
+          "discord.com"
+        ]
+        else []
+      ));
   # bash script to let dbus know about important env variables and
   # propagate them to relevent services run at the end of sway config
   # see
@@ -141,6 +146,10 @@ in {
   options.services.functora = with lib; {
     userName = mkOption {
       type = types.str;
+    };
+    blockHosts = mkOption {
+      type = types.bool;
+      default = true;
     };
   };
 

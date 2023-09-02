@@ -1,12 +1,24 @@
 module Functora.Prelude
   ( module X,
-    Redacted (..),
+
+    -- * Show
+    -- $show
     inspect,
     inspectType,
     inspectSymbol,
+
+    -- * Integral
+    -- $integral
     safeFromIntegral,
+
+    -- * Lens
+    -- $lens
     view,
     (^.),
+
+    -- * DerivingVia
+    -- $derivingVia
+    Redacted (..),
   )
 where
 
@@ -14,6 +26,7 @@ import Control.Lens.Combinators as X (Getting, first1Of, makePrisms)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
+import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
 import qualified Data.Semigroup as Semi
@@ -22,6 +35,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Typeable as Typeable
+import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
 import Type.Reflection
 import Universum as X hiding
@@ -44,10 +58,8 @@ import qualified Universum
 import Witch.Mini as X
 import qualified Prelude
 
-newtype Redacted a = Redacted a
-
-instance (Typeable a) => Show (Redacted a) where
-  show = const $ "<REDACTED> :: " <> inspectType @a
+-- $show
+-- Show
 
 inspect :: forall dst src. (Show src, Data src, IsString dst) => src -> dst
 inspect =
@@ -100,6 +112,9 @@ prettyLazyByteString raw =
     then raw
     else BL16.encode raw
 
+-- $integral
+-- Integral
+
 safeFromIntegral ::
   forall src dst.
   ( Integral src,
@@ -117,10 +132,9 @@ safeFromIntegral x =
     intMin = toInteger (minBound :: dst) :: Integer
     intMax = toInteger (maxBound :: dst) :: Integer
 
---
+-- $lens
 -- NOTE : view override is needed because of this:
 -- https://github.com/ekmett/lens/issues/798
---
 
 view :: Getting (Semi.First a) s a -> s -> a
 view = first1Of
@@ -131,3 +145,15 @@ infixl 8 ^.
 (^.) :: s -> Getting (Semi.First a) s a -> a
 (^.) = flip first1Of
 {-# INLINE (^.) #-}
+
+-- $derivingVia
+-- Newtypes to simplify deriving via.
+-- We have to expose default constructors/accessors
+-- to help GHC with figuring out that runtime representation does match.
+
+newtype Redacted a = Redacted
+  { unRedacted :: a
+  }
+
+instance (Typeable a) => Show (Redacted a) where
+  show = const $ "<REDACTED> :: " <> inspectType @a

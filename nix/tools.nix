@@ -40,6 +40,16 @@ with pkgs; let
          -o -path '${repoDir}/dist-newstyle' \) -prune \
          -o -name '*.hs' -print )
   '';
+  prettier = pkgs.writeShellApplication {
+    name = "prettier";
+    text = ''
+      ${
+        pkgs.nodePackages.prettier
+      }/bin/prettier --plugin ${
+        pkgs.nodePackages.prettier-plugin-toml
+      }/lib/node_modules/prettier-plugin-toml "$@"
+    '';
+  };
   styleTest = pkgs.writeShellScriptBin "style-test" ''
     set -euo pipefail
     ${hlintTest}/bin/hlint-test
@@ -48,4 +58,5 @@ with pkgs; let
 in [
   ormoluUnst
   styleTest
+  prettier
 ]

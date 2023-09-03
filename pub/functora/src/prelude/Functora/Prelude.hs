@@ -15,6 +15,7 @@ module Functora.Prelude
     -- $lens
     view,
     (^.),
+    makeGetters,
 
     -- * DerivingVia
     -- $derivingVia
@@ -22,7 +23,15 @@ module Functora.Prelude
   )
 where
 
-import Control.Lens.Combinators as X (Getting, first1Of, makePrisms)
+import Control.Lens.Combinators as X (first1Of, makePrisms)
+import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
+import Control.Monad.Trans.Except as X
+  ( catchE,
+    except,
+    mapExceptT,
+    throwE,
+    withExceptT,
+  )
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
@@ -37,9 +46,27 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Typeable as Typeable
 import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
+import qualified Language.Haskell.TH.Lib as TH
+import qualified Language.Haskell.TH.Syntax as TH
+import Lens.Micro as X hiding ((^.))
+import Lens.Micro.Contra as X (Fold, Getter)
+import Lens.Micro.GHC as X ()
+import Lens.Micro.TH as X (makeLenses)
+import qualified Lens.Micro.TH as TH
+  ( generateUpdateableOptics,
+    lensRules,
+    makeLensesWith,
+  )
+import Main.Utf8 as X (withUtf8)
+import Text.URI as X (URI)
+import Text.URI.QQ as X (uri)
 import Type.Reflection
 import Universum as X hiding
-  ( atomically,
+  ( Lens,
+    Lens',
+    Traversal,
+    Traversal',
+    atomically,
     bracket,
     finally,
     fromInteger,
@@ -52,9 +79,18 @@ import Universum as X hiding
     state,
     swap,
     view,
+    (%~),
+    (.~),
     (^.),
+    (^..),
+    (^?),
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
   )
-import qualified Universum
+import qualified Universum (fromIntegral, show)
 import Witch.Mini as X
 import qualified Prelude
 
@@ -145,6 +181,10 @@ infixl 8 ^.
 (^.) :: s -> Getting (Semi.First a) s a -> a
 (^.) = flip first1Of
 {-# INLINE (^.) #-}
+
+makeGetters :: TH.Name -> TH.DecsQ
+makeGetters =
+  TH.makeLensesWith $ TH.lensRules & TH.generateUpdateableOptics .~ False
 
 -- $derivingVia
 -- Newtypes to simplify deriving via.

@@ -754,10 +754,17 @@ let g:mix_format_on_save = 1
 let g:mix_format_silent_errors = 1
 
 "
-" => Gleam
+" => Neoformat
 "
 
 augroup fmt
   autocmd!
   autocmd BufWritePre * undojoin | Neoformat
 augroup end
+let g:neoformat_enabled_toml = ['taplo', 'topiary', 'prettier']
+let g:neoformat_toml_prettier = {
+      \ 'exe': 'prettier',
+      \ 'args': ['--stdin-filepath', '"%:p"'],
+      \ 'stdin': 1,
+      \ 'try_node_exe': 1,
+      \ }

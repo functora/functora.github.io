@@ -19,7 +19,6 @@ in
         unst.elixir
         unst.ollama
         unst.alejandra
-        newpkgs.nodePackages.prettier
         newpkgs.haskellPackages.cabal-fmt
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git

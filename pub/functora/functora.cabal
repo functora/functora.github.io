@@ -79,11 +79,20 @@ common pkg-prelude
     , base16-bytestring
     , bytestring
     , lens
+    , microlens
+    , microlens-contra
+    , microlens-ghc
+    , microlens-th
+    , modern-uri
+    , monad-chronicle
     , syb
     , tagged
+    , template-haskell
     , text
+    , transformers
     , universum
     , witch-mini
+    , with-utf8
 
 common pkg-qr
   import:         pkg
@@ -113,6 +122,7 @@ common pkg-cfg
     , aeson
     , base
     , bytestring
+    , modern-uri
     , tomland
 
 library
@@ -135,7 +145,10 @@ library aes
 
 library cfg
   import:          pkg-cfg
-  exposed-modules: Functora.Cfg
+  exposed-modules:
+    Functora.Cfg
+    Functora.CfgOrphan
+
   build-depends:   functora
   exposed:         True
   visibility:      public
@@ -156,6 +169,7 @@ test-suite functora-test
 
   other-modules:
     Functora.AesSpec
+    Functora.CfgSpec
     Functora.PreludeSpec
     Functora.QrSpec
 
@@ -165,11 +179,13 @@ test-suite functora-test
     other-modules:
       Functora.Aes
       Functora.Cfg
+      Functora.CfgOrphan
       Functora.Prelude
       Functora.Qr
 
   else
     build-depends:
       , aes
+      , cfg
       , functora
       , qr

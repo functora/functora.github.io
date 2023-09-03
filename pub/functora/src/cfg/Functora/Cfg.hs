@@ -27,8 +27,15 @@ import Data.Aeson as X
   )
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import Functora.CfgOrphan as X ()
 import Functora.Prelude
-import Toml as X (HasCodec, HasItemCodec, TomlCodec, TomlDecodeError (..))
+import Toml as X
+  ( HasCodec,
+    HasItemCodec,
+    TomlCodec,
+    TomlDecodeError (..),
+    prettyTomlDecodeErrors,
+  )
 import qualified Toml
 
 -- $json

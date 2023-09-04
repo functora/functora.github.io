@@ -55,6 +55,7 @@ import Control.Concurrent.STM.TChan as X
   )
 import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Lens.Combinators as X (first1Of, makePrisms)
+import Control.Monad.Except as X (MonadError (..))
 import Control.Monad.Extra as X
   ( eitherM,
     fromMaybeM,

@@ -87,6 +87,7 @@ common pkg-prelude
     , microlens-th
     , modern-uri
     , monad-chronicle
+    , mtl
     , stm
     , syb
     , tagged

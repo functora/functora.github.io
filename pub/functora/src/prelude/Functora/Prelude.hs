@@ -20,10 +20,46 @@ module Functora.Prelude
     -- * DerivingVia
     -- $derivingVia
     Redacted (..),
+
+    -- * Async
+    -- $async
+    spawnLink,
+    withSpawnLink,
+
+    -- * Time
+    -- $time
+    sleepMicroSeconds,
+    sleepMilliSeconds,
+    sleepSeconds,
+    sleepMinutes,
+    sleepHours,
   )
 where
 
+import Control.Concurrent.Async as X
+  ( Async,
+    asyncThreadId,
+    waitAnyCancel,
+  )
+import qualified Control.Concurrent.Async as Async
+import Control.Concurrent.STM as X (atomically)
+import Control.Concurrent.STM.TChan as X
+  ( TChan,
+    dupTChan,
+    newBroadcastTChan,
+    newBroadcastTChanIO,
+    newTChan,
+    readTChan,
+    tryReadTChan,
+    writeTChan,
+  )
+import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Lens.Combinators as X (first1Of, makePrisms)
+import Control.Monad.Extra as X
+  ( eitherM,
+    fromMaybeM,
+    maybeM,
+  )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
 import Control.Monad.Trans.Except as X
   ( catchE,
@@ -35,15 +71,21 @@ import Control.Monad.Trans.Except as X
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
+import Data.Either.Extra as X (fromEither)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
+import Data.List.Extra as X (enumerate, notNull)
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import Data.These as X (These (..), these)
+import Data.These.Combinators as X (hasThere)
+import Data.These.Lens as X
 import qualified Data.Typeable as Typeable
+import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
 import qualified Language.Haskell.TH.Lib as TH
@@ -91,6 +133,17 @@ import Universum as X hiding
     _5,
   )
 import qualified Universum (fromIntegral, show)
+import UnliftIO as X
+  ( MonadUnliftIO (..),
+    UnliftIO (..),
+    askRunInIO,
+    bracket,
+    finally,
+    race,
+    toIO,
+    withRunInIO,
+    withUnliftIO,
+  )
 import Witch.Mini as X
 import qualified Prelude
 
@@ -197,3 +250,41 @@ newtype Redacted a = Redacted
 
 instance (Typeable a) => Show (Redacted a) where
   show = const $ "<REDACTED> :: " <> inspectType @a
+
+-- $async
+-- Async
+
+spawnLink :: (MonadUnliftIO m) => m a -> m (Async a)
+spawnLink x =
+  withRunInIO $ \run -> do
+    pid <- Async.async $ run x
+    Async.link pid
+    pure pid
+
+withSpawnLink :: (MonadUnliftIO m) => m a -> (Async a -> m b) -> m b
+withSpawnLink action inner =
+  withRunInIO $ \run ->
+    Async.withAsync
+      (run action)
+      ( \pid -> do
+          Async.link pid
+          run $ inner pid
+      )
+
+-- $time
+-- Time
+
+sleepMicroSeconds :: (MonadIO m) => Integer -> m ()
+sleepMicroSeconds = liftIO . Delay.delay
+
+sleepMilliSeconds :: (MonadIO m) => Integer -> m ()
+sleepMilliSeconds = sleepMicroSeconds . (* 1_000)
+
+sleepSeconds :: (MonadIO m) => Integer -> m ()
+sleepSeconds = sleepMicroSeconds . (* 1_000_000)
+
+sleepMinutes :: (MonadIO m) => Integer -> m ()
+sleepMinutes = sleepSeconds . (* 60)
+
+sleepHours :: (MonadIO m) => Integer -> m ()
+sleepHours = sleepMinutes . (* 60)

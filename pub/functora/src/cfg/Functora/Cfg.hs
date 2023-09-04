@@ -120,8 +120,14 @@ instance
   where
   hasCodec = Toml.diwrap . Toml.table (genericTomlCodec @a)
 
-instance (Typeable a, HasCodec a) => HasItemCodec (GenericType a) where
-  hasItemCodec = Right genericTomlCodec
+instance
+  ( Generic a,
+    Typeable a,
+    Toml.GenericCodec (Rep a)
+  ) =>
+  HasItemCodec (GenericType a)
+  where
+  hasItemCodec = Right . Toml.diwrap $ genericTomlCodec @a
 
 instance
   ( Generic a,

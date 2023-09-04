@@ -75,9 +75,11 @@ common pkg-prelude
   import:         pkg
   hs-source-dirs: src/prelude
   build-depends:
+    , async
     , base
     , base16-bytestring
     , bytestring
+    , extra
     , lens
     , microlens
     , microlens-contra
@@ -85,12 +87,17 @@ common pkg-prelude
     , microlens-th
     , modern-uri
     , monad-chronicle
+    , stm
     , syb
     , tagged
     , template-haskell
     , text
+    , these
+    , these-lens
     , transformers
+    , unbounded-delays
     , universum
+    , unliftio
     , witch-mini
     , with-utf8
 
@@ -125,33 +132,56 @@ common pkg-cfg
     , modern-uri
     , tomland
 
+common pkg-web
+  import:         pkg
+  hs-source-dirs: src/web
+  build-depends:
+    , base
+    , bytestring
+    , http-client
+    , http-client-tls
+    , http-types
+    , modern-uri
+    , streaming-commons
+    , yesod-core
+
 library
   import:          pkg-prelude
-  exposed-modules: Functora.Prelude
+  exposed-modules:
+    Functora.Prelude
+    Functora.PreludeOrphan
 
 library qr
   import:          pkg-qr
-  exposed-modules: Functora.Qr
   build-depends:   functora
   exposed:         True
   visibility:      public
+  exposed-modules: Functora.Qr
 
 library aes
   import:          pkg-aes
-  exposed-modules: Functora.Aes
   build-depends:   functora
   exposed:         True
   visibility:      public
+  exposed-modules: Functora.Aes
 
 library cfg
   import:          pkg-cfg
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
   exposed-modules:
     Functora.Cfg
     Functora.CfgOrphan
 
+library web
+  import:          pkg-web
   build-depends:   functora
   exposed:         True
   visibility:      public
+  exposed-modules:
+    Functora.Web
+    Functora.WebOrphan
 
 test-suite functora-test
   import:         pkg
@@ -174,14 +204,17 @@ test-suite functora-test
     Functora.QrSpec
 
   if flag(ghcid)
-    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg
+    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
       Functora.Cfg
       Functora.CfgOrphan
       Functora.Prelude
+      Functora.PreludeOrphan
       Functora.Qr
+      Functora.Web
+      Functora.WebOrphan
 
   else
     build-depends:

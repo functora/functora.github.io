@@ -88,6 +88,7 @@ common pkg-prelude
     , modern-uri
     , monad-chronicle
     , mtl
+    , scientific
     , stm
     , syb
     , tagged
@@ -95,6 +96,7 @@ common pkg-prelude
     , text
     , these
     , these-lens
+    , time
     , transformers
     , unbounded-delays
     , universum
@@ -146,6 +148,16 @@ common pkg-web
     , streaming-commons
     , yesod-core
 
+common pkg-sql
+  import:         pkg
+  hs-source-dirs: src/sql
+  build-depends:
+    , base
+    , esqueleto
+    , modern-uri
+    , persistent
+    , uuid
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -184,6 +196,15 @@ library web
     Functora.Web
     Functora.WebOrphan
 
+library sql
+  import:          pkg-sql
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules:
+    Functora.Sql
+    Functora.SqlOrphan
+
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -205,7 +226,7 @@ test-suite functora-test
     Functora.QrSpec
 
   if flag(ghcid)
-    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web
+    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
@@ -214,6 +235,8 @@ test-suite functora-test
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr
+      Functora.Sql
+      Functora.SqlOrphan
       Functora.Web
       Functora.WebOrphan
 

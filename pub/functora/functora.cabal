@@ -155,7 +155,9 @@ common pkg-sql
     , base
     , esqueleto
     , modern-uri
+    , monad-logger
     , persistent
+    , resource-pool
     , uuid
 
 library

@@ -3,6 +3,15 @@ module Functora.Sql
   )
 where
 
+import Control.Monad.Logger as X
+  ( defaultOutput,
+    runLoggingT,
+    runNoLoggingT,
+  )
+import Data.Pool as X
+  ( Pool,
+    destroyAllResources,
+  )
 import Database.Esqueleto.Legacy as X
   ( BaseBackend,
     Entity (..),
@@ -29,7 +38,10 @@ import Database.Esqueleto.Legacy as X
     deleteKey,
     desc,
     from,
+    getBy,
     in_,
+    insertBy,
+    insertUniqueEntity,
     isNothing,
     just,
     limit,
@@ -91,3 +103,4 @@ import Database.Persist.TH as X
     sqlSettings,
   )
 import Functora.SqlOrphan as X ()
+import GHC.IO.Handle.FD as X (stderr, stdout)

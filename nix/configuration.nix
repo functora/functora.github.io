@@ -236,7 +236,7 @@ in {
       enable = true;
       package = kmonad-pkg;
       # extraArgs = [ "--log-level" "debug" ];
-      keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
+      # keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
       keyboards.alice80 = {
         device = "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
         defcfg = {
@@ -281,8 +281,8 @@ in {
           )
         '';
       };
-      keyboards.gk61 = {
-        device = "/dev/input/by-id/usb-SEMITEK_USB-HID_Gaming_Keyboard_SN0000000001-event-kbd";
+      keyboards.md600 = {
+        device = "/dev/input/by-id/usb-Mistel_MD600-event-kbd";
         defcfg = {
           enable = true;
           fallthrough = true;
@@ -292,44 +292,36 @@ in {
           (defalias
             fst  (layer-toggle fst-layer)
             snd  (layer-toggle snd-layer)
-            trd  (layer-toggle trd-layer)
             til  (around lsft grv)
             ltab (around lsft tab)
           )
           (defsrc
-            esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
-            tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
-            caps a    s    d    f    g    h    j    k    l    ;    '    ret
-            lsft z    x    c    v    b    n    m    ,    .    /    rsft
-            lctl lmet lalt           spc            ralt cmp  rctl
+            esc  1    2    3    4    5              6    7    8    9    0    -    =    bspc
+            tab  q    w    e    r    t              y    u    i    o    p    [    ]    \
+            caps a    s    d    f    g              h    j    k    l    ;    '    ret
+            lsft z    x    c    v    b              n    m    ,    .    /    rsft
+            lctl lmet lalt      spc                      spc       ralt      rctl
           )
           (deflayer qwerty
-            _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            esc  _    _    _    _    _    _    _    _    _    _    _    _    _
-            @fst _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    ret
-            _    _    _              _              _    @snd _
+            _    _    _    _    _    _              _    _    _    _    _    _    _    _
+            esc  _    _    _    _    _              _    _    _    _    _    _    _    _
+            @fst _    _    _    _    _              _    _    _    _    _    _    _
+            _    _    _    _    _    _              _    _    _    _    _    ret
+            _    _    _         _                        _         _         _
           )
           (deflayer fst-layer
-            _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _
-            @snd _    _    _    _    _    _    _    _    _    _    _    _    grv
-            _    _    _    _    _    _    lft  down up   rght _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _              tab            _    _    _
+            _    f1   f2   f3   f4   f5             f6   f7   f8   f9   f10  f11  f12  _
+            @snd _    _    _    _    _              _    _    _    _    _    _    _    grv
+            _    _    _    slck _    _              lft  down up   rght _    _    _
+            _    _    _    _    _    _              _    _    _    _    _    _
+            _    _    ralt      tab                      tab       _         _
           )
           (deflayer snd-layer
-            _    brdn bru  _    _    _    _    prev pp   next mute vold volu _
-            _    _    _    _    _    _    _    _    _    _    _    _    _    @til
-            _    _    _    _    _    _    home pgdn pgup end  _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _
-            _    @trd _              @ltab          _    _    _
-          )
-          (deflayer trd-layer
-            _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _
-            _    _    _              _              _    _    _
+            _    brdn bru  _    _    _              _    prev pp   next mute vold volu _
+            _    _    _    _    _    _              _    _    _    _    _    _    _    @til
+            _    _    _    _    _    _              home pgdn pgup end  _    _    _
+            _    _    _    _    _    _              _    _    _    _    _    _
+            _    _    _         @ltab                    @ltab     _         _
           )
         '';
       };

@@ -22,6 +22,7 @@ in
         newpkgs.haskellPackages.cabal-fmt
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git
+        newpkgs.litecli
         #
         # NOTE : HLS takes too much disk space
         # and time to build, maybe does not worth it.

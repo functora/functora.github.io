@@ -3,6 +3,7 @@ module Functora.CfgSpec (spec) where
 import Functora.Cfg
 import Functora.Prelude
 import Test.Hspec
+import Text.URI.QQ
 
 newtype Buz = Buz
   { _buzUri :: URI

@@ -88,6 +88,7 @@ import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
 import Data.Time.Clock as X (UTCTime, getCurrentTime)
 import Data.Time.Format.ISO8601 as X (ISO8601, iso8601Show)
+import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
@@ -105,7 +106,6 @@ import qualified Lens.Micro.TH as TH
   )
 import Main.Utf8 as X (withUtf8)
 import Text.URI as X (URI)
-import Text.URI.QQ as X (uri)
 import Type.Reflection
 import Universum as X hiding
   ( Lens,

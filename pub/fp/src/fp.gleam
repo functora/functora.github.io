@@ -180,3 +180,13 @@ pub fn ap_option(lhs: Option(fn(a) -> b), rhs: Option(a)) -> Option(b) {
 pub fn ap_result(lhs: Result(fn(a) -> b, e), rhs: Result(a, e)) -> Result(b, e) {
   ap(lhs, rhs, result_applicative_instance)
 }
+
+// Misc
+
+pub fn fixed_point(x: a, f: fn(fn(a) -> b, a) -> b) -> b {
+  y_combinator(function.curry2(f))(x)
+}
+
+pub fn y_combinator(f: fn(fn(a) -> b) -> fn(a) -> b) -> fn(a) -> b {
+  f(fn(x: a) { y_combinator(f)(x) })
+}

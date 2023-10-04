@@ -103,8 +103,8 @@ import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax as TH (Lift)
 import qualified Language.Haskell.TH.Syntax as TH
-import Lens.Micro as X hiding ((^.))
-import Lens.Micro.Contra as X (Fold, Getter)
+import Lens.Micro as X hiding (set, (^.))
+import Lens.Micro.Contra as X (Fold, Getter, fromSimpleFold, fromSimpleGetter)
 import Lens.Micro.GHC as X ()
 import Lens.Micro.TH as X (makeLenses)
 import qualified Lens.Micro.TH as TH

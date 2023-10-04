@@ -106,3 +106,17 @@ pub fn example_test() {
   applicative_web_form("WORLD!", "WORLD!", "WORLD!")
   |> should.equal(Error(Nil))
 }
+
+pub fn fixed_point_test() {
+  let equation = fn(x) { x * x * x - 3001 * x * x + 2_001_001 * x == -999_999 }
+  fp.fixed_point(
+    0,
+    fn(f, x) {
+      case equation(x) {
+        True -> x
+        False -> f(x + 1)
+      }
+    },
+  )
+  |> should.equal(1001)
+}

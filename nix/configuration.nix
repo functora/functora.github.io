@@ -45,9 +45,9 @@
           "postimees.ee"
           "youtube.com"
           "rumble.com"
-          "telegram.org"
-          "t.me"
           "discord.com"
+          # "telegram.org"
+          # "t.me"
         ]
         else []
       ));

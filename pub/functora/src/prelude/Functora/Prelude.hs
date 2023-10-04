@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Functora.Prelude
   ( module X,
 
@@ -33,6 +35,10 @@ module Functora.Prelude
     sleepSeconds,
     sleepMinutes,
     sleepHours,
+
+    -- * QQ
+    -- $qq
+    qq,
   )
 where
 
@@ -94,6 +100,8 @@ import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
 import qualified Language.Haskell.TH.Lib as TH
+import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import Language.Haskell.TH.Syntax as TH (Lift)
 import qualified Language.Haskell.TH.Syntax as TH
 import Lens.Micro as X hiding ((^.))
 import Lens.Micro.Contra as X (Fold, Getter)
@@ -292,3 +300,45 @@ sleepMinutes = sleepSeconds . (* 60)
 
 sleepHours :: (MonadIO m) => Integer -> m ()
 sleepHours = sleepMinutes . (* 60)
+
+-- $qq
+-- QQ
+
+qq ::
+  forall inp out e.
+  ( From String inp,
+    Typeable out,
+    TH.Lift out,
+    Data e,
+    Show e
+  ) =>
+  (inp -> Either e out) ->
+  QuasiQuoter
+qq parser =
+  QuasiQuoter
+    { quoteDec = failure "quoteDec",
+      quoteType = failure "quoteType",
+      quotePat = failure "quotePat",
+      quoteExp =
+        \x0 -> do
+          let fatal e =
+                fail
+                  $ "QuasiQuoter failed for the input ("
+                  <> x0
+                  <> ") of the type ("
+                  <> inspectType @out
+                  <> ") with the failure ("
+                  <> inspect e
+                  <> ")"
+          case parser $ from @String @inp x0 of
+            Left e -> fatal e
+            Right x -> [|$(TH.lift x)|]
+    }
+  where
+    failure :: Text -> any
+    failure field =
+      error
+        $ inspectType @out
+        <> " "
+        <> field
+        <> " is not implemented"

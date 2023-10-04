@@ -1,5 +1,6 @@
 module Functora.Sql
   ( module X,
+    (^:),
   )
 where
 
@@ -77,9 +78,9 @@ import Database.Esqueleto.Legacy as X
     (>.),
     (>=.),
     (?.),
-    (^.),
     (||.),
   )
+import qualified Database.Esqueleto.Legacy as Legacy
 import Database.Persist as X
   ( LiteralType (..),
   )
@@ -104,3 +105,15 @@ import Database.Persist.TH as X
   )
 import Functora.SqlOrphan as X ()
 import GHC.IO.Handle.FD as X (stderr, stdout)
+
+-- | Project a field of an entity.
+-- Alias exists to remove interference with Lens.
+(^:) ::
+  forall typ val.
+  (PersistEntity val, PersistField typ) =>
+  SqlExpr (Entity val) ->
+  EntityField val typ ->
+  SqlExpr (Value typ)
+(^:) = (Legacy.^.)
+
+infixl 9 ^:

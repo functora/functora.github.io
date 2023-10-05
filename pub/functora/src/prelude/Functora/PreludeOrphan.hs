@@ -7,6 +7,7 @@ import qualified Data.Data as Data
 import Data.Generics (Data)
 import Data.Ratio
 import Data.Scientific (Scientific)
+import Data.Tagged
 import Universum
 import Witch.Mini
 
@@ -16,6 +17,13 @@ instance Data SomeException where
   dataTypeOf _ = error "TODO : dataTypeOf SomeException"
 
 deriving stock instance (Data a, Data b) => Data (TryFromException a b)
+
+deriving stock instance
+  ( Typeable kind,
+    Typeable (tags :: kind),
+    Data rep
+  ) =>
+  Data (Tagged tags rep)
 
 instance
   ( From source target,

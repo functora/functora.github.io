@@ -60,22 +60,47 @@ webFetch ::
   URI ->
   [SomeQueryParam] ->
   ExceptT Text m BL.ByteString
-webFetch url qs = webCatch $ do
-  uriReq <- Web.parseRequest $ URI.renderStr url
-  let webReq = Web.setQueryString (unSomeQueryParam <$> qs) uriReq
-  webRes <- Web.httpLbs webReq =<< Web.newManager Tls.tlsManagerSettings
-  let webResBody = Web.responseBody webRes
-  let webResCode = Web.responseStatus webRes
+webFetch uri qs = do
+  let prev = URI.uriQuery uri
+  next <- except . forM qs $ uncurry newQueryParam . unSomeQueryParam
+  webCatch $ do
+    webReq <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
+    webRes <- Web.httpLbs webReq =<< Web.newManager Tls.tlsManagerSettings
+    let webResBody = Web.responseBody webRes
+    let webResCode = Web.responseStatus webRes
+    pure $
+      if Web.statusIsSuccessful webResCode
+        then Right webResBody
+        else
+          Left $
+            "Bad HTTP status="
+              <> inspect webResCode
+              <> " of req="
+              <> inspect webReq
+              <> " with res="
+              <> inspect webRes
+              <> " with body="
+              <> inspect webResBody
+
+newQueryParam :: ByteString -> Maybe ByteString -> Either Text URI.QueryParam
+newQueryParam keyRaw valRaw = do
+  keyTxt <-
+    first inspect
+      . tryFrom @(UTF_8 ByteString) @Text
+      $ Tagged @"UTF-8" keyRaw
+  key <-
+    first inspect $ URI.mkQueryKey keyTxt
+  valTxt <-
+    traverse
+      ( first inspect
+          . tryFrom @(UTF_8 ByteString) @Text
+          . Tagged @"UTF-8"
+      )
+      valRaw
+  val <-
+    traverse
+      ( first inspect . URI.mkQueryValue
+      )
+      valTxt
   pure $
-    if Web.statusIsSuccessful webResCode
-      then Right webResBody
-      else
-        Left $
-          "Bad HTTP status="
-            <> inspect webResCode
-            <> " of req="
-            <> inspect webReq
-            <> " with res="
-            <> inspect webRes
-            <> " with body="
-            <> inspect webResBody
+    maybe (URI.QueryFlag key) (URI.QueryParam key) val

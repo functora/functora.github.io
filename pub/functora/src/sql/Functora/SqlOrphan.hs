@@ -58,3 +58,15 @@ instance (Typeable a) => Data (BackendKey a) where
   gunfold _ z = z . Data.fromConstr
   toConstr _ = error "TODO : toConstr BackendKey"
   dataTypeOf _ = error "TODO : dataTypeOf BackendKey"
+
+instance PersistField Integer where
+  toPersistValue raw =
+    either
+      (const . error $ "Integer is invalid PersistValue " <> inspect @Text raw)
+      PersistInt64
+      $ tryFrom @Integer @Int64 raw
+  fromPersistValue = \case
+    PersistInt64 x -> Right $ from @Int64 @Integer x
+    raw -> Left $ "PersistValue is invalid Integer " <> inspect raw
+
+deriving via Int64 instance PersistFieldSql Integer

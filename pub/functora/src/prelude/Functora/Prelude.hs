@@ -82,7 +82,7 @@ import Data.Either.Extra as X (fromEither)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
-import Data.List.Extra as X (enumerate, notNull)
+import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
 import Data.Scientific as X (Scientific)
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))

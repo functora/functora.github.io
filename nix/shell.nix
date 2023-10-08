@@ -28,6 +28,7 @@ in
         # and time to build, maybe does not worth it.
         #
         pkgs.haskell-language-server
+        pkgs.nix-bundle
       ]
       ++ (import ./tools.nix)
       ++ (import ./../pub/dazzle/nix/tools.nix)

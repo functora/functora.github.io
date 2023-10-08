@@ -3,6 +3,11 @@
 module Functora.Cfg
   ( module X,
 
+    -- * Cli
+    -- $cli
+    Cli (..),
+    newCli,
+
     -- * JSON
     -- $json
     decodeJson,
@@ -29,6 +34,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import Functora.CfgOrphan as X ()
 import Functora.Prelude
+import qualified Options.Applicative as Cli
 import Toml as X
   ( HasCodec,
     HasItemCodec,
@@ -37,6 +43,54 @@ import Toml as X
     prettyTomlDecodeErrors,
   )
 import qualified Toml
+
+-- $cli
+-- Cli
+
+data Cli
+  = CliTextConf Text Bool
+  | CliFileConf FilePath Bool
+
+newCli :: (MonadIO m) => m Cli
+newCli =
+  liftIO $ Cli.execParser cliParser
+
+cliParser :: Cli.ParserInfo Cli
+cliParser =
+  Cli.info ((textConf <|> fileConf) <**> Cli.helper) $
+    Cli.fullDesc
+      <> Cli.header mempty
+      <> Cli.progDesc "Cli parser"
+
+textConf :: Cli.Parser Cli
+textConf =
+  CliTextConf
+    <$> Cli.strOption
+      ( Cli.long "text-conf"
+          <> Cli.short 't'
+          <> Cli.metavar "TEXTCONF"
+          <> Cli.help "Config as plain text"
+      )
+    <*> showConf
+
+fileConf :: Cli.Parser Cli
+fileConf =
+  CliFileConf
+    <$> Cli.strOption
+      ( Cli.long "file-conf"
+          <> Cli.short 'f'
+          <> Cli.metavar "FILENAME"
+          <> Cli.help "Config file location"
+      )
+    <*> showConf
+
+showConf :: Cli.Parser Bool
+showConf =
+  Cli.switch
+    ( Cli.long "show-conf"
+        <> Cli.short 's'
+        <> Cli.help "UNSAFE SHOW CONFIG INCLUDING SECRETS"
+    )
 
 -- $json
 -- JSON

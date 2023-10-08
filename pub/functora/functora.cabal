@@ -133,6 +133,7 @@ common pkg-cfg
     , base
     , bytestring
     , modern-uri
+    , optparse-applicative
     , tomland
 
 common pkg-web

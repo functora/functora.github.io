@@ -1,2 +1,2 @@
 --restart=.ghcid
---restart=functora.cabal
+--restart=functora-hakyll.cabal

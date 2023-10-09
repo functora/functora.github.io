@@ -2,10 +2,11 @@
 
 import Data.Monoid
 import Hakyll
+import Main.Utf8 (withUtf8)
 import System.FilePath
 
 main :: IO ()
-main = hakyllWith cfg $ do
+main = withUtf8 . hakyllWith cfg $ do
   match "css/*" $ do
     route idRoute
     compile compressCssCompiler
@@ -76,7 +77,7 @@ main = hakyllWith cfg $ do
       pairs <-
         mapM makeItem $
           makePairs $
-            fromMaybe [] $
+            maybe mempty id $
               lookupStringList "pairs" meta
       let pairCtx =
             field "left" (return . fst . itemBody)

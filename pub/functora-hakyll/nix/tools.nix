@@ -2,12 +2,14 @@ with (import ./../../../nix/project.nix);
 with pkgs; let
   cabal = "${pkgs.cabal-install}/bin/cabal";
   pkgDir = builtins.toString ./..;
+  repoDir = builtins.toString ./../../..;
   hakyllBuild = writeShellScriptBin "hakyll-build" ''
     (
       cd ${pkgDir} && \
       ${cabal} new-run site clean && \
-      ${cabal} new-run site rebuild && \
       sleep 1 && \
+      ${cabal} new-run site rebuild && \
+      sleep 2 && \
       (
         cd ${pkgDir}/docs && \
         ${htmldoc}/bin/htmldoc \
@@ -24,7 +26,13 @@ with pkgs; let
       ${cabal} new-run site watch
     )
   '';
+  hakyllPublish = writeShellScriptBin "hakyll-publish" ''
+    ${hakyllBuild}/bin/hakyll-build && \
+    rm -rf ${repoDir}/docs && \
+    cp -R ${pkgDir}/docs/ ${repoDir}/docs
+  '';
 in [
   hakyllBuild
   hakyllWatch
+  hakyllPublish
 ]

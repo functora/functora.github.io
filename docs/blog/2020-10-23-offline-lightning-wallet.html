@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure.">
+  <meta name="keywords" content="software,development,outsource,company,haskell,websites">
+  
+    <title>21it - Offline Lightning Wallet</title>
+  
+  <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css">
+  <link rel="stylesheet" href="../css/devicons.min.css">
+  <link rel="stylesheet" href="../css/picnic.min.css">
+  <link rel="stylesheet" href="../css/default.css">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+</head>
+
+<body>
+
+  
+  <nav>
+    <a href="../" class="brand">
+      <h2 class="racing-font">21it</h2>
+    </a>
+
+    <input id="bmenub" type="checkbox" class="show" autocomplete="off" aria-labelledby="bmenul">
+    <label id="bmenul" for="bmenub" class="burger button pseudo">≡</label>
+
+    <div class="menu">
+      <a class="pseudo button" href="../">Home</a>
+      <a class="pseudo button" href="../about.html">About</a>
+      <a class="pseudo button" href="../skills.html">Skills</a>
+      <a class="pseudo button" href="../code.html">Code</a>
+      <a class="pseudo button" href="../blog.html">Blog</a>
+      <a class="pseudo button" href="../contact.html">Contact</a>
+      <a class="pseudo button" href="../cv.pdf">CV</a>
+    </div>
+  </nav>
+  
+
+  
+    <div class="content page">
+      <h2 class="text-center">Offline Lightning Wallet</h2>
+      <article>
+  <section class="header text-center">
+    <em>
+      Published on October 23, 2020
+      
+      under
+      <a href="../license.html" class="regular-font">CC BY-SA 4.0</a>
+      license
+    </em>
+  </section>
+  <section>
+      <p>Lightning Network (LN) is awesome payment method. It’s trustless, instant, private and cheap. It scales well. It still just good old bitcoin, which is awesome. Of course, nothing is for free, and LN have some drawbacks. One of them is interactive nature of LN payments. Both sender and recipient have to be online to process the payment. This means that LN wallet is always hot, and in order to pay offline (for example in restaurant) customer needs to have a smartphone or other device with internet connection and access to LN node (which might be remote or hosted on device itself).</p>
+<p>Smartphone is general purpose device, and it implies very complex hardware and software. Some components of smartphone hardware, operating systems and applications are formally open source, but they inevitably are tied with proprietary components. Even if both hardware and software are open source, complexity of modern smartphone is so overwhelming that complete security audit is very hard, almost impossible task. In case where proprietary components are involved (which is 99% of the cases), such audit is just meaningless. Hardware bitcoin wallets like Coldcard, Ledger and Trezor are there for a good reason. They are specialized devices, open source and simple enough to allow complete security audit. Attack surface of smartphone is too big for such critical application as bitcoin wallet. The same for LN nodes. Lightning network is relatively new thing, but we already have a great choice of specialized LN devices like Nodl, Dojo and Casa. But as I meantioned before, LN node should always be online. These devices are not very portable and require electricity and internet connection to operate. They are meant to be run in a safe environment, for example at home behind the Tor for maximum security and privacy. Let’s make a couple of assumptions regarding hypothetical offline lightning payment:</p>
+<ul>
+<li>Customer has operational LN node at home.</li>
+<li>Customer wants to make a purchase in offline environment like a restaurant.</li>
+<li>Customer don’t have a smatphone, or other device with internet connection.</li>
+<li>Customer and merchant do not necessarily trust each other.</li>
+<li>Merchant has access to his own LN node and internet connection.</li>
+</ul>
+<p>And now let’s discuss LN bill - hypothetical standard for trustless offline lightning payments with bills printed on paper.</p>
+<h4 class="text-center">
+Step 1 - bills emission
+</h4>
+<p>Customer (issuer) preemptively generates at home some amount of new random invoice preimages (R), calculates corresponding SHA256 hashes HR=SHA256(R) and assigns some amount of satoshis (D) to every pair of R/HR. In terms of fiat money world, these 3 values together are representing disposable banknote/bill/check/voucher:</p>
+<ul>
+<li>D is a bill denomination, the maximum amount of satoshis (sat) that the banknote owner can request (and guaranteed to receive) from the banknote issuer.</li>
+<li>HR is a bill serial number, unique identifier assigned by the issuer.</li>
+<li>R is the proof of bill ownership, in fiat money world it’s a bill itself.</li>
+</ul>
+<p>Let’s call them LN bills = lightning network bills. Like in case of fiat banknotes, customer needs to have a reasonable supply of LN bills of different denominations to carry in form of paper in his offline physical wallet for different use cases. Weekly supply for one person might look like this:</p>
+<table>
+<thead>
+<tr class="header">
+<th>D (sat)</th>
+<th>pcs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>500k</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>200k</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>100k</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>70k</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<td>20k</td>
+<td>7</td>
+</tr>
+<tr class="even">
+<td>10k</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<p>As you can see, there can be multiple bills of the same denomination (like fiat banknotes), but still every bill must have individual unique preimage R and hash HR (like fiat banknotes serial numbers). Software which communicates with merchants, bill database and LN node itself should be hosted in safe place. For example at home behind the Tor. Good option is to host it at the same machine where customer LN node is running. For simplicity let’s just call all this software and databases as customer LN node.</p>
+<h4 class="text-center">
+Step 2 - bills printing
+</h4>
+<p>Now when there is fresh database of new unspent bills, customer can print them on paper. Preimage R is kind of inidividial “private key” for every bill - this is important proof of bill ownership, and should somehow be segregated from other data presented on the bill. The simplest case is just to print 2-sided bills where front side contains all public information, and back side contains private preimage R. Printed bill will contain:</p>
+<ul>
+<li>Customer LN node address. This LN node is running at home, and for better security, privacy and accessability it should be hosted as Tor hidden service (address should be in .onion domain namespace).</li>
+<li>Bill denomination D.</li>
+<li>Bill preimage hash HR.</li>
+<li>Bill preimage R (segreagated, for example in a back side of the bill)</li>
+</ul>
+<p>For convenience all the information should be printed on the bill in both human-readable format (text) and machine-readable format (QR code). In some specific cases bill can contain some other additional info, which is completely optional. For example, it might be legal disclamer, information about issuer, issuer digital or physical signature, or just advertisement.</p>
+<h4 class="text-center">
+Step 3 - transaction
+</h4>
+<p>For simplicity let’s say the price of the meal in a restaurant is close enough to denomination of some bill in customer wallet. Then customer can use a single bill to pay full price, but the process where multiple bills are involved is very similar. For simple example let’s say price is 69k, and bill denomination is 70k.</p>
+<ol type="1">
+<li>Firstly, merchant scans front side of customer’s 70k bill, merchant software verifies public bill data and generates HODL LN invoice with amount = 69k and preimage hash = HR from customer’s 70k bill.</li>
+<li>Then merchant prints invoice on paper and gives a copy to customer. Customer can verify that amount and preimage hash HR is correct. This step is needed only in situations where customer don’t trust merchant at all, which is not usually the case. In most cases offline merchants don’t have financial intentions to defraud their customers.</li>
+<li>After customer checked and confirmed invoice (verbally or with physical signature), merchant LN node sends it to the customer LN node (address is on the bill). Customer LN node recognizes invoice preimage hash (because it’s presented in bill database), verifies that invoice amount is less or equal to bill denomination (69k is less than 70k), and if everything is fine - sends the payment and marks this bill as spent.</li>
+<li>Merchant LN node receives the payment in form of HTLC (hash time locked contract), but can’t redeem the money yet. Merchant says customer that payment is received and preimage R is needed to resolve HTLC.</li>
+<li>Customer reveals preimage R from the back side of the bill, merchant LN node resolves HTLC, payment is completed.</li>
+</ol>
+<h4 class="text-center">
+What can go wrong
+</h4>
+<ul>
+<li>Basically everything what can go wrong in normal LN payment, for example routing failures, insufficient inbound/outbound capacity, etc. It’s not specific to offline bills, any kind of online or offline LN wallet can have these issues. In this case payment did not go through at all, it’s safe to destroy the bill and use any other payment method.</li>
+<li>Customer can accidentally lose his physical wallet full of bills. In this case he should go online as soon as possible and mark all lost bills in LN node database as invalid. But anyway, in this case the person who found the wallet can try to redeem all the bills while they are valid. To prevent this possibility, customer can preemptively set a pin code (P) for his LN node (and obviously not print it anywhere, especially on the bills). It will introduce additional step in merchant-customer interaction. Customer needs to enter pin code P which will be added to preimage hash HR and hashed again to get HP=SHA256(P+HR) which will be included into invoice (customer LN node will decline invoices without correct HP hash). In this case merchant can steal customer’s pin code (which is useless without unspent bills), but random person on the street who finds the wallet can’t discover the pin code easily.</li>
+<li>Merchant LN node goes offline after customer LN node has sent the payment, but before HTLC was resolved (money are locked but not redeemed).
+<ul>
+<li>If customer did not reveal preimage R yet - it’s safe to destroy the bill and use any other payment method, because moneyback of LN payment is guaranteed after HTLC timeout by LN software. Or he can just reveal preimage R to complete the payment (explained below).</li>
+<li>If customer did reveal preimage R - it’s not a problem. In this case he actually did completed the payment. Merchant can verify preimage R in offline mode because HR=SHA256(R). It’s responsibility of the merchant to go online and redeem the money before HTLC timeout occurs, customer already did all his part.</li>
+</ul></li>
+<li>Customer can try to defraud merchant, providing wrong preimage R. Or vice versa, merchant can try to defraud customer saying that provided preimage R is wrong, although it is correct. In both cases preimage R is easily verifiable even offline because HR=SHA256(R) and this hash is printed on both bill and invoice.</li>
+<li>Merchant can defraud customer, printing an invoice for expected amount of X sat, but actually sending to customer LN node the other invoice for bigger amount of Y sat. As soon as Y is smaller or equal to bill denomination D, the payment will go through. In previous transaction example, merchant can obtain 70k sat instead of expected 69k sat if he really wants to do so (but not more than 70k sat). That’s why it’s very important to choose denominations of the bills properly. Bill denomination should exactly match the price (fraud is impossible) or be slightly higher (fraud is insignificant).</li>
+</ul>
+<p>There is one common thing to note here - in case of any described fraud, both merchant and customer have a printed and signed copy of bill and invoice, which is comprehensive and irrefutable cryptographical proof of the defending side correctness, which might be easily verified by any third party if needed.</p>
+<h4 class="text-center">
+More offline use cases
+</h4>
+<p>In all the examples above, the person who spends the bill (customer) is the same person who created the bill (issuer). Merchant redeems bill immediately and atomically, it’s a part of described interactive offline purchase procedure. Merchant should never store unredeemed customer’s bills in form of paper to redeem them later - this is NOT safe. Described procedure is the only way to be protected from double spend or other fraud. In trustless environment the spender should always be the issuer. But there is a couple of other interesting use cases where issuer and spender can be different people. They are based on assumption that issuer don’t have financial intentions to defraud the spender.</p>
+<p>For example parent can give their child 70k sat bill to pay for a lunch. Or employer can giveaway bills to their employees for similar purpose as part of the company benefits. Or maybe crypto exchange can sell for a fiat money some sort of tamper-proof lightning bills where preimage R is sealed inside envelope, and other bill attributes are printed on envelope itself. The great thing about such use cases is that spender is able to use LN payments without having LN node or even LN wallet. Because of this, LN bills are also very cool for airdrop purposes because it does not require any kind of preparation or software installation. You can just giveaway paper bills to the people. And it’s possible to giveaway a very tiny fractions of bitcoin (like 100 sat) increasing amount of the people getting airdrop but keeping expenses the same (if compare with onchain bitcoins). Such micro amounts are not spendable onchain (because miner fees are higher), but they are completely spendable in LN.</p>
+<p>Another example of meaningful person to person paper bill transfer are activites where trust is just irrelevant, for example charity and tipping. Charity and tipping are completely voluntary activities, and spender in such cases does not have any legal obligations. Tipping of invalid bills can be considered as bad manners but not as a felony, because amount of tips money is not defined by law and can be literally equal to zero. Customers can even give to waiter special tipping bills without printed human-readable denomination. Waiter collects bills during the day, and redeems whatever is redeemable in the evening. Of course redeem procedure can be automated with some sort of machine (similar to fiat bill counters).</p>
+<h4 class="text-center">
+Comparison with fiat banknotes
+</h4>
+<p>LN bills might look similar to fiat banknotes. They do share some common properties like physicality and static denomination. But in all other aspects they are actually almost opposite to each other. LN bills are a bit closer to pre-1971 fiat banknotes, because they both are representing strictly defined fraction of hard base money unit (bitcoin or gold) which can (in case of LN bills - should) be redeemed through some after-trade procedure. Modern fiat banknotes are not redeemable at all. Fiat banknotes are absolutely centralized - the state has a monopoly on printing them. LN bills in opposite are absolutely decentralized, everybody can print and use them, money market finally can have a real competition. Any market should be competitive to be healthy. Security model is also very different. Fiat banknotes do require trust. They have watermarks which are supposed to be hard to replicate, but I doubt it really works. LN banknotes don’t require trust, they do require only cryptographical verification. In modern global world, cryptographical verification can scale. Trust can’t.</p>
+  </section>
+</article>
+<footer class="text-center">
+    <a href="../blog-archive.html">Blog Archive</a>
+</footer>
+
+    </div>
+  
+
+</body>
+
+</html>

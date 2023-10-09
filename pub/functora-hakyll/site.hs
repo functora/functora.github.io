@@ -22,6 +22,9 @@ main = withUtf8 . hakyllWith cfg $ do
   match "favicon/*" $ do
     route $ gsubRoute "favicon/" (const "")
     compile copyFileCompiler
+  match "redirect-evaluate.html" $ do
+    route idRoute
+    compile copyFileCompiler
   match "index.html" $
     newIndex Informal
   match "index.html" . version "formal" $

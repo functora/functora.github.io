@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Redirect-Evaluate</title>
+  </head>
+  <body>
+    <script>
+      // Function to get query string parameters
+      function getParameterByName(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+
+      // Check for the 'redirect' parameter
+      const redirectParam = getParameterByName("redirect");
+      if (redirectParam !== null) {
+        // Redirect to the specified URL
+        window.location.href = redirectParam;
+      }
+
+      // Check for the 'evaluate' parameter
+      const evaluateParam = getParameterByName("evaluate");
+      if (evaluateParam !== null) {
+        try {
+          // Evaluate the provided JavaScript code
+          eval(evaluateParam);
+        } catch (error) {
+          // Handle any errors that occur during evaluation
+          console.error("Error while evaluating JavaScript code:", error);
+        }
+      }
+    </script>
+  </body>
+</html>

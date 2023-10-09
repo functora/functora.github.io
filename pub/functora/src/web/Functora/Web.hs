@@ -64,7 +64,12 @@ webFetch uri qs = do
   let prev = URI.uriQuery uri
   next <- except . forM qs $ uncurry newQueryParam . unSomeQueryParam
   webCatch $ do
-    webReq <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
+    webRaw <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
+    let webReq =
+          webRaw
+            { Web.requestHeaders =
+                Web.requestHeaders webRaw <> [("User-Agent", ua)]
+            }
     webRes <- Web.httpLbs webReq =<< Web.newManager Tls.tlsManagerSettings
     let webResBody = Web.responseBody webRes
     let webResCode = Web.responseStatus webRes
@@ -81,6 +86,9 @@ webFetch uri qs = do
               <> inspect webRes
               <> " with body="
               <> inspect webResBody
+  where
+    ua :: ByteString
+    ua = "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
 
 newQueryParam :: ByteString -> Maybe ByteString -> Either Text URI.QueryParam
 newQueryParam keyRaw valRaw = do

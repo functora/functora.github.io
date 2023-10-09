@@ -43,9 +43,9 @@
           "err.ee"
           "delfi.ee"
           "postimees.ee"
-          "youtube.com"
           "rumble.com"
           "discord.com"
+          # "youtube.com"
           # "telegram.org"
           # "t.me"
         ]

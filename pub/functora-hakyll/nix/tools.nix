@@ -26,7 +26,7 @@ with pkgs; let
       ${cabal} new-run site watch
     )
   '';
-  hakyllPublish = writeShellScriptBin "hakyll-publish" ''
+  hakyllRelease = writeShellScriptBin "hakyll-release" ''
     ${hakyllBuild}/bin/hakyll-build && \
     rm -rf ${repoDir}/docs && \
     cp -R ${pkgDir}/docs/ ${repoDir}/docs
@@ -34,5 +34,5 @@ with pkgs; let
 in [
   hakyllBuild
   hakyllWatch
-  hakyllPublish
+  hakyllRelease
 ]

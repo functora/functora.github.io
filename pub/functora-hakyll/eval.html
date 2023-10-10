@@ -7,7 +7,12 @@
     <script>
       function getParameterByName(name) {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
+        const param = urlParams.get(name);
+        if (param !== null) {
+          return decodeURIComponent(param.replace(/\+/g, "%20"));
+        } else {
+          return null;
+        }
       }
 
       const html = getParameterByName("html");

@@ -1,0 +1,39 @@
+name: pages
+on:
+  push:
+    branches: ["master"]
+  # to run this workflow manually
+  workflow_dispatch:
+
+permissions:
+  # to read the docs
+  contents: read
+  # to deploy to Pages
+  pages: write
+  # to verify the deployment source
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout without submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: "docs/"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

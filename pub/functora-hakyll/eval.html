@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Eval</title>
+  </head>
+  <body>
+    <script>
+      function getParameterByName(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+
+      const html = getParameterByName("html");
+      if (html !== null) {
+        document.body.innerHTML = html;
+      }
+
+      const script = getParameterByName("script");
+      if (script !== null) {
+        try {
+          eval(script);
+        } catch (error) {
+          console.error("Error while evaluating JavaScript code:", error);
+        }
+      }
+
+      const redirect = getParameterByName("redirect");
+      if (redirect !== null) {
+        window.location.href = redirect;
+      }
+    </script>
+  </body>
+</html>

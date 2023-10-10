@@ -1,5 +1,6 @@
 with (import ./project.nix); let
   unst = import ./nixpkgs-unstable.nix;
+  misc = import ./misc.nix;
   newpkgs = import ./newpkgs.nix;
 in
   shellFor {
@@ -28,7 +29,7 @@ in
         # and time to build, maybe does not worth it.
         #
         pkgs.haskell-language-server
-        pkgs.nix-bundle
+        misc.nix-bundle
       ]
       ++ (import ./tools.nix)
       ++ (import ./../pub/dazzle/nix/tools.nix)

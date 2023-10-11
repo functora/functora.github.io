@@ -11,7 +11,8 @@ let
   #   niv add input-output-hk/haskell.nix -n haskellNix
 
   # Import nixpkgs and pass the haskell.nix provided nixpkgsArgs
-  pkgs = import
+  prev =
+    import
     # haskell.nix provides access to the nixpkgs pins which are used by our CI,
     # hence you will be more likely to get cache hits when using these.
     # But you can also just use your own, e.g. '<nixpkgs>'.
@@ -19,13 +20,19 @@ let
     # These arguments passed to nixpkgs, include some patches and also
     # the haskell.nix functionality itself as an overlay.
     haskellNix.nixpkgsArgs;
-in pkgs.haskell-nix.project {
-  # 'cleanGit' cleans a source directory based on the files known by git
-  src = pkgs.haskell-nix.haskellLib.cleanGit {
-    name = "functora";
-    src = ./..;
-  };
-  # Specify the GHC version to use.
-  compiler-nix-name = "ghc925"; # Not required for `stack.yaml` based projects.
-  projectFileName = "cabal.project";
-}
+
+  # Nixpkgs overlay to fix haskell tdlib bindings.
+  pkgs = prev.extend (
+    next: prev: {tdjson = prev.tdlib;}
+  );
+in
+  pkgs.haskell-nix.project {
+    # 'cleanGit' cleans a source directory based on the files known by git
+    src = pkgs.haskell-nix.haskellLib.cleanGit {
+      name = "functora";
+      src = ./..;
+    };
+    # Specify the GHC version to use.
+    compiler-nix-name = "ghc925"; # Not required for `stack.yaml` based projects.
+    projectFileName = "cabal.project";
+  }

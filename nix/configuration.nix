@@ -211,6 +211,8 @@ in {
       #media-session.enable = true;
     };
 
+    hardware.keyboard.qmk.enable = true;
+
     hardware.opengl = {
       enable = true;
       driSupport32Bit = true;
@@ -236,7 +238,7 @@ in {
       enable = true;
       package = kmonad-pkg;
       # extraArgs = [ "--log-level" "debug" ];
-      # keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
+      keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
       keyboards.alice80 = {
         device = "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
         defcfg = {

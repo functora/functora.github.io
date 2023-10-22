@@ -104,39 +104,33 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  | Enter|
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Ctrl | GUI  | Raise| Alt  |Space |Space |Space |Space |AltGr |Media | Fun  | Ctrl |
+ * | Ctrl | GUI  | Lower| Alt  |Space |Space |Space |Space |AltGr |Media | Fun  | Ctrl |
  * `-----------------------------------------------------------------------------------'
  */
+
 [_QWERTY] = LAYOUT_planck_grid(
     KC_ESC,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC,
     LOWER,   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
-    KC_LCTL, KC_LGUI, RAISE,   KC_LALT, KC_SPC,  KC_SPC,  KC_SPC,  KC_SPC,  KC_ALGR, MEDIA,   FUN,     KC_RCTL
+    KC_LCTL, KC_LGUI, LOWER,   KC_LALT, KC_SPC,  KC_SPC,  KC_SPC,  KC_SPC,  KC_ALGR, MEDIA,   FUN,     KC_RCTL
 ),
 
-/* Lower/Raise
- * ,-----------------------------------------------------------------------------------.
- * |      |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  |      |
- * |------+------+------+------+------+-------------+------+------+------+------+------|
- * |      |      |      |      |      | Ins  | Left | Down | Up   | Rght |   [  |   ]  |
- * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |      |      |      |      | Del  | Home | PgDn | PgUp | End  |   -  |   =  |
- * |------+------+------+------+------+------+------+------+------+------+------+------|
- * |      |      |      |      | Tab  | Tab  |      |      |   \  |   `  |      |      |
- * `-----------------------------------------------------------------------------------'
- */
+/* Lower */
+
 [_LOWER] = LAYOUT_planck_grid(
-    _______, KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    _______,
-    _______, _______, _______, _______, _______, KC_INS,  KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_LBRC, KC_RBRC,
-    _______, _______, _______, _______, _______, KC_DEL,  KC_HOME, KC_PGDN, KC_PGUP, KC_END,  KC_MINS, KC_EQL,
-    _______, _______, _______, _______, KC_TAB,  KC_TAB,  _______, _______, KC_BSLS, KC_GRV,  _______, _______
+    RAISE,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    _______,
+    ADJUST,  _______, _______, _______, _______, _______, KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_LBRC, KC_RBRC,
+    _______, _______, _______, _______, _______, _______, KC_DEL,  KC_INS,  _______, _______, KC_MINS, KC_EQL,
+    _______, _______, ADJUST,  _______, KC_TAB,  KC_TAB,  KC_TAB,  KC_TAB,  KC_BSLS, KC_GRV,  _______, _______
 ),
+
+/* Raise */
 
 [_RAISE] = LAYOUT_planck_grid(
-    _______, KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    _______,
-    _______, _______, _______, _______, _______, KC_INS,  KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_LBRC, KC_RBRC,
-    _______, _______, _______, _______, _______, KC_DEL,  KC_HOME, KC_PGDN, KC_PGUP, KC_END,  KC_MINS, KC_EQL,
-    _______, _______, _______, _______, KC_TAB,  KC_TAB,  _______, _______, KC_BSLS, KC_GRV,  _______, _______
+    _______,S(KC_1),S(KC_2),S(KC_3),S(KC_4),  S(KC_5),  S(KC_6),  S(KC_7),  S(KC_8),   S(KC_9),  S(KC_0),   _______,
+    _______,S(KC_A),S(KC_S),S(KC_D),S(KC_F),  S(KC_G),  KC_HOME,  KC_PGDN,  KC_PGUP,   KC_END,   S(KC_LBRC),S(KC_RBRC),
+    _______,S(KC_Z),S(KC_X),S(KC_C),S(KC_V),  S(KC_B),  S(KC_N),  S(KC_M),  S(KC_COMM),S(KC_DOT),S(KC_MINS),S(KC_EQL),
+    _______,_______,_______,_______,S(KC_TAB),S(KC_TAB),S(KC_TAB),S(KC_TAB),S(KC_BSLS),S(KC_GRV),_______,   _______
 ),
 
 /* Adjust (Lower + Raise)
@@ -144,6 +138,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * F-keys, mouse controls, emoji.
  *
  */
+
 [_ADJUST] = LAYOUT_planck_grid(
   _______, KC_F1  , KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_BTN4, KC_BTN1, KC_BTN2, KC_BTN3, EM_FIN,  EM_LEN,
   _______, KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_MS_L, KC_MS_D, KC_MS_U, KC_MS_R, EM_FIX,  EM_FLP,
@@ -158,7 +153,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [_MEDIA] = LAYOUT_planck_grid(
-    _______, KC_BRID, KC_BRIU, _______, RESET,   _______, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU,
+    _______, KC_BRID, KC_BRIU, _______, QK_BOOT, _______, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU,
     _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   AU_TOGG, MU_NEXT, MU_TOGG, AU_PREV, AU_NEXT,
     _______, KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, CK_RST,  CK_TOGG, CK_DOWN, CK_UP,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
@@ -188,6 +183,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |      |      |      |      |      |      |      |      |      |      |      |      |
  * `-----------------------------------------------------------------------------------'
  */
+
 // [_ESP] = LAYOUT_planck_grid(
 //     _______, ES_E,    _______, AC_E,    _______, _______, DI_U,    AC_U,    AC_I,    AC_O,    _______, _______,
 //     _______, AC_A,    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
@@ -208,20 +204,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case LOWER:
       if (record->event.pressed) {
         layer_on(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        // update_tri_layer(_LOWER, _RAISE, _ADJUST);
       } else {
         layer_off(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        // update_tri_layer(_LOWER, _RAISE, _ADJUST);
       }
       return false;
       break;
     case RAISE:
       if (record->event.pressed) {
         layer_on(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        // update_tri_layer(_LOWER, _RAISE, _ADJUST);
       } else {
         layer_off(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        // update_tri_layer(_LOWER, _RAISE, _ADJUST);
       }
       return false;
       break;

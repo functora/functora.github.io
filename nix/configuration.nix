@@ -8,6 +8,7 @@
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   unst = import ./nixpkgs-unstable.nix;
   yewtube = import ./yewtube.nix {inherit pkgs;};
+  qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/a8d549351d4b87ab80665f35e57bee2a04201245.tar.gz";
@@ -557,6 +558,8 @@ in {
         (tor-browser-bundle-bin.override {useHardenedMalloc = false;})
         kooha
         mpv
+        qmk
+        qmk-setup
       ];
       programs.git = {
         enable = true;

@@ -560,6 +560,10 @@ in {
         mpv
         qmk
         qmk-setup
+        # cd ~/tmp
+        # quickget macos monterey
+        # quickemu --vm macos-monterey.conf
+        quickemu
       ];
       programs.git = {
         enable = true;

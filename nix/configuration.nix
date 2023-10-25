@@ -560,9 +560,11 @@ in {
         mpv
         qmk
         qmk-setup
-        # cd ~/tmp
+        # mkdir -p ~/macos/Public
+        # cd ~/macos
+        # chmod 777 ./Public
         # quickget macos monterey
-        # quickemu --vm macos-monterey.conf
+        # quickemu --vm macos-monterey.conf --public-dir ./Public --extra_args "-cpu host,+vmx"
         quickemu
       ];
       programs.git = {

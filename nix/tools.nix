@@ -44,10 +44,10 @@ with pkgs; let
     name = "prettier";
     text = ''
       ${
-        pkgs.nodePackages.prettier
+        unst.nodePackages.prettier
       }/bin/prettier --plugin ${
-        pkgs.nodePackages.prettier-plugin-toml
-      }/lib/node_modules/prettier-plugin-toml "$@"
+        unst.nodePackages.prettier-plugin-toml
+      }/lib/node_modules/prettier-plugin-toml/lib/api.js "$@"
     '';
   };
   styleTest = pkgs.writeShellScriptBin "style-test" ''

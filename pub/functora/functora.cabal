@@ -79,6 +79,7 @@ common pkg-prelude
     , base
     , base16-bytestring
     , bytestring
+    , containers
     , extra
     , lens
     , microlens

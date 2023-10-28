@@ -43,6 +43,12 @@ module Functora.Prelude
     -- * Exceptions
     -- $exceptions
     throwString,
+
+    -- * Merge
+    -- $merge
+    mergeMap,
+    mergeAlt,
+    mergeBy,
   )
 where
 
@@ -81,6 +87,7 @@ import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
+import qualified Data.Map.Merge.Strict as Map
 import Data.Scientific as X (Scientific)
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))
@@ -376,3 +383,24 @@ throwString ::
   m a
 throwString =
   Safe.throwString . from @e @String
+
+-- $merge
+-- Merge
+
+mergeMap :: (Ord a) => (b -> b -> b) -> Map a b -> Map a b -> Map a b
+mergeMap upd =
+  Map.merge
+    (Map.mapMaybeMissing $ const pure)
+    (Map.mapMaybeMissing $ const pure)
+    (Map.zipWithMaybeMatched . const $ \lhs rhs -> pure $ upd lhs rhs)
+
+mergeAlt :: (Alternative t) => (a -> a -> a) -> t a -> t a -> t a
+mergeAlt f x y = liftA2 f x y <|> x <|> y
+
+mergeBy :: (Ord a) => (b -> a) -> (b -> b -> b) -> [b] -> [b] -> [b]
+mergeBy by upd lhs rhs =
+  elems
+    $ mergeMap
+      upd
+      (fromList $ (\x -> (by x, x)) <$> lhs)
+      (fromList $ (\x -> (by x, x)) <$> rhs)

@@ -32,6 +32,7 @@ import Data.Aeson as X
   )
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.List.NonEmpty as NE
 import Functora.CfgOrphan as X ()
 import Functora.Prelude
 import qualified Options.Applicative as Cli
@@ -48,8 +49,8 @@ import qualified Toml
 -- Cli
 
 data Cli
-  = CliTextConf Text Bool
-  | CliFileConf FilePath Bool
+  = CliTextConf (NonEmpty Text) Bool
+  | CliFileConf (NonEmpty FilePath) Bool
 
 newCli :: (MonadIO m) => m Cli
 newCli =
@@ -65,22 +66,26 @@ cliParser =
 textConf :: Cli.Parser Cli
 textConf =
   CliTextConf
-    <$> Cli.strOption
-      ( Cli.long "text-conf"
-          <> Cli.short 't'
-          <> Cli.metavar "TEXTCONF"
-          <> Cli.help "Config as plain text"
+    <$> fmap
+      NE.fromList
+      ( some . Cli.strOption $
+          Cli.long "text-conf"
+            <> Cli.short 't'
+            <> Cli.metavar "TEXTCONF"
+            <> Cli.help "Config as plain text"
       )
     <*> showConf
 
 fileConf :: Cli.Parser Cli
 fileConf =
   CliFileConf
-    <$> Cli.strOption
-      ( Cli.long "file-conf"
-          <> Cli.short 'f'
-          <> Cli.metavar "FILENAME"
-          <> Cli.help "Config file location"
+    <$> fmap
+      NE.fromList
+      ( some . Cli.strOption $
+          Cli.long "file-conf"
+            <> Cli.short 'f'
+            <> Cli.metavar "FILENAME"
+            <> Cli.help "Config file location"
       )
     <*> showConf
 

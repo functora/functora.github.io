@@ -5,7 +5,6 @@ module Functora.Web
     SomeQueryParam (..),
     someQueryParamLabel,
     unSomeQueryParam,
-    webCatch,
     webFetch,
   )
 where
@@ -39,76 +38,55 @@ unSomeQueryParam (SomeQueryParam label value) =
       $ toPathPiece value
   )
 
-webCatch ::
-  ( MonadIO m
-  ) =>
-  IO (Either Text a) ->
-  ExceptT Text m a
-webCatch expr =
-  ExceptT
-    . liftIO
-    . catch expr
-    $ \(e :: Web.HttpException) ->
-      pure
-        . Left
-        . from @String @Text
-        $ displayException e
-
 webFetch ::
-  ( MonadIO m
+  ( MonadIO m,
+    MonadThrow m
   ) =>
   URI ->
   [SomeQueryParam] ->
-  ExceptT Text m BL.ByteString
+  m BL.ByteString
 webFetch uri qs = do
   let prev = URI.uriQuery uri
-  next <- except . forM qs $ uncurry newQueryParam . unSomeQueryParam
-  webCatch $ do
-    webRaw <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
-    let webReq =
-          webRaw
-            { Web.requestHeaders =
-                Web.requestHeaders webRaw <> [("User-Agent", ua)]
-            }
-    webRes <- Web.httpLbs webReq =<< Web.newManager Tls.tlsManagerSettings
-    let webResBody = Web.responseBody webRes
-    let webResCode = Web.responseStatus webRes
-    pure $
-      if Web.statusIsSuccessful webResCode
-        then Right webResBody
-        else
-          Left $
-            "Bad HTTP status="
-              <> inspect webResCode
-              <> " of req="
-              <> inspect webReq
-              <> " with res="
-              <> inspect webRes
-              <> " with body="
-              <> inspect webResBody
+  next <- forM qs $ uncurry newQueryParam . unSomeQueryParam
+  webRaw <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
+  let webReq =
+        webRaw
+          { Web.requestHeaders =
+              Web.requestHeaders webRaw <> [("User-Agent", ua)]
+          }
+  webRes <- liftIO $ Web.httpLbs webReq =<< Web.newManager Tls.tlsManagerSettings
+  let webResBody = Web.responseBody webRes
+  let webResCode = Web.responseStatus webRes
+  if Web.statusIsSuccessful webResCode
+    then pure webResBody
+    else
+      throwString $
+        "Bad HTTP status="
+          <> inspect @Text webResCode
+          <> " of req="
+          <> inspect webReq
+          <> " with res="
+          <> inspect webRes
+          <> " with body="
+          <> inspect webResBody
   where
     ua :: ByteString
     ua = "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
 
-newQueryParam :: ByteString -> Maybe ByteString -> Either Text URI.QueryParam
+newQueryParam ::
+  (MonadThrow m) => ByteString -> Maybe ByteString -> m URI.QueryParam
 newQueryParam keyRaw valRaw = do
   keyTxt <-
-    first inspect
+    either throw pure
       . tryFrom @(UTF_8 ByteString) @Text
       $ Tagged @"UTF-8" keyRaw
-  key <-
-    first inspect $ URI.mkQueryKey keyTxt
+  key <- URI.mkQueryKey keyTxt
   valTxt <-
     traverse
-      ( first inspect
+      ( either throw pure
           . tryFrom @(UTF_8 ByteString) @Text
           . Tagged @"UTF-8"
       )
       valRaw
-  val <-
-    traverse
-      ( first inspect . URI.mkQueryValue
-      )
-      valTxt
-  pure $
-    maybe (URI.QueryFlag key) (URI.QueryParam key) val
+  val <- traverse URI.mkQueryValue valTxt
+  pure $ maybe (URI.QueryFlag key) (URI.QueryParam key) val

@@ -87,7 +87,7 @@ common pkg-prelude
     , microlens-th
     , modern-uri
     , monad-chronicle
-    , mtl
+    , safe-exceptions
     , scientific
     , stm
     , syb
@@ -97,7 +97,6 @@ common pkg-prelude
     , these
     , these-lens
     , time
-    , transformers
     , unbounded-delays
     , universum
     , unliftio
@@ -161,15 +160,6 @@ common pkg-sql
     , resource-pool
     , uuid
 
-common pkg-log
-  import:         pkg
-  hs-source-dirs: src/log
-  build-depends:
-    , base
-    , katip
-    , template-haskell
-    , text
-
 library
   import:          pkg-prelude
   exposed-modules:
@@ -217,15 +207,6 @@ library sql
     Functora.Sql
     Functora.SqlOrphan
 
-library log
-  import:          pkg-log
-  build-depends:   functora
-  exposed:         True
-  visibility:      public
-  exposed-modules:
-    Functora.Log
-    Functora.LogOrphan
-
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -248,16 +229,12 @@ test-suite functora-test
     Functora.QrSpec
 
   if flag(ghcid)
-    import:
-      pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql, pkg-log
-
+    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
       Functora.Cfg
       Functora.CfgOrphan
-      Functora.Log
-      Functora.LogOrphan
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr

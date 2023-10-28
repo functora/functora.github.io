@@ -39,6 +39,10 @@ module Functora.Prelude
     -- * QQ
     -- $qq
     qq,
+
+    -- * Exceptions
+    -- $exceptions
+    throwString,
   )
 where
 
@@ -60,21 +64,15 @@ import Control.Concurrent.STM.TChan as X
     writeTChan,
   )
 import qualified Control.Concurrent.Thread.Delay as Delay
+import Control.Exception.Safe as X (throw)
+import qualified Control.Exception.Safe as Safe
 import Control.Lens.Combinators as X (first1Of, makePrisms)
-import Control.Monad.Except as X (MonadError (..))
 import Control.Monad.Extra as X
   ( eitherM,
     fromMaybeM,
     maybeM,
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
-import Control.Monad.Trans.Except as X
-  ( catchE,
-    except,
-    mapExceptT,
-    throwE,
-    withExceptT,
-  )
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
@@ -122,16 +120,23 @@ import Universum as X hiding
     Traversal',
     atomically,
     bracket,
+    catch,
+    catchAny,
     finally,
     fromInteger,
     fromIntegral,
+    handleAny,
     on,
     over,
+    preview,
     print,
     set,
     show,
     state,
     swap,
+    throwM,
+    try,
+    tryAny,
     view,
     (%~),
     (.~),
@@ -150,9 +155,24 @@ import UnliftIO as X
     UnliftIO (..),
     askRunInIO,
     bracket,
+    catch,
+    catchAny,
+    catchAnyDeep,
+    catchDeep,
+    catchIO,
     finally,
+    handle,
+    handleAny,
+    handleAnyDeep,
+    handleDeep,
+    handleIO,
     race,
     toIO,
+    try,
+    tryAny,
+    tryAnyDeep,
+    tryDeep,
+    tryIO,
     withRunInIO,
     withUnliftIO,
   )
@@ -342,3 +362,17 @@ qq parser =
         <> " "
         <> field
         <> " is not implemented"
+
+-- $exceptions
+-- Exceptions
+
+throwString ::
+  forall e m a.
+  ( From e String,
+    MonadThrow m,
+    HasCallStack
+  ) =>
+  e ->
+  m a
+throwString =
+  Safe.throwString . from @e @String

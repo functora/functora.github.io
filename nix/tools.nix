@@ -1,6 +1,7 @@
 with (import ./project.nix);
 with pkgs; let
   unst = import ./nixpkgs-unstable.nix;
+  newpkgs = import ./newpkgs.nix;
   repoDir = builtins.toString ./..;
   hlintTest = pkgs.writeShellScriptBin "hlint-test" ''
     ${pkgs.hlint}/bin/hlint ${repoDir} \
@@ -9,10 +10,10 @@ with pkgs; let
       --ignore-glob=${repoDir}/pub/vi \
       --ignore-glob=${repoDir}/pub/dazzle/test
   '';
-  ormoluUnst = unst.writeShellApplication {
+  ormolu = unst.writeShellApplication {
     name = "ormolu";
     text = ''
-      ${unst.haskellPackages.fourmolu_0_13_0_0}/bin/fourmolu \
+      ${newpkgs.haskellPackages.fourmolu_0_12_0_0}/bin/fourmolu \
         --indentation 2 \
         --column-limit 80 \
         --function-arrows trailing \
@@ -32,7 +33,7 @@ with pkgs; let
     '';
   };
   ormoluTest = pkgs.writeShellScriptBin "ormolu-test" ''
-    ${ormoluUnst}/bin/ormolu --mode check \
+    ${ormolu}/bin/ormolu --mode check \
       $( find ${repoDir}/* \( \
          -path '${repoDir}/frk' \
          -o -path '${repoDir}/pub/vi' \
@@ -56,7 +57,7 @@ with pkgs; let
     ${ormoluTest}/bin/ormolu-test
   '';
 in [
-  ormoluUnst
+  ormolu
   styleTest
   prettier
 ]

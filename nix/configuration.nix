@@ -46,9 +46,16 @@
           "postimees.ee"
           "rumble.com"
           "discord.com"
-          # "youtube.com"
-          # "telegram.org"
-          # "t.me"
+          "youtube.com"
+          "telegram.org"
+          "t.me"
+          "odysee.com"
+          "soundcloud.com"
+          "twitter.com"
+          "twitch.tv"
+          "facebook.com"
+          "mercadolibre.com.uy"
+          "tiendamia.com"
         ]
         else []
       ));
@@ -182,11 +189,9 @@ in {
     ];
     nix.settings.trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-      "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
     ];
     nix.settings.substituters = [
       "https://cache.iog.io"
-      "https://nixcache.reflex-frp.org"
     ];
     nix.settings.experimental-features = [
       "nix-command"

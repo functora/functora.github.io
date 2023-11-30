@@ -1972,7 +1972,7 @@ c.content.notifications.enabled = False
 c.content.desktop_capture = False
 c.content.geolocation = False
 c.content.mouse_lock = False
-c.content.javascript.can_access_clipboard = True
+c.content.javascript.clipboard = "access"
 c.content.pdfjs = True
 c.content.blocking.method = "both"
 

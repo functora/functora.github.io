@@ -7,12 +7,12 @@
   vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   unst = import ./nixpkgs-unstable.nix;
-  yewtube = import ./yewtube.nix {inherit pkgs;};
+  yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/a8d549351d4b87ab80665f35e57bee2a04201245.tar.gz";
-    sha256 = "1rhc5zps6b7llxa080khd5f38r607q4pbml1217rz7a8k15gzyb5";
+    url = "https://github.com/nix-community/home-manager/archive/aeb2232d7a32530d3448318790534d196bf9427a.tar.gz";
+    sha256 = "16078fwcmqq41dqfnm124xxm8l6zykvqlj1kzgi0fvfil4y86slm";
   };
   kmonad-srv = builtins.fetchTarball {
     url = "https://github.com/kmonad/kmonad/archive/3413f1be996142c8ef4f36e246776a6df7175979.tar.gz";
@@ -512,6 +512,7 @@ in {
       wlr.enable = true;
       # gtk portal needed to make gtk apps happy
       extraPortals = [pkgs.xdg-desktop-portal-gtk];
+      config.common.default = "*";
     };
 
     #
@@ -560,7 +561,7 @@ in {
         awscli2
         qdigidoc
         libreoffice
-        (tor-browser-bundle-bin.override {useHardenedMalloc = false;})
+        tor-browser-bundle-bin
         kooha
         mpv
         qmk

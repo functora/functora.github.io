@@ -50,12 +50,11 @@
           "telegram.org"
           "t.me"
           "odysee.com"
-          "soundcloud.com"
           "twitter.com"
           "twitch.tv"
-          "facebook.com"
-          "mercadolibre.com.uy"
           "tiendamia.com"
+          # "mercadolibre.com.uy"
+          # "facebook.com"
         ]
         else []
       ));
@@ -476,6 +475,7 @@ in {
     services.tor.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
+    networking.nameservers = ["8.8.8.8" "8.8.4.4"];
     virtualisation.docker.enable = true;
     virtualisation.podman.enable = false;
     virtualisation.podman.dockerSocket.enable = false;
@@ -565,6 +565,8 @@ in {
         mpv
         qmk
         qmk-setup
+        prusa-slicer
+        cura
         # mkdir -p ~/macos/Public
         # cd ~/macos
         # chmod 777 ./Public

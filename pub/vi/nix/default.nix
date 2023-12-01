@@ -87,6 +87,7 @@ in
               vim-elixir
               gleam-vim
               neoformat
+              vim-terraform
               #
               # Productivity
               #

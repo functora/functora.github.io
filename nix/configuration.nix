@@ -218,17 +218,6 @@ in {
 
     hardware.keyboard.qmk.enable = true;
 
-    hardware.opengl = {
-      enable = true;
-      driSupport32Bit = true;
-      extraPackages = with pkgs; [
-        intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
-    };
-
     #
     # TODO : remove when this is fixed
     # https://github.com/NixOS/nixpkgs/issues/180175
@@ -477,8 +466,6 @@ in {
     networking.firewall.enable = true;
     networking.nameservers = ["8.8.8.8" "8.8.4.4"];
     virtualisation.docker.enable = true;
-    virtualisation.podman.enable = false;
-    virtualisation.podman.dockerSocket.enable = false;
     virtualisation.virtualbox.host.enable = true;
     users.extraGroups.vboxusers.members = [config.services.functora.userName];
     networking.extraHosts = blocked-hosts;
@@ -492,7 +479,6 @@ in {
         "input"
         "uinput"
         "docker"
-        "podman"
         "plugdev"
         "networkmanager"
       ];
@@ -568,6 +554,7 @@ in {
         qmk-setup
         prusa-slicer
         cura
+        freecad
         # mkdir -p ~/macos/Public
         # cd ~/macos
         # chmod 777 ./Public

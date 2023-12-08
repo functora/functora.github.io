@@ -1,8 +1,7 @@
 let
-  nixpkgs = import ./nixpkgs22.nix;
+  pkgs = import ./../../../nix/nixpkgs.nix;
 in
   {
-    pkgs ? import nixpkgs {},
     mini ? true,
     vimBackground ? "dark",
     vimColorScheme ? "PaperColor",

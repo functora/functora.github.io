@@ -14,6 +14,10 @@
     url = "https://github.com/nix-community/home-manager/archive/aeb2232d7a32530d3448318790534d196bf9427a.tar.gz";
     sha256 = "16078fwcmqq41dqfnm124xxm8l6zykvqlj1kzgi0fvfil4y86slm";
   };
+  nixos-hardware = builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixos-hardware/archive/fa194fc484fd7270ab324bb985593f71102e84d1.tar.gz";
+    sha256 = "06yn179lbhql3vkk4cjca4mdwr6lfdh6n1vqma3a4266dap6hcf4";
+  };
   kmonad-srv = builtins.fetchTarball {
     url = "https://github.com/kmonad/kmonad/archive/3413f1be996142c8ef4f36e246776a6df7175979.tar.gz";
     sha256 = "0mm439r5qkkpld51spbkmn0qy27sff6iw8c7mb87x73xk4z5cjxq";
@@ -140,6 +144,9 @@
 in {
   imports =
     [
+      (import "${nixos-hardware}/common/cpu/intel")
+      (import "${nixos-hardware}/common/pc/laptop")
+      (import "${nixos-hardware}/common/pc/laptop/ssd")
       (import "${home-manager}/nixos")
       (import "${kmonad-srv}/nix/nixos-module.nix")
       (import ./rigtora.nix)
@@ -160,7 +167,7 @@ in {
     };
   };
 
-  config = {
+  config = rec {
     #
     # Misc
     #
@@ -169,14 +176,10 @@ in {
       VISUAL = "nvim";
       BROWSER = "qutebrowser";
       TERMINAL = "alacritty";
+      WLR_NO_HARDWARE_CURSORS = "1";
+      NIXOS_OZONE_WL = "1";
     };
-    #
-    # NOTE : enable swap if needed
-    #
-    # swapDevices = [{
-    #   device = "/var/lib/swapfile";
-    #   size = 3 * 1024;
-    # }];
+    environment.sessionVariables = environment.variables;
     #
     # Nix
     #
@@ -202,6 +205,21 @@ in {
     security.polkit.enable = true;
     security.pam.services.swaylock = {};
     #
+    # Nvidia
+    #
+    hardware.opengl = {
+      enable = true;
+      driSupport = true;
+      driSupport32Bit = true;
+      extraPackages = with pkgs; [
+        vulkan-validation-layers
+        intel-media-driver # LIBVA_DRIVER_NAME=iHD
+        vaapiIntel # LIBVA_DRIVER_NAME=i965
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
+    };
+    #
     # Media
     #
     security.rtkit.enable = true;
@@ -211,9 +229,6 @@ in {
       alsa.support32Bit = true;
       pulse.enable = true;
       jack.enable = true;
-      # use the example session manager (no others are packaged yet so this is enabled by default,
-      # no need to redefine it in your config for now)
-      #media-session.enable = true;
     };
 
     hardware.keyboard.qmk.enable = true;
@@ -625,16 +640,6 @@ in {
             format = " RAM $mem_used_percents.eng(w:1) ";
             icons_format = "";
           }
-          #
-          # NOTE : enable swap if needed
-          #
-          # {
-          #   block = "memory";
-          #   display_type = "swap";
-          #   format_swap = " SWP {swap_used_percents}";
-          #   clickable = false;
-          #   icons_format = "";
-          # }
           {
             block = "cpu";
             format = " CPU $utilization ";
@@ -681,6 +686,7 @@ in {
       wayland.windowManager.sway = {
         enable = true;
         wrapperFeatures.gtk = true;
+        extraOptions = ["--unsupported-gpu"];
         extraConfig = ''
           for_window [class="Alacritty"] fullscreen enable
           for_window [class="qutebrowser"] fullscreen enable

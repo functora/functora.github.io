@@ -1,8 +1,7 @@
 let
-  pkgs22 = import (import ./nixpkgs22.nix) {};
+  pkgs = import ./../../../nix/nixpkgs.nix;
 in
   {
-    pkgs ? pkgs22,
     mini ? true,
     formatter ? "ormolu",
     vimBackground ? "dark",
@@ -51,7 +50,7 @@ in
           customRC =
             ''
               set runtimepath+=${vi-src}
-              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python38Packages.grip}/bin:${xdg_utils}/bin:${git}/bin:${jre8}/bin'
+              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg_utils}/bin:${git}/bin:${jre8}/bin'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'
               let g:languagetool_jar='${languagetool}/share/languagetool-commandline.jar'

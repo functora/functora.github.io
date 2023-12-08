@@ -37,7 +37,7 @@ in
         # mpris
         #
         dbus-python
-        pkgs.python310Packages.pygobject3
+        pkgs.python311Packages.pygobject3
       ];
       src = fetchPypi {
         inherit pname version;

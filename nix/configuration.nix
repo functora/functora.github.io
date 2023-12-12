@@ -537,6 +537,7 @@ in {
         #
         # wayland
         #
+        bemenu
         wlr-randr
         swaylock
         swayidle
@@ -757,7 +758,20 @@ in {
           };
         in {
           modifier = mod;
+          menu = "bemenu-run";
           defaultWorkspace = "workspace number 1";
+          #
+          # TODO : remove when kanshi service bug is fixed:
+          # https://github.com/nix-community/home-manager/issues/2797
+          #
+          startup = [
+            {
+              command = "${
+                pkgs.systemd
+              }/bin/systemctl --user reload-or-restart kanshi.service";
+              always = true;
+            }
+          ];
           keybindings = lib.mkOptionDefault (
             newMediaKeys "Mod5+Shift+"
             // newMediaKeys ""

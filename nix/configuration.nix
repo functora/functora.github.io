@@ -6,7 +6,6 @@
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
   xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
-  unst = import ./nixpkgs-unstable.nix;
   yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
@@ -750,9 +749,9 @@ in {
             "${mod}+Shift+l" = "move right";
             "${mod}+Shift+p" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy output";
             "${mod}+Shift+n" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy area";
-            "${mod}+Shift+u" = "exec ${unst.warpd}/bin/warpd --hint";
-            "${mod}+Shift+i" = "exec ${unst.warpd}/bin/warpd --normal";
-            "${mod}+Shift+y" = "exec ${unst.warpd}/bin/warpd --grid";
+            "${mod}+Shift+u" = "exec ${pkgs.warpd}/bin/warpd --hint";
+            "${mod}+Shift+i" = "exec ${pkgs.warpd}/bin/warpd --normal";
+            "${mod}+Shift+y" = "exec ${pkgs.warpd}/bin/warpd --grid";
             "${mod}+0" = "workspace number 10";
             "${mod}+Shift+0" = "move container to workspace number 10";
           };

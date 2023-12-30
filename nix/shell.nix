@@ -24,6 +24,7 @@ in
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git
         newpkgs.litecli
+        newpkgs.sqlite-web
         #
         # NOTE : HLS takes too much disk space
         # and time to build, maybe does not worth it.

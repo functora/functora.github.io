@@ -13,7 +13,7 @@ with pkgs; let
   ormolu = unst.writeShellApplication {
     name = "ormolu";
     text = ''
-      ${newpkgs.haskellPackages.fourmolu_0_12_0_0}/bin/fourmolu \
+      ${newpkgs.haskellPackages.fourmolu}/bin/fourmolu \
         --indentation 2 \
         --column-limit 80 \
         --function-arrows trailing \

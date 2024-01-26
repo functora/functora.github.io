@@ -48,7 +48,6 @@
           "delfi.ee"
           "postimees.ee"
           "rumble.com"
-          "discord.com"
           "youtube.com"
           "telegram.org"
           "t.me"
@@ -56,8 +55,9 @@
           "twitter.com"
           "twitch.tv"
           "tiendamia.com"
-          # "mercadolibre.com.uy"
-          # "facebook.com"
+          "mercadolibre.com.uy"
+          "facebook.com"
+          # "discord.com"
         ]
         else []
       ));
@@ -196,6 +196,7 @@ in {
     ];
     nix.settings.experimental-features = [
       "nix-command"
+      "flakes"
     ];
     nix.extraOptions = ''
       keep-outputs = true
@@ -479,8 +480,11 @@ in {
     services.tor.client.enable = true;
     networking.firewall.enable = true;
     networking.nameservers = ["8.8.8.8" "8.8.4.4"];
-    virtualisation.docker.enable = true;
     virtualisation.virtualbox.host.enable = true;
+    virtualisation.docker.enable = false;
+    virtualisation.podman.enable = true;
+    virtualisation.podman.dockerSocket.enable = true;
+    virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
     users.extraGroups.vboxusers.members = [config.services.functora.userName];
     networking.extraHosts = blocked-hosts;
 
@@ -493,6 +497,7 @@ in {
         "input"
         "uinput"
         "docker"
+        "podman"
         "plugdev"
         "networkmanager"
       ];
@@ -576,6 +581,7 @@ in {
         # quickget macos monterey
         # quickemu --vm macos-monterey.conf --public-dir ./Public --extra_args "-cpu host,+vmx"
         quickemu
+        pavucontrol
       ];
       programs.git = {
         enable = true;

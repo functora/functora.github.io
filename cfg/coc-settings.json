@@ -1,0 +1,26 @@
+{
+  "codeLens.enable": true,
+  "languageserver": {
+    "haskell": {
+      "command": "haskell-language-server",
+      "args": ["--lsp"],
+      "rootPatterns": [
+        "*.cabal",
+        "stack.yaml",
+        "cabal.project",
+        "package.yaml",
+        "hie.yaml"
+      ],
+      "filetypes": ["haskell", "lhaskell"]
+    },
+    "gleam": {
+      "command": "gleam",
+      "args": ["lsp"],
+      "filetypes": ["gleam"]
+    },
+    "elixirLS": {
+      "command": "elixir-ls",
+      "filetypes": ["elixir", "eelixir"]
+    }
+  }
+}

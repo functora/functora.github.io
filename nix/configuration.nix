@@ -612,6 +612,7 @@ in {
           source = ./xkb;
           recursive = true;
         };
+        ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
       };
       programs.i3status-rust = {
         enable = true;

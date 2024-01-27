@@ -387,7 +387,7 @@ endif
 
 syntax on
 set t_Co=256
-exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
+exe 'colorscheme ' . get(g:, "vimColorScheme", "everforest")
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
 nnoremap <space> <Nop>
@@ -549,7 +549,7 @@ nnoremap <nowait><expr> <C-l> coc#float#has_scroll() ? coc#float#scroll(0) : "\<
 inoremap <nowait><expr> <C-h> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
 inoremap <nowait><expr> <C-l> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
 
-if strftime("%H") > 7 && strftime("%H") < 18
+if strftime("%H") > 7 && strftime("%H") < 20
   set background=light
 else
   set background=dark
@@ -562,6 +562,7 @@ if exists("*ToggleBackground") == 0
 		else
             set background=dark
 		endif
+		syntax on
 	endfunction
 
 	command BG call ToggleBackground()

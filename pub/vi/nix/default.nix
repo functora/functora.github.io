@@ -74,6 +74,9 @@ in
               vim-togglelist
               papercolor-theme
               vim-better-whitespace
+              catppuccin-nvim
+              everforest
+              edge
               #
               # Programming
               #

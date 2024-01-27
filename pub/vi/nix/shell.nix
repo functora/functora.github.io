@@ -3,8 +3,8 @@ let
 in
   {
     mini ? true,
-    vimBackground ? "dark",
-    vimColorScheme ? "PaperColor",
+    vimBackground ? "light",
+    vimColorScheme ? "everforest",
   }:
     with pkgs; let
       pkg = import ./. {

@@ -5,7 +5,7 @@ in
     mini ? true,
     formatter ? "ormolu",
     vimBackground ? "light",
-    vimColorScheme ? "everforest",
+    vimColorScheme ? "edge",
   }:
     with pkgs;
     with builtins;

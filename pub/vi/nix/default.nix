@@ -4,8 +4,8 @@ in
   {
     mini ? true,
     formatter ? "ormolu",
-    vimBackground ? "dark",
-    vimColorScheme ? "PaperColor",
+    vimBackground ? "light",
+    vimColorScheme ? "everforest",
   }:
     with pkgs;
     with builtins;

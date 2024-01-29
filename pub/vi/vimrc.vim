@@ -760,7 +760,7 @@ let g:mix_format_silent_errors = 1
 
 augroup fmt
   autocmd!
-  autocmd BufWritePre * undojoin | Neoformat
+  autocmd BufWritePre * try | undojoin | Neoformat | catch /E790/ | Neoformat | endtry
 augroup end
 let g:neoformat_enabled_toml = ['taplo', 'topiary', 'prettier']
 let g:neoformat_toml_prettier = {

@@ -49,7 +49,6 @@
           "postimees.ee"
           "rumble.com"
           "youtube.com"
-          "telegram.org"
           "t.me"
           "odysee.com"
           "twitter.com"
@@ -58,6 +57,7 @@
           "mercadolibre.com.uy"
           "facebook.com"
           # "discord.com"
+          # "telegram.org"
         ]
         else []
       ));

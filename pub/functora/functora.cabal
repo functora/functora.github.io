@@ -33,7 +33,6 @@ common pkg
       -Wno-missing-kind-signatures
 
   default-extensions:
-    NoImplicitPrelude
     AllowAmbiguousTypes
     ConstraintKinds
     DataKinds
@@ -55,6 +54,7 @@ common pkg
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
+    NoImplicitPrelude
     NumericUnderscores
     OverloadedLists
     OverloadedStrings
@@ -161,6 +161,13 @@ common pkg-sql
     , resource-pool
     , uuid
 
+common pkg-money
+  import:         pkg
+  hs-source-dirs: src/money
+  build-depends:
+    , base
+    , dollaridoos
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -208,6 +215,15 @@ library sql
     Functora.Sql
     Functora.SqlOrphan
 
+library money
+  import:          pkg-money
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules:
+    Functora.Money
+    Functora.MoneyOrphan
+
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -230,12 +246,16 @@ test-suite functora-test
     Functora.QrSpec
 
   if flag(ghcid)
-    import:        pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql
+    import:
+      pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql, pkg-money
+
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
       Functora.Cfg
       Functora.CfgOrphan
+      Functora.Money
+      Functora.MoneyOrphan
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr

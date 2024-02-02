@@ -1,7 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Functora.Prelude
-  ( module X,
+  ( -- * Reexport
+    -- $reexport
+    module X,
+    LiftTH,
 
     -- * Show
     -- $show
@@ -17,7 +20,7 @@ module Functora.Prelude
     -- $lens
     view,
     (^.),
-    makeGetters,
+    mkGetters,
 
     -- * DerivingVia
     -- $derivingVia
@@ -36,13 +39,24 @@ module Functora.Prelude
     sleepMinutes,
     sleepHours,
 
+    -- * Exceptions
+    -- $exceptions
+    ParseException,
+    parseExceptionSource,
+    parseExceptionSourceType,
+    parseExceptionTargetType,
+    parseExceptionFailure,
+    throwParseException,
+    throwString,
+
+    -- * Parsers
+    -- $parsers
+    parseWords,
+    parseRatio,
+
     -- * QQ
     -- $qq
     qq,
-
-    -- * Exceptions
-    -- $exceptions
-    throwString,
 
     -- * Merge
     -- $merge
@@ -72,7 +86,7 @@ import Control.Concurrent.STM.TChan as X
 import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Exception.Safe as X (throw)
 import qualified Control.Exception.Safe as Safe
-import Control.Lens.Combinators as X (first1Of, makePrisms)
+import Control.Lens.Combinators as X (first1Of, makePrisms, review)
 import Control.Monad.Extra as X
   ( eitherM,
     fromMaybeM,
@@ -91,9 +105,11 @@ import qualified Data.Map.Merge.Strict as Map
 import Data.Scientific as X (Scientific)
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Text.Read as T
 import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
@@ -105,7 +121,7 @@ import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
 import qualified Language.Haskell.TH.Lib as TH
-import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax as TH (Lift)
 import qualified Language.Haskell.TH.Syntax as TH
 import Lens.Micro as X hiding (set, (^.))
@@ -185,6 +201,8 @@ import UnliftIO as X
   )
 import Witch.Mini as X
 import qualified Prelude
+
+type LiftTH = TH.Lift
 
 -- $show
 -- Show
@@ -274,8 +292,8 @@ infixl 8 ^.
 (^.) = flip first1Of
 {-# INLINE (^.) #-}
 
-makeGetters :: TH.Name -> TH.DecsQ
-makeGetters =
+mkGetters :: TH.Name -> TH.DecsQ
+mkGetters =
   TH.makeLensesWith $ TH.lensRules & TH.generateUpdateableOptics .~ False
 
 -- $derivingVia
@@ -328,6 +346,80 @@ sleepMinutes = sleepSeconds . (* 60)
 sleepHours :: (MonadIO m) => Integer -> m ()
 sleepHours = sleepMinutes . (* 60)
 
+-- $exceptions
+-- Exceptions
+
+data ParseException = ParseException
+  { _parseExceptionSource :: Text,
+    _parseExceptionSourceType :: SomeTypeRep,
+    _parseExceptionTargetType :: SomeTypeRep,
+    _parseExceptionFailure :: Text
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+instance Exception ParseException where
+  displayException = inspect
+
+TH.makeLensesWith
+  (TH.lensRules & TH.generateUpdateableOptics .~ False)
+  ''ParseException
+
+throwParseException ::
+  forall dst src e m.
+  ( Typeable dst,
+    Show src,
+    Show e,
+    Data src,
+    Data e,
+    MonadThrow m
+  ) =>
+  src ->
+  e ->
+  m dst
+throwParseException source failure =
+  throw
+    ParseException
+      { _parseExceptionSource = inspect source,
+        _parseExceptionSourceType = SomeTypeRep $ typeOf source,
+        _parseExceptionTargetType = SomeTypeRep $ typeRep @dst,
+        _parseExceptionFailure = inspect failure
+      }
+
+throwString ::
+  forall e m a.
+  ( From e String,
+    MonadThrow m,
+    HasCallStack
+  ) =>
+  e ->
+  m a
+throwString =
+  Safe.throwString . from @e @String
+
+-- $parsers
+-- Parsers
+
+parseWords :: forall a. (From a Text) => a -> [Text]
+parseWords = filter (not . null) . T.splitOn " " . from @a @Text
+
+parseRatio ::
+  forall str int m.
+  ( From str Text,
+    Integral int,
+    Show str,
+    Show int,
+    Data str,
+    Data int,
+    MonadThrow m
+  ) =>
+  str ->
+  m (Ratio int)
+parseRatio str =
+  case T.rational . T.strip $ from @str @Text str of
+    Right (rat, "") -> pure rat
+    Right e -> throwParseException str e
+    Left e -> throwParseException str e
+
 -- $qq
 -- QQ
 
@@ -369,20 +461,6 @@ qq parser =
         <> " "
         <> field
         <> " is not implemented"
-
--- $exceptions
--- Exceptions
-
-throwString ::
-  forall e m a.
-  ( From e String,
-    MonadThrow m,
-    HasCallStack
-  ) =>
-  e ->
-  m a
-throwString =
-  Safe.throwString . from @e @String
 
 -- $merge
 -- Merge

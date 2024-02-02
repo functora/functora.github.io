@@ -8,6 +8,7 @@ import Data.Generics (Data)
 import Data.Ratio
 import Data.Scientific (Scientific)
 import Data.Tagged
+import qualified Type.Reflection as Reflection
 import Universum
 import Witch.Mini
 
@@ -17,6 +18,11 @@ instance Data SomeException where
   dataTypeOf _ = error "TODO : dataTypeOf SomeException"
 
 deriving stock instance (Data a, Data b) => Data (TryFromException a b)
+
+instance Data Reflection.SomeTypeRep where
+  gunfold _ z = z . Data.fromConstr
+  toConstr _ = error "TODO : toConstr SomeTypeRep"
+  dataTypeOf _ = error "TODO : dataTypeOf SomeTypeRep"
 
 deriving stock instance
   ( Typeable kind,

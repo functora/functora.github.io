@@ -26,14 +26,14 @@ import Functora.Prelude
 newtype Border = Border
   { unBorder :: Int
   }
-  deriving newtype (Eq, Ord, Show, Read, Real, Num, Enum, Integral)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (Num, Enum, Real, Integral)
 
 newtype Scale = Scale
   { unScale :: Int
   }
-  deriving newtype (Eq, Ord, Show, Read, Real, Num, Enum, Integral)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (Num, Enum, Real, Integral)
 
 xff :: Word8
 xff = 0xff

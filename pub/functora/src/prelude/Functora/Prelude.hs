@@ -122,7 +122,6 @@ import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
 import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
-import Language.Haskell.TH.Syntax as TH (Lift)
 import qualified Language.Haskell.TH.Syntax as TH
 import Lens.Micro as X hiding (set, (^.))
 import Lens.Micro.Contra as X (Fold, Getter, fromSimpleFold, fromSimpleGetter)
@@ -201,6 +200,9 @@ import UnliftIO as X
   )
 import Witch.Mini as X
 import qualified Prelude
+
+-- $reexport
+-- Reexport
 
 type LiftTH = TH.Lift
 

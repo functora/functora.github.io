@@ -21,8 +21,7 @@ import Functora.Prelude
 newtype CurrencyCode = CurrencyCode
   { _unCurrencyCode :: Text
   }
-  deriving newtype (Eq, Ord, Show, Read)
-  deriving stock (Data, Generic, LiftTH)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, LiftTH)
 
 mkGetters ''CurrencyCode
 

@@ -8,8 +8,7 @@ import Text.URI.QQ
 newtype Buz = Buz
   { _buzUri :: URI
   }
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 spec :: Spec
 spec = do

@@ -93,22 +93,19 @@ type WordByteSize word size =
 newtype Ikm = Ikm
   { unIkm :: ByteString
   }
-  deriving newtype (Eq, Ord, Read)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Read, Data, Generic)
   deriving (Show) via Redacted Ikm
 
 newtype Salt = Salt
   { unSalt :: ByteString
   }
-  deriving newtype (Eq, Ord, Read)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Read, Data, Generic)
   deriving (Show) via Redacted Salt
 
 newtype Info = Info
   { unInfo :: ByteString
   }
-  deriving newtype (Eq, Ord, Read)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Read, Data, Generic)
   deriving (Show) via Redacted Info
 
 drvSomeAesKey ::

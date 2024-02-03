@@ -31,7 +31,6 @@ common pkg
       -Wno-missing-kind-signatures
 
   default-extensions:
-    NoImplicitPrelude
     AllowAmbiguousTypes
     ConstraintKinds
     DataKinds
@@ -53,6 +52,7 @@ common pkg
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
+    NoImplicitPrelude
     NumericUnderscores
     OverloadedLists
     OverloadedStrings
@@ -71,26 +71,49 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  aes prelude qr
+  hs-source-dirs:  prelude qr aes money
   build-depends:
+    , async
     , base
     , base16-bytestring
     , base64-bytestring
     , bmp
     , bytestring
+    , containers
     , Crypto
     , cryptohash-sha256
+    , dollaridoos
+    , extra
     , lens
+    , microlens
+    , microlens-contra
+    , microlens-ghc
+    , microlens-th
+    , modern-uri
+    , monad-chronicle
     , pkcs7
     , qrcode-core
+    , safe-exceptions
+    , scientific
+    , stm
     , syb
     , tagged
+    , template-haskell
     , text
+    , these
+    , these-lens
+    , time
+    , unbounded-delays
     , universum
+    , unliftio
     , vector
     , witch-mini
+    , with-utf8
 
   exposed-modules:
     Functora.Aes
+    Functora.Money
+    Functora.MoneyOrphan
     Functora.Prelude
+    Functora.PreludeOrphan
     Functora.Qr

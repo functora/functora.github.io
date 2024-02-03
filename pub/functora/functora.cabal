@@ -167,6 +167,7 @@ common pkg-money
   build-depends:
     , base
     , dollaridoos
+    , template-haskell
 
 library
   import:          pkg-prelude

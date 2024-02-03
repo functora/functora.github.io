@@ -60,4 +60,7 @@ in [
   ormolu
   styleTest
   prettier
+  unst.alejandra
+  newpkgs.haskellPackages.cabal-fmt
+  pkgs.haskell-language-server
 ]

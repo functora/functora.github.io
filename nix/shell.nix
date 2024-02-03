@@ -19,17 +19,10 @@ in
         unst.erlang
         unst.elixir
         unst.ollama
-        unst.alejandra
-        newpkgs.haskellPackages.cabal-fmt
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git
         newpkgs.litecli
         newpkgs.sqlite-web
-        #
-        # NOTE : HLS takes too much disk space
-        # and time to build, maybe does not worth it.
-        #
-        pkgs.haskell-language-server
         misc.nix-bundle
       ]
       ++ (import ./tools.nix)

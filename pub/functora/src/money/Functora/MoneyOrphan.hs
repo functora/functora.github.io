@@ -10,4 +10,4 @@ deriving stock instance (Read a) => Read (D.Money a)
 
 deriving stock instance (Data a) => Data (D.Money a)
 
-deriving stock instance (LiftTH a) => TH.Lift (D.Money a)
+deriving stock instance (TH.Lift a) => TH.Lift (D.Money a)

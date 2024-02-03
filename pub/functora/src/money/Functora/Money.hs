@@ -17,11 +17,12 @@ where
 import qualified Data.Money as D
 import Functora.MoneyOrphan ()
 import Functora.Prelude
+import qualified Language.Haskell.TH.Syntax as TH
 
 newtype CurrencyCode = CurrencyCode
   { _unCurrencyCode :: Text
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic, LiftTH)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
 
 mkGetters ''CurrencyCode
 
@@ -46,7 +47,7 @@ data Money = Money
     _moneyCurrencyCode :: CurrencyCode,
     _moneyCurrencyDesc :: Text
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic, LiftTH)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
 
 mkGetters ''Money
 

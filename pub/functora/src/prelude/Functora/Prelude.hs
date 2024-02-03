@@ -120,6 +120,7 @@ import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
 import qualified GHC.TypeLits as TypeLits
+import Instances.TH.Lift as X ()
 import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
 import qualified Language.Haskell.TH.Syntax as TH

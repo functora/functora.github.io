@@ -95,6 +95,7 @@ common pkg-prelude
     , tagged
     , template-haskell
     , text
+    , th-lift-instances
     , these
     , these-lens
     , time

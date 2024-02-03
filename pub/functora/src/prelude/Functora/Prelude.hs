@@ -115,7 +115,6 @@ import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
 import Data.Time.Clock as X (UTCTime, getCurrentTime)
-import Data.Time.Format.ISO8601 as X (ISO8601, iso8601Show)
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()

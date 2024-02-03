@@ -24,14 +24,14 @@ Customer (issuer) preemptively generates at home some amount of new random invoi
 
 Let's call them LN bills = lightning network bills. Like in case of fiat banknotes, customer needs to have a reasonable supply of LN bills of different denominations to carry in form of paper in his offline physical wallet for different use cases. Weekly supply for one person might look like this:
 
-|D (sat)|pcs|
-|-------|---|
-|500k   |1  |
-|200k   |1  |
-|100k   |2  |
-|70k    |14 |
-|20k    |7  |
-|10k    |7  |
+| D (sat) | pcs |
+| ------- | --- |
+| 500k    | 1   |
+| 200k    | 1   |
+| 100k    | 2   |
+| 70k     | 14  |
+| 20k     | 7   |
+| 10k     | 7   |
 
 As you can see, there can be multiple bills of the same denomination (like fiat banknotes), but still every bill must have individual unique preimage R and hash HR (like fiat banknotes serial numbers). Software which communicates with merchants, bill database and LN node itself should be hosted in safe place. For example at home behind the Tor. Good option is to host it at the same machine where customer LN node is running. For simplicity let's just call all this software and databases as customer LN node.
 

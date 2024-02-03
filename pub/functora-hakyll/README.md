@@ -1,4 +1,4 @@
-# 21it
+# Functora
 
 Compile site generator
 

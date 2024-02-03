@@ -488,7 +488,8 @@ mergeBy by upd lhs rhs =
 
 asumMap ::
   forall a b f m.
-  ( Foldable f,
+  ( Element (f a) ~ a,
+    Container (f a),
     Monoid (m b)
   ) =>
   (a -> m b) ->

@@ -15,7 +15,7 @@
 @font-face {
   font-family: "racing-font";
   font-display: swap;
-  src: url(../fonts/Sneakout-DGym.ttf);
+  src: url(../fonts/RacingSansOne-Regular.ttf);
 }
 
 .regular-font {
@@ -34,13 +34,19 @@
   font-family: "regular-font";
 }
 
-h1, h2, h3, h4, h5, .button {
+h1,
+h2,
+h3,
+h4,
+h5,
+.button {
   font-family: "square-font";
 }
 
 /* basic layouts */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -72,7 +78,7 @@ footer {
 }
 
 .black a {
-  color: #00CED1;
+  color: #00ced1;
 }
 
 .fluid {

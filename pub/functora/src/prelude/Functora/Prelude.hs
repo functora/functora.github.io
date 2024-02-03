@@ -63,6 +63,7 @@ module Functora.Prelude
     mergeMap,
     mergeAlt,
     mergeBy,
+    asumMap,
   )
 where
 
@@ -484,3 +485,14 @@ mergeBy by upd lhs rhs =
       upd
       (fromList $ (\x -> (by x, x)) <$> lhs)
       (fromList $ (\x -> (by x, x)) <$> rhs)
+
+asumMap ::
+  forall a b f m.
+  ( Foldable f,
+    Monoid (m b)
+  ) =>
+  (a -> m b) ->
+  f a ->
+  m b
+asumMap f =
+  foldr (mappend . f) mempty

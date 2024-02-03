@@ -1,64 +1,57 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure." />
+    <meta name="keywords" content="software,development,outsource,company,haskell,websites" />
+    
+    <title>Functora - Offline Lightning Wallet</title>
+    
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/devicons.min.css" />
+    <link rel="stylesheet" href="../css/picnic.min.css" />
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
+    <link rel="manifest" href="../site.webmanifest" />
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure.">
-  <meta name="keywords" content="software,development,outsource,company,haskell,websites">
-  
-    <title>21it - Offline Lightning Wallet</title>
-  
-  <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css">
-  <link rel="stylesheet" href="../css/devicons.min.css">
-  <link rel="stylesheet" href="../css/picnic.min.css">
-  <link rel="stylesheet" href="../css/default.css">
-  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-  <link rel="manifest" href="../site.webmanifest">
-</head>
+  <body>
+    
+    <nav>
+      <a href="../" class="brand">
+        <h2 class="racing-font">Fn</h2>
+      </a>
 
-<body>
+      <input id="bmenub" type="checkbox" class="show" autocomplete="off" aria-labelledby="bmenul" />
+      <label id="bmenul" for="bmenub" class="burger button pseudo">≡</label>
 
-  
-  <nav>
-    <a href="../" class="brand">
-      <h2 class="racing-font">21it</h2>
-    </a>
-
-    <input id="bmenub" type="checkbox" class="show" autocomplete="off" aria-labelledby="bmenul">
-    <label id="bmenul" for="bmenub" class="burger button pseudo">≡</label>
-
-    <div class="menu">
-      <a class="pseudo button" href="../">Home</a>
-      <a class="pseudo button" href="../about.html">About</a>
-      <a class="pseudo button" href="../skills.html">Skills</a>
-      <a class="pseudo button" href="../code.html">Code</a>
-      <a class="pseudo button" href="../blog.html">Blog</a>
-      <a class="pseudo button" href="../contact.html">Contact</a>
-      <a class="pseudo button" href="../cv.pdf">CV</a>
-    </div>
-  </nav>
-  
-
-  
+      <div class="menu">
+        <a class="pseudo button" href="../">Home</a>
+        <a class="pseudo button" href="../about.html">About</a>
+        <a class="pseudo button" href="../skills.html">Skills</a>
+        <a class="pseudo button" href="../code.html">Code</a>
+        <a class="pseudo button" href="../blog.html">Blog</a>
+        <a class="pseudo button" href="../contact.html">Contact</a>
+        <a class="pseudo button" href="../cv.pdf">CV</a>
+      </div>
+    </nav>
+     
     <div class="content page">
       <h2 class="text-center">Offline Lightning Wallet</h2>
       <article>
   <section class="header text-center">
     <em>
-      Published on October 23, 2020
-      
-      under
+      Published on October 23, 2020  under
       <a href="../license.html" class="regular-font">CC BY-SA 4.0</a>
       license
     </em>
   </section>
-  <section>
-      <p>Lightning Network (LN) is awesome payment method. It’s trustless, instant, private and cheap. It scales well. It still just good old bitcoin, which is awesome. Of course, nothing is for free, and LN have some drawbacks. One of them is interactive nature of LN payments. Both sender and recipient have to be online to process the payment. This means that LN wallet is always hot, and in order to pay offline (for example in restaurant) customer needs to have a smartphone or other device with internet connection and access to LN node (which might be remote or hosted on device itself).</p>
+  <section><p>Lightning Network (LN) is awesome payment method. It’s trustless, instant, private and cheap. It scales well. It still just good old bitcoin, which is awesome. Of course, nothing is for free, and LN have some drawbacks. One of them is interactive nature of LN payments. Both sender and recipient have to be online to process the payment. This means that LN wallet is always hot, and in order to pay offline (for example in restaurant) customer needs to have a smartphone or other device with internet connection and access to LN node (which might be remote or hosted on device itself).</p>
 <p>Smartphone is general purpose device, and it implies very complex hardware and software. Some components of smartphone hardware, operating systems and applications are formally open source, but they inevitably are tied with proprietary components. Even if both hardware and software are open source, complexity of modern smartphone is so overwhelming that complete security audit is very hard, almost impossible task. In case where proprietary components are involved (which is 99% of the cases), such audit is just meaningless. Hardware bitcoin wallets like Coldcard, Ledger and Trezor are there for a good reason. They are specialized devices, open source and simple enough to allow complete security audit. Attack surface of smartphone is too big for such critical application as bitcoin wallet. The same for LN nodes. Lightning network is relatively new thing, but we already have a great choice of specialized LN devices like Nodl, Dojo and Casa. But as I meantioned before, LN node should always be online. These devices are not very portable and require electricity and internet connection to operate. They are meant to be run in a safe environment, for example at home behind the Tor for maximum security and privacy. Let’s make a couple of assumptions regarding hypothetical offline lightning payment:</p>
 <ul>
 <li>Customer has operational LN node at home.</li>
@@ -159,16 +152,13 @@ More offline use cases
 <h4 class="text-center">
 Comparison with fiat banknotes
 </h4>
-<p>LN bills might look similar to fiat banknotes. They do share some common properties like physicality and static denomination. But in all other aspects they are actually almost opposite to each other. LN bills are a bit closer to pre-1971 fiat banknotes, because they both are representing strictly defined fraction of hard base money unit (bitcoin or gold) which can (in case of LN bills - should) be redeemed through some after-trade procedure. Modern fiat banknotes are not redeemable at all. Fiat banknotes are absolutely centralized - the state has a monopoly on printing them. LN bills in opposite are absolutely decentralized, everybody can print and use them, money market finally can have a real competition. Any market should be competitive to be healthy. Security model is also very different. Fiat banknotes do require trust. They have watermarks which are supposed to be hard to replicate, but I doubt it really works. LN banknotes don’t require trust, they do require only cryptographical verification. In modern global world, cryptographical verification can scale. Trust can’t.</p>
-  </section>
+<p>LN bills might look similar to fiat banknotes. They do share some common properties like physicality and static denomination. But in all other aspects they are actually almost opposite to each other. LN bills are a bit closer to pre-1971 fiat banknotes, because they both are representing strictly defined fraction of hard base money unit (bitcoin or gold) which can (in case of LN bills - should) be redeemed through some after-trade procedure. Modern fiat banknotes are not redeemable at all. Fiat banknotes are absolutely centralized - the state has a monopoly on printing them. LN bills in opposite are absolutely decentralized, everybody can print and use them, money market finally can have a real competition. Any market should be competitive to be healthy. Security model is also very different. Fiat banknotes do require trust. They have watermarks which are supposed to be hard to replicate, but I doubt it really works. LN banknotes don’t require trust, they do require only cryptographical verification. In modern global world, cryptographical verification can scale. Trust can’t.</p></section>
 </article>
 <footer class="text-center">
-    <a href="../blog-archive.html">Blog Archive</a>
+  <a href="../blog-archive.html">Blog Archive</a>
 </footer>
 
     </div>
-  
-
-</body>
-
+    
+  </body>
 </html>

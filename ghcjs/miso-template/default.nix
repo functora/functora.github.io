@@ -1,9 +1,9 @@
 let
   functora = builtins.fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/2788d8fecd74afe135c90e415b1a2b281fcf4155.tar.gz";
-    sha256 = "1yifldba2vkckyxbm7ckr5m2jx867fn16l5paxjq2l6x8m87m27j";
+    url = "https://github.com/functora/functora.github.io/archive/f1482c538f5a97c2a440d948f45a25953d6c82d1.tar.gz";
+    sha256 = "0ij4gnzqr7hsafsr3pqnqihnqlq07hs9pjbgvgmvbas47jhnhdfn";
   };
-  functora-miso = import "${functora}/frk/miso/default.nix" {
+  functora-miso = import "${functora}/ghcjs/miso/default.nix" {
     overlays = import ./overlays.nix {
       inherit functora;
     };
@@ -14,5 +14,5 @@ in
       miso = miso-jsaddle;
     };
     release = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" ./. {};
-    inherit pkgs;
+    inherit pkgs functora;
   }

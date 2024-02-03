@@ -2,7 +2,8 @@ with (import ./default.nix); let
   app-ghcid = pkgs.writeScriptBin "app-ghcid" ''
     (cd ${builtins.toString ./.} && ${pkgs.ghcid}/bin/ghcid --test=":main" --command="${pkgs.haskell.packages.ghc865.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
   '';
+  functora-tools = import "${builtins.trace functora functora}/nix/tools.nix";
 in
-  dev.env.overrideAttrs (old: {
-    buildInputs = old.buildInputs ++ [app-ghcid];
+  dev.env.overrideAttrs (prev: {
+    buildInputs = prev.buildInputs ++ [app-ghcid] ++ functora-tools;
   })

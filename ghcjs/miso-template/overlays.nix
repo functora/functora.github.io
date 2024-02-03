@@ -25,6 +25,11 @@
             witch-mini = doJailbreak (
               self.callCabal2nix "witch-mini" "${functora}/pub/witch-mini" {}
             );
+            with-utf8 = self.callHackageDirect {
+              pkg = "with-utf8";
+              ver = "1.1.0.0";
+              sha256 = "yuGp+bHk0Ce5E65z0jP7pCbEW3WIWeSOC2PcnmN/gdg=";
+            } {};
             functora-acme =
               self.callCabal2nix "functora-acme" "${functora}/pub/functora/src" {};
           }

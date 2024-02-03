@@ -1,0 +1,116 @@
+body {
+  padding: 0.6em 0.6em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  margin: 0 !important;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.summary {
+  color: white;
+  background-color: green;
+}
+
+.stack-middle,
+.stack-bottom {
+  padding: 0.6em 0.6em;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+}
+
+.stack-bottom {
+  border-bottom: 1px solid #aaa !important;
+  border-bottom-left-radius: 0.2em;
+  border-bottom-right-radius: 0.2em;
+}
+
+.border-top {
+  border-top: 1px solid #aaa !important;
+}
+
+.label {
+  margin: 0;
+}
+
+.no-offset-bottom-right {
+  margin-bottom: 0;
+  margin-right: 0;
+  padding-bottom: 0;
+  padding-right: 0;
+}
+
+.long-text {
+  word-break: break-all;
+}
+
+.logo {
+  max-width: 160px;
+}
+
+.qr {
+  max-width: 450px;
+  padding-bottom: 0 !important;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.flex-justify {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+@media print {
+  body {
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+  @page {
+    size: A4;
+    margin: 15mm;
+    background-color: #fff;
+  }
+}
+
+.lds-dual-ring {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+}
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border-radius: 50%;
+  border: 6px solid #cef;
+  border-color: #cef transparent #cef transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

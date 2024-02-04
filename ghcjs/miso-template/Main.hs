@@ -74,10 +74,18 @@ viewModel x =
     []
     [ link_ [rel_ "stylesheet", href_ "static/picnic.min.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
-      button_ [onClick AddOne] [text "+"],
-      text (ms x),
-      button_ [onClick SubtractOne] [text "-"],
+      mainWidget x,
       script_ [src_ "static/clipboard.min.js"] mempty,
-      script_ [src_ "static/patch.js", defer_ "defer"] mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
     ]
+
+mainWidget :: Model -> View Action
+mainWidget x =
+  row
+    [ button_ [onClick AddOne] [text "+"],
+      text (ms x),
+      button_ [onClick SubtractOne] [text "-"]
+    ]
+
+row :: [View action] -> View action
+row = div_ [class_ $ "flex one center"]

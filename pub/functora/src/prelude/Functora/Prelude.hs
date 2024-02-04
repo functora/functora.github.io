@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Functora.Prelude
   ( -- * Reexport
     -- $reexport
@@ -42,10 +40,6 @@ module Functora.Prelude
     -- * Exceptions
     -- $exceptions
     ParseException,
-    parseExceptionSource,
-    parseExceptionSourceType,
-    parseExceptionTargetType,
-    parseExceptionFailure,
     throwParseException,
     throwString,
 
@@ -119,6 +113,8 @@ import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
+import GHC.Records as X (HasField (..))
+import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
 import Instances.TH.Lift as X ()
 import qualified Language.Haskell.TH.Lib as TH
@@ -222,7 +218,7 @@ inspectType =
     . Typeable.typeRep
     $ Proxy @a
 
-inspectSymbol :: forall a b. (TypeLits.KnownSymbol a, IsString b) => b
+inspectSymbol :: forall a b. (KnownSymbol a, IsString b) => b
 inspectSymbol =
   fromString
     . TypeLits.symbolVal
@@ -353,19 +349,15 @@ sleepHours = sleepMinutes . (* 60)
 -- Exceptions
 
 data ParseException = ParseException
-  { _parseExceptionSource :: Text,
-    _parseExceptionSourceType :: SomeTypeRep,
-    _parseExceptionTargetType :: SomeTypeRep,
-    _parseExceptionFailure :: Text
+  { parseExceptionSource :: Text,
+    parseExceptionSourceType :: SomeTypeRep,
+    parseExceptionTargetType :: SomeTypeRep,
+    parseExceptionFailure :: Text
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
 instance Exception ParseException where
   displayException = inspect
-
-TH.makeLensesWith
-  (TH.lensRules & TH.generateUpdateableOptics .~ False)
-  ''ParseException
 
 throwParseException ::
   forall dst src e m.
@@ -382,10 +374,10 @@ throwParseException ::
 throwParseException source failure =
   throw
     ParseException
-      { _parseExceptionSource = inspect source,
-        _parseExceptionSourceType = SomeTypeRep $ typeOf source,
-        _parseExceptionTargetType = SomeTypeRep $ typeRep @dst,
-        _parseExceptionFailure = inspect failure
+      { parseExceptionSource = inspect source,
+        parseExceptionSourceType = SomeTypeRep $ typeOf source,
+        parseExceptionTargetType = SomeTypeRep $ typeRep @dst,
+        parseExceptionFailure = inspect failure
       }
 
 throwString ::
@@ -454,7 +446,7 @@ qq parser =
                   <> ")"
           case parser $ from @String @inp x0 of
             Left e -> fatal e
-            Right x -> [|$(TH.lift x)|]
+            Right x -> TH.lift x
     }
   where
     failure :: Text -> any

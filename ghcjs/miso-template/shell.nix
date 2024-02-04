@@ -5,5 +5,11 @@ with (import ./default.nix); let
   functora-tools = import "${builtins.trace functora functora}/nix/tools.nix";
 in
   dev.env.overrideAttrs (prev: {
-    buildInputs = prev.buildInputs ++ [app-ghcid] ++ functora-tools;
+    buildInputs =
+      [
+        app-ghcid
+        pkgs.haskell.packages.ghc865.cabal-install
+      ]
+      ++ prev.buildInputs
+      ++ functora-tools;
   })

@@ -1,14 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Functora.Money
-  ( CurrencyCode,
-    unCurrencyCode,
+  ( CurrencyCode (..),
     qqCurrencyCode,
     parseCurrencyCode,
-    Money,
-    moneyAmount,
-    moneyCurrencyCode,
-    moneyCurrencyDesc,
+    Money (..),
     qqMoney,
     parseMoney,
   )
@@ -20,11 +14,9 @@ import Functora.Prelude
 import qualified Language.Haskell.TH.Syntax as TH
 
 newtype CurrencyCode = CurrencyCode
-  { _unCurrencyCode :: Text
+  { unCurrencyCode :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
-
-mkGetters ''CurrencyCode
 
 qqCurrencyCode :: QuasiQuoter
 qqCurrencyCode = qq @Text @CurrencyCode parseCurrencyCode
@@ -43,13 +35,11 @@ parseCurrencyCode input =
     _ -> throwParseException input ("Input has wrong amount of words" :: Text)
 
 data Money = Money
-  { _moneyAmount :: D.Money Rational,
-    _moneyCurrencyCode :: CurrencyCode,
-    _moneyCurrencyDesc :: Text
+  { moneyAmount :: D.Money Rational,
+    moneyCurrencyCode :: CurrencyCode,
+    moneyCurrencyDesc :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
-
-mkGetters ''Money
 
 qqMoney :: QuasiQuoter
 qqMoney = qq @Text @Money parseMoney

@@ -1,14 +1,18 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functora.WebOrphan () where
 
+#ifndef __GHCJS__
+import Functora.Prelude
+import Yesod.Core (PathPiece (..))
 import qualified Data.Data as Data
 import qualified Data.Streaming.Zlib as Zlib
-import Functora.Prelude
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Types as Web
-import Yesod.Core (PathPiece (..))
+#endif
 
+#ifndef __GHCJS__
 instance Data Web.Request where
   gunfold _ z = z . Data.fromConstr
   toConstr _ = error "TODO : toConstr Web.Request"
@@ -33,3 +37,4 @@ instance PathPiece Natural where
     rightToMaybe $ tryFrom @Integer @Natural mid
   toPathPiece =
     toPathPiece . from @Natural @Integer
+#endif

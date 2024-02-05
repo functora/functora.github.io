@@ -1,7 +1,7 @@
 module Functora.Money
-  ( CurrencyCode (..),
-    qqCurrencyCode,
-    parseCurrencyCode,
+  ( Currency (..),
+    qqCurrency,
+    parseCurrency,
     Money (..),
     qqMoney,
     parseMoney,
@@ -13,31 +13,9 @@ import Functora.MoneyOrphan ()
 import Functora.Prelude
 import qualified Language.Haskell.TH.Syntax as TH
 
-newtype CurrencyCode = CurrencyCode
-  { unCurrencyCode :: Text
-  }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
-
-qqCurrencyCode :: QuasiQuoter
-qqCurrencyCode = qq @Text @CurrencyCode parseCurrencyCode
-
-parseCurrencyCode ::
-  ( From a Text,
-    Show a,
-    Data a,
-    MonadThrow m
-  ) =>
-  a ->
-  m CurrencyCode
-parseCurrencyCode input =
-  case parseWords input of
-    [cur] -> pure $ CurrencyCode cur
-    _ -> throwParseException input ("Input has wrong amount of words" :: Text)
-
 data Money = Money
   { moneyAmount :: D.Money Rational,
-    moneyCurrencyCode :: CurrencyCode,
-    moneyCurrencyDesc :: Text
+    moneyCurrency :: Currency
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
 
@@ -57,7 +35,28 @@ parseMoney input =
     [amt, cur] ->
       Money
         <$> fmap (review D.money) (parseRatio amt)
-        <*> parseCurrencyCode cur
-        <*> pure ""
+        <*> parseCurrency cur
     _ ->
       throwParseException input ("Input has wrong amount of words" :: Text)
+
+data Currency = Currency
+  { currencyCode :: Text,
+    currencyInfo :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
+
+qqCurrency :: QuasiQuoter
+qqCurrency = qq @Text @Currency parseCurrency
+
+parseCurrency ::
+  ( From a Text,
+    Show a,
+    Data a,
+    MonadThrow m
+  ) =>
+  a ->
+  m Currency
+parseCurrency input =
+  case parseWords input of
+    [cur] -> pure $ Currency {currencyCode = cur, currencyInfo = mempty}
+    _ -> throwParseException input ("Input has wrong amount of words" :: Text)

@@ -142,13 +142,19 @@ common pkg-web
   hs-source-dirs: src/web
   build-depends:
     , base
-    , bytestring
-    , http-client
-    , http-client-tls
-    , http-types
     , modern-uri
-    , streaming-commons
-    , yesod-core
+
+  if !impl(ghcjs)
+    build-depends:
+      , bytestring
+      , http-client
+      , http-client-tls
+      , http-types
+      , streaming-commons
+      , yesod-core
+
+  else
+    build-depends: ghcjs-base
 
 common pkg-sql
   import:         pkg
@@ -169,6 +175,16 @@ common pkg-money
     , base
     , dollaridoos
     , template-haskell
+
+common pkg-rates
+  import:         pkg
+  hs-source-dirs: src/rates
+  build-depends:
+    , aeson
+    , base
+    , containers
+    , money
+    , web
 
 library
   import:          pkg-prelude
@@ -226,6 +242,13 @@ library money
     Functora.Money
     Functora.MoneyOrphan
 
+library rates
+  import:          pkg-rates
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Rates
+
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -249,7 +272,7 @@ test-suite functora-test
 
   if flag(ghcid)
     import:
-      pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql, pkg-money
+      pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql, pkg-money, pkg-rates
 
     ghc-options:   -Wno-unused-packages
     other-modules:
@@ -261,6 +284,7 @@ test-suite functora-test
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr
+      Functora.Rates
       Functora.Sql
       Functora.SqlOrphan
       Functora.Web

@@ -71,8 +71,9 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  prelude qr aes money
+  hs-source-dirs:  prelude qr aes money web rates
   build-depends:
+    , aeson
     , async
     , base
     , base16-bytestring
@@ -111,6 +112,17 @@ library
     , witch-mini
     , with-utf8
 
+  if !impl(ghcjs)
+    build-depends:
+      , http-client
+      , http-client-tls
+      , http-types
+      , streaming-commons
+      , yesod-core
+
+  else
+    build-depends: ghcjs-base
+
   exposed-modules:
     Functora.Aes
     Functora.Money
@@ -118,3 +130,6 @@ library
     Functora.Prelude
     Functora.PreludeOrphan
     Functora.Qr
+    Functora.Rates
+    Functora.Web
+    Functora.WebOrphan

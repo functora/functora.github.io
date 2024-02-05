@@ -51,6 +51,7 @@ module Functora.Prelude
     -- * QQ
     -- $qq
     qq,
+    qqUri,
 
     -- * Merge
     -- $merge
@@ -58,6 +59,8 @@ module Functora.Prelude
     mergeAlt,
     mergeBy,
     asumMap,
+    altM,
+    altM',
   )
 where
 
@@ -130,7 +133,8 @@ import qualified Lens.Micro.TH as TH
     makeLensesWith,
   )
 import Main.Utf8 as X (withUtf8)
-import Text.URI as X (URI)
+import Text.URI as X (URI, mkURI)
+import qualified Text.URI.QQ as URI
 import Type.Reflection
 import Universum as X hiding
   ( Lens,
@@ -457,6 +461,9 @@ qq parser =
         <> field
         <> " is not implemented"
 
+qqUri :: QuasiQuoter
+qqUri = URI.uri
+
 -- $merge
 -- Merge
 
@@ -489,3 +496,11 @@ asumMap ::
   m b
 asumMap f =
   foldr (mappend . f) mempty
+
+altM :: (Monad m) => (a -> m (Either e b)) -> NonEmpty a -> m (Either e b)
+altM f (x :| xs) = either (altM' f xs) (pure . Right) =<< f x
+
+altM' :: (Monad m) => (a -> m (Either e b)) -> [a] -> e -> m (Either e b)
+altM' _ [] e = pure $ Left e
+altM' f [x] _ = f x
+altM' f (x : xs) _ = either (altM' f xs) (pure . Right) =<< f x

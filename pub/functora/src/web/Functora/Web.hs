@@ -1,54 +1,39 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Functora.Web
-  ( module X,
-    SomeQueryParam (..),
-    someQueryParamLabel,
-    unSomeQueryParam,
-    webFetch,
+  ( webFetch,
   )
 where
 
 import qualified Data.ByteString.Lazy as BL
 import Functora.Prelude
-import Functora.WebOrphan as X ()
+import qualified Text.URI as URI
+#ifndef __GHCJS__
+import Functora.WebOrphan ()
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
-import qualified Text.URI as URI
-import Yesod.Core as X (PathPiece (..))
-
-data SomeQueryParam = forall a.
-  ( PathPiece a
-  ) =>
-  SomeQueryParam
-  { _someQueryParamLabel :: ByteString,
-    _someQueryParamValue :: a
-  }
-
-makeLenses ''SomeQueryParam
-
-unSomeQueryParam ::
-  SomeQueryParam ->
-  (ByteString, Maybe ByteString)
-unSomeQueryParam (SomeQueryParam label value) =
-  ( label,
-    Just
-      . via @(UTF_8 ByteString) @Text @ByteString
-      $ toPathPiece value
-  )
+#else
+import qualified Data.JSString as JSString
+import qualified JavaScript.Web.XMLHttpRequest as Xhr
+#endif
 
 webFetch ::
   ( MonadIO m,
     MonadThrow m
   ) =>
   URI ->
-  [SomeQueryParam] ->
+  [(ByteString, Maybe ByteString)] ->
   m BL.ByteString
-webFetch uri qs = do
-  let prev = URI.uriQuery uri
-  next <- forM qs $ uncurry newQueryParam . unSomeQueryParam
-  webRaw <- Web.parseRequest $ URI.renderStr uri {URI.uriQuery = prev <> next}
+webFetch prevUri qs = do
+  let prevQuery = URI.uriQuery prevUri
+  nextQuery <- forM qs $ uncurry newQueryParam
+  let nextUri = URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}
+#ifndef __GHCJS__
+  webRaw <- Web.parseRequest nextUri
+  let ua :: ByteString =
+        "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
   let webReq =
         webRaw
           { Web.requestHeaders =
@@ -69,9 +54,30 @@ webFetch uri qs = do
           <> inspect webRes
           <> " with body="
           <> inspect webResBody
-  where
-    ua :: ByteString
-    ua = "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
+#else
+  let webReq =
+        Xhr.Request
+          { Xhr.reqMethod = Xhr.GET,
+            Xhr.reqURI = JSString.pack nextUri,
+            Xhr.reqLogin = Nothing,
+            Xhr.reqHeaders = mempty,
+            Xhr.reqWithCredentials = False,
+            Xhr.reqData = Xhr.NoData
+          }
+  webRes <- liftIO $ Xhr.xhrByteString webReq
+  let webResBody = Xhr.contents webRes
+  let webResCode = Xhr.status webRes
+  if webResCode >= 200 && webResCode < 300
+    then pure . BL.fromStrict $ fromMaybe mempty webResBody
+    else
+      throwString $
+        "Bad HTTP status="
+          <> inspect @Text webResCode
+          <> " of req="
+          <> inspect nextUri
+          <> " with res="
+          <> inspect webResBody
+#endif
 
 newQueryParam ::
   (MonadThrow m) => ByteString -> Maybe ByteString -> m URI.QueryParam

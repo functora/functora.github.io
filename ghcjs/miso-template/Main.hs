@@ -10,6 +10,7 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 #endif
 import Functora.Prelude
+import Functora.Rates as Rates
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
@@ -46,7 +47,15 @@ data Action
   deriving (Show, Eq)
 
 main :: IO ()
-main =
+main = do
+  --
+  -- TODO
+  --
+  res <- Rates.fetchCurrencies
+  putStrLn $ inspect @Text res
+  --
+  -- TODO
+  --
   runApp
     $ startApp
       App

@@ -32,9 +32,12 @@ common library
     -Weverything -Wno-all-missed-specialisations -Wno-implicit-prelude
     -Wno-missed-specialisations -Wno-missing-deriving-strategies
     -Wno-missing-export-lists -Wno-missing-exported-signatures
-    -Wno-missing-kind-signatures -Wno-missing-safe-haskell-mode
-    -Wno-prepositive-qualified-module -Wno-redundant-constraints
-    -Wno-safe -Wno-unsafe
+    -Wno-redundant-constraints -Wno-safe -Wno-unsafe
+
+  if impl(ghc >=8.10.7)
+    ghc-options:
+      -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
+      -Wno-missing-kind-signatures
 
   if flag(pedantic)
     ghc-options: -Werror

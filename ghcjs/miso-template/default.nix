@@ -10,6 +10,8 @@ let
     };
   };
   functora-pkgs = import "${functora}/nix/nixpkgs.nix";
+  safeCopy = "cp -RL --no-preserve=mode,ownership";
+  forceCopy = "cp -RLf --no-preserve=mode,ownership";
 in
   with functora-miso; rec {
     inherit pkgs functora;
@@ -18,7 +20,44 @@ in
     };
     app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" ./. {};
     repo = builtins.toString ./.;
-    release = app.overrideAttrs (_: rec {
+    app-release-latest = functora-pkgs.writeShellApplication rec {
+      name = "app-release-latest";
+      text = ''
+        (
+          cd ${repo}
+          nix-build -A releaseDer
+          rm -rf ./dist/latest
+          mkdir -p ./dist/latest
+          ${safeCopy} ./result/bin/app.jsexe/* ./dist/latest
+        )
+      '';
+    };
+    app-release-stable = functora-pkgs.writeShellApplication rec {
+      name = "app-release-stable";
+      text = let
+        vsn = app.passthru.version;
+      in ''
+        (
+          ${app-release-latest}/bin/app-release-latest
+          cd ${repo}
+          nix-build -A releaseStableDer
+          mkdir -p ./dist/${vsn}
+          ${safeCopy} ./result/${vsn}/* ./dist/${vsn}
+          ${forceCopy} ./result/${vsn}/favicon.ico ./dist/favicon.ico
+          ${forceCopy} ./result/index.html ./dist/index.html
+        )
+      '';
+    };
+    app-release-readme = functora-pkgs.writeShellApplication rec {
+      name = "app-release-readme";
+      text = ''
+        ${functora-pkgs.pandoc}/bin/pandoc \
+          --standalone \
+          --metadata title="Functora" \
+          ${repo}/README.md > ${repo}/static/readme.html
+      '';
+    };
+    releaseDer = app.overrideAttrs (_: rec {
       postInstall = ''
         mkdir -p $out/bin/app.jsexe/static
         cp -R ${./static}/* $out/bin/app.jsexe/static
@@ -27,24 +66,9 @@ in
         cp ${readmeDer}/readme.html $out/bin/app.jsexe/static/
       '';
     });
-    publish = functora-pkgs.writeShellApplication rec {
-      name = "publish";
-      text = let
-        vsn = app.passthru.version;
-      in ''
-        (
-          cd ${repo}
-          nix-build -A publishDer
-          mkdir -p ./docs/${vsn}
-          cp -RL ./result/${vsn}/* ./docs/${vsn}
-          cp -RLf ./result/${vsn}/favicon.ico ./docs/favicon.ico
-          cp -RLf ./result/index.html ./docs/index.html
-        )
-      '';
-    };
-    publishDer = functora-pkgs.stdenv.mkDerivation {
-      name = "publishDer";
-      src = ./docs;
+    releaseStableDer = functora-pkgs.stdenv.mkDerivation {
+      name = "releaseStableDer";
+      src = ./dist;
       dontBuild = true;
       installPhase = let
         vsn = app.passthru.version;
@@ -56,9 +80,9 @@ in
           exit 1
         else
           mkdir -p $out/${vsn}
-          cp -R ${release}/bin/app.jsexe/* $out/${vsn}
+          cp -R ${releaseDer}/bin/app.jsexe/* $out/${vsn}
           echo '<!doctype html><html><head><meta http-equiv="Refresh" content="0; url=${vsn}/index.html"></head><body></body></html>' > $out/index.html
-          echo "Version ${vsn} has been published!"
+          echo "Version ${vsn} has been released!"
         fi
       '';
     };
@@ -75,15 +99,6 @@ in
       installPhase = ''
         mkdir -p $out
         cp ./readme.html $out/readme.html
-      '';
-    };
-    readmeGen = functora-pkgs.writeShellApplication rec {
-      name = "readmeGen";
-      text = ''
-        ${functora-pkgs.pandoc}/bin/pandoc \
-          --standalone \
-          --metadata title="Functora" \
-          ${repo}/README.md > ${repo}/static/readme.html
       '';
     };
   }

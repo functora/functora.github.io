@@ -9,6 +9,7 @@
     "@capacitor/ios": "^5.6.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.4",
     "@capacitor/cli": "^5.6.0"
   }
 }

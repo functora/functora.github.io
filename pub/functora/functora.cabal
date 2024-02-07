@@ -150,6 +150,7 @@ common pkg-web
       , http-client
       , http-client-tls
       , http-types
+      , network-uri
       , streaming-commons
       , yesod-core
 
@@ -269,6 +270,7 @@ test-suite functora-test
     Functora.CfgSpec
     Functora.PreludeSpec
     Functora.QrSpec
+    Functora.RatesSpec
 
   if flag(ghcid)
     import:

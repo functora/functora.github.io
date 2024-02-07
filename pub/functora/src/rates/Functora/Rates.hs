@@ -1,5 +1,8 @@
 module Functora.Rates
   ( fetchCurrencies,
+    fetchCurrencies',
+    mkRootUris,
+    mkCurrenciesUris,
   )
 where
 
@@ -8,6 +11,8 @@ import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude
 import Functora.Web
+import qualified Text.URI as URI
+import qualified Text.URI.Lens as URILens
 
 fetchCurrencies ::
   ( MonadThrow m,
@@ -15,14 +20,8 @@ fetchCurrencies ::
   ) =>
   m (NonEmpty Currency)
 fetchCurrencies = do
-  uris <-
-    mapM
-      mkURI
-      [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.min.json",
-        "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json"
-      ]
-  eitherM throw pure
-    $ altM fetchCurrencies' uris
+  uris <- mkCurrenciesUris
+  eitherM throw pure $ altM fetchCurrencies' uris
 
 fetchCurrencies' ::
   ( MonadThrow m,
@@ -43,3 +42,22 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
         { currencyCode = code,
           currencyInfo = info
         }
+
+mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
+mkRootUris =
+  mapM
+    mkURI
+    [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest",
+      "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest"
+    ]
+
+mkCurrenciesUris :: (MonadThrow m) => m (NonEmpty URI)
+mkCurrenciesUris = do
+  uris <- mkRootUris
+  fmap sconcat . forM uris $ \uri -> do
+    pp0 <- URI.mkPathPiece "currencies.min.json"
+    pp1 <- URI.mkPathPiece "currencies.json"
+    pure
+      [ uri & URILens.uriPath %~ (<> [pp0]),
+        uri & URILens.uriPath %~ (<> [pp1])
+      ]

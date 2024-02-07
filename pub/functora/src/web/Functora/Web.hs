@@ -14,6 +14,7 @@ import Functora.WebOrphan ()
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
+import qualified Network.URI as NetURI
 #else
 import qualified Data.JSString as JSString
 import qualified JavaScript.Web.XMLHttpRequest as Xhr
@@ -31,7 +32,7 @@ webFetch prevUri qs = do
   nextQuery <- forM qs $ uncurry newQueryParam
   let nextUri = URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}
 #ifndef __GHCJS__
-  webRaw <- Web.parseRequest nextUri
+  webRaw <- Web.parseRequest $ NetURI.unEscapeString nextUri
   let ua :: ByteString =
         "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
   let webReq =

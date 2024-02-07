@@ -3,6 +3,7 @@ module Functora.Rates
     fetchCurrencies',
     mkRootUris,
     mkCurrenciesUris,
+    mkRatesUris,
   )
 where
 
@@ -36,11 +37,12 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
     maybe (throwString @Text "Zero currencies") pure . nonEmpty $ Map.toList xs0
   pure
     . Right
-    $ flip fmap xs1
-    $ \(code, info) ->
+    . flip fmap xs1
+    . uncurry
+    $ \code info ->
       Currency
-        { currencyCode = code,
-          currencyInfo = info
+        { currencyCode = CurrencyCode code,
+          currencyInfo = CurrencyInfo info
         }
 
 mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
@@ -60,4 +62,17 @@ mkCurrenciesUris = do
     pure
       [ uri & URILens.uriPath %~ (<> [pp0]),
         uri & URILens.uriPath %~ (<> [pp1])
+      ]
+
+mkRatesUris :: (MonadThrow m) => Currency -> m (NonEmpty URI)
+mkRatesUris cur = do
+  uris <- mkRootUris
+  let code = unCurrencyCode $ currencyCode cur
+  fmap sconcat . forM uris $ \uri -> do
+    pre <- URI.mkPathPiece "currencies"
+    pp0 <- URI.mkPathPiece $ code <> ".min.json"
+    pp1 <- URI.mkPathPiece $ code <> ".json"
+    pure
+      [ uri & URILens.uriPath %~ (<> [pre, pp0]),
+        uri & URILens.uriPath %~ (<> [pre, pp1])
       ]

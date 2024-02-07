@@ -1,10 +1,14 @@
 module Functora.Money
-  ( Currency (..),
-    qqCurrency,
-    parseCurrency,
-    Money (..),
+  ( Money (..),
     qqMoney,
     parseMoney,
+    Currency (..),
+    qqCurrency,
+    parseCurrency,
+    CurrencyCode (..),
+    qqCurrencyCode,
+    parseCurrencyCode,
+    CurrencyInfo (..),
   )
 where
 
@@ -40,8 +44,8 @@ parseMoney input =
       throwParseException input ("Input has wrong amount of words" :: Text)
 
 data Currency = Currency
-  { currencyCode :: Text,
-    currencyInfo :: Text
+  { currencyCode :: CurrencyCode,
+    currencyInfo :: CurrencyInfo
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
 
@@ -58,5 +62,31 @@ parseCurrency ::
   m Currency
 parseCurrency input =
   case parseWords input of
-    [cur] -> pure $ Currency {currencyCode = cur, currencyInfo = mempty}
+    [cur] -> Currency <$> parseCurrencyCode cur <*> pure (CurrencyInfo mempty)
     _ -> throwParseException input ("Input has wrong amount of words" :: Text)
+
+newtype CurrencyCode = CurrencyCode
+  { unCurrencyCode :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
+
+qqCurrencyCode :: QuasiQuoter
+qqCurrencyCode = qq @Text @CurrencyCode parseCurrencyCode
+
+parseCurrencyCode ::
+  ( From a Text,
+    Show a,
+    Data a,
+    MonadThrow m
+  ) =>
+  a ->
+  m CurrencyCode
+parseCurrencyCode input =
+  case parseWords input of
+    [cur] -> pure $ CurrencyCode cur
+    _ -> throwParseException input ("Input has wrong amount of words" :: Text)
+
+newtype CurrencyInfo = CurrencyInfo
+  { unCurrencyInfo :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)

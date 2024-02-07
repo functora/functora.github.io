@@ -184,6 +184,8 @@ common pkg-rates
     , aeson
     , base
     , containers
+    , dollaridoos
+    , modern-uri
     , money
     , web
 
@@ -297,4 +299,6 @@ test-suite functora-test
       , aes
       , cfg
       , functora
+      , money
       , qr
+      , rates

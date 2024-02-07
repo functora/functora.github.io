@@ -30,7 +30,7 @@ spec = do
           ]
     lhs `shouldBe` rhs
   it "mkRatesUris" $ do
-    cur <- parseCurrency @Text "btc"
+    cur <- parseCurrencyCode @Text "btc"
     lhs <- URI.render <<$>> mkRatesUris cur
     let rhs :: NonEmpty Text =
           [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.min.json",

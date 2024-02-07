@@ -1,6 +1,7 @@
 module Functora.Rates
   ( fetchCurrencies,
     fetchCurrencies',
+    fetchQuotesPerBase,
     mkRootUris,
     mkCurrenciesUris,
     mkRatesUris,
@@ -9,6 +10,7 @@ where
 
 import qualified Data.Aeson as A
 import qualified Data.Map as Map
+import qualified Data.Money as D
 import Functora.Money
 import Functora.Prelude
 import Functora.Web
@@ -45,6 +47,33 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
           currencyInfo = CurrencyInfo info
         }
 
+data QuotesPerBase = QuotesPerBase
+  { quotesPerBaseCreatedAt :: UTCTime,
+    quotesPerBaseUpdatesAt :: UTCTime,
+    quotesPerBaseAmounts :: Map CurrencyCode (D.Money Rational)
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+fetchQuotesPerBase ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  CurrencyCode ->
+  m QuotesPerBase
+fetchQuotesPerBase base = do
+  uris <- mkRatesUris base
+  eitherM throw pure $ altM fetchQuotesPerBase' uris
+
+fetchQuotesPerBase' ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  URI ->
+  m (Either SomeException QuotesPerBase)
+fetchQuotesPerBase' uri = handleAny (pure . Left) $ do
+  _bytes <- webFetch uri mempty
+  error "TODO"
+
 mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
 mkRootUris =
   mapM
@@ -64,14 +93,13 @@ mkCurrenciesUris = do
         uri & URILens.uriPath %~ (<> [pp1])
       ]
 
-mkRatesUris :: (MonadThrow m) => Currency -> m (NonEmpty URI)
+mkRatesUris :: (MonadThrow m) => CurrencyCode -> m (NonEmpty URI)
 mkRatesUris cur = do
   uris <- mkRootUris
-  let code = unCurrencyCode $ currencyCode cur
   fmap sconcat . forM uris $ \uri -> do
     pre <- URI.mkPathPiece "currencies"
-    pp0 <- URI.mkPathPiece $ code <> ".min.json"
-    pp1 <- URI.mkPathPiece $ code <> ".json"
+    pp0 <- URI.mkPathPiece $ unCurrencyCode cur <> ".min.json"
+    pp1 <- URI.mkPathPiece $ unCurrencyCode cur <> ".json"
     pure
       [ uri & URILens.uriPath %~ (<> [pre, pp0]),
         uri & URILens.uriPath %~ (<> [pre, pp1])

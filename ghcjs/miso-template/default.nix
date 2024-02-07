@@ -1,8 +1,8 @@
 let
   functora = ../..;
   # functora = builtins.fetchTarball {
-  #   url = "https://github.com/functora/functora.github.io/archive/f1482c538f5a97c2a440d948f45a25953d6c82d1.tar.gz";
-  #   sha256 = "0ij4gnzqr7hsafsr3pqnqihnqlq07hs9pjbgvgmvbas47jhnhdfn";
+  #   url = "https://github.com/functora/functora.github.io/archive/3062ad1011be60d58b2c91e1f84403620a759d8b.tar.gz";
+  #   sha256 = "0d6frzmk5vmhr624b6kjy06ws02lb92i9bhfjhfpy6wlkwfbn465";
   # };
   functora-miso = import "${functora}/ghcjs/miso/default.nix" {
     overlays = import ./overlays.nix {
@@ -12,9 +12,16 @@ let
   functora-pkgs = import "${functora}/nix/nixpkgs.nix";
   safeCopy = "cp -RL --no-preserve=mode,ownership";
   forceCopy = "cp -RLf --no-preserve=mode,ownership";
+  android-pkgs = import "${functora}/nix/android.nix";
+  android-sdk-args = {
+    platformVersions = ["33"];
+    buildToolsVersions = ["30.0.3" "34.0.0"];
+    abiVersions = ["armeabi-v7a" "arm64-v8a" "x86" "x86_64"];
+    systemImageTypes = ["default" "google_apis_playstore"];
+  };
 in
   with functora-miso; rec {
-    inherit pkgs functora;
+    inherit pkgs functora android-pkgs android-sdk-args;
     dev = pkgs.haskell.packages.ghc865.callCabal2nix "app" ./. {
       miso = miso-jsaddle;
     };
@@ -101,4 +108,18 @@ in
         cp ./readme.html $out/readme.html
       '';
     };
+    #
+    # NOTE : broken atm https://github.com/NixOS/nixpkgs/issues/187853
+    #
+    # emulateAndroidDer = android-pkgs.androidenv.emulateApp {
+    #   name = "emulateAndroidDer";
+    #   platformVersion = "33";
+    #   abiVersion = "armeabi-v7a";
+    #   systemImageType = "default";
+    #   app =
+    #     ./android/app/build/outputs/apk/release/app-release-unsigned.apk;
+    #   package = "App";
+    #   activity = "MainActivity";
+    #   sdkExtraArgs = android-sdk-args;
+    # };
   }

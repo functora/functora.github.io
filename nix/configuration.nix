@@ -439,6 +439,11 @@ in {
     };
 
     #
+    # Android
+    #
+    programs.adb.enable = true;
+
+    #
     # Web eID
     #
     # Tell p11-kit to load/proxy opensc-pkcs11.so, providing all available slots
@@ -499,6 +504,7 @@ in {
         "docker"
         "podman"
         "plugdev"
+        "adbusers"
         "networkmanager"
       ];
       packages = with pkgs; [

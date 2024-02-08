@@ -3,6 +3,7 @@ module Functora.Prelude
     -- $reexport
     module X,
     LiftTH,
+    getCurrentTime,
 
     -- * Show
     -- $show
@@ -111,7 +112,9 @@ import qualified Data.Text.Read as T
 import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
-import Data.Time.Clock as X (UTCTime, getCurrentTime)
+import Data.Time.Calendar.OrdinalDate as X (Day)
+import Data.Time.Clock as X (UTCTime (..))
+import qualified Data.Time.Clock as Clock
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
@@ -206,6 +209,9 @@ import qualified Prelude
 -- Reexport
 
 type LiftTH = TH.Lift
+
+getCurrentTime :: (MonadIO m) => m UTCTime
+getCurrentTime = liftIO Clock.getCurrentTime
 
 -- $show
 -- Show

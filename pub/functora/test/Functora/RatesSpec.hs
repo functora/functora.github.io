@@ -20,6 +20,10 @@ spec = do
         Left {} -> False
         Right currencies ->
           isJust $ find (\x -> currencyCode x == CurrencyCode "btc") currencies
+  focus . it "fetchQuotesPerBase" $ do
+    res <- fetchQuotesPerBase $ CurrencyCode "btc"
+    putStrLn $ inspect @Text res
+    True `shouldBe` False
   it "mkCurrenciesUris" $ do
     lhs <- URI.render <<$>> mkCurrenciesUris
     let rhs :: NonEmpty Text =

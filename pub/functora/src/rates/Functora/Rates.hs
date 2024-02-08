@@ -2,13 +2,13 @@ module Functora.Rates
   ( fetchCurrencies,
     fetchCurrencies',
     fetchQuotesPerBase,
-    mkRootUris,
     mkCurrenciesUris,
     mkRatesUris,
   )
 where
 
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import qualified Data.Map as Map
 import qualified Data.Money as D
 import Functora.Money
@@ -49,8 +49,8 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
 
 data QuotesPerBase = QuotesPerBase
   { quotesPerBaseCreatedAt :: UTCTime,
-    quotesPerBaseUpdatesAt :: UTCTime,
-    quotesPerBaseAmounts :: Map CurrencyCode (D.Money Rational)
+    quotesPerBaseUpdatedAt :: UTCTime,
+    quotesPerBaseQuotesMap :: Map CurrencyCode (D.Money Rational)
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -71,8 +71,17 @@ fetchQuotesPerBase' ::
   URI ->
   m (Either SomeException QuotesPerBase)
 fetchQuotesPerBase' uri = handleAny (pure . Left) $ do
-  _bytes <- webFetch uri mempty
-  error "TODO"
+  bytes <- webFetch uri mempty
+  updatedAt <- getCurrentTime
+  either throwString (pure . Right) $ do
+    root :: A.Object <- A.eitherDecode bytes
+    createdAt <- flip A.parseEither root (A..: "date")
+    pure
+      QuotesPerBase
+        { quotesPerBaseCreatedAt = UTCTime {utctDay = createdAt, utctDayTime = 0},
+          quotesPerBaseUpdatedAt = updatedAt,
+          quotesPerBaseQuotesMap = mempty
+        }
 
 mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
 mkRootUris =

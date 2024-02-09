@@ -114,7 +114,11 @@ import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
 import Data.Time.Calendar.OrdinalDate as X (Day)
-import Data.Time.Clock as X (UTCTime (..))
+import Data.Time.Clock as X
+  ( UTCTime (..),
+    diffUTCTime,
+    nominalDiffTimeToSeconds,
+  )
 import qualified Data.Time.Clock as Clock
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
@@ -203,6 +207,7 @@ import UnliftIO as X
     withRunInIO,
     withUnliftIO,
   )
+import UnliftIO.MVar as X (modifyMVar)
 import Witch.Mini as X
 import qualified Prelude
 

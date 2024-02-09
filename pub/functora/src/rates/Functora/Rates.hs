@@ -1,5 +1,10 @@
 module Functora.Rates
-  ( Currencies (..),
+  ( Market (..),
+    withMarket,
+    getMarket,
+    getCurrencies,
+    getQuotesPerBase,
+    Currencies (..),
     fetchCurrencies,
     fetchCurrencies',
     QuotesPerBase (..),
@@ -18,6 +23,76 @@ import Functora.Prelude
 import Functora.Web
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens
+
+data Market = Market
+  { marketCurrencies :: Currencies,
+    marketQuotesPerBase :: Map CurrencyCode QuotesPerBase
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+withMarket ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Maybe Market ->
+  ReaderT (MVar Market) m a ->
+  m a
+withMarket mst expr = do
+  st <- maybe (Market <$> fetchCurrencies <*> pure mempty) pure mst
+  mvar <- liftIO $ newMVar st
+  runReaderT expr mvar
+
+getMarket ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  ReaderT (MVar Market) m Market
+getMarket = do
+  mvar <- ask
+  readMVar mvar
+
+getCurrencies ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  ReaderT (MVar Market) m Currencies
+getCurrencies = do
+  mvar <- ask
+  modifyMVar mvar $ \st -> do
+    ct <- getCurrentTime
+    let prev = marketCurrencies st
+    if upToDate ct $ currenciesUpdatedAt prev
+      then pure (st, prev)
+      else do
+        next <- fetchCurrencies
+        pure (st {marketCurrencies = next}, next)
+
+getQuotesPerBase ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  CurrencyCode ->
+  ReaderT (MVar Market) m QuotesPerBase
+getQuotesPerBase cur = do
+  mvar <- ask
+  modifyMVar mvar $ \st -> do
+    let quotes = marketQuotesPerBase st
+    let update = do
+          next <- fetchQuotesPerBase cur
+          pure (st {marketQuotesPerBase = Map.insert cur next quotes}, next)
+    case Map.lookup cur quotes of
+      Nothing -> update
+      Just prev -> do
+        ct <- getCurrentTime
+        if upToDate ct $ quotesPerBaseUpdatedAt prev
+          then pure (st, prev)
+          else update
+
+upToDate :: UTCTime -> UTCTime -> Bool
+upToDate lhs rhs =
+  diff < 3600
+  where
+    diff = abs . nominalDiffTimeToSeconds $ diffUTCTime lhs rhs
 
 data Currencies = Currencies
   { currenciesList :: NonEmpty CurrencyInfo,

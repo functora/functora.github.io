@@ -10,6 +10,7 @@ module Functora.Prelude
     inspect,
     inspectType,
     inspectSymbol,
+    inspectRatio,
 
     -- * Integral
     -- $integral
@@ -233,6 +234,32 @@ inspectSymbol =
   fromString
     . TypeLits.symbolVal
     $ Proxy @a
+
+inspectRatio ::
+  forall a b.
+  ( From String a,
+    Integral b,
+    Show b
+  ) =>
+  Int ->
+  Ratio b ->
+  a
+inspectRatio decimalPlaces signedRational =
+  let (quotient, remainder) = unsignedNumerator `quotRem` unsignedDenominator
+      fractionalPart = take decimalPlaces (go remainder)
+   in from @String @a
+        $ (if signedRational < 0 then "-" else mempty)
+        <> Prelude.shows
+          quotient
+          (if null fractionalPart then mempty else "." <> fractionalPart)
+  where
+    unsignedRational = abs signedRational
+    unsignedNumerator = numerator unsignedRational
+    unsignedDenominator = denominator unsignedRational
+    go 0 = mempty
+    go previous =
+      let (current, next) = (10 * previous) `quotRem` unsignedDenominator
+       in Prelude.shows current (go next)
 
 display :: forall dst src. (Show src, Typeable src, IsString dst) => src -> dst
 display x

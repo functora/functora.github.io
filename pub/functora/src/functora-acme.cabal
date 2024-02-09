@@ -74,6 +74,7 @@ library
   hs-source-dirs:  prelude qr aes money web rates
   build-depends:
     , aeson
+    , aeson-combinators
     , async
     , base
     , base16-bytestring

@@ -1,14 +1,15 @@
 module Functora.Rates
   ( fetchCurrencies,
     fetchCurrencies',
+    QuotesPerBase (..),
     fetchQuotesPerBase,
+    fetchQuotesPerBase',
     mkCurrenciesUris,
     mkRatesUris,
   )
 where
 
-import qualified Data.Aeson as A
-import qualified Data.Aeson.Types as A
+import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Map as Map
 import qualified Data.Money as D
 import Functora.Money
@@ -21,7 +22,7 @@ fetchCurrencies ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  m (NonEmpty Currency)
+  m (NonEmpty CurrencyInfo)
 fetchCurrencies = do
   uris <- mkCurrenciesUris
   eitherM throw pure $ altM fetchCurrencies' uris
@@ -31,20 +32,20 @@ fetchCurrencies' ::
     MonadUnliftIO m
   ) =>
   URI ->
-  m (Either SomeException (NonEmpty Currency))
+  m (Either SomeException (NonEmpty CurrencyInfo))
 fetchCurrencies' uri = handleAny (pure . Left) $ do
-  bytes <- webFetch uri mempty
-  xs0 :: Map Text Text <- either throwString pure $ A.eitherDecode bytes
+  raw <- webFetch uri mempty
+  xs0 <- either throwString pure $ A.eitherDecode (A.mapStrict A.text) raw
   xs1 <-
     maybe (throwString @Text "Zero currencies") pure . nonEmpty $ Map.toList xs0
   pure
     . Right
     . flip fmap xs1
     . uncurry
-    $ \code info ->
-      Currency
-        { currencyCode = CurrencyCode code,
-          currencyInfo = CurrencyInfo info
+    $ \code text ->
+      CurrencyInfo
+        { currencyInfoCode = CurrencyCode code,
+          currencyInfoText = text
         }
 
 data QuotesPerBase = QuotesPerBase
@@ -60,27 +61,30 @@ fetchQuotesPerBase ::
   ) =>
   CurrencyCode ->
   m QuotesPerBase
-fetchQuotesPerBase base = do
-  uris <- mkRatesUris base
-  eitherM throw pure $ altM fetchQuotesPerBase' uris
+fetchQuotesPerBase baseCur = do
+  uris <- mkRatesUris baseCur
+  eitherM throw pure $ altM (fetchQuotesPerBase' baseCur) uris
 
 fetchQuotesPerBase' ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  CurrencyCode ->
   URI ->
   m (Either SomeException QuotesPerBase)
-fetchQuotesPerBase' uri = handleAny (pure . Left) $ do
+fetchQuotesPerBase' baseCur uri = handleAny (pure . Left) $ do
   bytes <- webFetch uri mempty
   updatedAt <- getCurrentTime
-  either throwString (pure . Right) $ do
-    root :: A.Object <- A.eitherDecode bytes
-    createdAt <- flip A.parseEither root (A..: "date")
+  either throwString (pure . Right) . flip A.eitherDecode bytes $ do
+    createdAt <- A.at ["date"] A.day
+    quotesMap <-
+      A.at [fromString . from @Text @String $ unCurrencyCode baseCur]
+        $ A.mapStrict unJsonMoneyAmount
     pure
       QuotesPerBase
         { quotesPerBaseCreatedAt = UTCTime {utctDay = createdAt, utctDayTime = 0},
           quotesPerBaseUpdatedAt = updatedAt,
-          quotesPerBaseQuotesMap = mempty
+          quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap
         }
 
 mkRootUris :: (MonadThrow m) => m (NonEmpty URI)

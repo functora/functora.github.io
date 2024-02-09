@@ -173,6 +173,8 @@ common pkg-money
   import:         pkg
   hs-source-dirs: src/money
   build-depends:
+    , aeson
+    , aeson-combinators
     , base
     , dollaridoos
     , template-haskell
@@ -181,7 +183,7 @@ common pkg-rates
   import:         pkg
   hs-source-dirs: src/rates
   build-depends:
-    , aeson
+    , aeson-combinators
     , base
     , containers
     , dollaridoos
@@ -260,6 +262,7 @@ test-suite functora-test
   build-depends:
     , base
     , bytestring
+    , containers
     , hspec
     , modern-uri
     , qrcode-core

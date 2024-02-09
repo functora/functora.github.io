@@ -1,5 +1,6 @@
 module Functora.RatesSpec (spec) where
 
+import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude
 import Functora.Rates
@@ -10,7 +11,7 @@ spec :: Spec
 spec = do
   it "fetchCurrencies" $ do
     currencies <- fetchCurrencies
-    let cur = find (\x -> currencyCode x == CurrencyCode "btc") currencies
+    let cur = find (\x -> currencyInfoCode x == CurrencyCode "btc") currencies
     cur `shouldSatisfy` isJust
   it "fetchCurrencies'" $ do
     uris <- mkCurrenciesUris
@@ -19,11 +20,10 @@ spec = do
       shouldSatisfy res $ \case
         Left {} -> False
         Right currencies ->
-          isJust $ find (\x -> currencyCode x == CurrencyCode "btc") currencies
-  focus . it "fetchQuotesPerBase" $ do
-    res <- fetchQuotesPerBase $ CurrencyCode "btc"
-    putStrLn $ inspect @Text res
-    True `shouldBe` False
+          isJust $ find (\x -> currencyInfoCode x == CurrencyCode "btc") currencies
+  it "fetchQuotesPerBase" $ do
+    res <- quotesPerBaseQuotesMap <$> fetchQuotesPerBase (CurrencyCode "btc")
+    Map.lookup (CurrencyCode "usd") res `shouldSatisfy` isJust
   it "mkCurrenciesUris" $ do
     lhs <- URI.render <<$>> mkCurrenciesUris
     let rhs :: NonEmpty Text =
@@ -34,8 +34,7 @@ spec = do
           ]
     lhs `shouldBe` rhs
   it "mkRatesUris" $ do
-    cur <- parseCurrencyCode @Text "btc"
-    lhs <- URI.render <<$>> mkRatesUris cur
+    lhs <- URI.render <<$>> mkRatesUris (CurrencyCode "btc")
     let rhs :: NonEmpty Text =
           [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.min.json",
             "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.json",

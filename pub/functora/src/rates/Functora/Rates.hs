@@ -1,6 +1,9 @@
 module Functora.Rates
   ( Market (..),
+    MarketFailure (..),
     withMarket,
+    withMarket',
+    getQuote,
     getMarket,
     getCurrencies,
     getQuotesPerBase,
@@ -24,11 +27,24 @@ import Functora.Web
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens
 
+--
+-- TODO : better naming for QuotesPerBase
+-- better naming for safe-unsafe stuff
+-- better naming for Money
+--
+
 data Market = Market
   { marketCurrencies :: Currencies,
     marketQuotesPerBase :: Map CurrencyCode QuotesPerBase
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data MarketFailure
+  = MarketFailureInternal Text
+  | MarketFailureMissingPair CurrencyCode CurrencyCode
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+instance Exception MarketFailure
 
 withMarket ::
   ( MonadThrow m,
@@ -36,11 +52,50 @@ withMarket ::
   ) =>
   Maybe Market ->
   ReaderT (MVar Market) m a ->
+  m (Either MarketFailure a)
+withMarket mst expr =
+  handleAny (pure . Left . MarketFailureInternal . inspect @Text)
+    . fmap Right
+    $ withMarket' mst expr
+
+withMarket' ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Maybe Market ->
+  ReaderT (MVar Market) m a ->
   m a
-withMarket mst expr = do
+withMarket' mst expr = do
   st <- maybe (Market <$> fetchCurrencies <*> pure mempty) pure mst
   mvar <- liftIO $ newMVar st
   runReaderT expr mvar
+
+data Quote = Quote
+  { quoteMoneyAmount :: D.Money Rational,
+    quoteUpdatedAt :: UTCTime
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+getQuote ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Money ->
+  CurrencyCode ->
+  ReaderT (MVar Market) m (Either MarketFailure Quote)
+getQuote baseMoney quoteCurrency =
+  handleAny (pure . Left . MarketFailureInternal . inspect @Text) $ do
+    let baseCurrency = moneyCurrencyCode baseMoney
+    quotes <- getQuotesPerBase baseCurrency
+    pure $ case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
+      Nothing ->
+        Left $ MarketFailureMissingPair baseCurrency quoteCurrency
+      Just quotesPerBase ->
+        Right
+          Quote
+            { quoteMoneyAmount = moneyAmount baseMoney D.$* quotesPerBase,
+              quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
+            }
 
 getMarket ::
   ( MonadThrow m,
@@ -130,7 +185,7 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
   pure $ Right Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
 
 data QuotesPerBase = QuotesPerBase
-  { quotesPerBaseQuotesMap :: Map CurrencyCode (D.Money Rational),
+  { quotesPerBaseQuotesMap :: Map CurrencyCode Rational,
     quotesPerBaseCreatedAt :: UTCTime,
     quotesPerBaseUpdatedAt :: UTCTime
   }
@@ -160,7 +215,7 @@ fetchQuotesPerBase' cur uri = handleAny (pure . Left) $ do
     createdAt <- A.at ["date"] A.day
     quotesMap <-
       A.at [fromString . from @Text @String $ unCurrencyCode cur]
-        $ A.mapStrict unJsonMoneyAmount
+        $ A.mapStrict unJsonRational
     pure
       QuotesPerBase
         { quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap,

@@ -1,6 +1,7 @@
 module Functora.RatesSpec (spec) where
 
 import qualified Data.Map as Map
+import qualified Data.Money as D
 import Functora.Money
 import Functora.Prelude
 import Functora.Rates
@@ -50,12 +51,16 @@ spec = do
             "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies/btc.json"
           ]
     lhs `shouldBe` rhs
-  it "getCurrencies" . withMarket Nothing $ do
+  it "getCurrencies" . withMarket' Nothing $ do
     lhs <- getCurrencies
     rhs <- getCurrencies
     lift $ lhs `shouldBe` rhs
-  it "getQuotesPerBase" . withMarket Nothing $ do
+  it "getQuotesPerBase" . withMarket' Nothing $ do
     let cur = CurrencyCode "btc"
     lhs <- getQuotesPerBase cur
     rhs <- getQuotesPerBase cur
     lift $ lhs `shouldBe` rhs
+  it "getQuote" . withMarket' Nothing $ do
+    let quoteCurrency = CurrencyCode "usd"
+    res <- getQuote (Money (D.Money 1) $ CurrencyCode "btc") quoteCurrency
+    lift $ res `shouldSatisfy` isRight

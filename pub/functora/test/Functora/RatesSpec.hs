@@ -10,13 +10,13 @@ import qualified Text.URI as URI
 spec :: Spec
 spec = do
   it "fetchCurrencies" $ do
-    currencies <- fetchCurrencies
+    currencies <- currenciesList <$> fetchCurrencies
     let cur = find (\x -> currencyInfoCode x == CurrencyCode "btc") currencies
     cur `shouldSatisfy` isJust
   it "fetchCurrencies'" $ do
     uris <- mkCurrenciesUris
     forM_ uris $ \uri -> do
-      res <- fetchCurrencies' uri
+      res <- currenciesList <<$>> fetchCurrencies' uri
       shouldSatisfy res $ \case
         Left {} -> False
         Right currencies ->
@@ -24,6 +24,14 @@ spec = do
   it "fetchQuotesPerBase" $ do
     res <- quotesPerBaseQuotesMap <$> fetchQuotesPerBase (CurrencyCode "btc")
     Map.lookup (CurrencyCode "usd") res `shouldSatisfy` isJust
+  it "fetchQuotesPerBase'" $ do
+    let cur = CurrencyCode "btc"
+    uris <- mkQuotePerBaseUris cur
+    forM_ uris $ \uri -> do
+      res <- quotesPerBaseQuotesMap <<$>> fetchQuotesPerBase' cur uri
+      shouldSatisfy res $ \case
+        Left {} -> False
+        Right xs -> isJust $ Map.lookup (CurrencyCode "usd") xs
   it "mkCurrenciesUris" $ do
     lhs <- URI.render <<$>> mkCurrenciesUris
     let rhs :: NonEmpty Text =
@@ -33,8 +41,8 @@ spec = do
             "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies.json"
           ]
     lhs `shouldBe` rhs
-  it "mkRatesUris" $ do
-    lhs <- URI.render <<$>> mkRatesUris (CurrencyCode "btc")
+  it "mkQuotePerBaseUris" $ do
+    lhs <- URI.render <<$>> mkQuotePerBaseUris (CurrencyCode "btc")
     let rhs :: NonEmpty Text =
           [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.min.json",
             "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.json",

@@ -1,7 +1,6 @@
 module Functora.RatesSpec (spec) where
 
 import qualified Data.Map as Map
-import qualified Data.Money as D
 import Functora.Money
 import Functora.Prelude
 import Functora.Rates
@@ -63,5 +62,5 @@ spec = do
   it "getQuote" . withMarket Nothing $ do
     let quoteCurrency = CurrencyCode "usd"
     res <-
-      tryMarket $ getQuote (Money (D.Money 1) $ CurrencyCode "btc") quoteCurrency
+      tryMarket $ getQuote (Funds (Money 1) $ CurrencyCode "btc") quoteCurrency
     lift $ res `shouldSatisfy` isRight

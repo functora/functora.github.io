@@ -186,7 +186,6 @@ common pkg-rates
     , aeson-combinators
     , base
     , containers
-    , dollaridoos
     , modern-uri
     , money
     , web
@@ -263,7 +262,6 @@ test-suite functora-test
     , base
     , bytestring
     , containers
-    , dollaridoos
     , hspec
     , modern-uri
     , qrcode-core

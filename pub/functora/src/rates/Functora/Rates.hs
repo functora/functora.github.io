@@ -36,7 +36,6 @@ where
 
 import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Map as Map
-import qualified Data.Money as D
 import Functora.Money
 import Functora.Prelude
 import Functora.Web
@@ -45,8 +44,6 @@ import qualified Text.URI.Lens as URILens
 
 --
 -- TODO : better naming for QuotesPerBase
--- better naming for safe-unsafe stuff
--- better naming for Money
 --
 
 -- $state
@@ -80,7 +77,7 @@ withMarket mst expr = do
 -- Stateful
 
 data Quote = Quote
-  { quoteMoneyAmount :: D.Money Rational,
+  { quoteMoneyAmount :: Money Rational,
     quoteUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -89,11 +86,11 @@ getQuote ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Money ->
+  Funds ->
   CurrencyCode ->
   ReaderT (MVar Market) m Quote
-getQuote baseMoney quoteCurrency = do
-  let baseCurrency = moneyCurrencyCode baseMoney
+getQuote baseFunds quoteCurrency = do
+  let baseCurrency = fundsCurrencyCode baseFunds
   quotes <- getQuotesPerBase baseCurrency
   case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
     Nothing ->
@@ -102,7 +99,7 @@ getQuote baseMoney quoteCurrency = do
     Just quotesPerBase ->
       pure
         Quote
-          { quoteMoneyAmount = moneyAmount baseMoney D.$* quotesPerBase,
+          { quoteMoneyAmount = fundsMoneyAmount baseFunds $* quotesPerBase,
             quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
           }
 

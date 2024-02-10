@@ -30,6 +30,11 @@
               ver = "1.1.0.0";
               sha256 = "yuGp+bHk0Ce5E65z0jP7pCbEW3WIWeSOC2PcnmN/gdg=";
             } {};
+            aeson-combinators = self.callHackageDirect {
+              pkg = "aeson-combinators";
+              ver = "0.1.2.1";
+              sha256 = "RSzmDOwyqWv08Dz7XI3ixwO7M+7HDhDxUeOeFLhUI+w=";
+            } {};
             functora-acme =
               self.callCabal2nix "functora-acme" "${functora}/pub/functora/src" {};
           }

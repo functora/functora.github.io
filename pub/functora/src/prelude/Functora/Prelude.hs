@@ -97,6 +97,7 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
 import Data.Either.Extra as X (fromEither)
+import Data.Fixed as X (Pico)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
@@ -113,12 +114,7 @@ import qualified Data.Text.Read as T
 import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
-import Data.Time.Calendar.OrdinalDate as X (Day)
-import Data.Time.Clock as X
-  ( UTCTime (..),
-    diffUTCTime,
-    nominalDiffTimeToSeconds,
-  )
+import Data.Time.Clock as X (UTCTime (..), diffUTCTime)
 import qualified Data.Time.Clock as Clock
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable

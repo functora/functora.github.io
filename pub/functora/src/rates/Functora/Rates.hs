@@ -42,10 +42,6 @@ import Functora.Web
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens
 
---
--- TODO : better naming for QuotesPerBase
---
-
 -- $state
 -- State
 
@@ -153,7 +149,7 @@ upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =
   diff < 3600
   where
-    diff = abs . nominalDiffTimeToSeconds $ diffUTCTime lhs rhs
+    diff = abs . toRational $ diffUTCTime lhs rhs
 
 -- $stateless
 -- Stateless

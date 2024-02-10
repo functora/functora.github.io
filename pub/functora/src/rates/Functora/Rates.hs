@@ -1,20 +1,36 @@
 module Functora.Rates
-  ( Market (..),
-    MarketFailure (..),
+  ( -- * State
+    -- $state
+    Market (..),
+    mkMarket,
     withMarket,
-    withMarket',
+
+    -- * Stateful
+    -- $stateful
+    Quote (..),
     getQuote,
     getMarket,
     getCurrencies,
     getQuotesPerBase,
+
+    -- * Stateless
+    -- $stateless
     Currencies (..),
     fetchCurrencies,
-    fetchCurrencies',
+    tryFetchCurrencies,
     QuotesPerBase (..),
     fetchQuotesPerBase,
-    fetchQuotesPerBase',
+    tryFetchQuotesPerBase,
+
+    -- * Uris
+    -- $uris
     mkCurrenciesUris,
     mkQuotePerBaseUris,
+
+    -- * Exceptions
+    -- $exceptions
+    MarketException (..),
+    tryMarket,
   )
 where
 
@@ -33,18 +49,20 @@ import qualified Text.URI.Lens as URILens
 -- better naming for Money
 --
 
+-- $state
+-- State
+
 data Market = Market
   { marketCurrencies :: Currencies,
     marketQuotesPerBase :: Map CurrencyCode QuotesPerBase
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-data MarketFailure
-  = MarketFailureInternal Text
-  | MarketFailureMissingPair CurrencyCode CurrencyCode
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
-
-instance Exception MarketFailure
+mkMarket :: (MonadThrow m, MonadUnliftIO m) => m Market
+mkMarket =
+  Market
+    <$> fetchCurrencies
+    <*> pure mempty
 
 withMarket ::
   ( MonadThrow m,
@@ -52,23 +70,14 @@ withMarket ::
   ) =>
   Maybe Market ->
   ReaderT (MVar Market) m a ->
-  m (Either MarketFailure a)
-withMarket mst expr =
-  handleAny (pure . Left . MarketFailureInternal . inspect @Text)
-    . fmap Right
-    $ withMarket' mst expr
-
-withMarket' ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Maybe Market ->
-  ReaderT (MVar Market) m a ->
   m a
-withMarket' mst expr = do
-  st <- maybe (Market <$> fetchCurrencies <*> pure mempty) pure mst
+withMarket mst expr = do
+  st <- maybe mkMarket pure mst
   mvar <- liftIO $ newMVar st
   runReaderT expr mvar
+
+-- $stateful
+-- Stateful
 
 data Quote = Quote
   { quoteMoneyAmount :: D.Money Rational,
@@ -82,20 +91,20 @@ getQuote ::
   ) =>
   Money ->
   CurrencyCode ->
-  ReaderT (MVar Market) m (Either MarketFailure Quote)
-getQuote baseMoney quoteCurrency =
-  handleAny (pure . Left . MarketFailureInternal . inspect @Text) $ do
-    let baseCurrency = moneyCurrencyCode baseMoney
-    quotes <- getQuotesPerBase baseCurrency
-    pure $ case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
-      Nothing ->
-        Left $ MarketFailureMissingPair baseCurrency quoteCurrency
-      Just quotesPerBase ->
-        Right
-          Quote
-            { quoteMoneyAmount = moneyAmount baseMoney D.$* quotesPerBase,
-              quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
-            }
+  ReaderT (MVar Market) m Quote
+getQuote baseMoney quoteCurrency = do
+  let baseCurrency = moneyCurrencyCode baseMoney
+  quotes <- getQuotesPerBase baseCurrency
+  case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
+    Nothing ->
+      throw
+        $ MarketExceptionMissingBaseAndQuote baseCurrency quoteCurrency
+    Just quotesPerBase ->
+      pure
+        Quote
+          { quoteMoneyAmount = moneyAmount baseMoney D.$* quotesPerBase,
+            quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
+          }
 
 getMarket ::
   ( MonadThrow m,
@@ -149,6 +158,9 @@ upToDate lhs rhs =
   where
     diff = abs . nominalDiffTimeToSeconds $ diffUTCTime lhs rhs
 
+-- $stateless
+-- Stateless
+
 data Currencies = Currencies
   { currenciesList :: NonEmpty CurrencyInfo,
     currenciesUpdatedAt :: UTCTime
@@ -162,15 +174,15 @@ fetchCurrencies ::
   m Currencies
 fetchCurrencies = do
   uris <- mkCurrenciesUris
-  eitherM throw pure $ altM fetchCurrencies' uris
+  eitherM throw pure $ altM tryFetchCurrencies uris
 
-fetchCurrencies' ::
+tryFetchCurrencies ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
   URI ->
-  m (Either SomeException Currencies)
-fetchCurrencies' uri = handleAny (pure . Left) $ do
+  m (Either MarketException Currencies)
+tryFetchCurrencies uri = tryMarket $ do
   raw <- webFetch uri mempty
   xs0 <- either throwString pure $ A.eitherDecode (A.mapStrict A.text) raw
   xs1 <-
@@ -182,7 +194,7 @@ fetchCurrencies' uri = handleAny (pure . Left) $ do
               currencyInfoText = text
             }
   ct <- getCurrentTime
-  pure $ Right Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
+  pure Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
 
 data QuotesPerBase = QuotesPerBase
   { quotesPerBaseQuotesMap :: Map CurrencyCode Rational,
@@ -199,19 +211,19 @@ fetchQuotesPerBase ::
   m QuotesPerBase
 fetchQuotesPerBase cur = do
   uris <- mkQuotePerBaseUris cur
-  eitherM throw pure $ altM (fetchQuotesPerBase' cur) uris
+  eitherM throw pure $ altM (tryFetchQuotesPerBase cur) uris
 
-fetchQuotesPerBase' ::
+tryFetchQuotesPerBase ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
   CurrencyCode ->
   URI ->
-  m (Either SomeException QuotesPerBase)
-fetchQuotesPerBase' cur uri = handleAny (pure . Left) $ do
+  m (Either MarketException QuotesPerBase)
+tryFetchQuotesPerBase cur uri = tryMarket $ do
   bytes <- webFetch uri mempty
   updatedAt <- getCurrentTime
-  either throwString (pure . Right) . flip A.eitherDecode bytes $ do
+  either throwString pure . flip A.eitherDecode bytes $ do
     createdAt <- A.at ["date"] A.day
     quotesMap <-
       A.at [fromString . from @Text @String $ unCurrencyCode cur]
@@ -222,6 +234,9 @@ fetchQuotesPerBase' cur uri = handleAny (pure . Left) $ do
           quotesPerBaseCreatedAt = UTCTime {utctDay = createdAt, utctDayTime = 0},
           quotesPerBaseUpdatedAt = updatedAt
         }
+
+-- $uris
+-- Uris
 
 mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
 mkRootUris =
@@ -253,3 +268,24 @@ mkQuotePerBaseUris cur = do
       [ uri & URILens.uriPath %~ (<> [pre, pp0]),
         uri & URILens.uriPath %~ (<> [pre, pp1])
       ]
+
+-- $exceptions
+-- Exceptions
+
+data MarketException
+  = MarketExceptionInternal SomeException
+  | MarketExceptionMissingBaseAndQuote CurrencyCode CurrencyCode
+  deriving stock (Show, Data, Generic)
+
+instance Exception MarketException
+
+tryMarket ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  m a ->
+  m (Either MarketException a)
+tryMarket =
+  handleAny (pure . Left . MarketExceptionInternal)
+    . handle (pure . Left)
+    . fmap Right

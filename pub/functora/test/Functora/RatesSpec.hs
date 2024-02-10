@@ -14,10 +14,10 @@ spec = do
     currencies <- currenciesList <$> fetchCurrencies
     let cur = find (\x -> currencyInfoCode x == CurrencyCode "btc") currencies
     cur `shouldSatisfy` isJust
-  it "fetchCurrencies'" $ do
+  it "tryFetchCurrencies" $ do
     uris <- mkCurrenciesUris
     forM_ uris $ \uri -> do
-      res <- currenciesList <<$>> fetchCurrencies' uri
+      res <- currenciesList <<$>> tryFetchCurrencies uri
       shouldSatisfy res $ \case
         Left {} -> False
         Right currencies ->
@@ -25,11 +25,11 @@ spec = do
   it "fetchQuotesPerBase" $ do
     res <- quotesPerBaseQuotesMap <$> fetchQuotesPerBase (CurrencyCode "btc")
     Map.lookup (CurrencyCode "usd") res `shouldSatisfy` isJust
-  it "fetchQuotesPerBase'" $ do
+  it "tryFetchQuotesPerBase" $ do
     let cur = CurrencyCode "btc"
     uris <- mkQuotePerBaseUris cur
     forM_ uris $ \uri -> do
-      res <- quotesPerBaseQuotesMap <<$>> fetchQuotesPerBase' cur uri
+      res <- quotesPerBaseQuotesMap <<$>> tryFetchQuotesPerBase cur uri
       shouldSatisfy res $ \case
         Left {} -> False
         Right xs -> isJust $ Map.lookup (CurrencyCode "usd") xs
@@ -51,16 +51,17 @@ spec = do
             "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies/btc.json"
           ]
     lhs `shouldBe` rhs
-  it "getCurrencies" . withMarket' Nothing $ do
+  it "getCurrencies" . withMarket Nothing $ do
     lhs <- getCurrencies
     rhs <- getCurrencies
     lift $ lhs `shouldBe` rhs
-  it "getQuotesPerBase" . withMarket' Nothing $ do
+  it "getQuotesPerBase" . withMarket Nothing $ do
     let cur = CurrencyCode "btc"
     lhs <- getQuotesPerBase cur
     rhs <- getQuotesPerBase cur
     lift $ lhs `shouldBe` rhs
-  it "getQuote" . withMarket' Nothing $ do
+  it "getQuote" . withMarket Nothing $ do
     let quoteCurrency = CurrencyCode "usd"
-    res <- getQuote (Money (D.Money 1) $ CurrencyCode "btc") quoteCurrency
+    res <-
+      tryMarket $ getQuote (Money (D.Money 1) $ CurrencyCode "btc") quoteCurrency
     lift $ res `shouldSatisfy` isRight

@@ -178,6 +178,7 @@ common pkg-money
     , base
     , dollaridoos
     , template-haskell
+    , text
 
 common pkg-rates
   import:         pkg

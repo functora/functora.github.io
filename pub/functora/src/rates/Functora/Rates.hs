@@ -12,6 +12,7 @@ module Functora.Rates
     getQuote,
     getMarket,
     getCurrencies,
+    getCurrencyInfo,
     getQuotesPerBase,
 
     -- * Stateless
@@ -133,6 +134,18 @@ getCurrencies = do
       else do
         next <- fetchCurrencies
         pure (st {marketCurrencies = next}, next)
+
+getCurrencyInfo ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  CurrencyCode ->
+  ReaderT (MVar Market) m CurrencyInfo
+getCurrencyInfo code = do
+  xs <- currenciesList <$> getCurrencies
+  case find ((== code) . currencyInfoCode) xs of
+    Nothing -> throw $ MarketExceptionMissingCurrencyCode code
+    Just x -> pure x
 
 getQuotesPerBase ::
   ( MonadThrow m,
@@ -277,6 +290,7 @@ mkQuotePerBaseUris cur = do
 
 data MarketException
   = MarketExceptionInternal SomeException
+  | MarketExceptionMissingCurrencyCode CurrencyCode
   | MarketExceptionMissingBaseAndQuote CurrencyCode CurrencyCode
   deriving stock (Show, Data, Generic)
 

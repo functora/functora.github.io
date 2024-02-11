@@ -4,6 +4,7 @@ module Functora.Rates
     Market (..),
     mkMarket,
     withMarket,
+    withNewMarket,
 
     -- * Stateful
     -- $stateful
@@ -51,23 +52,32 @@ data Market = Market
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-mkMarket :: (MonadThrow m, MonadUnliftIO m) => m Market
-mkMarket =
-  Market
-    <$> fetchCurrencies
-    <*> pure mempty
+mkMarket :: (MonadIO m) => m (MVar Market)
+mkMarket = newEmptyMVar
 
 withMarket ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Maybe Market ->
+  MVar Market ->
   ReaderT (MVar Market) m a ->
   m a
-withMarket mst expr = do
-  st <- maybe mkMarket pure mst
-  mvar <- liftIO $ newMVar st
-  runReaderT expr mvar
+withMarket var expr = do
+  mst <- tryReadMVar var
+  when (isNothing mst) $ do
+    st <- Market <$> fetchCurrencies <*> pure mempty
+    void $ tryPutMVar var st
+  runReaderT expr var
+
+withNewMarket ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  ReaderT (MVar Market) m a ->
+  m a
+withNewMarket expr = do
+  var <- mkMarket
+  withMarket var expr
 
 -- $stateful
 -- Stateful
@@ -105,8 +115,8 @@ getMarket ::
   ) =>
   ReaderT (MVar Market) m Market
 getMarket = do
-  mvar <- ask
-  readMVar mvar
+  var <- ask
+  readMVar var
 
 getCurrencies ::
   ( MonadThrow m,
@@ -114,8 +124,8 @@ getCurrencies ::
   ) =>
   ReaderT (MVar Market) m Currencies
 getCurrencies = do
-  mvar <- ask
-  modifyMVar mvar $ \st -> do
+  var <- ask
+  modifyMVar var $ \st -> do
     ct <- getCurrentTime
     let prev = marketCurrencies st
     if upToDate ct $ currenciesUpdatedAt prev
@@ -131,8 +141,8 @@ getQuotesPerBase ::
   CurrencyCode ->
   ReaderT (MVar Market) m QuotesPerBase
 getQuotesPerBase cur = do
-  mvar <- ask
-  modifyMVar mvar $ \st -> do
+  var <- ask
+  modifyMVar var $ \st -> do
     let quotes = marketQuotesPerBase st
     let update = do
           next <- fetchQuotesPerBase cur

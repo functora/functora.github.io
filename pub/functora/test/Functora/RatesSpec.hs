@@ -50,16 +50,16 @@ spec = do
             "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies/btc.json"
           ]
     lhs `shouldBe` rhs
-  it "getCurrencies" . withMarket Nothing $ do
+  it "getCurrencies" . withNewMarket $ do
     lhs <- getCurrencies
     rhs <- getCurrencies
     lift $ lhs `shouldBe` rhs
-  it "getQuotesPerBase" . withMarket Nothing $ do
+  it "getQuotesPerBase" . withNewMarket $ do
     let cur = CurrencyCode "btc"
     lhs <- getQuotesPerBase cur
     rhs <- getQuotesPerBase cur
     lift $ lhs `shouldBe` rhs
-  it "getQuote" . withMarket Nothing $ do
+  it "getQuote" . withNewMarket $ do
     let quoteCurrency = CurrencyCode "usd"
     res <-
       tryMarket $ getQuote (Funds (Money 1) $ CurrencyCode "btc") quoteCurrency

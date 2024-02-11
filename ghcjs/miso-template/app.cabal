@@ -64,7 +64,7 @@ executable app
   build-depends:
     , base
     , Crypto
-    , functora-acme
+    , functora-ghcjs
     , miso
 
   if !impl(ghcjs)

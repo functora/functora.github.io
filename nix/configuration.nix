@@ -48,7 +48,6 @@
           "delfi.ee"
           "postimees.ee"
           "rumble.com"
-          "youtube.com"
           "t.me"
           "odysee.com"
           "twitter.com"
@@ -58,6 +57,7 @@
           "facebook.com"
           # "discord.com"
           # "telegram.org"
+          # "youtube.com"
         ]
         else []
       ));

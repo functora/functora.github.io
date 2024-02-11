@@ -35,8 +35,8 @@
               ver = "0.1.2.1";
               sha256 = "RSzmDOwyqWv08Dz7XI3ixwO7M+7HDhDxUeOeFLhUI+w=";
             } {};
-            functora-acme =
-              self.callCabal2nix "functora-acme" "${functora}/pub/functora/src" {};
+            functora-ghcjs =
+              self.callCabal2nix "functora-ghcjs" "${functora}/pub/functora/src" {};
           }
         );
     in {

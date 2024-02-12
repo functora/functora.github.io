@@ -59,7 +59,8 @@ data Model = Model
     modelBaseCurrencyInfo :: CurrencyInfo,
     -- TODO : use timestamed data
     modelQuoteMoneyAmount :: Money Rational,
-    modelQuoteCurrencyInfo :: CurrencyInfo
+    modelQuoteCurrencyInfo :: CurrencyInfo,
+    modelDebug :: Text
   }
   deriving stock (Eq, Data, Generic)
 
@@ -83,7 +84,8 @@ mkModel = do
             modelBaseMoneyAmount = Money 0,
             modelBaseCurrencyInfo = btc,
             modelQuoteMoneyAmount = Money 0,
-            modelQuoteCurrencyInfo = usd
+            modelQuoteCurrencyInfo = usd,
+            modelDebug = mempty
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
     currenciesInfo <- currenciesList <$> getCurrencies
@@ -109,14 +111,28 @@ mkModel = do
           modelBaseMoneyAmount = baseAmt,
           modelBaseCurrencyInfo = baseCur,
           modelQuoteMoneyAmount = quoteMoneyAmount quote,
-          modelQuoteCurrencyInfo = quoteCur
+          modelQuoteCurrencyInfo = quoteCur,
+          modelDebug = mempty
         }
 
 data Action
   = Noop
-  | Echo Text
+  | Debug Text
   | SayHelloWorld
   deriving (Show, Eq)
+
+extendedEvents :: Map MisoString Bool
+extendedEvents =
+  defaultEvents
+    & Map.insert "MDCDialog:close" True
+    & Map.insert "MDCDrawer:close" True
+    & Map.insert "MDCList:action" True
+    & Map.insert "MDCSnackbar:closed" True
+    & Map.insert "MDCTab:interacted" True
+    & Map.insert "MDCSlider:input" True
+    & Map.insert "MDCMenuSurface:close" True
+    & Map.insert "MDCChip:interaction" True
+    & Map.insert "MDCIconButtonToggle:change" True
 
 main :: IO ()
 main = do
@@ -128,7 +144,7 @@ main = do
           update = updateModel,
           Miso.view = viewModel,
           subs = mempty,
-          events = defaultEvents,
+          events = extendedEvents,
           initialAction = SayHelloWorld,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
@@ -136,9 +152,9 @@ main = do
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop m = noEff m
-updateModel (Echo txt) m =
-  m <# do
-    liftIO (putStrLn $ "Echo ==> " <> txt) >> pure Noop
+updateModel (Debug txt) m =
+  m {modelDebug = txt} <# do
+    pure Noop
 updateModel SayHelloWorld m =
   m <# do
     liftIO (putStrLn @Text "Hello World") >> pure Noop
@@ -161,8 +177,7 @@ viewModel x =
       script_ [src_ "static/clipboard.min.js"] mempty,
       script_
         [ src_
-            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js",
-          defer_ "defer"
+            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js"
         ]
         mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
@@ -180,11 +195,11 @@ mainWidget st =
     mempty
     [ TextField.outlined
         . TextField.setLabel (Just "Hi")
-        . TextField.setOnChange (Echo . inspect @Text)
+        . TextField.setOnInput (Debug . inspect @Text)
         $ TextField.config,
       Select.outlined
         ( Select.setLabel (Just "Choose wisely")
-            $ Select.setOnChange (Echo . inspect @Text)
+            $ Select.setOnChange (Debug . inspect @Text)
             $ Select.setSelected (Just $ modelBaseCurrencyInfo st) Select.config
         )
         (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
@@ -225,7 +240,7 @@ mainWidget st =
                           style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
                           style_ $ Map.singleton "margin" "0"
                         ]
-                        [Miso.text "Lorem ipsum..."]
+                        [Miso.text . toMisoString $ modelDebug st]
                     ]
               ],
             Card.actions =

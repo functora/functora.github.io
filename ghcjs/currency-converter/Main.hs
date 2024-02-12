@@ -8,18 +8,30 @@ import qualified Network.Wai as Wai
 import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
+import qualified Data.ByteString.Lazy as BL
 #endif
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude
 import Functora.Rates
+import qualified Material.Button as Button
+import qualified Material.Card as Card
+import qualified Material.Elevation as Evaluation
+import qualified Material.IconButton as IconButton
+import qualified Material.Select as Select
+import qualified Material.Select.Item as SelectItem
+import qualified Material.TextField as TextField
+import qualified Material.Theme as Theme
+import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
 
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
-runApp app =
+runApp app = do
+  elm <- BL.readFile "static/material-components-web-elm.min.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -28,12 +40,12 @@ runApp app =
     =<< JSaddle.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      router
+      (router elm)
   where
-    router req sendResp =
+    router elm req =
       case Wai.pathInfo req of
-        ("static" : _) -> staticApp (defaultWebAppSettings ".") req sendResp
-        _ -> JSaddle.jsaddleApp req sendResp
+        ("static" : _) -> staticApp (defaultWebAppSettings ".") req
+        _ -> JSaddle.jsaddleAppWithJs (JSaddle.jsaddleJs False <> elm) req
 #else
 runApp :: IO () -> IO ()
 runApp = id
@@ -123,8 +135,6 @@ main = do
         }
 
 updateModel :: Action -> Model -> Effect Action Model
--- updateModel AddOne m = noEff (m + 1)
--- updateModel SubtractOne m = noEff (m - 1)
 updateModel Noop m = noEff m
 updateModel (Echo txt) m =
   m <# do
@@ -136,49 +146,142 @@ updateModel SayHelloWorld m =
 viewModel :: Model -> View Action
 viewModel x =
   div_
-    []
-    [ link_ [rel_ "stylesheet", href_ "static/picnic.min.css"],
+    mempty
+    [ link_
+        [ rel_ "stylesheet",
+          href_
+            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.css"
+        ],
+      link_
+        [ rel_ "stylesheet",
+          href_ "https://fonts.googleapis.com/icon?family=Material+Icons"
+        ],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget x,
       script_ [src_ "static/clipboard.min.js"] mempty,
+      script_
+        [ src_
+            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js",
+          defer_ "defer"
+        ]
+        mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
     ]
 
+currencyInfoItem :: CurrencyInfo -> SelectItem.SelectItem CurrencyInfo Action
+currencyInfoItem cur =
+  SelectItem.selectItem
+    (SelectItem.config $ cur)
+    [Miso.text . toMisoString $ inspectCurrencyInfo @Text cur]
+
 mainWidget :: Model -> View Action
 mainWidget st =
-  row
-    [ fieldset_
-        [class_ "flex two"]
-        [ input_
-            [ type_ "number",
-              placeholder_ "Base amount",
-              value_
-                . toMisoString @Text
-                . inspectRatio 8
-                . unMoney
-                $ modelBaseMoneyAmount st
-            ],
-          select_ [onInput $ Echo . fromMisoString]
-            . toList
-            $ modelCurrenciesInfo st
-            <&> \cur ->
-              option_
-                [ textProp "label"
-                    . toMisoString @Text
-                    $ inspectCurrencyInfo cur
-                ]
-                [text . ms $ inspect @Text cur]
-        ],
-      input_
-        [ type_ "number",
-          placeholder_ "Quote amount",
-          value_
-            . toMisoString @Text
-            . inspectRatio 8
-            . unMoney
-            $ modelQuoteMoneyAmount st
-        ]
+  div_
+    mempty
+    [ TextField.outlined
+        . TextField.setLabel (Just "Hi")
+        . TextField.setOnChange (Echo . inspect @Text)
+        $ TextField.config,
+      Select.outlined
+        ( Select.setLabel (Just "Choose wisely")
+            $ Select.setOnChange (Echo . inspect @Text)
+            $ Select.setSelected (Just $ modelBaseCurrencyInfo st) Select.config
+        )
+        (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
+        . fmap currencyInfoItem
+        . NonEmpty.tail
+        $ modelCurrenciesInfo st,
+      Card.card
+        ( Card.setAttributes
+            [ style_ $ Map.singleton "margin" "48px 0",
+              style_ $ Map.singleton "width" "350px",
+              Evaluation.z10
+            ]
+            $ Card.config
+        )
+        Card.Content
+          { Card.blocks =
+              [ Card.Block
+                  $ div_
+                    [style_ $ Map.singleton "padding" "1rem"]
+                    [ h2_
+                        [ Typography.headline6,
+                          style_ $ Map.singleton "margin" "0"
+                        ]
+                        [Miso.text "Title"],
+                      h3_
+                        [ Typography.subtitle2,
+                          Theme.textSecondaryOnBackground,
+                          style_ $ Map.singleton "margin" "0"
+                        ]
+                        [Miso.text "Subtitle"]
+                    ],
+                Card.Block
+                  $ div_
+                    []
+                    [ p_
+                        [ Typography.body2,
+                          Theme.textSecondaryOnBackground,
+                          style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
+                          style_ $ Map.singleton "margin" "0"
+                        ]
+                        [Miso.text "Lorem ipsum..."]
+                    ]
+              ],
+            Card.actions =
+              Just
+                $ Card.cardActions
+                  [Card.button Button.config "Visit"]
+                  [Card.icon IconButton.config "favorite"]
+          }
     ]
 
-row :: [View action] -> View action
-row = div_ [class_ $ "flex one center"]
+-- row
+--   [ fieldset_
+--       [class_ "flex two"]
+--       [ input_
+--           [ type_ "number",
+--             placeholder_ "Base amount",
+--             value_
+--               . toMisoString @Text
+--               . inspectRatio 8
+--               . unMoney
+--               $ modelBaseMoneyAmount st
+--           ],
+--         -- datalist_ [id_ "base"]
+--         --   . toList
+--         --   $ modelCurrenciesInfo st
+--         --   <&> \cur ->
+--         --     option_
+--         --       [ textProp "label"
+--         --           . toMisoString @Text
+--         --           $ inspectCurrencyInfo cur
+--         --       ]
+--         --       [text . ms $ inspect @Text cur],
+--         -- input_ [list_ "base"]
+--         select_
+--           [ onInput $ Echo . fromMisoString
+--           ]
+--           . toList
+--           $ modelCurrenciesInfo st
+--           <&> \cur ->
+--             option_
+--               [ textProp "label"
+--                   . toMisoString @Text
+--                   $ inspectCurrencyInfo cur
+--               ]
+--               [text . ms $ inspect @Text cur]
+--       ],
+--     input_
+--       [ type_ "number",
+--         placeholder_ "Quote amount",
+--         value_
+--           . toMisoString @Text
+--           . inspectRatio 8
+--           . unMoney
+--           $ modelQuoteMoneyAmount st
+--       ]
+--   ]
+
+-- row :: [View action] -> View action
+-- row = div_ [class_ $ "flex one center"]

@@ -18,6 +18,7 @@ common pkg
       -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
       -Wno-missing-kind-signatures
 
+  cpp-options:        -Wno-trigraphs
   default-extensions:
     AllowAmbiguousTypes
     ConstraintKinds
@@ -63,12 +64,15 @@ executable app
   ghcjs-options:    -dedupe
   build-depends:
     , base
+    , containers
     , Crypto
     , functora-ghcjs
     , miso
+    , miso-components
 
   if !impl(ghcjs)
     build-depends:
+      , bytestring
       , jsaddle-warp
       , wai
       , wai-app-static

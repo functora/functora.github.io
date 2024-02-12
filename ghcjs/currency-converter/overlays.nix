@@ -37,6 +37,8 @@
             } {};
             functora-ghcjs =
               self.callCabal2nix "functora-ghcjs" "${functora}/pub/functora/src" {};
+            miso-components =
+              self.callCabal2nix "miso-components" "${functora}/ghcjs/miso-components" {};
           }
         );
     in {

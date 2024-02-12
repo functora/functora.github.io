@@ -1,0 +1,101 @@
+cabal-version: 2.2
+name:          miso-components
+version:       0.1.0.0
+synopsis:      Miso components
+category:      Web
+build-type:    Simple
+
+common pkg
+  default-language: Haskell2010
+  js-sources:       material-components-web-elm.min.js
+  build-depends:
+    , aeson
+    , base
+    , bytestring
+    , containers
+    , miso
+
+  if !impl(ghcjs)
+    build-depends:
+      , jsaddle
+      , jsaddle-warp
+      , transformers
+      , warp
+      , websockets
+
+  ghc-options:
+    -Weverything -Wno-all-missed-specialisations
+    -Wno-missed-specialisations -Wno-missing-exported-signatures
+    -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-safe
+    -Wno-unsafe -fprint-potential-instances -fwarn-tabs
+
+  if impl(ghc >=8.10.7)
+    ghc-options:
+      -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
+      -Wno-missing-kind-signatures
+
+library
+  import:          pkg
+  exposed-modules:
+    Elm.List
+    Material.Button
+    Material.Button.Internal
+    Material.Card
+    Material.Checkbox
+    Material.Checkbox.Internal
+    Material.Chip.Action
+    Material.Chip.Action.Internal
+    Material.Chip.Choice
+    Material.Chip.Choice.Internal
+    Material.Chip.Filter
+    Material.Chip.Filter.Internal
+    Material.Chip.Input
+    Material.Chip.Input.Internal
+    Material.ChipSet.Action
+    Material.ChipSet.Choice
+    Material.ChipSet.Filter
+    Material.ChipSet.Input
+    Material.DataTable
+    Material.Dialog
+    Material.Drawer.Dismissible
+    Material.Drawer.Modal
+    Material.Drawer.Permanent
+    Material.Elevation
+    Material.Fab
+    Material.FormField
+    Material.HelperText
+    Material.Icon
+    Material.IconButton
+    Material.IconButton.Internal
+    Material.IconToggle
+    Material.ImageList
+    Material.ImageList.Item
+    Material.ImageList.Item.Internal
+    Material.LayoutGrid
+    Material.LinearProgress
+    Material.List
+    Material.List.Divider
+    Material.List.Item
+    Material.List.Item.Internal
+    Material.Menu
+    Material.Radio
+    Material.Ripple
+    Material.Select
+    Material.Select.Icon
+    Material.Select.Icon.Internal
+    Material.Select.Item
+    Material.Select.Item.Internal
+    Material.Slider
+    Material.Snackbar
+    Material.Switch
+    Material.Tab
+    Material.Tab.Internal
+    Material.TabBar
+    Material.TextField
+    Material.Theme
+    Material.TopAppBar
+    Material.Typography
+
+executable miso-components-example
+  import:  pkg
+  main-is: Main.hs

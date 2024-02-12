@@ -1,9 +1,9 @@
 let
   functora = ../..;
   functora-miso = import "${functora}/ghcjs/miso/default.nix" {
-    overlays = import ./overlays.nix {
-      inherit functora;
-    };
+    # overlays = import ./overlays.nix {
+    #   inherit functora;
+    # };
   };
 in
   with functora-miso; {

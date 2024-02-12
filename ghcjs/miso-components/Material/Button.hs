@@ -21,7 +21,7 @@ where
 
 import Data.Maybe
 import Material.Button.Internal
-import Miso.Html
+import Miso.Html hiding (Text)
 import Miso.Html.Event
 import Miso.String
 
@@ -105,43 +105,48 @@ data Variant
   | Outlined
 
 button :: Variant -> Config msg -> String -> View msg
-button variant ((config_@Config {additionalAttributes = additionalAttributes, touch = touch, href = href})) label =
-  let wrapTouch node =
-        if touch
-          then div_ [class_ "mdc-touch-target-wrapper"] [node]
-          else node
-   in wrapTouch $
-        nodeHtml
-          "mdc-button"
-          (mapMaybe id [disabledProp config_])
-          [ ( if href /= Nothing
-                then a_
-                else button_
-            )
-              ( mapMaybe
-                  id
-                  [ rootCs,
-                    variantCs variant,
-                    denseCs config_,
-                    touchCs config_,
-                    disabledAttr config_,
-                    tabIndexProp config_,
-                    hrefAttr config_,
-                    targetAttr config_,
-                    clickHandler config_
-                  ]
-                  ++ additionalAttributes
+button
+  variant
+  ( ( config_@Config {additionalAttributes = additionalAttributes, touch = touch, href = href}
+      )
+    )
+  label =
+    let wrapTouch node =
+          if touch
+            then div_ [class_ "mdc-touch-target-wrapper"] [node]
+            else node
+     in wrapTouch $
+          nodeHtml
+            "mdc-button"
+            (mapMaybe id [disabledProp config_])
+            [ ( if href /= Nothing
+                  then a_
+                  else button_
               )
-              ( mapMaybe
-                  id
-                  [ rippleElt,
-                    leadingIconElt config_,
-                    labelElt label,
-                    trailingIconElt config_,
-                    touchElt config_
-                  ]
-              )
-          ]
+                ( mapMaybe
+                    id
+                    [ rootCs,
+                      variantCs variant,
+                      denseCs config_,
+                      touchCs config_,
+                      disabledAttr config_,
+                      tabIndexProp config_,
+                      hrefAttr config_,
+                      targetAttr config_,
+                      clickHandler config_
+                    ]
+                    ++ additionalAttributes
+                )
+                ( mapMaybe
+                    id
+                    [ rippleElt,
+                      leadingIconElt config_,
+                      labelElt label,
+                      trailingIconElt config_,
+                      touchElt config_
+                    ]
+                )
+            ]
 
 -- | Text button variant (flush without outline)
 text :: Config msg -> String -> View msg

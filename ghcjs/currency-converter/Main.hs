@@ -17,8 +17,8 @@ import Functora.Prelude
 import Functora.Rates
 import qualified Material.Button as Button
 import qualified Material.Card as Card
-import qualified Material.Elevation as Evaluation
 import qualified Material.IconButton as IconButton
+import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
@@ -177,7 +177,8 @@ viewModel x =
       script_ [src_ "static/clipboard.min.js"] mempty,
       script_
         [ src_
-            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js"
+            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js",
+          defer_ "defer"
         ]
         mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
@@ -191,64 +192,77 @@ currencyInfoItem cur =
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  div_
-    mempty
-    [ TextField.outlined
-        . TextField.setLabel (Just "Hi")
-        . TextField.setOnInput (Debug . inspect @Text)
-        $ TextField.config,
-      Select.outlined
-        ( Select.setLabel (Just "Choose wisely")
-            $ Select.setOnChange (Debug . inspect @Text)
-            $ Select.setSelected (Just $ modelBaseCurrencyInfo st) Select.config
-        )
-        (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
-        . fmap currencyInfoItem
-        . NonEmpty.tail
-        $ modelCurrenciesInfo st,
-      Card.card
-        ( Card.setAttributes
-            [ style_ $ Map.singleton "margin" "48px 0",
-              style_ $ Map.singleton "width" "350px",
-              Evaluation.z10
+  LayoutGrid.layoutGrid
+    [ LayoutGrid.alignMiddle
+    ]
+    [ LayoutGrid.inner
+        [ class_ "container"
+        ]
+        [ LayoutGrid.cell
+            [ LayoutGrid.span6Desktop
             ]
-            $ Card.config
-        )
-        Card.Content
-          { Card.blocks =
-              [ Card.Block
-                  $ div_
-                    [style_ $ Map.singleton "padding" "1rem"]
-                    [ h2_
-                        [ Typography.headline6,
-                          style_ $ Map.singleton "margin" "0"
-                        ]
-                        [Miso.text "Title"],
-                      h3_
-                        [ Typography.subtitle2,
-                          Theme.textSecondaryOnBackground,
-                          style_ $ Map.singleton "margin" "0"
-                        ]
-                        [Miso.text "Subtitle"]
+            . (: mempty)
+            . TextField.outlined
+            . TextField.setLabel (Just "Hi")
+            . TextField.setOnInput (Debug . inspect @Text)
+            $ TextField.setAttributes [class_ "fill"] TextField.config,
+          LayoutGrid.cell
+            [ LayoutGrid.span6Desktop
+            ]
+            . (: mempty)
+            . Select.outlined
+              ( Select.setLabel (Just "Choose wisely")
+                  . Select.setOnChange (Debug . inspect @Text)
+                  . Select.setSelected (Just $ modelBaseCurrencyInfo st)
+                  $ Select.setAttributes [class_ "fill"] Select.config
+              )
+              (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
+            . fmap currencyInfoItem
+            . NonEmpty.tail
+            $ modelCurrenciesInfo st,
+          LayoutGrid.cell
+            [ LayoutGrid.span12
+            ]
+            . (: mempty)
+            $ Card.card
+              ( Card.setAttributes [class_ "fill"] Card.config
+              )
+              Card.Content
+                { Card.blocks =
+                    [ Card.Block
+                        $ div_
+                          [style_ $ Map.singleton "padding" "1rem"]
+                          [ h2_
+                              [ Typography.headline6,
+                                style_ $ Map.singleton "margin" "0"
+                              ]
+                              [Miso.text "Title"],
+                            h3_
+                              [ Typography.subtitle2,
+                                Theme.textSecondaryOnBackground,
+                                style_ $ Map.singleton "margin" "0"
+                              ]
+                              [Miso.text "Subtitle"]
+                          ],
+                      Card.Block
+                        $ div_
+                          []
+                          [ p_
+                              [ Typography.body2,
+                                Theme.textSecondaryOnBackground,
+                                style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
+                                style_ $ Map.singleton "margin" "0"
+                              ]
+                              [Miso.text . toMisoString $ modelDebug st]
+                          ]
                     ],
-                Card.Block
-                  $ div_
-                    []
-                    [ p_
-                        [ Typography.body2,
-                          Theme.textSecondaryOnBackground,
-                          style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
-                          style_ $ Map.singleton "margin" "0"
-                        ]
-                        [Miso.text . toMisoString $ modelDebug st]
-                    ]
-              ],
-            Card.actions =
-              Just
-                $ Card.cardActions
-                  [Card.button Button.config "Visit"]
-                  [Card.icon IconButton.config "favorite"]
-          }
+                  Card.actions =
+                    Just
+                      $ Card.cardActions
+                        [Card.button Button.config "Visit"]
+                        [Card.icon IconButton.config "favorite"]
+                }
+        ]
     ]
 
 -- row

@@ -101,6 +101,16 @@ import Data.Fixed as X (Pico)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb
+import Data.Generics.Internal.VL.Iso as X
+import Data.Generics.Internal.VL.Lens as X hiding
+  ( set,
+    view,
+    (^.),
+  )
+import Data.Generics.Internal.VL.Prism as X hiding (Market (..))
+import Data.Generics.Labels as X
+import Data.Generics.Product as X
+import Data.Generics.Sum as X
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Scientific as X (Scientific)
@@ -120,14 +130,13 @@ import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
-import GHC.Records as X (HasField (..))
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
 import Instances.TH.Lift as X ()
 import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
 import qualified Language.Haskell.TH.Syntax as TH
-import Lens.Micro as X hiding (set, (^.))
+import Lens.Micro as X (Getting, Traversal, Traversal', (%~))
 import Lens.Micro.Contra as X (Fold, Getter, fromSimpleFold, fromSimpleGetter)
 import Lens.Micro.GHC as X ()
 import Lens.Micro.TH as X (makeLenses)
@@ -488,11 +497,11 @@ qq parser =
     }
   where
     failure :: Text -> any
-    failure field =
+    failure msg =
       error
         $ inspectType @out
         <> " "
-        <> field
+        <> msg
         <> " is not implemented"
 
 qqUri :: QuasiQuoter

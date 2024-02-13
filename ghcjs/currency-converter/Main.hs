@@ -10,13 +10,10 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
-import Data.Generics.Internal.VL.Lens
-import Data.Generics.Labels ()
-import Data.Generics.Product
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import Functora.Money
-import Functora.Prelude hiding ((.~))
+import Functora.Prelude
 import Functora.Rates
 import qualified Material.Button as Button
 import qualified Material.Card as Card

@@ -54,6 +54,7 @@ common pkg
     MultiParamTypeClasses
     NoImplicitPrelude
     NumericUnderscores
+    OverloadedLabels
     OverloadedLists
     OverloadedStrings
     PackageImports
@@ -86,6 +87,7 @@ library
     , cryptohash-sha256
     , dollaridoos
     , extra
+    , generic-lens
     , lens
     , microlens
     , microlens-contra

@@ -68,7 +68,6 @@ executable app
     , containers
     , Crypto
     , functora-ghcjs
-    , generic-lens
     , miso
     , miso-components
 

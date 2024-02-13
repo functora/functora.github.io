@@ -10,10 +10,13 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
+import Data.Generics.Internal.VL.Lens
+import Data.Generics.Labels ()
+import Data.Generics.Product
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import Functora.Money
-import Functora.Prelude
+import Functora.Prelude hiding ((.~))
 import Functora.Rates
 import qualified Material.Button as Button
 import qualified Material.Card as Card
@@ -60,6 +63,7 @@ data Model = Model
     -- TODO : use timestamed data
     modelQuoteMoneyAmount :: Money Rational,
     modelQuoteCurrencyInfo :: CurrencyInfo,
+    modelAlert :: Maybe Text,
     modelDebug :: Text
   }
   deriving stock (Eq, Data, Generic)
@@ -85,6 +89,7 @@ mkModel = do
             modelBaseCurrencyInfo = btc,
             modelQuoteMoneyAmount = Money 0,
             modelQuoteCurrencyInfo = usd,
+            modelAlert = Nothing,
             modelDebug = mempty
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
@@ -112,6 +117,7 @@ mkModel = do
           modelBaseCurrencyInfo = baseCur,
           modelQuoteMoneyAmount = quoteMoneyAmount quote,
           modelQuoteCurrencyInfo = quoteCur,
+          modelAlert = Nothing,
           modelDebug = mempty
         }
 
@@ -119,7 +125,9 @@ data Action
   = Noop
   | Debug Text
   | SayHelloWorld
-  deriving (Show, Eq)
+  | forall a b. UserInput (Traversal' Model b) (a -> IO b) a
+  | SetModel Model
+  | InputBaseAmount String
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -151,13 +159,20 @@ main = do
         }
 
 updateModel :: Action -> Model -> Effect Action Model
-updateModel Noop m = noEff m
-updateModel (Debug txt) m =
-  m {modelDebug = txt} <# do
+updateModel Noop st = noEff st
+updateModel (SetModel st) _ = noEff st
+updateModel (UserInput pointer parser input) st = do
+  st <# do
+    output <- liftIO . tryAny $ parser input
+    pure $ case output of
+      Left e -> SetModel $ st & #modelAlert .~ Just (inspect @Text e)
+      Right x -> SetModel $ st & pointer .~ x
+updateModel (InputBaseAmount _) st = noEff st
+updateModel (Debug x) st = noEff st {modelDebug = x}
+updateModel SayHelloWorld st =
+  st <# do
+    liftIO (putStrLn @Text "Hello World")
     pure Noop
-updateModel SayHelloWorld m =
-  m <# do
-    liftIO (putStrLn @Text "Hello World") >> pure Noop
 
 viewModel :: Model -> View Action
 viewModel x =
@@ -203,16 +218,19 @@ mainWidget st =
             ]
             . (: mempty)
             . TextField.outlined
-            . TextField.setLabel (Just "Hi")
-            . TextField.setOnInput (Debug . inspect @Text)
+            . TextField.setType (Just "number")
+            . TextField.setLabel (Just "Base amount")
+            . TextField.setOnInput InputBaseAmount
             $ TextField.setAttributes [class_ "fill"] TextField.config,
           LayoutGrid.cell
             [ LayoutGrid.span6Desktop
             ]
             . (: mempty)
             . Select.outlined
-              ( Select.setLabel (Just "Choose wisely")
-                  . Select.setOnChange (Debug . inspect @Text)
+              ( Select.setLabel (Just "Base currency")
+                  . Select.setOnChange
+                    ( UserInput (field @"modelBaseCurrencyInfo") pure
+                    )
                   . Select.setSelected (Just $ modelBaseCurrencyInfo st)
                   $ Select.setAttributes [class_ "fill"] Select.config
               )
@@ -253,7 +271,11 @@ mainWidget st =
                                 style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
                                 style_ $ Map.singleton "margin" "0"
                               ]
-                              [Miso.text . toMisoString $ modelDebug st]
+                              [ Miso.text
+                                  . toMisoString
+                                  . inspectCurrencyInfo @Text
+                                  $ modelBaseCurrencyInfo st
+                              ]
                           ]
                     ],
                   Card.actions =

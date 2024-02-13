@@ -43,6 +43,7 @@ common pkg
     MultiParamTypeClasses
     NoImplicitPrelude
     NumericUnderscores
+    OverloadedLabels
     OverloadedLists
     OverloadedStrings
     PackageImports
@@ -67,6 +68,7 @@ executable app
     , containers
     , Crypto
     , functora-ghcjs
+    , generic-lens
     , miso
     , miso-components
 

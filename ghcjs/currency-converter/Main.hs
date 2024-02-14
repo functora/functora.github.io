@@ -21,6 +21,7 @@ import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
+import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
@@ -60,10 +61,9 @@ data Model = Model
     -- TODO : use timestamed data
     modelQuoteMoneyAmount :: Money Rational,
     modelQuoteCurrencyInfo :: CurrencyInfo,
-    modelAlert :: Maybe Text,
-    modelDebug :: Text
+    modelSnackbarQueue :: Snackbar.Queue Action
   }
-  deriving stock (Eq, Data, Generic)
+  deriving stock (Eq, Generic)
 
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
@@ -86,8 +86,7 @@ mkModel = do
             modelBaseCurrencyInfo = btc,
             modelQuoteMoneyAmount = Money 0,
             modelQuoteCurrencyInfo = usd,
-            modelAlert = Nothing,
-            modelDebug = mempty
+            modelSnackbarQueue = Snackbar.initialQueue
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
     currenciesInfo <- currenciesList <$> getCurrencies
@@ -114,17 +113,14 @@ mkModel = do
           modelBaseCurrencyInfo = baseCur,
           modelQuoteMoneyAmount = quoteMoneyAmount quote,
           modelQuoteCurrencyInfo = quoteCur,
-          modelAlert = Nothing,
-          modelDebug = mempty
+          modelSnackbarQueue = Snackbar.initialQueue
         }
 
 data Action
   = Noop
-  | Debug Text
-  | SayHelloWorld
-  | forall a b. UserInput (Traversal' Model b) (a -> IO b) a
   | SetModel Model
-  | InputBaseAmount String
+  | forall a b. UserInput (Traversal' Model b) (a -> IO b) a
+  | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -150,7 +146,7 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = SayHelloWorld,
+          initialAction = Noop,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
@@ -158,18 +154,22 @@ main = do
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
 updateModel (SetModel st) _ = noEff st
+updateModel (SnackbarClosed msg) st =
+  noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
 updateModel (UserInput pointer parser input) st = do
   st <# do
     output <- liftIO . tryAny $ parser input
-    pure $ case output of
-      Left e -> SetModel $ st & #modelAlert .~ Just (inspect @Text e)
-      Right x -> SetModel $ st & pointer .~ x
-updateModel (InputBaseAmount _) st = noEff st
-updateModel (Debug x) st = noEff st {modelDebug = x}
-updateModel SayHelloWorld st =
-  st <# do
-    liftIO (putStrLn @Text "Hello World")
-    pure Noop
+    pure . SetModel $ case output of
+      Right x -> st & pointer .~ x
+      Left e ->
+        let msg =
+              inspect e
+                & Snackbar.message
+                & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
+                & Snackbar.setOnActionIconClick SnackbarClosed
+         in st
+              & #modelSnackbarQueue
+              %~ Snackbar.addMessage msg
 
 viewModel :: Model -> View Action
 viewModel x =
@@ -217,7 +217,11 @@ mainWidget st =
             . TextField.outlined
             . TextField.setType (Just "number")
             . TextField.setLabel (Just "Base amount")
-            . TextField.setOnInput InputBaseAmount
+            . TextField.setOnInput
+              ( UserInput #modelBaseMoneyAmount
+                  $ fmap Money
+                  . parseRatio
+              )
             $ TextField.setAttributes [class_ "fill"] TextField.config,
           LayoutGrid.cell
             [ LayoutGrid.span6Desktop
@@ -225,9 +229,7 @@ mainWidget st =
             . (: mempty)
             . Select.outlined
               ( Select.setLabel (Just "Base currency")
-                  . Select.setOnChange
-                    ( UserInput (field @"modelBaseCurrencyInfo") pure
-                    )
+                  . Select.setOnChange (UserInput #modelBaseCurrencyInfo pure)
                   . Select.setSelected (Just $ modelBaseCurrencyInfo st)
                   $ Select.setAttributes [class_ "fill"] Select.config
               )
@@ -270,8 +272,12 @@ mainWidget st =
                               ]
                               [ Miso.text
                                   . toMisoString
-                                  . inspectCurrencyInfo @Text
-                                  $ modelBaseCurrencyInfo st
+                                  $ inspect @Text
+                                    ( modelBaseMoneyAmount st,
+                                      modelBaseCurrencyInfo st,
+                                      modelQuoteMoneyAmount st,
+                                      modelQuoteCurrencyInfo st
+                                    )
                               ]
                           ]
                     ],
@@ -280,56 +286,8 @@ mainWidget st =
                       $ Card.cardActions
                         [Card.button Button.config "Visit"]
                         [Card.icon IconButton.config "favorite"]
-                }
+                },
+          Snackbar.snackbar (Snackbar.config SnackbarClosed)
+            $ modelSnackbarQueue st
         ]
     ]
-
--- row
---   [ fieldset_
---       [class_ "flex two"]
---       [ input_
---           [ type_ "number",
---             placeholder_ "Base amount",
---             value_
---               . toMisoString @Text
---               . inspectRatio 8
---               . unMoney
---               $ modelBaseMoneyAmount st
---           ],
---         -- datalist_ [id_ "base"]
---         --   . toList
---         --   $ modelCurrenciesInfo st
---         --   <&> \cur ->
---         --     option_
---         --       [ textProp "label"
---         --           . toMisoString @Text
---         --           $ inspectCurrencyInfo cur
---         --       ]
---         --       [text . ms $ inspect @Text cur],
---         -- input_ [list_ "base"]
---         select_
---           [ onInput $ Echo . fromMisoString
---           ]
---           . toList
---           $ modelCurrenciesInfo st
---           <&> \cur ->
---             option_
---               [ textProp "label"
---                   . toMisoString @Text
---                   $ inspectCurrencyInfo cur
---               ]
---               [text . ms $ inspect @Text cur]
---       ],
---     input_
---       [ type_ "number",
---         placeholder_ "Quote amount",
---         value_
---           . toMisoString @Text
---           . inspectRatio 8
---           . unMoney
---           $ modelQuoteMoneyAmount st
---       ]
---   ]
-
--- row :: [View action] -> View action
--- row = div_ [class_ $ "flex one center"]

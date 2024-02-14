@@ -8,9 +8,19 @@ import Data.Generics (Data)
 import Data.Ratio
 import Data.Scientific (Scientific)
 import Data.Tagged
+import qualified Data.Typeable as Typeable
 import qualified Type.Reflection as Reflection
 import Universum
 import Witch.Mini
+import qualified Prelude
+
+instance (Typeable a) => Show (MVar a) where
+  show =
+    const
+      . mappend "<REDACTED> :: MVar "
+      . Universum.show
+      . Typeable.typeRep
+      $ Proxy @a
 
 instance Data SomeException where
   gunfold _ z = z . Data.fromConstr

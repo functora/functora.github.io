@@ -53,20 +53,28 @@ runApp = id
 #endif
 
 data Model = Model
-  { modelMarket :: MVar Market,
-    -- TODO : use timestamed data
-    modelCurrenciesInfo :: NonEmpty CurrencyInfo,
-    modelBaseMoneyAmount :: Money Rational,
-    modelBaseCurrencyInfo :: CurrencyInfo,
-    -- TODO : use timestamed data
-    modelQuoteMoneyAmount :: Money Rational,
-    modelQuoteCurrencyInfo :: CurrencyInfo,
+  { modelFinal :: ModelData,
+    modelDraft :: MVar ModelData,
+    modelMarket :: MVar Market,
     modelSnackbarQueue :: Snackbar.Queue Action
   }
   deriving stock (Eq, Generic)
 
+data ModelData = ModelData
+  { -- TODO : use timestamed data
+    modelDataCurrenciesInfo :: NonEmpty CurrencyInfo,
+    modelDataBaseMoneyAmount :: Money Rational,
+    modelDataBaseCurrencyInfo :: CurrencyInfo,
+    -- TODO : use timestamed data
+    modelDataQuoteMoneyAmount :: Money Rational,
+    modelDataQuoteCurrencyInfo :: CurrencyInfo,
+    modelDataUpdatedAt :: UTCTime
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
+  ct <- getCurrentTime
   market <- mkMarket
   let btc =
         CurrencyInfo
@@ -78,14 +86,21 @@ mkModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
+  let final =
+        ModelData
+          { modelDataCurrenciesInfo = [btc, usd],
+            modelDataBaseMoneyAmount = Money 0,
+            modelDataBaseCurrencyInfo = btc,
+            modelDataQuoteMoneyAmount = Money 0,
+            modelDataQuoteCurrencyInfo = usd,
+            modelDataUpdatedAt = ct
+          }
+  draft <- newMVar final
   let st =
         Model
-          { modelMarket = market,
-            modelCurrenciesInfo = [btc, usd],
-            modelBaseMoneyAmount = Money 0,
-            modelBaseCurrencyInfo = btc,
-            modelQuoteMoneyAmount = Money 0,
-            modelQuoteCurrencyInfo = usd,
+          { modelFinal = final,
+            modelDraft = draft,
+            modelMarket = market,
             modelSnackbarQueue = Snackbar.initialQueue
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
@@ -105,21 +120,29 @@ mkModel = do
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
         $ currencyInfoCode quoteCur
+    let final' =
+          ModelData
+            { modelDataCurrenciesInfo = currenciesInfo,
+              modelDataBaseMoneyAmount = baseAmt,
+              modelDataBaseCurrencyInfo = baseCur,
+              modelDataQuoteMoneyAmount = quoteMoneyAmount quote,
+              modelDataQuoteCurrencyInfo = quoteCur,
+              modelDataUpdatedAt = ct
+            }
+    draft' <- newMVar final'
     pure
       Model
-        { modelMarket = market,
-          modelCurrenciesInfo = currenciesInfo,
-          modelBaseMoneyAmount = baseAmt,
-          modelBaseCurrencyInfo = baseCur,
-          modelQuoteMoneyAmount = quoteMoneyAmount quote,
-          modelQuoteCurrencyInfo = quoteCur,
+        { modelFinal = final',
+          modelDraft = draft',
+          modelMarket = market,
           modelSnackbarQueue = Snackbar.initialQueue
         }
 
 data Action
   = Noop
-  | SetModel Model
-  | forall a b. (Show a, Data a) => UserInput (Lens' Model b) (a -> IO b) a
+  | Debounce
+  | SetModel Action Model
+  | forall a b. (Show a, Data a) => UserInput (Lens' ModelData b) (a -> IO b) a
   | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
@@ -146,28 +169,50 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = Noop,
+          initialAction = Debounce,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel (SetModel st) _ = noEff st
+updateModel (SetModel action st) _ = st <# pure action
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
-updateModel (UserInput optic parser input) st = do
+updateModel Debounce st = do
+  st <# do
+    let ttl = 300 :: Integer
+    sleepMilliSeconds ttl
+    ct <- getCurrentTime
+    draft <- readMVar $ modelDraft st
+    let diff = abs . toRational . diffUTCTime ct $ modelDataUpdatedAt draft
+    --
+    -- TODO : UpdateModel instead of SetModel ??
+    --
+    pure
+      $ if modelFinal st /= draft && diff > ttl % 1000
+        then SetModel Debounce $ st & #modelFinal .~ draft
+        else Debounce
+updateModel (UserInput optic parser input) st =
   st <# do
     output <- liftIO . tryAny $ parser input
-    pure . SetModel $ case output of
-      Right x -> st & optic .~ x
+    case output of
+      Right x -> do
+        ct <- getCurrentTime
+        modifyMVar (modelDraft st) $ \prev ->
+          pure
+            ( prev & optic .~ x & #modelDataUpdatedAt .~ ct,
+              Noop
+            )
       Left e ->
         let msg =
               inspect e
                 & Snackbar.message
                 & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
                 & Snackbar.setOnActionIconClick SnackbarClosed
-         in st
+         in pure
+              . SetModel Noop
+              $ st
               & #modelSnackbarQueue
               %~ Snackbar.addMessage msg
 
@@ -210,10 +255,10 @@ mainWidget st =
     [ LayoutGrid.inner
         [ class_ "container"
         ]
-        [ amountWidget st "Base amount" #modelBaseMoneyAmount,
-          currencyWidget st "Base currency" #modelBaseCurrencyInfo,
-          amountWidget st "Quote amount" #modelQuoteMoneyAmount,
-          currencyWidget st "Quote currency" #modelQuoteCurrencyInfo,
+        [ amountWidget st "Base amount" #modelDataBaseMoneyAmount,
+          currencyWidget st "Base currency" #modelDataBaseCurrencyInfo,
+          amountWidget st "Quote amount" #modelDataQuoteMoneyAmount,
+          currencyWidget st "Quote currency" #modelDataQuoteCurrencyInfo,
           LayoutGrid.cell
             [ LayoutGrid.span12
             ]
@@ -249,12 +294,10 @@ mainWidget st =
                               ]
                               [ Miso.text
                                   . toMisoString
-                                  $ inspect @Text
-                                    ( modelBaseMoneyAmount st,
-                                      modelBaseCurrencyInfo st,
-                                      modelQuoteMoneyAmount st,
-                                      modelQuoteCurrencyInfo st
-                                    )
+                                  . inspect @Text
+                                  $ st
+                                  ^. #modelFinal
+                                  . #modelDataBaseMoneyAmount
                               ]
                           ]
                     ],
@@ -272,7 +315,7 @@ mainWidget st =
 amountWidget ::
   Model ->
   String ->
-  Lens' Model (Money Rational) ->
+  Lens' ModelData (Money Rational) ->
   View Action
 amountWidget st label optic =
   LayoutGrid.cell
@@ -282,15 +325,19 @@ amountWidget st label optic =
     . TextField.filled
     . TextField.setType (Just "number")
     . TextField.setLabel (Just label)
-    . TextField.setValue (Just . inspectRatio 8 . unMoney $ st ^. optic)
-    . TextField.setOnInput (UserInput optic $ fmap Money . parseRatio)
+    . TextField.setValue
+      ( Just . inspectRatio 8 . unMoney $ st ^. #modelFinal . optic
+      )
+    . TextField.setOnInput
+      ( UserInput optic $ fmap Money . parseRatio
+      )
     . TextField.setAttributes [class_ "fill"]
     $ TextField.config
 
 currencyWidget ::
   Model ->
   String ->
-  Lens' Model CurrencyInfo ->
+  Lens' ModelData CurrencyInfo ->
   View Action
 currencyWidget st label optic =
   LayoutGrid.cell
@@ -299,12 +346,19 @@ currencyWidget st label optic =
     . (: mempty)
     . Select.filled
       ( Select.setLabel (Just label)
-          . Select.setSelected (Just $ st ^. optic)
+          . Select.setSelected (Just $ st ^. #modelFinal . optic)
           . Select.setOnChange (UserInput optic pure)
           . Select.setAttributes [class_ "fill-inner"]
           $ Select.config
       )
-      (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
+      ( currencyInfoItem
+          . NonEmpty.head
+          $ st
+          ^. #modelFinal
+          . #modelDataCurrenciesInfo
+      )
     . fmap currencyInfoItem
     . NonEmpty.tail
-    $ modelCurrenciesInfo st
+    $ st
+    ^. #modelFinal
+    . #modelDataCurrenciesInfo

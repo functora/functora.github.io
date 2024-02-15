@@ -113,6 +113,7 @@ import Data.Generics.Product as X
 import Data.Generics.Sum as X
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
+import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))

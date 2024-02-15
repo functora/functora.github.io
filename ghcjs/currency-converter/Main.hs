@@ -264,11 +264,7 @@ mainWidget st =
                         [Card.button Button.config "Visit"]
                         [Card.icon IconButton.config "favorite"]
                 },
-          LayoutGrid.cell
-            [ LayoutGrid.span12
-            ]
-            . (: mempty)
-            . Snackbar.snackbar (Snackbar.config SnackbarClosed)
+          Snackbar.snackbar (Snackbar.config SnackbarClosed)
             $ modelSnackbarQueue st
         ]
     ]

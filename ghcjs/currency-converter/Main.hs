@@ -119,7 +119,7 @@ mkModel = do
 data Action
   = Noop
   | SetModel Model
-  | forall a b. UserInput (Traversal' Model b) (a -> IO b) a
+  | forall a b. UserInput (Lens' Model b) (a -> IO b) a
   | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
@@ -156,11 +156,11 @@ updateModel Noop st = noEff st
 updateModel (SetModel st) _ = noEff st
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
-updateModel (UserInput pointer parser input) st = do
+updateModel (UserInput optic parser input) st = do
   st <# do
     output <- liftIO . tryAny $ parser input
     pure . SetModel $ case output of
-      Right x -> st & pointer .~ x
+      Right x -> st & optic .~ x
       Left e ->
         let msg =
               inspect e
@@ -210,33 +210,10 @@ mainWidget st =
     [ LayoutGrid.inner
         [ class_ "container"
         ]
-        [ LayoutGrid.cell
-            [ LayoutGrid.span6Desktop
-            ]
-            . (: mempty)
-            . TextField.outlined
-            . TextField.setType (Just "number")
-            . TextField.setLabel (Just "Base amount")
-            . TextField.setOnInput
-              ( UserInput #modelBaseMoneyAmount
-                  $ fmap Money
-                  . parseRatio
-              )
-            $ TextField.setAttributes [class_ "fill"] TextField.config,
-          LayoutGrid.cell
-            [ LayoutGrid.span6Desktop
-            ]
-            . (: mempty)
-            . Select.outlined
-              ( Select.setLabel (Just "Base currency")
-                  . Select.setOnChange (UserInput #modelBaseCurrencyInfo pure)
-                  . Select.setSelected (Just $ modelBaseCurrencyInfo st)
-                  $ Select.setAttributes [class_ "fill"] Select.config
-              )
-              (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
-            . fmap currencyInfoItem
-            . NonEmpty.tail
-            $ modelCurrenciesInfo st,
+        [ amountWidget st "Base amount" #modelBaseMoneyAmount,
+          currencyWidget st "Base currency" #modelBaseCurrencyInfo,
+          amountWidget st "Quote amount" #modelQuoteMoneyAmount,
+          currencyWidget st "Quote currency" #modelQuoteCurrencyInfo,
           LayoutGrid.cell
             [ LayoutGrid.span12
             ]
@@ -287,7 +264,49 @@ mainWidget st =
                         [Card.button Button.config "Visit"]
                         [Card.icon IconButton.config "favorite"]
                 },
-          Snackbar.snackbar (Snackbar.config SnackbarClosed)
+          LayoutGrid.cell
+            [ LayoutGrid.span12
+            ]
+            . (: mempty)
+            . Snackbar.snackbar (Snackbar.config SnackbarClosed)
             $ modelSnackbarQueue st
         ]
     ]
+
+amountWidget ::
+  Model ->
+  String ->
+  Lens' Model (Money Rational) ->
+  View Action
+amountWidget st label optic =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop
+    ]
+    . (: mempty)
+    . TextField.outlined
+    . TextField.setType (Just "number")
+    . TextField.setLabel (Just label)
+    . TextField.setValue (Just . inspectRatio 8 . unMoney $ st ^. optic)
+    . TextField.setOnInput (UserInput optic $ fmap Money . parseRatio)
+    $ TextField.setAttributes [class_ "fill"] TextField.config
+
+currencyWidget ::
+  Model ->
+  String ->
+  Lens' Model CurrencyInfo ->
+  View Action
+currencyWidget st label optic =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop
+    ]
+    . (: mempty)
+    . Select.outlined
+      ( Select.setLabel (Just label)
+          . Select.setSelected (Just $ st ^. optic)
+          . Select.setOnChange (UserInput optic pure)
+          $ Select.setAttributes [class_ "fill"] Select.config
+      )
+      (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
+    . fmap currencyInfoItem
+    . NonEmpty.tail
+    $ modelCurrenciesInfo st

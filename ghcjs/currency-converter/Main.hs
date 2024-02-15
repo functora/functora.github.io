@@ -119,7 +119,7 @@ mkModel = do
 data Action
   = Noop
   | SetModel Model
-  | forall a b. UserInput (Lens' Model b) (a -> IO b) a
+  | forall a b. (Show a, Data a) => UserInput (Lens' Model b) (a -> IO b) a
   | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
@@ -279,12 +279,13 @@ amountWidget st label optic =
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
-    . TextField.outlined
+    . TextField.filled
     . TextField.setType (Just "number")
     . TextField.setLabel (Just label)
     . TextField.setValue (Just . inspectRatio 8 . unMoney $ st ^. optic)
     . TextField.setOnInput (UserInput optic $ fmap Money . parseRatio)
-    $ TextField.setAttributes [class_ "fill"] TextField.config
+    . TextField.setAttributes [class_ "fill"]
+    $ TextField.config
 
 currencyWidget ::
   Model ->
@@ -296,11 +297,12 @@ currencyWidget st label optic =
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
-    . Select.outlined
+    . Select.filled
       ( Select.setLabel (Just label)
           . Select.setSelected (Just $ st ^. optic)
           . Select.setOnChange (UserInput optic pure)
-          $ Select.setAttributes [class_ "fill"] Select.config
+          . Select.setAttributes [class_ "fill-inner"]
+          $ Select.config
       )
       (currencyInfoItem . NonEmpty.head $ modelCurrenciesInfo st)
     . fmap currencyInfoItem

@@ -10,8 +10,11 @@ body {
   justify-content: center;
 }
 
-.fill,
-.fill > div {
+.fill {
+  width: 100%;
+}
+
+.fill-inner > div {
   width: 100%;
   min-width: 100%;
 }

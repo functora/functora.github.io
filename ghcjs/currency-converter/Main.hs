@@ -13,8 +13,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import Functora.Money
-import Functora.Prelude
-import Functora.Rates
+import Functora.Prelude as Prelude
+import Functora.Rates hiding (Quote)
 import qualified Material.Button as Button
 import qualified Material.Card as Card
 import qualified Material.IconButton as IconButton
@@ -60,17 +60,45 @@ data Model = Model
   }
   deriving stock (Eq, Generic)
 
+data BaseOrQuote
+  = Base
+  | Quote
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+
+--
+-- TODO : bouncy data for amounts only, do not process every amount input!!!
+-- But currency and other should not be bouncy, and should be as fast as possible,
+-- maybe need to use some loading progress bar for the stuff as curriencies loading
+--
 data ModelData = ModelData
   { -- TODO : use timestamed data
-    modelDataCurrenciesInfo :: NonEmpty CurrencyInfo,
-    modelDataBaseMoneyAmount :: Money Rational,
-    modelDataBaseCurrencyInfo :: CurrencyInfo,
+    modelDataCurrencies :: NonEmpty CurrencyInfo,
+    modelDataBaseAmountInput :: Text,
+    modelDataBaseAmountOutput :: Money Rational,
+    modelDataBaseCurrency :: CurrencyInfo,
     -- TODO : use timestamed data
-    modelDataQuoteMoneyAmount :: Money Rational,
-    modelDataQuoteCurrencyInfo :: CurrencyInfo,
+    modelDataQuoteAmountInput :: Text,
+    modelDataQuoteAmountOutput :: Money Rational,
+    modelDataQuoteCurrency :: CurrencyInfo,
+    modelDataBaseOrQuote :: BaseOrQuote,
     modelDataUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+-- significantChange :: ModelData -> ModelData -> Bool
+-- significantChange lhs rhs =
+--   modelDataCurrencies lhs
+--     /= modelDataCurrencies rhs
+--     || modelDataBaseAmountOutput lhs
+--     /= modelDataBaseAmountOutput rhs
+--     || modelDataBaseCurrency lhs
+--     /= modelDataBaseCurrency rhs
+--     || modelDataQuoteAmountOutput lhs
+--     /= modelDataQuoteAmountOutput rhs
+--     || modelDataQuoteCurrency lhs
+--     /= modelDataQuoteCurrency rhs
+--     || modelDataBaseOrQuote lhs
+--     /= modelDataBaseOrQuote rhs
 
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
@@ -86,13 +114,17 @@ mkModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
+  let zero = Money 0 :: Money Rational
   let final =
         ModelData
-          { modelDataCurrenciesInfo = [btc, usd],
-            modelDataBaseMoneyAmount = Money 0,
-            modelDataBaseCurrencyInfo = btc,
-            modelDataQuoteMoneyAmount = Money 0,
-            modelDataQuoteCurrencyInfo = usd,
+          { modelDataCurrencies = [btc, usd],
+            modelDataBaseAmountInput = inspectMoneyAmount zero,
+            modelDataBaseAmountOutput = zero,
+            modelDataBaseCurrency = btc,
+            modelDataQuoteAmountInput = inspectMoneyAmount zero,
+            modelDataQuoteAmountOutput = zero,
+            modelDataQuoteCurrency = usd,
+            modelDataBaseOrQuote = Base,
             modelDataUpdatedAt = ct
           }
   draft <- newMVar final
@@ -120,13 +152,17 @@ mkModel = do
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
         $ currencyInfoCode quoteCur
+    let quoteAmt = quoteMoneyAmount quote
     let final' =
           ModelData
-            { modelDataCurrenciesInfo = currenciesInfo,
-              modelDataBaseMoneyAmount = baseAmt,
-              modelDataBaseCurrencyInfo = baseCur,
-              modelDataQuoteMoneyAmount = quoteMoneyAmount quote,
-              modelDataQuoteCurrencyInfo = quoteCur,
+            { modelDataCurrencies = currenciesInfo,
+              modelDataBaseAmountInput = inspectMoneyAmount baseAmt,
+              modelDataBaseAmountOutput = baseAmt,
+              modelDataBaseCurrency = baseCur,
+              modelDataQuoteAmountInput = inspectMoneyAmount quoteAmt,
+              modelDataQuoteAmountOutput = quoteAmt,
+              modelDataQuoteCurrency = quoteCur,
+              modelDataBaseOrQuote = Base,
               modelDataUpdatedAt = ct
             }
     draft' <- newMVar final'
@@ -142,7 +178,10 @@ data Action
   = Noop
   | Debounce
   | SetModel Action Model
-  | forall a b. (Show a, Data a) => UserInput (Lens' ModelData b) (a -> IO b) a
+  | --
+    -- TODO : BouncyInput and InstantInput!!! (Or just different inputs for amt cur)
+    --
+    forall a. (Show a, Data a) => UserInput BaseOrQuote (Lens' ModelData a) a
   | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
@@ -183,41 +222,112 @@ updateModel Debounce st = do
   st <# do
     let ttl = 300 :: Integer
     sleepMilliSeconds ttl
-    ct <- getCurrentTime
-    draft <- readMVar $ modelDraft st
-    let diff = abs . toRational . diffUTCTime ct $ modelDataUpdatedAt draft
-    --
-    -- TODO : UpdateModel instead of SetModel ??
-    --
-    pure
-      $ if modelFinal st /= draft && diff > ttl % 1000
-        then SetModel Debounce $ st & #modelFinal .~ draft
-        else Debounce
-updateModel (UserInput optic parser input) st =
-  st <# do
-    output <- liftIO . tryAny $ parser input
-    case output of
-      Right x -> do
-        ct <- getCurrentTime
-        modifyMVar (modelDraft st) $ \prev ->
+    modifyMVar (modelDraft st) $ \draft -> do
+      ct <- getCurrentTime
+      let diff = abs . toRational . diffUTCTime ct $ modelDataUpdatedAt draft
+      --
+      -- TODO : UpdateModel instead of SetModel ??
+      --
+      -- if significantChange (modelFinal st) draft && diff > ttl % 1000
+      if diff > ttl % 1000
+        then do
+          putStrLn @Text "Debounce"
+          output <- liftIO . tryAny . evalModel draft $ modelMarket st
+          case output of
+            Left e -> do
+              let msg =
+                    inspect e
+                      & Snackbar.message
+                      & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
+                      & Snackbar.setOnActionIconClick SnackbarClosed
+              pure
+                ( draft,
+                  SetModel Debounce
+                    $ st
+                    & #modelSnackbarQueue
+                    %~ Snackbar.addMessage msg
+                )
+            Right final ->
+              pure
+                ( final,
+                  SetModel Debounce $ st & #modelFinal .~ final
+                )
+        else
           pure
-            ( prev & optic .~ x & #modelDataUpdatedAt .~ ct,
-              Noop
+            ( draft,
+              Debounce
             )
-      Left e ->
-        let msg =
-              inspect e
-                & Snackbar.message
-                & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-                & Snackbar.setOnActionIconClick SnackbarClosed
-         in pure
-              . SetModel Noop
-              $ st
-              & #modelSnackbarQueue
-              %~ Snackbar.addMessage msg
+updateModel (UserInput boq optic input) st =
+  st <# do
+    ct <- getCurrentTime
+    modifyMVar (modelDraft st) $ \prev ->
+      pure
+        ( prev
+            & optic
+            .~ input
+            & #modelDataBaseOrQuote
+            .~ boq
+            & #modelDataUpdatedAt
+            .~ ct,
+          Noop
+        )
+
+evalModel ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  ModelData ->
+  MVar Market ->
+  m ModelData
+evalModel draft market = do
+  let ( baseAmtInput,
+        baseAmtOutput,
+        baseCurrency,
+        quoteAmtInput,
+        quoteAmtOutput,
+        quoteCurrency
+        ) =
+          case modelDataBaseOrQuote draft of
+            Base ->
+              ( #modelDataBaseAmountInput,
+                #modelDataBaseAmountOutput,
+                #modelDataBaseCurrency,
+                #modelDataQuoteAmountInput,
+                #modelDataQuoteAmountOutput,
+                #modelDataQuoteCurrency
+              )
+            Quote ->
+              ( #modelDataQuoteAmountInput,
+                #modelDataQuoteAmountOutput,
+                #modelDataQuoteCurrency,
+                #modelDataBaseAmountInput,
+                #modelDataBaseAmountOutput,
+                #modelDataBaseCurrency
+              )
+  baseAmtResult <- tryAny . fmap Money . parseRatio $ draft ^. baseAmtInput
+  case baseAmtResult of
+    Left {} -> pure draft
+    Right baseAmt ->
+      withMarket market $ do
+        let funds =
+              Funds
+                { fundsMoneyAmount = baseAmt,
+                  fundsCurrencyCode = draft ^. baseCurrency . #currencyInfoCode
+                }
+        quote <-
+          getQuote funds $ draft ^. quoteCurrency . #currencyInfoCode
+        let quoteAmt = quoteMoneyAmount quote
+        pure
+          $ draft
+          & baseAmtOutput
+          .~ baseAmt
+          & quoteAmtInput
+          .~ inspectMoneyAmount quoteAmt
+          & quoteAmtOutput
+          .~ quoteAmt
 
 viewModel :: Model -> View Action
-viewModel x =
+viewModel st =
   div_
     mempty
     [ link_
@@ -230,7 +340,7 @@ viewModel x =
           href_ "https://fonts.googleapis.com/icon?family=Material+Icons"
         ],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
-      mainWidget x,
+      mainWidget st,
       script_ [src_ "static/clipboard.min.js"] mempty,
       script_
         [ src_
@@ -255,10 +365,10 @@ mainWidget st =
     [ LayoutGrid.inner
         [ class_ "container"
         ]
-        [ amountWidget st "Base amount" #modelDataBaseMoneyAmount,
-          currencyWidget st "Base currency" #modelDataBaseCurrencyInfo,
-          amountWidget st "Quote amount" #modelDataQuoteMoneyAmount,
-          currencyWidget st "Quote currency" #modelDataQuoteCurrencyInfo,
+        [ amountWidget st Base #modelDataBaseAmountInput,
+          currencyWidget st Base #modelDataBaseCurrency,
+          amountWidget st Quote #modelDataQuoteAmountInput,
+          currencyWidget st Quote #modelDataQuoteCurrency,
           LayoutGrid.cell
             [ LayoutGrid.span12
             ]
@@ -297,7 +407,20 @@ mainWidget st =
                                   . inspect @Text
                                   $ st
                                   ^. #modelFinal
-                                  . #modelDataBaseMoneyAmount
+                                  . #modelDataBaseAmountOutput
+                              ],
+                            p_
+                              [ Typography.body2,
+                                Theme.textSecondaryOnBackground,
+                                style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
+                                style_ $ Map.singleton "margin" "0"
+                              ]
+                              [ Miso.text
+                                  . toMisoString
+                                  . inspect @Text
+                                  $ st
+                                  ^. #modelFinal
+                                  . #modelDataBaseAmountInput
                               ]
                           ]
                     ],
@@ -314,40 +437,36 @@ mainWidget st =
 
 amountWidget ::
   Model ->
-  String ->
-  Lens' ModelData (Money Rational) ->
+  BaseOrQuote ->
+  Lens' ModelData Text ->
   View Action
-amountWidget st label optic =
+amountWidget st boq optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
     . TextField.filled
     . TextField.setType (Just "number")
-    . TextField.setLabel (Just label)
-    . TextField.setValue
-      ( Just . inspectRatio 8 . unMoney $ st ^. #modelFinal . optic
-      )
-    . TextField.setOnInput
-      ( UserInput optic $ fmap Money . parseRatio
-      )
+    . TextField.setLabel (Just $ inspect boq <> " amount")
+    . TextField.setValue (Just . from @Text @String $ st ^. #modelFinal . optic)
+    . TextField.setOnInput (UserInput boq optic . from @String @Text)
     . TextField.setAttributes [class_ "fill"]
     $ TextField.config
 
 currencyWidget ::
   Model ->
-  String ->
+  BaseOrQuote ->
   Lens' ModelData CurrencyInfo ->
   View Action
-currencyWidget st label optic =
+currencyWidget st boq optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
     . Select.filled
-      ( Select.setLabel (Just label)
+      ( Select.setLabel (Just $ inspect boq <> " currency")
           . Select.setSelected (Just $ st ^. #modelFinal . optic)
-          . Select.setOnChange (UserInput optic pure)
+          . Select.setOnChange (UserInput boq optic)
           . Select.setAttributes [class_ "fill-inner"]
           $ Select.config
       )
@@ -355,10 +474,13 @@ currencyWidget st label optic =
           . NonEmpty.head
           $ st
           ^. #modelFinal
-          . #modelDataCurrenciesInfo
+          . #modelDataCurrencies
       )
     . fmap currencyInfoItem
     . NonEmpty.tail
     $ st
     ^. #modelFinal
-    . #modelDataCurrenciesInfo
+    . #modelDataCurrencies
+
+inspectMoneyAmount :: (From String a) => Money Rational -> a
+inspectMoneyAmount = inspectRatio 8 . unMoney

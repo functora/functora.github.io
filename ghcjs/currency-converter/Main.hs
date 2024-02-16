@@ -65,6 +65,13 @@ data BaseOrQuote
   | Quote
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
+data ModelMoney = ModelMoney
+  { modelMoneyAmountInput :: Text,
+    modelMoneyAmountOutput :: Money Rational,
+    modelMoneyCurrencyInfo :: CurrencyInfo
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
 --
 -- TODO : bouncy data for amounts only, do not process every amount input!!!
 -- But currency and other should not be bouncy, and should be as fast as possible,
@@ -73,13 +80,9 @@ data BaseOrQuote
 data ModelData = ModelData
   { -- TODO : use timestamed data
     modelDataCurrencies :: NonEmpty CurrencyInfo,
-    modelDataBaseAmountInput :: Text,
-    modelDataBaseAmountOutput :: Money Rational,
-    modelDataBaseCurrency :: CurrencyInfo,
     -- TODO : use timestamed data
-    modelDataQuoteAmountInput :: Text,
-    modelDataQuoteAmountOutput :: Money Rational,
-    modelDataQuoteCurrency :: CurrencyInfo,
+    modelDataBaseMoney :: ModelMoney,
+    modelDataQuoteMoney :: ModelMoney,
     modelDataBaseOrQuote :: BaseOrQuote,
     modelDataUpdatedAt :: UTCTime
   }
@@ -118,12 +121,18 @@ mkModel = do
   let final =
         ModelData
           { modelDataCurrencies = [btc, usd],
-            modelDataBaseAmountInput = inspectMoneyAmount zero,
-            modelDataBaseAmountOutput = zero,
-            modelDataBaseCurrency = btc,
-            modelDataQuoteAmountInput = inspectMoneyAmount zero,
-            modelDataQuoteAmountOutput = zero,
-            modelDataQuoteCurrency = usd,
+            modelDataBaseMoney =
+              ModelMoney
+                { modelMoneyAmountInput = inspectMoneyAmount zero,
+                  modelMoneyAmountOutput = zero,
+                  modelMoneyCurrencyInfo = btc
+                },
+            modelDataQuoteMoney =
+              ModelMoney
+                { modelMoneyAmountInput = inspectMoneyAmount zero,
+                  modelMoneyAmountOutput = zero,
+                  modelMoneyCurrencyInfo = usd
+                },
             modelDataBaseOrQuote = Base,
             modelDataUpdatedAt = ct
           }
@@ -156,12 +165,18 @@ mkModel = do
     let final' =
           ModelData
             { modelDataCurrencies = currenciesInfo,
-              modelDataBaseAmountInput = inspectMoneyAmount baseAmt,
-              modelDataBaseAmountOutput = baseAmt,
-              modelDataBaseCurrency = baseCur,
-              modelDataQuoteAmountInput = inspectMoneyAmount quoteAmt,
-              modelDataQuoteAmountOutput = quoteAmt,
-              modelDataQuoteCurrency = quoteCur,
+              modelDataBaseMoney =
+                ModelMoney
+                  { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
+                    modelMoneyAmountOutput = baseAmt,
+                    modelMoneyCurrencyInfo = baseCur
+                  },
+              modelDataQuoteMoney =
+                ModelMoney
+                  { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
+                    modelMoneyAmountOutput = quoteAmt,
+                    modelMoneyCurrencyInfo = quoteCur
+                  },
               modelDataBaseOrQuote = Base,
               modelDataUpdatedAt = ct
             }
@@ -280,31 +295,14 @@ evalModel ::
   MVar Market ->
   m ModelData
 evalModel draft market = do
-  let ( baseAmtInput,
-        baseAmtOutput,
-        baseCurrency,
-        quoteAmtInput,
-        quoteAmtOutput,
-        quoteCurrency
-        ) =
-          case modelDataBaseOrQuote draft of
-            Base ->
-              ( #modelDataBaseAmountInput,
-                #modelDataBaseAmountOutput,
-                #modelDataBaseCurrency,
-                #modelDataQuoteAmountInput,
-                #modelDataQuoteAmountOutput,
-                #modelDataQuoteCurrency
-              )
-            Quote ->
-              ( #modelDataQuoteAmountInput,
-                #modelDataQuoteAmountOutput,
-                #modelDataQuoteCurrency,
-                #modelDataBaseAmountInput,
-                #modelDataBaseAmountOutput,
-                #modelDataBaseCurrency
-              )
-  baseAmtResult <- tryAny . fmap Money . parseRatio $ draft ^. baseAmtInput
+  let boq = modelDataBaseOrQuote draft
+  baseAmtResult <-
+    tryAny
+      . fmap Money
+      . parseRatio
+      $ draft
+      ^. getBaseMoneyOptic boq
+      . #modelMoneyAmountInput
   case baseAmtResult of
     Left {} -> pure draft
     Right baseAmt ->
@@ -312,19 +310,40 @@ evalModel draft market = do
         let funds =
               Funds
                 { fundsMoneyAmount = baseAmt,
-                  fundsCurrencyCode = draft ^. baseCurrency . #currencyInfoCode
+                  fundsCurrencyCode =
+                    draft
+                      ^. getBaseMoneyOptic boq
+                      . #modelMoneyCurrencyInfo
+                      . #currencyInfoCode
                 }
         quote <-
-          getQuote funds $ draft ^. quoteCurrency . #currencyInfoCode
+          getQuote funds
+            $ draft
+            ^. getQuoteMoneyOptic boq
+            . #modelMoneyCurrencyInfo
+            . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         pure
           $ draft
-          & baseAmtOutput
+          & getBaseMoneyOptic boq
+          . #modelMoneyAmountOutput
           .~ baseAmt
-          & quoteAmtInput
+          & getQuoteMoneyOptic boq
+          . #modelMoneyAmountInput
           .~ inspectMoneyAmount quoteAmt
-          & quoteAmtOutput
+          & getQuoteMoneyOptic boq
+          . #modelMoneyAmountOutput
           .~ quoteAmt
+
+getBaseMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getBaseMoneyOptic = \case
+  Base -> #modelDataBaseMoney
+  Quote -> #modelDataQuoteMoney
+
+getQuoteMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getQuoteMoneyOptic = \case
+  Base -> #modelDataQuoteMoney
+  Quote -> #modelDataBaseMoney
 
 viewModel :: Model -> View Action
 viewModel st =
@@ -365,10 +384,10 @@ mainWidget st =
     [ LayoutGrid.inner
         [ class_ "container"
         ]
-        [ amountWidget st Base #modelDataBaseAmountInput,
-          currencyWidget st Base #modelDataBaseCurrency,
-          amountWidget st Quote #modelDataQuoteAmountInput,
-          currencyWidget st Quote #modelDataQuoteCurrency,
+        [ amountWidget st Base #modelDataBaseMoney,
+          currencyWidget st Base #modelDataBaseMoney,
+          amountWidget st Quote #modelDataQuoteMoney,
+          currencyWidget st Quote #modelDataQuoteMoney,
           LayoutGrid.cell
             [ LayoutGrid.span12
             ]
@@ -407,7 +426,8 @@ mainWidget st =
                                   . inspect @Text
                                   $ st
                                   ^. #modelFinal
-                                  . #modelDataBaseAmountOutput
+                                  . #modelDataBaseMoney
+                                  . #modelMoneyAmountInput
                               ],
                             p_
                               [ Typography.body2,
@@ -420,7 +440,8 @@ mainWidget st =
                                   . inspect @Text
                                   $ st
                                   ^. #modelFinal
-                                  . #modelDataBaseAmountInput
+                                  . #modelDataBaseMoney
+                                  . #modelMoneyAmountOutput
                               ]
                           ]
                     ],
@@ -438,7 +459,7 @@ mainWidget st =
 amountWidget ::
   Model ->
   BaseOrQuote ->
-  Lens' ModelData Text ->
+  Lens' ModelData ModelMoney ->
   View Action
 amountWidget st boq optic =
   LayoutGrid.cell
@@ -448,15 +469,24 @@ amountWidget st boq optic =
     . TextField.filled
     . TextField.setType (Just "number")
     . TextField.setLabel (Just $ inspect boq <> " amount")
-    . TextField.setValue (Just . from @Text @String $ st ^. #modelFinal . optic)
-    . TextField.setOnInput (UserInput boq optic . from @String @Text)
+    . TextField.setValue
+      ( Just
+          . from @Text @String
+          $ st
+          ^. #modelFinal
+          . optic
+          . #modelMoneyAmountInput
+      )
+    . TextField.setOnInput
+      ( UserInput boq (optic . #modelMoneyAmountInput) . from @String @Text
+      )
     . TextField.setAttributes [class_ "fill"]
     $ TextField.config
 
 currencyWidget ::
   Model ->
   BaseOrQuote ->
-  Lens' ModelData CurrencyInfo ->
+  Lens' ModelData ModelMoney ->
   View Action
 currencyWidget st boq optic =
   LayoutGrid.cell
@@ -465,8 +495,16 @@ currencyWidget st boq optic =
     . (: mempty)
     . Select.filled
       ( Select.setLabel (Just $ inspect boq <> " currency")
-          . Select.setSelected (Just $ st ^. #modelFinal . optic)
-          . Select.setOnChange (UserInput boq optic)
+          . Select.setSelected
+            ( Just
+                $ st
+                ^. #modelFinal
+                . optic
+                . #modelMoneyCurrencyInfo
+            )
+          . Select.setOnChange
+            ( UserInput boq $ optic . #modelMoneyCurrencyInfo
+            )
           . Select.setAttributes [class_ "fill-inner"]
           $ Select.config
       )

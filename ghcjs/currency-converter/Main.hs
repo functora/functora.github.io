@@ -297,12 +297,7 @@ evalModel ::
 evalModel draft market = do
   let boq = modelDataBaseOrQuote draft
   baseAmtResult <-
-    tryAny
-      . fmap Money
-      . parseRatio
-      $ draft
-      ^. getBaseMoneyOptic boq
-      . #modelMoneyAmountInput
+    tryAny . parseMoney $ draft ^. getBaseMoneyOptic boq . #modelMoneyAmountInput
   case baseAmtResult of
     Left {} -> pure draft
     Right baseAmt ->
@@ -466,9 +461,9 @@ amountWidget st boq optic =
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
-    . TextField.filled
+    . TextField.outlined
     . TextField.setType (Just "number")
-    . TextField.setLabel (Just $ inspect boq <> " amount")
+    . TextField.setValid valid
     . TextField.setValue
       ( Just
           . from @Text @String
@@ -480,8 +475,23 @@ amountWidget st boq optic =
     . TextField.setOnInput
       ( UserInput boq (optic . #modelMoneyAmountInput) . from @String @Text
       )
+    . TextField.setPlaceholder
+      ( Just
+          . inspectCurrencyInfo
+          $ st
+          ^. #modelFinal
+          . optic
+          . #modelMoneyCurrencyInfo
+      )
+    . TextField.setRequired True
     . TextField.setAttributes [class_ "fill"]
     $ TextField.config
+  where
+    input = st ^. #modelFinal . optic . #modelMoneyAmountInput
+    output = st ^. #modelFinal . optic . #modelMoneyAmountOutput
+    valid =
+      (parseMoney input == Just output)
+        || (input == inspectMoneyAmount output)
 
 currencyWidget ::
   Model ->
@@ -494,14 +504,13 @@ currencyWidget st boq optic =
     ]
     . (: mempty)
     . Select.filled
-      ( Select.setLabel (Just $ inspect boq <> " currency")
-          . Select.setSelected
-            ( Just
-                $ st
-                ^. #modelFinal
-                . optic
-                . #modelMoneyCurrencyInfo
-            )
+      ( Select.setSelected
+          ( Just
+              $ st
+              ^. #modelFinal
+              . optic
+              . #modelMoneyCurrencyInfo
+          )
           . Select.setOnChange
             ( UserInput boq $ optic . #modelMoneyCurrencyInfo
             )

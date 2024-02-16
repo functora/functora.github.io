@@ -1,6 +1,7 @@
 module Functora.Money
   ( module X,
     unMoney,
+    parseMoney,
     Funds (..),
     unJsonRational,
     unJsonMoney,
@@ -21,6 +22,21 @@ import qualified Language.Haskell.TH.Syntax as TH
 
 unMoney :: Money a -> a
 unMoney (Money x) = x
+
+parseMoney ::
+  forall str int m.
+  ( From str Text,
+    Integral int,
+    Show str,
+    Show int,
+    Data str,
+    Data int,
+    MonadThrow m
+  ) =>
+  str ->
+  m (Money (Ratio int))
+parseMoney =
+  fmap Money . parseRatio
 
 data Funds = Funds
   { fundsMoneyAmount :: Money Rational,

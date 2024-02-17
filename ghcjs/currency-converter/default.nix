@@ -113,10 +113,10 @@ in
       text = ''
         (
           ${app-release-latest}/bin/app-release-latest
-          rm -rf ${repo}/../../pub/functora-hakyll/currency-converter
-          mkdir -p ${repo}/../../pub/functora-hakyll/currency-converter
+          rm -rf ${repo}/../../pub/functora-hakyll/apps/currency-converter
+          mkdir -p ${repo}/../../pub/functora-hakyll/apps/currency-converter
           ${safeCopy} ${repo}/dist/* \
-            ${repo}/../../pub/functora-hakyll/currency-converter
+            ${repo}/../../pub/functora-hakyll/apps/currency-converter
         )
       '';
     };

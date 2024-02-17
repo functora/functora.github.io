@@ -7,6 +7,9 @@ import System.FilePath
 
 main :: IO ()
 main = withUtf8 . hakyllWith cfg $ do
+  match "apps/**" $ do
+    route idRoute
+    compile copyFileCompiler
   match "css/*" $ do
     route idRoute
     compile compressCssCompiler

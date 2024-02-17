@@ -20,6 +20,7 @@ in
         app-release-stable
         app-release-readme
         app-release-android
+        app-publish
         pkgs.haskell.packages.ghc865.cabal-install
       ]
       ++ prev.buildInputs

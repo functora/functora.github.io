@@ -108,6 +108,18 @@ in
         cp ./readme.html $out/readme.html
       '';
     };
+    app-publish = functora-pkgs.writeShellApplication rec {
+      name = "app-publish";
+      text = ''
+        (
+          ${app-release-latest}/bin/app-release-latest
+          rm -rf ${repo}/../../pub/functora-hakyll/currency-converter
+          mkdir -p ${repo}/../../pub/functora-hakyll/currency-converter
+          ${safeCopy} ${repo}/dist/* \
+            ${repo}/../../pub/functora-hakyll/currency-converter
+        )
+      '';
+    };
     #
     # NOTE : broken atm https://github.com/NixOS/nixpkgs/issues/187853
     #

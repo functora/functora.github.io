@@ -16,15 +16,11 @@ import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates hiding (Quote)
 import qualified Material.Button as Button
--- import qualified Material.Card as Card
--- import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
--- import qualified Material.Theme as Theme
--- import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
@@ -431,73 +427,10 @@ mainWidget st =
         ]
         [ amountWidget st Base #modelDataBaseMoney,
           currencyWidget st Base #modelDataBaseMoney,
-          swapAmountsWidget,
-          swapCurrenciesWidget,
           amountWidget st Quote #modelDataQuoteMoney,
           currencyWidget st Quote #modelDataQuoteMoney,
-          -- LayoutGrid.cell
-          --   [ LayoutGrid.span12
-          --   ]
-          --   . (: mempty)
-          --   $ Card.card
-          --     ( Card.setAttributes [class_ "fill"] Card.config
-          --     )
-          --     Card.Content
-          --       { Card.blocks =
-          --           [ Card.Block
-          --               $ div_
-          --                 [style_ $ Map.singleton "padding" "1rem"]
-          --                 [ h2_
-          --                     [ Typography.headline6,
-          --                       style_ $ Map.singleton "margin" "0"
-          --                     ]
-          --                     [Miso.text "Title"],
-          --                   h3_
-          --                     [ Typography.subtitle2,
-          --                       Theme.textSecondaryOnBackground,
-          --                       style_ $ Map.singleton "margin" "0"
-          --                     ]
-          --                     [Miso.text "Subtitle"]
-          --                 ],
-          --             Card.Block
-          --               $ div_
-          --                 []
-          --                 [ p_
-          --                     [ Typography.body2,
-          --                       Theme.textSecondaryOnBackground,
-          --                       style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
-          --                       style_ $ Map.singleton "margin" "0"
-          --                     ]
-          --                     [ Miso.text
-          --                         . toMisoString
-          --                         . inspect @Text
-          --                         $ st
-          --                         ^. #modelFinal
-          --                         . #modelDataBaseMoney
-          --                         . #modelMoneyAmountInput
-          --                     ],
-          --                   p_
-          --                     [ Typography.body2,
-          --                       Theme.textSecondaryOnBackground,
-          --                       style_ $ Map.singleton "padding" "0 1rem 0.5rem 1rem",
-          --                       style_ $ Map.singleton "margin" "0"
-          --                     ]
-          --                     [ Miso.text
-          --                         . toMisoString
-          --                         . inspect @Text
-          --                         $ st
-          --                         ^. #modelFinal
-          --                         . #modelDataBaseMoney
-          --                         . #modelMoneyAmountOutput
-          --                     ]
-          --                 ]
-          --           ],
-          --         Card.actions =
-          --           Just
-          --             $ Card.cardActions
-          --               [Card.button Button.config "Visit"]
-          --               [Card.icon IconButton.config "favorite"]
-          --       },
+          swapAmountsWidget,
+          swapCurrenciesWidget,
           Snackbar.snackbar (Snackbar.config SnackbarClosed)
             $ modelSnackbarQueue st
         ]

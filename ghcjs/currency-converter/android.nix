@@ -34,10 +34,10 @@ with (import ./default.nix); let
         ${app-release-latest}/bin/app-release-latest
         ${pkgs.nodejs}/bin/npm i
         ${pkgs.nodejs}/bin/npx cap add android || true
+        ${pkgs.nodejs}/bin/npx cap sync
         cp ${repo}/static/android-chrome-512x512.png ${repo}/static/logo.png
         ${pkgs.nodejs}/bin/npx @capacitor/assets generate \
           --android --assetPath "${repo}/static"
-        ${pkgs.nodejs}/bin/npx cap sync
         cd ./android
         ./gradlew assembleRelease
         ${app-keygen-android}/bin/app-keygen-android

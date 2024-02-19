@@ -16,11 +16,15 @@ import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates hiding (Quote)
 import qualified Material.Button as Button
+import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
+import qualified Material.List as List
+import qualified Material.List.Item as ListItem
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
+import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
@@ -64,7 +68,9 @@ data BaseOrQuote
 data ModelMoney = ModelMoney
   { modelMoneyAmountInput :: Text,
     modelMoneyAmountOutput :: Money Rational,
-    modelMoneyCurrencyInfo :: CurrencyInfo
+    modelMoneyCurrencyInfo :: CurrencyInfo,
+    modelMoneyCurrencyOpen :: Bool,
+    modelMoneyCurrencySearch :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -121,13 +127,17 @@ mkModel = do
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
-                  modelMoneyCurrencyInfo = btc
+                  modelMoneyCurrencyInfo = btc,
+                  modelMoneyCurrencyOpen = False,
+                  modelMoneyCurrencySearch = mempty
                 },
             modelDataQuoteMoney =
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
-                  modelMoneyCurrencyInfo = usd
+                  modelMoneyCurrencyInfo = usd,
+                  modelMoneyCurrencyOpen = False,
+                  modelMoneyCurrencySearch = mempty
                 },
             modelDataBaseOrQuote = Base,
             modelDataUpdatedAt = ct
@@ -165,13 +175,17 @@ mkModel = do
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput = baseAmt,
-                    modelMoneyCurrencyInfo = baseCur
+                    modelMoneyCurrencyInfo = baseCur,
+                    modelMoneyCurrencyOpen = False,
+                    modelMoneyCurrencySearch = mempty
                   },
               modelDataQuoteMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput = quoteAmt,
-                    modelMoneyCurrencyInfo = quoteCur
+                    modelMoneyCurrencyInfo = quoteCur,
+                    modelMoneyCurrencyOpen = False,
+                    modelMoneyCurrencySearch = mempty
                   },
               modelDataBaseOrQuote = Base,
               modelDataUpdatedAt = ct
@@ -191,6 +205,7 @@ data Action
   | SwapAmounts
   | SwapCurrencies
   | SetModel Action Model
+  | forall a. UpdateModel (Lens' ModelData a) a
   | --
     -- TODO : BouncyInput and InstantInput!!! (Or just different inputs for amt cur)
     --
@@ -231,6 +246,18 @@ updateModel Noop st = noEff st
 updateModel (SetModel action st) _ = st <# pure action
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
+updateModel (UpdateModel optic input) st =
+  st <# do
+    ct <- getCurrentTime
+    modifyMVar (modelDraft st) $ \prev ->
+      pure
+        ( prev
+            & optic
+            .~ input
+            & #modelDataUpdatedAt
+            .~ ct,
+          Noop
+        )
 updateModel Debounce st = do
   st <# do
     let ttl = 300 :: Integer
@@ -376,6 +403,11 @@ evalModel draft market = do
           . #modelMoneyAmountOutput
           .~ quoteAmt
 
+getMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getMoneyOptic = \case
+  Base -> #modelDataBaseMoney
+  Quote -> #modelDataQuoteMoney
+
 getBaseMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
 getBaseMoneyOptic = \case
   Base -> #modelDataBaseMoney
@@ -426,7 +458,8 @@ mainWidget st =
         [ class_ "container"
         ]
         [ amountWidget st Base #modelDataBaseMoney,
-          currencyWidget st Base #modelDataBaseMoney,
+          -- currencyWidget st Base #modelDataBaseMoney,
+          currencyDialogWidget st Base,
           amountWidget st Quote #modelDataQuoteMoney,
           currencyWidget st Quote #modelDataQuoteMoney,
           swapAmountsWidget,
@@ -514,15 +547,119 @@ currencyWidget st boq optic =
     ^. #modelFinal
     . #modelDataCurrencies
 
+currencyDialogWidget ::
+  Model ->
+  BaseOrQuote ->
+  View Action
+currencyDialogWidget st boq =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop
+    ]
+    [ Button.raised
+        ( Button.setOnClick opened
+            . Button.setAttributes
+              [ Theme.secondaryBg,
+                class_ "fill"
+              ]
+            $ Button.config
+        )
+        . inspectCurrencyInfo
+        $ st
+        ^. #modelFinal
+        . getMoneyOptic boq
+        . #modelMoneyCurrencyInfo,
+      Dialog.dialog
+        ( Dialog.config
+            & Dialog.setOnClose closed
+            & Dialog.setOpen
+              ( st
+                  ^. #modelFinal
+                  . getMoneyOptic boq
+                  . #modelMoneyCurrencyOpen
+              )
+        )
+        ( Dialog.dialogContent
+            Nothing
+            [ currencyListWidget st boq
+            ]
+            [ TextField.outlined
+                . TextField.setType (Just "text")
+                . TextField.setValue
+                  ( Just
+                      . from @Text @String
+                      $ st
+                      ^. #modelFinal
+                      . getMoneyOptic boq
+                      . #modelMoneyCurrencySearch
+                  )
+                . TextField.setOnInput
+                  ( UserInput boq (getMoneyOptic boq . #modelMoneyCurrencySearch)
+                      . from @String @Text
+                  )
+                . TextField.setPlaceholder
+                  ( Just
+                      . inspectCurrencyInfo
+                      $ st
+                      ^. #modelFinal
+                      . getMoneyOptic boq
+                      . #modelMoneyCurrencyInfo
+                  )
+                . TextField.setAttributes [class_ "fill"]
+                $ TextField.config,
+              Button.text (Button.setOnClick closed $ Button.config) "Cancel"
+            ]
+        )
+    ]
+  where
+    opened = UpdateModel (getMoneyOptic boq . #modelMoneyCurrencyOpen) True
+    closed = UpdateModel (getMoneyOptic boq . #modelMoneyCurrencyOpen) False
+
+currencyListWidget :: Model -> BaseOrQuote -> View Action
+currencyListWidget st boq =
+  List.list
+    List.config
+    ( currencyItemWidget current
+        . NonEmpty.head
+        $ st
+        ^. #modelFinal
+        . #modelDataCurrencies
+    )
+    . fmap (currencyItemWidget current)
+    . Prelude.filter (\x -> search `isInfixOf` inspectCurrencyInfo x)
+    . NonEmpty.tail
+    $ st
+    ^. #modelFinal
+    . #modelDataCurrencies
+  where
+    current = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencyInfo
+    search = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencySearch
+
+currencyItemWidget :: CurrencyInfo -> CurrencyInfo -> ListItem.ListItem Action
+currencyItemWidget current item =
+  ListItem.listItem
+    ( ListItem.config
+        & ListItem.setSelected
+          ( if current == item
+              then Just ListItem.activated
+              else Nothing
+          )
+        & ListItem.setOnClick Noop
+    )
+    [ Miso.text $ inspectCurrencyInfo item
+    ]
+
 swapAmountsWidget :: View Action
 swapAmountsWidget =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
-    $ Button.text
+    $ Button.raised
       ( Button.setOnClick SwapAmounts
-          . Button.setAttributes [class_ "fill"]
+          . Button.setAttributes
+            [ Theme.secondaryBg,
+              class_ "fill"
+            ]
           $ Button.config
       )
       "Swap amounts"
@@ -533,9 +670,12 @@ swapCurrenciesWidget =
     [ LayoutGrid.span6Desktop
     ]
     . (: mempty)
-    $ Button.text
+    $ Button.raised
       ( Button.setOnClick SwapCurrencies
-          . Button.setAttributes [class_ "fill"]
+          . Button.setAttributes
+            [ Theme.secondaryBg,
+              class_ "fill"
+            ]
           $ Button.config
       )
       "Swap currencies"

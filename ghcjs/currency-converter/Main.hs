@@ -20,10 +20,9 @@ import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
-import qualified Material.Select as Select
-import qualified Material.Select.Item as SelectItem
 import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
+import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
@@ -204,7 +203,7 @@ data Action
   | SwapAmounts
   | SwapCurrencies
   | SetModel Action Model
-  | forall a. UpdateModel (Lens' ModelData a) a
+  | UpdateModelData (ModelData -> ModelData)
   | --
     -- TODO : BouncyInput and InstantInput!!! (Or just different inputs for amt cur)
     --
@@ -245,16 +244,12 @@ updateModel Noop st = noEff st
 updateModel (SetModel action st) _ = st <# pure action
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
-updateModel (UpdateModel optic input) st =
+updateModel (UpdateModelData updater) st =
   st <# do
     ct <- getCurrentTime
     modifyMVar (modelDraft st) $ \prev ->
       pure
-        ( prev
-            & optic
-            .~ input
-            & #modelDataUpdatedAt
-            .~ ct,
+        ( updater prev & #modelDataUpdatedAt .~ ct,
           Noop
         )
 updateModel Debounce st = do
@@ -265,7 +260,7 @@ updateModel Debounce st = do
       ct <- getCurrentTime
       let diff = abs . toRational . diffUTCTime ct $ modelDataUpdatedAt draft
       --
-      -- TODO : UpdateModel instead of SetModel ??
+      -- TODO : UpdateModelData instead of SetModel ??
       --
       -- if significantChange (modelFinal st) draft && diff > ttl % 1000
       if diff > ttl % 1000
@@ -442,12 +437,6 @@ viewModel st =
       script_ [src_ "static/app.js", defer_ "defer"] mempty
     ]
 
-currencyInfoItem :: CurrencyInfo -> SelectItem.SelectItem CurrencyInfo Action
-currencyInfoItem cur =
-  SelectItem.selectItem
-    (SelectItem.config $ cur)
-    [Miso.text . toMisoString $ inspectCurrencyInfo @Text cur]
-
 mainWidget :: Model -> View Action
 mainWidget st =
   LayoutGrid.layoutGrid
@@ -457,10 +446,9 @@ mainWidget st =
         [ class_ "container"
         ]
         [ amountWidget st Base #modelDataBaseMoney,
-          -- currencyWidget st Base #modelDataBaseMoney,
           currencyDialogWidget st Base,
           amountWidget st Quote #modelDataQuoteMoney,
-          currencyWidget st Quote #modelDataQuoteMoney,
+          currencyDialogWidget st Quote,
           swapAmountsWidget,
           swapCurrenciesWidget,
           Snackbar.snackbar (Snackbar.config SnackbarClosed)
@@ -509,42 +497,6 @@ amountWidget st boq optic =
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
-
-currencyWidget ::
-  Model ->
-  BaseOrQuote ->
-  Lens' ModelData ModelMoney ->
-  View Action
-currencyWidget st boq optic =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
-    ]
-    . (: mempty)
-    . Select.filled
-      ( Select.setSelected
-          ( Just
-              $ st
-              ^. #modelFinal
-              . optic
-              . #modelMoneyCurrencyInfo
-          )
-          . Select.setOnChange
-            ( UserInput boq $ optic . #modelMoneyCurrencyInfo
-            )
-          . Select.setAttributes [class_ "fill-inner"]
-          $ Select.config
-      )
-      ( currencyInfoItem
-          . NonEmpty.head
-          $ st
-          ^. #modelFinal
-          . #modelDataCurrencies
-      )
-    . fmap currencyInfoItem
-    . NonEmpty.tail
-    $ st
-    ^. #modelFinal
-    . #modelDataCurrencies
 
 currencyDialogWidget ::
   Model ->
@@ -607,8 +559,7 @@ currencyDialogWidget st boq =
                         . #modelMoneyCurrencyInfo
                     )
                   . TextField.setAttributes
-                    [ class_ "fill",
-                      autofocus_ True
+                    [ class_ "fill"
                     ]
                   $ TextField.config,
                 Button.raised
@@ -623,20 +574,22 @@ currencyDialogWidget st boq =
         )
     ]
   where
-    opened = UpdateModel (getMoneyOptic boq . #modelMoneyCurrencyOpen) True
-    closed = UpdateModel (getMoneyOptic boq . #modelMoneyCurrencyOpen) False
+    opened =
+      UpdateModelData (& getMoneyOptic boq . #modelMoneyCurrencyOpen .~ True)
+    closed =
+      UpdateModelData (& getMoneyOptic boq . #modelMoneyCurrencyOpen .~ False)
 
 currencyListWidget :: Model -> BaseOrQuote -> View Action
 currencyListWidget st boq =
   List.list
     List.config
-    ( currencyItemWidget current
+    ( currencyItemWidget boq current
         . NonEmpty.head
         $ st
         ^. #modelFinal
         . #modelDataCurrencies
     )
-    . fmap (currencyItemWidget current)
+    . fmap (currencyItemWidget boq current)
     . Prelude.filter (\x -> search `isInfixOf` inspectCurrencyInfo x)
     . NonEmpty.tail
     $ st
@@ -646,8 +599,12 @@ currencyListWidget st boq =
     current = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencyInfo
     search = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencySearch
 
-currencyItemWidget :: CurrencyInfo -> CurrencyInfo -> ListItem.ListItem Action
-currencyItemWidget current item =
+currencyItemWidget ::
+  BaseOrQuote ->
+  CurrencyInfo ->
+  CurrencyInfo ->
+  ListItem.ListItem Action
+currencyItemWidget boq current item =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -655,7 +612,16 @@ currencyItemWidget current item =
               then Just ListItem.activated
               else Nothing
           )
-        & ListItem.setOnClick Noop
+        & ListItem.setOnClick
+          ( UpdateModelData $ \st ->
+              st
+                & getMoneyOptic boq
+                . #modelMoneyCurrencyInfo
+                .~ item
+                & getMoneyOptic boq
+                . #modelMoneyCurrencyOpen
+                .~ False
+          )
     )
     [ Miso.text $ inspectCurrencyInfo item
     ]
@@ -669,7 +635,8 @@ swapAmountsWidget =
     $ Button.raised
       ( Button.setOnClick SwapAmounts
           . Button.setAttributes
-            [ class_ "fill"
+            [ class_ "fill",
+              Theme.secondaryBg
             ]
           $ Button.config
       )
@@ -684,7 +651,8 @@ swapCurrenciesWidget =
     $ Button.raised
       ( Button.setOnClick SwapCurrencies
           . Button.setAttributes
-            [ class_ "fill"
+            [ class_ "fill",
+              Theme.secondaryBg
             ]
           $ Button.config
       )

@@ -24,7 +24,6 @@ import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
-import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
@@ -271,7 +270,7 @@ updateModel Debounce st = do
       -- if significantChange (modelFinal st) draft && diff > ttl % 1000
       if diff > ttl % 1000
         then do
-          putStrLn @Text "Debounce"
+          -- putStrLn @Text "Debounce"
           output <- liftIO . tryAny . evalModel draft $ modelMarket st
           case output of
             Left e -> do
@@ -558,8 +557,7 @@ currencyDialogWidget st boq =
     [ Button.raised
         ( Button.setOnClick opened
             . Button.setAttributes
-              [ Theme.secondaryBg,
-                class_ "fill"
+              [ class_ "fill"
               ]
             $ Button.config
         )
@@ -582,32 +580,46 @@ currencyDialogWidget st boq =
             Nothing
             [ currencyListWidget st boq
             ]
-            [ TextField.outlined
-                . TextField.setType (Just "text")
-                . TextField.setValue
-                  ( Just
-                      . from @Text @String
-                      $ st
-                      ^. #modelFinal
-                      . getMoneyOptic boq
-                      . #modelMoneyCurrencySearch
+            . (: mempty)
+            $ div_
+              [ class_ "fill"
+              ]
+              [ TextField.outlined
+                  . TextField.setType (Just "text")
+                  . TextField.setValue
+                    ( Just
+                        . from @Text @String
+                        $ st
+                        ^. #modelFinal
+                        . getMoneyOptic boq
+                        . #modelMoneyCurrencySearch
+                    )
+                  . TextField.setOnInput
+                    ( UserInput boq (getMoneyOptic boq . #modelMoneyCurrencySearch)
+                        . from @String @Text
+                    )
+                  . TextField.setPlaceholder
+                    ( Just
+                        . inspectCurrencyInfo
+                        $ st
+                        ^. #modelFinal
+                        . getMoneyOptic boq
+                        . #modelMoneyCurrencyInfo
+                    )
+                  . TextField.setAttributes
+                    [ class_ "fill",
+                      autofocus_ True
+                    ]
+                  $ TextField.config,
+                Button.raised
+                  ( Button.config
+                      & Button.setOnClick closed
+                      & Button.setAttributes
+                        [ class_ "fill"
+                        ]
                   )
-                . TextField.setOnInput
-                  ( UserInput boq (getMoneyOptic boq . #modelMoneyCurrencySearch)
-                      . from @String @Text
-                  )
-                . TextField.setPlaceholder
-                  ( Just
-                      . inspectCurrencyInfo
-                      $ st
-                      ^. #modelFinal
-                      . getMoneyOptic boq
-                      . #modelMoneyCurrencyInfo
-                  )
-                . TextField.setAttributes [class_ "fill"]
-                $ TextField.config,
-              Button.text (Button.setOnClick closed $ Button.config) "Cancel"
-            ]
+                  "Cancel"
+              ]
         )
     ]
   where
@@ -657,8 +669,7 @@ swapAmountsWidget =
     $ Button.raised
       ( Button.setOnClick SwapAmounts
           . Button.setAttributes
-            [ Theme.secondaryBg,
-              class_ "fill"
+            [ class_ "fill"
             ]
           $ Button.config
       )
@@ -673,8 +684,7 @@ swapCurrenciesWidget =
     $ Button.raised
       ( Button.setOnClick SwapCurrencies
           . Button.setAttributes
-            [ Theme.secondaryBg,
-              class_ "fill"
+            [ class_ "fill"
             ]
           $ Button.config
       )

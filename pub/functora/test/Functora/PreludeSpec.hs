@@ -26,3 +26,18 @@ spec = do
     inspect @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
+  it "inspectRatio" $ do
+    let samples :: [(Rational, Text)] =
+          [ (0, "0"),
+            (1, "1"),
+            (42, "42"),
+            (0.3, "0.3"),
+            (0.33, "0.33"),
+            (0.333, "0.333"),
+            (0.3333, "0.333"),
+            (0.33333, "0.333"),
+            (1 % 3, "0.333")
+          ]
+    forM_ samples
+      . uncurry
+      $ \lhs rhs -> inspectRatio defaultRatioFormat lhs `shouldBe` rhs

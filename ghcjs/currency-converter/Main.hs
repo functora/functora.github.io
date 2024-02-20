@@ -447,9 +447,9 @@ mainWidget st =
         [ class_ "container"
         ]
         [ amountWidget st Base #modelDataBaseMoney,
-          currencyDialogWidget st Base,
+          currencyWidget st Base,
           amountWidget st Quote #modelDataQuoteMoney,
-          currencyDialogWidget st Quote,
+          currencyWidget st Quote,
           swapAmountsWidget,
           swapCurrenciesWidget,
           Snackbar.snackbar (Snackbar.config SnackbarClosed)
@@ -499,11 +499,11 @@ amountWidget st boq optic =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
 
-currencyDialogWidget ::
+currencyWidget ::
   Model ->
   BaseOrQuote ->
   View Action
-currencyDialogWidget st boq =
+currencyWidget st boq =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -591,10 +591,10 @@ currencyListWidget :: Model -> BaseOrQuote -> View Action
 currencyListWidget st boq =
   List.list
     List.config
-    ( currencyItemWidget boq current
+    ( currencyListItemWidget boq current
         $ maybe current NonEmpty.head matching
     )
-    . fmap (currencyItemWidget boq current)
+    . fmap (currencyListItemWidget boq current)
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelFinal . #modelDataCurrencies
@@ -611,12 +611,12 @@ currencyListWidget st boq =
           inspectCurrencyInfo
           False
 
-currencyItemWidget ::
+currencyListItemWidget ::
   BaseOrQuote ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
-currencyItemWidget boq current item =
+currencyListItemWidget boq current item =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -671,4 +671,4 @@ swapCurrenciesWidget =
       "Swap currencies"
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
-inspectMoneyAmount = inspectRatio 8 . unMoney
+inspectMoneyAmount = inspectRatio defaultRatioFormat . unMoney

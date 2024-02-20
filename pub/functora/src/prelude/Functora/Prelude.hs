@@ -10,6 +10,9 @@ module Functora.Prelude
     inspect,
     inspectType,
     inspectSymbol,
+    RatioFormat (..),
+    TotalDecimalPlacesOverflowPolicy (..),
+    defaultRatioFormat,
     inspectRatio,
 
     -- * Integral
@@ -55,14 +58,15 @@ module Functora.Prelude
     qq,
     qqUri,
 
-    -- * Merge
-    -- $merge
+    -- * Misc
+    -- $misc
     mergeMap,
     mergeAlt,
     mergeBy,
     asumMap,
     altM,
     altM',
+    takeWhileAcc,
   )
 where
 
@@ -115,6 +119,7 @@ import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
+import qualified Data.Scientific as Scientific
 import qualified Data.Semigroup as Semi
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text as T
@@ -246,31 +251,94 @@ inspectSymbol =
     . TypeLits.symbolVal
     $ Proxy @a
 
+data RatioFormat = RatioFormat
+  { ratioFormatThousandsSeparator :: String,
+    ratioFormatDecimalPlacesAfterNonZero :: Maybe Natural,
+    ratioFormatTotalDecimalPlacesLimit :: Maybe Natural,
+    ratioFormatTotalDecimalPlacesOverflowPolicy :: TotalDecimalPlacesOverflowPolicy
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data TotalDecimalPlacesOverflowPolicy
+  = TotalDecimalPlacesOverflowExponent
+  | TotalDecimalPlacesOverflowTruncate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+defaultRatioFormat :: RatioFormat
+defaultRatioFormat =
+  RatioFormat
+    { ratioFormatThousandsSeparator = mempty,
+      ratioFormatDecimalPlacesAfterNonZero = Just 2,
+      ratioFormatTotalDecimalPlacesLimit = Just 8,
+      ratioFormatTotalDecimalPlacesOverflowPolicy =
+        TotalDecimalPlacesOverflowExponent
+    }
+
 inspectRatio ::
   forall a b.
   ( From String a,
-    Integral b,
-    Show b
+    From b Integer,
+    Show b,
+    Integral b
   ) =>
-  Int ->
+  RatioFormat ->
   Ratio b ->
   a
-inspectRatio decimalPlaces signedRational =
+inspectRatio fmt signedRational =
   let (quotient, remainder) = unsignedNumerator `quotRem` unsignedDenominator
-      fractionalPart = take decimalPlaces (go remainder)
-   in from @String @a
-        $ (if signedRational < 0 then "-" else mempty)
-        <> Prelude.shows
-          quotient
-          (if null fractionalPart then mempty else "." <> fractionalPart)
+      fractionalPart =
+        takeWhileAcc
+          format
+          (0, if quotient == 0 then 0 else 1)
+          (go remainder)
+      fractionalSize =
+        length fractionalPart
+   in case totalDecimalPlacesLimit of
+        Just limit
+          | fractionalSize
+              >= limit
+              && ratioFormatTotalDecimalPlacesOverflowPolicy fmt
+              == TotalDecimalPlacesOverflowExponent ->
+              from @String @a
+                . Scientific.formatScientific Scientific.Exponent Nothing
+                . either fst fst
+                . Scientific.fromRationalRepetend (Just fractionalSize)
+                $ from @b @Integer signedNumerator
+                % from @b @Integer signedDenominator
+        _ ->
+          from @String @a
+            $ (if signedRational < 0 then "-" else mempty)
+            <> Prelude.shows
+              quotient
+              (if null fractionalPart then mempty else "." <> fractionalPart)
   where
-    unsignedRational = abs signedRational
-    unsignedNumerator = numerator unsignedRational
-    unsignedDenominator = denominator unsignedRational
+    signedNumerator = numerator signedRational
+    signedDenominator = denominator signedRational
+    unsignedNumerator = abs signedNumerator
+    unsignedDenominator = abs signedDenominator
+    nonZeroDecimalPlacesLimit =
+      (+ 1) <$> ratioFormatDecimalPlacesAfterNonZero fmt
+    totalDecimalPlacesLimit =
+      unsafeFrom <$> ratioFormatTotalDecimalPlacesLimit fmt
     go 0 = mempty
     go previous =
       let (current, next) = (10 * previous) `quotRem` unsignedDenominator
        in Prelude.shows current (go next)
+    format x (prevTotalDecimalPlaces, prevNonZeroDecimalPlaces) =
+      case (totalDecimalPlacesLimit, nonZeroDecimalPlacesLimit) of
+        (Just limit, _)
+          | prevTotalDecimalPlaces >= limit && prevNonZeroDecimalPlaces > 0 ->
+              Nothing
+        (_, Just limit)
+          | prevNonZeroDecimalPlaces >= limit ->
+              Nothing
+        (_, _) ->
+          Just
+            ( prevTotalDecimalPlaces + 1,
+              if prevNonZeroDecimalPlaces /= 0 || x /= '0'
+                then prevNonZeroDecimalPlaces + 1
+                else 0
+            )
 
 display :: forall dst src. (Show src, Typeable src, IsString dst) => src -> dst
 display x
@@ -508,8 +576,8 @@ qq parser =
 qqUri :: QuasiQuoter
 qqUri = URI.uri
 
--- $merge
--- Merge
+-- $misc
+-- Misc
 
 mergeMap :: (Ord a) => (b -> b -> b) -> Map a b -> Map a b -> Map a b
 mergeMap upd =
@@ -548,3 +616,10 @@ altM' :: (Monad m) => (a -> m (Either e b)) -> [a] -> e -> m (Either e b)
 altM' _ [] e = pure $ Left e
 altM' f [x] _ = f x
 altM' f (x : xs) _ = either (altM' f xs) (pure . Right) =<< f x
+
+takeWhileAcc :: (a -> b -> Maybe b) -> b -> [a] -> [a]
+takeWhileAcc _ _ [] = []
+takeWhileAcc f prev (x : xs) =
+  case f x prev of
+    Nothing -> []
+    Just next -> x : takeWhileAcc f next xs

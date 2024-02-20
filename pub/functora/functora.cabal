@@ -54,6 +54,7 @@ common pkg
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
+    MultiWayIf
     NoImplicitPrelude
     NumericUnderscores
     OverloadedLabels

@@ -68,6 +68,7 @@ executable app
     , containers
     , Crypto
     , functora-ghcjs
+    , fuzzy
     , miso
     , miso-components
 

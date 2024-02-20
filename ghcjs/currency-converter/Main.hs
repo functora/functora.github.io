@@ -26,6 +26,7 @@ import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
+import qualified Text.Fuzzy as Fuzzy
 
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
@@ -577,27 +578,38 @@ currencyDialogWidget st boq =
     opened =
       UpdateModelData (& getMoneyOptic boq . #modelMoneyCurrencyOpen .~ True)
     closed =
-      UpdateModelData (& getMoneyOptic boq . #modelMoneyCurrencyOpen .~ False)
+      UpdateModelData $ \st' ->
+        st'
+          & getMoneyOptic boq
+          . #modelMoneyCurrencyOpen
+          .~ False
+          & getMoneyOptic boq
+          . #modelMoneyCurrencySearch
+          .~ mempty
 
 currencyListWidget :: Model -> BaseOrQuote -> View Action
 currencyListWidget st boq =
   List.list
     List.config
     ( currencyItemWidget boq current
-        . NonEmpty.head
-        $ st
-        ^. #modelFinal
-        . #modelDataCurrencies
+        $ maybe current NonEmpty.head matching
     )
     . fmap (currencyItemWidget boq current)
-    . Prelude.filter (\x -> search `isInfixOf` inspectCurrencyInfo x)
-    . NonEmpty.tail
-    $ st
-    ^. #modelFinal
-    . #modelDataCurrencies
+    $ maybe mempty NonEmpty.tail matching
   where
+    currencies = st ^. #modelFinal . #modelDataCurrencies
     current = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencyInfo
     search = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencySearch
+    matching =
+      nonEmpty
+        . fmap Fuzzy.original
+        $ Fuzzy.filter
+          search
+          (toList currencies)
+          "<"
+          ">"
+          inspectCurrencyInfo
+          False
 
 currencyItemWidget ::
   BaseOrQuote ->
@@ -623,7 +635,7 @@ currencyItemWidget boq current item =
                 .~ False
           )
     )
-    [ Miso.text $ inspectCurrencyInfo item
+    [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
     ]
 
 swapAmountsWidget :: View Action

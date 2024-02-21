@@ -534,6 +534,7 @@ parseWords = filter (not . null) . T.splitOn " " . from @a @Text
 parseRatio ::
   forall str int m.
   ( From str Text,
+    From int Integer,
     Integral int,
     Show str,
     Show int,
@@ -544,6 +545,39 @@ parseRatio ::
   str ->
   m (Ratio int)
 parseRatio str =
+  case T.rational . T.strip $ from @str @Text str of
+    Right (rat, "")
+      | Just HRefl <- typeRep @int `eqTypeRep` typeRep @Integer ->
+          pure rat
+    Right (rat, "") -> do
+      let lhsRat =
+            from @int @Integer (numerator rat)
+              % from @int @Integer (denominator rat)
+      rhsRat <- parseRational str
+      if lhsRat == rhsRat
+        then pure rat
+        else
+          throwParseException str
+            $ inspectType @int
+            <> " numerator or denominator seems to be out of bounds, expected "
+            <> inspect @Text rhsRat
+            <> " but got "
+            <> inspect lhsRat
+    Right e ->
+      throwParseException str e
+    Left e ->
+      throwParseException str e
+
+parseRational ::
+  forall str m.
+  ( From str Text,
+    Show str,
+    Data str,
+    MonadThrow m
+  ) =>
+  str ->
+  m Rational
+parseRational str =
   case T.rational . T.strip $ from @str @Text str of
     Right (rat, "") -> pure rat
     Right e -> throwParseException str e

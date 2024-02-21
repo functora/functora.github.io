@@ -5,6 +5,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import Functora.Prelude
 import Test.Hspec
+import Test.QuickCheck
 import qualified Universum
 
 newtype Buz = Buz
@@ -26,6 +27,9 @@ spec = do
     inspect @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
+  it "parseRatio/overflow"
+    $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
+    `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"
   it "inspectRatio/samples" $ do
     let samples :: [(Rational, Text)] =
           [ (0, "0"),
@@ -78,3 +82,74 @@ spec = do
         when (lhs /= 0)
           $ inspectRatio defaultRatioFormat (-lhs)
           `shouldBe` "-" <> rhs
+  inspectParseRatioSigned @Integer
+  inspectParseRatioSigned @Int
+  --
+  -- NOTE : inspectRatio converts to Rational under the hood,
+  -- so smaller Ratio types sometimes do not have partial isomorphism.
+  --
+  -- inspectParseRatioSigned @Int8
+  inspectParseRatioSigned @Int16
+  inspectParseRatioSigned @Int32
+  inspectParseRatioSigned @Int64
+  inspectParseRatioUnsigned @Natural
+  inspectParseRatioUnsigned @Word
+  --
+  -- NOTE : inspectRatio converts to Rational under the hood,
+  -- so smaller Ratio types sometimes do not have partial isomorphism.
+  --
+  -- inspectParseRatioUnsigned @Word8
+  inspectParseRatioUnsigned @Word16
+  inspectParseRatioUnsigned @Word32
+  inspectParseRatioUnsigned @Word64
+
+inspectParseRatioSigned ::
+  forall a.
+  ( Show a,
+    Data a,
+    Integral a,
+    From a Integer
+  ) =>
+  Spec
+inspectParseRatioSigned =
+  inspectParseRatio @a
+    ("inspectParseRatio/" <> inspectType @a)
+    property
+
+inspectParseRatioUnsigned ::
+  forall a.
+  ( Show a,
+    Data a,
+    Integral a,
+    From a Integer
+  ) =>
+  Spec
+inspectParseRatioUnsigned =
+  inspectParseRatio @a
+    ("inspectParseRatio/" <> inspectType @a)
+    $ forAll uFractional
+
+inspectParseRatio ::
+  forall a.
+  ( Show a,
+    Data a,
+    Integral a,
+    From a Integer
+  ) =>
+  String ->
+  (forall prop. (Testable prop) => (Ratio a -> prop) -> Property) ->
+  Spec
+inspectParseRatio title generator =
+  it title . generator $ \rat -> do
+    let txt = inspectRatio @Text @a defaultRatioFormat rat
+    inspectRatio @Text @a defaultRatioFormat <$> parseRatio txt
+      `shouldBe` Just txt
+
+uFractional :: (Fractional a) => Gen a
+uFractional =
+  sized $ \n -> do
+    denom <- chooseInt (1, max 1 n)
+    numer <- chooseInt (0, n * denom)
+    pure
+      $ Universum.fromIntegral numer
+      / Universum.fromIntegral denom

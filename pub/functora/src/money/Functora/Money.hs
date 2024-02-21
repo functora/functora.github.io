@@ -26,6 +26,7 @@ unMoney (Money x) = x
 parseMoney ::
   forall str int m.
   ( From str Text,
+    From int Integer,
     Integral int,
     Show str,
     Show int,

@@ -11,7 +11,7 @@ module Functora.Prelude
     inspectType,
     inspectSymbol,
     RatioFormat (..),
-    TotalDecimalPlacesOverflowPolicy (..),
+    DecimalPlacesOverflowFormat (..),
     defaultRatioFormat,
     inspectRatio,
 
@@ -252,33 +252,33 @@ inspectSymbol =
     $ Proxy @a
 
 data RatioFormat = RatioFormat
-  { ratioFormatThousandsSeparator :: String,
+  { ratioFormatDoRounding :: Bool,
+    ratioFormatThousandsSeparator :: String,
     ratioFormatDecimalPlacesAfterNonZero :: Maybe Natural,
-    ratioFormatTotalDecimalPlacesLimit :: Maybe Natural,
-    ratioFormatTotalDecimalPlacesOverflowPolicy :: TotalDecimalPlacesOverflowPolicy
+    ratioFormatDecimalPlacesTotalLimit :: Maybe Natural,
+    ratioFormatDecimalPlacesTotalLimitOverflow :: DecimalPlacesOverflowFormat
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-data TotalDecimalPlacesOverflowPolicy
-  = TotalDecimalPlacesOverflowExponent
-  | TotalDecimalPlacesOverflowTruncate
+data DecimalPlacesOverflowFormat
+  = DecimalPlacesOverflowExponent
+  | DecimalPlacesOverflowTruncate
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 defaultRatioFormat :: RatioFormat
 defaultRatioFormat =
   RatioFormat
-    { ratioFormatThousandsSeparator = mempty,
+    { ratioFormatDoRounding = True,
+      ratioFormatThousandsSeparator = mempty,
       ratioFormatDecimalPlacesAfterNonZero = Just 2,
-      ratioFormatTotalDecimalPlacesLimit = Just 8,
-      ratioFormatTotalDecimalPlacesOverflowPolicy =
-        TotalDecimalPlacesOverflowExponent
+      ratioFormatDecimalPlacesTotalLimit = Just 8,
+      ratioFormatDecimalPlacesTotalLimitOverflow = DecimalPlacesOverflowExponent
     }
 
 inspectRatio ::
   forall a b.
   ( From String a,
     From b Integer,
-    Show b,
     Integral b
   ) =>
   RatioFormat ->
@@ -293,40 +293,52 @@ inspectRatio fmt signedRational =
           (go remainder)
       fractionalSize =
         length fractionalPart
-   in case totalDecimalPlacesLimit of
-        Just limit
-          | fractionalSize
-              >= limit
-              && ratioFormatTotalDecimalPlacesOverflowPolicy fmt
-              == TotalDecimalPlacesOverflowExponent ->
-              from @String @a
-                . Scientific.formatScientific Scientific.Exponent Nothing
-                . either fst fst
-                . Scientific.fromRationalRepetend (Just fractionalSize)
-                $ from @b @Integer signedNumerator
-                % from @b @Integer signedDenominator
-        _ ->
-          from @String @a
-            $ (if signedRational < 0 then "-" else mempty)
-            <> Prelude.shows
-              quotient
-              (if null fractionalPart then mempty else "." <> fractionalPart)
+   in if ratioFormatDoRounding fmt
+        then
+          inspectRatio fmt {ratioFormatDoRounding = False}
+            . roundRational fractionalSize
+            $ signedNumerator
+            % signedDenominator
+        else case totalDecimalPlacesLimit of
+          Just limit
+            | fractionalSize
+                >= limit
+                && ratioFormatDecimalPlacesTotalLimitOverflow fmt
+                == DecimalPlacesOverflowExponent ->
+                from @String @a
+                  . Scientific.formatScientific Scientific.Exponent Nothing
+                  . either fst fst
+                  . Scientific.fromRationalRepetend Nothing
+                  $ signedNumerator
+                  % signedDenominator
+          _ ->
+            from @String @a
+              $ (if signedRational < 0 then "-" else mempty)
+              <> Prelude.shows
+                quotient
+                (if null fractionalPart then mempty else "." <> fractionalPart)
   where
-    signedNumerator = numerator signedRational
-    signedDenominator = denominator signedRational
+    signedNumerator = from @b @Integer $ numerator signedRational
+    signedDenominator = from @b @Integer $ denominator signedRational
     unsignedNumerator = abs signedNumerator
     unsignedDenominator = abs signedDenominator
     nonZeroDecimalPlacesLimit =
       (+ 1) <$> ratioFormatDecimalPlacesAfterNonZero fmt
     totalDecimalPlacesLimit =
-      unsafeFrom <$> ratioFormatTotalDecimalPlacesLimit fmt
+      unsafeFrom <$> ratioFormatDecimalPlacesTotalLimit fmt
     go 0 = mempty
     go previous =
       let (current, next) = (10 * previous) `quotRem` unsignedDenominator
        in Prelude.shows current (go next)
     format x (prevTotalDecimalPlaces, prevNonZeroDecimalPlaces) =
       case (totalDecimalPlacesLimit, nonZeroDecimalPlacesLimit) of
-        (Just limit, _)
+        (Just totalLimit, Just nonZeroLimit)
+          | prevTotalDecimalPlaces
+              >= totalLimit
+              && prevNonZeroDecimalPlaces
+              >= nonZeroLimit ->
+              Nothing
+        (Just limit, Nothing)
           | prevTotalDecimalPlaces >= limit && prevNonZeroDecimalPlaces > 0 ->
               Nothing
         (_, Just limit)
@@ -339,6 +351,12 @@ inspectRatio fmt signedRational =
                 then prevNonZeroDecimalPlaces + 1
                 else 0
             )
+
+roundRational :: Int -> Rational -> Rational
+roundRational decimalPlaces input =
+  round (input * from @Integer @Rational mult) % mult
+  where
+    mult = 10 ^ decimalPlaces
 
 display :: forall dst src. (Show src, Typeable src, IsString dst) => src -> dst
 display x

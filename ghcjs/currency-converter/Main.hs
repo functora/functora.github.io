@@ -498,18 +498,22 @@ currencyWidget st boq =
               ]
               [ TextField.outlined
                   . TextField.setType (Just "text")
-                  . TextField.setValue
-                    ( Just
-                        . from @Text @String
-                        $ st
+                  . ( if st
                         ^. #modelFinal
                         . getMoneyOptic boq
-                        . #modelMoneyCurrencySearch
+                        . #modelMoneyCurrencyOpen
+                        then id
+                        else
+                          TextField.setValue
+                            ( Just
+                                . from @Text @String
+                                $ st
+                                ^. #modelFinal
+                                . getMoneyOptic boq
+                                . #modelMoneyCurrencySearch
+                            )
                     )
-                  . TextField.setOnInput
-                    ( UserInput boq (getMoneyOptic boq . #modelMoneyCurrencySearch)
-                        . from @String @Text
-                    )
+                  . TextField.setOnInput search
                   . TextField.setPlaceholder
                     ( Just
                         . inspectCurrencyInfo
@@ -534,6 +538,12 @@ currencyWidget st boq =
         )
     ]
   where
+    search input =
+      UpdateModelData InstantUpdate $ \st' ->
+        st'
+          & getMoneyOptic boq
+          . #modelMoneyCurrencySearch
+          .~ from @String @Text input
     opened =
       UpdateModelData InstantUpdate $ \st' ->
         st'

@@ -206,8 +206,6 @@ data UpdatePolicy
 data Action
   = Noop
   | Debounce
-  | SwapAmounts
-  | SwapCurrencies
   | SetModel Action Model
   | UpdateModelData UpdatePolicy (ModelData -> ModelData)
   | --
@@ -301,54 +299,6 @@ updateModel Debounce st = do
             ( draft,
               Debounce
             )
-updateModel SwapAmounts st = do
-  st <# do
-    ct <- getCurrentTime
-    modifyMVar (modelDraft st) $ \prev -> do
-      let baseInput = prev ^. #modelDataBaseMoney . #modelMoneyAmountInput
-      let baseOutput = prev ^. #modelDataBaseMoney . #modelMoneyAmountOutput
-      let quoteInput = prev ^. #modelDataQuoteMoney . #modelMoneyAmountInput
-      let quoteOutput = prev ^. #modelDataQuoteMoney . #modelMoneyAmountOutput
-      pure
-        ( prev
-            & #modelDataBaseMoney
-            . #modelMoneyAmountInput
-            .~ quoteInput
-            & #modelDataBaseMoney
-            . #modelMoneyAmountOutput
-            .~ quoteOutput
-            & #modelDataQuoteMoney
-            . #modelMoneyAmountInput
-            .~ baseInput
-            & #modelDataQuoteMoney
-            . #modelMoneyAmountOutput
-            .~ baseOutput
-            & #modelDataBaseOrQuote
-            .~ Base
-            & #modelDataUpdatedAt
-            .~ ct,
-          Noop
-        )
-updateModel SwapCurrencies st = do
-  st <# do
-    ct <- getCurrentTime
-    modifyMVar (modelDraft st) $ \prev -> do
-      let baseCurrency = prev ^. #modelDataBaseMoney . #modelMoneyCurrencyInfo
-      let quoteCurrency = prev ^. #modelDataQuoteMoney . #modelMoneyCurrencyInfo
-      pure
-        ( prev
-            & #modelDataBaseMoney
-            . #modelMoneyCurrencyInfo
-            .~ quoteCurrency
-            & #modelDataQuoteMoney
-            . #modelMoneyCurrencyInfo
-            .~ baseCurrency
-            & #modelDataBaseOrQuote
-            .~ Base
-            & #modelDataUpdatedAt
-            .~ ct,
-          Noop
-        )
 updateModel (UserInput boq optic input) st =
   st <# do
     ct <- getCurrentTime
@@ -664,7 +614,7 @@ swapAmountsWidget =
     ]
     . (: mempty)
     $ Button.raised
-      ( Button.setOnClick SwapAmounts
+      ( Button.setOnClick event
           . Button.setAttributes
             [ class_ "fill",
               Theme.secondaryBg
@@ -672,6 +622,28 @@ swapAmountsWidget =
           $ Button.config
       )
       "Swap amounts"
+  where
+    event =
+      UpdateModelData InstantUpdate $ \st ->
+        let baseInput = st ^. #modelDataBaseMoney . #modelMoneyAmountInput
+            baseOutput = st ^. #modelDataBaseMoney . #modelMoneyAmountOutput
+            quoteInput = st ^. #modelDataQuoteMoney . #modelMoneyAmountInput
+            quoteOutput = st ^. #modelDataQuoteMoney . #modelMoneyAmountOutput
+         in st
+              & #modelDataBaseMoney
+              . #modelMoneyAmountInput
+              .~ quoteInput
+              & #modelDataBaseMoney
+              . #modelMoneyAmountOutput
+              .~ quoteOutput
+              & #modelDataQuoteMoney
+              . #modelMoneyAmountInput
+              .~ baseInput
+              & #modelDataQuoteMoney
+              . #modelMoneyAmountOutput
+              .~ baseOutput
+              & #modelDataBaseOrQuote
+              .~ Base
 
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
@@ -680,7 +652,7 @@ swapCurrenciesWidget =
     ]
     . (: mempty)
     $ Button.raised
-      ( Button.setOnClick SwapCurrencies
+      ( Button.setOnClick event
           . Button.setAttributes
             [ class_ "fill",
               Theme.secondaryBg
@@ -688,6 +660,20 @@ swapCurrenciesWidget =
           $ Button.config
       )
       "Swap currencies"
+  where
+    event =
+      UpdateModelData InstantUpdate $ \st ->
+        let baseCurrency = st ^. #modelDataBaseMoney . #modelMoneyCurrencyInfo
+            quoteCurrency = st ^. #modelDataQuoteMoney . #modelMoneyCurrencyInfo
+         in st
+              & #modelDataBaseMoney
+              . #modelMoneyCurrencyInfo
+              .~ quoteCurrency
+              & #modelDataQuoteMoney
+              . #modelMoneyCurrencyInfo
+              .~ baseCurrency
+              & #modelDataBaseOrQuote
+              .~ Base
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
 inspectMoneyAmount = inspectRatio defaultRatioFormat . unMoney

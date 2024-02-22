@@ -198,13 +198,18 @@ mkModel = do
           modelSnackbarQueue = Snackbar.initialQueue
         }
 
+data UpdatePolicy
+  = InstantUpdate
+  | DelayedUpdate
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+
 data Action
   = Noop
   | Debounce
   | SwapAmounts
   | SwapCurrencies
   | SetModel Action Model
-  | UpdateModelData (ModelData -> ModelData)
+  | UpdateModelData UpdatePolicy (ModelData -> ModelData)
   | --
     -- TODO : BouncyInput and InstantInput!!! (Or just different inputs for amt cur)
     --
@@ -245,14 +250,18 @@ updateModel Noop st = noEff st
 updateModel (SetModel action st) _ = st <# pure action
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
-updateModel (UpdateModelData updater) st =
-  st <# do
-    ct <- getCurrentTime
-    modifyMVar (modelDraft st) $ \prev ->
-      pure
-        ( updater prev & #modelDataUpdatedAt .~ ct,
-          Noop
-        )
+updateModel (UpdateModelData policy updater) st =
+  ( if policy == InstantUpdate
+      then st & #modelFinal %~ updater
+      else st
+  )
+    <# do
+      ct <- getCurrentTime
+      modifyMVar (modelDraft st) $ \prev ->
+        pure
+          ( updater prev & #modelDataUpdatedAt .~ ct,
+            Noop
+          )
 updateModel Debounce st = do
   st <# do
     let ttl = 300 :: Integer
@@ -576,9 +585,16 @@ currencyWidget st boq =
     ]
   where
     opened =
-      UpdateModelData (& getMoneyOptic boq . #modelMoneyCurrencyOpen .~ True)
+      UpdateModelData InstantUpdate $ \st' ->
+        st'
+          & getMoneyOptic boq
+          . #modelMoneyCurrencyOpen
+          .~ True
+          & getMoneyOptic boq
+          . #modelMoneyCurrencySearch
+          .~ mempty
     closed =
-      UpdateModelData $ \st' ->
+      UpdateModelData InstantUpdate $ \st' ->
         st'
           & getMoneyOptic boq
           . #modelMoneyCurrencyOpen
@@ -625,14 +641,17 @@ currencyListItemWidget boq current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( UpdateModelData $ \st ->
+          ( UpdateModelData InstantUpdate $ \st ->
               st
-                & getMoneyOptic boq
-                . #modelMoneyCurrencyInfo
-                .~ item
                 & getMoneyOptic boq
                 . #modelMoneyCurrencyOpen
                 .~ False
+                & getMoneyOptic boq
+                . #modelMoneyCurrencySearch
+                .~ mempty
+                & getMoneyOptic boq
+                . #modelMoneyCurrencyInfo
+                .~ item
           )
     )
     [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item

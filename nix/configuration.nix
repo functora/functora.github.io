@@ -55,9 +55,9 @@
           "tiendamia.com"
           "mercadolibre.com.uy"
           "facebook.com"
-          # "discord.com"
-          # "telegram.org"
-          # "youtube.com"
+          "discord.com"
+          "telegram.org"
+          "youtube.com"
         ]
         else []
       ));

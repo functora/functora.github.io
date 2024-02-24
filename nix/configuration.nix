@@ -92,54 +92,135 @@
       ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
     '';
   };
-  mkTkl = dev: {
+  mkKbd = cfg: dev: {
+    config = cfg;
     device = dev;
     defcfg = {
       enable = true;
       fallthrough = true;
       allowCommands = false;
     };
-    config = ''
-      (defalias
-        fst  (layer-toggle fst-layer)
-        snd  (layer-toggle snd-layer)
-        til  (around lsft grv)
-        ltab (around lsft tab)
-      )
-      (defsrc
-        esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
-        grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup
-        tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn
-        caps a    s    d    f    g    h    j    k    l    ;    '    ret
-        lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up
-        lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght
-      )
-      (deflayer qwerty
-        _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-        esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _
-        esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _
-        @fst _    _    _    _    _    _    _    _    _    _    _    _
-        _    _    _    _    _    _    _    _    _    _    _    ret                  _
-        _    _    _              _              _    _    _    _               _    _    _
-      )
-      (deflayer fst-layer
-        _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-        _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _     _    _    _
-        @snd _    _    _    _    _    _    _    _    _    _    _    _    grv   _    _    _
-        _    _    _    slck _    _    lft  down up   rght _    _    _
-        _    _    _    _    _    _    _    _    _    _    _    _                    _
-        _    _    ralt           tab            _    _    _    _               _    _    _
-      )
-      (deflayer snd-layer
-        _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-        _    brdn bru  _    _    _    _    prev pp   next mute vold volu _     _    _    _
-        _    _    _    _    _    _    _    _    _    _    _    _    _    @til  _    _    _
-        _    _    _    _    _    _    home pgdn pgup end  _    _    _
-        _    _    _    _    _    _    _    _    _    _    _    _                    _
-        _    _    _              @ltab          _    _    _    _               _    _    _
-      )
-    '';
   };
+  mk60p = mkKbd ''
+    (defalias
+      fst  (layer-toggle fst-layer)
+      snd  (layer-toggle snd-layer)
+      til  (around lsft grv)
+      ltab (around lsft tab)
+    )
+    (defsrc
+      esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+      grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+      tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+      caps a    s    d    f    g    h    j    k    l    ;    '    ret
+      lsft z    x    c    v    b    n    m    ,    .    /    rsft
+      lctl lmet lalt           spc            ralt rmet cmp  rctl
+    )
+    (deflayer qwerty
+      _    _    _    _    _    _    _    _    _    _    _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _
+      @fst _    _    _    _    _    _    _    _    _    _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    ret
+      _    _    _              _              _    _    _    _
+    )
+    (deflayer fst-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _
+      _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _
+      @snd _    _    _    _    _    _    _    _    _    _    _    _    grv
+      _    _    _    slck _    _    lft  down up   rght _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _
+      _    _    ralt           tab            _    _    _    _
+    )
+    (deflayer snd-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _
+      _    brdn bru  _    _    _    _    prev pp   next mute vold volu _
+      _    _    _    _    _    _    _    _    _    _    _    _    _    @til
+      _    _    _    _    _    _    home pgdn pgup end  _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _
+      _    _    _              @ltab          _    _    _    _
+    )
+  '';
+  mkTkl = mkKbd ''
+    (defalias
+      fst  (layer-toggle fst-layer)
+      snd  (layer-toggle snd-layer)
+      til  (around lsft grv)
+      ltab (around lsft tab)
+    )
+    (defsrc
+      esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
+      grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup
+      tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn
+      caps a    s    d    f    g    h    j    k    l    ;    '    ret
+      lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up
+      lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght
+    )
+    (deflayer qwerty
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _
+      @fst _    _    _    _    _    _    _    _    _    _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    ret                  _
+      _    _    _              _              _    _    _    _               _    _    _
+    )
+    (deflayer fst-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _     _    _    _
+      @snd _    _    _    _    _    _    _    _    _    _    _    _    grv   _    _    _
+      _    _    _    slck _    _    lft  down up   rght _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _                    _
+      _    _    ralt           tab            _    _    _    _               _    _    _
+    )
+    (deflayer snd-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      _    brdn bru  _    _    _    _    prev pp   next mute vold volu _     _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _    _    @til  _    _    _
+      _    _    _    _    _    _    home pgdn pgup end  _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _                    _
+      _    _    _              @ltab          _    _    _    _               _    _    _
+    )
+  '';
+  mk100 = mkKbd ''
+    (defalias
+      fst  (layer-toggle fst-layer)
+      snd  (layer-toggle snd-layer)
+      til  (around lsft grv)
+      ltab (around lsft tab)
+    )
+    (defsrc
+      esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
+      grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
+      tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn  kp7  kp8  kp9  kp+
+      caps a    s    d    f    g    h    j    k    l    ;    '    ret                        kp4  kp5  kp6
+      lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up         kp1  kp2  kp3  kprt
+      lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght  kp0  kp.
+    )
+    (deflayer qwerty
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
+      esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
+      @fst _    _    _    _    _    _    _    _    _    _    _    _                          _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    ret                  _          _    _    _    _
+      _    _    _              _              _    _    _    _               _    _    _     _    _
+    )
+    (deflayer fst-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _     _    _    _     _    _    _    _
+      @snd _    _    _    _    _    _    _    _    _    _    _    _    grv   _    _    _     _    _    _    _
+      _    _    _    slck _    _    lft  down up   rght _    _    _                          _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _                    _          _    _    _    _
+      _    _    ralt           tab            _    _    _    _               _    _    _     _    _
+    )
+    (deflayer snd-layer
+      _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
+      _    brdn bru  _    _    _    _    prev pp   next mute vold volu _     _    _    _     _    _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _    _    @til  _    _    _     _    _    _    _
+      _    _    _    _    _    _    home pgdn pgup end  _    _    _                          _    _    _
+      _    _    _    _    _    _    _    _    _    _    _    _                    _          _    _    _    _
+      _    _    _              @ltab          _    _    _    _               _    _    _     _    _
+    )
+  '';
 in {
   imports =
     [
@@ -246,8 +327,8 @@ in {
     services.kmonad = {
       enable = true;
       package = kmonad-pkg;
-      # extraArgs = [ "--log-level" "debug" ];
-      keyboards.logitech-gpro = mkTkl "/dev/input/by-id/usb-Logitech_PRO_K_DA_157731643537-event-kbd";
+      keyboards.k995p = mk100 "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
+      keyboards.maxfit61 = mk60p "/dev/input/by-id/usb-FANTECH_MAXFIT61_Mechanical_Keyboard-event-kbd";
       keyboards.alice80 = {
         device = "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
         defcfg = {
@@ -333,54 +414,6 @@ in {
             _    _    _    _    _    _              home pgdn pgup end  _    _    _
             _    _    _    _    _    _              _    _    _    _    _    _
             _    _    _         @ltab                    @ltab     _         _
-          )
-        '';
-      };
-      keyboards.k995p = {
-        device = "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
-        defcfg = {
-          enable = true;
-          fallthrough = true;
-          allowCommands = false;
-        };
-        config = ''
-          (defalias
-            fst  (layer-toggle fst-layer)
-            snd  (layer-toggle snd-layer)
-            til  (around lsft grv)
-            ltab (around lsft tab)
-          )
-          (defsrc
-            esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
-            grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
-            tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn  kp7  kp8  kp9  kp+
-            caps a    s    d    f    g    h    j    k    l    ;    '    ret                        kp4  kp5  kp6
-            lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up         kp1  kp2  kp3  kprt
-            lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght  kp0  kp.
-          )
-          (deflayer qwerty
-            _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-            esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
-            esc  _    _    _    _    _    _    _    _    _    _    _    _    _     _    _    _     _    _    _    _
-            @fst _    _    _    _    _    _    _    _    _    _    _    _                          _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    ret                  _          _    _    _    _
-            _    _    _              _              _    _    _    _               _    _    _     _    _
-          )
-          (deflayer fst-layer
-            _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-            _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _     _    _    _     _    _    _    _
-            @snd _    _    _    _    _    _    _    _    _    _    _    _    grv   _    _    _     _    _    _    _
-            _    _    _    slck _    _    lft  down up   rght _    _    _                          _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _                    _          _    _    _    _
-            _    _    ralt           tab            _    _    _    _               _    _    _     _    _
-          )
-          (deflayer snd-layer
-            _    _    _    _    _    _    _    _    _    _    _    _    _          _    _    _
-            _    brdn bru  _    _    _    _    prev pp   next mute vold volu _     _    _    _     _    _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _    _    @til  _    _    _     _    _    _    _
-            _    _    _    _    _    _    home pgdn pgup end  _    _    _                          _    _    _
-            _    _    _    _    _    _    _    _    _    _    _    _                    _          _    _    _    _
-            _    _    _              @ltab          _    _    _    _               _    _    _     _    _
           )
         '';
       };

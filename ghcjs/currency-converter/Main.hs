@@ -52,9 +52,9 @@ runApp = id
 #endif
 
 data Model = Model
-  { modelFinal :: ModelData,
-    modelDraft :: MVar ModelData,
+  { modelData :: ModelData,
     modelMarket :: MVar Market,
+    modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action
   }
   deriving stock (Eq, Generic)
@@ -67,46 +67,23 @@ data BaseOrQuote
 data ModelMoney = ModelMoney
   { modelMoneyAmountInput :: Text,
     modelMoneyAmountOutput :: Money Rational,
+    modelMoneyAmountActive :: Bool,
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
     modelMoneyCurrencySearch :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
---
--- TODO : bouncy data for amounts only, do not process every amount input!!!
--- But currency and other should not be bouncy, and should be as fast as possible,
--- maybe need to use some loading progress bar for the stuff as curriencies loading
---
 data ModelData = ModelData
   { -- TODO : use timestamed data
-    modelDataCurrencies :: NonEmpty CurrencyInfo,
-    -- TODO : use timestamed data
     modelDataBaseMoney :: ModelMoney,
     modelDataQuoteMoney :: ModelMoney,
-    modelDataBaseOrQuote :: BaseOrQuote,
-    modelDataUpdatedAt :: UTCTime
+    modelDataBaseOrQuote :: BaseOrQuote
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
--- significantChange :: ModelData -> ModelData -> Bool
--- significantChange lhs rhs =
---   modelDataCurrencies lhs
---     /= modelDataCurrencies rhs
---     || modelDataBaseAmountOutput lhs
---     /= modelDataBaseAmountOutput rhs
---     || modelDataBaseCurrency lhs
---     /= modelDataBaseCurrency rhs
---     || modelDataQuoteAmountOutput lhs
---     /= modelDataQuoteAmountOutput rhs
---     || modelDataQuoteCurrency lhs
---     /= modelDataQuoteCurrency rhs
---     || modelDataBaseOrQuote lhs
---     /= modelDataBaseOrQuote rhs
-
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
-  ct <- getCurrentTime
   market <- mkMarket
   let btc =
         CurrencyInfo
@@ -121,11 +98,11 @@ mkModel = do
   let zero = Money 0 :: Money Rational
   let final =
         ModelData
-          { modelDataCurrencies = [btc, usd],
-            modelDataBaseMoney =
+          { modelDataBaseMoney =
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
+                  modelMoneyAmountActive = False,
                   modelMoneyCurrencyInfo = btc,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
@@ -134,19 +111,18 @@ mkModel = do
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
+                  modelMoneyAmountActive = False,
                   modelMoneyCurrencyInfo = usd,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
                 },
-            modelDataBaseOrQuote = Base,
-            modelDataUpdatedAt = ct
+            modelDataBaseOrQuote = Base
           }
-  draft <- newMVar final
   let st =
         Model
-          { modelFinal = final,
-            modelDraft = draft,
+          { modelData = final,
             modelMarket = market,
+            modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
@@ -169,11 +145,11 @@ mkModel = do
     let quoteAmt = quoteMoneyAmount quote
     let final' =
           ModelData
-            { modelDataCurrencies = currenciesInfo,
-              modelDataBaseMoney =
+            { modelDataBaseMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput = baseAmt,
+                    modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -182,36 +158,25 @@ mkModel = do
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput = quoteAmt,
+                    modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
                   },
-              modelDataBaseOrQuote = Base,
-              modelDataUpdatedAt = ct
+              modelDataBaseOrQuote = Base
             }
-    draft' <- newMVar final'
     pure
       Model
-        { modelFinal = final',
-          modelDraft = draft',
+        { modelData = final',
           modelMarket = market,
+          modelCurrencies = currenciesInfo,
           modelSnackbarQueue = Snackbar.initialQueue
         }
 
-data UpdatePolicy
-  = InstantUpdate
-  | DelayedUpdate
-  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
-
 data Action
   = Noop
-  | Debounce
-  | SetModel Action Model
-  | UpdateModelData UpdatePolicy (ModelData -> ModelData)
-  | --
-    -- TODO : BouncyInput and InstantInput!!! (Or just different inputs for amt cur)
-    --
-    forall a. (Show a, Data a) => UserInput BaseOrQuote (Lens' ModelData a) a
+  | InstantModelUpdate (Model -> Model)
+  | ComplexModelUpdate (Model -> Model) (Model -> IO Action)
   | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
@@ -238,124 +203,78 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = Debounce,
+          initialAction = Noop,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel (SetModel action st) _ = st <# pure action
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
-updateModel (UpdateModelData policy updater) st =
-  ( if policy == InstantUpdate
-      then st & #modelFinal %~ updater
-      else st
-  )
-    <# do
-      ct <- getCurrentTime
-      modifyMVar (modelDraft st) $ \prev ->
+updateModel (InstantModelUpdate updater) st = noEff $ updater st
+updateModel (ComplexModelUpdate instant delayed) prevSt = do
+  let nextSt = instant prevSt
+  nextSt <# do
+    res <- liftIO . tryAny $ delayed nextSt
+    case res of
+      Left e -> do
+        let msg =
+              inspect e
+                & Snackbar.message
+                & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
+                & Snackbar.setOnActionIconClick SnackbarClosed
         pure
-          ( updater prev & #modelDataUpdatedAt .~ ct,
-            Noop
-          )
-updateModel Debounce st = do
-  st <# do
-    let ttl = 300 :: Integer
-    sleepMilliSeconds ttl
-    modifyMVar (modelDraft st) $ \draft -> do
-      ct <- getCurrentTime
-      let diff = abs . toRational . diffUTCTime ct $ modelDataUpdatedAt draft
-      --
-      -- TODO : UpdateModelData instead of SetModel ??
-      --
-      -- if significantChange (modelFinal st) draft && diff > ttl % 1000
-      if diff > ttl % 1000
-        then do
-          -- putStrLn @Text "Debounce"
-          output <- liftIO . tryAny . evalModel draft $ modelMarket st
-          case output of
-            Left e -> do
-              let msg =
-                    inspect e
-                      & Snackbar.message
-                      & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-                      & Snackbar.setOnActionIconClick SnackbarClosed
-              pure
-                ( draft,
-                  SetModel Debounce
-                    $ st
-                    & #modelSnackbarQueue
-                    %~ Snackbar.addMessage msg
-                )
-            Right final ->
-              pure
-                ( final,
-                  SetModel Debounce $ st & #modelFinal .~ final
-                )
-        else
-          pure
-            ( draft,
-              Debounce
-            )
-updateModel (UserInput boq optic input) st =
-  st <# do
-    ct <- getCurrentTime
-    modifyMVar (modelDraft st) $ \prev ->
-      pure
-        ( prev
-            & optic
-            .~ input
-            & #modelDataBaseOrQuote
-            .~ boq
-            & #modelDataUpdatedAt
-            .~ ct,
-          Noop
-        )
+          $ InstantModelUpdate (& #modelSnackbarQueue %~ Snackbar.addMessage msg)
+      Right next ->
+        pure next
 
-evalModel ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  ModelData ->
-  MVar Market ->
-  m ModelData
-evalModel draft market = do
-  let boq = modelDataBaseOrQuote draft
+evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Action
+evalModel st = do
+  let boq = st ^. #modelData . #modelDataBaseOrQuote
   baseAmtResult <-
-    tryAny . parseMoney $ draft ^. getBaseMoneyOptic boq . #modelMoneyAmountInput
+    tryAny
+      . parseMoney
+      $ st
+      ^. #modelData
+      . getBaseMoneyOptic boq
+      . #modelMoneyAmountInput
   case baseAmtResult of
-    Left {} -> pure draft
+    Left {} -> pure $ InstantModelUpdate id -- TODO : render error?
     Right baseAmt ->
-      withMarket market $ do
+      withMarket (st ^. #modelMarket) $ do
         let funds =
               Funds
                 { fundsMoneyAmount = baseAmt,
                   fundsCurrencyCode =
-                    draft
-                      ^. getBaseMoneyOptic boq
+                    st
+                      ^. #modelData
+                      . getBaseMoneyOptic boq
                       . #modelMoneyCurrencyInfo
                       . #currencyInfoCode
                 }
         quote <-
           getQuote funds
-            $ draft
-            ^. getQuoteMoneyOptic boq
+            $ st
+            ^. #modelData
+            . getQuoteMoneyOptic boq
             . #modelMoneyCurrencyInfo
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
-        pure
-          $ draft
-          & getBaseMoneyOptic boq
-          . #modelMoneyAmountOutput
-          .~ baseAmt
-          & getQuoteMoneyOptic boq
-          . #modelMoneyAmountInput
-          .~ inspectMoneyAmount quoteAmt
-          & getQuoteMoneyOptic boq
-          . #modelMoneyAmountOutput
-          .~ quoteAmt
+        pure . InstantModelUpdate $ \st' ->
+          st'
+            & #modelData
+            . getBaseMoneyOptic boq
+            . #modelMoneyAmountOutput
+            .~ baseAmt
+            & #modelData
+            . getQuoteMoneyOptic boq
+            . #modelMoneyAmountInput
+            .~ inspectMoneyAmount quoteAmt
+            & #modelData
+            . getQuoteMoneyOptic boq
+            . #modelMoneyAmountOutput
+            .~ quoteAmt
 
 getMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
 getMoneyOptic = \case
@@ -405,23 +324,22 @@ mainWidget st =
     [ LayoutGrid.inner
         [ class_ "container"
         ]
-        [ amountWidget st Base #modelDataBaseMoney,
+        [ amountWidget st Base,
           currencyWidget st Base,
-          amountWidget st Quote #modelDataQuoteMoney,
+          amountWidget st Quote,
           currencyWidget st Quote,
           swapAmountsWidget,
           swapCurrenciesWidget,
+          LayoutGrid.cell [LayoutGrid.span12]
+            . (: mempty)
+            $ div_ mempty [inspect $ st ^. #modelData],
           Snackbar.snackbar (Snackbar.config SnackbarClosed)
             $ modelSnackbarQueue st
         ]
     ]
 
-amountWidget ::
-  Model ->
-  BaseOrQuote ->
-  Lens' ModelData ModelMoney ->
-  View Action
-amountWidget st boq optic =
+amountWidget :: Model -> BaseOrQuote -> View Action
+amountWidget st boq =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -429,34 +347,87 @@ amountWidget st boq optic =
     . TextField.outlined
     . TextField.setType (Just "number")
     . TextField.setValid valid
-    . TextField.setValue
-      ( Just
-          . from @Text @String
-          $ st
-          ^. #modelFinal
-          . optic
-          . #modelMoneyAmountInput
+    . ( if st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive
+          then id
+          else
+            TextField.setValue
+              ( Just
+                  . from @Text @String
+                  $ st
+                  ^. #modelData
+                  . getMoneyOptic boq
+                  . #modelMoneyAmountInput
+              )
       )
-    . TextField.setOnInput
-      ( UserInput boq (optic . #modelMoneyAmountInput) . from @String @Text
-      )
+    -- . TextField.setValue
+    --   ( Just
+    --       . from @Text @String
+    --       $ st
+    --       ^. #modelData
+    --       . optic
+    --       . #modelMoneyAmountInput
+    --   )
+    . TextField.setOnInput onInputAction
+    . TextField.setOnChange onChangeAction
     . TextField.setPlaceholder
       ( Just
           . inspectCurrencyInfo
           $ st
-          ^. #modelFinal
-          . optic
+          ^. #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencyInfo
       )
     . TextField.setRequired True
     . TextField.setAttributes [class_ "fill"]
     $ TextField.config
   where
-    input = st ^. #modelFinal . optic . #modelMoneyAmountInput
-    output = st ^. #modelFinal . optic . #modelMoneyAmountOutput
+    input = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput
+    output = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
+    onInputAction txt =
+      ComplexModelUpdate
+        ( \st' ->
+            st'
+              & #modelData
+              . getMoneyOptic boq
+              . #modelMoneyAmountInput
+              .~ from @String @Text txt
+              & #modelData
+              . getMoneyOptic boq
+              . #modelMoneyAmountActive
+              .~ True
+              & #modelData
+              . #modelDataBaseOrQuote
+              .~ boq
+        )
+        evalModel
+    onChangeAction txt =
+      ComplexModelUpdate
+        ( \st' ->
+            st'
+              & #modelData
+              . getMoneyOptic boq
+              . #modelMoneyAmountInput
+              .~ from @String @Text txt
+              & #modelData
+              . getMoneyOptic boq
+              . #modelMoneyAmountActive
+              .~ False
+              & #modelData
+              . #modelDataBaseOrQuote
+              .~ boq
+        )
+        ( \st' -> do
+            putStrLn
+              $ "ONCHANGE "
+              <> inspect @Text boq
+              <> " <"
+              <> inspect txt
+              <> ">"
+            evalModel st'
+        )
 
 currencyWidget ::
   Model ->
@@ -475,7 +446,7 @@ currencyWidget st boq =
         )
         . inspectCurrencyInfo
         $ st
-        ^. #modelFinal
+        ^. #modelData
         . getMoneyOptic boq
         . #modelMoneyCurrencyInfo,
       Dialog.dialog
@@ -483,7 +454,7 @@ currencyWidget st boq =
             & Dialog.setOnClose closed
             & Dialog.setOpen
               ( st
-                  ^. #modelFinal
+                  ^. #modelData
                   . getMoneyOptic boq
                   . #modelMoneyCurrencyOpen
               )
@@ -499,7 +470,7 @@ currencyWidget st boq =
               [ TextField.outlined
                   . TextField.setType (Just "text")
                   . ( if st
-                        ^. #modelFinal
+                        ^. #modelData
                         . getMoneyOptic boq
                         . #modelMoneyCurrencyOpen
                         then id
@@ -508,7 +479,7 @@ currencyWidget st boq =
                             ( Just
                                 . from @Text @String
                                 $ st
-                                ^. #modelFinal
+                                ^. #modelData
                                 . getMoneyOptic boq
                                 . #modelMoneyCurrencySearch
                             )
@@ -518,7 +489,7 @@ currencyWidget st boq =
                     ( Just
                         . inspectCurrencyInfo
                         $ st
-                        ^. #modelFinal
+                        ^. #modelData
                         . getMoneyOptic boq
                         . #modelMoneyCurrencyInfo
                     )
@@ -539,27 +510,32 @@ currencyWidget st boq =
     ]
   where
     search input =
-      UpdateModelData InstantUpdate $ \st' ->
+      InstantModelUpdate $ \st' ->
         st'
-          & getMoneyOptic boq
+          & #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      UpdateModelData InstantUpdate $ \st' ->
+      InstantModelUpdate $ \st' ->
         st'
-          & getMoneyOptic boq
+          & #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencyOpen
           .~ True
-          & getMoneyOptic boq
+          & #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      UpdateModelData InstantUpdate $ \st' ->
+      InstantModelUpdate $ \st' ->
         st'
-          & getMoneyOptic boq
+          & #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencyOpen
           .~ False
-          & getMoneyOptic boq
+          & #modelData
+          . getMoneyOptic boq
           . #modelMoneyCurrencySearch
           .~ mempty
 
@@ -573,9 +549,9 @@ currencyListWidget st boq =
     . fmap (currencyListItemWidget boq current)
     $ maybe mempty NonEmpty.tail matching
   where
-    currencies = st ^. #modelFinal . #modelDataCurrencies
-    current = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencyInfo
-    search = st ^. #modelFinal . getMoneyOptic boq . #modelMoneyCurrencySearch
+    currencies = st ^. #modelCurrencies
+    current = st ^. #modelData . getMoneyOptic boq . #modelMoneyCurrencyInfo
+    search = st ^. #modelData . getMoneyOptic boq . #modelMoneyCurrencySearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -601,15 +577,18 @@ currencyListItemWidget boq current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( UpdateModelData InstantUpdate $ \st ->
+          ( InstantModelUpdate $ \st ->
               st
-                & getMoneyOptic boq
+                & #modelData
+                . getMoneyOptic boq
                 . #modelMoneyCurrencyOpen
                 .~ False
-                & getMoneyOptic boq
+                & #modelData
+                . getMoneyOptic boq
                 . #modelMoneyCurrencySearch
                 .~ mempty
-                & getMoneyOptic boq
+                & #modelData
+                . getMoneyOptic boq
                 . #modelMoneyCurrencyInfo
                 .~ item
           )
@@ -624,7 +603,7 @@ swapAmountsWidget =
     ]
     . (: mempty)
     $ Button.raised
-      ( Button.setOnClick event
+      ( Button.setOnClick onClickAction
           . Button.setAttributes
             [ class_ "fill",
               Theme.secondaryBg
@@ -633,27 +612,39 @@ swapAmountsWidget =
       )
       "Swap amounts"
   where
-    event =
-      UpdateModelData InstantUpdate $ \st ->
-        let baseInput = st ^. #modelDataBaseMoney . #modelMoneyAmountInput
-            baseOutput = st ^. #modelDataBaseMoney . #modelMoneyAmountOutput
-            quoteInput = st ^. #modelDataQuoteMoney . #modelMoneyAmountInput
-            quoteOutput = st ^. #modelDataQuoteMoney . #modelMoneyAmountOutput
-         in st
-              & #modelDataBaseMoney
-              . #modelMoneyAmountInput
-              .~ quoteInput
-              & #modelDataBaseMoney
-              . #modelMoneyAmountOutput
-              .~ quoteOutput
-              & #modelDataQuoteMoney
-              . #modelMoneyAmountInput
-              .~ baseInput
-              & #modelDataQuoteMoney
-              . #modelMoneyAmountOutput
-              .~ baseOutput
-              & #modelDataBaseOrQuote
-              .~ Base
+    onClickAction =
+      ComplexModelUpdate
+        ( \st ->
+            let baseInput =
+                  st ^. #modelData . #modelDataBaseMoney . #modelMoneyAmountInput
+                baseOutput =
+                  st ^. #modelData . #modelDataBaseMoney . #modelMoneyAmountOutput
+                quoteInput =
+                  st ^. #modelData . #modelDataQuoteMoney . #modelMoneyAmountInput
+                quoteOutput =
+                  st ^. #modelData . #modelDataQuoteMoney . #modelMoneyAmountOutput
+             in st
+                  & #modelData
+                  . #modelDataBaseMoney
+                  . #modelMoneyAmountInput
+                  .~ quoteInput
+                  & #modelData
+                  . #modelDataBaseMoney
+                  . #modelMoneyAmountOutput
+                  .~ quoteOutput
+                  & #modelData
+                  . #modelDataQuoteMoney
+                  . #modelMoneyAmountInput
+                  .~ baseInput
+                  & #modelData
+                  . #modelDataQuoteMoney
+                  . #modelMoneyAmountOutput
+                  .~ baseOutput
+                  & #modelData
+                  . #modelDataBaseOrQuote
+                  .~ Base
+        )
+        evalModel
 
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
@@ -662,7 +653,7 @@ swapCurrenciesWidget =
     ]
     . (: mempty)
     $ Button.raised
-      ( Button.setOnClick event
+      ( Button.setOnClick onClickAction
           . Button.setAttributes
             [ class_ "fill",
               Theme.secondaryBg
@@ -671,19 +662,27 @@ swapCurrenciesWidget =
       )
       "Swap currencies"
   where
-    event =
-      UpdateModelData InstantUpdate $ \st ->
-        let baseCurrency = st ^. #modelDataBaseMoney . #modelMoneyCurrencyInfo
-            quoteCurrency = st ^. #modelDataQuoteMoney . #modelMoneyCurrencyInfo
-         in st
-              & #modelDataBaseMoney
-              . #modelMoneyCurrencyInfo
-              .~ quoteCurrency
-              & #modelDataQuoteMoney
-              . #modelMoneyCurrencyInfo
-              .~ baseCurrency
-              & #modelDataBaseOrQuote
-              .~ Base
+    onClickAction =
+      ComplexModelUpdate
+        ( \st ->
+            let baseCurrency =
+                  st ^. #modelData . #modelDataBaseMoney . #modelMoneyCurrencyInfo
+                quoteCurrency =
+                  st ^. #modelData . #modelDataQuoteMoney . #modelMoneyCurrencyInfo
+             in st
+                  & #modelData
+                  . #modelDataBaseMoney
+                  . #modelMoneyCurrencyInfo
+                  .~ quoteCurrency
+                  & #modelData
+                  . #modelDataQuoteMoney
+                  . #modelMoneyCurrencyInfo
+                  .~ baseCurrency
+                  & #modelData
+                  . #modelDataBaseOrQuote
+                  .~ Base
+        )
+        evalModel
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
 inspectMoneyAmount = inspectRatio defaultRatioFormat . unMoney

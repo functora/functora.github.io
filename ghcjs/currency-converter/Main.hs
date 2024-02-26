@@ -27,6 +27,7 @@ import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Miso
 import Miso.String
+import qualified System.IO.Unsafe as Unsafe
 import qualified Text.Fuzzy as Fuzzy
 
 #ifndef __GHCJS__
@@ -219,6 +220,13 @@ updateModel LoopModelUpdate st =
   batchEff
     st
     [ do
+        --
+        -- NOTE : The "correct" way is to use "controlled input" with
+        -- TextField.setValue but without proper Action queue synchronization
+        -- or mutex it does cause race conditions when user types "too fast":
+        --
+        -- https://github.com/dmjio/miso/issues/272
+        --
         forM_ enumerate $ \boq ->
           unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
             . void
@@ -234,26 +242,30 @@ updateModel LoopModelUpdate st =
         ct <- getCurrentTime
         if upToDate ct $ st ^. #modelUpdatedAt
           then pure Noop
-          else evalModel st
+          else PureModelUpdate <$> evalModel st
     ]
 updateModel (PureModelUpdate updater) st = noEff $ updater st
 updateModel (EvalModelUpdate updater) prevSt = do
   let nextSt = updater prevSt
-  nextSt <# do
-    res <- liftIO . tryAny $ evalModel nextSt
-    case res of
-      Left e -> do
-        let msg =
-              inspect e
-                & Snackbar.message
-                & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-                & Snackbar.setOnActionIconClick snackbarClosed
-        pure
-          $ PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.addMessage msg)
-      Right next ->
-        pure next
+  --
+  -- NOTE : The "correct" way is to emit PureModelUpdate effect instead,
+  -- but without proper Action queue synchronization or mutex it does cause
+  -- race conditions when user types "too fast". Impure evalModel function
+  -- is cached and fast anyways. It's ok.
+  --
+  let res = Unsafe.unsafePerformIO . tryAny $ evalModel nextSt
+  case res of
+    Left e -> do
+      let msg =
+            inspect e
+              & Snackbar.message
+              & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
+              & Snackbar.setOnActionIconClick snackbarClosed
+      noEff $ nextSt & #modelSnackbarQueue %~ Snackbar.addMessage msg
+    Right next ->
+      noEff $ next nextSt
 
-evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Action
+evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do
   let boq = st ^. #modelData . #modelDataBaseOrQuote
   baseAmtResult <-
@@ -264,7 +276,7 @@ evalModel st = do
       . getBaseMoneyOptic boq
       . #modelMoneyAmountInput
   case baseAmtResult of
-    Left {} -> pure Noop
+    Left {} -> pure id
     Right baseAmt ->
       withMarket (st ^. #modelMarket) $ do
         let funds =
@@ -286,7 +298,7 @@ evalModel st = do
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime
-        pure . PureModelUpdate $ \st' ->
+        pure $ \st' ->
           st'
             & #modelData
             . getBaseMoneyOptic boq
@@ -668,10 +680,12 @@ swapCurrenciesWidget =
               .~ Base
 
 snackbarClosed :: Snackbar.MessageId -> Action
-snackbarClosed msg = PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+snackbarClosed msg =
+  PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
-inspectMoneyAmount = inspectRatio defaultRatioFormat . unMoney
+inspectMoneyAmount =
+  inspectRatio defaultRatioFormat . unMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

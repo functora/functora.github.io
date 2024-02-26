@@ -33,7 +33,10 @@ import qualified Text.Fuzzy as Fuzzy
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
 runApp app = do
-  elm <- BL.readFile "static/material-components-web-elm.min.js"
+  js0 <- BL.readFile "static/material-components-web.min.js"
+  js1 <- BL.readFile "static/material-components-web-elm.min.js"
+  js2 <- BL.readFile "static/clipboard.min.js"
+  js3 <- BL.readFile "static/app.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -42,12 +45,12 @@ runApp app = do
     =<< JSaddle.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router elm)
+      (router $ js0 <> js1 <> js2 <> js3)
   where
-    router elm req =
+    router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
-        _ -> JSaddle.jsaddleAppWithJs (JSaddle.jsaddleJs False <> elm) req
+        _ -> JSaddle.jsaddleAppWithJs (JSaddle.jsaddleJs False <> js) req
 #else
 runApp :: IO () -> IO ()
 runApp = id
@@ -341,25 +344,10 @@ viewModel :: Model -> View Action
 viewModel st =
   div_
     mempty
-    [ link_
-        [ rel_ "stylesheet",
-          href_
-            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.css"
-        ],
-      link_
-        [ rel_ "stylesheet",
-          href_ "https://fonts.googleapis.com/icon?family=Material+Icons"
-        ],
+    [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
+      link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
-      mainWidget st,
-      script_ [src_ "static/clipboard.min.js"] mempty,
-      script_
-        [ src_
-            "https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.min.js",
-          defer_ "defer"
-        ]
-        mempty,
-      script_ [src_ "static/app.js", defer_ "defer"] mempty
+      mainWidget st
     ]
 
 mainWidget :: Model -> View Action

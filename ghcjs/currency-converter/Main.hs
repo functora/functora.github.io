@@ -54,7 +54,8 @@ runApp = id
 #endif
 
 data Model = Model
-  { modelData :: ModelData,
+  { modelHide :: Bool,
+    modelData :: ModelData,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
@@ -124,7 +125,8 @@ mkModel = do
           }
   let st =
         Model
-          { modelData = final,
+          { modelHide = True,
+            modelData = final,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -172,7 +174,8 @@ mkModel = do
             }
     pure
       Model
-        { modelData = final',
+        { modelHide = True,
+          modelData = final',
           modelMarket = market,
           modelCurrencies = currenciesInfo,
           modelSnackbarQueue = Snackbar.initialQueue,
@@ -231,18 +234,20 @@ updateModel LoopModelUpdate st =
           unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
             . void
             . JSaddle.eval @Text
-            $ "document.getElementById('"
+            $ "var el = document.getElementById('"
             <> inspect boq
-            <> "').value = '"
+            <> "'); if (el) el.value = '"
             <> (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput)
             <> "';"
         sleepMilliSeconds 300
         pure LoopModelUpdate,
-      do
-        ct <- getCurrentTime
-        if upToDate ct $ st ^. #modelUpdatedAt
-          then pure Noop
-          else PureModelUpdate <$> evalModel st
+      if st ^. #modelHide
+        then pure $ PureModelUpdate (& #modelHide .~ False)
+        else do
+          ct <- getCurrentTime
+          if upToDate ct $ st ^. #modelUpdatedAt
+            then pure Noop
+            else PureModelUpdate <$> evalModel st
     ]
 updateModel (PureModelUpdate updater) st = noEff $ updater st
 updateModel (EvalModelUpdate updater) prevSt = do
@@ -252,6 +257,8 @@ updateModel (EvalModelUpdate updater) prevSt = do
   -- but without proper Action queue synchronization or mutex it does cause
   -- race conditions when user types "too fast". Impure evalModel function
   -- is cached and fast anyways. It's ok.
+  --
+  -- TODO : experiment with implementing proper Action queue.
   --
   let res = Unsafe.unsafePerformIO . tryAny $ evalModel nextSt
   case res of
@@ -358,8 +365,16 @@ viewModel st =
 mainWidget :: Model -> View Action
 mainWidget st =
   LayoutGrid.layoutGrid
-    [ LayoutGrid.alignMiddle
-    ]
+    ( [ LayoutGrid.alignMiddle
+      ]
+        --
+        -- NOTE : need to hide widget on the first render to avoid flickering
+        --
+        <> ( if st ^. #modelHide
+              then [style_ [("display", "none")]]
+              else mempty
+           )
+    )
     [ LayoutGrid.inner
         [ class_ "container"
         ]
@@ -369,9 +384,9 @@ mainWidget st =
           currencyWidget st Quote,
           swapAmountsWidget,
           swapCurrenciesWidget,
-          LayoutGrid.cell [LayoutGrid.span12]
-            . (: mempty)
-            $ div_ mempty [inspect $ st ^. #modelData],
+          -- LayoutGrid.cell [LayoutGrid.span12]
+          --   . (: mempty)
+          --   $ div_ mempty [inspect $ st ^. #modelData],
           Snackbar.snackbar (Snackbar.config snackbarClosed)
             $ modelSnackbarQueue st
         ]

@@ -1,7 +1,7 @@
 with (import ./default.nix); let
   repo = toString ./.;
   app-ghcid = pkgs.writeScriptBin "app-ghcid" ''
-    (cd ${builtins.toString ./.} && ${pkgs.ghcid}/bin/ghcid --test=":main" --command="${pkgs.haskell.packages.ghc865.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
+    (cd ${builtins.toString ./.} && ${pkgs.ghcid}/bin/ghcid --test="Main.main" --command="${pkgs.haskell.packages.ghc865.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
   '';
   functora-tools = import "${builtins.trace functora functora}/nix/tools.nix";
   functora-pkgs = import "${builtins.trace functora functora}/nix/nixpkgs.nix";

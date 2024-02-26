@@ -15,6 +15,7 @@ import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates hiding (Quote)
+import qualified Language.Javascript.JSaddle.Evaluate as JSaddle
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
@@ -175,6 +176,7 @@ mkModel = do
 
 data Action
   = Noop
+  | ViewModelUpdate
   | PureModelUpdate (Model -> Model)
   | EvalModelUpdate (Model -> Model)
   | SnackbarClosed Snackbar.MessageId
@@ -203,13 +205,26 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = Noop,
+          initialAction = ViewModelUpdate,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
+updateModel ViewModelUpdate st =
+  st <# do
+    forM_ enumerate $ \boq ->
+      unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
+        . void
+        . JSaddle.eval @Text
+        $ "document.getElementById('"
+        <> inspect boq
+        <> "').value = '"
+        <> (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput)
+        <> "';"
+    sleepMilliSeconds 300
+    pure ViewModelUpdate
 updateModel (SnackbarClosed msg) st =
   noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
 updateModel (PureModelUpdate updater) st = noEff $ updater st
@@ -348,14 +363,6 @@ amountWidget st boq =
     $ TextField.config
     & TextField.setType (Just "number")
     & TextField.setValid valid
-    & TextField.setValue
-      ( Just
-          . from @Text @String
-          $ st
-          ^. #modelData
-          . getMoneyOptic boq
-          . #modelMoneyAmountInput
-      )
     & TextField.setOnInput onInputAction
     & TextField.setPlaceholder
       ( Just
@@ -366,13 +373,24 @@ amountWidget st boq =
           . #modelMoneyCurrencyInfo
       )
     & TextField.setRequired True
-    & TextField.setAttributes [class_ "fill"]
+    & TextField.setAttributes
+      [ class_ "fill",
+        id_ $ inspect boq,
+        onBlur onBlurAction
+      ]
   where
     input = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput
     output = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
+    onBlurAction =
+      EvalModelUpdate $ \st' ->
+        st'
+          & #modelData
+          . getMoneyOptic boq
+          . #modelMoneyAmountActive
+          .~ False
     onInputAction txt =
       EvalModelUpdate $ \st' ->
         st'

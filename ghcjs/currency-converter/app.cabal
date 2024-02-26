@@ -5,6 +5,10 @@ synopsis:      First miso app
 category:      Web
 build-type:    Simple
 
+flag ghcid
+  manual:  True
+  default: False
+
 common pkg
   default-language:   Haskell2010
   ghc-options:
@@ -69,6 +73,7 @@ executable app
     , Crypto
     , functora-ghcjs
     , fuzzy
+    , jsaddle
     , miso
     , miso-components
 

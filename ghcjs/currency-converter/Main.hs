@@ -66,9 +66,9 @@ data Model = Model
   }
   deriving stock (Eq, Generic)
 
-data BaseOrQuote
-  = Base
-  | Quote
+data TopOrBottom
+  = Top
+  | Bottom
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
 data ModelMoney = ModelMoney
@@ -83,9 +83,9 @@ data ModelMoney = ModelMoney
 
 data ModelData = ModelData
   { -- TODO : use timestamed data
-    modelDataBaseMoney :: ModelMoney,
-    modelDataQuoteMoney :: ModelMoney,
-    modelDataBaseOrQuote :: BaseOrQuote
+    modelDataTopMoney :: ModelMoney,
+    modelDataBottomMoney :: ModelMoney,
+    modelDataActiveMoney :: TopOrBottom
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -106,7 +106,7 @@ mkModel = do
   let zero = Money 0 :: Money Rational
   let final =
         ModelData
-          { modelDataBaseMoney =
+          { modelDataTopMoney =
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
@@ -115,7 +115,7 @@ mkModel = do
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
                 },
-            modelDataQuoteMoney =
+            modelDataBottomMoney =
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
@@ -124,7 +124,7 @@ mkModel = do
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
                 },
-            modelDataBaseOrQuote = Base
+            modelDataActiveMoney = Top
           }
   let st =
         Model
@@ -155,7 +155,7 @@ mkModel = do
     let quoteAmt = quoteMoneyAmount quote
     let final' =
           ModelData
-            { modelDataBaseMoney =
+            { modelDataTopMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput = baseAmt,
@@ -164,7 +164,7 @@ mkModel = do
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
                   },
-              modelDataQuoteMoney =
+              modelDataBottomMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput = quoteAmt,
@@ -173,7 +173,7 @@ mkModel = do
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
                   },
-              modelDataBaseOrQuote = Base
+              modelDataActiveMoney = Top
             }
     pure
       Model
@@ -233,14 +233,14 @@ updateModel LoopModelUpdate st =
         --
         -- https://github.com/dmjio/miso/issues/272
         --
-        forM_ enumerate $ \boq ->
-          unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
+        forM_ enumerate $ \loc ->
+          unless (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountActive)
             . void
             . JSaddle.eval @Text
             $ "var el = document.getElementById('"
-            <> inspect boq
+            <> inspect loc
             <> "'); if (el) el.value = '"
-            <> (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput)
+            <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
             <> "';"
         sleepMilliSeconds 300
         pure LoopModelUpdate,
@@ -277,13 +277,13 @@ updateModel (EvalModelUpdate updater) prevSt = do
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do
-  let boq = st ^. #modelData . #modelDataBaseOrQuote
+  let loc = st ^. #modelData . #modelDataActiveMoney
   baseAmtResult <-
     tryAny
       . parseMoney
       $ st
       ^. #modelData
-      . getBaseMoneyOptic boq
+      . getBaseMoneyOptic loc
       . #modelMoneyAmountInput
   case baseAmtResult of
     Left {} -> pure id
@@ -295,7 +295,7 @@ evalModel st = do
                   fundsCurrencyCode =
                     st
                       ^. #modelData
-                      . getBaseMoneyOptic boq
+                      . getBaseMoneyOptic loc
                       . #modelMoneyCurrencyInfo
                       . #currencyInfoCode
                 }
@@ -303,7 +303,7 @@ evalModel st = do
           getQuote funds
             $ st
             ^. #modelData
-            . getQuoteMoneyOptic boq
+            . getQuoteMoneyOptic loc
             . #modelMoneyCurrencyInfo
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
@@ -311,34 +311,34 @@ evalModel st = do
         pure $ \st' ->
           st'
             & #modelData
-            . getBaseMoneyOptic boq
+            . getBaseMoneyOptic loc
             . #modelMoneyAmountOutput
             .~ baseAmt
             & #modelData
-            . getQuoteMoneyOptic boq
+            . getQuoteMoneyOptic loc
             . #modelMoneyAmountInput
             .~ inspectMoneyAmount quoteAmt
             & #modelData
-            . getQuoteMoneyOptic boq
+            . getQuoteMoneyOptic loc
             . #modelMoneyAmountOutput
             .~ quoteAmt
             & #modelUpdatedAt
             .~ ct
 
-getMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
 getMoneyOptic = \case
-  Base -> #modelDataBaseMoney
-  Quote -> #modelDataQuoteMoney
+  Top -> #modelDataTopMoney
+  Bottom -> #modelDataBottomMoney
 
-getBaseMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getBaseMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
 getBaseMoneyOptic = \case
-  Base -> #modelDataBaseMoney
-  Quote -> #modelDataQuoteMoney
+  Top -> #modelDataTopMoney
+  Bottom -> #modelDataBottomMoney
 
-getQuoteMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
+getQuoteMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
 getQuoteMoneyOptic = \case
-  Base -> #modelDataQuoteMoney
-  Quote -> #modelDataBaseMoney
+  Top -> #modelDataBottomMoney
+  Bottom -> #modelDataTopMoney
 
 viewModel :: Model -> View Action
 viewModel st =
@@ -367,10 +367,10 @@ mainWidget st =
                     else mempty
                  )
           )
-          [ amountWidget st Base,
-            currencyWidget st Base,
-            amountWidget st Quote,
-            currencyWidget st Quote,
+          [ amountWidget st Top,
+            currencyWidget st Top,
+            amountWidget st Bottom,
+            currencyWidget st Bottom,
             swapAmountsWidget,
             swapCurrenciesWidget,
             -- LayoutGrid.cell [LayoutGrid.span12]
@@ -385,8 +385,8 @@ mainWidget st =
           else mempty
        )
 
-amountWidget :: Model -> BaseOrQuote -> View Action
-amountWidget st boq =
+amountWidget :: Model -> TopOrBottom -> View Action
+amountWidget st loc =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -401,18 +401,18 @@ amountWidget st boq =
           . inspectCurrencyInfo
           $ st
           ^. #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencyInfo
       )
     & TextField.setRequired True
     & TextField.setAttributes
       [ class_ "fill",
-        id_ $ inspect boq,
+        id_ $ inspect loc,
         onBlur onBlurAction
       ]
   where
-    input = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput
-    output = st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountOutput
+    input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
+    output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
@@ -420,29 +420,29 @@ amountWidget st boq =
       EvalModelUpdate $ \st' ->
         st'
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ False
     onInputAction txt =
       EvalModelUpdate $ \st' ->
         st'
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyAmountInput
           .~ from @String @Text txt
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ True
           & #modelData
-          . #modelDataBaseOrQuote
-          .~ boq
+          . #modelDataActiveMoney
+          .~ loc
 
 currencyWidget ::
   Model ->
-  BaseOrQuote ->
+  TopOrBottom ->
   View Action
-currencyWidget st boq =
+currencyWidget st loc =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -456,7 +456,7 @@ currencyWidget st boq =
         . inspectCurrencyInfo
         $ st
         ^. #modelData
-        . getMoneyOptic boq
+        . getMoneyOptic loc
         . #modelMoneyCurrencyInfo,
       Dialog.dialog
         ( Dialog.config
@@ -464,13 +464,13 @@ currencyWidget st boq =
             & Dialog.setOpen
               ( st
                   ^. #modelData
-                  . getMoneyOptic boq
+                  . getMoneyOptic loc
                   . #modelMoneyCurrencyOpen
               )
         )
         ( Dialog.dialogContent
             Nothing
-            [ currencyListWidget st boq
+            [ currencyListWidget st loc
             ]
             . (: mempty)
             $ div_
@@ -480,7 +480,7 @@ currencyWidget st boq =
                   . TextField.setType (Just "text")
                   . ( if st
                         ^. #modelData
-                        . getMoneyOptic boq
+                        . getMoneyOptic loc
                         . #modelMoneyCurrencyOpen
                         then id
                         else
@@ -489,7 +489,7 @@ currencyWidget st boq =
                                 . from @Text @String
                                 $ st
                                 ^. #modelData
-                                . getMoneyOptic boq
+                                . getMoneyOptic loc
                                 . #modelMoneyCurrencySearch
                             )
                     )
@@ -499,7 +499,7 @@ currencyWidget st boq =
                         . inspectCurrencyInfo
                         $ st
                         ^. #modelData
-                        . getMoneyOptic boq
+                        . getMoneyOptic loc
                         . #modelMoneyCurrencyInfo
                     )
                   . TextField.setAttributes
@@ -522,45 +522,45 @@ currencyWidget st boq =
       EvalModelUpdate $ \st' ->
         st'
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
       EvalModelUpdate $ \st' ->
         st'
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencyOpen
           .~ True
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
       EvalModelUpdate $ \st' ->
         st'
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencyOpen
           .~ False
           & #modelData
-          . getMoneyOptic boq
+          . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ mempty
 
-currencyListWidget :: Model -> BaseOrQuote -> View Action
-currencyListWidget st boq =
+currencyListWidget :: Model -> TopOrBottom -> View Action
+currencyListWidget st loc =
   List.list
     List.config
-    ( currencyListItemWidget boq current
+    ( currencyListItemWidget loc current
         $ maybe current NonEmpty.head matching
     )
-    . fmap (currencyListItemWidget boq current)
+    . fmap (currencyListItemWidget loc current)
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. #modelData . getMoneyOptic boq . #modelMoneyCurrencyInfo
-    search = st ^. #modelData . getMoneyOptic boq . #modelMoneyCurrencySearch
+    current = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencyInfo
+    search = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencySearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -573,11 +573,11 @@ currencyListWidget st boq =
           False
 
 currencyListItemWidget ::
-  BaseOrQuote ->
+  TopOrBottom ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
-currencyListItemWidget boq current item =
+currencyListItemWidget loc current item =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -589,15 +589,15 @@ currencyListItemWidget boq current item =
           ( EvalModelUpdate $ \st ->
               st
                 & #modelData
-                . getMoneyOptic boq
+                . getMoneyOptic loc
                 . #modelMoneyCurrencyOpen
                 .~ False
                 & #modelData
-                . getMoneyOptic boq
+                . getMoneyOptic loc
                 . #modelMoneyCurrencySearch
                 .~ mempty
                 & #modelData
-                . getMoneyOptic boq
+                . getMoneyOptic loc
                 . #modelMoneyCurrencyInfo
                 .~ item
           )
@@ -624,33 +624,33 @@ swapAmountsWidget =
     onClickAction =
       EvalModelUpdate $ \st ->
         let baseInput =
-              st ^. #modelData . #modelDataBaseMoney . #modelMoneyAmountInput
+              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
-              st ^. #modelData . #modelDataBaseMoney . #modelMoneyAmountOutput
+              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountOutput
             quoteInput =
-              st ^. #modelData . #modelDataQuoteMoney . #modelMoneyAmountInput
+              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountInput
             quoteOutput =
-              st ^. #modelData . #modelDataQuoteMoney . #modelMoneyAmountOutput
+              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountOutput
          in st
               & #modelData
-              . #modelDataBaseMoney
+              . #modelDataTopMoney
               . #modelMoneyAmountInput
               .~ quoteInput
               & #modelData
-              . #modelDataBaseMoney
+              . #modelDataTopMoney
               . #modelMoneyAmountOutput
               .~ quoteOutput
               & #modelData
-              . #modelDataQuoteMoney
+              . #modelDataBottomMoney
               . #modelMoneyAmountInput
               .~ baseInput
               & #modelData
-              . #modelDataQuoteMoney
+              . #modelDataBottomMoney
               . #modelMoneyAmountOutput
               .~ baseOutput
               & #modelData
-              . #modelDataBaseOrQuote
-              .~ Base
+              . #modelDataActiveMoney
+              .~ Top
 
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
@@ -671,21 +671,21 @@ swapCurrenciesWidget =
     onClickAction =
       EvalModelUpdate $ \st ->
         let baseCurrency =
-              st ^. #modelData . #modelDataBaseMoney . #modelMoneyCurrencyInfo
+              st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
-              st ^. #modelData . #modelDataQuoteMoney . #modelMoneyCurrencyInfo
+              st ^. #modelData . #modelDataBottomMoney . #modelMoneyCurrencyInfo
          in st
               & #modelData
-              . #modelDataBaseMoney
+              . #modelDataTopMoney
               . #modelMoneyCurrencyInfo
               .~ quoteCurrency
               & #modelData
-              . #modelDataQuoteMoney
+              . #modelDataBottomMoney
               . #modelMoneyCurrencyInfo
               .~ baseCurrency
               & #modelData
-              . #modelDataBaseOrQuote
-              .~ Base
+              . #modelDataActiveMoney
+              .~ Top
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =

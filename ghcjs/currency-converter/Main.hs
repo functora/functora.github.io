@@ -365,32 +365,37 @@ viewModel st =
 mainWidget :: Model -> View Action
 mainWidget st =
   LayoutGrid.layoutGrid
-    ( [ LayoutGrid.alignMiddle
-      ]
-        --
-        -- NOTE : need to hide widget on the first render to avoid flickering
-        --
-        <> ( if st ^. #modelHide
-              then [style_ [("display", "none")]]
-              else mempty
-           )
-    )
-    [ LayoutGrid.inner
-        [ class_ "container"
-        ]
-        [ amountWidget st Base,
-          currencyWidget st Base,
-          amountWidget st Quote,
-          currencyWidget st Quote,
-          swapAmountsWidget,
-          swapCurrenciesWidget,
-          -- LayoutGrid.cell [LayoutGrid.span12]
-          --   . (: mempty)
-          --   $ div_ mempty [inspect $ st ^. #modelData],
-          Snackbar.snackbar (Snackbar.config snackbarClosed)
-            $ modelSnackbarQueue st
-        ]
+    [ LayoutGrid.alignMiddle
     ]
+    $ [ LayoutGrid.inner
+          ( [ class_ "container"
+            ]
+              --
+              -- NOTE : need to hide widget on the first render
+              -- to avoid flickering
+              --
+              <> ( if st ^. #modelHide
+                    then [style_ [("display", "none")]]
+                    else mempty
+                 )
+          )
+          [ amountWidget st Base,
+            currencyWidget st Base,
+            amountWidget st Quote,
+            currencyWidget st Quote,
+            swapAmountsWidget,
+            swapCurrenciesWidget,
+            -- LayoutGrid.cell [LayoutGrid.span12]
+            --   . (: mempty)
+            --   $ div_ mempty [inspect $ st ^. #modelData],
+            Snackbar.snackbar (Snackbar.config snackbarClosed)
+              $ modelSnackbarQueue st
+          ]
+      ]
+    <> ( if st ^. #modelHide
+          then [div_ [class_ "lds-dual-ring"] mempty]
+          else mempty
+       )
 
 amountWidget :: Model -> BaseOrQuote -> View Action
 amountWidget st boq =

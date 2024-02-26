@@ -30,7 +30,7 @@
   patch(x4);
   function init() {
     if (typeof ClipboardJS === "undefined") {
-      setTimeout(init, 500);
+      setTimeout(init, 300);
     } else {
       new ClipboardJS(".clipboardjs");
     }

@@ -56,7 +56,8 @@ data Model = Model
   { modelData :: ModelData,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
-    modelSnackbarQueue :: Snackbar.Queue Action
+    modelSnackbarQueue :: Snackbar.Queue Action,
+    modelUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Generic)
 
@@ -85,6 +86,7 @@ data ModelData = ModelData
 
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
+  ct <- getCurrentTime
   market <- mkMarket
   let btc =
         CurrencyInfo
@@ -124,7 +126,8 @@ mkModel = do
           { modelData = final,
             modelMarket = market,
             modelCurrencies = [btc, usd],
-            modelSnackbarQueue = Snackbar.initialQueue
+            modelSnackbarQueue = Snackbar.initialQueue,
+            modelUpdatedAt = ct
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
     currenciesInfo <- currenciesList <$> getCurrencies
@@ -171,15 +174,15 @@ mkModel = do
         { modelData = final',
           modelMarket = market,
           modelCurrencies = currenciesInfo,
-          modelSnackbarQueue = Snackbar.initialQueue
+          modelSnackbarQueue = Snackbar.initialQueue,
+          modelUpdatedAt = ct
         }
 
 data Action
   = Noop
-  | ViewModelUpdate
+  | LoopModelUpdate
   | PureModelUpdate (Model -> Model)
   | EvalModelUpdate (Model -> Model)
-  | SnackbarClosed Snackbar.MessageId
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -205,28 +208,34 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = ViewModelUpdate,
+          initialAction = LoopModelUpdate,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel ViewModelUpdate st =
-  st <# do
-    forM_ enumerate $ \boq ->
-      unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
-        . void
-        . JSaddle.eval @Text
-        $ "document.getElementById('"
-        <> inspect boq
-        <> "').value = '"
-        <> (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput)
-        <> "';"
-    sleepMilliSeconds 300
-    pure ViewModelUpdate
-updateModel (SnackbarClosed msg) st =
-  noEff $ st & #modelSnackbarQueue %~ Snackbar.close msg
+updateModel LoopModelUpdate st =
+  batchEff
+    st
+    [ do
+        forM_ enumerate $ \boq ->
+          unless (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountActive)
+            . void
+            . JSaddle.eval @Text
+            $ "document.getElementById('"
+            <> inspect boq
+            <> "').value = '"
+            <> (st ^. #modelData . getMoneyOptic boq . #modelMoneyAmountInput)
+            <> "';"
+        sleepMilliSeconds 300
+        pure LoopModelUpdate,
+      do
+        ct <- getCurrentTime
+        if upToDate ct $ st ^. #modelUpdatedAt
+          then pure Noop
+          else evalModel st
+    ]
 updateModel (PureModelUpdate updater) st = noEff $ updater st
 updateModel (EvalModelUpdate updater) prevSt = do
   let nextSt = updater prevSt
@@ -238,7 +247,7 @@ updateModel (EvalModelUpdate updater) prevSt = do
               inspect e
                 & Snackbar.message
                 & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-                & Snackbar.setOnActionIconClick SnackbarClosed
+                & Snackbar.setOnActionIconClick snackbarClosed
         pure
           $ PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.addMessage msg)
       Right next ->
@@ -276,6 +285,7 @@ evalModel st = do
             . #modelMoneyCurrencyInfo
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
+        ct <- getCurrentTime
         pure . PureModelUpdate $ \st' ->
           st'
             & #modelData
@@ -290,6 +300,8 @@ evalModel st = do
             . getQuoteMoneyOptic boq
             . #modelMoneyAmountOutput
             .~ quoteAmt
+            & #modelUpdatedAt
+            .~ ct
 
 getMoneyOptic :: BaseOrQuote -> Lens' ModelData ModelMoney
 getMoneyOptic = \case
@@ -348,7 +360,7 @@ mainWidget st =
           LayoutGrid.cell [LayoutGrid.span12]
             . (: mempty)
             $ div_ mempty [inspect $ st ^. #modelData],
-          Snackbar.snackbar (Snackbar.config SnackbarClosed)
+          Snackbar.snackbar (Snackbar.config snackbarClosed)
             $ modelSnackbarQueue st
         ]
     ]
@@ -655,5 +667,14 @@ swapCurrenciesWidget =
               . #modelDataBaseOrQuote
               .~ Base
 
+snackbarClosed :: Snackbar.MessageId -> Action
+snackbarClosed msg = PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+
 inspectMoneyAmount :: (From String a) => Money Rational -> a
 inspectMoneyAmount = inspectRatio defaultRatioFormat . unMoney
+
+upToDate :: UTCTime -> UTCTime -> Bool
+upToDate lhs rhs =
+  diff < 3600
+  where
+    diff = abs . toRational $ diffUTCTime lhs rhs

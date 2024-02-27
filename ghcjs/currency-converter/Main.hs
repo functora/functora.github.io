@@ -188,9 +188,12 @@ mkModel = do
 
 data Action
   = Noop
-  | LoopModelUpdate
-  | PureModelUpdate (Model -> Model)
-  | EvalModelUpdate (Model -> Model)
+  | LoopUpdate
+  | PureUpdate (Model -> Model)
+  | EvalUpdate (JSM ()) (Model -> Model)
+
+simpleEvalUpdate :: (Model -> Model) -> Action
+simpleEvalUpdate = EvalUpdate $ pure ()
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -216,14 +219,14 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = LoopModelUpdate,
+          initialAction = LoopUpdate,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel LoopModelUpdate st =
+updateModel LoopUpdate st =
   batchEff
     st
     [ do
@@ -244,20 +247,20 @@ updateModel LoopModelUpdate st =
             <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
             <> "';"
         sleepMilliSeconds 300
-        pure LoopModelUpdate,
+        pure LoopUpdate,
       if st ^. #modelHide
-        then pure $ PureModelUpdate (& #modelHide .~ False)
+        then pure $ PureUpdate (& #modelHide .~ False)
         else do
           ct <- getCurrentTime
           if upToDate ct $ st ^. #modelUpdatedAt
             then pure Noop
-            else PureModelUpdate <$> evalModel st
+            else PureUpdate <$> evalModel st
     ]
-updateModel (PureModelUpdate updater) st = noEff $ updater st
-updateModel (EvalModelUpdate updater) prevSt = do
+updateModel (PureUpdate updater) st = noEff $ updater st
+updateModel (EvalUpdate after updater) prevSt = do
   let nextSt = updater prevSt
   --
-  -- NOTE : The "correct" way is to emit PureModelUpdate effect instead,
+  -- NOTE : The "correct" way is to emit PureUpdate effect instead,
   -- but without proper Action queue synchronization or mutex it does cause
   -- race conditions when user types "too fast". Impure evalModel function
   -- is cached and fast anyways. It's ok.
@@ -274,7 +277,9 @@ updateModel (EvalModelUpdate updater) prevSt = do
               & Snackbar.setOnActionIconClick snackbarClosed
       noEff $ nextSt & #modelSnackbarQueue %~ Snackbar.addMessage msg
     Right next ->
-      noEff $ next nextSt
+      next nextSt <# do
+        after
+        pure Noop
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do
@@ -428,14 +433,14 @@ amountWidget st loc =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      EvalModelUpdate $ \st' ->
+      simpleEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ False
     onInputAction txt =
-      EvalModelUpdate $ \st' ->
+      simpleEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -449,7 +454,7 @@ amountWidget st loc =
           . #modelDataTopOrBottom
           .~ loc
     onClearAction =
-      EvalModelUpdate $ \st' ->
+      EvalUpdate (focus $ inspect loc) $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -537,14 +542,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      EvalModelUpdate $ \st' ->
+      simpleEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      EvalModelUpdate $ \st' ->
+      simpleEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -555,7 +560,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      EvalModelUpdate $ \st' ->
+      simpleEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -604,7 +609,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( EvalModelUpdate $ \st ->
+          ( simpleEvalUpdate $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -640,7 +645,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      EvalModelUpdate $ \st ->
+      simpleEvalUpdate $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -684,7 +689,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      EvalModelUpdate $ \st ->
+      simpleEvalUpdate $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -704,7 +709,7 @@ swapCurrenciesWidget =
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  PureModelUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  PureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
 inspectMoneyAmount =

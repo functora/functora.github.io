@@ -430,7 +430,8 @@ amountWidget st loc =
     input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
     output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
     valid =
-      (parseMoney input == Just output)
+      (Prelude.null input)
+        || (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
       simpleEvalUpdate $ \st' ->
@@ -439,6 +440,19 @@ amountWidget st loc =
           . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ False
+          & #modelData
+          . getMoneyOptic loc
+          . #modelMoneyAmountInput
+          %~ ( \input' ->
+                if not (Prelude.null input')
+                  then input'
+                  else
+                    inspectMoneyAmount @Text
+                      $ st'
+                      ^. #modelData
+                      . getMoneyOptic loc
+                      . #modelMoneyAmountOutput
+             )
     onInputAction txt =
       simpleEvalUpdate $ \st' ->
         st'

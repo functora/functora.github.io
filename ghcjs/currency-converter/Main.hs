@@ -189,11 +189,21 @@ mkModel = do
 data Action
   = Noop
   | LoopUpdate
-  | PureUpdate (Model -> Model)
-  | EvalUpdate (JSM ()) (Model -> Model)
+  | SomeUpdate PureOrEval (JSM ()) (Model -> Model)
 
-simpleEvalUpdate :: (Model -> Model) -> Action
-simpleEvalUpdate = EvalUpdate $ pure ()
+data PureOrEval
+  = Pure
+  | Eval
+
+--
+-- NOTE : In most cases we don't need "after" JSM update.
+--
+
+mkPureUpdate :: (Model -> Model) -> Action
+mkPureUpdate = SomeUpdate Pure $ pure ()
+
+mkEvalUpdate :: (Model -> Model) -> Action
+mkEvalUpdate = SomeUpdate Eval $ pure ()
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -249,15 +259,18 @@ updateModel LoopUpdate st =
         sleepMilliSeconds 300
         pure LoopUpdate,
       if st ^. #modelHide
-        then pure $ PureUpdate (& #modelHide .~ False)
+        then pure $ mkPureUpdate (& #modelHide .~ False)
         else do
           ct <- getCurrentTime
           if upToDate ct $ st ^. #modelUpdatedAt
             then pure Noop
-            else PureUpdate <$> evalModel st
+            else mkPureUpdate <$> evalModel st
     ]
-updateModel (PureUpdate updater) st = noEff $ updater st
-updateModel (EvalUpdate after updater) prevSt = do
+updateModel (SomeUpdate Pure after updater) st =
+  updater st <# do
+    after
+    pure Noop
+updateModel (SomeUpdate Eval after updater) prevSt = do
   let nextSt = updater prevSt
   --
   -- NOTE : The "correct" way is to emit PureUpdate effect instead,
@@ -365,8 +378,7 @@ mainWidget st =
           ( [ class_ "container"
             ]
               --
-              -- NOTE : need to hide widget on the first render
-              -- to avoid flickering
+              -- NOTE : Hiding widget on the first render to avoid flickering.
               --
               <> ( if st ^. #modelHide
                     then [style_ [("display", "none")]]
@@ -434,7 +446,7 @@ amountWidget st loc =
         || (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      simpleEvalUpdate $ \st' ->
+      mkEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -454,7 +466,7 @@ amountWidget st loc =
                       . #modelMoneyAmountOutput
              )
     onInputAction txt =
-      simpleEvalUpdate $ \st' ->
+      mkEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -468,7 +480,7 @@ amountWidget st loc =
           . #modelDataTopOrBottom
           .~ loc
     onClearAction =
-      EvalUpdate (focus $ inspect loc) $ \st' ->
+      SomeUpdate Eval (focus $ inspect loc) $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -556,14 +568,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      simpleEvalUpdate $ \st' ->
+      mkEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      simpleEvalUpdate $ \st' ->
+      mkEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -574,7 +586,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      simpleEvalUpdate $ \st' ->
+      mkEvalUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -623,7 +635,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( simpleEvalUpdate $ \st ->
+          ( mkEvalUpdate $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -659,7 +671,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      simpleEvalUpdate $ \st ->
+      mkEvalUpdate $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -703,7 +715,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      simpleEvalUpdate $ \st ->
+      mkEvalUpdate $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -723,7 +735,7 @@ swapCurrenciesWidget =
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  PureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  mkPureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (From String a) => Money Rational -> a
 inspectMoneyAmount =

@@ -18,6 +18,7 @@ import Functora.Rates hiding (Quote)
 import qualified Language.Javascript.JSaddle.Evaluate as JSaddle
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
+import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
@@ -85,7 +86,7 @@ data ModelData = ModelData
   { -- TODO : use timestamed data
     modelDataTopMoney :: ModelMoney,
     modelDataBottomMoney :: ModelMoney,
-    modelDataActiveMoney :: TopOrBottom
+    modelDataTopOrBottom :: TopOrBottom
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -124,7 +125,7 @@ mkModel = do
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
                 },
-            modelDataActiveMoney = Top
+            modelDataTopOrBottom = Top
           }
   let st =
         Model
@@ -173,7 +174,7 @@ mkModel = do
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
                   },
-              modelDataActiveMoney = Top
+              modelDataTopOrBottom = Top
             }
     pure
       Model
@@ -277,7 +278,7 @@ updateModel (EvalModelUpdate updater) prevSt = do
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do
-  let loc = st ^. #modelData . #modelDataActiveMoney
+  let loc = st ^. #modelData . #modelDataTopOrBottom
   baseAmtResult <-
     tryAny
       . parseMoney
@@ -388,28 +389,38 @@ mainWidget st =
 amountWidget :: Model -> TopOrBottom -> View Action
 amountWidget st loc =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
+    [ LayoutGrid.span6Desktop,
+      style_
+        [ ("display", "flex"),
+          ("align-items", "center")
+        ]
     ]
-    . (: mempty)
-    . TextField.outlined
-    $ TextField.config
-    & TextField.setType (Just "number")
-    & TextField.setValid valid
-    & TextField.setOnInput onInputAction
-    & TextField.setPlaceholder
-      ( Just
-          . inspectCurrencyInfo
-          $ st
-          ^. #modelData
-          . getMoneyOptic loc
-          . #modelMoneyCurrencyInfo
-      )
-    & TextField.setRequired True
-    & TextField.setAttributes
-      [ class_ "fill",
-        id_ $ inspect loc,
-        onBlur onBlurAction
-      ]
+    [ TextField.outlined
+        $ TextField.config
+        & TextField.setType (Just "number")
+        & TextField.setValid valid
+        & TextField.setOnInput onInputAction
+        & TextField.setRequired True
+        & TextField.setPlaceholder
+          ( Just
+              . inspectCurrencyInfo
+              $ st
+              ^. #modelData
+              . getMoneyOptic loc
+              . #modelMoneyCurrencyInfo
+          )
+        & TextField.setAttributes
+          [ class_ "fill",
+            id_ $ inspect loc,
+            onBlur onBlurAction
+          ],
+      IconButton.iconButton
+        ( IconButton.config
+            & IconButton.setOnClick onClearAction
+            & IconButton.setAttributes [class_ "micro-margin-left"]
+        )
+        "close"
+    ]
   where
     input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
     output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
@@ -435,8 +446,15 @@ amountWidget st loc =
           . #modelMoneyAmountActive
           .~ True
           & #modelData
-          . #modelDataActiveMoney
+          . #modelDataTopOrBottom
           .~ loc
+    onClearAction =
+      EvalModelUpdate $ \st' ->
+        st'
+          & #modelData
+          . getMoneyOptic loc
+          . #modelMoneyAmountInput
+          .~ mempty
 
 currencyWidget ::
   Model ->
@@ -648,9 +666,6 @@ swapAmountsWidget =
               . #modelDataBottomMoney
               . #modelMoneyAmountOutput
               .~ baseOutput
-              & #modelData
-              . #modelDataActiveMoney
-              .~ Top
 
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
@@ -684,7 +699,7 @@ swapCurrenciesWidget =
               . #modelMoneyCurrencyInfo
               .~ baseCurrency
               & #modelData
-              . #modelDataActiveMoney
+              . #modelDataTopOrBottom
               .~ Top
 
 snackbarClosed :: Snackbar.MessageId -> Action

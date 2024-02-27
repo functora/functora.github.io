@@ -20,7 +20,15 @@ body {
 }
 
 .container {
-  max-width: 450px;
+  max-width: 550px;
+}
+
+.mdc-button {
+  height: 56px;
+}
+
+.micro-margin-left {
+  margin-left: 6px;
 }
 
 @media print {

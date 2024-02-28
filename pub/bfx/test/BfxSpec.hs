@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
-module BitfinexClientSpec
+module BfxSpec
   ( spec,
   )
 where
@@ -25,16 +25,16 @@ spec = before sysEnv $ do
     liftIO $ ss `shouldBe` PltOperative
   itRight "symbolsDetails succeeds" . const $ do
     ss <- Bitfinex.symbolsDetails
-    liftIO $
-      Map.lookup [currencyPair|ADABTC|] ss
-        `shouldBe` Just
-          CurrencyPairConf
-            { currencyPairPrecision = 5,
-              currencyPairInitMargin = 30 % 1,
-              currencyPairMinMargin = 15,
-              currencyPairMaxOrderAmt = [moneyBaseBuy|250000|],
-              currencyPairMinOrderAmt = [moneyBaseBuy|4|]
-            }
+    liftIO
+      $ Map.lookup [currencyPair|ADABTC|] ss
+      `shouldBe` Just
+        CurrencyPairConf
+          { currencyPairPrecision = 5,
+            currencyPairInitMargin = 30 % 1,
+            currencyPairMinMargin = 15,
+            currencyPairMaxOrderAmt = [moneyBaseBuy|250000|],
+            currencyPairMinOrderAmt = [moneyBaseBuy|4|]
+          }
   itRight "marketAveragePrice succeeds" . const $ do
     let sym = [currencyPair|ADABTC|]
     buyRate <-
@@ -59,19 +59,21 @@ spec = before sysEnv $ do
     let opts = SubmitOrder.optsPostOnly
     curRate <- Bitfinex.marketAveragePrice amt sym
     rate <-
-      tryErrorT . roundQuotePerBase' $
-        unQuotePerBase curRate |* 0.5
+      tryErrorT
+        . roundQuotePerBase'
+        $ unQuotePerBase curRate
+        |* 0.5
     order <- Bitfinex.submitOrderMaker env amt sym rate opts
     Bitfinex.cancelOrderById env $ orderId order
   itRight "retrieveOrders succeeds" $ \env ->
-    Bitfinex.retrieveOrders env $
-      GetOrders.optsSym [currencyPair|ADABTC|]
+    Bitfinex.retrieveOrders env
+      $ GetOrders.optsSym [currencyPair|ADABTC|]
   itRight "ordersHistory succeeds" $ \env ->
-    Bitfinex.ordersHistory env $
-      GetOrders.optsSym [currencyPair|ADABTC|]
+    Bitfinex.ordersHistory env
+      $ GetOrders.optsSym [currencyPair|ADABTC|]
   itRight "getOrders succeeds" $ \env ->
-    Bitfinex.getOrders env $
-      GetOrders.optsSym [currencyPair|ADABTC|]
+    Bitfinex.getOrders env
+      $ GetOrders.optsSym [currencyPair|ADABTC|]
   itLeft "getOrder fails" $ \env ->
     Bitfinex.getOrder env $ OrderId 0
   itLeft "submitCounterOrderMaker fails" $ \env -> do
@@ -87,8 +89,9 @@ spec = before sysEnv $ do
     (Bitfinex.wallets @'Base)
   itRight "netWorth succeeds" $ \env ->
     Bitfinex.netWorth env [ccQuote|BTC|]
-  itRight "candlesLast succeeds" . const $
-    Bitfinex.candlesLast Ctf1h [currencyPair|ADABTC|] Candles.optsDef
+  itRight "candlesLast succeeds"
+    . const
+    $ Bitfinex.candlesLast Ctf1h [currencyPair|ADABTC|] Candles.optsDef
   itRight "candlesHist succeeds" . const $ do
     Bitfinex.candlesHist Ctf1h [currencyPair|ADABTC|] Candles.optsDef
 

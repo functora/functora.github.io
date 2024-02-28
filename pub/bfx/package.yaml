@@ -153,6 +153,13 @@ library:
   <<: *deps
   source-dirs:
     - src
+  when:
+    - condition: flag(ghcid)
+      <<: *deps
+      source-dirs:
+        - src
+      ghc-options:
+        - -Wno-unused-packages
 
 tests:
   bfx-test:

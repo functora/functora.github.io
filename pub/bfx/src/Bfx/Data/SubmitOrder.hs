@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.SubmitOrder
@@ -83,9 +84,9 @@ instance
             -- TODO : use TIF for automated cancellation!
             --
         ]
-        <> maybe
-          mempty
-          (\x -> ["price_oco_stop" A..= toTextParam x])
-          (stopLoss opts)
+      <> maybe
+        mempty
+        (\x -> ["price_oco_stop" A..= toTextParam x])
+        (stopLoss opts)
     where
       opts = options req

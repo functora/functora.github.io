@@ -1,0 +1,3 @@
+--restart=.ghcid
+--restart=package.yaml
+--restart=../../cabal.project

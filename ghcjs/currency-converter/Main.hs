@@ -240,6 +240,9 @@ updateModel LoopUpdate st =
     st
     [ do
         --
+        -- TODO : MOVE TO "SomeUpdate" HANDLER!!!
+        -- Polling like this is not good!!!
+        --
         -- NOTE : The "correct" way is to use "controlled input" with
         -- TextField.setValue but without proper Action queue synchronization
         -- or mutex it does cause race conditions when user types "too fast":

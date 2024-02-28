@@ -21,7 +21,11 @@ in
               then "--fail-fast --color -f failed-examples"
               else ""
             else opt
-          }" --command="${pkgs.cabal-install}/bin/cabal new-repl ${pkg}-${cmd} --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
+          }" --command="${pkgs.cabal-install}/bin/cabal new-repl ${
+            if cmd == "lib"
+            then pkg
+            else "${pkg}-${cmd}"
+          } --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
         '';
       };
     mkService = srv: exe: {

@@ -1,0 +1,279 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           bfx
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/21it/bfx#readme>
+homepage:       https://github.com/21it/bfx#readme
+bug-reports:    https://github.com/21it/bfx/issues
+author:         21it
+maintainer:     21it@protonmail.com
+copyright:      (c) 2021-2022 21it
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/21it/bfx
+
+flag ghcid
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Bfx
+      Bfx.Chart
+      Bfx.Class.FromRpc
+      Bfx.Class.ToBaseUrl
+      Bfx.Class.ToPathPieces
+      Bfx.Class.ToRequestMethod
+      Bfx.Class.ToRequestParam
+      Bfx.Data.CancelOrderMulti
+      Bfx.Data.Candles
+      Bfx.Data.Env
+      Bfx.Data.FeeSummary
+      Bfx.Data.GetOrders
+      Bfx.Data.Kind
+      Bfx.Data.MarketAveragePrice
+      Bfx.Data.Metro
+      Bfx.Data.QQ
+      Bfx.Data.SubmitOrder
+      Bfx.Data.Type
+      Bfx.Data.Wallets
+      Bfx.Data.Web
+      Bfx.Import
+      Bfx.Import.External
+      Bfx.Import.Internal
+      Bfx.Import.Witch
+      Bfx.Indicator.Atr
+      Bfx.Indicator.Ma
+      Bfx.Indicator.Mma
+      Bfx.Indicator.Tr
+      Bfx.Math
+      Bfx.Orphan
+      Bfx.Parser
+      Bfx.Rpc.Generic
+      Bfx.Trading
+      Bfx.Util
+  other-modules:
+      Paths_bfx
+  hs-source-dirs:
+      src
+  default-extensions:
+      NoImplicitPrelude
+      MultiParamTypeClasses
+      LambdaCase
+      OverloadedStrings
+      OverloadedLists
+      GeneralizedNewtypeDeriving
+      DerivingStrategies
+      DerivingVia
+      DeriveGeneric
+      DeriveLift
+      QuasiQuotes
+      DataKinds
+      DefaultSignatures
+      EmptyCase
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      GADTs
+      InstanceSigs
+      KindSignatures
+      NoCUSKs
+      NoNamedWildCards
+      NoStarIsType
+      PolyKinds
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      StandaloneKindSignatures
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      UndecidableInstances
+      TupleSections
+  ghc-options: -Weverything -Werror -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances
+  build-depends:
+      GenericPretty
+    , aeson
+    , base >=4.7 && <5
+    , base16-bytestring
+    , bytestring
+    , combinat
+    , containers
+    , cryptonite
+    , envparse
+    , extra
+    , generic-pretty-instances
+    , gnuplot
+    , http-client
+    , http-client-tls
+    , http-types
+    , katip
+    , lens-aeson
+    , memory
+    , microlens
+    , parallel
+    , persistent
+    , pretty
+    , reanimate
+    , siggy-chardust
+    , singletons
+    , singletons-base
+    , table-layout
+    , template-haskell
+    , temporary
+    , text
+    , time
+    , transformers
+    , units
+    , universum
+    , unliftio
+    , vector
+    , witch
+  default-language: Haskell2010
+
+test-suite bfx-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Bfx.Data.CancelOrderMultiSpec
+      Bfx.Data.SubmitOrderSpec
+      Bfx.Data.TypeSpec
+      Bfx.TestEnv
+      BfxSpec
+      Paths_bfx
+  hs-source-dirs:
+      test
+  default-extensions:
+      NoImplicitPrelude
+      MultiParamTypeClasses
+      LambdaCase
+      OverloadedStrings
+      OverloadedLists
+      GeneralizedNewtypeDeriving
+      DerivingStrategies
+      DerivingVia
+      DeriveGeneric
+      DeriveLift
+      QuasiQuotes
+      DataKinds
+      DefaultSignatures
+      EmptyCase
+      ExistentialQuantification
+      FlexibleContexts
+      FlexibleInstances
+      GADTs
+      InstanceSigs
+      KindSignatures
+      NoCUSKs
+      NoNamedWildCards
+      NoStarIsType
+      PolyKinds
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      StandaloneKindSignatures
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      UndecidableInstances
+      TupleSections
+  ghc-options: -Weverything -Werror -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-missing-kind-signatures -fenable-th-splice-warnings -fprint-potential-instances -threaded -rtsopts -with-rtsopts=-N -optl-fuse-ld=gold
+  ld-options: -fuse-ld=gold
+  build-depends:
+      aeson
+    , base
+    , bfx
+    , containers
+    , hspec
+  default-language: Haskell2010
+  if flag(ghcid)
+    other-modules:
+        Bfx
+        Bfx.Chart
+        Bfx.Class.FromRpc
+        Bfx.Class.ToBaseUrl
+        Bfx.Class.ToPathPieces
+        Bfx.Class.ToRequestMethod
+        Bfx.Class.ToRequestParam
+        Bfx.Data.CancelOrderMulti
+        Bfx.Data.Candles
+        Bfx.Data.Env
+        Bfx.Data.FeeSummary
+        Bfx.Data.GetOrders
+        Bfx.Data.Kind
+        Bfx.Data.MarketAveragePrice
+        Bfx.Data.Metro
+        Bfx.Data.QQ
+        Bfx.Data.SubmitOrder
+        Bfx.Data.Type
+        Bfx.Data.Wallets
+        Bfx.Data.Web
+        Bfx.Import
+        Bfx.Import.External
+        Bfx.Import.Internal
+        Bfx.Import.Witch
+        Bfx.Indicator.Atr
+        Bfx.Indicator.Ma
+        Bfx.Indicator.Mma
+        Bfx.Indicator.Tr
+        Bfx.Math
+        Bfx.Orphan
+        Bfx.Parser
+        Bfx.Rpc.Generic
+        Bfx.Trading
+        Bfx.Util
+    hs-source-dirs:
+        src
+    ghc-options: -Wno-unused-packages
+    build-depends:
+        GenericPretty
+      , aeson
+      , base >=4.7 && <5
+      , base16-bytestring
+      , bytestring
+      , combinat
+      , containers
+      , cryptonite
+      , envparse
+      , extra
+      , generic-pretty-instances
+      , gnuplot
+      , http-client
+      , http-client-tls
+      , http-types
+      , katip
+      , lens-aeson
+      , memory
+      , microlens
+      , parallel
+      , persistent
+      , pretty
+      , reanimate
+      , siggy-chardust
+      , singletons
+      , singletons-base
+      , table-layout
+      , template-haskell
+      , temporary
+      , text
+      , time
+      , transformers
+      , units
+      , universum
+      , unliftio
+      , vector
+      , witch
+  else
+    build-depends:
+        bfx

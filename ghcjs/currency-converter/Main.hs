@@ -18,7 +18,6 @@ import Functora.Rates hiding (Quote)
 import qualified Language.Javascript.JSaddle.Evaluate as JSaddle
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
-import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
@@ -418,6 +417,26 @@ amountWidget st loc =
         & TextField.setValid valid
         & TextField.setOnInput onInputAction
         & TextField.setRequired True
+        & TextField.setLeadingIcon
+          ( Just
+              $ TextField.icon
+                [ class_ "mdc-text-field__icon--leading",
+                  intProp "tabindex" 0,
+                  textProp "role" "button",
+                  onClick onClearAction
+                ]
+                "content_copy"
+          )
+        & TextField.setTrailingIcon
+          ( Just
+              $ TextField.icon
+                [ class_ "mdc-text-field__icon--trailing",
+                  intProp "tabindex" 0,
+                  textProp "role" "button",
+                  onClick onClearAction
+                ]
+                "close"
+          )
         & TextField.setPlaceholder
           ( Just
               . inspectCurrencyInfo
@@ -430,13 +449,7 @@ amountWidget st loc =
           [ class_ "fill",
             id_ $ inspect loc,
             onBlur onBlurAction
-          ],
-      IconButton.iconButton
-        ( IconButton.config
-            & IconButton.setOnClick onClearAction
-            & IconButton.setAttributes [class_ "micro-margin-left"]
-        )
-        "close"
+          ]
     ]
   where
     input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
@@ -452,19 +465,6 @@ amountWidget st loc =
           . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ False
-          & #modelData
-          . getMoneyOptic loc
-          . #modelMoneyAmountInput
-          %~ ( \input' ->
-                if not (Prelude.null input')
-                  then input'
-                  else
-                    inspectMoneyAmount @Text
-                      $ st'
-                      ^. #modelData
-                      . getMoneyOptic loc
-                      . #modelMoneyAmountOutput
-             )
     onInputAction txt =
       mkEvalUpdate $ \st' ->
         st'
@@ -479,6 +479,9 @@ amountWidget st loc =
           & #modelData
           . #modelDataTopOrBottom
           .~ loc
+    --
+    -- TODO : Need to improve this, it's not smooth.
+    --
     onClearAction =
       SomeUpdate Eval (focus $ inspect loc) $ \st' ->
         st'
@@ -486,6 +489,10 @@ amountWidget st loc =
           . getMoneyOptic loc
           . #modelMoneyAmountInput
           .~ mempty
+          & #modelData
+          . getMoneyOptic loc
+          . #modelMoneyAmountActive
+          .~ True
 
 currencyWidget ::
   Model ->

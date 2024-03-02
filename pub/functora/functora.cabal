@@ -67,6 +67,7 @@ common pkg
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
+    StandaloneKindSignatures
     StrictData
     TupleSections
     TypeApplications
@@ -194,6 +195,16 @@ common pkg-rates
     , money
     , web
 
+common pkg-tags
+  import:         pkg
+  hs-source-dirs: src/tags
+  build-depends:
+    , base
+    , lift-type
+    , singletons-base
+    , template-haskell
+    , type-level-sets
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -257,6 +268,15 @@ library rates
   visibility:      public
   exposed-modules: Functora.Rates
 
+library tags
+  import:          pkg-tags
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Tags
+  other-modules:
+    Functora.TagsFamily
+    Functora.TagsOrphan
+
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -280,10 +300,15 @@ test-suite functora-test
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
+    Functora.Tags.TestFgpt
+    Functora.Tags.TestSing
+    Functora.TagsSpec
 
   if flag(ghcid)
     import:
-      pkg-prelude, pkg-qr, pkg-aes, pkg-cfg, pkg-web, pkg-sql, pkg-money, pkg-rates
+      pkg-prelude, pkg-qr, pkg-aes,
+      pkg-cfg, pkg-web, pkg-sql,
+      pkg-money, pkg-rates, pkg-tags
 
     ghc-options:   -Wno-unused-packages
     other-modules:
@@ -298,6 +323,9 @@ test-suite functora-test
       Functora.Rates
       Functora.Sql
       Functora.SqlOrphan
+      Functora.Tags
+      Functora.TagsFamily
+      Functora.TagsOrphan
       Functora.Web
       Functora.WebOrphan
 
@@ -309,3 +337,4 @@ test-suite functora-test
       , money
       , qr
       , rates
+      , tags

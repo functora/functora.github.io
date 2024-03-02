@@ -35,19 +35,15 @@ spec = do
   it "mkCurrenciesUris" $ do
     lhs <- URI.render <<$>> mkCurrenciesUris
     let rhs :: NonEmpty Text =
-          [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies.min.json",
-            "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies.json",
-            "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies.min.json",
-            "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies.json"
+          [ "https://cdn.jsdelivr.net/npm/%40fawazahmed0/currency-api%40latest/v1/currencies.min.json",
+            "https://cdn.jsdelivr.net/npm/%40fawazahmed0/currency-api%40latest/v1/currencies.json"
           ]
     lhs `shouldBe` rhs
   it "mkQuotePerBaseUris" $ do
     lhs <- URI.render <<$>> mkQuotePerBaseUris (CurrencyCode "btc")
     let rhs :: NonEmpty Text =
-          [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.min.json",
-            "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api%401/latest/currencies/btc.json",
-            "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies/btc.min.json",
-            "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest/currencies/btc.json"
+          [ "https://cdn.jsdelivr.net/npm/%40fawazahmed0/currency-api%40latest/v1/currencies/btc.min.json",
+            "https://cdn.jsdelivr.net/npm/%40fawazahmed0/currency-api%40latest/v1/currencies/btc.json"
           ]
     lhs `shouldBe` rhs
   it "getCurrencies" . withNewMarket $ do

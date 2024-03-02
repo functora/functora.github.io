@@ -258,8 +258,7 @@ mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
 mkRootUris =
   mapM
     mkURI
-    [ "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest",
-      "https://raw.githubusercontent.com/fawazahmed0/currency-api/1/latest"
+    [ "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1"
     ]
 
 mkCurrenciesUris :: (MonadThrow m) => m (NonEmpty URI)

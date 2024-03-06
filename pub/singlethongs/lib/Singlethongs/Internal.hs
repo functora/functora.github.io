@@ -1,5 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE PolyKinds #-}
@@ -22,6 +24,14 @@ module Singlethongs.Internal
 where
 
 import Data.Kind (Constraint, Type)
+import Data.Proxy (Proxy (..))
+import GHC.TypeLits
+  ( KnownSymbol,
+    SomeSymbol (..),
+    Symbol,
+    someSymbolVal,
+    symbolVal,
+  )
 
 #if __GLASGOW_HASKELL__ >= 810
 type Sing :: k -> Type
@@ -63,3 +73,19 @@ demote :: forall {k} (a :: k). (SingKind k, SingI a) => Demote k
 demote :: forall a. (SingKind (KindOf a), SingI a) => Demote (KindOf a)
 #endif
 demote = fromSing (sing @a)
+
+--
+-- TypeLits
+--
+
+data instance Sing (n :: Symbol) where
+  SSym :: (KnownSymbol n) => Sing n
+
+instance (KnownSymbol n) => SingI n where
+  sing = SSym
+
+instance SingKind Symbol where
+  type Demote Symbol = String
+  fromSing (SSym :: Sing n) = symbolVal (Proxy :: Proxy n)
+  toSing s = case someSymbolVal s of
+    SomeSymbol (_ :: Proxy n) -> SomeSing (SSym :: Sing n)

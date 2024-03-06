@@ -1,0 +1,11 @@
+dist-*
+.*.sw[a-p]
+*~
+.ghc.environment.*
+cabal*.project.local
+result*
+*.lock
+dist
+tags
+*/tmp
+tmp/*

@@ -1,22 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists -Wno-unused-type-patterns #-}
 
 module Functora.Tags.TestSing where
 
 import Functora.Tags
+import Prelude
 
-singletons
-  [d|
-    data Money = Money
+data Money = Money
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
-    data NetOrGross = Net | Gross
+data NetOrGross = Net | Gross
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
-    data GainOrLose = Gain | Lose
+data GainOrLose = Gain | Lose
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
-    data MerchantOrCustomer = Merchant | Customer
-    |]
+data MerchantOrCustomer = Merchant | Customer
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
-mkEnum ''Money
-mkEnum ''NetOrGross
-mkEnum ''GainOrLose
-mkEnum ''MerchantOrCustomer
+mkSing ''Money
+mkSing ''NetOrGross
+mkSing ''GainOrLose
+mkSing ''MerchantOrCustomer

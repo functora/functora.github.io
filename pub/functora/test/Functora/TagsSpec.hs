@@ -48,6 +48,10 @@ spec = do
     getGainOrLoseTag (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` Gain
   it "inspect" $ do
+    inspect @Text (mkMoney @NoTags)
+      `shouldBe` "Tagged (4 % 5)"
+    inspect @Text (mkMoney @(NoTags |+| "BTC" |+| 'Net))
+      `shouldBe` "Tagged (4 % 5)"
     inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Lose |+| 'Merchant))
       `shouldBe` "Tagged (4 % 5)"
     inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Lose))
@@ -57,5 +61,11 @@ spec = do
     inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` "Tagged (4 % 5)"
   it "inspectTags" $ do
+    inspectTags @NoTags @Text
+      `shouldBe` "'[] *"
+    inspectTags @(NoTags |+| "BTC" |+| 'Net) @Text
+      `shouldBe` "': * (Sing NetOrGross 'Net) (': * (Sing Symbol \"BTC\") ('[] *))"
     inspectTags @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
-      `shouldBe` "': * (SNetOrGross 'Net) (': * (SGainOrLose 'Gain) (': * (SSymbol \"BTC\") ('[] *)))"
+      `shouldBe` "': * (Sing NetOrGross 'Net) (': * (Sing GainOrLose 'Gain) (': * (Sing Symbol \"BTC\") ('[] *)))"
+    inspectTags @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
+      `shouldBe` inspectTags @(NoTags |+| "BTC" |+| 'Net |+| 'Gain)

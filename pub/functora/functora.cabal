@@ -30,7 +30,9 @@ common pkg
   if impl(ghc >=8.10.7)
     ghc-options:
       -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
-      -Wno-missing-kind-signatures
+
+  if impl(ghc >8.10.7)
+    ghc-options: -Wno-missing-kind-signatures
 
   default-extensions:
     AllowAmbiguousTypes
@@ -147,6 +149,7 @@ common pkg-web
   build-depends:
     , base
     , modern-uri
+    , network-uri
 
   if !impl(ghcjs)
     build-depends:
@@ -154,7 +157,6 @@ common pkg-web
       , http-client
       , http-client-tls
       , http-types
-      , network-uri
       , streaming-commons
       , yesod-core
 
@@ -201,7 +203,7 @@ common pkg-tags
   build-depends:
     , base
     , lift-type
-    , singletons-base
+    , singlethongs
     , template-haskell
     , type-level-sets
 

@@ -28,7 +28,9 @@ common pkg
   if impl(ghc >=8.10.7)
     ghc-options:
       -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
-      -Wno-missing-kind-signatures
+
+  if impl(ghc >8.10.7)
+    ghc-options: -Wno-missing-kind-signatures
 
   default-extensions:
     AllowAmbiguousTypes
@@ -73,7 +75,7 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  prelude qr aes money web rates
+  hs-source-dirs:  prelude qr aes money web rates tags
   build-depends:
     , aeson
     , aeson-combinators
@@ -90,16 +92,19 @@ library
     , extra
     , generic-lens
     , lens
+    , lift-type
     , microlens
     , microlens-contra
     , microlens-ghc
     , microlens-th
     , modern-uri
     , monad-chronicle
+    , network-uri
     , pkcs7
     , qrcode-core
     , safe-exceptions
     , scientific
+    , singlethongs
     , stm
     , syb
     , tagged
@@ -109,6 +114,7 @@ library
     , these
     , these-lens
     , time
+    , type-level-sets
     , unbounded-delays
     , universum
     , unliftio
@@ -121,7 +127,6 @@ library
       , http-client
       , http-client-tls
       , http-types
-      , network-uri
       , streaming-commons
       , yesod-core
 
@@ -136,5 +141,10 @@ library
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
+    Functora.Tags
     Functora.Web
     Functora.WebOrphan
+
+  other-modules:
+    Functora.TagsFamily
+    Functora.TagsOrphan

@@ -8,13 +8,13 @@ where
 
 import qualified Data.ByteString.Lazy as BL
 import Functora.Prelude
+import qualified Network.URI as NetURI
 import qualified Text.URI as URI
 #ifndef __GHCJS__
 import Functora.WebOrphan ()
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
-import qualified Network.URI as NetURI
 #else
 import qualified Data.JSString as JSString
 import qualified JavaScript.Web.XMLHttpRequest as Xhr
@@ -30,9 +30,11 @@ webFetch ::
 webFetch prevUri qs = do
   let prevQuery = URI.uriQuery prevUri
   nextQuery <- forM qs $ uncurry newQueryParam
-  let nextUri = URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}
+  let nextUri =
+        NetURI.unEscapeString
+          $ URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}
 #ifndef __GHCJS__
-  webRaw <- Web.parseRequest $ NetURI.unEscapeString nextUri
+  webRaw <- Web.parseRequest nextUri
   let ua :: ByteString =
         "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
   let webReq =

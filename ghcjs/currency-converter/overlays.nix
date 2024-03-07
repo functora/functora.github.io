@@ -5,13 +5,22 @@
       extendHaskell = ghcpkgs:
         ghcpkgs.extend (
           self: super: {
-            pkcs7 = doJailbreak (
-              self.callHackageDirect {
-                pkg = "pkcs7";
-                ver = "1.0.0.1";
-                sha256 = "eeX7kDgzZhhdeA0cWq/UVNxlEPzOO99nUj6qvEmY/yM=";
-              } {}
-            );
+            #
+            # Fixes
+            #
+            mkDerivation = args:
+              super.mkDerivation (args
+                // {
+                  broken = false;
+                  doCheck = false;
+                  doHaddock = false;
+                  enableLibraryProfiling = false;
+                });
+            pkcs7 = self.callHackageDirect {
+              pkg = "pkcs7";
+              ver = "1.0.0.1";
+              sha256 = "eeX7kDgzZhhdeA0cWq/UVNxlEPzOO99nUj6qvEmY/yM=";
+            } {};
             qrcode-core = self.callHackageDirect {
               pkg = "qrcode-core";
               ver = "0.9.8";
@@ -22,9 +31,6 @@
               ver = "1.8.2";
               sha256 = "Ekl/dTUi6nb4GtiG5kFlf+bau8QimRgLZlfticNcbbA=";
             } {};
-            witch-mini = doJailbreak (
-              self.callCabal2nix "witch-mini" "${functora}/pub/witch-mini" {}
-            );
             with-utf8 = self.callHackageDirect {
               pkg = "with-utf8";
               ver = "1.1.0.0";
@@ -50,10 +56,29 @@
               ver = "0.1.1.1";
               sha256 = "U7fvmUlo/HnOI0OANinj/STCOJapB/DEiPRCJXRdIkE=";
             } {};
-            functora-ghcjs =
-              self.callCabal2nix "functora-ghcjs" "${functora}/pub/functora/src" {};
+            lift-type = self.callHackageDirect {
+              pkg = "lift-type";
+              ver = "0.1.1.1";
+              sha256 = "EIIBNte4+s9s3lthoh1kj/qviuK+zlvBgNpKC0MmHcM=";
+            } {};
+            #
+            # Local
+            #
+            witch-mini = doJailbreak (
+              self.callCabal2nix "witch-mini" "${functora}/pub/witch-mini" {}
+            );
+            singlethongs =
+              self.callCabal2nix
+              "singlethongs" "${functora}/pub/singlethongs" {};
+            miso =
+              self.callCabal2nix
+              "miso" "${functora}/ghcjs/miso" {};
             miso-components =
-              self.callCabal2nix "miso-components" "${functora}/ghcjs/miso-components" {};
+              self.callCabal2nix
+              "miso-components" "${functora}/ghcjs/miso-components" {};
+            functora-ghcjs =
+              self.callCabal2nix
+              "functora-ghcjs" "${functora}/pub/functora/src" {};
           }
         );
     in {

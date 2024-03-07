@@ -7,10 +7,11 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneKindSignatures #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
+#if __GLASGOW_HASKELL__ >= 810
+{-# LANGUAGE StandaloneKindSignatures #-}
+#endif
 
 module Singlethongs.Internal
   ( Sing,
@@ -72,7 +73,7 @@ demote :: forall {k} (a :: k). (SingKind k, SingI a) => Demote k
 #else
 demote :: forall a. (SingKind (KindOf a), SingI a) => Demote (KindOf a)
 #endif
-demote = fromSing (sing @a)
+demote = fromSing (sing :: Sing a)
 
 --
 -- TypeLits

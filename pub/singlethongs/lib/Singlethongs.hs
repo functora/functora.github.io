@@ -33,6 +33,7 @@ module Singlethongs
     demote,
 
     -- * Template Haskell
+    mkSing,
     singlethongs,
 
     -- * Re-exports
@@ -42,5 +43,9 @@ module Singlethongs
 where
 
 import Data.Type.Equality
+import Language.Haskell.TH (Dec, Name, Q)
 import Singlethongs.Internal
 import Singlethongs.TH
+
+mkSing :: Name -> Q [Dec]
+mkSing = singlethongs

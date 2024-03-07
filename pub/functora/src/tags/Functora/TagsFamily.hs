@@ -23,25 +23,14 @@ module Functora.TagsFamily
     inspectTags,
 
     -- * Reexport
-    Mempty,
     module X,
   )
 where
 
-import Data.Bool.Singletons as X (type Not, type (&&))
 import Data.Data as X (Data)
 import Data.Kind (Type)
-import Data.Monoid.Singletons
-import Data.Singletons as X
-  ( Demote (..),
-    Sing,
-    SingI,
-    demote,
-    sing,
-    withSomeSing,
-  )
-import Data.Singletons.Base.TH as X (singletons)
 import Data.String (IsString, fromString)
+import Data.Type.Bool as X (type Not, type (&&))
 import Data.Type.Equality as X (type (==))
 import Data.Type.Map hiding ((:->))
 import qualified Data.Type.Map as TM (Mapping ((:->)))
@@ -58,6 +47,7 @@ import GHC.TypeLits as X
 import qualified Language.Haskell.TH.Lib as TH
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified LiftType
+import Singlethongs as X
 import Prelude
 
 type family Tags v where
@@ -68,7 +58,7 @@ type family tags |+| v where
   tags |+| (v :: k) =
     AsMap (AddTagFamily (Not (Member k tags)) v tags)
 
-type NoTags = Mempty :: [Mapping Type Type]
+type NoTags = ('[] :: [Mapping Type Type])
 
 type HasKey k tags =
   ( IsMap tags,

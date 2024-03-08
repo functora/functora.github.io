@@ -137,6 +137,7 @@ library
     Functora.Aes
     Functora.Money
     Functora.MoneyOrphan
+    Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan
     Functora.Qr

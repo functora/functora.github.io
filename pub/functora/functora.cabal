@@ -183,6 +183,7 @@ common pkg-money
     , aeson-combinators
     , base
     , dollaridoos
+    , tags
     , template-haskell
     , text
 
@@ -262,6 +263,7 @@ library money
   exposed-modules:
     Functora.Money
     Functora.MoneyOrphan
+    Functora.MoneySing
 
 library rates
   import:          pkg-rates
@@ -319,6 +321,7 @@ test-suite functora-test
       Functora.CfgOrphan
       Functora.Money
       Functora.MoneyOrphan
+      Functora.MoneySing
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr

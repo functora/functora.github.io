@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -34,6 +36,7 @@ module Singlethongs
 
     -- * Template Haskell
     mkSing,
+    mkEnum,
     singlethongs,
 
     -- * Re-exports
@@ -42,10 +45,40 @@ module Singlethongs
   )
 where
 
+import Data.Data (Data)
 import Data.Type.Equality
+import GHC.Generics (Generic)
 import Language.Haskell.TH (Dec, Name, Q)
+import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as TH
 import Singlethongs.Internal
 import Singlethongs.TH
 
 mkSing :: Name -> Q [Dec]
-mkSing = singlethongs
+mkSing name =
+  mappend
+    <$> mkEnum name
+    <*> singlethongs name
+
+mkEnum :: Name -> Q [Dec]
+mkEnum name = do
+  let typ = TH.conT name
+  [d|
+    deriving stock instance Eq $typ
+
+    deriving stock instance Ord $typ
+
+    deriving stock instance Show $typ
+
+    deriving stock instance Read $typ
+
+    deriving stock instance Enum $typ
+
+    deriving stock instance Bounded $typ
+
+    deriving stock instance Data $typ
+
+    deriving stock instance Generic $typ
+
+    deriving stock instance TH.Lift $typ
+    |]

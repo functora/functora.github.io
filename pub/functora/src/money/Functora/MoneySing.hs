@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-export-lists -Wno-unused-type-patterns #-}
 
-module Functora.Tags.TestSing where
+module Functora.MoneySing where
 
 import Functora.Tags
 
@@ -11,9 +11,15 @@ data NetOrGross = Net | Gross
 
 data GainOrLose = Gain | Lose
 
-data MerchantOrCustomer = Merchant | Customer
+data BaseOrQuote = Base | Quote
+
+data QuotesPerBase = QuotesPerBase
+
+data FeeRate = FeeRate
 
 mkSing ''Money
 mkSing ''NetOrGross
 mkSing ''GainOrLose
-mkSing ''MerchantOrCustomer
+mkSing ''BaseOrQuote
+mkSing ''QuotesPerBase
+mkSing ''FeeRate

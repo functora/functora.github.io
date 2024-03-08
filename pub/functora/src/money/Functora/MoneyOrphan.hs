@@ -1,10 +1,20 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functora.MoneyOrphan () where
 
-import Data.Money as D
+import qualified Data.Money as D
+import Functora.MoneySing
 import Functora.Prelude
+import Functora.Tags
 import qualified Language.Haskell.TH.Syntax as TH
+
+mkFgpt @Money
+mkFgpt @NetOrGross
+mkFgpt @GainOrLose
+mkFgpt @BaseOrQuote
+mkFgpt @QuotesPerBase
+mkFgpt @FeeRate
 
 deriving stock instance (Read a) => Read (D.Money a)
 

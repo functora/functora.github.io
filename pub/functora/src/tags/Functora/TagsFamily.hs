@@ -6,6 +6,7 @@ module Functora.TagsFamily
     -- $constructors
     type Tags,
     type (|+|),
+    type (|-|),
     type NoTags,
 
     -- * Accessors
@@ -18,7 +19,6 @@ module Functora.TagsFamily
     -- * Introspection
     -- $introspection
     Fgpt,
-    mkEnum,
     mkFgpt,
     inspectTags,
 
@@ -44,11 +44,12 @@ import GHC.TypeLits as X
     TypeError,
     someSymbolVal,
   )
-import qualified Language.Haskell.TH.Lib as TH
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified LiftType
 import Singlethongs as X
 import Prelude
+
+type NoTags = ('[] :: [Mapping Type Type])
 
 type family Tags v where
   Tags (v :: k) =
@@ -58,7 +59,9 @@ type family tags |+| v where
   tags |+| (v :: k) =
     AsMap (AddTagFamily (Not (Member k tags)) v tags)
 
-type NoTags = ('[] :: [Mapping Type Type])
+type family tags |-| v where
+  tags |-| (v :: k) =
+    AsMap (UnTagFamily (Member k tags) v tags '[])
 
 type HasKey k tags =
   ( IsMap tags,
@@ -85,27 +88,6 @@ type GetTag (v :: k) tags =
   )
 
 type family Fgpt (a :: k) :: Symbol
-
-mkEnum :: TH.Name -> TH.DecsQ
-mkEnum name = do
-  let typ = TH.conT name
-  [d|
-    deriving stock instance Eq $typ
-
-    deriving stock instance Ord $typ
-
-    deriving stock instance Show $typ
-
-    deriving stock instance Enum $typ
-
-    deriving stock instance Bounded $typ
-
-    deriving stock instance Read $typ
-
-    deriving stock instance Data $typ
-
-    deriving stock instance Generic $typ
-    |]
 
 mkFgpt :: forall a. (Typeable a) => TH.Q [TH.Dec]
 mkFgpt =
@@ -161,6 +143,20 @@ type family AddTagFamily member v tags where
       ( 'ShowType v
           ':<>: 'Text " tag is conflicting with "
           ':<>: 'ShowType tags
+      )
+
+type family UnTagFamily member v prev next where
+  UnTagFamily 'True _ '[] next =
+    next
+  UnTagFamily 'True v ((_ 'TM.:-> Sing v) ': prev) next =
+    UnTagFamily 'True v prev next
+  UnTagFamily 'True v (kv ': prev) next =
+    UnTagFamily 'True v prev (kv ': next)
+  UnTagFamily 'False v prev _ =
+    TypeError
+      ( 'ShowType v
+          ':<>: 'Text " tag is missing in "
+          ':<>: 'ShowType prev
       )
 
 type family GetTagFamily k tail tags where

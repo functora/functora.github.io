@@ -41,6 +41,13 @@ spec = do
     shouldBe
       (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       (mkMoney @(Tags 'Net |+| "BTC" |+| 'Gain))
+  it "UnTagFamily" $ do
+    shouldBe
+      (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain |-| "BTC"))
+      (mkMoney @(Tags 'Net |+| 'Gain))
+    shouldBe
+      (mkMoney @(Tags 'Net |+| 'Gain |-| 'Net |-| 'Gain))
+      (mkMoney @NoTags)
   it "Demote/Symbol" $ do
     getSymbolTag (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` "BTC"

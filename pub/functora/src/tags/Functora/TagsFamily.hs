@@ -4,9 +4,11 @@
 module Functora.TagsFamily
   ( -- * Constructors
     -- $constructors
+    TagsKind,
     type Tags,
     type (|+|),
     type (|-|),
+    type (|&|),
     type NoTags,
 
     -- * Accessors
@@ -49,6 +51,8 @@ import qualified LiftType
 import Singlethongs as X
 import Prelude
 
+type TagsKind = [Mapping Type Type]
+
 type NoTags = ('[] :: [Mapping Type Type])
 
 type family Tags v where
@@ -62,6 +66,10 @@ type family tags |+| v where
 type family tags |-| v where
   tags |-| (v :: k) =
     AsMap (UnTagFamily (Member k tags) v tags '[])
+
+type family lhs |&| rhs where
+  '[] |&| rhs = rhs
+  ((_ 'TM.:-> v) ': lhs) |&| rhs = lhs |&| (rhs |+| v)
 
 type HasKey k tags =
   ( IsMap tags,

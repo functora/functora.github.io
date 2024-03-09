@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
@@ -26,6 +27,7 @@ where
 
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (..))
+import qualified Data.Typeable as Typeable
 import GHC.TypeLits
   ( KnownSymbol,
     SomeSymbol (..),
@@ -38,6 +40,9 @@ import GHC.TypeLits
 type Sing :: k -> Type
 #endif
 data family Sing (a :: k)
+
+instance (Typeable.Typeable (Sing a)) => Show (Sing a) where
+  show = const . show $ Typeable.typeRep (Proxy :: Proxy (Sing a))
 
 #if __GLASGOW_HASKELL__ >= 900
 type SingI :: forall {k}. k -> Constraint

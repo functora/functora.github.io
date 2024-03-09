@@ -17,9 +17,12 @@ data QuotesPerBase = QuotesPerBase
 
 data FeeRate = FeeRate
 
+data SignedOrUnsigned = Signed | Unsigned
+
 mkSing ''Money
 mkSing ''NetOrGross
 mkSing ''GainOrLose
 mkSing ''BaseOrQuote
 mkSing ''QuotesPerBase
 mkSing ''FeeRate
+mkSing ''SignedOrUnsigned

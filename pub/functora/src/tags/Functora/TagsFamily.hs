@@ -14,6 +14,7 @@ module Functora.TagsFamily
     -- * Accessors
     -- $accessors
     HasKey,
+    HasNotKey,
     HasTag,
     HasTags,
     GetTag,
@@ -68,13 +69,19 @@ type family tags |-| v where
     AsMap (UnTagFamily (Member k tags) v tags '[])
 
 type family lhs |&| rhs where
-  '[] |&| rhs = rhs
-  ((_ 'TM.:-> v) ': lhs) |&| rhs = lhs |&| (rhs |+| v)
+  '[] |&| rhs = AsMap rhs
+  ((_ 'TM.:-> v) ': lhs) |&| rhs = (lhs |&| (rhs |+| v))
 
 type HasKey k tags =
   ( IsMap tags,
     Typeable (GetVals tags),
     Member k tags ~ 'True
+  )
+
+type HasNotKey k tags =
+  ( IsMap tags,
+    Typeable (GetVals tags),
+    Member k tags ~ 'False
   )
 
 type HasTag v tags =

@@ -15,6 +15,7 @@ mkFgpt @GainOrLose
 mkFgpt @BaseOrQuote
 mkFgpt @QuotesPerBase
 mkFgpt @FeeRate
+mkFgpt @SignedOrUnsigned
 
 deriving stock instance (Read a) => Read (D.Money a)
 

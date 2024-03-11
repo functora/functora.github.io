@@ -35,8 +35,7 @@ import Data.Kind (Type)
 import Data.String (IsString, fromString)
 import Data.Type.Bool as X (type Not, type (&&))
 import Data.Type.Equality as X (type (==))
-import Data.Type.Map hiding ((:->))
-import qualified Data.Type.Map as TM (Mapping ((:->)))
+import Data.Type.Map (AsMap, Cmp, IsMap, Lookup, Mapping ((:->)), Member)
 import Data.Typeable
 import qualified Data.Typeable as Typeable
 import GHC.Generics as X (Generic)
@@ -58,19 +57,19 @@ type NoTags = ('[] :: [Mapping Type Type])
 
 type family Tags v where
   Tags (v :: k) =
-    '[k :-> v]
+    '[k ':-> Sing v]
 
 type family tags |+| v where
-  tags |+| (v :: k) =
-    AsMap (AddTagFamily (Not (Member k tags)) v tags)
+  tags |+| v =
+    AsMap (AddTagFamily v tags tags '[])
 
 type family tags |-| v where
-  tags |-| (v :: k) =
-    AsMap (UnTagFamily (Member k tags) v tags '[])
+  tags |-| v =
+    AsMap (UnTagFamily 'False v tags tags '[])
 
 type family lhs |&| rhs where
   '[] |&| rhs = AsMap rhs
-  ((_ 'TM.:-> v) ': lhs) |&| rhs = (lhs |&| (rhs |+| v))
+  ((_ ':-> v) ': lhs) |&| rhs = (lhs |&| (rhs |+| v))
 
 type HasKey k tags =
   ( IsMap tags,
@@ -146,38 +145,48 @@ inspectTags =
 -- Private
 --
 
-type family k :-> v where
-  k :-> (v :: k) =
-    k 'TM.:-> Sing v
-
-type family AddTagFamily member v tags where
-  AddTagFamily 'True (v :: k) tags =
-    (k :-> v) ': tags
-  AddTagFamily 'False v tags =
+type family AddTagFamily v tags prev next where
+  AddTagFamily (v :: k) _ '[] next =
+    (k ':-> Sing v) ': next
+  AddTagFamily (v :: k) tags ((k ':-> _) ': _) _ =
     TypeError
       ( 'ShowType v
-          ':<>: 'Text " tag is conflicting with "
+          ':<>: 'Text " :: "
+          ':<>: 'ShowType k
+          ':<>: 'Text " tag conflicts with "
           ':<>: 'ShowType tags
       )
+  AddTagFamily v tags (kv ': prev) next =
+    AddTagFamily v tags prev (kv ': next)
 
-type family UnTagFamily member v prev next where
-  UnTagFamily 'True _ '[] next =
+type family UnTagFamily member v tags prev next where
+  UnTagFamily 'True _ _ '[] next =
     next
-  UnTagFamily 'True v ((_ 'TM.:-> Sing v) ': prev) next =
-    UnTagFamily 'True v prev next
-  UnTagFamily 'True v (kv ': prev) next =
-    UnTagFamily 'True v prev (kv ': next)
-  UnTagFamily 'False v prev _ =
+  UnTagFamily 'False (v :: k) tags '[] _ =
     TypeError
       ( 'ShowType v
+          ':<>: 'Text " :: "
+          ':<>: 'ShowType k
           ':<>: 'Text " tag is missing in "
-          ':<>: 'ShowType prev
+          ':<>: 'ShowType tags
       )
+  UnTagFamily 'False (v :: k) tags ((k ':-> Sing v) ': prev) next =
+    UnTagFamily 'True v tags prev next
+  UnTagFamily _ (v :: k) tags ((k ':-> _) ': _) _ =
+    TypeError
+      ( 'ShowType v
+          ':<>: 'Text " :: "
+          ':<>: 'ShowType k
+          ':<>: 'Text " tag conflicts with "
+          ':<>: 'ShowType tags
+      )
+  UnTagFamily member v tags (kv ': prev) next =
+    UnTagFamily member v tags prev (kv ': next)
 
-type family GetTagFamily k tail tags where
-  GetTagFamily k ((k 'TM.:-> v) ': _) _ = v
-  GetTagFamily k (_ ': tail) tags = GetTagFamily k tail tags
-  GetTagFamily k '[] tags =
+type family GetTagFamily k tags prev where
+  GetTagFamily k _ ((k ':-> v) ': _) = v
+  GetTagFamily k tags (_ ': next) = GetTagFamily k tags next
+  GetTagFamily k tags '[] =
     TypeError
       ( 'ShowType k
           ':<>: 'Text " key is missing in "
@@ -193,23 +202,25 @@ type family HasTagsFamily hastag submap supmap where
           ':<>: 'Text " clause with "
           ':<>: 'ShowType sup
       )
-  HasTagsFamily 'Nothing ((k 'TM.:-> v) ': sub) sup =
+  HasTagsFamily 'Nothing ((k ':-> v) ': sub) sup =
     HasTagsFamily
       ('Just (Lookup sup k == 'Just v))
-      ((k 'TM.:-> v) ': sub)
+      ((k ':-> v) ': sub)
       sup
   HasTagsFamily ('Just 'True) (_ ': sub) sup =
     HasTagsFamily 'Nothing sub sup
-  HasTagsFamily ('Just 'False) ((_ 'TM.:-> v) ': _) sup =
+  HasTagsFamily ('Just 'False) ((k ':-> v) ': _) sup =
     TypeError
       ( 'ShowType v
+          ':<>: 'Text " :: "
+          ':<>: 'ShowType k
           ':<>: 'Text " tag is missing in "
           ':<>: 'ShowType sup
       )
 
 type family ToValsFamily map lst where
   ToValsFamily '[] acc = acc
-  ToValsFamily ((_ 'TM.:-> v) ': tail) acc =
+  ToValsFamily ((_ ':-> v) ': tail) acc =
     ToValsFamily tail (v ': acc)
 
 type GetVals tags = ToValsFamily tags '[]
@@ -231,5 +242,5 @@ type HasVals vals tags =
 --
 
 type instance
-  Cmp ((k0 :: Type) 'TM.:-> _) (k1 'TM.:-> _) =
+  Cmp ((k0 :: Type) ':-> _) (k1 ':-> _) =
     Cmp (Fgpt k0) (Fgpt k1)

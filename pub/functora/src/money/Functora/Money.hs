@@ -142,7 +142,6 @@ mkUnsignedCash ::
   ( next ~ (tags |+| 'Unsigned),
     gain ~ (next |+| 'Gain),
     lose ~ (next |+| 'Lose),
-    HasNotKey GainOrLose next,
     HasTag 'Unsigned gain,
     HasTag 'Unsigned lose
   ) =>

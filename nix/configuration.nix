@@ -485,12 +485,14 @@ in {
       module: ${pkgs.opensc}/lib/opensc-pkcs11.so
     '';
     services.pcscd.enable = true;
+    services.pcscd.plugins = [pkgs.acsccid];
     #
     # Firefox
     #
     programs.firefox = {
       enable = true;
       # nativeMessagingHosts.euwebid = true;
+      nativeMessagingHosts.packages = [pkgs.web-eid-app];
       policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
     };
     #
@@ -512,6 +514,8 @@ in {
         ${pkgs.nssTools}/bin/modutil -force -dbdir sql:$NSSDB -add p11-kit-proxy \
           -libfile ${pkgs.p11-kit}/lib/p11-kit-proxy.so
       '')
+      libdigidocpp
+      qdigidoc
     ];
 
     services.tor.enable = true;
@@ -598,13 +602,14 @@ in {
         #
         # apps
         #
+        exfat
+        jmtpfs
         shellcheck
         chromium
         xournalpp
         mate.caja
         ccrypt
         awscli2
-        qdigidoc
         libreoffice
         tor-browser-bundle-bin
         kooha
@@ -853,6 +858,7 @@ in {
     #
     # Automount
     #
+    services.gvfs.enable = true;
     services.udisks2.enable = true;
     #
     # XServer

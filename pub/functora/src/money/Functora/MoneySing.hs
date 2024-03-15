@@ -5,8 +5,6 @@ module Functora.MoneySing where
 
 import Functora.Tags
 
-data Money = Money
-
 data NetOrGross = Net | Gross
 
 data GainOrLose = Gain | Lose
@@ -19,7 +17,6 @@ data FeeRate = FeeRate
 
 data SignedOrUnsigned = Signed | Unsigned
 
-mkSing ''Money
 mkSing ''NetOrGross
 mkSing ''GainOrLose
 mkSing ''BaseOrQuote

@@ -9,7 +9,6 @@ import Functora.Prelude
 import Functora.Tags
 import qualified Language.Haskell.TH.Syntax as TH
 
-mkFgpt @Money
 mkFgpt @NetOrGross
 mkFgpt @GainOrLose
 mkFgpt @BaseOrQuote

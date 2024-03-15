@@ -12,7 +12,7 @@ import qualified Language.Haskell.TH.Syntax as TH
 mkFgpt @NetOrGross
 mkFgpt @GainOrLose
 mkFgpt @BaseOrQuote
-mkFgpt @QuotesPerBase
+mkFgpt @QuotePerBase
 mkFgpt @FeeRate
 mkFgpt @SignedOrUnsigned
 

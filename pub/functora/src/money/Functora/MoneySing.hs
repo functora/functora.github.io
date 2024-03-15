@@ -11,7 +11,7 @@ data GainOrLose = Gain | Lose
 
 data BaseOrQuote = Base | Quote
 
-data QuotesPerBase = QuotesPerBase
+data QuotePerBase = QuotePerBase
 
 data FeeRate = FeeRate
 
@@ -20,6 +20,6 @@ data SignedOrUnsigned = Signed | Unsigned
 mkSing ''NetOrGross
 mkSing ''GainOrLose
 mkSing ''BaseOrQuote
-mkSing ''QuotesPerBase
+mkSing ''QuotePerBase
 mkSing ''FeeRate
 mkSing ''SignedOrUnsigned

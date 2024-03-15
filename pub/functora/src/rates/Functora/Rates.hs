@@ -8,7 +8,7 @@ module Functora.Rates
 
     -- * Stateful
     -- $stateful
-    Quote (..),
+    QuoteAt (..),
     getQuote,
     getMarket,
     getCurrencies,
@@ -40,6 +40,7 @@ import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude
+import Functora.Tags
 import Functora.Web
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens
@@ -83,8 +84,8 @@ withNewMarket expr = do
 -- $stateful
 -- Stateful
 
-data Quote = Quote
-  { quoteMoneyAmount :: Money Rational,
+data QuoteAt = QuoteAt
+  { quoteMoneyAmount :: Money (Tags 'Signed |+| 'Quote),
     quoteUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -93,9 +94,9 @@ getQuote ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Funds ->
+  Funds (Tags 'Signed |+| 'Base) ->
   CurrencyCode ->
-  ReaderT (MVar Market) m Quote
+  ReaderT (MVar Market) m QuoteAt
 getQuote baseFunds quoteCurrency = do
   let baseCurrency = fundsCurrencyCode baseFunds
   quotes <- getQuotesPerBase baseCurrency
@@ -105,9 +106,11 @@ getQuote baseFunds quoteCurrency = do
         $ MarketExceptionMissingBaseAndQuote baseCurrency quoteCurrency
     Just quotesPerBase ->
       pure
-        Quote
-          { quoteMoneyAmount = fundsMoneyAmount baseFunds $* quotesPerBase,
-            quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
+        QuoteAt
+          { quoteMoneyAmount =
+              quotesPerBase `quoteFromBase` fundsMoneyAmount baseFunds,
+            quoteUpdatedAt =
+              quotesPerBaseUpdatedAt quotes
           }
 
 getMarket ::
@@ -213,7 +216,8 @@ tryFetchCurrencies uri = tryMarket $ do
   pure Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
 
 data QuotesPerBase = QuotesPerBase
-  { quotesPerBaseQuotesMap :: Map CurrencyCode Rational,
+  { quotesPerBaseQuotesMap ::
+      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotePerBase)),
     quotesPerBaseCreatedAt :: UTCTime,
     quotesPerBaseUpdatedAt :: UTCTime
   }
@@ -243,7 +247,7 @@ tryFetchQuotesPerBase cur uri = tryMarket $ do
     createdAt <- A.at ["date"] A.day
     quotesMap <-
       A.at [fromString . from @Text @String $ unCurrencyCode cur]
-        $ A.mapStrict unJsonRational
+        $ A.mapStrict unJsonSignedMoney
     pure
       QuotesPerBase
         { quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap,

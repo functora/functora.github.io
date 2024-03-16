@@ -14,7 +14,8 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude as Prelude
-import Functora.Rates hiding (Quote)
+import Functora.Rates
+import Functora.Tags
 import qualified Language.Javascript.JSaddle.Evaluate as JSaddle
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -73,7 +74,7 @@ data TopOrBottom
 
 data ModelMoney = ModelMoney
   { modelMoneyAmountInput :: Text,
-    modelMoneyAmountOutput :: Money Rational,
+    modelMoneyAmountOutput :: Money (Tags 'Signed),
     modelMoneyAmountActive :: Bool,
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
@@ -103,7 +104,7 @@ mkModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  let zero = Money 0 :: Money Rational
+  let zero = Money 0 :: Money (Tags 'Signed)
   let final =
         ModelData
           { modelDataTopMoney =
@@ -147,7 +148,7 @@ mkModel = do
         . tryMarket
         . getCurrencyInfo
         $ currencyInfoCode usd
-    let baseAmt = Money 1 :: Money Rational
+    let baseAmt = Money 1 :: Money (Tags 'Signed |+| 'Base)
     quote <-
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
@@ -158,7 +159,8 @@ mkModel = do
             { modelDataTopMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
-                    modelMoneyAmountOutput = baseAmt,
+                    modelMoneyAmountOutput =
+                      mkSignedMoney @NoTags $ unMoney baseAmt,
                     modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
@@ -167,7 +169,8 @@ mkModel = do
               modelDataBottomMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
-                    modelMoneyAmountOutput = quoteAmt,
+                    modelMoneyAmountOutput =
+                      mkSignedMoney @NoTags $ unMoney quoteAmt,
                     modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
@@ -312,14 +315,12 @@ evalModel st = do
       withMarket (st ^. #modelMarket) $ do
         let funds =
               Funds
-                { fundsMoneyAmount = baseAmt,
-                  fundsCurrencyCode =
-                    st
-                      ^. #modelData
-                      . getBaseMoneyOptic loc
-                      . #modelMoneyCurrencyInfo
-                      . #currencyInfoCode
-                }
+                baseAmt
+                $ st
+                ^. #modelData
+                . getBaseMoneyOptic loc
+                . #modelMoneyCurrencyInfo
+                . #currencyInfoCode
         quote <-
           getQuote funds
             $ st
@@ -334,7 +335,7 @@ evalModel st = do
             & #modelData
             . getBaseMoneyOptic loc
             . #modelMoneyAmountOutput
-            .~ baseAmt
+            .~ mkSignedMoney @NoTags (unMoney baseAmt)
             & #modelData
             . getQuoteMoneyOptic loc
             . #modelMoneyAmountInput
@@ -342,7 +343,7 @@ evalModel st = do
             & #modelData
             . getQuoteMoneyOptic loc
             . #modelMoneyAmountOutput
-            .~ quoteAmt
+            .~ mkSignedMoney @NoTags (unMoney quoteAmt)
             & #modelUpdatedAt
             .~ ct
 
@@ -747,7 +748,7 @@ snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
   mkPureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
-inspectMoneyAmount :: (From String a) => Money Rational -> a
+inspectMoneyAmount :: (MoneyTags sig tags, From String a) => Money tags -> a
 inspectMoneyAmount =
   inspectRatio defaultRatioFormat . unMoney
 

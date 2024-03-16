@@ -196,6 +196,7 @@ common pkg-rates
     , containers
     , modern-uri
     , money
+    , tags
     , web
 
 common pkg-tags

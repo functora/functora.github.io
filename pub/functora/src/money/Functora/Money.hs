@@ -2,6 +2,9 @@
 
 module Functora.Money
   ( module X,
+    MoneyRep,
+    MoneyTags,
+    MkMoneyTags,
     Money (..),
     unMoney,
     parseMoney,
@@ -44,7 +47,8 @@ type MoneyTags (sig :: SignedOrUnsigned) tags =
     Show (MoneyRep sig),
     Read (MoneyRep sig),
     Data (MoneyRep sig),
-    Integral (MoneyRep sig)
+    Integral (MoneyRep sig),
+    From (MoneyRep sig) Integer
   )
 
 type MkMoneyTags (sig :: SignedOrUnsigned) lhs rhs =
@@ -85,7 +89,6 @@ unMoney (Money x) = x
 parseMoney ::
   forall str tags m sig rep.
   ( From str Text,
-    From rep Integer,
     Show str,
     Data str,
     MonadThrow m,

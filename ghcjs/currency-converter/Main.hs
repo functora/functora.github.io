@@ -83,8 +83,7 @@ data ModelMoney = ModelMoney
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ModelData = ModelData
-  { -- TODO : use timestamed data
-    modelDataTopMoney :: ModelMoney,
+  { modelDataTopMoney :: ModelMoney,
     modelDataBottomMoney :: ModelMoney,
     modelDataTopOrBottom :: TopOrBottom
   }
@@ -198,7 +197,7 @@ data PureOrEval
   | Eval
 
 --
--- NOTE : In most cases we don't need "after" JSM update.
+-- NOTE : In most cases we don't need "after" JSM action.
 --
 
 mkPureUpdate :: (Model -> Model) -> Action
@@ -238,43 +237,26 @@ main = do
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel LoopUpdate st =
+updateModel LoopUpdate prevSt = do
+  let nextSt = prevSt & #modelHide .~ False
   batchEff
-    st
+    nextSt
     [ do
-        --
-        -- TODO : MOVE TO "SomeUpdate" HANDLER!!!
-        -- Polling like this is not good!!!
-        --
-        -- NOTE : The "correct" way is to use "controlled input" with
-        -- TextField.setValue but without proper Action queue synchronization
-        -- or mutex it does cause race conditions when user types "too fast":
-        --
-        -- https://github.com/dmjio/miso/issues/272
-        --
-        forM_ enumerate $ \loc ->
-          unless (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountActive)
-            . void
-            . JSaddle.eval @Text
-            $ "var el = document.getElementById('"
-            <> inspect loc
-            <> "'); if (el) el.value = '"
-            <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
-            <> "';"
-        sleepMilliSeconds 300
+        sleepSeconds 60
         pure LoopUpdate,
-      if st ^. #modelHide
-        then pure $ mkPureUpdate (& #modelHide .~ False)
-        else do
-          ct <- getCurrentTime
-          if upToDate ct $ st ^. #modelUpdatedAt
-            then pure Noop
-            else mkPureUpdate <$> evalModel st
+      do
+        ct <- getCurrentTime
+        if (upToDate ct $ nextSt ^. #modelUpdatedAt) && not (prevSt ^. #modelHide)
+          then pure Noop
+          else mkPureUpdate <$> evalModel nextSt
     ]
-updateModel (SomeUpdate Pure after updater) st =
-  updater st <# do
-    after
-    pure Noop
+updateModel (SomeUpdate Pure after updater) prevSt = do
+  let nextSt = updater prevSt
+  batchEff
+    nextSt
+    [ syncInputs nextSt >> pure Noop,
+      after >> pure Noop
+    ]
 updateModel (SomeUpdate Eval after updater) prevSt = do
   let nextSt = updater prevSt
   --
@@ -282,8 +264,6 @@ updateModel (SomeUpdate Eval after updater) prevSt = do
   -- but without proper Action queue synchronization or mutex it does cause
   -- race conditions when user types "too fast". Impure evalModel function
   -- is cached and fast anyways. It's ok.
-  --
-  -- TODO : experiment with implementing proper Action queue.
   --
   let res = Unsafe.unsafePerformIO . tryAny $ evalModel nextSt
   case res of
@@ -294,10 +274,33 @@ updateModel (SomeUpdate Eval after updater) prevSt = do
               & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
               & Snackbar.setOnActionIconClick snackbarClosed
       noEff $ nextSt & #modelSnackbarQueue %~ Snackbar.addMessage msg
-    Right next ->
-      next nextSt <# do
-        after
-        pure Noop
+    Right next -> do
+      let finalSt = next nextSt
+      batchEff
+        finalSt
+        [ syncInputs finalSt >> pure Noop,
+          after >> pure Noop
+        ]
+
+syncInputs :: Model -> JSM ()
+syncInputs st =
+  --
+  -- NOTE : The "correct" way is to use "controlled input" with
+  -- TextField.setValue but without proper Action queue synchronization
+  -- or mutex it does cause race conditions when user types "too fast":
+  --
+  -- https://github.com/dmjio/miso/issues/272
+  --
+  forM_ enumerate $ \loc ->
+    unless
+      (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountActive)
+      . void
+      . JSaddle.eval @Text
+      $ "var el = document.getElementById('"
+      <> inspect loc
+      <> "'); if (el) el.value = '"
+      <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
+      <> "';"
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do

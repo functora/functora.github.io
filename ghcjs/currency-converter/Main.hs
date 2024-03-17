@@ -302,6 +302,17 @@ syncInputs st =
       <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
       <> "';"
 
+copyIntoClipboard :: (Show a, Data a) => a -> JSM ()
+copyIntoClipboard x =
+  void
+    . JSaddle.eval @Text
+    $ "navigator.clipboard.writeText('"
+    <> inspect x
+    <> "').then("
+    <> "function(){console.log('copied');},"
+    <> "function(){console.log('failed');}"
+    <> ");"
+
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do
   let loc = st ^. #modelData . #modelDataTopOrBottom
@@ -430,7 +441,7 @@ amountWidget st loc =
                 [ class_ "mdc-text-field__icon--leading",
                   intProp "tabindex" 0,
                   textProp "role" "button",
-                  onClick onClearAction
+                  onClick onCopyAction
                 ]
                 "content_copy"
           )
@@ -486,9 +497,16 @@ amountWidget st loc =
           & #modelData
           . #modelDataTopOrBottom
           .~ loc
-    --
-    -- TODO : Need to improve this, it's not smooth.
-    --
+    onCopyAction =
+      SomeUpdate
+        Eval
+        ( copyIntoClipboard
+            $ st
+            ^. #modelData
+            . getMoneyOptic loc
+            . #modelMoneyAmountInput
+        )
+        id
     onClearAction =
       SomeUpdate Eval (focus $ inspect loc) $ \st' ->
         st'

@@ -3,7 +3,7 @@
 module Main (main) where
 
 #ifndef __GHCJS__
-import Language.Javascript.JSaddle.Warp as JSaddle
+import Language.Javascript.JSaddle.Warp as JS
 import qualified Network.Wai as Wai
 import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
@@ -16,7 +16,7 @@ import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates
 import Functora.Tags
-import qualified Language.Javascript.JSaddle.Evaluate as JSaddle
+import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
@@ -43,7 +43,7 @@ runApp app = do
         8080
         (Warp.setTimeout 3600 Warp.defaultSettings)
     )
-    =<< JSaddle.jsaddleOr
+    =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
       (router $ js0 <> js1 <> js2 <> js3)
@@ -51,7 +51,7 @@ runApp app = do
     router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
-        _ -> JSaddle.jsaddleAppWithJs (JSaddle.jsaddleJs False <> js) req
+        _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #else
 runApp :: IO () -> IO ()
 runApp = id
@@ -295,7 +295,7 @@ syncInputs st =
     unless
       (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountActive)
       . void
-      . JSaddle.eval @Text
+      . JS.eval @Text
       $ "var el = document.getElementById('"
       <> inspect loc
       <> "'); if (el) el.value = '"
@@ -303,15 +303,12 @@ syncInputs st =
       <> "';"
 
 copyIntoClipboard :: (Show a, Data a) => a -> JSM ()
-copyIntoClipboard x =
-  void
-    . JSaddle.eval @Text
-    $ "navigator.clipboard.writeText('"
-    <> inspect x
-    <> "').then("
-    <> "function(){console.log('copied');},"
-    <> "function(){console.log('failed');}"
-    <> ");"
+copyIntoClipboard x = do
+  clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
+  prom <- clip ^. JS.js1 ("writeText" :: Text) (inspect @Text x)
+  success <- JS.function $ \_ _ _ -> void $ JS.eval @Text "alert('hello')"
+  failure <- JS.function $ \_ _ _ -> void $ JS.eval @Text "alert('world')"
+  void $ prom ^. JS.js2 ("then" :: Text) success failure
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel st = do

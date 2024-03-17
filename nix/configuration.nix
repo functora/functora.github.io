@@ -5,7 +5,7 @@
   ...
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
-  xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
+  # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
@@ -652,10 +652,10 @@ in {
         ".config/qutebrowser/blocked-hosts".text = blocked-hosts;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
         ".config/warpd/config".source = ../cfg/warpd.txt;
-        ".xkb" = {
-          source = ./xkb;
-          recursive = true;
-        };
+        # ".xkb" = {
+        #   source = ./xkb;
+        #   recursive = true;
+        # };
         ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
       };
       programs.i3status-rust = {

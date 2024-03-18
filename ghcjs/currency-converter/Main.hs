@@ -28,7 +28,7 @@ import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
-import Miso.String hiding (null)
+import Miso.String hiding (foldl, null, reverse)
 import qualified System.IO.Unsafe as Unsafe
 import qualified Text.Fuzzy as Fuzzy
 
@@ -64,7 +64,7 @@ data Model = Model
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
-    modelActionChan :: TChan Action,
+    modelUpdateQueue :: TChan (Model -> Model),
     modelUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Generic)
@@ -136,7 +136,7 @@ mkModel = do
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
-            modelActionChan = chan,
+            modelUpdateQueue = chan,
             modelUpdatedAt = ct
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
@@ -188,13 +188,15 @@ mkModel = do
           modelMarket = market,
           modelCurrencies = currenciesInfo,
           modelSnackbarQueue = Snackbar.initialQueue,
-          modelActionChan = chan,
+          modelUpdateQueue = chan,
           modelUpdatedAt = ct
         }
 
 data Action
   = Noop
-  | LoopUpdate
+  | InitUpdate
+  | TimeUpdate
+  | ChanUpdate
   | SomeUpdate (JSM ()) (Model -> Model)
 
 --
@@ -202,6 +204,12 @@ data Action
 --
 mkSomeUpdate :: (Model -> Model) -> Action
 mkSomeUpdate = SomeUpdate $ pure ()
+
+pushActionQueue :: (MonadIO m) => Model -> (Model -> Model) -> m ()
+pushActionQueue st =
+  liftIO
+    . atomically
+    . writeTChan (st ^. #modelUpdateQueue)
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -227,49 +235,80 @@ main = do
           Miso.view = viewModel,
           subs = mempty,
           events = extendedEvents,
-          initialAction = LoopUpdate,
+          initialAction = InitUpdate,
           mountPoint = Nothing, -- defaults to 'body'
           logLevel = Off
         }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel LoopUpdate prevSt = do
-  let nextSt = prevSt & #modelHide .~ False
+updateModel InitUpdate st = do
+  batchEff
+    st
+    [ do
+        sleepSeconds 60
+        pure TimeUpdate,
+      do
+        pushActionQueue st (& #modelHide .~ False)
+        pure ChanUpdate
+    ]
+updateModel TimeUpdate st = do
+  batchEff
+    st
+    [ do
+        sleepSeconds 60
+        pure TimeUpdate,
+      do
+        ct <- getCurrentTime
+        unless (upToDate ct $ st ^. #modelUpdatedAt) $ pushActionQueue st id
+        pure Noop
+    ]
+updateModel ChanUpdate prevSt = do
+  let res =
+        Unsafe.unsafePerformIO . tryAny $ do
+          actions <-
+            drainTChan $ prevSt ^. #modelUpdateQueue
+          nextSt <-
+            foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
+          if null actions
+            then pure nextSt
+            else evalModel nextSt
+  let nextSt =
+        case res of
+          Left e -> updateSnackbar id e prevSt
+          Right x -> x
   batchEff
     nextSt
     [ do
-        sleepMilliSeconds 300
-        pure LoopUpdate,
+        syncInputs nextSt
+        pure Noop,
       do
-        res <- liftIO . atomically $ tryReadTChan (nextSt ^. #modelActionChan)
-        case res of
-          Nothing -> pure Noop
-          Just action -> pure action,
-      do
-        ct <- getCurrentTime
-        if (upToDate ct $ nextSt ^. #modelUpdatedAt) && not (prevSt ^. #modelHide)
-          then pure Noop
-          else mkSomeUpdate <$> evalModel nextSt
+        sleepMilliSeconds 100
+        pure ChanUpdate
     ]
-updateModel (SomeUpdate after updater) prevSt = do
-  let nextSt = updater prevSt
-  --
-  -- NOTE : The "correct" way is to emit PureUpdate effect instead,
-  -- but without proper Action queue synchronization or mutex it does cause
-  -- race conditions when user types "too fast". Impure evalModel function
-  -- is cached and fast anyways. It's ok.
-  --
-  let res = Unsafe.unsafePerformIO . tryAny $ evalModel nextSt
-  case res of
-    Left e -> noEff $ updateSnackbar id e nextSt
-    Right next -> do
-      let finalSt = next nextSt
-      batchEff
-        finalSt
-        [ syncInputs finalSt >> pure Noop,
-          after >> pure Noop
-        ]
+updateModel (SomeUpdate after updater) st = do
+  batchEff
+    st
+    [ do
+        pushActionQueue st updater
+        pure Noop,
+      do
+        after
+        pure Noop
+    ]
+
+drainTChan :: (MonadIO m) => TChan a -> m [a]
+drainTChan chan =
+  liftIO
+    . atomically
+    . fmap reverse
+    $ drainInto []
+  where
+    drainInto acc = do
+      item <- tryReadTChan chan
+      case item of
+        Nothing -> pure acc
+        Just next -> drainInto $ next : acc
 
 syncInputs :: Model -> JSM ()
 syncInputs st =
@@ -291,8 +330,8 @@ syncInputs st =
       <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
       <> "';"
 
-copyIntoClipboard :: (Show a, Data a) => TChan Action -> a -> JSM ()
-copyIntoClipboard chan x = do
+copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
+copyIntoClipboard st x = do
   let txt = inspect @Text x
   unless (null txt) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
@@ -302,10 +341,7 @@ copyIntoClipboard chan x = do
     void $ prom ^. JS.js2 ("then" :: Text) success failure
   where
     mkUpdate =
-      liftIO
-        . atomically
-        . writeTChan chan
-        . mkSomeUpdate
+      pushActionQueue st
         . updateSnackbar Snackbar.clearQueue
 
 updateSnackbar ::
@@ -325,7 +361,7 @@ updateSnackbar before x =
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick snackbarClosed
 
-evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
+evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
   let loc = st ^. #modelData . #modelDataTopOrBottom
   baseAmtResult <-
@@ -336,7 +372,7 @@ evalModel st = do
       . getBaseMoneyOptic loc
       . #modelMoneyAmountInput
   case baseAmtResult of
-    Left {} -> pure id
+    Left {} -> pure st
     Right baseAmt ->
       withMarket (st ^. #modelMarket) $ do
         let funds =
@@ -356,22 +392,22 @@ evalModel st = do
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime
-        pure $ \st' ->
-          st'
-            & #modelData
-            . getBaseMoneyOptic loc
-            . #modelMoneyAmountOutput
-            .~ mkSignedMoney @NoTags (unMoney baseAmt)
-            & #modelData
-            . getQuoteMoneyOptic loc
-            . #modelMoneyAmountInput
-            .~ inspectMoneyAmount quoteAmt
-            & #modelData
-            . getQuoteMoneyOptic loc
-            . #modelMoneyAmountOutput
-            .~ mkSignedMoney @NoTags (unMoney quoteAmt)
-            & #modelUpdatedAt
-            .~ ct
+        pure
+          $ st
+          & #modelData
+          . getBaseMoneyOptic loc
+          . #modelMoneyAmountOutput
+          .~ mkSignedMoney @NoTags (unMoney baseAmt)
+          & #modelData
+          . getQuoteMoneyOptic loc
+          . #modelMoneyAmountInput
+          .~ inspectMoneyAmount quoteAmt
+          & #modelData
+          . getQuoteMoneyOptic loc
+          . #modelMoneyAmountOutput
+          .~ mkSignedMoney @NoTags (unMoney quoteAmt)
+          & #modelUpdatedAt
+          .~ ct
 
 getMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
 getMoneyOptic = \case
@@ -420,9 +456,9 @@ mainWidget st =
             currencyWidget st Bottom,
             swapAmountsWidget,
             swapCurrenciesWidget,
-            LayoutGrid.cell [LayoutGrid.span12]
-              . (: mempty)
-              $ div_ mempty [inspect $ st ^. #modelData],
+            -- LayoutGrid.cell [LayoutGrid.span12]
+            --   . (: mempty)
+            --   $ div_ mempty [inspect $ st ^. #modelData],
             copyright,
             Snackbar.snackbar (Snackbar.config snackbarClosed)
               $ modelSnackbarQueue st
@@ -533,7 +569,7 @@ amountWidget st loc =
           .~ loc
     onCopyAction =
       SomeUpdate
-        ( copyIntoClipboard (st ^. #modelActionChan)
+        ( copyIntoClipboard st
             $ st
             ^. #modelData
             . getMoneyOptic loc

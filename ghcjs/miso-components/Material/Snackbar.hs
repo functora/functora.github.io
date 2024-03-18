@@ -10,6 +10,7 @@ module Material.Snackbar
     initialQueue,
     MessageId,
     close,
+    clearQueue,
     addMessage,
     message,
     Message,
@@ -77,6 +78,12 @@ close messageId queue@Queue {messages = messages} =
             if currentMessageId == messageId
               then otherMessages
               else messages
+    }
+
+clearQueue :: Queue msg -> Queue msg
+clearQueue queue =
+  queue
+    { messages = mempty
     }
 
 -- | Adds a message to the queue

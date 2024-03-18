@@ -25,6 +25,7 @@ import qualified Material.List.Item as ListItem
 import qualified Material.Snackbar as Snackbar
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
+import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (null)
@@ -434,6 +435,7 @@ mainWidget st =
             currencyWidget st Bottom,
             swapAmountsWidget,
             swapCurrenciesWidget,
+            copyright,
             Snackbar.snackbar (Snackbar.config snackbarClosed)
               $ modelSnackbarQueue st
           ]
@@ -712,7 +714,9 @@ currencyListItemWidget loc current item =
 swapAmountsWidget :: View Action
 swapAmountsWidget =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span2Phone
     ]
     . (: mempty)
     $ Button.raised
@@ -756,7 +760,9 @@ swapAmountsWidget =
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span2Phone
     ]
     . (: mempty)
     $ Button.raised
@@ -787,6 +793,18 @@ swapCurrenciesWidget =
               & #modelData
               . #modelDataTopOrBottom
               .~ Top
+
+copyright :: View Action
+copyright =
+  LayoutGrid.cell
+    [ LayoutGrid.span12,
+      Typography.subtitle2,
+      style_
+        [ ("text-align", "center")
+        ]
+    ]
+    . (: mempty)
+    $ Miso.text "\169 2024 Functora. All rights reserved."
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =

@@ -195,7 +195,10 @@ mkModel = do
 data Action
   = Noop
   | LoopUpdate
-  | SomeUpdate PureOrEval (JSM ()) (Model -> Model)
+  | --
+    -- TODO : seems like don't need Pure/Eval
+    --
+    SomeUpdate PureOrEval (JSM ()) (Model -> Model)
 
 data PureOrEval
   = Pure
@@ -435,6 +438,9 @@ mainWidget st =
             currencyWidget st Bottom,
             swapAmountsWidget,
             swapCurrenciesWidget,
+            -- LayoutGrid.cell [LayoutGrid.span12]
+            --   . (: mempty)
+            --   $ div_ mempty [inspect $ st ^. #modelData],
             copyright,
             Snackbar.snackbar (Snackbar.config snackbarClosed)
               $ modelSnackbarQueue st
@@ -491,7 +497,8 @@ amountWidget st loc =
         & TextField.setAttributes
           [ class_ "fill",
             id_ $ inspect loc,
-            onBlur onBlurAction
+            onBlur onBlurAction,
+            onKeyDown onKeyDownAction
           ]
     ]
   where
@@ -508,6 +515,27 @@ amountWidget st loc =
           . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ False
+    onKeyDownAction (KeyCode code) =
+      let enterOrEscape = [13, 27] :: [Int]
+       in SomeUpdate
+            Pure
+            ( when (code `elem` enterOrEscape)
+                . void
+                . JS.eval @Text
+                $ "document.getElementById('"
+                <> inspect loc
+                <> "').getElementsByTagName('input')[0].blur();"
+            )
+            ( if code `elem` enterOrEscape
+                then id
+                else
+                  ( &
+                      #modelData
+                        . getMoneyOptic loc
+                        . #modelMoneyAmountActive
+                        .~ True
+                  )
+            )
     onInputAction txt =
       mkEvalUpdate $ \st' ->
         st'
@@ -524,7 +552,7 @@ amountWidget st loc =
           .~ loc
     onCopyAction =
       SomeUpdate
-        Eval
+        Pure
         ( copyIntoClipboard (st ^. #modelActionChan)
             $ st
             ^. #modelData
@@ -543,6 +571,9 @@ amountWidget st loc =
           . getMoneyOptic loc
           . #modelMoneyAmountActive
           .~ True
+          & #modelData
+          . #modelDataTopOrBottom
+          .~ loc
 
 currencyWidget ::
   Model ->

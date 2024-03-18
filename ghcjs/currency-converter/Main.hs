@@ -195,24 +195,13 @@ mkModel = do
 data Action
   = Noop
   | LoopUpdate
-  | --
-    -- TODO : seems like don't need Pure/Eval
-    --
-    SomeUpdate PureOrEval (JSM ()) (Model -> Model)
-
-data PureOrEval
-  = Pure
-  | Eval
+  | SomeUpdate (JSM ()) (Model -> Model)
 
 --
 -- NOTE : In most cases we don't need "after" JSM action.
 --
-
-mkPureUpdate :: (Model -> Model) -> Action
-mkPureUpdate = SomeUpdate Pure $ pure ()
-
-mkEvalUpdate :: (Model -> Model) -> Action
-mkEvalUpdate = SomeUpdate Eval $ pure ()
+mkSomeUpdate :: (Model -> Model) -> Action
+mkSomeUpdate = SomeUpdate $ pure ()
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -261,16 +250,9 @@ updateModel LoopUpdate prevSt = do
         ct <- getCurrentTime
         if (upToDate ct $ nextSt ^. #modelUpdatedAt) && not (prevSt ^. #modelHide)
           then pure Noop
-          else mkPureUpdate <$> evalModel nextSt
+          else mkSomeUpdate <$> evalModel nextSt
     ]
-updateModel (SomeUpdate Pure after updater) prevSt = do
-  let nextSt = updater prevSt
-  batchEff
-    nextSt
-    [ syncInputs nextSt >> pure Noop,
-      after >> pure Noop
-    ]
-updateModel (SomeUpdate Eval after updater) prevSt = do
+updateModel (SomeUpdate after updater) prevSt = do
   let nextSt = updater prevSt
   --
   -- NOTE : The "correct" way is to emit PureUpdate effect instead,
@@ -323,7 +305,7 @@ copyIntoClipboard chan x = do
       liftIO
         . atomically
         . writeTChan chan
-        . mkPureUpdate
+        . mkSomeUpdate
         . updateSnackbar Snackbar.clearQueue
 
 updateSnackbar ::
@@ -438,9 +420,9 @@ mainWidget st =
             currencyWidget st Bottom,
             swapAmountsWidget,
             swapCurrenciesWidget,
-            -- LayoutGrid.cell [LayoutGrid.span12]
-            --   . (: mempty)
-            --   $ div_ mempty [inspect $ st ^. #modelData],
+            LayoutGrid.cell [LayoutGrid.span12]
+              . (: mempty)
+              $ div_ mempty [inspect $ st ^. #modelData],
             copyright,
             Snackbar.snackbar (Snackbar.config snackbarClosed)
               $ modelSnackbarQueue st
@@ -509,7 +491,7 @@ amountWidget st loc =
         || (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      mkEvalUpdate $ \st' ->
+      mkSomeUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -518,7 +500,6 @@ amountWidget st loc =
     onKeyDownAction (KeyCode code) =
       let enterOrEscape = [13, 27] :: [Int]
        in SomeUpdate
-            Pure
             ( when (code `elem` enterOrEscape)
                 . void
                 . JS.eval @Text
@@ -537,7 +518,7 @@ amountWidget st loc =
                   )
             )
     onInputAction txt =
-      mkEvalUpdate $ \st' ->
+      mkSomeUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -552,7 +533,6 @@ amountWidget st loc =
           .~ loc
     onCopyAction =
       SomeUpdate
-        Pure
         ( copyIntoClipboard (st ^. #modelActionChan)
             $ st
             ^. #modelData
@@ -561,7 +541,7 @@ amountWidget st loc =
         )
         id
     onClearAction =
-      SomeUpdate Eval (focus $ inspect loc) $ \st' ->
+      SomeUpdate (focus $ inspect loc) $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -656,14 +636,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      mkEvalUpdate $ \st' ->
+      mkSomeUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      mkEvalUpdate $ \st' ->
+      mkSomeUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -674,7 +654,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      mkEvalUpdate $ \st' ->
+      mkSomeUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -723,7 +703,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( mkEvalUpdate $ \st ->
+          ( mkSomeUpdate $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -761,7 +741,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      mkEvalUpdate $ \st ->
+      mkSomeUpdate $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -807,7 +787,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      mkEvalUpdate $ \st ->
+      mkSomeUpdate $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -839,7 +819,7 @@ copyright =
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  mkPureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  mkSomeUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (MoneyTags sig tags, From String a) => Money tags -> a
 inspectMoneyAmount =

@@ -39,7 +39,7 @@ with (import ./default.nix); let
           --android-project android
         cp ${repo}/static/android-chrome-512x512.png ${repo}/static/logo.png
         ${pkgs.nodejs}/bin/npx @capacitor/assets generate \
-          --android --assetPath "${repo}/static"
+          --android --assetPath static
         cd ./android
         ./gradlew assembleRelease
         ${app-keygen-android}/bin/app-keygen-android

@@ -2,7 +2,7 @@
   function patch(x) {
     document.getElementsByTagName("head")[0].appendChild(x);
   }
-  document.title = "Functora Currency Converter";
+  document.title = "Currency Converter";
   var x0 = document.createElement("meta");
   x0.name = "viewport";
   x0.content = "width=device-width, initial-scale=1";

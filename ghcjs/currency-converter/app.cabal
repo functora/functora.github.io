@@ -13,7 +13,6 @@ common pkg
   default-language:   Haskell2010
   js-sources:
     static/app.js
-    static/clipboard.min.js
     static/material-components-web.min.js
 
   ghc-options:

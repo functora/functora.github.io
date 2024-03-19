@@ -35,10 +35,9 @@ import qualified Text.Fuzzy as Fuzzy
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
 runApp app = do
-  js0 <- BL.readFile "static/material-components-web.min.js"
-  js1 <- BL.readFile "static/material-components-web-elm.min.js"
-  js2 <- BL.readFile "static/clipboard.min.js"
-  js3 <- BL.readFile "static/app.js"
+  js0 <- BL.readFile "static/app.js"
+  js1 <- BL.readFile "static/material-components-web.min.js"
+  js2 <- BL.readFile "static/material-components-web-elm.min.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -47,7 +46,7 @@ runApp app = do
     =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router $ js0 <> js1 <> js2 <> js3)
+      (router $ js0 <> js1 <> js2)
   where
     router js req =
       case Wai.pathInfo req of

@@ -20,6 +20,7 @@ in rec {
     miso = functora-miso.miso-jsaddle;
   };
   app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" ./. {};
+  vsn = app.passthru.version;
   repo = builtins.toString ./.;
   app-release-latest = functora-pkgs.writeShellApplication rec {
     name = "app-release-latest";
@@ -35,13 +36,11 @@ in rec {
   };
   app-release-stable = functora-pkgs.writeShellApplication rec {
     name = "app-release-stable";
-    text = let
-      vsn = app.passthru.version;
-    in ''
+    text = ''
       (
-        ${app-release-latest}/bin/app-release-latest
         cd ${repo}
         nix-build -A releaseStableDer
+        rm -rf ./dist/${vsn}
         mkdir -p ./dist/${vsn}
         ${safeCopy} ./result/${vsn}/* ./dist/${vsn}
         ${forceCopy} ./result/${vsn}/favicon.ico ./dist/favicon.ico
@@ -69,22 +68,13 @@ in rec {
   });
   releaseStableDer = functora-pkgs.stdenv.mkDerivation {
     name = "releaseStableDer";
-    src = ./dist;
     dontBuild = true;
-    installPhase = let
-      vsn = app.passthru.version;
-    in ''
-      mkdir -p $out
-      cp -R ./* $out || true
-      if [ -d "$out/${vsn}" ]; then
-        echo "Version ${vsn} does already exit!"
-        exit 1
-      else
-        mkdir -p $out/${vsn}
-        cp -R ${releaseDer}/bin/app.jsexe/* $out/${vsn}
-        echo '<!doctype html><html><head><meta http-equiv="Refresh" content="0; url=${vsn}/index.html"></head><body></body></html>' > $out/index.html
-        echo "Version ${vsn} has been released!"
-      fi
+    dontUnpack = true;
+    installPhase = ''
+      mkdir -p $out/${vsn}
+      cp -R ${releaseDer}/bin/app.jsexe/* $out/${vsn}
+      echo '<!doctype html><html><head><meta http-equiv="Refresh" content="0; url=${vsn}/index.html"></head><body></body></html>' > $out/index.html
+      echo "Version ${vsn} has been released!"
     '';
   };
   readmeDer = functora-pkgs.stdenv.mkDerivation {
@@ -102,14 +92,21 @@ in rec {
       cp ./readme.html $out/readme.html
     '';
   };
-  app-publish = functora-pkgs.writeShellApplication rec {
-    name = "app-publish";
+  app-publish-stable = functora-pkgs.writeShellApplication rec {
+    name = "app-publish-stable";
     text = ''
       (
-        ${app-release-latest}/bin/app-release-latest
-        rm -rf ${repo}/../../pub/functora-hakyll/apps/currency-converter
-        mkdir -p ${repo}/../../pub/functora-hakyll/apps/currency-converter
-        ${safeCopy} ${repo}/dist/* \
+        ${app-release-stable}/bin/app-release-stable
+        if [ -d "${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}" ]
+        then
+          echo "Version ${vsn} does already exist!"
+          exit 1
+        else
+          mkdir -p ${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}
+        fi
+        ${safeCopy} ${repo}/dist/${vsn}/* \
+          ${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}
+        ${forceCopy} ${repo}/dist/index.html \
           ${repo}/../../pub/functora-hakyll/apps/currency-converter
       )
     '';

@@ -16,11 +16,11 @@ in
     buildInputs =
       [
         app-ghcid
+        app-publish-stable
         app-release-latest
         app-release-stable
         app-release-readme
         app-release-android
-        app-publish
         functora-pkgs.cabal-install
       ]
       ++ prev.buildInputs

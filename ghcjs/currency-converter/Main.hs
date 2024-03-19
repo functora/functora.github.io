@@ -197,13 +197,13 @@ data Action
   | InitUpdate
   | TimeUpdate
   | ChanUpdate
-  | SomeUpdate (JSM ()) (Model -> Model)
+  | PushUpdate (JSM ()) (Model -> Model)
 
 --
 -- NOTE : In most cases we don't need "after" JSM action.
 --
-mkSomeUpdate :: (Model -> Model) -> Action
-mkSomeUpdate = SomeUpdate $ pure ()
+mkPushUpdate :: (Model -> Model) -> Action
+mkPushUpdate = PushUpdate $ pure ()
 
 pushActionQueue :: (MonadIO m) => Model -> (Model -> Model) -> m ()
 pushActionQueue st =
@@ -286,7 +286,7 @@ updateModel ChanUpdate prevSt = do
         sleepMilliSeconds 100
         pure ChanUpdate
     ]
-updateModel (SomeUpdate after updater) st = do
+updateModel (PushUpdate after updater) st = do
   batchEff
     st
     [ do
@@ -527,7 +527,7 @@ amountWidget st loc =
         || (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      mkSomeUpdate $ \st' ->
+      mkPushUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -535,7 +535,7 @@ amountWidget st loc =
           .~ False
     onKeyDownAction (KeyCode code) =
       let enterOrEscape = [13, 27] :: [Int]
-       in SomeUpdate
+       in PushUpdate
             ( when (code `elem` enterOrEscape)
                 . void
                 . JS.eval @Text
@@ -554,7 +554,7 @@ amountWidget st loc =
                   )
             )
     onInputAction txt =
-      mkSomeUpdate $ \st' ->
+      mkPushUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -568,7 +568,7 @@ amountWidget st loc =
           . #modelDataTopOrBottom
           .~ loc
     onCopyAction =
-      SomeUpdate
+      PushUpdate
         ( copyIntoClipboard st
             $ st
             ^. #modelData
@@ -577,7 +577,7 @@ amountWidget st loc =
         )
         id
     onClearAction =
-      SomeUpdate (focus $ inspect loc) $ \st' ->
+      PushUpdate (focus $ inspect loc) $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -672,14 +672,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      mkSomeUpdate $ \st' ->
+      mkPushUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      mkSomeUpdate $ \st' ->
+      mkPushUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -690,7 +690,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      mkSomeUpdate $ \st' ->
+      mkPushUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -739,7 +739,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( mkSomeUpdate $ \st ->
+          ( mkPushUpdate $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -777,7 +777,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      mkSomeUpdate $ \st ->
+      mkPushUpdate $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -823,7 +823,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      mkSomeUpdate $ \st ->
+      mkPushUpdate $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -855,7 +855,7 @@ copyright =
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  mkSomeUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  mkPushUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (MoneyTags sig tags, From String a) => Money tags -> a
 inspectMoneyAmount =

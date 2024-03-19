@@ -35,11 +35,11 @@ with (import ./default.nix); let
         ${pkgs.nodejs}/bin/npm i
         ${pkgs.nodejs}/bin/npx cap add android || true
         ${pkgs.nodejs}/bin/npx cap sync
-        ${pkgs.nodejs}/bin/npx trapeze run trapeze.yaml -y \
-          --android-project android
         cp ${repo}/static/android-chrome-512x512.png ${repo}/static/logo.png
         ${pkgs.nodejs}/bin/npx @capacitor/assets generate \
           --android --assetPath static
+        ${pkgs.nodejs}/bin/npx trapeze run trapeze.yaml -y \
+          --android-project android
         cd ./android
         ./gradlew assembleRelease
         ${app-keygen-android}/bin/app-keygen-android

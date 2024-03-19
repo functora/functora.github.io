@@ -28,12 +28,4 @@
   x4.rel = "manifest";
   x4.href = "static/site.webmanifest";
   patch(x4);
-  function init() {
-    if (typeof ClipboardJS === "undefined") {
-      setTimeout(init, 300);
-    } else {
-      new ClipboardJS(".clipboardjs");
-    }
-  }
-  init();
 })();

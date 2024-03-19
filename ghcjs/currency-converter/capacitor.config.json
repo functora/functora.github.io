@@ -1,6 +1,6 @@
 {
   "appId": "com.functora.app",
-  "appName": "app",
+  "appName": "Functora Currency Converter",
   "webDir": "dist/latest",
   "server": {
     "androidScheme": "https"

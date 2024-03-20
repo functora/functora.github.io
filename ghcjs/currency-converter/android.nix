@@ -6,10 +6,10 @@ with (import ./default.nix); let
   app-keygen-android = pkgs.writeShellApplication {
     name = "app-keygen-android";
     text = ''
-      if [ ! -f "${repo}/android/keys/app-key.jks" ]; then
-        mkdir -p ${repo}/android/keys
+      if [ ! -f ~/keys/app-key.jks ]; then
+        mkdir -p ~/keys
         ${pkgs.zulu}/bin/keytool -genkey -v \
-          -keystore ${repo}/android/keys/app-key.jks \
+          -keystore ~/keys/app-key.jks \
           -keyalg RSA \
           -keysize 2048 \
           -validity 10000 \
@@ -21,7 +21,7 @@ with (import ./default.nix); let
     name = "app-sign-apk";
     text = ''
       ${pkgs.apksigner}/bin/apksigner sign \
-        --ks ${repo}/android/keys/app-key.jks \
+        --ks ~/keys/app-key.jks \
         --out ${repo}/android/app.apk \
         ${repo}/android/app/build/outputs/apk/release/app-release-unsigned.apk
     '';
@@ -31,7 +31,7 @@ with (import ./default.nix); let
     text = ''
       ${pkgs.zulu}/bin/jarsigner \
         -verbose \
-        -keystore ${repo}/android/keys/app-key.jks \
+        -keystore ~/keys/app-key.jks \
         -signedjar ${repo}/android/app.aab \
         ${repo}/android/app/build/outputs/bundle/release/app-release.aab \
         app-key

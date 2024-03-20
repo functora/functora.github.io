@@ -25,9 +25,9 @@ in
         app-publish-stable
         app-release-latest
         app-release-stable
-        app-release-readme
         app-release-apk
         app-release-aab
+        app-release-license
         functora-pkgs.cabal-install
       ]
       ++ prev.buildInputs

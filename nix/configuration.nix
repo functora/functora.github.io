@@ -607,7 +607,7 @@ in {
         shellcheck
         chromium
         xournalpp
-        mate.caja
+        gnome.nautilus
         ccrypt
         awscli2
         libreoffice

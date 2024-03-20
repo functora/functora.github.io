@@ -52,13 +52,11 @@ in rec {
       )
     '';
   };
-  app-release-readme = functora-pkgs.writeShellApplication rec {
-    name = "app-release-readme";
+  app-release-license = functora-pkgs.writeShellApplication rec {
+    name = "app-release-license";
     text = ''
-      ${functora-pkgs.pandoc}/bin/pandoc \
-        --standalone \
-        --metadata title="Functora" \
-        ${repo}/README.md > ${repo}/static/readme.html
+      ${functora-pkgs.lice}/bin/lice \
+        -l txt -y 2024 -o Functora mit > ${repo}/LICENSE
     '';
   };
   releaseDer = app.overrideAttrs (_: rec {
@@ -66,8 +64,8 @@ in rec {
       mkdir -p $out/bin/app.jsexe/static
       cp -R ${./static}/* $out/bin/app.jsexe/static
       cp ${./static}/favicon.ico $out/bin/app.jsexe/favicon.ico
-      rm $out/bin/app.jsexe/static/readme.html || true
-      cp ${readmeDer}/readme.html $out/bin/app.jsexe/static/
+      cp ${readmeDer}/readme.html $out/bin/app.jsexe/
+      cp ${licenseDer}/license.html $out/bin/app.jsexe/
     '';
   });
   releaseStableDer = functora-pkgs.stdenv.mkDerivation {
@@ -94,6 +92,22 @@ in rec {
     installPhase = ''
       mkdir -p $out
       cp ./readme.html $out/readme.html
+    '';
+  };
+  licenseDer = functora-pkgs.stdenv.mkDerivation {
+    name = "licenseDer";
+    src = ./LICENSE;
+    dontUnpack = true;
+    buildPhase = ''
+      ${functora-pkgs.pandoc}/bin/pandoc \
+        --standalone \
+        --from markdown \
+        --metadata title="LICENSE" \
+        $src > license.html
+    '';
+    installPhase = ''
+      mkdir -p $out
+      cp ./license.html $out/license.html
     '';
   };
   app-publish-stable = functora-pkgs.writeShellApplication rec {

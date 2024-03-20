@@ -5,10 +5,16 @@ with (import ./default.nix); let
   app-ghcid = functora-pkgs.writeScriptBin "app-ghcid" ''
     (cd ${builtins.toString ./.} && ${functora-pkgs.ghcid}/bin/ghcid --test="Main.main" --command="${functora-pkgs.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
   '';
-  app-release-android = functora-pkgs.writeShellApplication {
-    name = "app-release-android";
+  app-release-apk = functora-pkgs.writeShellApplication {
+    name = "app-release-apk";
     text = ''
-      nix-shell ${repo}/android.nix --command "app-release-android"
+      nix-shell ${repo}/android.nix --command "app-release-apk"
+    '';
+  };
+  app-release-aab = functora-pkgs.writeShellApplication {
+    name = "app-release-aab";
+    text = ''
+      nix-shell ${repo}/android.nix --command "app-release-aab"
     '';
   };
 in
@@ -20,7 +26,8 @@ in
         app-release-latest
         app-release-stable
         app-release-readme
-        app-release-android
+        app-release-apk
+        app-release-aab
         functora-pkgs.cabal-install
       ]
       ++ prev.buildInputs

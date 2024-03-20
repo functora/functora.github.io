@@ -17,8 +17,8 @@ with (import ./default.nix); let
       fi
     '';
   };
-  app-sign-android = pkgs.writeShellApplication {
-    name = "app-sign-android";
+  app-sign-apk = pkgs.writeShellApplication {
+    name = "app-sign-apk";
     text = ''
       ${pkgs.apksigner}/bin/apksigner sign \
         --ks ${repo}/android/keys/app-key.jks \
@@ -26,8 +26,19 @@ with (import ./default.nix); let
         ${repo}/android/app/build/outputs/apk/release/app-release-unsigned.apk
     '';
   };
-  app-release-android = pkgs.writeShellApplication rec {
-    name = "app-release-android";
+  app-sign-aab = pkgs.writeShellApplication {
+    name = "app-sign-aab";
+    text = ''
+      ${pkgs.zulu}/bin/jarsigner \
+        -verbose \
+        -keystore ${repo}/android/keys/app-key.jks \
+        -signedjar ${repo}/android/app.aab \
+        ${repo}/android/app/build/outputs/bundle/release/app-release.aab \
+        app-key
+    '';
+  };
+  app-prepare-android = pkgs.writeShellApplication rec {
+    name = "app-prepare-android";
     text = ''
       (
         cd ${repo}
@@ -40,12 +51,36 @@ with (import ./default.nix); let
           --android --assetPath static
         ${pkgs.nodejs}/bin/npx trapeze run trapeze.yaml -y \
           --android-project android
+      )
+    '';
+  };
+  app-release-apk = pkgs.writeShellApplication rec {
+    name = "app-release-apk";
+    text = ''
+      (
+        cd ${repo}
+        ${app-prepare-android}/bin/app-prepare-android
         cd ./android
         ./gradlew assembleRelease
         ${app-keygen-android}/bin/app-keygen-android
         rm ${repo}/android/app.apk || true
-        ${app-sign-android}/bin/app-sign-android
+        ${app-sign-apk}/bin/app-sign-apk
         ls -la ${repo}/android/app.apk
+      )
+    '';
+  };
+  app-release-aab = pkgs.writeShellApplication rec {
+    name = "app-release-aab";
+    text = ''
+      (
+        cd ${repo}
+        ${app-prepare-android}/bin/app-prepare-android
+        cd ./android
+        ./gradlew bundleRelease
+        ${app-keygen-android}/bin/app-keygen-android
+        rm ${repo}/android/app.aab || true
+        ${app-sign-aab}/bin/app-sign-aab
+        ls -la ${repo}/android/app.aab
       )
     '';
   };
@@ -56,8 +91,10 @@ in
       android-sdk
       glibc
       jdk
+      zulu
       nodejs
-      app-release-android
+      app-release-apk
+      app-release-aab
     ];
     GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/34.0.0/aapt2";
     ANDROID_SDK_ROOT = "${android-sdk}/libexec/android-sdk";

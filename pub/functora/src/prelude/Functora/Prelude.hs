@@ -3,7 +3,6 @@ module Functora.Prelude
     -- $reexport
     module X,
     LiftTH,
-    getCurrentTime,
 
     -- * Show
     -- $show
@@ -41,6 +40,9 @@ module Functora.Prelude
     sleepSeconds,
     sleepMinutes,
     sleepHours,
+    epoch,
+    getCurrentTime,
+    getCurrentPicos,
 
     -- * Exceptions
     -- $exceptions
@@ -130,8 +132,17 @@ import qualified Data.Text.Read as T
 import Data.These as X (These (..), these)
 import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
-import Data.Time.Clock as X (UTCTime (..), diffUTCTime)
+import Data.Time.Clock as X
+  ( DiffTime,
+    UTCTime (..),
+    addUTCTime,
+    diffTimeToPicoseconds,
+    diffUTCTime,
+    nominalDay,
+    secondsToDiffTime,
+  )
 import qualified Data.Time.Clock as Clock
+import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
@@ -226,9 +237,6 @@ import qualified Prelude
 -- Reexport
 
 type LiftTH = TH.Lift
-
-getCurrentTime :: (MonadIO m) => m UTCTime
-getCurrentTime = liftIO Clock.getCurrentTime
 
 -- $show
 -- Show
@@ -478,6 +486,21 @@ sleepMinutes = sleepSeconds . (* 60)
 
 sleepHours :: (MonadIO m) => Integer -> m ()
 sleepHours = sleepMinutes . (* 60)
+
+epoch :: UTCTime
+epoch = posixSecondsToUTCTime 0
+
+getCurrentTime :: (MonadIO m) => m UTCTime
+getCurrentTime = liftIO Clock.getCurrentTime
+
+getCurrentPicos :: (MonadIO m) => m Integer
+getCurrentPicos = do
+  ct <- getCurrentTime
+  pure
+    . diffTimeToPicoseconds
+    . fromRational
+    . toRational
+    $ diffUTCTime ct epoch
 
 -- $exceptions
 -- Exceptions

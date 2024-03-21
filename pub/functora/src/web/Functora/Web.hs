@@ -28,8 +28,9 @@ webFetch ::
   [(ByteString, Maybe ByteString)] ->
   m BL.ByteString
 webFetch prevUri qs = do
+  nonce <- getCurrentPicos
   let prevQuery = URI.uriQuery prevUri
-  nextQuery <- forM qs $ uncurry newQueryParam
+  nextQuery <- mapM (uncurry newQueryParam) $ (inspect nonce, Nothing) : qs
   let nextUri =
         NetURI.unEscapeString
           $ URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}

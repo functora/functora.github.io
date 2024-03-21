@@ -66,6 +66,7 @@ in rec {
       cp ${./static}/favicon.ico $out/bin/app.jsexe/favicon.ico
       cp ${readmeDer}/readme.html $out/bin/app.jsexe/
       cp ${licenseDer}/license.html $out/bin/app.jsexe/
+      cp ${privacyDer}/privacy.html $out/bin/app.jsexe/
     '';
   });
   releaseStableDer = functora-pkgs.stdenv.mkDerivation {
@@ -96,18 +97,36 @@ in rec {
   };
   licenseDer = functora-pkgs.stdenv.mkDerivation {
     name = "licenseDer";
-    src = ./LICENSE;
+    src = ./.;
     dontUnpack = true;
     buildPhase = ''
+      echo "# [Back](index.html)" > ./index-link.md
       ${functora-pkgs.pandoc}/bin/pandoc \
         --standalone \
         --from markdown \
         --metadata title="LICENSE" \
-        $src > license.html
+        $src/LICENSE ./index-link.md > license.html
     '';
     installPhase = ''
       mkdir -p $out
       cp ./license.html $out/license.html
+    '';
+  };
+  privacyDer = functora-pkgs.stdenv.mkDerivation {
+    name = "privacyDer";
+    src = ./.;
+    dontUnpack = true;
+    buildPhase = ''
+      echo "# [Back](index.html)" > ./index-link.md
+      ${functora-pkgs.pandoc}/bin/pandoc \
+        --standalone \
+        --from markdown \
+        --metadata title="PRIVACY POLICY" \
+        $src/privacy.md ./index-link.md > privacy.html
+    '';
+    installPhase = ''
+      mkdir -p $out
+      cp ./privacy.html $out/privacy.html
     '';
   };
   app-publish-stable = functora-pkgs.writeShellApplication rec {

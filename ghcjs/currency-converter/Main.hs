@@ -849,8 +849,13 @@ copyright =
         [ ("text-align", "center")
         ]
     ]
-    . (: mempty)
-    $ Miso.text "\169 2024 Functora. All rights reserved."
+    [ Miso.text "\169 2024 Functora. All rights reserved. ",
+      Miso.text "By continuing to use this software, you agree to the ",
+      a_ [href_ "license.html"] [Miso.text "Terms and Conditions"],
+      Miso.text " and ",
+      a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
+      Miso.text "."
+    ]
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =

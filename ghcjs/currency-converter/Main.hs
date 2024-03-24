@@ -28,8 +28,7 @@ import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
-import Miso.String hiding (foldl, null, reverse)
-import qualified System.IO.Unsafe as Unsafe
+import Miso.String hiding (cons, foldl, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
 #ifndef __GHCJS__
@@ -63,7 +62,8 @@ data Model = Model
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
-    modelUpdateQueue :: TChan (Model -> Model),
+    modelProducerQueue :: TChan (Model -> Model),
+    modelConsumerQueue :: TChan (Model -> Model),
     modelUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Generic)
@@ -76,7 +76,6 @@ data TopOrBottom
 data ModelMoney = ModelMoney
   { modelMoneyAmountInput :: Text,
     modelMoneyAmountOutput :: Money (Tags 'Signed),
-    modelMoneyAmountActive :: Bool,
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
     modelMoneyCurrencySearch :: Text
@@ -93,7 +92,8 @@ data ModelData = ModelData
 mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 mkModel = do
   ct <- getCurrentTime
-  chan <- liftIO $ atomically newTChan
+  prod <- liftIO newBroadcastTChanIO
+  cons <- liftIO . atomically $ dupTChan prod
   market <- mkMarket
   let btc =
         CurrencyInfo
@@ -112,7 +112,6 @@ mkModel = do
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
-                  modelMoneyAmountActive = False,
                   modelMoneyCurrencyInfo = btc,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
@@ -121,7 +120,6 @@ mkModel = do
               ModelMoney
                 { modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
-                  modelMoneyAmountActive = False,
                   modelMoneyCurrencyInfo = usd,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
@@ -135,7 +133,8 @@ mkModel = do
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
-            modelUpdateQueue = chan,
+            modelProducerQueue = prod,
+            modelConsumerQueue = cons,
             modelUpdatedAt = ct
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
@@ -163,7 +162,6 @@ mkModel = do
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput =
                       mkSignedMoney @NoTags $ unMoney baseAmt,
-                    modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -173,7 +171,6 @@ mkModel = do
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput =
                       mkSignedMoney @NoTags $ unMoney quoteAmt,
-                    modelMoneyAmountActive = False,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -187,7 +184,8 @@ mkModel = do
           modelMarket = market,
           modelCurrencies = currenciesInfo,
           modelSnackbarQueue = Snackbar.initialQueue,
-          modelUpdateQueue = chan,
+          modelProducerQueue = prod,
+          modelConsumerQueue = cons,
           modelUpdatedAt = ct
         }
 
@@ -195,20 +193,20 @@ data Action
   = Noop
   | InitUpdate
   | TimeUpdate
-  | ChanUpdate
+  | ChanUpdate Model
   | PushUpdate (JSM ()) (Model -> Model)
 
 --
--- NOTE : In most cases we don't need "after" JSM action.
+-- NOTE : In most cases we don't need JSM.
 --
-mkPushUpdate :: (Model -> Model) -> Action
-mkPushUpdate = PushUpdate $ pure ()
+pureUpdate :: (Model -> Model) -> Action
+pureUpdate = PushUpdate $ pure ()
 
 pushActionQueue :: (MonadIO m) => Model -> (Model -> Model) -> m ()
 pushActionQueue st =
   liftIO
     . atomically
-    . writeTChan (st ^. #modelUpdateQueue)
+    . writeTChan (st ^. #modelProducerQueue)
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -241,15 +239,27 @@ main = do
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel InitUpdate st = do
+updateModel InitUpdate prevSt = do
   batchEff
-    st
+    prevSt
     [ do
         sleepSeconds 60
         pure TimeUpdate,
       do
-        pushActionQueue st (& #modelHide .~ False)
-        pure ChanUpdate
+        --
+        -- NOTE : making a new pair of TChans to avoid deadlocks
+        -- when running in ghcid mode and reloading page without
+        -- restarting executable. It's ok, the overhead is low.
+        --
+        prod <- liftIO newBroadcastTChanIO
+        cons <- liftIO . atomically $ dupTChan prod
+        let nextSt =
+              prevSt
+                { modelProducerQueue = prod,
+                  modelConsumerQueue = cons
+                }
+        pushActionQueue nextSt (& #modelHide .~ False)
+        pure $ ChanUpdate nextSt
     ]
 updateModel TimeUpdate st = do
   batchEff
@@ -262,70 +272,56 @@ updateModel TimeUpdate st = do
         unless (upToDate ct $ st ^. #modelUpdatedAt) $ pushActionQueue st id
         pure Noop
     ]
-updateModel ChanUpdate prevSt = do
-  let res =
-        Unsafe.unsafePerformIO . tryAny $ do
-          actions <-
-            drainTChan $ prevSt ^. #modelUpdateQueue
-          nextSt <-
-            foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-          if null actions
-            then pure nextSt
-            else evalModel nextSt
-  let nextSt =
-        case res of
-          Left e -> updateSnackbar id e prevSt
-          Right x -> x
+updateModel (ChanUpdate prevSt) _ = do
   batchEff
-    nextSt
+    prevSt
     [ do
-        syncInputs nextSt
+        syncInputs prevSt
         pure Noop,
       do
-        sleepMilliSeconds 100
-        pure ChanUpdate
+        actions <- drainTChan $ prevSt ^. #modelConsumerQueue
+        nextSt <- foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
+        pure $ ChanUpdate nextSt
     ]
-updateModel (PushUpdate after updater) st = do
+updateModel (PushUpdate runJSM updater) st = do
   batchEff
     st
     [ do
         pushActionQueue st updater
         pure Noop,
       do
-        after
+        runJSM
         pure Noop
     ]
 
 drainTChan :: (MonadIO m) => TChan a -> m [a]
-drainTChan chan =
+drainTChan chan = do
+  item <- liftIO . atomically $ readTChan chan
   liftIO
-    . atomically
-    . fmap reverse
-    $ drainInto []
+    . fmap ((item :) . reverse)
+    $ drainInto [] False
   where
-    drainInto acc = do
-      item <- tryReadTChan chan
+    drainInto acc debounced = do
+      item <- atomically $ tryReadTChan chan
       case item of
-        Nothing -> pure acc
-        Just next -> drainInto $ next : acc
+        Nothing | debounced -> pure acc
+        Nothing -> sleepMilliSeconds 300 >> drainInto acc True
+        Just next -> drainInto (next : acc) False
 
 syncInputs :: Model -> JSM ()
 syncInputs st =
   --
   -- NOTE : The "correct" way is to use "controlled input" with
-  -- TextField.setValue but without proper Action queue synchronization
-  -- or mutex it does cause race conditions when user types "too fast":
+  -- TextField.setValue but it does cause race conditions
+  -- when user types "too fast":
   --
   -- https://github.com/dmjio/miso/issues/272
   --
-  forM_ enumerate $ \loc ->
-    unless
-      (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountActive)
-      . void
-      . JS.eval @Text
+  forM_ enumerate $ \loc -> do
+    JS.eval @Text
       $ "var el = document.getElementById('"
       <> inspect loc
-      <> "'); if (el) el.value = '"
+      <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
       <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
       <> "';"
 
@@ -335,11 +331,11 @@ copyIntoClipboard st x = do
   unless (null txt) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
-    success <- JS.function $ \_ _ _ -> mkUpdate $ "Copied " <> txt
-    failure <- JS.function $ \_ _ _ -> mkUpdate $ "Failed to copy " <> txt
+    success <- JS.function $ \_ _ _ -> push $ "Copied " <> txt
+    failure <- JS.function $ \_ _ _ -> push $ "Failed to copy " <> txt
     void $ prom ^. JS.js2 ("then" :: Text) success failure
   where
-    mkUpdate =
+    push =
       pushActionQueue st
         . updateSnackbar Snackbar.clearQueue
 
@@ -363,13 +359,18 @@ updateSnackbar before x =
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
   let loc = st ^. #modelData . #modelDataTopOrBottom
+  let baseAmtInput =
+        case st ^. #modelData . getBaseMoneyOptic loc . #modelMoneyAmountInput of
+          amt
+            | null amt ->
+                inspectMoneyAmount
+                  $ st
+                  ^. #modelData
+                  . getBaseMoneyOptic loc
+                  . #modelMoneyAmountOutput
+          amt -> amt
   baseAmtResult <-
-    tryAny
-      . parseMoney
-      $ st
-      ^. #modelData
-      . getBaseMoneyOptic loc
-      . #modelMoneyAmountInput
+    tryAny $ parseMoney baseAmtInput
   case baseAmtResult of
     Left {} -> pure st
     Right baseAmt ->
@@ -393,6 +394,10 @@ evalModel st = do
         ct <- getCurrentTime
         pure
           $ st
+          & #modelData
+          . getBaseMoneyOptic loc
+          . #modelMoneyAmountInput
+          .~ baseAmtInput
           & #modelData
           . getBaseMoneyOptic loc
           . #modelMoneyAmountOutput
@@ -514,24 +519,26 @@ amountWidget st loc =
         & TextField.setAttributes
           [ class_ "fill",
             id_ $ inspect loc,
-            onBlur onBlurAction,
-            onKeyDown onKeyDownAction
+            onKeyDown onKeyDownAction,
+            onBlur onBlurAction
           ]
     ]
   where
     input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
     output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
     valid =
-      (Prelude.null input)
-        || (parseMoney input == Just output)
+      (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      mkPushUpdate $ \st' ->
-        st'
-          & #modelData
-          . getMoneyOptic loc
-          . #modelMoneyAmountActive
-          .~ False
+      pureUpdate $ \st' ->
+        if valid
+          then st'
+          else
+            st'
+              & #modelData
+              . getMoneyOptic loc
+              . #modelMoneyAmountInput
+              .~ inspectMoneyAmount output
     onKeyDownAction (KeyCode code) =
       let enterOrEscape = [13, 27] :: [Int]
        in PushUpdate
@@ -542,27 +549,14 @@ amountWidget st loc =
                 <> inspect loc
                 <> "').getElementsByTagName('input')[0].blur();"
             )
-            ( if code `elem` enterOrEscape
-                then id
-                else
-                  ( &
-                      #modelData
-                        . getMoneyOptic loc
-                        . #modelMoneyAmountActive
-                        .~ True
-                  )
-            )
+            id
     onInputAction txt =
-      mkPushUpdate $ \st' ->
+      pureUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyAmountInput
           .~ from @String @Text txt
-          & #modelData
-          . getMoneyOptic loc
-          . #modelMoneyAmountActive
-          .~ True
           & #modelData
           . #modelDataTopOrBottom
           .~ loc
@@ -576,19 +570,25 @@ amountWidget st loc =
         )
         id
     onClearAction =
-      PushUpdate (focus $ inspect loc) $ \st' ->
-        st'
-          & #modelData
-          . getMoneyOptic loc
-          . #modelMoneyAmountInput
-          .~ mempty
-          & #modelData
-          . getMoneyOptic loc
-          . #modelMoneyAmountActive
-          .~ True
-          & #modelData
-          . #modelDataTopOrBottom
-          .~ loc
+      PushUpdate
+        ( do
+            focus $ inspect loc
+            void
+              . JS.eval @Text
+              $ "var el = document.getElementById('"
+              <> inspect loc
+              <> "'); if (el) el.value = '';"
+        )
+        ( \st' ->
+            st'
+              & #modelData
+              . getMoneyOptic loc
+              . #modelMoneyAmountInput
+              .~ mempty
+              & #modelData
+              . #modelDataTopOrBottom
+              .~ loc
+        )
 
 currencyWidget ::
   Model ->
@@ -671,14 +671,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      mkPushUpdate $ \st' ->
+      pureUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      mkPushUpdate $ \st' ->
+      pureUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -689,7 +689,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      mkPushUpdate $ \st' ->
+      pureUpdate $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -738,7 +738,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( mkPushUpdate $ \st ->
+          ( pureUpdate $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -776,7 +776,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      mkPushUpdate $ \st ->
+      pureUpdate $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -822,7 +822,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      mkPushUpdate $ \st ->
+      pureUpdate $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -859,7 +859,7 @@ copyright =
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  mkPushUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  pureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (MoneyTags sig tags, From String a) => Money tags -> a
 inspectMoneyAmount =

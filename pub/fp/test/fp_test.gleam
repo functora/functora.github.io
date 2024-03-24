@@ -4,7 +4,7 @@ import gleeunit/should
 import gleam/option.{Some}
 import gleam/string
 import gleam/int
-import gleam/base
+import gleam/bit_array
 import gleam/function
 
 pub fn main() {
@@ -83,7 +83,7 @@ pub fn applicative_web_form(
   Wallet
   |> function.curry3
   |> fp.fmap_result(int.parse(balance))
-  |> fp.ap_result(base.decode64(seed))
+  |> fp.ap_result(bit_array.base64_decode(seed))
   |> fp.ap_result(fp.pure_result(info))
 }
 

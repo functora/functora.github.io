@@ -88,7 +88,6 @@ library
     , containers
     , Crypto
     , cryptohash-sha256
-    , dollaridoos
     , extra
     , generic-lens
     , lens

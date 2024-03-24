@@ -20,7 +20,7 @@ module Functora.Rates
     Currencies (..),
     fetchCurrencies,
     tryFetchCurrencies,
-    QuotesPerBase (..),
+    QuotesPerBaseAt (..),
     fetchQuotesPerBase,
     tryFetchQuotesPerBase,
 
@@ -50,7 +50,7 @@ import qualified Text.URI.Lens as URILens
 
 data Market = Market
   { marketCurrencies :: Currencies,
-    marketQuotesPerBase :: Map CurrencyCode QuotesPerBase
+    marketQuotesPerBase :: Map CurrencyCode QuotesPerBaseAt
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -155,7 +155,7 @@ getQuotesPerBase ::
     MonadUnliftIO m
   ) =>
   CurrencyCode ->
-  ReaderT (MVar Market) m QuotesPerBase
+  ReaderT (MVar Market) m QuotesPerBaseAt
 getQuotesPerBase cur = do
   var <- ask
   modifyMVar var $ \st -> do
@@ -215,9 +215,9 @@ tryFetchCurrencies uri = tryMarket $ do
   ct <- getCurrentTime
   pure Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
 
-data QuotesPerBase = QuotesPerBase
+data QuotesPerBaseAt = QuotesPerBaseAt
   { quotesPerBaseQuotesMap ::
-      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotePerBase)),
+      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotesPerBase)),
     quotesPerBaseCreatedAt :: UTCTime,
     quotesPerBaseUpdatedAt :: UTCTime
   }
@@ -228,7 +228,7 @@ fetchQuotesPerBase ::
     MonadUnliftIO m
   ) =>
   CurrencyCode ->
-  m QuotesPerBase
+  m QuotesPerBaseAt
 fetchQuotesPerBase cur = do
   uris <- mkQuotePerBaseUris cur
   eitherM throw pure $ altM (tryFetchQuotesPerBase cur) uris
@@ -239,7 +239,7 @@ tryFetchQuotesPerBase ::
   ) =>
   CurrencyCode ->
   URI ->
-  m (Either MarketException QuotesPerBase)
+  m (Either MarketException QuotesPerBaseAt)
 tryFetchQuotesPerBase cur uri = tryMarket $ do
   bytes <- webFetch uri mempty
   updatedAt <- getCurrentTime
@@ -249,7 +249,7 @@ tryFetchQuotesPerBase cur uri = tryMarket $ do
       A.at [fromString . from @Text @String $ unCurrencyCode cur]
         $ A.mapStrict unJsonSignedMoney
     pure
-      QuotesPerBase
+      QuotesPerBaseAt
         { quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap,
           quotesPerBaseCreatedAt = UTCTime {utctDay = createdAt, utctDayTime = 0},
           quotesPerBaseUpdatedAt = updatedAt

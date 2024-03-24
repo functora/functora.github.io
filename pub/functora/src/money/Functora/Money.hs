@@ -12,6 +12,7 @@ module Functora.Money
     mkSignedMoney,
     mkUnsignedMoney,
     mkFeeRate,
+    addFee,
     deductFee,
     quoteFromBase,
     Funds (..),
@@ -150,8 +151,22 @@ mkFeeRate ::
   Money next
 mkFeeRate = Money
 
-deductFee ::
+addFee ::
   forall fee amt sig tags.
+  ( GetTag sig fee,
+    GetTag sig amt,
+    MkMoneyTags
+      sig
+      tags
+      ((fee |-| sig |-| 'FeeRate) |&| (amt |-| 'Net |+| 'Gross))
+  ) =>
+  Money fee ->
+  Money amt ->
+  Money tags
+addFee (Money fee) (Money amt) =
+  Money $ amt / (1 - fee)
+
+deductFee ::
   ( GetTag sig fee,
     GetTag sig amt,
     MkMoneyTags
@@ -172,7 +187,7 @@ quoteFromBase ::
     MkMoneyTags
       sig
       quote
-      ((rate |-| sig |-| 'QuotePerBase) |&| (base |-| 'Base |+| 'Quote))
+      ((rate |-| sig |-| 'QuotesPerBase) |&| (base |-| 'Base |+| 'Quote))
   ) =>
   Money rate ->
   Money base ->

@@ -171,8 +171,10 @@ common pkg-sql
     , esqueleto
     , modern-uri
     , monad-logger
+    , money
     , persistent
     , resource-pool
+    , tags
     , uuid
 
 common pkg-money
@@ -262,7 +264,7 @@ library money
   visibility:      public
   exposed-modules:
     Functora.Money
-    Functora.MoneyOrphan
+    Functora.MoneyFgpt
     Functora.MoneySing
 
 library rates
@@ -320,7 +322,7 @@ test-suite functora-test
       Functora.Cfg
       Functora.CfgOrphan
       Functora.Money
-      Functora.MoneyOrphan
+      Functora.MoneyFgpt
       Functora.MoneySing
       Functora.Prelude
       Functora.PreludeOrphan

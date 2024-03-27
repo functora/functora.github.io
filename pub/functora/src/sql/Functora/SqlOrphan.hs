@@ -7,7 +7,9 @@ import qualified Data.Data as Data
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Esqueleto.Legacy hiding (from)
+import Functora.Money
 import Functora.Prelude hiding (Key)
+import Functora.Tags
 import qualified Text.URI as URI
 
 deriving stock instance Data PersistValue
@@ -70,3 +72,29 @@ instance PersistField Integer where
     raw -> Left $ "PersistValue is invalid Integer " <> inspect raw
 
 deriving via Int64 instance PersistFieldSql Integer
+
+deriving via
+  Rational
+  instance
+    (MoneyTags sig tags) => PersistFieldSql (Money tags)
+
+instance (MoneyTags sig tags) => PersistField (Money tags) where
+  toPersistValue (Money rep) =
+    case sing :: Sing sig of
+      SSigned -> PersistRational rep
+      SUnsigned -> PersistRational $ from @(Ratio Natural) @Rational rep
+  fromPersistValue raw =
+    case raw of
+      PersistRational x ->
+        case sing :: Sing sig of
+          SSigned ->
+            pure $ Money x
+          SUnsigned ->
+            bimap (const failure) Money $ tryFrom @Rational @(Ratio Natural) x
+      _ ->
+        Left failure
+    where
+      failure =
+        inspectType @(Money tags)
+          <> " PersistValue is invalid "
+          <> inspect raw

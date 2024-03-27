@@ -1,14 +1,19 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
-module Functora.MoneyOrphan () where
+module Functora.MoneyFgpt () where
 
 import Functora.MoneySing
 import Functora.Tags
 
+mkFgpt @BuyOrSell
 mkFgpt @NetOrGross
 mkFgpt @GainOrLose
 mkFgpt @BaseOrQuote
-mkFgpt @QuotesPerBase
+mkFgpt @QuotePerBase
 mkFgpt @FeeRate
+mkFgpt @ProfitRate
 mkFgpt @SignedOrUnsigned
+mkFgpt @CurrencyKind
+mkFgpt @MakerOrTaker
+mkFgpt @LocalOrRemote
+mkFgpt @MinOrMax

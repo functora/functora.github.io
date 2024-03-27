@@ -2,7 +2,7 @@ module Functora.Rates
   ( -- * State
     -- $state
     Market (..),
-    mkMarket,
+    newMarket,
     withMarket,
     withNewMarket,
 
@@ -26,8 +26,8 @@ module Functora.Rates
 
     -- * Uris
     -- $uris
-    mkCurrenciesUris,
-    mkQuotePerBaseUris,
+    newCurrenciesUris,
+    newQuotePerBaseUris,
 
     -- * Exceptions
     -- $exceptions
@@ -54,8 +54,8 @@ data Market = Market
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-mkMarket :: (MonadIO m) => m (MVar Market)
-mkMarket = newEmptyMVar
+newMarket :: (MonadIO m) => m (MVar Market)
+newMarket = newEmptyMVar
 
 withMarket ::
   ( MonadThrow m,
@@ -78,7 +78,7 @@ withNewMarket ::
   ReaderT (MVar Market) m a ->
   m a
 withNewMarket expr = do
-  var <- mkMarket
+  var <- newMarket
   withMarket var expr
 
 -- $stateful
@@ -108,7 +108,7 @@ getQuote baseFunds quoteCurrency = do
       pure
         QuoteAt
           { quoteMoneyAmount =
-              quotesPerBase `quoteFromBase` fundsMoneyAmount baseFunds,
+              exchangeMoney quotesPerBase $ fundsMoneyAmount baseFunds,
             quoteUpdatedAt =
               quotesPerBaseUpdatedAt quotes
           }
@@ -192,7 +192,7 @@ fetchCurrencies ::
   ) =>
   m Currencies
 fetchCurrencies = do
-  uris <- mkCurrenciesUris
+  uris <- newCurrenciesUris
   eitherM throw pure $ altM tryFetchCurrencies uris
 
 tryFetchCurrencies ::
@@ -217,7 +217,7 @@ tryFetchCurrencies uri = tryMarket $ do
 
 data QuotesPerBaseAt = QuotesPerBaseAt
   { quotesPerBaseQuotesMap ::
-      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotesPerBase)),
+      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotePerBase)),
     quotesPerBaseCreatedAt :: UTCTime,
     quotesPerBaseUpdatedAt :: UTCTime
   }
@@ -230,7 +230,7 @@ fetchQuotesPerBase ::
   CurrencyCode ->
   m QuotesPerBaseAt
 fetchQuotesPerBase cur = do
-  uris <- mkQuotePerBaseUris cur
+  uris <- newQuotePerBaseUris cur
   eitherM throw pure $ altM (tryFetchQuotesPerBase cur) uris
 
 tryFetchQuotesPerBase ::
@@ -258,16 +258,16 @@ tryFetchQuotesPerBase cur uri = tryMarket $ do
 -- $uris
 -- Uris
 
-mkRootUris :: (MonadThrow m) => m (NonEmpty URI)
-mkRootUris =
+newRootUris :: (MonadThrow m) => m (NonEmpty URI)
+newRootUris =
   mapM
     mkURI
     [ "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1"
     ]
 
-mkCurrenciesUris :: (MonadThrow m) => m (NonEmpty URI)
-mkCurrenciesUris = do
-  uris <- mkRootUris
+newCurrenciesUris :: (MonadThrow m) => m (NonEmpty URI)
+newCurrenciesUris = do
+  uris <- newRootUris
   fmap sconcat . forM uris $ \uri -> do
     pp0 <- URI.mkPathPiece "currencies.min.json"
     pp1 <- URI.mkPathPiece "currencies.json"
@@ -276,9 +276,9 @@ mkCurrenciesUris = do
         uri & URILens.uriPath %~ (<> [pp1])
       ]
 
-mkQuotePerBaseUris :: (MonadThrow m) => CurrencyCode -> m (NonEmpty URI)
-mkQuotePerBaseUris cur = do
-  uris <- mkRootUris
+newQuotePerBaseUris :: (MonadThrow m) => CurrencyCode -> m (NonEmpty URI)
+newQuotePerBaseUris cur = do
+  uris <- newRootUris
   fmap sconcat . forM uris $ \uri -> do
     pre <- URI.mkPathPiece "currencies"
     pp0 <- URI.mkPathPiece $ unCurrencyCode cur <> ".min.json"

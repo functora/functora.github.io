@@ -135,7 +135,7 @@ library
   exposed-modules:
     Functora.Aes
     Functora.Money
-    Functora.MoneyOrphan
+    Functora.MoneyFgpt
     Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan

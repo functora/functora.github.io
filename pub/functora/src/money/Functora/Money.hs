@@ -4,23 +4,25 @@ module Functora.Money
   ( module X,
     MoneyRep,
     MoneyTags,
-    MkMoneyTags,
+    NewMoneyTags,
     Money (..),
     unMoney,
     parseMoney,
     SomeMoney (..),
-    mkSignedMoney,
-    mkUnsignedMoney,
-    mkFeeRate,
+    newSignedMoney,
+    newUnsignedMoneyBOS,
+    newUnsignedMoneyGOL,
+    newFeeRate,
     addFee,
     deductFee,
-    quoteFromBase,
+    exchangeMoney,
     Funds (..),
     fundsMoneyAmount,
     fundsCurrencyCode,
     unJsonRational,
     unJsonSignedMoney,
-    unJsonUnsignedMoney,
+    unJsonUnsignedMoneyBOS,
+    unJsonUnsignedMoneyGOL,
     CurrencyCode (..),
     inspectCurrencyCode,
     CurrencyInfo (..),
@@ -31,7 +33,7 @@ where
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Text as T
-import Functora.MoneyOrphan as X ()
+import Functora.MoneyFgpt as X ()
 import Functora.MoneySing as X
 import Functora.Prelude
 import Functora.Tags
@@ -49,10 +51,12 @@ type MoneyTags (sig :: SignedOrUnsigned) tags =
     Read (MoneyRep sig),
     Data (MoneyRep sig),
     Integral (MoneyRep sig),
-    From (MoneyRep sig) Integer
+    From (MoneyRep sig) Integer,
+    Typeable sig,
+    Typeable tags
   )
 
-type MkMoneyTags (sig :: SignedOrUnsigned) lhs rhs =
+type NewMoneyTags (sig :: SignedOrUnsigned) lhs rhs =
   ( lhs ~ rhs,
     MoneyTags sig lhs
   )
@@ -73,11 +77,7 @@ deriving stock instance (MoneyTags sig tags) => Show (Money tags)
 
 deriving stock instance (MoneyTags sig tags) => Read (Money tags)
 
-deriving stock instance
-  ( MoneyTags sig tags,
-    Typeable tags
-  ) =>
-  Data (Money tags)
+deriving stock instance (MoneyTags sig tags) => Data (Money tags)
 
 unMoney ::
   forall tags sig.
@@ -120,42 +120,53 @@ instance (TestEquality (Sing :: k -> Type)) => Eq (SomeMoney k tags) where
 
 deriving stock instance Show (SomeMoney k tags)
 
-mkSignedMoney ::
+newSignedMoney ::
   forall prev next.
-  ( MkMoneyTags 'Signed next (prev |+| 'Signed)
+  ( NewMoneyTags 'Signed next (prev |+| 'Signed)
   ) =>
   Rational ->
   Money next
-mkSignedMoney = Money
+newSignedMoney = Money
 
-mkUnsignedMoney ::
-  forall tags gain lose.
-  ( MkMoneyTags 'Unsigned gain (tags |+| 'Unsigned |+| 'Gain),
-    MkMoneyTags 'Unsigned lose (tags |+| 'Unsigned |+| 'Lose)
+newUnsignedMoneyBOS ::
+  forall tags buy sell.
+  ( NewMoneyTags 'Unsigned buy (tags |+| 'Unsigned |+| 'Buy),
+    NewMoneyTags 'Unsigned sell (tags |+| 'Unsigned |+| 'Sell)
   ) =>
   Rational ->
-  SomeMoney GainOrLose (tags |+| 'Unsigned)
-mkUnsignedMoney raw
-  | raw < 0 =
-      SomeMoney (sing :: Sing 'Lose) (Money uns :: Money lose)
-  | otherwise =
-      SomeMoney (sing :: Sing 'Gain) (Money uns :: Money gain)
+  SomeMoney BuyOrSell (tags |+| 'Unsigned)
+newUnsignedMoneyBOS raw
+  | raw < 0 = SomeMoney (sing :: Sing 'Sell) (Money uns :: Money sell)
+  | otherwise = SomeMoney (sing :: Sing 'Buy) (Money uns :: Money buy)
   where
     uns = unsafeFrom @Rational @(Ratio Natural) $ abs raw
 
-mkFeeRate ::
+newUnsignedMoneyGOL ::
+  forall tags gain lose.
+  ( NewMoneyTags 'Unsigned gain (tags |+| 'Unsigned |+| 'Gain),
+    NewMoneyTags 'Unsigned lose (tags |+| 'Unsigned |+| 'Lose)
+  ) =>
+  Rational ->
+  SomeMoney GainOrLose (tags |+| 'Unsigned)
+newUnsignedMoneyGOL raw
+  | raw < 0 = SomeMoney (sing :: Sing 'Lose) (Money uns :: Money lose)
+  | otherwise = SomeMoney (sing :: Sing 'Gain) (Money uns :: Money gain)
+  where
+    uns = unsafeFrom @Rational @(Ratio Natural) $ abs raw
+
+newFeeRate ::
   forall prev sig next.
-  ( MkMoneyTags sig next (prev |+| 'Unsigned |+| 'FeeRate)
+  ( NewMoneyTags sig next (prev |+| 'FeeRate)
   ) =>
   Ratio (MoneyRep sig) ->
   Money next
-mkFeeRate = Money
+newFeeRate = Money
 
 addFee ::
   forall fee amt sig tags.
   ( GetTag sig fee,
     GetTag sig amt,
-    MkMoneyTags
+    NewMoneyTags
       sig
       tags
       ((fee |-| sig |-| 'FeeRate) |&| (amt |-| 'Net |+| 'Gross))
@@ -169,7 +180,7 @@ addFee (Money fee) (Money amt) =
 deductFee ::
   ( GetTag sig fee,
     GetTag sig amt,
-    MkMoneyTags
+    NewMoneyTags
       sig
       tags
       ((fee |-| sig |-| 'FeeRate) |&| (amt |-| 'Gross |+| 'Net))
@@ -180,19 +191,19 @@ deductFee ::
 deductFee (Money fee) (Money amt) =
   Money $ amt * (1 - fee)
 
-quoteFromBase ::
+exchangeMoney ::
   forall rate base quote sig.
   ( MoneyTags sig rate,
     MoneyTags sig base,
-    MkMoneyTags
+    NewMoneyTags
       sig
       quote
-      ((rate |-| sig |-| 'QuotesPerBase) |&| (base |-| 'Base |+| 'Quote))
+      ((rate |-| sig |-| 'QuotePerBase) |&| (base |-| 'Base |+| 'Quote))
   ) =>
   Money rate ->
   Money base ->
   Money quote
-quoteFromBase (Money rate) (Money base) =
+exchangeMoney (Money rate) (Money base) =
   Money $ rate * base
 
 data Funds tags where
@@ -218,7 +229,7 @@ deriving stock instance (MoneyTags sig tags) => Show (Funds tags)
 
 deriving stock instance (MoneyTags sig tags) => Read (Funds tags)
 
-deriving stock instance (MoneyTags sig tags, Typeable tags) => Data (Funds tags)
+deriving stock instance (MoneyTags sig tags) => Data (Funds tags)
 
 unJsonRational :: A.Decoder Rational
 unJsonRational = toRational <$> A.scientific
@@ -226,14 +237,23 @@ unJsonRational = toRational <$> A.scientific
 unJsonSignedMoney :: (MoneyTags 'Signed tags) => A.Decoder (Money tags)
 unJsonSignedMoney = Money <$> unJsonRational
 
-unJsonUnsignedMoney ::
+unJsonUnsignedMoneyBOS ::
+  forall tags.
+  ( MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Buy),
+    MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Sell)
+  ) =>
+  A.Decoder (SomeMoney BuyOrSell (tags |+| 'Unsigned))
+unJsonUnsignedMoneyBOS =
+  newUnsignedMoneyBOS @tags <$> unJsonRational
+
+unJsonUnsignedMoneyGOL ::
   forall tags.
   ( MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Gain),
     MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Lose)
   ) =>
   A.Decoder (SomeMoney GainOrLose (tags |+| 'Unsigned))
-unJsonUnsignedMoney =
-  mkUnsignedMoney @tags <$> unJsonRational
+unJsonUnsignedMoneyGOL =
+  newUnsignedMoneyGOL @tags <$> unJsonRational
 
 newtype CurrencyCode = CurrencyCode
   { unCurrencyCode :: Text

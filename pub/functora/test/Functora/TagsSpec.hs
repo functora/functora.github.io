@@ -9,8 +9,8 @@ import Functora.Tags.TestFgpt ()
 import Functora.Tags.TestSing
 import Test.Hspec
 
-mkMoney :: forall tags. Tagged (tags |+| 'Money) Rational
-mkMoney = Tagged $ 4 % 5
+newMoney :: forall tags. Tagged (tags |+| 'Money) Rational
+newMoney = Tagged $ 4 % 5
 
 getSymbolTag ::
   forall (tag :: Symbol) tags rep.
@@ -39,33 +39,33 @@ spec :: Spec
 spec = do
   it "Tags/Eq" $ do
     shouldBe
-      (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
-      (mkMoney @(Tags 'Net |+| "BTC" |+| 'Gain))
+      (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
+      (newMoney @(Tags 'Net |+| "BTC" |+| 'Gain))
   it "UnTagFamily" $ do
     shouldBe
-      (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain |-| "BTC"))
-      (mkMoney @(Tags 'Net |+| 'Gain))
+      (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain |-| "BTC"))
+      (newMoney @(Tags 'Net |+| 'Gain))
     shouldBe
-      (mkMoney @(Tags 'Net |+| 'Gain |-| 'Net |-| 'Gain))
-      (mkMoney @NoTags)
+      (newMoney @(Tags 'Net |+| 'Gain |-| 'Net |-| 'Gain))
+      (newMoney @NoTags)
   it "Demote/Symbol" $ do
-    getSymbolTag (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
+    getSymbolTag (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` "BTC"
   it "Demote/GainOrLose" $ do
-    getGainOrLoseTag (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
+    getGainOrLoseTag (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` Gain
   it "inspect" $ do
-    inspect @Text (mkMoney @NoTags)
+    inspect @Text (newMoney @NoTags)
       `shouldBe` "Tagged (4 % 5)"
-    inspect @Text (mkMoney @(NoTags |+| "BTC" |+| 'Net))
+    inspect @Text (newMoney @(NoTags |+| "BTC" |+| 'Net))
       `shouldBe` "Tagged (4 % 5)"
-    inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Lose |+| 'Merchant))
+    inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Lose |+| 'Merchant))
       `shouldBe` "Tagged (4 % 5)"
-    inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Lose))
+    inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Lose))
       `shouldBe` "Tagged (4 % 5)"
-    inspect @Text (mkMoney @(Tags "BTC"))
+    inspect @Text (newMoney @(Tags "BTC"))
       `shouldBe` "Tagged (4 % 5)"
-    inspect @Text (mkMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
+    inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` "Tagged (4 % 5)"
   it "inspectTags" $ do
     inspectTags @NoTags @Text

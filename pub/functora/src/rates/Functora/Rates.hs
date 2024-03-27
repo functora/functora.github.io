@@ -40,7 +40,6 @@ import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude
-import Functora.Tags
 import Functora.Web
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens

@@ -5,11 +5,11 @@ module Functora.Money
     MoneyRep,
     MoneyTags,
     NewMoneyTags,
-    Money (..),
+    Money,
     unMoney,
     parseMoney,
     SomeMoney (..),
-    newSignedMoney,
+    newMoney,
     newUnsignedMoneyBOS,
     newUnsignedMoneyGOL,
     newFeeRate,
@@ -36,7 +36,7 @@ import qualified Data.Text as T
 import Functora.MoneyFgpt as X ()
 import Functora.MoneySing as X
 import Functora.Prelude
-import Functora.Tags
+import Functora.Tags as X
 import qualified Language.Haskell.TH.Syntax as TH
 
 type family MoneyRep sig where
@@ -120,13 +120,13 @@ instance (TestEquality (Sing :: k -> Type)) => Eq (SomeMoney k tags) where
 
 deriving stock instance Show (SomeMoney k tags)
 
-newSignedMoney ::
-  forall prev next.
-  ( NewMoneyTags 'Signed next (prev |+| 'Signed)
+newMoney ::
+  forall sig tags.
+  ( MoneyTags sig tags
   ) =>
-  Rational ->
-  Money next
-newSignedMoney = Money
+  Ratio (MoneyRep sig) ->
+  Money tags
+newMoney = Money
 
 newUnsignedMoneyBOS ::
   forall tags buy sell.

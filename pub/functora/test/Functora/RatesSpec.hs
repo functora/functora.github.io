@@ -58,5 +58,11 @@ spec = do
   it "getQuote" . withNewMarket $ do
     let quoteCurrency = CurrencyCode "usd"
     res <-
-      tryMarket $ getQuote (Funds (Money 1) $ CurrencyCode "btc") quoteCurrency
+      tryMarket
+        $ getQuote
+          ( Funds
+              (newMoney @'Signed 1)
+              (CurrencyCode "btc")
+          )
+          quoteCurrency
     lift $ res `shouldSatisfy` isRight

@@ -9,7 +9,6 @@ import qualified Data.UUID as UUID
 import Database.Esqueleto.Legacy hiding (from)
 import Functora.Money
 import Functora.Prelude hiding (Key)
-import Functora.Tags
 import qualified Text.URI as URI
 
 deriving stock instance Data PersistValue
@@ -79,18 +78,20 @@ deriving via
     (MoneyTags sig tags) => PersistFieldSql (Money tags)
 
 instance (MoneyTags sig tags) => PersistField (Money tags) where
-  toPersistValue (Money rep) =
-    case sing :: Sing sig of
-      SSigned -> PersistRational rep
-      SUnsigned -> PersistRational $ from @(Ratio Natural) @Rational rep
+  toPersistValue money =
+    let rep = unMoney money
+     in case sing :: Sing sig of
+          SSigned -> PersistRational rep
+          SUnsigned -> PersistRational $ from @(Ratio Natural) @Rational rep
   fromPersistValue raw =
     case raw of
       PersistRational x ->
         case sing :: Sing sig of
           SSigned ->
-            pure $ Money x
+            pure $ newMoney @sig @tags x
           SUnsigned ->
-            bimap (const failure) Money $ tryFrom @Rational @(Ratio Natural) x
+            bimap (const failure) (newMoney @sig @tags) $
+              tryFrom @Rational @(Ratio Natural) x
       _ ->
         Left failure
     where

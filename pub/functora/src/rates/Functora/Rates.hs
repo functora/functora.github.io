@@ -246,7 +246,7 @@ tryFetchQuotesPerBase cur uri = tryMarket $ do
     createdAt <- A.at ["date"] A.day
     quotesMap <-
       A.at [fromString . from @Text @String $ unCurrencyCode cur]
-        $ A.mapStrict unJsonSignedMoney
+        $ A.mapStrict unJsonMoney
     pure
       QuotesPerBaseAt
         { quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap,

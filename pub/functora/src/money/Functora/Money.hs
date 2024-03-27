@@ -20,7 +20,7 @@ module Functora.Money
     fundsMoneyAmount,
     fundsCurrencyCode,
     unJsonRational,
-    unJsonSignedMoney,
+    unJsonMoney,
     unJsonUnsignedMoneyBOS,
     unJsonUnsignedMoneyGOL,
     CurrencyCode (..),
@@ -121,7 +121,7 @@ instance (TestEquality (Sing :: k -> Type)) => Eq (SomeMoney k tags) where
 deriving stock instance Show (SomeMoney k tags)
 
 newMoney ::
-  forall sig tags.
+  forall tags sig.
   ( MoneyTags sig tags
   ) =>
   Ratio (MoneyRep sig) ->
@@ -232,10 +232,17 @@ deriving stock instance (MoneyTags sig tags) => Read (Funds tags)
 deriving stock instance (MoneyTags sig tags) => Data (Funds tags)
 
 unJsonRational :: A.Decoder Rational
-unJsonRational = toRational <$> A.scientific
+unJsonRational =
+  toRational <$> A.scientific
 
-unJsonSignedMoney :: (MoneyTags 'Signed tags) => A.Decoder (Money tags)
-unJsonSignedMoney = Money <$> unJsonRational
+unJsonMoney :: forall tags sig. (MoneyTags sig tags) => A.Decoder (Money tags)
+unJsonMoney = do
+  rat <- unJsonRational
+  case sing :: Sing sig of
+    SSigned -> pure $ newMoney rat
+    SUnsigned ->
+      either (fail . inspect) (pure . newMoney)
+        $ tryFrom @Rational @(Ratio Natural) rat
 
 unJsonUnsignedMoneyBOS ::
   forall tags.

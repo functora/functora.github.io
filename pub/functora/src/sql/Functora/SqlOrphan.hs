@@ -88,9 +88,9 @@ instance (MoneyTags sig tags) => PersistField (Money tags) where
       PersistRational x ->
         case sing :: Sing sig of
           SSigned ->
-            pure $ newMoney @sig @tags x
+            pure $ newMoney x
           SUnsigned ->
-            bimap (const failure) (newMoney @sig @tags) $
+            bimap (const failure) newMoney $
               tryFrom @Rational @(Ratio Natural) x
       _ ->
         Left failure

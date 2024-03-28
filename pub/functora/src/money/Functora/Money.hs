@@ -2,7 +2,7 @@
 
 module Functora.Money
   ( module X,
-    MoneyRep,
+    IntRep,
     MoneyTags,
     NewMoneyTags,
     Money,
@@ -39,62 +39,57 @@ import Functora.Prelude
 import Functora.Tags as X
 import qualified Language.Haskell.TH.Syntax as TH
 
-type family MoneyRep sig where
-  MoneyRep 'Signed = Integer
-  MoneyRep 'Unsigned = Natural
+type IntRep tags = NewIntRep (GetKey SignedOrUnsigned tags)
 
-type MoneyTags (sig :: SignedOrUnsigned) tags =
-  ( GetTag sig tags,
-    Eq (MoneyRep sig),
-    Ord (MoneyRep sig),
-    Show (MoneyRep sig),
-    Read (MoneyRep sig),
-    Data (MoneyRep sig),
-    Integral (MoneyRep sig),
-    From (MoneyRep sig) Integer,
-    Typeable sig,
+type family NewIntRep sig where
+  NewIntRep 'Signed = Integer
+  NewIntRep 'Unsigned = Natural
+
+type MoneyTags tags =
+  ( Eq (IntRep tags),
+    Ord (IntRep tags),
+    Show (IntRep tags),
+    Read (IntRep tags),
+    Data (IntRep tags),
+    Integral (IntRep tags),
+    From (IntRep tags) Integer,
+    Typeable (IntRep tags),
     Typeable tags
   )
 
-type NewMoneyTags (sig :: SignedOrUnsigned) lhs rhs =
+type NewMoneyTags lhs rhs =
   ( lhs ~ rhs,
-    MoneyTags sig lhs
+    MoneyTags lhs
   )
 
 data Money tags where
   Money ::
-    forall tags sig.
-    ( MoneyTags sig tags
+    forall tags.
+    ( MoneyTags tags
     ) =>
-    Ratio (MoneyRep sig) ->
+    Ratio (IntRep tags) ->
     Money tags
 
 deriving stock instance Eq (Money tags)
 
 deriving stock instance Ord (Money tags)
 
-deriving stock instance (MoneyTags sig tags) => Show (Money tags)
+deriving stock instance (MoneyTags tags) => Show (Money tags)
 
-deriving stock instance (MoneyTags sig tags) => Read (Money tags)
+deriving stock instance (MoneyTags tags) => Read (Money tags)
 
-deriving stock instance (MoneyTags sig tags) => Data (Money tags)
+deriving stock instance (MoneyTags tags) => Data (Money tags)
 
-unMoney ::
-  forall tags sig.
-  ( MoneyTags sig tags
-  ) =>
-  Money tags ->
-  Ratio (MoneyRep sig)
+unMoney :: Money tags -> Ratio (IntRep tags)
 unMoney (Money x) = x
 
 parseMoney ::
-  forall str tags m sig rep.
+  forall str tags m.
   ( From str Text,
     Show str,
     Data str,
-    MonadThrow m,
-    MoneyTags sig tags,
-    rep ~ MoneyRep sig
+    MoneyTags tags,
+    MonadThrow m
   ) =>
   str ->
   m (Money tags)
@@ -102,11 +97,11 @@ parseMoney =
   fmap Money . parseRatio
 
 data SomeMoney k tags
-  = forall (tag :: k) (sig :: SignedOrUnsigned).
+  = forall (tag :: k).
     ( SingI tag,
       Typeable tag,
       Typeable k,
-      MoneyTags sig (tags |+| tag)
+      MoneyTags (tags |+| tag)
     ) =>
     SomeMoney
       (Sing tag)
@@ -121,17 +116,19 @@ instance (TestEquality (Sing :: k -> Type)) => Eq (SomeMoney k tags) where
 deriving stock instance Show (SomeMoney k tags)
 
 newMoney ::
-  forall tags sig.
-  ( MoneyTags sig tags
+  forall tags.
+  ( MoneyTags tags
   ) =>
-  Ratio (MoneyRep sig) ->
+  Ratio (IntRep tags) ->
   Money tags
 newMoney = Money
 
 newUnsignedMoneyBOS ::
   forall tags buy sell.
-  ( NewMoneyTags 'Unsigned buy (tags |+| 'Unsigned |+| 'Buy),
-    NewMoneyTags 'Unsigned sell (tags |+| 'Unsigned |+| 'Sell)
+  ( NewMoneyTags buy (tags |+| 'Unsigned |+| 'Buy),
+    NewMoneyTags sell (tags |+| 'Unsigned |+| 'Sell),
+    IntRep buy ~ Natural,
+    IntRep sell ~ Natural
   ) =>
   Rational ->
   SomeMoney BuyOrSell (tags |+| 'Unsigned)
@@ -143,8 +140,10 @@ newUnsignedMoneyBOS raw
 
 newUnsignedMoneyGOL ::
   forall tags gain lose.
-  ( NewMoneyTags 'Unsigned gain (tags |+| 'Unsigned |+| 'Gain),
-    NewMoneyTags 'Unsigned lose (tags |+| 'Unsigned |+| 'Lose)
+  ( NewMoneyTags gain (tags |+| 'Unsigned |+| 'Gain),
+    NewMoneyTags lose (tags |+| 'Unsigned |+| 'Lose),
+    IntRep gain ~ Natural,
+    IntRep lose ~ Natural
   ) =>
   Rational ->
   SomeMoney GainOrLose (tags |+| 'Unsigned)
@@ -155,21 +154,18 @@ newUnsignedMoneyGOL raw
     uns = unsafeFrom @Rational @(Ratio Natural) $ abs raw
 
 newFeeRate ::
-  forall prev sig next.
-  ( NewMoneyTags sig next (prev |+| 'FeeRate)
+  forall prev next.
+  ( NewMoneyTags next (prev |+| 'FeeRate)
   ) =>
-  Ratio (MoneyRep sig) ->
+  Ratio (IntRep next) ->
   Money next
 newFeeRate = Money
 
 addFee ::
-  forall fee amt sig tags.
-  ( GetTag sig fee,
-    GetTag sig amt,
-    NewMoneyTags
-      sig
-      tags
-      ((fee |-| sig |-| 'FeeRate) |&| (amt |-| 'Net |+| 'Gross))
+  forall fee amt tags.
+  ( IntRep fee ~ IntRep amt,
+    IntRep fee ~ IntRep tags,
+    NewMoneyTags tags (amt |-| 'Net |+| 'Gross)
   ) =>
   Money fee ->
   Money amt ->
@@ -178,12 +174,10 @@ addFee (Money fee) (Money amt) =
   Money $ amt / (1 - fee)
 
 deductFee ::
-  ( GetTag sig fee,
-    GetTag sig amt,
-    NewMoneyTags
-      sig
-      tags
-      ((fee |-| sig |-| 'FeeRate) |&| (amt |-| 'Gross |+| 'Net))
+  forall fee amt tags.
+  ( IntRep fee ~ IntRep amt,
+    IntRep fee ~ IntRep tags,
+    NewMoneyTags tags (amt |-| 'Gross |+| 'Net)
   ) =>
   Money fee ->
   Money amt ->
@@ -192,13 +186,10 @@ deductFee (Money fee) (Money amt) =
   Money $ amt * (1 - fee)
 
 exchangeMoney ::
-  forall rate base quote sig.
-  ( MoneyTags sig rate,
-    MoneyTags sig base,
-    NewMoneyTags
-      sig
-      quote
-      ((rate |-| sig |-| 'QuotePerBase) |&| (base |-| 'Base |+| 'Quote))
+  forall rate base quote.
+  ( IntRep rate ~ IntRep base,
+    IntRep rate ~ IntRep quote,
+    NewMoneyTags quote (base |-| 'Base |+| 'Quote)
   ) =>
   Money rate ->
   Money base ->
@@ -207,13 +198,7 @@ exchangeMoney (Money rate) (Money base) =
   Money $ rate * base
 
 data Funds tags where
-  Funds ::
-    forall tags sig.
-    ( MoneyTags sig tags
-    ) =>
-    Money tags ->
-    CurrencyCode ->
-    Funds tags
+  Funds :: Money tags -> CurrencyCode -> Funds tags
 
 fundsMoneyAmount :: Funds tags -> Money tags
 fundsMoneyAmount (Funds amt _) = amt
@@ -225,17 +210,21 @@ deriving stock instance Eq (Funds tags)
 
 deriving stock instance Ord (Funds tags)
 
-deriving stock instance (MoneyTags sig tags) => Show (Funds tags)
+deriving stock instance (MoneyTags tags) => Show (Funds tags)
 
-deriving stock instance (MoneyTags sig tags) => Read (Funds tags)
+deriving stock instance (MoneyTags tags) => Read (Funds tags)
 
-deriving stock instance (MoneyTags sig tags) => Data (Funds tags)
+deriving stock instance (MoneyTags tags) => Data (Funds tags)
 
 unJsonRational :: A.Decoder Rational
-unJsonRational =
-  toRational <$> A.scientific
+unJsonRational = toRational <$> A.scientific
 
-unJsonMoney :: forall tags sig. (MoneyTags sig tags) => A.Decoder (Money tags)
+unJsonMoney ::
+  forall tags (sig :: SignedOrUnsigned).
+  ( MoneyTags tags,
+    GetTag sig tags
+  ) =>
+  A.Decoder (Money tags)
 unJsonMoney = do
   rat <- unJsonRational
   case sing :: Sing sig of
@@ -245,18 +234,22 @@ unJsonMoney = do
         $ tryFrom @Rational @(Ratio Natural) rat
 
 unJsonUnsignedMoneyBOS ::
-  forall tags.
-  ( MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Buy),
-    MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Sell)
+  forall tags buy sell.
+  ( NewMoneyTags buy (tags |+| 'Unsigned |+| 'Buy),
+    NewMoneyTags sell (tags |+| 'Unsigned |+| 'Sell),
+    IntRep buy ~ Natural,
+    IntRep sell ~ Natural
   ) =>
   A.Decoder (SomeMoney BuyOrSell (tags |+| 'Unsigned))
 unJsonUnsignedMoneyBOS =
   newUnsignedMoneyBOS @tags <$> unJsonRational
 
 unJsonUnsignedMoneyGOL ::
-  forall tags.
-  ( MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Gain),
-    MoneyTags 'Unsigned (tags |+| 'Unsigned |+| 'Lose)
+  forall tags gain lose.
+  ( NewMoneyTags gain (tags |+| 'Unsigned |+| 'Gain),
+    NewMoneyTags lose (tags |+| 'Unsigned |+| 'Lose),
+    IntRep gain ~ Natural,
+    IntRep lose ~ Natural
   ) =>
   A.Decoder (SomeMoney GainOrLose (tags |+| 'Unsigned))
 unJsonUnsignedMoneyGOL =

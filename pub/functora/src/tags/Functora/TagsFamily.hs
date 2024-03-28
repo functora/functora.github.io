@@ -18,6 +18,8 @@ module Functora.TagsFamily
     HasTag,
     HasTags,
     GetTag,
+    GetKey,
+    GetTagDef,
 
     -- * Introspection
     -- $introspection
@@ -96,10 +98,14 @@ type HasTags sub sup =
   )
 
 type GetTag (v :: k) tags =
-  ( Sing v ~ GetTagFamily k tags tags,
+  ( v ~ GetTagFamily k tags tags,
     SingI v,
     HasTag v tags
   )
+
+type GetKey k tags = GetTagFamily k tags tags
+
+type GetTagDef (def :: k) tags = GetTagDefFamily def tags tags
 
 type family Fgpt (a :: k) :: Symbol
 
@@ -184,7 +190,7 @@ type family UnTagFamily member v tags prev next where
     UnTagFamily member v tags prev (kv ': next)
 
 type family GetTagFamily k tags prev where
-  GetTagFamily k _ ((k ':-> v) ': _) = v
+  GetTagFamily k _ ((k ':-> Sing v) ': _) = v
   GetTagFamily k tags (_ ': next) = GetTagFamily k tags next
   GetTagFamily k tags '[] =
     TypeError
@@ -192,6 +198,11 @@ type family GetTagFamily k tags prev where
           ':<>: 'Text " key is missing in "
           ':<>: 'ShowType tags
       )
+
+type family GetTagDefFamily (def :: k) tags prev where
+  GetTagDefFamily (_ :: k) _ ((k ':-> Sing v) ': _) = v
+  GetTagDefFamily def tags (_ ': next) = GetTagDefFamily def tags next
+  GetTagDefFamily def _ '[] = def
 
 type family HasTagsFamily hastag submap supmap where
   HasTagsFamily 'Nothing '[] _ = 'True

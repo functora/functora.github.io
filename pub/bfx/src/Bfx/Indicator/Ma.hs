@@ -7,23 +7,20 @@ module Bfx.Indicator.Ma
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Import
 import qualified Data.Map as Map
 import qualified Data.Vector as V
+import qualified Prelude
 
 newtype Ma = Ma
-  { unMa :: QuotePerBase'
+  { unMa :: Money (Tags 'Unsigned |+| 'QuotePerBase)
   }
-  deriving newtype
-    ( Eq,
-      Ord
-    )
   deriving stock
-    ( Generic
+    ( Eq,
+      Ord,
+      Data,
+      Generic
     )
-
-instance NFData Ma
 
 newtype MaPeriod = MaPeriod
   { unMaPeriod :: Natural
@@ -38,10 +35,9 @@ newtype MaPeriod = MaPeriod
       Integral
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
-
-instance NFData MaPeriod
 
 ma :: MaPeriod -> NonEmpty Candle -> Map UTCTime Ma
 ma period candles =
@@ -55,7 +51,7 @@ ma period candles =
         0
         mempty
   where
-    maPeriod = fromIntegral period
+    maPeriod = Prelude.fromIntegral period
     stopAtIdx = length candles - maPeriod
 
 unsafeMa ::
@@ -69,13 +65,15 @@ unsafeMa maPeriod candles stopAtIdx currentIdx acc =
   if stopAtIdx < currentIdx
     then acc
     else
-      unsafeMa maPeriod candles stopAtIdx (currentIdx + 1) $
-        Map.insert maUtc maVal acc
+      unsafeMa maPeriod candles stopAtIdx (currentIdx + 1)
+        $ Map.insert maUtc maVal acc
   where
     chunk = V.slice currentIdx maPeriod candles
     maUtc = candleAt $ V.last chunk
     maVal =
       Ma
-        . (|/ fromIntegral maPeriod)
-        . V.foldl1 (|+|)
-        $ V.map (unQuotePerBase . candleClose) chunk
+        . newMoney
+        . (/ Prelude.fromIntegral maPeriod)
+        . unMoney
+        . V.foldl1 addMoney
+        $ V.map candleClose chunk

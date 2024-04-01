@@ -9,7 +9,7 @@ module Bfx.Data.GetOrders
 where
 
 import Bfx.Data.Type
-import Bfx.Import hiding (currencyPair)
+import Bfx.Import
 
 data Options = Options
   { currencyPair :: Maybe CurrencyPair,

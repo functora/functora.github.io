@@ -10,6 +10,7 @@ where
 
 import Bfx.Import
 import qualified Data.Text as T
+import qualified Prelude
 
 data Section
   = Last
@@ -24,7 +25,8 @@ data Section
 instance ToRequestParam Section where
   toTextParam =
     T.toLower
-      . show
+      . T.pack
+      . Prelude.show
 
 data Request = Request
   { timeFrame :: CandleTimeFrame,

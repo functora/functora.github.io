@@ -17,3 +17,4 @@ mkFgpt @CurrencyKind
 mkFgpt @MakerOrTaker
 mkFgpt @LocalOrRemote
 mkFgpt @MinOrMax
+mkFgpt @Revenue

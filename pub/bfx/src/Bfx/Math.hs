@@ -1,13 +1,10 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Math
-  ( addFee,
-    deductFee,
-    tweakMoneyPip,
+  ( tweakMoneyPip,
     tweakMakerRate,
     newCounterOrder,
-    newCounterOrderSimple,
+    -- newCounterOrderSimple,
   )
 where
 
@@ -16,76 +13,50 @@ import Bfx.Data.Metro
 import Bfx.Data.Type
 import Bfx.Import.External
 
-addFee ::
-  forall crel act mrel.
-  ( SingI crel
-  ) =>
-  Money crel act ->
-  FeeRate mrel crel ->
-  Either
-    (TryFromException Rational (Money crel act))
-    (Money crel act)
-addFee amt fee =
-  roundMoney' @crel $
-    unMoney amt |/ (1 - unFeeRate fee)
-
-deductFee ::
-  forall crel act mrel.
-  ( SingI crel
-  ) =>
-  Money crel act ->
-  FeeRate mrel crel ->
-  Either
-    (TryFromException Rational (Money crel act))
-    (Money crel act)
-deductFee amt fee =
-  roundMoney' @crel $
-    unMoney amt |* (1 - unFeeRate fee)
-
 tweakMoneyPip ::
-  forall act.
-  ( SingI act
+  forall tags bos m.
+  ( CashTags tags,
+    GetTag 'Base tags,
+    GetTag (bos :: BuyOrSell) tags,
+    MonadThrow m
   ) =>
-  Money 'Base act ->
-  Either
-    (TryFromException Rational (Money 'Base act))
-    (Money 'Base act)
+  Money tags ->
+  m (Money tags)
 tweakMoneyPip amt =
-  case sing :: Sing act of
-    SBuy -> tweakMoneyPip' (|+| pip) amt
-    SSell -> tweakMoneyPip' (|-| pip) amt
+  case sing :: Sing bos of
+    SBuy -> tweakMoneyPip' (`addMoney` pip) amt
+    SSell -> tweakMoneyPip' (`deductMoney` pip) amt
   where
-    pip :: MoneyBase'
-    pip = unMoney [moneyBaseBuy|0.00000001|]
+    pip :: Money tags
+    pip = newMoney 0.00000001
 
 tweakMoneyPip' ::
-  (MoneyBase' -> MoneyBase') ->
-  Money 'Base act ->
-  Either
-    (TryFromException Rational (Money 'Base act))
-    (Money 'Base act)
+  ( CashTags tags,
+    GetTag 'Base tags,
+    MonadThrow m
+  ) =>
+  (Money tags -> Money tags) ->
+  Money tags ->
+  m (Money tags)
 tweakMoneyPip' expr amt = do
-  newAmt <-
-    roundMoney'
-      . expr
-      $ unMoney amt
+  newAmt <- roundMoney $ expr amt
   if newAmt /= amt
     then pure newAmt
     else tweakMoneyPip' (expr . expr) amt
 
 tweakMakerRate ::
-  forall act.
-  ( SingI act
+  forall tags bos m.
+  ( RateTags tags,
+    GetTag (bos :: BuyOrSell) tags,
+    MonadThrow m
   ) =>
-  QuotePerBase act ->
-  Either
-    (TryFromException Rational (QuotePerBase act))
-    (QuotePerBase act)
+  Money tags ->
+  m (Money tags)
 tweakMakerRate rate =
-  tweakMakerRateRec rate (unQuotePerBase rate) tweak
+  tweakMakerRateRec rate rate tweak
   where
     --
-    -- TODO : use pip when 'units' bug with
+    -- TODO : ??? use pip when 'units' bug with
     -- arithmetic underflow will be fixed.
     -- This implementation is wrong for
     -- non-negative types:
@@ -93,88 +64,90 @@ tweakMakerRate rate =
     -- (|-|) :: (d1 @~ d2, Num n) => Qu d1 l n -> Qu d2 l n -> Qu d1 l n
     -- a |-| b = a |+| qNegate b
     --
-    tweak :: Rational
+    tweak :: Ratio Natural
     tweak =
-      case sing :: Sing act of
+      case sing :: Sing bos of
         SBuy -> 999 % 1000
         SSell -> 1001 % 1000
 
 tweakMakerRateRec ::
-  QuotePerBase act ->
-  QuotePerBase' ->
-  Rational ->
-  Either
-    (TryFromException Rational (QuotePerBase act))
-    (QuotePerBase act)
-tweakMakerRateRec rate rate' tweak =
-  case roundQuotePerBase' newRate' of
-    Left e -> Left e
-    Right x | x /= rate -> Right x
-    Right {} -> tweakMakerRateRec rate newRate' tweak
+  forall tags m.
+  ( RateTags tags,
+    MonadThrow m
+  ) =>
+  Money tags ->
+  Money tags ->
+  Ratio Natural ->
+  m (Money tags)
+tweakMakerRateRec rate prev tweak =
+  case roundQuotePerBase next of
+    Left e -> throw e
+    Right x | x /= rate -> pure x
+    Right {} -> tweakMakerRateRec rate next tweak
   where
-    newRate' = rate' |* tweak
+    next = newMoney @tags $ unMoney @tags prev * tweak
 
 newCounterOrder ::
-  Money 'Base 'Buy ->
-  QuotePerBase 'Buy ->
-  FeeRate mrel0 'Base ->
-  FeeRate mrel1 'Quote ->
-  ProfitRate ->
-  Either
-    Error
-    ( Money 'Quote 'Sell,
-      Money 'Base 'Sell,
-      QuotePerBase 'Sell
+  ( MonadThrow m
+  ) =>
+  Money (Tags 'Unsigned |+| 'Base |+| 'Buy |+| 'Gross) ->
+  Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Buy |+| 'Net) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'FeeRate) ->
+  Money (Tags 'Unsigned |+| 'Quote |+| 'FeeRate) ->
+  Money (Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net |+| 'ProfitRate) ->
+  m
+    ( Money (Tags 'Unsigned |+| 'Quote |+| 'Sell |+| 'Gross |+| 'Revenue),
+      Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'Net),
+      Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell)
     )
-newCounterOrder base0 rate0 feeB feeQ prof0 = do
-  exitQuote <- tryErrorE $ roundMoney' exitQuoteGain
-  exitBase0 <- tryErrorE $ roundMoney' exitBaseLoss
-  exitBase <- tryErrorE $ tweakMoneyPip exitBase0
-  exitPrice <- tryErrorE $ roundQuotePerBase' exitRate
+newCounterOrder enterBaseGain enterRate enterFee exitFee profRate = do
+  exitQuote <- roundMoney exitQuoteGain
+  exitBase <- tweakMoneyPip =<< roundMoney exitBaseLoss
+  exitPrice <- roundQuotePerBase exitRate
   pure (exitQuote, exitBase, exitPrice)
   where
-    enterFee :: Rational
-    enterFee =
-      from feeB
-    exitFee :: Rational
-    exitFee =
-      from feeQ
-    prof :: Rational
-    prof =
-      from prof0
-    enterBaseGain :: MoneyBase'
-    enterBaseGain =
-      unMoney base0
-    exitBaseLoss :: MoneyBase'
+    exitBaseLoss :: Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'Net)
     exitBaseLoss =
-      enterBaseGain |* (1 - enterFee)
-    enterQuoteLoss :: MoneyQuote'
+      deductFee enterFee
+        $ reTagMoney @'Buy @'Sell enterBaseGain
+    enterQuoteLoss :: Money (Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net)
     enterQuoteLoss =
-      enterBaseGain |*| unQuotePerBase rate0
-    exitQuoteGain :: MoneyQuote'
+      exchangeMoney
+        @(Tags 'Unsigned |+| 'Buy |+| 'Net)
+        enterRate
+        $ reTagMoney @'Gross @'Net
+          enterBaseGain
+    exitQuoteGain ::
+      Money (Tags 'Unsigned |+| 'Quote |+| 'Sell |+| 'Gross |+| 'Revenue)
     exitQuoteGain =
-      (enterQuoteLoss |* (1 + prof)) |/ (1 - exitFee)
-    exitRate :: QuotePerBase'
+      addFee exitFee
+        . reTagMoney @'Buy @'Sell
+        $ addProfit profRate enterQuoteLoss
+    exitRate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell)
     exitRate =
-      exitQuoteGain |/| exitBaseLoss
+      newQuotePerBase @(Tags 'Unsigned |+| 'Sell)
+        (unTagMoney @'Gross $ unTagMoney @'Revenue exitQuoteGain)
+        (unTagMoney @'Net exitBaseLoss)
 
-newCounterOrderSimple ::
-  Money 'Base 'Sell ->
-  QuotePerBase 'Sell ->
-  FeeRate mrel 'Quote ->
-  Either Error (Money 'Quote 'Sell)
-newCounterOrderSimple base rate fee =
-  tryErrorE $ roundMoney' exitQuoteGain
-  where
-    exitFee :: Rational
-    exitFee =
-      from fee
-    exitRate :: QuotePerBase'
-    exitRate =
-      unQuotePerBase rate
-    exitBaseLoss :: MoneyBase'
-    exitBaseLoss =
-      unMoney base
-    exitQuoteGain :: MoneyQuote'
-    exitQuoteGain =
-      (exitBaseLoss |*| exitRate) |* (1 - exitFee)
+-- newCounterOrderSimple ::
+--   ( MonadThrow m
+--   ) =>
+--   Money (Tags 'Unsigned |+| 'Base |+| 'Sell) ->
+--   Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell) ->
+--   Money (Tags 'Unsigned |+| 'FeeRate |+| 'Quote) ->
+--   m (Money (Tags 'Unsigned |+| 'Quote |+| 'Sell))
+-- newCounterOrderSimple base rate fee =
+--   tryErrorE $ roundMoney' exitQuoteGain
+--   where
+--     exitFee :: Rational
+--     exitFee =
+--       from fee
+--     exitRate :: Money (Tags 'Unsigned |+| 'QuotePerBase)
+--     exitRate =
+--       unQuotePerBase rate
+--     exitBaseLoss :: Money (Tags 'Unsigned |+| 'Base |+| 'Sell)
+--     exitBaseLoss =
+--       unMoney base
+--     exitQuoteGain :: Money (Tags 'Unsigned |+| 'Quote |+| 'Net)
+--     exitQuoteGain =
+--       (exitBaseLoss |*| exitRate) |* (1 - exitFee)

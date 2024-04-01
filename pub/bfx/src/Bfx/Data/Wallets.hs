@@ -8,8 +8,6 @@ module Bfx.Data.Wallets
   )
 where
 
-import Bfx.Data.Kind
-import Bfx.Data.Metro
 import Bfx.Import.External
 
 data WalletType
@@ -20,6 +18,7 @@ data WalletType
     ( Eq,
       Ord,
       Show,
+      Data,
       Generic,
       Enum,
       Bounded
@@ -34,19 +33,17 @@ newWalletType = \case
   "funding" -> Right Funding
   x -> Left $ TryFromException x Nothing
 
-data Response (crel :: CurrencyRelation) = Response
-  { balance :: Money crel 'Sell,
-    unsettledInterest :: Money crel 'Sell,
-    availableBalance :: Money crel 'Sell,
+data Response = Response
+  { balance :: Money (Tags 'Unsigned),
+    unsettledInterest :: Money (Tags 'Unsigned),
+    availableBalance :: Money (Tags 'Unsigned),
     lastChange :: Maybe Text
   }
   deriving stock
     ( Eq,
       Ord,
+      Show,
+      Read,
+      Data,
       Generic
     )
-
-deriving stock instance
-  ( Show (Money crel 'Sell)
-  ) =>
-  Show (Response crel)

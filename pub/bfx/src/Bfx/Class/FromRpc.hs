@@ -1,5 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Class.FromRpc
@@ -15,7 +15,6 @@ import qualified Bfx.Data.Wallets as Wallets
 import Bfx.Data.Web
 import Bfx.Import.External
 import Bfx.Parser
-import Bfx.Util
 import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Data.Text as T
@@ -30,22 +29,20 @@ instance FromRpc 'PlatformStatus PltStatus where
     ss <-
       maybeToRight
         "PltStatus is missing"
-        $ raw ^? nth 0 . _Integral
+        $ raw
+        ^? nth 0 . _Integral
     case ss :: Natural of
       1 -> Right PltOperative
       0 -> Right PltMaintenance
       _ -> Left "Incorrect PltStatus"
 
-instance
-  FromRpc
-    'CancelOrderMulti
-    (Map OrderId (SomeOrder 'Remote))
-  where
+instance FromRpc 'CancelOrderMulti (Map OrderId (SomeOrder 'Remote)) where
   fromRpc (RawResponse raw) = do
     xs <-
       maybeToRight
         "Order Array is missing"
-        $ raw ^? nth 4
+        $ raw
+        ^? nth 4
     parseOrderMap xs
 
 instance
@@ -64,56 +61,65 @@ instance
   fromRpc (RawResponse raw) =
     parseOrderMap raw
 
-instance
-  ( SingI act
-  ) =>
-  FromRpc 'SubmitOrder (Order act 'Remote)
-  where
+instance (SingI act) => FromRpc 'SubmitOrder (Order act 'Remote) where
   fromRpc (RawResponse raw) = do
     rawOrder <-
       maybeToRight
         "Order is missing"
-        $ raw ^? nth 4 . nth 0
+        $ raw
+        ^? nth 4 . nth 0
     SomeOrder orderSing order <- parseOrder rawOrder
     case testEquality (sing :: Sing act) orderSing of
       Nothing -> Left "Incorrect ExchangeAction"
       Just Refl -> pure order
 
-instance FromRpc 'MarketAveragePrice (QuotePerBase act) where
+instance (RateTags tags) => FromRpc 'MarketAveragePrice (Money tags) where
   fromRpc (RawResponse raw) = do
     x <-
       maybeToRight
         "QuotePerBase is missing"
         (toRational <$> raw ^? nth 0 . _Number)
-    first (const $ "QuotePerBase is invalid " <> show x) $
-      roundQuotePerBase x
+    first (const $ "QuotePerBase is invalid " <> inspect x)
+      . roundQuotePerBase
+      . newMoney
+      $ unsafeFrom @Rational @(Ratio Natural) x
 
 instance FromRpc 'FeeSummary FeeSummary.Response where
   fromRpc (RawResponse raw) = do
-    x0 <- parse 0 0 tryFromE "makerCrypto2CryptoFee"
-    x1 <- parse 0 1 tryFromE "makerCrypto2StableFee"
-    x2 <- parse 0 2 tryFromE "makerCrypto2FiatFee"
+    x0 <- parse 0 0 (money @'Maker) "makerCrypto2CryptoFee"
+    x1 <- parse 0 1 (money @'Maker) "makerCrypto2StableFee"
+    x2 <- parse 0 2 (money @'Maker) "makerCrypto2FiatFee"
     x3 <- parse 0 5 (pure . RebateRate) "makerDerivativeRebate"
-    x4 <- parse 1 0 tryFromE "takerCrypto2CryptoFee"
-    x5 <- parse 1 1 tryFromE "takerCrypto2StableFee"
-    x6 <- parse 1 2 tryFromE "takerCrypto2FiatFee"
-    x7 <- parse 1 5 tryFromE "takerDerivativeFee"
-    pure $
-      FeeSummary.Response x0 x1 x2 x3 x4 x5 x6 x7
+    x4 <- parse 1 0 (money @'Taker) "takerCrypto2CryptoFee"
+    x5 <- parse 1 1 (money @'Taker) "takerCrypto2StableFee"
+    x6 <- parse 1 2 (money @'Taker) "takerCrypto2FiatFee"
+    x7 <- parse 1 5 (money @'Taker) "takerDerivativeFee"
+    pure
+      $ FeeSummary.Response x0 x1 x2 x3 x4 x5 x6 x7
     where
+      money ::
+        forall tag.
+        ( CashTags (Tags 'Unsigned |+| 'FeeRate |+| tag)
+        ) =>
+        Rational ->
+        Either Text (Money (Tags 'Unsigned |+| 'FeeRate |+| tag))
+      money =
+        bimap inspect newMoney
+          . tryFrom @Rational @(Ratio Natural)
       parse ::
         Int ->
         Int ->
-        (Rational -> Either a c) ->
+        (Rational -> Either Text c) ->
         Text ->
         Either Text c
-      parse ix0 ix1 con field =
-        ( first (const $ field <> " is invalid")
+      parse ix0 ix1 con label =
+        ( first (const $ label <> " is invalid")
             . con
             . toRational
         )
-          <=< maybeToRight (field <> " is missing")
-          $ raw ^? nth 4 . nth ix0 . nth ix1 . _Number
+          <=< maybeToRight (label <> " is missing")
+          $ raw
+          ^? nth 4 . nth ix0 . nth ix1 . _Number
 
 instance
   FromRpc
@@ -124,10 +130,11 @@ instance
     xs <-
       maybeToRight
         "Json is not an array"
-        $ raw ^? _Array
+        $ raw
+        ^? _Array
     res <-
-      foldrM parser mempty $
-        V.filter
+      foldrM parser mempty
+        $ V.filter
           ( \x ->
               (length <$> x ^? key "pair" . _String) == Just 6
           )
@@ -141,75 +148,79 @@ instance
         pure $ Map.insert sym cfg acc
       parseEntry x = do
         sym0 <-
-          maybeToRight "Symbol is missing" $
-            x ^? key "pair" . _String
+          maybeToRight "Symbol is missing"
+            $ x
+            ^? key "pair" . _String
         sym <-
-          first (const $ "Symbol is invalid " <> show sym0) $
-            newCurrencyPair sym0
+          first (const $ "Symbol is invalid " <> inspect sym0)
+            $ newCurrencyPair sym0
         prec <-
-          maybeToRight "Precision is missing" $
-            x ^? key "price_precision" . _Integral
+          maybeToRight "Precision is missing"
+            $ x
+            ^? key "price_precision" . _Integral
         initMargin0 <-
-          maybeToRight "Init Margin is missing" $
-            x ^? key "initial_margin" . _String
+          maybeToRight "Init Margin is missing"
+            $ x
+            ^? key "initial_margin" . _String
         initMargin <-
           first
-            ( const $
-                "Init Margin is invalid " <> show initMargin0
+            ( const
+                $ "Init Margin is invalid "
+                <> inspect initMargin0
             )
-            --
-            -- TODO : remove redundant Ratio Natural
-            --
-            $ readViaRatio @(Ratio Natural) initMargin0
+            $ parseRatio initMargin0
         minMargin0 <-
-          maybeToRight "Min Margin is missing" $
-            x ^? key "minimum_margin" . _String
+          maybeToRight "Min Margin is missing"
+            $ x
+            ^? key "minimum_margin" . _String
         minMargin <-
           first
-            ( const $
-                "Min Margin is invalid " <> show minMargin0
+            ( const
+                $ "Min Margin is invalid "
+                <> inspect minMargin0
             )
-            $ readViaRatio @(Ratio Natural) minMargin0
+            $ parseRatio minMargin0
         maxOrderAmt0 <-
-          maybeToRight "Max Order Size is missing" $
-            x ^? key "maximum_order_size" . _String
+          maybeToRight "Max Order Size is missing"
+            $ x
+            ^? key "maximum_order_size" . _String
         maxOrderAmt <-
           first
-            ( const $
-                "Max Order Size is invalid " <> show maxOrderAmt0
+            ( const
+                $ "Max Order Size is invalid "
+                <> inspect maxOrderAmt0
             )
-            $ tryReadViaRatio @Rational maxOrderAmt0
+            $ parseRatio maxOrderAmt0
         minOrderAmt0 <-
-          maybeToRight "Min Order Size is missing" $
-            x ^? key "minimum_order_size" . _String
+          maybeToRight "Min Order Size is missing"
+            $ x
+            ^? key "minimum_order_size" . _String
         minOrderAmt <-
           first
-            ( const $
-                "Min Order Size is invalid " <> show minOrderAmt0
+            ( const
+                $ "Min Order Size is invalid "
+                <> inspect minOrderAmt0
             )
-            $ tryReadViaRatio @Rational minOrderAmt0
+            $ parseRatio minOrderAmt0
         pure
           ( sym,
             CurrencyPairConf
               { currencyPairPrecision = prec,
                 currencyPairInitMargin = initMargin,
                 currencyPairMinMargin = minMargin,
-                currencyPairMaxOrderAmt = maxOrderAmt,
-                currencyPairMinOrderAmt = minOrderAmt
+                currencyPairMaxOrderAmt = newMoney maxOrderAmt,
+                currencyPairMinOrderAmt = newMoney minOrderAmt
               }
           )
 
 instance
-  ( SingI crel,
-    Typeable crel
-  ) =>
   FromRpc
     'Wallets
     ( Map
-        (CurrencyCode crel)
+        CurrencyCode
         ( Map
             Wallets.WalletType
-            (Wallets.Response crel)
+            Wallets.Response
         )
     )
   where
@@ -217,13 +228,14 @@ instance
     xs <-
       maybeToRight
         "Json is not an array"
-        $ raw ^? _Array
+        $ raw
+        ^? _Array
     foldrM parser mempty xs
     where
       parser x acc = do
         (currency, walletType, res) <- parseEntry x
-        pure $
-          Map.alter
+        pure
+          $ Map.alter
             ( Just
                 . Map.insert walletType res
                 . fromMaybe mempty
@@ -232,27 +244,38 @@ instance
             acc
       parseEntry x = do
         walletType <-
-          first show . Wallets.newWalletType
+          first inspect
+            . Wallets.newWalletType
             =<< maybeToRight
               "WalletType is missing"
               (x ^? nth 0 . _String)
         currency <-
-          first show . newCurrencyCode
+          first inspect
+            . newCurrencyCode
             =<< maybeToRight
               "CurrencyCode is missing"
               (x ^? nth 1 . _String)
         balance <-
-          first show . roundMoney
+          first inspect
+            . roundMoney
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Balance is missing"
               (toRational <$> x ^? nth 2 . _Number)
         unsettledInterest <-
-          first show . roundMoney
+          first inspect
+            . roundMoney
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "UnsettledBalance is missing"
               (toRational <$> x ^? nth 3 . _Number)
         availableBalance <-
-          first show . roundMoney
+          first inspect
+            . roundMoney
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "AvailableBalance is missing"
               (toRational <$> x ^? nth 4 . _Number)
@@ -274,8 +297,9 @@ instance FromRpc 'CandlesLast Candle where
 instance FromRpc 'CandlesHist (NonEmpty Candle) where
   fromRpc (RawResponse raw) = do
     xs0 <-
-      maybeToRight "Json is not an array" $
-        raw ^? _Array
+      maybeToRight "Json is not an array"
+        $ raw
+        ^? _Array
     xs1 <-
       sortOn candleAt
         <$> mapM parseCandle (V.toList xs0)
@@ -289,10 +313,11 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
     xs <-
       maybeToRight
         "Json is not an array"
-        $ raw ^? _Array
+        $ raw
+        ^? _Array
     res <-
-      foldrM parser mempty $
-        V.filter
+      foldrM parser mempty
+        $ V.filter
           ( \x ->
               maybe
                 False
@@ -313,22 +338,32 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
         pure $ Map.insert k v acc
       parseEntry x = do
         sym <-
-          first show . newCurrencyPair
+          first inspect
+            . newCurrencyPair
             =<< maybeToRight
               "CurrencyPair is missing"
               (x ^? nth 0 . _String)
         bid <-
-          first show . roundQuotePerBase
+          first inspect
+            . roundQuotePerBase
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Bid is missing"
               (toRational <$> x ^? nth 1 . _Number)
         ask0 <-
-          first show . roundQuotePerBase
+          first inspect
+            . roundQuotePerBase
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Ask is missing"
               (toRational <$> x ^? nth 3 . _Number)
         vol <-
-          first show . roundMoney
+          first inspect
+            . roundMoney
+            . newMoney
+            . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Volume is missing"
               (toRational <$> x ^? nth 8 . _Number)

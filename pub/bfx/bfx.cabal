@@ -82,17 +82,13 @@ common pkg-lib
   hs-source-dirs: src
   build-depends:
     , aeson
-    , base                      >=4.7 && <5
+    , base                             >=4.7 && <5
     , base16-bytestring
     , bytestring
-    , combinat
     , containers
     , cryptonite
     , envparse
-    , extra
-    , generic-pretty-instances
-    , GenericPretty
-    , gnuplot
+    , functora:{functora, money, sql}
     , http-client
     , http-client-tls
     , http-types
@@ -100,24 +96,14 @@ common pkg-lib
     , lens-aeson
     , memory
     , microlens
-    , parallel
-    , persistent
-    , pretty
-    , reanimate
     , siggy-chardust
-    , singletons
-    , singletons-base
-    , table-layout
     , template-haskell
     , temporary
     , text
-    , time
     , transformers
     , units
-    , universum
     , unliftio
     , vector
-    , witch
 
 library
   import:          pkg-lib
@@ -128,7 +114,6 @@ library
 
   exposed-modules:
     Bfx
-    Bfx.Chart
     Bfx.Class.FromRpc
     Bfx.Class.ToBaseUrl
     Bfx.Class.ToPathPieces
@@ -142,7 +127,6 @@ library
     Bfx.Data.Kind
     Bfx.Data.MarketAveragePrice
     Bfx.Data.Metro
-    Bfx.Data.QQ
     Bfx.Data.SubmitOrder
     Bfx.Data.Type
     Bfx.Data.Wallets
@@ -150,16 +134,13 @@ library
     Bfx.Import
     Bfx.Import.External
     Bfx.Import.Internal
-    Bfx.Import.Witch
     Bfx.Indicator.Atr
     Bfx.Indicator.Ma
-    Bfx.Indicator.Mma
     Bfx.Indicator.Tr
     Bfx.Math
     Bfx.Orphan
     Bfx.Parser
     Bfx.Rpc.Generic
-    Bfx.Trading
     Bfx.Util
 
 test-suite bfx-test
@@ -185,7 +166,6 @@ test-suite bfx-test
   if flag(ghcid)
     other-modules:
       Bfx
-      Bfx.Chart
       Bfx.Class.FromRpc
       Bfx.Class.ToBaseUrl
       Bfx.Class.ToPathPieces
@@ -199,7 +179,6 @@ test-suite bfx-test
       Bfx.Data.Kind
       Bfx.Data.MarketAveragePrice
       Bfx.Data.Metro
-      Bfx.Data.QQ
       Bfx.Data.SubmitOrder
       Bfx.Data.Type
       Bfx.Data.Wallets
@@ -207,33 +186,26 @@ test-suite bfx-test
       Bfx.Import
       Bfx.Import.External
       Bfx.Import.Internal
-      Bfx.Import.Witch
       Bfx.Indicator.Atr
       Bfx.Indicator.Ma
-      Bfx.Indicator.Mma
       Bfx.Indicator.Tr
       Bfx.Math
       Bfx.Orphan
       Bfx.Parser
       Bfx.Rpc.Generic
-      Bfx.Trading
       Bfx.Util
 
     hs-source-dirs: src
     ghc-options:    -Wno-unused-packages
     build-depends:
       , aeson
-      , base                      >=4.7 && <5
+      , base                             >=4.7 && <5
       , base16-bytestring
       , bytestring
-      , combinat
       , containers
       , cryptonite
       , envparse
-      , extra
-      , generic-pretty-instances
-      , GenericPretty
-      , gnuplot
+      , functora:{functora, money, sql}
       , http-client
       , http-client-tls
       , http-types
@@ -241,24 +213,14 @@ test-suite bfx-test
       , lens-aeson
       , memory
       , microlens
-      , parallel
-      , persistent
-      , pretty
-      , reanimate
       , siggy-chardust
-      , singletons
-      , singletons-base
-      , table-layout
       , template-haskell
       , temporary
       , text
-      , time
       , transformers
       , units
-      , universum
       , unliftio
       , vector
-      , witch
 
   else
     build-depends: bfx

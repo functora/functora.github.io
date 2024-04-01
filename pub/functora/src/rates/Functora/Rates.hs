@@ -107,7 +107,8 @@ getQuote baseFunds quoteCurrency = do
       pure
         QuoteAt
           { quoteMoneyAmount =
-              exchangeMoney quotesPerBase $ fundsMoneyAmount baseFunds,
+              exchangeMoney @(Tags 'Signed) quotesPerBase
+                $ fundsMoneyAmount baseFunds,
             quoteUpdatedAt =
               quotesPerBaseUpdatedAt quotes
           }

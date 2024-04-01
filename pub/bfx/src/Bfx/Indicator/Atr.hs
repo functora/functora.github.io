@@ -6,25 +6,24 @@ module Bfx.Indicator.Atr
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Import
 import Bfx.Indicator.Tr (Tr)
 import qualified Bfx.Indicator.Tr as Tr
 import qualified Data.Map as Map
 import qualified Data.Vector as V
+import qualified Prelude
 
 newtype Atr = Atr
-  { unAtr :: QuotePerBase'
+  { unAtr :: Money (Tags 'Unsigned |+| 'QuotePerBase)
   }
   deriving newtype
     ( Eq,
       Ord
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
-
-instance NFData Atr
 
 newtype AtrPeriod = AtrPeriod
   { unAtrPeriod :: Natural
@@ -41,8 +40,6 @@ newtype AtrPeriod = AtrPeriod
   deriving stock
     ( Generic
     )
-
-instance NFData AtrPeriod
 
 stdAtrPeriod :: AtrPeriod
 stdAtrPeriod =
@@ -65,7 +62,7 @@ atr0 period cs =
         mempty
   where
     trs = Tr.tr cs
-    intPeriod = fromIntegral period
+    intPeriod = Prelude.fromIntegral period
     stopAtIdx = length trs - intPeriod
 
 unsafeAtr ::
@@ -79,13 +76,15 @@ unsafeAtr intPeriod xs stopAtIdx currentIdx acc =
   if stopAtIdx < currentIdx
     then acc
     else
-      unsafeAtr intPeriod xs stopAtIdx (currentIdx + 1) $
-        Map.insert at val acc
+      unsafeAtr intPeriod xs stopAtIdx (currentIdx + 1)
+        $ Map.insert at val acc
   where
     chunk = V.slice currentIdx intPeriod xs
     at = fst $ V.last chunk
     val =
       Atr
-        . (|/ fromIntegral intPeriod)
-        . V.foldl1 (|+|)
+        . newMoney
+        . (/ Prelude.fromIntegral intPeriod)
+        . unMoney
+        . V.foldl1 addMoney
         $ V.map (Tr.unTr . snd) chunk

@@ -10,15 +10,18 @@ import Bfx.Data.Kind
 import Bfx.Data.Type
 import Bfx.Import.External
 
+--
+-- TODO : this is not 100% correct
+--
 data Response = Response
-  { makerCrypto2CryptoFee :: FeeRate 'Maker 'Base,
-    makerCrypto2StableFee :: FeeRate 'Maker 'Base,
-    makerCrypto2FiatFee :: FeeRate 'Maker 'Base,
+  { makerCrypto2CryptoFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
+    makerCrypto2StableFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
+    makerCrypto2FiatFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
     makerDerivativeRebate :: RebateRate 'Maker,
-    takerCrypto2CryptoFee :: FeeRate 'Taker 'Base,
-    takerCrypto2StableFee :: FeeRate 'Taker 'Base,
-    takerCrypto2FiatFee :: FeeRate 'Taker 'Base,
-    takerDerivativeFee :: FeeRate 'Taker 'Base
+    takerCrypto2CryptoFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
+    takerCrypto2StableFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
+    takerCrypto2FiatFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
+    takerDerivativeFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker)
   }
   deriving stock
     ( Eq,
@@ -27,15 +30,18 @@ data Response = Response
       Generic
     )
 
+--
+-- TODO : accept 2 types
+--
 getFee ::
-  forall (mrel :: MarketRelation).
-  ( SingI mrel
+  forall (mot :: MakerOrTaker).
+  ( SingI mot
   ) =>
   CurrencyKind ->
   Response ->
-  FeeRate mrel 'Base
-getFee cck =
-  case (sing :: Sing mrel, cck) of
+  Money (Tags 'Unsigned |+| 'FeeRate |+| mot)
+getFee ck =
+  case (sing :: Sing mot, ck) of
     (SMaker, Crypto) -> makerCrypto2CryptoFee
     (SMaker, Stable) -> makerCrypto2StableFee
     (SMaker, Fiat) -> makerCrypto2FiatFee

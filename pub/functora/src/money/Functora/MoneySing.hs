@@ -29,6 +29,8 @@ data LocalOrRemote = Local | Remote
 
 data MinOrMax = Min | Max
 
+data Revenue = Revenue
+
 mkSing ''BuyOrSell
 mkSing ''NetOrGross
 mkSing ''GainOrLose
@@ -41,3 +43,4 @@ mkSing ''CurrencyKind
 mkSing ''MakerOrTaker
 mkSing ''LocalOrRemote
 mkSing ''MinOrMax
+mkSing ''Revenue

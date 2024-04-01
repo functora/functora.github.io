@@ -7,15 +7,23 @@ module Functora.Money
     NewMoneyTags,
     Money,
     unMoney,
+    tagMoney,
+    unTagMoney,
+    reTagMoney,
     parseMoney,
+    addMoney,
+    deductMoney,
     SomeMoney (..),
     newMoney,
     newUnsignedMoneyBOS,
     newUnsignedMoneyGOL,
     newFeeRate,
+    newProfitRate,
     addFee,
     deductFee,
+    addProfit,
     exchangeMoney,
+    newQuotePerBase,
     Funds (..),
     fundsMoneyAmount,
     fundsCurrencyCode,
@@ -83,6 +91,33 @@ deriving stock instance (MoneyTags tags) => Data (Money tags)
 unMoney :: Money tags -> Ratio (IntRep tags)
 unMoney (Money x) = x
 
+tagMoney ::
+  forall prevTag prevTags nextTags.
+  ( NewMoneyTags nextTags (prevTags |+| prevTag),
+    IntRep prevTags ~ IntRep nextTags
+  ) =>
+  Money prevTags ->
+  Money nextTags
+tagMoney = newMoney . unMoney
+
+unTagMoney ::
+  forall prevTag prevTags nextTags.
+  ( NewMoneyTags nextTags (prevTags |-| prevTag),
+    IntRep prevTags ~ IntRep nextTags
+  ) =>
+  Money prevTags ->
+  Money nextTags
+unTagMoney = newMoney . unMoney
+
+reTagMoney ::
+  forall prevTag nextTag prevTags nextTags.
+  ( NewMoneyTags nextTags (prevTags |-| prevTag |+| nextTag),
+    IntRep prevTags ~ IntRep nextTags
+  ) =>
+  Money prevTags ->
+  Money nextTags
+reTagMoney = newMoney . unMoney
+
 parseMoney ::
   forall str tags m.
   ( From str Text,
@@ -95,6 +130,14 @@ parseMoney ::
   m (Money tags)
 parseMoney =
   fmap Money . parseRatio
+
+addMoney :: (MoneyTags tags) => Money tags -> Money tags -> Money tags
+addMoney lhs rhs =
+  newMoney $ unMoney lhs + unMoney rhs
+
+deductMoney :: (MoneyTags tags) => Money tags -> Money tags -> Money tags
+deductMoney lhs rhs =
+  newMoney $ unMoney lhs - unMoney rhs
 
 data SomeMoney k tags
   = forall (tag :: k).
@@ -161,6 +204,14 @@ newFeeRate ::
   Money next
 newFeeRate = Money
 
+newProfitRate ::
+  forall prev next.
+  ( NewMoneyTags next (prev |+| 'ProfitRate)
+  ) =>
+  Ratio (IntRep next) ->
+  Money next
+newProfitRate = Money
+
 addFee ::
   forall fee amt tags.
   ( IntRep fee ~ IntRep amt,
@@ -185,17 +236,41 @@ deductFee ::
 deductFee (Money fee) (Money amt) =
   Money $ amt * (1 - fee)
 
-exchangeMoney ::
-  forall rate base quote.
-  ( IntRep rate ~ IntRep base,
-    IntRep rate ~ IntRep quote,
-    NewMoneyTags quote (base |-| 'Base |+| 'Quote)
+addProfit ::
+  forall tags.
+  ( IntRep tags ~ IntRep (tags |+| 'ProfitRate),
+    IntRep tags ~ IntRep (tags |+| 'Revenue),
+    MoneyTags (tags |+| 'Revenue)
   ) =>
-  Money rate ->
-  Money base ->
-  Money quote
+  Money (tags |+| 'ProfitRate) ->
+  Money tags ->
+  Money (tags |+| 'Revenue)
+addProfit (Money rate) (Money amt) =
+  Money $ amt * (1 + rate)
+
+exchangeMoney ::
+  forall tags.
+  ( IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Base),
+    IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Quote),
+    MoneyTags (tags |+| 'Quote)
+  ) =>
+  Money (tags |+| 'QuotePerBase) ->
+  Money (tags |+| 'Base) ->
+  Money (tags |+| 'Quote)
 exchangeMoney (Money rate) (Money base) =
   Money $ rate * base
+
+newQuotePerBase ::
+  forall tags.
+  ( IntRep (tags |+| 'Quote) ~ IntRep (tags |+| 'Base),
+    IntRep (tags |+| 'Quote) ~ IntRep (tags |+| 'QuotePerBase),
+    MoneyTags (tags |+| 'QuotePerBase)
+  ) =>
+  Money (tags |+| 'Quote) ->
+  Money (tags |+| 'Base) ->
+  Money (tags |+| 'QuotePerBase)
+newQuotePerBase (Money quote) (Money base) =
+  Money $ quote / base
 
 data Funds tags where
   Funds :: Money tags -> CurrencyCode -> Funds tags

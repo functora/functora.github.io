@@ -75,9 +75,17 @@ deriving via Int64 instance PersistFieldSql Integer
 deriving via
   Rational
   instance
-    (MoneyTags sig tags) => PersistFieldSql (Money tags)
+    ( MoneyTags tags,
+      GetTag (sig :: SignedOrUnsigned) tags
+    ) =>
+    PersistFieldSql (Money tags)
 
-instance (MoneyTags sig tags) => PersistField (Money tags) where
+instance
+  ( MoneyTags tags,
+    GetTag (sig :: SignedOrUnsigned) tags
+  ) =>
+  PersistField (Money tags)
+  where
   toPersistValue money =
     let rep = unMoney money
      in case sing :: Sing sig of

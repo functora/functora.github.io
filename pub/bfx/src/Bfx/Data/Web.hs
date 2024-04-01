@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.Web
@@ -12,20 +11,17 @@ module Bfx.Data.Web
     NonceGen,
     newNonceGen,
     withNonce,
-    epoch,
     parseJsonBs,
     utcTimeToMicros,
   )
 where
 
 import Bfx.Import.External
-import Bfx.Util
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
-import qualified Witch
 import qualified Prelude
 
 newtype PrvKey = PrvKey
@@ -83,7 +79,9 @@ data RequestMethod
   deriving stock
     ( Eq,
       Ord,
-      Show
+      Show,
+      Data,
+      Generic
     )
 
 newtype BaseUrl
@@ -101,6 +99,10 @@ newtype RawResponse
     ( Eq,
       Ord
     )
+  deriving stock
+    ( Data,
+      Generic
+    )
 
 instance From ByteString RawResponse
 
@@ -109,7 +111,7 @@ instance From RawResponse ByteString
 instance Show RawResponse where
   show x =
     case decodeUtf8' bs of
-      Left {} -> "ByteString RawResponse" <> show (BS.unpack bs)
+      Left {} -> "ByteString RawResponse" <> inspect (BS.unpack bs)
       Right res -> "Text RawResponse " <> T.unpack res
     where
       bs = BL.toStrict $ from x
@@ -121,6 +123,10 @@ newtype Nonce = Nonce
     ( Eq,
       Ord,
       Show
+    )
+  deriving stock
+    ( Data,
+      Generic
     )
 
 mkNonce :: (MonadIO m) => m Nonce
@@ -164,7 +170,7 @@ withNonce (NonceGen var) this = do
 
 utcTimeToMicros :: UTCTime -> Natural
 utcTimeToMicros x =
-  fromInteger
+  Prelude.fromInteger
     $ diffTimeToPicoseconds
       ( fromRational
           . toRational
@@ -172,19 +178,14 @@ utcTimeToMicros x =
       )
     `div` 1000000
 
-epoch :: UTCTime
-epoch =
-  posixSecondsToUTCTime 0
-
 parseJsonBs ::
   forall a.
   ( Typeable a,
-    From (UTF_8 BS.ByteString) a,
-    'False ~ (UTF_8 BS.ByteString == a)
+    From (UTF_8 BS.ByteString) a
   ) =>
   A.Value ->
   A.Parser a
 parseJsonBs =
-  A.withText (showType @a)
+  A.withText (inspectType @a)
     $ pure
     . via @(UTF_8 BS.ByteString)

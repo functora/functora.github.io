@@ -13,23 +13,23 @@ where
 import Bfx.Import
 import qualified Data.Aeson as A
 
-data Request (act :: ExchangeAction) = Request
-  { amount :: Money 'Base act,
+data Request (bos :: BuyOrSell) = Request
+  { amount :: Money (Tags 'Unsigned |+| 'Base |+| bos),
     symbol :: CurrencyPair,
-    rate :: QuotePerBase act,
-    options :: Options act
+    rate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
+    options :: Options bos
   }
   deriving stock (Eq, Ord, Show)
 
-data Options (act :: ExchangeAction) = Options
-  { stopLoss :: Maybe (QuotePerBase act),
+data Options (bos :: BuyOrSell) = Options
+  { stopLoss :: Maybe (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
     clientId :: Maybe OrderClientId,
     groupId :: Maybe OrderGroupId,
     flags :: Set OrderFlag
   }
   deriving stock (Eq, Ord, Show)
 
-optsDef :: Options act
+optsDef :: Options bos
 optsDef =
   Options
     { stopLoss = Nothing,
@@ -38,7 +38,7 @@ optsDef =
       flags = mempty
     }
 
-optsPostOnly :: Options act
+optsPostOnly :: Options bos
 optsPostOnly =
   Options
     { stopLoss = Nothing,
@@ -47,7 +47,9 @@ optsPostOnly =
       flags = [PostOnly]
     }
 
-optsPostOnlyStopLoss :: QuotePerBase act -> Options act
+optsPostOnlyStopLoss ::
+  Money (Tags 'Unsigned |+| 'QuotePerBase |+| (bos :: BuyOrSell)) ->
+  Options bos
 optsPostOnlyStopLoss sl =
   Options
     { stopLoss = Just sl,
@@ -57,11 +59,12 @@ optsPostOnlyStopLoss sl =
     }
 
 instance
-  ( ToRequestParam (Money 'Base act),
-    ToRequestParam (QuotePerBase act),
-    SingI act
+  forall (bos :: BuyOrSell).
+  ( ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| bos)),
+    ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
+    SingI bos
   ) =>
-  ToJSON (Request act)
+  ToJSON (Request bos)
   where
   toJSON req =
     eradicateNull

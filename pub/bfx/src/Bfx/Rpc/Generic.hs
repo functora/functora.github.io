@@ -27,6 +27,7 @@ import qualified Network.HTTP.Types as Web
 pub ::
   forall method req res m.
   ( MonadIO m,
+    MonadThrow m,
     SingI method,
     ToBaseUrl method,
     ToPathPieces method req,
@@ -35,36 +36,38 @@ pub ::
   ) =>
   [SomeQueryParam] ->
   req ->
-  ExceptT Error m res
-pub qs req = catchWeb $ do
+  m res
+pub qs req = do
   manager <-
-    Web.newManager Tls.tlsManagerSettings
+    liftIO $ Web.newManager Tls.tlsManagerSettings
   webReq0 <-
     Web.parseRequest
       . T.unpack
       . T.intercalate "/"
-      $ coerce (toBaseUrl @method) : toPathPieces @method req
+      $ coerce (toBaseUrl @method)
+      : toPathPieces @method req
   let webReq1 =
         Web.setQueryString
           (unQueryParam <$> qs)
           $ webReq0
-            { Web.method = show $ toRequestMethod @method
+            { Web.method = inspect $ toRequestMethod @method
             }
   webRes <-
-    Web.httpLbs webReq1 manager
+    liftIO $ Web.httpLbs webReq1 manager
   let rawRes =
         RawResponse $ Web.responseBody webRes
-  pure $
-    if Web.responseStatus webRes == Web.ok200
-      then
-        first (parserFailure @method webReq1 webRes rawRes)
-          . fromRpc @method
-          $ rawRes
-      else Left $ ErrorWebPub webReq1 webRes
+  if Web.responseStatus webRes == Web.ok200
+    then
+      either (throw . parserFailure @method webReq1 webRes rawRes) pure
+        $ fromRpc @method rawRes
+    else
+      throw
+        $ ErrorWebPub webReq1 webRes
 
 prv ::
   forall method req res m.
-  ( MonadIO m,
+  ( MonadThrow m,
+    MonadUnliftIO m,
     SingI method,
     ToBaseUrl method,
     ToPathPieces method req,
@@ -74,22 +77,24 @@ prv ::
   ) =>
   Env ->
   req ->
-  ExceptT Error m res
-prv env req = catchWeb $ do
+  m res
+prv env req = do
   manager <-
-    Web.newManager Tls.tlsManagerSettings
+    liftIO $ Web.newManager Tls.tlsManagerSettings
   let apiPath =
         T.intercalate "/" $ toPathPieces @method req
   let reqBody = A.encode req
   webReq0 <-
     Web.parseRequest
       . T.unpack
-      $ coerce (toBaseUrl @method) <> "/" <> apiPath
+      $ coerce (toBaseUrl @method)
+      <> "/"
+      <> apiPath
   withNonce (envNonceGen env) $ \nonce' -> do
-    let nonce = encodeUtf8 (show nonce' :: Text)
+    let nonce = encodeUtf8 (inspect nonce' :: Text)
     let webReq1 =
           webReq0
-            { Web.method = show $ toRequestMethod @method,
+            { Web.method = inspect $ toRequestMethod @method,
               Web.requestBody = Web.RequestBodyLBS reqBody,
               Web.requestHeaders =
                 [ ( "Content-Type",
@@ -110,16 +115,16 @@ prv env req = catchWeb $ do
                 ]
             }
     webRes <-
-      Web.httpLbs webReq1 manager
+      liftIO $ Web.httpLbs webReq1 manager
     let rawRes =
           RawResponse $ Web.responseBody webRes
-    pure $
-      if Web.responseStatus webRes == Web.ok200
-        then
-          first (parserFailure @method webReq1 webRes rawRes)
-            . fromRpc @method
-            $ rawRes
-        else Left $ ErrorWebPrv reqBody webReq1 webRes
+    if Web.responseStatus webRes == Web.ok200
+      then
+        either (throw . parserFailure @method webReq1 webRes rawRes) pure
+          $ fromRpc @method rawRes
+      else
+        throw
+          $ ErrorWebPrv reqBody webReq1 webRes
 
 sign ::
   PrvKey ->
@@ -131,24 +136,9 @@ sign prvKey apiPath nonce reqBody =
   Crypto.hmacGetDigest
     . Crypto.hmac (coerce prvKey :: BS.ByteString)
     $ "/api/"
-      <> encodeUtf8 apiPath
-      <> nonce
-      <> BL.toStrict reqBody
-
-catchWeb ::
-  ( MonadIO m
-  ) =>
-  IO (Either Error a) ->
-  ExceptT Error m a
-catchWeb this =
-  --
-  -- TODO : hide sensitive data like headers
-  --
-  ExceptT . liftIO $
-    this
-      `catch` ( \(x :: HttpException) ->
-                  pure . Left $ ErrorWebException x
-              )
+    <> encodeUtf8 apiPath
+    <> nonce
+    <> BL.toStrict reqBody
 
 --
 -- TODO : add ParserFailure type instead of Text?
@@ -163,9 +153,9 @@ parserFailure ::
   Text ->
   Error
 parserFailure webReq webRes res err =
-  ErrorParser webReq webRes $
-    show (fromSing (sing :: Sing method))
-      <> " failed because "
-      <> err
-      <> " in "
-      <> show res
+  ErrorParser webReq webRes
+    $ inspect (fromSing (sing :: Sing method))
+    <> " failed because "
+    <> err
+    <> " in "
+    <> inspect res

@@ -8,87 +8,109 @@ module Bfx.Parser
   )
 where
 
-import Bfx.Data.Kind
 import Bfx.Data.Metro
 import Bfx.Data.Type
 import Bfx.Import.External
-import Bfx.Util
 import Data.Aeson.Lens
 import qualified Data.Map as Map
 import Lens.Micro hiding (at)
+import qualified Prelude
 
 parseOrder ::
   ( AsValue a,
-    Show a
+    Show a,
+    Data a
   ) =>
   a ->
   Either Text (SomeOrder 'Remote)
 parseOrder x = do
   id0 <-
-    maybeToRight (failure "OrderId is missing") $
-      OrderId
-        <$> x ^? nth 0 . _Integral
+    maybeToRight (failure "OrderId is missing")
+      $ OrderId
+      <$> x
+      ^? nth 0 . _Integral
   gid <-
-    maybeToRight (failure "OrderGroupId is missing") $
-      (Just . OrderGroupId <$> x ^? nth 1 . _Integral)
-        <|> ( ( either
-                  (const Nothing)
-                  (Just . Just)
-                  . readVia @Natural @OrderGroupId @Text
-              )
-                =<< x ^? nth 1 . _String
+    maybeToRight (failure "OrderGroupId is missing")
+      $ (Just . OrderGroupId <$> x ^? nth 1 . _Integral)
+      <|> ( ( either
+                (const Nothing)
+                (Just . Just . OrderGroupId)
+                . readEither
             )
-        <|> (Nothing <$ x ^? nth 1 . _Null)
+              =<< x
+              ^? nth 1 . _String
+          )
+      <|> (Nothing <$ x ^? nth 1 . _Null)
   cid <-
-    maybeToRight (failure "OrderClientId is missing") $
-      (Just . OrderClientId <$> x ^? nth 2 . _Integral)
-        <|> (Nothing <$ x ^? nth 2 . _Null)
+    maybeToRight (failure "OrderClientId is missing")
+      $ (Just . OrderClientId <$> x ^? nth 2 . _Integral)
+      <|> (Nothing <$ x ^? nth 2 . _Null)
   sym0 <-
-    maybeToRight (failure "Symbol is missing") $
-      x ^? nth 3 . _String
+    maybeToRight (failure "Symbol is missing")
+      $ x
+      ^? nth 3 . _String
   sym <-
-    first (const $ failure "Symbol is invalid") $
-      newCurrencyPair sym0
+    first (const $ failure "Symbol is invalid")
+      $ newCurrencyPair sym0
   amt0 <-
-    maybeToRight (failure "OrderAmount is missing") $
-      toRational <$> x ^? nth 7 . _Number
-  SomeMoney sAct amt <-
-    first (failure . ("OrderAmount is invalid " <>) . show) $
-      tryFrom amt0
+    maybeToRight (failure "OrderAmount is missing")
+      $ toRational
+      <$> x
+      ^? nth 7 . _Number
+  --
+  -- TODO : handle zero amt???
+  --
+  -- SomeMoney bos amt <-
+  --   first (failure . ("OrderAmount is invalid " <>) . inspect)
+  --     $ tryFrom amt0
   ss0 <-
-    maybeToRight (failure "OrderStatus is missing") $
-      x ^? nth 13 . _String
+    maybeToRight (failure "OrderStatus is missing")
+      $ x
+      ^? nth 13 . _String
   ss1 <-
-    first
-      ( failure
-          . ("OrderStatus is not recognized " <>)
-          . show
-      )
+    first (failure . ("OrderStatus is not recognized " <>) . inspect)
       $ newOrderStatus ss0
   price <-
     maybeToRight
       (failure "ExchangeRate is missing")
-      $ x ^? nth 16 . _Number
+      $ x
+      ^? nth 16 . _Number
   rate <-
-    first
-      ( const
-          . failure
-          $ "ExchangeRate is invalid " <> show price
-      )
-      $ tryFrom (toRational price)
-  pure . SomeOrder sAct $
-    Order
-      { orderId = id0,
-        orderGroupId = gid,
-        orderClientId = cid,
-        orderAmount = amt,
-        orderSymbol = sym,
-        orderRate = rate,
-        orderStatus = ss1
-      }
+    first (const . failure $ "ExchangeRate is invalid " <> inspect price)
+      $ tryFrom @Rational @(Ratio Natural) (toRational price)
+  case newUnsignedMoneyBOS @(Tags 'Base) amt0 of
+    SomeMoney bos amt ->
+      pure
+        . SomeOrder bos
+        $ Order
+          { orderId = id0,
+            orderGroupId = gid,
+            orderClientId = cid,
+            orderAmount = amt,
+            orderSymbol = sym,
+            orderRate = newMoney rate,
+            orderStatus = ss1
+          }
   where
+    -- let SomeMoney bos amt =
+    --       newUnsignedMoneyBOS @(Tags 'Base) amt0 ::
+    --         SomeMoney BuyOrSell (Tags 'Unsigned |+| 'Base)
+    -- case bos of
+    --   SBuy ->
+    --     pure
+    --       . SomeOrder SBuy
+    --       $ Order
+    --         { orderId = id0,
+    --           orderGroupId = gid,
+    --           orderClientId = cid,
+    --           orderAmount = amt,
+    --           orderSymbol = sym,
+    --           orderRate = newMoney rate,
+    --           orderStatus = ss1
+    --         }
+
     failure =
-      (<> " in " <> show x)
+      (<> " in " <> inspect x)
 
 parseOrderMap ::
   ( AsValue a
@@ -99,7 +121,8 @@ parseOrderMap raw = do
   xs <-
     maybeToRight
       "Json is not an array"
-      $ raw ^? _Array
+      $ raw
+      ^? _Array
   foldrM parser mempty xs
   where
     parser x acc = do
@@ -115,33 +138,63 @@ parseCandle x = do
   at <-
     posixSecondsToUTCTime
       . (/ 1000)
-      . fromInteger
+      . Prelude.fromInteger
       . from @Natural
       <$> maybeToRight
         "UTCTime is missing"
         (x ^? nth 0 . _Integral)
   open <-
-    first show . roundQuotePerBase
+    first inspect
+      . roundQuotePerBase
+      . newMoney
+      --
+      -- TODO : tryFrom???
+      --
+      . unsafeFrom @Rational @(Ratio Natural)
       =<< maybeToRight
         "Open is missing"
         (toRational <$> x ^? nth 1 . _Number)
   close <-
-    first show . roundQuotePerBase
+    first inspect
+      . roundQuotePerBase
+      . newMoney
+      --
+      -- TODO : tryFrom???
+      --
+      . unsafeFrom @Rational @(Ratio Natural)
       =<< maybeToRight
         "Close is missing"
         (toRational <$> x ^? nth 2 . _Number)
   high <-
-    first show . roundQuotePerBase
+    first inspect
+      . roundQuotePerBase
+      . newMoney
+      --
+      -- TODO : tryFrom???
+      --
+      . unsafeFrom @Rational @(Ratio Natural)
       =<< maybeToRight
         "High is missing"
         (toRational <$> x ^? nth 3 . _Number)
   low <-
-    first show . roundQuotePerBase
+    first inspect
+      . roundQuotePerBase
+      . newMoney
+      --
+      -- TODO : tryFrom???
+      --
+      . unsafeFrom @Rational @(Ratio Natural)
       =<< maybeToRight
         "Low is missing"
         (toRational <$> x ^? nth 4 . _Number)
   vol <-
-    first show . roundMoney
+    first inspect
+      . roundMoney
+      . newMoney
+      --
+      -- TODO : tryFrom???
+      --
+      . unsafeFrom @Rational @(Ratio Natural)
       =<< maybeToRight
         "Volume is missing"
         (toRational <$> x ^? nth 5 . _Number)

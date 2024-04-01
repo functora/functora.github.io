@@ -4,28 +4,21 @@
 module Functora.TagsFamily
   ( -- * Constructors
     -- $constructors
-    TagsKind,
     type Tags,
+    type NoTags,
     type (|+|),
     type (|-|),
     type (|&|),
-    type NoTags,
 
     -- * Accessors
     -- $accessors
-    HasKey,
-    HasNotKey,
-    HasTag,
-    HasTags,
     GetTag,
     GetKey,
-    GetTagDef,
 
-    -- * Introspection
-    -- $introspection
+    -- * Fingerprints
+    -- $fingerprints
     Fgpt,
     mkFgpt,
-    inspectTags,
 
     -- * Reexport
     module X,
@@ -34,10 +27,9 @@ where
 
 import Data.Data as X (Data)
 import Data.Kind (Type)
-import Data.String (IsString, fromString)
 import Data.Type.Bool as X (type Not, type (&&))
 import Data.Type.Equality as X (type (==))
-import Data.Type.Map (AsMap, Cmp, IsMap, Lookup, Mapping ((:->)), Member)
+import Data.Type.Map (AsMap, Cmp, Mapping ((:->)))
 import Data.Typeable
 import qualified Data.Typeable as Typeable
 import GHC.Generics as X (Generic)
@@ -53,13 +45,14 @@ import qualified LiftType
 import Singlethongs as X
 import Prelude
 
-type TagsKind = [Mapping Type Type]
-
-type NoTags = ('[] :: [Mapping Type Type])
+-- $constructors
+-- Constructors
 
 type family Tags v where
   Tags (v :: k) =
     '[k ':-> Sing v]
+
+type NoTags = ('[] :: [Mapping Type Type])
 
 type family tags |+| v where
   tags |+| v =
@@ -71,41 +64,20 @@ type family tags |-| v where
 
 type family lhs |&| rhs where
   '[] |&| rhs = AsMap rhs
-  ((_ ':-> v) ': lhs) |&| rhs = (lhs |&| (rhs |+| v))
+  ((_ ':-> v) ': lhs) |&| rhs = lhs |&| (rhs |+| v)
 
-type HasKey k tags =
-  ( IsMap tags,
-    Typeable (GetVals tags),
-    Member k tags ~ 'True
-  )
-
-type HasNotKey k tags =
-  ( IsMap tags,
-    Typeable (GetVals tags),
-    Member k tags ~ 'False
-  )
-
-type HasTag v tags =
-  ( HasTags (Tags v) tags
-  )
-
-type HasTags sub sup =
-  ( IsMap sub,
-    IsMap sup,
-    Typeable (GetVals sub),
-    Typeable (GetVals sup),
-    HasTagsFamily 'Nothing sub sup ~ 'True
-  )
+-- $accessors
+-- Accessors
 
 type GetTag (v :: k) tags =
-  ( v ~ GetTagFamily k tags tags,
-    SingI v,
-    HasTag v tags
+  ( v ~ GetTagFamily ('Nothing :: Maybe k) k tags tags,
+    SingI v
   )
 
-type GetKey k tags = GetTagFamily k tags tags
+type GetKey k tags = GetTagFamily ('Nothing :: Maybe k) k tags tags
 
-type GetTagDef (def :: k) tags = GetTagDefFamily def tags tags
+-- $fingerprints
+-- Fingerprints
 
 type family Fgpt (a :: k) :: Symbol
 
@@ -134,18 +106,6 @@ mkFgpt =
               $ Typeable.typeRepFingerprint rep
          )
     |]
-
-inspectTags ::
-  forall tags text vals.
-  ( HasVals vals tags,
-    IsString text
-  ) =>
-  text
-inspectTags =
-  fromString
-    . show
-    . Typeable.typeRep
-    $ Proxy @vals
 
 --
 -- Private
@@ -189,58 +149,26 @@ type family UnTagFamily member v tags prev next where
   UnTagFamily member v tags (kv ': prev) next =
     UnTagFamily member v tags prev (kv ': next)
 
-type family GetTagFamily k tags prev where
-  GetTagFamily k _ ((k ':-> Sing v) ': _) = v
-  GetTagFamily k tags (_ ': next) = GetTagFamily k tags next
-  GetTagFamily k tags '[] =
+type family GetTagFamily mv k tags prev where
+  GetTagFamily ('Just (v :: k)) k _ '[] = v
+  GetTagFamily 'Nothing k tags '[] =
     TypeError
       ( 'ShowType k
           ':<>: 'Text " key is missing in "
           ':<>: 'ShowType tags
       )
-
-type family GetTagDefFamily (def :: k) tags prev where
-  GetTagDefFamily (_ :: k) _ ((k ':-> Sing v) ': _) = v
-  GetTagDefFamily def tags (_ ': next) = GetTagDefFamily def tags next
-  GetTagDefFamily def _ '[] = def
-
-type family HasTagsFamily hastag submap supmap where
-  HasTagsFamily 'Nothing '[] _ = 'True
-  HasTagsFamily has '[] sup =
-    TypeError
-      ( 'Text "Impossible HasTagsFamily "
-          ':<>: 'ShowType has
-          ':<>: 'Text " clause with "
-          ':<>: 'ShowType sup
-      )
-  HasTagsFamily 'Nothing ((k ':-> v) ': sub) sup =
-    HasTagsFamily
-      ('Just (Lookup sup k == 'Just v))
-      ((k ':-> v) ': sub)
-      sup
-  HasTagsFamily ('Just 'True) (_ ': sub) sup =
-    HasTagsFamily 'Nothing sub sup
-  HasTagsFamily ('Just 'False) ((k ':-> v) ': _) sup =
+  GetTagFamily ('Just v) k tags ((k ':-> Sing v) ': _) =
     TypeError
       ( 'ShowType v
           ':<>: 'Text " :: "
           ':<>: 'ShowType k
-          ':<>: 'Text " tag is missing in "
-          ':<>: 'ShowType sup
+          ':<>: 'Text " tag conflicts with "
+          ':<>: 'ShowType tags
       )
-
-type family ToValsFamily map lst where
-  ToValsFamily '[] acc = acc
-  ToValsFamily ((_ ':-> v) ': tail) acc =
-    ToValsFamily tail (v ': acc)
-
-type GetVals tags = ToValsFamily tags '[]
-
-type HasVals vals tags =
-  ( IsMap tags,
-    Typeable vals,
-    vals ~ GetVals tags
-  )
+  GetTagFamily 'Nothing k tags ((k ':-> Sing v) ': next) =
+    GetTagFamily ('Just v) k tags next
+  GetTagFamily mv k tags (_ ': next) =
+    GetTagFamily mv k tags next
 
 --
 -- TODO : NEED A PROPER INSTANCE!

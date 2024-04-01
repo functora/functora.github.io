@@ -67,12 +67,12 @@ spec = do
       `shouldBe` "Tagged (4 % 5)"
     inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
       `shouldBe` "Tagged (4 % 5)"
-  it "inspectTags" $ do
-    inspectTags @NoTags @Text
-      `shouldBe` "'[] *"
-    inspectTags @(NoTags |+| "BTC" |+| 'Net) @Text
-      `shouldBe` "': * (Sing NetOrGross 'Net) (': * (Sing Symbol \"BTC\") ('[] *))"
-    inspectTags @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
-      `shouldBe` "': * (Sing NetOrGross 'Net) (': * (Sing GainOrLose 'Gain) (': * (Sing Symbol \"BTC\") ('[] *)))"
-    inspectTags @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
-      `shouldBe` inspectTags @(NoTags |+| "BTC" |+| 'Net |+| 'Gain)
+  it "inspectType" $ do
+    inspectType @NoTags @Text
+      `shouldBe` "'[] (Mapping * *)"
+    inspectType @(NoTags |+| "BTC" |+| 'Net) @Text
+      `shouldBe` "': (Mapping * *) (':-> * * Symbol (Sing Symbol \"BTC\")) (': (Mapping * *) (':-> * * NetOrGross (Sing NetOrGross 'Net)) ('[] (Mapping * *)))"
+    inspectType @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
+      `shouldBe` "': (Mapping * *) (':-> * * Symbol (Sing Symbol \"BTC\")) (': (Mapping * *) (':-> * * GainOrLose (Sing GainOrLose 'Gain)) (': (Mapping * *) (':-> * * NetOrGross (Sing NetOrGross 'Net)) ('[] (Mapping * *))))"
+    inspectType @(Tags "BTC" |+| 'Net |+| 'Gain) @Text
+      `shouldBe` inspectType @(NoTags |+| "BTC" |+| 'Net |+| 'Gain)

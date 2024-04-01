@@ -14,7 +14,7 @@ newMoney = Tagged $ 4 % 5
 
 getSymbolTag ::
   forall (tag :: Symbol) tags rep.
-  ( GetTag tag tags
+  ( HasTag tag tags
   ) =>
   Tagged tags rep ->
   Demote Symbol
@@ -23,7 +23,7 @@ getSymbolTag _ =
 
 getGainOrLoseTag ::
   forall (tag :: GainOrLose) tags rep.
-  ( GetTag tag tags
+  ( HasTag tag tags
   ) =>
   Tagged tags rep ->
   GainOrLose

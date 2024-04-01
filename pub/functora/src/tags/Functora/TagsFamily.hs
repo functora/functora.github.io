@@ -13,7 +13,7 @@ module Functora.TagsFamily
     -- * Accessors
     -- $accessors
     GetTag,
-    GetKey,
+    HasTag,
 
     -- * Fingerprints
     -- $fingerprints
@@ -69,12 +69,15 @@ type family lhs |&| rhs where
 -- $accessors
 -- Accessors
 
-type GetTag (v :: k) tags =
-  ( v ~ GetTagFamily ('Nothing :: Maybe k) k tags tags,
-    SingI v
-  )
+type GetTag k tags = GetTagFamily ('Nothing :: Maybe k) k tags tags
 
-type GetKey k tags = GetTagFamily ('Nothing :: Maybe k) k tags tags
+type HasTag (v :: k) tags =
+  ( SingI v,
+    Typeable v,
+    Typeable k,
+    Typeable tags,
+    v ~ GetTag k tags
+  )
 
 -- $fingerprints
 -- Fingerprints

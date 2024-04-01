@@ -76,13 +76,13 @@ deriving via
   Rational
   instance
     ( MoneyTags tags,
-      GetTag (sig :: SignedOrUnsigned) tags
+      HasTag (sig :: SignedOrUnsigned) tags
     ) =>
     PersistFieldSql (Money tags)
 
 instance
   ( MoneyTags tags,
-    GetTag (sig :: SignedOrUnsigned) tags
+    HasTag (sig :: SignedOrUnsigned) tags
   ) =>
   PersistField (Money tags)
   where

@@ -47,7 +47,7 @@ import Functora.Prelude
 import Functora.Tags as X
 import qualified Language.Haskell.TH.Syntax as TH
 
-type IntRep tags = NewIntRep (GetKey SignedOrUnsigned tags)
+type IntRep tags = NewIntRep (GetTag SignedOrUnsigned tags)
 
 type family NewIntRep sig where
   NewIntRep 'Signed = Integer
@@ -297,7 +297,7 @@ unJsonRational = toRational <$> A.scientific
 unJsonMoney ::
   forall tags (sig :: SignedOrUnsigned).
   ( MoneyTags tags,
-    GetTag sig tags
+    HasTag sig tags
   ) =>
   A.Decoder (Money tags)
 unJsonMoney = do

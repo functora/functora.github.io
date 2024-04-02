@@ -268,8 +268,7 @@ submitOrderMaker ::
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
     MoneyTags (Tags 'Unsigned |+| 'Base |+| bos),
     MoneyTags (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
-    GetTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
-    Typeable bos
+    HasTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos)
   ) =>
   Env ->
   Money (Tags 'Unsigned |+| 'Base |+| bos) ->
@@ -294,8 +293,7 @@ submitOrderMakerRec ::
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
     MoneyTags (Tags 'Unsigned |+| 'Base |+| bos),
     MoneyTags (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
-    GetTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
-    Typeable bos
+    HasTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos)
   ) =>
   Env ->
   Money (Tags 'Unsigned |+| 'Base |+| bos) ->

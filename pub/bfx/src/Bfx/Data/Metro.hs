@@ -12,7 +12,7 @@ import Bfx.Import.External
 
 type CashTags tags =
   ( MoneyTags tags,
-    GetTag 'Unsigned tags
+    HasTag 'Unsigned tags
   )
 
 roundMoney ::
@@ -35,8 +35,8 @@ roundMoney money =
 
 type RateTags tags =
   ( MoneyTags tags,
-    GetTag 'Unsigned tags,
-    GetTag 'QuotePerBase tags
+    HasTag 'Unsigned tags,
+    HasTag 'QuotePerBase tags
   )
 
 roundQuotePerBase ::

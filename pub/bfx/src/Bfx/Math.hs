@@ -16,8 +16,8 @@ import Bfx.Import.External
 tweakMoneyPip ::
   forall tags bos m.
   ( CashTags tags,
-    GetTag 'Base tags,
-    GetTag (bos :: BuyOrSell) tags,
+    HasTag 'Base tags,
+    HasTag (bos :: BuyOrSell) tags,
     MonadThrow m
   ) =>
   Money tags ->
@@ -32,7 +32,7 @@ tweakMoneyPip amt =
 
 tweakMoneyPip' ::
   ( CashTags tags,
-    GetTag 'Base tags,
+    HasTag 'Base tags,
     MonadThrow m
   ) =>
   (Money tags -> Money tags) ->
@@ -47,7 +47,7 @@ tweakMoneyPip' expr amt = do
 tweakMakerRate ::
   forall tags bos m.
   ( RateTags tags,
-    GetTag (bos :: BuyOrSell) tags,
+    HasTag (bos :: BuyOrSell) tags,
     MonadThrow m
   ) =>
   Money tags ->

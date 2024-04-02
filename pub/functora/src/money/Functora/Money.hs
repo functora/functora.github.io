@@ -70,52 +70,33 @@ type NewMoneyTags lhs rhs =
     MoneyTags lhs
   )
 
-data Money tags where
-  Money ::
-    forall tags.
-    ( MoneyTags tags
-    ) =>
-    Ratio (IntRep tags) ->
-    Money tags
-
-deriving stock instance Eq (Money tags)
-
-deriving stock instance Ord (Money tags)
-
-deriving stock instance (MoneyTags tags) => Show (Money tags)
-
-deriving stock instance (MoneyTags tags) => Read (Money tags)
-
-deriving stock instance (MoneyTags tags) => Data (Money tags)
+type Money tags = Tagged tags (Ratio (IntRep tags))
 
 unMoney :: Money tags -> Ratio (IntRep tags)
-unMoney (Money x) = x
+unMoney (Tagged x) = x
 
 tagMoney ::
-  forall prevTag prevTags nextTags.
-  ( NewMoneyTags nextTags (prevTags |+| prevTag),
-    IntRep prevTags ~ IntRep nextTags
+  forall tag tags.
+  ( IntRep tags ~ IntRep (tags |+| tag)
   ) =>
-  Money prevTags ->
-  Money nextTags
+  Money tags ->
+  Money (tags |+| tag)
 tagMoney = newMoney . unMoney
 
 unTagMoney ::
-  forall prevTag prevTags nextTags.
-  ( NewMoneyTags nextTags (prevTags |-| prevTag),
-    IntRep prevTags ~ IntRep nextTags
+  forall tag tags.
+  ( IntRep tags ~ IntRep (tags |-| tag)
   ) =>
-  Money prevTags ->
-  Money nextTags
+  Money tags ->
+  Money (tags |-| tag)
 unTagMoney = newMoney . unMoney
 
 reTagMoney ::
-  forall prevTag nextTag prevTags nextTags.
-  ( NewMoneyTags nextTags (prevTags |-| prevTag |+| nextTag),
-    IntRep prevTags ~ IntRep nextTags
+  forall prev next tags.
+  ( IntRep tags ~ IntRep (tags |-| prev |+| next)
   ) =>
-  Money prevTags ->
-  Money nextTags
+  Money tags ->
+  Money (tags |-| prev |+| next)
 reTagMoney = newMoney . unMoney
 
 parseMoney ::
@@ -129,7 +110,7 @@ parseMoney ::
   str ->
   m (Money tags)
 parseMoney =
-  fmap Money . parseRatio
+  fmap Tagged . parseRatio
 
 addMoney :: (MoneyTags tags) => Money tags -> Money tags -> Money tags
 addMoney lhs rhs =
@@ -160,11 +141,9 @@ deriving stock instance Show (SomeMoney k tags)
 
 newMoney ::
   forall tags.
-  ( MoneyTags tags
-  ) =>
   Ratio (IntRep tags) ->
   Money tags
-newMoney = Money
+newMoney = Tagged
 
 newUnsignedMoneyBOS ::
   forall tags buy sell.
@@ -176,8 +155,8 @@ newUnsignedMoneyBOS ::
   Rational ->
   SomeMoney BuyOrSell (tags |+| 'Unsigned)
 newUnsignedMoneyBOS raw
-  | raw < 0 = SomeMoney (sing :: Sing 'Sell) (Money uns :: Money sell)
-  | otherwise = SomeMoney (sing :: Sing 'Buy) (Money uns :: Money buy)
+  | raw < 0 = SomeMoney (sing :: Sing 'Sell) (Tagged uns :: Money sell)
+  | otherwise = SomeMoney (sing :: Sing 'Buy) (Tagged uns :: Money buy)
   where
     uns = unsafeFrom @Rational @(Ratio Natural) $ abs raw
 
@@ -191,26 +170,22 @@ newUnsignedMoneyGOL ::
   Rational ->
   SomeMoney GainOrLose (tags |+| 'Unsigned)
 newUnsignedMoneyGOL raw
-  | raw < 0 = SomeMoney (sing :: Sing 'Lose) (Money uns :: Money lose)
-  | otherwise = SomeMoney (sing :: Sing 'Gain) (Money uns :: Money gain)
+  | raw < 0 = SomeMoney (sing :: Sing 'Lose) (Tagged uns :: Money lose)
+  | otherwise = SomeMoney (sing :: Sing 'Gain) (Tagged uns :: Money gain)
   where
     uns = unsafeFrom @Rational @(Ratio Natural) $ abs raw
 
 newFeeRate ::
-  forall prev next.
-  ( NewMoneyTags next (prev |+| 'FeeRate)
-  ) =>
-  Ratio (IntRep next) ->
-  Money next
-newFeeRate = Money
+  forall tags.
+  Ratio (IntRep (tags |+| 'FeeRate)) ->
+  Money (tags |+| 'FeeRate)
+newFeeRate = Tagged
 
 newProfitRate ::
-  forall prev next.
-  ( NewMoneyTags next (prev |+| 'ProfitRate)
-  ) =>
-  Ratio (IntRep next) ->
-  Money next
-newProfitRate = Money
+  forall tags.
+  Ratio (IntRep (tags |+| 'ProfitRate)) ->
+  Money (tags |+| 'ProfitRate)
+newProfitRate = Tagged
 
 addFee ::
   forall fee amt tags.
@@ -221,8 +196,8 @@ addFee ::
   Money fee ->
   Money amt ->
   Money tags
-addFee (Money fee) (Money amt) =
-  Money $ amt / (1 - fee)
+addFee (Tagged fee) (Tagged amt) =
+  Tagged $ amt / (1 - fee)
 
 deductFee ::
   forall fee amt tags.
@@ -233,8 +208,8 @@ deductFee ::
   Money fee ->
   Money amt ->
   Money tags
-deductFee (Money fee) (Money amt) =
-  Money $ amt * (1 - fee)
+deductFee (Tagged fee) (Tagged amt) =
+  Tagged $ amt * (1 - fee)
 
 addProfit ::
   forall tags.
@@ -245,8 +220,8 @@ addProfit ::
   Money (tags |+| 'ProfitRate) ->
   Money tags ->
   Money (tags |+| 'Revenue)
-addProfit (Money rate) (Money amt) =
-  Money $ amt * (1 + rate)
+addProfit (Tagged rate) (Tagged amt) =
+  Tagged $ amt * (1 + rate)
 
 exchangeMoney ::
   forall tags.
@@ -257,8 +232,8 @@ exchangeMoney ::
   Money (tags |+| 'QuotePerBase) ->
   Money (tags |+| 'Base) ->
   Money (tags |+| 'Quote)
-exchangeMoney (Money rate) (Money base) =
-  Money $ rate * base
+exchangeMoney (Tagged rate) (Tagged base) =
+  Tagged $ rate * base
 
 newQuotePerBase ::
   forall tags.
@@ -269,11 +244,17 @@ newQuotePerBase ::
   Money (tags |+| 'Quote) ->
   Money (tags |+| 'Base) ->
   Money (tags |+| 'QuotePerBase)
-newQuotePerBase (Money quote) (Money base) =
-  Money $ quote / base
+newQuotePerBase (Tagged quote) (Tagged base) =
+  Tagged $ quote / base
 
 data Funds tags where
-  Funds :: Money tags -> CurrencyCode -> Funds tags
+  Funds ::
+    forall tags.
+    ( MoneyTags tags
+    ) =>
+    Money tags ->
+    CurrencyCode ->
+    Funds tags
 
 fundsMoneyAmount :: Funds tags -> Money tags
 fundsMoneyAmount (Funds amt _) = amt

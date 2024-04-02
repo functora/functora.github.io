@@ -72,19 +72,12 @@ instance PersistField Integer where
 
 deriving via Int64 instance PersistFieldSql Integer
 
-deriving via
-  Rational
-  instance
-    ( MoneyTags tags,
-      HasTag (sig :: SignedOrUnsigned) tags
-    ) =>
-    PersistFieldSql (Money tags)
-
 instance
   ( MoneyTags tags,
+    Ratio (IntRep tags) ~ a,
     HasTag (sig :: SignedOrUnsigned) tags
   ) =>
-  PersistField (Money tags)
+  PersistField (Tagged tags a)
   where
   toPersistValue money =
     let rep = unMoney money
@@ -107,3 +100,12 @@ instance
         inspectType @(Money tags)
           <> " PersistValue is invalid "
           <> inspect raw
+
+deriving via
+  Rational
+  instance
+    ( MoneyTags tags,
+      Ratio (IntRep tags) ~ a,
+      HasTag (sig :: SignedOrUnsigned) tags
+    ) =>
+    PersistFieldSql (Tagged tags a)

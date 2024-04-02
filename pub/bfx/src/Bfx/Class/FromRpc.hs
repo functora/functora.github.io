@@ -73,7 +73,12 @@ instance (SingI act) => FromRpc 'SubmitOrder (Order act 'Remote) where
       Nothing -> Left "Incorrect ExchangeAction"
       Just Refl -> pure order
 
-instance (RateTags tags) => FromRpc 'MarketAveragePrice (Money tags) where
+instance
+  ( RateTags tags,
+    Ratio (IntRep tags) ~ a
+  ) =>
+  FromRpc 'MarketAveragePrice (Tagged tags a)
+  where
   fromRpc (RawResponse raw) = do
     x <-
       maybeToRight

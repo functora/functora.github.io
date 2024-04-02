@@ -59,9 +59,10 @@ instance ToRequestParam Text where
 --
 instance
   ( CashTags tags,
-    GetTag (bos :: BuyOrSell) tags
+    Ratio (IntRep tags) ~ a,
+    HasTag (bos :: BuyOrSell) tags
   ) =>
-  ToRequestParam (Money tags)
+  ToRequestParam (Tagged tags a)
   where
   toTextParam amt =
     case sing :: Sing bos of

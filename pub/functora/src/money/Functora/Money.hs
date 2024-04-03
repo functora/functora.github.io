@@ -65,28 +65,19 @@ type NewRatTags lhs rhs =
     RatTags lhs
   )
 
-type family MoneyTagsFamily tags mtag where
-  MoneyTagsFamily tags ('Just _) = tags
-  MoneyTagsFamily tags ('Nothing :: Maybe k) =
-    TypeError
-      ( 'ShowType k
-          ':<>: 'Text " key is missing in "
-          ':<>: 'ShowType tags
-      )
-
 type Money tags =
   Tagged
     tags
     ( Ratio
         ( IntRep
-            ( MoneyTagsFamily tags (MaybeGetTag MoneyKind tags)
+            ( RefineTags tags '[SignedOrUnsigned, MoneyKind]
             )
         )
     )
 
 type MoneyTags tags =
   ( RatTags tags,
-    tags ~ MoneyTagsFamily tags (MaybeGetTag MoneyKind tags)
+    tags ~ RefineTags tags '[SignedOrUnsigned, MoneyKind]
   )
 
 type NewMoneyTags lhs rhs =

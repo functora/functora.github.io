@@ -15,6 +15,7 @@ module Functora.TagsFamily
     MaybeGetTag,
     GetTag,
     HasTag,
+    RefineTags,
 
     -- * Fingerprints
     -- $fingerprints
@@ -81,6 +82,8 @@ type HasTag (v :: k) tags =
     Typeable tags,
     v ~ GetTag k tags
   )
+
+type RefineTags tags keys = RefineTagsFamily tags keys
 
 -- $fingerprints
 -- Fingerprints
@@ -182,6 +185,22 @@ type family GetTagFamily k tags mv where
           ':<>: 'ShowType tags
       )
   GetTagFamily k tags 'Nothing =
+    TypeError
+      ( 'ShowType k
+          ':<>: 'Text " key is missing in "
+          ':<>: 'ShowType tags
+      )
+
+type family RefineTagsFamily tags keys where
+  RefineTagsFamily tags '[] = tags
+  RefineTagsFamily tags (k ': keys) =
+    RefineTagsFamilyRec tags k keys (MaybeGetTag k tags)
+
+type family RefineTagsFamilyRec tags k keys mv where
+  RefineTagsFamilyRec tags _ '[] ('Just _) = tags
+  RefineTagsFamilyRec tags _ (k ': keys) ('Just _) =
+    RefineTagsFamilyRec tags k keys (MaybeGetTag k tags)
+  RefineTagsFamilyRec tags k _ 'Nothing =
     TypeError
       ( 'ShowType k
           ':<>: 'Text " key is missing in "

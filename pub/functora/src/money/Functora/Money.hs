@@ -65,29 +65,28 @@ type NewRatTags lhs rhs =
     RatTags lhs
   )
 
---
--- TODO : Use MaybeGetTag instead to pattern match on (Just _)?
---
-type family MoneyTagsFamily tags tag where
-  MoneyTagsFamily tags 'MoneyAmount = tags
-  MoneyTagsFamily tags 'Currency = tags
-  MoneyTagsFamily tags 'QuotePerBase = tags
-  MoneyTagsFamily tags 'FeeRate = tags
-  MoneyTagsFamily tags 'ProfitRate = tags
+type family MoneyTagsFamily tags mtag where
+  MoneyTagsFamily tags ('Just _) = tags
+  MoneyTagsFamily tags ('Nothing :: Maybe k) =
+    TypeError
+      ( 'ShowType k
+          ':<>: 'Text " key is missing in "
+          ':<>: 'ShowType tags
+      )
 
 type Money tags =
   Tagged
     tags
     ( Ratio
         ( IntRep
-            ( MoneyTagsFamily tags (GetTag MoneyKind tags)
+            ( MoneyTagsFamily tags (MaybeGetTag MoneyKind tags)
             )
         )
     )
 
 type MoneyTags tags =
   ( RatTags tags,
-    tags ~ MoneyTagsFamily tags (GetTag MoneyKind tags)
+    tags ~ MoneyTagsFamily tags (MaybeGetTag MoneyKind tags)
   )
 
 type NewMoneyTags lhs rhs =

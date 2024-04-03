@@ -12,6 +12,7 @@ module Functora.TagsFamily
 
     -- * Accessors
     -- $accessors
+    MaybeGetTag,
     GetTag,
     HasTag,
 
@@ -69,7 +70,9 @@ type family lhs |&| rhs where
 -- $accessors
 -- Accessors
 
-type GetTag k tags = GetTagFamily ('Nothing :: Maybe k) k tags tags
+type MaybeGetTag k tags = MaybeGetTagFamily ('Nothing :: Maybe k) k tags tags
+
+type GetTag k tags = GetTagFamily k tags (MaybeGetTag k tags)
 
 type HasTag (v :: k) tags =
   ( SingI v,
@@ -152,15 +155,10 @@ type family UnTagFamily member v tags prev next where
   UnTagFamily member v tags (kv ': prev) next =
     UnTagFamily member v tags prev (kv ': next)
 
-type family GetTagFamily mv k tags prev where
-  GetTagFamily ('Just (v :: k)) k _ '[] = v
-  GetTagFamily 'Nothing k tags '[] =
-    TypeError
-      ( 'ShowType k
-          ':<>: 'Text " key is missing in "
-          ':<>: 'ShowType tags
-      )
-  GetTagFamily ('Just v) k tags ((k ':-> Sing v) ': _) =
+type family MaybeGetTagFamily mv k tags prev where
+  MaybeGetTagFamily ('Just (v :: k)) k _ '[] = 'Just v
+  MaybeGetTagFamily 'Nothing _ _ '[] = 'Nothing
+  MaybeGetTagFamily ('Just v) k tags ((k ':-> Sing v) ': _) =
     TypeError
       ( 'ShowType v
           ':<>: 'Text " :: "
@@ -168,10 +166,27 @@ type family GetTagFamily mv k tags prev where
           ':<>: 'Text " tag conflicts with "
           ':<>: 'ShowType tags
       )
-  GetTagFamily 'Nothing k tags ((k ':-> Sing v) ': next) =
-    GetTagFamily ('Just v) k tags next
-  GetTagFamily mv k tags (_ ': next) =
-    GetTagFamily mv k tags next
+  MaybeGetTagFamily 'Nothing k tags ((k ':-> Sing v) ': next) =
+    MaybeGetTagFamily ('Just v) k tags next
+  MaybeGetTagFamily mv k tags (_ ': next) =
+    MaybeGetTagFamily mv k tags next
+
+type family GetTagFamily k tags mv where
+  GetTagFamily k _ ('Just (v :: k)) = v
+  GetTagFamily k tags ('Just v) =
+    TypeError
+      ( 'ShowType v
+          ':<>: 'Text " :: "
+          ':<>: 'ShowType k
+          ':<>: 'Text " tag conflicts with "
+          ':<>: 'ShowType tags
+      )
+  GetTagFamily k tags 'Nothing =
+    TypeError
+      ( 'ShowType k
+          ':<>: 'Text " key is missing in "
+          ':<>: 'ShowType tags
+      )
 
 --
 -- TODO : NEED A PROPER INSTANCE!

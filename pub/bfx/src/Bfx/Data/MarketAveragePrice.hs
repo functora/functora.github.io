@@ -8,7 +8,7 @@ where
 import Bfx.Import
 
 data Request (bos :: BuyOrSell) = Request
-  { amount :: Money (Tags 'Unsigned |+| 'Base |+| bos),
+  { amount :: Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
     symbol :: CurrencyPair
   }
   deriving stock

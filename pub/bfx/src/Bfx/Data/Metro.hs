@@ -24,10 +24,10 @@ roundMoney ::
   m (Money tags)
 roundMoney money =
   if raw >= 0 && rounded >= 0
-    then pure $ newMoney rounded
+    then pure $ Tagged rounded
     else throw $ TryFromException @(Ratio Natural) @(Money tags) raw Nothing
   where
-    raw = unMoney money
+    raw = unTagged money
     rounded =
       unsafeFrom @Rational @(Ratio Natural)
         . roundMoneyRat
@@ -48,10 +48,10 @@ roundQuotePerBase ::
   m (Money tags)
 roundQuotePerBase money =
   if raw > 0 && rounded > 0
-    then pure $ newMoney rounded
+    then pure $ Tagged rounded
     else throw $ TryFromException @(Ratio Natural) @(Money tags) raw Nothing
   where
-    raw = unMoney money
+    raw = unTagged money
     rounded =
       unsafeFrom @Rational @(Ratio Natural)
         . roundQuotePerBaseRat

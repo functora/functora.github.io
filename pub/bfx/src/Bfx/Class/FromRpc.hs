@@ -86,7 +86,7 @@ instance
         (toRational <$> raw ^? nth 0 . _Number)
     first (const $ "QuotePerBase is invalid " <> inspect x)
       . roundQuotePerBase
-      . newMoney
+      . Tagged
       $ unsafeFrom @Rational @(Ratio Natural) x
 
 instance FromRpc 'FeeSummary FeeSummary.Response where
@@ -109,7 +109,7 @@ instance FromRpc 'FeeSummary FeeSummary.Response where
         Rational ->
         Either Text (Money (Tags 'Unsigned |+| 'FeeRate |+| tag))
       money =
-        bimap inspect newMoney
+        bimap inspect Tagged
           . tryFrom @Rational @(Ratio Natural)
       parse ::
         Int ->
@@ -213,8 +213,8 @@ instance
               { currencyPairPrecision = prec,
                 currencyPairInitMargin = initMargin,
                 currencyPairMinMargin = minMargin,
-                currencyPairMaxOrderAmt = newMoney maxOrderAmt,
-                currencyPairMinOrderAmt = newMoney minOrderAmt
+                currencyPairMaxOrderAmt = Tagged maxOrderAmt,
+                currencyPairMinOrderAmt = Tagged minOrderAmt
               }
           )
 
@@ -263,7 +263,7 @@ instance
         balance <-
           first inspect
             . roundMoney
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Balance is missing"
@@ -271,7 +271,7 @@ instance
         unsettledInterest <-
           first inspect
             . roundMoney
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "UnsettledBalance is missing"
@@ -279,7 +279,7 @@ instance
         availableBalance <-
           first inspect
             . roundMoney
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "AvailableBalance is missing"
@@ -351,7 +351,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
         bid <-
           first inspect
             . roundQuotePerBase
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Bid is missing"
@@ -359,7 +359,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
         ask0 <-
           first inspect
             . roundQuotePerBase
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Ask is missing"
@@ -367,7 +367,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
         vol <-
           first inspect
             . roundMoney
-            . newMoney
+            . Tagged
             . unsafeFrom @Rational @(Ratio Natural)
             =<< maybeToRight
               "Volume is missing"

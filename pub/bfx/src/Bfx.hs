@@ -68,10 +68,10 @@ marketAveragePrice ::
   forall (act :: BuyOrSell) m.
   ( MonadUnliftIO m,
     MonadThrow m,
-    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| act)),
+    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| act)),
     Typeable act
   ) =>
-  Money (Tags 'Unsigned |+| 'Base |+| act) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| act) ->
   CurrencyPair ->
   m (Money (Tags 'Unsigned |+| 'QuotePerBase |+| act))
 marketAveragePrice amt sym =
@@ -119,9 +119,9 @@ spendableExchangeBalance ::
   ) =>
   Env ->
   CurrencyCode ->
-  m (Money (Tags 'Unsigned))
+  m (Money (Tags 'Unsigned |+| 'MoneyAmount))
 spendableExchangeBalance env cc =
-  maybe (newMoney 0) Wallets.availableBalance
+  maybe (Tagged 0) Wallets.availableBalance
     . Map.lookup Wallets.Exchange
     . Map.findWithDefault mempty cc
     <$> wallets env
@@ -239,12 +239,13 @@ submitOrder ::
   forall (bos :: BuyOrSell) m.
   ( MonadUnliftIO m,
     MonadThrow m,
-    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| bos)),
+    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
+    Typeable bos,
     SingI bos
   ) =>
   Env ->
-  Money (Tags 'Unsigned |+| 'Base |+| bos) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos) ->
   CurrencyPair ->
   Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos) ->
   SubmitOrder.Options bos ->
@@ -264,14 +265,14 @@ submitOrderMaker ::
   forall (bos :: BuyOrSell) m.
   ( MonadUnliftIO m,
     MonadThrow m,
-    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| bos)),
+    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
-    MoneyTags (Tags 'Unsigned |+| 'Base |+| bos),
+    MoneyTags (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
     MoneyTags (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
     HasTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos)
   ) =>
   Env ->
-  Money (Tags 'Unsigned |+| 'Base |+| bos) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos) ->
   CurrencyPair ->
   Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos) ->
   SubmitOrder.Options bos ->
@@ -289,14 +290,14 @@ submitOrderMakerRec ::
   forall (bos :: BuyOrSell) m.
   ( MonadUnliftIO m,
     MonadThrow m,
-    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| bos)),
+    ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
-    MoneyTags (Tags 'Unsigned |+| 'Base |+| bos),
+    MoneyTags (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
     MoneyTags (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
     HasTag bos (Tags 'Unsigned |+| 'QuotePerBase |+| bos)
   ) =>
   Env ->
-  Money (Tags 'Unsigned |+| 'Base |+| bos) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos) ->
   CurrencyPair ->
   Int ->
   Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos) ->
@@ -402,7 +403,7 @@ submitCounterOrder' ::
     MonadThrow m
   ) =>
   ( Env ->
-    Money (Tags 'Unsigned |+| 'Base |+| 'Sell) ->
+    Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| 'Sell) ->
     CurrencyPair ->
     Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell) ->
     SubmitOrder.Options 'Sell ->
@@ -421,17 +422,17 @@ submitCounterOrder' submit env id0 feeB feeQ prof opts = do
     SBuy | orderStatus remOrder == Executed -> do
       (_, exitAmt, exitRate) <-
         Math.newCounterOrder
-          (tagMoney @'Gross (orderAmount remOrder))
-          (tagMoney @'Net (orderRate remOrder))
+          (tag @'Gross (orderAmount remOrder))
+          (tag @'Net (orderRate remOrder))
           feeB
           feeQ
-          (tagMoney @'Quote . tagMoney @'Buy $ tagMoney @'Net prof)
+          (tag @'Quote . tag @'Buy $ tag @'Net prof)
       currentRate <-
-        marketAveragePrice (unTagMoney @'Net exitAmt)
+        marketAveragePrice (unTag @'Net exitAmt)
           $ orderSymbol remOrder
       submit
         env
-        (unTagMoney @'Net exitAmt)
+        (unTag @'Net exitAmt)
         (orderSymbol remOrder)
         (max exitRate currentRate)
         opts
@@ -444,7 +445,7 @@ dumpIntoQuote' ::
     MonadThrow m
   ) =>
   ( Env ->
-    Money (Tags 'Unsigned |+| 'Base |+| 'Sell) ->
+    Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| 'Sell) ->
     CurrencyPair ->
     Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell) ->
     SubmitOrder.Options 'Sell ->
@@ -456,12 +457,12 @@ dumpIntoQuote' ::
   m (Order 'Sell 'Remote)
 dumpIntoQuote' submit env sym opts = do
   amt <- spendableExchangeBalance env (currencyPairBase sym)
-  rate <- marketAveragePrice (tagMoney @'Sell $ tagMoney @'Base amt) sym
+  rate <- marketAveragePrice (tag @'Sell $ tag @'Base amt) sym
   catchAny
-    (submit env (tagMoney @'Sell $ tagMoney @'Base amt) sym rate opts)
+    (submit env (tag @'Sell $ tag @'Base amt) sym rate opts)
     . const
     $ do
-      newAmt <- Math.tweakMoneyPip (tagMoney @'Sell $ tagMoney @'Base amt)
+      newAmt <- Math.tweakMoneyPip (tag @'Sell $ tag @'Base amt)
       submit env newAmt sym rate opts
 
 dumpIntoQuote ::
@@ -492,7 +493,7 @@ netWorth ::
   ) =>
   Env ->
   CurrencyCode ->
-  m (Money (Tags 'Unsigned))
+  m (Money (Tags 'Unsigned |+| 'MoneyAmount))
 netWorth env ccq = do
   -- Simplify fees (assume it's alwayus Maker and Crypto2Crypto)
   fee <- FeeSummary.makerCrypto2CryptoFee <$> feeSummary env
@@ -501,12 +502,12 @@ netWorth env ccq = do
   res <-
     foldrM
       ( \(ccb, bs1) totalAcc -> do
-          let localAcc :: Money (Tags 'Unsigned) =
+          let localAcc :: Money (Tags 'Unsigned |+| 'MoneyAmount) =
                 foldr
                   ( \amt acc ->
                       Wallets.balance amt `addMoney` acc
                   )
-                  (newMoney 0)
+                  (Tagged 0)
                   $ Map.elems bs1
           if ccb == ccq
             then pure $ totalAcc `addMoney` localAcc
@@ -514,27 +515,29 @@ netWorth env ccq = do
               -- In this case we are dealing with Base
               -- money, so we need transform from Quote
               sym <- currencyPairCon (from ccb) $ Tagged @'Quote ccq
-              baseMoney :: Money (Tags 'Unsigned |+| 'Base |+| 'Sell) <-
-                fmap (tagMoney @'Base . tagMoney @'Sell) $ roundMoney localAcc
-              if baseMoney == newMoney 0
+              baseMoney ::
+                Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'MoneyAmount) <-
+                fmap (tag @'Base . tag @'Sell) $ roundMoney localAcc
+              if baseMoney == Tagged 0
                 then pure totalAcc
                 else do
                   price :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell) <-
                     marketAveragePrice baseMoney sym
                   pure
                     . addMoney totalAcc
-                    . unTagMoney @'Net
-                    . unTagMoney @'Sell
-                    . unTagMoney @'Quote
+                    . unTag @'Net
+                    . unTag @'Sell
+                    . unTag @'Quote
                     $ deductFee
+                      @(Tags 'Unsigned |+| 'FeeRate |+| 'Maker)
                       fee
-                      ( tagMoney @'Gross
+                      ( tag @'Gross
                           $ exchangeMoney @(Tags 'Unsigned |+| 'Sell)
                             price
                             baseMoney
                       )
       )
-      (newMoney 0)
+      (Tagged 0)
       . filter
         ( \(cc, _) ->
             fromRight

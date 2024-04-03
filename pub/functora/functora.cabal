@@ -205,6 +205,7 @@ common pkg-tags
     , base
     , lift-type
     , singlethongs
+    , tagged
     , template-haskell
     , type-level-sets
 

@@ -61,7 +61,7 @@ spec = do
       tryMarket
         $ getQuote
           ( Funds
-              (newMoney 1)
+              (Tagged 1)
               (CurrencyCode "btc")
           )
           quoteCurrency

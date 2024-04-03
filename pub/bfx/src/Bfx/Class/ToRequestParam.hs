@@ -70,4 +70,4 @@ instance
       SSell -> toTextParam $ (-1) * success amt
     where
       success :: Money tags -> Rational
-      success = abs . from @(Ratio Natural) @Rational . unMoney
+      success = abs . from @(Ratio Natural) @Rational . unTagged

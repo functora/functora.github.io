@@ -14,7 +14,7 @@ import Bfx.Import
 import qualified Data.Aeson as A
 
 data Request (bos :: BuyOrSell) = Request
-  { amount :: Money (Tags 'Unsigned |+| 'Base |+| bos),
+  { amount :: Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
     symbol :: CurrencyPair,
     rate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
     options :: Options bos
@@ -60,8 +60,9 @@ optsPostOnlyStopLoss sl =
 
 instance
   forall (bos :: BuyOrSell).
-  ( ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| bos)),
+  ( ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
     ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
+    Typeable bos,
     SingI bos
   ) =>
   ToJSON (Request bos)

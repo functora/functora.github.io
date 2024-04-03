@@ -72,8 +72,8 @@ unsafeMa maPeriod candles stopAtIdx currentIdx acc =
     maUtc = candleAt $ V.last chunk
     maVal =
       Ma
-        . newMoney
+        . Tagged
         . (/ Prelude.fromIntegral maPeriod)
-        . unMoney
+        . unTagged
         . V.foldl1 addMoney
         $ V.map candleClose chunk

@@ -5,6 +5,10 @@ module Functora.MoneySing where
 
 import Functora.Tags
 
+data MoneyKind = MoneyAmount | Currency | QuotePerBase | FeeRate | ProfitRate
+
+data CurrencyKind = Crypto | Stable | Fiat
+
 data BuyOrSell = Buy | Sell
 
 data NetOrGross = Net | Gross
@@ -12,16 +16,6 @@ data NetOrGross = Net | Gross
 data GainOrLose = Gain | Lose
 
 data BaseOrQuote = Base | Quote
-
-data QuotePerBase = QuotePerBase
-
-data FeeRate = FeeRate
-
-data ProfitRate = ProfitRate
-
-data SignedOrUnsigned = Signed | Unsigned
-
-data CurrencyKind = Crypto | Stable | Fiat
 
 data MakerOrTaker = Maker | Taker
 
@@ -31,16 +25,16 @@ data MinOrMax = Min | Max
 
 data Revenue = Revenue
 
+data SignedOrUnsigned = Signed | Unsigned
+
+mkSing ''MoneyKind
+mkSing ''CurrencyKind
 mkSing ''BuyOrSell
 mkSing ''NetOrGross
 mkSing ''GainOrLose
 mkSing ''BaseOrQuote
-mkSing ''QuotePerBase
-mkSing ''FeeRate
-mkSing ''ProfitRate
-mkSing ''SignedOrUnsigned
-mkSing ''CurrencyKind
 mkSing ''MakerOrTaker
 mkSing ''LocalOrRemote
 mkSing ''MinOrMax
 mkSing ''Revenue
+mkSing ''SignedOrUnsigned

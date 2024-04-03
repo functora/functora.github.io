@@ -78,7 +78,7 @@ parseOrder x = do
   rate <-
     first (const . failure $ "ExchangeRate is invalid " <> inspect price)
       $ tryFrom @Rational @(Ratio Natural) (toRational price)
-  case newUnsignedMoneyBOS @(Tags 'Base) amt0 of
+  case newUnsignedMoneyBOS @(Tags 'Base |+| 'MoneyAmount) amt0 of
     SomeMoney bos amt ->
       pure
         . SomeOrder bos
@@ -88,7 +88,7 @@ parseOrder x = do
             orderClientId = cid,
             orderAmount = amt,
             orderSymbol = sym,
-            orderRate = newMoney rate,
+            orderRate = Tagged rate,
             orderStatus = ss1
           }
   where
@@ -105,7 +105,7 @@ parseOrder x = do
     --           orderClientId = cid,
     --           orderAmount = amt,
     --           orderSymbol = sym,
-    --           orderRate = newMoney rate,
+    --           orderRate = Tagged rate,
     --           orderStatus = ss1
     --         }
 
@@ -146,7 +146,7 @@ parseCandle x = do
   open <-
     first inspect
       . roundQuotePerBase
-      . newMoney
+      . Tagged
       --
       -- TODO : tryFrom???
       --
@@ -157,7 +157,7 @@ parseCandle x = do
   close <-
     first inspect
       . roundQuotePerBase
-      . newMoney
+      . Tagged
       --
       -- TODO : tryFrom???
       --
@@ -168,7 +168,7 @@ parseCandle x = do
   high <-
     first inspect
       . roundQuotePerBase
-      . newMoney
+      . Tagged
       --
       -- TODO : tryFrom???
       --
@@ -179,7 +179,7 @@ parseCandle x = do
   low <-
     first inspect
       . roundQuotePerBase
-      . newMoney
+      . Tagged
       --
       -- TODO : tryFrom???
       --
@@ -190,7 +190,7 @@ parseCandle x = do
   vol <-
     first inspect
       . roundMoney
-      . newMoney
+      . Tagged
       --
       -- TODO : tryFrom???
       --

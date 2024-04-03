@@ -84,7 +84,7 @@ withNewMarket expr = do
 -- Stateful
 
 data QuoteAt = QuoteAt
-  { quoteMoneyAmount :: Money (Tags 'Signed |+| 'Quote),
+  { quoteMoneyAmount :: Money (Tags 'Signed |+| 'Quote |+| 'MoneyAmount),
     quoteUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -93,7 +93,7 @@ getQuote ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Funds (Tags 'Signed |+| 'Base) ->
+  Funds (Tags 'Signed |+| 'Base |+| 'MoneyAmount) ->
   CurrencyCode ->
   ReaderT (MVar Market) m QuoteAt
 getQuote baseFunds quoteCurrency = do

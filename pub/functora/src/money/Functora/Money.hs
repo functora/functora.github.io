@@ -6,15 +6,10 @@ module Functora.Money
     MoneyTags,
     NewMoneyTags,
     Money,
-    unMoney,
-    tagMoney,
-    unTagMoney,
-    reTagMoney,
     parseMoney,
     addMoney,
     deductMoney,
     SomeMoney (..),
-    newMoney,
     newUnsignedMoneyBOS,
     newUnsignedMoneyGOL,
     newFeeRate,
@@ -47,13 +42,13 @@ import Functora.Prelude
 import Functora.Tags as X
 import qualified Language.Haskell.TH.Syntax as TH
 
-type IntRep tags = NewIntRep (GetTag SignedOrUnsigned tags)
+type IntRep tags = IntRepFamily (GetTag SignedOrUnsigned tags)
 
-type family NewIntRep sig where
-  NewIntRep 'Signed = Integer
-  NewIntRep 'Unsigned = Natural
+type family IntRepFamily tag where
+  IntRepFamily 'Signed = Integer
+  IntRepFamily 'Unsigned = Natural
 
-type MoneyTags tags =
+type RatTags tags =
   ( Eq (IntRep tags),
     Ord (IntRep tags),
     Show (IntRep tags),
@@ -65,39 +60,40 @@ type MoneyTags tags =
     Typeable tags
   )
 
-type NewMoneyTags lhs rhs =
+type NewRatTags lhs rhs =
   ( lhs ~ rhs,
-    MoneyTags lhs
+    RatTags lhs
   )
 
-type Money tags = Tagged tags (Ratio (IntRep tags))
+--
+-- TODO : Use MaybeGetTag instead to pattern match on (Just _)?
+--
+type family MoneyTagsFamily tags tag where
+  MoneyTagsFamily tags 'MoneyAmount = tags
+  MoneyTagsFamily tags 'Currency = tags
+  MoneyTagsFamily tags 'QuotePerBase = tags
+  MoneyTagsFamily tags 'FeeRate = tags
+  MoneyTagsFamily tags 'ProfitRate = tags
 
-unMoney :: Money tags -> Ratio (IntRep tags)
-unMoney (Tagged x) = x
+type Money tags =
+  Tagged
+    tags
+    ( Ratio
+        ( IntRep
+            ( MoneyTagsFamily tags (GetTag MoneyKind tags)
+            )
+        )
+    )
 
-tagMoney ::
-  forall tag tags.
-  ( IntRep tags ~ IntRep (tags |+| tag)
-  ) =>
-  Money tags ->
-  Money (tags |+| tag)
-tagMoney = newMoney . unMoney
+type MoneyTags tags =
+  ( RatTags tags,
+    tags ~ MoneyTagsFamily tags (GetTag MoneyKind tags)
+  )
 
-unTagMoney ::
-  forall tag tags.
-  ( IntRep tags ~ IntRep (tags |-| tag)
-  ) =>
-  Money tags ->
-  Money (tags |-| tag)
-unTagMoney = newMoney . unMoney
-
-reTagMoney ::
-  forall prev next tags.
-  ( IntRep tags ~ IntRep (tags |-| prev |+| next)
-  ) =>
-  Money tags ->
-  Money (tags |-| prev |+| next)
-reTagMoney = newMoney . unMoney
+type NewMoneyTags lhs rhs =
+  ( NewRatTags lhs rhs,
+    MoneyTags lhs
+  )
 
 parseMoney ::
   forall str tags m.
@@ -114,11 +110,11 @@ parseMoney =
 
 addMoney :: (MoneyTags tags) => Money tags -> Money tags -> Money tags
 addMoney lhs rhs =
-  newMoney $ unMoney lhs + unMoney rhs
+  (+) <$> lhs <*> rhs
 
 deductMoney :: (MoneyTags tags) => Money tags -> Money tags -> Money tags
 deductMoney lhs rhs =
-  newMoney $ unMoney lhs - unMoney rhs
+  (-) <$> lhs <*> rhs
 
 data SomeMoney k tags
   = forall (tag :: k).
@@ -138,12 +134,6 @@ instance (TestEquality (Sing :: k -> Type)) => Eq (SomeMoney k tags) where
       Nothing -> False
 
 deriving stock instance Show (SomeMoney k tags)
-
-newMoney ::
-  forall tags.
-  Ratio (IntRep tags) ->
-  Money tags
-newMoney = Tagged
 
 newUnsignedMoneyBOS ::
   forall tags buy sell.
@@ -177,12 +167,16 @@ newUnsignedMoneyGOL raw
 
 newFeeRate ::
   forall tags.
+  ( MoneyTags (tags |+| 'FeeRate)
+  ) =>
   Ratio (IntRep (tags |+| 'FeeRate)) ->
   Money (tags |+| 'FeeRate)
 newFeeRate = Tagged
 
 newProfitRate ::
   forall tags.
+  ( MoneyTags (tags |+| 'ProfitRate)
+  ) =>
   Ratio (IntRep (tags |+| 'ProfitRate)) ->
   Money (tags |+| 'ProfitRate)
 newProfitRate = Tagged
@@ -191,6 +185,8 @@ addFee ::
   forall fee amt tags.
   ( IntRep fee ~ IntRep amt,
     IntRep fee ~ IntRep tags,
+    MoneyTags fee,
+    MoneyTags amt,
     NewMoneyTags tags (amt |-| 'Net |+| 'Gross)
   ) =>
   Money fee ->
@@ -203,6 +199,8 @@ deductFee ::
   forall fee amt tags.
   ( IntRep fee ~ IntRep amt,
     IntRep fee ~ IntRep tags,
+    MoneyTags fee,
+    MoneyTags amt,
     NewMoneyTags tags (amt |-| 'Gross |+| 'Net)
   ) =>
   Money fee ->
@@ -213,37 +211,43 @@ deductFee (Tagged fee) (Tagged amt) =
 
 addProfit ::
   forall tags.
-  ( IntRep tags ~ IntRep (tags |+| 'ProfitRate),
-    IntRep tags ~ IntRep (tags |+| 'Revenue),
-    MoneyTags (tags |+| 'Revenue)
+  ( IntRep (tags |+| 'MoneyAmount) ~ IntRep (tags |+| 'ProfitRate),
+    IntRep (tags |+| 'MoneyAmount) ~ IntRep (tags |+| 'MoneyAmount |+| 'Revenue),
+    MoneyTags (tags |+| 'ProfitRate),
+    MoneyTags (tags |+| 'MoneyAmount),
+    MoneyTags (tags |+| 'MoneyAmount |+| 'Revenue)
   ) =>
   Money (tags |+| 'ProfitRate) ->
-  Money tags ->
-  Money (tags |+| 'Revenue)
+  Money (tags |+| 'MoneyAmount) ->
+  Money (tags |+| 'MoneyAmount |+| 'Revenue)
 addProfit (Tagged rate) (Tagged amt) =
   Tagged $ amt * (1 + rate)
 
 exchangeMoney ::
   forall tags.
-  ( IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Base),
-    IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Quote),
-    MoneyTags (tags |+| 'Quote)
+  ( IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Base |+| 'MoneyAmount),
+    IntRep (tags |+| 'QuotePerBase) ~ IntRep (tags |+| 'Quote |+| 'MoneyAmount),
+    MoneyTags (tags |+| 'QuotePerBase),
+    MoneyTags (tags |+| 'Base |+| 'MoneyAmount),
+    MoneyTags (tags |+| 'Quote |+| 'MoneyAmount)
   ) =>
   Money (tags |+| 'QuotePerBase) ->
-  Money (tags |+| 'Base) ->
-  Money (tags |+| 'Quote)
+  Money (tags |+| 'Base |+| 'MoneyAmount) ->
+  Money (tags |+| 'Quote |+| 'MoneyAmount)
 exchangeMoney (Tagged rate) (Tagged base) =
   Tagged $ rate * base
 
 newQuotePerBase ::
   forall tags.
   ( IntRep (tags |+| 'Quote) ~ IntRep (tags |+| 'Base),
-    IntRep (tags |+| 'Quote) ~ IntRep (tags |+| 'QuotePerBase),
-    MoneyTags (tags |+| 'QuotePerBase)
+    IntRep (tags |+| 'Quote) ~ IntRep (tags |-| 'MoneyAmount |+| 'QuotePerBase),
+    MoneyTags (tags |+| 'Quote),
+    MoneyTags (tags |+| 'Base),
+    MoneyTags (tags |-| 'MoneyAmount |+| 'QuotePerBase)
   ) =>
   Money (tags |+| 'Quote) ->
   Money (tags |+| 'Base) ->
-  Money (tags |+| 'QuotePerBase)
+  Money (tags |-| 'MoneyAmount |+| 'QuotePerBase)
 newQuotePerBase (Tagged quote) (Tagged base) =
   Tagged $ quote / base
 
@@ -276,17 +280,17 @@ unJsonRational :: A.Decoder Rational
 unJsonRational = toRational <$> A.scientific
 
 unJsonMoney ::
-  forall tags (sig :: SignedOrUnsigned).
+  forall tags (tag :: SignedOrUnsigned).
   ( MoneyTags tags,
-    HasTag sig tags
+    HasTag tag tags
   ) =>
   A.Decoder (Money tags)
 unJsonMoney = do
   rat <- unJsonRational
-  case sing :: Sing sig of
-    SSigned -> pure $ newMoney rat
+  case sing :: Sing tag of
+    SSigned -> pure $ Tagged rat
     SUnsigned ->
-      either (fail . inspect) (pure . newMoney)
+      either (fail . inspect) (pure . Tagged)
         $ tryFrom @Rational @(Ratio Natural) rat
 
 unJsonUnsignedMoneyBOS ::
@@ -338,3 +342,9 @@ inspectCurrencyInfo input =
   where
     info = T.strip $ currencyInfoText input
     code = inspectCurrencyCode $ currencyInfoCode input
+
+--
+-- TODO : remove it
+--
+-- example :: Money (Tags 'Unsigned)
+-- example = Tagged 1

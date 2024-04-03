@@ -83,8 +83,8 @@ unsafeAtr intPeriod xs stopAtIdx currentIdx acc =
     at = fst $ V.last chunk
     val =
       Atr
-        . newMoney
+        . Tagged
         . (/ Prelude.fromIntegral intPeriod)
-        . unMoney
+        . unTagged
         . V.foldl1 addMoney
         $ V.map (Tr.unTr . snd) chunk

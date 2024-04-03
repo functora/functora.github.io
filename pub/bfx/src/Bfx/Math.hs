@@ -10,7 +10,6 @@ where
 
 import Bfx.Data.Kind
 import Bfx.Data.Metro
-import Bfx.Data.Type
 import Bfx.Import.External
 
 tweakMoneyPip ::
@@ -28,7 +27,7 @@ tweakMoneyPip amt =
     SSell -> tweakMoneyPip' (`deductMoney` pip) amt
   where
     pip :: Money tags
-    pip = newMoney 0.00000001
+    pip = Tagged 0.00000001
 
 tweakMoneyPip' ::
   ( CashTags tags,
@@ -85,49 +84,78 @@ tweakMakerRateRec rate prev tweak =
     Right x | x /= rate -> pure x
     Right {} -> tweakMakerRateRec rate next tweak
   where
-    next = newMoney @tags $ unMoney @tags prev * tweak
+    next = Tagged @tags $ unTagged @tags prev * tweak
 
 newCounterOrder ::
   ( MonadThrow m
   ) =>
-  Money (Tags 'Unsigned |+| 'Base |+| 'Buy |+| 'Gross) ->
+  Money (Tags 'Unsigned |+| 'Base |+| 'Buy |+| 'Gross |+| 'MoneyAmount) ->
   Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Buy |+| 'Net) ->
   Money (Tags 'Unsigned |+| 'Base |+| 'FeeRate) ->
   Money (Tags 'Unsigned |+| 'Quote |+| 'FeeRate) ->
   Money (Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net |+| 'ProfitRate) ->
   m
-    ( Money (Tags 'Unsigned |+| 'Quote |+| 'Sell |+| 'Gross |+| 'Revenue),
-      Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'Net),
-      Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell)
+    ( Money
+        ( Tags 'Unsigned
+            |+| 'Quote
+            |+| 'Sell
+            |+| 'Gross
+            |+| 'Revenue
+            |+| 'MoneyAmount
+        ),
+      Money
+        ( Tags 'Unsigned
+            |+| 'Base
+            |+| 'Sell
+            |+| 'Net
+            |+| 'MoneyAmount
+        ),
+      Money
+        ( Tags 'Unsigned
+            |+| 'QuotePerBase
+            |+| 'Sell
+        )
     )
 newCounterOrder enterBaseGain enterRate enterFee exitFee profRate = do
   exitQuote <- roundMoney exitQuoteGain
-  exitBase <- tweakMoneyPip =<< roundMoney exitBaseLoss
+  exitBase <-
+    tweakMoneyPip
+      =<< roundMoney exitBaseLoss
   exitPrice <- roundQuotePerBase exitRate
   pure (exitQuote, exitBase, exitPrice)
   where
-    exitBaseLoss :: Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'Net)
+    exitBaseLoss ::
+      Money (Tags 'Unsigned |+| 'Base |+| 'Sell |+| 'Net |+| 'MoneyAmount)
     exitBaseLoss =
       deductFee enterFee
-        $ reTagMoney @'Buy @'Sell enterBaseGain
-    enterQuoteLoss :: Money (Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net)
+        $ reTag @'Buy @'Sell enterBaseGain
+    enterQuoteLoss ::
+      Money (Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net |+| 'MoneyAmount)
     enterQuoteLoss =
-      exchangeMoney
-        @(Tags 'Unsigned |+| 'Buy |+| 'Net)
-        enterRate
-        $ reTagMoney @'Gross @'Net
-          enterBaseGain
+      exchangeMoney @(Tags 'Unsigned |+| 'Buy |+| 'Net) enterRate
+        $ reTag @'Gross @'Net enterBaseGain
     exitQuoteGain ::
-      Money (Tags 'Unsigned |+| 'Quote |+| 'Sell |+| 'Gross |+| 'Revenue)
+      Money
+        ( Tags 'Unsigned
+            |+| 'Quote
+            |+| 'Sell
+            |+| 'Gross
+            |+| 'Revenue
+            |+| 'MoneyAmount
+        )
     exitQuoteGain =
-      addFee exitFee
-        . reTagMoney @'Buy @'Sell
-        $ addProfit profRate enterQuoteLoss
+      addFee
+        exitFee
+        . reTag @'Buy @'Sell
+        $ addProfit
+          @(Tags 'Unsigned |+| 'Quote |+| 'Buy |+| 'Net)
+          profRate
+          enterQuoteLoss
     exitRate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| 'Sell)
     exitRate =
-      newQuotePerBase @(Tags 'Unsigned |+| 'Sell)
-        (unTagMoney @'Gross $ unTagMoney @'Revenue exitQuoteGain)
-        (unTagMoney @'Net exitBaseLoss)
+      newQuotePerBase @(Tags 'Unsigned |+| 'Sell |+| 'MoneyAmount)
+        (unTag @'Gross $ unTag @'Revenue exitQuoteGain)
+        (unTag @'Net exitBaseLoss)
 
 -- newCounterOrderSimple ::
 --   ( MonadThrow m
@@ -147,7 +175,7 @@ newCounterOrder enterBaseGain enterRate enterFee exitFee profRate = do
 --       unQuotePerBase rate
 --     exitBaseLoss :: Money (Tags 'Unsigned |+| 'Base |+| 'Sell)
 --     exitBaseLoss =
---       unMoney base
+--       unTagged base
 --     exitQuoteGain :: Money (Tags 'Unsigned |+| 'Quote |+| 'Net)
 --     exitQuoteGain =
 --       (exitBaseLoss |*| exitRate) |* (1 - exitFee)

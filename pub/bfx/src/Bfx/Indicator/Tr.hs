@@ -42,8 +42,8 @@ absRange ::
   Money (Tags 'Unsigned |+| 'QuotePerBase) ->
   Money (Tags 'Unsigned |+| 'QuotePerBase)
 absRange x y =
-  newMoney
+  Tagged
     . unsafeFrom @Rational @(Ratio Natural)
     . abs
-    $ abs (from @(Ratio Natural) @Rational $ unMoney x)
-    - abs (from @(Ratio Natural) @Rational $ unMoney y)
+    $ abs (from @(Ratio Natural) @Rational $ unTagged x)
+    - abs (from @(Ratio Natural) @Rational $ unTagged y)

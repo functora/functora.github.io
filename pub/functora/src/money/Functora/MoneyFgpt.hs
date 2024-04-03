@@ -5,16 +5,14 @@ module Functora.MoneyFgpt () where
 import Functora.MoneySing
 import Functora.Tags
 
+mkFgpt @MoneyKind
+mkFgpt @CurrencyKind
 mkFgpt @BuyOrSell
 mkFgpt @NetOrGross
 mkFgpt @GainOrLose
 mkFgpt @BaseOrQuote
-mkFgpt @QuotePerBase
-mkFgpt @FeeRate
-mkFgpt @ProfitRate
-mkFgpt @SignedOrUnsigned
-mkFgpt @CurrencyKind
 mkFgpt @MakerOrTaker
 mkFgpt @LocalOrRemote
 mkFgpt @MinOrMax
 mkFgpt @Revenue
+mkFgpt @SignedOrUnsigned

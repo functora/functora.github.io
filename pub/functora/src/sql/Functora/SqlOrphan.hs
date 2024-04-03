@@ -72,40 +72,9 @@ instance PersistField Integer where
 
 deriving via Int64 instance PersistFieldSql Integer
 
-instance
-  ( MoneyTags tags,
-    Ratio (IntRep tags) ~ a,
-    HasTag (sig :: SignedOrUnsigned) tags
-  ) =>
-  PersistField (Tagged tags a)
-  where
-  toPersistValue money =
-    let rep = unMoney money
-     in case sing :: Sing sig of
-          SSigned -> PersistRational rep
-          SUnsigned -> PersistRational $ from @(Ratio Natural) @Rational rep
-  fromPersistValue raw =
-    case raw of
-      PersistRational x ->
-        case sing :: Sing sig of
-          SSigned ->
-            pure $ newMoney x
-          SUnsigned ->
-            bimap (const failure) newMoney $
-              tryFrom @Rational @(Ratio Natural) x
-      _ ->
-        Left failure
-    where
-      failure =
-        inspectType @(Money tags)
-          <> " PersistValue is invalid "
-          <> inspect raw
+instance (PersistField rep) => PersistField (Tagged tags rep) where
+  toPersistValue = toPersistValue . unTagged
+  fromPersistValue = fmap Tagged . fromPersistValue
 
-deriving via
-  Rational
-  instance
-    ( MoneyTags tags,
-      Ratio (IntRep tags) ~ a,
-      HasTag (sig :: SignedOrUnsigned) tags
-    ) =>
-    PersistFieldSql (Tagged tags a)
+instance (PersistFieldSql rep) => PersistFieldSql (Tagged tags rep) where
+  sqlType = const . sqlType $ Proxy @rep

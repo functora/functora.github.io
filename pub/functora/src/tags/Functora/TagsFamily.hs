@@ -73,7 +73,7 @@ type family lhs |&| rhs where
 
 type MaybeGetTag k tags = MaybeGetTagFamily ('Nothing :: Maybe k) k tags tags
 
-type GetTag k tags = GetTagFamily k tags (MaybeGetTag k tags)
+type GetTag k tags = (GetTagFamily k tags (MaybeGetTag k tags :: Maybe k) :: k)
 
 type HasTag (v :: k) tags =
   ( SingI v,

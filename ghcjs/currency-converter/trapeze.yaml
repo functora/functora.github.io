@@ -9,3 +9,17 @@ platforms:
         target: manifest/application/activity
         attrs:
           android:label: "@string/app_name"
+    gradle:
+      - file: build.gradle
+        target:
+          allprojects:
+            repositories:
+        replace:
+          repositories: |
+            {
+                maven {
+                    url 'https://maven.mozilla.org/maven2/'
+                }
+                google()
+                mavenCentral()
+            }

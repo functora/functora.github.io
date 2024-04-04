@@ -545,7 +545,7 @@ amountWidget st loc =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      pureUpdate 0 $ \st' ->
+      pureUpdate 300 $ \st' ->
         if valid
           then st'
           else

@@ -51,6 +51,7 @@ with (import ./default.nix); let
           --android --assetPath static
         ${pkgs.nodejs}/bin/npx trapeze run trapeze.yaml -y \
           --android-project android
+        printf "include ':capacitor-android'\nproject(':capacitor-android').projectDir = new File('../../../pub/capacitor-geckoview/capacitor')" > ./android/capacitor.settings.gradle
       )
     '';
   };

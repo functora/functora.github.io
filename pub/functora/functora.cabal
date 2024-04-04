@@ -108,6 +108,7 @@ common pkg-prelude
     , unbounded-delays
     , universum
     , unliftio
+    , uuid
     , witch-mini
     , with-utf8
 

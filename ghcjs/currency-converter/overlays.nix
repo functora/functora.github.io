@@ -61,6 +61,11 @@
               ver = "0.1.1.1";
               sha256 = "EIIBNte4+s9s3lthoh1kj/qviuK+zlvBgNpKC0MmHcM=";
             } {};
+            uuid = doJailbreak (self.callHackageDirect {
+              pkg = "uuid";
+              ver = "1.3.11";
+              sha256 = "MGfh19sw6wjqknzHLgfDLet1m0pTISe7rsdl/OSwnFM=";
+            } {});
             #
             # Local
             #

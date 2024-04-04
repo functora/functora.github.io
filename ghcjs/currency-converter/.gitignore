@@ -4,3 +4,4 @@ dist-newstyle
 node_modules
 dist
 android
+capacitor-geckoview/capacitor/build

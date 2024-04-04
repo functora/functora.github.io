@@ -82,7 +82,8 @@ data TopOrBottom
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
 data ModelMoney = ModelMoney
-  { modelMoneyAmountInput :: Text,
+  { modelMoneyAmountUuid :: UUID,
+    modelMoneyAmountInput :: Text,
     modelMoneyAmountOutput :: Money (Tags 'Signed |+| 'MoneyAmount),
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
@@ -97,12 +98,14 @@ data ModelData = ModelData
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-mkModel :: (MonadThrow m, MonadUnliftIO m) => m Model
-mkModel = do
+newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
+newModel = do
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- newMarket
+  topUuid <- newUuid
+  bottomUuid <- newUuid
   let btc =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "btc",
@@ -118,7 +121,8 @@ mkModel = do
         ModelData
           { modelDataTopMoney =
               ModelMoney
-                { modelMoneyAmountInput = inspectMoneyAmount zero,
+                { modelMoneyAmountUuid = topUuid,
+                  modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
                   modelMoneyCurrencyInfo = btc,
                   modelMoneyCurrencyOpen = False,
@@ -126,7 +130,8 @@ mkModel = do
                 },
             modelDataBottomMoney =
               ModelMoney
-                { modelMoneyAmountInput = inspectMoneyAmount zero,
+                { modelMoneyAmountUuid = bottomUuid,
+                  modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
                   modelMoneyCurrencyInfo = usd,
                   modelMoneyCurrencyOpen = False,
@@ -167,7 +172,8 @@ mkModel = do
           ModelData
             { modelDataTopMoney =
                 ModelMoney
-                  { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
+                  { modelMoneyAmountUuid = topUuid,
+                    modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput = unTag @'Base baseAmt,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
@@ -175,7 +181,8 @@ mkModel = do
                   },
               modelDataBottomMoney =
                 ModelMoney
-                  { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
+                  { modelMoneyAmountUuid = bottomUuid,
+                    modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput = unTag @'Quote quoteAmt,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
@@ -231,7 +238,7 @@ extendedEvents =
 
 main :: IO ()
 main = do
-  st <- mkModel
+  st <- newModel
   runApp
     $ startApp
       App
@@ -336,7 +343,7 @@ syncInputs st =
   forM_ enumerate $ \loc -> do
     JS.eval @Text
       $ "var el = document.getElementById('"
-      <> inspect loc
+      <> htmlUuid (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountUuid)
       <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
       <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
       <> "';"
@@ -533,12 +540,19 @@ amountWidget st loc =
           )
         & TextField.setAttributes
           [ class_ "fill",
-            id_ $ inspect loc,
+            id_
+              . ms
+              . htmlUuid @Text
+              $ st
+              ^. #modelData
+              . getMoneyOptic loc
+              . #modelMoneyAmountUuid,
             onKeyDown onKeyDownAction,
             onBlur onBlurAction
           ]
     ]
   where
+    uuid = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountUuid
     input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
     output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
     valid =
@@ -561,7 +575,7 @@ amountWidget st loc =
                 . void
                 . JS.eval @Text
                 $ "document.getElementById('"
-                <> inspect loc
+                <> htmlUuid uuid
                 <> "').getElementsByTagName('input')[0].blur();"
             )
             ( ChanItem 300 id
@@ -589,11 +603,11 @@ amountWidget st loc =
     onClearAction =
       PushUpdate
         ( do
-            focus $ inspect loc
+            focus . ms $ htmlUuid @Text uuid
             void
               . JS.eval @Text
               $ "var el = document.getElementById('"
-              <> inspect loc
+              <> htmlUuid uuid
               <> "'); if (el) el.value = '';"
         )
         ( ChanItem 300 $ \st' ->

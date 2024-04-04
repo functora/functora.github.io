@@ -4,7 +4,6 @@
 module Functora.SqlOrphan () where
 
 import qualified Data.Data as Data
-import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Esqueleto.Legacy hiding (from)
 import Functora.Money

@@ -117,6 +117,7 @@ library
     , unbounded-delays
     , universum
     , unliftio
+    , uuid
     , vector
     , witch-mini
     , with-utf8

@@ -69,6 +69,8 @@ module Functora.Prelude
     altM,
     altM',
     takeWhileAcc,
+    newUuid,
+    htmlUuid,
   )
 where
 
@@ -145,6 +147,9 @@ import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
 import Data.Tuple.Extra as X (uncurry3)
 import qualified Data.Typeable as Typeable
+import Data.UUID as X (UUID)
+import qualified Data.UUID as UUID
+import qualified Data.UUID.V4 as UUID
 import Functora.PreludeOrphan as X ()
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
@@ -698,3 +703,9 @@ takeWhileAcc f prev (x : xs) =
   case f x prev of
     Nothing -> []
     Just next -> x : takeWhileAcc f next xs
+
+newUuid :: (MonadIO m) => m UUID
+newUuid = liftIO UUID.nextRandom
+
+htmlUuid :: forall a. (From Text a) => UUID -> a
+htmlUuid = from @Text @a . ("uuid-" <>) . UUID.toText

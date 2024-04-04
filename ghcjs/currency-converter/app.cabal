@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name:          app
-version:       0.1.0.2
+version:       0.1.0.3
 synopsis:      First miso app
 category:      Web
 build-type:    Simple
@@ -10,6 +10,8 @@ flag ghcid
   default: False
 
 common pkg
+  other-modules:      Paths_app
+  autogen-modules:    Paths_app
   default-language:   Haskell2010
   js-sources:
     static/app.js
@@ -70,9 +72,9 @@ common pkg
     TypeOperators
 
 executable app
-  import:           pkg
-  main-is:          Main.hs
-  ghcjs-options:    -dedupe
+  import:        pkg
+  main-is:       Main.hs
+  ghcjs-options: -dedupe
   build-depends:
     , base
     , containers
@@ -81,6 +83,7 @@ executable app
     , jsaddle
     , miso
     , miso-components
+    , text
 
   if !impl(ghcjs)
     build-depends:
@@ -91,7 +94,8 @@ executable app
       , warp
       , websockets
 
+  if impl(ghcjs)
+    ghc-options: -Wno-missing-home-modules
+
   if (flag(ghcid) && impl(ghc >=8.10.7))
     ghc-options: -Wno-unused-packages
-
-  default-language: Haskell2010

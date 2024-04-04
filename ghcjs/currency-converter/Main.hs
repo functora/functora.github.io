@@ -12,6 +12,8 @@ import qualified Data.ByteString.Lazy as BL
 #endif
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
+import qualified Data.Text as T
+import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates
@@ -27,7 +29,8 @@ import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
-import Miso.String hiding (cons, foldl, null, reverse)
+import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+import qualified Paths_app as Paths
 import qualified Text.Fuzzy as Fuzzy
 
 #ifndef __GHCJS__
@@ -61,11 +64,17 @@ data Model = Model
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
-    modelProducerQueue :: TChan (Model -> Model),
-    modelConsumerQueue :: TChan (Model -> Model),
+    modelProducerQueue :: TChan (ChanItem (Model -> Model)),
+    modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
     modelUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Generic)
+
+data ChanItem a = ChanItem
+  { chanItemDelay :: Natural,
+    chanItemValue :: a
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data TopOrBottom
   = Top
@@ -191,15 +200,17 @@ data Action
   | InitUpdate
   | TimeUpdate
   | ChanUpdate Model
-  | PushUpdate (JSM ()) (Model -> Model)
+  | PushUpdate (JSM ()) (ChanItem (Model -> Model))
 
 --
 -- NOTE : In most cases we don't need JSM.
 --
-pureUpdate :: (Model -> Model) -> Action
-pureUpdate = PushUpdate $ pure ()
+pureUpdate :: Natural -> (Model -> Model) -> Action
+pureUpdate delay =
+  PushUpdate (pure ())
+    . ChanItem delay
 
-pushActionQueue :: (MonadIO m) => Model -> (Model -> Model) -> m ()
+pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =
   liftIO
     . atomically
@@ -255,7 +266,7 @@ updateModel InitUpdate prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        pushActionQueue nextSt (& #modelHide .~ False)
+        pushActionQueue nextSt $ ChanItem 0 (& #modelHide .~ False)
         pure $ ChanUpdate nextSt
     ]
 updateModel TimeUpdate st = do
@@ -266,7 +277,9 @@ updateModel TimeUpdate st = do
         pure TimeUpdate,
       do
         ct <- getCurrentTime
-        unless (upToDate ct $ st ^. #modelUpdatedAt) $ pushActionQueue st id
+        unless (upToDate ct $ st ^. #modelUpdatedAt)
+          . pushActionQueue st
+          $ ChanItem 0 id
         pure Noop
     ]
 updateModel (ChanUpdate prevSt) _ = do
@@ -291,19 +304,25 @@ updateModel (PushUpdate runJSM updater) st = do
         pure Noop
     ]
 
-drainTChan :: (MonadIO m) => TChan a -> m [a]
+drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
 drainTChan chan = do
   item <- liftIO . atomically $ readTChan chan
   liftIO
-    . fmap ((item :) . reverse)
-    $ drainInto [] False
+    . fmap ((chanItemValue item :) . reverse)
+    . drainInto []
+    $ chanItemDelay item
   where
-    drainInto acc debounced = do
+    drainInto acc delay = do
       item <- atomically $ tryReadTChan chan
       case item of
-        Nothing | debounced -> pure acc
-        Nothing -> sleepMilliSeconds 300 >> drainInto acc True
-        Just next -> drainInto (next : acc) False
+        Nothing | delay == 0 -> pure acc
+        Nothing -> do
+          sleepMilliSeconds $ from @Natural @Integer delay
+          drainInto acc 0
+        Just next ->
+          drainInto (chanItemValue next : acc)
+            . max delay
+            $ chanItemDelay next
 
 syncInputs :: Model -> JSM ()
 syncInputs st =
@@ -342,10 +361,9 @@ updateSnackbar ::
   ) =>
   (Snackbar.Queue Action -> Snackbar.Queue Action) ->
   a ->
-  Model ->
-  Model
+  ChanItem (Model -> Model)
 updateSnackbar before x =
-  (& #modelSnackbarQueue %~ (Snackbar.addMessage msg . before))
+  ChanItem 0 (& #modelSnackbarQueue %~ (Snackbar.addMessage msg . before))
   where
     msg =
       inspect x
@@ -527,7 +545,7 @@ amountWidget st loc =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
     onBlurAction =
-      pureUpdate $ \st' ->
+      pureUpdate 0 $ \st' ->
         if valid
           then st'
           else
@@ -546,9 +564,10 @@ amountWidget st loc =
                 <> inspect loc
                 <> "').getElementsByTagName('input')[0].blur();"
             )
-            id
+            ( ChanItem 300 id
+            )
     onInputAction txt =
-      pureUpdate $ \st' ->
+      pureUpdate 300 $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -565,7 +584,8 @@ amountWidget st loc =
             . getMoneyOptic loc
             . #modelMoneyAmountInput
         )
-        id
+        ( ChanItem 0 id
+        )
     onClearAction =
       PushUpdate
         ( do
@@ -576,7 +596,7 @@ amountWidget st loc =
               <> inspect loc
               <> "'); if (el) el.value = '';"
         )
-        ( \st' ->
+        ( ChanItem 300 $ \st' ->
             st'
               & #modelData
               . getMoneyOptic loc
@@ -668,14 +688,14 @@ currencyWidget st loc =
     ]
   where
     search input =
-      pureUpdate $ \st' ->
+      pureUpdate 0 $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
-      pureUpdate $ \st' ->
+      pureUpdate 0 $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -686,7 +706,7 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
-      pureUpdate $ \st' ->
+      pureUpdate 0 $ \st' ->
         st'
           & #modelData
           . getMoneyOptic loc
@@ -735,7 +755,7 @@ currencyListItemWidget loc current item =
               else Nothing
           )
         & ListItem.setOnClick
-          ( pureUpdate $ \st ->
+          ( pureUpdate 0 $ \st ->
               st
                 & #modelData
                 . getMoneyOptic loc
@@ -773,7 +793,7 @@ swapAmountsWidget =
       "Swap amounts"
   where
     onClickAction =
-      pureUpdate $ \st ->
+      pureUpdate 0 $ \st ->
         let baseInput =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
             baseOutput =
@@ -819,7 +839,7 @@ swapCurrenciesWidget =
       "Swap currencies"
   where
     onClickAction =
-      pureUpdate $ \st ->
+      pureUpdate 0 $ \st ->
         let baseCurrency =
               st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
             quoteCurrency =
@@ -851,12 +871,13 @@ copyright =
       a_ [href_ "license.html"] [Miso.text "Terms and Conditions"],
       Miso.text " and ",
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
-      Miso.text "."
+      Miso.text ". ",
+      Miso.text . ms $ "Version " <> vsn <> "."
     ]
 
 snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
-  pureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
+  pureUpdate 0 (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
 inspectMoneyAmount =
@@ -867,3 +888,9 @@ upToDate lhs rhs =
   diff < 3600
   where
     diff = abs . toRational $ diffUTCTime lhs rhs
+
+vsn :: Text
+vsn =
+  T.intercalate "."
+    . fmap inspect
+    $ Version.versionBranch Paths.version

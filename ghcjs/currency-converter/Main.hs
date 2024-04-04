@@ -15,7 +15,6 @@ import qualified Data.Map as Map
 import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates
-import Functora.Tags
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -75,7 +74,7 @@ data TopOrBottom
 
 data ModelMoney = ModelMoney
   { modelMoneyAmountInput :: Text,
-    modelMoneyAmountOutput :: Money (Tags 'Signed),
+    modelMoneyAmountOutput :: Money (Tags 'Signed |+| 'MoneyAmount),
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
     modelMoneyCurrencySearch :: Text
@@ -94,7 +93,7 @@ mkModel = do
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
-  market <- mkMarket
+  market <- newMarket
   let btc =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "btc",
@@ -105,7 +104,7 @@ mkModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  let zero = Money 0 :: Money (Tags 'Signed)
+  let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
   let final =
         ModelData
           { modelDataTopMoney =
@@ -149,7 +148,7 @@ mkModel = do
         . tryMarket
         . getCurrencyInfo
         $ currencyInfoCode usd
-    let baseAmt = Money 1 :: Money (Tags 'Signed |+| 'Base)
+    let baseAmt = Tagged 1 :: Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
     quote <-
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
@@ -160,8 +159,7 @@ mkModel = do
             { modelDataTopMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount baseAmt,
-                    modelMoneyAmountOutput =
-                      mkSignedMoney @NoTags $ unMoney baseAmt,
+                    modelMoneyAmountOutput = unTag @'Base baseAmt,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -169,8 +167,7 @@ mkModel = do
               modelDataBottomMoney =
                 ModelMoney
                   { modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
-                    modelMoneyAmountOutput =
-                      mkSignedMoney @NoTags $ unMoney quoteAmt,
+                    modelMoneyAmountOutput = unTag @'Quote quoteAmt,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -401,7 +398,7 @@ evalModel st = do
           & #modelData
           . getBaseMoneyOptic loc
           . #modelMoneyAmountOutput
-          .~ mkSignedMoney @NoTags (unMoney baseAmt)
+          .~ unTag @'Base baseAmt
           & #modelData
           . getQuoteMoneyOptic loc
           . #modelMoneyAmountInput
@@ -409,7 +406,7 @@ evalModel st = do
           & #modelData
           . getQuoteMoneyOptic loc
           . #modelMoneyAmountOutput
-          .~ mkSignedMoney @NoTags (unMoney quoteAmt)
+          .~ unTag @'Quote quoteAmt
           & #modelUpdatedAt
           .~ ct
 
@@ -861,9 +858,9 @@ snackbarClosed :: Snackbar.MessageId -> Action
 snackbarClosed msg =
   pureUpdate (& #modelSnackbarQueue %~ Snackbar.close msg)
 
-inspectMoneyAmount :: (MoneyTags sig tags, From String a) => Money tags -> a
+inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
 inspectMoneyAmount =
-  inspectRatio defaultRatioFormat . unMoney
+  inspectRatio defaultRatioFormat . unTagged
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

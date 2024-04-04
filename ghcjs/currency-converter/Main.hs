@@ -85,6 +85,7 @@ data ModelMoney = ModelMoney
   { modelMoneyAmountUuid :: UUID,
     modelMoneyAmountInput :: Text,
     modelMoneyAmountOutput :: Money (Tags 'Signed |+| 'MoneyAmount),
+    modelMoneyCurrencyUuid :: UUID,
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
     modelMoneyCurrencySearch :: Text
@@ -104,8 +105,10 @@ newModel = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- newMarket
-  topUuid <- newUuid
-  bottomUuid <- newUuid
+  topAmtUuid <- newUuid
+  topCurUuid <- newUuid
+  bottomAmtUuid <- newUuid
+  bottomCurUuid <- newUuid
   let btc =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "btc",
@@ -121,18 +124,20 @@ newModel = do
         ModelData
           { modelDataTopMoney =
               ModelMoney
-                { modelMoneyAmountUuid = topUuid,
+                { modelMoneyAmountUuid = topAmtUuid,
                   modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
+                  modelMoneyCurrencyUuid = topCurUuid,
                   modelMoneyCurrencyInfo = btc,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
                 },
             modelDataBottomMoney =
               ModelMoney
-                { modelMoneyAmountUuid = bottomUuid,
+                { modelMoneyAmountUuid = bottomAmtUuid,
                   modelMoneyAmountInput = inspectMoneyAmount zero,
                   modelMoneyAmountOutput = zero,
+                  modelMoneyCurrencyUuid = bottomCurUuid,
                   modelMoneyCurrencyInfo = usd,
                   modelMoneyCurrencyOpen = False,
                   modelMoneyCurrencySearch = mempty
@@ -172,18 +177,20 @@ newModel = do
           ModelData
             { modelDataTopMoney =
                 ModelMoney
-                  { modelMoneyAmountUuid = topUuid,
+                  { modelMoneyAmountUuid = topAmtUuid,
                     modelMoneyAmountInput = inspectMoneyAmount baseAmt,
                     modelMoneyAmountOutput = unTag @'Base baseAmt,
+                    modelMoneyCurrencyUuid = topCurUuid,
                     modelMoneyCurrencyInfo = baseCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
                   },
               modelDataBottomMoney =
                 ModelMoney
-                  { modelMoneyAmountUuid = bottomUuid,
+                  { modelMoneyAmountUuid = bottomAmtUuid,
                     modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
                     modelMoneyAmountOutput = unTag @'Quote quoteAmt,
+                    modelMoneyCurrencyUuid = bottomCurUuid,
                     modelMoneyCurrencyInfo = quoteCur,
                     modelMoneyCurrencyOpen = False,
                     modelMoneyCurrencySearch = mempty
@@ -547,7 +554,7 @@ amountWidget st loc =
               ^. #modelData
               . getMoneyOptic loc
               . #modelMoneyAmountUuid,
-            onKeyDown onKeyDownAction,
+            onKeyDown $ onKeyDownAction uuid,
             onBlur onBlurAction
           ]
     ]
@@ -568,18 +575,6 @@ amountWidget st loc =
               . getMoneyOptic loc
               . #modelMoneyAmountInput
               .~ inspectMoneyAmount output
-    onKeyDownAction (KeyCode code) =
-      let enterOrEscape = [13, 27] :: [Int]
-       in PushUpdate
-            ( when (code `elem` enterOrEscape)
-                . void
-                . JS.eval @Text
-                $ "document.getElementById('"
-                <> htmlUuid uuid
-                <> "').getElementsByTagName('input')[0].blur();"
-            )
-            ( ChanItem 300 id
-            )
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
@@ -619,6 +614,20 @@ amountWidget st loc =
               & #modelData
               . #modelDataTopOrBottom
               .~ loc
+        )
+
+onKeyDownAction :: UUID -> KeyCode -> Action
+onKeyDownAction uuid (KeyCode code) =
+  let enterOrEscape = [13, 27] :: [Int]
+   in PushUpdate
+        ( when (code `elem` enterOrEscape)
+            . void
+            . JS.eval @Text
+            $ "document.getElementById('"
+            <> htmlUuid uuid
+            <> "').getElementsByTagName('input')[0].blur();"
+        )
+        ( ChanItem 300 id
         )
 
 currencyWidget ::
@@ -686,7 +695,9 @@ currencyWidget st loc =
                         . #modelMoneyCurrencyInfo
                     )
                   . TextField.setAttributes
-                    [ class_ "fill"
+                    [ class_ "fill",
+                      id_ . ms $ htmlUuid @Text uuid,
+                      onKeyDown $ onKeyDownAction uuid
                     ]
                   $ TextField.config,
                 Button.raised
@@ -701,6 +712,7 @@ currencyWidget st loc =
         )
     ]
   where
+    uuid = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencyUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'

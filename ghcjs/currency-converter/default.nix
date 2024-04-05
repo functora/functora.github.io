@@ -34,7 +34,7 @@ in rec {
         nix-build -A releaseDer
         rm -rf ./dist/latest
         mkdir -p ./dist/latest
-        ${safeCopy} ./result/bin/app.jsexe/* ./dist/latest
+        ${safeCopy} ./result/* ./dist/latest
       )
     '';
   };
@@ -59,23 +59,38 @@ in rec {
         -l txt -y 2024 -o Functora mit > ${repo}/LICENSE
     '';
   };
-  releaseDer = app.overrideAttrs (_: rec {
-    postInstall = ''
-      mkdir -p $out/bin/app.jsexe/static
-      cp -R ${./static}/* $out/bin/app.jsexe/static
-      cp ${./static}/favicon.ico $out/bin/app.jsexe/favicon.ico
-      cp ${readmeDer}/readme.html $out/bin/app.jsexe/
-      cp ${licenseDer}/license.html $out/bin/app.jsexe/
-      cp ${privacyDer}/privacy.html $out/bin/app.jsexe/
+  releaseDer = functora-pkgs.stdenv.mkDerivation {
+    name = "releaseDer";
+    dontBuild = true;
+    dontUnpack = true;
+    installPhase = ''
+      mkdir -p $out/static
+      cp ${./static}/*.png $out/static/
+      cp ${./static}/*.css $out/static/
+      cp ${./static}/*.woff2 $out/static/
+      cp ${./static}/*.ico $out/
+      cp ${./static}/*.webmanifest $out/
+      cp ${readmeDer}/readme.html $out/
+      cp ${licenseDer}/license.html $out/
+      cp ${privacyDer}/privacy.html $out/
+      echo '<!doctype html><html><head><script language="javascript" src="all.js"></script></head><body></body></html>' > $out/index.html
+      ${functora-pkgs.closurecompiler}/bin/closure-compiler \
+        --jscomp_off=checkVars \
+        --compilation_level ADVANCED_OPTIMIZATIONS \
+        --externs ${app}/bin/app.jsexe/all.js.externs \
+        --externs ${./static}/material-components-web.min.js \
+        --externs ${./static}/material-components-web-elm.min.js \
+        --js ${app}/bin/app.jsexe/all.js \
+        --js_output_file $out/all.js
     '';
-  });
+  };
   releaseStableDer = functora-pkgs.stdenv.mkDerivation {
     name = "releaseStableDer";
     dontBuild = true;
     dontUnpack = true;
     installPhase = ''
       mkdir -p $out/${vsn}
-      cp -R ${releaseDer}/bin/app.jsexe/* $out/${vsn}
+      cp -R ${releaseDer}/* $out/${vsn}
       echo '<!doctype html><html><head><meta http-equiv="Refresh" content="0; url=${vsn}/index.html"></head><body></body></html>' > $out/index.html
       echo "Version ${vsn} has been released!"
     '';

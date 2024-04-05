@@ -66,20 +66,26 @@ in rec {
     installPhase = ''
       mkdir -p $out/static
       cp ${./static}/*.png $out/static/
-      cp ${./static}/*.css $out/static/
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.ico $out/
       cp ${./static}/*.webmanifest $out/
       cp ${readmeDer}/readme.html $out/
       cp ${licenseDer}/license.html $out/
       cp ${privacyDer}/privacy.html $out/
-      echo '<!doctype html><html><head><script language="javascript" src="all.js"></script></head><body></body></html>' > $out/index.html
+      echo '<!doctype html><html><head><script language="javascript" src="all.js"></script><link rel="stylesheet" href="static/all.css"/></head><body></body></html>' > $out/index.html
+      ${functora-pkgs.clean-css-cli}/bin/cleancss \
+        -O2 \
+        --source-map \
+        -o $out/static/all.css \
+        ${./static}/material-components-web.min.css \
+        ${./static}/material-icons.css \
+        ${./static}/app.css
       ${functora-pkgs.closurecompiler}/bin/closure-compiler \
         --jscomp_off=checkVars \
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/app.jsexe/all.js.externs \
         --externs ${./static}/material-components-web.min.js \
-        --externs ${./static}/material-components-web-elm.min.js \
+        --create_source_map $out/all.js.map \
         --js ${app}/bin/app.jsexe/all.js \
         --js_output_file $out/all.js
     '';

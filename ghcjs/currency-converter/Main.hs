@@ -459,6 +459,7 @@ getQuoteMoneyOptic = \case
 
 viewModel :: Model -> View Action
 viewModel st =
+#ifndef __GHCJS__
   div_
     mempty
     [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
@@ -466,6 +467,9 @@ viewModel st =
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget st
     ]
+#else
+  mainWidget st
+#endif
 
 mainWidget :: Model -> View Action
 mainWidget st =
@@ -514,9 +518,7 @@ amountWidget st loc =
     [ TextField.outlined
         $ TextField.config
         & TextField.setType (Just "number")
-        & TextField.setValid valid
         & TextField.setOnInput onInputAction
-        & TextField.setRequired True
         & TextField.setLeadingIcon
           ( Just
               $ TextField.icon

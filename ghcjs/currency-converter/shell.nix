@@ -30,6 +30,7 @@ in
         app-release-license
         functora-pkgs.cabal-install
         functora-pkgs.closurecompiler
+        functora-pkgs.clean-css-cli
       ]
       ++ prev.buildInputs
       ++ functora-tools;

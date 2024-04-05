@@ -96,6 +96,12 @@ executable app
 
   if impl(ghcjs)
     ghc-options: -Wno-missing-home-modules
+    cpp-options: -DGHCJS_BROWSER
+
+  if !flag(ghcid)
+    ghc-options:
+      -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts
+      -with-rtsopts=-N
 
   if (flag(ghcid) && impl(ghc >=8.10.7))
     ghc-options: -Wno-unused-packages

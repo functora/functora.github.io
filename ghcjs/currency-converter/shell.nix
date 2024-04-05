@@ -29,6 +29,7 @@ in
         app-release-aab
         app-release-license
         functora-pkgs.cabal-install
+        functora-pkgs.closurecompiler
       ]
       ++ prev.buildInputs
       ++ functora-tools;

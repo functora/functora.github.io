@@ -26,6 +26,13 @@ in rec {
   app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" ./. {};
   vsn = app.passthru.version;
   repo = builtins.toString ./.;
+  app-serve-latest = functora-pkgs.writeShellApplication rec {
+    name = "app-serve-latest";
+    text = ''
+      ${functora-pkgs.simple-http-server}/bin/simple-http-server \
+        -p 3000 ${repo}/dist/latest
+    '';
+  };
   app-release-latest = functora-pkgs.writeShellApplication rec {
     name = "app-release-latest";
     text = ''
@@ -67,12 +74,15 @@ in rec {
       mkdir -p $out/static
       cp ${./static}/*.png $out/static/
       cp ${./static}/*.woff2 $out/static/
-      cp ${./static}/*.ico $out/
       cp ${./static}/*.webmanifest $out/
-      cp ${readmeDer}/readme.html $out/
-      cp ${licenseDer}/license.html $out/
-      cp ${privacyDer}/privacy.html $out/
-      echo '<!doctype html><html><head><script language="javascript" src="all.js"></script><link rel="stylesheet" href="static/all.css"/></head><body></body></html>' > $out/index.html
+      cp ${./static}/*.ico $out/
+      ${functora-pkgs.html-minifier}/bin/html-minifier -o $out/license.html \
+        ${licenseDer}/license.html
+      ${functora-pkgs.html-minifier}/bin/html-minifier -o $out/privacy.html \
+        ${privacyDer}/privacy.html
+      echo '<!doctype html><html lang="en"><head><script language="javascript" src="all.js" defer></script><link rel="stylesheet" href="static/all.css"/></head><body></body></html>' \
+        | ${functora-pkgs.html-minifier}/bin/html-minifier \
+        > $out/index.html
       ${functora-pkgs.clean-css-cli}/bin/cleancss \
         -O2 \
         --source-map \
@@ -85,6 +95,7 @@ in rec {
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/app.jsexe/all.js.externs \
         --externs ${./static}/material-components-web.min.js \
+        --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
         --create_source_map $out/all.js.map \
         --js ${app}/bin/app.jsexe/all.js \
         --js_output_file $out/all.js

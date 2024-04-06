@@ -26,6 +26,6 @@
   patch(x3);
   var x4 = document.createElement("link");
   x4.rel = "manifest";
-  x4.href = "static/site.webmanifest";
+  x4.href = "site.webmanifest";
   patch(x4);
 })();

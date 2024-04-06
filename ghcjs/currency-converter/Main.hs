@@ -52,6 +52,7 @@ runApp app = do
     router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
+        ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #else
 runApp :: IO () -> IO ()
@@ -896,7 +897,7 @@ copyright =
     ]
     [ Miso.text "\169 2024 Functora. All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
-      a_ [href_ "license.html"] [Miso.text "Terms and Conditions"],
+      a_ [href_ "license.html"] [Miso.text "Terms of Service"],
       Miso.text " and ",
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text ". ",

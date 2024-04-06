@@ -1,8 +1,8 @@
 platforms:
   android:
     appName: Currency Converter
-    versionCode: 4
-    versionName: 0.1.0.3
+    versionCode: 5
+    versionName: 0.1.0.4
     packageName: com.functora.currency_converter
     manifest:
       - file: AndroidManifest.xml

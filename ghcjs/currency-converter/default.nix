@@ -20,10 +20,11 @@ let
   };
 in rec {
   inherit pkgs functora android-pkgs android-sdk-args;
-  dev = pkgs.haskell.packages.ghc865.callCabal2nix "app" ./. {
+  source = pkgs.nix-gitignore.gitignoreSourcePure ./.gitignore ./.;
+  dev = pkgs.haskell.packages.ghc865.callCabal2nix "app" source {
     miso = functora-miso.miso-jsaddle;
   };
-  app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" ./. {};
+  app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" source {};
   vsn = app.passthru.version;
   repo = builtins.toString ./.;
   app-serve-latest = functora-pkgs.writeShellApplication rec {
@@ -76,13 +77,21 @@ in rec {
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.webmanifest $out/
       cp ${./static}/*.ico $out/
-      ${functora-pkgs.html-minifier}/bin/html-minifier -o $out/license.html \
+      ${functora-pkgs.html-minifier}/bin/html-minifier \
+        --minify-js \
+        --minify-css \
+        -o $out/license.html \
         ${licenseDer}/license.html
-      ${functora-pkgs.html-minifier}/bin/html-minifier -o $out/privacy.html \
+      ${functora-pkgs.html-minifier}/bin/html-minifier \
+        --minify-js \
+        --minify-css \
+        -o $out/privacy.html \
         ${privacyDer}/privacy.html
-      echo '<!doctype html><html lang="en"><head><script language="javascript" src="all.js" defer></script><link rel="stylesheet" href="static/all.css"/></head><body></body></html>' \
-        | ${functora-pkgs.html-minifier}/bin/html-minifier \
-        > $out/index.html
+      ${functora-pkgs.html-minifier}/bin/html-minifier \
+        --minify-js \
+        --minify-css \
+        -o $out/index.html \
+        ${./static}/index.html
       ${functora-pkgs.clean-css-cli}/bin/cleancss \
         -O2 \
         --source-map \
@@ -129,7 +138,7 @@ in rec {
   };
   licenseDer = functora-pkgs.stdenv.mkDerivation {
     name = "licenseDer";
-    src = ./.;
+    src = ./LICENSE;
     dontUnpack = true;
     buildPhase = ''
       echo "# [Back](index.html)" > ./index-link.md
@@ -137,7 +146,7 @@ in rec {
         --standalone \
         --from markdown \
         --metadata title="LICENSE" \
-        $src/LICENSE ./index-link.md > license.html
+        $src ./index-link.md > license.html
     '';
     installPhase = ''
       mkdir -p $out
@@ -146,7 +155,7 @@ in rec {
   };
   privacyDer = functora-pkgs.stdenv.mkDerivation {
     name = "privacyDer";
-    src = ./.;
+    src = ./privacy.md;
     dontUnpack = true;
     buildPhase = ''
       echo "# [Back](index.html)" > ./index-link.md
@@ -154,7 +163,7 @@ in rec {
         --standalone \
         --from markdown \
         --metadata title="PRIVACY POLICY" \
-        $src/privacy.md ./index-link.md > privacy.html
+        $src ./index-link.md > privacy.html
     '';
     installPhase = ''
       mkdir -p $out

@@ -52,15 +52,15 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   [ amountWidget st Top,
-    currencyWidget st $ Misc.getMoneyOptic Top,
+    currencyWidget st $ Misc.getConverterMoneyLens Top,
     amountWidget st Bottom,
-    currencyWidget st $ Misc.getMoneyOptic Bottom,
+    currencyWidget st $ Misc.getConverterMoneyLens Bottom,
     swapAmountsWidget,
     swapCurrenciesWidget
   ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ amountWidget st Top,
-    currencyWidget st $ Misc.getMoneyOptic Top,
+    currencyWidget st $ Misc.getConverterMoneyLens Top,
     currencyWidget st
       $ #modelData
       . #modelDataPaymentMethodsInput

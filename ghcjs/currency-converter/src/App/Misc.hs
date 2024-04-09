@@ -1,5 +1,5 @@
 module App.Misc
-  ( getMoneyOptic,
+  ( getConverterMoneyLens,
     pushActionQueue,
     onKeyDownAction,
     copyIntoClipboard,
@@ -14,8 +14,8 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
-getMoneyOptic = \case
+getConverterMoneyLens :: TopOrBottom -> ALens' Model ModelMoney
+getConverterMoneyLens = \case
   Top -> #modelData . #modelDataTopMoney
   Bottom -> #modelData . #modelDataBottomMoney
 

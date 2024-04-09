@@ -161,7 +161,7 @@ syncInputs st =
   -- https://github.com/dmjio/miso/issues/272
   --
   forM_ enumerate $ \loc -> do
-    let moneyLens = Misc.getMoneyOptic loc
+    let moneyLens = Misc.getConverterMoneyLens loc
     JS.eval @Text
       $ "var el = document.getElementById('"
       <> htmlUuid (st ^. cloneLens moneyLens . #modelMoneyAmountUuid)
@@ -172,8 +172,8 @@ syncInputs st =
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
   let loc = st ^. #modelData . #modelDataTopOrBottom
-  let baseLens = getBaseMoneyOptic loc
-  let quoteLens = getQuoteMoneyOptic loc
+  let baseLens = getBaseConverterMoneyLens loc
+  let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
         case st ^. cloneLens baseLens . #modelMoneyAmountInput of
           amt
@@ -221,13 +221,13 @@ evalModel st = do
           & #modelUpdatedAt
           .~ ct
 
-getBaseMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
-getBaseMoneyOptic = \case
+getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model ModelMoney
+getBaseConverterMoneyLens = \case
   Top -> #modelData . #modelDataTopMoney
   Bottom -> #modelData . #modelDataBottomMoney
 
-getQuoteMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
-getQuoteMoneyOptic = \case
+getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model ModelMoney
+getQuoteConverterMoneyLens = \case
   Top -> #modelData . #modelDataBottomMoney
   Bottom -> #modelData . #modelDataTopMoney
 

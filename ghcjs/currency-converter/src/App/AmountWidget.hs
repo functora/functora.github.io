@@ -69,7 +69,7 @@ amountWidget st loc =
           ]
     ]
   where
-    moneyLens = Misc.getMoneyOptic loc
+    moneyLens = Misc.getConverterMoneyLens loc
     uuid = st ^. cloneLens moneyLens . #modelMoneyAmountUuid
     input = st ^. cloneLens moneyLens . #modelMoneyAmountInput
     output = st ^. cloneLens moneyLens . #modelMoneyAmountOutput

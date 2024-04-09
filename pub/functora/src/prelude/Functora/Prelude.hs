@@ -94,7 +94,13 @@ import Control.Concurrent.STM.TChan as X
 import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Exception.Safe as X (throw)
 import qualified Control.Exception.Safe as Safe
-import Control.Lens.Combinators as X (first1Of, makePrisms, review)
+import Control.Lens.Combinators as X
+  ( ALens',
+    cloneLens,
+    first1Of,
+    makePrisms,
+    review,
+  )
 import Control.Monad.Extra as X
   ( eitherM,
     fromMaybeM,

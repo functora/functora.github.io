@@ -2,6 +2,7 @@ module App.Types
   ( Model (..),
     Action (..),
     ModelData (..),
+    TextInput (..),
     ModelMoney (..),
     PaymentMethod (..),
     ChanItem (..),
@@ -9,6 +10,7 @@ module App.Types
     TopOrBottom (..),
     newModel,
     pureUpdate,
+    newTextInput,
     inspectMoneyAmount,
   )
 where
@@ -46,7 +48,13 @@ data ModelData = ModelData
     modelDataTopOrBottom :: TopOrBottom,
     modelDataPaymentMethods :: [PaymentMethod],
     modelDataPaymentMethodsInput :: PaymentMethod,
-    modelDataUserName :: Text
+    modelDataUserName :: TextInput
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data TextInput = TextInput
+  { textInputUuid :: UUID,
+    textInputValue :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -57,14 +65,17 @@ data ModelMoney = ModelMoney
     modelMoneyCurrencyUuid :: UUID,
     modelMoneyCurrencyInfo :: CurrencyInfo,
     modelMoneyCurrencyOpen :: Bool,
+    --
+    -- TODO : TextInput
+    --
     modelMoneyCurrencySearch :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data PaymentMethod = PaymentMethod
   { paymentMethodMoney :: ModelMoney,
-    paymentMethodReference :: Text,
-    paymentMethodNotes :: Text
+    paymentMethodReference :: TextInput,
+    paymentMethodNotes :: TextInput
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -102,7 +113,8 @@ newModel = do
           }
   topMoney <- newModelMoney btc
   bottomMoney <- newModelMoney usd
-  methodMoney <- newModelMoney btc
+  paymentMethod <- newPaymentMethod btc
+  userName <- newTextInput
   let st =
         Model
           { modelHide = True,
@@ -112,13 +124,8 @@ newModel = do
                   modelDataBottomMoney = bottomMoney,
                   modelDataTopOrBottom = Top,
                   modelDataPaymentMethods = mempty,
-                  modelDataPaymentMethodsInput =
-                    PaymentMethod
-                      { paymentMethodMoney = methodMoney,
-                        paymentMethodReference = mempty,
-                        paymentMethodNotes = mempty
-                      },
-                  modelDataUserName = mempty
+                  modelDataPaymentMethodsInput = paymentMethod,
+                  modelDataUserName = userName
                 },
             modelScreen = Converter,
             modelMarket = market,
@@ -222,6 +229,22 @@ pureUpdate :: Natural -> (Model -> Model) -> Action
 pureUpdate delay =
   PushUpdate (pure ())
     . ChanItem delay
+
+newTextInput :: (MonadIO m) => m TextInput
+newTextInput = do
+  uuid <- newUuid
+  pure
+    TextInput
+      { textInputUuid = uuid,
+        textInputValue = mempty
+      }
+
+newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m PaymentMethod
+newPaymentMethod cur =
+  PaymentMethod
+    <$> newModelMoney cur
+    <*> newTextInput
+    <*> newTextInput
 
 inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
 inspectMoneyAmount =

@@ -23,6 +23,7 @@ common pkg
     App.CurrencyWidget
     App.MainWidget
     App.Misc
+    App.TextInputWidget
     App.Types
 
   ghc-options:

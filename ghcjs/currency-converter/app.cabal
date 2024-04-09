@@ -21,6 +21,7 @@ common pkg
   other-modules:
     App.AmountWidget
     App.CurrencyWidget
+    App.MainWidget
     App.Misc
     App.Types
 

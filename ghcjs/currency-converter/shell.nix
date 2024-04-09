@@ -1,7 +1,7 @@
 with (import ./default.nix); let
   repo = toString ./.;
-  functora-pkgs = import "${builtins.trace functora functora}/nix/nixpkgs.nix";
-  functora-tools = import "${builtins.trace functora functora}/nix/tools.nix";
+  functora-pkgs = import "${functora}/nix/nixpkgs.nix";
+  functora-tools = import "${functora}/nix/tools.nix";
   app-ghcid = functora-pkgs.writeScriptBin "app-ghcid" ''
     (cd ${builtins.toString ./.} && ${functora-pkgs.ghcid}/bin/ghcid --test="Main.main" --command="${functora-pkgs.cabal-install}/bin/cabal new-repl app --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
   '';
@@ -36,5 +36,6 @@ in
         functora-pkgs.simple-http-server
       ]
       ++ prev.buildInputs
-      ++ functora-tools;
+      ++ pkgs.lib.lists.take (pkgs.lib.lists.length functora-tools - 1)
+      functora-tools;
   })

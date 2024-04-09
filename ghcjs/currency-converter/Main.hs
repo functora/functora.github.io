@@ -62,6 +62,7 @@ runApp = id
 data Model = Model
   { modelHide :: Bool,
     modelData :: ModelData,
+    modelScreen :: Screen,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
@@ -70,6 +71,18 @@ data Model = Model
     modelUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Generic)
+
+data PaymentMethod = PaymentMethod
+  { paymentMethodMoney :: ModelMoney,
+    paymentMethodReference :: Text,
+    paymentMethodNotes :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data Screen
+  = Converter
+  | InvoiceEditor
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
@@ -96,7 +109,9 @@ data ModelMoney = ModelMoney
 data ModelData = ModelData
   { modelDataTopMoney :: ModelMoney,
     modelDataBottomMoney :: ModelMoney,
-    modelDataTopOrBottom :: TopOrBottom
+    modelDataTopOrBottom :: TopOrBottom,
+    modelDataPaymentMethods :: [PaymentMethod],
+    modelDataPaymentMethodsInput :: PaymentMethod
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -106,10 +121,6 @@ newModel = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- newMarket
-  topAmtUuid <- newUuid
-  topCurUuid <- newUuid
-  bottomAmtUuid <- newUuid
-  bottomCurUuid <- newUuid
   let btc =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "btc",
@@ -120,35 +131,26 @@ newModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
-  let final =
-        ModelData
-          { modelDataTopMoney =
-              ModelMoney
-                { modelMoneyAmountUuid = topAmtUuid,
-                  modelMoneyAmountInput = inspectMoneyAmount zero,
-                  modelMoneyAmountOutput = zero,
-                  modelMoneyCurrencyUuid = topCurUuid,
-                  modelMoneyCurrencyInfo = btc,
-                  modelMoneyCurrencyOpen = False,
-                  modelMoneyCurrencySearch = mempty
-                },
-            modelDataBottomMoney =
-              ModelMoney
-                { modelMoneyAmountUuid = bottomAmtUuid,
-                  modelMoneyAmountInput = inspectMoneyAmount zero,
-                  modelMoneyAmountOutput = zero,
-                  modelMoneyCurrencyUuid = bottomCurUuid,
-                  modelMoneyCurrencyInfo = usd,
-                  modelMoneyCurrencyOpen = False,
-                  modelMoneyCurrencySearch = mempty
-                },
-            modelDataTopOrBottom = Top
-          }
+  topMoney <- newModelMoney btc
+  bottomMoney <- newModelMoney usd
+  methodMoney <- newModelMoney btc
   let st =
         Model
           { modelHide = True,
-            modelData = final,
+            modelData =
+              ModelData
+                { modelDataTopMoney = topMoney,
+                  modelDataBottomMoney = bottomMoney,
+                  modelDataTopOrBottom = Top,
+                  modelDataPaymentMethods = mempty,
+                  modelDataPaymentMethodsInput =
+                    PaymentMethod
+                      { paymentMethodMoney = methodMoney,
+                        paymentMethodReference = mempty,
+                        paymentMethodNotes = mempty
+                      }
+                },
+            modelScreen = Converter,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -174,41 +176,74 @@ newModel = do
         (Funds baseAmt $ currencyInfoCode baseCur)
         $ currencyInfoCode quoteCur
     let quoteAmt = quoteMoneyAmount quote
-    let final' =
-          ModelData
-            { modelDataTopMoney =
-                ModelMoney
-                  { modelMoneyAmountUuid = topAmtUuid,
-                    modelMoneyAmountInput = inspectMoneyAmount baseAmt,
-                    modelMoneyAmountOutput = unTag @'Base baseAmt,
-                    modelMoneyCurrencyUuid = topCurUuid,
-                    modelMoneyCurrencyInfo = baseCur,
-                    modelMoneyCurrencyOpen = False,
-                    modelMoneyCurrencySearch = mempty
-                  },
-              modelDataBottomMoney =
-                ModelMoney
-                  { modelMoneyAmountUuid = bottomAmtUuid,
-                    modelMoneyAmountInput = inspectMoneyAmount quoteAmt,
-                    modelMoneyAmountOutput = unTag @'Quote quoteAmt,
-                    modelMoneyCurrencyUuid = bottomCurUuid,
-                    modelMoneyCurrencyInfo = quoteCur,
-                    modelMoneyCurrencyOpen = False,
-                    modelMoneyCurrencySearch = mempty
-                  },
-              modelDataTopOrBottom = Top
-            }
     pure
-      Model
-        { modelHide = True,
-          modelData = final',
-          modelMarket = market,
-          modelCurrencies = currenciesInfo,
-          modelSnackbarQueue = Snackbar.initialQueue,
-          modelProducerQueue = prod,
-          modelConsumerQueue = cons,
-          modelUpdatedAt = ct
-        }
+      $ st
+      --
+      -- Converter
+      --
+      & #modelData
+      . #modelDataTopMoney
+      . #modelMoneyAmountInput
+      .~ inspectMoneyAmount baseAmt
+      & #modelData
+      . #modelDataTopMoney
+      . #modelMoneyAmountOutput
+      .~ unTag @'Base baseAmt
+      & #modelData
+      . #modelDataTopMoney
+      . #modelMoneyCurrencyInfo
+      .~ baseCur
+      & #modelData
+      . #modelDataBottomMoney
+      . #modelMoneyAmountInput
+      .~ inspectMoneyAmount quoteAmt
+      & #modelData
+      . #modelDataBottomMoney
+      . #modelMoneyAmountOutput
+      .~ unTag @'Quote quoteAmt
+      & #modelData
+      . #modelDataBottomMoney
+      . #modelMoneyCurrencyInfo
+      .~ quoteCur
+      --
+      -- InvoiceEditor
+      --
+      & #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodMoney
+      . #modelMoneyAmountInput
+      .~ inspectMoneyAmount baseAmt
+      & #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodMoney
+      . #modelMoneyAmountOutput
+      .~ unTag @'Base baseAmt
+      & #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodMoney
+      . #modelMoneyCurrencyInfo
+      .~ baseCur
+      --
+      -- Misc
+      --
+      & #modelCurrencies
+      .~ currenciesInfo
+
+newModelMoney :: (MonadIO m) => CurrencyInfo -> m ModelMoney
+newModelMoney cur = do
+  amtUuid <- newUuid
+  curUuid <- newUuid
+  let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
+  pure
+    ModelMoney
+      { modelMoneyAmountUuid = amtUuid,
+        modelMoneyAmountInput = inspectMoneyAmount zero,
+        modelMoneyAmountOutput = zero,
+        modelMoneyCurrencyUuid = curUuid,
+        modelMoneyCurrencyInfo = cur,
+        modelMoneyCurrencyOpen = False,
+        modelMoneyCurrencySearch = mempty
+      }
 
 data Action
   = Noop
@@ -349,11 +384,12 @@ syncInputs st =
   -- https://github.com/dmjio/miso/issues/272
   --
   forM_ enumerate $ \loc -> do
+    let moneyLens = getMoneyOptic loc
     JS.eval @Text
       $ "var el = document.getElementById('"
-      <> htmlUuid (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountUuid)
+      <> htmlUuid (st ^. cloneLens moneyLens . #modelMoneyAmountUuid)
       <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
-      <> (st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput)
+      <> (st ^. cloneLens moneyLens . #modelMoneyAmountInput)
       <> "';"
 
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
@@ -389,14 +425,15 @@ updateSnackbar before x =
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
   let loc = st ^. #modelData . #modelDataTopOrBottom
+  let baseLens = getBaseMoneyOptic loc
+  let quoteLens = getQuoteMoneyOptic loc
   let baseAmtInput =
-        case st ^. #modelData . getBaseMoneyOptic loc . #modelMoneyAmountInput of
+        case st ^. cloneLens baseLens . #modelMoneyAmountInput of
           amt
             | null amt ->
                 inspectMoneyAmount
                   $ st
-                  ^. #modelData
-                  . getBaseMoneyOptic loc
+                  ^. cloneLens baseLens
                   . #modelMoneyAmountOutput
           amt -> amt
   baseAmtResult <-
@@ -409,58 +446,52 @@ evalModel st = do
               Funds
                 baseAmt
                 $ st
-                ^. #modelData
-                . getBaseMoneyOptic loc
+                ^. cloneLens baseLens
                 . #modelMoneyCurrencyInfo
                 . #currencyInfoCode
         quote <-
           getQuote funds
             $ st
-            ^. #modelData
-            . getQuoteMoneyOptic loc
+            ^. cloneLens quoteLens
             . #modelMoneyCurrencyInfo
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime
         pure
           $ st
-          & #modelData
-          . getBaseMoneyOptic loc
+          & cloneLens baseLens
           . #modelMoneyAmountInput
           .~ baseAmtInput
-          & #modelData
-          . getBaseMoneyOptic loc
+          & cloneLens baseLens
           . #modelMoneyAmountOutput
           .~ unTag @'Base baseAmt
-          & #modelData
-          . getQuoteMoneyOptic loc
+          & cloneLens quoteLens
           . #modelMoneyAmountInput
           .~ inspectMoneyAmount quoteAmt
-          & #modelData
-          . getQuoteMoneyOptic loc
+          & cloneLens quoteLens
           . #modelMoneyAmountOutput
           .~ unTag @'Quote quoteAmt
           & #modelUpdatedAt
           .~ ct
 
-getMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
+getMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
 getMoneyOptic = \case
-  Top -> #modelDataTopMoney
-  Bottom -> #modelDataBottomMoney
+  Top -> #modelData . #modelDataTopMoney
+  Bottom -> #modelData . #modelDataBottomMoney
 
-getBaseMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
+getBaseMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
 getBaseMoneyOptic = \case
-  Top -> #modelDataTopMoney
-  Bottom -> #modelDataBottomMoney
+  Top -> #modelData . #modelDataTopMoney
+  Bottom -> #modelData . #modelDataBottomMoney
 
-getQuoteMoneyOptic :: TopOrBottom -> Lens' ModelData ModelMoney
+getQuoteMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
 getQuoteMoneyOptic = \case
-  Top -> #modelDataBottomMoney
-  Bottom -> #modelDataTopMoney
+  Top -> #modelData . #modelDataBottomMoney
+  Bottom -> #modelData . #modelDataTopMoney
 
 viewModel :: Model -> View Action
-viewModel st =
 #ifndef __GHCJS__
+viewModel st =
   div_
     mempty
     [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
@@ -469,6 +500,7 @@ viewModel st =
       mainWidget st
     ]
 #else
+viewModel st =
   mainWidget st
 #endif
 
@@ -488,24 +520,36 @@ mainWidget st =
                     else mempty
                  )
           )
-          [ amountWidget st Top,
-            currencyWidget st Top,
-            amountWidget st Bottom,
-            currencyWidget st Bottom,
-            swapAmountsWidget,
-            swapCurrenciesWidget,
-            -- LayoutGrid.cell [LayoutGrid.span12]
-            --   . (: mempty)
-            --   $ div_ mempty [inspect $ st ^. #modelData],
-            copyright,
-            Snackbar.snackbar (Snackbar.config snackbarClosed)
-              $ modelSnackbarQueue st
-          ]
+          ( screenWidget st
+              <> [
+                   -- LayoutGrid.cell [LayoutGrid.span12]
+                   --   . (: mempty)
+                   --   $ div_ mempty [inspect $ st ^. #modelData],
+                   swapScreenWidget st,
+                   copyright,
+                   Snackbar.snackbar (Snackbar.config snackbarClosed)
+                    $ modelSnackbarQueue st
+                 ]
+          )
       ]
     <> ( if st ^. #modelHide
           then [div_ [class_ "lds-dual-ring"] mempty]
           else mempty
        )
+
+screenWidget :: Model -> [View Action]
+screenWidget st@Model {modelScreen = Converter} =
+  [ amountWidget st Top,
+    currencyWidget st Top,
+    amountWidget st Bottom,
+    currencyWidget st Bottom,
+    swapAmountsWidget,
+    swapCurrenciesWidget
+  ]
+screenWidget st@Model {modelScreen = InvoiceEditor} =
+  [ amountWidget st Top,
+    currencyWidget st Top
+  ]
 
 amountWidget :: Model -> TopOrBottom -> View Action
 amountWidget st loc =
@@ -544,8 +588,7 @@ amountWidget st loc =
           ( Just
               . inspectCurrencyInfo
               $ st
-              ^. #modelData
-              . getMoneyOptic loc
+              ^. cloneLens moneyLens
               . #modelMoneyCurrencyInfo
           )
         & TextField.setAttributes
@@ -554,17 +597,17 @@ amountWidget st loc =
               . ms
               . htmlUuid @Text
               $ st
-              ^. #modelData
-              . getMoneyOptic loc
+              ^. cloneLens moneyLens
               . #modelMoneyAmountUuid,
             onKeyDown $ onKeyDownAction uuid,
             onBlur onBlurAction
           ]
     ]
   where
-    uuid = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountUuid
-    input = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountInput
-    output = st ^. #modelData . getMoneyOptic loc . #modelMoneyAmountOutput
+    moneyLens = getMoneyOptic loc
+    uuid = st ^. cloneLens moneyLens . #modelMoneyAmountUuid
+    input = st ^. cloneLens moneyLens . #modelMoneyAmountInput
+    output = st ^. cloneLens moneyLens . #modelMoneyAmountOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
@@ -574,15 +617,13 @@ amountWidget st loc =
           then st'
           else
             st'
-              & #modelData
-              . getMoneyOptic loc
+              & cloneLens moneyLens
               . #modelMoneyAmountInput
               .~ inspectMoneyAmount output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyAmountInput
           .~ from @String @Text txt
           & #modelData
@@ -592,8 +633,7 @@ amountWidget st loc =
       PushUpdate
         ( copyIntoClipboard st
             $ st
-            ^. #modelData
-            . getMoneyOptic loc
+            ^. cloneLens moneyLens
             . #modelMoneyAmountInput
         )
         ( ChanItem 0 id
@@ -610,8 +650,7 @@ amountWidget st loc =
         )
         ( ChanItem 300 $ \st' ->
             st'
-              & #modelData
-              . getMoneyOptic loc
+              & cloneLens moneyLens
               . #modelMoneyAmountInput
               .~ mempty
               & #modelData
@@ -650,16 +689,14 @@ currencyWidget st loc =
         )
         . inspectCurrencyInfo
         $ st
-        ^. #modelData
-        . getMoneyOptic loc
+        ^. cloneLens moneyLens
         . #modelMoneyCurrencyInfo,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
             & Dialog.setOpen
               ( st
-                  ^. #modelData
-                  . getMoneyOptic loc
+                  ^. cloneLens moneyLens
                   . #modelMoneyCurrencyOpen
               )
         )
@@ -674,8 +711,7 @@ currencyWidget st loc =
               [ TextField.outlined
                   . TextField.setType (Just "text")
                   . ( if st
-                        ^. #modelData
-                        . getMoneyOptic loc
+                        ^. cloneLens moneyLens
                         . #modelMoneyCurrencyOpen
                         then id
                         else
@@ -683,8 +719,7 @@ currencyWidget st loc =
                             ( Just
                                 . from @Text @String
                                 $ st
-                                ^. #modelData
-                                . getMoneyOptic loc
+                                ^. cloneLens moneyLens
                                 . #modelMoneyCurrencySearch
                             )
                     )
@@ -693,8 +728,7 @@ currencyWidget st loc =
                     ( Just
                         . inspectCurrencyInfo
                         $ st
-                        ^. #modelData
-                        . getMoneyOptic loc
+                        ^. cloneLens moneyLens
                         . #modelMoneyCurrencyInfo
                     )
                   . TextField.setAttributes
@@ -715,34 +749,30 @@ currencyWidget st loc =
         )
     ]
   where
-    uuid = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencyUuid
+    moneyLens = getMoneyOptic loc
+    uuid = st ^. cloneLens moneyLens . #modelMoneyCurrencyUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyCurrencySearch
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyCurrencyOpen
           .~ True
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyCurrencySearch
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyCurrencyOpen
           .~ False
-          & #modelData
-          . getMoneyOptic loc
+          & cloneLens moneyLens
           . #modelMoneyCurrencySearch
           .~ mempty
 
@@ -756,9 +786,10 @@ currencyListWidget st loc =
     . fmap (currencyListItemWidget loc current)
     $ maybe mempty NonEmpty.tail matching
   where
+    moneyLens = getMoneyOptic loc
     currencies = st ^. #modelCurrencies
-    current = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencyInfo
-    search = st ^. #modelData . getMoneyOptic loc . #modelMoneyCurrencySearch
+    current = st ^. cloneLens moneyLens . #modelMoneyCurrencyInfo
+    search = st ^. cloneLens moneyLens . #modelMoneyCurrencySearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -786,22 +817,21 @@ currencyListItemWidget loc current item =
         & ListItem.setOnClick
           ( pureUpdate 0 $ \st ->
               st
-                & #modelData
-                . getMoneyOptic loc
+                & cloneLens moneyLens
                 . #modelMoneyCurrencyOpen
                 .~ False
-                & #modelData
-                . getMoneyOptic loc
+                & cloneLens moneyLens
                 . #modelMoneyCurrencySearch
                 .~ mempty
-                & #modelData
-                . getMoneyOptic loc
+                & cloneLens moneyLens
                 . #modelMoneyCurrencyInfo
                 .~ item
           )
     )
     [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
     ]
+  where
+    moneyLens = getMoneyOptic loc
 
 swapAmountsWidget :: View Action
 swapAmountsWidget =
@@ -848,6 +878,9 @@ swapAmountsWidget =
               . #modelDataBottomMoney
               . #modelMoneyAmountOutput
               .~ baseOutput
+              & #modelData
+              . #modelDataTopOrBottom
+              .~ Top
 
 swapCurrenciesWidget :: View Action
 swapCurrenciesWidget =
@@ -885,6 +918,45 @@ swapCurrenciesWidget =
               & #modelData
               . #modelDataTopOrBottom
               .~ Top
+
+swapScreenWidget :: Model -> View Action
+swapScreenWidget st =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span8Tablet,
+      LayoutGrid.span4Phone
+    ]
+    . (: mempty)
+    . Button.raised
+      ( Button.setOnClick onClickAction
+          . Button.setAttributes
+            [ class_ "fill",
+              Theme.secondaryBg
+            ]
+          $ Button.config
+      )
+    $ case st ^. #modelScreen of
+      Converter -> "Create invoice"
+      InvoiceEditor -> "Show converter"
+  where
+    onClickAction =
+      PushUpdate
+        ( do
+            --
+            -- NOTE : Need to sync text inputs on new screen.
+            --
+            sleepMilliSeconds 300
+            pushActionQueue st $ ChanItem 0 id
+        )
+        $ ChanItem
+          0
+          ( &
+              #modelScreen
+                %~ ( \case
+                      Converter -> InvoiceEditor
+                      InvoiceEditor -> Converter
+                   )
+          )
 
 copyright :: View Action
 copyright =

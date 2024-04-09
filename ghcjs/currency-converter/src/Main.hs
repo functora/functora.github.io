@@ -22,6 +22,22 @@ import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
+main :: IO ()
+main = do
+  st <- newModel
+  runApp
+    $ startApp
+      App
+        { model = st,
+          update = updateModel,
+          Miso.view = viewModel,
+          subs = mempty,
+          events = extendedEvents,
+          initialAction = InitUpdate,
+          mountPoint = Nothing, -- defaults to 'body'
+          logLevel = Off
+        }
+
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
 runApp app = do
@@ -47,35 +63,6 @@ runApp app = do
 runApp :: IO () -> IO ()
 runApp = id
 #endif
-
-extendedEvents :: Map MisoString Bool
-extendedEvents =
-  defaultEvents
-    & Map.insert "MDCDialog:close" True
-    & Map.insert "MDCDrawer:close" True
-    & Map.insert "MDCList:action" True
-    & Map.insert "MDCSnackbar:closed" True
-    & Map.insert "MDCTab:interacted" True
-    & Map.insert "MDCSlider:input" True
-    & Map.insert "MDCMenuSurface:close" True
-    & Map.insert "MDCChip:interaction" True
-    & Map.insert "MDCIconButtonToggle:change" True
-
-main :: IO ()
-main = do
-  st <- newModel
-  runApp
-    $ startApp
-      App
-        { model = st,
-          update = updateModel,
-          Miso.view = viewModel,
-          subs = mempty,
-          events = extendedEvents,
-          initialAction = InitUpdate,
-          mountPoint = Nothing, -- defaults to 'body'
-          logLevel = Off
-        }
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
@@ -135,6 +122,34 @@ updateModel (PushUpdate runJSM updater) st = do
         runJSM
         pure Noop
     ]
+
+viewModel :: Model -> View Action
+#ifndef __GHCJS__
+viewModel st =
+  div_
+    mempty
+    [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
+      link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
+      link_ [rel_ "stylesheet", href_ "static/app.css"],
+      mainWidget st
+    ]
+#else
+viewModel st =
+  mainWidget st
+#endif
+
+extendedEvents :: Map MisoString Bool
+extendedEvents =
+  defaultEvents
+    & Map.insert "MDCDialog:close" True
+    & Map.insert "MDCDrawer:close" True
+    & Map.insert "MDCList:action" True
+    & Map.insert "MDCSnackbar:closed" True
+    & Map.insert "MDCTab:interacted" True
+    & Map.insert "MDCSlider:input" True
+    & Map.insert "MDCMenuSurface:close" True
+    & Map.insert "MDCChip:interaction" True
+    & Map.insert "MDCIconButtonToggle:change" True
 
 syncInputs :: Model -> JSM ()
 syncInputs st =
@@ -215,21 +230,6 @@ getQuoteMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
 getQuoteMoneyOptic = \case
   Top -> #modelData . #modelDataBottomMoney
   Bottom -> #modelData . #modelDataTopMoney
-
-viewModel :: Model -> View Action
-#ifndef __GHCJS__
-viewModel st =
-  div_
-    mempty
-    [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
-      link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
-      link_ [rel_ "stylesheet", href_ "static/app.css"],
-      mainWidget st
-    ]
-#else
-viewModel st =
-  mainWidget st
-#endif
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

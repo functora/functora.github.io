@@ -111,7 +111,8 @@ data ModelData = ModelData
     modelDataBottomMoney :: ModelMoney,
     modelDataTopOrBottom :: TopOrBottom,
     modelDataPaymentMethods :: [PaymentMethod],
-    modelDataPaymentMethodsInput :: PaymentMethod
+    modelDataPaymentMethodsInput :: PaymentMethod,
+    modelDataUserName :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -148,7 +149,8 @@ newModel = do
                       { paymentMethodMoney = methodMoney,
                         paymentMethodReference = mempty,
                         paymentMethodNotes = mempty
-                      }
+                      },
+                  modelDataUserName = mempty
                 },
             modelScreen = Converter,
             modelMarket = market,
@@ -540,15 +542,19 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   [ amountWidget st Top,
-    currencyWidget st Top,
+    currencyWidget st $ getMoneyOptic Top,
     amountWidget st Bottom,
-    currencyWidget st Bottom,
+    currencyWidget st $ getMoneyOptic Bottom,
     swapAmountsWidget,
     swapCurrenciesWidget
   ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ amountWidget st Top,
-    currencyWidget st Top
+    currencyWidget st $ getMoneyOptic Top,
+    currencyWidget st
+      $ #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodMoney
   ]
 
 amountWidget :: Model -> TopOrBottom -> View Action
@@ -674,9 +680,9 @@ onKeyDownAction uuid (KeyCode code) =
 
 currencyWidget ::
   Model ->
-  TopOrBottom ->
+  ALens' Model ModelMoney ->
   View Action
-currencyWidget st loc =
+currencyWidget st moneyLens =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -702,7 +708,7 @@ currencyWidget st loc =
         )
         ( Dialog.dialogContent
             Nothing
-            [ currencyListWidget st loc
+            [ currencyListWidget st moneyLens
             ]
             . (: mempty)
             $ div_
@@ -749,7 +755,6 @@ currencyWidget st loc =
         )
     ]
   where
-    moneyLens = getMoneyOptic loc
     uuid = st ^. cloneLens moneyLens . #modelMoneyCurrencyUuid
     search input =
       pureUpdate 0 $ \st' ->
@@ -776,17 +781,19 @@ currencyWidget st loc =
           . #modelMoneyCurrencySearch
           .~ mempty
 
-currencyListWidget :: Model -> TopOrBottom -> View Action
-currencyListWidget st loc =
+currencyListWidget ::
+  Model ->
+  ALens' Model ModelMoney ->
+  View Action
+currencyListWidget st moneyLens =
   List.list
     List.config
-    ( currencyListItemWidget loc current
+    ( currencyListItemWidget moneyLens current
         $ maybe current NonEmpty.head matching
     )
-    . fmap (currencyListItemWidget loc current)
+    . fmap (currencyListItemWidget moneyLens current)
     $ maybe mempty NonEmpty.tail matching
   where
-    moneyLens = getMoneyOptic loc
     currencies = st ^. #modelCurrencies
     current = st ^. cloneLens moneyLens . #modelMoneyCurrencyInfo
     search = st ^. cloneLens moneyLens . #modelMoneyCurrencySearch
@@ -802,11 +809,11 @@ currencyListWidget st loc =
           False
 
 currencyListItemWidget ::
-  TopOrBottom ->
+  ALens' Model ModelMoney ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
-currencyListItemWidget loc current item =
+currencyListItemWidget moneyLens current item =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -830,8 +837,6 @@ currencyListItemWidget loc current item =
     )
     [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
     ]
-  where
-    moneyLens = getMoneyOptic loc
 
 swapAmountsWidget :: View Action
 swapAmountsWidget =

@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module App.Types
   ( Model (..),
     Action (..),
@@ -10,6 +8,7 @@ module App.Types
     Screen (..),
     TopOrBottom (..),
     newModel,
+    pureUpdate,
     inspectMoneyAmount,
   )
 where
@@ -215,6 +214,14 @@ newModelMoney cur = do
         modelMoneyCurrencyOpen = False,
         modelMoneyCurrencySearch = mempty
       }
+
+--
+-- NOTE : In most cases we don't need JSM.
+--
+pureUpdate :: Natural -> (Model -> Model) -> Action
+pureUpdate delay =
+  PushUpdate (pure ())
+    . ChanItem delay
 
 inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
 inspectMoneyAmount =

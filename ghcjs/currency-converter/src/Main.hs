@@ -10,8 +10,10 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
+import App.AmountWidget
+import App.CurrencyWidget
+import qualified App.Misc as Misc
 import App.Types
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Version as Version
@@ -20,19 +22,14 @@ import Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.List as List
-import qualified Material.List.Item as ListItem
 import qualified Material.Snackbar as Snackbar
-import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Paths_app as Paths
-import qualified Text.Fuzzy as Fuzzy
 
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
@@ -59,20 +56,6 @@ runApp app = do
 runApp :: IO () -> IO ()
 runApp = id
 #endif
-
---
--- NOTE : In most cases we don't need JSM.
---
-pureUpdate :: Natural -> (Model -> Model) -> Action
-pureUpdate delay =
-  PushUpdate (pure ())
-    . ChanItem delay
-
-pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
-pushActionQueue st =
-  liftIO
-    . atomically
-    . writeTChan (st ^. #modelProducerQueue)
 
 extendedEvents :: Map MisoString Bool
 extendedEvents =
@@ -124,7 +107,7 @@ updateModel InitUpdate prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        pushActionQueue nextSt $ ChanItem 0 (& #modelHide .~ False)
+        Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelHide .~ False)
         pure $ ChanUpdate nextSt
     ]
 updateModel TimeUpdate st = do
@@ -136,7 +119,7 @@ updateModel TimeUpdate st = do
       do
         ct <- getCurrentTime
         unless (upToDate ct $ st ^. #modelUpdatedAt)
-          . pushActionQueue st
+          . Misc.pushActionQueue st
           $ ChanItem 0 id
         pure Noop
     ]
@@ -147,7 +130,7 @@ updateModel (ChanUpdate prevSt) _ = do
         syncInputs prevSt
         pure Noop,
       do
-        actions <- drainTChan $ prevSt ^. #modelConsumerQueue
+        actions <- Misc.drainTChan $ prevSt ^. #modelConsumerQueue
         nextSt <- foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
         pure $ ChanUpdate nextSt
     ]
@@ -155,32 +138,12 @@ updateModel (PushUpdate runJSM updater) st = do
   batchEff
     st
     [ do
-        pushActionQueue st updater
+        Misc.pushActionQueue st updater
         pure Noop,
       do
         runJSM
         pure Noop
     ]
-
-drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
-drainTChan chan = do
-  item <- liftIO . atomically $ readTChan chan
-  liftIO
-    . fmap ((chanItemValue item :) . reverse)
-    . drainInto []
-    $ chanItemDelay item
-  where
-    drainInto acc delay = do
-      item <- atomically $ tryReadTChan chan
-      case item of
-        Nothing | delay == 0 -> pure acc
-        Nothing -> do
-          sleepMilliSeconds $ from @Natural @Integer delay
-          drainInto acc 0
-        Just next ->
-          drainInto (chanItemValue next : acc)
-            . max delay
-            $ chanItemDelay next
 
 syncInputs :: Model -> JSM ()
 syncInputs st =
@@ -192,43 +155,13 @@ syncInputs st =
   -- https://github.com/dmjio/miso/issues/272
   --
   forM_ enumerate $ \loc -> do
-    let moneyLens = getMoneyOptic loc
+    let moneyLens = Misc.getMoneyOptic loc
     JS.eval @Text
       $ "var el = document.getElementById('"
       <> htmlUuid (st ^. cloneLens moneyLens . #modelMoneyAmountUuid)
       <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
       <> (st ^. cloneLens moneyLens . #modelMoneyAmountInput)
       <> "';"
-
-copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
-copyIntoClipboard st x = do
-  let txt = inspect @Text x
-  unless (null txt) $ do
-    clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
-    prom <- clip ^. JS.js1 ("writeText" :: Text) txt
-    success <- JS.function $ \_ _ _ -> push $ "Copied " <> txt
-    failure <- JS.function $ \_ _ _ -> push $ "Failed to copy " <> txt
-    void $ prom ^. JS.js2 ("then" :: Text) success failure
-  where
-    push =
-      pushActionQueue st
-        . updateSnackbar Snackbar.clearQueue
-
-updateSnackbar ::
-  ( Show a,
-    Data a
-  ) =>
-  (Snackbar.Queue Action -> Snackbar.Queue Action) ->
-  a ->
-  ChanItem (Model -> Model)
-updateSnackbar before x =
-  ChanItem 0 (& #modelSnackbarQueue %~ (Snackbar.addMessage msg . before))
-  where
-    msg =
-      inspect x
-        & Snackbar.message
-        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick snackbarClosed
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
@@ -282,11 +215,6 @@ evalModel st = do
           & #modelUpdatedAt
           .~ ct
 
-getMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
-getMoneyOptic = \case
-  Top -> #modelData . #modelDataTopMoney
-  Bottom -> #modelData . #modelDataBottomMoney
-
 getBaseMoneyOptic :: TopOrBottom -> ALens' Model ModelMoney
 getBaseMoneyOptic = \case
   Top -> #modelData . #modelDataTopMoney
@@ -334,8 +262,8 @@ mainWidget st =
                    --   . (: mempty)
                    --   $ div_ mempty [inspect $ st ^. #modelData],
                    swapScreenWidget st,
-                   copyright,
-                   Snackbar.snackbar (Snackbar.config snackbarClosed)
+                   tosWidget,
+                   Snackbar.snackbar (Snackbar.config Misc.snackbarClosed)
                     $ modelSnackbarQueue st
                  ]
           )
@@ -348,387 +276,20 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   [ amountWidget st Top,
-    currencyWidget st $ getMoneyOptic Top,
+    currencyWidget st $ Misc.getMoneyOptic Top,
     amountWidget st Bottom,
-    currencyWidget st $ getMoneyOptic Bottom,
+    currencyWidget st $ Misc.getMoneyOptic Bottom,
     swapAmountsWidget,
     swapCurrenciesWidget
   ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ amountWidget st Top,
-    currencyWidget st $ getMoneyOptic Top,
+    currencyWidget st $ Misc.getMoneyOptic Top,
     currencyWidget st
       $ #modelData
       . #modelDataPaymentMethodsInput
       . #paymentMethodMoney
   ]
-
-amountWidget :: Model -> TopOrBottom -> View Action
-amountWidget st loc =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center")
-        ]
-    ]
-    [ TextField.outlined
-        $ TextField.config
-        & TextField.setType (Just "number")
-        & TextField.setOnInput onInputAction
-        & TextField.setLeadingIcon
-          ( Just
-              $ TextField.icon
-                [ class_ "mdc-text-field__icon--leading",
-                  intProp "tabindex" 0,
-                  textProp "role" "button",
-                  onClick onCopyAction
-                ]
-                "content_copy"
-          )
-        & TextField.setTrailingIcon
-          ( Just
-              $ TextField.icon
-                [ class_ "mdc-text-field__icon--trailing",
-                  intProp "tabindex" 0,
-                  textProp "role" "button",
-                  onClick onClearAction
-                ]
-                "close"
-          )
-        & TextField.setPlaceholder
-          ( Just
-              . inspectCurrencyInfo
-              $ st
-              ^. cloneLens moneyLens
-              . #modelMoneyCurrencyInfo
-          )
-        & TextField.setAttributes
-          [ class_ "fill",
-            id_
-              . ms
-              . htmlUuid @Text
-              $ st
-              ^. cloneLens moneyLens
-              . #modelMoneyAmountUuid,
-            onKeyDown $ onKeyDownAction uuid,
-            onBlur onBlurAction
-          ]
-    ]
-  where
-    moneyLens = getMoneyOptic loc
-    uuid = st ^. cloneLens moneyLens . #modelMoneyAmountUuid
-    input = st ^. cloneLens moneyLens . #modelMoneyAmountInput
-    output = st ^. cloneLens moneyLens . #modelMoneyAmountOutput
-    valid =
-      (parseMoney input == Just output)
-        || (input == inspectMoneyAmount output)
-    onBlurAction =
-      pureUpdate 300 $ \st' ->
-        if valid
-          then st'
-          else
-            st'
-              & cloneLens moneyLens
-              . #modelMoneyAmountInput
-              .~ inspectMoneyAmount output
-    onInputAction txt =
-      pureUpdate 300 $ \st' ->
-        st'
-          & cloneLens moneyLens
-          . #modelMoneyAmountInput
-          .~ from @String @Text txt
-          & #modelData
-          . #modelDataTopOrBottom
-          .~ loc
-    onCopyAction =
-      PushUpdate
-        ( copyIntoClipboard st
-            $ st
-            ^. cloneLens moneyLens
-            . #modelMoneyAmountInput
-        )
-        ( ChanItem 0 id
-        )
-    onClearAction =
-      PushUpdate
-        ( do
-            focus . ms $ htmlUuid @Text uuid
-            void
-              . JS.eval @Text
-              $ "var el = document.getElementById('"
-              <> htmlUuid uuid
-              <> "'); if (el) el.value = '';"
-        )
-        ( ChanItem 300 $ \st' ->
-            st'
-              & cloneLens moneyLens
-              . #modelMoneyAmountInput
-              .~ mempty
-              & #modelData
-              . #modelDataTopOrBottom
-              .~ loc
-        )
-
-onKeyDownAction :: UUID -> KeyCode -> Action
-onKeyDownAction uuid (KeyCode code) =
-  let enterOrEscape = [13, 27] :: [Int]
-   in PushUpdate
-        ( when (code `elem` enterOrEscape)
-            . void
-            . JS.eval @Text
-            $ "document.getElementById('"
-            <> htmlUuid uuid
-            <> "').getElementsByTagName('input')[0].blur();"
-        )
-        ( ChanItem 300 id
-        )
-
-currencyWidget ::
-  Model ->
-  ALens' Model ModelMoney ->
-  View Action
-currencyWidget st moneyLens =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
-    ]
-    [ Button.raised
-        ( Button.setOnClick opened
-            . Button.setAttributes
-              [ class_ "fill"
-              ]
-            $ Button.config
-        )
-        . inspectCurrencyInfo
-        $ st
-        ^. cloneLens moneyLens
-        . #modelMoneyCurrencyInfo,
-      Dialog.dialog
-        ( Dialog.config
-            & Dialog.setOnClose closed
-            & Dialog.setOpen
-              ( st
-                  ^. cloneLens moneyLens
-                  . #modelMoneyCurrencyOpen
-              )
-        )
-        ( Dialog.dialogContent
-            Nothing
-            [ currencyListWidget st moneyLens
-            ]
-            . (: mempty)
-            $ div_
-              [ class_ "fill"
-              ]
-              [ TextField.outlined
-                  . TextField.setType (Just "text")
-                  . ( if st
-                        ^. cloneLens moneyLens
-                        . #modelMoneyCurrencyOpen
-                        then id
-                        else
-                          TextField.setValue
-                            ( Just
-                                . from @Text @String
-                                $ st
-                                ^. cloneLens moneyLens
-                                . #modelMoneyCurrencySearch
-                            )
-                    )
-                  . TextField.setOnInput search
-                  . TextField.setPlaceholder
-                    ( Just
-                        . inspectCurrencyInfo
-                        $ st
-                        ^. cloneLens moneyLens
-                        . #modelMoneyCurrencyInfo
-                    )
-                  . TextField.setAttributes
-                    [ class_ "fill",
-                      id_ . ms $ htmlUuid @Text uuid,
-                      onKeyDown $ onKeyDownAction uuid
-                    ]
-                  $ TextField.config,
-                Button.raised
-                  ( Button.config
-                      & Button.setOnClick closed
-                      & Button.setAttributes
-                        [ class_ "fill"
-                        ]
-                  )
-                  "Cancel"
-              ]
-        )
-    ]
-  where
-    uuid = st ^. cloneLens moneyLens . #modelMoneyCurrencyUuid
-    search input =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
-          .~ from @String @Text input
-    opened =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencyOpen
-          .~ True
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
-          .~ mempty
-    closed =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencyOpen
-          .~ False
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
-          .~ mempty
-
-currencyListWidget ::
-  Model ->
-  ALens' Model ModelMoney ->
-  View Action
-currencyListWidget st moneyLens =
-  List.list
-    List.config
-    ( currencyListItemWidget moneyLens current
-        $ maybe current NonEmpty.head matching
-    )
-    . fmap (currencyListItemWidget moneyLens current)
-    $ maybe mempty NonEmpty.tail matching
-  where
-    currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens moneyLens . #modelMoneyCurrencyInfo
-    search = st ^. cloneLens moneyLens . #modelMoneyCurrencySearch
-    matching =
-      nonEmpty
-        . fmap Fuzzy.original
-        $ Fuzzy.filter
-          search
-          (toList currencies)
-          "<"
-          ">"
-          inspectCurrencyInfo
-          False
-
-currencyListItemWidget ::
-  ALens' Model ModelMoney ->
-  CurrencyInfo ->
-  CurrencyInfo ->
-  ListItem.ListItem Action
-currencyListItemWidget moneyLens current item =
-  ListItem.listItem
-    ( ListItem.config
-        & ListItem.setSelected
-          ( if current == item
-              then Just ListItem.activated
-              else Nothing
-          )
-        & ListItem.setOnClick
-          ( pureUpdate 0 $ \st ->
-              st
-                & cloneLens moneyLens
-                . #modelMoneyCurrencyOpen
-                .~ False
-                & cloneLens moneyLens
-                . #modelMoneyCurrencySearch
-                .~ mempty
-                & cloneLens moneyLens
-                . #modelMoneyCurrencyInfo
-                .~ item
-          )
-    )
-    [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
-    ]
-
-swapAmountsWidget :: View Action
-swapAmountsWidget =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span2Phone
-    ]
-    . (: mempty)
-    $ Button.raised
-      ( Button.setOnClick onClickAction
-          . Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
-          $ Button.config
-      )
-      "Swap amounts"
-  where
-    onClickAction =
-      pureUpdate 0 $ \st ->
-        let baseInput =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
-            baseOutput =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountOutput
-            quoteInput =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountInput
-            quoteOutput =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountOutput
-         in st
-              & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyAmountInput
-              .~ quoteInput
-              & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyAmountOutput
-              .~ quoteOutput
-              & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyAmountInput
-              .~ baseInput
-              & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyAmountOutput
-              .~ baseOutput
-              & #modelData
-              . #modelDataTopOrBottom
-              .~ Top
-
-swapCurrenciesWidget :: View Action
-swapCurrenciesWidget =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span2Phone
-    ]
-    . (: mempty)
-    $ Button.raised
-      ( Button.setOnClick onClickAction
-          . Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
-          $ Button.config
-      )
-      "Swap currencies"
-  where
-    onClickAction =
-      pureUpdate 0 $ \st ->
-        let baseCurrency =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
-            quoteCurrency =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyCurrencyInfo
-         in st
-              & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyCurrencyInfo
-              .~ quoteCurrency
-              & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyCurrencyInfo
-              .~ baseCurrency
-              & #modelData
-              . #modelDataTopOrBottom
-              .~ Top
 
 swapScreenWidget :: Model -> View Action
 swapScreenWidget st =
@@ -757,7 +318,7 @@ swapScreenWidget st =
             -- NOTE : Need to sync text inputs on new screen.
             --
             sleepMilliSeconds 300
-            pushActionQueue st $ ChanItem 0 id
+            Misc.pushActionQueue st $ ChanItem 0 id
         )
         $ ChanItem
           0
@@ -769,8 +330,8 @@ swapScreenWidget st =
                    )
           )
 
-copyright :: View Action
-copyright =
+tosWidget :: View Action
+tosWidget =
   LayoutGrid.cell
     [ LayoutGrid.span12,
       Typography.subtitle2,
@@ -786,10 +347,6 @@ copyright =
       Miso.text ". ",
       Miso.text . ms $ "Version " <> vsn <> "."
     ]
-
-snackbarClosed :: Snackbar.MessageId -> Action
-snackbarClosed msg =
-  pureUpdate 0 (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

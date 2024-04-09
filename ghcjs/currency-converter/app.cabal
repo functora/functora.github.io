@@ -18,7 +18,12 @@ common pkg
     static/app.js
     static/material-components-web.min.js
 
-  other-modules:      App.Types
+  other-modules:
+    App.AmountWidget
+    App.CurrencyWidget
+    App.Misc
+    App.Types
+
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
     -Wno-missed-specialisations -Wno-missing-exported-signatures

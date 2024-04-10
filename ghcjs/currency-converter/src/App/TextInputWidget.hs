@@ -5,7 +5,6 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.LayoutGrid as LayoutGrid
@@ -15,10 +14,10 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 textInputWidget ::
   Model ->
-  Tagged "placeholder" Text ->
+  Text ->
   ALens' Model TextInput ->
   View Action
-textInputWidget st (Tagged placeholder) textLens =
+textInputWidget st placeholder textLens =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_

@@ -48,7 +48,8 @@ data ModelData = ModelData
     modelDataTopOrBottom :: TopOrBottom,
     modelDataPaymentMethods :: [PaymentMethod],
     modelDataPaymentMethodsInput :: PaymentMethod,
-    modelDataUserName :: TextInput
+    modelDataIssuer :: TextInput,
+    modelDataClient :: TextInput
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -74,8 +75,9 @@ data ModelMoney = ModelMoney
 
 data PaymentMethod = PaymentMethod
   { paymentMethodMoney :: ModelMoney,
-    paymentMethodReference :: TextInput,
-    paymentMethodNotes :: TextInput
+    paymentMethodAddress :: TextInput,
+    paymentMethodNotes :: TextInput,
+    paymentMethodAddressQrCode :: Bool
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -114,7 +116,8 @@ newModel = do
   topMoney <- newModelMoney btc
   bottomMoney <- newModelMoney usd
   paymentMethod <- newPaymentMethod btc
-  userName <- newTextInput
+  issuer <- newTextInput
+  client <- newTextInput
   let st =
         Model
           { modelHide = True,
@@ -125,9 +128,10 @@ newModel = do
                   modelDataTopOrBottom = Top,
                   modelDataPaymentMethods = mempty,
                   modelDataPaymentMethodsInput = paymentMethod,
-                  modelDataUserName = userName
+                  modelDataIssuer = issuer,
+                  modelDataClient = client
                 },
-            modelScreen = Converter,
+            modelScreen = InvoiceEditor,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -245,6 +249,7 @@ newPaymentMethod cur =
     <$> newModelMoney cur
     <*> newTextInput
     <*> newTextInput
+    <*> pure True
 
 inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
 inspectMoneyAmount =

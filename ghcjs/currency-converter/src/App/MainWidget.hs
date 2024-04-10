@@ -3,13 +3,16 @@ module App.MainWidget (mainWidget) where
 import App.AmountWidget
 import App.CurrencyWidget
 import qualified App.Misc as Misc
+import App.TextInputWidget
 import App.Types
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
+import qualified Material.DataTable as DataTable
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
+import qualified Material.Switch as Switch
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
@@ -59,20 +62,83 @@ screenWidget st@Model {modelScreen = Converter} =
     swapCurrenciesWidget
   ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
-  [ amountWidget st Top,
+  [ textWidget "Invoice entities",
+    textInputWidget st "Issuer"
+      $ #modelData
+      . #modelDataIssuer,
+    textInputWidget st "Client"
+      $ #modelData
+      . #modelDataClient,
+    textWidget "Invoice amounts",
+    amountWidget st Top,
     currencyWidget st $ Misc.getConverterMoneyLens Top,
+    textWidget "Payment methods",
+    textInputWidget st "Address"
+      $ #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodAddress,
+    switchWidget st "Address QR code"
+      $ #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodAddressQrCode,
+    textInputWidget st "Notes"
+      $ #modelData
+      . #modelDataPaymentMethodsInput
+      . #paymentMethodNotes,
     currencyWidget st
       $ #modelData
       . #modelDataPaymentMethodsInput
       . #paymentMethodMoney
   ]
 
+switchWidget :: Model -> Text -> ALens' Model Bool -> View Action
+switchWidget st txt boolLens =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop
+    ]
+    [ DataTable.dataTable
+        ( DataTable.config
+            & DataTable.setAttributes [class_ "fill"]
+        )
+        [ DataTable.row
+            mempty
+            [ DataTable.cell
+                [ Typography.body1,
+                  LayoutGrid.alignMiddle,
+                  style_
+                    [ ("text-align", "center")
+                    ]
+                ]
+                [ Miso.text txt,
+                  Miso.text " ",
+                  Switch.switch
+                    $ Switch.config
+                    & Switch.setChecked (st ^. cloneLens boolLens)
+                    & Switch.setOnChange
+                      ( pureUpdate 0 (& cloneLens boolLens %~ not)
+                      )
+                ]
+            ]
+        ]
+        mempty
+    ]
+
+textWidget :: Text -> View Action
+textWidget txt =
+  LayoutGrid.cell
+    [ LayoutGrid.span12,
+      Typography.body1,
+      style_
+        [ ("text-align", "center")
+        ]
+    ]
+    [ Miso.text txt
+    ]
+
 swapScreenWidget :: Model -> View Action
 swapScreenWidget st =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span8Tablet,
-      LayoutGrid.span4Phone
+    [ LayoutGrid.span12
     ]
     . (: mempty)
     . Button.raised
@@ -110,7 +176,7 @@ tosWidget :: View Action
 tosWidget =
   LayoutGrid.cell
     [ LayoutGrid.span12,
-      Typography.subtitle2,
+      Typography.caption,
       style_
         [ ("text-align", "center")
         ]

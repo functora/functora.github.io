@@ -160,14 +160,32 @@ syncInputs st =
   --
   -- https://github.com/dmjio/miso/issues/272
   --
-  forM_ enumerate $ \loc -> do
-    let moneyLens = Misc.getConverterMoneyLens loc
+  forM_ allLens . uncurry $ \uuidLens textLens ->
     JS.eval @Text
       $ "var el = document.getElementById('"
-      <> htmlUuid (st ^. cloneLens moneyLens . #modelMoneyAmountUuid)
+      <> htmlUuid (st ^. cloneLens uuidLens)
       <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
-      <> (st ^. cloneLens moneyLens . #modelMoneyAmountInput)
+      <> (st ^. cloneLens textLens)
       <> "';"
+  where
+    --
+    -- TODO : refactor, use TextInput instead of separate fields for money amount
+    --
+    allLens :: [(ALens' Model UUID, ALens' Model Text)]
+    allLens =
+      [ ( #modelData . #modelDataTopMoney . #modelMoneyAmountUuid,
+          #modelData . #modelDataTopMoney . #modelMoneyAmountInput
+        ),
+        ( #modelData . #modelDataBottomMoney . #modelMoneyAmountUuid,
+          #modelData . #modelDataBottomMoney . #modelMoneyAmountInput
+        ),
+        ( #modelData . #modelDataIssuer . #textInputUuid,
+          #modelData . #modelDataIssuer . #textInputValue
+        ),
+        ( #modelData . #modelDataClient . #textInputUuid,
+          #modelData . #modelDataClient . #textInputValue
+        )
+      ]
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do

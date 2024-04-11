@@ -3,7 +3,7 @@ module App.MainWidget (mainWidget) where
 import App.AmountWidget
 import App.CurrencyWidget
 import qualified App.Misc as Misc
-import App.TextInputWidget
+import App.TextModelWidget
 import App.Types
 import qualified Data.Text as T
 import qualified Data.Version as Version
@@ -55,40 +55,42 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   [ amountWidget st Top,
-    currencyWidget st $ Misc.getConverterMoneyLens Top,
+    currencyWidget st $ Misc.getConverterCurrencyLens Top,
     amountWidget st Bottom,
-    currencyWidget st $ Misc.getConverterMoneyLens Bottom,
+    currencyWidget st $ Misc.getConverterCurrencyLens Bottom,
     swapAmountsWidget,
     swapCurrenciesWidget
   ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ textWidget "Invoice entities",
-    textInputWidget st "Issuer"
+    textModelWidget st "Issuer"
       $ #modelData
-      . #modelDataIssuer,
-    textInputWidget st "Client"
+      . #dataModelIssuer,
+    textModelWidget st "Client"
       $ #modelData
-      . #modelDataClient,
+      . #dataModelClient,
     textWidget "Invoice amounts",
     amountWidget st Top,
-    currencyWidget st $ Misc.getConverterMoneyLens Top,
+    currencyWidget st $ Misc.getConverterCurrencyLens Top,
     textWidget "Payment methods",
-    textInputWidget st "Address"
+    textModelWidget st "Address"
       $ #modelData
-      . #modelDataPaymentMethodsInput
+      . #dataModelPaymentMethodsInput
       . #paymentMethodAddress,
     switchWidget st "Address QR code"
       $ #modelData
-      . #modelDataPaymentMethodsInput
+      . #dataModelPaymentMethodsInput
       . #paymentMethodAddressQrCode,
-    textInputWidget st "Notes"
+    textModelWidget st "Notes"
       $ #modelData
-      . #modelDataPaymentMethodsInput
+      . #dataModelPaymentMethodsInput
       . #paymentMethodNotes,
     currencyWidget st
       $ #modelData
-      . #modelDataPaymentMethodsInput
+      . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
+      . #moneyModelCurrency,
+    addPaymentMethodWidget st
   ]
 
 switchWidget :: Model -> Text -> ALens' Model Bool -> View Action
@@ -152,6 +154,41 @@ swapScreenWidget st =
     $ case st ^. #modelScreen of
       Converter -> "Create invoice"
       InvoiceEditor -> "Show converter"
+  where
+    onClickAction =
+      PushUpdate
+        ( do
+            --
+            -- NOTE : Need to sync text inputs on new screen.
+            --
+            sleepMilliSeconds 300
+            Misc.pushActionQueue st $ ChanItem 0 id
+        )
+        $ ChanItem
+          0
+          ( &
+              #modelScreen
+                %~ ( \case
+                      Converter -> InvoiceEditor
+                      InvoiceEditor -> Converter
+                   )
+          )
+
+addPaymentMethodWidget :: Model -> View Action
+addPaymentMethodWidget st =
+  LayoutGrid.cell
+    [ LayoutGrid.span12
+    ]
+    . (: mempty)
+    $ Button.raised
+      ( Button.config
+          & Button.setOnClick onClickAction
+          & Button.setAttributes
+            [ class_ "fill",
+              Theme.secondaryBg
+            ]
+      )
+      "Add payment method"
   where
     onClickAction =
       PushUpdate

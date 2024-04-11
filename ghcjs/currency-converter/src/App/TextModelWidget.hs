@@ -1,5 +1,5 @@
-module App.TextInputWidget
-  ( textInputWidget,
+module App.TextModelWidget
+  ( textModelWidget,
   )
 where
 
@@ -12,12 +12,12 @@ import qualified Material.TextField as TextField
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
-textInputWidget ::
+textModelWidget ::
   Model ->
   Text ->
-  ALens' Model TextInput ->
+  ALens' Model TextModel ->
   View Action
-textInputWidget st placeholder textLens =
+textModelWidget st placeholder optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -60,19 +60,19 @@ textInputWidget st placeholder textLens =
           ]
     ]
   where
-    uuid = st ^. cloneLens textLens . #textInputUuid
+    uuid = st ^. cloneLens optic . #textModelUuid
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
-          & cloneLens textLens
-          . #textInputValue
+          & cloneLens optic
+          . #textModelValue
           .~ from @String @Text txt
     onCopyAction =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
-            ^. cloneLens textLens
-            . #textInputValue
+            ^. cloneLens optic
+            . #textModelValue
         )
         ( ChanItem 0 id
         )
@@ -88,7 +88,7 @@ textInputWidget st placeholder textLens =
         )
         ( ChanItem 300 $ \st' ->
             st'
-              & cloneLens textLens
-              . #textInputValue
+              & cloneLens optic
+              . #textModelValue
               .~ mempty
         )

@@ -22,9 +22,9 @@ import qualified Text.Fuzzy as Fuzzy
 
 currencyWidget ::
   Model ->
-  ALens' Model ModelMoney ->
+  ALens' Model CurrencyInput ->
   View Action
-currencyWidget st moneyLens =
+currencyWidget st optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -37,20 +37,20 @@ currencyWidget st moneyLens =
         )
         . inspectCurrencyInfo
         $ st
-        ^. cloneLens moneyLens
-        . #modelMoneyCurrencyInfo,
+        ^. cloneLens optic
+        . #currencyInputInfo,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
             & Dialog.setOpen
               ( st
-                  ^. cloneLens moneyLens
-                  . #modelMoneyCurrencyOpen
+                  ^. cloneLens optic
+                  . #currencyInputOpen
               )
         )
         ( Dialog.dialogContent
             Nothing
-            [ currencyListWidget st moneyLens
+            [ currencyListWidget st optic
             ]
             . (: mempty)
             $ div_
@@ -59,16 +59,16 @@ currencyWidget st moneyLens =
               [ TextField.outlined
                   . TextField.setType (Just "text")
                   . ( if st
-                        ^. cloneLens moneyLens
-                        . #modelMoneyCurrencyOpen
+                        ^. cloneLens optic
+                        . #currencyInputOpen
                         then id
                         else
                           TextField.setValue
                             ( Just
                                 . from @Text @String
                                 $ st
-                                ^. cloneLens moneyLens
-                                . #modelMoneyCurrencySearch
+                                ^. cloneLens optic
+                                . #currencyInputSearch
                             )
                     )
                   . TextField.setOnInput search
@@ -76,8 +76,8 @@ currencyWidget st moneyLens =
                     ( Just
                         . inspectCurrencyInfo
                         $ st
-                        ^. cloneLens moneyLens
-                        . #modelMoneyCurrencyInfo
+                        ^. cloneLens optic
+                        . #currencyInputInfo
                     )
                   . TextField.setAttributes
                     [ class_ "fill",
@@ -97,48 +97,48 @@ currencyWidget st moneyLens =
         )
     ]
   where
-    uuid = st ^. cloneLens moneyLens . #modelMoneyCurrencyUuid
+    uuid = st ^. cloneLens optic . #currencyInputUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
+          & cloneLens optic
+          . #currencyInputSearch
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencyOpen
+          & cloneLens optic
+          . #currencyInputOpen
           .~ True
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
+          & cloneLens optic
+          . #currencyInputSearch
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
-          & cloneLens moneyLens
-          . #modelMoneyCurrencyOpen
+          & cloneLens optic
+          . #currencyInputOpen
           .~ False
-          & cloneLens moneyLens
-          . #modelMoneyCurrencySearch
+          & cloneLens optic
+          . #currencyInputSearch
           .~ mempty
 
 currencyListWidget ::
   Model ->
-  ALens' Model ModelMoney ->
+  ALens' Model CurrencyInput ->
   View Action
-currencyListWidget st moneyLens =
+currencyListWidget st optic =
   List.list
     List.config
-    ( currencyListItemWidget moneyLens current
+    ( currencyListItemWidget optic current
         $ maybe current NonEmpty.head matching
     )
-    . fmap (currencyListItemWidget moneyLens current)
+    . fmap (currencyListItemWidget optic current)
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens moneyLens . #modelMoneyCurrencyInfo
-    search = st ^. cloneLens moneyLens . #modelMoneyCurrencySearch
+    current = st ^. cloneLens optic . #currencyInputInfo
+    search = st ^. cloneLens optic . #currencyInputSearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -151,11 +151,11 @@ currencyListWidget st moneyLens =
           False
 
 currencyListItemWidget ::
-  ALens' Model ModelMoney ->
+  ALens' Model CurrencyInput ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
-currencyListItemWidget moneyLens current item =
+currencyListItemWidget optic current item =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -166,14 +166,14 @@ currencyListItemWidget moneyLens current item =
         & ListItem.setOnClick
           ( pureUpdate 0 $ \st ->
               st
-                & cloneLens moneyLens
-                . #modelMoneyCurrencyOpen
+                & cloneLens optic
+                . #currencyInputOpen
                 .~ False
-                & cloneLens moneyLens
-                . #modelMoneyCurrencySearch
+                & cloneLens optic
+                . #currencyInputSearch
                 .~ mempty
-                & cloneLens moneyLens
-                . #modelMoneyCurrencyInfo
+                & cloneLens optic
+                . #currencyInputInfo
                 .~ item
           )
     )
@@ -201,18 +201,28 @@ swapCurrenciesWidget =
     onClickAction =
       pureUpdate 0 $ \st ->
         let baseCurrency =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyCurrencyInfo
+              st
+                ^. #modelData
+                . #dataModelTopMoney
+                . #moneyModelCurrency
+                . #currencyInputInfo
             quoteCurrency =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyCurrencyInfo
+              st
+                ^. #modelData
+                . #dataModelBottomMoney
+                . #moneyModelCurrency
+                . #currencyInputInfo
          in st
               & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyCurrencyInfo
+              . #dataModelTopMoney
+              . #moneyModelCurrency
+              . #currencyInputInfo
               .~ quoteCurrency
               & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyCurrencyInfo
+              . #dataModelBottomMoney
+              . #moneyModelCurrency
+              . #currencyInputInfo
               .~ baseCurrency
               & #modelData
-              . #modelDataTopOrBottom
+              . #dataModelTopOrBottom
               .~ Top

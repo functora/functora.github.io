@@ -54,7 +54,8 @@ amountWidget st loc =
               . inspectCurrencyInfo
               $ st
               ^. cloneLens moneyLens
-              . #modelMoneyCurrencyInfo
+              . #moneyModelCurrency
+              . #currencyInputInfo
           )
         & TextField.setAttributes
           [ class_ "fill",
@@ -63,16 +64,16 @@ amountWidget st loc =
               . htmlUuid @Text
               $ st
               ^. cloneLens moneyLens
-              . #modelMoneyAmountUuid,
+              . #moneyModelAmountUuid,
             onKeyDown $ Misc.onKeyDownAction uuid,
             onBlur onBlurAction
           ]
     ]
   where
     moneyLens = Misc.getConverterMoneyLens loc
-    uuid = st ^. cloneLens moneyLens . #modelMoneyAmountUuid
-    input = st ^. cloneLens moneyLens . #modelMoneyAmountInput
-    output = st ^. cloneLens moneyLens . #modelMoneyAmountOutput
+    uuid = st ^. cloneLens moneyLens . #moneyModelAmountUuid
+    input = st ^. cloneLens moneyLens . #moneyModelAmountInput
+    output = st ^. cloneLens moneyLens . #moneyModelAmountOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
@@ -83,23 +84,23 @@ amountWidget st loc =
           else
             st'
               & cloneLens moneyLens
-              . #modelMoneyAmountInput
+              . #moneyModelAmountInput
               .~ inspectMoneyAmount output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens moneyLens
-          . #modelMoneyAmountInput
+          . #moneyModelAmountInput
           .~ from @String @Text txt
           & #modelData
-          . #modelDataTopOrBottom
+          . #dataModelTopOrBottom
           .~ loc
     onCopyAction =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
             ^. cloneLens moneyLens
-            . #modelMoneyAmountInput
+            . #moneyModelAmountInput
         )
         ( ChanItem 0 id
         )
@@ -116,10 +117,10 @@ amountWidget st loc =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens moneyLens
-              . #modelMoneyAmountInput
+              . #moneyModelAmountInput
               .~ mempty
               & #modelData
-              . #modelDataTopOrBottom
+              . #dataModelTopOrBottom
               .~ loc
         )
 
@@ -144,30 +145,30 @@ swapAmountsWidget =
     onClickAction =
       pureUpdate 0 $ \st ->
         let baseInput =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountInput
+              st ^. #modelData . #dataModelTopMoney . #moneyModelAmountInput
             baseOutput =
-              st ^. #modelData . #modelDataTopMoney . #modelMoneyAmountOutput
+              st ^. #modelData . #dataModelTopMoney . #moneyModelAmountOutput
             quoteInput =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountInput
+              st ^. #modelData . #dataModelBottomMoney . #moneyModelAmountInput
             quoteOutput =
-              st ^. #modelData . #modelDataBottomMoney . #modelMoneyAmountOutput
+              st ^. #modelData . #dataModelBottomMoney . #moneyModelAmountOutput
          in st
               & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyAmountInput
+              . #dataModelTopMoney
+              . #moneyModelAmountInput
               .~ quoteInput
               & #modelData
-              . #modelDataTopMoney
-              . #modelMoneyAmountOutput
+              . #dataModelTopMoney
+              . #moneyModelAmountOutput
               .~ quoteOutput
               & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyAmountInput
+              . #dataModelBottomMoney
+              . #moneyModelAmountInput
               .~ baseInput
               & #modelData
-              . #modelDataBottomMoney
-              . #modelMoneyAmountOutput
+              . #dataModelBottomMoney
+              . #moneyModelAmountOutput
               .~ baseOutput
               & #modelData
-              . #modelDataTopOrBottom
+              . #dataModelTopOrBottom
               .~ Top

@@ -1,5 +1,6 @@
 module App.Misc
   ( getConverterMoneyLens,
+    getConverterCurrencyLens,
     pushActionQueue,
     onKeyDownAction,
     copyIntoClipboard,
@@ -14,10 +15,15 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterMoneyLens :: TopOrBottom -> ALens' Model ModelMoney
+getConverterMoneyLens :: TopOrBottom -> ALens' Model MoneyModel
 getConverterMoneyLens = \case
-  Top -> #modelData . #modelDataTopMoney
-  Bottom -> #modelData . #modelDataBottomMoney
+  Top -> #modelData . #dataModelTopMoney
+  Bottom -> #modelData . #dataModelBottomMoney
+
+getConverterCurrencyLens :: TopOrBottom -> ALens' Model CurrencyInput
+getConverterCurrencyLens = \case
+  Top -> #modelData . #dataModelTopMoney . #moneyModelCurrency
+  Bottom -> #modelData . #dataModelBottomMoney . #moneyModelCurrency
 
 pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =

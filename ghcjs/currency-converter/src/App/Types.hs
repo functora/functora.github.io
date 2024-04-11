@@ -132,8 +132,8 @@ newModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  topMoney <- newModelMoney btc
-  bottomMoney <- newModelMoney usd
+  topMoney <- newMoneyModel btc
+  bottomMoney <- newMoneyModel usd
   paymentMethod <- newPaymentMethod btc
   issuer <- newTextModel
   client <- newTextModel
@@ -238,8 +238,8 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newModelMoney :: (MonadIO m) => CurrencyInfo -> m MoneyModel
-newModelMoney cur = do
+newMoneyModel :: (MonadIO m) => CurrencyInfo -> m MoneyModel
+newMoneyModel cur = do
   amtUuid <- newUuid
   curUuid <- newUuid
   let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
@@ -280,7 +280,7 @@ newTextModel = do
 newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m PaymentMethod
 newPaymentMethod cur =
   PaymentMethod
-    <$> newModelMoney cur
+    <$> newMoneyModel cur
     <*> newTextModel
     <*> newTextModel
     <*> pure True

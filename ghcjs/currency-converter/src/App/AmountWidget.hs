@@ -70,8 +70,8 @@ amountWidget st loc =
     input = st ^. cloneLens optic . #moneyModelAmount . #amountModelInput
     output = st ^. cloneLens optic . #moneyModelAmount . #amountModelOutput
     valid =
-      (parseMoney input == Just output)
-        || (input == inspectMoneyAmount output)
+      (parseRatio input == Just output)
+        || (input == inspectRatioDef output)
     onBlurAction =
       pureUpdate 300 $ \st' ->
         if valid
@@ -81,7 +81,7 @@ amountWidget st loc =
               & cloneLens optic
               . #moneyModelAmount
               . #amountModelInput
-              .~ inspectMoneyAmount output
+              .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'

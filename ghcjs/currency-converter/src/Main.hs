@@ -196,7 +196,7 @@ evalModel st = do
         case st ^. cloneLens baseLens . #moneyModelAmount . #amountModelInput of
           amt
             | null amt ->
-                inspectMoneyAmount
+                inspectRatioDef
                   $ st
                   ^. cloneLens baseLens
                   . #moneyModelAmount
@@ -234,15 +234,15 @@ evalModel st = do
           & cloneLens baseLens
           . #moneyModelAmount
           . #amountModelOutput
-          .~ unTag @'Base baseAmt
+          .~ unTagged baseAmt
           & cloneLens quoteLens
           . #moneyModelAmount
           . #amountModelInput
-          .~ inspectMoneyAmount quoteAmt
+          .~ inspectRatioDef (unTagged quoteAmt)
           & cloneLens quoteLens
           . #moneyModelAmount
           . #amountModelOutput
-          .~ unTag @'Quote quoteAmt
+          .~ unTagged quoteAmt
           & #modelUpdatedAt
           .~ ct
 

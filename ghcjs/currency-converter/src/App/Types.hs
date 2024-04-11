@@ -14,7 +14,6 @@ module App.Types
     newModel,
     pureUpdate,
     newTextModel,
-    inspectMoneyAmount,
   )
 where
 
@@ -71,7 +70,7 @@ data MoneyModel = MoneyModel
 data AmountModel = AmountModel
   { amountModelUuid :: UUID,
     amountModelInput :: Text,
-    amountModelOutput :: Money (Tags 'Signed |+| 'MoneyAmount)
+    amountModelOutput :: Rational
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -185,12 +184,12 @@ newModel = do
       . #dataModelTopMoney
       . #moneyModelAmount
       . #amountModelInput
-      .~ inspectMoneyAmount baseAmt
+      .~ inspectRatioDef (unTagged baseAmt)
       & #modelData
       . #dataModelTopMoney
       . #moneyModelAmount
       . #amountModelOutput
-      .~ unTag @'Base baseAmt
+      .~ unTagged baseAmt
       & #modelData
       . #dataModelTopMoney
       . #moneyModelCurrency
@@ -200,12 +199,12 @@ newModel = do
       . #dataModelBottomMoney
       . #moneyModelAmount
       . #amountModelInput
-      .~ inspectMoneyAmount quoteAmt
+      .~ inspectRatioDef (unTagged quoteAmt)
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelAmount
       . #amountModelOutput
-      .~ unTag @'Quote quoteAmt
+      .~ unTagged quoteAmt
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelCurrency
@@ -219,13 +218,13 @@ newModel = do
       . #paymentMethodMoney
       . #moneyModelAmount
       . #amountModelInput
-      .~ inspectMoneyAmount baseAmt
+      .~ inspectRatioDef (unTagged baseAmt)
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelAmount
       . #amountModelOutput
-      .~ unTag @'Base baseAmt
+      .~ unTagged baseAmt
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
@@ -242,14 +241,13 @@ newMoneyModel :: (MonadIO m) => CurrencyInfo -> m MoneyModel
 newMoneyModel cur = do
   amtUuid <- newUuid
   curUuid <- newUuid
-  let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
   pure
     MoneyModel
       { moneyModelAmount =
           AmountModel
             { amountModelUuid = amtUuid,
-              amountModelInput = inspectMoneyAmount zero,
-              amountModelOutput = zero
+              amountModelInput = inspectRatioDef @Text @Integer 0,
+              amountModelOutput = 0
             },
         moneyModelCurrency =
           CurrencyModel
@@ -284,7 +282,3 @@ newPaymentMethod cur =
     <*> newTextModel
     <*> newTextModel
     <*> pure True
-
-inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a
-inspectMoneyAmount =
-  inspectRatio defaultRatioFormat . unTagged

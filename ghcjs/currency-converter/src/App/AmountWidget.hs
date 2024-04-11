@@ -53,27 +53,22 @@ amountWidget st loc =
           ( Just
               . inspectCurrencyInfo
               $ st
-              ^. cloneLens moneyLens
+              ^. cloneLens optic
               . #moneyModelCurrency
-              . #currencyInputInfo
+              . #currencyModelData
           )
         & TextField.setAttributes
           [ class_ "fill",
-            id_
-              . ms
-              . htmlUuid @Text
-              $ st
-              ^. cloneLens moneyLens
-              . #moneyModelAmountUuid,
+            id_ . ms $ htmlUuid @Text uuid,
             onKeyDown $ Misc.onKeyDownAction uuid,
             onBlur onBlurAction
           ]
     ]
   where
-    moneyLens = Misc.getConverterMoneyLens loc
-    uuid = st ^. cloneLens moneyLens . #moneyModelAmountUuid
-    input = st ^. cloneLens moneyLens . #moneyModelAmountInput
-    output = st ^. cloneLens moneyLens . #moneyModelAmountOutput
+    optic = Misc.getConverterMoneyLens loc
+    uuid = st ^. cloneLens optic . #moneyModelAmount . #amountModelUuid
+    input = st ^. cloneLens optic . #moneyModelAmount . #amountModelInput
+    output = st ^. cloneLens optic . #moneyModelAmount . #amountModelOutput
     valid =
       (parseMoney input == Just output)
         || (input == inspectMoneyAmount output)
@@ -83,14 +78,16 @@ amountWidget st loc =
           then st'
           else
             st'
-              & cloneLens moneyLens
-              . #moneyModelAmountInput
+              & cloneLens optic
+              . #moneyModelAmount
+              . #amountModelInput
               .~ inspectMoneyAmount output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
-          & cloneLens moneyLens
-          . #moneyModelAmountInput
+          & cloneLens optic
+          . #moneyModelAmount
+          . #amountModelInput
           .~ from @String @Text txt
           & #modelData
           . #dataModelTopOrBottom
@@ -99,8 +96,9 @@ amountWidget st loc =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
-            ^. cloneLens moneyLens
-            . #moneyModelAmountInput
+            ^. cloneLens optic
+            . #moneyModelAmount
+            . #amountModelInput
         )
         ( ChanItem 0 id
         )
@@ -116,8 +114,9 @@ amountWidget st loc =
         )
         ( ChanItem 300 $ \st' ->
             st'
-              & cloneLens moneyLens
-              . #moneyModelAmountInput
+              & cloneLens optic
+              . #moneyModelAmount
+              . #amountModelInput
               .~ mempty
               & #modelData
               . #dataModelTopOrBottom
@@ -145,29 +144,49 @@ swapAmountsWidget =
     onClickAction =
       pureUpdate 0 $ \st ->
         let baseInput =
-              st ^. #modelData . #dataModelTopMoney . #moneyModelAmountInput
+              st
+                ^. #modelData
+                . #dataModelTopMoney
+                . #moneyModelAmount
+                . #amountModelInput
             baseOutput =
-              st ^. #modelData . #dataModelTopMoney . #moneyModelAmountOutput
+              st
+                ^. #modelData
+                . #dataModelTopMoney
+                . #moneyModelAmount
+                . #amountModelOutput
             quoteInput =
-              st ^. #modelData . #dataModelBottomMoney . #moneyModelAmountInput
+              st
+                ^. #modelData
+                . #dataModelBottomMoney
+                . #moneyModelAmount
+                . #amountModelInput
             quoteOutput =
-              st ^. #modelData . #dataModelBottomMoney . #moneyModelAmountOutput
+              st
+                ^. #modelData
+                . #dataModelBottomMoney
+                . #moneyModelAmount
+                . #amountModelOutput
          in st
               & #modelData
               . #dataModelTopMoney
-              . #moneyModelAmountInput
+              . #moneyModelAmount
+              . #amountModelInput
               .~ quoteInput
               & #modelData
               . #dataModelTopMoney
-              . #moneyModelAmountOutput
+              . #moneyModelAmount
+              . #amountModelOutput
               .~ quoteOutput
               & #modelData
               . #dataModelBottomMoney
-              . #moneyModelAmountInput
+              . #moneyModelAmount
+              . #amountModelInput
               .~ baseInput
               & #modelData
               . #dataModelBottomMoney
-              . #moneyModelAmountOutput
+              . #moneyModelAmount
+              . #amountModelOutput
               .~ baseOutput
               & #modelData
               . #dataModelTopOrBottom

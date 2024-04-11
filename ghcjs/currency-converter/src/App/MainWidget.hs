@@ -111,7 +111,7 @@ switchWidget st txt boolLens =
                     [ ("text-align", "center")
                     ]
                 ]
-                [ Miso.text txt,
+                [ Miso.text $ ms txt,
                   Miso.text " ",
                   Switch.switch
                     $ Switch.config
@@ -134,7 +134,7 @@ textWidget txt =
         [ ("text-align", "center")
         ]
     ]
-    [ Miso.text txt
+    [ Miso.text $ ms txt
     ]
 
 swapScreenWidget :: Model -> View Action

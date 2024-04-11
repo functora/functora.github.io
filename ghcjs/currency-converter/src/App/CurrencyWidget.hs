@@ -22,7 +22,7 @@ import qualified Text.Fuzzy as Fuzzy
 
 currencyWidget ::
   Model ->
-  ALens' Model CurrencyInput ->
+  ALens' Model CurrencyModel ->
   View Action
 currencyWidget st optic =
   LayoutGrid.cell
@@ -38,14 +38,14 @@ currencyWidget st optic =
         . inspectCurrencyInfo
         $ st
         ^. cloneLens optic
-        . #currencyInputInfo,
+        . #currencyModelData,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
             & Dialog.setOpen
               ( st
                   ^. cloneLens optic
-                  . #currencyInputOpen
+                  . #currencyModelOpen
               )
         )
         ( Dialog.dialogContent
@@ -60,7 +60,7 @@ currencyWidget st optic =
                   . TextField.setType (Just "text")
                   . ( if st
                         ^. cloneLens optic
-                        . #currencyInputOpen
+                        . #currencyModelOpen
                         then id
                         else
                           TextField.setValue
@@ -68,7 +68,7 @@ currencyWidget st optic =
                                 . from @Text @String
                                 $ st
                                 ^. cloneLens optic
-                                . #currencyInputSearch
+                                . #currencyModelSearch
                             )
                     )
                   . TextField.setOnInput search
@@ -77,7 +77,7 @@ currencyWidget st optic =
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
-                        . #currencyInputInfo
+                        . #currencyModelData
                     )
                   . TextField.setAttributes
                     [ class_ "fill",
@@ -97,35 +97,35 @@ currencyWidget st optic =
         )
     ]
   where
-    uuid = st ^. cloneLens optic . #currencyInputUuid
+    uuid = st ^. cloneLens optic . #currencyModelUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #currencyInputSearch
+          . #currencyModelSearch
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #currencyInputOpen
+          . #currencyModelOpen
           .~ True
           & cloneLens optic
-          . #currencyInputSearch
+          . #currencyModelSearch
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #currencyInputOpen
+          . #currencyModelOpen
           .~ False
           & cloneLens optic
-          . #currencyInputSearch
+          . #currencyModelSearch
           .~ mempty
 
 currencyListWidget ::
   Model ->
-  ALens' Model CurrencyInput ->
+  ALens' Model CurrencyModel ->
   View Action
 currencyListWidget st optic =
   List.list
@@ -137,8 +137,8 @@ currencyListWidget st optic =
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #currencyInputInfo
-    search = st ^. cloneLens optic . #currencyInputSearch
+    current = st ^. cloneLens optic . #currencyModelData
+    search = st ^. cloneLens optic . #currencyModelSearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -151,7 +151,7 @@ currencyListWidget st optic =
           False
 
 currencyListItemWidget ::
-  ALens' Model CurrencyInput ->
+  ALens' Model CurrencyModel ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
@@ -167,13 +167,13 @@ currencyListItemWidget optic current item =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneLens optic
-                . #currencyInputOpen
+                . #currencyModelOpen
                 .~ False
                 & cloneLens optic
-                . #currencyInputSearch
+                . #currencyModelSearch
                 .~ mempty
                 & cloneLens optic
-                . #currencyInputInfo
+                . #currencyModelData
                 .~ item
           )
     )
@@ -205,23 +205,23 @@ swapCurrenciesWidget =
                 ^. #modelData
                 . #dataModelTopMoney
                 . #moneyModelCurrency
-                . #currencyInputInfo
+                . #currencyModelData
             quoteCurrency =
               st
                 ^. #modelData
                 . #dataModelBottomMoney
                 . #moneyModelCurrency
-                . #currencyInputInfo
+                . #currencyModelData
          in st
               & #modelData
               . #dataModelTopMoney
               . #moneyModelCurrency
-              . #currencyInputInfo
+              . #currencyModelData
               .~ quoteCurrency
               & #modelData
               . #dataModelBottomMoney
               . #moneyModelCurrency
-              . #currencyInputInfo
+              . #currencyModelData
               .~ baseCurrency
               & #modelData
               . #dataModelTopOrBottom

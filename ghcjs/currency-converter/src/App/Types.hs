@@ -4,7 +4,8 @@ module App.Types
     DataModel (..),
     TextModel (..),
     MoneyModel (..),
-    CurrencyInput (..),
+    AmountModel (..),
+    CurrencyModel (..),
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
@@ -12,7 +13,7 @@ module App.Types
     TopOrBottom (..),
     newModel,
     pureUpdate,
-    newTextInput,
+    newTextModel,
     inspectMoneyAmount,
   )
 where
@@ -57,15 +58,31 @@ data DataModel = DataModel
 
 data TextModel = TextModel
   { textModelUuid :: UUID,
-    textModelValue :: Text
+    textModelData :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data MoneyModel = MoneyModel
-  { moneyModelAmountUuid :: UUID,
-    moneyModelAmountInput :: Text,
-    moneyModelAmountOutput :: Money (Tags 'Signed |+| 'MoneyAmount),
-    moneyModelCurrency :: CurrencyInput
+  { moneyModelAmount :: AmountModel,
+    moneyModelCurrency :: CurrencyModel
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data AmountModel = AmountModel
+  { amountModelUuid :: UUID,
+    amountModelInput :: Text,
+    amountModelOutput :: Money (Tags 'Signed |+| 'MoneyAmount)
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+data CurrencyModel = CurrencyModel
+  { currencyModelUuid :: UUID,
+    currencyModelData :: CurrencyInfo,
+    currencyModelOpen :: Bool,
+    --
+    -- TODO : use TextModel
+    --
+    currencyModelSearch :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -95,18 +112,7 @@ data TopOrBottom
 
 data Asset = Asset
   { assetDescription :: TextModel,
-    assetCurrency :: CurrencyInput
-  }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
-
-data CurrencyInput = CurrencyInput
-  { currencyInputUuid :: UUID,
-    currencyInputInfo :: CurrencyInfo,
-    currencyInputOpen :: Bool,
-    --
-    -- TODO : use TextModel
-    --
-    currencyInputSearch :: Text
+    assetCurrency :: CurrencyModel
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -129,8 +135,8 @@ newModel = do
   topMoney <- newModelMoney btc
   bottomMoney <- newModelMoney usd
   paymentMethod <- newPaymentMethod btc
-  issuer <- newTextInput
-  client <- newTextInput
+  issuer <- newTextModel
+  client <- newTextModel
   let st =
         Model
           { modelHide = True,
@@ -177,29 +183,33 @@ newModel = do
       --
       & #modelData
       . #dataModelTopMoney
-      . #moneyModelAmountInput
+      . #moneyModelAmount
+      . #amountModelInput
       .~ inspectMoneyAmount baseAmt
       & #modelData
       . #dataModelTopMoney
-      . #moneyModelAmountOutput
+      . #moneyModelAmount
+      . #amountModelOutput
       .~ unTag @'Base baseAmt
       & #modelData
       . #dataModelTopMoney
       . #moneyModelCurrency
-      . #currencyInputInfo
+      . #currencyModelData
       .~ baseCur
       & #modelData
       . #dataModelBottomMoney
-      . #moneyModelAmountInput
+      . #moneyModelAmount
+      . #amountModelInput
       .~ inspectMoneyAmount quoteAmt
       & #modelData
       . #dataModelBottomMoney
-      . #moneyModelAmountOutput
+      . #moneyModelAmount
+      . #amountModelOutput
       .~ unTag @'Quote quoteAmt
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelCurrency
-      . #currencyInputInfo
+      . #currencyModelData
       .~ quoteCur
       --
       -- InvoiceEditor
@@ -207,18 +217,20 @@ newModel = do
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
-      . #moneyModelAmountInput
+      . #moneyModelAmount
+      . #amountModelInput
       .~ inspectMoneyAmount baseAmt
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
-      . #moneyModelAmountOutput
+      . #moneyModelAmount
+      . #amountModelOutput
       .~ unTag @'Base baseAmt
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelCurrency
-      . #currencyInputInfo
+      . #currencyModelData
       .~ baseCur
       --
       -- Misc
@@ -233,15 +245,18 @@ newModelMoney cur = do
   let zero = Tagged 0 :: Money (Tags 'Signed |+| 'MoneyAmount)
   pure
     MoneyModel
-      { moneyModelAmountUuid = amtUuid,
-        moneyModelAmountInput = inspectMoneyAmount zero,
-        moneyModelAmountOutput = zero,
+      { moneyModelAmount =
+          AmountModel
+            { amountModelUuid = amtUuid,
+              amountModelInput = inspectMoneyAmount zero,
+              amountModelOutput = zero
+            },
         moneyModelCurrency =
-          CurrencyInput
-            { currencyInputUuid = curUuid,
-              currencyInputInfo = cur,
-              currencyInputOpen = False,
-              currencyInputSearch = mempty
+          CurrencyModel
+            { currencyModelUuid = curUuid,
+              currencyModelData = cur,
+              currencyModelOpen = False,
+              currencyModelSearch = mempty
             }
       }
 
@@ -253,21 +268,21 @@ pureUpdate delay =
   PushUpdate (pure ())
     . ChanItem delay
 
-newTextInput :: (MonadIO m) => m TextModel
-newTextInput = do
+newTextModel :: (MonadIO m) => m TextModel
+newTextModel = do
   uuid <- newUuid
   pure
     TextModel
       { textModelUuid = uuid,
-        textModelValue = mempty
+        textModelData = mempty
       }
 
 newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m PaymentMethod
 newPaymentMethod cur =
   PaymentMethod
     <$> newModelMoney cur
-    <*> newTextInput
-    <*> newTextInput
+    <*> newTextModel
+    <*> newTextModel
     <*> pure True
 
 inspectMoneyAmount :: (MoneyTags tags, From String a) => Money tags -> a

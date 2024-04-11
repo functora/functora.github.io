@@ -173,17 +173,17 @@ syncInputs st =
     --
     allLens :: [(ALens' Model UUID, ALens' Model Text)]
     allLens =
-      [ ( #modelData . #dataModelTopMoney . #moneyModelAmountUuid,
-          #modelData . #dataModelTopMoney . #moneyModelAmountInput
+      [ ( #modelData . #dataModelTopMoney . #moneyModelAmount . #amountModelUuid,
+          #modelData . #dataModelTopMoney . #moneyModelAmount . #amountModelInput
         ),
-        ( #modelData . #dataModelBottomMoney . #moneyModelAmountUuid,
-          #modelData . #dataModelBottomMoney . #moneyModelAmountInput
+        ( #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelUuid,
+          #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelInput
         ),
         ( #modelData . #dataModelIssuer . #textModelUuid,
-          #modelData . #dataModelIssuer . #textModelValue
+          #modelData . #dataModelIssuer . #textModelData
         ),
         ( #modelData . #dataModelClient . #textModelUuid,
-          #modelData . #dataModelClient . #textModelValue
+          #modelData . #dataModelClient . #textModelData
         )
       ]
 
@@ -193,13 +193,14 @@ evalModel st = do
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
-        case st ^. cloneLens baseLens . #moneyModelAmountInput of
+        case st ^. cloneLens baseLens . #moneyModelAmount . #amountModelInput of
           amt
             | null amt ->
                 inspectMoneyAmount
                   $ st
                   ^. cloneLens baseLens
-                  . #moneyModelAmountOutput
+                  . #moneyModelAmount
+                  . #amountModelOutput
           amt -> amt
   baseAmtResult <-
     tryAny $ parseMoney baseAmtInput
@@ -213,30 +214,34 @@ evalModel st = do
                 $ st
                 ^. cloneLens baseLens
                 . #moneyModelCurrency
-                . #currencyInputInfo
+                . #currencyModelData
                 . #currencyInfoCode
         quote <-
           getQuote funds
             $ st
             ^. cloneLens quoteLens
             . #moneyModelCurrency
-            . #currencyInputInfo
+            . #currencyModelData
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime
         pure
           $ st
           & cloneLens baseLens
-          . #moneyModelAmountInput
+          . #moneyModelAmount
+          . #amountModelInput
           .~ baseAmtInput
           & cloneLens baseLens
-          . #moneyModelAmountOutput
+          . #moneyModelAmount
+          . #amountModelOutput
           .~ unTag @'Base baseAmt
           & cloneLens quoteLens
-          . #moneyModelAmountInput
+          . #moneyModelAmount
+          . #amountModelInput
           .~ inspectMoneyAmount quoteAmt
           & cloneLens quoteLens
-          . #moneyModelAmountOutput
+          . #moneyModelAmount
+          . #amountModelOutput
           .~ unTag @'Quote quoteAmt
           & #modelUpdatedAt
           .~ ct

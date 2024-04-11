@@ -13,6 +13,7 @@ module Functora.Prelude
     DecimalPlacesOverflowFormat (..),
     defaultRatioFormat,
     inspectRatio,
+    inspectRatioDef,
 
     -- * Integral
     -- $integral
@@ -370,6 +371,17 @@ inspectRatio fmt signedRational =
                 then prevNonZeroDecimalPlaces + 1
                 else 0
             )
+
+inspectRatioDef ::
+  forall a b.
+  ( From String a,
+    From b Integer,
+    Integral b
+  ) =>
+  Ratio b ->
+  a
+inspectRatioDef =
+  inspectRatio defaultRatioFormat
 
 roundRational :: Int -> Rational -> Rational
 roundRational decimalPlaces input =

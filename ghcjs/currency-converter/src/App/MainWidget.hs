@@ -55,65 +55,66 @@ mainWidget st =
 
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
-  let converterAmountWidget loc =
+  let amountWidget' loc =
         amountWidget
           st
-          ( inspectCurrencyInfo @Text
-              $ st
-              ^. cloneLens (Misc.getConverterCurrencyLens loc)
+          ( cloneLens (Misc.getConverterCurrencyLens loc)
               . #currencyModelData
+              . to (inspectCurrencyInfo @Text)
           )
           (Misc.getConverterAmountLens loc)
           (& #modelData . #dataModelTopOrBottom .~ loc)
-      converterCurrencyWidget =
+      currencyWidget' =
         currencyWidget st
           . Misc.getConverterCurrencyLens
-   in [ converterAmountWidget Top,
-        converterCurrencyWidget Top,
-        converterAmountWidget Bottom,
-        converterCurrencyWidget Bottom,
+   in [ amountWidget' Top,
+        currencyWidget' Top,
+        amountWidget' Bottom,
+        currencyWidget' Bottom,
         swapAmountsWidget,
         swapCurrenciesWidget
       ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
-  let amountPlaceholder =
-        inspectCurrencyInfo
-          $ st
-          ^. cloneLens (Misc.getConverterCurrencyLens Top)
+  [ textWidget "Invoice entities",
+    textModelWidget st "Issuer"
+      $ #modelData
+      . #dataModelIssuer,
+    textModelWidget st "Client"
+      $ #modelData
+      . #dataModelClient,
+    textWidget "Invoice amounts",
+    --
+    -- TODO : don't reuse Converter data
+    --
+    amountWidget
+      st
+      ( cloneLens (Misc.getConverterCurrencyLens Top)
           . #currencyModelData
-   in [ textWidget "Invoice entities",
-        textModelWidget st "Issuer"
-          $ #modelData
-          . #dataModelIssuer,
-        textModelWidget st "Client"
-          $ #modelData
-          . #dataModelClient,
-        textWidget "Invoice amounts",
-        --
-        -- TODO : don't reuse Converter data
-        --
-        amountWidget st amountPlaceholder (Misc.getConverterAmountLens Top) id,
-        currencyWidget st $ Misc.getConverterCurrencyLens Top,
-        textWidget "Payment methods",
-        textModelWidget st "Address"
-          $ #modelData
-          . #dataModelPaymentMethodsInput
-          . #paymentMethodAddress,
-        switchWidget st "Address QR code"
-          $ #modelData
-          . #dataModelPaymentMethodsInput
-          . #paymentMethodAddressQrCode,
-        textModelWidget st "Notes"
-          $ #modelData
-          . #dataModelPaymentMethodsInput
-          . #paymentMethodNotes,
-        currencyWidget st
-          $ #modelData
-          . #dataModelPaymentMethodsInput
-          . #paymentMethodMoney
-          . #moneyModelCurrency,
-        addPaymentMethodWidget st
-      ]
+          . to (inspectCurrencyInfo @Text)
+      )
+      (Misc.getConverterAmountLens Top)
+      id,
+    currencyWidget st $ Misc.getConverterCurrencyLens Top,
+    textWidget "Payment methods",
+    textModelWidget st "Address"
+      $ #modelData
+      . #dataModelPaymentMethodsInput
+      . #paymentMethodAddress,
+    switchWidget st "Address QR code"
+      $ #modelData
+      . #dataModelPaymentMethodsInput
+      . #paymentMethodAddressQrCode,
+    textModelWidget st "Notes"
+      $ #modelData
+      . #dataModelPaymentMethodsInput
+      . #paymentMethodNotes,
+    currencyWidget st
+      $ #modelData
+      . #dataModelPaymentMethodsInput
+      . #paymentMethodMoney
+      . #moneyModelCurrency,
+    addPaymentMethodWidget st
+  ]
 
 switchWidget :: Model -> Text -> ALens' Model Bool -> View Action
 switchWidget st txt boolLens =

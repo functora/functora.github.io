@@ -17,12 +17,12 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 amountWidget ::
   Model ->
-  Text ->
+  Getter' Model Text ->
   ALens' Model AmountModel ->
   ( Model -> Model
   ) ->
   View Action
-amountWidget st placeholder optic extraOnInput =
+amountWidget st placeholderOptic amountOptic extraOnInput =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -36,7 +36,9 @@ amountWidget st placeholder optic extraOnInput =
         & TextField.setOnInput onInputAction
         & TextField.setPlaceholder
           ( Just
-              $ from @Text @String placeholder
+              . from @Text @String
+              $ st
+              ^. placeholderOptic
           )
         & TextField.setLeadingIcon
           ( Just
@@ -66,9 +68,9 @@ amountWidget st placeholder optic extraOnInput =
           ]
     ]
   where
-    uuid = st ^. cloneLens optic . #amountModelUuid
-    input = st ^. cloneLens optic . #amountModelInput
-    output = st ^. cloneLens optic . #amountModelOutput
+    uuid = st ^. cloneLens amountOptic . #amountModelUuid
+    input = st ^. cloneLens amountOptic . #amountModelInput
+    output = st ^. cloneLens amountOptic . #amountModelOutput
     valid =
       (parseRatio input == Just output)
         || (input == inspectRatioDef output)
@@ -78,13 +80,13 @@ amountWidget st placeholder optic extraOnInput =
           then st'
           else
             st'
-              & cloneLens optic
+              & cloneLens amountOptic
               . #amountModelInput
               .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
-          & cloneLens optic
+          & cloneLens amountOptic
           . #amountModelInput
           .~ from @String @Text txt
           & extraOnInput
@@ -92,7 +94,7 @@ amountWidget st placeholder optic extraOnInput =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
-            ^. cloneLens optic
+            ^. cloneLens amountOptic
             . #amountModelInput
         )
         ( ChanItem 0 id
@@ -109,7 +111,7 @@ amountWidget st placeholder optic extraOnInput =
         )
         ( ChanItem 300 $ \st' ->
             st'
-              & cloneLens optic
+              & cloneLens amountOptic
               . #amountModelInput
               .~ mempty
               & extraOnInput

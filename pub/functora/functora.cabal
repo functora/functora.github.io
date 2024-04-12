@@ -181,9 +181,9 @@ common pkg-money
   import:         pkg
   hs-source-dirs: src/money
   build-depends:
-    , aeson
     , aeson-combinators
     , base
+    , cfg
     , tags
     , template-haskell
     , text

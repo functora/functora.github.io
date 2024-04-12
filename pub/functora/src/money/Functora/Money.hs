@@ -33,9 +33,9 @@ module Functora.Money
   )
 where
 
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Text as T
+import Functora.Cfg
 import Functora.MoneyFgpt as X ()
 import Functora.MoneySing as X
 import Functora.Prelude
@@ -322,6 +322,7 @@ data CurrencyInfo = CurrencyInfo
     currencyInfoText :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
+  deriving (FromJSON, ToJSON) via GenericType CurrencyInfo
 
 inspectCurrencyInfo :: forall a. (From Text a) => CurrencyInfo -> a
 inspectCurrencyInfo input =

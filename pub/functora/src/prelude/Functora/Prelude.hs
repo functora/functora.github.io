@@ -23,6 +23,7 @@ module Functora.Prelude
     -- $lens
     view,
     (^.),
+    Getter',
     mkGetters,
 
     -- * DerivingVia
@@ -101,6 +102,7 @@ import Control.Lens.Combinators as X
     first1Of,
     makePrisms,
     review,
+    to,
   )
 import Control.Monad.Extra as X
   ( eitherM,
@@ -131,7 +133,7 @@ import qualified Data.Map.Merge.Strict as Map
 import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
 import qualified Data.Scientific as Scientific
-import qualified Data.Semigroup as Semi
+import qualified Data.Semigroup as Semigroup
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -446,15 +448,17 @@ safeFromIntegral x =
 -- NOTE : view override is needed because of this:
 -- https://github.com/ekmett/lens/issues/798
 
-view :: Getting (Semi.First a) s a -> s -> a
+view :: Getter' s a -> s -> a
 view = first1Of
 {-# INLINE view #-}
 
 infixl 8 ^.
 
-(^.) :: s -> Getting (Semi.First a) s a -> a
+(^.) :: s -> Getter' s a -> a
 (^.) = flip first1Of
 {-# INLINE (^.) #-}
+
+type Getter' s a = Getting (Semigroup.First a) s a
 
 mkGetters :: TH.Name -> TH.DecsQ
 mkGetters =

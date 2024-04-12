@@ -6,7 +6,6 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -16,8 +15,14 @@ import qualified Material.Theme as Theme
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
-amountWidget :: Model -> TopOrBottom -> View Action
-amountWidget st loc =
+amountWidget ::
+  Model ->
+  Text ->
+  ALens' Model AmountModel ->
+  ( Model -> Model
+  ) ->
+  View Action
+amountWidget st placeholder optic extraOnInput =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -29,6 +34,10 @@ amountWidget st loc =
         $ TextField.config
         & TextField.setType (Just "number")
         & TextField.setOnInput onInputAction
+        & TextField.setPlaceholder
+          ( Just
+              $ from @Text @String placeholder
+          )
         & TextField.setLeadingIcon
           ( Just
               $ TextField.icon
@@ -49,14 +58,6 @@ amountWidget st loc =
                 ]
                 "close"
           )
-        & TextField.setPlaceholder
-          ( Just
-              . inspectCurrencyInfo
-              $ st
-              ^. cloneLens optic
-              . #moneyModelCurrency
-              . #currencyModelData
-          )
         & TextField.setAttributes
           [ class_ "fill",
             id_ . ms $ htmlUuid @Text uuid,
@@ -65,10 +66,9 @@ amountWidget st loc =
           ]
     ]
   where
-    optic = Misc.getConverterMoneyLens loc
-    uuid = st ^. cloneLens optic . #moneyModelAmount . #amountModelUuid
-    input = st ^. cloneLens optic . #moneyModelAmount . #amountModelInput
-    output = st ^. cloneLens optic . #moneyModelAmount . #amountModelOutput
+    uuid = st ^. cloneLens optic . #amountModelUuid
+    input = st ^. cloneLens optic . #amountModelInput
+    output = st ^. cloneLens optic . #amountModelOutput
     valid =
       (parseRatio input == Just output)
         || (input == inspectRatioDef output)
@@ -79,25 +79,20 @@ amountWidget st loc =
           else
             st'
               & cloneLens optic
-              . #moneyModelAmount
               . #amountModelInput
               .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens optic
-          . #moneyModelAmount
           . #amountModelInput
           .~ from @String @Text txt
-          & #modelData
-          . #dataModelTopOrBottom
-          .~ loc
+          & extraOnInput
     onCopyAction =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
             ^. cloneLens optic
-            . #moneyModelAmount
             . #amountModelInput
         )
         ( ChanItem 0 id
@@ -115,12 +110,9 @@ amountWidget st loc =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens optic
-              . #moneyModelAmount
               . #amountModelInput
               .~ mempty
-              & #modelData
-              . #dataModelTopOrBottom
-              .~ loc
+              & extraOnInput
         )
 
 swapAmountsWidget :: View Action

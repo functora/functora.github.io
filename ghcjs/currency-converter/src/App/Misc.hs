@@ -1,5 +1,5 @@
 module App.Misc
-  ( getConverterMoneyLens,
+  ( getConverterAmountLens,
     getConverterCurrencyLens,
     pushActionQueue,
     onKeyDownAction,
@@ -15,10 +15,10 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterMoneyLens :: TopOrBottom -> ALens' Model MoneyModel
-getConverterMoneyLens = \case
-  Top -> #modelData . #dataModelTopMoney
-  Bottom -> #modelData . #dataModelBottomMoney
+getConverterAmountLens :: TopOrBottom -> ALens' Model AmountModel
+getConverterAmountLens = \case
+  Top -> #modelData . #dataModelTopMoney . #moneyModelAmount
+  Bottom -> #modelData . #dataModelBottomMoney . #moneyModelAmount
 
 getConverterCurrencyLens :: TopOrBottom -> ALens' Model CurrencyModel
 getConverterCurrencyLens = \case

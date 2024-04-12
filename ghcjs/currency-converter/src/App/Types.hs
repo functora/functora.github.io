@@ -9,7 +9,7 @@ module App.Types
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
-    Asset (..),
+    AssetModel (..),
     TopOrBottom (..),
     newModel,
     pureUpdate,
@@ -109,9 +109,11 @@ data TopOrBottom
   | Bottom
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
 
-data Asset = Asset
-  { assetDescription :: TextModel,
-    assetCurrency :: CurrencyModel
+data AssetModel = AssetModel
+  { assetModelDescription :: TextModel,
+    assetModelAmount :: AmountModel,
+    assetModelCurrency :: CurrencyModel,
+    assetModelRates :: QuotesPerBaseAt
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 

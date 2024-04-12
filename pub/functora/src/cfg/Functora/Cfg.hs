@@ -58,21 +58,22 @@ newCli =
 
 cliParser :: Cli.ParserInfo Cli
 cliParser =
-  Cli.info ((textConf <|> fileConf) <**> Cli.helper) $
-    Cli.fullDesc
-      <> Cli.header mempty
-      <> Cli.progDesc "Cli parser"
+  Cli.info ((textConf <|> fileConf) <**> Cli.helper)
+    $ Cli.fullDesc
+    <> Cli.header mempty
+    <> Cli.progDesc "Cli parser"
 
 textConf :: Cli.Parser Cli
 textConf =
   CliTextConf
     <$> fmap
       NE.fromList
-      ( some . Cli.strOption $
-          Cli.long "text-conf"
-            <> Cli.short 't'
-            <> Cli.metavar "TEXTCONF"
-            <> Cli.help "Config as plain text"
+      ( some
+          . Cli.strOption
+          $ Cli.long "text-conf"
+          <> Cli.short 't'
+          <> Cli.metavar "TEXTCONF"
+          <> Cli.help "Config as plain text"
       )
     <*> showConf
 
@@ -81,11 +82,12 @@ fileConf =
   CliFileConf
     <$> fmap
       NE.fromList
-      ( some . Cli.strOption $
-          Cli.long "file-conf"
-            <> Cli.short 'f'
-            <> Cli.metavar "FILENAME"
-            <> Cli.help "Config file location"
+      ( some
+          . Cli.strOption
+          $ Cli.long "file-conf"
+          <> Cli.short 'f'
+          <> Cli.metavar "FILENAME"
+          <> Cli.help "Config file location"
       )
     <*> showConf
 
@@ -108,8 +110,8 @@ decodeJson ::
   inp ->
   Either String out
 decodeJson raw =
-  A.eitherDecode $
-    via @(UTF_8 BL.ByteString) @inp @BL.ByteString raw
+  A.eitherDecode
+    $ via @(UTF_8 BL.ByteString) @inp @BL.ByteString raw
 
 -- $toml
 -- TOML
@@ -210,8 +212,8 @@ instance
 instance
   ( Generic a,
     Typeable a,
-    A.GToJSON' A.Value A.Zero (Rep a),
-    A.GToJSON' A.Encoding A.Zero (Rep a)
+    A.GToJSON A.Zero (Rep a),
+    A.GToEncoding A.Zero (Rep a)
   ) =>
   ToJSON (GenericType a)
   where
@@ -221,8 +223,8 @@ instance
 instance
   ( Generic a,
     Typeable a,
-    A.GToJSON' A.Value A.Zero (Rep a),
-    A.GToJSON' A.Encoding A.Zero (Rep a),
+    A.GToJSON A.Zero (Rep a),
+    A.GToEncoding A.Zero (Rep a),
     A.GToJSONKey (Rep a)
   ) =>
   ToJSONKey (GenericType a)
@@ -244,8 +246,7 @@ optsAeson =
       A.omitNothingFields = True,
       A.sumEncoding = A.defaultTaggedObject,
       A.unwrapUnaryRecords = False,
-      A.tagSingleConstructors = False,
-      A.rejectUnknownFields = True
+      A.tagSingleConstructors = False
     }
   where
     fmt = Toml.stripTypeNamePrefix $ Proxy @a

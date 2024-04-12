@@ -75,7 +75,7 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  prelude qr aes money web rates tags
+  hs-source-dirs:  prelude qr aes money web rates tags cfg
   build-depends:
     , aeson
     , aeson-combinators
@@ -99,6 +99,7 @@ library
     , modern-uri
     , monad-chronicle
     , network-uri
+    , optparse-applicative
     , pkcs7
     , qrcode-core
     , safe-exceptions
@@ -113,6 +114,7 @@ library
     , these
     , these-lens
     , time
+    , tomland
     , type-level-sets
     , unbounded-delays
     , universum
@@ -135,6 +137,8 @@ library
 
   exposed-modules:
     Functora.Aes
+    Functora.Cfg
+    Functora.CfgOrphan
     Functora.Money
     Functora.MoneyFgpt
     Functora.MoneySing

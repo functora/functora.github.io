@@ -73,6 +73,10 @@ module Functora.Prelude
     takeWhileAcc,
     newUuid,
     htmlUuid,
+    randomList,
+    randomListPure,
+    randomByteString,
+    randomByteStringPure,
   )
 where
 
@@ -110,6 +114,7 @@ import Control.Monad.Extra as X
     maybeM,
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
 import qualified Data.ByteString.Lazy as BL
@@ -177,6 +182,7 @@ import qualified Lens.Micro.TH as TH
     makeLensesWith,
   )
 import Main.Utf8 as X (withUtf8)
+import qualified System.Random as Random
 import Text.URI as X (URI, mkURI)
 import qualified Text.URI.QQ as URI
 import Type.Reflection
@@ -731,3 +737,28 @@ newUuid = liftIO UUID.nextRandom
 
 htmlUuid :: forall a. (From Text a) => UUID -> a
 htmlUuid = from @Text @a . ("uuid-" <>) . UUID.toText
+
+--
+-- NOTE : compat with older random
+--
+
+randomList :: forall a m. (Random.Random a, MonadIO m) => Natural -> m [a]
+randomList = liftIO . Random.getStdRandom . randomListPure
+
+randomListPure ::
+  (Random.RandomGen g, Random.Random a) => Natural -> g -> ([a], g)
+randomListPure qty =
+  go mempty qty
+  where
+    go acc 0 g = (acc, g)
+    go acc n prev =
+      let (x, next) = Random.random prev
+       in go (x : acc) (n - 1) next
+
+randomByteString :: (MonadIO m) => Natural -> m ByteString
+randomByteString = liftIO . Random.getStdRandom . randomByteStringPure
+
+randomByteStringPure :: (Random.RandomGen g) => Natural -> g -> (ByteString, g)
+randomByteStringPure qty =
+  first BS.pack
+    . randomListPure qty

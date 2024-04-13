@@ -148,8 +148,8 @@ inspectParseRatio title generator =
 uFractional :: (Fractional a) => Gen a
 uFractional =
   sized $ \n -> do
-    denom <- chooseInt (1, max 1 n)
-    numer <- chooseInt (0, n * denom)
+    denom <- choose (1, max 1 n)
+    numer <- choose (0, n * denom)
     pure
       $ Universum.fromIntegral numer
       / Universum.fromIntegral denom

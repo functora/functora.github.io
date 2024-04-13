@@ -73,9 +73,6 @@ common pkg
     TypeFamilies
     TypeOperators
 
-library
-  import:          pkg
-  hs-source-dirs:  prelude qr aes money web rates tags cfg
   build-depends:
     , aeson
     , aeson-combinators
@@ -96,12 +93,13 @@ library
     , microlens-contra
     , microlens-ghc
     , microlens-th
-    , modern-uri
+    , modern-uri >=0.3.4.4
     , monad-chronicle
     , network-uri
     , optparse-applicative
     , pkcs7
     , qrcode-core
+    , random
     , safe-exceptions
     , scientific
     , singlethongs
@@ -135,6 +133,9 @@ library
   else
     build-depends: ghcjs-base
 
+library
+  import:          pkg
+  hs-source-dirs:  prelude qr aes money web rates tags cfg
   exposed-modules:
     Functora.Aes
     Functora.Cfg
@@ -153,3 +154,47 @@ library
   other-modules:
     Functora.TagsFamily
     Functora.TagsOrphan
+
+test-suite functora-ghcjs-test
+  import:         pkg
+  type:           exitcode-stdio-1.0
+  main-is:        Spec.hs
+  hs-source-dirs: prelude qr aes money web rates tags cfg
+  hs-source-dirs: test
+  build-depends:
+    , base
+    , bytestring
+    , containers
+    , hspec
+    , modern-uri
+    , qrcode-core
+    , QuickCheck
+    , text
+    , universum
+
+  other-modules:
+    Functora.AesSpec
+    Functora.CfgSpec
+    Functora.PreludeSpec
+    Functora.QrSpec
+    Functora.RatesSpec
+    Functora.Tags.TestFgpt
+    Functora.Tags.TestSing
+    Functora.TagsSpec
+
+  other-modules:
+    Functora.Aes
+    Functora.Cfg
+    Functora.CfgOrphan
+    Functora.Money
+    Functora.MoneyFgpt
+    Functora.MoneySing
+    Functora.Prelude
+    Functora.PreludeOrphan
+    Functora.Qr
+    Functora.Rates
+    Functora.Tags
+    Functora.TagsFamily
+    Functora.TagsOrphan
+    Functora.Web
+    Functora.WebOrphan

@@ -94,6 +94,7 @@ common pkg-prelude
     , microlens-th
     , modern-uri
     , monad-chronicle
+    , random
     , safe-exceptions
     , scientific
     , stm
@@ -287,7 +288,7 @@ test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  hs-source-dirs: test
+  hs-source-dirs: src/test
   build-depends:
     , base
     , bytestring
@@ -296,7 +297,6 @@ test-suite functora-test
     , modern-uri
     , qrcode-core
     , QuickCheck
-    , random
     , text
     , universum
 

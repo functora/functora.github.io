@@ -109,8 +109,7 @@
               "miso-components" "${functora}/ghcjs/miso-components" {};
             functora-ghcjs =
               self.callCabal2nix
-              "functora-ghcjs" "${functora}/pub/functora/src" {}
-            ;
+              "functora-ghcjs" "${functora}/pub/functora/src" {};
           }
         );
     in {

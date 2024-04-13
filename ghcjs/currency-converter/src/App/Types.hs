@@ -1,8 +1,9 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module App.Types
   ( Model (..),
     Action (..),
     DataModel (..),
-    TextModel (..),
     MoneyModel (..),
     AmountModel (..),
     CurrencyModel (..),
@@ -11,13 +12,15 @@ module App.Types
     Screen (..),
     AssetModel (..),
     TopOrBottom (..),
+    Unique (..),
+    newUnique,
     newModel,
     pureUpdate,
-    newTextModel,
   )
 where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import Functora.Cfg
 import Functora.Money
 import Functora.Prelude as Prelude
 import Functora.Rates
@@ -26,7 +29,7 @@ import Miso hiding (view)
 
 data Model = Model
   { modelHide :: Bool,
-    modelData :: DataModel,
+    modelData :: DataModel Unique,
     modelScreen :: Screen,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
@@ -44,20 +47,48 @@ data Action
   | ChanUpdate Model
   | PushUpdate (JSM ()) (ChanItem (Model -> Model))
 
-data DataModel = DataModel
+data DataModel f = DataModel
   { dataModelTopMoney :: MoneyModel,
     dataModelBottomMoney :: MoneyModel,
     dataModelTopOrBottom :: TopOrBottom,
-    dataModelPaymentMethods :: [PaymentMethod],
-    dataModelPaymentMethodsInput :: PaymentMethod,
-    dataModelIssuer :: TextModel,
-    dataModelClient :: TextModel
+    dataModelPaymentMethods :: [PaymentMethod f],
+    dataModelPaymentMethodsInput :: PaymentMethod f,
+    dataModelIssuer :: f Text,
+    dataModelClient :: f Text
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Generic)
 
-data TextModel = TextModel
-  { textModelUuid :: UUID,
-    textModelData :: Text
+deriving stock instance (Eq (f Text)) => Eq (DataModel f)
+
+deriving stock instance (Ord (f Text)) => Ord (DataModel f)
+
+deriving stock instance (Show (f Text)) => Show (DataModel f)
+
+deriving stock instance (Read (f Text)) => Read (DataModel f)
+
+deriving stock instance (Typeable f, Data (f Text)) => Data (DataModel f)
+
+deriving via
+  GenericType (DataModel f)
+  instance
+    ( Typeable f,
+      ToJSON (f Text),
+      ToJSON (PaymentMethod f)
+    ) =>
+    ToJSON (DataModel f)
+
+deriving via
+  GenericType (DataModel f)
+  instance
+    ( Typeable f,
+      FromJSON (f Text),
+      FromJSON (PaymentMethod f)
+    ) =>
+    FromJSON (DataModel f)
+
+data Unique a = Unique
+  { uniqueUuid :: UUID,
+    uniqueData :: a
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
@@ -66,6 +97,7 @@ data MoneyModel = MoneyModel
     moneyModelCurrency :: CurrencyModel
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType MoneyModel
 
 data AmountModel = AmountModel
   { amountModelUuid :: UUID,
@@ -73,25 +105,37 @@ data AmountModel = AmountModel
     amountModelOutput :: Rational
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType AmountModel
 
 data CurrencyModel = CurrencyModel
   { currencyModelUuid :: UUID,
     currencyModelData :: CurrencyInfo,
     currencyModelOpen :: Bool,
     --
-    -- TODO : use TextModel
+    -- TODO : use Unique Text
     --
     currencyModelSearch :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType CurrencyModel
 
-data PaymentMethod = PaymentMethod
+data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: MoneyModel,
-    paymentMethodAddress :: TextModel,
-    paymentMethodNotes :: TextModel,
+    paymentMethodAddress :: f Text,
+    paymentMethodNotes :: f Text,
     paymentMethodAddressQrCode :: Bool
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Generic)
+
+deriving stock instance (Eq (f Text)) => Eq (PaymentMethod f)
+
+deriving stock instance (Ord (f Text)) => Ord (PaymentMethod f)
+
+deriving stock instance (Show (f Text)) => Show (PaymentMethod f)
+
+deriving stock instance (Read (f Text)) => Read (PaymentMethod f)
+
+deriving stock instance (Typeable f, Data (f Text)) => Data (PaymentMethod f)
 
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
@@ -103,19 +147,31 @@ data Screen
   = Converter
   | InvoiceEditor
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType Screen
 
 data TopOrBottom
   = Top
   | Bottom
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
-data AssetModel = AssetModel
-  { assetModelDescription :: TextModel,
+data AssetModel f = AssetModel
+  { assetModelDescription :: f Text,
     assetModelAmount :: AmountModel,
     assetModelCurrency :: CurrencyModel,
     assetModelRates :: QuotesPerBaseAt
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Generic)
+
+deriving stock instance (Eq (f Text)) => Eq (AssetModel f)
+
+deriving stock instance (Ord (f Text)) => Ord (AssetModel f)
+
+deriving stock instance (Show (f Text)) => Show (AssetModel f)
+
+deriving stock instance (Read (f Text)) => Read (AssetModel f)
+
+deriving stock instance (Typeable f, Data (f Text)) => Data (AssetModel f)
 
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
@@ -136,8 +192,8 @@ newModel = do
   topMoney <- newMoneyModel btc
   bottomMoney <- newMoneyModel usd
   paymentMethod <- newPaymentMethod btc
-  issuer <- newTextModel
-  client <- newTextModel
+  issuer <- newUnique mempty
+  client <- newUnique mempty
   let st =
         Model
           { modelHide = True,
@@ -151,7 +207,7 @@ newModel = do
                   dataModelIssuer = issuer,
                   dataModelClient = client
                 },
-            modelScreen = InvoiceEditor,
+            modelScreen = Converter,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -268,19 +324,16 @@ pureUpdate delay =
   PushUpdate (pure ())
     . ChanItem delay
 
-newTextModel :: (MonadIO m) => m TextModel
-newTextModel = do
-  uuid <- newUuid
-  pure
-    TextModel
-      { textModelUuid = uuid,
-        textModelData = mempty
-      }
+newUnique :: (MonadIO m) => a -> m (Unique a)
+newUnique x =
+  Unique
+    <$> newUuid
+    <*> pure x
 
-newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m PaymentMethod
+newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m (PaymentMethod Unique)
 newPaymentMethod cur =
   PaymentMethod
     <$> newMoneyModel cur
-    <*> newTextModel
-    <*> newTextModel
+    <*> newUnique mempty
+    <*> newUnique mempty
     <*> pure True

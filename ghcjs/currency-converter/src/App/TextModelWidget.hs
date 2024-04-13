@@ -15,7 +15,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 textModelWidget ::
   Model ->
   Text ->
-  ALens' Model TextModel ->
+  ALens' Model (Unique Text) ->
   View Action
 textModelWidget st placeholder optic =
   LayoutGrid.cell
@@ -60,19 +60,19 @@ textModelWidget st placeholder optic =
           ]
     ]
   where
-    uuid = st ^. cloneLens optic . #textModelUuid
+    uuid = st ^. cloneLens optic . #uniqueUuid
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens optic
-          . #textModelData
+          . #uniqueData
           .~ from @String @Text txt
     onCopyAction =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
             ^. cloneLens optic
-            . #textModelData
+            . #uniqueData
         )
         ( ChanItem 0 id
         )
@@ -89,6 +89,6 @@ textModelWidget st placeholder optic =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens optic
-              . #textModelData
+              . #uniqueData
               .~ mempty
         )

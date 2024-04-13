@@ -80,10 +80,6 @@ common pkg
     TypeFamilies
     TypeOperators
 
-executable app
-  import:        pkg
-  main-is:       Main.hs
-  ghcjs-options: -dedupe
   build-depends:
     , base
     , containers
@@ -103,6 +99,11 @@ executable app
       , warp
       , websockets
 
+executable app
+  import:        pkg
+  main-is:       Main.hs
+  ghcjs-options: -dedupe
+
   if impl(ghcjs)
     ghc-options: -Wno-missing-home-modules
     cpp-options: -DGHCJS_BROWSER
@@ -114,3 +115,15 @@ executable app
 
   if (flag(ghcid) && impl(ghc >=8.10.7))
     ghc-options: -Wno-unused-packages
+
+test-suite app-test
+  import:         pkg
+  type:           exitcode-stdio-1.0
+  main-is:        Spec.hs
+  hs-source-dirs: test
+  other-modules:  App.TypesSpec
+  build-depends:
+    , aeson
+    , hspec
+    , QuickCheck
+    , quickcheck-instances

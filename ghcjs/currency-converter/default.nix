@@ -1,13 +1,14 @@
 let
   # functora = ../..;
   functora = fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/a3fda2a2b095ae50b4bdb941b06f8b7f3beb0115.tar.gz";
-    sha256 = "1gawwdkd37qih6s1zr9l1jwqhaqghbkfdqmvmha2rcfhvyp4z4dz";
+    url = "https://github.com/functora/functora.github.io/archive/b843abd602fefb33ac366183dd4142d905c6b850.tar.gz";
+    sha256 = "0lsybqza9rjgvm63kcadir1mx9yx374qwfdj8j5pxj9wdw0h3qad";
   };
   functora-miso = import "${functora}/ghcjs/miso/default.nix" {
     overlays = import ./overlays.nix {inherit functora;};
   };
   pkgs = functora-miso.pkgs;
+  doCheck = pkgs.haskell.lib.doCheck;
   functora-pkgs = import "${functora}/nix/nixpkgs.nix";
   safeCopy = "cp -RL --no-preserve=mode,ownership";
   forceCopy = "cp -RLf --no-preserve=mode,ownership";
@@ -21,9 +22,9 @@ let
 in rec {
   inherit pkgs functora android-pkgs android-sdk-args;
   source = pkgs.nix-gitignore.gitignoreSourcePure ./.gitignore ./.;
-  dev = pkgs.haskell.packages.ghc865.callCabal2nix "app" source {
+  dev = doCheck (pkgs.haskell.packages.ghc865.callCabal2nix "app" source {
     miso = functora-miso.miso-jsaddle;
-  };
+  });
   app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" source {};
   vsn = app.passthru.version;
   repo = builtins.toString ./.;

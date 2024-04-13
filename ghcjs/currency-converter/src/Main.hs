@@ -179,11 +179,11 @@ syncInputs st =
         ( #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelUuid,
           #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelInput
         ),
-        ( #modelData . #dataModelIssuer . #textModelUuid,
-          #modelData . #dataModelIssuer . #textModelData
+        ( #modelData . #dataModelIssuer . #uniqueUuid,
+          #modelData . #dataModelIssuer . #uniqueData
         ),
-        ( #modelData . #dataModelClient . #textModelUuid,
-          #modelData . #dataModelClient . #textModelData
+        ( #modelData . #dataModelClient . #uniqueUuid,
+          #modelData . #dataModelClient . #uniqueData
         )
       ]
 

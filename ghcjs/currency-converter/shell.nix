@@ -34,6 +34,8 @@ in
         functora-pkgs.clean-css-cli
         functora-pkgs.html-minifier
         functora-pkgs.simple-http-server
+        functora-pkgs.haskellPackages.hspec
+        functora-pkgs.haskellPackages.hspec-discover
       ]
       ++ prev.buildInputs
       ++ pkgs.lib.lists.take (pkgs.lib.lists.length functora-tools - 1)

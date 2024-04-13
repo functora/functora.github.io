@@ -2,6 +2,7 @@
   (
     _: pkgs: let
       doJailbreak = pkgs.haskell.lib.doJailbreak;
+      doCheck = pkgs.haskell.lib.doCheck;
       extendHaskell = ghcpkgs:
         ghcpkgs.extend (
           self: super: {
@@ -66,6 +67,31 @@
               ver = "1.3.11";
               sha256 = "MGfh19sw6wjqknzHLgfDLet1m0pTISe7rsdl/OSwnFM=";
             } {});
+            tomland = doJailbreak (self.callHackageDirect {
+              pkg = "tomland";
+              ver = "1.3.3.2";
+              sha256 = "wFarQgkISj3Tq+Wf7AfcT/vowYvOsGhmxp8N66wBLZ4=";
+            } {});
+            validation-selective = self.callHackageDirect {
+              pkg = "validation-selective";
+              ver = "0.2.0.0";
+              sha256 = "fdaVS5mmemT7aeCOJw67/KplvPShHdGQ2C7pUCjoLco=";
+            } {};
+            modern-uri = doCheck (doJailbreak (self.callHackageDirect {
+              pkg = "modern-uri";
+              ver = "0.3.4.4";
+              sha256 = "6ppd9FxNMtoZS7878iTFyHdn1fY4kE167PUc1WJ2HKc=";
+            } {}));
+            megaparsec = doJailbreak (self.callHackageDirect {
+              pkg = "megaparsec";
+              ver = "9.0.0";
+              sha256 = "VHTZlu8Xc8pmrvUk75PLN90q9Ly0ampyJbTEqq9jeA4=";
+            } {});
+            hspec-megaparsec = doJailbreak (self.callHackageDirect {
+              pkg = "hspec-megaparsec";
+              ver = "2.2.0";
+              sha256 = "zKp8jnhJE5riJSkAKLPds38aoiL3rSs/Cpm8aXWRlDk=";
+            } {});
             #
             # Local
             #
@@ -83,7 +109,8 @@
               "miso-components" "${functora}/ghcjs/miso-components" {};
             functora-ghcjs =
               self.callCabal2nix
-              "functora-ghcjs" "${functora}/pub/functora/src" {};
+              "functora-ghcjs" "${functora}/pub/functora/src" {}
+            ;
           }
         );
     in {

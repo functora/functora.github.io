@@ -173,11 +173,19 @@ syncInputs st =
     --
     allLens :: [(ALens' Model UUID, ALens' Model Text)]
     allLens =
-      [ ( #modelData . #dataModelTopMoney . #moneyModelAmount . #amountModelUuid,
-          #modelData . #dataModelTopMoney . #moneyModelAmount . #amountModelInput
+      [ ( #modelData . #dataModelTopMoney . #moneyModelAmount . #uniqueUuid,
+          #modelData
+            . #dataModelTopMoney
+            . #moneyModelAmount
+            . #uniqueData
+            . #amountModelInput
         ),
-        ( #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelUuid,
-          #modelData . #dataModelBottomMoney . #moneyModelAmount . #amountModelInput
+        ( #modelData . #dataModelBottomMoney . #moneyModelAmount . #uniqueUuid,
+          #modelData
+            . #dataModelBottomMoney
+            . #moneyModelAmount
+            . #uniqueData
+            . #amountModelInput
         ),
         ( #modelData . #dataModelIssuer . #uniqueUuid,
           #modelData . #dataModelIssuer . #uniqueData
@@ -193,13 +201,18 @@ evalModel st = do
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
-        case st ^. cloneLens baseLens . #moneyModelAmount . #amountModelInput of
+        case st
+          ^. cloneLens baseLens
+          . #moneyModelAmount
+          . #uniqueData
+          . #amountModelInput of
           amt
             | null amt ->
                 inspectRatioDef
                   $ st
                   ^. cloneLens baseLens
                   . #moneyModelAmount
+                  . #uniqueData
                   . #amountModelOutput
           amt -> amt
   baseAmtResult <-
@@ -229,29 +242,33 @@ evalModel st = do
           $ st
           & cloneLens baseLens
           . #moneyModelAmount
+          . #uniqueData
           . #amountModelInput
           .~ baseAmtInput
           & cloneLens baseLens
           . #moneyModelAmount
+          . #uniqueData
           . #amountModelOutput
           .~ unTagged baseAmt
           & cloneLens quoteLens
           . #moneyModelAmount
+          . #uniqueData
           . #amountModelInput
           .~ inspectRatioDef (unTagged quoteAmt)
           & cloneLens quoteLens
           . #moneyModelAmount
+          . #uniqueData
           . #amountModelOutput
           .~ unTagged quoteAmt
           & #modelUpdatedAt
           .~ ct
 
-getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model MoneyModel
+getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (MoneyModel Unique)
 getBaseConverterMoneyLens = \case
   Top -> #modelData . #dataModelTopMoney
   Bottom -> #modelData . #dataModelBottomMoney
 
-getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model MoneyModel
+getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (MoneyModel Unique)
 getQuoteConverterMoneyLens = \case
   Top -> #modelData . #dataModelBottomMoney
   Bottom -> #modelData . #dataModelTopMoney

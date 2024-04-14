@@ -18,7 +18,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 amountWidget ::
   Model ->
   Getter' Model Text ->
-  ALens' Model AmountModel ->
+  ALens' Model (Unique AmountModel) ->
   ( Model -> Model
   ) ->
   View Action
@@ -68,9 +68,9 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
           ]
     ]
   where
-    uuid = st ^. cloneLens amountOptic . #amountModelUuid
-    input = st ^. cloneLens amountOptic . #amountModelInput
-    output = st ^. cloneLens amountOptic . #amountModelOutput
+    uuid = st ^. cloneLens amountOptic . #uniqueUuid
+    input = st ^. cloneLens amountOptic . #uniqueData . #amountModelInput
+    output = st ^. cloneLens amountOptic . #uniqueData . #amountModelOutput
     valid =
       (parseRatio input == Just output)
         || (input == inspectRatioDef output)
@@ -81,21 +81,20 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
           else
             st'
               & cloneLens amountOptic
+              . #uniqueData
               . #amountModelInput
               .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens amountOptic
+          . #uniqueData
           . #amountModelInput
           .~ from @String @Text txt
           & extraOnInput
     onCopyAction =
       PushUpdate
-        ( Misc.copyIntoClipboard st
-            $ st
-            ^. cloneLens amountOptic
-            . #amountModelInput
+        ( Misc.copyIntoClipboard st input
         )
         ( ChanItem 0 id
         )
@@ -112,6 +111,7 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens amountOptic
+              . #uniqueData
               . #amountModelInput
               .~ mempty
               & extraOnInput
@@ -142,44 +142,52 @@ swapAmountsWidget =
                 ^. #modelData
                 . #dataModelTopMoney
                 . #moneyModelAmount
+                . #uniqueData
                 . #amountModelInput
             baseOutput =
               st
                 ^. #modelData
                 . #dataModelTopMoney
                 . #moneyModelAmount
+                . #uniqueData
                 . #amountModelOutput
             quoteInput =
               st
                 ^. #modelData
                 . #dataModelBottomMoney
                 . #moneyModelAmount
+                . #uniqueData
                 . #amountModelInput
             quoteOutput =
               st
                 ^. #modelData
                 . #dataModelBottomMoney
                 . #moneyModelAmount
+                . #uniqueData
                 . #amountModelOutput
          in st
               & #modelData
               . #dataModelTopMoney
               . #moneyModelAmount
+              . #uniqueData
               . #amountModelInput
               .~ quoteInput
               & #modelData
               . #dataModelTopMoney
               . #moneyModelAmount
+              . #uniqueData
               . #amountModelOutput
               .~ quoteOutput
               & #modelData
               . #dataModelBottomMoney
               . #moneyModelAmount
+              . #uniqueData
               . #amountModelInput
               .~ baseInput
               & #modelData
               . #dataModelBottomMoney
               . #moneyModelAmount
+              . #uniqueData
               . #amountModelOutput
               .~ baseOutput
               & #modelData

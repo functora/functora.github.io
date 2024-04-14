@@ -15,7 +15,7 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterAmountLens :: TopOrBottom -> ALens' Model AmountModel
+getConverterAmountLens :: TopOrBottom -> ALens' Model (Unique AmountModel)
 getConverterAmountLens = \case
   Top -> #modelData . #dataModelTopMoney . #moneyModelAmount
   Bottom -> #modelData . #dataModelBottomMoney . #moneyModelAmount

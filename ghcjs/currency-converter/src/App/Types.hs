@@ -51,8 +51,8 @@ data Action
   | PushUpdate (JSM ()) (ChanItem (Model -> Model))
 
 data DataModel f = DataModel
-  { dataModelTopMoney :: MoneyModel,
-    dataModelBottomMoney :: MoneyModel,
+  { dataModelTopMoney :: MoneyModel f,
+    dataModelBottomMoney :: MoneyModel f,
     dataModelTopOrBottom :: TopOrBottom,
     dataModelPaymentMethods :: [PaymentMethod f],
     dataModelPaymentMethodsInput :: PaymentMethod f,
@@ -61,15 +61,36 @@ data DataModel f = DataModel
   }
   deriving stock (Generic)
 
-deriving stock instance (Eq (f Text)) => Eq (DataModel f)
+deriving stock instance
+  ( Eq (f Text),
+    Eq (f AmountModel)
+  ) =>
+  Eq (DataModel f)
 
-deriving stock instance (Ord (f Text)) => Ord (DataModel f)
+deriving stock instance
+  ( Ord (f Text),
+    Ord (f AmountModel)
+  ) =>
+  Ord (DataModel f)
 
-deriving stock instance (Show (f Text)) => Show (DataModel f)
+deriving stock instance
+  ( Show (f Text),
+    Show (f AmountModel)
+  ) =>
+  Show (DataModel f)
 
-deriving stock instance (Read (f Text)) => Read (DataModel f)
+deriving stock instance
+  ( Read (f Text),
+    Read (f AmountModel)
+  ) =>
+  Read (DataModel f)
 
-deriving stock instance (Typeable f, Data (f Text)) => Data (DataModel f)
+deriving stock instance
+  ( Typeable f,
+    Data (f Text),
+    Data (f AmountModel)
+  ) =>
+  Data (DataModel f)
 
 instance FunctorB DataModel
 
@@ -80,6 +101,7 @@ deriving via
   instance
     ( Typeable f,
       ToJSON (f Text),
+      ToJSON (MoneyModel f),
       ToJSON (PaymentMethod f)
     ) =>
     ToJSON (DataModel f)
@@ -89,6 +111,7 @@ deriving via
   instance
     ( Typeable f,
       FromJSON (f Text),
+      FromJSON (MoneyModel f),
       FromJSON (PaymentMethod f)
     ) =>
     FromJSON (DataModel f)
@@ -99,16 +122,65 @@ data Unique a = Unique
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-data MoneyModel = MoneyModel
-  { moneyModelAmount :: AmountModel,
+data MoneyModel f = MoneyModel
+  { moneyModelAmount :: f AmountModel,
     moneyModelCurrency :: CurrencyModel
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType MoneyModel
+  deriving stock (Generic)
+
+deriving stock instance
+  ( Eq (f Text),
+    Eq (f AmountModel)
+  ) =>
+  Eq (MoneyModel f)
+
+deriving stock instance
+  ( Ord (f Text),
+    Ord (f AmountModel)
+  ) =>
+  Ord (MoneyModel f)
+
+deriving stock instance
+  ( Show (f Text),
+    Show (f AmountModel)
+  ) =>
+  Show (MoneyModel f)
+
+deriving stock instance
+  ( Read (f Text),
+    Read (f AmountModel)
+  ) =>
+  Read (MoneyModel f)
+
+deriving stock instance
+  ( Typeable f,
+    Data (f Text),
+    Data (f AmountModel)
+  ) =>
+  Data (MoneyModel f)
+
+instance FunctorB MoneyModel
+
+instance TraversableB MoneyModel
+
+deriving via
+  GenericType (MoneyModel f)
+  instance
+    ( Typeable f,
+      ToJSON (f AmountModel)
+    ) =>
+    ToJSON (MoneyModel f)
+
+deriving via
+  GenericType (MoneyModel f)
+  instance
+    ( Typeable f,
+      FromJSON (f AmountModel)
+    ) =>
+    FromJSON (MoneyModel f)
 
 data AmountModel = AmountModel
-  { amountModelUuid :: UUID,
-    amountModelInput :: Text,
+  { amountModelInput :: Text,
     amountModelOutput :: Rational
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -127,22 +199,43 @@ data CurrencyModel = CurrencyModel
   deriving (ToJSON, FromJSON) via GenericType CurrencyModel
 
 data PaymentMethod f = PaymentMethod
-  { paymentMethodMoney :: MoneyModel,
+  { paymentMethodMoney :: MoneyModel f,
     paymentMethodAddress :: f Text,
     paymentMethodNotes :: f Text,
     paymentMethodAddressQrCode :: Bool
   }
   deriving stock (Generic)
 
-deriving stock instance (Eq (f Text)) => Eq (PaymentMethod f)
+deriving stock instance
+  ( Eq (f Text),
+    Eq (f AmountModel)
+  ) =>
+  Eq (PaymentMethod f)
 
-deriving stock instance (Ord (f Text)) => Ord (PaymentMethod f)
+deriving stock instance
+  ( Ord (f Text),
+    Ord (f AmountModel)
+  ) =>
+  Ord (PaymentMethod f)
 
-deriving stock instance (Show (f Text)) => Show (PaymentMethod f)
+deriving stock instance
+  ( Show (f Text),
+    Show (f AmountModel)
+  ) =>
+  Show (PaymentMethod f)
 
-deriving stock instance (Read (f Text)) => Read (PaymentMethod f)
+deriving stock instance
+  ( Read (f Text),
+    Read (f AmountModel)
+  ) =>
+  Read (PaymentMethod f)
 
-deriving stock instance (Typeable f, Data (f Text)) => Data (PaymentMethod f)
+deriving stock instance
+  ( Typeable f,
+    Data (f Text),
+    Data (f AmountModel)
+  ) =>
+  Data (PaymentMethod f)
 
 instance FunctorB PaymentMethod
 
@@ -182,7 +275,7 @@ deriving stock instance (Show (f Text)) => Show (AssetModel f)
 
 deriving stock instance (Read (f Text)) => Read (AssetModel f)
 
-deriving stock instance (Typeable f, Data (f Text)) => Data (AssetModel f)
+deriving stock instance (Data (f Text), Typeable f) => Data (AssetModel f)
 
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
@@ -218,7 +311,7 @@ newModel = do
                   dataModelIssuer = issuer,
                   dataModelClient = client
                 },
-            modelScreen = Converter,
+            modelScreen = InvoiceEditor,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -252,11 +345,13 @@ newModel = do
       & #modelData
       . #dataModelTopMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelInput
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelData
       . #dataModelTopMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelOutput
       .~ unTagged baseAmt
       & #modelData
@@ -267,11 +362,13 @@ newModel = do
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelInput
       .~ inspectRatioDef (unTagged quoteAmt)
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelOutput
       .~ unTagged quoteAmt
       & #modelData
@@ -286,12 +383,14 @@ newModel = do
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelInput
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelData
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelAmount
+      . #uniqueData
       . #amountModelOutput
       .~ unTagged baseAmt
       & #modelData
@@ -306,18 +405,18 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newMoneyModel :: (MonadIO m) => CurrencyInfo -> m MoneyModel
+newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (MoneyModel Unique)
 newMoneyModel cur = do
-  amtUuid <- newUuid
   curUuid <- newUuid
+  amt <-
+    newUnique
+      AmountModel
+        { amountModelInput = inspectRatioDef @Text @Integer 0,
+          amountModelOutput = 0
+        }
   pure
     MoneyModel
-      { moneyModelAmount =
-          AmountModel
-            { amountModelUuid = amtUuid,
-              amountModelInput = inspectRatioDef @Text @Integer 0,
-              amountModelOutput = 0
-            },
+      { moneyModelAmount = amt,
         moneyModelCurrency =
           CurrencyModel
             { currencyModelUuid = curUuid,

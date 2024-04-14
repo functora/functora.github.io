@@ -16,9 +16,12 @@ module App.Types
     newUnique,
     newModel,
     pureUpdate,
+    newDataModelUnique,
+    newDataModelIdentity,
   )
 where
 
+import Data.Functor.Barbie
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
 import Functora.Money
@@ -67,6 +70,10 @@ deriving stock instance (Show (f Text)) => Show (DataModel f)
 deriving stock instance (Read (f Text)) => Read (DataModel f)
 
 deriving stock instance (Typeable f, Data (f Text)) => Data (DataModel f)
+
+instance FunctorB DataModel
+
+instance TraversableB DataModel
 
 deriving via
   GenericType (DataModel f)
@@ -136,6 +143,10 @@ deriving stock instance (Show (f Text)) => Show (PaymentMethod f)
 deriving stock instance (Read (f Text)) => Read (PaymentMethod f)
 
 deriving stock instance (Typeable f, Data (f Text)) => Data (PaymentMethod f)
+
+instance FunctorB PaymentMethod
+
+instance TraversableB PaymentMethod
 
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
@@ -337,3 +348,9 @@ newPaymentMethod cur =
     <*> newUnique mempty
     <*> newUnique mempty
     <*> pure True
+
+newDataModelIdentity :: DataModel Unique -> DataModel Identity
+newDataModelIdentity = bmap (Identity . uniqueData)
+
+newDataModelUnique :: (MonadIO m) => DataModel Identity -> m (DataModel Unique)
+newDataModelUnique = btraverse (newUnique . runIdentity)

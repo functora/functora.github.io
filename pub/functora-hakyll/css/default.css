@@ -15,7 +15,7 @@
 @font-face {
   font-family: "racing-font";
   font-display: swap;
-  src: url(../fonts/RacingSansOne-Regular.ttf);
+  src: url(../fonts/larabiefont.ttf);
 }
 
 .regular-font {
@@ -28,7 +28,6 @@
 
 .racing-font {
   font-family: "racing-font";
-  letter-spacing: 2px;
 }
 
 * {

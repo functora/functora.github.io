@@ -81,6 +81,7 @@ common pkg
     TypeOperators
 
   build-depends:
+    , barbies
     , base
     , containers
     , functora-ghcjs

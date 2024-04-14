@@ -92,6 +92,11 @@
               ver = "2.2.0";
               sha256 = "zKp8jnhJE5riJSkAKLPds38aoiL3rSs/Cpm8aXWRlDk=";
             } {});
+            barbies = self.callHackageDirect {
+              pkg = "barbies";
+              ver = "2.1.1.0";
+              sha256 = "KK6vVyb2a+oiRvNK8eXVJa3lNCPykpelN4XHQCmSxWk=";
+            } {};
             #
             # Local
             #

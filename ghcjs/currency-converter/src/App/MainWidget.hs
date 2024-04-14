@@ -59,6 +59,7 @@ screenWidget st@Model {modelScreen = Converter} =
         amountWidget
           st
           ( cloneLens (Misc.getConverterCurrencyLens loc)
+              . #uniqueData
               . #currencyModelData
               . to (inspectCurrencyInfo @Text)
           )
@@ -89,6 +90,7 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
     amountWidget
       st
       ( cloneLens (Misc.getConverterCurrencyLens Top)
+          . #uniqueData
           . #currencyModelData
           . to (inspectCurrencyInfo @Text)
       )

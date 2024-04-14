@@ -20,7 +20,7 @@ getConverterAmountLens = \case
   Top -> #modelData . #dataModelTopMoney . #moneyModelAmount
   Bottom -> #modelData . #dataModelBottomMoney . #moneyModelAmount
 
-getConverterCurrencyLens :: TopOrBottom -> ALens' Model CurrencyModel
+getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Unique CurrencyModel)
 getConverterCurrencyLens = \case
   Top -> #modelData . #dataModelTopMoney . #moneyModelCurrency
   Bottom -> #modelData . #dataModelBottomMoney . #moneyModelCurrency

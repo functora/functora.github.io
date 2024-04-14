@@ -63,32 +63,30 @@ data DataModel f = DataModel
 
 deriving stock instance
   ( Eq (f Text),
-    Eq (f AmountModel)
+    Eq (f AmountModel),
+    Eq (f CurrencyModel)
   ) =>
   Eq (DataModel f)
 
 deriving stock instance
   ( Ord (f Text),
-    Ord (f AmountModel)
+    Ord (f AmountModel),
+    Ord (f CurrencyModel)
   ) =>
   Ord (DataModel f)
 
 deriving stock instance
   ( Show (f Text),
-    Show (f AmountModel)
+    Show (f AmountModel),
+    Show (f CurrencyModel)
   ) =>
   Show (DataModel f)
 
 deriving stock instance
-  ( Read (f Text),
-    Read (f AmountModel)
-  ) =>
-  Read (DataModel f)
-
-deriving stock instance
   ( Typeable f,
     Data (f Text),
-    Data (f AmountModel)
+    Data (f AmountModel),
+    Data (f CurrencyModel)
   ) =>
   Data (DataModel f)
 
@@ -120,42 +118,40 @@ data Unique a = Unique
   { uniqueUuid :: UUID,
     uniqueData :: a
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 data MoneyModel f = MoneyModel
   { moneyModelAmount :: f AmountModel,
-    moneyModelCurrency :: CurrencyModel
+    moneyModelCurrency :: f CurrencyModel
   }
   deriving stock (Generic)
 
 deriving stock instance
   ( Eq (f Text),
-    Eq (f AmountModel)
+    Eq (f AmountModel),
+    Eq (f CurrencyModel)
   ) =>
   Eq (MoneyModel f)
 
 deriving stock instance
   ( Ord (f Text),
-    Ord (f AmountModel)
+    Ord (f AmountModel),
+    Ord (f CurrencyModel)
   ) =>
   Ord (MoneyModel f)
 
 deriving stock instance
   ( Show (f Text),
-    Show (f AmountModel)
+    Show (f AmountModel),
+    Show (f CurrencyModel)
   ) =>
   Show (MoneyModel f)
 
 deriving stock instance
-  ( Read (f Text),
-    Read (f AmountModel)
-  ) =>
-  Read (MoneyModel f)
-
-deriving stock instance
   ( Typeable f,
     Data (f Text),
-    Data (f AmountModel)
+    Data (f AmountModel),
+    Data (f CurrencyModel)
   ) =>
   Data (MoneyModel f)
 
@@ -167,7 +163,8 @@ deriving via
   GenericType (MoneyModel f)
   instance
     ( Typeable f,
-      ToJSON (f AmountModel)
+      ToJSON (f AmountModel),
+      ToJSON (f CurrencyModel)
     ) =>
     ToJSON (MoneyModel f)
 
@@ -175,7 +172,8 @@ deriving via
   GenericType (MoneyModel f)
   instance
     ( Typeable f,
-      FromJSON (f AmountModel)
+      FromJSON (f AmountModel),
+      FromJSON (f CurrencyModel)
     ) =>
     FromJSON (MoneyModel f)
 
@@ -183,19 +181,18 @@ data AmountModel = AmountModel
   { amountModelInput :: Text,
     amountModelOutput :: Rational
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType AmountModel
 
 data CurrencyModel = CurrencyModel
-  { currencyModelUuid :: UUID,
-    currencyModelData :: CurrencyInfo,
+  { currencyModelData :: CurrencyInfo,
     currencyModelOpen :: Bool,
     --
     -- TODO : use Unique Text
     --
     currencyModelSearch :: Text
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType CurrencyModel
 
 data PaymentMethod f = PaymentMethod
@@ -208,32 +205,30 @@ data PaymentMethod f = PaymentMethod
 
 deriving stock instance
   ( Eq (f Text),
-    Eq (f AmountModel)
+    Eq (f AmountModel),
+    Eq (f CurrencyModel)
   ) =>
   Eq (PaymentMethod f)
 
 deriving stock instance
   ( Ord (f Text),
-    Ord (f AmountModel)
+    Ord (f AmountModel),
+    Ord (f CurrencyModel)
   ) =>
   Ord (PaymentMethod f)
 
 deriving stock instance
   ( Show (f Text),
-    Show (f AmountModel)
+    Show (f AmountModel),
+    Show (f CurrencyModel)
   ) =>
   Show (PaymentMethod f)
 
 deriving stock instance
-  ( Read (f Text),
-    Read (f AmountModel)
-  ) =>
-  Read (PaymentMethod f)
-
-deriving stock instance
   ( Typeable f,
     Data (f Text),
-    Data (f AmountModel)
+    Data (f AmountModel),
+    Data (f CurrencyModel)
   ) =>
   Data (PaymentMethod f)
 
@@ -245,18 +240,18 @@ data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
     chanItemValue :: a
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Screen
   = Converter
   | InvoiceEditor
-  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Screen
 
 data TopOrBottom
   = Top
   | Bottom
-  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
 data AssetModel f = AssetModel
@@ -272,8 +267,6 @@ deriving stock instance (Eq (f Text)) => Eq (AssetModel f)
 deriving stock instance (Ord (f Text)) => Ord (AssetModel f)
 
 deriving stock instance (Show (f Text)) => Show (AssetModel f)
-
-deriving stock instance (Read (f Text)) => Read (AssetModel f)
 
 deriving stock instance (Data (f Text), Typeable f) => Data (AssetModel f)
 
@@ -357,6 +350,7 @@ newModel = do
       & #modelData
       . #dataModelTopMoney
       . #moneyModelCurrency
+      . #uniqueData
       . #currencyModelData
       .~ baseCur
       & #modelData
@@ -374,6 +368,7 @@ newModel = do
       & #modelData
       . #dataModelBottomMoney
       . #moneyModelCurrency
+      . #uniqueData
       . #currencyModelData
       .~ quoteCur
       --
@@ -397,6 +392,7 @@ newModel = do
       . #dataModelPaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelCurrency
+      . #uniqueData
       . #currencyModelData
       .~ baseCur
       --
@@ -406,24 +402,24 @@ newModel = do
       .~ currenciesInfo
 
 newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (MoneyModel Unique)
-newMoneyModel cur = do
-  curUuid <- newUuid
+newMoneyModel curInfo = do
   amt <-
     newUnique
       AmountModel
         { amountModelInput = inspectRatioDef @Text @Integer 0,
           amountModelOutput = 0
         }
+  cur <-
+    newUnique
+      CurrencyModel
+        { currencyModelData = curInfo,
+          currencyModelOpen = False,
+          currencyModelSearch = mempty
+        }
   pure
     MoneyModel
       { moneyModelAmount = amt,
-        moneyModelCurrency =
-          CurrencyModel
-            { currencyModelUuid = curUuid,
-              currencyModelData = cur,
-              currencyModelOpen = False,
-              currencyModelSearch = mempty
-            }
+        moneyModelCurrency = cur
       }
 
 --

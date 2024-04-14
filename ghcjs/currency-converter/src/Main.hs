@@ -227,6 +227,7 @@ evalModel st = do
                 $ st
                 ^. cloneLens baseLens
                 . #moneyModelCurrency
+                . #uniqueData
                 . #currencyModelData
                 . #currencyInfoCode
         quote <-
@@ -234,6 +235,7 @@ evalModel st = do
             $ st
             ^. cloneLens quoteLens
             . #moneyModelCurrency
+            . #uniqueData
             . #currencyModelData
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote

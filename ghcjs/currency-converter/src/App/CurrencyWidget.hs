@@ -22,7 +22,7 @@ import qualified Text.Fuzzy as Fuzzy
 
 currencyWidget ::
   Model ->
-  ALens' Model CurrencyModel ->
+  ALens' Model (Unique CurrencyModel) ->
   View Action
 currencyWidget st optic =
   LayoutGrid.cell
@@ -38,6 +38,7 @@ currencyWidget st optic =
         . inspectCurrencyInfo
         $ st
         ^. cloneLens optic
+        . #uniqueData
         . #currencyModelData,
       Dialog.dialog
         ( Dialog.config
@@ -45,6 +46,7 @@ currencyWidget st optic =
             & Dialog.setOpen
               ( st
                   ^. cloneLens optic
+                  . #uniqueData
                   . #currencyModelOpen
               )
         )
@@ -60,6 +62,7 @@ currencyWidget st optic =
                   . TextField.setType (Just "text")
                   . ( if st
                         ^. cloneLens optic
+                        . #uniqueData
                         . #currencyModelOpen
                         then id
                         else
@@ -68,6 +71,7 @@ currencyWidget st optic =
                                 . from @Text @String
                                 $ st
                                 ^. cloneLens optic
+                                . #uniqueData
                                 . #currencyModelSearch
                             )
                     )
@@ -77,6 +81,7 @@ currencyWidget st optic =
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
+                        . #uniqueData
                         . #currencyModelData
                     )
                   . TextField.setAttributes
@@ -97,35 +102,40 @@ currencyWidget st optic =
         )
     ]
   where
-    uuid = st ^. cloneLens optic . #currencyModelUuid
+    uuid = st ^. cloneLens optic . #uniqueUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
+          . #uniqueData
           . #currencyModelSearch
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
+          . #uniqueData
           . #currencyModelOpen
           .~ True
           & cloneLens optic
+          . #uniqueData
           . #currencyModelSearch
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
+          . #uniqueData
           . #currencyModelOpen
           .~ False
           & cloneLens optic
+          . #uniqueData
           . #currencyModelSearch
           .~ mempty
 
 currencyListWidget ::
   Model ->
-  ALens' Model CurrencyModel ->
+  ALens' Model (Unique CurrencyModel) ->
   View Action
 currencyListWidget st optic =
   List.list
@@ -137,8 +147,8 @@ currencyListWidget st optic =
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #currencyModelData
-    search = st ^. cloneLens optic . #currencyModelSearch
+    current = st ^. cloneLens optic . #uniqueData . #currencyModelData
+    search = st ^. cloneLens optic . #uniqueData . #currencyModelSearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -151,7 +161,7 @@ currencyListWidget st optic =
           False
 
 currencyListItemWidget ::
-  ALens' Model CurrencyModel ->
+  ALens' Model (Unique CurrencyModel) ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
@@ -167,12 +177,15 @@ currencyListItemWidget optic current item =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneLens optic
+                . #uniqueData
                 . #currencyModelOpen
                 .~ False
                 & cloneLens optic
+                . #uniqueData
                 . #currencyModelSearch
                 .~ mempty
                 & cloneLens optic
+                . #uniqueData
                 . #currencyModelData
                 .~ item
           )
@@ -205,22 +218,26 @@ swapCurrenciesWidget =
                 ^. #modelData
                 . #dataModelTopMoney
                 . #moneyModelCurrency
+                . #uniqueData
                 . #currencyModelData
             quoteCurrency =
               st
                 ^. #modelData
                 . #dataModelBottomMoney
                 . #moneyModelCurrency
+                . #uniqueData
                 . #currencyModelData
          in st
               & #modelData
               . #dataModelTopMoney
               . #moneyModelCurrency
+              . #uniqueData
               . #currencyModelData
               .~ quoteCurrency
               & #modelData
               . #dataModelBottomMoney
               . #moneyModelCurrency
+              . #uniqueData
               . #currencyModelData
               .~ baseCurrency
               & #modelData

@@ -5,9 +5,9 @@ module App.Types
     Unique (..),
     Action (..),
     St (..),
-    MoneyModel (..),
-    AmountModel (..),
-    CurrencyModel (..),
+    Money (..),
+    Amount (..),
+    Currency (..),
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
@@ -16,15 +16,16 @@ module App.Types
     newUnique,
     newModel,
     pureUpdate,
-    newStateModelUnique,
-    newStateModelIdentity,
+    newStateUnique,
+    newStateIdentity,
   )
 where
 
 import Data.Functor.Barbie
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
-import Functora.Money
+import Functora.Money hiding (Currency, Money)
+import qualified Functora.Money as Money
 import Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Material.Snackbar as Snackbar
@@ -59,22 +60,22 @@ data Action
 type Std f =
   ( Typeable f,
     Eq (f Text),
-    Eq (f AmountModel),
-    Eq (f CurrencyModel),
+    Eq (f Amount),
+    Eq (f Currency),
     Ord (f Text),
-    Ord (f AmountModel),
-    Ord (f CurrencyModel),
+    Ord (f Amount),
+    Ord (f Currency),
     Show (f Text),
-    Show (f AmountModel),
-    Show (f CurrencyModel),
+    Show (f Amount),
+    Show (f Currency),
     Data (f Text),
-    Data (f AmountModel),
-    Data (f CurrencyModel)
+    Data (f Amount),
+    Data (f Currency)
   )
 
 data St f = St
-  { stateTopMoney :: MoneyModel f,
-    stateBottomMoney :: MoneyModel f,
+  { stateTopMoney :: Money f,
+    stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
     statePaymentMethods :: [PaymentMethod f],
     statePaymentMethodsInput :: PaymentMethod f,
@@ -99,54 +100,48 @@ deriving via GenericType (St Identity) instance ToJSON (St Identity)
 
 deriving via GenericType (St Identity) instance FromJSON (St Identity)
 
-data MoneyModel f = MoneyModel
-  { moneyModelAmount :: f AmountModel,
-    moneyModelCurrency :: f CurrencyModel
+data Money f = Money
+  { moneyAmount :: f Amount,
+    moneyCurrency :: f Currency
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (MoneyModel f)
+deriving stock instance (Std f) => Eq (Money f)
 
-deriving stock instance (Std f) => Ord (MoneyModel f)
+deriving stock instance (Std f) => Ord (Money f)
 
-deriving stock instance (Std f) => Show (MoneyModel f)
+deriving stock instance (Std f) => Show (Money f)
 
-deriving stock instance (Std f) => Data (MoneyModel f)
+deriving stock instance (Std f) => Data (Money f)
 
-instance FunctorB MoneyModel
+instance FunctorB Money
 
-instance TraversableB MoneyModel
+instance TraversableB Money
 
-deriving via
-  GenericType (MoneyModel Identity)
-  instance
-    ToJSON (MoneyModel Identity)
+deriving via GenericType (Money Identity) instance ToJSON (Money Identity)
 
-deriving via
-  GenericType (MoneyModel Identity)
-  instance
-    FromJSON (MoneyModel Identity)
+deriving via GenericType (Money Identity) instance FromJSON (Money Identity)
 
-data AmountModel = AmountModel
-  { amountModelInput :: Text,
-    amountModelOutput :: Rational
+data Amount = Amount
+  { amountInput :: Text,
+    amountOutput :: Rational
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType AmountModel
+  deriving (ToJSON, FromJSON) via GenericType Amount
 
-data CurrencyModel = CurrencyModel
-  { currencyModelValue :: CurrencyInfo,
-    currencyModelOpen :: Bool,
+data Currency = Currency
+  { currencyValue :: CurrencyInfo,
+    currencyOpen :: Bool,
     --
     -- TODO : use Unique Text??
     --
-    currencyModelSearch :: Text
+    currencySearch :: Text
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType CurrencyModel
+  deriving (ToJSON, FromJSON) via GenericType Currency
 
 data PaymentMethod f = PaymentMethod
-  { paymentMethodMoney :: MoneyModel f,
+  { paymentMethodMoney :: Money f,
     paymentMethodAddress :: f Text,
     paymentMethodNotes :: f Text,
     paymentMethodAddressQrCode :: Bool
@@ -195,8 +190,8 @@ data TopOrBottom
 
 data AssetModel f = AssetModel
   { assetModelDescription :: f Text,
-    assetModelAmount :: AmountModel,
-    assetModelCurrency :: CurrencyModel,
+    assetModelAmount :: Amount,
+    assetModelCurrency :: Currency,
     assetModelRates :: QuotesPerBaseAt
   }
   deriving stock (Generic)
@@ -263,7 +258,7 @@ newModel = do
         . tryMarket
         . getCurrencyInfo
         $ currencyInfoCode usd
-    let baseAmt = Tagged 1 :: Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
+    let baseAmt = Tagged 1 :: Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
     quote <-
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
@@ -276,39 +271,39 @@ newModel = do
       --
       & #modelState
       . #stateTopMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelInput
+      . #amountInput
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
       . #stateTopMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelOutput
+      . #amountOutput
       .~ unTagged baseAmt
       & #modelState
       . #stateTopMoney
-      . #moneyModelCurrency
+      . #moneyCurrency
       . #uniqueValue
-      . #currencyModelValue
+      . #currencyValue
       .~ baseCur
       & #modelState
       . #stateBottomMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelInput
+      . #amountInput
       .~ inspectRatioDef (unTagged quoteAmt)
       & #modelState
       . #stateBottomMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelOutput
+      . #amountOutput
       .~ unTagged quoteAmt
       & #modelState
       . #stateBottomMoney
-      . #moneyModelCurrency
+      . #moneyCurrency
       . #uniqueValue
-      . #currencyModelValue
+      . #currencyValue
       .~ quoteCur
       --
       -- InvoiceEditor
@@ -316,23 +311,23 @@ newModel = do
       & #modelState
       . #statePaymentMethodsInput
       . #paymentMethodMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelInput
+      . #amountInput
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
       . #statePaymentMethodsInput
       . #paymentMethodMoney
-      . #moneyModelAmount
+      . #moneyAmount
       . #uniqueValue
-      . #amountModelOutput
+      . #amountOutput
       .~ unTagged baseAmt
       & #modelState
       . #statePaymentMethodsInput
       . #paymentMethodMoney
-      . #moneyModelCurrency
+      . #moneyCurrency
       . #uniqueValue
-      . #currencyModelValue
+      . #currencyValue
       .~ baseCur
       --
       -- Misc
@@ -340,25 +335,25 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (MoneyModel Unique)
+newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (Money Unique)
 newMoneyModel curInfo = do
   amt <-
     newUnique
-      AmountModel
-        { amountModelInput = inspectRatioDef @Text @Integer 0,
-          amountModelOutput = 0
+      Amount
+        { amountInput = inspectRatioDef @Text @Integer 0,
+          amountOutput = 0
         }
   cur <-
     newUnique
-      CurrencyModel
-        { currencyModelValue = curInfo,
-          currencyModelOpen = False,
-          currencyModelSearch = mempty
+      Currency
+        { currencyValue = curInfo,
+          currencyOpen = False,
+          currencySearch = mempty
         }
   pure
-    MoneyModel
-      { moneyModelAmount = amt,
-        moneyModelCurrency = cur
+    Money
+      { moneyAmount = amt,
+        moneyCurrency = cur
       }
 
 --
@@ -383,14 +378,14 @@ newPaymentMethod cur =
     <*> newUnique mempty
     <*> pure True
 
-newStateModelIdentity :: St Unique -> St Identity
-newStateModelIdentity =
+newStateIdentity :: St Unique -> St Identity
+newStateIdentity =
   bmap (Identity . uniqueValue)
 
-newStateModelUnique ::
+newStateUnique ::
   ( MonadIO m
   ) =>
   St Identity ->
   m (St Unique)
-newStateModelUnique =
+newStateUnique =
   btraverse (newUnique . runIdentity)

@@ -15,15 +15,15 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterAmountLens :: TopOrBottom -> ALens' Model (Unique AmountModel)
+getConverterAmountLens :: TopOrBottom -> ALens' Model (Unique Amount)
 getConverterAmountLens = \case
-  Top -> #modelState . #stateTopMoney . #moneyModelAmount
-  Bottom -> #modelState . #stateBottomMoney . #moneyModelAmount
+  Top -> #modelState . #stateTopMoney . #moneyAmount
+  Bottom -> #modelState . #stateBottomMoney . #moneyAmount
 
-getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Unique CurrencyModel)
+getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Unique Currency)
 getConverterCurrencyLens = \case
-  Top -> #modelState . #stateTopMoney . #moneyModelCurrency
-  Bottom -> #modelState . #stateBottomMoney . #moneyModelCurrency
+  Top -> #modelState . #stateTopMoney . #moneyCurrency
+  Bottom -> #modelState . #stateBottomMoney . #moneyCurrency
 
 pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =

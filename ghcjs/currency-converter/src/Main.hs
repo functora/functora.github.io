@@ -14,7 +14,7 @@ import App.MainWidget
 import qualified App.Misc as Misc
 import App.Types
 import qualified Data.Map as Map
-import Functora.Money
+import Functora.Money hiding (Money)
 import Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Language.Javascript.JSaddle as JS
@@ -173,19 +173,19 @@ syncInputs st =
     --
     allLens :: [(ALens' Model UUID, ALens' Model Text)]
     allLens =
-      [ ( #modelState . #stateTopMoney . #moneyModelAmount . #uniqueUuid,
+      [ ( #modelState . #stateTopMoney . #moneyAmount . #uniqueUuid,
           #modelState
             . #stateTopMoney
-            . #moneyModelAmount
+            . #moneyAmount
             . #uniqueValue
-            . #amountModelInput
+            . #amountInput
         ),
-        ( #modelState . #stateBottomMoney . #moneyModelAmount . #uniqueUuid,
+        ( #modelState . #stateBottomMoney . #moneyAmount . #uniqueUuid,
           #modelState
             . #stateBottomMoney
-            . #moneyModelAmount
+            . #moneyAmount
             . #uniqueValue
-            . #amountModelInput
+            . #amountInput
         ),
         ( #modelState . #stateIssuer . #uniqueUuid,
           #modelState . #stateIssuer . #uniqueValue
@@ -203,17 +203,17 @@ evalModel st = do
   let baseAmtInput =
         case st
           ^. cloneLens baseLens
-          . #moneyModelAmount
+          . #moneyAmount
           . #uniqueValue
-          . #amountModelInput of
+          . #amountInput of
           amt
             | null amt ->
                 inspectRatioDef
                   $ st
                   ^. cloneLens baseLens
-                  . #moneyModelAmount
+                  . #moneyAmount
                   . #uniqueValue
-                  . #amountModelOutput
+                  . #amountOutput
           amt -> amt
   baseAmtResult <-
     tryAny $ parseMoney baseAmtInput
@@ -226,51 +226,51 @@ evalModel st = do
                 baseAmt
                 $ st
                 ^. cloneLens baseLens
-                . #moneyModelCurrency
+                . #moneyCurrency
                 . #uniqueValue
-                . #currencyModelValue
+                . #currencyValue
                 . #currencyInfoCode
         quote <-
           getQuote funds
             $ st
             ^. cloneLens quoteLens
-            . #moneyModelCurrency
+            . #moneyCurrency
             . #uniqueValue
-            . #currencyModelValue
+            . #currencyValue
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime
         pure
           $ st
           & cloneLens baseLens
-          . #moneyModelAmount
+          . #moneyAmount
           . #uniqueValue
-          . #amountModelInput
+          . #amountInput
           .~ baseAmtInput
           & cloneLens baseLens
-          . #moneyModelAmount
+          . #moneyAmount
           . #uniqueValue
-          . #amountModelOutput
+          . #amountOutput
           .~ unTagged baseAmt
           & cloneLens quoteLens
-          . #moneyModelAmount
+          . #moneyAmount
           . #uniqueValue
-          . #amountModelInput
+          . #amountInput
           .~ inspectRatioDef (unTagged quoteAmt)
           & cloneLens quoteLens
-          . #moneyModelAmount
+          . #moneyAmount
           . #uniqueValue
-          . #amountModelOutput
+          . #amountOutput
           .~ unTagged quoteAmt
           & #modelUpdatedAt
           .~ ct
 
-getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (MoneyModel Unique)
+getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
   Top -> #modelState . #stateTopMoney
   Bottom -> #modelState . #stateBottomMoney
 
-getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (MoneyModel Unique)
+getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getQuoteConverterMoneyLens = \case
   Top -> #modelState . #stateBottomMoney
   Bottom -> #modelState . #stateTopMoney

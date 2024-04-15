@@ -69,8 +69,8 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
     ]
   where
     uuid = st ^. cloneLens amountOptic . #uniqueUuid
-    input = st ^. cloneLens amountOptic . #uniqueData . #amountModelInput
-    output = st ^. cloneLens amountOptic . #uniqueData . #amountModelOutput
+    input = st ^. cloneLens amountOptic . #uniqueValue . #amountModelInput
+    output = st ^. cloneLens amountOptic . #uniqueValue . #amountModelOutput
     valid =
       (parseRatio input == Just output)
         || (input == inspectRatioDef output)
@@ -81,14 +81,14 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
           else
             st'
               & cloneLens amountOptic
-              . #uniqueData
+              . #uniqueValue
               . #amountModelInput
               .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens amountOptic
-          . #uniqueData
+          . #uniqueValue
           . #amountModelInput
           .~ from @String @Text txt
           & extraOnInput
@@ -111,7 +111,7 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens amountOptic
-              . #uniqueData
+              . #uniqueValue
               . #amountModelInput
               .~ mempty
               & extraOnInput
@@ -139,57 +139,57 @@ swapAmountsWidget =
       pureUpdate 0 $ \st ->
         let baseInput =
               st
-                ^. #modelData
-                . #dataModelTopMoney
+                ^. #modelState
+                . #stateTopMoney
                 . #moneyModelAmount
-                . #uniqueData
+                . #uniqueValue
                 . #amountModelInput
             baseOutput =
               st
-                ^. #modelData
-                . #dataModelTopMoney
+                ^. #modelState
+                . #stateTopMoney
                 . #moneyModelAmount
-                . #uniqueData
+                . #uniqueValue
                 . #amountModelOutput
             quoteInput =
               st
-                ^. #modelData
-                . #dataModelBottomMoney
+                ^. #modelState
+                . #stateBottomMoney
                 . #moneyModelAmount
-                . #uniqueData
+                . #uniqueValue
                 . #amountModelInput
             quoteOutput =
               st
-                ^. #modelData
-                . #dataModelBottomMoney
+                ^. #modelState
+                . #stateBottomMoney
                 . #moneyModelAmount
-                . #uniqueData
+                . #uniqueValue
                 . #amountModelOutput
          in st
-              & #modelData
-              . #dataModelTopMoney
+              & #modelState
+              . #stateTopMoney
               . #moneyModelAmount
-              . #uniqueData
+              . #uniqueValue
               . #amountModelInput
               .~ quoteInput
-              & #modelData
-              . #dataModelTopMoney
+              & #modelState
+              . #stateTopMoney
               . #moneyModelAmount
-              . #uniqueData
+              . #uniqueValue
               . #amountModelOutput
               .~ quoteOutput
-              & #modelData
-              . #dataModelBottomMoney
+              & #modelState
+              . #stateBottomMoney
               . #moneyModelAmount
-              . #uniqueData
+              . #uniqueValue
               . #amountModelInput
               .~ baseInput
-              & #modelData
-              . #dataModelBottomMoney
+              & #modelState
+              . #stateBottomMoney
               . #moneyModelAmount
-              . #uniqueData
+              . #uniqueValue
               . #amountModelOutput
               .~ baseOutput
-              & #modelData
-              . #dataModelTopOrBottom
+              & #modelState
+              . #stateTopOrBottom
               .~ Top

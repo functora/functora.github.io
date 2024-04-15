@@ -38,15 +38,15 @@ currencyWidget st optic =
         . inspectCurrencyInfo
         $ st
         ^. cloneLens optic
-        . #uniqueData
-        . #currencyModelData,
+        . #uniqueValue
+        . #currencyModelValue,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
             & Dialog.setOpen
               ( st
                   ^. cloneLens optic
-                  . #uniqueData
+                  . #uniqueValue
                   . #currencyModelOpen
               )
         )
@@ -62,7 +62,7 @@ currencyWidget st optic =
                   . TextField.setType (Just "text")
                   . ( if st
                         ^. cloneLens optic
-                        . #uniqueData
+                        . #uniqueValue
                         . #currencyModelOpen
                         then id
                         else
@@ -71,7 +71,7 @@ currencyWidget st optic =
                                 . from @Text @String
                                 $ st
                                 ^. cloneLens optic
-                                . #uniqueData
+                                . #uniqueValue
                                 . #currencyModelSearch
                             )
                     )
@@ -81,8 +81,8 @@ currencyWidget st optic =
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
-                        . #uniqueData
-                        . #currencyModelData
+                        . #uniqueValue
+                        . #currencyModelValue
                     )
                   . TextField.setAttributes
                     [ class_ "fill",
@@ -107,29 +107,29 @@ currencyWidget st optic =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           . #currencyModelSearch
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           . #currencyModelOpen
           .~ True
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           . #currencyModelSearch
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           . #currencyModelOpen
           .~ False
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           . #currencyModelSearch
           .~ mempty
 
@@ -147,8 +147,8 @@ currencyListWidget st optic =
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #uniqueData . #currencyModelData
-    search = st ^. cloneLens optic . #uniqueData . #currencyModelSearch
+    current = st ^. cloneLens optic . #uniqueValue . #currencyModelValue
+    search = st ^. cloneLens optic . #uniqueValue . #currencyModelSearch
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -177,16 +177,16 @@ currencyListItemWidget optic current item =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneLens optic
-                . #uniqueData
+                . #uniqueValue
                 . #currencyModelOpen
                 .~ False
                 & cloneLens optic
-                . #uniqueData
+                . #uniqueValue
                 . #currencyModelSearch
                 .~ mempty
                 & cloneLens optic
-                . #uniqueData
-                . #currencyModelData
+                . #uniqueValue
+                . #currencyModelValue
                 .~ item
           )
     )
@@ -215,31 +215,31 @@ swapCurrenciesWidget =
       pureUpdate 0 $ \st ->
         let baseCurrency =
               st
-                ^. #modelData
-                . #dataModelTopMoney
+                ^. #modelState
+                . #stateTopMoney
                 . #moneyModelCurrency
-                . #uniqueData
-                . #currencyModelData
+                . #uniqueValue
+                . #currencyModelValue
             quoteCurrency =
               st
-                ^. #modelData
-                . #dataModelBottomMoney
+                ^. #modelState
+                . #stateBottomMoney
                 . #moneyModelCurrency
-                . #uniqueData
-                . #currencyModelData
+                . #uniqueValue
+                . #currencyModelValue
          in st
-              & #modelData
-              . #dataModelTopMoney
+              & #modelState
+              . #stateTopMoney
               . #moneyModelCurrency
-              . #uniqueData
-              . #currencyModelData
+              . #uniqueValue
+              . #currencyModelValue
               .~ quoteCurrency
-              & #modelData
-              . #dataModelBottomMoney
+              & #modelState
+              . #stateBottomMoney
               . #moneyModelCurrency
-              . #uniqueData
-              . #currencyModelData
+              . #uniqueValue
+              . #currencyModelValue
               .~ baseCurrency
-              & #modelData
-              . #dataModelTopOrBottom
+              & #modelState
+              . #stateTopOrBottom
               .~ Top

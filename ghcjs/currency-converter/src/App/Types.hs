@@ -4,7 +4,7 @@ module App.Types
   ( Model (..),
     Unique (..),
     Action (..),
-    DataModel (..),
+    St (..),
     MoneyModel (..),
     AmountModel (..),
     CurrencyModel (..),
@@ -16,8 +16,8 @@ module App.Types
     newUnique,
     newModel,
     pureUpdate,
-    newDataModelUnique,
-    newDataModelIdentity,
+    newStateModelUnique,
+    newStateModelIdentity,
   )
 where
 
@@ -32,7 +32,7 @@ import Miso hiding (view)
 
 data Model = Model
   { modelHide :: Bool,
-    modelData :: DataModel Unique,
+    modelState :: St Unique,
     modelScreen :: Screen,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
@@ -45,7 +45,7 @@ data Model = Model
 
 data Unique a = Unique
   { uniqueUuid :: UUID,
-    uniqueData :: a
+    uniqueValue :: a
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
@@ -72,38 +72,32 @@ type Std f =
     Data (f CurrencyModel)
   )
 
-data DataModel f = DataModel
-  { dataModelTopMoney :: MoneyModel f,
-    dataModelBottomMoney :: MoneyModel f,
-    dataModelTopOrBottom :: TopOrBottom,
-    dataModelPaymentMethods :: [PaymentMethod f],
-    dataModelPaymentMethodsInput :: PaymentMethod f,
-    dataModelIssuer :: f Text,
-    dataModelClient :: f Text
+data St f = St
+  { stateTopMoney :: MoneyModel f,
+    stateBottomMoney :: MoneyModel f,
+    stateTopOrBottom :: TopOrBottom,
+    statePaymentMethods :: [PaymentMethod f],
+    statePaymentMethodsInput :: PaymentMethod f,
+    stateIssuer :: f Text,
+    stateClient :: f Text
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (DataModel f)
+deriving stock instance (Std f) => Eq (St f)
 
-deriving stock instance (Std f) => Ord (DataModel f)
+deriving stock instance (Std f) => Ord (St f)
 
-deriving stock instance (Std f) => Show (DataModel f)
+deriving stock instance (Std f) => Show (St f)
 
-deriving stock instance (Std f) => Data (DataModel f)
+deriving stock instance (Std f) => Data (St f)
 
-instance FunctorB DataModel
+instance FunctorB St
 
-instance TraversableB DataModel
+instance TraversableB St
 
-deriving via
-  GenericType (DataModel Identity)
-  instance
-    ToJSON (DataModel Identity)
+deriving via GenericType (St Identity) instance ToJSON (St Identity)
 
-deriving via
-  GenericType (DataModel Identity)
-  instance
-    FromJSON (DataModel Identity)
+deriving via GenericType (St Identity) instance FromJSON (St Identity)
 
 data MoneyModel f = MoneyModel
   { moneyModelAmount :: f AmountModel,
@@ -141,10 +135,10 @@ data AmountModel = AmountModel
   deriving (ToJSON, FromJSON) via GenericType AmountModel
 
 data CurrencyModel = CurrencyModel
-  { currencyModelData :: CurrencyInfo,
+  { currencyModelValue :: CurrencyInfo,
     currencyModelOpen :: Bool,
     --
-    -- TODO : use Unique Text
+    -- TODO : use Unique Text??
     --
     currencyModelSearch :: Text
   }
@@ -239,15 +233,15 @@ newModel = do
   let st =
         Model
           { modelHide = True,
-            modelData =
-              DataModel
-                { dataModelTopMoney = topMoney,
-                  dataModelBottomMoney = bottomMoney,
-                  dataModelTopOrBottom = Top,
-                  dataModelPaymentMethods = mempty,
-                  dataModelPaymentMethodsInput = paymentMethod,
-                  dataModelIssuer = issuer,
-                  dataModelClient = client
+            modelState =
+              St
+                { stateTopMoney = topMoney,
+                  stateBottomMoney = bottomMoney,
+                  stateTopOrBottom = Top,
+                  statePaymentMethods = mempty,
+                  statePaymentMethodsInput = paymentMethod,
+                  stateIssuer = issuer,
+                  stateClient = client
                 },
             modelScreen = InvoiceEditor,
             modelMarket = market,
@@ -280,65 +274,65 @@ newModel = do
       --
       -- Converter
       --
-      & #modelData
-      . #dataModelTopMoney
+      & #modelState
+      . #stateTopMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelInput
       .~ inspectRatioDef (unTagged baseAmt)
-      & #modelData
-      . #dataModelTopMoney
+      & #modelState
+      . #stateTopMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelOutput
       .~ unTagged baseAmt
-      & #modelData
-      . #dataModelTopMoney
+      & #modelState
+      . #stateTopMoney
       . #moneyModelCurrency
-      . #uniqueData
-      . #currencyModelData
+      . #uniqueValue
+      . #currencyModelValue
       .~ baseCur
-      & #modelData
-      . #dataModelBottomMoney
+      & #modelState
+      . #stateBottomMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelInput
       .~ inspectRatioDef (unTagged quoteAmt)
-      & #modelData
-      . #dataModelBottomMoney
+      & #modelState
+      . #stateBottomMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelOutput
       .~ unTagged quoteAmt
-      & #modelData
-      . #dataModelBottomMoney
+      & #modelState
+      . #stateBottomMoney
       . #moneyModelCurrency
-      . #uniqueData
-      . #currencyModelData
+      . #uniqueValue
+      . #currencyModelValue
       .~ quoteCur
       --
       -- InvoiceEditor
       --
-      & #modelData
-      . #dataModelPaymentMethodsInput
+      & #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelInput
       .~ inspectRatioDef (unTagged baseAmt)
-      & #modelData
-      . #dataModelPaymentMethodsInput
+      & #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelAmount
-      . #uniqueData
+      . #uniqueValue
       . #amountModelOutput
       .~ unTagged baseAmt
-      & #modelData
-      . #dataModelPaymentMethodsInput
+      & #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelCurrency
-      . #uniqueData
-      . #currencyModelData
+      . #uniqueValue
+      . #currencyModelValue
       .~ baseCur
       --
       -- Misc
@@ -357,7 +351,7 @@ newMoneyModel curInfo = do
   cur <-
     newUnique
       CurrencyModel
-        { currencyModelData = curInfo,
+        { currencyModelValue = curInfo,
           currencyModelOpen = False,
           currencyModelSearch = mempty
         }
@@ -389,8 +383,14 @@ newPaymentMethod cur =
     <*> newUnique mempty
     <*> pure True
 
-newDataModelIdentity :: DataModel Unique -> DataModel Identity
-newDataModelIdentity = bmap (Identity . uniqueData)
+newStateModelIdentity :: St Unique -> St Identity
+newStateModelIdentity =
+  bmap (Identity . uniqueValue)
 
-newDataModelUnique :: (MonadIO m) => DataModel Identity -> m (DataModel Unique)
-newDataModelUnique = btraverse (newUnique . runIdentity)
+newStateModelUnique ::
+  ( MonadIO m
+  ) =>
+  St Identity ->
+  m (St Unique)
+newStateModelUnique =
+  btraverse (newUnique . runIdentity)

@@ -17,13 +17,13 @@ import Miso hiding (view)
 
 getConverterAmountLens :: TopOrBottom -> ALens' Model (Unique AmountModel)
 getConverterAmountLens = \case
-  Top -> #modelData . #dataModelTopMoney . #moneyModelAmount
-  Bottom -> #modelData . #dataModelBottomMoney . #moneyModelAmount
+  Top -> #modelState . #stateTopMoney . #moneyModelAmount
+  Bottom -> #modelState . #stateBottomMoney . #moneyModelAmount
 
 getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Unique CurrencyModel)
 getConverterCurrencyLens = \case
-  Top -> #modelData . #dataModelTopMoney . #moneyModelCurrency
-  Bottom -> #modelData . #dataModelBottomMoney . #moneyModelCurrency
+  Top -> #modelState . #stateTopMoney . #moneyModelCurrency
+  Bottom -> #modelState . #stateBottomMoney . #moneyModelCurrency
 
 pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =

@@ -40,7 +40,7 @@ mainWidget st =
               <> [
                    -- LayoutGrid.cell [LayoutGrid.span12]
                    --   . (: mempty)
-                   --   $ div_ mempty [inspect $ st ^. #modelData],
+                   --   $ div_ mempty [inspect $ st ^. #modelState],
                    swapScreenWidget st,
                    tosWidget,
                    Snackbar.snackbar (Snackbar.config Misc.snackbarClosed)
@@ -59,12 +59,12 @@ screenWidget st@Model {modelScreen = Converter} =
         amountWidget
           st
           ( cloneLens (Misc.getConverterCurrencyLens loc)
-              . #uniqueData
-              . #currencyModelData
+              . #uniqueValue
+              . #currencyModelValue
               . to (inspectCurrencyInfo @Text)
           )
           (Misc.getConverterAmountLens loc)
-          (& #modelData . #dataModelTopOrBottom .~ loc)
+          (& #modelState . #stateTopOrBottom .~ loc)
       currencyWidget' =
         currencyWidget st
           . Misc.getConverterCurrencyLens
@@ -78,11 +78,11 @@ screenWidget st@Model {modelScreen = Converter} =
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ textWidget "Invoice entities",
     textModelWidget st "Issuer"
-      $ #modelData
-      . #dataModelIssuer,
+      $ #modelState
+      . #stateIssuer,
     textModelWidget st "Client"
-      $ #modelData
-      . #dataModelClient,
+      $ #modelState
+      . #stateClient,
     textWidget "Invoice amounts",
     --
     -- TODO : don't reuse Converter data
@@ -90,8 +90,8 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
     amountWidget
       st
       ( cloneLens (Misc.getConverterCurrencyLens Top)
-          . #uniqueData
-          . #currencyModelData
+          . #uniqueValue
+          . #currencyModelValue
           . to (inspectCurrencyInfo @Text)
       )
       (Misc.getConverterAmountLens Top)
@@ -99,20 +99,20 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
     currencyWidget st $ Misc.getConverterCurrencyLens Top,
     textWidget "Payment methods",
     textModelWidget st "Address"
-      $ #modelData
-      . #dataModelPaymentMethodsInput
+      $ #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodAddress,
     switchWidget st "Address QR code"
-      $ #modelData
-      . #dataModelPaymentMethodsInput
+      $ #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodAddressQrCode,
     textModelWidget st "Notes"
-      $ #modelData
-      . #dataModelPaymentMethodsInput
+      $ #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodNotes,
     currencyWidget st
-      $ #modelData
-      . #dataModelPaymentMethodsInput
+      $ #modelState
+      . #statePaymentMethodsInput
       . #paymentMethodMoney
       . #moneyModelCurrency,
     addPaymentMethodWidget st

@@ -65,14 +65,14 @@ textModelWidget st placeholder optic =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueData
+          . #uniqueValue
           .~ from @String @Text txt
     onCopyAction =
       PushUpdate
         ( Misc.copyIntoClipboard st
             $ st
             ^. cloneLens optic
-            . #uniqueData
+            . #uniqueValue
         )
         ( ChanItem 0 id
         )
@@ -89,6 +89,6 @@ textModelWidget st placeholder optic =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens optic
-              . #uniqueData
+              . #uniqueValue
               .~ mempty
         )

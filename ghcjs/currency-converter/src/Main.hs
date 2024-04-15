@@ -173,19 +173,27 @@ syncInputs st =
     --
     allLens :: [(ALens' Model UUID, ALens' Model Text)]
     allLens =
-      [ ( #modelState . #stateTopMoney . #moneyAmount . #uniqueUuid,
+      [ ( #modelState
+            . #stateTopMoney
+            . #moneyAmount
+            . #amountInput
+            . #uniqueUuid,
           #modelState
             . #stateTopMoney
             . #moneyAmount
-            . #uniqueValue
             . #amountInput
+            . #uniqueValue
         ),
-        ( #modelState . #stateBottomMoney . #moneyAmount . #uniqueUuid,
+        ( #modelState
+            . #stateBottomMoney
+            . #moneyAmount
+            . #amountInput
+            . #uniqueUuid,
           #modelState
             . #stateBottomMoney
             . #moneyAmount
-            . #uniqueValue
             . #amountInput
+            . #uniqueValue
         ),
         ( #modelState . #stateIssuer . #uniqueUuid,
           #modelState . #stateIssuer . #uniqueValue
@@ -204,15 +212,14 @@ evalModel st = do
         case st
           ^. cloneLens baseLens
           . #moneyAmount
-          . #uniqueValue
-          . #amountInput of
+          . #amountInput
+          . #uniqueValue of
           amt
             | null amt ->
                 inspectRatioDef
                   $ st
                   ^. cloneLens baseLens
                   . #moneyAmount
-                  . #uniqueValue
                   . #amountOutput
           amt -> amt
   baseAmtResult <-
@@ -227,7 +234,6 @@ evalModel st = do
                 $ st
                 ^. cloneLens baseLens
                 . #moneyCurrency
-                . #uniqueValue
                 . #currencyValue
                 . #currencyInfoCode
         quote <-
@@ -235,7 +241,6 @@ evalModel st = do
             $ st
             ^. cloneLens quoteLens
             . #moneyCurrency
-            . #uniqueValue
             . #currencyValue
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
@@ -244,22 +249,20 @@ evalModel st = do
           $ st
           & cloneLens baseLens
           . #moneyAmount
-          . #uniqueValue
           . #amountInput
+          . #uniqueValue
           .~ baseAmtInput
           & cloneLens baseLens
           . #moneyAmount
-          . #uniqueValue
           . #amountOutput
           .~ unTagged baseAmt
           & cloneLens quoteLens
           . #moneyAmount
-          . #uniqueValue
           . #amountInput
+          . #uniqueValue
           .~ inspectRatioDef (unTagged quoteAmt)
           & cloneLens quoteLens
           . #moneyAmount
-          . #uniqueValue
           . #amountOutput
           .~ unTagged quoteAmt
           & #modelUpdatedAt

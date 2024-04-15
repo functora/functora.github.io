@@ -22,7 +22,7 @@ import qualified Text.Fuzzy as Fuzzy
 
 currencyWidget ::
   Model ->
-  ALens' Model (Unique Currency) ->
+  ALens' Model (Currency Unique) ->
   View Action
 currencyWidget st optic =
   LayoutGrid.cell
@@ -38,17 +38,11 @@ currencyWidget st optic =
         . inspectCurrencyInfo
         $ st
         ^. cloneLens optic
-        . #uniqueValue
         . #currencyValue,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
-            & Dialog.setOpen
-              ( st
-                  ^. cloneLens optic
-                  . #uniqueValue
-                  . #currencyOpen
-              )
+            & Dialog.setOpen (st ^. cloneLens optic . #currencyOpen)
         )
         ( Dialog.dialogContent
             Nothing
@@ -60,10 +54,7 @@ currencyWidget st optic =
               ]
               [ TextField.outlined
                   . TextField.setType (Just "text")
-                  . ( if st
-                        ^. cloneLens optic
-                        . #uniqueValue
-                        . #currencyOpen
+                  . ( if st ^. cloneLens optic . #currencyOpen
                         then id
                         else
                           TextField.setValue
@@ -71,8 +62,8 @@ currencyWidget st optic =
                                 . from @Text @String
                                 $ st
                                 ^. cloneLens optic
-                                . #uniqueValue
                                 . #currencySearch
+                                . #uniqueValue
                             )
                     )
                   . TextField.setOnInput search
@@ -81,7 +72,6 @@ currencyWidget st optic =
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
-                        . #uniqueValue
                         . #currencyValue
                     )
                   . TextField.setAttributes
@@ -102,40 +92,38 @@ currencyWidget st optic =
         )
     ]
   where
-    uuid = st ^. cloneLens optic . #uniqueUuid
+    uuid = st ^. cloneLens optic . #currencySearch . #uniqueUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueValue
           . #currencySearch
+          . #uniqueValue
           .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueValue
           . #currencyOpen
           .~ True
           & cloneLens optic
-          . #uniqueValue
           . #currencySearch
+          . #uniqueValue
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #uniqueValue
           . #currencyOpen
           .~ False
           & cloneLens optic
-          . #uniqueValue
           . #currencySearch
+          . #uniqueValue
           .~ mempty
 
 currencyListWidget ::
   Model ->
-  ALens' Model (Unique Currency) ->
+  ALens' Model (Currency Unique) ->
   View Action
 currencyListWidget st optic =
   List.list
@@ -147,8 +135,8 @@ currencyListWidget st optic =
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #uniqueValue . #currencyValue
-    search = st ^. cloneLens optic . #uniqueValue . #currencySearch
+    current = st ^. cloneLens optic . #currencyValue
+    search = st ^. cloneLens optic . #currencySearch . #uniqueValue
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -161,7 +149,7 @@ currencyListWidget st optic =
           False
 
 currencyListItemWidget ::
-  ALens' Model (Unique Currency) ->
+  ALens' Model (Currency Unique) ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
@@ -177,15 +165,13 @@ currencyListItemWidget optic current item =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneLens optic
-                . #uniqueValue
                 . #currencyOpen
                 .~ False
                 & cloneLens optic
-                . #uniqueValue
                 . #currencySearch
+                . #uniqueValue
                 .~ mempty
                 & cloneLens optic
-                . #uniqueValue
                 . #currencyValue
                 .~ item
           )
@@ -218,26 +204,22 @@ swapCurrenciesWidget =
                 ^. #modelState
                 . #stateTopMoney
                 . #moneyCurrency
-                . #uniqueValue
                 . #currencyValue
             quoteCurrency =
               st
                 ^. #modelState
                 . #stateBottomMoney
                 . #moneyCurrency
-                . #uniqueValue
                 . #currencyValue
          in st
               & #modelState
               . #stateTopMoney
               . #moneyCurrency
-              . #uniqueValue
               . #currencyValue
               .~ quoteCurrency
               & #modelState
               . #stateBottomMoney
               . #moneyCurrency
-              . #uniqueValue
               . #currencyValue
               .~ baseCurrency
               & #modelState

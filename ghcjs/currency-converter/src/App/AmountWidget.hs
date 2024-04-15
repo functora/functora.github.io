@@ -18,7 +18,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 amountWidget ::
   Model ->
   Getter' Model Text ->
-  ALens' Model (Unique Amount) ->
+  ALens' Model (Amount Unique) ->
   ( Model -> Model
   ) ->
   View Action
@@ -68,9 +68,9 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
           ]
     ]
   where
-    uuid = st ^. cloneLens amountOptic . #uniqueUuid
-    input = st ^. cloneLens amountOptic . #uniqueValue . #amountInput
-    output = st ^. cloneLens amountOptic . #uniqueValue . #amountOutput
+    uuid = st ^. cloneLens amountOptic . #amountInput . #uniqueUuid
+    input = st ^. cloneLens amountOptic . #amountInput . #uniqueValue
+    output = st ^. cloneLens amountOptic . #amountOutput
     valid =
       (parseRatio input == Just output)
         || (input == inspectRatioDef output)
@@ -81,15 +81,15 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
           else
             st'
               & cloneLens amountOptic
-              . #uniqueValue
               . #amountInput
+              . #uniqueValue
               .~ inspectRatioDef output
     onInputAction txt =
       pureUpdate 300 $ \st' ->
         st'
           & cloneLens amountOptic
-          . #uniqueValue
           . #amountInput
+          . #uniqueValue
           .~ from @String @Text txt
           & extraOnInput
     onCopyAction =
@@ -111,8 +111,8 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
         ( ChanItem 300 $ \st' ->
             st'
               & cloneLens amountOptic
-              . #uniqueValue
               . #amountInput
+              . #uniqueValue
               .~ mempty
               & extraOnInput
         )
@@ -142,52 +142,48 @@ swapAmountsWidget =
                 ^. #modelState
                 . #stateTopMoney
                 . #moneyAmount
-                . #uniqueValue
                 . #amountInput
+                . #uniqueValue
             baseOutput =
               st
                 ^. #modelState
                 . #stateTopMoney
                 . #moneyAmount
-                . #uniqueValue
                 . #amountOutput
             quoteInput =
               st
                 ^. #modelState
                 . #stateBottomMoney
                 . #moneyAmount
-                . #uniqueValue
                 . #amountInput
+                . #uniqueValue
             quoteOutput =
               st
                 ^. #modelState
                 . #stateBottomMoney
                 . #moneyAmount
-                . #uniqueValue
                 . #amountOutput
          in st
               & #modelState
               . #stateTopMoney
               . #moneyAmount
-              . #uniqueValue
               . #amountInput
+              . #uniqueValue
               .~ quoteInput
               & #modelState
               . #stateTopMoney
               . #moneyAmount
-              . #uniqueValue
               . #amountOutput
               .~ quoteOutput
               & #modelState
               . #stateBottomMoney
               . #moneyAmount
-              . #uniqueValue
               . #amountInput
+              . #uniqueValue
               .~ baseInput
               & #modelState
               . #stateBottomMoney
               . #moneyAmount
-              . #uniqueValue
               . #amountOutput
               .~ baseOutput
               & #modelState

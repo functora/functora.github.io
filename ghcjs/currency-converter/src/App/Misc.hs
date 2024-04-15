@@ -15,12 +15,12 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterAmountLens :: TopOrBottom -> ALens' Model (Unique Amount)
+getConverterAmountLens :: TopOrBottom -> ALens' Model (Amount Unique)
 getConverterAmountLens = \case
   Top -> #modelState . #stateTopMoney . #moneyAmount
   Bottom -> #modelState . #stateBottomMoney . #moneyAmount
 
-getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Unique Currency)
+getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Currency Unique)
 getConverterCurrencyLens = \case
   Top -> #modelState . #stateTopMoney . #moneyCurrency
   Bottom -> #modelState . #stateBottomMoney . #moneyCurrency

@@ -263,7 +263,7 @@ newModel = do
                   stateIssuer = issuer,
                   stateClient = client
                 },
-            modelScreen = InvoiceEditor,
+            modelScreen = Converter,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -390,10 +390,6 @@ newStateIdentity :: St Unique -> St Identity
 newStateIdentity =
   bmap (Identity . uniqueValue)
 
-newStateUnique ::
-  ( MonadIO m
-  ) =>
-  St Identity ->
-  m (St Unique)
+newStateUnique :: (MonadIO m) => St Identity -> m (St Unique)
 newStateUnique =
   btraverse (newUnique . runIdentity)

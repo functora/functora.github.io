@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as BL
 import App.MainWidget
 import qualified App.Misc as Misc
 import App.Types
+import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)
 import Functora.Prelude as Prelude
@@ -151,57 +152,29 @@ extendedEvents =
     & Map.insert "MDCChip:interaction" True
     & Map.insert "MDCIconButtonToggle:change" True
 
+--
+-- NOTE : The "correct" way is to use "controlled input" with
+-- TextField.setValue but it does cause race conditions
+-- when user types "too fast":
+--
+-- https://github.com/dmjio/miso/issues/272
+--
 syncInputs :: Model -> JSM ()
-syncInputs st =
-  --
-  -- NOTE : The "correct" way is to use "controlled input" with
-  -- TextField.setValue but it does cause race conditions
-  -- when user types "too fast":
-  --
-  -- https://github.com/dmjio/miso/issues/272
-  --
-  forM_ allLens . uncurry $ \uuidLens textLens ->
-    JS.eval @Text
-      $ "var el = document.getElementById('"
-      <> htmlUuid (st ^. cloneLens uuidLens)
-      <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
-      <> (st ^. cloneLens textLens)
-      <> "';"
+syncInputs =
+  void
+    . Syb.everywhereM (Syb.mkM fun)
+    . modelState
   where
-    --
-    -- TODO : refactor, use TextInput instead of separate fields for money amount
-    --
-    allLens :: [(ALens' Model UUID, ALens' Model Text)]
-    allLens =
-      [ ( #modelState
-            . #stateTopMoney
-            . #moneyAmount
-            . #amountInput
-            . #uniqueUuid,
-          #modelState
-            . #stateTopMoney
-            . #moneyAmount
-            . #amountInput
-            . #uniqueValue
-        ),
-        ( #modelState
-            . #stateBottomMoney
-            . #moneyAmount
-            . #amountInput
-            . #uniqueUuid,
-          #modelState
-            . #stateBottomMoney
-            . #moneyAmount
-            . #amountInput
-            . #uniqueValue
-        ),
-        ( #modelState . #stateIssuer . #uniqueUuid,
-          #modelState . #stateIssuer . #uniqueValue
-        ),
-        ( #modelState . #stateClient . #uniqueUuid,
-          #modelState . #stateClient . #uniqueValue
-        )
-      ]
+    fun :: Unique Text -> JSM (Unique Text)
+    fun txt = do
+      void
+        . JS.eval @Text
+        $ "var el = document.getElementById('"
+        <> htmlUuid (txt ^. #uniqueUuid)
+        <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
+        <> (txt ^. #uniqueValue)
+        <> "';"
+      pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do

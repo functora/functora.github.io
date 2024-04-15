@@ -89,6 +89,7 @@ common pkg
     , jsaddle
     , miso
     , miso-components
+    , syb
     , text
 
   if !impl(ghcjs)

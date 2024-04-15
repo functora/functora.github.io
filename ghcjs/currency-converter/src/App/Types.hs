@@ -2,6 +2,7 @@
 
 module App.Types
   ( Model (..),
+    Unique (..),
     Action (..),
     DataModel (..),
     MoneyModel (..),
@@ -12,7 +13,6 @@ module App.Types
     Screen (..),
     AssetModel (..),
     TopOrBottom (..),
-    Unique (..),
     newUnique,
     newModel,
     pureUpdate,
@@ -43,12 +43,34 @@ data Model = Model
   }
   deriving stock (Eq, Generic)
 
+data Unique a = Unique
+  { uniqueUuid :: UUID,
+    uniqueData :: a
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
 data Action
   = Noop
   | InitUpdate
   | TimeUpdate
   | ChanUpdate Model
   | PushUpdate (JSM ()) (ChanItem (Model -> Model))
+
+type Std f =
+  ( Typeable f,
+    Eq (f Text),
+    Eq (f AmountModel),
+    Eq (f CurrencyModel),
+    Ord (f Text),
+    Ord (f AmountModel),
+    Ord (f CurrencyModel),
+    Show (f Text),
+    Show (f AmountModel),
+    Show (f CurrencyModel),
+    Data (f Text),
+    Data (f AmountModel),
+    Data (f CurrencyModel)
+  )
 
 data DataModel f = DataModel
   { dataModelTopMoney :: MoneyModel f,
@@ -61,64 +83,27 @@ data DataModel f = DataModel
   }
   deriving stock (Generic)
 
-deriving stock instance
-  ( Eq (f Text),
-    Eq (f AmountModel),
-    Eq (f CurrencyModel)
-  ) =>
-  Eq (DataModel f)
+deriving stock instance (Std f) => Eq (DataModel f)
 
-deriving stock instance
-  ( Ord (f Text),
-    Ord (f AmountModel),
-    Ord (f CurrencyModel)
-  ) =>
-  Ord (DataModel f)
+deriving stock instance (Std f) => Ord (DataModel f)
 
-deriving stock instance
-  ( Show (f Text),
-    Show (f AmountModel),
-    Show (f CurrencyModel)
-  ) =>
-  Show (DataModel f)
+deriving stock instance (Std f) => Show (DataModel f)
 
-deriving stock instance
-  ( Typeable f,
-    Data (f Text),
-    Data (f AmountModel),
-    Data (f CurrencyModel)
-  ) =>
-  Data (DataModel f)
+deriving stock instance (Std f) => Data (DataModel f)
 
 instance FunctorB DataModel
 
 instance TraversableB DataModel
 
 deriving via
-  GenericType (DataModel f)
+  GenericType (DataModel Identity)
   instance
-    ( Typeable f,
-      ToJSON (f Text),
-      ToJSON (MoneyModel f),
-      ToJSON (PaymentMethod f)
-    ) =>
-    ToJSON (DataModel f)
+    ToJSON (DataModel Identity)
 
 deriving via
-  GenericType (DataModel f)
+  GenericType (DataModel Identity)
   instance
-    ( Typeable f,
-      FromJSON (f Text),
-      FromJSON (MoneyModel f),
-      FromJSON (PaymentMethod f)
-    ) =>
-    FromJSON (DataModel f)
-
-data Unique a = Unique
-  { uniqueUuid :: UUID,
-    uniqueData :: a
-  }
-  deriving stock (Eq, Ord, Show, Data, Generic)
+    FromJSON (DataModel Identity)
 
 data MoneyModel f = MoneyModel
   { moneyModelAmount :: f AmountModel,
@@ -126,56 +111,27 @@ data MoneyModel f = MoneyModel
   }
   deriving stock (Generic)
 
-deriving stock instance
-  ( Eq (f Text),
-    Eq (f AmountModel),
-    Eq (f CurrencyModel)
-  ) =>
-  Eq (MoneyModel f)
+deriving stock instance (Std f) => Eq (MoneyModel f)
 
-deriving stock instance
-  ( Ord (f Text),
-    Ord (f AmountModel),
-    Ord (f CurrencyModel)
-  ) =>
-  Ord (MoneyModel f)
+deriving stock instance (Std f) => Ord (MoneyModel f)
 
-deriving stock instance
-  ( Show (f Text),
-    Show (f AmountModel),
-    Show (f CurrencyModel)
-  ) =>
-  Show (MoneyModel f)
+deriving stock instance (Std f) => Show (MoneyModel f)
 
-deriving stock instance
-  ( Typeable f,
-    Data (f Text),
-    Data (f AmountModel),
-    Data (f CurrencyModel)
-  ) =>
-  Data (MoneyModel f)
+deriving stock instance (Std f) => Data (MoneyModel f)
 
 instance FunctorB MoneyModel
 
 instance TraversableB MoneyModel
 
 deriving via
-  GenericType (MoneyModel f)
+  GenericType (MoneyModel Identity)
   instance
-    ( Typeable f,
-      ToJSON (f AmountModel),
-      ToJSON (f CurrencyModel)
-    ) =>
-    ToJSON (MoneyModel f)
+    ToJSON (MoneyModel Identity)
 
 deriving via
-  GenericType (MoneyModel f)
+  GenericType (MoneyModel Identity)
   instance
-    ( Typeable f,
-      FromJSON (f AmountModel),
-      FromJSON (f CurrencyModel)
-    ) =>
-    FromJSON (MoneyModel f)
+    FromJSON (MoneyModel Identity)
 
 data AmountModel = AmountModel
   { amountModelInput :: Text,
@@ -203,38 +159,27 @@ data PaymentMethod f = PaymentMethod
   }
   deriving stock (Generic)
 
-deriving stock instance
-  ( Eq (f Text),
-    Eq (f AmountModel),
-    Eq (f CurrencyModel)
-  ) =>
-  Eq (PaymentMethod f)
+deriving stock instance (Std f) => Eq (PaymentMethod f)
 
-deriving stock instance
-  ( Ord (f Text),
-    Ord (f AmountModel),
-    Ord (f CurrencyModel)
-  ) =>
-  Ord (PaymentMethod f)
+deriving stock instance (Std f) => Ord (PaymentMethod f)
 
-deriving stock instance
-  ( Show (f Text),
-    Show (f AmountModel),
-    Show (f CurrencyModel)
-  ) =>
-  Show (PaymentMethod f)
+deriving stock instance (Std f) => Show (PaymentMethod f)
 
-deriving stock instance
-  ( Typeable f,
-    Data (f Text),
-    Data (f AmountModel),
-    Data (f CurrencyModel)
-  ) =>
-  Data (PaymentMethod f)
+deriving stock instance (Std f) => Data (PaymentMethod f)
 
 instance FunctorB PaymentMethod
 
 instance TraversableB PaymentMethod
+
+deriving via
+  GenericType (PaymentMethod Identity)
+  instance
+    ToJSON (PaymentMethod Identity)
+
+deriving via
+  GenericType (PaymentMethod Identity)
+  instance
+    FromJSON (PaymentMethod Identity)
 
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
@@ -262,13 +207,13 @@ data AssetModel f = AssetModel
   }
   deriving stock (Generic)
 
-deriving stock instance (Eq (f Text)) => Eq (AssetModel f)
+deriving stock instance (Std f) => Eq (AssetModel f)
 
-deriving stock instance (Ord (f Text)) => Ord (AssetModel f)
+deriving stock instance (Std f) => Ord (AssetModel f)
 
-deriving stock instance (Show (f Text)) => Show (AssetModel f)
+deriving stock instance (Std f) => Show (AssetModel f)
 
-deriving stock instance (Data (f Text), Typeable f) => Data (AssetModel f)
+deriving stock instance (Std f) => Data (AssetModel f)
 
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do

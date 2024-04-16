@@ -195,6 +195,7 @@ common pkg-rates
   build-depends:
     , aeson-combinators
     , base
+    , cfg
     , containers
     , modern-uri
     , money

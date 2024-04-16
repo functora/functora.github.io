@@ -1,11 +1,11 @@
-module App.CurrencyWidget
-  ( currencyWidget,
-    swapCurrenciesWidget,
+module App.Widgets.Currency
+  ( currencySelect,
+    currencySwap,
   )
 where
 
-import App.TextWidget
 import App.Types
+import qualified App.Widgets.TextInput as TextInput
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Money
 import Functora.Prelude as Prelude
@@ -19,11 +19,11 @@ import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
-currencyWidget ::
+currencySelect ::
   Model ->
   ALens' Model (Currency Unique) ->
   View Action
-currencyWidget st optic =
+currencySelect st optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -51,7 +51,7 @@ currencyWidget st optic =
             $ div_
               [ class_ "fill"
               ]
-              [ textWidget
+              [ TextInput.textInput
                   st
                   ( inspectCurrencyInfo
                       $ st
@@ -152,8 +152,8 @@ currencyListItemWidget optic current item =
     [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
     ]
 
-swapCurrenciesWidget :: View Action
-swapCurrenciesWidget =
+currencySwap :: View Action
+currencySwap =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,

@@ -1,10 +1,10 @@
-module App.MainWidget (mainWidget) where
+module App.Widgets.Main (mainWidget) where
 
-import App.AmountWidget
-import App.CurrencyWidget
 import qualified App.Misc as Misc
-import App.TextWidget
 import App.Types
+import qualified App.Widgets.Amount as Amount
+import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.TextInput as TextInput
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
@@ -56,7 +56,7 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
-        amountWidget
+        Amount.amountSelect
           st
           ( cloneLens (Misc.getConverterCurrencyLens loc)
               . #currencyOutput
@@ -65,28 +65,28 @@ screenWidget st@Model {modelScreen = Converter} =
           (Misc.getConverterAmountLens loc)
           (& #modelState . #stateTopOrBottom .~ loc)
       currencyWidget' =
-        currencyWidget st
+        Currency.currencySelect st
           . Misc.getConverterCurrencyLens
    in [ amountWidget' Top,
         currencyWidget' Top,
         amountWidget' Bottom,
         currencyWidget' Bottom,
-        swapAmountsWidget,
-        swapCurrenciesWidget
+        Amount.amountSwap,
+        Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ titleWidget "Invoice entities",
-    textWidget st "Issuer"
+    TextInput.textInput st "Issuer"
       $ #modelState
       . #stateIssuer,
-    textWidget st "Client"
+    TextInput.textInput st "Client"
       $ #modelState
       . #stateClient,
     titleWidget "Invoice amounts",
     --
     -- TODO : don't reuse Converter data
     --
-    amountWidget
+    Amount.amountSelect
       st
       ( cloneLens (Misc.getConverterCurrencyLens Top)
           . #currencyOutput
@@ -94,9 +94,9 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
       )
       (Misc.getConverterAmountLens Top)
       id,
-    currencyWidget st $ Misc.getConverterCurrencyLens Top,
+    Currency.currencySelect st $ Misc.getConverterCurrencyLens Top,
     titleWidget "Payment methods",
-    textWidget st "Address"
+    TextInput.textInput st "Address"
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodAddress,
@@ -104,11 +104,11 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodAddressQrCode,
-    textWidget st "Notes"
+    TextInput.textInput st "Notes"
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodNotes,
-    currencyWidget st
+    Currency.currencySelect st
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodMoney

@@ -1,6 +1,6 @@
-module App.AmountWidget
-  ( amountWidget,
-    swapAmountsWidget,
+module App.Widgets.Amount
+  ( amountSelect,
+    amountSwap,
   )
 where
 
@@ -15,14 +15,14 @@ import qualified Material.Theme as Theme
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
-amountWidget ::
+amountSelect ::
   Model ->
   Getter' Model Text ->
   ALens' Model (Amount Unique) ->
   ( Model -> Model
   ) ->
   View Action
-amountWidget st placeholderOptic amountOptic extraOnInput =
+amountSelect st placeholderOptic amountOptic extraOnInput =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -117,8 +117,8 @@ amountWidget st placeholderOptic amountOptic extraOnInput =
               & extraOnInput
         )
 
-swapAmountsWidget :: View Action
-swapAmountsWidget =
+amountSwap :: View Action
+amountSwap =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,

@@ -19,12 +19,12 @@ common pkg
     static/material-components-web.min.js
 
   other-modules:
-    App.AmountWidget
-    App.CurrencyWidget
-    App.MainWidget
     App.Misc
-    App.TextWidget
     App.Types
+    App.Widgets.Amount
+    App.Widgets.Currency
+    App.Widgets.Main
+    App.Widgets.TextInput
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

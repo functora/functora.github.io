@@ -10,9 +10,9 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
-import App.MainWidget
 import qualified App.Misc as Misc
 import App.Types
+import App.Widgets.Main
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)

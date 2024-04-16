@@ -11,10 +11,10 @@ module App.Types
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
-    AssetModel (..),
+    Asset (..),
     TopOrBottom (..),
-    newUnique,
     newModel,
+    newUnique,
     pureUpdate,
     newStateUnique,
     newStateIdentity,
@@ -137,12 +137,9 @@ deriving via GenericType (Amount Identity) instance ToJSON (Amount Identity)
 deriving via GenericType (Amount Identity) instance FromJSON (Amount Identity)
 
 data Currency f = Currency
-  --
-  -- TODO : refactor in Input/Output terms
-  --
-  { currencyValue :: CurrencyInfo,
-    currencyOpen :: Bool,
-    currencySearch :: f Text
+  { currencyInput :: f Text,
+    currencyOutput :: CurrencyInfo,
+    currencyOpen :: Bool
   }
   deriving stock (Generic)
 
@@ -213,21 +210,25 @@ data TopOrBottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
-data AssetModel f = AssetModel
-  { assetModelDescription :: f Text,
-    assetModelAmount :: Amount f,
-    assetModelCurrency :: Currency f,
-    assetModelRates :: QuotesPerBaseAt
+data Asset f = Asset
+  { assetDescription :: f Text,
+    assetAmount :: Amount f,
+    assetCurrency :: Currency f,
+    assetRates :: QuotesPerBaseAt
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (AssetModel f)
+deriving stock instance (Std f) => Eq (Asset f)
 
-deriving stock instance (Std f) => Ord (AssetModel f)
+deriving stock instance (Std f) => Ord (Asset f)
 
-deriving stock instance (Std f) => Show (AssetModel f)
+deriving stock instance (Std f) => Show (Asset f)
 
-deriving stock instance (Std f) => Data (AssetModel f)
+deriving stock instance (Std f) => Data (Asset f)
+
+deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
+
+deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
@@ -308,7 +309,7 @@ newModel = do
       & #modelState
       . #stateTopMoney
       . #moneyCurrency
-      . #currencyValue
+      . #currencyOutput
       .~ baseCur
       & #modelState
       . #stateBottomMoney
@@ -324,7 +325,7 @@ newModel = do
       & #modelState
       . #stateBottomMoney
       . #moneyCurrency
-      . #currencyValue
+      . #currencyOutput
       .~ quoteCur
       --
       -- InvoiceEditor
@@ -346,7 +347,7 @@ newModel = do
       . #statePaymentMethodsInput
       . #paymentMethodMoney
       . #moneyCurrency
-      . #currencyValue
+      . #currencyOutput
       .~ baseCur
       --
       -- Misc
@@ -355,9 +356,9 @@ newModel = do
       .~ currenciesInfo
 
 newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (Money Unique)
-newMoneyModel curInfo = do
+newMoneyModel value = do
   amt <- Amount <$> newUnique (inspectRatioDef @Text @Integer 0) <*> pure 0
-  cur <- Currency curInfo False <$> newUnique mempty
+  cur <- Currency <$> newUnique mempty <*> pure value <*> pure False
   pure
     Money
       { moneyAmount = amt,

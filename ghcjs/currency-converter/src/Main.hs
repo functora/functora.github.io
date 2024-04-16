@@ -207,14 +207,14 @@ evalModel st = do
                 $ st
                 ^. cloneLens baseLens
                 . #moneyCurrency
-                . #currencyValue
+                . #currencyOutput
                 . #currencyInfoCode
         quote <-
           getQuote funds
             $ st
             ^. cloneLens quoteLens
             . #moneyCurrency
-            . #currencyValue
+            . #currencyOutput
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
         ct <- getCurrentTime

@@ -38,7 +38,7 @@ currencyWidget st optic =
         . inspectCurrencyInfo
         $ st
         ^. cloneLens optic
-        . #currencyValue,
+        . #currencyOutput,
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
@@ -62,7 +62,7 @@ currencyWidget st optic =
                                 . from @Text @String
                                 $ st
                                 ^. cloneLens optic
-                                . #currencySearch
+                                . #currencyInput
                                 . #uniqueValue
                             )
                     )
@@ -72,7 +72,7 @@ currencyWidget st optic =
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
-                        . #currencyValue
+                        . #currencyOutput
                     )
                   . TextField.setAttributes
                     [ class_ "fill",
@@ -92,12 +92,12 @@ currencyWidget st optic =
         )
     ]
   where
-    uuid = st ^. cloneLens optic . #currencySearch . #uniqueUuid
+    uuid = st ^. cloneLens optic . #currencyInput . #uniqueUuid
     search input =
       pureUpdate 0 $ \st' ->
         st'
           & cloneLens optic
-          . #currencySearch
+          . #currencyInput
           . #uniqueValue
           .~ from @String @Text input
     opened =
@@ -107,7 +107,7 @@ currencyWidget st optic =
           . #currencyOpen
           .~ True
           & cloneLens optic
-          . #currencySearch
+          . #currencyInput
           . #uniqueValue
           .~ mempty
     closed =
@@ -117,7 +117,7 @@ currencyWidget st optic =
           . #currencyOpen
           .~ False
           & cloneLens optic
-          . #currencySearch
+          . #currencyInput
           . #uniqueValue
           .~ mempty
 
@@ -135,8 +135,8 @@ currencyListWidget st optic =
     $ maybe mempty NonEmpty.tail matching
   where
     currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #currencyValue
-    search = st ^. cloneLens optic . #currencySearch . #uniqueValue
+    current = st ^. cloneLens optic . #currencyOutput
+    search = st ^. cloneLens optic . #currencyInput . #uniqueValue
     matching =
       nonEmpty
         . fmap Fuzzy.original
@@ -168,11 +168,11 @@ currencyListItemWidget optic current item =
                 . #currencyOpen
                 .~ False
                 & cloneLens optic
-                . #currencySearch
+                . #currencyInput
                 . #uniqueValue
                 .~ mempty
                 & cloneLens optic
-                . #currencyValue
+                . #currencyOutput
                 .~ item
           )
     )
@@ -204,23 +204,23 @@ swapCurrenciesWidget =
                 ^. #modelState
                 . #stateTopMoney
                 . #moneyCurrency
-                . #currencyValue
+                . #currencyOutput
             quoteCurrency =
               st
                 ^. #modelState
                 . #stateBottomMoney
                 . #moneyCurrency
-                . #currencyValue
+                . #currencyOutput
          in st
               & #modelState
               . #stateTopMoney
               . #moneyCurrency
-              . #currencyValue
+              . #currencyOutput
               .~ quoteCurrency
               & #modelState
               . #stateBottomMoney
               . #moneyCurrency
-              . #currencyValue
+              . #currencyOutput
               .~ baseCurrency
               & #modelState
               . #stateTopOrBottom

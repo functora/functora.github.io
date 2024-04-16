@@ -4,7 +4,7 @@ module App.CurrencyWidget
   )
 where
 
-import qualified App.Misc as Misc
+import App.TextWidget
 import App.Types
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Money
@@ -14,7 +14,6 @@ import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
-import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
@@ -52,22 +51,16 @@ currencyWidget st optic =
             $ div_
               [ class_ "fill"
               ]
-              [ TextField.outlined
-                  $ TextField.config
-                  & TextField.setType (Just "text")
-                  & TextField.setOnInput search
-                  & TextField.setPlaceholder
-                    ( Just
-                        . inspectCurrencyInfo
-                        $ st
-                        ^. cloneLens optic
-                        . #currencyOutput
-                    )
-                  & TextField.setAttributes
-                    [ class_ "fill",
-                      id_ . ms $ htmlUuid @Text uuid,
-                      onKeyDown $ Misc.onKeyDownAction uuid
-                    ],
+              [ textWidget
+                  st
+                  ( inspectCurrencyInfo
+                      $ st
+                      ^. cloneLens optic
+                      . #currencyOutput
+                  )
+                  ( cloneLens optic
+                      . #currencyInput
+                  ),
                 Button.raised
                   ( Button.config
                       & Button.setOnClick closed
@@ -80,14 +73,6 @@ currencyWidget st optic =
         )
     ]
   where
-    uuid = st ^. cloneLens optic . #currencyInput . #uniqueUuid
-    search input =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneLens optic
-          . #currencyInput
-          . #uniqueValue
-          .~ from @String @Text input
     opened =
       pureUpdate 0 $ \st' ->
         st'

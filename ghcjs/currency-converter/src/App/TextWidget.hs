@@ -1,5 +1,5 @@
-module App.TextModelWidget
-  ( textModelWidget,
+module App.TextWidget
+  ( textWidget,
   )
 where
 
@@ -12,12 +12,12 @@ import qualified Material.TextField as TextField
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
-textModelWidget ::
+textWidget ::
   Model ->
   Text ->
   ALens' Model (Unique Text) ->
   View Action
-textModelWidget st placeholder optic =
+textWidget st placeholder optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_

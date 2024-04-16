@@ -53,33 +53,21 @@ currencyWidget st optic =
               [ class_ "fill"
               ]
               [ TextField.outlined
-                  . TextField.setType (Just "text")
-                  . ( if st ^. cloneLens optic . #currencyOpen
-                        then id
-                        else
-                          TextField.setValue
-                            ( Just
-                                . from @Text @String
-                                $ st
-                                ^. cloneLens optic
-                                . #currencyInput
-                                . #uniqueValue
-                            )
-                    )
-                  . TextField.setOnInput search
-                  . TextField.setPlaceholder
+                  $ TextField.config
+                  & TextField.setType (Just "text")
+                  & TextField.setOnInput search
+                  & TextField.setPlaceholder
                     ( Just
                         . inspectCurrencyInfo
                         $ st
                         ^. cloneLens optic
                         . #currencyOutput
                     )
-                  . TextField.setAttributes
+                  & TextField.setAttributes
                     [ class_ "fill",
                       id_ . ms $ htmlUuid @Text uuid,
                       onKeyDown $ Misc.onKeyDownAction uuid
-                    ]
-                  $ TextField.config,
+                    ],
                 Button.raised
                   ( Button.config
                       & Button.setOnClick closed

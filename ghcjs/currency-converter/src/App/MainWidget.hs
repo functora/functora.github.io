@@ -3,7 +3,7 @@ module App.MainWidget (mainWidget) where
 import App.AmountWidget
 import App.CurrencyWidget
 import qualified App.Misc as Misc
-import App.TextModelWidget
+import App.TextWidget
 import App.Types
 import qualified Data.Text as T
 import qualified Data.Version as Version
@@ -75,14 +75,14 @@ screenWidget st@Model {modelScreen = Converter} =
         swapCurrenciesWidget
       ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
-  [ textWidget "Invoice entities",
-    textModelWidget st "Issuer"
+  [ titleWidget "Invoice entities",
+    textWidget st "Issuer"
       $ #modelState
       . #stateIssuer,
-    textModelWidget st "Client"
+    textWidget st "Client"
       $ #modelState
       . #stateClient,
-    textWidget "Invoice amounts",
+    titleWidget "Invoice amounts",
     --
     -- TODO : don't reuse Converter data
     --
@@ -95,8 +95,8 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
       (Misc.getConverterAmountLens Top)
       id,
     currencyWidget st $ Misc.getConverterCurrencyLens Top,
-    textWidget "Payment methods",
-    textModelWidget st "Address"
+    titleWidget "Payment methods",
+    textWidget st "Address"
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodAddress,
@@ -104,7 +104,7 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodAddressQrCode,
-    textModelWidget st "Notes"
+    textWidget st "Notes"
       $ #modelState
       . #statePaymentMethodsInput
       . #paymentMethodNotes,
@@ -148,8 +148,8 @@ switchWidget st txt boolLens =
         mempty
     ]
 
-textWidget :: Text -> View Action
-textWidget txt =
+titleWidget :: Text -> View Action
+titleWidget txt =
   LayoutGrid.cell
     [ LayoutGrid.span12,
       Typography.body1,

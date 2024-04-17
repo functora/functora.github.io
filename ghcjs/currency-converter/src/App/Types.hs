@@ -4,6 +4,7 @@ module App.Types
   ( Model (..),
     Unique (..),
     Action (..),
+    Std,
     St (..),
     Money (..),
     Amount (..),
@@ -18,9 +19,12 @@ module App.Types
     pureUpdate,
     newStateUnique,
     newStateIdentity,
+    TextProp (..),
+    newTextProp,
   )
 where
 
+import Control.Lens.Combinators (each)
 import Data.Functor.Barbie
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
@@ -55,7 +59,10 @@ data Action
   | InitUpdate
   | TimeUpdate
   | ChanUpdate Model
-  | PushUpdate (JSM ()) (ChanItem (Model -> Model))
+  | --
+    -- TODO : JSM (Model -> Model)
+    --
+    PushUpdate (JSM ()) (ChanItem (Model -> Model))
 
 type Std f =
   ( Typeable f,
@@ -71,8 +78,8 @@ data St f = St
     stateTopOrBottom :: TopOrBottom,
     statePaymentMethods :: [PaymentMethod f],
     statePaymentMethodsInput :: PaymentMethod f,
-    stateIssuer :: f Text,
-    stateClient :: f Text
+    stateTextProps :: [TextProp f],
+    stateAssets :: [Asset f]
   }
   deriving stock (Generic)
 
@@ -211,10 +218,8 @@ data TopOrBottom
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
 data Asset f = Asset
-  { assetDescription :: f Text,
-    assetAmount :: Amount f,
-    assetCurrency :: Currency f,
-    assetRates :: QuotesPerBaseAt
+  { assetProps :: [TextProp f],
+    assetMoney :: Money f
   }
   deriving stock (Generic)
 
@@ -225,6 +230,10 @@ deriving stock instance (Std f) => Ord (Asset f)
 deriving stock instance (Std f) => Show (Asset f)
 
 deriving stock instance (Std f) => Data (Asset f)
+
+instance FunctorB Asset
+
+instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
 
@@ -246,11 +255,12 @@ newModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  topMoney <- newMoneyModel btc
-  bottomMoney <- newMoneyModel usd
+  topMoney <- newMoney btc
+  bottomMoney <- newMoney usd
   paymentMethod <- newPaymentMethod btc
-  issuer <- newUnique mempty
-  client <- newUnique mempty
+  issuer <- newTextProp "Issuer" mempty
+  client <- newTextProp "Client" mempty
+  asset <- newAsset usd
   let st =
         Model
           { modelHide = True,
@@ -261,8 +271,8 @@ newModel = do
                   stateTopOrBottom = Top,
                   statePaymentMethods = mempty,
                   statePaymentMethodsInput = paymentMethod,
-                  stateIssuer = issuer,
-                  stateClient = client
+                  stateTextProps = [issuer, client],
+                  stateAssets = [asset]
                 },
             modelScreen = Converter,
             modelMarket = market,
@@ -350,20 +360,54 @@ newModel = do
       . #currencyOutput
       .~ baseCur
       --
+      -- Asset
+      --
+      & #modelState
+      . #stateAssets
+      . each
+      . #assetMoney
+      . #moneyAmount
+      . #amountInput
+      . #uniqueValue
+      .~ inspectRatioDef (100 :: Rational)
+      & #modelState
+      . #stateAssets
+      . each
+      . #assetMoney
+      . #moneyAmount
+      . #amountOutput
+      .~ 100
+      & #modelState
+      . #stateAssets
+      . each
+      . #assetMoney
+      . #moneyCurrency
+      . #currencyOutput
+      .~ quoteCur
+      --
       -- Misc
       --
       & #modelCurrencies
       .~ currenciesInfo
 
-newMoneyModel :: (MonadIO m) => CurrencyInfo -> m (Money Unique)
-newMoneyModel value = do
-  amt <- Amount <$> newUnique (inspectRatioDef @Text @Integer 0) <*> pure 0
-  cur <- Currency <$> newUnique mempty <*> pure value <*> pure False
-  pure
-    Money
-      { moneyAmount = amt,
-        moneyCurrency = cur
-      }
+newAmount :: (MonadIO m) => m (Amount Unique)
+newAmount =
+  Amount
+    <$> newUnique (inspectRatioDef @Text @Integer 0)
+    <*> pure 0
+
+newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
+newCurrency cur =
+  Currency
+    <$> newUnique mempty
+    <*> pure cur
+    <*> pure False
+
+newMoney :: (MonadIO m) => CurrencyInfo -> m (Money Unique)
+newMoney cur =
+  Money
+    <$> newAmount
+    <*> newCurrency cur
 
 --
 -- NOTE : In most cases we don't need JSM.
@@ -382,10 +426,16 @@ newUnique x =
 newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m (PaymentMethod Unique)
 newPaymentMethod cur =
   PaymentMethod
-    <$> newMoneyModel cur
+    <$> newMoney cur
     <*> newUnique mempty
     <*> newUnique mempty
     <*> pure True
+
+newAsset :: (MonadIO m) => CurrencyInfo -> m (Asset Unique)
+newAsset cur =
+  Asset
+    <$> fmap (: mempty) (newTextProp mempty mempty)
+    <*> newMoney cur
 
 newStateIdentity :: St Unique -> St Identity
 newStateIdentity =
@@ -394,3 +444,39 @@ newStateIdentity =
 newStateUnique :: (MonadIO m) => St Identity -> m (St Unique)
 newStateUnique =
   btraverse (newUnique . runIdentity)
+
+data TextProp f = TextProp
+  { textPropKey :: f Text,
+    textPropValue :: f Text,
+    textPropValueQrCode :: Bool
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Std f) => Eq (TextProp f)
+
+deriving stock instance (Std f) => Ord (TextProp f)
+
+deriving stock instance (Std f) => Show (TextProp f)
+
+deriving stock instance (Std f) => Data (TextProp f)
+
+instance FunctorB TextProp
+
+instance TraversableB TextProp
+
+deriving via
+  GenericType (TextProp Identity)
+  instance
+    ToJSON (TextProp Identity)
+
+deriving via
+  GenericType (TextProp Identity)
+  instance
+    FromJSON (TextProp Identity)
+
+newTextProp :: (MonadIO m) => Text -> Text -> m (TextProp Unique)
+newTextProp key val =
+  TextProp
+    <$> newUnique key
+    <*> newUnique val
+    <*> pure False

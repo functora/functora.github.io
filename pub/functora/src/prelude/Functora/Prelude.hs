@@ -103,6 +103,7 @@ import qualified Control.Exception.Safe as Safe
 import Control.Lens.Combinators as X
   ( ALens',
     cloneLens,
+    each,
     first1Of,
     makePrisms,
     review,

@@ -5,6 +5,7 @@ import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.TextInput as TextInput
+import qualified App.Widgets.TextProps as TextProps
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
@@ -76,12 +77,7 @@ screenWidget st@Model {modelScreen = Converter} =
       ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
   [ titleWidget "Invoice entities",
-    TextInput.textInput st "Issuer"
-      $ #modelState
-      . #stateIssuer,
-    TextInput.textInput st "Client"
-      $ #modelState
-      . #stateClient,
+    TextProps.textProps st $ #modelState . #stateTextProps,
     titleWidget "Invoice amounts",
     --
     -- TODO : don't reuse Converter data

@@ -25,6 +25,7 @@ common pkg
     App.Widgets.Currency
     App.Widgets.Main
     App.Widgets.TextInput
+    App.Widgets.TextProps
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
@@ -87,6 +88,7 @@ common pkg
     , functora-ghcjs
     , fuzzy
     , jsaddle
+    , lens
     , miso
     , miso-components
     , syb

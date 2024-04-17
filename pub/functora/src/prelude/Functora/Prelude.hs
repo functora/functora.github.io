@@ -100,11 +100,16 @@ import Control.Concurrent.STM.TChan as X
 import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Exception.Safe as X (throw)
 import qualified Control.Exception.Safe as Safe
+import Control.Lens as X ((^?!))
 import Control.Lens.Combinators as X
   ( ALens',
+    ATraversal',
+    at,
     cloneLens,
+    cloneTraversal,
     each,
     first1Of,
+    ix,
     makePrisms,
     review,
     to,

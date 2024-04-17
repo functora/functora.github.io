@@ -72,6 +72,8 @@ module Functora.Prelude
     altM',
     takeWhileAcc,
     newUuid,
+    nilUuid,
+    nullUuid,
     htmlUuid,
     randomList,
     randomListPure,
@@ -100,7 +102,7 @@ import Control.Concurrent.STM.TChan as X
 import qualified Control.Concurrent.Thread.Delay as Delay
 import Control.Exception.Safe as X (throw)
 import qualified Control.Exception.Safe as Safe
-import Control.Lens as X ((^?!))
+import Control.Lens as X ((^?))
 import Control.Lens.Combinators as X
   ( ALens',
     ATraversal',
@@ -740,6 +742,12 @@ takeWhileAcc f prev (x : xs) =
 
 newUuid :: (MonadIO m) => m UUID
 newUuid = liftIO UUID.nextRandom
+
+nilUuid :: UUID
+nilUuid = UUID.nil
+
+nullUuid :: UUID -> Bool
+nullUuid = UUID.null
 
 htmlUuid :: forall a. (From Text a) => UUID -> a
 htmlUuid = from @Text @a . ("uuid-" <>) . UUID.toText

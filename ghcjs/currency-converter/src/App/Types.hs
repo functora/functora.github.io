@@ -59,10 +59,7 @@ data Action
   | InitUpdate
   | TimeUpdate
   | ChanUpdate Model
-  | --
-    -- TODO : JSM (Model -> Model)
-    --
-    PushUpdate (JSM ()) (ChanItem (Model -> Model))
+  | PushUpdate (JSM (ChanItem (Model -> Model)))
 
 type Std f =
   ( Typeable f,
@@ -414,7 +411,8 @@ newMoney cur =
 --
 pureUpdate :: Natural -> (Model -> Model) -> Action
 pureUpdate delay =
-  PushUpdate (pure ())
+  PushUpdate
+    . pure
     . ChanItem delay
 
 newUnique :: (MonadIO m) => a -> m (Unique a)

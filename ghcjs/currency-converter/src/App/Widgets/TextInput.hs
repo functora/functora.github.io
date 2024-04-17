@@ -68,27 +68,21 @@ textInput st placeholder optic =
           . #uniqueValue
           .~ from @String @Text txt
     onCopyAction =
-      PushUpdate
-        ( Misc.copyIntoClipboard st
-            $ st
-            ^. cloneLens optic
-            . #uniqueValue
-        )
-        ( ChanItem 0 id
-        )
+      PushUpdate $ do
+        Misc.copyIntoClipboard st $ st ^. cloneLens optic . #uniqueValue
+        pure $ ChanItem 0 id
     onClearAction =
-      PushUpdate
-        ( do
-            focus . ms $ htmlUuid @Text uuid
-            void
-              . JS.eval @Text
-              $ "var el = document.getElementById('"
-              <> htmlUuid uuid
-              <> "'); if (el) el.value = '';"
-        )
-        ( ChanItem 300 $ \st' ->
-            st'
-              & cloneLens optic
-              . #uniqueValue
-              .~ mempty
-        )
+      PushUpdate $ do
+        focus
+          . ms
+          $ htmlUuid @Text uuid
+        void
+          . JS.eval @Text
+          $ "var el = document.getElementById('"
+          <> htmlUuid uuid
+          <> "'); if (el) el.value = '';"
+        pure . ChanItem 300 $ \st' ->
+          st'
+            & cloneLens optic
+            . #uniqueValue
+            .~ mempty

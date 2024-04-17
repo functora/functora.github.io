@@ -33,17 +33,16 @@ pushActionQueue st =
 
 onKeyDownAction :: UUID -> KeyCode -> Action
 onKeyDownAction uuid (KeyCode code) =
-  let enterOrEscape = [13, 27] :: [Int]
-   in PushUpdate
-        ( when (code `elem` enterOrEscape)
-            . void
-            . JS.eval @Text
-            $ "document.getElementById('"
-            <> htmlUuid uuid
-            <> "').getElementsByTagName('input')[0].blur();"
-        )
-        ( ChanItem 300 id
-        )
+  PushUpdate $ do
+    let enterOrEscape = [13, 27] :: [Int]
+    when (code `elem` enterOrEscape)
+      . void
+      . JS.eval @Text
+      $ "document.getElementById('"
+      <> htmlUuid uuid
+      <> "').getElementsByTagName('input')[0].blur();"
+    pure
+      $ ChanItem 300 id
 
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do

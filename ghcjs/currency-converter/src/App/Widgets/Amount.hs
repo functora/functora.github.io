@@ -93,29 +93,26 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
           .~ from @String @Text txt
           & extraOnInput
     onCopyAction =
-      PushUpdate
-        ( Misc.copyIntoClipboard st input
-        )
-        ( ChanItem 0 id
-        )
+      PushUpdate $ do
+        Misc.copyIntoClipboard st input
+        pure $ ChanItem 0 id
     onClearAction =
-      PushUpdate
-        ( do
-            focus . ms $ htmlUuid @Text uuid
-            void
-              . JS.eval @Text
-              $ "var el = document.getElementById('"
-              <> htmlUuid uuid
-              <> "'); if (el) el.value = '';"
-        )
-        ( ChanItem 300 $ \st' ->
-            st'
-              & cloneLens amountOptic
-              . #amountInput
-              . #uniqueValue
-              .~ mempty
-              & extraOnInput
-        )
+      PushUpdate $ do
+        focus
+          . ms
+          $ htmlUuid @Text uuid
+        void
+          . JS.eval @Text
+          $ "var el = document.getElementById('"
+          <> htmlUuid uuid
+          <> "'); if (el) el.value = '';"
+        pure . ChanItem 300 $ \st' ->
+          st'
+            & cloneLens amountOptic
+            . #amountInput
+            . #uniqueValue
+            .~ mempty
+            & extraOnInput
 
 amountSwap :: View Action
 amountSwap =

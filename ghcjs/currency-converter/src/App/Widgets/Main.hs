@@ -175,23 +175,22 @@ swapScreenWidget st =
       InvoiceEditor -> "Show converter"
   where
     onClickAction =
-      PushUpdate
-        ( do
-            --
-            -- NOTE : Need to sync text inputs on new screen.
-            --
-            sleepMilliSeconds 300
-            Misc.pushActionQueue st $ ChanItem 0 id
-        )
-        $ ChanItem
-          0
-          ( &
-              #modelScreen
-                %~ ( \case
-                      Converter -> InvoiceEditor
-                      InvoiceEditor -> Converter
-                   )
-          )
+      PushUpdate $ do
+        --
+        -- NOTE : Force sync text inputs on new screen.
+        --
+        sleepMilliSeconds 300
+        Misc.pushActionQueue st $ ChanItem 0 id
+        pure
+          $ ChanItem
+            0
+            ( &
+                #modelScreen
+                  %~ ( \case
+                        Converter -> InvoiceEditor
+                        InvoiceEditor -> Converter
+                     )
+            )
 
 addPaymentMethodWidget :: Model -> View Action
 addPaymentMethodWidget st =
@@ -210,23 +209,22 @@ addPaymentMethodWidget st =
       "Add payment method"
   where
     onClickAction =
-      PushUpdate
-        ( do
-            --
-            -- NOTE : Need to sync text inputs on new screen.
-            --
-            sleepMilliSeconds 300
-            Misc.pushActionQueue st $ ChanItem 0 id
-        )
-        $ ChanItem
-          0
-          ( &
-              #modelScreen
-                %~ ( \case
-                      Converter -> InvoiceEditor
-                      InvoiceEditor -> Converter
-                   )
-          )
+      PushUpdate $ do
+        --
+        -- NOTE : Need to sync text inputs on new screen.
+        --
+        sleepMilliSeconds 300
+        Misc.pushActionQueue st $ ChanItem 0 id
+        pure
+          $ ChanItem
+            0
+            ( &
+                #modelScreen
+                  %~ ( \case
+                        Converter -> InvoiceEditor
+                        InvoiceEditor -> Converter
+                     )
+            )
 
 tosWidget :: View Action
 tosWidget =

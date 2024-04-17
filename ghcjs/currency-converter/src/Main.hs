@@ -113,14 +113,12 @@ updateModel (ChanUpdate prevSt) _ = do
         nextSt <- foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
         pure $ ChanUpdate nextSt
     ]
-updateModel (PushUpdate runJSM updater) st = do
+updateModel (PushUpdate newUpdater) st = do
   batchEff
     st
     [ do
+        updater <- newUpdater
         Misc.pushActionQueue st updater
-        pure Noop,
-      do
-        runJSM
         pure Noop
     ]
 

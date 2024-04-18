@@ -17,8 +17,8 @@ module App.Types
     newModel,
     newUnique,
     pureUpdate,
-    newStateUnique,
-    newStateIdentity,
+    newUniqueState,
+    newIdentityState,
     TextProp (..),
     newTextProp,
   )
@@ -203,7 +203,7 @@ data ChanItem a = ChanItem
 
 data Screen
   = Converter
-  | InvoiceEditor
+  | DocumentEditor
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Screen
 
@@ -270,7 +270,7 @@ newModel = do
                   stateTextProps = [issuer, client],
                   stateAssets = [asset]
                 },
-            modelScreen = InvoiceEditor,
+            modelScreen = DocumentEditor,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -334,7 +334,7 @@ newModel = do
       . #currencyOutput
       .~ quoteCur
       --
-      -- InvoiceEditor
+      -- DocumentEditor
       --
       & #modelState
       . #statePaymentMethodsInput
@@ -434,12 +434,12 @@ newAsset cur =
     <$> fmap (: mempty) (newTextProp mempty mempty)
     <*> newMoney cur
 
-newStateIdentity :: St Unique -> St Identity
-newStateIdentity =
+newIdentityState :: St Unique -> St Identity
+newIdentityState =
   bmap (Identity . uniqueValue)
 
-newStateUnique :: (MonadIO m) => St Identity -> m (St Unique)
-newStateUnique =
+newUniqueState :: (MonadIO m) => St Identity -> m (St Unique)
+newUniqueState =
   btraverse (newUnique . runIdentity)
 
 data TextProp f = TextProp

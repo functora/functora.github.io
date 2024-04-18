@@ -4,6 +4,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import qualified App.Widgets.TextProps as TextProps
 import qualified Data.Text as T
@@ -11,10 +12,8 @@ import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
-import qualified Material.DataTable as DataTable
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
-import qualified Material.Switch as Switch
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
@@ -38,10 +37,12 @@ mainWidget st =
                  )
           )
           ( screenWidget st
-              <> [
-                   -- LayoutGrid.cell [LayoutGrid.span12]
-                   --   . (: mempty)
-                   --   $ div_ mempty [inspect $ st ^. #modelState],
+              <> [ -- LayoutGrid.cell [LayoutGrid.span12]
+                   --  . (: mempty)
+                   --  $ div_
+                   --    mempty
+                   --    [ inspect . newIdentityState $ st ^. #modelState
+                   --    ],
                    swapScreenWidget st,
                    tosWidget,
                    Snackbar.snackbar (Snackbar.config Misc.snackbarClosed)
@@ -75,11 +76,11 @@ screenWidget st@Model {modelScreen = Converter} =
         Amount.amountSwap,
         Currency.currencySwap
       ]
-screenWidget st@Model {modelScreen = InvoiceEditor} =
-  [ titleWidget "Invoice entities"
+screenWidget st@Model {modelScreen = DocumentEditor} =
+  [ titleWidget "Document info"
   ]
     <> TextProps.textProps st (#modelState . #stateTextProps)
-    <> [ titleWidget "Invoice amounts",
+    <> [ titleWidget "Document items",
          --
          -- TODO : don't reuse Converter data
          --
@@ -97,7 +98,7 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
           $ #modelState
           . #statePaymentMethodsInput
           . #paymentMethodAddress,
-         switchWidget st "Address QR code"
+         Switch.switch st "Address QR code"
           $ #modelState
           . #statePaymentMethodsInput
           . #paymentMethodAddressQrCode,
@@ -112,38 +113,6 @@ screenWidget st@Model {modelScreen = InvoiceEditor} =
           . #moneyCurrency,
          addPaymentMethodWidget st
        ]
-
-switchWidget :: Model -> Text -> ALens' Model Bool -> View Action
-switchWidget st txt boolLens =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
-    ]
-    [ DataTable.dataTable
-        ( DataTable.config
-            & DataTable.setAttributes [class_ "fill"]
-        )
-        [ DataTable.row
-            mempty
-            [ DataTable.cell
-                [ Typography.body1,
-                  LayoutGrid.alignMiddle,
-                  style_
-                    [ ("text-align", "center")
-                    ]
-                ]
-                [ Miso.text $ ms txt,
-                  Miso.text " ",
-                  Switch.switch
-                    $ Switch.config
-                    & Switch.setChecked (st ^. cloneLens boolLens)
-                    & Switch.setOnChange
-                      ( pureUpdate 0 (& cloneLens boolLens %~ not)
-                      )
-                ]
-            ]
-        ]
-        mempty
-    ]
 
 titleWidget :: Text -> View Action
 titleWidget txt =
@@ -173,7 +142,7 @@ swapScreenWidget st =
       )
     $ case st ^. #modelScreen of
       Converter -> "Create invoice"
-      InvoiceEditor -> "Show converter"
+      DocumentEditor -> "Show converter"
   where
     onClickAction =
       PushUpdate $ do
@@ -189,8 +158,8 @@ swapScreenWidget st =
             ( &
                 #modelScreen
                   %~ ( \case
-                        Converter -> InvoiceEditor
-                        InvoiceEditor -> Converter
+                        Converter -> DocumentEditor
+                        DocumentEditor -> Converter
                      )
             )
 
@@ -224,8 +193,8 @@ addPaymentMethodWidget st =
             ( &
                 #modelScreen
                   %~ ( \case
-                        Converter -> InvoiceEditor
-                        InvoiceEditor -> Converter
+                        Converter -> DocumentEditor
+                        DocumentEditor -> Converter
                      )
             )
 

@@ -24,6 +24,7 @@ common pkg
     App.Widgets.Amount
     App.Widgets.Currency
     App.Widgets.Main
+    App.Widgets.Switch
     App.Widgets.TextInput
     App.Widgets.TextProps
 

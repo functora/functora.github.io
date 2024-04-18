@@ -4,6 +4,7 @@ module App.Widgets.TextProps
 where
 
 import App.Types
+import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
 import Miso hiding (at, view)
@@ -20,18 +21,18 @@ textPropInputs ::
   Int ->
   [View Action]
 textPropInputs st optic idx =
-  [ TextInput.textInput
-      st
-      "Key"
-      ( cloneLens optic
-          . ix idx
-          . #textPropKey
-      ),
-    TextInput.textInput
-      st
-      "Value"
-      ( cloneLens optic
-          . ix idx
-          . #textPropValue
-      )
+  [ TextInput.textInput st ("Label " <> idxTxt)
+      $ cloneLens optic
+      . ix idx
+      . #textPropKey,
+    TextInput.textInput st ("Value " <> idxTxt)
+      $ cloneLens optic
+      . ix idx
+      . #textPropValue,
+    Switch.switch st ("Value " <> idxTxt <> " QR code")
+      $ cloneLens optic
+      . ix idx
+      . #textPropValueQrCode
   ]
+  where
+    idxTxt = "#" <> inspect (idx + 1)

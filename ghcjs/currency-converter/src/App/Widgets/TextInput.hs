@@ -15,7 +15,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 textInput ::
   Model ->
   Text ->
-  ALens' Model (Unique Text) ->
+  ATraversal' Model (Unique Text) ->
   View Action
 textInput st placeholder optic =
   LayoutGrid.cell
@@ -60,19 +60,24 @@ textInput st placeholder optic =
           ]
     ]
   where
-    uuid = st ^. cloneLens optic . #uniqueUuid
+    uuid = fromMaybe nilUuid $ st ^? cloneTraversal optic . #uniqueUuid
     onInputAction txt =
-      pureUpdate 300 $ \st' ->
-        st'
-          & cloneLens optic
-          . #uniqueValue
-          .~ from @String @Text txt
+      PushUpdate $ do
+        Misc.verifyUuid uuid
+        pure . ChanItem 300 $ \st' ->
+          st'
+            & cloneTraversal optic
+            . #uniqueValue
+            .~ from @String @Text txt
     onCopyAction =
       PushUpdate $ do
-        Misc.copyIntoClipboard st $ st ^. cloneLens optic . #uniqueValue
+        Misc.verifyUuid uuid
+        whenJust (st ^? cloneTraversal optic . #uniqueValue)
+          $ Misc.copyIntoClipboard st
         pure $ ChanItem 0 id
     onClearAction =
       PushUpdate $ do
+        Misc.verifyUuid uuid
         focus
           . ms
           $ htmlUuid @Text uuid
@@ -83,6 +88,6 @@ textInput st placeholder optic =
           <> "'); if (el) el.value = '';"
         pure . ChanItem 300 $ \st' ->
           st'
-            & cloneLens optic
+            & cloneTraversal optic
             . #uniqueValue
             .~ mempty

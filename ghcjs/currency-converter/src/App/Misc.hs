@@ -6,6 +6,7 @@ module App.Misc
     copyIntoClipboard,
     snackbarClosed,
     drainTChan,
+    verifyUuid,
   )
 where
 
@@ -34,6 +35,7 @@ pushActionQueue st =
 onKeyDownAction :: UUID -> KeyCode -> Action
 onKeyDownAction uuid (KeyCode code) =
   PushUpdate $ do
+    verifyUuid uuid
     let enterOrEscape = [13, 27] :: [Int]
     when (code `elem` enterOrEscape)
       . void
@@ -98,3 +100,8 @@ drainTChan chan = do
           drainInto (chanItemValue next : acc)
             . max delay
             $ chanItemDelay next
+
+verifyUuid :: UUID -> JSM ()
+verifyUuid uuid =
+  when (nullUuid uuid)
+    $ consoleLog "UNEXPECTED NULL UUID"

@@ -76,41 +76,42 @@ screenWidget st@Model {modelScreen = Converter} =
         Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = InvoiceEditor} =
-  [ titleWidget "Invoice entities",
-    TextProps.textProps st $ #modelState . #stateTextProps,
-    titleWidget "Invoice amounts",
-    --
-    -- TODO : don't reuse Converter data
-    --
-    Amount.amountSelect
-      st
-      ( cloneLens (Misc.getConverterCurrencyLens Top)
-          . #currencyOutput
-          . to (inspectCurrencyInfo @Text)
-      )
-      (Misc.getConverterAmountLens Top)
-      id,
-    Currency.currencySelect st $ Misc.getConverterCurrencyLens Top,
-    titleWidget "Payment methods",
-    TextInput.textInput st "Address"
-      $ #modelState
-      . #statePaymentMethodsInput
-      . #paymentMethodAddress,
-    switchWidget st "Address QR code"
-      $ #modelState
-      . #statePaymentMethodsInput
-      . #paymentMethodAddressQrCode,
-    TextInput.textInput st "Notes"
-      $ #modelState
-      . #statePaymentMethodsInput
-      . #paymentMethodNotes,
-    Currency.currencySelect st
-      $ #modelState
-      . #statePaymentMethodsInput
-      . #paymentMethodMoney
-      . #moneyCurrency,
-    addPaymentMethodWidget st
+  [ titleWidget "Invoice entities"
   ]
+    <> TextProps.textProps st (#modelState . #stateTextProps)
+    <> [ titleWidget "Invoice amounts",
+         --
+         -- TODO : don't reuse Converter data
+         --
+         Amount.amountSelect
+          st
+          ( cloneLens (Misc.getConverterCurrencyLens Top)
+              . #currencyOutput
+              . to (inspectCurrencyInfo @Text)
+          )
+          (Misc.getConverterAmountLens Top)
+          id,
+         Currency.currencySelect st $ Misc.getConverterCurrencyLens Top,
+         titleWidget "Payment methods",
+         TextInput.textInput st "Address"
+          $ #modelState
+          . #statePaymentMethodsInput
+          . #paymentMethodAddress,
+         switchWidget st "Address QR code"
+          $ #modelState
+          . #statePaymentMethodsInput
+          . #paymentMethodAddressQrCode,
+         TextInput.textInput st "Notes"
+          $ #modelState
+          . #statePaymentMethodsInput
+          . #paymentMethodNotes,
+         Currency.currencySelect st
+          $ #modelState
+          . #statePaymentMethodsInput
+          . #paymentMethodMoney
+          . #moneyCurrency,
+         addPaymentMethodWidget st
+       ]
 
 switchWidget :: Model -> Text -> ALens' Model Bool -> View Action
 switchWidget st txt boolLens =
@@ -179,8 +180,9 @@ swapScreenWidget st =
         --
         -- NOTE : Force sync text inputs on new screen.
         --
-        sleepMilliSeconds 300
-        Misc.pushActionQueue st $ ChanItem 0 id
+        void . spawnLink $ do
+          sleepMilliSeconds 300
+          Misc.pushActionQueue st $ ChanItem 0 id
         pure
           $ ChanItem
             0
@@ -213,8 +215,9 @@ addPaymentMethodWidget st =
         --
         -- NOTE : Need to sync text inputs on new screen.
         --
-        sleepMilliSeconds 300
-        Misc.pushActionQueue st $ ChanItem 0 id
+        void . spawnLink $ do
+          sleepMilliSeconds 300
+          Misc.pushActionQueue st $ ChanItem 0 id
         pure
           $ ChanItem
             0

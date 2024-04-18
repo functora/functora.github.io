@@ -24,7 +24,6 @@ module App.Types
   )
 where
 
-import Control.Lens.Combinators (each)
 import Data.Functor.Barbie
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
@@ -271,7 +270,7 @@ newModel = do
                   stateTextProps = [issuer, client],
                   stateAssets = [asset]
                 },
-            modelScreen = Converter,
+            modelScreen = InvoiceEditor,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,

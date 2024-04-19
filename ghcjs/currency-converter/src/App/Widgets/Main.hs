@@ -149,9 +149,7 @@ swapScreenWidget st =
         --
         -- NOTE : Force sync text inputs on new screen.
         --
-        void . spawnLink $ do
-          sleepMilliSeconds 300
-          Misc.pushActionQueue st $ ChanItem 0 id
+        Misc.forceRender st
         pure
           $ ChanItem
             0
@@ -184,9 +182,7 @@ addPaymentMethodWidget st =
         --
         -- NOTE : Need to sync text inputs on new screen.
         --
-        void . spawnLink $ do
-          sleepMilliSeconds 300
-          Misc.pushActionQueue st $ ChanItem 0 id
+        Misc.forceRender st
         pure
           $ ChanItem
             0

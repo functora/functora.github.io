@@ -7,6 +7,7 @@ module App.Misc
     snackbarClosed,
     drainTChan,
     verifyUuid,
+    forceRender,
   )
 where
 
@@ -105,3 +106,9 @@ verifyUuid :: UUID -> JSM ()
 verifyUuid uuid =
   when (nullUuid uuid)
     $ consoleLog "UNEXPECTED NULL UUID"
+
+forceRender :: Model -> JSM ()
+forceRender st =
+  void . spawnLink $ do
+    sleepMilliSeconds 300
+    pushActionQueue st $ ChanItem 0 id

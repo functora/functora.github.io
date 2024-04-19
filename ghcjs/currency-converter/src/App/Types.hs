@@ -21,6 +21,7 @@ module App.Types
     newIdentityState,
     TextProp (..),
     newTextProp,
+    dupTextProp,
   )
 where
 
@@ -477,3 +478,16 @@ newTextProp key val =
     <$> newUnique key
     <*> newUnique val
     <*> pure False
+
+dupTextProp :: (MonadIO m) => m (TextProp Unique -> TextProp Unique)
+dupTextProp = do
+  keyUuid <- newUuid
+  valUuid <- newUuid
+  pure $ \this ->
+    this
+      & #textPropKey
+      . #uniqueUuid
+      .~ keyUuid
+      & #textPropValue
+      . #uniqueUuid
+      .~ valUuid

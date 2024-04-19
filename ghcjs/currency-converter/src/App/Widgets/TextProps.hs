@@ -3,6 +3,7 @@ module App.Widgets.TextProps
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
@@ -36,7 +37,7 @@ textPropInputs st optic idx =
       $ cloneLens optic
       . ix idx
       . #textPropValueQrCode,
-    textPropButton ("Duplicate " <> idxTxt) duplicateValue,
+    textPropButton ("Duplicate " <> idxTxt) $ duplicateValue st optic idx,
     textPropButton ("Remove " <> idxTxt) removeValue
   ]
   where
@@ -67,9 +68,23 @@ textPropButton label action =
         )
     ]
 
-duplicateValue :: Action
-duplicateValue =
-  Noop
+duplicateValue :: Model -> ALens' Model [TextProp Unique] -> Int -> Action
+duplicateValue st optic idx =
+  PushUpdate $ do
+    duplicator <- dupTextProp
+    let updater loc el =
+          if loc == idx
+            then [el, duplicator el]
+            else [el]
+    --
+    -- TODO : maybe move to general update function?
+    -- Probably overhead is not to big,
+    -- and this will cover all corner cases everywhere.
+    --
+    Misc.forceRender st
+    pure
+      . ChanItem 0
+      $ (& cloneLens optic %~ ((>>= uncurry updater) . zip [0 ..]))
 
 removeValue :: Action
 removeValue =

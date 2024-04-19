@@ -15,11 +15,17 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 switch :: Model -> Text -> ATraversal' Model Bool -> View Action
 switch st txt optic =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
+    [ LayoutGrid.span6Desktop,
+      style_
+        [ ("display", "flex"),
+          ("align-items", "center")
+        ]
     ]
     [ DataTable.dataTable
         ( DataTable.config
-            & DataTable.setAttributes [class_ "fill"]
+            & DataTable.setAttributes
+              [ class_ "fill"
+              ]
         )
         [ DataTable.row
             mempty
@@ -33,7 +39,6 @@ switch st txt optic =
                     ]
                 ]
                 [ Miso.text $ ms txt,
-                  Miso.text " ",
                   Switch.switch
                     $ Switch.config
                     & Switch.setChecked

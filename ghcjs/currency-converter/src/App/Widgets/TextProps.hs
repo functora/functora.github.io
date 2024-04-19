@@ -7,6 +7,9 @@ import App.Types
 import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
+import qualified Material.Button as Button
+import qualified Material.LayoutGrid as LayoutGrid
+import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 textProps :: Model -> ALens' Model [TextProp Unique] -> [View Action]
@@ -32,7 +35,42 @@ textPropInputs st optic idx =
     Switch.switch st ("Value " <> idxTxt <> " QR code")
       $ cloneLens optic
       . ix idx
-      . #textPropValueQrCode
+      . #textPropValueQrCode,
+    textPropButton ("Duplicate " <> idxTxt) duplicateValue,
+    textPropButton ("Remove " <> idxTxt) removeValue
   ]
   where
     idxTxt = "#" <> inspect (idx + 1)
+
+textPropButton ::
+  forall a action.
+  ( From a String
+  ) =>
+  a ->
+  action ->
+  View action
+textPropButton label action =
+  LayoutGrid.cell
+    [ LayoutGrid.span3Desktop,
+      LayoutGrid.span2Tablet,
+      LayoutGrid.span2Phone
+    ]
+    [ Button.raised
+        ( Button.setOnClick action
+            . Button.setAttributes
+              [ class_ "fill",
+                Theme.secondaryBg
+              ]
+            $ Button.config
+        )
+        ( from @a @String label
+        )
+    ]
+
+duplicateValue :: Action
+duplicateValue =
+  Noop
+
+removeValue :: Action
+removeValue =
+  Noop

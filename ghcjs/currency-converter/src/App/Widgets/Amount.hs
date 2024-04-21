@@ -17,8 +17,8 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 amountSelect ::
   Model ->
-  Getter' Model Text ->
-  ALens' Model (Amount Unique) ->
+  Fold Model Text ->
+  ATraversal' Model (Amount Unique) ->
   ( Model -> Model
   ) ->
   View Action
@@ -35,10 +35,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
         & TextField.setType (Just "number")
         & TextField.setOnInput onInputAction
         & TextField.setPlaceholder
-          ( Just
-              . from @Text @String
-              $ st
-              ^. placeholderOptic
+          ( fmap (from @Text @String) $ st ^? placeholderOptic
           )
         & TextField.setLeadingIcon
           ( Just
@@ -68,36 +65,58 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
           ]
     ]
   where
-    uuid = st ^. cloneLens amountOptic . #amountInput . #uniqueUuid
-    input = st ^. cloneLens amountOptic . #amountInput . #uniqueValue
-    output = st ^. cloneLens amountOptic . #amountOutput
-    valid =
-      (parseRatio input == Just output)
-        || (input == inspectRatioDef output)
+    uuid =
+      fromMaybe nilUuid
+        $ st
+        ^? cloneTraversal amountOptic
+        . #amountInput
+        . #uniqueUuid
+    getInput st' =
+      st' ^? cloneTraversal amountOptic . #amountInput . #uniqueValue
+    getOutput st' =
+      (getInput st' >>= parseRatio)
+        <|> (st' ^? cloneTraversal amountOptic . #amountOutput)
+    getInputReplacement st' = do
+      inp <- getInput st'
+      out <- getOutput st'
+      if (parseRatio inp == Just out) || (inp == inspectRatioDef out)
+        then Nothing
+        else Just out
     onBlurAction =
-      pureUpdate 300 $ \st' ->
-        if valid
-          then st'
-          else
-            st'
-              & cloneLens amountOptic
-              . #amountInput
-              . #uniqueValue
-              .~ inspectRatioDef output
+      PushUpdate $ do
+        Misc.verifyUuid uuid
+        pure . ChanItem 300 $ \st' ->
+          st'
+            & cloneTraversal amountOptic
+            . #amountInput
+            . #uniqueValue
+            %~ maybe id (const . inspectRatioDef) (getInputReplacement st')
+            & cloneTraversal amountOptic
+            . #amountOutput
+            %~ maybe id (const . id) (getOutput st')
     onInputAction txt =
-      pureUpdate 300 $ \st' ->
-        st'
-          & cloneLens amountOptic
-          . #amountInput
-          . #uniqueValue
-          .~ from @String @Text txt
-          & extraOnInput
+      PushUpdate $ do
+        Misc.verifyUuid uuid
+        pure . ChanItem 300 $ \prev ->
+          let next =
+                prev
+                  & cloneTraversal amountOptic
+                  . #amountInput
+                  . #uniqueValue
+                  .~ from @String @Text txt
+                  & extraOnInput
+           in next
+                & cloneTraversal amountOptic
+                . #amountOutput
+                %~ maybe id (const . id) (getOutput next)
     onCopyAction =
       PushUpdate $ do
-        Misc.copyIntoClipboard st input
+        Misc.verifyUuid uuid
+        whenJust (getInput st) $ Misc.copyIntoClipboard st
         pure $ ChanItem 0 id
     onClearAction =
       PushUpdate $ do
+        Misc.verifyUuid uuid
         focus
           . ms
           $ htmlUuid @Text uuid
@@ -108,7 +127,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
           <> "'); if (el) el.value = '';"
         pure . ChanItem 300 $ \st' ->
           st'
-            & cloneLens amountOptic
+            & cloneTraversal amountOptic
             . #amountInput
             . #uniqueValue
             .~ mempty

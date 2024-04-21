@@ -1979,8 +1979,9 @@ c.content.blocking.method = "both"
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.searchengines = {
-        'DEFAULT': 'https://google.com/search?q={}',
-        'google': 'https://google.com/search?q={}',
+        'DEFAULT': 'https://google.com/search?q=before:2022 {}',
+        'google': 'https://google.com/search?q=before:2022 {}',
+        'ggl': 'https://google.com/search?q={}',
         'ddg': 'https://duckduckgo.com/?q={}',
         'github': 'https://github.com/search?type=code&q={}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',

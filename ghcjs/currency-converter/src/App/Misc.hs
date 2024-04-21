@@ -1,5 +1,5 @@
 module App.Misc
-  ( getConverterAmountLens,
+  ( getConverterAmountOptic,
     getConverterCurrencyLens,
     pushActionQueue,
     onKeyDownAction,
@@ -17,8 +17,12 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
 
-getConverterAmountLens :: TopOrBottom -> ALens' Model (Amount Unique)
-getConverterAmountLens = \case
+getConverterAmountOptic ::
+  ( Functor f
+  ) =>
+  TopOrBottom ->
+  LensLike' f Model (Amount Unique)
+getConverterAmountOptic = \case
   Top -> #modelState . #stateTopMoney . #moneyAmount
   Bottom -> #modelState . #stateBottomMoney . #moneyAmount
 

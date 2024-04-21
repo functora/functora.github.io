@@ -22,6 +22,7 @@ common pkg
     App.Misc
     App.Types
     App.Widgets.Amount
+    App.Widgets.Assets
     App.Widgets.Currency
     App.Widgets.Main
     App.Widgets.Switch

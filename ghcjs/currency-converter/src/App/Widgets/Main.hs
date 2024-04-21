@@ -3,6 +3,7 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Amount as Amount
+import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
@@ -64,7 +65,7 @@ screenWidget st@Model {modelScreen = Converter} =
               . #currencyOutput
               . to (inspectCurrencyInfo @Text)
           )
-          (Misc.getConverterAmountLens loc)
+          (Misc.getConverterAmountOptic loc)
           (& #modelState . #stateTopOrBottom .~ loc)
       currencyWidget' =
         Currency.currencySelect st
@@ -77,23 +78,12 @@ screenWidget st@Model {modelScreen = Converter} =
         Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = DocumentEditor} =
-  [ titleWidget "Document info"
+  [ titleWidget "Document notes"
   ]
     <> TextProps.textProps st (#modelState . #stateTextProps)
-    <> [ titleWidget "Document items",
-         --
-         -- TODO : don't reuse Converter data
-         --
-         Amount.amountSelect
-          st
-          ( cloneLens (Misc.getConverterCurrencyLens Top)
-              . #currencyOutput
-              . to (inspectCurrencyInfo @Text)
-          )
-          (Misc.getConverterAmountLens Top)
-          id,
-         Currency.currencySelect st $ Misc.getConverterCurrencyLens Top,
-         titleWidget "Payment methods",
+    <> [titleWidget "Document items"]
+    <> Assets.assets st (#modelState . #stateAssets)
+    <> [ titleWidget "Payment methods",
          TextInput.textInput st "Address"
           $ #modelState
           . #statePaymentMethodsInput

@@ -1,6 +1,6 @@
 module App.Misc
   ( getConverterAmountOptic,
-    getConverterCurrencyLens,
+    getConverterCurrencyOptic,
     pushActionQueue,
     onKeyDownAction,
     copyIntoClipboard,
@@ -26,8 +26,12 @@ getConverterAmountOptic = \case
   Top -> #modelState . #stateTopMoney . #moneyAmount
   Bottom -> #modelState . #stateBottomMoney . #moneyAmount
 
-getConverterCurrencyLens :: TopOrBottom -> ALens' Model (Currency Unique)
-getConverterCurrencyLens = \case
+getConverterCurrencyOptic ::
+  ( Functor f
+  ) =>
+  TopOrBottom ->
+  LensLike' f Model (Currency Unique)
+getConverterCurrencyOptic = \case
   Top -> #modelState . #stateTopMoney . #moneyCurrency
   Bottom -> #modelState . #stateBottomMoney . #moneyCurrency
 

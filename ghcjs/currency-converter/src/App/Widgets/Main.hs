@@ -61,15 +61,18 @@ screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
         Amount.amountSelect
           st
-          ( cloneLens (Misc.getConverterCurrencyLens loc)
+          ( cloneLens (Misc.getConverterCurrencyOptic loc)
               . #currencyOutput
               . to (inspectCurrencyInfo @Text)
           )
-          (Misc.getConverterAmountOptic loc)
-          (& #modelState . #stateTopOrBottom .~ loc)
+          ( Misc.getConverterAmountOptic loc
+          )
+          ( & #modelState . #stateTopOrBottom .~ loc
+          )
       currencyWidget' =
         Currency.currencySelect st
-          . Misc.getConverterCurrencyLens
+          . cloneLens
+          . Misc.getConverterCurrencyOptic
    in [ amountWidget' Top,
         currencyWidget' Top,
         amountWidget' Bottom,

@@ -13,28 +13,28 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
-textProps :: Model -> ALens' Model [TextProp Unique] -> [View Action]
+textProps :: Model -> ATraversal' Model [TextProp Unique] -> [View Action]
 textProps st optic =
-  zip [0 :: Int ..] (st ^. cloneLens optic)
+  zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
     >>= textPropInputs st optic
     . fst
 
 textPropInputs ::
   Model ->
-  ALens' Model [TextProp Unique] ->
+  ATraversal' Model [TextProp Unique] ->
   Int ->
   [View Action]
 textPropInputs st optic idx =
   [ TextInput.textInput st ("Label " <> idxTxt)
-      $ cloneLens optic
+      $ cloneTraversal optic
       . ix idx
       . #textPropKey,
     TextInput.textInput st ("Value " <> idxTxt)
-      $ cloneLens optic
+      $ cloneTraversal optic
       . ix idx
       . #textPropValue,
     Switch.switch st ("Value " <> idxTxt <> " QR code")
-      $ cloneLens optic
+      $ cloneTraversal optic
       . ix idx
       . #textPropValueQrCode,
     textPropButton ("Duplicate " <> idxTxt) $ duplicateValue st optic idx,
@@ -68,7 +68,11 @@ textPropButton label action =
         )
     ]
 
-duplicateValue :: Model -> ALens' Model [TextProp Unique] -> Int -> Action
+duplicateValue ::
+  Model ->
+  ATraversal' Model [TextProp Unique] ->
+  Int ->
+  Action
 duplicateValue st optic idx =
   PushUpdate $ do
     duplicator <- dupTextProp
@@ -84,7 +88,7 @@ duplicateValue st optic idx =
     Misc.forceRender st
     pure
       . ChanItem 0
-      $ (& cloneLens optic %~ ((>>= uncurry updater) . zip [0 ..]))
+      $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
 
 removeValue :: Action
 removeValue =

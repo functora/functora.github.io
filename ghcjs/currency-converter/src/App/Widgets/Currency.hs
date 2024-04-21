@@ -7,7 +7,7 @@ where
 import App.Types
 import qualified App.Widgets.TextInput as TextInput
 import qualified Data.List.NonEmpty as NonEmpty
-import Functora.Money
+import Functora.Money hiding (Currency)
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -21,7 +21,7 @@ import qualified Text.Fuzzy as Fuzzy
 
 currencySelect ::
   Model ->
-  ALens' Model (Currency Unique) ->
+  ATraversal' Model (Currency Unique) ->
   View Action
 currencySelect st optic =
   LayoutGrid.cell
@@ -35,13 +35,17 @@ currencySelect st optic =
             $ Button.config
         )
         . inspectCurrencyInfo
-        $ st
-        ^. cloneLens optic
-        . #currencyOutput,
+        $ fromMaybe
+          (unexpectedCurrency ^. #currencyOutput)
+          (st ^? cloneTraversal optic . #currencyOutput),
       Dialog.dialog
         ( Dialog.config
             & Dialog.setOnClose closed
-            & Dialog.setOpen (st ^. cloneLens optic . #currencyOpen)
+            & Dialog.setOpen
+              ( fromMaybe
+                  (unexpectedCurrency ^. #currencyOpen)
+                  (st ^? cloneTraversal optic . #currencyOpen)
+              )
         )
         ( Dialog.dialogContent
             Nothing
@@ -54,11 +58,11 @@ currencySelect st optic =
               [ TextInput.textInput
                   st
                   ( inspectCurrencyInfo
-                      $ st
-                      ^. cloneLens optic
-                      . #currencyOutput
+                      $ fromMaybe
+                        (unexpectedCurrency ^. #currencyOutput)
+                        (st ^? cloneTraversal optic . #currencyOutput)
                   )
-                  ( cloneLens optic
+                  ( cloneTraversal optic
                       . #currencyInput
                   ),
                 Button.raised
@@ -76,27 +80,27 @@ currencySelect st optic =
     opened =
       pureUpdate 0 $ \st' ->
         st'
-          & cloneLens optic
+          & cloneTraversal optic
           . #currencyOpen
           .~ True
-          & cloneLens optic
+          & cloneTraversal optic
           . #currencyInput
           . #uniqueValue
           .~ mempty
     closed =
       pureUpdate 0 $ \st' ->
         st'
-          & cloneLens optic
+          & cloneTraversal optic
           . #currencyOpen
           .~ False
-          & cloneLens optic
+          & cloneTraversal optic
           . #currencyInput
           . #uniqueValue
           .~ mempty
 
 currencyListWidget ::
   Model ->
-  ALens' Model (Currency Unique) ->
+  ATraversal' Model (Currency Unique) ->
   View Action
 currencyListWidget st optic =
   List.list
@@ -107,22 +111,28 @@ currencyListWidget st optic =
     . fmap (currencyListItemWidget optic current)
     $ maybe mempty NonEmpty.tail matching
   where
-    currencies = st ^. #modelCurrencies
-    current = st ^. cloneLens optic . #currencyOutput
-    search = st ^. cloneLens optic . #currencyInput . #uniqueValue
+    current =
+      fromMaybe
+        (unexpectedCurrency ^. #currencyOutput)
+        (st ^? cloneTraversal optic . #currencyOutput)
+    search =
+      fromMaybe
+        (unexpectedCurrency ^. #currencyInput . #uniqueValue)
+        (st ^? cloneTraversal optic . #currencyInput . #uniqueValue)
     matching =
       nonEmpty
         . fmap Fuzzy.original
         $ Fuzzy.filter
           search
-          (toList currencies)
+          ( toList $ st ^. #modelCurrencies
+          )
           "<"
           ">"
           inspectCurrencyInfo
           False
 
 currencyListItemWidget ::
-  ALens' Model (Currency Unique) ->
+  ATraversal' Model (Currency Unique) ->
   CurrencyInfo ->
   CurrencyInfo ->
   ListItem.ListItem Action
@@ -137,14 +147,14 @@ currencyListItemWidget optic current item =
         & ListItem.setOnClick
           ( pureUpdate 0 $ \st ->
               st
-                & cloneLens optic
+                & cloneTraversal optic
                 . #currencyOpen
                 .~ False
-                & cloneLens optic
+                & cloneTraversal optic
                 . #currencyInput
                 . #uniqueValue
                 .~ mempty
-                & cloneLens optic
+                & cloneTraversal optic
                 . #currencyOutput
                 .~ item
           )
@@ -159,16 +169,16 @@ currencySwap =
       LayoutGrid.span4Tablet,
       LayoutGrid.span2Phone
     ]
-    . (: mempty)
-    $ Button.raised
-      ( Button.setOnClick onClickAction
-          . Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
-          $ Button.config
-      )
-      "Swap currencies"
+    [ Button.raised
+        ( Button.config
+            & Button.setOnClick onClickAction
+            & Button.setAttributes
+              [ class_ "fill",
+                Theme.secondaryBg
+              ]
+        )
+        "Swap currencies"
+    ]
   where
     onClickAction =
       pureUpdate 0 $ \st ->
@@ -198,3 +208,15 @@ currencySwap =
               & #modelState
               . #stateTopOrBottom
               .~ Top
+
+unexpectedCurrency :: Currency Unique
+unexpectedCurrency =
+  Currency
+    { currencyOpen = False,
+      currencyInput = Unique nilUuid "UNEXPECTED CURRENCY",
+      currencyOutput =
+        CurrencyInfo
+          { currencyInfoCode = CurrencyCode "UNEXPECTED",
+            currencyInfoText = "CURRENCY"
+          }
+    }

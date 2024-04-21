@@ -5,6 +5,8 @@ where
 
 import App.Types
 import qualified App.Widgets.Amount as Amount
+import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.TextProps as TextProps
 import Functora.Money
 import Functora.Prelude as Prelude
 import Miso hiding (at, view)
@@ -35,5 +37,18 @@ assetsWidget st optic idx =
           . #assetMoney
           . #moneyAmount
       )
-      id
+      id,
+    Currency.currencySelect
+      st
+      ( cloneLens optic
+          . ix idx
+          . #assetMoney
+          . #moneyCurrency
+      )
   ]
+    <> TextProps.textProps
+      st
+      ( cloneLens optic
+          . ix idx
+          . #assetProps
+      )

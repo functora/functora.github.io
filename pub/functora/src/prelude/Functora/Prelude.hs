@@ -62,14 +62,14 @@ module Functora.Prelude
     qq,
     qqUri,
 
-    -- * Rnd
-    -- $rnd
-    Rnd (..),
-    newRnd,
-    addRnd,
-    nilRnd,
-    nullRnd,
-    htmlRnd,
+    -- * Uid
+    -- $uid
+    Uid (..),
+    newUid,
+    addUid,
+    nilUid,
+    nullUid,
+    htmlUid,
 
     -- * Misc
     -- $misc
@@ -710,34 +710,34 @@ qq parser =
 qqUri :: QuasiQuoter
 qqUri = URI.uri
 
--- $rnd
--- Rnd
+-- $uid
+-- Uid
 
-newtype Rnd = Rnd
-  { unRnd :: ByteString
+newtype Uid = Uid
+  { unUid :: ByteString
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-newRnd :: (MonadIO m) => m Rnd
-newRnd = Rnd <$> randomByteString 32
+newUid :: (MonadIO m) => m Uid
+newUid = Uid <$> randomByteString 32
 
-addRnd :: Rnd -> Rnd -> Rnd
-addRnd (Rnd lhs) (Rnd rhs) = Rnd . SHA256.hash $ lhs <> rhs
+addUid :: Uid -> Uid -> Uid
+addUid (Uid lhs) (Uid rhs) = Uid . SHA256.hash $ lhs <> rhs
 
-nilRnd :: Rnd
-nilRnd = Rnd $ BS.replicate 32 0
+nilUid :: Uid
+nilUid = Uid $ BS.replicate 32 0
 
-nullRnd :: Rnd -> Bool
-nullRnd = (== nilRnd)
+nullUid :: Uid -> Bool
+nullUid = (== nilUid)
 
-htmlRnd :: forall a. (From Text a) => Rnd -> a
-htmlRnd =
+htmlUid :: forall a. (From Text a) => Uid -> a
+htmlUid =
   from @Text @a
-    . ("rnd-" <>)
+    . ("uid-" <>)
     . unsafeFrom @(UTF_8 ByteString) @Text
     . Tagged @"UTF-8"
     . encodeBase58 bitcoinAlphabet
-    . unRnd
+    . unUid
 
 -- $misc
 -- Misc

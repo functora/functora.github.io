@@ -27,10 +27,10 @@ spec = do
     inspect @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
-  it "rnd" $ do
-    htmlRnd @Text nilRnd `shouldBe` "rnd-11111111111111111111111111111111"
-    htmlRnd @Text (addRnd nilRnd nilRnd)
-      `shouldBe` "rnd-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
+  it "uid" $ do
+    htmlUid @Text nilUid `shouldBe` "uid-11111111111111111111111111111111"
+    htmlUid @Text (addUid nilUid nilUid)
+      `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
     `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"

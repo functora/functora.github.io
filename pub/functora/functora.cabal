@@ -83,8 +83,10 @@ common pkg-prelude
     , async
     , base
     , base16-bytestring
+    , base58-bytestring
     , bytestring
     , containers
+    , cryptohash-sha256
     , extra
     , generic-lens
     , lens

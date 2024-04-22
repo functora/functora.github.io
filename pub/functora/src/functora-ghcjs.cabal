@@ -79,6 +79,7 @@ common pkg
     , async
     , base
     , base16-bytestring
+    , base58-bytestring
     , base64-bytestring
     , bmp
     , bytestring
@@ -93,7 +94,7 @@ common pkg
     , microlens-contra
     , microlens-ghc
     , microlens-th
-    , modern-uri >=0.3.4.4
+    , modern-uri            >=0.3.4.4
     , monad-chronicle
     , network-uri
     , optparse-applicative

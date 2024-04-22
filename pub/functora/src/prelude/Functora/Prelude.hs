@@ -62,6 +62,15 @@ module Functora.Prelude
     qq,
     qqUri,
 
+    -- * Rnd
+    -- $rnd
+    Rnd (..),
+    newRnd,
+    addRnd,
+    nilRnd,
+    nullRnd,
+    htmlRnd,
+
     -- * Misc
     -- $misc
     mergeMap,
@@ -123,9 +132,17 @@ import Control.Monad.Extra as X
     maybeM,
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
+import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
+import Data.ByteString.Base58 as X
+  ( bitcoinAlphabet,
+    decodeBase58,
+    encodeBase58,
+    flickrAlphabet,
+    rippleAlphabet,
+  )
 import qualified Data.ByteString.Lazy as BL
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
@@ -692,6 +709,35 @@ qq parser =
 
 qqUri :: QuasiQuoter
 qqUri = URI.uri
+
+-- $rnd
+-- Rnd
+
+newtype Rnd = Rnd
+  { unRnd :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+
+newRnd :: (MonadIO m) => m Rnd
+newRnd = Rnd <$> randomByteString 32
+
+addRnd :: Rnd -> Rnd -> Rnd
+addRnd (Rnd lhs) (Rnd rhs) = Rnd . SHA256.hash $ lhs <> rhs
+
+nilRnd :: Rnd
+nilRnd = Rnd $ BS.replicate 32 0
+
+nullRnd :: Rnd -> Bool
+nullRnd = (== nilRnd)
+
+htmlRnd :: forall a. (From Text a) => Rnd -> a
+htmlRnd =
+  from @Text @a
+    . ("rnd-" <>)
+    . unsafeFrom @(UTF_8 ByteString) @Text
+    . Tagged @"UTF-8"
+    . encodeBase58 bitcoinAlphabet
+    . unRnd
 
 -- $misc
 -- Misc

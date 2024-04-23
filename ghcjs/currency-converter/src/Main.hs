@@ -168,7 +168,7 @@ syncInputs =
       void
         . JS.eval @Text
         $ "var el = document.getElementById('"
-        <> htmlUuid (txt ^. #uniqueUuid)
+        <> htmlUid (txt ^. #uniqueUid)
         <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
         <> (txt ^. #uniqueValue)
         <> "';"

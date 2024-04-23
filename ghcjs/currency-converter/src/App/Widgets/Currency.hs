@@ -106,7 +106,7 @@ currencyListWidget st optic =
   List.list
     List.config
     ( currencyListItemWidget optic current
-        $ maybe current NonEmpty.head matching
+        $ maybe currentFuzz NonEmpty.head matching
     )
     . fmap (currencyListItemWidget optic current)
     $ maybe mempty NonEmpty.tail matching
@@ -115,28 +115,33 @@ currencyListWidget st optic =
       fromMaybe
         (unexpectedCurrency ^. #currencyOutput)
         (st ^? cloneTraversal optic . #currencyOutput)
+    currentFuzz =
+      Fuzzy.Fuzzy
+        { Fuzzy.original = current,
+          Fuzzy.rendered = inspectCurrencyInfo current,
+          Fuzzy.score = 0
+        }
     search =
       fromMaybe
         (unexpectedCurrency ^. #currencyInput . #uniqueValue)
         (st ^? cloneTraversal optic . #currencyInput . #uniqueValue)
     matching =
       nonEmpty
-        . fmap Fuzzy.original
         $ Fuzzy.filter
           search
           ( toList $ st ^. #modelCurrencies
           )
-          "<"
-          ">"
+          "<b>"
+          "</b>"
           inspectCurrencyInfo
           False
 
 currencyListItemWidget ::
   ATraversal' Model (Currency Unique) ->
   CurrencyInfo ->
-  CurrencyInfo ->
+  Fuzzy.Fuzzy CurrencyInfo Text ->
   ListItem.ListItem Action
-currencyListItemWidget optic current item =
+currencyListItemWidget optic current fuzz =
   ListItem.listItem
     ( ListItem.config
         & ListItem.setSelected
@@ -159,8 +164,12 @@ currencyListItemWidget optic current item =
                 .~ item
           )
     )
-    [ Miso.text . toMisoString $ inspectCurrencyInfo @Text item
+    [ Miso.rawHtml
+        . toMisoString
+        $ Fuzzy.rendered fuzz
     ]
+  where
+    item = Fuzzy.original fuzz
 
 currencySwap :: View Action
 currencySwap =
@@ -213,7 +222,7 @@ unexpectedCurrency :: Currency Unique
 unexpectedCurrency =
   Currency
     { currencyOpen = False,
-      currencyInput = Unique nilUuid "UNEXPECTED CURRENCY",
+      currencyInput = Unique nilUid "UNEXPECTED CURRENCY",
       currencyOutput =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "UNEXPECTED",

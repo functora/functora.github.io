@@ -55,15 +55,15 @@ textInput st placeholder optic =
           )
         & TextField.setAttributes
           [ class_ "fill",
-            id_ . ms $ htmlUuid @Text uuid,
-            onKeyDown $ Misc.onKeyDownAction uuid
+            id_ . ms $ htmlUid @Text uid,
+            onKeyDown $ Misc.onKeyDownAction uid
           ]
     ]
   where
-    uuid = fromMaybe nilUuid $ st ^? cloneTraversal optic . #uniqueUuid
+    uid = fromMaybe nilUid $ st ^? cloneTraversal optic . #uniqueUid
     onInputAction txt =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal optic
@@ -71,20 +71,20 @@ textInput st placeholder optic =
             .~ from @String @Text txt
     onCopyAction =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         whenJust (st ^? cloneTraversal optic . #uniqueValue)
           $ Misc.copyIntoClipboard st
         pure $ ChanItem 0 id
     onClearAction =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         focus
           . ms
-          $ htmlUuid @Text uuid
+          $ htmlUid @Text uid
         void
           . JS.eval @Text
           $ "var el = document.getElementById('"
-          <> htmlUuid uuid
+          <> htmlUid uid
           <> "'); if (el) el.value = '';"
         pure . ChanItem 300 $ \st' ->
           st'

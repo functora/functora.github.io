@@ -84,7 +84,8 @@ screenWidget st@Model {modelScreen = DocumentEditor} =
   [ titleWidget "Document notes"
   ]
     <> TextProps.textProps st (#modelState . #stateTextProps)
-    <> [titleWidget "Document items"]
+    <> [ titleWidget "Document items"
+       ]
     <> Assets.assets st (#modelState . #stateAssets)
     <> [ titleWidget "Payment methods",
          TextInput.textInput st "Address"

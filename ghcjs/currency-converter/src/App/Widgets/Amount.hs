@@ -59,18 +59,18 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
           )
         & TextField.setAttributes
           [ class_ "fill",
-            id_ . ms $ htmlUuid @Text uuid,
-            onKeyDown $ Misc.onKeyDownAction uuid,
+            id_ . ms $ htmlUid @Text uid,
+            onKeyDown $ Misc.onKeyDownAction uid,
             onBlur onBlurAction
           ]
     ]
   where
-    uuid =
-      fromMaybe nilUuid
+    uid =
+      fromMaybe nilUid
         $ st
         ^? cloneTraversal amountOptic
         . #amountInput
-        . #uniqueUuid
+        . #uniqueUid
     getInput st' =
       st' ^? cloneTraversal amountOptic . #amountInput . #uniqueValue
     getOutput st' =
@@ -84,7 +84,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
         else Just out
     onBlurAction =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal amountOptic
@@ -96,7 +96,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
             %~ maybe id (const . id) (getOutput st')
     onInputAction txt =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         pure . ChanItem 300 $ \prev ->
           let next =
                 prev
@@ -111,19 +111,19 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
                 %~ maybe id (const . id) (getOutput next)
     onCopyAction =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         whenJust (getInput st) $ Misc.copyIntoClipboard st
         pure $ ChanItem 0 id
     onClearAction =
       PushUpdate $ do
-        Misc.verifyUuid uuid
+        Misc.verifyUid uid
         focus
           . ms
-          $ htmlUuid @Text uuid
+          $ htmlUid @Text uid
         void
           . JS.eval @Text
           $ "var el = document.getElementById('"
-          <> htmlUuid uuid
+          <> htmlUid uid
           <> "'); if (el) el.value = '';"
         pure . ChanItem 300 $ \st' ->
           st'

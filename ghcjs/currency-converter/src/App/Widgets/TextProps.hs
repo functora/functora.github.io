@@ -75,7 +75,7 @@ duplicateValue ::
   Action
 duplicateValue st optic idx =
   PushUpdate $ do
-    duplicator <- dupTextProp
+    duplicator <- newUniqueDuplicator @Text
     let updater loc el =
           if loc == idx
             then [el, duplicator el]

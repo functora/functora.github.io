@@ -6,7 +6,7 @@ module App.Misc
     copyIntoClipboard,
     snackbarClosed,
     drainTChan,
-    verifyUuid,
+    verifyUid,
     forceRender,
   )
 where
@@ -41,16 +41,16 @@ pushActionQueue st =
     . atomically
     . writeTChan (st ^. #modelProducerQueue)
 
-onKeyDownAction :: UUID -> KeyCode -> Action
-onKeyDownAction uuid (KeyCode code) =
+onKeyDownAction :: Uid -> KeyCode -> Action
+onKeyDownAction uid (KeyCode code) =
   PushUpdate $ do
-    verifyUuid uuid
+    verifyUid uid
     let enterOrEscape = [13, 27] :: [Int]
     when (code `elem` enterOrEscape)
       . void
       . JS.eval @Text
       $ "document.getElementById('"
-      <> htmlUuid uuid
+      <> htmlUid uid
       <> "').getElementsByTagName('input')[0].blur();"
     pure
       $ ChanItem 300 id
@@ -110,10 +110,10 @@ drainTChan chan = do
             . max delay
             $ chanItemDelay next
 
-verifyUuid :: UUID -> JSM ()
-verifyUuid uuid =
-  when (nullUuid uuid)
-    $ consoleLog "UNEXPECTED NULL UUID"
+verifyUid :: Uid -> JSM ()
+verifyUid uid =
+  when (nullUid uid)
+    $ consoleLog "UNEXPECTED NULL UID"
 
 forceRender :: Model -> JSM ()
 forceRender st =

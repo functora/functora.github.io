@@ -16,16 +16,17 @@ module App.Types
     TopOrBottom (..),
     newModel,
     newUnique,
+    newUniqueDuplicator,
     pureUpdate,
     newUniqueState,
     newIdentityState,
     TextProp (..),
     newTextProp,
-    dupTextProp,
   )
 where
 
 import Data.Functor.Barbie
+import qualified Data.Generics as Syb
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
@@ -49,7 +50,7 @@ data Model = Model
   deriving stock (Eq, Generic)
 
 data Unique a = Unique
-  { uniqueUuid :: UUID,
+  { uniqueUid :: Uid,
     uniqueValue :: a
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
@@ -418,8 +419,23 @@ pureUpdate delay =
 newUnique :: (MonadIO m) => a -> m (Unique a)
 newUnique x =
   Unique
-    <$> newUuid
+    <$> newUid
     <*> pure x
+
+newUniqueDuplicator ::
+  forall (b :: Type) a m.
+  ( Data a,
+    Typeable b,
+    MonadIO m
+  ) =>
+  m (a -> a)
+newUniqueDuplicator = do
+  uid <- newUid
+  pure
+    $ Syb.everywhere
+    $ Syb.mkT
+      ( (& #uniqueUid %~ addUid uid) :: Unique b -> Unique b
+      )
 
 newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m (PaymentMethod Unique)
 newPaymentMethod cur =
@@ -478,16 +494,3 @@ newTextProp key val =
     <$> newUnique key
     <*> newUnique val
     <*> pure False
-
-dupTextProp :: (MonadIO m) => m (TextProp Unique -> TextProp Unique)
-dupTextProp = do
-  keyUuid <- newUuid
-  valUuid <- newUuid
-  pure $ \this ->
-    this
-      & #textPropKey
-      . #uniqueUuid
-      .~ keyUuid
-      & #textPropValue
-      . #uniqueUuid
-      .~ valUuid

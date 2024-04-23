@@ -18,7 +18,7 @@ import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+import Miso.String (ms)
 import qualified Paths_app as Paths
 
 mainWidget :: Model -> View Action

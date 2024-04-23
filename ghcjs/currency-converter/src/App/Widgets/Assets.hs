@@ -13,7 +13,9 @@ import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
+import qualified Material.Typography as Typography
 import Miso hiding (at, view)
+import Miso.String (ms)
 
 assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
 assets st optic =
@@ -27,7 +29,8 @@ assetsWidget ::
   Int ->
   [View Action]
 assetsWidget st optic idx =
-  [ Amount.amountSelect
+  [ titleWidget $ "Item " <> idxTxt,
+    Amount.amountSelect
       st
       ( cloneTraversal optic
           . ix idx
@@ -56,24 +59,24 @@ assetsWidget st optic idx =
           . ix idx
           . #assetProps
       )
-    <> [ assetButton ("Duplicate " <> idxTxt) $ duplicate st optic idx,
-         assetButton ("Remove " <> idxTxt) remove
+    <> [ button ("Duplicate item " <> idxTxt) $ Misc.duplicateAt st optic idx,
+         button ("Remove item " <> idxTxt) $ Misc.removeAt st optic idx
        ]
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
 
-assetButton ::
+button ::
   forall a action.
   ( From a String
   ) =>
   a ->
   action ->
   View action
-assetButton label action =
+button label action =
   LayoutGrid.cell
-    [ LayoutGrid.span3Desktop,
-      LayoutGrid.span2Tablet,
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
       LayoutGrid.span2Phone
     ]
     [ Button.raised
@@ -88,28 +91,14 @@ assetButton label action =
         )
     ]
 
-duplicate ::
-  Model ->
-  ATraversal' Model [Asset Unique] ->
-  Int ->
-  Action
-duplicate st optic idx =
-  PushUpdate $ do
-    duplicator <- newUniqueDuplicator @Text
-    let updater loc el =
-          if loc == idx
-            then [el, duplicator el]
-            else [el]
-    --
-    -- TODO : maybe move to general update function?
-    -- Probably overhead is not to big,
-    -- and this will cover all corner cases everywhere.
-    --
-    Misc.forceRender st
-    pure
-      . ChanItem 0
-      $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
-
-remove :: Action
-remove =
-  Noop
+titleWidget :: Text -> View Action
+titleWidget txt =
+  LayoutGrid.cell
+    [ LayoutGrid.span12,
+      Typography.body1,
+      style_
+        [ ("text-align", "center")
+        ]
+    ]
+    [ Miso.text $ ms txt
+    ]

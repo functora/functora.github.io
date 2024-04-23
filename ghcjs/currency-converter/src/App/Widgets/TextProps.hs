@@ -25,32 +25,32 @@ textPropInputs ::
   Int ->
   [View Action]
 textPropInputs st optic idx =
-  [ TextInput.textInput st ("Label " <> idxTxt)
+  [ TextInput.textInput st ("Attribute " <> idxTxt <> " label")
       $ cloneTraversal optic
       . ix idx
       . #textPropKey,
-    TextInput.textInput st ("Value " <> idxTxt)
+    TextInput.textInput st ("Attribute " <> idxTxt <> " value")
       $ cloneTraversal optic
       . ix idx
       . #textPropValue,
-    Switch.switch st ("Value " <> idxTxt <> " QR code")
+    Switch.switch st ("Attribute " <> idxTxt <> " QR code")
       $ cloneTraversal optic
       . ix idx
       . #textPropValueQrCode,
-    textPropButton ("Duplicate " <> idxTxt) $ duplicateValue st optic idx,
-    textPropButton ("Remove " <> idxTxt) removeValue
+    button ("Duplicate attribute " <> idxTxt) $ Misc.duplicateAt st optic idx,
+    button ("Remove attribute " <> idxTxt) $ Misc.removeAt st optic idx
   ]
   where
     idxTxt = "#" <> inspect (idx + 1)
 
-textPropButton ::
+button ::
   forall a action.
   ( From a String
   ) =>
   a ->
   action ->
   View action
-textPropButton label action =
+button label action =
   LayoutGrid.cell
     [ LayoutGrid.span3Desktop,
       LayoutGrid.span2Tablet,
@@ -67,29 +67,3 @@ textPropButton label action =
         ( from @a @String label
         )
     ]
-
-duplicateValue ::
-  Model ->
-  ATraversal' Model [TextProp Unique] ->
-  Int ->
-  Action
-duplicateValue st optic idx =
-  PushUpdate $ do
-    duplicator <- newUniqueDuplicator @Text
-    let updater loc el =
-          if loc == idx
-            then [el, duplicator el]
-            else [el]
-    --
-    -- TODO : maybe move to general update function?
-    -- Probably overhead is not to big,
-    -- and this will cover all corner cases everywhere.
-    --
-    Misc.forceRender st
-    pure
-      . ChanItem 0
-      $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
-
-removeValue :: Action
-removeValue =
-  Noop

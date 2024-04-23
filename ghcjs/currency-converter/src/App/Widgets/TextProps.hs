@@ -25,20 +25,20 @@ textPropInputs ::
   Int ->
   [View Action]
 textPropInputs st optic idx =
-  [ TextInput.textInput st ("Attribute " <> idxTxt <> " label")
+  [ TextInput.textInput st ("Label " <> idxTxt)
       $ cloneTraversal optic
       . ix idx
       . #textPropKey,
-    TextInput.textInput st ("Attribute " <> idxTxt <> " value")
+    TextInput.textInput st ("Value " <> idxTxt)
       $ cloneTraversal optic
       . ix idx
       . #textPropValue,
-    Switch.switch st ("Attribute " <> idxTxt <> " QR code")
+    Switch.switch st ("Value " <> idxTxt <> " QR code")
       $ cloneTraversal optic
       . ix idx
       . #textPropValueQrCode,
-    button ("Duplicate attribute " <> idxTxt) $ Misc.duplicateAt st optic idx,
-    button ("Remove attribute " <> idxTxt) $ Misc.removeAt st optic idx
+    button ("Duplicate " <> idxTxt) $ Misc.duplicateAt st optic idx,
+    button ("Remove " <> idxTxt) $ Misc.removeAt st optic idx
   ]
   where
     idxTxt = "#" <> inspect (idx + 1)

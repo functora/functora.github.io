@@ -25,7 +25,7 @@ textInput st placeholder optic =
           ("align-items", "center")
         ]
     ]
-    [ TextField.outlined
+    [ TextField.filled
         $ TextField.config
         & TextField.setType (Just "text")
         & TextField.setOnInput onInputAction
@@ -49,7 +49,7 @@ textInput st placeholder optic =
                 ]
                 "close"
           )
-        & TextField.setPlaceholder
+        & TextField.setLabel
           ( Just
               $ from @Text @String placeholder
           )

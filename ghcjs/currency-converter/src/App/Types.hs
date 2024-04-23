@@ -216,8 +216,9 @@ data TopOrBottom
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
 data Asset f = Asset
-  { assetProps :: [TextProp f],
-    assetMoney :: Money f
+  { assetDescription :: f Text,
+    assetQuantity :: Amount f,
+    assetPrice :: Money f
   }
   deriving stock (Generic)
 
@@ -253,12 +254,12 @@ newModel = do
           { currencyInfoCode = CurrencyCode "usd",
             currencyInfoText = mempty
           }
-  topMoney <- newMoney btc
-  bottomMoney <- newMoney usd
-  paymentMethod <- newPaymentMethod btc
-  issuer <- newTextProp "Issuer" mempty
-  client <- newTextProp "Client" mempty
-  asset <- newAsset usd
+  topMoney <- newMoney 0 btc
+  bottomMoney <- newMoney 0 usd
+  paymentMethod <- newPaymentMethod 0 btc
+  issuer <- newTextProp "Issuer" "Alice LLC"
+  client <- newTextProp "Client" "Bob"
+  asset <- newAsset "Jeans" 100 usd
   let st =
         Model
           { modelHide = True,
@@ -363,22 +364,7 @@ newModel = do
       & #modelState
       . #stateAssets
       . each
-      . #assetMoney
-      . #moneyAmount
-      . #amountInput
-      . #uniqueValue
-      .~ inspectRatioDef (100 :: Rational)
-      & #modelState
-      . #stateAssets
-      . each
-      . #assetMoney
-      . #moneyAmount
-      . #amountOutput
-      .~ 100
-      & #modelState
-      . #stateAssets
-      . each
-      . #assetMoney
+      . #assetPrice
       . #moneyCurrency
       . #currencyOutput
       .~ quoteCur
@@ -388,11 +374,11 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newAmount :: (MonadIO m) => m (Amount Unique)
-newAmount =
+newAmount :: (MonadIO m) => Rational -> m (Amount Unique)
+newAmount amt =
   Amount
-    <$> newUnique (inspectRatioDef @Text @Integer 0)
-    <*> pure 0
+    <$> newUnique (inspectRatioDef @Text amt)
+    <*> pure amt
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
@@ -401,10 +387,10 @@ newCurrency cur =
     <*> pure cur
     <*> pure False
 
-newMoney :: (MonadIO m) => CurrencyInfo -> m (Money Unique)
-newMoney cur =
+newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
+newMoney amt cur =
   Money
-    <$> newAmount
+    <$> newAmount amt
     <*> newCurrency cur
 
 --
@@ -437,19 +423,25 @@ newUniqueDuplicator = do
       ( (& #uniqueUid %~ addUid uid) :: Unique b -> Unique b
       )
 
-newPaymentMethod :: (MonadIO m) => CurrencyInfo -> m (PaymentMethod Unique)
-newPaymentMethod cur =
+newPaymentMethod ::
+  ( MonadIO m
+  ) =>
+  Rational ->
+  CurrencyInfo ->
+  m (PaymentMethod Unique)
+newPaymentMethod amt cur =
   PaymentMethod
-    <$> newMoney cur
+    <$> newMoney amt cur
     <*> newUnique mempty
     <*> newUnique mempty
     <*> pure True
 
-newAsset :: (MonadIO m) => CurrencyInfo -> m (Asset Unique)
-newAsset cur =
+newAsset :: (MonadIO m) => Text -> Rational -> CurrencyInfo -> m (Asset Unique)
+newAsset txt amt cur =
   Asset
-    <$> fmap (: mempty) (newTextProp mempty mempty)
-    <*> newMoney cur
+    <$> newUnique txt
+    <*> newAmount 1
+    <*> newMoney amt cur
 
 newIdentityState :: St Unique -> St Identity
 newIdentityState =

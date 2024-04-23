@@ -30,11 +30,11 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
           ("align-items", "center")
         ]
     ]
-    [ TextField.outlined
+    [ TextField.filled
         $ TextField.config
         & TextField.setType (Just "number")
         & TextField.setOnInput onInputAction
-        & TextField.setPlaceholder
+        & TextField.setLabel
           ( fmap (from @Text @String) $ st ^? placeholderOptic
           )
         & TextField.setLeadingIcon

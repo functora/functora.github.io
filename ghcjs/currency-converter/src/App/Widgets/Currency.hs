@@ -57,11 +57,7 @@ currencySelect st optic =
               ]
               [ TextInput.textInput
                   st
-                  ( inspectCurrencyInfo
-                      $ fromMaybe
-                        (unexpectedCurrency ^. #currencyOutput)
-                        (st ^? cloneTraversal optic . #currencyOutput)
-                  )
+                  "Search"
                   ( cloneTraversal optic
                       . #currencyInput
                   ),

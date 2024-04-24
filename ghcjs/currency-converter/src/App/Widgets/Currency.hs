@@ -57,9 +57,12 @@ currencySelect st optic =
               ]
               [ TextInput.textInput
                   st
-                  "Search"
                   ( cloneTraversal optic
                       . #currencyInput
+                  )
+                  ( TextInput.opts
+                      & #optsPlaceholder
+                      .~ "Search"
                   ),
                 Button.raised
                   ( Button.config

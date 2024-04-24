@@ -1,68 +1,47 @@
-module App.Widgets.Assets
-  ( assets,
+module App.Widgets.PaymentMethods
+  ( paymentMethods,
   )
 where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
-import qualified App.Widgets.TextInput as TextInput
+import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
-assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
-assets st optic =
+paymentMethods ::
+  Model ->
+  ATraversal' Model [PaymentMethod Unique] ->
+  [View Action]
+paymentMethods st optic =
   zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-    >>= assetsWidget st optic
+    >>= paymentMethodsWidget st optic
     . fst
 
-assetsWidget ::
+paymentMethodsWidget ::
   Model ->
-  ATraversal' Model [Asset Unique] ->
+  ATraversal' Model [PaymentMethod Unique] ->
   Int ->
   [View Action]
-assetsWidget st optic idx =
-  [ TextInput.textInput
+paymentMethodsWidget st optic idx =
+  [ Currency.currencySelect
       st
       ( cloneTraversal optic
           . ix idx
-          . #assetDescription
-      )
-      ( TextInput.opts
-          & #optsPlaceholder
-          .~ ("Description " <> idxTxt)
-      ),
-    Amount.amountSelect
-      st
-      ( to . const $ "Quantity " <> idxTxt
-      )
-      ( cloneTraversal optic
-          . ix idx
-          . #assetQuantity
-      )
-      id,
-    Amount.amountSelect
-      st
-      ( to . const $ "Price " <> idxTxt
-      )
-      ( cloneTraversal optic
-          . ix idx
-          . #assetPrice
-          . #moneyAmount
-      )
-      id,
-    Currency.currencySelect
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #assetPrice
+          . #paymentMethodMoney
           . #moneyCurrency
       )
   ]
+    <> TextProps.textProps
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #paymentMethodTextProps
+      )
     <> [ button ("Duplicate " <> idxTxt) $ Misc.duplicateAt st optic idx,
          button ("Remove " <> idxTxt) $ Misc.removeAt st optic idx
        ]

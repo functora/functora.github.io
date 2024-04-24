@@ -25,14 +25,26 @@ textPropInputs ::
   Int ->
   [View Action]
 textPropInputs st optic idx =
-  [ TextInput.textInput st ("Label " <> idxTxt)
-      $ cloneTraversal optic
-      . ix idx
-      . #textPropKey,
-    TextInput.textInput st ("Value " <> idxTxt)
-      $ cloneTraversal optic
-      . ix idx
-      . #textPropValue,
+  [ TextInput.textInput
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #textPropKey
+      )
+      ( TextInput.opts
+          & #optsPlaceholder
+          .~ ("Label " <> idxTxt)
+      ),
+    TextInput.textInput
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #textPropValue
+      )
+      ( TextInput.opts
+          & #optsPlaceholder
+          .~ ("Value " <> idxTxt)
+      ),
     Switch.switch st ("Value " <> idxTxt <> " QR code")
       $ cloneTraversal optic
       . ix idx
@@ -41,6 +53,7 @@ textPropInputs st optic idx =
     button ("Remove " <> idxTxt) $ Misc.removeAt st optic idx
   ]
   where
+    idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
 
 button ::

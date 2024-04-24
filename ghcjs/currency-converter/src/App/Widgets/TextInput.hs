@@ -1,5 +1,7 @@
 module App.Widgets.TextInput
-  ( textInput,
+  ( Opts (..),
+    opts,
+    textInput,
   )
 where
 
@@ -12,12 +14,29 @@ import qualified Material.TextField as TextField
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
+data Opts = Opts
+  { optsDisabled :: Bool,
+    optsPlaceholder :: Text
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+--
+-- TODO : use optsDisabled in View
+--
+
+opts :: Opts
+opts =
+  Opts
+    { optsDisabled = False,
+      optsPlaceholder = mempty
+    }
+
 textInput ::
   Model ->
-  Text ->
   ATraversal' Model (Unique Text) ->
+  Opts ->
   View Action
-textInput st placeholder optic =
+textInput st optic options =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -50,8 +69,7 @@ textInput st placeholder optic =
                 "close"
           )
         & TextField.setLabel
-          ( Just
-              $ from @Text @String placeholder
+          ( Just . from @Text @String $ options ^. #optsPlaceholder
           )
         & TextField.setAttributes
           [ class_ "fill",

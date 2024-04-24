@@ -5,8 +5,7 @@ import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Currency as Currency
-import qualified App.Widgets.Switch as Switch
-import qualified App.Widgets.TextInput as TextInput
+import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.TextProps as TextProps
 import qualified Data.Text as T
 import qualified Data.Version as Version
@@ -87,26 +86,9 @@ screenWidget st@Model {modelScreen = DocumentEditor} =
     <> [ titleWidget "Document items"
        ]
     <> Assets.assets st (#modelState . #stateAssets)
-    <> [ titleWidget "Payment methods",
-         TextInput.textInput st "Address"
-          $ #modelState
-          . #statePaymentMethodsInput
-          . #paymentMethodAddress,
-         Switch.switch st "Address QR code"
-          $ #modelState
-          . #statePaymentMethodsInput
-          . #paymentMethodAddressQrCode,
-         TextInput.textInput st "Notes"
-          $ #modelState
-          . #statePaymentMethodsInput
-          . #paymentMethodNotes,
-         Currency.currencySelect st
-          $ #modelState
-          . #statePaymentMethodsInput
-          . #paymentMethodMoney
-          . #moneyCurrency,
-         addPaymentMethodWidget st
+    <> [ titleWidget "Payment methods"
        ]
+    <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
 
 titleWidget :: Text -> View Action
 titleWidget txt =
@@ -142,39 +124,6 @@ swapScreenWidget st =
       PushUpdate $ do
         --
         -- NOTE : Force sync text inputs on new screen.
-        --
-        Misc.forceRender st
-        pure
-          $ ChanItem
-            0
-            ( &
-                #modelScreen
-                  %~ ( \case
-                        Converter -> DocumentEditor
-                        DocumentEditor -> Converter
-                     )
-            )
-
-addPaymentMethodWidget :: Model -> View Action
-addPaymentMethodWidget st =
-  LayoutGrid.cell
-    [ LayoutGrid.span12
-    ]
-    . (: mempty)
-    $ Button.raised
-      ( Button.config
-          & Button.setOnClick onClickAction
-          & Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
-      )
-      "Add payment method"
-  where
-    onClickAction =
-      PushUpdate $ do
-        --
-        -- NOTE : Need to sync text inputs on new screen.
         --
         Misc.forceRender st
         pure

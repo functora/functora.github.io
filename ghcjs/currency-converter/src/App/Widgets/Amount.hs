@@ -1,5 +1,7 @@
 module App.Widgets.Amount
-  ( amountSelect,
+  ( Opts (..),
+    opts,
+    amountSelect,
     amountSwap,
   )
 where
@@ -14,6 +16,19 @@ import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+
+data Opts = Opts
+  { optsDisabled :: Bool,
+    optsPlaceholder :: Text
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+opts :: Opts
+opts =
+  Opts
+    { optsDisabled = False,
+      optsPlaceholder = mempty
+    }
 
 amountSelect ::
   Model ->

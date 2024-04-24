@@ -74,10 +74,9 @@ data St f = St
   { stateTopMoney :: Money f,
     stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
-    statePaymentMethods :: [PaymentMethod f],
-    statePaymentMethodsInput :: PaymentMethod f,
     stateTextProps :: [TextProp f],
-    stateAssets :: [Asset f]
+    stateAssets :: [Asset f],
+    statePaymentMethods :: [PaymentMethod f]
   }
   deriving stock (Generic)
 
@@ -169,9 +168,7 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodAddress :: f Text,
-    paymentMethodNotes :: f Text,
-    paymentMethodAddressQrCode :: Bool
+    paymentMethodTextProps :: [TextProp f]
   }
   deriving stock (Generic)
 
@@ -256,10 +253,10 @@ newModel = do
           }
   topMoney <- newMoney 0 btc
   bottomMoney <- newMoney 0 usd
-  paymentMethod <- newPaymentMethod 0 btc
   issuer <- newTextProp "Issuer" "Alice LLC"
   client <- newTextProp "Client" "Bob"
   asset <- newAsset "Jeans" 100 usd
+  paymentMethod <- newPaymentMethod 0 btc
   let st =
         Model
           { modelHide = True,
@@ -268,10 +265,9 @@ newModel = do
                 { stateTopMoney = topMoney,
                   stateBottomMoney = bottomMoney,
                   stateTopOrBottom = Top,
-                  statePaymentMethods = mempty,
-                  statePaymentMethodsInput = paymentMethod,
                   stateTextProps = [issuer, client],
-                  stateAssets = [asset]
+                  stateAssets = [asset],
+                  statePaymentMethods = [paymentMethod]
                 },
             modelScreen = DocumentEditor,
             modelMarket = market,
@@ -340,20 +336,23 @@ newModel = do
       -- DocumentEditor
       --
       & #modelState
-      . #statePaymentMethodsInput
+      . #statePaymentMethods
+      . each
       . #paymentMethodMoney
       . #moneyAmount
       . #amountInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
-      . #statePaymentMethodsInput
+      . #statePaymentMethods
+      . each
       . #paymentMethodMoney
       . #moneyAmount
       . #amountOutput
       .~ unTagged baseAmt
       & #modelState
-      . #statePaymentMethodsInput
+      . #statePaymentMethods
+      . each
       . #paymentMethodMoney
       . #moneyCurrency
       . #currencyOutput
@@ -429,12 +428,12 @@ newPaymentMethod ::
   Rational ->
   CurrencyInfo ->
   m (PaymentMethod Unique)
-newPaymentMethod amt cur =
+newPaymentMethod amt cur = do
+  address <- newTextProp "Address" mempty
+  notes <- newTextProp "Notes" mempty
   PaymentMethod
     <$> newMoney amt cur
-    <*> newUnique mempty
-    <*> newUnique mempty
-    <*> pure True
+    <*> pure [address, notes]
 
 newAsset :: (MonadIO m) => Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset txt amt cur =

@@ -5,6 +5,7 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude as Prelude
@@ -28,7 +29,20 @@ paymentMethodsWidget ::
   Int ->
   [View Action]
 paymentMethodsWidget st optic idx =
-  [ Currency.currencySelect
+  [ Amount.amountSelect
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #paymentMethodMoney
+          . #moneyAmount
+      )
+      ( Amount.opts
+          & #optsDisabled
+          .~ True
+          & #optsPlaceholder
+          .~ ("Total " <> idxTxt)
+      ),
+    Currency.currencySelect
       st
       ( cloneTraversal optic
           . ix idx

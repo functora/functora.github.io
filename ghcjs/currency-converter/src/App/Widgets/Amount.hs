@@ -49,6 +49,7 @@ amountSelect st amountOptic options =
         $ TextField.config
         & TextField.setType (Just "number")
         & TextField.setOnInput onInputAction
+        & TextField.setDisabled (options ^. #optsDisabled)
         & TextField.setLabel
           ( Just . from @Text @String $ options ^. #optsPlaceholder
           )
@@ -56,21 +57,25 @@ amountSelect st amountOptic options =
           ( Just
               $ TextField.icon
                 [ class_ "mdc-text-field__icon--leading",
-                  intProp "tabindex" 0,
+                  style_ [("pointer-events", "auto")],
                   textProp "role" "button",
+                  intProp "tabindex" 0,
                   onClick onCopyAction
                 ]
                 "content_copy"
           )
         & TextField.setTrailingIcon
-          ( Just
-              $ TextField.icon
-                [ class_ "mdc-text-field__icon--trailing",
-                  intProp "tabindex" 0,
-                  textProp "role" "button",
-                  onClick onClearAction
-                ]
-                "close"
+          ( if options ^. #optsDisabled
+              then Nothing
+              else
+                Just
+                  $ TextField.icon
+                    [ class_ "mdc-text-field__icon--trailing",
+                      intProp "tabindex" 0,
+                      textProp "role" "button",
+                      onClick onClearAction
+                    ]
+                    "close"
           )
         & TextField.setAttributes
           [ class_ "fill",

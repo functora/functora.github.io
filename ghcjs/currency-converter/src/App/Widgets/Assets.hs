@@ -38,23 +38,25 @@ assetsWidget st optic idx =
       ),
     Amount.amountSelect
       st
-      ( to . const $ "Quantity " <> idxTxt
-      )
       ( cloneTraversal optic
           . ix idx
           . #assetQuantity
       )
-      id,
+      ( Amount.opts
+          & #optsPlaceholder
+          .~ ("Quantity " <> idxTxt)
+      ),
     Amount.amountSelect
       st
-      ( to . const $ "Price " <> idxTxt
-      )
       ( cloneTraversal optic
           . ix idx
           . #assetPrice
           . #moneyAmount
       )
-      id,
+      ( Amount.opts
+          & #optsPlaceholder
+          .~ ("Price " <> idxTxt)
+      ),
     Currency.currencySelect
       st
       ( cloneTraversal optic

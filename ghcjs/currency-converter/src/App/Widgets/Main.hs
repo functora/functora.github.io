@@ -60,13 +60,17 @@ screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
         Amount.amountSelect
           st
-          ( cloneLens (Misc.getConverterCurrencyOptic loc)
-              . #currencyOutput
-              . to (inspectCurrencyInfo @Text)
-          )
           ( Misc.getConverterAmountOptic loc
           )
-          ( & #modelState . #stateTopOrBottom .~ loc
+          ( Amount.opts
+              & #optsExtraOnInput
+              .~ (& #modelState . #stateTopOrBottom .~ loc)
+              & #optsPlaceholder
+              .~ ( st
+                    ^. cloneLens (Misc.getConverterCurrencyOptic loc)
+                    . #currencyOutput
+                    . to (inspectCurrencyInfo @Text)
+                 )
           )
       currencyWidget' =
         Currency.currencySelect st

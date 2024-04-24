@@ -19,25 +19,25 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 data Opts = Opts
   { optsDisabled :: Bool,
-    optsPlaceholder :: Text
+    optsPlaceholder :: Text,
+    optsExtraOnInput :: Model -> Model
   }
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Generic)
 
 opts :: Opts
 opts =
   Opts
     { optsDisabled = False,
-      optsPlaceholder = mempty
+      optsPlaceholder = mempty,
+      optsExtraOnInput = id
     }
 
 amountSelect ::
   Model ->
-  Fold Model Text ->
   ATraversal' Model (Amount Unique) ->
-  ( Model -> Model
-  ) ->
+  Opts ->
   View Action
-amountSelect st placeholderOptic amountOptic extraOnInput =
+amountSelect st amountOptic options =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -50,7 +50,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
         & TextField.setType (Just "number")
         & TextField.setOnInput onInputAction
         & TextField.setLabel
-          ( fmap (from @Text @String) $ st ^? placeholderOptic
+          ( Just . from @Text @String $ options ^. #optsPlaceholder
           )
         & TextField.setLeadingIcon
           ( Just
@@ -119,7 +119,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
                   . #amountInput
                   . #uniqueValue
                   .~ from @String @Text txt
-                  & extraOnInput
+                  & (options ^. #optsExtraOnInput)
            in next
                 & cloneTraversal amountOptic
                 . #amountOutput
@@ -146,7 +146,7 @@ amountSelect st placeholderOptic amountOptic extraOnInput =
             . #amountInput
             . #uniqueValue
             .~ mempty
-            & extraOnInput
+            & (options ^. #optsExtraOnInput)
 
 amountSwap :: View Action
 amountSwap =

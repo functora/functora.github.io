@@ -14,6 +14,7 @@ module App.Types
     Screen (..),
     Asset (..),
     TopOrBottom (..),
+    OnlineOrOffline (..),
     newModel,
     newUnique,
     newUniqueDuplicator,
@@ -45,7 +46,7 @@ data Model = Model
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
     modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
-    modelUpdatedAt :: UTCTime
+    modelOnlineAt :: UTCTime
   }
   deriving stock (Eq, Generic)
 
@@ -212,6 +213,12 @@ data TopOrBottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
 
+data OnlineOrOffline
+  = Online
+  | Offline
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType OnlineOrOffline
+
 data Asset f = Asset
   { assetDescription :: f Text,
     assetQuantity :: Amount f,
@@ -235,6 +242,9 @@ deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
 
 deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 
+--
+-- TODO : simplify this
+--
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
   ct <- getCurrentTime
@@ -275,7 +285,7 @@ newModel = do
             modelSnackbarQueue = Snackbar.initialQueue,
             modelProducerQueue = prod,
             modelConsumerQueue = cons,
-            modelUpdatedAt = ct
+            modelOnlineAt = ct
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
     currenciesInfo <- currenciesList <$> getCurrencies
@@ -430,7 +440,7 @@ newPaymentMethod ::
   m (PaymentMethod Unique)
 newPaymentMethod amt cur = do
   address <- newTextProp "Address" mempty
-  notes <- newTextProp "Notes" mempty
+  notes <- newTextProp "Details" mempty
   PaymentMethod
     <$> newMoney amt cur
     <*> pure [address, notes]

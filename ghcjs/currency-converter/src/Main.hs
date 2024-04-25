@@ -24,10 +24,10 @@ import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 main :: IO ()
-main = do
-  st <- newModel
-  runApp
-    $ startApp
+main =
+  runApp . forever . handleAny maxAttention $ do
+    st <- newModel
+    startApp
       App
         { model = st,
           update = updateModel,
@@ -97,7 +97,7 @@ updateModel TimeUpdate st = do
         pure TimeUpdate,
       do
         ct <- getCurrentTime
-        unless (upToDate ct $ st ^. #modelUpdatedAt)
+        unless (upToDate ct $ st ^. #modelOnlineAt)
           . Misc.pushActionQueue st
           $ ChanItem 0 id
         pure Noop
@@ -109,9 +109,17 @@ updateModel (ChanUpdate prevSt) _ = do
         syncInputs prevSt
         pure Noop,
       do
-        actions <- Misc.drainTChan $ prevSt ^. #modelConsumerQueue
-        nextSt <- foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-        pure $ ChanUpdate nextSt
+        actions <-
+          Misc.drainTChan $ prevSt ^. #modelConsumerQueue
+        nextSt <-
+          handleAny
+            ( \e -> do
+                maxAttention e
+                pure $ prevSt & #modelHide .~ False
+            )
+            $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
+        pure
+          $ ChanUpdate nextSt
     ]
 updateModel (PushUpdate newUpdater) st = do
   batchEff
@@ -215,9 +223,10 @@ evalModel st = do
             . #currencyOutput
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
+        next <- evalInvoice st
         ct <- getCurrentTime
         pure
-          $ st
+          $ next
           & cloneLens baseLens
           . #moneyAmount
           . #amountInput
@@ -236,8 +245,66 @@ evalModel st = do
           . #moneyAmount
           . #amountOutput
           .~ unTagged quoteAmt
-          & #modelUpdatedAt
+          & #modelOnlineAt
           .~ ct
+
+evalInvoice ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Model ->
+  ReaderT (MVar Market) m Model
+evalInvoice st = do
+  mtds <- forM (st ^. #modelState . #statePaymentMethods) $ \mtd -> do
+    total <-
+      foldM
+        (\acc -> fmap (+ acc) . getTotalPayment mtd)
+        0
+        (st ^. #modelState . #stateAssets)
+    pure
+      $ mtd
+      & #paymentMethodMoney
+      . #moneyAmount
+      . #amountInput
+      . #uniqueValue
+      .~ inspectRatioDef @Text total
+      & #paymentMethodMoney
+      . #moneyAmount
+      . #amountOutput
+      .~ total
+  pure
+    $ st
+    & #modelState
+    . #statePaymentMethods
+    .~ mtds
+
+getTotalPayment ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  PaymentMethod Unique ->
+  Asset Unique ->
+  ReaderT (MVar Market) m Rational
+getTotalPayment method asset = do
+  quote <-
+    getQuote
+      ( Funds (Tagged $ price * quantity)
+          $ asset
+          ^. #assetPrice
+          . #moneyCurrency
+          . #currencyOutput
+          . #currencyInfoCode
+      )
+      ( method
+          ^. #paymentMethodMoney
+          . #moneyCurrency
+          . #currencyOutput
+          . #currencyInfoCode
+      )
+  pure $ quote ^. #quoteMoneyAmount . to unTagged
+  where
+    price = asset ^. #assetPrice . #moneyAmount . #amountOutput
+    quantity = asset ^. #assetQuantity . #amountOutput
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
@@ -254,3 +321,8 @@ upToDate lhs rhs =
   diff < 3600
   where
     diff = abs . toRational $ diffUTCTime lhs rhs
+
+maxAttention :: SomeException -> JSM ()
+maxAttention e = do
+  consoleLog $ inspect e
+  alert $ inspect e

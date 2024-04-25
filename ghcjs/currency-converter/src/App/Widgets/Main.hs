@@ -84,21 +84,21 @@ screenWidget st@Model {modelScreen = Converter} =
         Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = DocumentEditor} =
-  [ titleWidget "Document notes"
+  [ headerWidget "Header"
   ]
     <> TextProps.textProps st (#modelState . #stateTextProps)
-    <> [ titleWidget "Document items"
+    <> [ headerWidget "Line items"
        ]
     <> Assets.assets st (#modelState . #stateAssets)
-    <> [ titleWidget "Payment methods"
+    <> [ headerWidget "Payment methods"
        ]
     <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
 
-titleWidget :: Text -> View Action
-titleWidget txt =
+headerWidget :: Text -> View Action
+headerWidget txt =
   LayoutGrid.cell
     [ LayoutGrid.span12,
-      Typography.body1,
+      Typography.headline5,
       style_
         [ ("text-align", "center")
         ]

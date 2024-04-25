@@ -2,3 +2,4 @@
 dist-newstyle
 capacitor-geckoview
 package-lock.json
+*\.min\.*

@@ -1980,9 +1980,17 @@ c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.searchengines = {
         'DEFAULT': 'https://google.com/search?q=before:2022 {}',
-        'google': 'https://google.com/search?q=before:2022 {}',
         'ggl': 'https://google.com/search?q={}',
         'ddg': 'https://duckduckgo.com/?q={}',
+        'gpt': 'https://chat.openai.com/?q={}',
+        'enes': 'https://translate.google.com/?sl=en&tl=es&op=translate&text={}',
+        'enru': 'https://translate.google.com/?sl=en&tl=ru&op=translate&text={}',
+        'esen': 'https://translate.google.com/?sl=es&tl=en&op=translate&text={}',
+        'esru': 'https://translate.google.com/?sl=es&tl=ru&op=translate&text={}',
+        'ruen': 'https://translate.google.com/?sl=ru&tl=en&op=translate&text={}',
+        'rues': 'https://translate.google.com/?sl=ru&tl=es&op=translate&text={}',
+        'trans': 'https://translate.google.com/?sl=auto&tl=auto&op=translate&text={}',
+        'sound': 'https://soundcloud.com/search/sets?q={}',
         'github': 'https://github.com/search?type=code&q={}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',

@@ -14,10 +14,9 @@ import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 textProps :: Model -> ATraversal' Model [TextProp Unique] -> [View Action]
-textProps st optic =
-  zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-    >>= textPropInputs st optic
-    . fst
+textProps st optic = (<> [newButton optic]) $ do
+  idx <- fst <$> zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
+  textPropInputs st optic idx
 
 textPropInputs ::
   Model ->
@@ -49,26 +48,44 @@ textPropInputs st optic idx =
       $ cloneTraversal optic
       . ix idx
       . #textPropValueQrCode,
-    button ("Duplicate " <> idxTxt) $ Misc.duplicateAt st optic idx,
-    button ("Remove " <> idxTxt) $ Misc.removeAt st optic idx
+    smallButton ("Duplicate note " <> idxTxt) $ Misc.duplicateAt st optic idx,
+    smallButton ("Remove note " <> idxTxt) $ Misc.removeAt st optic idx
   ]
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
 
-button ::
-  forall a action.
-  ( From a String
-  ) =>
-  a ->
-  action ->
-  View action
-button label action =
-  LayoutGrid.cell
+newButton :: ATraversal' Model [TextProp Unique] -> View Action
+newButton optic =
+  bigButton @Text "Add new note" . PushUpdate $ do
+    el <- newTextProp mempty mempty
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [el]))
+
+bigButton :: forall a action. (From a String) => a -> action -> View action
+bigButton =
+  button @a @action
+    [ LayoutGrid.span12
+    ]
+
+smallButton :: forall a action. (From a String) => a -> action -> View action
+smallButton =
+  button @a @action
     [ LayoutGrid.span3Desktop,
       LayoutGrid.span2Tablet,
       LayoutGrid.span2Phone
     ]
+
+button ::
+  forall a action.
+  ( From a String
+  ) =>
+  [Attribute action] ->
+  a ->
+  action ->
+  View action
+button attrs label action =
+  LayoutGrid.cell
+    attrs
     [ Button.raised
         ( Button.setOnClick action
             . Button.setAttributes

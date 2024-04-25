@@ -29,7 +29,8 @@ paymentMethodsWidget ::
   Int ->
   [View Action]
 paymentMethodsWidget st optic idx =
-  [ Amount.amountSelect
+  [ Misc.titleWidget $ "Method " <> idxTxt,
+    Amount.amountSelect
       st
       ( cloneTraversal optic
           . ix idx
@@ -56,8 +57,10 @@ paymentMethodsWidget st optic idx =
           . ix idx
           . #paymentMethodTextProps
       )
-    <> [ button ("Duplicate " <> idxTxt) $ Misc.duplicateAt st optic idx,
-         button ("Remove " <> idxTxt) $ Misc.removeAt st optic idx
+    <> [ button ("Duplicate method " <> idxTxt)
+          $ Misc.duplicateAt st optic idx,
+         button ("Remove method " <> idxTxt)
+          $ Misc.removeAt st optic idx
        ]
   where
     idxTxt :: Text

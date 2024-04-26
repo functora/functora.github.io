@@ -14,6 +14,7 @@ module App.Types
     Screen (..),
     Asset (..),
     TopOrBottom (..),
+    HeaderOrFooter (..),
     OnlineOrOffline (..),
     newModel,
     newUnique,
@@ -24,6 +25,7 @@ module App.Types
     TextProp (..),
     newTextProp,
     newPaymentMethod,
+    newAsset,
   )
 where
 
@@ -213,6 +215,12 @@ data TopOrBottom
   | Bottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType TopOrBottom
+
+data HeaderOrFooter
+  = Header
+  | Footer
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType HeaderOrFooter
 
 data OnlineOrOffline
   = Online

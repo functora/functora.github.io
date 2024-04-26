@@ -127,6 +127,9 @@ updateModel (PushUpdate newUpdater) st = do
     [ do
         updater <- newUpdater
         Misc.pushActionQueue st updater
+        void . spawnLink $ do
+          sleepMilliSeconds 300
+          Misc.pushActionQueue st $ ChanItem 0 id
         pure Noop
     ]
 

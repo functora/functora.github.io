@@ -12,6 +12,9 @@ module App.Misc
     removeAt,
     titleWidget,
     getSomeCurrency,
+    newAssetAction,
+    newTextPropAction,
+    newPaymentMethodAction,
   )
 where
 
@@ -186,3 +189,22 @@ getSomeCurrency st cur =
   fromMaybe (head currencies) $ find ((== cur) . currencyInfoCode) currencies
   where
     currencies = st ^. #modelCurrencies
+
+newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
+newAssetAction st optic =
+  PushUpdate $ do
+    item <- newAsset mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
+
+newTextPropAction :: ATraversal' Model [TextProp Unique] -> Action
+newTextPropAction optic =
+  PushUpdate $ do
+    item <- newTextProp mempty mempty
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
+
+newPaymentMethodAction ::
+  Model -> ATraversal' Model [PaymentMethod Unique] -> Action
+newPaymentMethodAction st optic =
+  PushUpdate $ do
+    item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))

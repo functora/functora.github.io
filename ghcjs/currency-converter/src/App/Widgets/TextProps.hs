@@ -6,16 +6,22 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
+import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
-textProps :: Model -> ATraversal' Model [TextProp Unique] -> [View Action]
-textProps st optic = (<> [newButton optic]) $ do
-  idx <- fst <$> zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  textPropInputs st optic idx
+textProps ::
+  HeaderOrFooter -> Model -> ATraversal' Model [TextProp Unique] -> [View Action]
+textProps hof st optic =
+  case hof of
+    Header -> (Header.header "Details" (Just (Misc.newTextPropAction optic)) :)
+    Footer -> (<> [footer optic])
+    $ do
+      idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
+      textPropInputs st optic idx
 
 textPropInputs ::
   Model ->
@@ -60,8 +66,8 @@ textPropInputs st optic idx =
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
 
-newButton :: ATraversal' Model [TextProp Unique] -> View Action
-newButton optic =
+footer :: ATraversal' Model [TextProp Unique] -> View Action
+footer optic =
   Button.bigButton @Text mempty "Add new note" . PushUpdate $ do
     el <- newTextProp mempty mempty
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [el]))

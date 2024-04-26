@@ -84,27 +84,9 @@ screenWidget st@Model {modelScreen = Converter} =
         Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = DocumentEditor} =
-  [ headerWidget "Header"
-  ]
-    <> TextProps.textProps st (#modelState . #stateTextProps)
-    <> [ headerWidget "Line items"
-       ]
+  TextProps.textProps Header st (#modelState . #stateTextProps)
     <> Assets.assets st (#modelState . #stateAssets)
-    <> [ headerWidget "Payment methods"
-       ]
     <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
-
-headerWidget :: Text -> View Action
-headerWidget txt =
-  LayoutGrid.cell
-    [ LayoutGrid.span12,
-      Typography.headline5,
-      style_
-        [ ("text-align", "center")
-        ]
-    ]
-    [ Miso.text $ ms txt
-    ]
 
 swapScreenWidget :: Model -> View Action
 swapScreenWidget st =

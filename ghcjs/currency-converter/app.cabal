@@ -25,6 +25,7 @@ common pkg
     App.Widgets.Assets
     App.Widgets.Button
     App.Widgets.Currency
+    App.Widgets.Header
     App.Widgets.Main
     App.Widgets.PaymentMethods
     App.Widgets.Switch

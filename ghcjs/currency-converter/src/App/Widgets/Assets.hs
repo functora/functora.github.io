@@ -8,23 +8,24 @@ import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.Header as Header
 import qualified App.Widgets.TextInput as TextInput
-import Functora.Prelude as Prelude
+import Functora.Prelude
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
 assets st optic =
-  zip [0 :: Int ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-    >>= assetsWidget st optic
-    . fst
+  (Header.header "Assets" (Just (Misc.newAssetAction st optic)) :) $ do
+    idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
+    assetWidget st optic idx
 
-assetsWidget ::
+assetWidget ::
   Model ->
   ATraversal' Model [Asset Unique] ->
   Int ->
   [View Action]
-assetsWidget st optic idx =
+assetWidget st optic idx =
   [ TextInput.textInput
       st
       ( cloneTraversal optic

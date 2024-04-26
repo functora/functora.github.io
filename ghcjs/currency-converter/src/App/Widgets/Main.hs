@@ -4,6 +4,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Assets as Assets
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.TextProps as TextProps
@@ -11,7 +12,6 @@ import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
@@ -108,38 +108,28 @@ headerWidget txt =
 
 swapScreenWidget :: Model -> View Action
 swapScreenWidget st =
-  LayoutGrid.cell
-    [ LayoutGrid.span12
-    ]
-    . (: mempty)
-    . Button.raised
-      ( Button.setOnClick onClickAction
-          . Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
-          $ Button.config
-      )
-    $ case st ^. #modelScreen of
-      Converter -> "Create invoice"
-      DocumentEditor -> "Show converter"
-  where
-    onClickAction =
-      PushUpdate $ do
-        --
-        -- NOTE : Force sync text inputs on new screen.
-        --
-        Misc.forceRender st
-        pure
-          $ ChanItem
-            0
-            ( &
-                #modelScreen
-                  %~ ( \case
-                        Converter -> DocumentEditor
-                        DocumentEditor -> Converter
-                     )
-            )
+  Button.bigButton @Text
+    [Theme.secondaryBg]
+    ( case st ^. #modelScreen of
+        Converter -> "Create invoice"
+        DocumentEditor -> "Show converter"
+    )
+    . PushUpdate
+    $ do
+      --
+      -- NOTE : Force sync text inputs on new screen.
+      --
+      Misc.forceRender st
+      pure
+        $ ChanItem
+          0
+          ( &
+              #modelScreen
+                %~ ( \case
+                      Converter -> DocumentEditor
+                      DocumentEditor -> Converter
+                   )
+          )
 
 tosWidget :: View Action
 tosWidget =

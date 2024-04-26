@@ -11,10 +11,12 @@ module App.Misc
     duplicateAt,
     removeAt,
     titleWidget,
+    getSomeCurrency,
   )
 where
 
 import App.Types
+import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.LayoutGrid as LayoutGrid
@@ -178,3 +180,9 @@ titleWidget txt =
     ]
     [ Miso.text $ ms txt
     ]
+
+getSomeCurrency :: Model -> CurrencyCode -> CurrencyInfo
+getSomeCurrency st cur =
+  fromMaybe (head currencies) $ find ((== cur) . currencyInfoCode) currencies
+  where
+    currencies = st ^. #modelCurrencies

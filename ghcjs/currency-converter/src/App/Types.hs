@@ -23,6 +23,7 @@ module App.Types
     newIdentityState,
     TextProp (..),
     newTextProp,
+    newPaymentMethod,
   )
 where
 

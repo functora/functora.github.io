@@ -23,6 +23,7 @@ common pkg
     App.Types
     App.Widgets.Amount
     App.Widgets.Assets
+    App.Widgets.Button
     App.Widgets.Currency
     App.Widgets.Main
     App.Widgets.PaymentMethods

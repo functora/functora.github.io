@@ -10,7 +10,6 @@ module App.Misc
     forceRender,
     duplicateAt,
     removeAt,
-    titleWidget,
     getSomeCurrency,
     newAssetAction,
     newTextPropAction,
@@ -22,11 +21,8 @@ import App.Types
 import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
-import qualified Material.Typography as Typography
 import Miso hiding (view)
-import Miso.String (ms)
 
 getConverterAmountOptic ::
   ( Functor f
@@ -171,18 +167,6 @@ removeAt st optic idx =
     pure
       . ChanItem 0
       $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
-
-titleWidget :: Text -> View Action
-titleWidget txt =
-  LayoutGrid.cell
-    [ LayoutGrid.span12,
-      Typography.body1,
-      style_
-        [ ("text-align", "center")
-        ]
-    ]
-    [ Miso.text $ ms txt
-    ]
 
 getSomeCurrency :: Model -> CurrencyCode -> CurrencyInfo
 getSomeCurrency st cur =

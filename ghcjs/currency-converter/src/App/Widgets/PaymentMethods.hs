@@ -29,29 +29,29 @@ paymentMethodWidget ::
   Int ->
   [View Action]
 paymentMethodWidget st optic idx =
-  [ Misc.titleWidget $ "Method " <> idxTxt
+  [ Header.subHeader ("Method " <> idxTxt),
+    Header.navHeader $ Header.newNav st optic idx,
+    Amount.amountSelect
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #paymentMethodMoney
+          . #moneyAmount
+      )
+      ( Amount.opts
+          & #optsDisabled
+          .~ True
+          & #optsPlaceholder
+          .~ ("Total " <> idxTxt)
+      ),
+    Currency.currencySelect
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #paymentMethodMoney
+          . #moneyCurrency
+      )
   ]
-    <> [ Amount.amountSelect
-          st
-          ( cloneTraversal optic
-              . ix idx
-              . #paymentMethodMoney
-              . #moneyAmount
-          )
-          ( Amount.opts
-              & #optsDisabled
-              .~ True
-              & #optsPlaceholder
-              .~ ("Total " <> idxTxt)
-          ),
-         Currency.currencySelect
-          st
-          ( cloneTraversal optic
-              . ix idx
-              . #paymentMethodMoney
-              . #moneyCurrency
-          )
-       ]
     <> TextProps.textProps
       Footer
       st

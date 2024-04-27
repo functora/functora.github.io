@@ -1,11 +1,17 @@
 module App.Widgets.Header
   ( header,
+    subHeader,
+    Nav (..),
+    newNav,
+    navHeader,
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import Functora.Prelude
 import qualified Material.Fab as Fab
+import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
@@ -33,3 +39,86 @@ header txt action =
           ]
       )
       action
+
+subHeader :: Text -> View Action
+subHeader txt =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span4Phone,
+      Typography.headline5,
+      style_
+        [ ("display", "flex"),
+          ("align-items", "center"),
+          ("justify-content", "center"),
+          ("text-align", "center")
+        ]
+    ]
+    [ Miso.text $ ms txt
+    ]
+
+data Nav = Nav
+  { navDown :: Action,
+    navUp :: Action,
+    navDuplicate :: Action,
+    navRemove :: Action,
+    navAdd :: Maybe Action
+  }
+  deriving stock (Generic)
+
+newNav :: (Data a) => Model -> ATraversal' Model [a] -> Int -> Nav
+newNav st optic idx =
+  Nav
+    { navDown = Noop,
+      navUp = Noop,
+      navDuplicate = Misc.duplicateAt st optic idx,
+      navRemove = Misc.removeAt st optic idx,
+      navAdd = Just Noop
+    }
+
+navHeader :: Nav -> View Action
+navHeader nav =
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span4Phone,
+      Typography.headline5,
+      style_
+        [ ("display", "flex"),
+          ("align-items", "center"),
+          ("justify-content", "space-between"),
+          ("text-align", "center")
+        ]
+    ]
+    $ [ IconButton.iconButton
+          ( IconButton.config
+              & IconButton.setOnClick (navDown nav)
+          )
+          "keyboard_double_arrow_down",
+        IconButton.iconButton
+          ( IconButton.config
+              & IconButton.setOnClick (navUp nav)
+          )
+          "keyboard_double_arrow_up",
+        IconButton.iconButton
+          ( IconButton.config
+              & IconButton.setOnClick (navDuplicate nav)
+          )
+          "library_add",
+        IconButton.iconButton
+          ( IconButton.config
+              & IconButton.setOnClick (navRemove nav)
+          )
+          "delete_forever"
+      ]
+    <> maybe
+      mempty
+      ( \action ->
+          [ IconButton.iconButton
+              ( IconButton.config
+                  & IconButton.setOnClick action
+              )
+              "post_add"
+          ]
+      )
+      (navAdd nav)

@@ -126,6 +126,11 @@ currencyListWidget st optic =
         (st ^? cloneTraversal optic . #currencyInput . #uniqueValue)
     matching =
       nonEmpty
+        --
+        -- TODO : filter not by exact word order,
+        -- but by all possible permutations as well,
+        -- with bigger priority for original query.
+        --
         $ Fuzzy.filter
           search
           ( toList $ st ^. #modelCurrencies

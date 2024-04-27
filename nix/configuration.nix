@@ -49,7 +49,6 @@
           "postimees.ee"
           "rumble.com"
           "t.me"
-          "odysee.com"
           "twitter.com"
           "twitch.tv"
           "tiendamia.com"
@@ -58,6 +57,9 @@
           "discord.com"
           "telegram.org"
           "youtube.com"
+          # "odysee.com"
+          # "bastyon.com"
+          # "bitchute.com"
         ]
         else []
       ));

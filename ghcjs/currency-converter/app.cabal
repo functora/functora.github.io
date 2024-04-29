@@ -24,6 +24,7 @@ common pkg
     App.Widgets.Amount
     App.Widgets.Assets
     App.Widgets.Button
+    App.Widgets.Chips
     App.Widgets.Currency
     App.Widgets.Header
     App.Widgets.Main

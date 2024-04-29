@@ -5,12 +5,10 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
-import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 textProps ::
@@ -18,17 +16,17 @@ textProps ::
 textProps hof st optic =
   case hof of
     Header -> (Header.header "Details" (Just (Misc.newTextPropAction optic)) :)
-    Footer -> (<> [footer optic])
+    Footer -> id
     $ do
       idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-      textPropInputs st optic idx
+      textPropWidget st optic idx
 
-textPropInputs ::
+textPropWidget ::
   Model ->
   ATraversal' Model [TextProp Unique] ->
   Int ->
   [View Action]
-textPropInputs st optic idx =
+textPropWidget st optic idx =
   [ TextInput.textInput
       st
       ( cloneTraversal optic
@@ -53,21 +51,8 @@ textPropInputs st optic idx =
       $ cloneTraversal optic
       . ix idx
       . #textPropValueQrCode,
-    Button.smallButton
-      [Theme.secondaryBg]
-      ("Duplicate note " <> idxTxt)
-      $ Misc.duplicateAt st optic idx,
-    Button.smallButton
-      [Theme.secondaryBg]
-      ("Remove note " <> idxTxt)
-      $ Misc.removeAt st optic idx
+    Header.navHeaderSimple st optic idx
   ]
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
-
-footer :: ATraversal' Model [TextProp Unique] -> View Action
-footer optic =
-  Button.bigButton @Text mempty "Add new note" . PushUpdate $ do
-    el <- newTextProp mempty mempty
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [el]))

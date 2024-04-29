@@ -1,9 +1,8 @@
 module App.Widgets.Header
   ( header,
     subHeader,
-    Nav (..),
-    newNav,
-    navHeader,
+    navHeaderComplex,
+    navHeaderSimple,
   )
 where
 
@@ -66,15 +65,51 @@ data Nav = Nav
   }
   deriving stock (Generic)
 
-newNav :: (Data a) => Model -> ATraversal' Model [a] -> Int -> Nav
-newNav st optic idx =
-  Nav
-    { navDown = Noop,
-      navUp = Noop,
-      navDuplicate = Misc.duplicateAt st optic idx,
-      navRemove = Misc.removeAt st optic idx,
-      navAdd = Just Noop
-    }
+navHeaderComplex ::
+  ( Data a
+  ) =>
+  Model ->
+  ATraversal' Model [a] ->
+  ATraversal' a [TextProp Unique] ->
+  Int ->
+  View Action
+navHeaderComplex st optic props idx =
+  --
+  -- TODO : implement all
+  --
+  navHeader
+    Nav
+      { navDown = Noop,
+        navUp = Noop,
+        navDuplicate = Misc.duplicateAt st optic idx,
+        navRemove = Misc.removeAt st optic idx,
+        navAdd =
+          Just
+            . Misc.newTextPropAction
+            $ cloneTraversal optic
+            . ix idx
+            . props
+      }
+
+navHeaderSimple ::
+  ( Data a
+  ) =>
+  Model ->
+  ATraversal' Model [a] ->
+  Int ->
+  View Action
+navHeaderSimple st optic idx =
+  --
+  -- TODO : implement all
+  --
+  navHeader
+    Nav
+      { navDown = Noop,
+        navUp = Noop,
+        navDuplicate = Misc.duplicateAt st optic idx,
+        navRemove = Misc.removeAt st optic idx,
+        navAdd = Nothing
+      }
 
 navHeader :: Nav -> View Action
 navHeader nav =

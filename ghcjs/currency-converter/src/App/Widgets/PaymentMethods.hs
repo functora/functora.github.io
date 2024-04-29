@@ -6,12 +6,10 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Amount as Amount
-import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude as Prelude
-import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 paymentMethods ::
@@ -30,7 +28,7 @@ paymentMethodWidget ::
   [View Action]
 paymentMethodWidget st optic idx =
   [ Header.subHeader ("Method " <> idxTxt),
-    Header.navHeader $ Header.newNav st optic idx,
+    Header.navHeaderComplex st optic #paymentMethodTextProps idx,
     Amount.amountSelect
       st
       ( cloneTraversal optic
@@ -59,15 +57,6 @@ paymentMethodWidget st optic idx =
           . ix idx
           . #paymentMethodTextProps
       )
-    <> [ Button.mediumButton
-          [Theme.secondaryBg]
-          ("Duplicate method " <> idxTxt)
-          $ Misc.duplicateAt st optic idx,
-         Button.mediumButton
-          [Theme.secondaryBg]
-          ("Remove method " <> idxTxt)
-          $ Misc.removeAt st optic idx
-       ]
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)

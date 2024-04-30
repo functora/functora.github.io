@@ -5,11 +5,11 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Chips as Chips
 import qualified App.Widgets.Header as Header
+import qualified App.Widgets.IconToggles as IconToggles
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
-import qualified Material.Chip.Filter as Filter
+import qualified Material.IconToggle as IconToggle
 import Miso hiding (at, view)
 
 textProps ::
@@ -28,7 +28,31 @@ textPropWidget ::
   Int ->
   [View Action]
 textPropWidget st optic idx =
-  [ TextInput.textInput
+  [ IconToggles.iconToggles
+      st
+      [ ( "Value " <> idxTxt <> " text",
+          IconToggle.icon "font_download",
+          IconToggle.icon "font_download_off",
+          cloneTraversal optic . ix idx . #textPropValuePlainText
+        ),
+        ( "Value " <> idxTxt <> " QR code",
+          IconToggle.icon "qr_code_2",
+          IconToggle.icon "developer_board_off",
+          cloneTraversal optic . ix idx . #textPropValueQrCode
+        ),
+        ( "Value " <> idxTxt <> " link",
+          IconToggle.icon "link",
+          IconToggle.icon "link_off",
+          cloneTraversal optic . ix idx . #textPropValueLink
+        ),
+        ( "Value " <> idxTxt <> " HTML",
+          IconToggle.icon "code",
+          IconToggle.icon "code_off",
+          cloneTraversal optic . ix idx . #textPropValueHtml
+        )
+      ],
+    Header.navHeaderSimple st optic idx,
+    TextInput.textInput
       st
       ( cloneTraversal optic
           . ix idx
@@ -47,27 +71,7 @@ textPropWidget st optic idx =
       ( TextInput.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
-      ),
-    Chips.chips
-      st
-      [ ( "Text",
-          Just $ Filter.icon "title",
-          cloneTraversal optic . ix idx . #textPropValuePlainText
-        ),
-        ( "QR",
-          Just $ Filter.icon "qr_code_2",
-          cloneTraversal optic . ix idx . #textPropValueQrCode
-        ),
-        ( "Link",
-          Just $ Filter.icon "link",
-          cloneTraversal optic . ix idx . #textPropValueLink
-        ),
-        ( "HTML",
-          Just $ Filter.icon "code",
-          cloneTraversal optic . ix idx . #textPropValueHtml
-        )
-      ],
-    Header.navHeaderSimple st optic idx
+      )
   ]
   where
     idxTxt :: Text

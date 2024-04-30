@@ -27,6 +27,7 @@ common pkg
     App.Widgets.Chips
     App.Widgets.Currency
     App.Widgets.Header
+    App.Widgets.IconToggles
     App.Widgets.Main
     App.Widgets.PaymentMethods
     App.Widgets.Switch

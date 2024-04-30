@@ -8,7 +8,7 @@ import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Header as Header
-import qualified App.Widgets.TextInput as TextInput
+import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude
 import Miso hiding (at, view)
 
@@ -24,29 +24,7 @@ assetWidget ::
   Int ->
   [View Action]
 assetWidget st optic idx =
-  [ Header.subHeader ("Item " <> idxTxt),
-    Header.navHeaderSimple st optic idx,
-    TextInput.textInput
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #assetDescription
-      )
-      ( TextInput.opts
-          & #optsPlaceholder
-          .~ ("Description " <> idxTxt)
-      ),
-    Amount.amountSelect
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #assetQuantity
-      )
-      ( Amount.opts
-          & #optsPlaceholder
-          .~ ("Quantity " <> idxTxt)
-      ),
-    Amount.amountSelect
+  [ Amount.amountSelect
       st
       ( cloneTraversal optic
           . ix idx
@@ -63,8 +41,26 @@ assetWidget st optic idx =
           . ix idx
           . #assetPrice
           . #moneyCurrency
+      ),
+    Amount.amountSelect
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #assetQuantity
       )
+      ( Amount.opts
+          & #optsPlaceholder
+          .~ ("Quantity " <> idxTxt)
+      ),
+    Header.navHeaderComplex st optic #assetTextProps idx mempty
   ]
+    <> TextProps.textProps
+      Footer
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #assetTextProps
+      )
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)

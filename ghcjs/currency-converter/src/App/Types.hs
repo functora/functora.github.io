@@ -229,9 +229,9 @@ data OnlineOrOffline
   deriving (ToJSON, FromJSON) via GenericType OnlineOrOffline
 
 data Asset f = Asset
-  { assetDescription :: f Text,
+  { assetPrice :: Money f,
     assetQuantity :: Amount f,
-    assetPrice :: Money f
+    assetTextProps :: [TextProp f]
   }
   deriving stock (Generic)
 
@@ -274,7 +274,7 @@ newModel = do
   bottomMoney <- newMoney 0 usd
   issuer <- newTextProp "Issuer" "Alice LLC"
   client <- newTextProp "Client" "Bob"
-  asset <- newAsset "Jeans" 100 usd
+  asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
   let st =
         Model
@@ -454,12 +454,14 @@ newPaymentMethod amt cur = do
     <$> newMoney amt cur
     <*> pure [address, notes]
 
-newAsset :: (MonadIO m) => Text -> Rational -> CurrencyInfo -> m (Asset Unique)
-newAsset txt amt cur =
+newAsset ::
+  (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
+newAsset label value amt cur = do
+  item <- newTextProp label value
   Asset
-    <$> newUnique txt
+    <$> newMoney amt cur
     <*> newAmount 1
-    <*> newMoney amt cur
+    <*> pure [item]
 
 newIdentityState :: St Unique -> St Identity
 newIdentityState =

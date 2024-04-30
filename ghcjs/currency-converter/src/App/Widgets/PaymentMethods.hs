@@ -10,6 +10,7 @@ import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude as Prelude
+import qualified Material.LayoutGrid as LayoutGrid
 import Miso hiding (at, view)
 
 paymentMethods ::
@@ -27,9 +28,7 @@ paymentMethodWidget ::
   Int ->
   [View Action]
 paymentMethodWidget st optic idx =
-  [ Header.subHeader ("Method " <> idxTxt),
-    Header.navHeaderComplex st optic #paymentMethodTextProps idx,
-    Amount.amountSelect
+  [ Amount.amountSelect
       st
       ( cloneTraversal optic
           . ix idx
@@ -48,7 +47,8 @@ paymentMethodWidget st optic idx =
           . ix idx
           . #paymentMethodMoney
           . #moneyCurrency
-      )
+      ),
+    Header.navHeaderComplex st optic #paymentMethodTextProps idx [LayoutGrid.span12]
   ]
     <> TextProps.textProps
       Footer

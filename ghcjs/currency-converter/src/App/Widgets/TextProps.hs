@@ -28,7 +28,27 @@ textPropWidget ::
   Int ->
   [View Action]
 textPropWidget st optic idx =
-  [ IconToggles.iconToggles
+  [ TextInput.textInput
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #textPropKey
+      )
+      ( TextInput.opts
+          & #optsPlaceholder
+          .~ ("Label " <> idxTxt)
+      ),
+    TextInput.textInput
+      st
+      ( cloneTraversal optic
+          . ix idx
+          . #textPropValue
+      )
+      ( TextInput.opts
+          & #optsPlaceholder
+          .~ ("Value " <> idxTxt)
+      ),
+    IconToggles.iconToggles
       st
       [ ( "Value " <> idxTxt <> " text",
           IconToggle.icon "font_download",
@@ -51,27 +71,7 @@ textPropWidget st optic idx =
           cloneTraversal optic . ix idx . #textPropValueHtml
         )
       ],
-    Header.navHeaderSimple st optic idx,
-    TextInput.textInput
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #textPropKey
-      )
-      ( TextInput.opts
-          & #optsPlaceholder
-          .~ ("Label " <> idxTxt)
-      ),
-    TextInput.textInput
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #textPropValue
-      )
-      ( TextInput.opts
-          & #optsPlaceholder
-          .~ ("Value " <> idxTxt)
-      )
+    Header.navHeaderSimple st optic idx
   ]
   where
     idxTxt :: Text

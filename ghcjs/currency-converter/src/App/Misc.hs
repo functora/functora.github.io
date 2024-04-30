@@ -177,7 +177,7 @@ getSomeCurrency st cur =
 newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
-    item <- newAsset mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
+    item <- newAsset mempty mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
 
 newTextPropAction :: ATraversal' Model [TextProp Unique] -> Action

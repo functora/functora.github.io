@@ -12,6 +12,7 @@ import Functora.Prelude
 import qualified Material.Fab as Fab
 import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
+import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
@@ -33,6 +34,7 @@ header txt action =
             Fab.fab
               ( Fab.config
                   & Fab.setOnClick act
+                  & Fab.setAttributes [Theme.secondaryBg]
               )
               "add"
           ]
@@ -61,7 +63,8 @@ data Nav = Nav
     navUp :: Action,
     navDuplicate :: Action,
     navRemove :: Action,
-    navAdd :: Maybe Action
+    navAdd :: Maybe Action,
+    navButtonStyle :: [Attribute Action]
   }
   deriving stock (Generic)
 
@@ -72,12 +75,21 @@ navHeaderComplex ::
   ATraversal' Model [a] ->
   ATraversal' a [TextProp Unique] ->
   Int ->
+  [Attribute Action] ->
   View Action
-navHeaderComplex st optic props idx =
+navHeaderComplex st optic props idx attrs =
   --
   -- TODO : implement all
   --
   navHeader
+    ( if null attrs
+        then
+          [ LayoutGrid.span6Desktop,
+            LayoutGrid.span4Tablet,
+            LayoutGrid.span4Phone
+          ]
+        else attrs
+    )
     Nav
       { navDown = Noop,
         navUp = Noop,
@@ -88,7 +100,10 @@ navHeaderComplex st optic props idx =
             . Misc.newTextPropAction
             $ cloneTraversal optic
             . ix idx
-            . props
+            . props,
+        navButtonStyle =
+          [ Theme.primary
+          ]
       }
 
 navHeaderSimple ::
@@ -103,46 +118,53 @@ navHeaderSimple st optic idx =
   -- TODO : implement all
   --
   navHeader
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span4Phone
+    ]
     Nav
       { navDown = Noop,
         navUp = Noop,
         navDuplicate = Misc.duplicateAt st optic idx,
         navRemove = Misc.removeAt st optic idx,
-        navAdd = Nothing
+        navAdd = Nothing,
+        navButtonStyle = mempty
       }
 
-navHeader :: Nav -> View Action
-navHeader nav =
+navHeader :: [Attribute Action] -> Nav -> View Action
+navHeader style nav =
   LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      Typography.headline5,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center"),
-          ("justify-content", "space-between"),
-          ("text-align", "center")
-        ]
-    ]
+    ( style
+        <> [ style_
+              [ ("display", "flex"),
+                ("align-items", "center"),
+                ("justify-content", "space-between"),
+                ("text-align", "center")
+              ]
+           ]
+    )
     $ [ IconButton.iconButton
           ( IconButton.config
               & IconButton.setOnClick (navDown nav)
+              & IconButton.setAttributes buttonAttrs
           )
           "keyboard_double_arrow_down",
         IconButton.iconButton
           ( IconButton.config
               & IconButton.setOnClick (navUp nav)
+              & IconButton.setAttributes buttonAttrs
           )
           "keyboard_double_arrow_up",
         IconButton.iconButton
           ( IconButton.config
               & IconButton.setOnClick (navDuplicate nav)
+              & IconButton.setAttributes buttonAttrs
           )
           "library_add",
         IconButton.iconButton
           ( IconButton.config
               & IconButton.setOnClick (navRemove nav)
+              & IconButton.setAttributes buttonAttrs
           )
           "delete_forever"
       ]
@@ -157,3 +179,5 @@ navHeader nav =
           ]
       )
       (navAdd nav)
+  where
+    buttonAttrs = navButtonStyle nav

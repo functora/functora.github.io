@@ -472,7 +472,10 @@ newUniqueState =
 data TextProp f = TextProp
   { textPropKey :: f Text,
     textPropValue :: f Text,
-    textPropValueQrCode :: Bool
+    textPropValuePlainText :: Bool,
+    textPropValueQrCode :: Bool,
+    textPropValueLink :: Bool,
+    textPropValueHtml :: Bool
   }
   deriving stock (Generic)
 
@@ -503,4 +506,7 @@ newTextProp key val =
   TextProp
     <$> newUnique key
     <*> newUnique val
+    <*> pure True
+    <*> pure False
+    <*> pure False
     <*> pure False

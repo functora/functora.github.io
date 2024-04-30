@@ -5,10 +5,11 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Chips as Chips
 import qualified App.Widgets.Header as Header
-import qualified App.Widgets.Switch as Switch
 import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
+import qualified Material.Chip.Filter as Filter
 import Miso hiding (at, view)
 
 textProps ::
@@ -47,10 +48,25 @@ textPropWidget st optic idx =
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
       ),
-    Switch.switch st ("Value " <> idxTxt <> " QR code")
-      $ cloneTraversal optic
-      . ix idx
-      . #textPropValueQrCode,
+    Chips.chips
+      st
+      [ ( "Text",
+          Just $ Filter.icon "title",
+          cloneTraversal optic . ix idx . #textPropValuePlainText
+        ),
+        ( "QR",
+          Just $ Filter.icon "qr_code_2",
+          cloneTraversal optic . ix idx . #textPropValueQrCode
+        ),
+        ( "Link",
+          Just $ Filter.icon "link",
+          cloneTraversal optic . ix idx . #textPropValueLink
+        ),
+        ( "HTML",
+          Just $ Filter.icon "code",
+          cloneTraversal optic . ix idx . #textPropValueHtml
+        )
+      ],
     Header.navHeaderSimple st optic idx
   ]
   where

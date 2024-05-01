@@ -137,5 +137,6 @@ test-suite app-test
   build-depends:
     , aeson
     , hspec
+    , optics-core
     , QuickCheck
     , quickcheck-instances

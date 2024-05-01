@@ -1,10 +1,29 @@
 module App.TypesSpec (spec) where
 
 import qualified Data.Aeson as A
+import qualified Data.Generics as Syb
 import Functora.Prelude
+import qualified Optics.Generic as Ops
+import qualified Optics.Setter as Ops
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Instances ()
+
+data Expr
+  = Lit Int
+  | Add Expr Expr
+  | Sub Expr Expr
+  | Mul Expr Expr
+  deriving (Eq, Ord, Show, Data, Generic)
+
+expr :: Expr
+expr = Add (Sub (Lit 1) (Lit 2)) (Lit 3)
+
+f :: Expr -> Expr
+f = \case
+  Add a b -> Mul a b
+  Lit i -> Lit (i + 1)
+  a -> a
 
 spec :: Spec
 spec = do
@@ -16,3 +35,15 @@ spec = do
     txtJson `shouldBe` wrapJson
     A.decode txtJson `shouldBe` Just txt
     A.decode wrapJson `shouldBe` Just wrap
+  it "syb/everywhere"
+    -- good?
+    $ Syb.everywhere (Syb.mkT f) expr
+    `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
+  it "generic-lens/types"
+    -- bad?
+    $ over types f expr
+    `shouldBe` Mul (Sub (Lit 1) (Lit 2)) (Lit 3)
+  it "optics-core/gplate"
+    -- bad?
+    $ Ops.over Ops.gplate f expr
+    `shouldBe` Add (Sub (Lit 1) (Lit 2)) (Lit 4)

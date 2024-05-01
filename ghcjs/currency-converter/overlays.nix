@@ -97,6 +97,21 @@
               ver = "2.1.1.0";
               sha256 = "KK6vVyb2a+oiRvNK8eXVJa3lNCPykpelN4XHQCmSxWk=";
             } {};
+            optics-core = self.callHackageDirect {
+              pkg = "optics-core";
+              ver = "0.4.1.1";
+              sha256 = "+f0EQFLOZQcQj9ENU9EDJpFIT2qxd3CuQ+6xgIohndg=";
+            } {};
+            indexed-traversable = self.callHackageDirect {
+              pkg = "indexed-traversable";
+              ver = "0.1.3";
+              sha256 = "TQize782MFwR4ac7Q/mJw/FmwzmDPsZRRPwMUICXjHc=";
+            } {};
+            foldable1-classes-compat = self.callHackageDirect {
+              pkg = "foldable1-classes-compat";
+              ver = "0.1";
+              sha256 = "Om6/w38G4ZaBZAGzlFb6ElvU4BCU3aOCXogpIZsm4RE=";
+            } {};
             #
             # Local
             #

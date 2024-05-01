@@ -26,6 +26,15 @@ module App.Types
     newTextProp,
     newPaymentMethod,
     newAsset,
+    DynType (..),
+    DynOutput (..),
+    dynOutputType,
+    parseDynOutput,
+    inspectDynOutput,
+    DynValue (..),
+    newDynValue,
+    DynProp (..),
+    newDynProp,
   )
 where
 
@@ -508,6 +517,111 @@ newTextProp key val =
   TextProp
     <$> newUnique key
     <*> newUnique val
+    <*> pure True
+    <*> pure False
+    <*> pure False
+    <*> pure False
+
+data DynType
+  = DynTypeText
+  | DynTypeNumber
+  | DynTypePercent
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType DynType
+
+data DynOutput
+  = DynOutputText Text
+  | DynOutputNumber Rational
+  | DynOutputPercent Rational
+  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType DynOutput
+
+dynOutputType :: DynOutput -> DynType
+dynOutputType = \case
+  DynOutputText {} -> DynTypeText
+  DynOutputNumber {} -> DynTypeNumber
+  DynOutputPercent {} -> DynTypePercent
+
+parseDynOutput :: DynValue Unique -> Maybe DynOutput
+parseDynOutput value =
+  case value ^. #dynValueOutput of
+    DynOutputText {} -> Just $ DynOutputText input
+    DynOutputNumber {} -> DynOutputNumber <$> parseRatio input
+    DynOutputPercent {} -> DynOutputPercent <$> parseRatio input
+  where
+    input = value ^. #dynValueInput . #uniqueValue
+
+inspectDynOutput :: DynOutput -> Text
+inspectDynOutput = \case
+  DynOutputText x -> x
+  DynOutputNumber x -> inspectRatioDef x
+  DynOutputPercent x -> inspectRatioDef x
+
+data DynValue f = DynValue
+  { dynValueInput :: f Text,
+    dynValueOutput :: DynOutput
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Std f) => Eq (DynValue f)
+
+deriving stock instance (Std f) => Ord (DynValue f)
+
+deriving stock instance (Std f) => Show (DynValue f)
+
+deriving stock instance (Std f) => Data (DynValue f)
+
+instance FunctorB DynValue
+
+instance TraversableB DynValue
+
+deriving via
+  GenericType (DynValue Identity)
+  instance
+    ToJSON (DynValue Identity)
+
+deriving via
+  GenericType (DynValue Identity)
+  instance
+    FromJSON (DynValue Identity)
+
+newDynValue :: (MonadIO m) => DynOutput -> m (DynValue Unique)
+newDynValue output =
+  DynValue
+    <$> newUnique (inspectDynOutput output)
+    <*> pure output
+
+data DynProp f = DynProp
+  { dynPropKey :: f Text,
+    dynPropValue :: DynValue f,
+    dynPropValuePlainText :: Bool,
+    dynPropValueQrCode :: Bool,
+    dynPropValueLink :: Bool,
+    dynPropValueHtml :: Bool
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Std f) => Eq (DynProp f)
+
+deriving stock instance (Std f) => Ord (DynProp f)
+
+deriving stock instance (Std f) => Show (DynProp f)
+
+deriving stock instance (Std f) => Data (DynProp f)
+
+instance FunctorB DynProp
+
+instance TraversableB DynProp
+
+deriving via GenericType (DynProp Identity) instance ToJSON (DynProp Identity)
+
+deriving via GenericType (DynProp Identity) instance FromJSON (DynProp Identity)
+
+newDynProp :: (MonadIO m) => Text -> DynOutput -> m (DynProp Unique)
+newDynProp key val =
+  DynProp
+    <$> newUnique key
+    <*> newDynValue val
     <*> pure True
     <*> pure False
     <*> pure False

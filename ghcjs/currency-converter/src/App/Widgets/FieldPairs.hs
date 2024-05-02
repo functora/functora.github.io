@@ -1,11 +1,11 @@
-module App.Widgets.DynProps
-  ( dynProps,
+module App.Widgets.FieldPairs
+  ( fieldPairs,
   )
 where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.DynInput as DynInput
+import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.IconToggles as IconToggles
 import qualified App.Widgets.TextInput as TextInput
@@ -13,42 +13,42 @@ import Functora.Prelude as Prelude
 import qualified Material.IconToggle as IconToggle
 import Miso hiding (at, view)
 
-dynProps ::
+fieldPairs ::
   HeaderOrFooter ->
   Model ->
-  ATraversal' Model [DynProp Unique] ->
+  ATraversal' Model [FieldPair Unique] ->
   [View Action]
-dynProps hof st optic =
+fieldPairs hof st optic =
   case hof of
-    Header -> (Header.header "Details" (Just (Misc.newDynPropAction optic)) :)
+    Header -> (Header.header "Details" (Just (Misc.newFieldPairAction optic)) :)
     Footer -> id
     $ do
       idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-      dynPropWidget st optic idx
+      fieldPairWidget st optic idx
 
-dynPropWidget ::
+fieldPairWidget ::
   Model ->
-  ATraversal' Model [DynProp Unique] ->
+  ATraversal' Model [FieldPair Unique] ->
   Int ->
   [View Action]
-dynPropWidget st optic idx =
+fieldPairWidget st optic idx =
   [ TextInput.textInput
       st
       ( cloneTraversal optic
           . ix idx
-          . #dynPropKey
+          . #fieldPairKey
       )
       ( TextInput.opts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
       ),
-    DynInput.dynInput
+    Field.field
       st
       ( cloneTraversal optic
           . ix idx
-          . #dynPropValue
+          . #fieldPairValue
       )
-      ( DynInput.opts
+      ( Field.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
       ),
@@ -57,22 +57,22 @@ dynPropWidget st optic idx =
       [ ( "Value " <> idxTxt <> " text",
           IconToggle.icon "font_download",
           IconToggle.icon "font_download_off",
-          cloneTraversal optic . ix idx . #dynPropValuePlainText
+          cloneTraversal optic . ix idx . #fieldPairValuePlainText
         ),
         ( "Value " <> idxTxt <> " QR code",
           IconToggle.icon "qr_code_2",
           IconToggle.icon "developer_board_off",
-          cloneTraversal optic . ix idx . #dynPropValueQrCode
+          cloneTraversal optic . ix idx . #fieldPairValueQrCode
         ),
         ( "Value " <> idxTxt <> " link",
           IconToggle.icon "link",
           IconToggle.icon "link_off",
-          cloneTraversal optic . ix idx . #dynPropValueLink
+          cloneTraversal optic . ix idx . #fieldPairValueLink
         ),
         ( "Value " <> idxTxt <> " HTML",
           IconToggle.icon "code",
           IconToggle.icon "code_off",
-          cloneTraversal optic . ix idx . #dynPropValueHtml
+          cloneTraversal optic . ix idx . #fieldPairValueHtml
         )
       ],
     Header.navHeaderSimple st optic idx

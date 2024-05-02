@@ -1,13 +1,13 @@
-module App.Widgets.DynInput
+module App.Widgets.Field
   ( Opts (..),
     opts,
-    dynInput,
+    field,
   )
 where
 
 import qualified App.Misc as Misc
 import App.Types
-import Functora.Prelude as Prelude
+import Functora.Prelude hiding (field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.TextField as TextField
@@ -29,12 +29,12 @@ opts =
       optsExtraOnInput = id
     }
 
-dynInput ::
+field ::
   Model ->
-  ATraversal' Model (DynValue Unique) ->
+  ATraversal' Model (FieldValue Unique) ->
   Opts ->
   View Action
-dynInput st optic options =
+field st optic options =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -47,13 +47,13 @@ dynInput st optic options =
         & TextField.setType
           ( fmap
               ( \case
-                  DynOutputText {} -> "text"
-                  DynOutputNumber {} -> "number"
-                  DynOutputPercent {} -> "number"
+                  FieldOutputText {} -> "text"
+                  FieldOutputNumber {} -> "number"
+                  FieldOutputPercent {} -> "number"
               )
               $ st
               ^? cloneTraversal optic
-              . #dynValueOutput
+              . #fieldValueOutput
           )
         & TextField.setOnInput onInputAction
         & TextField.setDisabled (options ^. #optsDisabled)
@@ -96,18 +96,18 @@ dynInput st optic options =
       fromMaybe nilUid
         $ st
         ^? cloneTraversal optic
-        . #dynValueInput
+        . #fieldValueInput
         . #uniqueUid
     getInput st' =
-      st' ^? cloneTraversal optic . #dynValueInput . #uniqueValue
+      st' ^? cloneTraversal optic . #fieldValueInput . #uniqueValue
     getOutput st' = do
-      (st' ^? cloneTraversal optic >>= parseDynOutput)
-        <|> (st' ^? cloneTraversal optic . #dynValueOutput)
+      (st' ^? cloneTraversal optic >>= parseFieldOutput)
+        <|> (st' ^? cloneTraversal optic . #fieldValueOutput)
     getInputReplacement st' = do
-      let next = st' ^? cloneTraversal optic >>= parseDynOutput
+      let next = st' ^? cloneTraversal optic >>= parseFieldOutput
       inp <- getInput st'
       out <- getOutput st'
-      if isJust next || (inp == inspectDynOutput out)
+      if isJust next || (inp == inspectFieldOutput out)
         then Nothing
         else Just out
     onBlurAction =
@@ -116,11 +116,11 @@ dynInput st optic options =
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal optic
-            . #dynValueInput
+            . #fieldValueInput
             . #uniqueValue
-            %~ maybe id (const . inspectDynOutput) (getInputReplacement st')
+            %~ maybe id (const . inspectFieldOutput) (getInputReplacement st')
             & cloneTraversal optic
-            . #dynValueOutput
+            . #fieldValueOutput
             %~ maybe id (const . id) (getOutput st')
     onInputAction txt =
       PushUpdate $ do
@@ -129,13 +129,13 @@ dynInput st optic options =
           let next =
                 prev
                   & cloneTraversal optic
-                  . #dynValueInput
+                  . #fieldValueInput
                   . #uniqueValue
                   .~ from @String @Text txt
                   & (options ^. #optsExtraOnInput)
            in next
                 & cloneTraversal optic
-                . #dynValueOutput
+                . #fieldValueOutput
                 %~ maybe id (const . id) (getOutput next)
     onCopyAction =
       PushUpdate $ do
@@ -156,7 +156,7 @@ dynInput st optic options =
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal optic
-            . #dynValueInput
+            . #fieldValueInput
             . #uniqueValue
             .~ mempty
             & (options ^. #optsExtraOnInput)

@@ -13,7 +13,7 @@ module App.Misc
     getSomeCurrency,
     newAssetAction,
     newTextPropAction,
-    newDynPropAction,
+    newFieldPairAction,
     newPaymentMethodAction,
   )
 where
@@ -187,10 +187,10 @@ newTextPropAction optic =
     item <- newTextProp mempty mempty
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
 
-newDynPropAction :: ATraversal' Model [DynProp Unique] -> Action
-newDynPropAction optic =
+newFieldPairAction :: ATraversal' Model [FieldPair Unique] -> Action
+newFieldPairAction optic =
   PushUpdate $ do
-    item <- newDynProp mempty $ DynOutputText mempty
+    item <- newFieldPair mempty $ FieldOutputText mempty
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
 
 newPaymentMethodAction ::

@@ -26,15 +26,15 @@ module App.Types
     newTextProp,
     newPaymentMethod,
     newAsset,
-    DynType (..),
-    DynOutput (..),
-    dynOutputType,
-    parseDynOutput,
-    inspectDynOutput,
-    DynValue (..),
-    newDynValue,
-    DynProp (..),
-    newDynProp,
+    FieldType (..),
+    FieldOutput (..),
+    fieldOutputType,
+    parseFieldOutput,
+    inspectFieldOutput,
+    FieldValue (..),
+    newFieldValue,
+    FieldPair (..),
+    newFieldPair,
   )
 where
 
@@ -522,106 +522,112 @@ newTextProp key val =
     <*> pure False
     <*> pure False
 
-data DynType
-  = DynTypeText
-  | DynTypeNumber
-  | DynTypePercent
+data FieldType
+  = FieldTypeText
+  | FieldTypeNumber
+  | FieldTypePercent
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType DynType
+  deriving (ToJSON, FromJSON) via GenericType FieldType
 
-data DynOutput
-  = DynOutputText Text
-  | DynOutputNumber Rational
-  | DynOutputPercent Rational
+data FieldOutput
+  = FieldOutputText Text
+  | FieldOutputNumber Rational
+  | FieldOutputPercent Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType DynOutput
+  deriving (ToJSON, FromJSON) via GenericType FieldOutput
 
-dynOutputType :: DynOutput -> DynType
-dynOutputType = \case
-  DynOutputText {} -> DynTypeText
-  DynOutputNumber {} -> DynTypeNumber
-  DynOutputPercent {} -> DynTypePercent
+fieldOutputType :: FieldOutput -> FieldType
+fieldOutputType = \case
+  FieldOutputText {} -> FieldTypeText
+  FieldOutputNumber {} -> FieldTypeNumber
+  FieldOutputPercent {} -> FieldTypePercent
 
-parseDynOutput :: DynValue Unique -> Maybe DynOutput
-parseDynOutput value =
-  case value ^. #dynValueOutput of
-    DynOutputText {} -> Just $ DynOutputText input
-    DynOutputNumber {} -> DynOutputNumber <$> parseRatio input
-    DynOutputPercent {} -> DynOutputPercent <$> parseRatio input
+parseFieldOutput :: FieldValue Unique -> Maybe FieldOutput
+parseFieldOutput value =
+  case value ^. #fieldValueOutput of
+    FieldOutputText {} -> Just $ FieldOutputText input
+    FieldOutputNumber {} -> FieldOutputNumber <$> parseRatio input
+    FieldOutputPercent {} -> FieldOutputPercent <$> parseRatio input
   where
-    input = value ^. #dynValueInput . #uniqueValue
+    input = value ^. #fieldValueInput . #uniqueValue
 
-inspectDynOutput :: DynOutput -> Text
-inspectDynOutput = \case
-  DynOutputText x -> x
-  DynOutputNumber x -> inspectRatioDef x
-  DynOutputPercent x -> inspectRatioDef x
+inspectFieldOutput :: FieldOutput -> Text
+inspectFieldOutput = \case
+  FieldOutputText x -> x
+  FieldOutputNumber x -> inspectRatioDef x
+  FieldOutputPercent x -> inspectRatioDef x
 
-data DynValue f = DynValue
-  { dynValueInput :: f Text,
-    dynValueOutput :: DynOutput
+data FieldValue f = FieldValue
+  { fieldValueInput :: f Text,
+    fieldValueOutput :: FieldOutput
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (DynValue f)
+deriving stock instance (Std f) => Eq (FieldValue f)
 
-deriving stock instance (Std f) => Ord (DynValue f)
+deriving stock instance (Std f) => Ord (FieldValue f)
 
-deriving stock instance (Std f) => Show (DynValue f)
+deriving stock instance (Std f) => Show (FieldValue f)
 
-deriving stock instance (Std f) => Data (DynValue f)
+deriving stock instance (Std f) => Data (FieldValue f)
 
-instance FunctorB DynValue
+instance FunctorB FieldValue
 
-instance TraversableB DynValue
-
-deriving via
-  GenericType (DynValue Identity)
-  instance
-    ToJSON (DynValue Identity)
+instance TraversableB FieldValue
 
 deriving via
-  GenericType (DynValue Identity)
+  GenericType (FieldValue Identity)
   instance
-    FromJSON (DynValue Identity)
+    ToJSON (FieldValue Identity)
 
-newDynValue :: (MonadIO m) => DynOutput -> m (DynValue Unique)
-newDynValue output =
-  DynValue
-    <$> newUnique (inspectDynOutput output)
+deriving via
+  GenericType (FieldValue Identity)
+  instance
+    FromJSON (FieldValue Identity)
+
+newFieldValue :: (MonadIO m) => FieldOutput -> m (FieldValue Unique)
+newFieldValue output =
+  FieldValue
+    <$> newUnique (inspectFieldOutput output)
     <*> pure output
 
-data DynProp f = DynProp
-  { dynPropKey :: f Text,
-    dynPropValue :: DynValue f,
-    dynPropValuePlainText :: Bool,
-    dynPropValueQrCode :: Bool,
-    dynPropValueLink :: Bool,
-    dynPropValueHtml :: Bool
+data FieldPair f = FieldPair
+  { fieldPairKey :: f Text,
+    fieldPairValue :: FieldValue f,
+    fieldPairValuePlainText :: Bool,
+    fieldPairValueQrCode :: Bool,
+    fieldPairValueLink :: Bool,
+    fieldPairValueHtml :: Bool
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (DynProp f)
+deriving stock instance (Std f) => Eq (FieldPair f)
 
-deriving stock instance (Std f) => Ord (DynProp f)
+deriving stock instance (Std f) => Ord (FieldPair f)
 
-deriving stock instance (Std f) => Show (DynProp f)
+deriving stock instance (Std f) => Show (FieldPair f)
 
-deriving stock instance (Std f) => Data (DynProp f)
+deriving stock instance (Std f) => Data (FieldPair f)
 
-instance FunctorB DynProp
+instance FunctorB FieldPair
 
-instance TraversableB DynProp
+instance TraversableB FieldPair
 
-deriving via GenericType (DynProp Identity) instance ToJSON (DynProp Identity)
+deriving via
+  GenericType (FieldPair Identity)
+  instance
+    ToJSON (FieldPair Identity)
 
-deriving via GenericType (DynProp Identity) instance FromJSON (DynProp Identity)
+deriving via
+  GenericType (FieldPair Identity)
+  instance
+    FromJSON (FieldPair Identity)
 
-newDynProp :: (MonadIO m) => Text -> DynOutput -> m (DynProp Unique)
-newDynProp key val =
-  DynProp
+newFieldPair :: (MonadIO m) => Text -> FieldOutput -> m (FieldPair Unique)
+newFieldPair key val =
+  FieldPair
     <$> newUnique key
-    <*> newDynValue val
+    <*> newFieldValue val
     <*> pure True
     <*> pure False
     <*> pure False

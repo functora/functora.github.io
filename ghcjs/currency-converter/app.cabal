@@ -26,8 +26,8 @@ common pkg
     App.Widgets.Button
     App.Widgets.Chips
     App.Widgets.Currency
-    App.Widgets.DynInput
-    App.Widgets.DynProps
+    App.Widgets.Field
+    App.Widgets.FieldPairs
     App.Widgets.Header
     App.Widgets.IconToggles
     App.Widgets.Main

@@ -48,7 +48,7 @@ spec = do
     htmlUid @Text (addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
   it "soplate"
-    $ over biplated fun expr
+    $ over soplate fun expr
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")

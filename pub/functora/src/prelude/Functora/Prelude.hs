@@ -191,6 +191,7 @@ import Data.UUID as X (UUID)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
 import Functora.PreludeOrphan as X ()
+import Functora.Soplate as X
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits

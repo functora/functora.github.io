@@ -89,6 +89,7 @@ common pkg-prelude
     , cryptohash-sha256
     , extra
     , generic-lens
+    , generics-sop
     , lens
     , microlens
     , microlens-contra
@@ -219,6 +220,7 @@ library
   exposed-modules:
     Functora.Prelude
     Functora.PreludeOrphan
+    Functora.Soplate
 
 library qr
   import:          pkg-qr
@@ -331,6 +333,7 @@ test-suite functora-test
       Functora.PreludeOrphan
       Functora.Qr
       Functora.Rates
+      Functora.Soplate
       Functora.Sql
       Functora.SqlOrphan
       Functora.Tags

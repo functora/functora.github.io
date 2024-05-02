@@ -88,6 +88,7 @@ common pkg
     , cryptohash-sha256
     , extra
     , generic-lens
+    , generics-sop
     , lens
     , lift-type
     , microlens
@@ -148,6 +149,7 @@ library
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
+    Functora.Soplate
     Functora.Tags
     Functora.Web
     Functora.WebOrphan
@@ -194,6 +196,7 @@ test-suite functora-ghcjs-test
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
+    Functora.Soplate
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan

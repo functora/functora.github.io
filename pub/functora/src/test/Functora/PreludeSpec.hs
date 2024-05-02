@@ -13,6 +13,22 @@ newtype Buz = Buz
   }
   deriving stock (Eq, Ord, Show, Data)
 
+data Expr
+  = Lit Int
+  | Add Expr Expr
+  | Sub Expr Expr
+  | Mul Expr Expr
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+expr :: Expr
+expr = Add (Sub (Lit 1) (Lit 2)) (Lit 3)
+
+fun :: Expr -> Expr
+fun = \case
+  Add a b -> Mul a b
+  Lit i -> Lit (i + 1)
+  a -> a
+
 spec :: Spec
 spec = do
   it "inspect/data" $ do
@@ -31,6 +47,9 @@ spec = do
     htmlUid @Text nilUid `shouldBe` "uid-11111111111111111111111111111111"
     htmlUid @Text (addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
+  it "soplate"
+    $ over biplated fun expr
+    `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
     `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"

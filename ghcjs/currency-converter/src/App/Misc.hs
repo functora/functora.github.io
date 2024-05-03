@@ -12,7 +12,6 @@ module App.Misc
     removeAt,
     getSomeCurrency,
     newAssetAction,
-    newTextPropAction,
     newFieldPairAction,
     newPaymentMethodAction,
   )
@@ -179,12 +178,6 @@ newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
     item <- newAsset mempty mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
-
-newTextPropAction :: ATraversal' Model [TextProp Unique] -> Action
-newTextPropAction optic =
-  PushUpdate $ do
-    item <- newTextProp mempty mempty
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
 
 newFieldPairAction :: ATraversal' Model [FieldPair Unique] -> Action

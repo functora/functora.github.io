@@ -7,8 +7,8 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
-import qualified App.Widgets.TextProps as TextProps
 import Functora.Prelude
 import Miso hiding (at, view)
 
@@ -52,14 +52,14 @@ assetWidget st optic idx =
           & #optsPlaceholder
           .~ ("Quantity " <> idxTxt)
       ),
-    Header.navHeaderComplex st optic #assetTextProps idx mempty
+    Header.navHeaderComplex st optic #assetFieldPairs idx mempty
   ]
-    <> TextProps.textProps
+    <> FieldPairs.fieldPairs
       Footer
       st
       ( cloneTraversal optic
           . ix idx
-          . #assetTextProps
+          . #assetFieldPairs
       )
   where
     idxTxt :: Text

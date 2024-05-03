@@ -15,7 +15,7 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+import Miso.String (ms)
 
 header :: Text -> Maybe Action -> View Action
 header txt action =
@@ -73,11 +73,11 @@ navHeaderComplex ::
   ) =>
   Model ->
   ATraversal' Model [a] ->
-  ATraversal' a [TextProp Unique] ->
+  ATraversal' a [FieldPair Unique] ->
   Int ->
   [Attribute Action] ->
   View Action
-navHeaderComplex st optic props idx attrs =
+navHeaderComplex st optic fields idx attrs =
   --
   -- TODO : implement all
   --
@@ -97,10 +97,10 @@ navHeaderComplex st optic props idx attrs =
         navRemove = Misc.removeAt st optic idx,
         navAdd =
           Just
-            . Misc.newTextPropAction
+            . Misc.newFieldPairAction
             $ cloneTraversal optic
             . ix idx
-            . props,
+            . fields,
         navButtonStyle =
           [ Theme.primary
           ]

@@ -22,8 +22,6 @@ module App.Types
     pureUpdate,
     newUniqueState,
     newIdentityState,
-    TextProp (..),
-    newTextProp,
     newPaymentMethod,
     newAsset,
     FieldType (..),
@@ -87,7 +85,7 @@ data St f = St
   { stateTopMoney :: Money f,
     stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
-    stateTextProps :: [TextProp f],
+    stateFieldPairs :: [FieldPair f],
     stateAssets :: [Asset f],
     statePaymentMethods :: [PaymentMethod f]
   }
@@ -181,7 +179,7 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodTextProps :: [TextProp f]
+    paymentMethodFieldPairs :: [FieldPair f]
   }
   deriving stock (Generic)
 
@@ -240,7 +238,7 @@ data OnlineOrOffline
 data Asset f = Asset
   { assetPrice :: Money f,
     assetQuantity :: Amount f,
-    assetTextProps :: [TextProp f]
+    assetFieldPairs :: [FieldPair f]
   }
   deriving stock (Generic)
 
@@ -281,8 +279,8 @@ newModel = do
           }
   topMoney <- newMoney 0 btc
   bottomMoney <- newMoney 0 usd
-  issuer <- newTextProp "Issuer" "Alice LLC"
-  client <- newTextProp "Client" "Bob"
+  issuer <- newFieldPair "Issuer" $ FieldOutputText "Alice LLC"
+  client <- newFieldPair "Client" $ FieldOutputText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
   let st =
@@ -293,7 +291,7 @@ newModel = do
                 { stateTopMoney = topMoney,
                   stateBottomMoney = bottomMoney,
                   stateTopOrBottom = Top,
-                  stateTextProps = [issuer, client],
+                  stateFieldPairs = [issuer, client],
                   stateAssets = [asset],
                   statePaymentMethods = [paymentMethod]
                 },
@@ -457,8 +455,8 @@ newPaymentMethod ::
   CurrencyInfo ->
   m (PaymentMethod Unique)
 newPaymentMethod amt cur = do
-  address <- newTextProp "Address" mempty
-  notes <- newTextProp "Details" mempty
+  address <- newFieldPair "Address" $ FieldOutputText mempty
+  notes <- newFieldPair "Details" $ FieldOutputText mempty
   PaymentMethod
     <$> newMoney amt cur
     <*> pure [address, notes]
@@ -466,7 +464,7 @@ newPaymentMethod amt cur = do
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
-  item <- newTextProp label value
+  item <- newFieldPair label $ FieldOutputText value
   Asset
     <$> newMoney amt cur
     <*> newAmount 1
@@ -479,48 +477,6 @@ newIdentityState =
 newUniqueState :: (MonadIO m) => St Identity -> m (St Unique)
 newUniqueState =
   btraverse (newUnique . runIdentity)
-
-data TextProp f = TextProp
-  { textPropKey :: f Text,
-    textPropValue :: f Text,
-    textPropValuePlainText :: Bool,
-    textPropValueQrCode :: Bool,
-    textPropValueLink :: Bool,
-    textPropValueHtml :: Bool
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Std f) => Eq (TextProp f)
-
-deriving stock instance (Std f) => Ord (TextProp f)
-
-deriving stock instance (Std f) => Show (TextProp f)
-
-deriving stock instance (Std f) => Data (TextProp f)
-
-instance FunctorB TextProp
-
-instance TraversableB TextProp
-
-deriving via
-  GenericType (TextProp Identity)
-  instance
-    ToJSON (TextProp Identity)
-
-deriving via
-  GenericType (TextProp Identity)
-  instance
-    FromJSON (TextProp Identity)
-
-newTextProp :: (MonadIO m) => Text -> Text -> m (TextProp Unique)
-newTextProp key val =
-  TextProp
-    <$> newUnique key
-    <*> newUnique val
-    <*> pure True
-    <*> pure False
-    <*> pure False
-    <*> pure False
 
 data FieldType
   = FieldTypeText

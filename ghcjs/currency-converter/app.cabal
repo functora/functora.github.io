@@ -34,7 +34,6 @@ common pkg
     App.Widgets.PaymentMethods
     App.Widgets.Switch
     App.Widgets.TextInput
-    App.Widgets.TextProps
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

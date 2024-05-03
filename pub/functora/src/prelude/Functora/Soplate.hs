@@ -21,7 +21,7 @@ instance
   ( GTo a,
     GFrom a,
     Generic a,
-    GCode a ~ xs : xss,
+    GCode a ~ (xs : xss),
     All2 (Soplate s) (xs : xss)
   ) =>
   ChildsOf s a (xs : xss)

@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Functora.Soplate
-  ( soplate,
+  ( Soplate (..),
   )
 where
 
@@ -14,41 +14,24 @@ type MonadTraversal a s = forall f. (Monad f) => (s -> f s) -> a -> f a
 class Soplate s a where
   soplate :: MonadTraversal a s
 
-class Childs s code where
-  childsOf_SOP :: MonadTraversal (SOP I code) s
-
-instance Childs s '[] where
-  childsOf_SOP _ = pure
-
-instance
-  ( All2 (Soplate s) (xs : xss),
-    Childs s xss
-  ) =>
-  Childs s (xs : xss)
-  where
-  childsOf_SOP f (SOP (Z np)) = SOP . Z <$> traverseP f np
-  childsOf_SOP f (SOP (S sp)) = SOP . S . unSOP <$> childsOf_SOP f (SOP sp)
-
 class ChildsOf s a code where
   childsOf :: MonadTraversal a s
 
 instance
-  ( GFrom a,
-    GTo a,
+  ( GTo a,
+    GFrom a,
     Generic a,
-    Childs s (xs : xss),
-    GCode a ~ (xs : xss)
+    GCode a ~ xs : xss,
+    All2 (Soplate s) (xs : xss)
   ) =>
   ChildsOf s a (xs : xss)
   where
-  childsOf f x = gto <$> childsOf_SOP f (gfrom x)
+  childsOf f x = gto <$> childsOf_SOP (gfrom x)
+    where
+      childsOf_SOP = hctraverse (Proxy @(Soplate s)) (soplate f . unI)
 
 instance {-# INCOHERENT #-} ChildsOf s a xs where
-  childsOf _ = pure
-
-traverseP :: (All (Soplate s) xs) => MonadTraversal (NP I xs) s
-traverseP _ Nil = pure Nil
-traverseP f (I x :* xs) = liftA2 (:*) (I <$> soplate f x) (traverseP f xs)
+  childsOf = const pure
 
 instance (ChildsOf s a (GCode a)) => Soplate s a where
   soplate f x = childsOf @s @a @(GCode a) f x

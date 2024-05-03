@@ -11,7 +11,7 @@ import qualified Universum
 newtype Buz = Buz
   { _unBuz :: Map ByteString Int
   }
-  deriving stock (Eq, Ord, Show, Data)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Expr
   = Lit Int
@@ -19,6 +19,13 @@ data Expr
   | Sub Expr Expr
   | Mul Expr Expr
   deriving stock (Eq, Ord, Show, Data, Generic)
+
+data NoData = NoData
+  { noDataExpr :: Expr,
+    noDataByte :: ByteString,
+    noDataSelf :: Maybe NoData
+  }
+  deriving stock (Eq, Ord, Show, Generic)
 
 expr :: Expr
 expr = Add (Sub (Lit 1) (Lit 2)) (Lit 3)
@@ -47,9 +54,12 @@ spec = do
     htmlUid @Text nilUid `shouldBe` "uid-11111111111111111111111111111111"
     htmlUid @Text (addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
-  it "soplate"
+  it "soplate/fun"
     $ over soplate fun expr
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
+  it "soplate/plus"
+    $ over soplate (+ (1 :: Int)) expr
+    `shouldBe` Add (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
     `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"
@@ -125,6 +135,27 @@ spec = do
   inspectParseRatioUnsigned @Word16
   inspectParseRatioUnsigned @Word32
   inspectParseRatioUnsigned @Word64
+  it "inspectSop/IsString" $ do
+    inspectSop @Text ("HELLO" :: String) `shouldBe` "HELLO"
+    inspectSop @Text ("HELLO" :: Text) `shouldBe` "HELLO"
+    inspectSop @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
+    inspectSop @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
+    inspectSop @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
+  it "inspectSop/NoData" $ do
+    let nodata =
+          NoData
+            { noDataExpr = expr,
+              noDataByte = "example",
+              noDataSelf =
+                Just
+                  NoData
+                    { noDataExpr = Lit 1,
+                      noDataByte = BS.pack [106, 246, 171, 231, 231, 166, 121],
+                      noDataSelf = Nothing
+                    }
+            }
+    inspectSop @Text nodata
+      `shouldBe` "NoData {noDataExpr = Add (Sub (Lit 1) (Lit 2)) (Lit 3), noDataByte = \"example\", noDataSelf = Just (NoData {noDataExpr = Lit 1, noDataByte = \"6af6abe7e7a679\", noDataSelf = Nothing})}"
 
 inspectParseRatioSigned ::
   forall a.

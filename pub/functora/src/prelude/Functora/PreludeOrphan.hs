@@ -14,6 +14,8 @@ import Universum
 import Witch.Mini
 import qualified Prelude
 
+deriving stock instance Generic (Ratio a)
+
 instance (Typeable a) => Show (MVar a) where
   show =
     const

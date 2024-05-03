@@ -110,6 +110,7 @@ common pkg-prelude
     , these-lens
     , time
     , unbounded-delays
+    , uniplate
     , universum
     , unliftio
     , uuid

@@ -117,6 +117,7 @@ common pkg
     , tomland
     , type-level-sets
     , unbounded-delays
+    , uniplate
     , universum
     , unliftio
     , uuid

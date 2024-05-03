@@ -7,6 +7,7 @@ module Functora.Prelude
     -- * Show
     -- $show
     inspect,
+    inspectSop,
     inspectType,
     inspectSymbol,
     RatioFormat (..),
@@ -159,6 +160,7 @@ import Data.Generics.Internal.VL.Prism as X hiding (Market (..))
 import Data.Generics.Labels as X
 import Data.Generics.Product as X
 import Data.Generics.Sum as X
+import Data.Generics.Uniplate.Data as X ()
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Ratio as X ((%))
@@ -293,6 +295,21 @@ inspect =
   display @dst @src
     . Syb.everywhere (Syb.mkT prettyByteString)
     . Syb.everywhere (Syb.mkT prettyLazyByteString)
+
+inspectSop ::
+  forall dst src.
+  ( Show src,
+    Typeable src,
+    Soplate ByteString src,
+    Soplate BL.ByteString src,
+    IsString dst
+  ) =>
+  src ->
+  dst
+inspectSop =
+  display @dst @src
+    . over soplate prettyByteString
+    . over soplate prettyLazyByteString
 
 inspectType :: forall a b. (Typeable a, IsString b) => b
 inspectType =

@@ -536,6 +536,12 @@ data FieldOutput
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType FieldOutput
 
+defaultHtmlType :: FieldOutput -> Text
+defaultHtmlType = \case
+  FieldOutputText {} -> "text"
+  FieldOutputNumber {} -> "number"
+  FieldOutputPercent {} -> "number"
+
 fieldOutputType :: FieldOutput -> FieldType
 fieldOutputType = \case
   FieldOutputText {} -> FieldTypeText
@@ -559,7 +565,9 @@ inspectFieldOutput = \case
 
 data FieldValue f = FieldValue
   { fieldValueInput :: f Text,
-    fieldValueOutput :: FieldOutput
+    fieldValueOutput :: FieldOutput,
+    fieldValueHtmlType :: Text,
+    fieldValueSettingsOpen :: Bool
   }
   deriving stock (Generic)
 
@@ -590,6 +598,8 @@ newFieldValue output =
   FieldValue
     <$> newUnique (inspectFieldOutput output)
     <*> pure output
+    <*> pure (defaultHtmlType output)
+    <*> pure False
 
 data FieldPair f = FieldPair
   { fieldPairKey :: f Text,

@@ -9,6 +9,8 @@ import qualified App.Misc as Misc
 import App.Types
 import Functora.Prelude hiding (field)
 import qualified Language.Javascript.JSaddle as JS
+import qualified Material.Button as Button
+import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.TextField as TextField
 import Miso hiding (view)
@@ -17,7 +19,8 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
-    optsExtraOnInput :: Model -> Model
+    optsExtraOnInput :: Model -> Model,
+    optsLeadingSettings :: Bool
   }
   deriving stock (Generic)
 
@@ -26,7 +29,8 @@ opts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,
-      optsExtraOnInput = id
+      optsExtraOnInput = id,
+      optsLeadingSettings = True
     }
 
 field ::
@@ -45,15 +49,10 @@ field st optic options =
     [ TextField.filled
         $ TextField.config
         & TextField.setType
-          ( fmap
-              ( \case
-                  FieldOutputText {} -> "text"
-                  FieldOutputNumber {} -> "number"
-                  FieldOutputPercent {} -> "number"
-              )
-              $ st
+          ( from @Text @String
+              <$> st
               ^? cloneTraversal optic
-              . #fieldValueOutput
+              . #fieldValueHtmlType
           )
         & TextField.setOnInput onInputAction
         & TextField.setDisabled (options ^. #optsDisabled)
@@ -62,14 +61,25 @@ field st optic options =
           )
         & TextField.setLeadingIcon
           ( Just
-              $ TextField.icon
-                [ class_ "mdc-text-field__icon--leading",
-                  style_ [("pointer-events", "auto")],
-                  textProp "role" "button",
-                  intProp "tabindex" 0,
-                  onClick onCopyAction
-                ]
-                "content_copy"
+              $ if options ^. #optsLeadingSettings
+                then
+                  TextField.icon
+                    [ class_ "mdc-text-field__icon--leading",
+                      style_ [("pointer-events", "auto")],
+                      textProp "role" "button",
+                      intProp "tabindex" 0,
+                      onClick opened
+                    ]
+                    "settings"
+                else
+                  TextField.icon
+                    [ class_ "mdc-text-field__icon--leading",
+                      style_ [("pointer-events", "auto")],
+                      textProp "role" "button",
+                      intProp "tabindex" 0,
+                      onClick onCopyAction
+                    ]
+                    "content_copy"
           )
         & TextField.setTrailingIcon
           ( if options ^. #optsDisabled
@@ -89,7 +99,44 @@ field st optic options =
             id_ . ms $ htmlUid @Text uid,
             onKeyDown $ Misc.onKeyDownAction uid,
             onBlur onBlurAction
-          ]
+          ],
+      Dialog.dialog
+        ( Dialog.config
+            & Dialog.setOnClose closed
+            & Dialog.setOpen
+              ( fromMaybe
+                  False
+                  (st ^? cloneTraversal optic . #fieldValueSettingsOpen)
+              )
+        )
+        ( Dialog.dialogContent
+            Nothing
+            [ -- currencyListWidget st optic
+              text "HELLO"
+            ]
+            [ div_
+                [ class_ "fill"
+                ]
+                [ -- TextInput.textInput
+                  --   st
+                  --   ( cloneTraversal optic
+                  --       . #currencyInput
+                  --   )
+                  --   ( TextInput.opts
+                  --       & #optsPlaceholder
+                  --       .~ "Search"
+                  --   ),
+                  Button.raised
+                    ( Button.config
+                        & Button.setOnClick closed
+                        & Button.setAttributes
+                          [ class_ "fill"
+                          ]
+                    )
+                    "Cancel"
+                ]
+            ]
+        )
     ]
   where
     uid =
@@ -160,3 +207,15 @@ field st optic options =
             . #uniqueValue
             .~ mempty
             & (options ^. #optsExtraOnInput)
+    opened =
+      pureUpdate 0 $ \st' ->
+        st'
+          & cloneTraversal optic
+          . #fieldValueSettingsOpen
+          .~ True
+    closed =
+      pureUpdate 0 $ \st' ->
+        st'
+          & cloneTraversal optic
+          . #fieldValueSettingsOpen
+          .~ False

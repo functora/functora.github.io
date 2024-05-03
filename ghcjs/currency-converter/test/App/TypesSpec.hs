@@ -19,8 +19,8 @@ data Expr
 expr :: Expr
 expr = Add (Sub (Lit 1) (Lit 2)) (Lit 3)
 
-f :: Expr -> Expr
-f = \case
+fun :: Expr -> Expr
+fun = \case
   Add a b -> Mul a b
   Lit i -> Lit (i + 1)
   a -> a
@@ -37,13 +37,17 @@ spec = do
     A.decode wrapJson `shouldBe` Just wrap
   it "syb/everywhere"
     -- good?
-    $ Syb.everywhere (Syb.mkT f) expr
+    $ Syb.everywhere (Syb.mkT fun) expr
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "generic-lens/types"
     -- bad?
-    $ over types f expr
+    $ over types fun expr
     `shouldBe` Mul (Sub (Lit 1) (Lit 2)) (Lit 3)
   it "optics-core/gplate"
     -- bad?
-    $ Ops.over Ops.gplate f expr
+    $ Ops.over Ops.gplate fun expr
     `shouldBe` Add (Sub (Lit 1) (Lit 2)) (Lit 4)
+  it "soplate"
+    -- good?
+    $ over soplate fun expr
+    `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)

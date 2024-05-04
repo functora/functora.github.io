@@ -4,7 +4,6 @@ module App.Types
   ( Model (..),
     Unique (..),
     Action (..),
-    Std,
     St (..),
     Money (..),
     Amount (..),
@@ -73,7 +72,15 @@ data Action
   | ChanUpdate Model
   | PushUpdate (JSM (ChanItem (Model -> Model)))
 
-type Std f =
+type Typ a =
+  ( Typeable a,
+    Eq a,
+    Ord a,
+    Show a,
+    Data a
+  )
+
+type Hkt f =
   ( Typeable f,
     Eq (f Text),
     Ord (f Text),
@@ -85,19 +92,19 @@ data St f = St
   { stateTopMoney :: Money f,
     stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
-    stateFieldPairs :: [FieldPair f],
+    stateFieldPairs :: [FieldPair FieldOutput f],
     stateAssets :: [Asset f],
     statePaymentMethods :: [PaymentMethod f]
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (St f)
+deriving stock instance (Hkt f) => Eq (St f)
 
-deriving stock instance (Std f) => Ord (St f)
+deriving stock instance (Hkt f) => Ord (St f)
 
-deriving stock instance (Std f) => Show (St f)
+deriving stock instance (Hkt f) => Show (St f)
 
-deriving stock instance (Std f) => Data (St f)
+deriving stock instance (Hkt f) => Data (St f)
 
 instance FunctorB St
 
@@ -113,13 +120,13 @@ data Money f = Money
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (Money f)
+deriving stock instance (Hkt f) => Eq (Money f)
 
-deriving stock instance (Std f) => Ord (Money f)
+deriving stock instance (Hkt f) => Ord (Money f)
 
-deriving stock instance (Std f) => Show (Money f)
+deriving stock instance (Hkt f) => Show (Money f)
 
-deriving stock instance (Std f) => Data (Money f)
+deriving stock instance (Hkt f) => Data (Money f)
 
 instance FunctorB Money
 
@@ -135,13 +142,13 @@ data Amount f = Amount
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (Amount f)
+deriving stock instance (Hkt f) => Eq (Amount f)
 
-deriving stock instance (Std f) => Ord (Amount f)
+deriving stock instance (Hkt f) => Ord (Amount f)
 
-deriving stock instance (Std f) => Show (Amount f)
+deriving stock instance (Hkt f) => Show (Amount f)
 
-deriving stock instance (Std f) => Data (Amount f)
+deriving stock instance (Hkt f) => Data (Amount f)
 
 instance FunctorB Amount
 
@@ -158,13 +165,13 @@ data Currency f = Currency
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (Currency f)
+deriving stock instance (Hkt f) => Eq (Currency f)
 
-deriving stock instance (Std f) => Ord (Currency f)
+deriving stock instance (Hkt f) => Ord (Currency f)
 
-deriving stock instance (Std f) => Show (Currency f)
+deriving stock instance (Hkt f) => Show (Currency f)
 
-deriving stock instance (Std f) => Data (Currency f)
+deriving stock instance (Hkt f) => Data (Currency f)
 
 instance FunctorB Currency
 
@@ -179,17 +186,17 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodFieldPairs :: [FieldPair f]
+    paymentMethodFieldPairs :: [FieldPair FieldOutput f]
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (PaymentMethod f)
+deriving stock instance (Hkt f) => Eq (PaymentMethod f)
 
-deriving stock instance (Std f) => Ord (PaymentMethod f)
+deriving stock instance (Hkt f) => Ord (PaymentMethod f)
 
-deriving stock instance (Std f) => Show (PaymentMethod f)
+deriving stock instance (Hkt f) => Show (PaymentMethod f)
 
-deriving stock instance (Std f) => Data (PaymentMethod f)
+deriving stock instance (Hkt f) => Data (PaymentMethod f)
 
 instance FunctorB PaymentMethod
 
@@ -238,17 +245,17 @@ data OnlineOrOffline
 data Asset f = Asset
   { assetPrice :: Money f,
     assetQuantity :: Amount f,
-    assetFieldPairs :: [FieldPair f]
+    assetFieldPairs :: [FieldPair FieldOutput f]
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (Asset f)
+deriving stock instance (Hkt f) => Eq (Asset f)
 
-deriving stock instance (Std f) => Ord (Asset f)
+deriving stock instance (Hkt f) => Ord (Asset f)
 
-deriving stock instance (Std f) => Show (Asset f)
+deriving stock instance (Hkt f) => Show (Asset f)
 
-deriving stock instance (Std f) => Data (Asset f)
+deriving stock instance (Hkt f) => Data (Asset f)
 
 instance FunctorB Asset
 
@@ -505,7 +512,7 @@ fieldOutputType = \case
   FieldOutputNumber {} -> FieldTypeNumber
   FieldOutputPercent {} -> FieldTypePercent
 
-parseFieldOutput :: Field Unique -> Maybe FieldOutput
+parseFieldOutput :: Field FieldOutput Unique -> Maybe FieldOutput
 parseFieldOutput value =
   case value ^. #fieldOutput of
     FieldOutputText {} -> Just $ FieldOutputText input
@@ -520,47 +527,51 @@ inspectFieldOutput = \case
   FieldOutputNumber x -> inspectRatioDef x
   FieldOutputPercent x -> inspectRatioDef x
 
-data Field f = Field
+data Field a f = Field
   { fieldInput :: f Text,
-    fieldOutput :: FieldOutput,
+    fieldOutput :: a,
     fieldHtmlType :: Text,
     fieldSettingsOpen :: Bool
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (Field f)
+deriving stock instance (Typ a, Hkt f) => Eq (Field a f)
 
-deriving stock instance (Std f) => Ord (Field f)
+deriving stock instance (Typ a, Hkt f) => Ord (Field a f)
 
-deriving stock instance (Std f) => Show (Field f)
+deriving stock instance (Typ a, Hkt f) => Show (Field a f)
 
-deriving stock instance (Std f) => Data (Field f)
+deriving stock instance (Typ a, Hkt f) => Data (Field a f)
 
-instance FunctorB Field
+instance FunctorB (Field a)
 
-instance TraversableB Field
-
-deriving via
-  GenericType (Field Identity)
-  instance
-    ToJSON (Field Identity)
+instance TraversableB (Field a)
 
 deriving via
-  GenericType (Field Identity)
+  GenericType (Field a Identity)
   instance
-    FromJSON (Field Identity)
+    (Typ a, ToJSON a) => ToJSON (Field a Identity)
 
-newField :: (MonadIO m) => FieldOutput -> m (Field Unique)
-newField output =
+deriving via
+  GenericType (Field a Identity)
+  instance
+    (Typ a, FromJSON a) => FromJSON (Field a Identity)
+
+newField ::
+  --
+  -- TODO : newtype for HtmlType
+  --
+  (MonadIO m) => a -> (a -> Text) -> (a -> Text) -> m (Field a Unique)
+newField output newInput newHtmlType =
   Field
-    <$> newUnique (inspectFieldOutput output)
+    <$> newUnique (newInput output)
     <*> pure output
-    <*> pure (defaultHtmlType output)
+    <*> pure (newHtmlType output)
     <*> pure False
 
-data FieldPair f = FieldPair
+data FieldPair a f = FieldPair
   { fieldPairKey :: f Text,
-    fieldPairValue :: Field f,
+    fieldPairValue :: Field a f,
     fieldPairValuePlainText :: Bool,
     fieldPairValueQrCode :: Bool,
     fieldPairValueLink :: Bool,
@@ -568,33 +579,34 @@ data FieldPair f = FieldPair
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (FieldPair f)
+deriving stock instance (Typ a, Hkt f) => Eq (FieldPair a f)
 
-deriving stock instance (Std f) => Ord (FieldPair f)
+deriving stock instance (Typ a, Hkt f) => Ord (FieldPair a f)
 
-deriving stock instance (Std f) => Show (FieldPair f)
+deriving stock instance (Typ a, Hkt f) => Show (FieldPair a f)
 
-deriving stock instance (Std f) => Data (FieldPair f)
+deriving stock instance (Typ a, Hkt f) => Data (FieldPair a f)
 
-instance FunctorB FieldPair
+instance FunctorB (FieldPair a)
 
-instance TraversableB FieldPair
-
-deriving via
-  GenericType (FieldPair Identity)
-  instance
-    ToJSON (FieldPair Identity)
+instance TraversableB (FieldPair a)
 
 deriving via
-  GenericType (FieldPair Identity)
+  GenericType (FieldPair a Identity)
   instance
-    FromJSON (FieldPair Identity)
+    (Typ a, ToJSON a) => ToJSON (FieldPair a Identity)
 
-newFieldPair :: (MonadIO m) => Text -> FieldOutput -> m (FieldPair Unique)
+deriving via
+  GenericType (FieldPair a Identity)
+  instance
+    (Typ a, FromJSON a) => FromJSON (FieldPair a Identity)
+
+newFieldPair ::
+  (MonadIO m) => Text -> FieldOutput -> m (FieldPair FieldOutput Unique)
 newFieldPair key val =
   FieldPair
     <$> newUnique key
-    <*> newField val
+    <*> newField val inspectFieldOutput defaultHtmlType
     <*> pure True
     <*> pure False
     <*> pure False

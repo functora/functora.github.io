@@ -180,7 +180,7 @@ newAssetAction st optic =
     item <- newAsset mempty mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
 
-newFieldPairAction :: ATraversal' Model [FieldPair Unique] -> Action
+newFieldPairAction :: ATraversal' Model [FieldPair FieldOutput Unique] -> Action
 newFieldPairAction optic =
   PushUpdate $ do
     item <- newFieldPair mempty $ FieldOutputText mempty

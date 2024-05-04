@@ -16,7 +16,7 @@ import Miso hiding (at, view)
 fieldPairs ::
   HeaderOrFooter ->
   Model ->
-  ATraversal' Model [FieldPair Unique] ->
+  ATraversal' Model [FieldPair FieldOutput Unique] ->
   [View Action]
 fieldPairs hof st optic =
   case hof of
@@ -28,7 +28,7 @@ fieldPairs hof st optic =
 
 fieldPairWidget ::
   Model ->
-  ATraversal' Model [FieldPair Unique] ->
+  ATraversal' Model [FieldPair FieldOutput Unique] ->
   Int ->
   [View Action]
 fieldPairWidget st optic idx =
@@ -51,7 +51,9 @@ fieldPairWidget st optic idx =
       ( Field.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
-      ),
+      )
+      parseFieldOutput
+      inspectFieldOutput,
     IconToggles.iconToggles
       st
       [ ( "Value " <> idxTxt <> " text",

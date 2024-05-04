@@ -35,10 +35,12 @@ opts =
 
 field ::
   Model ->
-  ATraversal' Model (Field Unique) ->
+  ATraversal' Model (Field a Unique) ->
   Opts ->
+  (Field a Unique -> Maybe a) ->
+  (a -> Text) ->
   View Action
-field st optic options =
+field st optic options parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -148,13 +150,13 @@ field st optic options =
     getInput st' =
       st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
     getOutput st' = do
-      (st' ^? cloneTraversal optic >>= parseFieldOutput)
+      (st' ^? cloneTraversal optic >>= parser)
         <|> (st' ^? cloneTraversal optic . #fieldOutput)
     getInputReplacement st' = do
-      let next = st' ^? cloneTraversal optic >>= parseFieldOutput
+      let next = st' ^? cloneTraversal optic >>= parser
       inp <- getInput st'
       out <- getOutput st'
-      if isJust next || (inp == inspectFieldOutput out)
+      if isJust next || (inp == viewer out)
         then Nothing
         else Just out
     onBlurAction =
@@ -165,7 +167,7 @@ field st optic options =
             & cloneTraversal optic
             . #fieldInput
             . #uniqueValue
-            %~ maybe id (const . inspectFieldOutput) (getInputReplacement st')
+            %~ maybe id (const . viewer) (getInputReplacement st')
             & cloneTraversal optic
             . #fieldOutput
             %~ maybe id (const . id) (getOutput st')

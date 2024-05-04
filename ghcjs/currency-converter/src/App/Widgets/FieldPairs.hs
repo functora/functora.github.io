@@ -8,7 +8,6 @@ import App.Types
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.IconToggles as IconToggles
-import qualified App.Widgets.TextInput as TextInput
 import Functora.Prelude as Prelude
 import qualified Material.IconToggle as IconToggle
 import Miso hiding (at, view)
@@ -32,17 +31,17 @@ fieldPairWidget ::
   Int ->
   [View Action]
 fieldPairWidget st optic idx =
-  [ TextInput.textInput
+  [ Field.textField
       st
       ( cloneTraversal optic
           . ix idx
           . #fieldPairKey
       )
-      ( TextInput.opts
+      ( Field.opts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
       ),
-    Field.field
+    Field.dynamicField
       st
       ( cloneTraversal optic
           . ix idx
@@ -51,9 +50,7 @@ fieldPairWidget st optic idx =
       ( Field.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
-      )
-      parseFieldOutput
-      inspectFieldOutput,
+      ),
     IconToggles.iconToggles
       st
       [ ( "Value " <> idxTxt <> " text",

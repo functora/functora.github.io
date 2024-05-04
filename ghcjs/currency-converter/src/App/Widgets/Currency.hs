@@ -1,11 +1,11 @@
 module App.Widgets.Currency
-  ( currencySelect,
-    currencySwap,
+  ( selectCurrency,
+    swapCurrencies,
   )
 where
 
 import App.Types
-import qualified App.Widgets.TextInput as TextInput
+import qualified App.Widgets.Field as Field
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Money hiding (Currency)
 import Functora.Prelude as Prelude
@@ -19,11 +19,11 @@ import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
-currencySelect ::
+selectCurrency ::
   Model ->
   ATraversal' Model (Currency Unique) ->
   View Action
-currencySelect st optic =
+selectCurrency st optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
@@ -55,12 +55,12 @@ currencySelect st optic =
             $ div_
               [ class_ "fill"
               ]
-              [ TextInput.textInput
+              [ Field.textField
                   st
                   ( cloneTraversal optic
                       . #currencyInput
                   )
-                  ( TextInput.opts
+                  ( Field.opts
                       & #optsPlaceholder
                       .~ "Search"
                   ),
@@ -84,6 +84,7 @@ currencySelect st optic =
           .~ True
           & cloneTraversal optic
           . #currencyInput
+          . #fieldInput
           . #uniqueValue
           .~ mempty
     closed =
@@ -94,6 +95,7 @@ currencySelect st optic =
           .~ False
           & cloneTraversal optic
           . #currencyInput
+          . #fieldInput
           . #uniqueValue
           .~ mempty
 
@@ -122,8 +124,8 @@ currencyListWidget st optic =
         }
     search =
       fromMaybe
-        (unexpectedCurrency ^. #currencyInput . #uniqueValue)
-        (st ^? cloneTraversal optic . #currencyInput . #uniqueValue)
+        (unexpectedCurrency ^. #currencyInput . #fieldInput . #uniqueValue)
+        (st ^? cloneTraversal optic . #currencyInput . #fieldInput . #uniqueValue)
     matching =
       nonEmpty
         --
@@ -161,6 +163,7 @@ currencyListItemWidget optic current fuzz =
                 .~ False
                 & cloneTraversal optic
                 . #currencyInput
+                . #fieldInput
                 . #uniqueValue
                 .~ mempty
                 & cloneTraversal optic
@@ -175,8 +178,8 @@ currencyListItemWidget optic current fuzz =
   where
     item = Fuzzy.original fuzz
 
-currencySwap :: View Action
-currencySwap =
+swapCurrencies :: View Action
+swapCurrencies =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -226,7 +229,13 @@ unexpectedCurrency :: Currency Unique
 unexpectedCurrency =
   Currency
     { currencyOpen = False,
-      currencyInput = Unique nilUid "UNEXPECTED CURRENCY",
+      currencyInput =
+        Field
+          { fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
+            fieldOutput = "UNEXPECTED CURRENCY",
+            fieldHtmlType = "text",
+            fieldSettingsOpen = False
+          },
       currencyOutput =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "UNEXPECTED",

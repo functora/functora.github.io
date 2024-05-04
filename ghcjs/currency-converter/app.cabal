@@ -33,7 +33,6 @@ common pkg
     App.Widgets.PaymentMethods
     App.Widgets.SwapAmounts
     App.Widgets.Switch
-    App.Widgets.TextInput
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

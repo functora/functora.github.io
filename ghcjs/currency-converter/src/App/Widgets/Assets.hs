@@ -24,7 +24,7 @@ assetWidget ::
   Int ->
   [View Action]
 assetWidget st optic idx =
-  [ Field.ratField
+  [ Field.rationalField
       st
       ( cloneTraversal optic
           . ix idx
@@ -35,14 +35,14 @@ assetWidget st optic idx =
           & #optsPlaceholder
           .~ ("Price " <> idxTxt)
       ),
-    Currency.currencySelect
+    Currency.selectCurrency
       st
       ( cloneTraversal optic
           . ix idx
           . #assetPrice
           . #moneyCurrency
       ),
-    Field.ratField
+    Field.rationalField
       st
       ( cloneTraversal optic
           . ix idx

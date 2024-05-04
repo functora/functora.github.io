@@ -59,7 +59,7 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
-        Field.ratField
+        Field.rationalField
           st
           ( Misc.getConverterAmountOptic loc
           )
@@ -74,7 +74,7 @@ screenWidget st@Model {modelScreen = Converter} =
                  )
           )
       currencyWidget' =
-        Currency.currencySelect st
+        Currency.selectCurrency st
           . cloneLens
           . Misc.getConverterCurrencyOptic
    in [ amountWidget' Top,
@@ -82,7 +82,7 @@ screenWidget st@Model {modelScreen = Converter} =
         amountWidget' Bottom,
         currencyWidget' Bottom,
         SwapAmounts.swapAmounts,
-        Currency.currencySwap
+        Currency.swapCurrencies
       ]
 screenWidget st@Model {modelScreen = DocumentEditor} =
   FieldPairs.fieldPairs Header st (#modelState . #stateFieldPairs)

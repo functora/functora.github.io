@@ -1,9 +1,9 @@
 module App.Widgets.Field
   ( Opts (..),
     opts,
-    field,
-    ratField,
-    dynField,
+    rationalField,
+    textField,
+    dynamicField,
   )
 where
 
@@ -224,12 +224,12 @@ field st optic options parser viewer =
           . #fieldSettingsOpen
           .~ False
 
-ratField ::
+rationalField ::
   Model ->
   ATraversal' Model (Field Rational Unique) ->
   Opts ->
   View Action
-ratField st optic options =
+rationalField st optic options =
   field
     st
     optic
@@ -239,12 +239,27 @@ ratField st optic options =
     )
     inspectRatioDef
 
-dynField ::
+textField ::
+  Model ->
+  ATraversal' Model (Field Text Unique) ->
+  Opts ->
+  View Action
+textField st optic options =
+  field
+    st
+    optic
+    ( options & #optsSettingsIcon .~ False
+    )
+    ( Just . view (#fieldInput . #uniqueValue)
+    )
+    id
+
+dynamicField ::
   Model ->
   ATraversal' Model (Field FieldOutput Unique) ->
   Opts ->
   View Action
-dynField st optic options =
+dynamicField st optic options =
   field
     st
     optic

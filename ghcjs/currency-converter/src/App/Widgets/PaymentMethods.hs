@@ -28,7 +28,7 @@ paymentMethodWidget ::
   Int ->
   [View Action]
 paymentMethodWidget st optic idx =
-  [ Field.ratField
+  [ Field.rationalField
       st
       ( cloneTraversal optic
           . ix idx
@@ -41,7 +41,7 @@ paymentMethodWidget st optic idx =
           & #optsPlaceholder
           .~ ("Total " <> idxTxt)
       ),
-    Currency.currencySelect
+    Currency.selectCurrency
       st
       ( cloneTraversal optic
           . ix idx

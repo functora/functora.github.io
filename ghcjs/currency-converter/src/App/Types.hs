@@ -136,7 +136,7 @@ deriving via GenericType (Money Identity) instance ToJSON (Money Identity)
 deriving via GenericType (Money Identity) instance FromJSON (Money Identity)
 
 data Currency f = Currency
-  { currencyInput :: f Text,
+  { currencyInput :: Field Text f,
     currencyOutput :: CurrencyInfo,
     currencyOpen :: Bool
   }
@@ -384,21 +384,29 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newRatField :: (MonadIO m) => Rational -> m (Field Rational Unique)
-newRatField output =
+newRationalField :: (MonadIO m) => Rational -> m (Field Rational Unique)
+newRationalField output =
   newField output inspectRatioDef $ const "number"
+
+newTextField :: (MonadIO m) => Text -> m (Field Text Unique)
+newTextField output =
+  newField output id $ const "text"
+
+newDynamicField :: (MonadIO m) => FieldOutput -> m (Field FieldOutput Unique)
+newDynamicField output =
+  newField output inspectFieldOutput defaultHtmlType
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
   Currency
-    <$> newUnique mempty
+    <$> newTextField mempty
     <*> pure cur
     <*> pure False
 
 newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
 newMoney amt cur =
   Money
-    <$> newRatField amt
+    <$> newRationalField amt
     <*> newCurrency cur
 
 --
@@ -450,7 +458,7 @@ newAsset label value amt cur = do
   item <- newFieldPair label $ FieldOutputText value
   Asset
     <$> newMoney amt cur
-    <*> newRatField 1
+    <*> newRationalField 1
     <*> pure [item]
 
 newIdentityState :: St Unique -> St Identity
@@ -545,7 +553,7 @@ newField output newInput newHtmlType =
     <*> pure False
 
 data FieldPair a f = FieldPair
-  { fieldPairKey :: f Text,
+  { fieldPairKey :: Field Text f,
     fieldPairValue :: Field a f,
     fieldPairValuePlainText :: Bool,
     fieldPairValueQrCode :: Bool,
@@ -580,8 +588,8 @@ newFieldPair ::
   (MonadIO m) => Text -> FieldOutput -> m (FieldPair FieldOutput Unique)
 newFieldPair key val =
   FieldPair
-    <$> newUnique key
-    <*> newField val inspectFieldOutput defaultHtmlType
+    <$> newTextField key
+    <*> newDynamicField val
     <*> pure True
     <*> pure False
     <*> pure False

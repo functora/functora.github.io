@@ -126,6 +126,10 @@ import Control.Lens.Combinators as X
     makePrisms,
     review,
     to,
+    _Just,
+    _Left,
+    _Nothing,
+    _Right,
   )
 import Control.Monad.Extra as X
   ( eitherM,

@@ -1962,7 +1962,7 @@ config.load_autoconfig(True)
 c.qt.highdpi = True
 c.zoom.default = '130%'
 c.tabs.last_close = "ignore"
-# c.content.images = False
+c.content.images = False
 c.content.autoplay = False
 c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"
@@ -1975,6 +1975,7 @@ c.content.mouse_lock = False
 c.content.javascript.clipboard = "access"
 c.content.pdfjs = True
 c.content.blocking.method = "both"
+c.content.headers.user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0"
 
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
@@ -1983,6 +1984,7 @@ c.url.searchengines = {
         'ggl': 'https://google.com/search?q={}',
         'ddg': 'https://duckduckgo.com/?q={}',
         'gpt': 'https://chat.openai.com/?q={}',
+        'bing': 'https://www.bing.com/search?showconv=1&sendquery=1&q={}',
         'enes': 'https://translate.google.com/details?sl=en&tl=es&op=translate&text={}',
         'enru': 'https://translate.google.com/details?sl=en&tl=ru&op=translate&text={}',
         'esen': 'https://translate.google.com/details?sl=es&tl=en&op=translate&text={}',
@@ -2001,8 +2003,8 @@ c.url.searchengines = {
 # config.set('content.images', True, '*://localhost/*')
 # config.set('content.images', True, '*://127.0.0.1/*')
 # config.set('content.images', True, 'file:///*')
-# config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')
 
+config.bind('I', 'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload')
 config.bind('Q', 'quit')
 config.bind('K', 'tab-next')
 config.bind('J', 'tab-prev')

@@ -2,6 +2,8 @@ module App.Widgets.Field
   ( Opts (..),
     opts,
     field,
+    ratField,
+    dynField,
   )
 where
 
@@ -20,7 +22,7 @@ data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
-    optsLeadingSettings :: Bool
+    optsSettingsIcon :: Bool
   }
   deriving stock (Generic)
 
@@ -30,7 +32,7 @@ opts =
     { optsDisabled = False,
       optsPlaceholder = mempty,
       optsExtraOnInput = id,
-      optsLeadingSettings = True
+      optsSettingsIcon = True
     }
 
 field ::
@@ -63,7 +65,7 @@ field st optic options parser viewer =
           )
         & TextField.setLeadingIcon
           ( Just
-              $ if options ^. #optsLeadingSettings
+              $ if options ^. #optsSettingsIcon
                 then
                   TextField.icon
                     [ class_ "mdc-text-field__icon--leading",
@@ -221,3 +223,31 @@ field st optic options parser viewer =
           & cloneTraversal optic
           . #fieldSettingsOpen
           .~ False
+
+ratField ::
+  Model ->
+  ATraversal' Model (Field Rational Unique) ->
+  Opts ->
+  View Action
+ratField st optic options =
+  field
+    st
+    optic
+    ( options & #optsSettingsIcon .~ False
+    )
+    ( parseRatio . view (#fieldInput . #uniqueValue)
+    )
+    inspectRatioDef
+
+dynField ::
+  Model ->
+  ATraversal' Model (Field FieldOutput Unique) ->
+  Opts ->
+  View Action
+dynField st optic options =
+  field
+    st
+    optic
+    options
+    parseFieldOutput
+    inspectFieldOutput

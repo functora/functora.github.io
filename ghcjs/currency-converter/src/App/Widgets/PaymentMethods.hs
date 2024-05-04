@@ -5,8 +5,8 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
@@ -28,14 +28,14 @@ paymentMethodWidget ::
   Int ->
   [View Action]
 paymentMethodWidget st optic idx =
-  [ Amount.amountSelect
+  [ Field.ratField
       st
       ( cloneTraversal optic
           . ix idx
           . #paymentMethodMoney
           . #moneyAmount
       )
-      ( Amount.opts
+      ( Field.opts
           & #optsDisabled
           .~ True
           & #optsPlaceholder

@@ -6,7 +6,6 @@ module App.Types
     Action (..),
     St (..),
     Money (..),
-    Amount (..),
     Currency (..),
     PaymentMethod (..),
     ChanItem (..),
@@ -115,7 +114,7 @@ deriving via GenericType (St Identity) instance ToJSON (St Identity)
 deriving via GenericType (St Identity) instance FromJSON (St Identity)
 
 data Money f = Money
-  { moneyAmount :: Amount f,
+  { moneyAmount :: Field Rational f,
     moneyCurrency :: Currency f
   }
   deriving stock (Generic)
@@ -135,28 +134,6 @@ instance TraversableB Money
 deriving via GenericType (Money Identity) instance ToJSON (Money Identity)
 
 deriving via GenericType (Money Identity) instance FromJSON (Money Identity)
-
-data Amount f = Amount
-  { amountInput :: f Text,
-    amountOutput :: Rational
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (Amount f)
-
-deriving stock instance (Hkt f) => Ord (Amount f)
-
-deriving stock instance (Hkt f) => Show (Amount f)
-
-deriving stock instance (Hkt f) => Data (Amount f)
-
-instance FunctorB Amount
-
-instance TraversableB Amount
-
-deriving via GenericType (Amount Identity) instance ToJSON (Amount Identity)
-
-deriving via GenericType (Amount Identity) instance FromJSON (Amount Identity)
 
 data Currency f = Currency
   { currencyInput :: f Text,
@@ -244,7 +221,7 @@ data OnlineOrOffline
 
 data Asset f = Asset
   { assetPrice :: Money f,
-    assetQuantity :: Amount f,
+    assetQuantity :: Field Rational f,
     assetFieldPairs :: [FieldPair FieldOutput f]
   }
   deriving stock (Generic)
@@ -337,13 +314,13 @@ newModel = do
       & #modelState
       . #stateTopMoney
       . #moneyAmount
-      . #amountInput
+      . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
       . #stateTopMoney
       . #moneyAmount
-      . #amountOutput
+      . #fieldOutput
       .~ unTagged baseAmt
       & #modelState
       . #stateTopMoney
@@ -353,13 +330,13 @@ newModel = do
       & #modelState
       . #stateBottomMoney
       . #moneyAmount
-      . #amountInput
+      . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged quoteAmt)
       & #modelState
       . #stateBottomMoney
       . #moneyAmount
-      . #amountOutput
+      . #fieldOutput
       .~ unTagged quoteAmt
       & #modelState
       . #stateBottomMoney
@@ -374,7 +351,7 @@ newModel = do
       . each
       . #paymentMethodMoney
       . #moneyAmount
-      . #amountInput
+      . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
@@ -382,7 +359,7 @@ newModel = do
       . each
       . #paymentMethodMoney
       . #moneyAmount
-      . #amountOutput
+      . #fieldOutput
       .~ unTagged baseAmt
       & #modelState
       . #statePaymentMethods
@@ -407,11 +384,9 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newAmount :: (MonadIO m) => Rational -> m (Amount Unique)
-newAmount amt =
-  Amount
-    <$> newUnique (inspectRatioDef @Text amt)
-    <*> pure amt
+newRatField :: (MonadIO m) => Rational -> m (Field Rational Unique)
+newRatField output =
+  newField output inspectRatioDef $ const "number"
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
@@ -423,7 +398,7 @@ newCurrency cur =
 newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
 newMoney amt cur =
   Money
-    <$> newAmount amt
+    <$> newRatField amt
     <*> newCurrency cur
 
 --
@@ -475,7 +450,7 @@ newAsset label value amt cur = do
   item <- newFieldPair label $ FieldOutputText value
   Asset
     <$> newMoney amt cur
-    <*> newAmount 1
+    <*> newRatField 1
     <*> pure [item]
 
 newIdentityState :: St Unique -> St Identity

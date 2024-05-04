@@ -194,7 +194,7 @@ evalModel st = do
         case st
           ^. cloneLens baseLens
           . #moneyAmount
-          . #amountInput
+          . #fieldInput
           . #uniqueValue of
           amt
             | null amt ->
@@ -202,7 +202,7 @@ evalModel st = do
                   $ st
                   ^. cloneLens baseLens
                   . #moneyAmount
-                  . #amountOutput
+                  . #fieldOutput
           amt -> amt
   baseAmtResult <-
     tryAny $ parseMoney baseAmtInput
@@ -232,21 +232,21 @@ evalModel st = do
           $ next
           & cloneLens baseLens
           . #moneyAmount
-          . #amountInput
+          . #fieldInput
           . #uniqueValue
           .~ baseAmtInput
           & cloneLens baseLens
           . #moneyAmount
-          . #amountOutput
+          . #fieldOutput
           .~ unTagged baseAmt
           & cloneLens quoteLens
           . #moneyAmount
-          . #amountInput
+          . #fieldInput
           . #uniqueValue
           .~ inspectRatioDef (unTagged quoteAmt)
           & cloneLens quoteLens
           . #moneyAmount
-          . #amountOutput
+          . #fieldOutput
           .~ unTagged quoteAmt
           & #modelOnlineAt
           .~ ct
@@ -268,12 +268,12 @@ evalInvoice st = do
       $ mtd
       & #paymentMethodMoney
       . #moneyAmount
-      . #amountInput
+      . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef @Text total
       & #paymentMethodMoney
       . #moneyAmount
-      . #amountOutput
+      . #fieldOutput
       .~ total
   pure
     $ st
@@ -306,8 +306,8 @@ getTotalPayment method asset = do
       )
   pure $ quote ^. #quoteMoneyAmount . to unTagged
   where
-    price = asset ^. #assetPrice . #moneyAmount . #amountOutput
-    quantity = asset ^. #assetQuantity . #amountOutput
+    price = asset ^. #assetPrice . #moneyAmount . #fieldOutput
+    quantity = asset ^. #assetQuantity . #fieldOutput
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case

@@ -19,7 +19,7 @@ where
 
 import App.Types
 import Functora.Money
-import Functora.Prelude as Prelude
+import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
@@ -28,7 +28,7 @@ getConverterAmountOptic ::
   ( Functor f
   ) =>
   TopOrBottom ->
-  LensLike' f Model (Amount Unique)
+  LensLike' f Model (Field Rational Unique)
 getConverterAmountOptic = \case
   Top -> #modelState . #stateTopMoney . #moneyAmount
   Bottom -> #modelState . #stateBottomMoney . #moneyAmount

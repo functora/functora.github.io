@@ -2,12 +2,13 @@ module App.Widgets.Main (mainWidget) where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Amount as Amount
 import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.PaymentMethods as PaymentMethods
+import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
@@ -58,11 +59,11 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
-        Amount.amountSelect
+        Field.ratField
           st
           ( Misc.getConverterAmountOptic loc
           )
-          ( Amount.opts
+          ( Field.opts
               & #optsExtraOnInput
               .~ (& #modelState . #stateTopOrBottom .~ loc)
               & #optsPlaceholder
@@ -80,7 +81,7 @@ screenWidget st@Model {modelScreen = Converter} =
         currencyWidget' Top,
         amountWidget' Bottom,
         currencyWidget' Bottom,
-        Amount.amountSwap,
+        SwapAmounts.swapAmounts,
         Currency.currencySwap
       ]
 screenWidget st@Model {modelScreen = DocumentEditor} =

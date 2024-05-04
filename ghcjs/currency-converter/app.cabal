@@ -21,7 +21,6 @@ common pkg
   other-modules:
     App.Misc
     App.Types
-    App.Widgets.Amount
     App.Widgets.Assets
     App.Widgets.Button
     App.Widgets.Chips
@@ -32,6 +31,7 @@ common pkg
     App.Widgets.IconToggles
     App.Widgets.Main
     App.Widgets.PaymentMethods
+    App.Widgets.SwapAmounts
     App.Widgets.Switch
     App.Widgets.TextInput
 

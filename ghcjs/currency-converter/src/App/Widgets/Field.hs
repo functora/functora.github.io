@@ -7,7 +7,7 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import Functora.Prelude hiding (field)
+import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -35,7 +35,7 @@ opts =
 
 field ::
   Model ->
-  ATraversal' Model (FieldValue Unique) ->
+  ATraversal' Model (Field Unique) ->
   Opts ->
   View Action
 field st optic options =
@@ -52,7 +52,7 @@ field st optic options =
           ( from @Text @String
               <$> st
               ^? cloneTraversal optic
-              . #fieldValueHtmlType
+              . #fieldHtmlType
           )
         & TextField.setOnInput onInputAction
         & TextField.setDisabled (options ^. #optsDisabled)
@@ -106,7 +106,7 @@ field st optic options =
             & Dialog.setOpen
               ( fromMaybe
                   False
-                  (st ^? cloneTraversal optic . #fieldValueSettingsOpen)
+                  (st ^? cloneTraversal optic . #fieldSettingsOpen)
               )
         )
         ( Dialog.dialogContent
@@ -143,13 +143,13 @@ field st optic options =
       fromMaybe nilUid
         $ st
         ^? cloneTraversal optic
-        . #fieldValueInput
+        . #fieldInput
         . #uniqueUid
     getInput st' =
-      st' ^? cloneTraversal optic . #fieldValueInput . #uniqueValue
+      st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
     getOutput st' = do
       (st' ^? cloneTraversal optic >>= parseFieldOutput)
-        <|> (st' ^? cloneTraversal optic . #fieldValueOutput)
+        <|> (st' ^? cloneTraversal optic . #fieldOutput)
     getInputReplacement st' = do
       let next = st' ^? cloneTraversal optic >>= parseFieldOutput
       inp <- getInput st'
@@ -163,11 +163,11 @@ field st optic options =
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal optic
-            . #fieldValueInput
+            . #fieldInput
             . #uniqueValue
             %~ maybe id (const . inspectFieldOutput) (getInputReplacement st')
             & cloneTraversal optic
-            . #fieldValueOutput
+            . #fieldOutput
             %~ maybe id (const . id) (getOutput st')
     onInputAction txt =
       PushUpdate $ do
@@ -176,13 +176,13 @@ field st optic options =
           let next =
                 prev
                   & cloneTraversal optic
-                  . #fieldValueInput
+                  . #fieldInput
                   . #uniqueValue
                   .~ from @String @Text txt
                   & (options ^. #optsExtraOnInput)
            in next
                 & cloneTraversal optic
-                . #fieldValueOutput
+                . #fieldOutput
                 %~ maybe id (const . id) (getOutput next)
     onCopyAction =
       PushUpdate $ do
@@ -203,7 +203,7 @@ field st optic options =
         pure . ChanItem 300 $ \st' ->
           st'
             & cloneTraversal optic
-            . #fieldValueInput
+            . #fieldInput
             . #uniqueValue
             .~ mempty
             & (options ^. #optsExtraOnInput)
@@ -211,11 +211,11 @@ field st optic options =
       pureUpdate 0 $ \st' ->
         st'
           & cloneTraversal optic
-          . #fieldValueSettingsOpen
+          . #fieldSettingsOpen
           .~ True
     closed =
       pureUpdate 0 $ \st' ->
         st'
           & cloneTraversal optic
-          . #fieldValueSettingsOpen
+          . #fieldSettingsOpen
           .~ False

@@ -29,8 +29,8 @@ module App.Types
     fieldOutputType,
     parseFieldOutput,
     inspectFieldOutput,
-    FieldValue (..),
-    newFieldValue,
+    Field (..),
+    newField,
     FieldPair (..),
     newFieldPair,
   )
@@ -42,7 +42,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import qualified Functora.Money as Money
-import Functora.Prelude as Prelude
+import Functora.Prelude hiding (Field (..))
 import Functora.Rates
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
@@ -263,6 +263,7 @@ deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 --
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
+  let defaultScreen = Converter
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
@@ -295,7 +296,7 @@ newModel = do
                   stateAssets = [asset],
                   statePaymentMethods = [paymentMethod]
                 },
-            modelScreen = DocumentEditor,
+            modelScreen = defaultScreen,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,
@@ -504,14 +505,14 @@ fieldOutputType = \case
   FieldOutputNumber {} -> FieldTypeNumber
   FieldOutputPercent {} -> FieldTypePercent
 
-parseFieldOutput :: FieldValue Unique -> Maybe FieldOutput
+parseFieldOutput :: Field Unique -> Maybe FieldOutput
 parseFieldOutput value =
-  case value ^. #fieldValueOutput of
+  case value ^. #fieldOutput of
     FieldOutputText {} -> Just $ FieldOutputText input
     FieldOutputNumber {} -> FieldOutputNumber <$> parseRatio input
     FieldOutputPercent {} -> FieldOutputPercent <$> parseRatio input
   where
-    input = value ^. #fieldValueInput . #uniqueValue
+    input = value ^. #fieldInput . #uniqueValue
 
 inspectFieldOutput :: FieldOutput -> Text
 inspectFieldOutput = \case
@@ -519,39 +520,39 @@ inspectFieldOutput = \case
   FieldOutputNumber x -> inspectRatioDef x
   FieldOutputPercent x -> inspectRatioDef x
 
-data FieldValue f = FieldValue
-  { fieldValueInput :: f Text,
-    fieldValueOutput :: FieldOutput,
-    fieldValueHtmlType :: Text,
-    fieldValueSettingsOpen :: Bool
+data Field f = Field
+  { fieldInput :: f Text,
+    fieldOutput :: FieldOutput,
+    fieldHtmlType :: Text,
+    fieldSettingsOpen :: Bool
   }
   deriving stock (Generic)
 
-deriving stock instance (Std f) => Eq (FieldValue f)
+deriving stock instance (Std f) => Eq (Field f)
 
-deriving stock instance (Std f) => Ord (FieldValue f)
+deriving stock instance (Std f) => Ord (Field f)
 
-deriving stock instance (Std f) => Show (FieldValue f)
+deriving stock instance (Std f) => Show (Field f)
 
-deriving stock instance (Std f) => Data (FieldValue f)
+deriving stock instance (Std f) => Data (Field f)
 
-instance FunctorB FieldValue
+instance FunctorB Field
 
-instance TraversableB FieldValue
-
-deriving via
-  GenericType (FieldValue Identity)
-  instance
-    ToJSON (FieldValue Identity)
+instance TraversableB Field
 
 deriving via
-  GenericType (FieldValue Identity)
+  GenericType (Field Identity)
   instance
-    FromJSON (FieldValue Identity)
+    ToJSON (Field Identity)
 
-newFieldValue :: (MonadIO m) => FieldOutput -> m (FieldValue Unique)
-newFieldValue output =
-  FieldValue
+deriving via
+  GenericType (Field Identity)
+  instance
+    FromJSON (Field Identity)
+
+newField :: (MonadIO m) => FieldOutput -> m (Field Unique)
+newField output =
+  Field
     <$> newUnique (inspectFieldOutput output)
     <*> pure output
     <*> pure (defaultHtmlType output)
@@ -559,7 +560,7 @@ newFieldValue output =
 
 data FieldPair f = FieldPair
   { fieldPairKey :: f Text,
-    fieldPairValue :: FieldValue f,
+    fieldPairValue :: Field f,
     fieldPairValuePlainText :: Bool,
     fieldPairValueQrCode :: Bool,
     fieldPairValueLink :: Bool,
@@ -593,7 +594,7 @@ newFieldPair :: (MonadIO m) => Text -> FieldOutput -> m (FieldPair Unique)
 newFieldPair key val =
   FieldPair
     <$> newUnique key
-    <*> newFieldValue val
+    <*> newField val
     <*> pure True
     <*> pure False
     <*> pure False

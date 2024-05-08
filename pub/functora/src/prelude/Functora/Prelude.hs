@@ -89,6 +89,8 @@ module Functora.Prelude
     randomListPure,
     randomByteString,
     randomByteStringPure,
+    expBackOff,
+    expBackOffSecondsAfter,
   )
 where
 
@@ -137,6 +139,7 @@ import Control.Monad.Extra as X
     maybeM,
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
+import Control.Monad.Trans.Reader as X (mapReaderT)
 import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
@@ -188,6 +191,7 @@ import Data.Time.Clock as X
     diffUTCTime,
     nominalDay,
     secondsToDiffTime,
+    secondsToNominalDiffTime,
   )
 import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
@@ -845,3 +849,15 @@ randomByteStringPure :: (Random.RandomGen g) => Natural -> g -> (ByteString, g)
 randomByteStringPure qty =
   first BS.pack
     . randomListPure qty
+
+expBackOff :: forall a. (From a Natural) => a -> Natural
+expBackOff = (2 ^) . from @a @Natural
+
+expBackOffSecondsAfter :: (From a Natural) => a -> UTCTime -> UTCTime
+expBackOffSecondsAfter attempt =
+  addUTCTime
+    ( secondsToNominalDiffTime
+        . from @Integer @Pico
+        . from @Natural @Integer
+        $ expBackOff attempt
+    )

@@ -1985,6 +1985,7 @@ c.url.searchengines = {
         'ddg': 'https://duckduckgo.com/?q={}',
         'gpt': 'https://chat.openai.com/?q={}',
         'bing': 'https://www.bing.com/search?showconv=1&sendquery=1&q={}',
+        'wiki': 'https://en.wikipedia.org/w/index.php?search={}',
         'enes': 'https://translate.google.com/details?sl=en&tl=es&op=translate&text={}',
         'enru': 'https://translate.google.com/details?sl=en&tl=ru&op=translate&text={}',
         'esen': 'https://translate.google.com/details?sl=es&tl=en&op=translate&text={}',

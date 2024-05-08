@@ -1,5 +1,7 @@
 module Functora.Sql
   ( module X,
+    upsertBy,
+    selectOneRequired,
     (^:),
   )
 where
@@ -9,10 +11,8 @@ import Control.Monad.Logger as X
     runLoggingT,
     runNoLoggingT,
   )
-import Data.Pool as X
-  ( Pool,
-    destroyAllResources,
-  )
+import Data.Pool as X (Pool, destroyAllResources)
+import qualified Database.Esqueleto.Internal.Internal as Internal
 import Database.Esqueleto.Legacy as X
   ( BaseBackend,
     Entity (..),
@@ -84,6 +84,7 @@ import qualified Database.Esqueleto.Legacy as Legacy
 import Database.Persist as X
   ( LiteralType (..),
   )
+import qualified Database.Persist as Persist
 import Database.Persist.Class as X
   ( BackendKey,
   )
@@ -103,8 +104,61 @@ import Database.Persist.TH as X
     share,
     sqlSettings,
   )
+import Functora.Prelude
+  ( HasCallStack,
+    MonadIO,
+    MonadThrow,
+    NonEmpty,
+    ReaderT,
+    Text,
+    Type,
+    Typeable,
+    inspectType,
+    maybeM,
+    pure,
+    throwString,
+    toList,
+    ($),
+    (.),
+    (<>),
+  )
 import Functora.SqlOrphan as X ()
 import GHC.IO.Handle.FD as X (stderr, stdout)
+
+-- | NOTE : This is workaround. Empty updates do cause exception.
+upsertBy ::
+  forall record (m :: Type -> Type) backend.
+  ( MonadIO m,
+    Legacy.PersistUniqueWrite backend,
+    Legacy.PersistRecordBackend record backend,
+    Legacy.SafeToInsert record
+  ) =>
+  Legacy.Unique record ->
+  record ->
+  NonEmpty (Persist.Update record) ->
+  ReaderT backend m (Entity record)
+upsertBy key rec =
+  Legacy.upsertBy key rec . toList
+
+selectOneRequired ::
+  forall r a m backend.
+  ( MonadIO m,
+    MonadThrow m,
+    Internal.SqlSelect a r,
+    Legacy.SqlBackendCanRead backend,
+    HasCallStack,
+    Typeable r
+  ) =>
+  Legacy.SqlQuery a ->
+  ReaderT backend m r
+selectOneRequired =
+  maybeM
+    ( throwString $
+        "Required at least one row of "
+          <> inspectType @r @Text
+    )
+    pure
+    . Legacy.selectOne
 
 -- | Project a field of an entity.
 -- Alias exists to remove interference with Lens.

@@ -156,6 +156,10 @@ spec = do
             }
     inspectSop @Text nodata
       `shouldBe` "NoData {noDataExpr = Add (Sub (Lit 1) (Lit 2)) (Lit 3), noDataByte = \"example\", noDataSelf = Just (NoData {noDataExpr = Lit 1, noDataByte = \"6af6abe7e7a679\", noDataSelf = Nothing})}"
+  it "expBackOff" $ do
+    let xs :: NonEmpty Natural = expBackOff @Natural <$> [0 .. 17]
+    head xs `shouldBe` 1
+    last xs `shouldBe` 131072
 
 inspectParseRatioSigned ::
   forall a.

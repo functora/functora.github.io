@@ -115,6 +115,7 @@ common pkg
     , these-lens
     , time
     , tomland
+    , transformers
     , type-level-sets
     , unbounded-delays
     , uniplate

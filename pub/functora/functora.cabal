@@ -109,6 +109,7 @@ common pkg-prelude
     , these
     , these-lens
     , time
+    , transformers
     , unbounded-delays
     , uniplate
     , universum
@@ -174,7 +175,7 @@ common pkg-sql
   hs-source-dirs: src/sql
   build-depends:
     , base
-    , esqueleto
+    , esqueleto      >=3.2.0
     , modern-uri
     , monad-logger
     , money

@@ -2,6 +2,7 @@ module Functora.Sql
   ( module X,
     upsertBy,
     selectOneRequired,
+    runMigrationPool,
     (^:),
   )
 where
@@ -38,6 +39,9 @@ import Database.Esqueleto.Legacy as X
     asc,
     deleteKey,
     desc,
+    distinct,
+    distinctOn,
+    don,
     from,
     getBy,
     in_,
@@ -96,6 +100,7 @@ import Database.Persist.Sql as X
 import Database.Persist.Sql.Migration as X
   ( runMigrationQuiet,
   )
+import qualified Database.Persist.Sql.Types.Internal as Sql
 import Database.Persist.TH as X
   ( derivePersistField,
     mkMigrate,
@@ -106,21 +111,27 @@ import Database.Persist.TH as X
   )
 import Functora.Prelude
   ( HasCallStack,
+    Maybe (..),
     MonadIO,
     MonadThrow,
+    MonadUnliftIO,
     NonEmpty,
     ReaderT,
     Text,
     Type,
     Typeable,
+    flip,
     inspectType,
+    liftIO,
     maybeM,
     pure,
+    runReaderT,
     throwString,
     toList,
     ($),
     (.),
     (<>),
+    (==),
   )
 import Functora.SqlOrphan as X ()
 import GHC.IO.Handle.FD as X (stderr, stdout)
@@ -159,6 +170,41 @@ selectOneRequired =
     )
     pure
     . Legacy.selectOne
+
+-- | Runs a migration action on a pool. Exactly like 'runSqlPool', but it will
+--   disable foreign keys if running on a sqlite database per the recommendation
+--   in the <https://sqlite.org/lang_altertable.html#making_other_kinds_of_table_schema_changes
+--   relevant sqlite documentation>.
+--
+--   Workaround for <https://github.com/yesodweb/persistent/issues/1125>
+runMigrationPool ::
+  forall m a.
+  ( MonadUnliftIO m
+  ) =>
+  ReaderT SqlBackend m a ->
+  Legacy.ConnectionPool ->
+  m a
+runMigrationPool r pconn =
+  Legacy.runSqlPoolWithHooks r pconn Nothing before after onException
+  where
+    before conn = do
+      let sqlBackend = Legacy.projectBackend conn
+      let getter = Legacy.getStmtConn sqlBackend
+      whenSqlite conn $ rawExecute "PRAGMA foreign_keys=OFF" []
+      liftIO $ Sql.connBegin sqlBackend getter Nothing
+    after conn = do
+      let sqlBackend = Legacy.projectBackend conn
+      let getter = Legacy.getStmtConn sqlBackend
+      whenSqlite conn $ rawExecute "PRAGMA foreign_keys=ON" []
+      liftIO $ Sql.connCommit sqlBackend getter
+    onException conn _ = do
+      let sqlBackend = Legacy.projectBackend conn
+      let getter = Legacy.getStmtConn sqlBackend
+      liftIO $ Sql.connRollback sqlBackend getter
+    whenSqlite conn act
+      | Sql.connRDBMS conn == "sqlite" =
+          runReaderT `flip` conn $ act
+    whenSqlite _ _ = pure ()
 
 -- | Project a field of an entity.
 -- Alias exists to remove interference with Lens.

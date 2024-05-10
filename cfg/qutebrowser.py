@@ -1980,8 +1980,8 @@ c.content.headers.user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.searchengines = {
-        'DEFAULT': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
-        'ggl': 'https://google.com/search?q={}',
+        'DEFAULT': 'https://google.com/search?q={}',
+        'ggl': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
         'ddg': 'https://duckduckgo.com/?q={}',
         'gpt': 'https://chat.openai.com/?q={}',
         'bing': 'https://www.bing.com/search?showconv=1&sendquery=1&q={}',

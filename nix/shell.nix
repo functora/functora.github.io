@@ -22,6 +22,7 @@ in
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git
         newpkgs.litecli
+        newpkgs.sqlite
         newpkgs.sqlite-web
         misc.nix-bundle
       ]

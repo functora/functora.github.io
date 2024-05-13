@@ -9,12 +9,14 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Switch as Switch
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.TextField as TextField
+import qualified Material.Theme as Theme
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
@@ -115,31 +117,65 @@ field st optic options parser viewer =
         )
         ( Dialog.dialogContent
             Nothing
-            [ -- currencyListWidget st optic
-              text "HELLO"
+            [ Switch.switch
+                st
+                ( Switch.opts
+                    & #optsPlaceholder
+                    .~ "Text"
+                    & #optsIcon
+                    .~ Just "font_download"
+                )
+                ( cloneTraversal optic . #fieldPlainText
+                ),
+              Switch.switch
+                st
+                ( Switch.opts
+                    & #optsPlaceholder
+                    .~ "QR code"
+                    & #optsIcon
+                    .~ Just "qr_code_2"
+                )
+                ( cloneTraversal optic . #fieldQrCode
+                ),
+              Switch.switch
+                st
+                ( Switch.opts
+                    & #optsPlaceholder
+                    .~ "Link"
+                    & #optsIcon
+                    .~ Just "link"
+                )
+                ( cloneTraversal optic . #fieldLink
+                ),
+              Switch.switch
+                st
+                ( Switch.opts
+                    & #optsPlaceholder
+                    .~ "HTML"
+                    & #optsIcon
+                    .~ Just "code"
+                )
+                ( cloneTraversal optic . #fieldHtml
+                ),
+              Button.raised
+                ( Button.config
+                    & Button.setOnClick closed
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
+                )
+                "Hello",
+              Button.raised
+                ( Button.config
+                    & Button.setOnClick closed
+                    & Button.setAttributes
+                      [ class_ "fill"
+                      ]
+                )
+                "Cancel"
             ]
-            [ div_
-                [ class_ "fill"
-                ]
-                [ -- TextInput.textInput
-                  --   st
-                  --   ( cloneTraversal optic
-                  --       . #currencyInput
-                  --   )
-                  --   ( TextInput.opts
-                  --       & #optsPlaceholder
-                  --       .~ "Search"
-                  --   ),
-                  Button.raised
-                    ( Button.config
-                        & Button.setOnClick closed
-                        & Button.setAttributes
-                          [ class_ "fill"
-                          ]
-                    )
-                    "Cancel"
-                ]
-            ]
+            mempty
         )
     ]
   where

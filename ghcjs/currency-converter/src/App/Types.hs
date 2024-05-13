@@ -247,7 +247,7 @@ deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 --
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
-  let defaultScreen = Converter
+  let defaultScreen = DocumentEditor
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
@@ -514,7 +514,11 @@ data Field a f = Field
   { fieldInput :: f Text,
     fieldOutput :: a,
     fieldHtmlType :: Text,
-    fieldSettingsOpen :: Bool
+    fieldSettingsOpen :: Bool,
+    fieldPlainText :: Bool,
+    fieldQrCode :: Bool,
+    fieldLink :: Bool,
+    fieldHtml :: Bool
   }
   deriving stock (Generic)
 
@@ -545,12 +549,19 @@ newField ::
   -- TODO : newtype for HtmlType
   --
   (MonadIO m) => a -> (a -> Text) -> (a -> Text) -> m (Field a Unique)
-newField output newInput newHtmlType =
-  Field
-    <$> newUnique (newInput output)
-    <*> pure output
-    <*> pure (newHtmlType output)
-    <*> pure False
+newField output newInput newHtmlType = do
+  input <- newUnique $ newInput output
+  pure
+    Field
+      { fieldInput = input,
+        fieldOutput = output,
+        fieldHtmlType = newHtmlType output,
+        fieldSettingsOpen = False,
+        fieldPlainText = True,
+        fieldQrCode = False,
+        fieldLink = False,
+        fieldHtml = False
+      }
 
 data FieldPair a f = FieldPair
   { fieldPairKey :: Field Text f,

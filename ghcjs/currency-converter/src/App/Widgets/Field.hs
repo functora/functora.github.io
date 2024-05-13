@@ -9,6 +9,7 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Switch as Switch
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
@@ -117,63 +118,72 @@ field st optic options parser viewer =
         )
         ( Dialog.dialogContent
             Nothing
-            [ Switch.switch
-                st
-                ( Switch.opts
-                    & #optsPlaceholder
-                    .~ "Text"
-                    & #optsIcon
-                    .~ Just "font_download"
-                )
-                ( cloneTraversal optic . #fieldPlainText
-                ),
-              Switch.switch
-                st
-                ( Switch.opts
-                    & #optsPlaceholder
-                    .~ "QR code"
-                    & #optsIcon
-                    .~ Just "qr_code_2"
-                )
-                ( cloneTraversal optic . #fieldQrCode
-                ),
-              Switch.switch
-                st
-                ( Switch.opts
-                    & #optsPlaceholder
-                    .~ "Link"
-                    & #optsIcon
-                    .~ Just "link"
-                )
-                ( cloneTraversal optic . #fieldLink
-                ),
-              Switch.switch
-                st
-                ( Switch.opts
-                    & #optsPlaceholder
-                    .~ "HTML"
-                    & #optsIcon
-                    .~ Just "code"
-                )
-                ( cloneTraversal optic . #fieldHtml
-                ),
-              Button.raised
-                ( Button.config
-                    & Button.setOnClick closed
-                    & Button.setAttributes
-                      [ class_ "fill",
-                        Theme.secondaryBg
-                      ]
-                )
-                "Hello",
-              Button.raised
-                ( Button.config
-                    & Button.setOnClick closed
-                    & Button.setAttributes
-                      [ class_ "fill"
-                      ]
-                )
-                "Cancel"
+            [ Cell.grid
+                mempty
+                [ Cell.mediumCell
+                    $ Switch.switch
+                      st
+                      ( Switch.opts
+                          & #optsPlaceholder
+                          .~ "Text"
+                          & #optsIcon
+                          .~ Just "font_download"
+                      )
+                      ( cloneTraversal optic . #fieldPlainText
+                      ),
+                  Cell.mediumCell
+                    $ Switch.switch
+                      st
+                      ( Switch.opts
+                          & #optsPlaceholder
+                          .~ "QR code"
+                          & #optsIcon
+                          .~ Just "qr_code_2"
+                      )
+                      ( cloneTraversal optic . #fieldQrCode
+                      ),
+                  Cell.mediumCell
+                    $ Switch.switch
+                      st
+                      ( Switch.opts
+                          & #optsPlaceholder
+                          .~ "Link"
+                          & #optsIcon
+                          .~ Just "link"
+                      )
+                      ( cloneTraversal optic . #fieldLink
+                      ),
+                  Cell.mediumCell
+                    $ Switch.switch
+                      st
+                      ( Switch.opts
+                          & #optsPlaceholder
+                          .~ "HTML"
+                          & #optsIcon
+                          .~ Just "code"
+                      )
+                      ( cloneTraversal optic . #fieldHtml
+                      ),
+                  Cell.bigCell
+                    $ Button.raised
+                      ( Button.config
+                          & Button.setOnClick closed
+                          & Button.setAttributes
+                            [ class_ "fill",
+                              Theme.secondaryBg
+                            ]
+                      )
+                      "Hello",
+                  Cell.bigCell
+                    $ Button.raised
+                      ( Button.config
+                          & Button.setOnClick closed
+                          & Button.setAttributes
+                            [ class_ "fill"
+                            ]
+                      )
+                      "Cancel"
+                ]
             ]
             mempty
         )

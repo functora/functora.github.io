@@ -91,6 +91,7 @@ module Functora.Prelude
     randomByteStringPure,
     expBackOff,
     expBackOffSecondsAfter,
+    secondsToNominalDiffTime,
   )
 where
 
@@ -185,13 +186,13 @@ import Data.These.Combinators as X (hasThere)
 import Data.These.Lens as X
 import Data.Time.Clock as X
   ( DiffTime,
+    NominalDiffTime,
     UTCTime (..),
     addUTCTime,
     diffTimeToPicoseconds,
     diffUTCTime,
     nominalDay,
     secondsToDiffTime,
-    secondsToNominalDiffTime,
   )
 import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
@@ -857,7 +858,10 @@ expBackOffSecondsAfter :: (From a Natural) => a -> UTCTime -> UTCTime
 expBackOffSecondsAfter attempt =
   addUTCTime
     ( secondsToNominalDiffTime
-        . from @Integer @Pico
-        . from @Natural @Integer
         $ expBackOff attempt
     )
+
+secondsToNominalDiffTime :: forall a. (From a Natural) => a -> NominalDiffTime
+secondsToNominalDiffTime =
+  Universum.fromIntegral
+    . from @a @Natural

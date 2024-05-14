@@ -160,6 +160,9 @@ spec = do
     let xs :: NonEmpty Natural = expBackOff @Natural <$> [0 .. 17]
     head xs `shouldBe` 1
     last xs `shouldBe` 131072
+  it "expBackOffSecondsAfter"
+    $ inspect @Text (expBackOffSecondsAfter @Natural 3 epoch)
+    `shouldBe` "1970-01-01 00:00:08 UTC"
 
 inspectParseRatioSigned ::
   forall a.

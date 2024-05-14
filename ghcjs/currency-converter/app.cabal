@@ -22,7 +22,6 @@ common pkg
     App.Misc
     App.Types
     App.Widgets.Assets
-    App.Widgets.Button
     App.Widgets.Cell
     App.Widgets.Chips
     App.Widgets.Currency

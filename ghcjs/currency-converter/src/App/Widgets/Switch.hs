@@ -54,7 +54,9 @@ switch st options optic =
               ( fmap (Icon.icon mempty . from @Text @String)
                   $ optsIcon options
               )
-            <> [ Miso.text . ms $ options ^. #optsPlaceholder,
+            <> [ Miso.rawHtml "&nbsp;",
+                 Miso.text . ms $ options ^. #optsPlaceholder,
+                 Miso.rawHtml "&nbsp;&nbsp;",
                  Switch.switch
                   $ Switch.config
                   & Switch.setChecked

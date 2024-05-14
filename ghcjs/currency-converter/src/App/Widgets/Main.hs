@@ -3,7 +3,7 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
-import qualified App.Widgets.Button as Button
+import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
@@ -13,6 +13,7 @@ import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
+import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
@@ -91,28 +92,36 @@ screenWidget st@Model {modelScreen = DocumentEditor} =
 
 swapScreenWidget :: Model -> View Action
 swapScreenWidget st =
-  Button.bigButton @Text
-    [Theme.secondaryBg]
-    ( case st ^. #modelScreen of
-        Converter -> "Create invoice"
-        DocumentEditor -> "Show converter"
-    )
-    . PushUpdate
-    $ do
-      --
-      -- NOTE : Force sync text inputs on new screen.
-      --
-      Misc.forceRender st
-      pure
-        $ ChanItem
-          0
-          ( &
-              #modelScreen
-                %~ ( \case
-                      Converter -> DocumentEditor
-                      DocumentEditor -> Converter
-                   )
-          )
+  Cell.bigCell
+    $ Button.raised
+      ( Button.config
+          & Button.setAttributes
+            [ Theme.secondaryBg,
+              class_ "fill"
+            ]
+          & Button.setOnClick
+            ( PushUpdate
+                $ do
+                  --
+                  -- NOTE : Force sync text inputs on new screen.
+                  --
+                  Misc.forceRender st
+                  pure
+                    $ ChanItem
+                      0
+                      ( &
+                          #modelScreen
+                            %~ ( \case
+                                  Converter -> DocumentEditor
+                                  DocumentEditor -> Converter
+                               )
+                      )
+            )
+      )
+      ( case st ^. #modelScreen of
+          Converter -> "Create invoice"
+          DocumentEditor -> "Show converter"
+      )
 
 tosWidget :: View Action
 tosWidget =

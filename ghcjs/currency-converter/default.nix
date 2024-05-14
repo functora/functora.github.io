@@ -104,7 +104,9 @@ in rec {
         --jscomp_off=checkVars \
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/app.jsexe/all.js.externs \
+        --externs ${./static}/app.js \
         --externs ${./static}/material-components-web.min.js \
+        --externs ${./static}/material-components-web-elm.min.js \
         --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
         --create_source_map $out/all.js.map \
         --js ${app}/bin/app.jsexe/all.js \

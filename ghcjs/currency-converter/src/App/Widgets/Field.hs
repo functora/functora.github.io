@@ -10,12 +10,13 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
-import qualified App.Widgets.Switch as Switch
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
+import qualified Material.Select as Select
+import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import Miso hiding (view)
@@ -121,59 +122,87 @@ field st optic options parser viewer =
             [ Cell.grid
                 mempty
                 [ Cell.mediumCell
-                    $ Switch.switch
-                      st
-                      ( Switch.opts
-                          & #optsPlaceholder
-                          .~ "Text"
-                          & #optsIcon
-                          .~ Just "font_download"
+                    $ Select.outlined
+                      ( Select.config
+                          & Select.setLabel (Just "Show as")
+                          & Select.setAttributes [class_ "fill-inner"]
+                          & Select.setSelected
+                            ( st ^? cloneTraversal optic . #fieldFormat
+                            )
+                          & Select.setOnChange
+                            ( \x ->
+                                pureUpdate
+                                  0
+                                  ( & cloneTraversal optic . #fieldFormat .~ x
+                                  )
+                            )
                       )
-                      ( cloneTraversal optic . #fieldPlainText
-                      ),
-                  Cell.mediumCell
-                    $ Switch.switch
-                      st
-                      ( Switch.opts
-                          & #optsPlaceholder
-                          .~ "QR code"
-                          & #optsIcon
-                          .~ Just "qr_code_2"
+                      --
+                      -- NOTE : maybe add icons:
+                      --
+                      -- "font_download"
+                      -- "qr_code_2"
+                      -- "link"
+                      -- "code"
+                      --
+                      ( SelectItem.selectItem
+                          (SelectItem.config FieldFormatText)
+                          [text "Text"]
                       )
-                      ( cloneTraversal optic . #fieldQrCode
-                      ),
-                  Cell.mediumCell
-                    $ Switch.switch
-                      st
-                      ( Switch.opts
-                          & #optsPlaceholder
-                          .~ "Link"
-                          & #optsIcon
-                          .~ Just "link"
-                      )
-                      ( cloneTraversal optic . #fieldLink
-                      ),
-                  Cell.mediumCell
-                    $ Switch.switch
-                      st
-                      ( Switch.opts
-                          & #optsPlaceholder
-                          .~ "HTML"
-                          & #optsIcon
-                          .~ Just "code"
-                      )
-                      ( cloneTraversal optic . #fieldHtml
-                      ),
-                  Cell.bigCell
+                      [ SelectItem.selectItem
+                          (SelectItem.config FieldFormatQrCode)
+                          [text "QR code"],
+                        SelectItem.selectItem
+                          (SelectItem.config FieldFormatLink)
+                          [text "Link"],
+                        SelectItem.selectItem
+                          (SelectItem.config FieldFormatHtml)
+                          [text "HTML"]
+                      ],
+                  Cell.smallCell
                     $ Button.raised
                       ( Button.config
                           & Button.setOnClick closed
+                          & Button.setIcon (Just "keyboard_double_arrow_down")
                           & Button.setAttributes
                             [ class_ "fill",
                               Theme.secondaryBg
                             ]
                       )
-                      "Hello",
+                      "Down",
+                  Cell.smallCell
+                    $ Button.raised
+                      ( Button.config
+                          & Button.setOnClick closed
+                          & Button.setIcon (Just "keyboard_double_arrow_up")
+                          & Button.setAttributes
+                            [ class_ "fill",
+                              Theme.secondaryBg
+                            ]
+                      )
+                      "Up",
+                  Cell.smallCell
+                    $ Button.raised
+                      ( Button.config
+                          & Button.setOnClick closed
+                          & Button.setIcon (Just "library_add")
+                          & Button.setAttributes
+                            [ class_ "fill",
+                              Theme.secondaryBg
+                            ]
+                      )
+                      "Clone",
+                  Cell.smallCell
+                    $ Button.raised
+                      ( Button.config
+                          & Button.setOnClick closed
+                          & Button.setIcon (Just "delete_forever")
+                          & Button.setAttributes
+                            [ class_ "fill",
+                              Theme.secondaryBg
+                            ]
+                      )
+                      "Delete",
                   Cell.bigCell
                     $ Button.raised
                       ( Button.config

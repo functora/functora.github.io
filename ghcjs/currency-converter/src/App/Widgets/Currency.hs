@@ -235,10 +235,7 @@ unexpectedCurrency =
             fieldOutput = "UNEXPECTED CURRENCY",
             fieldHtmlType = "text",
             fieldSettingsOpen = False,
-            fieldPlainText = True,
-            fieldQrCode = False,
-            fieldLink = False,
-            fieldHtml = False
+            fieldFormat = FieldFormatText
           },
       currencyOutput =
         CurrencyInfo

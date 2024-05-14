@@ -28,6 +28,7 @@ module App.Types
     parseFieldOutput,
     inspectFieldOutput,
     Field (..),
+    FieldFormat (..),
     newField,
     FieldPair (..),
     newFieldPair,
@@ -515,10 +516,7 @@ data Field a f = Field
     fieldOutput :: a,
     fieldHtmlType :: Text,
     fieldSettingsOpen :: Bool,
-    fieldPlainText :: Bool,
-    fieldQrCode :: Bool,
-    fieldLink :: Bool,
-    fieldHtml :: Bool
+    fieldFormat :: FieldFormat
   }
   deriving stock (Generic)
 
@@ -544,6 +542,14 @@ deriving via
   instance
     (Typ a, FromJSON a) => FromJSON (Field a Identity)
 
+data FieldFormat
+  = FieldFormatText
+  | FieldFormatQrCode
+  | FieldFormatLink
+  | FieldFormatHtml
+  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving (ToJSON, FromJSON) via (GenericType FieldFormat)
+
 newField ::
   --
   -- TODO : newtype for HtmlType
@@ -557,10 +563,7 @@ newField output newInput newHtmlType = do
         fieldOutput = output,
         fieldHtmlType = newHtmlType output,
         fieldSettingsOpen = False,
-        fieldPlainText = True,
-        fieldQrCode = False,
-        fieldLink = False,
-        fieldHtml = False
+        fieldFormat = FieldFormatText
       }
 
 data FieldPair a f = FieldPair

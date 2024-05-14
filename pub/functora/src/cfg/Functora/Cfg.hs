@@ -11,6 +11,7 @@ module Functora.Cfg
     -- * JSON
     -- $json
     decodeJson,
+    encodeJson,
 
     -- * TOML
     -- $toml
@@ -112,6 +113,18 @@ decodeJson ::
 decodeJson raw =
   A.eitherDecode
     $ via @(UTF_8 BL.ByteString) @inp @BL.ByteString raw
+
+encodeJson ::
+  forall out inp.
+  ( ToJSON inp,
+    From (UTF_8 BL.ByteString) out
+  ) =>
+  inp ->
+  out
+encodeJson =
+  from @(UTF_8 BL.ByteString) @out
+    . Tagged @"UTF-8"
+    . A.encode
 
 -- $toml
 -- TOML

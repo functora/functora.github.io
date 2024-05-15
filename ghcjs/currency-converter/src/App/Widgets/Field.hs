@@ -25,12 +25,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
-    optsExtraOnInput :: Model -> Model,
-    --
-    -- TODO : remove this, derive behaviour from
-    -- provided optics and index.
-    --
-    optsSettingsIcon :: Bool
+    optsExtraOnInput :: Model -> Model
   }
   deriving stock (Generic)
 
@@ -39,8 +34,7 @@ opts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,
-      optsExtraOnInput = id,
-      optsSettingsIcon = True
+      optsExtraOnInput = id
     }
 
 field ::
@@ -49,13 +43,14 @@ field ::
     Data a
   ) =>
   Model ->
-  Maybe (ATraversal' Model [FieldPair a Unique], Int) ->
-  ATraversal' Model (Field a Unique) ->
+  Either
+    (ATraversal' Model (Field a Unique))
+    (ATraversal' Model [FieldPair a Unique], Int) ->
   Opts ->
   (Field a Unique -> Maybe a) ->
   (a -> Text) ->
   View Action
-field st moptic optic options parser viewer =
+field st eoptic options parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -77,7 +72,7 @@ field st moptic optic options parser viewer =
           )
         & TextField.setLeadingIcon
           ( Just
-              $ if options ^. #optsSettingsIcon
+              $ if isRight eoptic
                 then
                   TextField.icon
                     [ class_ "mdc-text-field__icon--leading",
@@ -166,8 +161,9 @@ field st moptic optic options parser viewer =
                             )
                             typs
                   ]
-                <> maybe
-                  mempty
+                <> either
+                  ( const mempty
+                  )
                   ( \(opt, idx) ->
                       [ Cell.smallCell
                           $ Button.raised
@@ -215,7 +211,7 @@ field st moptic optic options parser viewer =
                             "Delete"
                       ]
                   )
-                  moptic
+                  eoptic
                 <> [ Cell.bigCell
                       $ Button.raised
                         ( Button.config
@@ -237,6 +233,15 @@ field st moptic optic options parser viewer =
         ^? cloneTraversal optic
         . #fieldInput
         . #uniqueUid
+    optic =
+      either
+        id
+        ( \(opt, idx) ->
+            cloneTraversal opt
+              . ix idx
+              . #fieldPairValue
+        )
+        eoptic
     getInput st' =
       st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
     getOutput st' = do
@@ -320,10 +325,9 @@ ratioField ::
 ratioField st optic options =
   field
     st
-    Nothing
-    optic
-    ( options & #optsSettingsIcon .~ False
+    ( Left optic
     )
+    options
     ( parseRatio . view (#fieldInput . #uniqueValue)
     )
     inspectRatioDef
@@ -336,10 +340,9 @@ textField ::
 textField st optic options =
   field
     st
-    Nothing
-    optic
-    ( options & #optsSettingsIcon .~ False
+    ( Left optic
     )
+    options
     ( Just . view (#fieldInput . #uniqueValue)
     )
     id
@@ -353,11 +356,7 @@ dynamicField ::
 dynamicField st optic idx options =
   field
     st
-    ( Just (optic, idx)
-    )
-    ( cloneTraversal optic
-        . ix idx
-        . #fieldPairValue
+    ( Right (optic, idx)
     )
     options
     parseDynamicField

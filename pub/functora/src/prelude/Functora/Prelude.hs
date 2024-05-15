@@ -93,6 +93,7 @@ module Functora.Prelude
     expBackOffSecondsAfter,
     secondsToNominalDiffTime,
     nubOrdNE,
+    nubOrdByNE,
     nubOrdOnNE,
     enumerateNE,
   )
@@ -172,8 +173,7 @@ import Data.Generics.Labels as X
 import Data.Generics.Product as X
 import Data.Generics.Sum as X
 import Data.Generics.Uniplate.Data as X ()
-import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdOn)
-import qualified Data.List.NonEmpty.Extra as NonEmptyExtra
+import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
@@ -871,10 +871,13 @@ secondsToNominalDiffTime =
     . from @a @Natural
 
 nubOrdNE :: (Ord a) => NonEmpty a -> NonEmpty a
-nubOrdNE = NonEmptyExtra.nubOrd
+nubOrdNE = nubOrdByNE compare
+
+nubOrdByNE :: (a -> a -> Ordering) -> NonEmpty a -> NonEmpty a
+nubOrdByNE cmp = fromList . nubOrdBy cmp . toList
 
 nubOrdOnNE :: (Ord b) => (a -> b) -> NonEmpty a -> NonEmpty a
-nubOrdOnNE = NonEmptyExtra.nubOrdOn
+nubOrdOnNE f = fromList . nubOrdOn f . toList
 
 enumerateNE :: forall a. (Ord a, Enum a, Bounded a) => NonEmpty a
 enumerateNE = nubOrdNE $ minBound :| enumerate @a

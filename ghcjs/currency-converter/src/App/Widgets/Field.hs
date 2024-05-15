@@ -1,7 +1,7 @@
 module App.Widgets.Field
   ( Opts (..),
     opts,
-    rationalField,
+    ratioField,
     textField,
     dynamicField,
   )
@@ -26,6 +26,10 @@ data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
+    --
+    -- TODO : remove this, derive behaviour from
+    -- provided optics and index.
+    --
     optsSettingsIcon :: Bool
   }
   deriving stock (Generic)
@@ -40,13 +44,18 @@ opts =
     }
 
 field ::
+  ( Ord a,
+    Show a,
+    Data a
+  ) =>
   Model ->
+  Maybe (ATraversal' Model [FieldPair a Unique], Int) ->
   ATraversal' Model (Field a Unique) ->
   Opts ->
   (Field a Unique -> Maybe a) ->
   (a -> Text) ->
   View Action
-field st optic options parser viewer =
+field st moptic optic options parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -57,10 +66,9 @@ field st optic options parser viewer =
     [ TextField.filled
         $ TextField.config
         & TextField.setType
-          ( from @Text @String
-              <$> st
-              ^? cloneTraversal optic
-              . #fieldHtmlType
+          ( fmap
+              (from @Text @String . htmlFieldType)
+              (st ^? cloneTraversal optic . #fieldType)
           )
         & TextField.setOnInput onInputAction
         & TextField.setDisabled (options ^. #optsDisabled)
@@ -121,98 +129,103 @@ field st optic options parser viewer =
             Nothing
             [ Cell.grid
                 mempty
-                [ Cell.mediumCell
-                    $ Select.outlined
-                      ( Select.config
-                          & Select.setLabel (Just "Show as")
-                          & Select.setAttributes [class_ "fill-inner"]
-                          & Select.setSelected
-                            ( st ^? cloneTraversal optic . #fieldFormat
-                            )
-                          & Select.setOnChange
-                            ( \x ->
-                                pureUpdate
-                                  0
-                                  ( & cloneTraversal optic . #fieldFormat .~ x
+                $ [ let typ :| typs = enumerateNE @FieldType
+                     in Cell.mediumCell
+                          $ Select.outlined
+                            ( Select.config
+                                & Select.setLabel (Just "Type")
+                                & Select.setAttributes [class_ "fill-inner"]
+                                & Select.setSelected
+                                  ( st ^? cloneTraversal optic . #fieldType
+                                  )
+                                & Select.setOnChange
+                                  ( \x ->
+                                      pureUpdate
+                                        0
+                                        ( & cloneTraversal optic . #fieldType .~ x
+                                        )
                                   )
                             )
-                      )
-                      --
-                      -- NOTE : maybe add icons:
-                      --
-                      -- "font_download"
-                      -- "qr_code_2"
-                      -- "link"
-                      -- "code"
-                      --
-                      ( SelectItem.selectItem
-                          (SelectItem.config FieldFormatText)
-                          [text "Text"]
-                      )
-                      [ SelectItem.selectItem
-                          (SelectItem.config FieldFormatQrCode)
-                          [text "QR code"],
-                        SelectItem.selectItem
-                          (SelectItem.config FieldFormatLink)
-                          [text "Link"],
-                        SelectItem.selectItem
-                          (SelectItem.config FieldFormatHtml)
-                          [text "HTML"]
-                      ],
-                  Cell.smallCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick closed
-                          & Button.setIcon (Just "keyboard_double_arrow_down")
-                          & Button.setAttributes
-                            [ class_ "fill",
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Down",
-                  Cell.smallCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick closed
-                          & Button.setIcon (Just "keyboard_double_arrow_up")
-                          & Button.setAttributes
-                            [ class_ "fill",
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Up",
-                  Cell.smallCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick closed
-                          & Button.setIcon (Just "library_add")
-                          & Button.setAttributes
-                            [ class_ "fill",
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Clone",
-                  Cell.smallCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick closed
-                          & Button.setIcon (Just "delete_forever")
-                          & Button.setAttributes
-                            [ class_ "fill",
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Delete",
-                  Cell.bigCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick closed
-                          & Button.setAttributes
-                            [ class_ "fill"
-                            ]
-                      )
-                      "Cancel"
-                ]
+                            --
+                            -- NOTE : maybe add icons:
+                            --
+                            -- "font_download"
+                            -- "qr_code_2"
+                            -- "link"
+                            -- "code"
+                            --
+                            ( SelectItem.selectItem
+                                (SelectItem.config typ)
+                                [text $ userFieldType typ]
+                            )
+                          $ fmap
+                            ( \t ->
+                                SelectItem.selectItem
+                                  (SelectItem.config t)
+                                  [text $ userFieldType t]
+                            )
+                            typs
+                  ]
+                <> maybe
+                  mempty
+                  ( \(opt, idx) ->
+                      [ Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon (Just "keyboard_double_arrow_down")
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Down",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon (Just "keyboard_double_arrow_up")
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Up",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick (Misc.duplicateAt st opt idx)
+                                & Button.setIcon (Just "library_add")
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Clone",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon (Just "delete_forever")
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Delete"
+                      ]
+                  )
+                  moptic
+                <> [ Cell.bigCell
+                      $ Button.raised
+                        ( Button.config
+                            & Button.setOnClick closed
+                            & Button.setAttributes
+                              [ class_ "fill"
+                              ]
+                        )
+                        "Back"
+                   ]
             ]
             mempty
         )
@@ -299,14 +312,15 @@ field st optic options parser viewer =
           . #fieldSettingsOpen
           .~ False
 
-rationalField ::
+ratioField ::
   Model ->
   ATraversal' Model (Field Rational Unique) ->
   Opts ->
   View Action
-rationalField st optic options =
+ratioField st optic options =
   field
     st
+    Nothing
     optic
     ( options & #optsSettingsIcon .~ False
     )
@@ -322,6 +336,7 @@ textField ::
 textField st optic options =
   field
     st
+    Nothing
     optic
     ( options & #optsSettingsIcon .~ False
     )
@@ -331,13 +346,19 @@ textField st optic options =
 
 dynamicField ::
   Model ->
-  ATraversal' Model (Field FieldOutput Unique) ->
+  ATraversal' Model [FieldPair DynamicField Unique] ->
+  Int ->
   Opts ->
   View Action
-dynamicField st optic options =
+dynamicField st optic idx options =
   field
     st
-    optic
+    ( Just (optic, idx)
+    )
+    ( cloneTraversal optic
+        . ix idx
+        . #fieldPairValue
+    )
     options
-    parseFieldOutput
-    inspectFieldOutput
+    parseDynamicField
+    inspectDynamicField

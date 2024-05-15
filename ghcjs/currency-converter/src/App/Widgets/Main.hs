@@ -60,7 +60,7 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
-        Field.rationalField
+        Field.ratioField
           st
           ( Misc.getConverterAmountOptic loc
           )

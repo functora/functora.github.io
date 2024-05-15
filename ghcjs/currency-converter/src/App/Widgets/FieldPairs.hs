@@ -15,7 +15,7 @@ import Miso hiding (at, view)
 fieldPairs ::
   HeaderOrFooter ->
   Model ->
-  ATraversal' Model [FieldPair FieldOutput Unique] ->
+  ATraversal' Model [FieldPair DynamicField Unique] ->
   [View Action]
 fieldPairs hof st optic =
   case hof of
@@ -27,7 +27,7 @@ fieldPairs hof st optic =
 
 fieldPairWidget ::
   Model ->
-  ATraversal' Model [FieldPair FieldOutput Unique] ->
+  ATraversal' Model [FieldPair DynamicField Unique] ->
   Int ->
   [View Action]
 fieldPairWidget st optic idx =
@@ -43,10 +43,8 @@ fieldPairWidget st optic idx =
       ),
     Field.dynamicField
       st
-      ( cloneTraversal optic
-          . ix idx
-          . #fieldPairValue
-      )
+      optic
+      idx
       ( Field.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)

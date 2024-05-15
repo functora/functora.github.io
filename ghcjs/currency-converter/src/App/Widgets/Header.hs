@@ -73,7 +73,7 @@ navHeaderComplex ::
   ) =>
   Model ->
   ATraversal' Model [a] ->
-  ATraversal' a [FieldPair FieldOutput Unique] ->
+  ATraversal' a [FieldPair DynamicField Unique] ->
   Int ->
   [Attribute Action] ->
   View Action

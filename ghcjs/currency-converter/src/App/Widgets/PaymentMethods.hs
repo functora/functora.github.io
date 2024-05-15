@@ -28,7 +28,7 @@ paymentMethodWidget ::
   Int ->
   [View Action]
 paymentMethodWidget st optic idx =
-  [ Field.rationalField
+  [ Field.ratioField
       st
       ( cloneTraversal optic
           . ix idx

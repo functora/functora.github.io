@@ -231,11 +231,10 @@ unexpectedCurrency =
     { currencyOpen = False,
       currencyInput =
         Field
-          { fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
+          { fieldType = FieldTypeText,
+            fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
             fieldOutput = "UNEXPECTED CURRENCY",
-            fieldHtmlType = "text",
-            fieldSettingsOpen = False,
-            fieldFormat = FieldFormatText
+            fieldSettingsOpen = False
           },
       currencyOutput =
         CurrencyInfo

@@ -23,12 +23,12 @@ module App.Types
     newPaymentMethod,
     newAsset,
     FieldType (..),
-    FieldOutput (..),
-    fieldOutputType,
-    parseFieldOutput,
-    inspectFieldOutput,
+    htmlFieldType,
+    userFieldType,
+    DynamicField (..),
+    parseDynamicField,
+    inspectDynamicField,
     Field (..),
-    FieldFormat (..),
     newField,
     FieldPair (..),
     newFieldPair,
@@ -92,7 +92,7 @@ data St f = St
   { stateTopMoney :: Money f,
     stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
-    stateFieldPairs :: [FieldPair FieldOutput f],
+    stateFieldPairs :: [FieldPair DynamicField f],
     stateAssets :: [Asset f],
     statePaymentMethods :: [PaymentMethod f]
   }
@@ -164,7 +164,7 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodFieldPairs :: [FieldPair FieldOutput f]
+    paymentMethodFieldPairs :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
 
@@ -223,7 +223,7 @@ data OnlineOrOffline
 data Asset f = Asset
   { assetPrice :: Money f,
     assetQuantity :: Field Rational f,
-    assetFieldPairs :: [FieldPair FieldOutput f]
+    assetFieldPairs :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
 
@@ -265,8 +265,8 @@ newModel = do
           }
   topMoney <- newMoney 0 btc
   bottomMoney <- newMoney 0 usd
-  issuer <- newFieldPair "Issuer" $ FieldOutputText "Alice LLC"
-  client <- newFieldPair "Client" $ FieldOutputText "Bob"
+  issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice LLC"
+  client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
   let st =
@@ -385,17 +385,17 @@ newModel = do
       & #modelCurrencies
       .~ currenciesInfo
 
-newRationalField :: (MonadIO m) => Rational -> m (Field Rational Unique)
-newRationalField output =
-  newField output inspectRatioDef $ const "number"
+newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
+newRatioField output =
+  newField FieldTypeNumber output inspectRatioDef
 
 newTextField :: (MonadIO m) => Text -> m (Field Text Unique)
 newTextField output =
-  newField output id $ const "text"
+  newField FieldTypeText output id
 
-newDynamicField :: (MonadIO m) => FieldOutput -> m (Field FieldOutput Unique)
+newDynamicField :: (MonadIO m) => DynamicField -> m (Field DynamicField Unique)
 newDynamicField output =
-  newField output inspectFieldOutput defaultHtmlType
+  newField FieldTypeText output inspectDynamicField
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
@@ -407,7 +407,7 @@ newCurrency cur =
 newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
 newMoney amt cur =
   Money
-    <$> newRationalField amt
+    <$> newRatioField amt
     <*> newCurrency cur
 
 --
@@ -447,8 +447,8 @@ newPaymentMethod ::
   CurrencyInfo ->
   m (PaymentMethod Unique)
 newPaymentMethod amt cur = do
-  address <- newFieldPair "Address" $ FieldOutputText mempty
-  notes <- newFieldPair "Details" $ FieldOutputText mempty
+  address <- newFieldPair "Address" $ DynamicFieldText mempty
+  notes <- newFieldPair "Details" $ DynamicFieldText mempty
   PaymentMethod
     <$> newMoney amt cur
     <*> pure [address, notes]
@@ -456,10 +456,10 @@ newPaymentMethod amt cur = do
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
-  item <- newFieldPair label $ FieldOutputText value
+  item <- newFieldPair label $ DynamicFieldText value
   Asset
     <$> newMoney amt cur
-    <*> newRationalField 1
+    <*> newRatioField 1
     <*> pure [item]
 
 newIdentityState :: St Unique -> St Identity
@@ -471,52 +471,60 @@ newUniqueState =
   btraverse (newUnique . runIdentity)
 
 data FieldType
-  = FieldTypeText
-  | FieldTypeNumber
+  = -- Rational
+    FieldTypeNumber
   | FieldTypePercent
+  | -- Text
+    FieldTypeText
+  | FieldTypeQrCode
+  | FieldTypeLink
+  | FieldTypeHtml
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType FieldType
 
-data FieldOutput
-  = FieldOutputText Text
-  | FieldOutputNumber Rational
-  | FieldOutputPercent Rational
+htmlFieldType :: FieldType -> Text
+htmlFieldType = \case
+  FieldTypeNumber -> "number"
+  FieldTypePercent -> "number"
+  FieldTypeText -> "text"
+  FieldTypeQrCode -> "text"
+  FieldTypeLink -> "text"
+  FieldTypeHtml -> "text"
+
+userFieldType :: FieldType -> Text
+userFieldType = \case
+  FieldTypeNumber -> "Number"
+  FieldTypePercent -> "Percent"
+  FieldTypeText -> "Text"
+  FieldTypeQrCode -> "QR code"
+  FieldTypeLink -> "Link"
+  FieldTypeHtml -> "HTML"
+
+data DynamicField
+  = DynamicFieldText Text
+  | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType FieldOutput
+  deriving (ToJSON, FromJSON) via GenericType DynamicField
 
-defaultHtmlType :: FieldOutput -> Text
-defaultHtmlType = \case
-  FieldOutputText {} -> "text"
-  FieldOutputNumber {} -> "number"
-  FieldOutputPercent {} -> "number"
-
-fieldOutputType :: FieldOutput -> FieldType
-fieldOutputType = \case
-  FieldOutputText {} -> FieldTypeText
-  FieldOutputNumber {} -> FieldTypeNumber
-  FieldOutputPercent {} -> FieldTypePercent
-
-parseFieldOutput :: Field FieldOutput Unique -> Maybe FieldOutput
-parseFieldOutput value =
-  case value ^. #fieldOutput of
-    FieldOutputText {} -> Just $ FieldOutputText input
-    FieldOutputNumber {} -> FieldOutputNumber <$> parseRatio input
-    FieldOutputPercent {} -> FieldOutputPercent <$> parseRatio input
+parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
+parseDynamicField value =
+  case value ^. #fieldType of
+    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio input
+    FieldTypePercent -> DynamicFieldNumber <$> parseRatio input
+    _ -> Just $ DynamicFieldText input
   where
     input = value ^. #fieldInput . #uniqueValue
 
-inspectFieldOutput :: FieldOutput -> Text
-inspectFieldOutput = \case
-  FieldOutputText x -> x
-  FieldOutputNumber x -> inspectRatioDef x
-  FieldOutputPercent x -> inspectRatioDef x
+inspectDynamicField :: DynamicField -> Text
+inspectDynamicField = \case
+  DynamicFieldText x -> x
+  DynamicFieldNumber x -> inspectRatioDef x
 
 data Field a f = Field
-  { fieldInput :: f Text,
+  { fieldType :: FieldType,
+    fieldInput :: f Text,
     fieldOutput :: a,
-    fieldHtmlType :: Text,
-    fieldSettingsOpen :: Bool,
-    fieldFormat :: FieldFormat
+    fieldSettingsOpen :: Bool
   }
   deriving stock (Generic)
 
@@ -542,28 +550,15 @@ deriving via
   instance
     (Typ a, FromJSON a) => FromJSON (Field a Identity)
 
-data FieldFormat
-  = FieldFormatText
-  | FieldFormatQrCode
-  | FieldFormatLink
-  | FieldFormatHtml
-  deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via (GenericType FieldFormat)
-
-newField ::
-  --
-  -- TODO : newtype for HtmlType
-  --
-  (MonadIO m) => a -> (a -> Text) -> (a -> Text) -> m (Field a Unique)
-newField output newInput newHtmlType = do
+newField :: (MonadIO m) => FieldType -> a -> (a -> Text) -> m (Field a Unique)
+newField typ output newInput = do
   input <- newUnique $ newInput output
   pure
     Field
-      { fieldInput = input,
+      { fieldType = typ,
+        fieldInput = input,
         fieldOutput = output,
-        fieldHtmlType = newHtmlType output,
-        fieldSettingsOpen = False,
-        fieldFormat = FieldFormatText
+        fieldSettingsOpen = False
       }
 
 data FieldPair a f = FieldPair
@@ -599,7 +594,7 @@ deriving via
     (Typ a, FromJSON a) => FromJSON (FieldPair a Identity)
 
 newFieldPair ::
-  (MonadIO m) => Text -> FieldOutput -> m (FieldPair FieldOutput Unique)
+  (MonadIO m) => Text -> DynamicField -> m (FieldPair DynamicField Unique)
 newFieldPair key val =
   FieldPair
     <$> newTextField key

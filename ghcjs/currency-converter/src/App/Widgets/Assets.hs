@@ -51,8 +51,7 @@ assetWidget st optic idx =
       ( Field.opts
           & #optsPlaceholder
           .~ ("Quantity " <> idxTxt)
-      ),
-    Header.navHeaderComplex st optic #assetFieldPairs idx mempty
+      )
   ]
     <> FieldPairs.fieldPairs
       Footer

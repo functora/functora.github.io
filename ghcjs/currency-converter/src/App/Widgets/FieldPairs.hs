@@ -7,9 +7,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
-import qualified App.Widgets.IconToggles as IconToggles
 import Functora.Prelude as Prelude
-import qualified Material.IconToggle as IconToggle
 import Miso hiding (at, view)
 
 fieldPairs ::
@@ -48,31 +46,7 @@ fieldPairWidget st optic idx =
       ( Field.opts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
-      ),
-    IconToggles.iconToggles
-      st
-      [ ( "Value " <> idxTxt <> " text",
-          IconToggle.icon "font_download",
-          IconToggle.icon "font_download_off",
-          cloneTraversal optic . ix idx . #fieldPairValuePlainText
-        ),
-        ( "Value " <> idxTxt <> " QR code",
-          IconToggle.icon "qr_code_2",
-          IconToggle.icon "developer_board_off",
-          cloneTraversal optic . ix idx . #fieldPairValueQrCode
-        ),
-        ( "Value " <> idxTxt <> " link",
-          IconToggle.icon "link",
-          IconToggle.icon "link_off",
-          cloneTraversal optic . ix idx . #fieldPairValueLink
-        ),
-        ( "Value " <> idxTxt <> " HTML",
-          IconToggle.icon "code",
-          IconToggle.icon "code_off",
-          cloneTraversal optic . ix idx . #fieldPairValueHtml
-        )
-      ],
-    Header.navHeaderSimple st optic idx
+      )
   ]
   where
     idxTxt :: Text

@@ -1,6 +1,6 @@
 module App.Widgets.Switch
   ( Opts (..),
-    opts,
+    defOpts,
     switch,
   )
 where
@@ -22,8 +22,8 @@ data Opts = Opts
   }
   deriving stock (Generic)
 
-opts :: Opts
-opts =
+defOpts :: Opts
+defOpts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,

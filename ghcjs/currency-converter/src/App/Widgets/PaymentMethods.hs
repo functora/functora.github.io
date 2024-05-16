@@ -35,7 +35,7 @@ paymentMethodWidget st optic idx =
             #paymentMethodMoney . #moneyAmount
           )
       )
-      ( Field.opts
+      ( Field.defOpts
           & #optsDisabled
           .~ True
           & #optsPlaceholder

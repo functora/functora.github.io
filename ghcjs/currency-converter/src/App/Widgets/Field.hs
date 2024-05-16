@@ -1,6 +1,6 @@
 module App.Widgets.Field
   ( Opts (..),
-    opts,
+    defOpts,
     ratioField,
     textField,
     dynamicField,
@@ -26,17 +26,17 @@ data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
-    optsSettingsModal :: Maybe (View Action)
+    optsStaticType :: Bool
   }
   deriving stock (Generic)
 
-opts :: Opts
-opts =
+defOpts :: Opts
+defOpts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,
       optsExtraOnInput = id,
-      optsSettingsModal = Nothing
+      optsStaticType = False
     }
 
 field ::
@@ -116,133 +116,145 @@ field st eoptic options parser viewer =
             onKeyDown $ Misc.onKeyDownAction uid,
             onBlur onBlurAction
           ],
-      flip fromMaybe (options ^. #optsSettingsModal)
-        $ Dialog.dialog
-          ( Dialog.config
-              & Dialog.setOnClose closed
-              & Dialog.setOpen
-                ( fromMaybe
-                    False
-                    (st ^? cloneTraversal optic . #fieldSettingsOpen)
-                )
-          )
-          ( Dialog.dialogContent
-              Nothing
-              [ Cell.grid
-                  mempty
-                  $ [ let typ :| typs = enumerateNE @FieldType
-                       in Cell.mediumCell
-                            $ Select.outlined
-                              ( Select.config
-                                  & Select.setLabel (Just "Type")
-                                  & Select.setAttributes [class_ "fill-inner"]
-                                  & Select.setSelected
-                                    ( st ^? cloneTraversal optic . #fieldType
-                                    )
-                                  & Select.setOnChange
-                                    ( \x ->
-                                        pureUpdate
-                                          0
-                                          ( & cloneTraversal optic . #fieldType .~ x
-                                          )
-                                    )
-                              )
-                              --
-                              -- NOTE : maybe add icons:
-                              --
-                              -- "font_download"
-                              -- "qr_code_2"
-                              -- "link"
-                              -- "code"
-                              --
-                              ( SelectItem.selectItem
-                                  (SelectItem.config typ)
-                                  [text $ userFieldType typ]
-                              )
-                            $ fmap
-                              ( \t ->
-                                  SelectItem.selectItem
-                                    (SelectItem.config t)
-                                    [text $ userFieldType t]
-                              )
-                              typs
-                    ]
-                  <> either
-                    ( const mempty
-                    )
-                    ( \(opt, idx, _) ->
-                        [ Cell.smallCell
-                            $ Button.raised
-                              ( Button.config
-                                  & Button.setOnClick closed
-                                  & Button.setIcon
-                                    ( Just "keyboard_double_arrow_down"
-                                    )
-                                  & Button.setAttributes
-                                    [ class_ "fill",
-                                      Theme.secondaryBg
-                                    ]
-                              )
-                              "Down",
-                          Cell.smallCell
-                            $ Button.raised
-                              ( Button.config
-                                  & Button.setOnClick closed
-                                  & Button.setIcon
-                                    ( Just "keyboard_double_arrow_up"
-                                    )
-                                  & Button.setAttributes
-                                    [ class_ "fill",
-                                      Theme.secondaryBg
-                                    ]
-                              )
-                              "Up",
-                          Cell.smallCell
-                            $ Button.raised
-                              ( Button.config
-                                  & Button.setOnClick
-                                    ( Misc.duplicateAt st opt idx
-                                    )
-                                  & Button.setIcon
-                                    ( Just "library_add"
-                                    )
-                                  & Button.setAttributes
-                                    [ class_ "fill",
-                                      Theme.secondaryBg
-                                    ]
-                              )
-                              "Clone",
-                          Cell.smallCell
-                            $ Button.raised
-                              ( Button.config
-                                  & Button.setOnClick
-                                    ( Misc.removeAt st opt idx
-                                    )
-                                  & Button.setIcon
-                                    ( Just "delete_forever"
-                                    )
-                                  & Button.setAttributes
-                                    [ class_ "fill",
-                                      Theme.secondaryBg
-                                    ]
-                              )
-                              "Delete"
+      Dialog.dialog
+        ( Dialog.config
+            & Dialog.setOnClose closed
+            & Dialog.setOpen
+              ( fromMaybe
+                  False
+                  (st ^? cloneTraversal optic . #fieldSettingsOpen)
+              )
+        )
+        ( Dialog.dialogContent
+            Nothing
+            [ Cell.grid
+                mempty
+                $ ( if options ^. #optsStaticType
+                      then mempty
+                      else
+                        [ let typ :| typs = enumerateNE @FieldType
+                           in Cell.mediumCell
+                                $ Select.outlined
+                                  ( Select.config
+                                      & Select.setLabel
+                                        ( Just "Type"
+                                        )
+                                      & Select.setAttributes
+                                        [ class_ "fill-inner"
+                                        ]
+                                      & Select.setSelected
+                                        ( st
+                                            ^? cloneTraversal optic
+                                            . #fieldType
+                                        )
+                                      & Select.setOnChange
+                                        ( \x ->
+                                            pureUpdate
+                                              0
+                                              ( &
+                                                  cloneTraversal optic
+                                                    . #fieldType
+                                                    .~ x
+                                              )
+                                        )
+                                  )
+                                  --
+                                  -- NOTE : maybe add icons:
+                                  --
+                                  -- "font_download"
+                                  -- "qr_code_2"
+                                  -- "link"
+                                  -- "code"
+                                  --
+                                  ( SelectItem.selectItem
+                                      (SelectItem.config typ)
+                                      [text $ userFieldType typ]
+                                  )
+                                $ fmap
+                                  ( \t ->
+                                      SelectItem.selectItem
+                                        (SelectItem.config t)
+                                        [text $ userFieldType t]
+                                  )
+                                  typs
                         ]
-                    )
-                    eoptic
-                  <> [ Cell.bigCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick closed
-                              & Button.setAttributes
-                                [ class_ "fill"
-                                ]
-                          )
-                          "Back"
-                     ]
-              ]
-              mempty
-          )
+                  )
+                <> either
+                  ( const mempty
+                  )
+                  ( \(opt, idx, _) ->
+                      [ Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon
+                                  ( Just "keyboard_double_arrow_down"
+                                  )
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Down",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon
+                                  ( Just "keyboard_double_arrow_up"
+                                  )
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Up",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick
+                                  ( Misc.duplicateAt st opt idx
+                                  )
+                                & Button.setIcon
+                                  ( Just "library_add"
+                                  )
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Clone",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick
+                                  ( Misc.removeAt st opt idx
+                                  )
+                                & Button.setIcon
+                                  ( Just "delete_forever"
+                                  )
+                                & Button.setAttributes
+                                  [ class_ "fill",
+                                    Theme.secondaryBg
+                                  ]
+                            )
+                            "Delete"
+                      ]
+                  )
+                  eoptic
+                <> [ Cell.bigCell
+                      $ Button.raised
+                        ( Button.config
+                            & Button.setOnClick closed
+                            & Button.setAttributes
+                              [ class_ "fill"
+                              ]
+                        )
+                        "Back"
+                   ]
+            ]
+            mempty
+        )
     ]
   where
     uid =

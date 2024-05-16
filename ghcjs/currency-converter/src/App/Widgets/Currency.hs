@@ -61,7 +61,7 @@ selectCurrency st optic =
                       $ cloneTraversal optic
                       . #currencyInput
                   )
-                  ( Field.opts
+                  ( Field.defOpts
                       & #optsPlaceholder
                       .~ "Search"
                   ),

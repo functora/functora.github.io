@@ -32,7 +32,9 @@ assetWidget st optic idx =
             #assetPrice . #moneyAmount
           )
       )
-      ( Field.opts
+      ( Field.defOpts
+          & #optsStaticType
+          .~ True
           & #optsPlaceholder
           .~ ("Price " <> idxTxt)
       ),
@@ -51,7 +53,9 @@ assetWidget st optic idx =
             #assetQuantity
           )
       )
-      ( Field.opts
+      ( Field.defOpts
+          & #optsStaticType
+          .~ True
           & #optsPlaceholder
           .~ ("Quantity " <> idxTxt)
       )

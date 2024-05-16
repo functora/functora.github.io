@@ -65,7 +65,7 @@ screenWidget st@Model {modelScreen = Converter} =
           ( Left
               $ Misc.getConverterAmountOptic loc
           )
-          ( Field.opts
+          ( Field.defOpts
               & #optsExtraOnInput
               .~ (& #modelState . #stateTopOrBottom .~ loc)
               & #optsPlaceholder

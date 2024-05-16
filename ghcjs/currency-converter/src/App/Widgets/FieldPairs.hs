@@ -36,7 +36,7 @@ fieldPairWidget st optic idx =
           . ix idx
           . #fieldPairKey
       )
-      ( Field.opts
+      ( Field.defOpts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
       ),
@@ -44,7 +44,7 @@ fieldPairWidget st optic idx =
       st
       optic
       idx
-      ( Field.opts
+      ( Field.defOpts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
       )

@@ -40,14 +40,17 @@ opts =
     }
 
 field ::
-  ( Ord a,
-    Show a,
-    Data a
+  forall a b.
+  ( Data b
   ) =>
   Model ->
   Either
-    (ATraversal' Model (Field a Unique))
-    (ATraversal' Model [FieldPair a Unique], Int) ->
+    ( ATraversal' Model (Field a Unique)
+    )
+    ( ATraversal' Model [b],
+      Int,
+      ATraversal' b (Field a Unique)
+    ) ->
   Opts ->
   (Field a Unique -> Maybe a) ->
   (a -> Text) ->
@@ -167,12 +170,14 @@ field st eoptic options parser viewer =
                   <> either
                     ( const mempty
                     )
-                    ( \(opt, idx) ->
+                    ( \(opt, idx, _) ->
                         [ Cell.smallCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setOnClick closed
-                                  & Button.setIcon (Just "keyboard_double_arrow_down")
+                                  & Button.setIcon
+                                    ( Just "keyboard_double_arrow_down"
+                                    )
                                   & Button.setAttributes
                                     [ class_ "fill",
                                       Theme.secondaryBg
@@ -183,7 +188,9 @@ field st eoptic options parser viewer =
                             $ Button.raised
                               ( Button.config
                                   & Button.setOnClick closed
-                                  & Button.setIcon (Just "keyboard_double_arrow_up")
+                                  & Button.setIcon
+                                    ( Just "keyboard_double_arrow_up"
+                                    )
                                   & Button.setAttributes
                                     [ class_ "fill",
                                       Theme.secondaryBg
@@ -193,8 +200,12 @@ field st eoptic options parser viewer =
                           Cell.smallCell
                             $ Button.raised
                               ( Button.config
-                                  & Button.setOnClick (Misc.duplicateAt st opt idx)
-                                  & Button.setIcon (Just "library_add")
+                                  & Button.setOnClick
+                                    ( Misc.duplicateAt st opt idx
+                                    )
+                                  & Button.setIcon
+                                    ( Just "library_add"
+                                    )
                                   & Button.setAttributes
                                     [ class_ "fill",
                                       Theme.secondaryBg
@@ -204,8 +215,12 @@ field st eoptic options parser viewer =
                           Cell.smallCell
                             $ Button.raised
                               ( Button.config
-                                  & Button.setOnClick (Misc.removeAt st opt idx)
-                                  & Button.setIcon (Just "delete_forever")
+                                  & Button.setOnClick
+                                    ( Misc.removeAt st opt idx
+                                    )
+                                  & Button.setIcon
+                                    ( Just "delete_forever"
+                                    )
                                   & Button.setAttributes
                                     [ class_ "fill",
                                       Theme.secondaryBg
@@ -239,10 +254,10 @@ field st eoptic options parser viewer =
     optic =
       either
         id
-        ( \(opt, idx) ->
+        ( \(opt, idx, access) ->
             cloneTraversal opt
               . ix idx
-              . #fieldPairValue
+              . access
         )
         eoptic
     getInput st' =
@@ -321,30 +336,44 @@ field st eoptic options parser viewer =
           .~ False
 
 ratioField ::
+  ( Data b
+  ) =>
   Model ->
-  ATraversal' Model (Field Rational Unique) ->
+  Either
+    ( ATraversal' Model (Field Rational Unique)
+    )
+    ( ATraversal' Model [b],
+      Int,
+      ATraversal' b (Field Rational Unique)
+    ) ->
   Opts ->
   View Action
 ratioField st optic options =
   field
     st
-    ( Left optic
-    )
+    optic
     options
     ( parseRatio . view (#fieldInput . #uniqueValue)
     )
     inspectRatioDef
 
 textField ::
+  ( Data b
+  ) =>
   Model ->
-  ATraversal' Model (Field Text Unique) ->
+  Either
+    ( ATraversal' Model (Field Text Unique)
+    )
+    ( ATraversal' Model [b],
+      Int,
+      ATraversal' b (Field Text Unique)
+    ) ->
   Opts ->
   View Action
 textField st optic options =
   field
     st
-    ( Left optic
-    )
+    optic
     options
     ( Just . view (#fieldInput . #uniqueValue)
     )
@@ -359,7 +388,7 @@ dynamicField ::
 dynamicField st optic idx options =
   field
     st
-    ( Right (optic, idx)
+    ( Right (optic, idx, #fieldPairValue)
     )
     options
     parseDynamicField

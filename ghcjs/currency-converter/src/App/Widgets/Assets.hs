@@ -26,10 +26,11 @@ assetWidget ::
 assetWidget st optic idx =
   [ Field.ratioField
       st
-      ( cloneTraversal optic
-          . ix idx
-          . #assetPrice
-          . #moneyAmount
+      ( Right
+          ( optic,
+            idx,
+            #assetPrice . #moneyAmount
+          )
       )
       ( Field.opts
           & #optsPlaceholder
@@ -44,9 +45,11 @@ assetWidget st optic idx =
       ),
     Field.ratioField
       st
-      ( cloneTraversal optic
-          . ix idx
-          . #assetQuantity
+      ( Right
+          ( optic,
+            idx,
+            #assetQuantity
+          )
       )
       ( Field.opts
           & #optsPlaceholder

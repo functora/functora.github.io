@@ -29,9 +29,10 @@ fieldPairWidget ::
   Int ->
   [View Action]
 fieldPairWidget st optic idx =
-  [ Field.textField
+  [ Field.textField @Text
       st
-      ( cloneTraversal optic
+      ( Left
+          $ cloneTraversal optic
           . ix idx
           . #fieldPairKey
       )

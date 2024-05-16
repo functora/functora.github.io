@@ -10,7 +10,6 @@ import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
-import qualified Material.LayoutGrid as LayoutGrid
 import Miso hiding (at, view)
 
 paymentMethods ::
@@ -30,10 +29,11 @@ paymentMethodWidget ::
 paymentMethodWidget st optic idx =
   [ Field.ratioField
       st
-      ( cloneTraversal optic
-          . ix idx
-          . #paymentMethodMoney
-          . #moneyAmount
+      ( Right
+          ( optic,
+            idx,
+            #paymentMethodMoney . #moneyAmount
+          )
       )
       ( Field.opts
           & #optsDisabled
@@ -47,14 +47,7 @@ paymentMethodWidget st optic idx =
           . ix idx
           . #paymentMethodMoney
           . #moneyCurrency
-      ),
-    Header.navHeaderComplex
-      st
-      optic
-      #paymentMethodFieldPairs
-      idx
-      [ LayoutGrid.span12
-      ]
+      )
   ]
     <> FieldPairs.fieldPairs
       Footer

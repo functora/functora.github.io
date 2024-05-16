@@ -1,6 +1,5 @@
 module App.Widgets.Header
   ( header,
-    subHeader,
   )
 where
 
@@ -36,20 +35,3 @@ header txt action =
           ]
       )
       action
-
-subHeader :: Text -> View Action
-subHeader txt =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      Typography.headline5,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center"),
-          ("justify-content", "center"),
-          ("text-align", "center")
-        ]
-    ]
-    [ Miso.text $ ms txt
-    ]

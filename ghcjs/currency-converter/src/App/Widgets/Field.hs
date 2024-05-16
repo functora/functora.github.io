@@ -55,7 +55,7 @@ field ::
   (Field a Unique -> Maybe a) ->
   (a -> Text) ->
   View Action
-field st eoptic options parser viewer =
+field st eoptic opts parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -71,9 +71,9 @@ field st eoptic options parser viewer =
               (st ^? cloneTraversal optic . #fieldType)
           )
         & TextField.setOnInput onInputAction
-        & TextField.setDisabled (options ^. #optsDisabled)
+        & TextField.setDisabled (opts ^. #optsDisabled)
         & TextField.setLabel
-          ( Just . from @Text @String $ options ^. #optsPlaceholder
+          ( Just . from @Text @String $ opts ^. #optsPlaceholder
           )
         & TextField.setLeadingIcon
           ( Just
@@ -98,7 +98,7 @@ field st eoptic options parser viewer =
                     "content_copy"
           )
         & TextField.setTrailingIcon
-          ( if options ^. #optsDisabled
+          ( if opts ^. #optsDisabled
               then Nothing
               else
                 Just
@@ -129,7 +129,7 @@ field st eoptic options parser viewer =
             Nothing
             [ Cell.grid
                 mempty
-                $ ( if options ^. #optsStaticType
+                $ ( if opts ^. #optsStaticType
                       then mempty
                       else
                         [ let typ :| typs = enumerateNE @FieldType
@@ -250,7 +250,7 @@ field st eoptic options parser viewer =
                               [ class_ "fill"
                               ]
                         )
-                        "Back"
+                        "Close"
                    ]
             ]
             mempty
@@ -306,7 +306,7 @@ field st eoptic options parser viewer =
                   . #fieldInput
                   . #uniqueValue
                   .~ from @String @Text txt
-                  & (options ^. #optsExtraOnInput)
+                  & (opts ^. #optsExtraOnInput)
            in next
                 & cloneTraversal optic
                 . #fieldOutput
@@ -333,7 +333,7 @@ field st eoptic options parser viewer =
             . #fieldInput
             . #uniqueValue
             .~ mempty
-            & (options ^. #optsExtraOnInput)
+            & (opts ^. #optsExtraOnInput)
     opened =
       pureUpdate 0 $ \st' ->
         st'
@@ -360,11 +360,11 @@ ratioField ::
     ) ->
   Opts ->
   View Action
-ratioField st optic options =
+ratioField st optic opts =
   field
     st
     optic
-    options
+    opts
     ( parseRatio . view (#fieldInput . #uniqueValue)
     )
     inspectRatioDef
@@ -382,11 +382,11 @@ textField ::
     ) ->
   Opts ->
   View Action
-textField st optic options =
+textField st optic opts =
   field
     st
     optic
-    options
+    opts
     ( Just . view (#fieldInput . #uniqueValue)
     )
     id
@@ -397,11 +397,11 @@ dynamicField ::
   Int ->
   Opts ->
   View Action
-dynamicField st optic idx options =
+dynamicField st optic idx opts =
   field
     st
     ( Right (optic, idx, #fieldPairValue)
     )
-    options
+    opts
     parseDynamicField
     inspectDynamicField

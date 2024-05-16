@@ -31,7 +31,7 @@ defOpts =
     }
 
 switch :: Model -> Opts -> ATraversal' Model Bool -> View Action
-switch st options optic =
+switch st opts optic =
   DataTable.dataTable
     ( DataTable.config
         & DataTable.setAttributes
@@ -52,10 +52,10 @@ switch st options optic =
             ]
             $ maybeToList
               ( fmap (Icon.icon mempty . from @Text @String)
-                  $ optsIcon options
+                  $ optsIcon opts
               )
             <> [ Miso.rawHtml "&nbsp;",
-                 Miso.text . ms $ options ^. #optsPlaceholder,
+                 Miso.text . ms $ opts ^. #optsPlaceholder,
                  Miso.rawHtml "&nbsp;&nbsp;",
                  Switch.switch
                   $ Switch.config

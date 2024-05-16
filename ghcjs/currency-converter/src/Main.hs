@@ -16,7 +16,7 @@ import App.Widgets.Main
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)
-import Functora.Prelude as Prelude
+import Functora.Prelude hiding (Field)
 import Functora.Rates
 import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
@@ -291,7 +291,7 @@ getTotalPayment ::
 getTotalPayment method asset = do
   quote <-
     getQuote
-      ( Funds (Tagged $ price * quantity)
+      ( Funds (Tagged total)
           $ asset
           ^. #assetPrice
           . #moneyCurrency
@@ -307,7 +307,22 @@ getTotalPayment method asset = do
   pure $ quote ^. #quoteMoneyAmount . to unTagged
   where
     price = asset ^. #assetPrice . #moneyAmount . #fieldOutput
-    quantity = asset ^. #assetQuantity . #fieldOutput
+    total =
+      foldl
+        ( \acc Field {fieldType = typ, fieldOutput = out} ->
+            case out of
+              DynamicFieldNumber x
+                | typ == FieldTypeNumber ->
+                    acc * x
+              DynamicFieldNumber x
+                | typ == FieldTypePercent ->
+                    acc * (1 + (x / 100))
+              _ ->
+                acc
+        )
+        price
+        ( fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
+        )
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case

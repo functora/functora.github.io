@@ -44,20 +44,6 @@ assetWidget st optic idx =
           . ix idx
           . #assetPrice
           . #moneyCurrency
-      ),
-    Field.ratioField
-      st
-      ( Right
-          ( optic,
-            idx,
-            #assetQuantity
-          )
-      )
-      ( Field.defOpts
-          & #optsStaticType
-          .~ True
-          & #optsPlaceholder
-          .~ ("Quantity " <> idxTxt)
       )
   ]
     <> FieldPairs.fieldPairs

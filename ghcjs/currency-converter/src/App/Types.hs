@@ -222,7 +222,6 @@ data OnlineOrOffline
 
 data Asset f = Asset
   { assetPrice :: Money f,
-    assetQuantity :: Field Rational f,
     assetFieldPairs :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
@@ -395,7 +394,13 @@ newTextField output =
 
 newDynamicField :: (MonadIO m) => DynamicField -> m (Field DynamicField Unique)
 newDynamicField output =
-  newField FieldTypeText output inspectDynamicField
+  newField
+    ( case output of
+        DynamicFieldNumber {} -> FieldTypeNumber
+        DynamicFieldText {} -> FieldTypeText
+    )
+    output
+    inspectDynamicField
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
@@ -456,11 +461,11 @@ newPaymentMethod amt cur = do
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
-  item <- newFieldPair label $ DynamicFieldText value
+  qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
+  desc <- newFieldPair label $ DynamicFieldText value
   Asset
     <$> newMoney amt cur
-    <*> newRatioField 1
-    <*> pure [item]
+    <*> pure [qty, desc]
 
 newIdentityState :: St Unique -> St Identity
 newIdentityState =

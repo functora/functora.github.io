@@ -7,7 +7,6 @@ module App.Misc
     snackbarClosed,
     drainTChan,
     verifyUid,
-    forceRender,
     duplicateAt,
     removeAt,
     getSomeCurrency,
@@ -122,48 +121,33 @@ verifyUid uid =
   when (nullUid uid)
     $ consoleLog "UNEXPECTED NULL UID"
 
-forceRender :: Model -> JSM ()
-forceRender st =
-  void . spawnLink $ do
-    sleepMilliSeconds 300
-    pushActionQueue st $ ChanItem 0 id
-
 duplicateAt ::
   ( Data a
   ) =>
-  Model ->
   ATraversal' Model [a] ->
   Int ->
   Action
-duplicateAt st optic idx =
+duplicateAt optic idx =
   PushUpdate $ do
     duplicator <- newUniqueDuplicator @Text
     let updater loc el =
           if loc == idx
             then [el, duplicator el]
             else [el]
-    --
-    -- TODO : maybe move to general update function?
-    -- Probably overhead is not to big,
-    -- and this will cover all corner cases everywhere.
-    --
-    forceRender st
     pure
       . ChanItem 0
       $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
 
 removeAt ::
-  Model ->
   ATraversal' Model [a] ->
   Int ->
   Action
-removeAt st optic idx =
+removeAt optic idx =
   PushUpdate $ do
     let updater loc el =
           if loc == idx
             then mempty
             else [el]
-    forceRender st
     pure
       . ChanItem 0
       $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))

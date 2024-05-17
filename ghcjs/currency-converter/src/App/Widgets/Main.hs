@@ -101,22 +101,15 @@ swapScreenWidget st =
               class_ "fill"
             ]
           & Button.setOnClick
-            ( PushUpdate
-                $ do
-                  --
-                  -- NOTE : Force sync text inputs on new screen.
-                  --
-                  Misc.forceRender st
-                  pure
-                    $ ChanItem
-                      0
-                      ( &
-                          #modelScreen
-                            %~ ( \case
-                                  Converter -> DocumentEditor
-                                  DocumentEditor -> Converter
-                               )
-                      )
+            ( pureUpdate
+                0
+                ( &
+                    #modelScreen
+                      %~ ( \case
+                            Converter -> DocumentEditor
+                            DocumentEditor -> Converter
+                         )
+                )
             )
       )
       ( case st ^. #modelScreen of

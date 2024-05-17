@@ -168,13 +168,13 @@ field st eoptic opts parser viewer =
                                   --
                                   ( SelectItem.selectItem
                                       (SelectItem.config typ)
-                                      [text $ userFieldType typ]
+                                      [text . ms $ userFieldType typ]
                                   )
                                 $ fmap
                                   ( \t ->
                                       SelectItem.selectItem
                                         (SelectItem.config t)
-                                        [text $ userFieldType t]
+                                        [text . ms $ userFieldType t]
                                   )
                                   typs
                         ]
@@ -213,7 +213,7 @@ field st eoptic opts parser viewer =
                           $ Button.raised
                             ( Button.config
                                 & Button.setOnClick
-                                  ( Misc.duplicateAt st opt idx
+                                  ( Misc.duplicateAt opt idx
                                   )
                                 & Button.setIcon
                                   ( Just "library_add"
@@ -228,7 +228,7 @@ field st eoptic opts parser viewer =
                           $ Button.raised
                             ( Button.config
                                 & Button.setOnClick
-                                  ( Misc.removeAt st opt idx
+                                  ( Misc.removeAt opt idx
                                   )
                                 & Button.setIcon
                                   ( Just "delete_forever"

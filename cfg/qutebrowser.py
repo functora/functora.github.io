@@ -1983,7 +1983,7 @@ c.url.searchengines = {
         'DEFAULT': 'https://google.com/search?q={}',
         'ggl': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
         'ddg': 'https://duckduckgo.com/?q={}',
-        'gpt': 'https://chat.openai.com/?q={}',
+        'gpt': 'https://chatgpt.com/?model=gpt-4o&q={}',
         'bing': 'https://www.bing.com/search?showconv=1&sendquery=1&q={}',
         'wiki': 'https://en.wikipedia.org/w/index.php?search={}',
         'enes': 'https://translate.google.com/details?sl=en&tl=es&op=translate&text={}',

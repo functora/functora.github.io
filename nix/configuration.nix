@@ -621,6 +621,7 @@ in {
         prusa-slicer
         cura
         freecad
+        lesspass-cli
         # mkdir -p ~/macos/Public
         # cd ~/macos
         # chmod 777 ./Public

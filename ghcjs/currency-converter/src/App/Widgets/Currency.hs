@@ -72,7 +72,7 @@ selectCurrency st optic =
                         [ class_ "fill"
                         ]
                   )
-                  "Close"
+                  "Back"
               ]
         )
     ]

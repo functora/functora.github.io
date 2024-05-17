@@ -250,7 +250,7 @@ field st eoptic opts parser viewer =
                               [ class_ "fill"
                               ]
                         )
-                        "Close"
+                        "Back"
                    ]
             ]
             mempty

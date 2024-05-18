@@ -38,6 +38,8 @@ paymentMethodWidget st optic idx =
       ( Field.defOpts
           & #optsDisabled
           .~ True
+          & #optsTrailingWidget
+          .~ Nothing
           & #optsPlaceholder
           .~ ("Total " <> idxTxt)
       ),

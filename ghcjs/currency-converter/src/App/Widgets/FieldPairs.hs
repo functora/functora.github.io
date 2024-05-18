@@ -39,6 +39,17 @@ fieldPairWidget st optic idx =
       ( Field.defOpts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
+          & #optsLeadingWidget
+          .~ Nothing
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.ModalWidget
+                $ Field.ModalFieldWidget
+                  optic
+                  idx
+                  #fieldPairValue
+                  Dynamic
+            )
       ),
     Field.dynamicField
       st
@@ -47,6 +58,12 @@ fieldPairWidget st optic idx =
       ( Field.defOpts
           & #optsPlaceholder
           .~ ("Value " <> idxTxt)
+          & #optsLeadingWidget
+          .~ Nothing
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.DeleteWidget optic idx
+            )
       )
   ]
   where

@@ -1,5 +1,7 @@
 module App.Widgets.Field
   ( Opts (..),
+    OptsWidget (..),
+    ModalWidget' (..),
     defOpts,
     ratioField,
     textField,
@@ -10,6 +12,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -26,9 +29,36 @@ data Opts = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
-    optsStaticType :: Bool
+    optsLeadingWidget :: Maybe OptsWidget,
+    optsTrailingWidget :: Maybe OptsWidget
   }
   deriving stock (Generic)
+
+data OptsWidget
+  = CopyWidget
+  | ClearWidget
+  | forall a. DeleteWidget (ATraversal' Model [a]) Int
+  | ModalWidget ModalWidget'
+
+data ModalWidget' where
+  ModalItemWidget ::
+    forall a b.
+    ( Data a
+    ) =>
+    ATraversal' Model [a] ->
+    Int ->
+    ATraversal' a [FieldPair b Unique] ->
+    ATraversal' a OpenedOrClosed ->
+    ModalWidget'
+  ModalFieldWidget ::
+    forall a b.
+    ( Data a
+    ) =>
+    ATraversal' Model [a] ->
+    Int ->
+    ATraversal' a (Field b Unique) ->
+    StaticOrDynamic ->
+    ModalWidget'
 
 defOpts :: Opts
 defOpts =
@@ -36,14 +66,16 @@ defOpts =
     { optsDisabled = False,
       optsPlaceholder = mempty,
       optsExtraOnInput = id,
-      optsStaticType = False
+      optsLeadingWidget = Just CopyWidget,
+      optsTrailingWidget = Just ClearWidget
     }
 
 field ::
   forall a b.
-  ( Data b
-  ) =>
   Model ->
+  --
+  -- TODO : this Either is redundant, need left-only
+  --
   Either
     ( ATraversal' Model (Field a Unique)
     )
@@ -63,199 +95,47 @@ field st eoptic opts parser viewer =
           ("align-items", "center")
         ]
     ]
-    [ TextField.filled
-        $ TextField.config
-        & TextField.setType
-          ( fmap
-              (from @Text @String . htmlFieldType)
-              (st ^? cloneTraversal optic . #fieldType)
-          )
-        & TextField.setOnInput onInputAction
-        & TextField.setDisabled (opts ^. #optsDisabled)
-        & TextField.setLabel
-          ( Just . from @Text @String $ opts ^. #optsPlaceholder
-          )
-        & TextField.setLeadingIcon
-          ( Just
-              $ if isRight eoptic
-                then
-                  TextField.icon
-                    [ class_ "mdc-text-field__icon--leading",
-                      style_ [("pointer-events", "auto")],
-                      textProp "role" "button",
-                      intProp "tabindex" 0,
-                      onClick opened
-                    ]
-                    "settings"
-                else
-                  TextField.icon
-                    [ class_ "mdc-text-field__icon--leading",
-                      style_ [("pointer-events", "auto")],
-                      textProp "role" "button",
-                      intProp "tabindex" 0,
-                      onClick onCopyAction
-                    ]
-                    "content_copy"
-          )
-        & TextField.setTrailingIcon
-          ( if opts ^. #optsDisabled
-              then Nothing
-              else
-                Just
-                  $ TextField.icon
-                    [ class_ "mdc-text-field__icon--trailing",
-                      intProp "tabindex" 0,
-                      textProp "role" "button",
-                      onClick onClearAction
-                    ]
-                    "close"
-          )
-        & TextField.setAttributes
-          [ class_ "fill",
-            id_ . ms $ htmlUid @Text uid,
-            onKeyDown $ Misc.onKeyDownAction uid,
-            onBlur onBlurAction
-          ],
-      Dialog.dialog
-        ( Dialog.config
-            & Dialog.setOnClose closed
-            & Dialog.setOpen
-              ( fromMaybe
-                  False
-                  (st ^? cloneTraversal optic . #fieldSettingsOpen)
-              )
-        )
-        ( Dialog.dialogContent
-            Nothing
-            [ Cell.grid
-                mempty
-                $ ( if opts ^. #optsStaticType
-                      then mempty
-                      else
-                        [ let typ :| typs = enumerateNE @FieldType
-                           in Cell.mediumCell
-                                $ Select.outlined
-                                  ( Select.config
-                                      & Select.setLabel
-                                        ( Just "Type"
-                                        )
-                                      & Select.setAttributes
-                                        [ class_ "fill-inner"
-                                        ]
-                                      & Select.setSelected
-                                        ( st
-                                            ^? cloneTraversal optic
-                                            . #fieldType
-                                        )
-                                      & Select.setOnChange
-                                        ( \x ->
-                                            pureUpdate
-                                              0
-                                              ( &
-                                                  cloneTraversal optic
-                                                    . #fieldType
-                                                    .~ x
-                                              )
-                                        )
-                                  )
-                                  --
-                                  -- NOTE : maybe add icons:
-                                  --
-                                  -- "font_download"
-                                  -- "qr_code_2"
-                                  -- "link"
-                                  -- "code"
-                                  --
-                                  ( SelectItem.selectItem
-                                      (SelectItem.config typ)
-                                      [text . ms $ userFieldType typ]
-                                  )
-                                $ fmap
-                                  ( \t ->
-                                      SelectItem.selectItem
-                                        (SelectItem.config t)
-                                        [text . ms $ userFieldType t]
-                                  )
-                                  typs
-                        ]
-                  )
-                <> either
-                  ( const mempty
-                  )
-                  ( \(opt, idx, _) ->
-                      [ Cell.smallCell
-                          $ Button.raised
-                            ( Button.config
-                                & Button.setOnClick closed
-                                & Button.setIcon
-                                  ( Just "keyboard_double_arrow_down"
-                                  )
-                                & Button.setAttributes
-                                  [ class_ "fill",
-                                    Theme.secondaryBg
-                                  ]
-                            )
-                            "Down",
-                        Cell.smallCell
-                          $ Button.raised
-                            ( Button.config
-                                & Button.setOnClick closed
-                                & Button.setIcon
-                                  ( Just "keyboard_double_arrow_up"
-                                  )
-                                & Button.setAttributes
-                                  [ class_ "fill",
-                                    Theme.secondaryBg
-                                  ]
-                            )
-                            "Up",
-                        Cell.smallCell
-                          $ Button.raised
-                            ( Button.config
-                                & Button.setOnClick
-                                  ( Misc.duplicateAt opt idx
-                                  )
-                                & Button.setIcon
-                                  ( Just "library_add"
-                                  )
-                                & Button.setAttributes
-                                  [ class_ "fill",
-                                    Theme.secondaryBg
-                                  ]
-                            )
-                            "Clone",
-                        Cell.smallCell
-                          $ Button.raised
-                            ( Button.config
-                                & Button.setOnClick
-                                  ( Misc.removeAt opt idx
-                                  )
-                                & Button.setIcon
-                                  ( Just "delete_forever"
-                                  )
-                                & Button.setAttributes
-                                  [ class_ "fill",
-                                    Theme.secondaryBg
-                                  ]
-                            )
-                            "Delete"
-                      ]
-                  )
-                  eoptic
-                <> [ Cell.bigCell
-                      $ Button.raised
-                        ( Button.config
-                            & Button.setOnClick closed
-                            & Button.setAttributes
-                              [ class_ "fill"
-                              ]
-                        )
-                        "Back"
-                   ]
+    $ ( maybeToList
+          . fmap (fieldModal st)
+          . listToMaybe
+          $ catMaybes
+            [ opts ^. #optsLeadingWidget,
+              opts ^. #optsTrailingWidget
             ]
-            mempty
-        )
-    ]
+          >>= ( \case
+                  ModalWidget widget -> [widget]
+                  _ -> mempty
+              )
+      )
+    <> [ TextField.filled
+          $ TextField.config
+          & TextField.setType
+            ( fmap
+                (from @Text @String . htmlFieldType)
+                (st ^? cloneTraversal optic . #fieldType)
+            )
+          & TextField.setOnInput onInputAction
+          & TextField.setDisabled (opts ^. #optsDisabled)
+          & TextField.setLabel
+            ( Just . from @Text @String $ opts ^. #optsPlaceholder
+            )
+          & TextField.setLeadingIcon
+            ( fmap
+                (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
+                (opts ^. #optsLeadingWidget)
+            )
+          & TextField.setTrailingIcon
+            ( fmap
+                (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
+                (opts ^. #optsTrailingWidget)
+            )
+          & TextField.setAttributes
+            [ class_ "fill",
+              id_ . ms $ htmlUid @Text uid,
+              onKeyDown $ Misc.onKeyDownAction uid,
+              onBlur onBlurAction
+            ]
+       ]
   where
     uid =
       fromMaybe nilUid
@@ -311,45 +191,8 @@ field st eoptic opts parser viewer =
                 & cloneTraversal optic
                 . #fieldOutput
                 %~ maybe id (const . id) (getOutput next)
-    onCopyAction =
-      PushUpdate $ do
-        Misc.verifyUid uid
-        whenJust (getInput st) $ Misc.copyIntoClipboard st
-        pure $ ChanItem 0 id
-    onClearAction =
-      PushUpdate $ do
-        Misc.verifyUid uid
-        focus
-          . ms
-          $ htmlUid @Text uid
-        void
-          . JS.eval @Text
-          $ "var el = document.getElementById('"
-          <> htmlUid uid
-          <> "'); if (el) el.value = '';"
-        pure . ChanItem 300 $ \st' ->
-          st'
-            & cloneTraversal optic
-            . #fieldInput
-            . #uniqueValue
-            .~ mempty
-            & (opts ^. #optsExtraOnInput)
-    opened =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneTraversal optic
-          . #fieldSettingsOpen
-          .~ True
-    closed =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneTraversal optic
-          . #fieldSettingsOpen
-          .~ False
 
 ratioField ::
-  ( Data b
-  ) =>
   Model ->
   Either
     ( ATraversal' Model (Field Rational Unique)
@@ -370,8 +213,6 @@ ratioField st optic opts =
     inspectRatioDef
 
 textField ::
-  ( Data b
-  ) =>
   Model ->
   Either
     ( ATraversal' Model (Field Text Unique)
@@ -405,3 +246,323 @@ dynamicField st optic idx opts =
     opts
     parseDynamicField
     inspectDynamicField
+
+fieldIcon ::
+  Model ->
+  ATraversal' Model (Field a Unique) ->
+  LeadingOrTrailing ->
+  ( Model -> Model
+  ) ->
+  OptsWidget ->
+  TextField.Icon Action
+fieldIcon st optic lot extraOnInput = \case
+  CopyWidget ->
+    icon "content_copy" . PushUpdate $ do
+      Misc.verifyUid uid
+      whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
+        $ Misc.copyIntoClipboard st
+      pure
+        $ ChanItem 0 id
+  ClearWidget ->
+    icon "close" . PushUpdate $ do
+      Misc.verifyUid uid
+      focus
+        . ms
+        $ htmlUid @Text uid
+      void
+        . JS.eval @Text
+        $ "var el = document.getElementById('"
+        <> htmlUid uid
+        <> "'); if (el) el.value = '';"
+      pure . ChanItem 300 $ \st' ->
+        st'
+          & cloneTraversal optic
+          . #fieldInput
+          . #uniqueValue
+          .~ mempty
+          & extraOnInput
+  DeleteWidget opt idx ->
+    icon "delete_forever"
+      $ Misc.removeAt opt idx
+  ModalWidget (ModalItemWidget opt idx _ ooc) ->
+    icon "settings"
+      $ pureUpdate
+        0
+        ( &
+            cloneTraversal opt
+              . ix idx
+              . cloneTraversal ooc
+              .~ Opened
+        )
+  ModalWidget (ModalFieldWidget opt idx access _) ->
+    icon "settings"
+      $ pureUpdate
+        0
+        ( &
+            cloneTraversal opt
+              . ix idx
+              . cloneTraversal access
+              . #fieldSettingsOpen
+              .~ True
+        )
+  where
+    uid =
+      fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
+    icon txt action =
+      TextField.icon
+        [ class_ $ case lot of
+            Leading -> "mdc-text-field__icon--leading"
+            Trailing -> "mdc-text-field__icon--trailing",
+          style_ [("pointer-events", "auto")],
+          textProp "role" "button",
+          intProp "tabindex" 0,
+          onClick action
+        ]
+        txt
+
+fieldModal ::
+  Model ->
+  ModalWidget' ->
+  View Action
+fieldModal st (ModalItemWidget opt idx _ ooc) = do
+  let closed =
+        pureUpdate
+          0
+          ( &
+              cloneTraversal opt
+                . ix idx
+                . cloneTraversal ooc
+                .~ Closed
+          )
+  Dialog.dialog
+    ( Dialog.config
+        & Dialog.setOnClose closed
+        & Dialog.setOpen
+          ( Just Opened
+              == ( st
+                    ^? cloneTraversal opt
+                    . ix idx
+                    . cloneTraversal ooc
+                 )
+          )
+    )
+    ( Dialog.dialogContent
+        Nothing
+        [ Cell.grid
+            mempty
+            [ Cell.smallCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick Noop
+                      & Button.setIcon
+                        ( Just "keyboard_double_arrow_down"
+                        )
+                      & Button.setAttributes
+                        [ class_ "fill",
+                          Theme.secondaryBg
+                        ]
+                  )
+                  "Down",
+              Cell.smallCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick Noop
+                      & Button.setIcon
+                        ( Just "keyboard_double_arrow_up"
+                        )
+                      & Button.setAttributes
+                        [ class_ "fill",
+                          Theme.secondaryBg
+                        ]
+                  )
+                  "Up",
+              Cell.smallCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick
+                        ( Misc.duplicateAt opt idx
+                        )
+                      & Button.setIcon
+                        ( Just "library_add"
+                        )
+                      & Button.setAttributes
+                        [ class_ "fill",
+                          Theme.secondaryBg
+                        ]
+                  )
+                  "Clone",
+              Cell.smallCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick
+                        ( Misc.removeAt opt idx
+                        )
+                      & Button.setIcon
+                        ( Just "delete_forever"
+                        )
+                      & Button.setAttributes
+                        [ class_ "fill",
+                          Theme.secondaryBg
+                        ]
+                  )
+                  "Delete",
+              Cell.bigCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick closed
+                      & Button.setAttributes
+                        [ class_ "fill"
+                        ]
+                  )
+                  "Back"
+            ]
+        ]
+        mempty
+    )
+fieldModal st (ModalFieldWidget opt idx access sod) = do
+  let optic =
+        cloneTraversal opt
+          . ix idx
+          . cloneTraversal access
+  let closed =
+        pureUpdate
+          0
+          ( &
+              cloneTraversal opt
+                . ix idx
+                . cloneTraversal access
+                . #fieldSettingsOpen
+                .~ False
+          )
+  Dialog.dialog
+    ( Dialog.config
+        & Dialog.setOnClose closed
+        & Dialog.setOpen
+          ( fromMaybe
+              False
+              (st ^? cloneTraversal optic . #fieldSettingsOpen)
+          )
+    )
+    ( Dialog.dialogContent
+        Nothing
+        [ Cell.grid
+            mempty
+            $ ( case sod of
+                  Static -> mempty
+                  Dynamic ->
+                    [ let typ :| typs = enumerateNE @FieldType
+                       in Cell.mediumCell
+                            $ Select.outlined
+                              ( Select.config
+                                  & Select.setLabel
+                                    ( Just "Type"
+                                    )
+                                  & Select.setAttributes
+                                    [ class_ "fill-inner"
+                                    ]
+                                  & Select.setSelected
+                                    ( st
+                                        ^? cloneTraversal optic
+                                        . #fieldType
+                                    )
+                                  & Select.setOnChange
+                                    ( \x ->
+                                        pureUpdate
+                                          0
+                                          ( &
+                                              cloneTraversal optic
+                                                . #fieldType
+                                                .~ x
+                                          )
+                                    )
+                              )
+                              --
+                              -- NOTE : maybe add icons:
+                              --
+                              -- "font_download"
+                              -- "qr_code_2"
+                              -- "link"
+                              -- "code"
+                              --
+                              ( SelectItem.selectItem
+                                  (SelectItem.config typ)
+                                  [text . ms $ userFieldType typ]
+                              )
+                            $ fmap
+                              ( \t ->
+                                  SelectItem.selectItem
+                                    (SelectItem.config t)
+                                    [text . ms $ userFieldType t]
+                              )
+                              typs
+                    ]
+              )
+            <> [ Cell.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick Noop
+                        & Button.setIcon
+                          ( Just "keyboard_double_arrow_down"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Down",
+                 Cell.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick Noop
+                        & Button.setIcon
+                          ( Just "keyboard_double_arrow_up"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Up",
+                 Cell.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( Misc.duplicateAt opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "library_add"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Clone",
+                 Cell.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( Misc.removeAt opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "delete_forever"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Delete",
+                 Cell.bigCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick closed
+                        & Button.setAttributes
+                          [ class_ "fill"
+                          ]
+                    )
+                    "Back"
+               ]
+        ]
+        mempty
+    )

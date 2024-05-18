@@ -14,6 +14,9 @@ module App.Types
     TopOrBottom (..),
     HeaderOrFooter (..),
     OnlineOrOffline (..),
+    StaticOrDynamic (..),
+    LeadingOrTrailing (..),
+    OpenedOrClosed (..),
     newModel,
     newUnique,
     newUniqueDuplicator,
@@ -220,9 +223,28 @@ data OnlineOrOffline
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType OnlineOrOffline
 
+data StaticOrDynamic
+  = Static
+  | Dynamic
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType StaticOrDynamic
+
+data LeadingOrTrailing
+  = Leading
+  | Trailing
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType LeadingOrTrailing
+
+data OpenedOrClosed
+  = Opened
+  | Closed
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType OpenedOrClosed
+
 data Asset f = Asset
   { assetPrice :: Money f,
-    assetFieldPairs :: [FieldPair DynamicField f]
+    assetFieldPairs :: [FieldPair DynamicField f],
+    assetModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -466,6 +488,7 @@ newAsset label value amt cur = do
   Asset
     <$> newMoney amt cur
     <*> pure [qty, desc]
+    <*> pure Closed
 
 newIdentityState :: St Unique -> St Identity
 newIdentityState =

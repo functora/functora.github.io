@@ -175,6 +175,7 @@ import Data.Generics.Sum as X
 import Data.Generics.Uniplate.Data as X ()
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
+import Data.Maybe as X (listToMaybe)
 import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
 import qualified Data.Scientific as Scientific

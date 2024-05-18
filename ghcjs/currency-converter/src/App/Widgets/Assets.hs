@@ -33,10 +33,21 @@ assetWidget st optic idx =
           )
       )
       ( Field.defOpts
-          & #optsStaticType
-          .~ True
           & #optsPlaceholder
           .~ ("Price " <> idxTxt)
+          & #optsLeadingWidget
+          .~ Just
+            ( Field.ModalWidget
+                $ Field.ModalItemWidget
+                  optic
+                  idx
+                  #assetFieldPairs
+                  #assetModalState
+            )
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.DeleteWidget optic idx
+            )
       ),
     Currency.selectCurrency
       st

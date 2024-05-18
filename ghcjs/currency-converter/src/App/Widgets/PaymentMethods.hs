@@ -29,19 +29,29 @@ paymentMethodWidget ::
 paymentMethodWidget st optic idx =
   [ Field.ratioField
       st
-      ( Right
-          ( optic,
-            idx,
-            #paymentMethodMoney . #moneyAmount
-          )
+      ( cloneTraversal optic
+          . ix idx
+          . #paymentMethodMoney
+          . #moneyAmount
       )
       ( Field.defOpts
-          & #optsDisabled
-          .~ True
-          & #optsTrailingWidget
-          .~ Nothing
           & #optsPlaceholder
           .~ ("Total " <> idxTxt)
+          & #optsDisabled
+          .~ True
+          & #optsLeadingWidget
+          .~ Just
+            ( Field.ModalWidget
+                $ Field.ModalItemWidget
+                  optic
+                  idx
+                  #paymentMethodFieldPairs
+                  #paymentMethodModalState
+            )
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.DeleteWidget optic idx
+            )
       ),
     Currency.selectCurrency
       st

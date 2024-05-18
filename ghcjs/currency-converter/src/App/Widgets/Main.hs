@@ -60,10 +60,9 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelScreen = Converter} =
   let amountWidget' loc =
-        Field.ratioField @Rational
+        Field.ratioField
           st
-          ( Left
-              $ Misc.getConverterAmountOptic loc
+          ( Misc.getConverterAmountOptic loc
           )
           ( Field.defOpts
               & #optsExtraOnInput

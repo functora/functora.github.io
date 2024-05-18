@@ -71,23 +71,13 @@ defOpts =
     }
 
 field ::
-  forall a b.
   Model ->
-  --
-  -- TODO : this Either is redundant, need left-only
-  --
-  Either
-    ( ATraversal' Model (Field a Unique)
-    )
-    ( ATraversal' Model [b],
-      Int,
-      ATraversal' b (Field a Unique)
-    ) ->
+  ATraversal' Model (Field a Unique) ->
   Opts ->
   (Field a Unique -> Maybe a) ->
   (a -> Text) ->
   View Action
-field st eoptic opts parser viewer =
+field st optic opts parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       style_
@@ -143,15 +133,6 @@ field st eoptic opts parser viewer =
         ^? cloneTraversal optic
         . #fieldInput
         . #uniqueUid
-    optic =
-      either
-        id
-        ( \(opt, idx, access) ->
-            cloneTraversal opt
-              . ix idx
-              . access
-        )
-        eoptic
     getInput st' =
       st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
     getOutput st' = do
@@ -194,13 +175,7 @@ field st eoptic opts parser viewer =
 
 ratioField ::
   Model ->
-  Either
-    ( ATraversal' Model (Field Rational Unique)
-    )
-    ( ATraversal' Model [b],
-      Int,
-      ATraversal' b (Field Rational Unique)
-    ) ->
+  ATraversal' Model (Field Rational Unique) ->
   Opts ->
   View Action
 ratioField st optic opts =
@@ -214,13 +189,7 @@ ratioField st optic opts =
 
 textField ::
   Model ->
-  Either
-    ( ATraversal' Model (Field Text Unique)
-    )
-    ( ATraversal' Model [b],
-      Int,
-      ATraversal' b (Field Text Unique)
-    ) ->
+  ATraversal' Model (Field Text Unique) ->
   Opts ->
   View Action
 textField st optic opts =
@@ -241,7 +210,9 @@ dynamicField ::
 dynamicField st optic idx opts =
   field
     st
-    ( Right (optic, idx, #fieldPairValue)
+    ( cloneTraversal optic
+        . ix idx
+        . #fieldPairValue
     )
     opts
     parseDynamicField

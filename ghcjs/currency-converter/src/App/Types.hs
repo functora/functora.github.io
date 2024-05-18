@@ -167,7 +167,8 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodFieldPairs :: [FieldPair DynamicField f]
+    paymentMethodFieldPairs :: [FieldPair DynamicField f],
+    paymentMethodModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -479,6 +480,7 @@ newPaymentMethod amt cur = do
   PaymentMethod
     <$> newMoney amt cur
     <*> pure [address, notes]
+    <*> pure Closed
 
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)

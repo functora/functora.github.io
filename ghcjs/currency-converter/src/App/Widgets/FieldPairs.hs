@@ -29,19 +29,26 @@ fieldPairWidget ::
   Int ->
   [View Action]
 fieldPairWidget st optic idx =
-  [ Field.textField @Text
+  [ Field.textField
       st
-      ( Left
-          $ cloneTraversal optic
+      ( cloneTraversal optic
           . ix idx
           . #fieldPairKey
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ("Label " <> idxTxt)
+          .~ ( "Label " <> idxTxt
+             )
+      ),
+    Field.dynamicField
+      st
+      optic
+      idx
+      ( Field.defOpts
+          & #optsPlaceholder
+          .~ ( "Value " <> idxTxt
+             )
           & #optsLeadingWidget
-          .~ Nothing
-          & #optsTrailingWidget
           .~ Just
             ( Field.ModalWidget
                 $ Field.ModalFieldWidget
@@ -50,16 +57,6 @@ fieldPairWidget st optic idx =
                   #fieldPairValue
                   Dynamic
             )
-      ),
-    Field.dynamicField
-      st
-      optic
-      idx
-      ( Field.defOpts
-          & #optsPlaceholder
-          .~ ("Value " <> idxTxt)
-          & #optsLeadingWidget
-          .~ Nothing
           & #optsTrailingWidget
           .~ Just
             ( Field.DeleteWidget optic idx

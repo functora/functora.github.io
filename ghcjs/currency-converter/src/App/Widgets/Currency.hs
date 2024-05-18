@@ -55,10 +55,9 @@ selectCurrency st optic =
             $ div_
               [ class_ "fill"
               ]
-              [ Field.textField @Text
+              [ Field.textField
                   st
-                  ( Left
-                      $ cloneTraversal optic
+                  ( cloneTraversal optic
                       . #currencyInput
                   )
                   ( Field.defOpts

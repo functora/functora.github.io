@@ -381,9 +381,8 @@ fieldModal st (ModalItemWidget opt idx _ ooc) = do
                 $ Button.raised
                   ( Button.config
                       & Button.setOnClick closed
-                      & Button.setAttributes
-                        [ class_ "fill"
-                        ]
+                      & Button.setIcon (Just "arrow_back")
+                      & Button.setAttributes [class_ "fill"]
                   )
                   "Back"
             ]
@@ -528,9 +527,8 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick closed
-                        & Button.setAttributes
-                          [ class_ "fill"
-                          ]
+                        & Button.setIcon (Just "arrow_back")
+                        & Button.setAttributes [class_ "fill"]
                     )
                     "Back"
                ]

@@ -24,6 +24,7 @@ bigCell =
     [ LayoutGrid.span12Desktop,
       LayoutGrid.span8Tablet,
       LayoutGrid.span4Phone,
+      LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
     . (: mempty)
@@ -34,6 +35,7 @@ mediumCell =
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
       LayoutGrid.span4Phone,
+      LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
     . (: mempty)
@@ -44,6 +46,7 @@ smallCell =
     [ LayoutGrid.span3Desktop,
       LayoutGrid.span2Tablet,
       LayoutGrid.span2Phone,
+      LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
     . (: mempty)

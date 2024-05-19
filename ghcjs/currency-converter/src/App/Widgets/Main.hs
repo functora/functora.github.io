@@ -47,7 +47,7 @@ mainWidget st =
                    --    ],
                    swapScreenWidget st,
                    tosWidget,
-                   Snackbar.snackbar (Snackbar.config Misc.snackbarClosed)
+                   Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)
                     $ modelSnackbarQueue st
                  ]
           )

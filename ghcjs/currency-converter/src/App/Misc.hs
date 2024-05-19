@@ -4,7 +4,8 @@ module App.Misc
     pushActionQueue,
     onKeyDownAction,
     copyIntoClipboard,
-    snackbarClosed,
+    textPopup,
+    textPopupClosed,
     drainTChan,
     verifyUid,
     duplicateAt,
@@ -67,33 +68,28 @@ copyIntoClipboard st x = do
   unless (null txt) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
-    success <- JS.function $ \_ _ _ -> push $ "Copied " <> txt
-    failure <- JS.function $ \_ _ _ -> push $ "Failed to copy " <> txt
+    success <- JS.function $ \_ _ _ -> textPopup st $ "Copied " <> txt
+    failure <- JS.function $ \_ _ _ -> textPopup st $ "Failed to copy " <> txt
     void $ prom ^. JS.js2 ("then" :: Text) success failure
-  where
-    push =
-      pushActionQueue st
-        . updateSnackbar Snackbar.clearQueue
 
-updateSnackbar ::
-  ( Show a,
-    Data a
-  ) =>
-  ( Snackbar.Queue Action -> Snackbar.Queue Action
-  ) ->
-  a ->
-  ChanItem (Model -> Model)
-updateSnackbar f x =
-  ChanItem 0 (& #modelSnackbarQueue %~ (Snackbar.addMessage msg . f))
+textPopup :: (Show a, Data a) => Model -> a -> JSM ()
+textPopup st x =
+  pushActionQueue st
+    $ ChanItem
+      0
+      ( &
+          #modelSnackbarQueue
+            %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
+      )
   where
     msg =
       inspect x
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick snackbarClosed
+        & Snackbar.setOnActionIconClick textPopupClosed
 
-snackbarClosed :: Snackbar.MessageId -> Action
-snackbarClosed msg =
+textPopupClosed :: Snackbar.MessageId -> Action
+textPopupClosed msg =
   pureUpdate 0 (& #modelSnackbarQueue %~ Snackbar.close msg)
 
 drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]

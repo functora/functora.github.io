@@ -43,12 +43,12 @@ data OptsWidget
 
 data ModalWidget' where
   ModalItemWidget ::
-    forall a b.
+    forall a.
     ( Data a
     ) =>
     ATraversal' Model [a] ->
     Int ->
-    ATraversal' a [FieldPair b Unique] ->
+    ATraversal' a [FieldPair DynamicField Unique] ->
     ATraversal' a OpenedOrClosed ->
     ModalWidget'
   ModalFieldWidget ::
@@ -298,7 +298,7 @@ fieldModal ::
   Model ->
   ModalWidget' ->
   View Action
-fieldModal st (ModalItemWidget opt idx _ ooc) = do
+fieldModal st (ModalItemWidget opt idx fps ooc) = do
   let closed =
         pureUpdate
           0
@@ -324,7 +324,25 @@ fieldModal st (ModalItemWidget opt idx _ ooc) = do
         Nothing
         [ Cell.grid
             mempty
-            [ Cell.smallCell
+            [ Cell.bigCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick
+                        ( Misc.newFieldPairAction
+                            $ cloneTraversal opt
+                            . ix idx
+                            . cloneTraversal fps
+                        )
+                      & Button.setIcon
+                        ( Just "add"
+                        )
+                      & Button.setAttributes
+                        [ class_ "fill",
+                          Theme.secondaryBg
+                        ]
+                  )
+                  "Add details",
+              Cell.smallCell
                 $ Button.raised
                   ( Button.config
                       & Button.setOnClick Noop
@@ -476,7 +494,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                         & #optsIcon
                         .~ Just "content_copy"
                         & #optsPlaceholder
-                        .~ "Add copy"
+                        .~ "Allow copy"
                     )
                     ( cloneTraversal optic
                         . #fieldAddCopy

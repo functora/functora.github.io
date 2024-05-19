@@ -162,18 +162,18 @@ newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
     item <- newAsset mempty mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
 
 newFieldPairAction ::
   ATraversal' Model [FieldPair DynamicField Unique] -> Action
 newFieldPairAction optic =
   PushUpdate $ do
     item <- newFieldPair mempty $ DynamicFieldText mempty
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
 
 newPaymentMethodAction ::
   Model -> ATraversal' Model [PaymentMethod Unique] -> Action
 newPaymentMethodAction st optic =
   PushUpdate $ do
     item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (item :))
+    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))

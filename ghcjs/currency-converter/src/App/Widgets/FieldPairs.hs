@@ -46,7 +46,16 @@ fieldPairWidget st optic idx =
       idx
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ( "Value " <> idxTxt
+          .~ ( "Value "
+                <> idxTxt
+                <> ( maybe mempty (" - " <>)
+                      $ st
+                      ^? cloneTraversal optic
+                      . ix idx
+                      . #fieldPairValue
+                      . #fieldType
+                      . to userFieldType
+                   )
              )
           & #optsLeadingWidget
           .~ Just

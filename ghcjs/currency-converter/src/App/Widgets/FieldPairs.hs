@@ -59,7 +59,7 @@ fieldPairWidget st optic idx =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.DeleteWidget optic idx
+            ( Field.DeleteWidget optic idx mempty
             )
       )
   ]

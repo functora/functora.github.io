@@ -38,7 +38,7 @@ data Opts = Opts
 data OptsWidget
   = CopyWidget
   | ClearWidget
-  | forall a. DeleteWidget (ATraversal' Model [a]) Int
+  | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
   | ModalWidget ModalWidget'
 
 data ModalWidget' where
@@ -229,14 +229,14 @@ fieldIcon ::
   TextField.Icon Action
 fieldIcon st optic lot extraOnInput = \case
   CopyWidget ->
-    icon "content_copy" . PushUpdate $ do
+    icon "content_copy" mempty . PushUpdate $ do
       Misc.verifyUid uid
       whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
         $ Misc.copyIntoClipboard st
       pure
         $ ChanItem 0 id
   ClearWidget ->
-    icon "close" . PushUpdate $ do
+    icon "close" mempty . PushUpdate $ do
       Misc.verifyUid uid
       focus
         . ms
@@ -253,11 +253,11 @@ fieldIcon st optic lot extraOnInput = \case
           . #uniqueValue
           .~ mempty
           & extraOnInput
-  DeleteWidget opt idx ->
-    icon "delete_forever"
+  DeleteWidget opt idx attrs ->
+    icon "delete_forever" attrs
       $ Misc.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ ooc) ->
-    icon "settings"
+    icon "settings" [Theme.primary]
       $ pureUpdate
         0
         ( &
@@ -267,7 +267,7 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ModalWidget (ModalFieldWidget opt idx access _) ->
-    icon "settings"
+    icon "settings" mempty
       $ pureUpdate
         0
         ( &
@@ -280,16 +280,18 @@ fieldIcon st optic lot extraOnInput = \case
   where
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
-    icon txt action =
+    icon txt attrs action =
       TextField.icon
-        [ class_ $ case lot of
-            Leading -> "mdc-text-field__icon--leading"
-            Trailing -> "mdc-text-field__icon--trailing",
-          style_ [("pointer-events", "auto")],
-          textProp "role" "button",
-          intProp "tabindex" 0,
-          onClick action
-        ]
+        ( [ class_ $ case lot of
+              Leading -> "mdc-text-field__icon--leading"
+              Trailing -> "mdc-text-field__icon--trailing",
+            style_ [("pointer-events", "auto")],
+            textProp "role" "button",
+            intProp "tabindex" 0,
+            onClick action
+          ]
+            <> attrs
+        )
         txt
 
 fieldModal ::

@@ -345,7 +345,9 @@ fieldModal st (ModalItemWidget opt idx fps ooc) = do
               Cell.smallCell
                 $ Button.raised
                   ( Button.config
-                      & Button.setOnClick Noop
+                      & Button.setOnClick
+                        ( Misc.moveDown opt idx
+                        )
                       & Button.setIcon
                         ( Just "keyboard_double_arrow_down"
                         )
@@ -358,7 +360,9 @@ fieldModal st (ModalItemWidget opt idx fps ooc) = do
               Cell.smallCell
                 $ Button.raised
                   ( Button.config
-                      & Button.setOnClick Noop
+                      & Button.setOnClick
+                        ( Misc.moveUp opt idx
+                        )
                       & Button.setIcon
                         ( Just "keyboard_double_arrow_up"
                         )
@@ -502,7 +506,9 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                  Cell.smallCell
                   $ Button.raised
                     ( Button.config
-                        & Button.setOnClick Noop
+                        & Button.setOnClick
+                          ( Misc.moveDown opt idx
+                          )
                         & Button.setIcon
                           ( Just "keyboard_double_arrow_down"
                           )
@@ -515,7 +521,9 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                  Cell.smallCell
                   $ Button.raised
                     ( Button.config
-                        & Button.setOnClick Noop
+                        & Button.setOnClick
+                          ( Misc.moveUp opt idx
+                          )
                         & Button.setIcon
                           ( Just "keyboard_double_arrow_up"
                           )

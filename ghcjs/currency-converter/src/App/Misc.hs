@@ -10,6 +10,8 @@ module App.Misc
     verifyUid,
     duplicateAt,
     removeAt,
+    moveUp,
+    moveDown,
     getSomeCurrency,
     newAssetAction,
     newFieldPairAction,
@@ -23,6 +25,7 @@ import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (view)
+import qualified Prelude
 
 getConverterAmountOptic ::
   ( Functor f
@@ -147,6 +150,37 @@ removeAt optic idx =
     pure
       . ChanItem 0
       $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+
+moveUp :: ATraversal' Model [a] -> Int -> Action
+moveUp optic idx =
+  PushUpdate
+    . pure
+    . ChanItem 0
+    $ (& cloneTraversal optic %~ swapAt (idx - 1) idx)
+
+moveDown :: ATraversal' Model [a] -> Int -> Action
+moveDown optic idx =
+  PushUpdate
+    . pure
+    . ChanItem 0
+    $ (& cloneTraversal optic %~ swapAt idx (idx + 1))
+
+swapAt :: Int -> Int -> [a] -> [a]
+swapAt i j xs
+  | i == j = xs
+  | i < 0 || i >= len = xs
+  | j < 0 || j >= len = xs
+  | otherwise = do
+      (idx, val) <- zip [0 ..] xs
+      pure
+        $ if
+          | idx == i -> jval
+          | idx == j -> ival
+          | otherwise -> val
+  where
+    len = length xs
+    ival = xs Prelude.!! i
+    jval = xs Prelude.!! j
 
 getSomeCurrency :: Model -> CurrencyCode -> CurrencyInfo
 getSomeCurrency st cur =

@@ -12,6 +12,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Switch as Switch
 import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
@@ -273,8 +274,8 @@ fieldIcon st optic lot extraOnInput = \case
             cloneTraversal opt
               . ix idx
               . cloneTraversal access
-              . #fieldSettingsOpen
-              .~ True
+              . #fieldModalState
+              .~ Opened
         )
   where
     uid =
@@ -401,16 +402,15 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
               cloneTraversal opt
                 . ix idx
                 . cloneTraversal access
-                . #fieldSettingsOpen
-                .~ False
+                . #fieldModalState
+                .~ Closed
           )
   Dialog.dialog
     ( Dialog.config
         & Dialog.setOnClose closed
         & Dialog.setOpen
-          ( fromMaybe
-              False
-              (st ^? cloneTraversal optic . #fieldSettingsOpen)
+          ( Just Opened
+              == (st ^? cloneTraversal optic . #fieldModalState)
           )
     )
     ( Dialog.dialogContent
@@ -467,7 +467,19 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                               typs
                     ]
               )
-            <> [ Cell.smallCell
+            <> [ Cell.mediumCell
+                  $ Switch.switch
+                    st
+                    ( Switch.defOpts
+                        & #optsIcon
+                        .~ Just "content_copy"
+                        & #optsPlaceholder
+                        .~ "Add copy"
+                    )
+                    ( cloneTraversal optic
+                        . #fieldAddCopy
+                    ),
+                 Cell.smallCell
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick Noop

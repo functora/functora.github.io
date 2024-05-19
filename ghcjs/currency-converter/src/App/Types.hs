@@ -554,7 +554,8 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Text,
     fieldOutput :: a,
-    fieldSettingsOpen :: Bool
+    fieldAddCopy :: Bool,
+    fieldModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -588,7 +589,8 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldSettingsOpen = False
+        fieldAddCopy = True,
+        fieldModalState = Closed
       }
 
 data FieldPair a f = FieldPair

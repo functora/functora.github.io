@@ -234,7 +234,8 @@ unexpectedCurrency =
           { fieldType = FieldTypeText,
             fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
             fieldOutput = "UNEXPECTED CURRENCY",
-            fieldSettingsOpen = False
+            fieldAddCopy = True,
+            fieldModalState = Closed
           },
       currencyOutput =
         CurrencyInfo

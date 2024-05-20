@@ -37,8 +37,11 @@ fieldPairWidget st optic idx =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ( "Label " <> idxTxt
-             )
+          .~ ("Label " <> idxTxt)
+          & #optsLeadingWidget
+          .~ Just (Field.DownWidget optic idx mempty)
+          & #optsTrailingWidget
+          .~ Just (Field.UpWidget optic idx mempty)
       ),
     Field.dynamicField
       st

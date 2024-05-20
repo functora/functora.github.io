@@ -38,6 +38,8 @@ data Opts = Opts
 data OptsWidget
   = CopyWidget
   | ClearWidget
+  | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
+  | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
   | ModalWidget ModalWidget'
 
@@ -253,6 +255,12 @@ fieldIcon st optic lot extraOnInput = \case
           . #uniqueValue
           .~ mempty
           & extraOnInput
+  UpWidget opt idx attrs ->
+    icon "keyboard_double_arrow_up" attrs
+      $ Misc.moveUp opt idx
+  DownWidget opt idx attrs ->
+    icon "keyboard_double_arrow_down" attrs
+      $ Misc.moveDown opt idx
   DeleteWidget opt idx attrs ->
     icon "delete_forever" attrs
       $ Misc.removeAt opt idx

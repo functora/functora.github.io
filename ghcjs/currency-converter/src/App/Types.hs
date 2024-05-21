@@ -51,6 +51,7 @@ import Miso hiding (view)
 
 data Model = Model
   { modelHide :: Bool,
+    modelMenu :: OpenedOrClosed,
     modelState :: St Unique,
     modelScreen :: Screen,
     modelMarket :: MVar Market,
@@ -294,6 +295,7 @@ newModel = do
   let st =
         Model
           { modelHide = True,
+            modelMenu = Closed,
             modelState =
               St
                 { stateTopMoney = topMoney,

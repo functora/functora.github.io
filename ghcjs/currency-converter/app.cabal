@@ -30,6 +30,7 @@ common pkg
     App.Widgets.Header
     App.Widgets.IconToggles
     App.Widgets.Main
+    App.Widgets.Menu
     App.Widgets.PaymentMethods
     App.Widgets.SwapAmounts
     App.Widgets.Switch

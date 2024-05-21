@@ -3,20 +3,18 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
+import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
-import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String (ms)
@@ -38,14 +36,14 @@ mainWidget st =
                     else mempty
                  )
           )
-          ( screenWidget st
+          ( Menu.menu st
+              <> screenWidget st
               <> [ -- LayoutGrid.cell [LayoutGrid.span12]
                    --  . (: mempty)
                    --  $ div_
                    --    mempty
                    --    [ inspect . newIdentityState $ st ^. #modelState
                    --    ],
-                   swapScreenWidget st,
                    tosWidget,
                    Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)
                     $ modelSnackbarQueue st
@@ -89,32 +87,6 @@ screenWidget st@Model {modelScreen = DocumentEditor} =
   FieldPairs.fieldPairs Header st (#modelState . #stateFieldPairs)
     <> Assets.assets st (#modelState . #stateAssets)
     <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
-
-swapScreenWidget :: Model -> View Action
-swapScreenWidget st =
-  Cell.bigCell
-    $ Button.raised
-      ( Button.config
-          & Button.setAttributes
-            [ Theme.secondaryBg,
-              class_ "fill"
-            ]
-          & Button.setOnClick
-            ( pureUpdate
-                0
-                ( &
-                    #modelScreen
-                      %~ ( \case
-                            Converter -> DocumentEditor
-                            DocumentEditor -> Converter
-                         )
-                )
-            )
-      )
-      ( case st ^. #modelScreen of
-          Converter -> "Create invoice"
-          DocumentEditor -> "Show converter"
-      )
 
 tosWidget :: View Action
 tosWidget =

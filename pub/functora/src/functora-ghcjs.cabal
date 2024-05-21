@@ -81,6 +81,7 @@ common pkg
     , base16-bytestring
     , base58-bytestring
     , base64-bytestring
+    , binary
     , bmp
     , bytestring
     , containers

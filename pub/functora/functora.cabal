@@ -145,6 +145,7 @@ common pkg-cfg
   build-depends:
     , aeson
     , base
+    , binary
     , bytestring
     , modern-uri
     , optparse-applicative

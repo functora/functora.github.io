@@ -18,6 +18,11 @@ module Functora.Cfg
     decodeToml,
     encodeToml,
 
+    -- * Binary
+    -- $binary
+    decodeBinary,
+    encodeBinary,
+
     -- * DerivingVia
     -- $derivingVia
     GenericEnum (..),
@@ -32,10 +37,14 @@ import Data.Aeson as X
     ToJSONKey (..),
   )
 import qualified Data.Aeson as A
+import Data.Binary as X (Binary)
+import qualified Data.Binary as Binary
+import qualified Data.Binary.Get as Binary
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.List.NonEmpty as NE
 import Functora.CfgOrphan as X ()
 import Functora.Prelude
+import qualified GHC.Generics as Generics
 import qualified Options.Applicative as Cli
 import Toml as X
   ( HasCodec,
@@ -157,6 +166,27 @@ genericTomlCodec =
             xs -> xs
       }
 
+-- $binary
+-- Binary
+
+decodeBinary ::
+  forall inp out.
+  ( From inp BL.ByteString,
+    Show out,
+    Data out,
+    Binary out
+  ) =>
+  inp ->
+  Either (BL.ByteString, Binary.ByteOffset, String) out
+decodeBinary raw = do
+  (extra, qty, res) <- Binary.decodeOrFail $ from @inp @BL.ByteString raw
+  if null extra
+    then pure res
+    else Left (extra, qty, inspect res)
+
+encodeBinary :: (Binary a) => a -> BL.ByteString
+encodeBinary = Binary.encode
+
 -- $derivingVia
 -- Newtypes to simplify deriving via.
 -- We have to expose default constructors/accessors
@@ -236,6 +266,22 @@ instance
   ToJSONKey (GenericType a)
   where
   toJSONKey = contramap unGenericType $ A.genericToJSONKey A.defaultJSONKeyOptions
+
+instance
+  ( Generic a,
+    Typeable a,
+    Binary.GBinaryPut (Rep a),
+    Binary.GBinaryGet (Rep a)
+  ) =>
+  Binary (GenericType a)
+  where
+  putList = defaultPutList
+  put = Binary.gput . Generics.from . unGenericType
+  get = GenericType . Generics.to <$> Binary.gget
+
+{-# INLINE defaultPutList #-}
+defaultPutList :: (Binary a) => [a] -> Binary.Put
+defaultPutList xs = Binary.put (length xs) <> mapM_ Binary.put xs
 
 optsAeson :: forall a. (Typeable a) => A.Options
 optsAeson =

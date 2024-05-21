@@ -10,8 +10,6 @@ import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.SwapAmounts as SwapAmounts
-import qualified Data.Text as T
-import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude as Prelude
 import qualified Material.LayoutGrid as LayoutGrid
@@ -19,7 +17,6 @@ import qualified Material.Snackbar as Snackbar
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String (ms)
-import qualified Paths_app as Paths
 
 mainWidget :: Model -> View Action
 mainWidget st =
@@ -37,7 +34,12 @@ mainWidget st =
                     else mempty
                  )
           )
-          ( Menu.menu st
+          ( ( if elem @[Screen]
+                (st ^. #modelState . #stateScreen)
+                [Converter, Editor]
+                then Menu.menu st
+                else mempty
+            )
               <> screenWidget st
               <> [ -- LayoutGrid.cell [LayoutGrid.span12]
                    --  . (: mempty)
@@ -57,7 +59,7 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st@Model {modelScreen = Converter} =
+screenWidget st@Model {modelState = St {stateScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField
           st
@@ -84,7 +86,7 @@ screenWidget st@Model {modelScreen = Converter} =
         SwapAmounts.swapAmounts,
         Currency.swapCurrencies
       ]
-screenWidget st@Model {modelScreen = Editor} =
+screenWidget st@Model {modelState = St {stateScreen = Editor}} =
   FieldPairs.fieldPairs Header st (#modelState . #stateFieldPairs)
     <> Assets.assets st (#modelState . #stateAssets)
     <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
@@ -105,11 +107,5 @@ tosWidget =
       Miso.text " and ",
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text ". ",
-      Miso.text . ms $ "Version " <> vsn <> "."
+      Miso.text . ms $ "Version " <> Misc.vsn <> "."
     ]
-
-vsn :: Text
-vsn =
-  T.intercalate "."
-    . fmap inspect
-    $ Version.versionBranch Paths.version

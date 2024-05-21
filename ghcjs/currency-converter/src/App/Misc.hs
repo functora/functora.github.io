@@ -16,15 +16,21 @@ module App.Misc
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
+    appUri,
+    vsn,
   )
 where
 
 import App.Types
+import qualified Data.Text as T
+import qualified Data.Version as Version
 import Functora.Money
 import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
-import Miso hiding (view)
+import Miso hiding (URI, view)
+import qualified Paths_app as Paths
+import qualified Text.URI as URI
 import qualified Prelude
 
 getConverterAmountOptic ::
@@ -207,3 +213,23 @@ newPaymentMethodAction st optic =
   PushUpdate $ do
     item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
+
+appUri :: (MonadThrow m) => Model -> m URI
+appUri _ = do
+  uri <-
+    mkURI
+      $ "https://functora.github.io/apps/currency-converter/"
+      <> vsn
+      <> "/index.html"
+  stk <- URI.mkQueryKey "s"
+  stv <- URI.mkQueryValue $ "HELLO"
+  pure
+    $ uri
+      { URI.uriQuery = [URI.QueryParam stk stv]
+      }
+
+vsn :: Text
+vsn =
+  T.intercalate "."
+    . fmap inspect
+    $ Version.versionBranch Paths.version

@@ -53,7 +53,6 @@ data Model = Model
   { modelHide :: Bool,
     modelMenu :: OpenedOrClosed,
     modelState :: St Unique,
-    modelScreen :: Screen,
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
@@ -93,7 +92,8 @@ type Hkt f =
   )
 
 data St f = St
-  { stateTopMoney :: Money f,
+  { stateScreen :: Screen,
+    stateTopMoney :: Money f,
     stateBottomMoney :: Money f,
     stateTopOrBottom :: TopOrBottom,
     stateFieldPairs :: [FieldPair DynamicField f],
@@ -206,6 +206,7 @@ data ChanItem a = ChanItem
 data Screen
   = Converter
   | Editor
+  -- \| QrViewer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Screen
 
@@ -301,7 +302,8 @@ newModel = do
             modelMenu = Closed,
             modelState =
               St
-                { stateTopMoney = topMoney,
+                { stateScreen = defaultScreen,
+                  stateTopMoney = topMoney,
                   stateBottomMoney = bottomMoney,
                   stateTopOrBottom = Top,
                   stateFieldPairs = [issuer, client],
@@ -310,7 +312,6 @@ newModel = do
                   statePwd = pwd,
                   stateEditable = True
                 },
-            modelScreen = defaultScreen,
             modelMarket = market,
             modelCurrencies = [btc, usd],
             modelSnackbarQueue = Snackbar.initialQueue,

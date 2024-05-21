@@ -76,4 +76,7 @@ menu st =
   where
     opened = pureUpdate 0 (& #modelMenu .~ Opened)
     closed = pureUpdate 0 (& #modelMenu .~ Closed)
-    screen x = pureUpdate 0 $ (#modelMenu .~ Closed) . (#modelScreen .~ x)
+    screen x =
+      pureUpdate 0
+        $ (#modelMenu .~ Closed)
+        . (#modelState . #stateScreen .~ x)

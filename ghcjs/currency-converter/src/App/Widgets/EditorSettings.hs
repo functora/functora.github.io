@@ -3,6 +3,7 @@ module App.Widgets.EditorSettings
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
@@ -11,7 +12,10 @@ import qualified App.Widgets.Switch as Switch
 import Functora.Prelude as Prelude
 -- import qualified Material.Button as Button
 -- import qualified Material.Theme as Theme
+
 import Miso hiding (view)
+import Miso.String (ms)
+import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
 editorSettings st =
@@ -39,5 +43,14 @@ editorSettings st =
         )
         ( #modelState
             . #stateEditable
-        )
+        ),
+    Cell.bigCell
+      $ div_
+        mempty
+        [ text
+            . ms
+            . URI.render
+            . either impureThrow id
+            $ Misc.appUri st
+        ]
   ]

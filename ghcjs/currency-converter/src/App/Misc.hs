@@ -22,8 +22,11 @@ module App.Misc
 where
 
 import App.Types
+import qualified Data.ByteString.Base64.URL as B64URL
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Version as Version
+import Functora.Cfg
 import Functora.Money
 import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
@@ -215,14 +218,22 @@ newPaymentMethodAction st optic =
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
 
 appUri :: (MonadThrow m) => Model -> m URI
-appUri _ = do
+appUri st = do
   uri <-
     mkURI
       $ "https://functora.github.io/apps/currency-converter/"
       <> vsn
       <> "/index.html"
   stk <- URI.mkQueryKey "s"
-  stv <- URI.mkQueryValue $ "HELLO"
+  stb <-
+    either throw pure
+      . decodeUtf8'
+      . B64URL.encode
+      . from @BL.ByteString @ByteString
+      . encodeBinary
+      . newIdentityState
+      $ modelState st
+  stv <- URI.mkQueryValue stb
   pure
     $ uri
       { URI.uriQuery = [URI.QueryParam stk stv]

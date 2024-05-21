@@ -80,7 +80,8 @@ type Typ a =
     Eq a,
     Ord a,
     Show a,
-    Data a
+    Data a,
+    Binary a
   )
 
 type Hkt f =
@@ -116,6 +117,8 @@ instance FunctorB St
 
 instance TraversableB St
 
+deriving via GenericType (St Identity) instance Binary (St Identity)
+
 deriving via GenericType (St Identity) instance ToJSON (St Identity)
 
 deriving via GenericType (St Identity) instance FromJSON (St Identity)
@@ -137,6 +140,8 @@ deriving stock instance (Hkt f) => Data (Money f)
 instance FunctorB Money
 
 instance TraversableB Money
+
+deriving via GenericType (Money Identity) instance Binary (Money Identity)
 
 deriving via GenericType (Money Identity) instance ToJSON (Money Identity)
 
@@ -160,6 +165,8 @@ deriving stock instance (Hkt f) => Data (Currency f)
 instance FunctorB Currency
 
 instance TraversableB Currency
+
+deriving via GenericType (Currency Identity) instance Binary (Currency Identity)
 
 deriving via GenericType (Currency Identity) instance ToJSON (Currency Identity)
 
@@ -190,6 +197,11 @@ instance TraversableB PaymentMethod
 deriving via
   GenericType (PaymentMethod Identity)
   instance
+    Binary (PaymentMethod Identity)
+
+deriving via
+  GenericType (PaymentMethod Identity)
+  instance
     ToJSON (PaymentMethod Identity)
 
 deriving via
@@ -206,45 +218,44 @@ data ChanItem a = ChanItem
 data Screen
   = Converter
   | Editor
-  -- \| QrViewer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType Screen
+  deriving (Binary, ToJSON, FromJSON) via GenericType Screen
 
 data TopOrBottom
   = Top
   | Bottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType TopOrBottom
+  deriving (Binary, ToJSON, FromJSON) via GenericType TopOrBottom
 
 data HeaderOrFooter
   = Header
   | Footer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType HeaderOrFooter
+  deriving (Binary, ToJSON, FromJSON) via GenericType HeaderOrFooter
 
 data OnlineOrOffline
   = Online
   | Offline
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType OnlineOrOffline
+  deriving (Binary, ToJSON, FromJSON) via GenericType OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType StaticOrDynamic
+  deriving (Binary, ToJSON, FromJSON) via GenericType StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType LeadingOrTrailing
+  deriving (Binary, ToJSON, FromJSON) via GenericType LeadingOrTrailing
 
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType OpenedOrClosed
+  deriving (Binary, ToJSON, FromJSON) via GenericType OpenedOrClosed
 
 data Asset f = Asset
   { assetPrice :: Money f,
@@ -264,6 +275,8 @@ deriving stock instance (Hkt f) => Data (Asset f)
 instance FunctorB Asset
 
 instance TraversableB Asset
+
+deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
 deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
 
@@ -519,7 +532,7 @@ data FieldType
   | FieldTypeHtml
   | FieldTypePwd
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType FieldType
+  deriving (Binary, ToJSON, FromJSON) via GenericType FieldType
 
 htmlFieldType :: FieldType -> Text
 htmlFieldType = \case
@@ -545,7 +558,7 @@ data DynamicField
   = DynamicFieldText Text
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (ToJSON, FromJSON) via GenericType DynamicField
+  deriving (Binary, ToJSON, FromJSON) via GenericType DynamicField
 
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
@@ -581,6 +594,11 @@ deriving stock instance (Typ a, Hkt f) => Data (Field a f)
 instance FunctorB (Field a)
 
 instance TraversableB (Field a)
+
+deriving via
+  GenericType (Field a Identity)
+  instance
+    (Typ a) => Binary (Field a Identity)
 
 deriving via
   GenericType (Field a Identity)
@@ -625,6 +643,11 @@ deriving stock instance (Typ a, Hkt f) => Data (FieldPair a f)
 instance FunctorB (FieldPair a)
 
 instance TraversableB (FieldPair a)
+
+deriving via
+  GenericType (FieldPair a Identity)
+  instance
+    (Typ a) => Binary (FieldPair a Identity)
 
 deriving via
   GenericType (FieldPair a Identity)

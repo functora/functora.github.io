@@ -94,6 +94,7 @@ common pkg
   build-depends:
     , barbies
     , base
+    , base64-bytestring
     , containers
     , functora-ghcjs
     , fuzzy

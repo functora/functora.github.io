@@ -117,7 +117,7 @@ import Control.Concurrent.STM.TChan as X
     writeTChan,
   )
 import qualified Control.Concurrent.Thread.Delay as Delay
-import Control.Exception.Safe as X (throw)
+import Control.Exception.Safe as X (impureThrow, throw)
 import qualified Control.Exception.Safe as Safe
 import Control.Lens as X ((^?))
 import Control.Lens.Combinators as X

@@ -38,6 +38,7 @@ data Opts = Opts
 data OptsWidget
   = CopyWidget
   | ClearWidget
+  | ShowOrHideWidget
   | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
@@ -255,6 +256,14 @@ fieldIcon st optic lot extraOnInput = \case
           . #uniqueValue
           .~ mempty
           & extraOnInput
+  ShowOrHideWidget ->
+    case st ^? cloneTraversal optic . #fieldType of
+      Just FieldTypePwd ->
+        icon "visibility" mempty
+          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypeText)
+      _ ->
+        icon "visibility_off" mempty
+          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePwd)
   UpWidget opt idx attrs ->
     icon "keyboard_double_arrow_up" attrs
       $ Misc.moveUp opt idx

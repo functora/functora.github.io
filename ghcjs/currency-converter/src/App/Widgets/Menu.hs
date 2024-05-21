@@ -53,7 +53,7 @@ menu st =
                 Cell.mediumCell
                   $ Button.raised
                     ( Button.config
-                        & Button.setOnClick (screen DocumentEditor)
+                        & Button.setOnClick (screen Editor)
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"

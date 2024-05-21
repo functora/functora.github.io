@@ -98,7 +98,9 @@ data St f = St
     stateTopOrBottom :: TopOrBottom,
     stateFieldPairs :: [FieldPair DynamicField f],
     stateAssets :: [Asset f],
-    statePaymentMethods :: [PaymentMethod f]
+    statePaymentMethods :: [PaymentMethod f],
+    statePwd :: Field Text f,
+    stateEditable :: Bool
   }
   deriving stock (Generic)
 
@@ -203,7 +205,7 @@ data ChanItem a = ChanItem
 
 data Screen
   = Converter
-  | DocumentEditor
+  | Editor
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Screen
 
@@ -271,7 +273,7 @@ deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 --
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
-  let defaultScreen = DocumentEditor
+  let defaultScreen = Editor
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
@@ -292,6 +294,7 @@ newModel = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
+  pwd <- newField FieldTypePwd mempty id
   let st =
         Model
           { modelHide = True,
@@ -303,7 +306,9 @@ newModel = do
                   stateTopOrBottom = Top,
                   stateFieldPairs = [issuer, client],
                   stateAssets = [asset],
-                  statePaymentMethods = [paymentMethod]
+                  statePaymentMethods = [paymentMethod],
+                  statePwd = pwd,
+                  stateEditable = True
                 },
             modelScreen = defaultScreen,
             modelMarket = market,
@@ -369,7 +374,7 @@ newModel = do
       . #currencyOutput
       .~ quoteCur
       --
-      -- DocumentEditor
+      -- Editor
       --
       & #modelState
       . #statePaymentMethods
@@ -511,6 +516,7 @@ data FieldType
   | FieldTypeQrCode
   | FieldTypeLink
   | FieldTypeHtml
+  | FieldTypePwd
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType FieldType
 
@@ -522,6 +528,7 @@ htmlFieldType = \case
   FieldTypeQrCode -> "text"
   FieldTypeLink -> "text"
   FieldTypeHtml -> "text"
+  FieldTypePwd -> "password"
 
 userFieldType :: FieldType -> Text
 userFieldType = \case
@@ -531,6 +538,7 @@ userFieldType = \case
   FieldTypeQrCode -> "QR code"
   FieldTypeLink -> "Link"
   FieldTypeHtml -> "HTML"
+  FieldTypePwd -> "Password"
 
 data DynamicField
   = DynamicFieldText Text

@@ -4,6 +4,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.EditorSettings as EditorSettings
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Menu as Menu
@@ -83,10 +84,11 @@ screenWidget st@Model {modelScreen = Converter} =
         SwapAmounts.swapAmounts,
         Currency.swapCurrencies
       ]
-screenWidget st@Model {modelScreen = DocumentEditor} =
+screenWidget st@Model {modelScreen = Editor} =
   FieldPairs.fieldPairs Header st (#modelState . #stateFieldPairs)
     <> Assets.assets st (#modelState . #stateAssets)
     <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
+    <> EditorSettings.editorSettings st
 
 tosWidget :: View Action
 tosWidget =

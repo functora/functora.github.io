@@ -40,6 +40,7 @@ import qualified Data.Aeson as A
 import Data.Binary as X (Binary)
 import qualified Data.Binary as Binary
 import qualified Data.Binary.Get as Binary
+import Data.Binary.Instances as X ()
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.List.NonEmpty as NE
 import Functora.CfgOrphan as X ()

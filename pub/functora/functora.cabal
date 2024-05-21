@@ -146,6 +146,7 @@ common pkg-cfg
     , aeson
     , base
     , binary
+    , binary-instances
     , bytestring
     , modern-uri
     , optparse-applicative

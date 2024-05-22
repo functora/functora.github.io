@@ -79,4 +79,4 @@ menu st =
     screen x =
       pureUpdate 0
         $ (#modelMenu .~ Closed)
-        . (#modelState . #stateScreen .~ x)
+        . (#modelState . #stScreen .~ x)

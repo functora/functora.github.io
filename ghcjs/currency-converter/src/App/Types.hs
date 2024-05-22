@@ -96,16 +96,13 @@ type Hkt f =
   )
 
 data St f = St
-  { stateScreen :: Screen,
+  { stScreen :: Screen,
     stConv :: StConv f,
-    stateFieldPairs :: [FieldPair DynamicField f],
-    stateAssets :: [Asset f],
-    statePaymentMethods :: [PaymentMethod f],
+    stDoc :: StDoc f,
     --
     -- TODO : move pwd out of St, no point for it to be here
     --
-    statePwd :: Field Text f,
-    stateEditable :: Bool
+    statePwd :: Field Text f
   }
   deriving stock (Generic)
 
@@ -151,6 +148,32 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 deriving via GenericType (StConv Identity) instance ToJSON (StConv Identity)
 
 deriving via GenericType (StConv Identity) instance FromJSON (StConv Identity)
+
+data StDoc f = StDoc
+  { stDocFieldPairs :: [FieldPair DynamicField f],
+    stDocAssets :: [Asset f],
+    stDocPaymentMethods :: [PaymentMethod f],
+    stDocEditable :: Bool
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Hkt f) => Eq (StDoc f)
+
+deriving stock instance (Hkt f) => Ord (StDoc f)
+
+deriving stock instance (Hkt f) => Show (StDoc f)
+
+deriving stock instance (Hkt f) => Data (StDoc f)
+
+instance FunctorB StDoc
+
+instance TraversableB StDoc
+
+deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
+
+deriving via GenericType (StDoc Identity) instance ToJSON (StDoc Identity)
+
+deriving via GenericType (StDoc Identity) instance FromJSON (StDoc Identity)
 
 data Money f = Money
   { moneyAmount :: Field Rational f,
@@ -312,7 +335,7 @@ deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
 deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 
 --
--- TODO : simplify this
+-- TODO : simplify this !!!!
 --
 newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
 newModel = do
@@ -344,18 +367,21 @@ newModel = do
             modelMenu = Closed,
             modelState =
               St
-                { stateScreen = defaultScreen,
+                { stScreen = defaultScreen,
                   stConv =
                     StConv
                       { stConvTopMoney = topMoney,
                         stConvBottomMoney = bottomMoney,
                         stConvTopOrBottom = Top
                       },
-                  stateFieldPairs = [issuer, client],
-                  stateAssets = [asset],
-                  statePaymentMethods = [paymentMethod],
-                  statePwd = pwd,
-                  stateEditable = True
+                  stDoc =
+                    StDoc
+                      { stDocFieldPairs = [issuer, client],
+                        stDocAssets = [asset],
+                        stDocPaymentMethods = [paymentMethod],
+                        stDocEditable = True
+                      },
+                  statePwd = pwd
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
@@ -429,7 +455,8 @@ newModel = do
       -- Editor
       --
       & #modelState
-      . #statePaymentMethods
+      . #stDoc
+      . #stDocPaymentMethods
       . each
       . #paymentMethodMoney
       . #moneyAmount
@@ -437,14 +464,16 @@ newModel = do
       . #uniqueValue
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
-      . #statePaymentMethods
+      . #stDoc
+      . #stDocPaymentMethods
       . each
       . #paymentMethodMoney
       . #moneyAmount
       . #fieldOutput
       .~ unTagged baseAmt
       & #modelState
-      . #statePaymentMethods
+      . #stDoc
+      . #stDocPaymentMethods
       . each
       . #paymentMethodMoney
       . #moneyCurrency
@@ -454,7 +483,8 @@ newModel = do
       -- Asset
       --
       & #modelState
-      . #stateAssets
+      . #stDoc
+      . #stDocAssets
       . each
       . #assetPrice
       . #moneyCurrency

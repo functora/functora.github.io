@@ -35,7 +35,7 @@ mainWidget st =
                  )
           )
           ( ( if elem @[Screen]
-                (st ^. #modelState . #stateScreen)
+                (st ^. #modelState . #stScreen)
                 [Converter, Editor]
                 then Menu.menu st
                 else mempty
@@ -59,7 +59,7 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st@Model {modelState = St {stateScreen = Converter}} =
+screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField
           st
@@ -86,10 +86,15 @@ screenWidget st@Model {modelState = St {stateScreen = Converter}} =
         SwapAmounts.swapAmounts,
         Currency.swapCurrencies
       ]
-screenWidget st@Model {modelState = St {stateScreen = Editor}} =
-  FieldPairs.fieldPairs Header st (#modelState . #stateFieldPairs)
-    <> Assets.assets st (#modelState . #stateAssets)
-    <> PaymentMethods.paymentMethods st (#modelState . #statePaymentMethods)
+screenWidget st@Model {modelState = St {stScreen = Editor}} =
+  FieldPairs.fieldPairs Header st (#modelState . #stDoc . #stDocFieldPairs)
+    <> Assets.assets st (#modelState . #stDoc . #stDocAssets)
+    <> PaymentMethods.paymentMethods
+      st
+      ( #modelState
+          . #stDoc
+          . #stDocPaymentMethods
+      )
     <> EditorSettings.editorSettings st
 
 tosWidget :: View Action

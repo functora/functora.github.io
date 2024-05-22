@@ -258,12 +258,12 @@ evalInvoice ::
   Model ->
   ReaderT (MVar Market) m Model
 evalInvoice st = do
-  mtds <- forM (st ^. #modelState . #statePaymentMethods) $ \mtd -> do
+  mtds <- forM (st ^. #modelState . #stDoc . #stDocPaymentMethods) $ \mtd -> do
     total <-
       foldM
         (\acc -> fmap (+ acc) . getTotalPayment mtd)
         0
-        (st ^. #modelState . #stateAssets)
+        (st ^. #modelState . #stDoc . #stDocAssets)
     pure
       $ mtd
       & #paymentMethodMoney
@@ -278,7 +278,8 @@ evalInvoice st = do
   pure
     $ st
     & #modelState
-    . #statePaymentMethods
+    . #stDoc
+    . #stDocPaymentMethods
     .~ mtds
 
 getTotalPayment ::

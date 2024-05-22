@@ -37,7 +37,8 @@ editorSettings st =
             .~ "Allow editing"
         )
         ( #modelState
-            . #stateEditable
+            . #stDoc
+            . #stDocEditable
         ),
     Cell.bigCell
       $ Field.constLinkField

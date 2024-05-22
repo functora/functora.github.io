@@ -41,6 +41,7 @@ where
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import qualified Functora.Money as Money
@@ -99,10 +100,7 @@ data St f = St
   { stScreen :: Screen,
     stConv :: StConv f,
     stDoc :: StDoc f,
-    --
-    -- TODO : move pwd out of St, no point for it to be here
-    --
-    statePwd :: Field Text f
+    stAes :: StAes f
   }
   deriving stock (Generic)
 
@@ -119,10 +117,6 @@ instance FunctorB St
 instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
-
-deriving via GenericType (St Identity) instance ToJSON (St Identity)
-
-deriving via GenericType (St Identity) instance FromJSON (St Identity)
 
 data StConv f = StConv
   { stConvTopMoney :: Money f,
@@ -144,10 +138,6 @@ instance FunctorB StConv
 instance TraversableB StConv
 
 deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
-
-deriving via GenericType (StConv Identity) instance ToJSON (StConv Identity)
-
-deriving via GenericType (StConv Identity) instance FromJSON (StConv Identity)
 
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
@@ -171,9 +161,26 @@ instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 
-deriving via GenericType (StDoc Identity) instance ToJSON (StDoc Identity)
+data StAes f = StAes
+  { stAesIkm :: Field Text f,
+    stAesSalt :: Aes.Salt,
+    stAesInfo :: Aes.Info
+  }
+  deriving stock (Generic)
 
-deriving via GenericType (StDoc Identity) instance FromJSON (StDoc Identity)
+deriving stock instance (Hkt f) => Eq (StAes f)
+
+deriving stock instance (Hkt f) => Ord (StAes f)
+
+deriving stock instance (Hkt f) => Show (StAes f)
+
+deriving stock instance (Hkt f) => Data (StAes f)
+
+instance FunctorB StAes
+
+instance TraversableB StAes
+
+deriving via GenericType (StAes Identity) instance Binary (StAes Identity)
 
 data Money f = Money
   { moneyAmount :: Field Rational f,
@@ -195,10 +202,6 @@ instance TraversableB Money
 
 deriving via GenericType (Money Identity) instance Binary (Money Identity)
 
-deriving via GenericType (Money Identity) instance ToJSON (Money Identity)
-
-deriving via GenericType (Money Identity) instance FromJSON (Money Identity)
-
 data Currency f = Currency
   { currencyInput :: Field Text f,
     currencyOutput :: CurrencyInfo,
@@ -219,13 +222,6 @@ instance FunctorB Currency
 instance TraversableB Currency
 
 deriving via GenericType (Currency Identity) instance Binary (Currency Identity)
-
-deriving via GenericType (Currency Identity) instance ToJSON (Currency Identity)
-
-deriving via
-  GenericType (Currency Identity)
-  instance
-    FromJSON (Currency Identity)
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
@@ -251,16 +247,6 @@ deriving via
   instance
     Binary (PaymentMethod Identity)
 
-deriving via
-  GenericType (PaymentMethod Identity)
-  instance
-    ToJSON (PaymentMethod Identity)
-
-deriving via
-  GenericType (PaymentMethod Identity)
-  instance
-    FromJSON (PaymentMethod Identity)
-
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
     chanItemValue :: a
@@ -271,43 +257,43 @@ data Screen
   = Converter
   | Editor
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType Screen
+  deriving (Binary) via GenericType Screen
 
 data TopOrBottom
   = Top
   | Bottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType TopOrBottom
+  deriving (Binary) via GenericType TopOrBottom
 
 data HeaderOrFooter
   = Header
   | Footer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType HeaderOrFooter
+  deriving (Binary) via GenericType HeaderOrFooter
 
 data OnlineOrOffline
   = Online
   | Offline
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType OnlineOrOffline
+  deriving (Binary) via GenericType OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType StaticOrDynamic
+  deriving (Binary) via GenericType StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType LeadingOrTrailing
+  deriving (Binary) via GenericType LeadingOrTrailing
 
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType OpenedOrClosed
+  deriving (Binary) via GenericType OpenedOrClosed
 
 data Asset f = Asset
   { assetPrice :: Money f,
@@ -329,10 +315,6 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
-
-deriving via GenericType (Asset Identity) instance ToJSON (Asset Identity)
-
-deriving via GenericType (Asset Identity) instance FromJSON (Asset Identity)
 
 --
 -- TODO : simplify this !!!!
@@ -360,7 +342,9 @@ newModel = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
-  pwd <- newField FieldTypePwd mempty id
+  ikm <- newField FieldTypePwd mempty id
+  salt <- Aes.Salt <$> randomByteString 32
+  info <- Aes.Info <$> randomByteString 32
   let st =
         Model
           { modelHide = True,
@@ -381,7 +365,12 @@ newModel = do
                         stDocPaymentMethods = [paymentMethod],
                         stDocEditable = True
                       },
-                  statePwd = pwd
+                  stAes =
+                    StAes
+                      { stAesIkm = ikm,
+                        stAesSalt = salt,
+                        stAesInfo = info
+                      }
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
@@ -600,7 +589,7 @@ data FieldType
   | FieldTypeHtml
   | FieldTypePwd
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType FieldType
+  deriving (Binary) via GenericType FieldType
 
 htmlFieldType :: FieldType -> Text
 htmlFieldType = \case
@@ -626,7 +615,7 @@ data DynamicField
   = DynamicFieldText Text
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType DynamicField
+  deriving (Binary) via GenericType DynamicField
 
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
@@ -668,16 +657,6 @@ deriving via
   instance
     (Typ a) => Binary (Field a Identity)
 
-deriving via
-  GenericType (Field a Identity)
-  instance
-    (Typ a, ToJSON a) => ToJSON (Field a Identity)
-
-deriving via
-  GenericType (Field a Identity)
-  instance
-    (Typ a, FromJSON a) => FromJSON (Field a Identity)
-
 newField :: (MonadIO m) => FieldType -> a -> (a -> Text) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
@@ -716,16 +695,6 @@ deriving via
   GenericType (FieldPair a Identity)
   instance
     (Typ a) => Binary (FieldPair a Identity)
-
-deriving via
-  GenericType (FieldPair a Identity)
-  instance
-    (Typ a, ToJSON a) => ToJSON (FieldPair a Identity)
-
-deriving via
-  GenericType (FieldPair a Identity)
-  instance
-    (Typ a, FromJSON a) => FromJSON (FieldPair a Identity)
 
 newFieldPair ::
   (MonadIO m) => Text -> DynamicField -> m (FieldPair DynamicField Unique)

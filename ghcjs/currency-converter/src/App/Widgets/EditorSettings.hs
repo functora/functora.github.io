@@ -19,7 +19,8 @@ editorSettings st =
       $ Field.textField
         st
         ( #modelState
-            . #statePwd
+            . #stAes
+            . #stAesIkm
         )
         ( Field.defOpts
             & #optsPlaceholder

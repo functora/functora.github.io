@@ -187,7 +187,7 @@ syncInputs =
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel st = do
-  let loc = st ^. #modelState . #stateTopOrBottom
+  let loc = st ^. #modelState . #stConv . #stConvTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
@@ -326,13 +326,13 @@ getTotalPayment method asset = do
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
-  Top -> #modelState . #stateTopMoney
-  Bottom -> #modelState . #stateBottomMoney
+  Top -> #modelState . #stConv . #stConvTopMoney
+  Bottom -> #modelState . #stConv . #stConvBottomMoney
 
 getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getQuoteConverterMoneyLens = \case
-  Top -> #modelState . #stateBottomMoney
-  Bottom -> #modelState . #stateTopMoney
+  Top -> #modelState . #stConv . #stConvBottomMoney
+  Bottom -> #modelState . #stConv . #stConvTopMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

@@ -67,7 +67,7 @@ screenWidget st@Model {modelState = St {stateScreen = Converter}} =
           )
           ( Field.defOpts
               & #optsExtraOnInput
-              .~ (& #modelState . #stateTopOrBottom .~ loc)
+              .~ (& #modelState . #stConv . #stConvTopOrBottom .~ loc)
               & #optsPlaceholder
               .~ ( st
                     ^. cloneLens (Misc.getConverterCurrencyOptic loc)

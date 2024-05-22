@@ -33,52 +33,61 @@ swapAmounts =
         let baseInput =
               st
                 ^. #modelState
-                . #stateTopMoney
+                . #stConv
+                . #stConvTopMoney
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
             baseOutput =
               st
                 ^. #modelState
-                . #stateTopMoney
+                . #stConv
+                . #stConvTopMoney
                 . #moneyAmount
                 . #fieldOutput
             quoteInput =
               st
                 ^. #modelState
-                . #stateBottomMoney
+                . #stConv
+                . #stConvBottomMoney
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
             quoteOutput =
               st
                 ^. #modelState
-                . #stateBottomMoney
+                . #stConv
+                . #stConvBottomMoney
                 . #moneyAmount
                 . #fieldOutput
          in st
               & #modelState
-              . #stateTopMoney
+              . #stConv
+              . #stConvTopMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ quoteInput
               & #modelState
-              . #stateTopMoney
+              . #stConv
+              . #stConvTopMoney
               . #moneyAmount
               . #fieldOutput
               .~ quoteOutput
               & #modelState
-              . #stateBottomMoney
+              . #stConv
+              . #stConvBottomMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ baseInput
               & #modelState
-              . #stateBottomMoney
+              . #stConv
+              . #stConvBottomMoney
               . #moneyAmount
               . #fieldOutput
               .~ baseOutput
               & #modelState
-              . #stateTopOrBottom
+              . #stConv
+              . #stConvTopOrBottom
               .~ Top

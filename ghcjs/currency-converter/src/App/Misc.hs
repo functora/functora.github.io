@@ -42,8 +42,8 @@ getConverterAmountOptic ::
   TopOrBottom ->
   LensLike' f Model (Field Rational Unique)
 getConverterAmountOptic = \case
-  Top -> #modelState . #stateTopMoney . #moneyAmount
-  Bottom -> #modelState . #stateBottomMoney . #moneyAmount
+  Top -> #modelState . #stConv . #stConvTopMoney . #moneyAmount
+  Bottom -> #modelState . #stConv . #stConvBottomMoney . #moneyAmount
 
 getConverterCurrencyOptic ::
   ( Functor f
@@ -51,8 +51,8 @@ getConverterCurrencyOptic ::
   TopOrBottom ->
   LensLike' f Model (Currency Unique)
 getConverterCurrencyOptic = \case
-  Top -> #modelState . #stateTopMoney . #moneyCurrency
-  Bottom -> #modelState . #stateBottomMoney . #moneyCurrency
+  Top -> #modelState . #stConv . #stConvTopMoney . #moneyCurrency
+  Bottom -> #modelState . #stConv . #stConvBottomMoney . #moneyCurrency
 
 pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =

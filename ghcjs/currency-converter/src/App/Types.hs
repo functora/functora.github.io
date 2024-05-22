@@ -53,6 +53,9 @@ data Model = Model
   { modelHide :: Bool,
     modelMenu :: OpenedOrClosed,
     modelState :: St Unique,
+    --
+    -- TODO : modelStateHistory :: [St Unique]
+    --
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
@@ -94,12 +97,13 @@ type Hkt f =
 
 data St f = St
   { stateScreen :: Screen,
-    stateTopMoney :: Money f,
-    stateBottomMoney :: Money f,
-    stateTopOrBottom :: TopOrBottom,
+    stConv :: StConv f,
     stateFieldPairs :: [FieldPair DynamicField f],
     stateAssets :: [Asset f],
     statePaymentMethods :: [PaymentMethod f],
+    --
+    -- TODO : move pwd out of St, no point for it to be here
+    --
     statePwd :: Field Text f,
     stateEditable :: Bool
   }
@@ -122,6 +126,31 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 deriving via GenericType (St Identity) instance ToJSON (St Identity)
 
 deriving via GenericType (St Identity) instance FromJSON (St Identity)
+
+data StConv f = StConv
+  { stConvTopMoney :: Money f,
+    stConvBottomMoney :: Money f,
+    stConvTopOrBottom :: TopOrBottom
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Hkt f) => Eq (StConv f)
+
+deriving stock instance (Hkt f) => Ord (StConv f)
+
+deriving stock instance (Hkt f) => Show (StConv f)
+
+deriving stock instance (Hkt f) => Data (StConv f)
+
+instance FunctorB StConv
+
+instance TraversableB StConv
+
+deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
+
+deriving via GenericType (StConv Identity) instance ToJSON (StConv Identity)
+
+deriving via GenericType (StConv Identity) instance FromJSON (StConv Identity)
 
 data Money f = Money
   { moneyAmount :: Field Rational f,
@@ -316,9 +345,12 @@ newModel = do
             modelState =
               St
                 { stateScreen = defaultScreen,
-                  stateTopMoney = topMoney,
-                  stateBottomMoney = bottomMoney,
-                  stateTopOrBottom = Top,
+                  stConv =
+                    StConv
+                      { stConvTopMoney = topMoney,
+                        stConvBottomMoney = bottomMoney,
+                        stConvTopOrBottom = Top
+                      },
                   stateFieldPairs = [issuer, client],
                   stateAssets = [asset],
                   statePaymentMethods = [paymentMethod],
@@ -356,34 +388,40 @@ newModel = do
       -- Converter
       --
       & #modelState
-      . #stateTopMoney
+      . #stConv
+      . #stConvTopMoney
       . #moneyAmount
       . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged baseAmt)
       & #modelState
-      . #stateTopMoney
+      . #stConv
+      . #stConvTopMoney
       . #moneyAmount
       . #fieldOutput
       .~ unTagged baseAmt
       & #modelState
-      . #stateTopMoney
+      . #stConv
+      . #stConvTopMoney
       . #moneyCurrency
       . #currencyOutput
       .~ baseCur
       & #modelState
-      . #stateBottomMoney
+      . #stConv
+      . #stConvBottomMoney
       . #moneyAmount
       . #fieldInput
       . #uniqueValue
       .~ inspectRatioDef (unTagged quoteAmt)
       & #modelState
-      . #stateBottomMoney
+      . #stConv
+      . #stConvBottomMoney
       . #moneyAmount
       . #fieldOutput
       .~ unTagged quoteAmt
       & #modelState
-      . #stateBottomMoney
+      . #stConv
+      . #stConvBottomMoney
       . #moneyCurrency
       . #currencyOutput
       .~ quoteCur

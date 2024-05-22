@@ -201,28 +201,33 @@ swapCurrencies =
         let baseCurrency =
               st
                 ^. #modelState
-                . #stateTopMoney
+                . #stConv
+                . #stConvTopMoney
                 . #moneyCurrency
                 . #currencyOutput
             quoteCurrency =
               st
                 ^. #modelState
-                . #stateBottomMoney
+                . #stConv
+                . #stConvBottomMoney
                 . #moneyCurrency
                 . #currencyOutput
          in st
               & #modelState
-              . #stateTopMoney
+              . #stConv
+              . #stConvTopMoney
               . #moneyCurrency
               . #currencyOutput
               .~ quoteCurrency
               & #modelState
-              . #stateBottomMoney
+              . #stConv
+              . #stConvBottomMoney
               . #moneyCurrency
               . #currencyOutput
               .~ baseCurrency
               & #modelState
-              . #stateTopOrBottom
+              . #stConv
+              . #stConvTopOrBottom
               .~ Top
 
 unexpectedCurrency :: Currency Unique

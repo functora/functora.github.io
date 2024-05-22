@@ -10,16 +10,11 @@ import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Switch as Switch
 import Functora.Prelude as Prelude
--- import qualified Material.Button as Button
--- import qualified Material.Theme as Theme
-
 import Miso hiding (view)
-import Miso.String (ms)
-import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
 editorSettings st =
-  [ Header.header "Settings" Nothing,
+  [ Header.header "Share" Nothing,
     Cell.mediumCell
       $ Field.textField
         st
@@ -39,18 +34,19 @@ editorSettings st =
             & #optsIcon
             .~ Just "edit"
             & #optsPlaceholder
-            .~ "Allow edit"
+            .~ "Allow editing"
         )
         ( #modelState
             . #stateEditable
         ),
     Cell.bigCell
-      $ div_
-        mempty
-        [ text
-            . ms
-            . URI.render
-            . either impureThrow id
+      $ Field.constLinkField
+        st
+        ( either impureThrow id
             $ Misc.appUri st
-        ]
+        )
+        ( Field.defOpts
+            & #optsPlaceholder
+            .~ "QR code link"
+        )
   ]

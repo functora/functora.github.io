@@ -6,6 +6,7 @@ module App.Widgets.Field
     ratioField,
     textField,
     dynamicField,
+    constLinkField,
   )
 where
 
@@ -23,8 +24,9 @@ import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
-import Miso hiding (view)
+import Miso hiding (URI, view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+import qualified Text.URI as URI
 
 data Opts = Opts
   { optsDisabled :: Bool,
@@ -232,14 +234,14 @@ fieldIcon ::
   TextField.Icon Action
 fieldIcon st optic lot extraOnInput = \case
   CopyWidget ->
-    icon "content_copy" mempty . PushUpdate $ do
+    fieldIconSimple lot "content_copy" mempty . PushUpdate $ do
       Misc.verifyUid uid
       whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
         $ Misc.copyIntoClipboard st
       pure
         $ ChanItem 0 id
   ClearWidget ->
-    icon "close" mempty . PushUpdate $ do
+    fieldIconSimple lot "close" mempty . PushUpdate $ do
       Misc.verifyUid uid
       focus
         . ms
@@ -259,22 +261,22 @@ fieldIcon st optic lot extraOnInput = \case
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePwd ->
-        icon "visibility" mempty
+        fieldIconSimple lot "visibility_off" mempty
           $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypeText)
       _ ->
-        icon "visibility_off" mempty
+        fieldIconSimple lot "visibility" mempty
           $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePwd)
   UpWidget opt idx attrs ->
-    icon "keyboard_double_arrow_up" attrs
+    fieldIconSimple lot "keyboard_double_arrow_up" attrs
       $ Misc.moveUp opt idx
   DownWidget opt idx attrs ->
-    icon "keyboard_double_arrow_down" attrs
+    fieldIconSimple lot "keyboard_double_arrow_down" attrs
       $ Misc.moveDown opt idx
   DeleteWidget opt idx attrs ->
-    icon "delete_forever" attrs
+    fieldIconSimple lot "delete_forever" attrs
       $ Misc.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ ooc) ->
-    icon "settings" [Theme.primary]
+    fieldIconSimple lot "settings" [Theme.primary]
       $ pureUpdate
         0
         ( &
@@ -284,7 +286,7 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ModalWidget (ModalFieldWidget opt idx access _) ->
-    icon "settings" mempty
+    fieldIconSimple lot "settings" mempty
       $ pureUpdate
         0
         ( &
@@ -297,19 +299,26 @@ fieldIcon st optic lot extraOnInput = \case
   where
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
-    icon txt attrs action =
-      TextField.icon
-        ( [ class_ $ case lot of
-              Leading -> "mdc-text-field__icon--leading"
-              Trailing -> "mdc-text-field__icon--trailing",
-            style_ [("pointer-events", "auto")],
-            textProp "role" "button",
-            intProp "tabindex" 0,
-            onClick action
-          ]
-            <> attrs
-        )
-        txt
+
+fieldIconSimple ::
+  LeadingOrTrailing ->
+  String ->
+  [Attribute action] ->
+  action ->
+  TextField.Icon action
+fieldIconSimple lot txt attrs action =
+  TextField.icon
+    ( [ class_ $ case lot of
+          Leading -> "mdc-text-field__icon--leading"
+          Trailing -> "mdc-text-field__icon--trailing",
+        style_ [("pointer-events", "auto")],
+        textProp "role" "button",
+        intProp "tabindex" 0,
+        onClick action
+      ]
+        <> attrs
+    )
+    txt
 
 fieldModal ::
   Model ->
@@ -592,3 +601,31 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
         ]
         mempty
     )
+
+constLinkField :: Model -> URI -> Opts -> View Action
+constLinkField st uri opts =
+  TextField.filled
+    $ TextField.config
+    & TextField.setType (Just . from @Text @String $ htmlFieldType FieldTypeLink)
+    & TextField.setLabel (Just . from @Text @String $ opts ^. #optsPlaceholder)
+    & TextField.setDisabled True
+    & TextField.setLeadingIcon
+      ( Just
+          . fieldIconSimple Leading "content_copy" [Theme.primary]
+          . PushUpdate
+          $ do
+            Misc.copyIntoClipboard st txt
+            pure $ ChanItem 0 id
+      )
+    --
+    -- TODO : change state in current app instance!
+    --
+    -- & TextField.setTrailingIcon
+    --   ( fmap
+    --       (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
+    --       (opts ^. #optsTrailingWidget)
+    --   )
+    & TextField.setValue (Just $ from @Text @String txt)
+    & TextField.setAttributes [class_ "fill"]
+  where
+    txt = URI.render uri

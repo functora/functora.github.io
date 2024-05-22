@@ -5,6 +5,9 @@ module App.Types
     Unique (..),
     Action (..),
     St (..),
+    StConv (..),
+    StDoc (..),
+    StCpt (..),
     Money (..),
     Currency (..),
     PaymentMethod (..),
@@ -99,8 +102,9 @@ type Hkt f =
 data St f = St
   { stScreen :: Screen,
     stConv :: StConv f,
+    stConvCpt :: Maybe ByteString,
     stDoc :: StDoc f,
-    stAes :: StAes f
+    stCpt :: StCpt f
   }
   deriving stock (Generic)
 
@@ -161,26 +165,26 @@ instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 
-data StAes f = StAes
-  { stAesIkm :: Field Text f,
-    stAesSalt :: Aes.Salt,
-    stAesInfo :: Aes.Info
+data StCpt f = StCpt
+  { stCptIkm :: Field Text f,
+    stCptSalt :: Aes.Salt,
+    stCptInfo :: Aes.Info
   }
   deriving stock (Generic)
 
-deriving stock instance (Hkt f) => Eq (StAes f)
+deriving stock instance (Hkt f) => Eq (StCpt f)
 
-deriving stock instance (Hkt f) => Ord (StAes f)
+deriving stock instance (Hkt f) => Ord (StCpt f)
 
-deriving stock instance (Hkt f) => Show (StAes f)
+deriving stock instance (Hkt f) => Show (StCpt f)
 
-deriving stock instance (Hkt f) => Data (StAes f)
+deriving stock instance (Hkt f) => Data (StCpt f)
 
-instance FunctorB StAes
+instance FunctorB StCpt
 
-instance TraversableB StAes
+instance TraversableB StCpt
 
-deriving via GenericType (StAes Identity) instance Binary (StAes Identity)
+deriving via GenericType (StCpt Identity) instance Binary (StCpt Identity)
 
 data Money f = Money
   { moneyAmount :: Field Rational f,
@@ -358,6 +362,7 @@ newModel = do
                         stConvBottomMoney = bottomMoney,
                         stConvTopOrBottom = Top
                       },
+                  stConvCpt = Nothing,
                   stDoc =
                     StDoc
                       { stDocFieldPairs = [issuer, client],
@@ -365,11 +370,11 @@ newModel = do
                         stDocPaymentMethods = [paymentMethod],
                         stDocEditable = True
                       },
-                  stAes =
-                    StAes
-                      { stAesIkm = ikm,
-                        stAesSalt = salt,
-                        stAesInfo = info
+                  stCpt =
+                    StCpt
+                      { stCptIkm = ikm,
+                        stCptSalt = salt,
+                        stCptInfo = info
                       }
                 },
             modelMarket = market,

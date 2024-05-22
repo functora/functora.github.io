@@ -16,6 +16,7 @@ module App.Misc
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
+    modelToQuery,
     appUri,
     vsn,
   )
@@ -26,6 +27,7 @@ import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Version as Version
+import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money
 import Functora.Prelude hiding (Field)
@@ -217,6 +219,58 @@ newPaymentMethodAction st optic =
     item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
 
+modelToQuery :: (MonadThrow m) => Model -> m [URI.QueryParam]
+modelToQuery mdl = do
+  kDoc <- URI.mkQueryKey "d"
+  vDoc <-
+    (URI.mkQueryValue <=< encodeText)
+      . maybe id Aes.encrypt mAes
+      $ encodeBinary (st ^. #stDoc)
+  kCpt <- URI.mkQueryKey "c"
+  mCpt <-
+    forM mPrv $ \prv ->
+      (URI.mkQueryValue <=< encodeText)
+        $ encodeBinary
+          ( prv
+              & #stCptIkm
+              .~ Field
+                { fieldType = prv ^. #stCptIkm . #fieldType,
+                  fieldInput = Identity mempty,
+                  fieldOutput = mempty @Text,
+                  fieldAddCopy = prv ^. #stCptIkm . #fieldAddCopy,
+                  fieldModalState = prv ^. #stCptIkm . #fieldModalState
+                }
+          )
+  pure
+    $ catMaybes
+      [ Just $ URI.QueryParam kDoc vDoc,
+        URI.QueryParam kCpt <$> mCpt
+      ]
+  where
+    st :: St Identity
+    st = newIdentityState $ mdl ^. #modelState
+    mPrv :: Maybe (StCpt Identity)
+    mPrv =
+      if null $ st ^. #stCpt . #stCptIkm . #fieldOutput
+        then Nothing
+        else Just $ st ^. #stCpt
+    mAes :: Maybe Aes.SomeAesKey
+    mAes =
+      fmap
+        ( \prv ->
+            Aes.drvSomeAesKey @Aes.Word256
+              (Aes.Ikm . encodeUtf8 $ prv ^. #stCptIkm . #fieldOutput)
+              (prv ^. #stCptSalt)
+              (prv ^. #stCptInfo)
+        )
+        mPrv
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText =
+      either throw pure
+        . decodeUtf8'
+        . B64URL.encode
+        . from @BL.ByteString @ByteString
+
 appUri :: (MonadThrow m) => Model -> m URI
 appUri st = do
   uri <-
@@ -224,19 +278,10 @@ appUri st = do
       $ "https://functora.github.io/apps/currency-converter/"
       <> vsn
       <> "/index.html"
-  stk <- URI.mkQueryKey "s"
-  stb <-
-    either throw pure
-      . decodeUtf8'
-      . B64URL.encode
-      . from @BL.ByteString @ByteString
-      . encodeBinary
-      . newIdentityState
-      $ modelState st
-  stv <- URI.mkQueryValue stb
+  qxs <- modelToQuery st
   pure
     $ uri
-      { URI.uriQuery = [URI.QueryParam stk stv]
+      { URI.uriQuery = qxs
       }
 
 vsn :: Text

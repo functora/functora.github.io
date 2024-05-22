@@ -17,6 +17,7 @@ import qualified Codec.Encryption.Modes as Crypto
 import qualified Codec.Utils as Crypto
 import qualified Crypto.Data.PKCS7 as PKCS7
 import qualified Crypto.Hash.SHA256 as SHA256
+import Data.Binary (Binary)
 import qualified Data.Data as Data
 import Data.LargeWord
 import Functora.Prelude
@@ -94,18 +95,21 @@ newtype Ikm = Ikm
   { unIkm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
   deriving (Show) via Redacted Ikm
 
 newtype Salt = Salt
   { unSalt :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
   deriving (Show) via Redacted Salt
 
 newtype Info = Info
   { unInfo :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
   deriving (Show) via Redacted Info
 
 drvSomeAesKey ::

@@ -135,6 +135,7 @@ common pkg-aes
   hs-source-dirs: src/aes
   build-depends:
     , base
+    , binary
     , Crypto
     , cryptohash-sha256
     , pkcs7

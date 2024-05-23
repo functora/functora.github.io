@@ -10,11 +10,9 @@ sample = "Hello, World!"
 spec :: Spec
 spec = do
   it "encrypt/decrypt" $ do
-    ikm <- Ikm <$> randomByteString 32
-    salt <- Salt <$> randomByteString 32
-    info <- Info <$> randomByteString 32
-    let aes0 = drvSomeAesKey @Word256 ikm salt info
-    let aes1 = drvSomeAesKey @Word256 (Ikm "User defined key") salt info
+    hkdf <- randomHkdf 32
+    let aes0 = drvSomeAesKey @Word256 hkdf
+    let aes1 = drvSomeAesKey @Word256 hkdf {hkdfIkm = Ikm "User defined key"}
     decrypt aes0 (encrypt aes0 sample) `shouldBe` Just sample
     decrypt aes1 (encrypt aes1 sample) `shouldBe` Just sample
     decrypt aes1 (encrypt aes0 sample) `shouldNotBe` Just sample

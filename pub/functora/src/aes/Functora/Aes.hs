@@ -9,6 +9,8 @@ module Functora.Aes
     Ikm (..),
     Salt (..),
     Info (..),
+    Hkdf (..),
+    randomHkdf,
   )
 where
 
@@ -112,6 +114,31 @@ newtype Info = Info
   deriving newtype (Binary)
   deriving (Show) via Redacted Info
 
+data Hkdf = Hkdf
+  { -- IKM (Input Keying Material): This is the initial input from which you want to derive keys. Typically, the IKM should be at least as long as the output length of the hash function used in the HMAC construction (i.e., the hash function used in HKDF). For instance, if you're using SHA-256, which has a 256-bit output, your IKM should ideally be 256 bits or longer.
+    hkdfIkm :: Ikm,
+    -- The salt is a non-secret random value that is mixed with the IKM before deriving the keys. It adds an extra layer of security, ensuring that the same IKM with different salts will result in different derived keys. The salt size is not fixed but should be sufficient to ensure uniqueness. A common recommendation is to use a salt that is at least as long as the output length of the hash function. So, if using SHA-256, a 256-bit (32-byte) salt is a reasonable choice.
+    hkdfSalt :: Salt,
+    -- The info parameter is an optional context or additional data that you can include to derive keys for specific purposes or to differentiate between different applications of the same IKM. The size of the info parameter depends on your use case and how much context you want to provide. It's usually a good practice to keep this as small as possible to avoid unnecessarily inflating the derived key size.
+    hkdfInfo :: Info
+  }
+  deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving (Show) via Redacted Hkdf
+
+instance Binary Hkdf
+
+randomHkdf :: (MonadIO m) => Natural -> m Hkdf
+randomHkdf size = do
+  ikm <- Ikm <$> randomByteString size
+  salt <- Salt <$> randomByteString size
+  info <- Info <$> randomByteString size
+  pure
+    Hkdf
+      { hkdfIkm = ikm,
+        hkdfSalt = salt,
+        hkdfInfo = info
+      }
+
 drvSomeAesKey ::
   forall word size.
   ( Bounded word,
@@ -119,14 +146,9 @@ drvSomeAesKey ::
     AES.AESKey word,
     WordByteSize word size
   ) =>
-  -- IKM (Input Keying Material): This is the initial input from which you want to derive keys. Typically, the IKM should be at least as long as the output length of the hash function used in the HMAC construction (i.e., the hash function used in HKDF). For instance, if you're using SHA-256, which has a 256-bit output, your IKM should ideally be 256 bits or longer.
-  Ikm ->
-  -- The salt is a non-secret random value that is mixed with the IKM before deriving the keys. It adds an extra layer of security, ensuring that the same IKM with different salts will result in different derived keys. The salt size is not fixed but should be sufficient to ensure uniqueness. A common recommendation is to use a salt that is at least as long as the output length of the hash function. So, if using SHA-256, a 256-bit (32-byte) salt is a reasonable choice.
-  Salt ->
-  -- The info parameter is an optional context or additional data that you can include to derive keys for specific purposes or to differentiate between different applications of the same IKM. The size of the info parameter depends on your use case and how much context you want to provide. It's usually a good practice to keep this as small as possible to avoid unnecessarily inflating the derived key size.
-  Info ->
+  Hkdf ->
   SomeAesKey
-drvSomeAesKey ikm salt info =
+drvSomeAesKey hkdf =
   SomeAesKey
     . unsafeWord @word
     . from @ByteString @[Word8]
@@ -137,6 +159,10 @@ drvSomeAesKey ikm salt info =
     . unsafeFrom @Natural @Int
     . natVal
     $ Proxy @size
+  where
+    ikm = hkdfIkm hkdf
+    salt = hkdfSalt hkdf
+    info = hkdfInfo hkdf
 
 unsafeWord :: forall a. (Integral a, Bounded a) => [Word8] -> a
 unsafeWord =

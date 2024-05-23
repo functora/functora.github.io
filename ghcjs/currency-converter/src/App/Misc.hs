@@ -248,11 +248,12 @@ modelToQuery mdl = do
       ]
   where
     st :: St Identity
-    st = newIdentityState $ mdl ^. #modelState
-    mPrv :: Maybe (StCpt Identity)
+    st =
+      newIdentityState $ mdl ^. #modelState
+    mPrv :: Either Aes.Hkdf Aes.Hkdf
     mPrv =
-      if null $ st ^. #stCpt . #stCptIkm . #fieldOutput
-        then Nothing
+      if null $ st ^. #stIkm . #fieldOutput
+        then Left $ st ^. #stHkdf
         else Just $ st ^. #stCpt
     mAes :: Maybe Aes.SomeAesKey
     mAes =

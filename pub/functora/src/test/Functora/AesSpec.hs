@@ -9,11 +9,11 @@ sample = "Hello, World!"
 
 spec :: Spec
 spec = do
-  it "encrypt/decrypt" $ do
+  it "encryptHmac/unHmacDecrypt" $ do
     hkdf <- randomHkdf 32
     let aes0 = drvSomeAesKey @Word256 hkdf
     let aes1 = drvSomeAesKey @Word256 hkdf {hkdfIkm = Ikm "User defined key"}
-    decrypt aes0 (encrypt aes0 sample) `shouldBe` Just sample
-    decrypt aes1 (encrypt aes1 sample) `shouldBe` Just sample
-    decrypt aes1 (encrypt aes0 sample) `shouldNotBe` Just sample
-    decrypt aes0 (encrypt aes1 sample) `shouldNotBe` Just sample
+    unHmacDecrypt aes0 (encryptHmac aes0 sample) `shouldBe` Just sample
+    unHmacDecrypt aes1 (encryptHmac aes1 sample) `shouldBe` Just sample
+    unHmacDecrypt aes1 (encryptHmac aes0 sample) `shouldBe` Nothing
+    unHmacDecrypt aes0 (encryptHmac aes1 sample) `shouldBe` Nothing

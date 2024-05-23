@@ -144,6 +144,7 @@ library
   hs-source-dirs:  prelude qr aes money web rates tags cfg
   exposed-modules:
     Functora.Aes
+    Functora.AesOrphan
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Money
@@ -191,6 +192,7 @@ test-suite functora-ghcjs-test
 
   other-modules:
     Functora.Aes
+    Functora.AesOrphan
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Money

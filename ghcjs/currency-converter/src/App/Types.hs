@@ -104,7 +104,8 @@ data St f = St
     stConv :: StConv f,
     stConvCpt :: Maybe ByteString,
     stDoc :: StDoc f,
-    stCpt :: StCpt f
+    stUserIkm :: Field Text f,
+    stDefHkdf :: Aes.Hkdf
   }
   deriving stock (Generic)
 
@@ -347,8 +348,7 @@ newModel = do
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newField FieldTypePwd mempty id
-  salt <- Aes.Salt <$> randomByteString 32
-  info <- Aes.Info <$> randomByteString 32
+  hkdf <- Aes.randomHkdf 32
   let st =
         Model
           { modelHide = True,
@@ -370,12 +370,8 @@ newModel = do
                         stDocPaymentMethods = [paymentMethod],
                         stDocEditable = True
                       },
-                  stCpt =
-                    StCpt
-                      { stCptIkm = ikm,
-                        stCptSalt = salt,
-                        stCptInfo = info
-                      }
+                  stUserIkm = ikm,
+                  stDefHkdf = hkdf
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],

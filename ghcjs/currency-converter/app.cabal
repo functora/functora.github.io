@@ -95,6 +95,7 @@ common pkg
     , barbies
     , base
     , base64-bytestring
+    , bytestring
     , containers
     , functora-ghcjs
     , fuzzy
@@ -107,7 +108,6 @@ common pkg
 
   if !impl(ghcjs)
     build-depends:
-      , bytestring
       , jsaddle-warp
       , wai
       , wai-app-static

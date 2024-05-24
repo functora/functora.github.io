@@ -9,11 +9,8 @@ module Functora.Aes
     Word128,
     Word192,
     Word256,
-    Ikm (..),
-    Salt (..),
-    Info (..),
-    Hkdf (..),
-    randomHkdf,
+    Km (..),
+    randomKm,
   )
 where
 
@@ -21,19 +18,12 @@ import qualified Codec.Encryption.AES as AES
 import qualified Codec.Encryption.Modes as Crypto
 import qualified Codec.Utils as Utils
 import qualified Crypto.Data.PKCS7 as PKCS7
-import Data.Binary (Binary)
 import qualified Data.Bits as Bits
-import qualified Data.ByteString as BS
-import Data.ByteString.Internal (createAndTrim, memcpy, toForeignPtr)
 import qualified Data.Data as Data
 import Data.LargeWord
-import Foreign.ForeignPtr (withForeignPtr)
-import Foreign.Ptr (plusPtr)
 import Functora.AesOrphan ()
 import Functora.Prelude
-import System.IO.Unsafe (unsafeDupablePerformIO)
 import Type.Reflection
-import Prelude (fromIntegral)
 
 data Crypto a = Crypto
   { cryptoValue :: a,
@@ -52,10 +42,10 @@ encryptHmac ::
   SomeAesKey ->
   a ->
   Crypto a
-encryptHmac prv@(SomeAesKey cipher _) plain =
+encryptHmac (SomeAesKey cipher hmacer) plain =
   Crypto
     { cryptoValue = value,
-      cryptoValueHmac = myHmac prv value
+      cryptoValueHmac = sha256Hmac (unOkm hmacer) value
     }
   where
     value =
@@ -76,8 +66,8 @@ unHmacDecrypt ::
   SomeAesKey ->
   Crypto a ->
   Maybe a
-unHmacDecrypt prv@(SomeAesKey cipher _) (Crypto value valueHmac) = do
-  if valueHmac == myHmac prv value
+unHmacDecrypt (SomeAesKey cipher hmacer) (Crypto value valueHmac) = do
+  if sha256Hmac (unOkm hmacer) value == valueHmac
     then Just ()
     else Nothing
   fmap (from @ByteString @a)
@@ -85,24 +75,6 @@ unHmacDecrypt prv@(SomeAesKey cipher _) (Crypto value valueHmac) = do
     . blocksToBs
     . Crypto.unCbc AES.decrypt 0 cipher
     $ bsToBlocks value
-
-myHmac ::
-  forall a.
-  ( From a [Word8],
-    From [Word8] a
-  ) =>
-  SomeAesKey ->
-  a ->
-  a
-myHmac (SomeAesKey _ hmacer) =
-  sha256Hmac
-    ( from @[Word8] @a
-        $ Utils.i2osp
-          ( Bits.finiteBitSize hmacer
-              `div` Bits.finiteBitSize (0 :: Word8)
-          )
-          hmacer
-    )
 
 bsToBlocks :: forall a. (From a [Word8]) => a -> [Word128]
 bsToBlocks =
@@ -129,7 +101,7 @@ data SomeAesKey = forall a.
   ) =>
   SomeAesKey
   { someAesKeyCipher :: a,
-    someAesKeyHmacer :: a
+    someAesKeyHmacer :: Okm
   }
 
 deriving via Redacted SomeAesKey instance Show SomeAesKey
@@ -157,53 +129,32 @@ type WordByteSize word size =
     WordByteSizeFamily word ~ size
   )
 
-newtype Ikm = Ikm
-  { unIkm :: ByteString
-  }
-  deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
-  deriving (Show) via Redacted Ikm
-
-newtype Salt = Salt
-  { unSalt :: ByteString
-  }
-  deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
-  deriving (Show) via Redacted Salt
-
-newtype Info = Info
-  { unInfo :: ByteString
-  }
-  deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
-  deriving (Show) via Redacted Info
-
-data Hkdf = Hkdf
+data Km = Km
   { -- IKM (Input Keying Material): This is the initial input from which you want to derive keys. Typically, the IKM should be at least as long as the output length of the hash function used in the HMAC construction (i.e., the hash function used in HKDF). For instance, if you're using SHA-256, which has a 256-bit output, your IKM should ideally be 256 bits or longer.
-    hkdfIkm :: Ikm,
+    kmIkm :: Ikm,
     -- The salt is a non-secret random value that is mixed with the IKM before deriving the keys. It adds an extra layer of security, ensuring that the same IKM with different salts will result in different derived keys. The salt size is not fixed but should be sufficient to ensure uniqueness. A common recommendation is to use a salt that is at least as long as the output length of the hash function. So, if using SHA-256, a 256-bit (32-byte) salt is a reasonable choice.
-    hkdfSalt :: Salt,
+    kmSalt :: SaltKm,
     -- The info parameter is an optional context or additional data that you can include to derive keys for specific purposes or to differentiate between different applications of the same IKM. The size of the info parameter depends on your use case and how much context you want to provide. It's usually a good practice to keep this as small as possible to avoid unnecessarily inflating the derived key size.
-    hkdfCipherInfo :: Info,
-    hkdfHmacerInfo :: Info
+    kmCipherInfo :: InfoKm,
+    kmHmacerInfo :: InfoKm
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving (Show) via Redacted Hkdf
+  deriving (Show) via Redacted Km
 
-instance Binary Hkdf
+instance Binary Km
 
-randomHkdf :: (MonadIO m) => Natural -> m Hkdf
-randomHkdf size = do
+randomKm :: (MonadIO m) => Natural -> m Km
+randomKm size = do
   ikm <- Ikm <$> randomByteString size
-  salt <- Salt <$> randomByteString size
-  cipherInfo <- Info <$> randomByteString size
-  hmacerInfo <- Info <$> randomByteString size
+  salt <- SaltKm <$> randomByteString size
+  cipherInfo <- InfoKm <$> randomByteString size
+  hmacerInfo <- InfoKm <$> randomByteString size
   pure
-    Hkdf
-      { hkdfIkm = ikm,
-        hkdfSalt = salt,
-        hkdfCipherInfo = cipherInfo,
-        hkdfHmacerInfo = hmacerInfo
+    Km
+      { kmIkm = ikm,
+        kmSalt = salt,
+        kmCipherInfo = cipherInfo,
+        kmHmacerInfo = hmacerInfo
       }
 
 drvSomeAesKey ::
@@ -214,26 +165,29 @@ drvSomeAesKey ::
     WordByteSize word size,
     Bits.FiniteBits word
   ) =>
-  Hkdf ->
+  Km ->
   SomeAesKey
-drvSomeAesKey hkdf =
+drvSomeAesKey km =
   SomeAesKey
-    { someAesKeyCipher = derive cipherInfo,
-      someAesKeyHmacer = derive hmacerInfo
+    { someAesKeyCipher =
+        unsafeWord @word
+          . from @ByteString @[Word8]
+          . unOkm
+          $ derive cipherInfo,
+      someAesKeyHmacer =
+        derive hmacerInfo
     }
   where
-    ikm = hkdfIkm hkdf
-    salt = hkdfSalt hkdf
-    cipherInfo = hkdfCipherInfo hkdf
-    hmacerInfo = hkdfHmacerInfo hkdf
+    ikm = kmIkm km
+    salt = kmSalt km
+    cipherInfo = kmCipherInfo km
+    hmacerInfo = kmHmacerInfo km
     derive info =
-      unsafeWord @word
-        . from @ByteString @[Word8]
-        . myHkdf
-          (unIkm ikm)
-          (unSalt salt)
-          (unInfo info)
-        . unsafeFrom @Natural @Int
+      sha256Hkdf
+        ikm
+        salt
+        info
+        . OkmByteSize
         . natVal
         $ Proxy @size
 
@@ -242,51 +196,3 @@ unsafeWord =
   fromMaybe (error "unsafeWord overflow failure")
     . safeFromIntegral @Integer @a
     . foldl (\acc i -> acc * 256 + toInteger @Word8 i) (0 :: Integer)
-
---
--- TODO : This is naive HKDF-SHA256 implementation!!!
--- REWRITE AND TESTS ARE NEEDED!!!
---
-
--- | perform IO for hashes that do allocation and ffi.
--- unsafeDupablePerformIO is used when possible as the
--- computation is pure and the output is directly linked
--- to the input. we also do not modify anything after it has
--- been returned to the user.
-unsafeDoIO :: IO a -> a
-unsafeDoIO = unsafeDupablePerformIO
-
-withByteStringPtr :: ByteString -> (Ptr Word8 -> IO a) -> IO a
-withByteStringPtr b f =
-  withForeignPtr fptr $ \ptr -> f (ptr `plusPtr` off)
-  where
-    (fptr, off, _) = toForeignPtr b
-
--- | <https://tools.ietf.org/html/rfc6234 RFC6234>-compatible
--- HKDF-SHA-256 key derivation function.
-myHkdf ::
-  -- | /IKM/ Input keying material
-  ByteString ->
-  -- | /salt/ Optional salt value, a non-secret random value (can be @""@)
-  ByteString ->
-  -- | /info/ Optional context and application specific information (can be @""@)
-  ByteString ->
-  -- | /L/ length of output keying material in octets (at most 255*32 bytes)
-  Int ->
-  -- | /OKM/ Output keying material (/L/ bytes)
-  ByteString
-myHkdf ikm salt info l
-  | l == 0 = BS.empty
-  | 0 > l || l > 255 * 32 = error "hkdf: invalid L parameter"
-  | otherwise = unsafeDoIO $ createAndTrim (32 * fromIntegral cnt) (go 0 BS.empty)
-  where
-    prk :: ByteString
-    prk = sha256Hmac salt ikm
-    cnt = fromIntegral ((l + 31) `div` 32) :: Word8
-    go :: Word8 -> ByteString -> Ptr Word8 -> IO Int
-    go !i t !p
-      | i == cnt = return l
-      | otherwise = do
-          let t' = sha256Hmac prk $ t <> info <> BS.singleton (i + 1)
-          withByteStringPtr t' $ \tptr' -> memcpy p tptr' 32
-          go (i + 1) t' (p `plusPtr` 32)

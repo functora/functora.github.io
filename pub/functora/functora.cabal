@@ -84,6 +84,7 @@ common pkg-prelude
     , base
     , base16-bytestring
     , base58-bytestring
+    , binary
     , bytestring
     , containers
     , Crypto
@@ -135,8 +136,6 @@ common pkg-aes
   hs-source-dirs: src/aes
   build-depends:
     , base
-    , binary
-    , bytestring
     , Crypto
     , pkcs7
 
@@ -305,10 +304,12 @@ test-suite functora-test
     , base
     , bytestring
     , containers
+    , cryptohash-sha256
     , hspec
     , modern-uri
     , qrcode-core
     , QuickCheck
+    , quickcheck-instances
     , text
     , universum
 

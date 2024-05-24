@@ -1,11 +1,13 @@
 module Functora.PreludeSpec (spec) where
 
+import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import Functora.Prelude
 import Test.Hspec
 import Test.QuickCheck
+import Test.QuickCheck.Instances ()
 import qualified Universum
 
 newtype Buz = Buz
@@ -163,6 +165,19 @@ spec = do
   it "expBackOffSecondsAfter"
     $ inspect @Text (expBackOffSecondsAfter @Natural 3 epoch)
     `shouldBe` "1970-01-01 00:00:08 UTC"
+  it "sha256Hash" . property $ \msg ->
+    sha256Hash msg `shouldBe` SHA256.hash msg
+  it "sha256Hmac" . property . uncurry $ \prv msg ->
+    sha256Hmac prv msg `shouldBe` SHA256.hmac prv msg
+  it "sha256Hkdf" . property $ \(size :: Word8, ikm, salt, info) -> do
+    unOkm
+      ( sha256Hkdf
+          (Ikm ikm)
+          (SaltKm salt)
+          (InfoKm info)
+          (OkmByteSize $ from @Word8 @Natural size)
+      )
+      `shouldBe` SHA256.hkdf ikm salt info (from @Word8 @Int size)
 
 inspectParseRatioSigned ::
   forall a.

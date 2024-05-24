@@ -65,8 +65,14 @@ module Functora.Prelude
 
     -- * Crypto
     -- $crypto
+    Ikm (..),
+    Okm (..),
+    SaltKm (..),
+    InfoKm (..),
+    OkmByteSize (..),
     sha256Hash,
     sha256Hmac,
+    sha256Hkdf,
 
     -- * Uid
     -- $uid
@@ -150,6 +156,7 @@ import Control.Monad.Extra as X
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
 import Control.Monad.Trans.Reader as X (mapReaderT)
+import Data.Binary as X (Binary)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
@@ -751,6 +758,40 @@ qqUri = URI.uri
 -- $crypto
 -- Crypto
 
+newtype Ikm = Ikm
+  { unIkm :: ByteString
+  }
+  deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
+  deriving (Show) via Redacted Ikm
+
+newtype Okm = Okm
+  { unOkm :: ByteString
+  }
+  deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
+  deriving (Show) via Redacted Okm
+
+newtype SaltKm = SaltKm
+  { unSaltKm :: ByteString
+  }
+  deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
+  deriving (Show) via Redacted SaltKm
+
+newtype InfoKm = InfoKm
+  { unInfoKm :: ByteString
+  }
+  deriving stock (Eq, Ord, Read, Data, Generic)
+  deriving newtype (Binary)
+  deriving (Show) via Redacted InfoKm
+
+newtype OkmByteSize = OkmByteSize
+  { unOkmByteSize :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (Binary)
+
 sha256Hash :: forall a b. (From a [Word8], From [Word8] b) => a -> b
 sha256Hash =
   from @[Word8] @b
@@ -777,6 +818,33 @@ sha256Hmac prv msg =
       )
       ( from @b @[Word8] msg
       )
+
+sha256Hkdf :: Ikm -> SaltKm -> InfoKm -> OkmByteSize -> Okm
+sha256Hkdf ikm salt info okmByteSize =
+  let prk = sha256HkdfExtract salt ikm
+   in hkdfExpand prk info okmByteSize
+
+sha256HkdfExtract :: SaltKm -> Ikm -> ByteString
+sha256HkdfExtract (SaltKm salt) (Ikm ikm) =
+  sha256Hmac salt ikm
+
+hkdfExpand :: ByteString -> InfoKm -> OkmByteSize -> Okm
+hkdfExpand prk (InfoKm info) okmByteSize =
+  Okm $ expand mempty mempty 0
+  where
+    size :: Int
+    size = unsafeFrom @Natural @Int $ unOkmByteSize okmByteSize
+    expand :: ByteString -> ByteString -> Int -> ByteString
+    expand acc prev idx =
+      if idx * 32 >= size
+        then BS.take size acc
+        else expand (acc <> next) next $ idx + 1
+      where
+        next =
+          sha256Hmac prk
+            $ prev
+            <> info
+            <> BS.singleton (Prelude.fromIntegral idx + 1)
 
 -- $uid
 -- Uid

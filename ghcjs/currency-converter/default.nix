@@ -1,9 +1,9 @@
 let
-  functora = ../..;
-  # functora = fetchTarball {
-  #   url = "https://github.com/functora/functora.github.io/archive/487fc2947934e0412dd89e93faa634db6484246e.tar.gz";
-  #   sha256 = "0zcgvlv4j5jay0zzpqgd3gfkvr67y2kcrv865f3q2mpb99hvymvp";
-  # };
+  # functora = ../..;
+  functora = fetchTarball {
+    url = "https://github.com/functora/functora.github.io/archive/478342826431dadb02a014dc8f32487ed099c51a.tar.gz";
+    sha256 = "0ga3n3f906r4wbdnazdifjkz81y5sibbqs2mvhfqj39jznrzcdz4";
+  };
   functora-miso = import "${functora}/ghcjs/miso/default.nix" {
     overlays = import ./overlays.nix {inherit functora;};
   };

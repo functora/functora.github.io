@@ -224,47 +224,29 @@ modelToQuery mdl = do
   kDoc <- URI.mkQueryKey "d"
   vDoc <-
     (URI.mkQueryValue <=< encodeText)
-      . maybe id Aes.encrypt mAes
+      . encodeBinary
+      . Aes.encryptHmac aes
       $ encodeBinary (st ^. #stDoc)
-  kCpt <- URI.mkQueryKey "c"
-  mCpt <-
-    forM mPrv $ \prv ->
-      (URI.mkQueryValue <=< encodeText)
-        $ encodeBinary
-          ( prv
-              & #stCptIkm
-              .~ Field
-                { fieldType = prv ^. #stCptIkm . #fieldType,
-                  fieldInput = Identity mempty,
-                  fieldOutput = mempty @Text,
-                  fieldAddCopy = prv ^. #stCptIkm . #fieldAddCopy,
-                  fieldModalState = prv ^. #stCptIkm . #fieldModalState
-                }
-          )
+  kHkdf <- URI.mkQueryKey "h"
+  vHkdf <-
+    (URI.mkQueryValue <=< encodeText)
+      . encodeBinary
+      . fromEither
+      $ fmap (& #hkdfIkm .~ Aes.Ikm mempty) hkdf
   pure
-    $ catMaybes
-      [ Just $ URI.QueryParam kDoc vDoc,
-        URI.QueryParam kCpt <$> mCpt
-      ]
+    [ URI.QueryParam kDoc vDoc,
+      URI.QueryParam kHkdf vHkdf
+    ]
   where
     st :: St Identity
-    st =
-      newIdentityState $ mdl ^. #modelState
-    mPrv :: Either Aes.Hkdf Aes.Hkdf
-    mPrv =
-      if null $ st ^. #stIkm . #fieldOutput
-        then Left $ st ^. #stHkdf
-        else Just $ st ^. #stCpt
-    mAes :: Maybe Aes.SomeAesKey
-    mAes =
-      fmap
-        ( \prv ->
-            Aes.drvSomeAesKey @Aes.Word256
-              (Aes.Ikm . encodeUtf8 $ prv ^. #stCptIkm . #fieldOutput)
-              (prv ^. #stCptSalt)
-              (prv ^. #stCptInfo)
-        )
-        mPrv
+    st = newIdentityState $ mdl ^. #modelState
+    aes :: Aes.SomeAesKey
+    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither hkdf
+    hkdf :: Either Aes.Hkdf Aes.Hkdf
+    hkdf =
+      case st ^. #stUserIkm . #fieldOutput of
+        ikm | null ikm -> Left (st ^. #stDefHkdf)
+        ikm -> Right $ (st ^. #stDefHkdf) & #hkdfIkm .~ Aes.Ikm (encodeUtf8 ikm)
     encodeText :: (MonadThrow m) => BL.ByteString -> m Text
     encodeText =
       either throw pure

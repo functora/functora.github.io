@@ -1,2 +1,5 @@
 index-state: 2023-08-20T00:00:00Z
 packages: *.cabal
+
+package cryptohash-sha256
+  flags: -use-cbits

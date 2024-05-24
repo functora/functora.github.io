@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Functora.Aes
   ( Crypto,
     encryptHmac,
@@ -17,18 +19,21 @@ where
 
 import qualified Codec.Encryption.AES as AES
 import qualified Codec.Encryption.Modes as Crypto
-import qualified Codec.Utils as Crypto
 import qualified Codec.Utils as Utils
 import qualified Crypto.Data.PKCS7 as PKCS7
-import qualified Crypto.Hash.SHA256 as SHA256
 import Data.Binary (Binary)
 import qualified Data.Bits as Bits
+import qualified Data.ByteString as BS
+import Data.ByteString.Internal (createAndTrim, memcpy, toForeignPtr)
 import qualified Data.Data as Data
-import qualified Data.HMAC as HMAC
 import Data.LargeWord
+import Foreign.ForeignPtr (withForeignPtr)
+import Foreign.Ptr (plusPtr)
 import Functora.AesOrphan ()
 import Functora.Prelude
+import System.IO.Unsafe (unsafeDupablePerformIO)
 import Type.Reflection
+import Prelude (fromIntegral)
 
 data Crypto a = Crypto
   { cryptoValue :: a,
@@ -41,7 +46,8 @@ instance (Binary a) => Binary (Crypto a)
 encryptHmac ::
   forall a.
   ( From a ByteString,
-    From ByteString a
+    From a [Word8],
+    From [Word8] a
   ) =>
   SomeAesKey ->
   a ->
@@ -49,11 +55,11 @@ encryptHmac ::
 encryptHmac prv@(SomeAesKey cipher _) plain =
   Crypto
     { cryptoValue = value,
-      cryptoValueHmac = hmac prv value
+      cryptoValueHmac = myHmac prv value
     }
   where
     value =
-      from @ByteString @a
+      from @[Word8] @a
         . blocksToBs
         . Crypto.cbc AES.encrypt 0 cipher
         . bsToBlocks
@@ -63,58 +69,55 @@ encryptHmac prv@(SomeAesKey cipher _) plain =
 unHmacDecrypt ::
   forall a.
   ( Eq a,
-    From a ByteString,
-    From ByteString a
+    From ByteString a,
+    From a [Word8],
+    From [Word8] a
   ) =>
   SomeAesKey ->
   Crypto a ->
   Maybe a
 unHmacDecrypt prv@(SomeAesKey cipher _) (Crypto value valueHmac) = do
-  if valueHmac == hmac prv value
+  if valueHmac == myHmac prv value
     then Just ()
     else Nothing
   fmap (from @ByteString @a)
     . PKCS7.unpadBytesN bytesPerBlock
     . blocksToBs
     . Crypto.unCbc AES.decrypt 0 cipher
-    . bsToBlocks
-    $ from @a @ByteString value
+    $ bsToBlocks value
 
-hmac ::
+myHmac ::
   forall a.
-  ( From a ByteString,
-    From ByteString a
+  ( From a [Word8],
+    From [Word8] a
   ) =>
   SomeAesKey ->
   a ->
   a
-hmac (SomeAesKey _ hmacer) =
-  from @ByteString @a
-    . from @[Word8] @ByteString
-    . HMAC.hmac_sha1
-      ( Utils.i2osp
+myHmac (SomeAesKey _ hmacer) =
+  sha256Hmac
+    ( from @[Word8] @a
+        $ Utils.i2osp
           ( Bits.finiteBitSize hmacer
               `div` Bits.finiteBitSize (0 :: Word8)
           )
           hmacer
-      )
-    . from @ByteString @[Word8]
-    . from @a @ByteString
+    )
 
-bsToBlocks :: ByteString -> [Word128]
+bsToBlocks :: forall a. (From a [Word8]) => a -> [Word128]
 bsToBlocks =
   fmap unsafeWord
     . breakup
-    . from @ByteString @[Word8]
+    . from @a @[Word8]
   where
     breakup [] = []
     breakup xs = (take bytesPerBlock xs) : (breakup $ drop bytesPerBlock xs)
 
-blocksToBs :: [Word128] -> ByteString
+blocksToBs :: forall a. (From [Word8] a) => [Word128] -> a
 blocksToBs =
-  from @[Word8] @ByteString
+  from @[Word8] @a
     . concat
-    . fmap (Crypto.toOctets (256 :: Integer))
+    . fmap (Utils.toOctets (256 :: Integer))
 
 bytesPerBlock :: Int
 bytesPerBlock = 16
@@ -226,7 +229,7 @@ drvSomeAesKey hkdf =
     derive info =
       unsafeWord @word
         . from @ByteString @[Word8]
-        . SHA256.hkdf
+        . myHkdf
           (unIkm ikm)
           (unSalt salt)
           (unInfo info)
@@ -239,3 +242,51 @@ unsafeWord =
   fromMaybe (error "unsafeWord overflow failure")
     . safeFromIntegral @Integer @a
     . foldl (\acc i -> acc * 256 + toInteger @Word8 i) (0 :: Integer)
+
+--
+-- TODO : This is naive HKDF-SHA256 implementation!!!
+-- REWRITE AND TESTS ARE NEEDED!!!
+--
+
+-- | perform IO for hashes that do allocation and ffi.
+-- unsafeDupablePerformIO is used when possible as the
+-- computation is pure and the output is directly linked
+-- to the input. we also do not modify anything after it has
+-- been returned to the user.
+unsafeDoIO :: IO a -> a
+unsafeDoIO = unsafeDupablePerformIO
+
+withByteStringPtr :: ByteString -> (Ptr Word8 -> IO a) -> IO a
+withByteStringPtr b f =
+  withForeignPtr fptr $ \ptr -> f (ptr `plusPtr` off)
+  where
+    (fptr, off, _) = toForeignPtr b
+
+-- | <https://tools.ietf.org/html/rfc6234 RFC6234>-compatible
+-- HKDF-SHA-256 key derivation function.
+myHkdf ::
+  -- | /IKM/ Input keying material
+  ByteString ->
+  -- | /salt/ Optional salt value, a non-secret random value (can be @""@)
+  ByteString ->
+  -- | /info/ Optional context and application specific information (can be @""@)
+  ByteString ->
+  -- | /L/ length of output keying material in octets (at most 255*32 bytes)
+  Int ->
+  -- | /OKM/ Output keying material (/L/ bytes)
+  ByteString
+myHkdf ikm salt info l
+  | l == 0 = BS.empty
+  | 0 > l || l > 255 * 32 = error "hkdf: invalid L parameter"
+  | otherwise = unsafeDoIO $ createAndTrim (32 * fromIntegral cnt) (go 0 BS.empty)
+  where
+    prk :: ByteString
+    prk = sha256Hmac salt ikm
+    cnt = fromIntegral ((l + 31) `div` 32) :: Word8
+    go :: Word8 -> ByteString -> Ptr Word8 -> IO Int
+    go !i t !p
+      | i == cnt = return l
+      | otherwise = do
+          let t' = sha256Hmac prk $ t <> info <> BS.singleton (i + 1)
+          withByteStringPtr t' $ \tptr' -> memcpy p tptr' 32
+          go (i + 1) t' (p `plusPtr` 32)

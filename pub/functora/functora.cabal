@@ -86,7 +86,7 @@ common pkg-prelude
     , base58-bytestring
     , bytestring
     , containers
-    , cryptohash-sha256
+    , Crypto
     , extra
     , generic-lens
     , generics-sop
@@ -136,8 +136,8 @@ common pkg-aes
   build-depends:
     , base
     , binary
+    , bytestring
     , Crypto
-    , cryptohash-sha256
     , pkcs7
 
 common pkg-cfg

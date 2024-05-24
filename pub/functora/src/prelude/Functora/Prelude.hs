@@ -63,6 +63,11 @@ module Functora.Prelude
     qq,
     qqUri,
 
+    -- * Crypto
+    -- $crypto
+    sha256Hash,
+    sha256Hmac,
+
     -- * Uid
     -- $uid
     Uid (..),
@@ -145,7 +150,6 @@ import Control.Monad.Extra as X
   )
 import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
 import Control.Monad.Trans.Reader as X (mapReaderT)
-import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as BL16
@@ -157,6 +161,7 @@ import Data.ByteString.Base58 as X
     rippleAlphabet,
   )
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Digest.SHA256 as SHA256
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
 import Data.Functor.Contravariant as X (contramap)
@@ -173,6 +178,7 @@ import Data.Generics.Labels as X
 import Data.Generics.Product as X
 import Data.Generics.Sum as X
 import Data.Generics.Uniplate.Data as X ()
+import qualified Data.HMAC as HMAC
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Maybe as X (listToMaybe)
@@ -742,6 +748,36 @@ qq parser =
 qqUri :: QuasiQuoter
 qqUri = URI.uri
 
+-- $crypto
+-- Crypto
+
+sha256Hash :: forall a b. (From a [Word8], From [Word8] b) => a -> b
+sha256Hash =
+  from @[Word8] @b
+    . SHA256.hash
+    . from @a @[Word8]
+
+sha256Hmac ::
+  forall a b c.
+  ( From a [Word8],
+    From b [Word8],
+    From [Word8] c
+  ) =>
+  a ->
+  b ->
+  c
+sha256Hmac prv msg =
+  from @[Word8] @c
+    $ HMAC.hmac
+      HMAC.HashMethod
+        { HMAC.digest = sha256Hash,
+          HMAC.input_blocksize = 512
+        }
+      ( from @a @[Word8] prv
+      )
+      ( from @b @[Word8] msg
+      )
+
 -- $uid
 -- Uid
 
@@ -754,7 +790,7 @@ newUid :: (MonadIO m) => m Uid
 newUid = Uid <$> randomByteString 32
 
 addUid :: Uid -> Uid -> Uid
-addUid (Uid lhs) (Uid rhs) = Uid . SHA256.hash $ lhs <> rhs
+addUid (Uid lhs) (Uid rhs) = Uid . sha256Hash $ lhs <> rhs
 
 nilUid :: Uid
 nilUid = Uid $ BS.replicate 32 0

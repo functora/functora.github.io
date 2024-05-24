@@ -87,7 +87,6 @@ common pkg
     , bytestring
     , containers
     , Crypto
-    , cryptohash-sha256
     , extra
     , generic-lens
     , generics-sop

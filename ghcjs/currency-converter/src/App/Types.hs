@@ -7,7 +7,6 @@ module App.Types
     St (..),
     StConv (..),
     StDoc (..),
-    StCpt (..),
     Money (..),
     Currency (..),
     PaymentMethod (..),
@@ -102,10 +101,9 @@ type Hkt f =
 data St f = St
   { stScreen :: Screen,
     stConv :: StConv f,
-    stConvCpt :: Maybe ByteString,
     stDoc :: StDoc f,
     stUserIkm :: Field Text f,
-    stDefHkdf :: Aes.Hkdf
+    stDefKm :: Aes.Km
   }
   deriving stock (Generic)
 
@@ -165,27 +163,6 @@ instance FunctorB StDoc
 instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
-
-data StCpt f = StCpt
-  { stCptIkm :: Field Text f,
-    stCptSalt :: Aes.Salt,
-    stCptInfo :: Aes.Info
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (StCpt f)
-
-deriving stock instance (Hkt f) => Ord (StCpt f)
-
-deriving stock instance (Hkt f) => Show (StCpt f)
-
-deriving stock instance (Hkt f) => Data (StCpt f)
-
-instance FunctorB StCpt
-
-instance TraversableB StCpt
-
-deriving via GenericType (StCpt Identity) instance Binary (StCpt Identity)
 
 data Money f = Money
   { moneyAmount :: Field Rational f,
@@ -348,7 +325,7 @@ newModel = do
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newField FieldTypePwd mempty id
-  hkdf <- Aes.randomHkdf 32
+  km <- Aes.randomKm 32
   let st =
         Model
           { modelHide = True,
@@ -362,7 +339,6 @@ newModel = do
                         stConvBottomMoney = bottomMoney,
                         stConvTopOrBottom = Top
                       },
-                  stConvCpt = Nothing,
                   stDoc =
                     StDoc
                       { stDocFieldPairs = [issuer, client],
@@ -371,7 +347,7 @@ newModel = do
                         stDocEditable = True
                       },
                   stUserIkm = ikm,
-                  stDefHkdf = hkdf
+                  stDefKm = km
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],

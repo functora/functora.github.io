@@ -227,26 +227,26 @@ modelToQuery mdl = do
       . encodeBinary
       . Aes.encryptHmac aes
       $ encodeBinary (st ^. #stDoc)
-  kHkdf <- URI.mkQueryKey "h"
-  vHkdf <-
+  kKm <- URI.mkQueryKey "k"
+  vKm <-
     (URI.mkQueryValue <=< encodeText)
       . encodeBinary
       . fromEither
-      $ fmap (& #hkdfIkm .~ Aes.Ikm mempty) hkdf
+      $ fmap (& #kmIkm .~ Ikm mempty) ekm
   pure
     [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kHkdf vHkdf
+      URI.QueryParam kKm vKm
     ]
   where
     st :: St Identity
     st = newIdentityState $ mdl ^. #modelState
     aes :: Aes.SomeAesKey
-    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither hkdf
-    hkdf :: Either Aes.Hkdf Aes.Hkdf
-    hkdf =
+    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
+    ekm :: Either Aes.Km Aes.Km
+    ekm =
       case st ^. #stUserIkm . #fieldOutput of
-        ikm | null ikm -> Left (st ^. #stDefHkdf)
-        ikm -> Right $ (st ^. #stDefHkdf) & #hkdfIkm .~ Aes.Ikm (encodeUtf8 ikm)
+        ikm | null ikm -> Left (st ^. #stDefKm)
+        ikm -> Right $ (st ^. #stDefKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
     encodeText :: (MonadThrow m) => BL.ByteString -> m Text
     encodeText =
       either throw pure

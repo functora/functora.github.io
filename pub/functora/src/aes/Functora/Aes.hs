@@ -25,23 +25,21 @@ import Functora.AesOrphan ()
 import Functora.Prelude
 import Type.Reflection
 
-data Crypto a = Crypto
-  { cryptoValue :: a,
-    cryptoValueHmac :: a
+data Crypto = Crypto
+  { cryptoValue :: ByteString,
+    cryptoValueHmac :: ByteString
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-instance (Binary a) => Binary (Crypto a)
+instance Binary Crypto
 
 encryptHmac ::
   forall a.
-  ( From a ByteString,
-    From a [Word8],
-    From [Word8] a
+  ( From a ByteString
   ) =>
   SomeAesKey ->
   a ->
-  Crypto a
+  Crypto
 encryptHmac (SomeAesKey cipher hmacer) plain =
   Crypto
     { cryptoValue = value,
@@ -49,7 +47,7 @@ encryptHmac (SomeAesKey cipher hmacer) plain =
     }
   where
     value =
-      from @[Word8] @a
+      from @[Word8] @ByteString
         . blocksToBs
         . Crypto.cbc AES.encrypt 0 cipher
         . bsToBlocks
@@ -58,13 +56,10 @@ encryptHmac (SomeAesKey cipher hmacer) plain =
 
 unHmacDecrypt ::
   forall a.
-  ( Eq a,
-    From ByteString a,
-    From a [Word8],
-    From [Word8] a
+  ( From ByteString a
   ) =>
   SomeAesKey ->
-  Crypto a ->
+  Crypto ->
   Maybe a
 unHmacDecrypt (SomeAesKey cipher hmacer) (Crypto value valueHmac) = do
   if sha256Hmac (unOkm hmacer) value == valueHmac

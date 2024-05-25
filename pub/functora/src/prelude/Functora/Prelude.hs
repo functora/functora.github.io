@@ -214,7 +214,7 @@ import Data.Time.Clock as X
   )
 import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
-import Data.Tuple.Extra as X (uncurry3)
+import Data.Tuple.Extra as X (thd3, uncurry3)
 import qualified Data.Typeable as Typeable
 import Data.UUID as X (UUID)
 import qualified Data.UUID as UUID

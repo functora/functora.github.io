@@ -244,9 +244,9 @@ modelToQuery mdl = do
     aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
     ekm :: Either Aes.Km Aes.Km
     ekm =
-      case st ^. #stUserIkm . #fieldOutput of
-        ikm | null ikm -> Left (st ^. #stDefKm)
-        ikm -> Right $ (st ^. #stDefKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
+      case st ^. #stIkm . #fieldOutput of
+        ikm | null ikm -> Left (st ^. #stKm)
+        ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
     encodeText :: (MonadThrow m) => BL.ByteString -> m Text
     encodeText =
       either throw pure
@@ -256,11 +256,14 @@ modelToQuery mdl = do
 
 appUri :: (MonadThrow m) => Model -> m URI
 appUri st = do
-  uri <-
-    mkURI
-      $ "https://functora.github.io/apps/currency-converter/"
-      <> vsn
-      <> "/index.html"
+  uri <- mkURI "http://localhost:8080"
+  --
+  -- TODO : cabal flag for this!!!
+  --
+  -- mkURI
+  --   $ "https://functora.github.io/apps/currency-converter/"
+  --   <> vsn
+  --   <> "/index.html"
   qxs <- modelToQuery st
   pure
     $ uri

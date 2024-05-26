@@ -7,6 +7,7 @@ module App.Types
     St (..),
     StConv (..),
     StDoc (..),
+    StCrypto (..),
     Money (..),
     Currency (..),
     PaymentMethod (..),
@@ -40,6 +41,7 @@ module App.Types
   )
 where
 
+import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import qualified Data.List.NonEmpty as NonEmpty
@@ -50,7 +52,8 @@ import qualified Functora.Money as Money
 import Functora.Prelude hiding (Field (..))
 import Functora.Rates
 import qualified Material.Snackbar as Snackbar
-import Miso hiding (view)
+import Miso hiding (URI, view)
+import qualified Text.URI as URI
 
 data Model = Model
   { modelHide :: Bool,
@@ -102,8 +105,9 @@ data St f = St
   { stScreen :: Screen,
     stConv :: StConv f,
     stDoc :: StDoc f,
-    stUserIkm :: Field Text f,
-    stDefKm :: Aes.Km
+    stIkm :: Field Text f,
+    stKm :: Aes.Km,
+    stCrypto :: Maybe (StCrypto f)
   }
   deriving stock (Generic)
 
@@ -120,6 +124,27 @@ instance FunctorB St
 instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
+
+data StCrypto f = StCrypto
+  { stCryptoKm :: Aes.Km,
+    stCryptoIkm :: Field Text f,
+    stCryptoDoc :: Aes.Crypto
+  }
+  deriving stock (Generic)
+
+deriving stock instance (Hkt f) => Eq (StCrypto f)
+
+deriving stock instance (Hkt f) => Ord (StCrypto f)
+
+deriving stock instance (Hkt f) => Show (StCrypto f)
+
+deriving stock instance (Hkt f) => Data (StCrypto f)
+
+instance FunctorB StCrypto
+
+instance TraversableB StCrypto
+
+deriving via GenericType (StCrypto Identity) instance Binary (StCrypto Identity)
 
 data StConv f = StConv
   { stConvTopMoney :: Money f,
@@ -301,8 +326,8 @@ deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 --
 -- TODO : simplify this !!!!
 --
-newModel :: (MonadThrow m, MonadUnliftIO m) => m Model
-newModel = do
+newModel :: (MonadThrow m, MonadUnliftIO m) => URI -> m Model
+newModel uri = do
   let defaultScreen = Editor
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
@@ -326,6 +351,7 @@ newModel = do
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newField FieldTypePwd mempty id
   km <- Aes.randomKm 32
+  mcrypto <- parseCrypto uri
   let st =
         Model
           { modelHide = True,
@@ -346,8 +372,9 @@ newModel = do
                         stDocPaymentMethods = [paymentMethod],
                         stDocEditable = True
                       },
-                  stUserIkm = ikm,
-                  stDefKm = km
+                  stIkm = ikm,
+                  stKm = km,
+                  stCrypto = mcrypto
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
@@ -683,3 +710,32 @@ newFieldPair key val =
     <*> pure False
     <*> pure False
     <*> pure False
+
+parseCrypto :: (MonadThrow m, MonadIO m) => URI -> m (Maybe (StCrypto Unique))
+parseCrypto uri = do
+  kKm <- URI.mkQueryKey "k"
+  kDoc <- URI.mkQueryKey "d"
+  let qs = URI.uriQuery uri
+  case (,) <$> asumMap (qsGet kDoc) qs <*> asumMap (qsGet kKm) qs of
+    Nothing -> pure Nothing
+    Just (vDoc, vKm) -> do
+      bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
+      bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
+      km <- either (throwString . thd3) pure $ decodeBinary bKm
+      ikm <- newField FieldTypePwd mempty id
+      doc <- either (throwString . thd3) pure $ decodeBinary bDoc
+      pure
+        $ Just
+          StCrypto
+            { stCryptoKm = km,
+              stCryptoIkm = ikm,
+              stCryptoDoc = doc
+            }
+
+qsGet ::
+  URI.RText 'URI.QueryKey ->
+  URI.QueryParam ->
+  Maybe Text
+qsGet qk = \case
+  URI.QueryParam k x | k == qk -> Just $ URI.unRText x
+  _ -> Nothing

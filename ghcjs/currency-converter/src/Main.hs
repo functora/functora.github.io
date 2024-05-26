@@ -22,11 +22,13 @@ import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
+import qualified Text.URI as URI
 
 main :: IO ()
 main =
   runApp . forever . handleAny maxAttention $ do
-    st <- newModel
+    uri <- URI.mkURI . inspect =<< getCurrentURI
+    st <- newModel uri
     startApp
       App
         { model = st,

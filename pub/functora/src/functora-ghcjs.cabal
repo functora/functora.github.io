@@ -105,6 +105,7 @@ common pkg
     , random
     , safe-exceptions
     , scientific
+    , serialise
     , singlethongs
     , stm
     , syb
@@ -172,10 +173,12 @@ test-suite functora-ghcjs-test
     , base
     , bytestring
     , containers
+    , cryptohash-sha256
     , hspec
     , modern-uri
     , qrcode-core
     , QuickCheck
+    , quickcheck-instances
     , text
     , universum
 

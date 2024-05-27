@@ -101,6 +101,7 @@ common pkg-prelude
     , random
     , safe-exceptions
     , scientific
+    , serialise
     , stm
     , syb
     , tagged
@@ -136,6 +137,7 @@ common pkg-aes
   hs-source-dirs: src/aes
   build-depends:
     , base
+    , cfg
     , Crypto
     , pkcs7
 
@@ -150,6 +152,7 @@ common pkg-cfg
     , bytestring
     , modern-uri
     , optparse-applicative
+    , serialise
     , tomland
 
 common pkg-web
@@ -302,8 +305,10 @@ test-suite functora-test
   hs-source-dirs: src/test
   build-depends:
     , base
+    , base16-bytestring
     , bytestring
     , containers
+    , Crypto
     , cryptohash-sha256
     , hspec
     , modern-uri

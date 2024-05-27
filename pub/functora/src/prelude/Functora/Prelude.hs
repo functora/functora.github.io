@@ -110,6 +110,7 @@ module Functora.Prelude
   )
 where
 
+import Codec.Serialise as X (Serialise)
 import Control.Concurrent.Async as X
   ( Async,
     asyncThreadId,
@@ -762,35 +763,35 @@ newtype Ikm = Ikm
   { unIkm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
+  deriving newtype (Binary, Serialise)
   deriving (Show) via Redacted Ikm
 
 newtype Okm = Okm
   { unOkm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
+  deriving newtype (Binary, Serialise)
   deriving (Show) via Redacted Okm
 
 newtype SaltKm = SaltKm
   { unSaltKm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
+  deriving newtype (Binary, Serialise)
   deriving (Show) via Redacted SaltKm
 
 newtype InfoKm = InfoKm
   { unInfoKm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary)
+  deriving newtype (Binary, Serialise)
   deriving (Show) via Redacted InfoKm
 
 newtype OkmByteSize = OkmByteSize
   { unOkmByteSize :: Natural
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving newtype (Binary)
+  deriving newtype (Binary, Serialise)
 
 sha256Hash :: forall a b. (From a [Word8], From [Word8] b) => a -> b
 sha256Hash =

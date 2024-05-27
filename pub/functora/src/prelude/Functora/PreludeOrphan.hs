@@ -2,6 +2,7 @@
 
 module Functora.PreludeOrphan () where
 
+import Codec.Serialise (Serialise)
 import qualified Data.Coerce as Coerce
 import qualified Data.Data as Data
 import Data.Generics (Data)
@@ -15,6 +16,8 @@ import Witch.Mini
 import qualified Prelude
 
 deriving stock instance Generic (Ratio a)
+
+deriving newtype instance (Serialise rep) => Serialise (Tagged tag rep)
 
 instance (Typeable a) => Show (MVar a) where
   show =

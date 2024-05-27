@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Functora.Aes
   ( Crypto,
     encryptHmac,
@@ -11,17 +9,19 @@ module Functora.Aes
     Word256,
     Km (..),
     randomKm,
+    unsafeWord,
   )
 where
 
 import qualified Codec.Encryption.AES as AES
-import qualified Codec.Encryption.Modes as Crypto
+import qualified Codec.Encryption.Modes as Modes
 import qualified Codec.Utils as Utils
 import qualified Crypto.Data.PKCS7 as PKCS7
 import qualified Data.Bits as Bits
 import qualified Data.Data as Data
 import Data.LargeWord
 import Functora.AesOrphan ()
+import Functora.Cfg
 import Functora.Prelude
 import Type.Reflection
 
@@ -30,8 +30,7 @@ data Crypto = Crypto
     cryptoValueHmac :: ByteString
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-
-instance Binary Crypto
+  deriving (Binary, Serialise) via GenericType Crypto
 
 encryptHmac ::
   forall a.
@@ -48,9 +47,10 @@ encryptHmac (SomeAesKey cipher hmacer) plain =
   where
     value =
       from @[Word8] @ByteString
-        . blocksToBs
-        . Crypto.cbc AES.encrypt 0 cipher
-        . bsToBlocks
+        . Utils.listToOctets
+        . Modes.cbc AES.encrypt 0 cipher
+        . Utils.listFromOctets
+        . from @ByteString @[Word8]
         . PKCS7.padBytesN bytesPerBlock
         $ from @a @ByteString plain
 
@@ -67,24 +67,11 @@ unHmacDecrypt (SomeAesKey cipher hmacer) (Crypto value valueHmac) = do
     else Nothing
   fmap (from @ByteString @a)
     . PKCS7.unpadBytesN bytesPerBlock
-    . blocksToBs
-    . Crypto.unCbc AES.decrypt 0 cipher
-    $ bsToBlocks value
-
-bsToBlocks :: forall a. (From a [Word8]) => a -> [Word128]
-bsToBlocks =
-  fmap unsafeWord
-    . breakup
-    . from @a @[Word8]
-  where
-    breakup [] = []
-    breakup xs = (take bytesPerBlock xs) : (breakup $ drop bytesPerBlock xs)
-
-blocksToBs :: forall a. (From [Word8] a) => [Word128] -> a
-blocksToBs =
-  from @[Word8] @a
-    . concat
-    . fmap (Utils.toOctets (256 :: Integer))
+    . from @[Word8] @ByteString
+    . Utils.listToOctets
+    . Modes.unCbc AES.decrypt 0 cipher
+    . Utils.listFromOctets
+    $ from @ByteString @[Word8] value
 
 bytesPerBlock :: Int
 bytesPerBlock = 16
@@ -135,8 +122,7 @@ data Km = Km
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
   deriving (Show) via Redacted Km
-
-instance Binary Km
+  deriving (Binary, Serialise) via GenericType Km
 
 randomKm :: (MonadIO m) => Natural -> m Km
 randomKm size = do

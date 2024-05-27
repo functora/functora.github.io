@@ -103,6 +103,7 @@ common pkg
     , miso
     , miso-components
     , modern-uri
+    , network-uri
     , syb
     , text
 

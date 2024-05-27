@@ -455,7 +455,9 @@ newModel uri = do
         . tryMarket
         . getCurrencyInfo
         $ currencyInfoCode usd
-    let baseAmt = Tagged 1 :: Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
+    let baseAmt =
+          Tagged 1 ::
+            Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
     quote <-
       getQuote
         (Funds baseAmt $ currencyInfoCode baseCur)
@@ -501,45 +503,6 @@ newModel uri = do
       & #modelState
       . #stConv
       . #stConvBottomMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ quoteCur
-      --
-      -- Editor
-      --
-      & #modelState
-      . #stDoc
-      . #stDocPaymentMethods
-      . each
-      . #paymentMethodMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged baseAmt)
-      & #modelState
-      . #stDoc
-      . #stDocPaymentMethods
-      . each
-      . #paymentMethodMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged baseAmt
-      & #modelState
-      . #stDoc
-      . #stDocPaymentMethods
-      . each
-      . #paymentMethodMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ baseCur
-      --
-      -- Asset
-      --
-      & #modelState
-      . #stDoc
-      . #stDocAssets
-      . each
-      . #assetPrice
       . #moneyCurrency
       . #currencyOutput
       .~ quoteCur

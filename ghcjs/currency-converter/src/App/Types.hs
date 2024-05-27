@@ -90,7 +90,8 @@ type Typ a =
     Ord a,
     Show a,
     Data a,
-    Binary a
+    Binary a,
+    Serialise a
   )
 
 type Hkt f =
@@ -125,6 +126,8 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
+deriving via GenericType (St Identity) instance Serialise (St Identity)
+
 data StCrypto f = StCrypto
   { stCryptoKm :: Aes.Km,
     stCryptoIkm :: Field Text f,
@@ -144,7 +147,15 @@ instance FunctorB StCrypto
 
 instance TraversableB StCrypto
 
-deriving via GenericType (StCrypto Identity) instance Binary (StCrypto Identity)
+deriving via
+  GenericType (StCrypto Identity)
+  instance
+    Binary (StCrypto Identity)
+
+deriving via
+  GenericType (StCrypto Identity)
+  instance
+    Serialise (StCrypto Identity)
 
 data StConv f = StConv
   { stConvTopMoney :: Money f,
@@ -166,6 +177,8 @@ instance FunctorB StConv
 instance TraversableB StConv
 
 deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
+
+deriving via GenericType (StConv Identity) instance Serialise (StConv Identity)
 
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
@@ -189,6 +202,8 @@ instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 
+deriving via GenericType (StDoc Identity) instance Serialise (StDoc Identity)
+
 data Money f = Money
   { moneyAmount :: Field Rational f,
     moneyCurrency :: Currency f
@@ -209,6 +224,8 @@ instance TraversableB Money
 
 deriving via GenericType (Money Identity) instance Binary (Money Identity)
 
+deriving via GenericType (Money Identity) instance Serialise (Money Identity)
+
 data Currency f = Currency
   { currencyInput :: Field Text f,
     currencyOutput :: CurrencyInfo,
@@ -228,7 +245,15 @@ instance FunctorB Currency
 
 instance TraversableB Currency
 
-deriving via GenericType (Currency Identity) instance Binary (Currency Identity)
+deriving via
+  GenericType (Currency Identity)
+  instance
+    Binary (Currency Identity)
+
+deriving via
+  GenericType (Currency Identity)
+  instance
+    Serialise (Currency Identity)
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
@@ -254,6 +279,11 @@ deriving via
   instance
     Binary (PaymentMethod Identity)
 
+deriving via
+  GenericType (PaymentMethod Identity)
+  instance
+    Serialise (PaymentMethod Identity)
+
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
     chanItemValue :: a
@@ -264,43 +294,43 @@ data Screen
   = Converter
   | Editor
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType Screen
+  deriving (Binary, Serialise) via GenericType Screen
 
 data TopOrBottom
   = Top
   | Bottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType TopOrBottom
+  deriving (Binary, Serialise) via GenericType TopOrBottom
 
 data HeaderOrFooter
   = Header
   | Footer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType HeaderOrFooter
+  deriving (Binary, Serialise) via GenericType HeaderOrFooter
 
 data OnlineOrOffline
   = Online
   | Offline
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType OnlineOrOffline
+  deriving (Binary, Serialise) via GenericType OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType StaticOrDynamic
+  deriving (Binary, Serialise) via GenericType StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType LeadingOrTrailing
+  deriving (Binary, Serialise) via GenericType LeadingOrTrailing
 
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType OpenedOrClosed
+  deriving (Binary, Serialise) via GenericType OpenedOrClosed
 
 data Asset f = Asset
   { assetPrice :: Money f,
@@ -322,6 +352,8 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
+
+deriving via GenericType (Asset Identity) instance Serialise (Asset Identity)
 
 --
 -- TODO : simplify this !!!!
@@ -351,7 +383,41 @@ newModel uri = do
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newField FieldTypePwd mempty id
   km <- Aes.randomKm 32
-  mcrypto <- parseCrypto uri
+  mStCrypto <- parseStCrypto uri
+  let defDoc =
+        StDoc
+          { stDocFieldPairs = [issuer, client],
+            stDocAssets = [asset],
+            stDocPaymentMethods = [paymentMethod],
+            stDocEditable = True
+          }
+  (doc, cpt) <-
+    maybe
+      ( pure (defDoc, Nothing)
+      )
+      ( \cpt ->
+          if null $ cpt ^. #stCryptoKm . #kmIkm . #unIkm
+            then pure (defDoc, Just cpt)
+            else do
+              bDoc :: ByteString <-
+                maybe
+                  ( throwString @Text "Failed to decrypt the document!"
+                  )
+                  pure
+                  $ Aes.unHmacDecrypt
+                    ( Aes.drvSomeAesKey @Aes.Word256 $ cpt ^. #stCryptoKm
+                    )
+                    ( cpt ^. #stCryptoDoc
+                    )
+              doc <-
+                btraverse (newUnique . runIdentity)
+                  =<< either (throwString . thd3) pure (decodeBinary bDoc)
+              pure
+                ( doc,
+                  Nothing
+                )
+      )
+      mStCrypto
   let st =
         Model
           { modelHide = True,
@@ -365,16 +431,10 @@ newModel uri = do
                         stConvBottomMoney = bottomMoney,
                         stConvTopOrBottom = Top
                       },
-                  stDoc =
-                    StDoc
-                      { stDocFieldPairs = [issuer, client],
-                        stDocAssets = [asset],
-                        stDocPaymentMethods = [paymentMethod],
-                        stDocEditable = True
-                      },
+                  stDoc = doc,
                   stIkm = ikm,
                   stKm = km,
-                  stCrypto = mcrypto
+                  stCrypto = cpt
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
@@ -593,7 +653,7 @@ data FieldType
   | FieldTypeHtml
   | FieldTypePwd
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType FieldType
+  deriving (Binary, Serialise) via GenericType FieldType
 
 htmlFieldType :: FieldType -> Text
 htmlFieldType = \case
@@ -619,7 +679,7 @@ data DynamicField
   = DynamicFieldText Text
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary) via GenericType DynamicField
+  deriving (Binary, Serialise) via GenericType DynamicField
 
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
@@ -661,6 +721,11 @@ deriving via
   instance
     (Typ a) => Binary (Field a Identity)
 
+deriving via
+  GenericType (Field a Identity)
+  instance
+    (Typ a) => Serialise (Field a Identity)
+
 newField :: (MonadIO m) => FieldType -> a -> (a -> Text) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
@@ -700,6 +765,11 @@ deriving via
   instance
     (Typ a) => Binary (FieldPair a Identity)
 
+deriving via
+  GenericType (FieldPair a Identity)
+  instance
+    (Typ a) => Serialise (FieldPair a Identity)
+
 newFieldPair ::
   (MonadIO m) => Text -> DynamicField -> m (FieldPair DynamicField Unique)
 newFieldPair key val =
@@ -711,8 +781,8 @@ newFieldPair key val =
     <*> pure False
     <*> pure False
 
-parseCrypto :: (MonadThrow m, MonadIO m) => URI -> m (Maybe (StCrypto Unique))
-parseCrypto uri = do
+parseStCrypto :: (MonadThrow m, MonadIO m) => URI -> m (Maybe (StCrypto Unique))
+parseStCrypto uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
   let qs = URI.uriQuery uri

@@ -26,7 +26,7 @@ import qualified Text.URI as URI
 
 main :: IO ()
 main =
-  runApp . forever . handleAny maxAttention $ do
+  runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
     uri <- URI.mkURI . inspect =<< getCurrentURI
     st <- newModel uri
     startApp

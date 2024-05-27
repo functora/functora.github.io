@@ -1,5 +1,7 @@
 module App.TypesSpec (spec) where
 
+import qualified App.Misc as Misc
+import qualified App.Types as Types
 import qualified Data.Aeson as A
 import qualified Data.Generics as Syb
 import Functora.Prelude
@@ -8,6 +10,7 @@ import qualified Optics.Setter as Ops
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Instances ()
+import qualified Text.URI as URI
 
 data Expr
   = Lit Int
@@ -51,3 +54,9 @@ spec = do
     -- good?
     $ over soplate fun expr
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
+  it "serialization" $ do
+    st0 <- Types.newModel =<< URI.mkURI "http://localhost"
+    uri <- Misc.appUri st0
+    st1 <- Types.newModel uri
+    (st0 ^. #modelState . to Types.newIdentityState . #stDoc)
+      `shouldBe` (st1 ^. #modelState . to Types.newIdentityState . #stDoc)

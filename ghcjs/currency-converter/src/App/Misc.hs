@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module App.Misc
   ( getConverterAmountOptic,
     getConverterCurrencyOptic,
@@ -256,19 +258,21 @@ modelToQuery mdl = do
 
 appUri :: (MonadThrow m) => Model -> m URI
 appUri st = do
-  uri <- mkURI "http://localhost:8080"
-  --
-  -- TODO : cabal flag for this!!!
-  --
-  -- mkURI
-  --   $ "https://functora.github.io/apps/currency-converter/"
-  --   <> vsn
-  --   <> "/index.html"
+  uri <- mkURI txtUri
   qxs <- modelToQuery st
   pure
     $ uri
       { URI.uriQuery = qxs
       }
+
+txtUri :: Text
+#ifdef GHCID
+txtUri =
+  "http://localhost:8080"
+#else
+txtUri =
+  "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
+#endif
 
 vsn :: Text
 vsn =

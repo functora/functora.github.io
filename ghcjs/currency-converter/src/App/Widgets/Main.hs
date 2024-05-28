@@ -3,8 +3,8 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Currency as Currency
+import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.EditorSettings as EditorSettings
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
@@ -61,16 +61,7 @@ mainWidget st =
 
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stCrypto = Just {}}} =
-  [ Cell.bigCell
-      $ Field.passwordField
-        st
-        ( #modelState
-            . #stCrypto
-            . _Just
-            . #stCryptoIkm
-        )
-        Field.defOpts
-  ]
+  Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField

@@ -25,6 +25,7 @@ common pkg
     App.Widgets.Cell
     App.Widgets.Chips
     App.Widgets.Currency
+    App.Widgets.Decrypt
     App.Widgets.EditorSettings
     App.Widgets.Field
     App.Widgets.FieldPairs

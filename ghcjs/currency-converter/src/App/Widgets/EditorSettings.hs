@@ -16,17 +16,12 @@ editorSettings :: Model -> [View Action]
 editorSettings st =
   [ Header.header "Share" Nothing,
     Cell.mediumCell
-      $ Field.textField
+      $ Field.passwordField
         st
         ( #modelState
             . #stIkm
         )
-        ( Field.defOpts
-            & #optsPlaceholder
-            .~ "Password"
-            & #optsLeadingWidget
-            .~ Just Field.ShowOrHideWidget
-        ),
+        Field.defOpts,
     Cell.mediumCell
       $ Switch.switch
         st

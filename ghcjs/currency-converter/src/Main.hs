@@ -22,7 +22,6 @@ import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
-import qualified Network.URI as NetURI
 import qualified Text.URI as URI
 
 main :: IO ()
@@ -30,13 +29,6 @@ main =
   runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
     uri <- URI.mkURI . inspect =<< getCurrentURI
     st <- newModel uri
-    whenJust
-      ( NetURI.parseURI
-          . from @Text @String
-          . URI.render
-          $ uri {URI.uriQuery = mempty}
-      )
-      replaceURI
     startApp
       App
         { model = st,

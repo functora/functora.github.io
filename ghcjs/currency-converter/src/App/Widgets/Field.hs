@@ -6,6 +6,7 @@ module App.Widgets.Field
     ratioField,
     textField,
     dynamicField,
+    passwordField,
     constLinkField,
   )
 where
@@ -33,7 +34,8 @@ data Opts = Opts
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
     optsLeadingWidget :: Maybe OptsWidget,
-    optsTrailingWidget :: Maybe OptsWidget
+    optsTrailingWidget :: Maybe OptsWidget,
+    optsOnKeyDownAction :: Uid -> KeyCode -> Action
   }
   deriving stock (Generic)
 
@@ -73,7 +75,8 @@ defOpts =
       optsPlaceholder = mempty,
       optsExtraOnInput = id,
       optsLeadingWidget = Just CopyWidget,
-      optsTrailingWidget = Just ClearWidget
+      optsTrailingWidget = Just ClearWidget,
+      optsOnKeyDownAction = Misc.onKeyDownAction
     }
 
 field ::
@@ -128,7 +131,7 @@ field st optic opts parser viewer =
           & TextField.setAttributes
             [ class_ "fill",
               id_ . ms $ htmlUid @Text uid,
-              onKeyDown $ Misc.onKeyDownAction uid,
+              onKeyDown . optsOnKeyDownAction opts $ uid,
               onBlur onBlurAction
             ]
        ]
@@ -224,6 +227,22 @@ dynamicField st optic idx opts =
     parseDynamicField
     inspectDynamicField
 
+passwordField ::
+  Model ->
+  ATraversal' Model (Field Text Unique) ->
+  Opts ->
+  View Action
+passwordField st optic opts =
+  textField
+    st
+    optic
+    ( opts
+        & #optsPlaceholder
+        .~ "Password"
+        & #optsLeadingWidget
+        .~ Just ShowOrHideWidget
+    )
+
 fieldIcon ::
   Model ->
   ATraversal' Model (Field a Unique) ->
@@ -260,12 +279,12 @@ fieldIcon st optic lot extraOnInput = \case
           & extraOnInput
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
-      Just FieldTypePwd ->
+      Just FieldTypePassword ->
         fieldIconSimple lot "visibility_off" mempty
           $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypeText)
       _ ->
         fieldIconSimple lot "visibility" mempty
-          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePwd)
+          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
   UpWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_up" attrs
       $ Misc.moveUp opt idx

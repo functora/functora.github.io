@@ -36,6 +36,10 @@ module App.Types
     inspectDynamicField,
     Field (..),
     newField,
+    newRatioField,
+    newTextField,
+    newDynamicField,
+    newPasswordField,
     FieldPair (..),
     newFieldPair,
   )
@@ -381,7 +385,7 @@ newModel uri = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
-  ikm <- newField FieldTypePwd mempty id
+  ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mStCrypto <- parseStCrypto uri
   let defDoc =
@@ -530,6 +534,10 @@ newDynamicField output =
     output
     inspectDynamicField
 
+newPasswordField :: (MonadIO m) => Text -> m (Field Text Unique)
+newPasswordField output =
+  newField FieldTypePassword output id
+
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
   Currency
@@ -614,7 +622,7 @@ data FieldType
   | FieldTypeQrCode
   | FieldTypeLink
   | FieldTypeHtml
-  | FieldTypePwd
+  | FieldTypePassword
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary, Serialise) via GenericType FieldType
 
@@ -626,7 +634,7 @@ htmlFieldType = \case
   FieldTypeQrCode -> "text"
   FieldTypeLink -> "text"
   FieldTypeHtml -> "text"
-  FieldTypePwd -> "password"
+  FieldTypePassword -> "password"
 
 userFieldType :: FieldType -> Text
 userFieldType = \case
@@ -636,7 +644,7 @@ userFieldType = \case
   FieldTypeQrCode -> "QR code"
   FieldTypeLink -> "Link"
   FieldTypeHtml -> "HTML"
-  FieldTypePwd -> "Password"
+  FieldTypePassword -> "Password"
 
 data DynamicField
   = DynamicFieldText Text
@@ -755,7 +763,7 @@ parseStCrypto uri = do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
       bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
       km <- either (throwString . thd3) pure $ decodeBinary bKm
-      ikm <- newField FieldTypePwd mempty id
+      ikm <- newPasswordField mempty
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
       pure
         $ Just

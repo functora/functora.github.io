@@ -112,6 +112,7 @@ data St f = St
     stDoc :: StDoc f,
     stIkm :: Field Text f,
     stKm :: Aes.Km,
+    stHint :: Field DynamicField f,
     stCrypto :: Maybe (StCrypto f)
   }
   deriving stock (Generic)
@@ -135,7 +136,8 @@ deriving via GenericType (St Identity) instance Serialise (St Identity)
 data StCrypto f = StCrypto
   { stCryptoKm :: Aes.Km,
     stCryptoIkm :: Field Text f,
-    stCryptoDoc :: Aes.Crypto
+    stCryptoDoc :: Aes.Crypto,
+    stCryptoHint :: Field DynamicField f
   }
   deriving stock (Generic)
 
@@ -187,8 +189,7 @@ deriving via GenericType (StConv Identity) instance Serialise (StConv Identity)
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
     stDocAssets :: [Asset f],
-    stDocPaymentMethods :: [PaymentMethod f],
-    stDocEditable :: Bool
+    stDocPaymentMethods :: [PaymentMethod f]
   }
   deriving stock (Generic)
 
@@ -387,14 +388,14 @@ newModel uri = do
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
+  hint <- newDynamicField $ DynamicFieldText mempty
   mApp <- unAppUri uri
   let defScr = Editor
   let defDoc =
         StDoc
           { stDocFieldPairs = [issuer, client],
             stDocAssets = [asset],
-            stDocPaymentMethods = [paymentMethod],
-            stDocEditable = True
+            stDocPaymentMethods = [paymentMethod]
           }
   (scr, doc, cpt) <-
     maybe
@@ -440,6 +441,7 @@ newModel uri = do
                   stDoc = doc,
                   stIkm = ikm,
                   stKm = km,
+                  stHint = hint,
                   stCrypto = cpt
                 },
             modelMarket = market,
@@ -764,27 +766,33 @@ unAppUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
   kScr <- URI.mkQueryKey "s"
+  kHint <- URI.mkQueryKey "h"
   let qs = URI.uriQuery uri
-  case (,,)
+  case (,,,)
     <$> asumMap (qsGet kDoc) qs
     <*> asumMap (qsGet kKm) qs
-    <*> asumMap (qsGet kScr) qs of
+    <*> asumMap (qsGet kScr) qs
+    <*> asumMap (qsGet kHint) qs of
     Nothing -> pure Nothing
-    Just (vDoc, vKm, vScr) -> do
+    Just (vDoc, vKm, vScr, vHint) -> do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
       bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
       bScr <- either throwString pure . B64URL.decode $ encodeUtf8 vScr
+      bHint <- either throwString pure . B64URL.decode $ encodeUtf8 vHint
       km <- either (throwString . thd3) pure $ decodeBinary bKm
       ikm <- newPasswordField mempty
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
       scr <- either (throwString . thd3) pure $ decodeBinary bScr
+      iHint <- either (throwString . thd3) pure $ decodeBinary bHint
+      hint <- btraverse (newUnique . runIdentity) iHint
       pure
         $ Just
           ( scr,
             StCrypto
               { stCryptoKm = km,
                 stCryptoIkm = ikm,
-                stCryptoDoc = doc
+                stCryptoDoc = doc,
+                stCryptoHint = hint
               }
           )
 

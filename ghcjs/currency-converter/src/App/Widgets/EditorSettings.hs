@@ -8,7 +8,6 @@ import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
-import qualified App.Widgets.Switch as Switch
 import Functora.Prelude as Prelude
 import Miso hiding (view)
 
@@ -23,26 +22,55 @@ editorSettings st =
         )
         Field.defOpts,
     Cell.mediumCell
-      $ Switch.switch
+      $ Field.field
         st
-        ( Switch.defOpts
-            & #optsIcon
-            .~ Just "edit"
-            & #optsPlaceholder
-            .~ "Allow editing"
-        )
         ( #modelState
-            . #stDoc
-            . #stDocEditable
+            . #stHint
+        )
+        ( Field.defOpts
+            & #optsPlaceholder
+            .~ ( "Hint - "
+                  <> ( st
+                        ^. #modelState
+                        . #stHint
+                        . #fieldType
+                        . to userFieldType
+                     )
+               )
+            & #optsLeadingWidget
+            .~ Just
+              ( Field.ModalWidget
+                  $ Field.ModalMiniWidget (#modelState . #stHint)
+              )
+        )
+        parseDynamicField
+        inspectDynamicField,
+    Cell.bigCell
+      $ Field.constLinkField
+        st
+        ( either impureThrow id
+            . Misc.appUri
+            $ st
+            & #modelState
+            . #stScreen
+            .~ QrViewer
+        )
+        ( Field.defOpts
+            & #optsPlaceholder
+            .~ "QR code link"
         ),
     Cell.bigCell
       $ Field.constLinkField
         st
         ( either impureThrow id
-            $ Misc.appUri st
+            . Misc.appUri
+            $ st
+            & #modelState
+            . #stScreen
+            .~ Editor
         )
         ( Field.defOpts
             & #optsPlaceholder
-            .~ "QR code link"
+            .~ "Editor link"
         )
   ]

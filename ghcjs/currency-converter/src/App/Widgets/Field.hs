@@ -3,6 +3,7 @@ module App.Widgets.Field
     OptsWidget (..),
     ModalWidget' (..),
     defOpts,
+    field,
     ratioField,
     textField,
     dynamicField,
@@ -66,6 +67,12 @@ data ModalWidget' where
     Int ->
     ATraversal' a (Field b Unique) ->
     StaticOrDynamic ->
+    ModalWidget'
+  ModalMiniWidget ::
+    forall a.
+    ( Data a
+    ) =>
+    ATraversal' Model (Field a Unique) ->
     ModalWidget'
 
 defOpts :: Opts
@@ -312,6 +319,15 @@ fieldIcon st optic lot extraOnInput = \case
             cloneTraversal opt
               . ix idx
               . cloneTraversal access
+              . #fieldModalState
+              .~ Opened
+        )
+  ModalWidget (ModalMiniWidget opt) ->
+    fieldIconSimple lot "settings" mempty
+      $ pureUpdate
+        0
+        ( &
+            cloneTraversal opt
               . #fieldModalState
               .~ Opened
         )
@@ -620,6 +636,81 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
         ]
         mempty
     )
+fieldModal st (ModalMiniWidget opt) = do
+  let closed =
+        pureUpdate 0 (& cloneTraversal opt . #fieldModalState .~ Closed)
+  Dialog.dialog
+    ( Dialog.config
+        & Dialog.setOnClose closed
+        & Dialog.setOpen
+          ( Just Opened == st ^? cloneTraversal opt . #fieldModalState
+          )
+    )
+    ( Dialog.dialogContent
+        Nothing
+        [ Cell.grid
+            mempty
+            [ Cell.bigCell
+                $ selectTypeWidget st opt,
+              Cell.bigCell
+                $ Button.raised
+                  ( Button.config
+                      & Button.setOnClick closed
+                      & Button.setIcon (Just "arrow_back")
+                      & Button.setAttributes [class_ "fill"]
+                  )
+                  "Back"
+            ]
+        ]
+        mempty
+    )
+
+selectTypeWidget :: Model -> ATraversal' Model (Field a Unique) -> View Action
+selectTypeWidget st optic =
+  let typ :| typs = enumerateNE @FieldType
+   in Select.outlined
+        ( Select.config
+            & Select.setLabel
+              ( Just "Type"
+              )
+            & Select.setAttributes
+              [ class_ "fill-inner"
+              ]
+            & Select.setSelected
+              ( st
+                  ^? cloneTraversal optic
+                  . #fieldType
+              )
+            & Select.setOnChange
+              ( \x ->
+                  pureUpdate
+                    0
+                    ( &
+                        cloneTraversal optic
+                          . #fieldType
+                          .~ x
+                    )
+              )
+        )
+        --
+        -- NOTE : maybe add icons:
+        --
+        -- "font_download"
+        -- "qr_code_2"
+        -- "link"
+        -- "code"
+        --
+        ( SelectItem.selectItem
+            (SelectItem.config typ)
+            [text . ms $ userFieldType typ]
+        )
+        $ fmap
+          ( \t ->
+              SelectItem.selectItem
+                (SelectItem.config t)
+                [text . ms $ userFieldType t]
+          )
+          typs
 
 constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st uri opts =

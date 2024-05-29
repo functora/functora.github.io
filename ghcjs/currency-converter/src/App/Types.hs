@@ -297,6 +297,7 @@ data ChanItem a = ChanItem
 data Screen
   = Converter
   | Editor
+  | QrViewer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary, Serialise) via GenericType Screen
 
@@ -364,7 +365,6 @@ deriving via GenericType (Asset Identity) instance Serialise (Asset Identity)
 --
 newModel :: (MonadThrow m, MonadUnliftIO m) => URI -> m Model
 newModel uri = do
-  let defaultScreen = Editor
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
@@ -387,7 +387,8 @@ newModel uri = do
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
-  mStCrypto <- parseStCrypto uri
+  mApp <- unAppUri uri
+  let defScr = Editor
   let defDoc =
         StDoc
           { stDocFieldPairs = [issuer, client],
@@ -395,13 +396,13 @@ newModel uri = do
             stDocPaymentMethods = [paymentMethod],
             stDocEditable = True
           }
-  (doc, cpt) <-
+  (scr, doc, cpt) <-
     maybe
-      ( pure (defDoc, Nothing)
+      ( pure (defScr, defDoc, Nothing)
       )
-      ( \cpt ->
+      ( uncurry $ \scr cpt ->
           if null $ cpt ^. #stCryptoKm . #kmIkm . #unIkm
-            then pure (defDoc, Just cpt)
+            then pure (scr, defDoc, Just cpt)
             else do
               bDoc :: ByteString <-
                 maybe
@@ -417,18 +418,19 @@ newModel uri = do
                 btraverse (newUnique . runIdentity)
                   =<< either (throwString . thd3) pure (decodeBinary bDoc)
               pure
-                ( doc,
+                ( scr,
+                  doc,
                   Nothing
                 )
       )
-      mStCrypto
+      mApp
   let st =
         Model
           { modelHide = True,
             modelMenu = Closed,
             modelState =
               St
-                { stScreen = defaultScreen,
+                { stScreen = scr,
                   stConv =
                     StConv
                       { stConvTopMoney = topMoney,
@@ -752,26 +754,39 @@ newFieldPair key val =
     <*> pure False
     <*> pure False
 
-parseStCrypto :: (MonadThrow m, MonadIO m) => URI -> m (Maybe (StCrypto Unique))
-parseStCrypto uri = do
+unAppUri ::
+  ( MonadThrow m,
+    MonadIO m
+  ) =>
+  URI ->
+  m (Maybe (Screen, StCrypto Unique))
+unAppUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
+  kScr <- URI.mkQueryKey "s"
   let qs = URI.uriQuery uri
-  case (,) <$> asumMap (qsGet kDoc) qs <*> asumMap (qsGet kKm) qs of
+  case (,,)
+    <$> asumMap (qsGet kDoc) qs
+    <*> asumMap (qsGet kKm) qs
+    <*> asumMap (qsGet kScr) qs of
     Nothing -> pure Nothing
-    Just (vDoc, vKm) -> do
+    Just (vDoc, vKm, vScr) -> do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
       bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
+      bScr <- either throwString pure . B64URL.decode $ encodeUtf8 vScr
       km <- either (throwString . thd3) pure $ decodeBinary bKm
       ikm <- newPasswordField mempty
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
+      scr <- either (throwString . thd3) pure $ decodeBinary bScr
       pure
         $ Just
-          StCrypto
-            { stCryptoKm = km,
-              stCryptoIkm = ikm,
-              stCryptoDoc = doc
-            }
+          ( scr,
+            StCrypto
+              { stCryptoKm = km,
+                stCryptoIkm = ikm,
+                stCryptoDoc = doc
+              }
+          )
 
 qsGet ::
   URI.RText 'URI.QueryKey ->

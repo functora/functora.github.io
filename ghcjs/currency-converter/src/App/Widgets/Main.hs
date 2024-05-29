@@ -60,6 +60,11 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
+screenWidget _st@Model {modelState = St {stScreen = QrViewer}} =
+  --
+  -- TODO !!!
+  --
+  mempty
 screenWidget st@Model {modelState = St {stCrypto = Just {}}} =
   Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
@@ -114,6 +119,7 @@ tosWidget =
       a_ [href_ "license.html"] [Miso.text "Terms of Service"],
       Miso.text " and ",
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
-      Miso.text ". ",
+      Miso.text
+        ". This software is 100% organic and AI-free. It is built and tested exclusively by humans. ",
       Miso.text . ms $ "Version " <> Misc.vsn <> "."
     ]

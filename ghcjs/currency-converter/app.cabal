@@ -104,6 +104,7 @@ common pkg
     , miso
     , miso-components
     , modern-uri
+    , random
     , syb
     , text
 

@@ -7,6 +7,7 @@ module App.Misc
     onKeyDownAction,
     copyIntoClipboard,
     textPopup,
+    textPopupPure,
     textPopupClosed,
     drainTChan,
     verifyUid,
@@ -97,6 +98,18 @@ textPopup st x =
           #modelSnackbarQueue
             %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
       )
+  where
+    msg =
+      inspect x
+        & Snackbar.message
+        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
+        & Snackbar.setOnActionIconClick textPopupClosed
+
+textPopupPure :: (Show a, Data a) => Model -> a -> Model
+textPopupPure st x =
+  st
+    & #modelSnackbarQueue
+    %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
   where
     msg =
       inspect x
@@ -235,9 +248,14 @@ modelToQuery mdl = do
       . encodeBinary
       . fromEither
       $ fmap (& #kmIkm .~ Ikm mempty) ekm
+  kSc <- URI.mkQueryKey "s"
+  vSc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stScreen)
   pure
     [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kKm vKm
+      URI.QueryParam kKm vKm,
+      URI.QueryParam kSc vSc
     ]
   where
     st :: St Identity

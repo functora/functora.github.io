@@ -248,8 +248,8 @@ modelToQuery mdl = do
       . encodeBinary
       . fromEither
       $ fmap (& #kmIkm .~ Ikm mempty) ekm
-  kScr <- URI.mkQueryKey "s"
-  vScr <-
+  kSc <- URI.mkQueryKey "s"
+  vSc <-
     (URI.mkQueryValue <=< encodeText)
       $ encodeBinary (st ^. #stScreen)
   kHint <- URI.mkQueryKey "h"
@@ -259,7 +259,7 @@ modelToQuery mdl = do
   pure
     [ URI.QueryParam kDoc vDoc,
       URI.QueryParam kKm vKm,
-      URI.QueryParam kScr vScr,
+      URI.QueryParam kSc vSc,
       URI.QueryParam kHint vHint
     ]
   where

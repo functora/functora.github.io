@@ -223,6 +223,42 @@
       _    _    _              @ltab          _    _    _    _               _    _    _     _    _
     )
   '';
+  mkAlice = mkKbd ''
+    (defalias
+      fst  (layer-toggle fst-layer)
+      snd  (layer-toggle snd-layer)
+      til  (around lsft grv)
+      ltab (around lsft tab)
+    )
+    (defsrc
+      esc  1    2    3    4    5    6              7    8    9    0    -    =    bspc
+      tab  q    w    e    r    t              y    u    i    o    p    [    ]    \         del
+      caps a    s    d    f    g              h    j    k    l    ;    '    ret            pgup
+      lsft z    x    c    v    b              b    n    m    ,    .    /    rsft      up   pgdn
+      lctl      lmet      spc       lalt      spc       ralt      rctl           lft  down rght
+    )
+    (deflayer qwerty
+      _    _    _    _    _    _    _              _    _    _    _    _    _    _
+      esc  _    _    _    _    _              _    _    _    _    _    _    _    _         _
+      @fst _    _    _    _    _              _    _    _    _    _    _    _              _
+      _    _    _    _    _    _              _    _    _    _    _    _    ret       _    _
+      _         _         _         _         _         _         _              _    _    _
+    )
+    (deflayer fst-layer
+      _    f1   f2   f3   f4   f5   f6             f7   f8   f9   f10  f11  f12  _
+      @snd _    _    _    _    _              _    _    _    _    _    _    _    grv       _
+      _    _    _    slck _    _              lft  down up   rght _    _    _              _
+      _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
+      _         _         tab       ralt      tab       _         _              _    _    _
+    )
+    (deflayer snd-layer
+      _    brdn bru  _    _    _    _              prev pp   next mute vold volu _
+      _    _    _    _    _    _              _    _    _    _    _    _    _    @til      _
+      _    _    _    _    _    _              home pgdn pgup end  _    _    _              _
+      _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
+      _         _         @ltab     _         @ltab     _         _              _    _    _
+    )
+  '';
 in {
   imports =
     [
@@ -329,52 +365,11 @@ in {
     services.kmonad = {
       enable = true;
       package = kmonad-pkg;
+      keyboards.miniM = mkTkl "/dev/input/by-id/usb-Unicomp_Inc_U_AP1_4_87k_Kbrd_v7_57-event-kbd";
       keyboards.k995p = mk100 "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
       keyboards.maxfit61 = mk60p "/dev/input/by-id/usb-FANTECH_MAXFIT61_Mechanical_Keyboard-event-kbd";
-      keyboards.alice80 = {
-        device = "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
-        defcfg = {
-          enable = true;
-          fallthrough = true;
-          allowCommands = false;
-        };
-        config = ''
-          (defalias
-            fst  (layer-toggle fst-layer)
-            snd  (layer-toggle snd-layer)
-            til  (around lsft grv)
-            ltab (around lsft tab)
-          )
-          (defsrc
-            esc  1    2    3    4    5    6              7    8    9    0    -    =    bspc
-            tab  q    w    e    r    t              y    u    i    o    p    [    ]    \         del
-            caps a    s    d    f    g              h    j    k    l    ;    '    ret            pgup
-            lsft z    x    c    v    b              b    n    m    ,    .    /    rsft      up   pgdn
-            lctl      lmet      spc       lalt      spc                 rctl           lft  down rght
-          )
-          (deflayer qwerty
-            _    _    _    _    _    _    _              _    _    _    _    _    _    _
-            esc  _    _    _    _    _              _    _    _    _    _    _    _    _         _
-            @fst _    _    _    _    _              _    _    _    _    _    _    _              _
-            _    _    _    _    _    _              _    _    _    _    _    _    ret       _    _
-            _         _         _         _         _                   _              _    _    _
-          )
-          (deflayer fst-layer
-            _    f1   f2   f3   f4   f5   f6             f7   f8   f9   f10  f11  f12  _
-            @snd _    _    _    _    _              _    _    _    _    _    _    _    grv       _
-            _    _    _    slck _    _              lft  down up   rght _    _    _              _
-            _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
-            _         _         tab       ralt      tab                 _              _    _    _
-          )
-          (deflayer snd-layer
-            _    brdn bru  _    _    _    _              prev pp   next mute vold volu _
-            _    _    _    _    _    _              _    _    _    _    _    _    _    @til      _
-            _    _    _    _    _    _              home pgdn pgup end  _    _    _              _
-            _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
-            _         _         @ltab     _         @ltab               _              _    _    _
-          )
-        '';
-      };
+      keyboards.feker80 = mkAlice "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
+      keyboards.aks068 = mkAlice "/dev/input/by-id/usb-RDR_AKS068-event-kbd";
       keyboards.md600 = {
         device = "/dev/input/by-id/usb-Mistel_MD600-event-kbd";
         defcfg = {
@@ -566,6 +561,13 @@ in {
     };
 
     #
+    # Via/Vial
+    #
+    services.udev.packages = with pkgs; [
+      via
+    ];
+
+    #
     # Home
     #
     home-manager.users.${config.services.functora.userName} = {
@@ -629,6 +631,8 @@ in {
         # quickemu --vm macos-monterey.conf --public-dir ./Public --extra_args "-cpu host,+vmx"
         quickemu
         pavucontrol
+        via
+        vial
       ];
       programs.git = {
         enable = true;

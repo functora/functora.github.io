@@ -1,8 +1,8 @@
 let
   # functora = ../..;
   functora = fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/2ac970833a5b414974d5fedfa14643115d9c7be8.tar.gz";
-    sha256 = "1skfrvyxn6qgljzzc36dqicjx6nxypbjpdrr67nk24a4mch5m0wb";
+    url = "https://github.com/functora/functora.github.io/archive/58e3121b1ed1f8a2bb3e8f9e38b43b87783f8417.tar.gz";
+    sha256 = "1xni605m938l6ws882rkih65ca5j43j3kcvd2ih9yrx3ycp97wmr";
   };
   functora-miso = import "${functora}/ghcjs/miso/default.nix" {
     overlays = import ./overlays.nix {inherit functora;};

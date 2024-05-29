@@ -53,7 +53,7 @@ editorSettings st =
             $ st
             & #modelState
             . #stScreen
-            .~ QrViewer
+            .~ QrCode Editor
         )
         ( Field.defOpts
             & #optsPlaceholder

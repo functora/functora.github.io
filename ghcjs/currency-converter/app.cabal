@@ -34,6 +34,7 @@ common pkg
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.PaymentMethods
+    App.Widgets.Qr
     App.Widgets.SwapAmounts
     App.Widgets.Switch
 
@@ -104,6 +105,7 @@ common pkg
     , miso
     , miso-components
     , modern-uri
+    , qrcode-core
     , random
     , syb
     , text

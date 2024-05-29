@@ -7,12 +7,13 @@ module App.Types
     St (..),
     StConv (..),
     StDoc (..),
-    StCrypto (..),
+    StExt (..),
     Money (..),
     Currency (..),
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
+    unQrCode,
     Asset (..),
     TopOrBottom (..),
     HeaderOrFooter (..),
@@ -113,7 +114,7 @@ data St f = St
     stIkm :: Field Text f,
     stKm :: Aes.Km,
     stHint :: Field DynamicField f,
-    stCrypto :: Maybe (StCrypto f)
+    stExt :: Maybe (StExt f)
   }
   deriving stock (Generic)
 
@@ -133,35 +134,37 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 deriving via GenericType (St Identity) instance Serialise (St Identity)
 
-data StCrypto f = StCrypto
-  { stCryptoKm :: Aes.Km,
-    stCryptoIkm :: Field Text f,
-    stCryptoDoc :: Aes.Crypto,
-    stCryptoHint :: Field DynamicField f
+data StExt f = StExt
+  { stExtKm :: Aes.Km,
+    stExtIkm :: Field Text f,
+    stExtDoc :: Aes.Crypto,
+    stExtHint :: Field DynamicField f,
+    stExtUri :: URI,
+    stExtScreen :: Screen
   }
   deriving stock (Generic)
 
-deriving stock instance (Hkt f) => Eq (StCrypto f)
+deriving stock instance (Hkt f) => Eq (StExt f)
 
-deriving stock instance (Hkt f) => Ord (StCrypto f)
+deriving stock instance (Hkt f) => Ord (StExt f)
 
-deriving stock instance (Hkt f) => Show (StCrypto f)
+deriving stock instance (Hkt f) => Show (StExt f)
 
-deriving stock instance (Hkt f) => Data (StCrypto f)
+deriving stock instance (Hkt f) => Data (StExt f)
 
-instance FunctorB StCrypto
+instance FunctorB StExt
 
-instance TraversableB StCrypto
-
-deriving via
-  GenericType (StCrypto Identity)
-  instance
-    Binary (StCrypto Identity)
+instance TraversableB StExt
 
 deriving via
-  GenericType (StCrypto Identity)
+  GenericType (StExt Identity)
   instance
-    Serialise (StCrypto Identity)
+    Binary (StExt Identity)
+
+deriving via
+  GenericType (StExt Identity)
+  instance
+    Serialise (StExt Identity)
 
 data StConv f = StConv
   { stConvTopMoney :: Money f,
@@ -298,9 +301,14 @@ data ChanItem a = ChanItem
 data Screen
   = Converter
   | Editor
-  | QrViewer
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  | QrCode Screen
+  deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary, Serialise) via GenericType Screen
+
+unQrCode :: Screen -> Screen
+unQrCode = \case
+  QrCode sc -> unQrCode sc
+  sc -> sc
 
 data TopOrBottom
   = Top
@@ -390,20 +398,26 @@ newModel uri = do
   km <- Aes.randomKm 32
   hint <- newDynamicField $ DynamicFieldText mempty
   mApp <- unAppUri uri
-  let defScr = Editor
+  let defSc = Editor
   let defDoc =
         StDoc
           { stDocFieldPairs = [issuer, client],
             stDocAssets = [asset],
             stDocPaymentMethods = [paymentMethod]
           }
-  (scr, doc, cpt) <-
+  (sc, doc, ext) <-
     maybe
-      ( pure (defScr, defDoc, Nothing)
+      ( pure (defSc, defDoc, Nothing)
       )
-      ( uncurry $ \scr cpt ->
-          if null $ cpt ^. #stCryptoKm . #kmIkm . #unIkm
-            then pure (scr, defDoc, Just cpt)
+      ( \ext -> do
+          let sc = ext ^. #stExtScreen
+          if null $ ext ^. #stExtKm . #kmIkm . #unIkm
+            then
+              pure
+                ( sc,
+                  defDoc,
+                  Just ext
+                )
             else do
               bDoc :: ByteString <-
                 maybe
@@ -411,15 +425,15 @@ newModel uri = do
                   )
                   pure
                   $ Aes.unHmacDecrypt
-                    ( Aes.drvSomeAesKey @Aes.Word256 $ cpt ^. #stCryptoKm
+                    ( Aes.drvSomeAesKey @Aes.Word256 $ ext ^. #stExtKm
                     )
-                    ( cpt ^. #stCryptoDoc
+                    ( ext ^. #stExtDoc
                     )
               doc <-
                 btraverse (newUnique . runIdentity)
                   =<< either (throwString . thd3) pure (decodeBinary bDoc)
               pure
-                ( scr,
+                ( sc,
                   doc,
                   Nothing
                 )
@@ -431,7 +445,7 @@ newModel uri = do
             modelMenu = Closed,
             modelState =
               St
-                { stScreen = scr,
+                { stScreen = sc,
                   stConv =
                     StConv
                       { stConvTopMoney = topMoney,
@@ -442,7 +456,7 @@ newModel uri = do
                   stIkm = ikm,
                   stKm = km,
                   stHint = hint,
-                  stCrypto = cpt
+                  stExt = ext
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
@@ -761,40 +775,40 @@ unAppUri ::
     MonadIO m
   ) =>
   URI ->
-  m (Maybe (Screen, StCrypto Unique))
+  m (Maybe (StExt Unique))
 unAppUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
-  kScr <- URI.mkQueryKey "s"
+  kSc <- URI.mkQueryKey "s"
   kHint <- URI.mkQueryKey "h"
   let qs = URI.uriQuery uri
   case (,,,)
     <$> asumMap (qsGet kDoc) qs
     <*> asumMap (qsGet kKm) qs
-    <*> asumMap (qsGet kScr) qs
+    <*> asumMap (qsGet kSc) qs
     <*> asumMap (qsGet kHint) qs of
     Nothing -> pure Nothing
-    Just (vDoc, vKm, vScr, vHint) -> do
+    Just (vDoc, vKm, vSc, vHint) -> do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
       bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
-      bScr <- either throwString pure . B64URL.decode $ encodeUtf8 vScr
+      bSc <- either throwString pure . B64URL.decode $ encodeUtf8 vSc
       bHint <- either throwString pure . B64URL.decode $ encodeUtf8 vHint
       km <- either (throwString . thd3) pure $ decodeBinary bKm
       ikm <- newPasswordField mempty
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
-      scr <- either (throwString . thd3) pure $ decodeBinary bScr
+      sc <- either (throwString . thd3) pure $ decodeBinary bSc
       iHint <- either (throwString . thd3) pure $ decodeBinary bHint
       hint <- btraverse (newUnique . runIdentity) iHint
       pure
         $ Just
-          ( scr,
-            StCrypto
-              { stCryptoKm = km,
-                stCryptoIkm = ikm,
-                stCryptoDoc = doc,
-                stCryptoHint = hint
-              }
-          )
+          StExt
+            { stExtKm = km,
+              stExtIkm = ikm,
+              stExtDoc = doc,
+              stExtHint = hint,
+              stExtUri = uri,
+              stExtScreen = sc
+            }
 
 qsGet ::
   URI.RText 'URI.QueryKey ->

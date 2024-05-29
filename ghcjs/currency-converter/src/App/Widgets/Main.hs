@@ -10,6 +10,7 @@ import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PaymentMethods as PaymentMethods
+import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
 import Functora.Prelude as Prelude
@@ -18,6 +19,7 @@ import qualified Material.Snackbar as Snackbar
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String (ms)
+import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
 mainWidget st =
@@ -60,13 +62,19 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget _st@Model {modelState = St {stScreen = QrViewer}} =
-  --
-  -- TODO !!!
-  --
-  mempty
-screenWidget st@Model {modelState = St {stCrypto = Just {}}} =
-  Decrypt.decrypt st
+screenWidget st@Model {modelState = St {stExt = Just ext}} =
+  case ext ^. #stExtScreen of
+    QrCode {} ->
+      Qr.qr
+        ( st ^? #modelState . #stExt . _Just . #stExtUri . to URI.render
+        )
+        Field.defOpts
+    _ ->
+      Decrypt.decrypt st
+screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
+  case Misc.appUri $ st & #modelState . #stScreen .~ unQrCode sc of
+    Left e -> impureThrow e
+    Right uri -> Qr.qr (Just $ URI.render uri) Field.defOpts
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField

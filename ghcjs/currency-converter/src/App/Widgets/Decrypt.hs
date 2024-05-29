@@ -21,9 +21,9 @@ decrypt st =
       $ Field.passwordField
         st
         ( #modelState
-            . #stCrypto
+            . #stExt
             . _Just
-            . #stCryptoIkm
+            . #stExtIkm
         )
         ( Field.defOpts
             & #optsOnKeyDownAction
@@ -40,25 +40,25 @@ decrypt st =
   ]
 
 decryptDoc :: Model -> Action
-decryptDoc st@Model {modelState = St {stCrypto = Nothing}} =
+decryptDoc st@Model {modelState = St {stExt = Nothing}} =
   PushUpdate $ do
     Misc.textPopup @Text st "Nothing to decrypt!"
     pure $ ChanItem 0 id
-decryptDoc Model {modelState = St {stCrypto = Just {}}} =
+decryptDoc Model {modelState = St {stExt = Just {}}} =
   PushUpdate $ do
     rnd0 <- liftIO Random.newStdGen
     pure $ ChanItem 0 $ \case
-      st@Model {modelState = St {stCrypto = Nothing}} -> st
-      st@Model {modelState = St {stCrypto = Just cpt}} ->
+      st@Model {modelState = St {stExt = Nothing}} -> st
+      st@Model {modelState = St {stExt = Just ext}} ->
         let aes =
               Aes.drvSomeAesKey @Aes.Word256
-                $ (cpt ^. #stCryptoKm)
+                $ (ext ^. #stExtKm)
                 & #kmIkm
-                .~ (cpt ^. #stCryptoIkm . #fieldOutput . to (Ikm . encodeUtf8))
+                .~ (ext ^. #stExtIkm . #fieldOutput . to (Ikm . encodeUtf8))
             eDoc = do
               bDoc <-
                 maybe (Left "Incorrect password!") Right
-                  $ Aes.unHmacDecrypt @ByteString aes (cpt ^. #stCryptoDoc)
+                  $ Aes.unHmacDecrypt @ByteString aes (ext ^. #stExtDoc)
               first thd3
                 $ decodeBinary bDoc
          in case eDoc of
@@ -78,7 +78,7 @@ decryptDoc Model {modelState = St {stCrypto = Just {}}} =
                   pure
                     $ st
                     & #modelState
-                    . #stCrypto
+                    . #stExt
                     .~ Nothing
                     & #modelState
                     . #stDoc

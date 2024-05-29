@@ -3,6 +3,7 @@
 module Functora.PreludeOrphan () where
 
 import Codec.Serialise (Serialise)
+import Data.Binary (Binary)
 import qualified Data.Coerce as Coerce
 import qualified Data.Data as Data
 import Data.Generics (Data)
@@ -10,10 +11,35 @@ import Data.Ratio
 import Data.Scientific (Scientific)
 import Data.Tagged
 import qualified Data.Typeable as Typeable
+import Text.URI
 import qualified Type.Reflection as Reflection
 import Universum
 import Witch.Mini
 import qualified Prelude
+
+instance Binary URI
+
+instance Binary (RText a)
+
+instance Binary RTextLabel
+
+instance Binary QueryParam
+
+instance Binary Authority
+
+instance Binary UserInfo
+
+instance Serialise URI
+
+instance Serialise (RText a)
+
+instance Serialise RTextLabel
+
+instance Serialise QueryParam
+
+instance Serialise Authority
+
+instance Serialise UserInfo
 
 deriving stock instance Generic (Ratio a)
 

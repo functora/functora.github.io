@@ -91,6 +91,7 @@ library
     Material.Tab
     Material.Tab.Internal
     Material.TabBar
+    Material.TextArea
     Material.TextField
     Material.Theme
     Material.TopAppBar

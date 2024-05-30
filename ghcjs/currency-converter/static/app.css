@@ -10,6 +10,11 @@ body {
   justify-content: center;
 }
 
+textarea {
+  resize: vertical;
+  pointer-events: auto;
+}
+
 .fill {
   width: 100%;
 }

@@ -9,6 +9,7 @@ import qualified App.Widgets.Field as Field
 import qualified Codec.QRCode as QRCode
 import Functora.Prelude hiding (Field)
 import qualified Functora.Qr as Qr
+import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
 import Miso.String (ms)
 
@@ -26,7 +27,14 @@ qr st txt opts =
           $ newQrImg txt,
         Just
           . Cell.bigCell
-          $ Field.constTextField st txt opts
+          $ Field.constTextField st txt opts,
+        Just
+          . Cell.bigCell
+          . TextArea.filled
+          $ TextArea.config
+          & TextArea.setValue (Just $ from @Text @String txt)
+          & TextArea.setDisabled True
+          & TextArea.setFullwidth True
       ]
 
 newQrImg :: Text -> Maybe Text

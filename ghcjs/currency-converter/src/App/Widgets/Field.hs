@@ -8,6 +8,7 @@ module App.Widgets.Field
     textField,
     dynamicField,
     passwordField,
+    constTextField,
     constLinkField,
   )
 where
@@ -712,8 +713,8 @@ selectTypeWidget st optic =
           )
           typs
 
-constLinkField :: Model -> URI -> Opts -> View Action
-constLinkField st uri opts =
+constTextField :: Model -> Text -> Opts -> View Action
+constTextField st txt opts =
   TextField.filled
     $ TextField.config
     & TextField.setType (Just . from @Text @String $ htmlFieldType FieldTypeLink)
@@ -737,5 +738,8 @@ constLinkField st uri opts =
     --   )
     & TextField.setValue (Just $ from @Text @String txt)
     & TextField.setAttributes [class_ "fill"]
-  where
-    txt = URI.render uri
+
+constLinkField :: Model -> URI -> Opts -> View Action
+constLinkField st =
+  constTextField st
+    . URI.render

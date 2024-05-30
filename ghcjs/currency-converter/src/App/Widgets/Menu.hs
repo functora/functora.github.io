@@ -44,22 +44,24 @@ menu st =
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (screen Converter)
+                        & Button.setIcon (Just "attach_money")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"
                           ]
                     )
-                    "Show converter",
+                    "Converter",
                 Cell.mediumCell
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (screen Editor)
+                        & Button.setIcon (Just "edit")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"
                           ]
                     )
-                    "Create invoice",
+                    "Editor",
                 Cell.bigCell
                   $ Button.raised
                     ( Button.config

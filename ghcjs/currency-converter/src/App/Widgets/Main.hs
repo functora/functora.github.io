@@ -37,12 +37,7 @@ mainWidget st =
                     else mempty
                  )
           )
-          ( ( if elem @[Screen]
-                (st ^. #modelState . #stScreen)
-                [Converter, Editor]
-                then Menu.menu st
-                else mempty
-            )
+          ( Menu.menu st
               <> screenWidget st
               <> [ -- LayoutGrid.cell [LayoutGrid.span12]
                    --  . (: mempty)
@@ -66,15 +61,17 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
   case ext ^. #stExtScreen of
     QrCode {} ->
       Qr.qr
-        ( st ^? #modelState . #stExt . _Just . #stExtUri . to URI.render
-        )
-        Field.defOpts
+        st
+        (ext ^. #stExtUri . to URI.render)
+        (Field.defOpts & #optsPlaceholder .~ "Link")
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   case Misc.appUri $ st & #modelState . #stScreen .~ unQrCode sc of
-    Left e -> impureThrow e
-    Right uri -> Qr.qr (Just $ URI.render uri) Field.defOpts
+    Left e ->
+      impureThrow e
+    Right uri ->
+      Qr.qr st (URI.render uri) (Field.defOpts & #optsPlaceholder .~ "Link")
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField

@@ -12,8 +12,8 @@ import qualified Functora.Qr as Qr
 import Miso hiding (at, view)
 import Miso.String (ms)
 
-qr :: Maybe Text -> Field.Opts -> [View Action]
-qr mTxt _ =
+qr :: Model -> Text -> Field.Opts -> [View Action]
+qr st txt opts =
   catMaybes
     $ [ fmap
           ( \img ->
@@ -23,10 +23,11 @@ qr mTxt _ =
                     src_ $ ms img
                   ]
           )
-          mImg
+          $ newQrImg txt,
+        Just
+          . Cell.bigCell
+          $ Field.constTextField st txt opts
       ]
-  where
-    mImg = mTxt >>= newQrImg
 
 newQrImg :: Text -> Maybe Text
 newQrImg =

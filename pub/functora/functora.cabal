@@ -76,6 +76,12 @@ common pkg
     TypeFamilies
     TypeOperators
 
+common exe
+  ld-options:  -fuse-ld=gold
+  ghc-options:
+    -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts
+    -with-rtsopts=-N -with-rtsopts=-T -optl-fuse-ld=gold
+
 common pkg-prelude
   import:         pkg
   hs-source-dirs: src/prelude
@@ -222,6 +228,13 @@ common pkg-tags
     , template-haskell
     , type-level-sets
 
+common pkg-elm2miso
+  import:         pkg
+  hs-source-dirs: src/elm2miso
+  build-depends:
+    , base
+    , regex-compat
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -298,6 +311,16 @@ library tags
     Functora.TagsFamily
     Functora.TagsOrphan
 
+library elm2miso-lib
+  import:          pkg-elm2miso
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Elm2Miso
+
+executable elm2miso
+  import:  pkg-elm2miso, exe
+  main-is: Functora.Elm2Miso.hs
+
 test-suite functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
@@ -315,12 +338,14 @@ test-suite functora-test
     , qrcode-core
     , QuickCheck
     , quickcheck-instances
+    , string-qq
     , text
     , universum
 
   other-modules:
     Functora.AesSpec
     Functora.CfgSpec
+    Functora.Elm2MisoSpec
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
@@ -332,7 +357,8 @@ test-suite functora-test
     import:
       pkg-prelude, pkg-qr, pkg-aes,
       pkg-cfg, pkg-web, pkg-sql,
-      pkg-money, pkg-rates, pkg-tags
+      pkg-money, pkg-rates, pkg-tags,
+      pkg-elm2miso
 
     ghc-options:   -Wno-unused-packages
     other-modules:
@@ -340,6 +366,7 @@ test-suite functora-test
       Functora.AesOrphan
       Functora.Cfg
       Functora.CfgOrphan
+      Functora.Elm2Miso
       Functora.Money
       Functora.MoneyFgpt
       Functora.MoneySing
@@ -360,6 +387,7 @@ test-suite functora-test
     build-depends:
       , aes
       , cfg
+      , elm2miso-lib
       , functora
       , money
       , qr

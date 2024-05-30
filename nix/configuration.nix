@@ -633,6 +633,7 @@ in {
         pavucontrol
         via
         vial
+        usbutils
       ];
       programs.git = {
         enable = true;

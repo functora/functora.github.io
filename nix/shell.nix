@@ -25,6 +25,7 @@ in
         newpkgs.sqlite
         newpkgs.sqlite-web
         misc.nix-bundle
+        functora.components.exes.elm2miso
       ]
       ++ (import ./tools.nix)
       ++ (import ./../pub/dazzle/nix/tools.nix)

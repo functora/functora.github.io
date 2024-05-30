@@ -318,8 +318,9 @@ library elm2miso-lib
   exposed-modules: Functora.Elm2Miso
 
 executable elm2miso
-  import:  pkg-elm2miso, exe
-  main-is: Functora.Elm2Miso.hs
+  import:        pkg-elm2miso, exe
+  main-is:       Main.hs
+  other-modules: Functora.Elm2Miso
 
 test-suite functora-test
   import:         pkg

@@ -16,7 +16,7 @@ main = do
       inString <- readFile inFile
       let outString = elm2miso inString
       writeFile outFile outString
-    _ -> putStrLn "usage: Translator <inFile> <outFile>"
+    _ -> putStrLn "usage: elm2miso <inFile> <outFile>"
 
 elm2miso :: String -> String
 elm2miso raw =

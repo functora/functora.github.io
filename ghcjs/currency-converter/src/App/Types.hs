@@ -688,7 +688,7 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Text,
     fieldOutput :: a,
-    fieldAddCopy :: Bool,
+    fieldAllowCopy :: Bool,
     fieldModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
@@ -723,7 +723,7 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldAddCopy = True,
+        fieldAllowCopy = True,
         fieldModalState = Closed
       }
 

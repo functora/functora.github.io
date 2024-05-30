@@ -8,6 +8,7 @@ import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.EditorSettings as EditorSettings
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
+import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.Qr as Qr
@@ -60,18 +61,16 @@ screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stExt = Just ext}} =
   case ext ^. #stExtScreen of
     QrCode {} ->
-      Qr.qr
-        st
-        (ext ^. #stExtUri . to URI.render)
-        (Field.defOpts & #optsPlaceholder .~ "Link")
+      [Header.header "Document" Nothing]
+        <> Qr.qr st (ext ^. #stExtUri . to URI.render) True
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   case Misc.appUri $ st & #modelState . #stScreen .~ unQrCode sc of
-    Left e ->
-      impureThrow e
+    Left e -> impureThrow e
     Right uri ->
-      Qr.qr st (URI.render uri) (Field.defOpts & #optsPlaceholder .~ "Link")
+      [Header.header "Document" Nothing]
+        <> Qr.qr st (URI.render uri) True
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField

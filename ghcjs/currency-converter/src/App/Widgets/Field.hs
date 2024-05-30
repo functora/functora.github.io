@@ -563,7 +563,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                         .~ "Allow copy"
                     )
                     ( cloneTraversal optic
-                        . #fieldAddCopy
+                        . #fieldAllowCopy
                     ),
                  Cell.smallCell
                   $ Button.raised

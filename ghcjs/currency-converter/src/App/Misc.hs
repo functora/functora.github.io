@@ -20,7 +20,10 @@ module App.Misc
     newFieldPairAction,
     newPaymentMethodAction,
     modelToQuery,
-    appUri,
+    shareUri,
+    setScreenPure,
+    setScreenAction,
+    setExtScreenAction,
     vsn,
   )
 where
@@ -279,23 +282,35 @@ modelToQuery mdl = do
         . B64URL.encode
         . from @BL.ByteString @ByteString
 
-appUri :: (MonadThrow m) => Model -> m URI
-appUri st = do
-  uri <- mkURI txtUri
+shareUri :: (MonadThrow m) => Model -> m URI
+shareUri st = do
+  uri <- mkURI baseShareUri
   qxs <- modelToQuery st
   pure
     $ uri
       { URI.uriQuery = qxs
       }
 
-txtUri :: Text
+baseShareUri :: Text
 #ifdef GHCID
-txtUri =
+baseShareUri =
   "http://localhost:8080"
 #else
-txtUri =
+baseShareUri =
   "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
 #endif
+
+setScreenPure :: Screen -> Model -> Model
+setScreenPure sc =
+  (& #modelState . #stScreen .~ sc)
+
+setScreenAction :: Screen -> Action
+setScreenAction =
+  pureUpdate 0 . setScreenPure
+
+setExtScreenAction :: Screen -> Action
+setExtScreenAction sc =
+  pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
 vsn :: Text
 vsn =

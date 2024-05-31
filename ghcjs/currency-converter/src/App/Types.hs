@@ -397,7 +397,7 @@ newModel uri = do
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   hint <- newDynamicField $ DynamicFieldText mempty
-  mApp <- unAppUri uri
+  mApp <- unShareUri uri
   let defSc = Editor
   let defDoc =
         StDoc
@@ -770,13 +770,13 @@ newFieldPair key val =
     <*> pure False
     <*> pure False
 
-unAppUri ::
+unShareUri ::
   ( MonadThrow m,
     MonadIO m
   ) =>
   URI ->
   m (Maybe (StExt Unique))
-unAppUri uri = do
+unShareUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
   kSc <- URI.mkQueryKey "s"

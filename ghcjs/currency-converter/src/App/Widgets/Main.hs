@@ -15,6 +15,7 @@ import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
 import Functora.Prelude as Prelude
+import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Typography as Typography
@@ -60,17 +61,47 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stExt = Just ext}} =
   case ext ^. #stExtScreen of
-    QrCode {} ->
+    QrCode sc ->
       [Header.header "Document" Nothing]
-        <> Qr.qr st (ext ^. #stExtUri . to URI.render) True
+        <> Qr.qr
+          st
+          ( ext ^. #stExtUri . to URI.render
+          )
+          ( Qr.defOpts
+              & #optsExtraWidgets
+              .~ [ Button.raised
+                    ( Button.config
+                        & Button.setIcon (Just "login")
+                        & Button.setAttributes [class_ "fill"]
+                        & Button.setOnClick
+                          ( Misc.setExtScreenAction $ unQrCode sc
+                          )
+                    )
+                    "Open"
+                 ]
+          )
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  case Misc.appUri $ st & #modelState . #stScreen .~ unQrCode sc of
+  case Misc.shareUri $ st & #modelState . #stScreen .~ unQrCode sc of
     Left e -> impureThrow e
     Right uri ->
       [Header.header "Document" Nothing]
-        <> Qr.qr st (URI.render uri) True
+        <> Qr.qr
+          st
+          ( URI.render uri
+          )
+          ( Qr.defOpts
+              & #optsExtraWidgets
+              .~ [ Button.raised
+                    ( Button.config
+                        & Button.setIcon (Just "login")
+                        & Button.setAttributes [class_ "fill"]
+                        & Button.setOnClick (Misc.setScreenAction $ unQrCode sc)
+                    )
+                    "Open"
+                 ]
+          )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField

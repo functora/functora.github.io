@@ -37,7 +37,8 @@ data Opts = Opts
     optsExtraOnInput :: Model -> Model,
     optsLeadingWidget :: Maybe OptsWidget,
     optsTrailingWidget :: Maybe OptsWidget,
-    optsOnKeyDownAction :: Uid -> KeyCode -> Action
+    optsOnKeyDownAction :: Uid -> KeyCode -> Action,
+    optsExtraAttributes :: [Attribute Action]
   }
   deriving stock (Generic)
 
@@ -84,7 +85,8 @@ defOpts =
       optsExtraOnInput = id,
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
-      optsOnKeyDownAction = Misc.onKeyDownAction
+      optsOnKeyDownAction = Misc.onKeyDownAction,
+      optsExtraAttributes = mempty
     }
 
 field ::
@@ -137,11 +139,14 @@ field st optic opts parser viewer =
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
-            [ class_ "fill",
-              id_ . ms $ htmlUid @Text uid,
-              onKeyDown . optsOnKeyDownAction opts $ uid,
-              onBlur onBlurAction
-            ]
+            ( [ class_ "fill",
+                id_ . ms $ htmlUid @Text uid,
+                onKeyDown . optsOnKeyDownAction opts $ uid,
+                onBlur onBlurAction
+              ]
+                <> ( opts ^. #optsExtraAttributes
+                   )
+            )
        ]
   where
     uid =

@@ -1,5 +1,7 @@
 module App.Widgets.Qr
   ( qr,
+    Opts (..),
+    defOpts,
   )
 where
 
@@ -14,8 +16,8 @@ import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
 import Miso.String (ms)
 
-qr :: Model -> Text -> Bool -> [View Action]
-qr st txt allowCopy =
+qr :: Model -> Text -> Opts -> [View Action]
+qr st txt opts =
   catMaybes
     [ fmap
         ( \img ->
@@ -28,9 +30,16 @@ qr st txt allowCopy =
         $ newQrImg txt
     ]
     <> copyWidget
+    <> fmap extraCell extraWidgets
   where
+    allowCopy = opts ^. #optsAllowCopy
+    extraWidgets = opts ^. #optsExtraWidgets
+    extraCell =
+      case mod (length extraWidgets + if allowCopy then 1 else 0) 2 of
+        0 -> Cell.mediumCell
+        _ -> Cell.bigCell
     copyWidget =
-      if not allowCopy
+      if not $ opts ^. #optsAllowCopy
         then mempty
         else
           [ Cell.bigCell
@@ -39,7 +48,7 @@ qr st txt allowCopy =
               & TextArea.setValue (Just $ from @Text @String txt)
               & TextArea.setDisabled True
               & TextArea.setFullwidth True,
-            Cell.bigCell
+            extraCell
               $ Button.raised
                 ( Button.config
                     & Button.setIcon (Just "content_copy")
@@ -61,3 +70,16 @@ newQrImg =
       ( QRCode.defaultQRCodeOptions QRCode.L
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
+
+data Opts = Opts
+  { optsAllowCopy :: Bool,
+    optsExtraWidgets :: [View Action]
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts
+defOpts =
+  Opts
+    { optsAllowCopy = True,
+      optsExtraWidgets = mempty
+    }

@@ -103,5 +103,5 @@ shareLink :: forall a. (From Text a) => Screen -> Model -> a
 shareLink sc =
   from @Text @a
     . either impureThrow URI.render
-    . Misc.shareUri
+    . Misc.stUri
     . Misc.setScreenPure sc

@@ -25,10 +25,10 @@ module App.Types
     newUnique,
     newUniqueDuplicator,
     pureUpdate,
-    newUniqueState,
-    newIdentityState,
     newPaymentMethod,
     newAsset,
+    uniqueToIdentity,
+    identityToUnique,
     FieldType (..),
     htmlFieldType,
     userFieldType,
@@ -139,7 +139,6 @@ data StExt f = StExt
     stExtIkm :: Field Text f,
     stExtDoc :: Aes.Crypto,
     stExtHint :: Field DynamicField f,
-    stExtUri :: URI,
     stExtScreen :: Screen
   }
   deriving stock (Generic)
@@ -430,7 +429,7 @@ newModel uri = do
                     ( ext ^. #stExtDoc
                     )
               doc <-
-                btraverse (newUnique . runIdentity)
+                identityToUnique
                   =<< either (throwString . thd3) pure (decodeBinary bDoc)
               pure
                 ( sc,
@@ -623,13 +622,13 @@ newAsset label value amt cur = do
     <*> pure [qty, desc]
     <*> pure Closed
 
-newIdentityState :: St Unique -> St Identity
-newIdentityState =
-  bmap (Identity . uniqueValue)
+uniqueToIdentity :: (FunctorB f) => f Unique -> f Identity
+uniqueToIdentity =
+  bmap $ Identity . uniqueValue
 
-newUniqueState :: (MonadIO m) => St Identity -> m (St Unique)
-newUniqueState =
-  btraverse (newUnique . runIdentity)
+identityToUnique :: (TraversableB f, MonadIO m) => f Identity -> m (f Unique)
+identityToUnique =
+  btraverse $ newUnique . runIdentity
 
 data FieldType
   = -- Rational
@@ -798,7 +797,7 @@ unShareUri uri = do
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
       sc <- either (throwString . thd3) pure $ decodeBinary bSc
       iHint <- either (throwString . thd3) pure $ decodeBinary bHint
-      hint <- btraverse (newUnique . runIdentity) iHint
+      hint <- identityToUnique iHint
       pure
         $ Just
           StExt
@@ -806,7 +805,6 @@ unShareUri uri = do
               stExtIkm = ikm,
               stExtDoc = doc,
               stExtHint = hint,
-              stExtUri = uri,
               stExtScreen = sc
             }
 

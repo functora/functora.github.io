@@ -56,7 +56,7 @@ spec = do
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "serialization" $ do
     st0 <- Types.newModel =<< URI.mkURI "http://localhost"
-    uri <- Misc.shareUri st0
+    uri <- Misc.stUri st0
     st1 <- Types.newModel uri
-    (st0 ^. #modelState . to Types.newIdentityState . #stDoc)
-      `shouldBe` (st1 ^. #modelState . to Types.newIdentityState . #stDoc)
+    (st0 ^. #modelState . to Types.uniqueToIdentity . #stDoc)
+      `shouldBe` (st1 ^. #modelState . to Types.uniqueToIdentity . #stDoc)

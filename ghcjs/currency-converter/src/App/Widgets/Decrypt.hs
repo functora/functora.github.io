@@ -83,6 +83,9 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                     & #modelState
                     . #stDoc
                     .~ uDoc
+                    & #modelState
+                    . #stScreen
+                    %~ unQrCode
 
 onKeyDownAction :: Model -> Uid -> KeyCode -> Action
 onKeyDownAction st uid code =

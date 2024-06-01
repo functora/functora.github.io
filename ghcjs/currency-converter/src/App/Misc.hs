@@ -19,8 +19,8 @@ module App.Misc
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
-    modelToQuery,
-    shareUri,
+    stUri,
+    stExtUri,
     setScreenPure,
     setScreenAction,
     setExtScreenAction,
@@ -237,8 +237,8 @@ newPaymentMethodAction st optic =
     item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
     pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
 
-modelToQuery :: (MonadThrow m) => Model -> m [URI.QueryParam]
-modelToQuery mdl = do
+stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
+stQuery st = do
   kDoc <- URI.mkQueryKey "d"
   vDoc <-
     (URI.mkQueryValue <=< encodeText)
@@ -266,8 +266,6 @@ modelToQuery mdl = do
       URI.QueryParam kHint vHint
     ]
   where
-    st :: St Identity
-    st = newIdentityState $ mdl ^. #modelState
     aes :: Aes.SomeAesKey
     aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
     ekm :: Either Aes.Km Aes.Km
@@ -282,21 +280,62 @@ modelToQuery mdl = do
         . B64URL.encode
         . from @BL.ByteString @ByteString
 
-shareUri :: (MonadThrow m) => Model -> m URI
-shareUri st = do
-  uri <- mkURI baseShareUri
-  qxs <- modelToQuery st
+stExtQuery :: (MonadThrow m) => StExt Identity -> m [URI.QueryParam]
+stExtQuery st = do
+  kDoc <- URI.mkQueryKey "d"
+  vDoc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtDoc)
+  kKm <- URI.mkQueryKey "k"
+  vKm <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtKm)
+  kSc <- URI.mkQueryKey "s"
+  vSc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtScreen)
+  kHint <- URI.mkQueryKey "h"
+  vHint <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtHint)
+  pure
+    [ URI.QueryParam kDoc vDoc,
+      URI.QueryParam kKm vKm,
+      URI.QueryParam kSc vSc,
+      URI.QueryParam kHint vHint
+    ]
+  where
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText =
+      either throw pure
+        . decodeUtf8'
+        . B64URL.encode
+        . from @BL.ByteString @ByteString
+
+stUri :: (MonadThrow m) => Model -> m URI
+stUri st = do
+  uri <- mkURI baseUri
+  qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
       { URI.uriQuery = qxs
       }
 
-baseShareUri :: Text
+stExtUri :: (MonadThrow m) => StExt Unique -> m URI
+stExtUri st = do
+  uri <- mkURI baseUri
+  qxs <- stExtQuery $ uniqueToIdentity st
+  pure
+    $ uri
+      { URI.uriQuery = qxs
+      }
+
+baseUri :: Text
 #ifdef GHCID
-baseShareUri =
+baseUri =
   "http://localhost:8080"
 #else
-baseShareUri =
+baseUri =
   "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
 #endif
 

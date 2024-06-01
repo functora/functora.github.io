@@ -65,7 +65,11 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
       [Header.header "Document" Nothing]
         <> Qr.qr
           st
-          ( ext ^. #stExtUri . to URI.render
+          ( either impureThrow URI.render
+              . Misc.stExtUri
+              $ ext
+              & #stExtScreen
+              %~ unQrCode
           )
           ( Qr.defOpts
               & #optsExtraWidgets
@@ -83,7 +87,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  case Misc.shareUri $ st & #modelState . #stScreen .~ unQrCode sc of
+  case Misc.stUri $ st & #modelState . #stScreen %~ unQrCode of
     Left e -> impureThrow e
     Right uri ->
       [Header.header "Document" Nothing]

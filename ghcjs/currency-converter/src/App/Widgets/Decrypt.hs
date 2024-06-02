@@ -50,11 +50,12 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
     pure $ ChanItem 0 $ \case
       st@Model {modelState = St {stExt = Nothing}} -> st
       st@Model {modelState = St {stExt = Just ext}} ->
-        let aes =
+        let ikm = ext ^. #stExtIkm . #fieldOutput
+            aes =
               Aes.drvSomeAesKey @Aes.Word256
                 $ (ext ^. #stExtKm)
                 & #kmIkm
-                .~ (ext ^. #stExtIkm . #fieldOutput . to (Ikm . encodeUtf8))
+                .~ Ikm (encodeUtf8 ikm)
             eDoc = do
               bDoc <-
                 maybe (Left "Incorrect password!") Right
@@ -81,11 +82,23 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                     . #stExt
                     .~ Nothing
                     & #modelState
+                    . #stIkm
+                    . #fieldInput
+                    . #uniqueValue
+                    .~ ikm
+                    & #modelState
+                    . #stIkm
+                    . #fieldOutput
+                    .~ ikm
+                    & #modelState
                     . #stDoc
                     .~ uDoc
                     & #modelState
+                    . #stPre
+                    .~ (ext ^. #stExtPre)
+                    & #modelState
                     . #stScreen
-                    %~ unQrCode
+                    .~ unQrCode (ext ^. #stExtScreen)
 
 onKeyDownAction :: Model -> Uid -> KeyCode -> Action
 onKeyDownAction st uid code =

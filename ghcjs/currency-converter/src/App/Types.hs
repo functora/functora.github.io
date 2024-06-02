@@ -113,7 +113,7 @@ data St f = St
     stDoc :: StDoc f,
     stIkm :: Field Text f,
     stKm :: Aes.Km,
-    stHint :: Field DynamicField f,
+    stPre :: Field DynamicField f,
     stExt :: Maybe (StExt f)
   }
   deriving stock (Generic)
@@ -138,7 +138,7 @@ data StExt f = StExt
   { stExtKm :: Aes.Km,
     stExtIkm :: Field Text f,
     stExtDoc :: Aes.Crypto,
-    stExtHint :: Field DynamicField f,
+    stExtPre :: Field DynamicField f,
     stExtScreen :: Screen
   }
   deriving stock (Generic)
@@ -395,8 +395,8 @@ newModel uri = do
   paymentMethod <- newPaymentMethod 0 btc
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
-  hint <- newDynamicField $ DynamicFieldText mempty
   mApp <- unShareUri uri
+  defPre <- newDynamicField $ DynamicFieldText "Document"
   let defSc = Editor
   let defDoc =
         StDoc
@@ -404,17 +404,19 @@ newModel uri = do
             stDocAssets = [asset],
             stDocPaymentMethods = [paymentMethod]
           }
-  (sc, doc, ext) <-
+  (sc, doc, pre, ext) <-
     maybe
-      ( pure (defSc, defDoc, Nothing)
+      ( pure (defSc, defDoc, defPre, Nothing)
       )
       ( \ext -> do
           let sc = ext ^. #stExtScreen
+          let pre = ext ^. #stExtPre
           if null $ ext ^. #stExtKm . #kmIkm . #unIkm
             then
               pure
                 ( sc,
                   defDoc,
+                  pre,
                   Just ext
                 )
             else do
@@ -434,6 +436,7 @@ newModel uri = do
               pure
                 ( sc,
                   doc,
+                  pre,
                   Nothing
                 )
       )
@@ -454,7 +457,7 @@ newModel uri = do
                   stDoc = doc,
                   stIkm = ikm,
                   stKm = km,
-                  stHint = hint,
+                  stPre = pre,
                   stExt = ext
                 },
             modelMarket = market,
@@ -779,32 +782,32 @@ unShareUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
   kSc <- URI.mkQueryKey "s"
-  kHint <- URI.mkQueryKey "h"
+  kPre <- URI.mkQueryKey "p"
   let qs = URI.uriQuery uri
   case (,,,)
     <$> asumMap (qsGet kDoc) qs
     <*> asumMap (qsGet kKm) qs
     <*> asumMap (qsGet kSc) qs
-    <*> asumMap (qsGet kHint) qs of
+    <*> asumMap (qsGet kPre) qs of
     Nothing -> pure Nothing
-    Just (vDoc, vKm, vSc, vHint) -> do
+    Just (vDoc, vKm, vSc, vPre) -> do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
       bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
       bSc <- either throwString pure . B64URL.decode $ encodeUtf8 vSc
-      bHint <- either throwString pure . B64URL.decode $ encodeUtf8 vHint
+      bPre <- either throwString pure . B64URL.decode $ encodeUtf8 vPre
       km <- either (throwString . thd3) pure $ decodeBinary bKm
       ikm <- newPasswordField mempty
       doc <- either (throwString . thd3) pure $ decodeBinary bDoc
       sc <- either (throwString . thd3) pure $ decodeBinary bSc
-      iHint <- either (throwString . thd3) pure $ decodeBinary bHint
-      hint <- identityToUnique iHint
+      iPre <- either (throwString . thd3) pure $ decodeBinary bPre
+      pre <- identityToUnique iPre
       pure
         $ Just
           StExt
             { stExtKm = km,
               stExtIkm = ikm,
               stExtDoc = doc,
-              stExtHint = hint,
+              stExtPre = pre,
               stExtScreen = sc
             }
 

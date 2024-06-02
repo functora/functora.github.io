@@ -28,14 +28,14 @@ editorSettings st =
       $ Field.field
         st
         ( #modelState
-            . #stHint
+            . #stPre
         )
         ( Field.defOpts
             & #optsPlaceholder
-            .~ ( "Hint - "
+            .~ ( "Preview - "
                   <> ( st
                         ^. #modelState
-                        . #stHint
+                        . #stPre
                         . #fieldType
                         . to userFieldType
                      )
@@ -43,7 +43,7 @@ editorSettings st =
             & #optsLeadingWidget
             .~ Just
               ( Field.ModalWidget
-                  $ Field.ModalMiniWidget (#modelState . #stHint)
+                  $ Field.ModalMiniWidget (#modelState . #stPre)
               )
         )
         parseDynamicField

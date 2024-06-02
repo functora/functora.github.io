@@ -634,6 +634,7 @@ in {
         via
         vial
         usbutils
+        signal-desktop
       ];
       programs.git = {
         enable = true;

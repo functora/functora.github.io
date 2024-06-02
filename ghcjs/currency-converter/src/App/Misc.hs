@@ -255,15 +255,15 @@ stQuery st = do
   vSc <-
     (URI.mkQueryValue <=< encodeText)
       $ encodeBinary (st ^. #stScreen)
-  kHint <- URI.mkQueryKey "h"
-  vHint <-
+  kPre <- URI.mkQueryKey "p"
+  vPre <-
     (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stHint)
+      $ encodeBinary (st ^. #stPre)
   pure
     [ URI.QueryParam kDoc vDoc,
       URI.QueryParam kKm vKm,
       URI.QueryParam kSc vSc,
-      URI.QueryParam kHint vHint
+      URI.QueryParam kPre vPre
     ]
   where
     aes :: Aes.SomeAesKey
@@ -294,15 +294,15 @@ stExtQuery st = do
   vSc <-
     (URI.mkQueryValue <=< encodeText)
       $ encodeBinary (st ^. #stExtScreen)
-  kHint <- URI.mkQueryKey "h"
-  vHint <-
+  kPre <- URI.mkQueryKey "p"
+  vPre <-
     (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtHint)
+      $ encodeBinary (st ^. #stExtPre)
   pure
     [ URI.QueryParam kDoc vDoc,
       URI.QueryParam kKm vKm,
       URI.QueryParam kSc vSc,
-      URI.QueryParam kHint vHint
+      URI.QueryParam kPre vPre
     ]
   where
     encodeText :: (MonadThrow m) => BL.ByteString -> m Text

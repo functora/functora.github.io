@@ -6,6 +6,7 @@ module App.Misc
     pushActionQueue,
     onKeyDownAction,
     copyIntoClipboard,
+    copyIntoClipboardAction,
     textPopup,
     textPopupPure,
     textPopupClosed,
@@ -88,9 +89,15 @@ copyIntoClipboard st x = do
   unless (null txt) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
-    success <- JS.function $ \_ _ _ -> textPopup st $ "Copied " <> txt
-    failure <- JS.function $ \_ _ _ -> textPopup st $ "Failed to copy " <> txt
+    success <- JS.function $ \_ _ _ -> textPopup @Text st "Copied!"
+    failure <- JS.function $ \_ _ _ -> textPopup @Text st "Failed to copy!"
     void $ prom ^. JS.js2 ("then" :: Text) success failure
+
+copyIntoClipboardAction :: (Show a, Data a) => Model -> a -> Action
+copyIntoClipboardAction st x =
+  PushUpdate $ do
+    copyIntoClipboard st x
+    pure $ ChanItem 0 id
 
 textPopup :: (Show a, Data a) => Model -> a -> JSM ()
 textPopup st x =

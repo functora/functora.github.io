@@ -44,7 +44,7 @@ menu st =
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (screen Converter)
-                        & Button.setIcon (Just "attach_money")
+                        & Button.setIcon (Just "currency_exchange")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"
@@ -55,7 +55,7 @@ menu st =
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (screen Editor)
-                        & Button.setIcon (Just "edit")
+                        & Button.setIcon (Just "settings")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"

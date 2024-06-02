@@ -725,24 +725,13 @@ constTextField st txt opts =
     & TextField.setType (Just . from @Text @String $ htmlFieldType FieldTypeLink)
     & TextField.setLabel (Just . from @Text @String $ opts ^. #optsPlaceholder)
     & TextField.setDisabled True
+    & TextField.setAttributes [class_ "fill"]
+    & TextField.setValue (Just $ from @Text @String txt)
     & TextField.setLeadingIcon
       ( Just
           . fieldIconSimple Leading "content_copy" [Theme.primary]
-          . PushUpdate
-          $ do
-            Misc.copyIntoClipboard st txt
-            pure $ ChanItem 0 id
+          $ Misc.copyIntoClipboardAction st txt
       )
-    --
-    -- TODO : change state in current app instance!
-    --
-    -- & TextField.setTrailingIcon
-    --   ( fmap
-    --       (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
-    --       (opts ^. #optsTrailingWidget)
-    --   )
-    & TextField.setValue (Just $ from @Text @String txt)
-    & TextField.setAttributes [class_ "fill"]
 
 constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st =

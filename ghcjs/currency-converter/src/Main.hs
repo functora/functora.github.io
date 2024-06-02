@@ -28,10 +28,10 @@ main :: IO ()
 main =
   runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
     uri <- URI.mkURI . inspect =<< getCurrentURI
-    st <- newModel uri
+    st <- newModel Nothing uri
     startApp
       App
-        { model = st,
+        { model = st & #modelHide .~ True,
           update = updateModel,
           Miso.view = viewModel,
           subs = mempty,

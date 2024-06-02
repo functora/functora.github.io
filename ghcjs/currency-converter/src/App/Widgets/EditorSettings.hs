@@ -11,6 +11,7 @@ import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
+import qualified Material.Theme as Theme
 import Miso hiding (view)
 import qualified Text.URI as URI
 
@@ -55,15 +56,24 @@ editorSettings st =
       & TextArea.setLabel (Just "Editor link")
       & TextArea.setDisabled True
       & TextArea.setFullwidth True,
-    Cell.bigCell
+    Cell.mediumCell
       $ Button.raised
         ( Button.config
             & Button.setIcon (Just "content_copy")
-            & Button.setAttributes [class_ "fill"]
+            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+            & Button.setOnClick (Misc.copyIntoClipboardAction st editorLink)
+        )
+        "Editor link",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setIcon (Just "login")
+            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
             & Button.setOnClick
               ( PushUpdate $ do
-                  Misc.copyIntoClipboard st editorLink
-                  pure $ ChanItem 0 id
+                  uri <- URI.mkURI $ from @String @Text editorLink
+                  new <- newModel (Just $ st ^. #modelMarket) uri
+                  pure . ChanItem 0 $ const new
               )
         )
         "Editor link",
@@ -78,20 +88,21 @@ editorSettings st =
       $ Button.raised
         ( Button.config
             & Button.setIcon (Just "content_copy")
-            & Button.setAttributes [class_ "fill"]
-            & Button.setOnClick
-              ( PushUpdate $ do
-                  Misc.copyIntoClipboard st editorQrCode
-                  pure $ ChanItem 0 id
-              )
+            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+            & Button.setOnClick (Misc.copyIntoClipboardAction st editorQrCode)
         )
         "Editor QR code",
     Cell.mediumCell
       $ Button.raised
         ( Button.config
             & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill"]
-            & Button.setOnClick (Misc.setScreenAction $ QrCode Editor)
+            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+            & Button.setOnClick
+              ( PushUpdate $ do
+                  uri <- URI.mkURI $ from @String @Text editorQrCode
+                  new <- newModel (Just $ st ^. #modelMarket) uri
+                  pure . ChanItem 0 $ const new
+              )
         )
         "Editor QR code"
   ]

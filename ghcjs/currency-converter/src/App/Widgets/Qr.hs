@@ -53,11 +53,7 @@ qr st txt opts =
                 ( Button.config
                     & Button.setIcon (Just "content_copy")
                     & Button.setAttributes [class_ "fill"]
-                    & Button.setOnClick
-                      ( PushUpdate $ do
-                          Misc.copyIntoClipboard st txt
-                          pure $ ChanItem 0 id
-                      )
+                    & Button.setOnClick (Misc.copyIntoClipboardAction st txt)
                 )
                 "Copy"
           ]

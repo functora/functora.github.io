@@ -39,7 +39,7 @@ mainWidget st =
                     else mempty
                  )
           )
-          ( Menu.menu st
+          ( menu
               <> screenWidget st
               <> [ -- LayoutGrid.cell [LayoutGrid.span12]
                    --  . (: mempty)
@@ -57,6 +57,15 @@ mainWidget st =
           then [div_ [class_ "lds-dual-ring"] mempty]
           else mempty
        )
+  where
+    sc =
+      fromMaybe
+        (st ^. #modelState . #stScreen)
+        (st ^? #modelState . #stExt . _Just . #stExtScreen)
+    menu =
+      case sc of
+        QrCode {} -> mempty
+        _ -> Menu.menu st
 
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stExt = Just ext}} =

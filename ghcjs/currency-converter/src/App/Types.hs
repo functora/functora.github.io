@@ -43,6 +43,7 @@ module App.Types
     newPasswordField,
     FieldPair (..),
     newFieldPair,
+    unShareUri,
   )
 where
 
@@ -371,12 +372,18 @@ deriving via GenericType (Asset Identity) instance Serialise (Asset Identity)
 --
 -- TODO : simplify this !!!!
 --
-newModel :: (MonadThrow m, MonadUnliftIO m) => URI -> m Model
-newModel uri = do
+newModel ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Maybe (MVar Market) ->
+  URI ->
+  m Model
+newModel mMark uri = do
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
-  market <- newMarket
+  market <- maybe newMarket pure mMark
   let btc =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "btc",
@@ -443,7 +450,7 @@ newModel uri = do
       mApp
   let st =
         Model
-          { modelHide = True,
+          { modelHide = False,
             modelMenu = Closed,
             modelState =
               St

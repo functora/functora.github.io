@@ -301,6 +301,7 @@ data ChanItem a = ChanItem
 data Screen
   = Converter
   | Editor
+  | Viewer
   | QrCode Screen
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary, Serialise) via GenericType Screen

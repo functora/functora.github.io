@@ -1,7 +1,7 @@
 module App.TypesSpec (spec) where
 
 import qualified App.Misc as Misc
-import qualified App.Types as Types
+import App.Types
 import qualified Data.Aeson as A
 import qualified Data.Generics as Syb
 import Functora.Prelude
@@ -55,8 +55,8 @@ spec = do
     $ over soplate fun expr
     `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "serialization" $ do
-    st0 <- Types.newModel =<< URI.mkURI "http://localhost"
+    st0 <- newModel Nothing =<< URI.mkURI "http://localhost"
     uri <- Misc.stUri st0
-    st1 <- Types.newModel uri
-    (st0 ^. #modelState . to Types.uniqueToIdentity . #stDoc)
-      `shouldBe` (st1 ^. #modelState . to Types.uniqueToIdentity . #stDoc)
+    st1 <- newModel Nothing uri
+    (st0 ^. #modelState . #stDoc . to uniqueToIdentity)
+      `shouldBe` (st1 ^. #modelState . #stDoc . to uniqueToIdentity)

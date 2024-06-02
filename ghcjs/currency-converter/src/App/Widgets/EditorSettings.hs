@@ -52,6 +52,34 @@ editorSettings st =
     Cell.bigCell
       . TextArea.filled
       $ TextArea.config
+      & TextArea.setValue (Just viewerLink)
+      & TextArea.setLabel (Just "Viewer link")
+      & TextArea.setDisabled True
+      & TextArea.setFullwidth True,
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setIcon (Just "content_copy")
+            & Button.setAttributes [class_ "fill"]
+            & Button.setOnClick (Misc.copyIntoClipboardAction st viewerLink)
+        )
+        "Viewer link",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setIcon (Just "login")
+            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+            & Button.setOnClick
+              ( PushUpdate $ do
+                  uri <- URI.mkURI $ from @String @Text viewerLink
+                  new <- newModel (Just $ st ^. #modelMarket) uri
+                  pure . ChanItem 0 $ const new
+              )
+        )
+        "Viewer link",
+    Cell.bigCell
+      . TextArea.filled
+      $ TextArea.config
       & TextArea.setValue (Just editorLink)
       & TextArea.setLabel (Just "Editor link")
       & TextArea.setDisabled True
@@ -107,6 +135,7 @@ editorSettings st =
         "Editor QR code"
   ]
   where
+    viewerLink = shareLink Viewer st
     editorLink = shareLink Editor st
     editorQrCode = shareLink (QrCode Editor) st
 

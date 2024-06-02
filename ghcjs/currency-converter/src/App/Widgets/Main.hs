@@ -152,6 +152,8 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           . #stDocPaymentMethods
       )
     <> EditorSettings.editorSettings st
+screenWidget st@Model {modelState = St {stScreen = Viewer}} =
+  FieldPairs.fieldPairsViewer (st ^. #modelState . #stDoc . #stDocFieldPairs)
 
 tosWidget :: View Action
 tosWidget =

@@ -1,14 +1,33 @@
 module App.Widgets.FieldPairs
-  ( fieldPairs,
+  ( fieldPairsViewer,
+    fieldPairs,
   )
 where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
+import qualified Material.Typography as Typography
 import Miso hiding (at, view)
+import Miso.String (ms)
+
+fieldPairsViewer :: [FieldPair DynamicField Unique] -> [View Action]
+fieldPairsViewer = (>>= fieldPairViewer)
+
+fieldPairViewer :: FieldPair DynamicField Unique -> [View Action]
+fieldPairViewer pair =
+  [ Cell.mediumCell
+      $ strong_
+        [Typography.typography]
+        [text . ms $ pair ^. #fieldPairKey . #fieldOutput],
+    Cell.mediumCell
+      $ span_
+        [Typography.typography]
+        [text . inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput]
+  ]
 
 fieldPairs ::
   HeaderOrFooter ->

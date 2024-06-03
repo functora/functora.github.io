@@ -10,12 +10,14 @@ module App.Widgets.Field
     passwordField,
     constTextField,
     constLinkField,
+    dynamicFieldViewer,
   )
 where
 
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.Switch as Switch
 import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
@@ -27,6 +29,7 @@ import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
+import qualified Material.Typography as Typography
 import Miso hiding (URI, view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
@@ -752,7 +755,7 @@ constTextField st txt opts =
         & TextField.setDisabled True
         & TextField.setValue (Just $ from @Text @String txt)
         & TextField.setType
-          ( Just . from @Text @String $ htmlFieldType FieldTypeLink
+          ( Just . from @Text @String $ htmlFieldType FieldTypeText
           )
         & TextField.setLabel
           ( Just . from @Text @String $ opts ^. #optsPlaceholder
@@ -779,3 +782,49 @@ constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st =
   constTextField st
     . URI.render
+
+--
+-- TODO : support optional copying widgets
+--
+dynamicFieldViewer :: Model -> Field DynamicField Unique -> [View Action]
+dynamicFieldViewer st value =
+  case value ^. #fieldType of
+    FieldTypeNumber -> plain out text
+    FieldTypePercent -> plain out $ text . (<> "%")
+    FieldTypeText -> plain out text
+    FieldTypeTitle -> header out
+    FieldTypeQrCode -> Qr.qr st out Qr.defOpts
+    FieldTypeHtml -> plain out rawHtml
+    FieldTypePassword -> plain out $ const "*****"
+  where
+    out = inspectDynamicField $ value ^. #fieldOutput
+
+plain ::
+  ( Container a,
+    ToMisoString a
+  ) =>
+  a ->
+  (MisoString -> View action) ->
+  [View action]
+plain out widget =
+  if null out
+    then mempty
+    else
+      [ span_
+          [Typography.typography]
+          [widget $ ms out]
+      ]
+
+header :: Text -> [View Action]
+header txt =
+  if null txt
+    then mempty
+    else
+      [ div_
+          [ Typography.headline4,
+            class_ "fill",
+            style_ [("text-align", "center")]
+          ]
+          [ text $ ms txt
+          ]
+      ]

@@ -73,7 +73,9 @@ screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stExt = Just ext}} =
   case ext ^. #stExtScreen of
     QrCode sc ->
-      [Header.header "Document" Nothing]
+      Header.headerWrapper
+        ( Field.dynamicFieldViewer st (ext ^. #stExtPre)
+        )
         <> Qr.qr
           st
           ( either impureThrow URI.render
@@ -101,10 +103,9 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   case Misc.stUri $ st & #modelState . #stScreen %~ unQrCode of
     Left e -> impureThrow e
     Right uri ->
-      --
-      -- TODO : this headers needs to be dynamic input!
-      --
-      [Header.header "Document" Nothing]
+      Header.headerWrapper
+        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
+        )
         <> Qr.qr
           st
           ( URI.render uri
@@ -228,7 +229,14 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
       )
     <> EditorSettings.editorSettings st
 screenWidget st@Model {modelState = St {stScreen = Viewer}} =
-  FieldPairs.fieldPairsViewer (st ^. #modelState . #stDoc . #stDocFieldPairs)
+  Header.headerWrapper
+    ( Field.dynamicFieldViewer
+        st
+        (st ^. #modelState . #stDoc . #stDocFieldPairsHeader)
+    )
+    <> FieldPairs.fieldPairsViewer
+      st
+      (st ^. #modelState . #stDoc . #stDocFieldPairs)
 
 tosWidget :: View Action
 tosWidget =

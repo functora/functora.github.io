@@ -194,9 +194,9 @@ data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
     stDocAssets :: [Asset f],
     stDocPaymentMethods :: [PaymentMethod f],
-    stDocFieldPairsHeader :: Field Text f,
-    stDocAssetsHeader :: Field Text f,
-    stDocPaymentMethodsHeader :: Field Text f
+    stDocFieldPairsHeader :: Field DynamicField f,
+    stDocAssetsHeader :: Field DynamicField f,
+    stDocPaymentMethodsHeader :: Field DynamicField f
   }
   deriving stock (Generic)
 
@@ -411,13 +411,13 @@ newModel mMark uri = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
-  fieldPairsHeader <- newTextField "Invoice"
-  assetsHeader <- newTextField "Line items"
-  paymentMethodsHeader <- newTextField "Payment methods"
+  fieldPairsHeader <- newDynamicTitleField "Invoice #6102"
+  assetsHeader <- newDynamicTitleField "Line items"
+  paymentMethodsHeader <- newDynamicTitleField "Payment methods"
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
-  defPre <- newDynamicField $ DynamicFieldText "Document"
+  defPre <- newDynamicTitleField "Document"
   let defSc = Editor
   let defDoc =
         StDoc
@@ -578,6 +578,12 @@ newDynamicField output =
     output
     inspectDynamicField
 
+newDynamicTitleField :: (MonadIO m) => Text -> m (Field DynamicField Unique)
+newDynamicTitleField =
+  fmap (& #fieldType .~ FieldTypeTitle)
+    . newDynamicField
+    . DynamicFieldText
+
 newPasswordField :: (MonadIO m) => Text -> m (Field Text Unique)
 newPasswordField output =
   newField FieldTypePassword output id
@@ -663,8 +669,8 @@ data FieldType
   | FieldTypePercent
   | -- Text
     FieldTypeText
+  | FieldTypeTitle
   | FieldTypeQrCode
-  | FieldTypeLink
   | FieldTypeHtml
   | FieldTypePassword
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
@@ -675,8 +681,8 @@ htmlFieldType = \case
   FieldTypeNumber -> "number"
   FieldTypePercent -> "number"
   FieldTypeText -> "text"
+  FieldTypeTitle -> "text"
   FieldTypeQrCode -> "text"
-  FieldTypeLink -> "text"
   FieldTypeHtml -> "text"
   FieldTypePassword -> "password"
 
@@ -685,8 +691,8 @@ userFieldType = \case
   FieldTypeNumber -> "Number"
   FieldTypePercent -> "Percent"
   FieldTypeText -> "Text"
+  FieldTypeTitle -> "Title"
   FieldTypeQrCode -> "QR code"
-  FieldTypeLink -> "Link"
   FieldTypeHtml -> "HTML"
   FieldTypePassword -> "Password"
 

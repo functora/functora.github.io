@@ -12,24 +12,30 @@ import qualified Material.Typography as Typography
 import Miso hiding (at, view)
 import Miso.String (ms)
 
-fieldPairsViewer :: [FieldPair DynamicField Unique] -> [View Action]
-fieldPairsViewer = (>>= fieldPairViewer)
+fieldPairsViewer :: Model -> [FieldPair DynamicField Unique] -> [View Action]
+fieldPairsViewer st = (>>= fieldPairViewer st)
 
-fieldPairViewer :: FieldPair DynamicField Unique -> [View Action]
-fieldPairViewer pair =
-  [ Cell.mediumCell
-      $ strong_
-        [ Typography.typography
+fieldPairViewer :: Model -> FieldPair DynamicField Unique -> [View Action]
+fieldPairViewer st pair =
+  ( if null k
+      then mempty
+      else
+        [ cell
+            $ strong_
+              [Typography.typography]
+              [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
         ]
-        [ text . ms $ pair ^. #fieldPairKey . #fieldOutput
-        ],
-    Cell.mediumCell
-      $ span_
-        [ Typography.typography
-        ]
-        [ text . ms . inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
-        ]
-  ]
+  )
+    <> [ cell
+          . div_ mempty
+          $ Field.dynamicFieldViewer st (pair ^. #fieldPairValue)
+       ]
+  where
+    k = pair ^. #fieldPairKey . #fieldOutput
+    cell =
+      if null k
+        then Cell.bigCell
+        else Cell.mediumCell
 
 fieldPairs ::
   Model ->

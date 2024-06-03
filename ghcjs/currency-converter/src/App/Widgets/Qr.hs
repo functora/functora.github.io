@@ -17,20 +17,22 @@ import Miso hiding (at, view)
 import Miso.String (ms)
 
 qr :: Model -> Text -> Opts -> [View Action]
-qr st txt opts =
-  catMaybes
-    [ fmap
-        ( \img ->
-            Cell.bigCell
-              $ img_
-                [ class_ "fill",
-                  src_ $ ms img
-                ]
-        )
-        $ newQrImg txt
-    ]
-    <> copyWidget
-    <> fmap extraCell extraWidgets
+qr st txt opts
+  | null txt = mempty
+  | otherwise =
+      catMaybes
+        [ fmap
+            ( \img ->
+                Cell.bigCell
+                  $ img_
+                    [ class_ "fill",
+                      src_ $ ms img
+                    ]
+            )
+            $ newQrImg txt
+        ]
+        <> copyWidget
+        <> fmap extraCell extraWidgets
   where
     allowCopy = opts ^. #optsAllowCopy
     extraWidgets = opts ^. #optsExtraWidgets

@@ -20,6 +20,7 @@ module App.Types
     OnlineOrOffline (..),
     StaticOrDynamic (..),
     LeadingOrTrailing (..),
+    FilledOrOutlined (..),
     OpenedOrClosed (..),
     newModel,
     newUnique,
@@ -192,7 +193,10 @@ deriving via GenericType (StConv Identity) instance Serialise (StConv Identity)
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
     stDocAssets :: [Asset f],
-    stDocPaymentMethods :: [PaymentMethod f]
+    stDocPaymentMethods :: [PaymentMethod f],
+    stDocFieldPairsHeader :: Field Text f,
+    stDocAssetsHeader :: Field Text f,
+    stDocPaymentMethodsHeader :: Field Text f
   }
   deriving stock (Generic)
 
@@ -341,6 +345,12 @@ data LeadingOrTrailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary, Serialise) via GenericType LeadingOrTrailing
 
+data FilledOrOutlined
+  = Filled
+  | Outlined
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (Binary, Serialise) via GenericType FilledOrOutlined
+
 data OpenedOrClosed
   = Opened
   | Closed
@@ -401,6 +411,9 @@ newModel mMark uri = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   asset <- newAsset "Description" "Jeans" 100 usd
   paymentMethod <- newPaymentMethod 0 btc
+  fieldPairsHeader <- newTextField "Invoice"
+  assetsHeader <- newTextField "Line items"
+  paymentMethodsHeader <- newTextField "Payment methods"
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
@@ -410,7 +423,10 @@ newModel mMark uri = do
         StDoc
           { stDocFieldPairs = [issuer, client],
             stDocAssets = [asset],
-            stDocPaymentMethods = [paymentMethod]
+            stDocPaymentMethods = [paymentMethod],
+            stDocFieldPairsHeader = fieldPairsHeader,
+            stDocAssetsHeader = assetsHeader,
+            stDocPaymentMethodsHeader = paymentMethodsHeader
           }
   (sc, doc, pre, ext) <-
     maybe

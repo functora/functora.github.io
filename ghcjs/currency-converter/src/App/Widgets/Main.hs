@@ -18,6 +18,7 @@ import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
+import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String (ms)
@@ -65,6 +66,7 @@ mainWidget st =
     menu =
       case sc of
         QrCode {} -> mempty
+        _ | isJust (st ^. #modelState . #stExt) -> mempty
         _ -> Menu.menu st
 
 screenWidget :: Model -> [View Action]
@@ -99,6 +101,9 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   case Misc.stUri $ st & #modelState . #stScreen %~ unQrCode of
     Left e -> impureThrow e
     Right uri ->
+      --
+      -- TODO : this headers needs to be dynamic input!
+      --
       [Header.header "Document" Nothing]
         <> Qr.qr
           st
@@ -143,8 +148,78 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         Currency.swapCurrencies
       ]
 screenWidget st@Model {modelState = St {stScreen = Editor}} =
-  FieldPairs.fieldPairs Header st (#modelState . #stDoc . #stDocFieldPairs)
-    <> Assets.assets st (#modelState . #stDoc . #stDocAssets)
+  Header.headerEditor
+    st
+    ( #modelState
+        . #stDoc
+        . #stDocFieldPairsHeader
+    )
+    ( Field.defOpts
+        & #optsPlaceholder
+        .~ "Header"
+        & #optsLeadingWidget
+        .~ Nothing
+        & #optsTrailingWidget
+        .~ Just
+          ( Field.ActionWidget "add" [Theme.primary]
+              . Misc.newFieldPairAction
+              $ #modelState
+              . #stDoc
+              . #stDocFieldPairs
+          )
+    )
+    <> FieldPairs.fieldPairs
+      st
+      ( #modelState
+          . #stDoc
+          . #stDocFieldPairs
+      )
+    <> Header.headerEditor
+      st
+      ( #modelState
+          . #stDoc
+          . #stDocAssetsHeader
+      )
+      ( Field.defOpts
+          & #optsPlaceholder
+          .~ "Assets"
+          & #optsLeadingWidget
+          .~ Nothing
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.ActionWidget "add" [Theme.primary]
+                . Misc.newAssetAction st
+                $ #modelState
+                . #stDoc
+                . #stDocAssets
+            )
+      )
+    <> Assets.assets
+      st
+      ( #modelState
+          . #stDoc
+          . #stDocAssets
+      )
+    <> Header.headerEditor
+      st
+      ( #modelState
+          . #stDoc
+          . #stDocPaymentMethodsHeader
+      )
+      ( Field.defOpts
+          & #optsPlaceholder
+          .~ "Payments"
+          & #optsLeadingWidget
+          .~ Nothing
+          & #optsTrailingWidget
+          .~ Just
+            ( Field.ActionWidget "add" [Theme.primary]
+                . Misc.newPaymentMethodAction st
+                $ #modelState
+                . #stDoc
+                . #stDocPaymentMethods
+            )
+      )
     <> PaymentMethods.paymentMethods
       st
       ( #modelState

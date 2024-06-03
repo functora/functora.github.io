@@ -19,12 +19,13 @@ swapAmounts =
     ]
     . (: mempty)
     $ Button.raised
-      ( Button.setOnClick onClickAction
-          . Button.setAttributes
+      ( Button.config
+          & Button.setIcon (Just "swap_horizontal_circle")
+          & Button.setOnClick onClickAction
+          & Button.setAttributes
             [ class_ "fill",
               Theme.secondaryBg
             ]
-          $ Button.config
       )
       "Swap amounts"
   where

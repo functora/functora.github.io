@@ -33,12 +33,14 @@ import qualified Text.URI as URI
 
 data Opts = Opts
   { optsDisabled :: Bool,
+    optsFullWidth :: Bool,
     optsPlaceholder :: Text,
     optsExtraOnInput :: Model -> Model,
     optsLeadingWidget :: Maybe OptsWidget,
     optsTrailingWidget :: Maybe OptsWidget,
     optsOnKeyDownAction :: Uid -> KeyCode -> Action,
-    optsExtraAttributes :: [Attribute Action]
+    optsExtraAttributes :: [Attribute Action],
+    optsFilledOrOutlined :: FilledOrOutlined
   }
   deriving stock (Generic)
 
@@ -49,6 +51,7 @@ data OptsWidget
   | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
+  | ActionWidget Text [Attribute Action] Action
   | ModalWidget ModalWidget'
 
 data ModalWidget' where
@@ -81,12 +84,14 @@ defOpts :: Opts
 defOpts =
   Opts
     { optsDisabled = False,
+      optsFullWidth = True,
       optsPlaceholder = mempty,
       optsExtraOnInput = id,
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
       optsOnKeyDownAction = Misc.onKeyDownAction,
-      optsExtraAttributes = mempty
+      optsExtraAttributes = mempty,
+      optsFilledOrOutlined = Filled
     }
 
 field ::
@@ -99,6 +104,9 @@ field ::
 field st optic opts parser viewer =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span4Phone,
+      LayoutGrid.alignMiddle,
       style_
         [ ("display", "flex"),
           ("align-items", "center")
@@ -116,7 +124,9 @@ field st optic opts parser viewer =
                   _ -> mempty
               )
       )
-    <> [ TextField.filled
+    <> [ case opts ^. #optsFilledOrOutlined of
+          Filled -> TextField.filled
+          Outlined -> TextField.outlined
           $ TextField.config
           & TextField.setType
             ( fmap
@@ -139,11 +149,14 @@ field st optic opts parser viewer =
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
-            ( [ class_ "fill",
-                id_ . ms $ htmlUid @Text uid,
+            ( [ id_ . ms $ htmlUid @Text uid,
                 onKeyDown . optsOnKeyDownAction opts $ uid,
                 onBlur onBlurAction
               ]
+                <> ( if opts ^. #optsFullWidth
+                      then [class_ "fill"]
+                      else mempty
+                   )
                 <> ( opts ^. #optsExtraAttributes
                    )
             )
@@ -337,6 +350,8 @@ fieldIcon st optic lot extraOnInput = \case
               . #fieldModalState
               .~ Opened
         )
+  ActionWidget icon attrs action ->
+    fieldIconSimple lot (from @Text @String icon) attrs action
   where
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
@@ -720,18 +735,45 @@ selectTypeWidget st optic =
 
 constTextField :: Model -> Text -> Opts -> View Action
 constTextField st txt opts =
-  TextField.filled
-    $ TextField.config
-    & TextField.setType (Just . from @Text @String $ htmlFieldType FieldTypeLink)
-    & TextField.setLabel (Just . from @Text @String $ opts ^. #optsPlaceholder)
-    & TextField.setDisabled True
-    & TextField.setAttributes [class_ "fill"]
-    & TextField.setValue (Just $ from @Text @String txt)
-    & TextField.setLeadingIcon
-      ( Just
-          . fieldIconSimple Leading "content_copy" [Theme.primary]
-          $ Misc.copyIntoClipboardAction st txt
-      )
+  LayoutGrid.cell
+    [ LayoutGrid.span6Desktop,
+      LayoutGrid.span4Tablet,
+      LayoutGrid.span4Phone,
+      LayoutGrid.alignMiddle,
+      style_
+        [ ("display", "flex"),
+          ("align-items", "center")
+        ]
+    ]
+    [ case opts ^. #optsFilledOrOutlined of
+        Filled -> TextField.filled
+        Outlined -> TextField.outlined
+        $ TextField.config
+        & TextField.setDisabled True
+        & TextField.setValue (Just $ from @Text @String txt)
+        & TextField.setType
+          ( Just . from @Text @String $ htmlFieldType FieldTypeLink
+          )
+        & TextField.setLabel
+          ( Just . from @Text @String $ opts ^. #optsPlaceholder
+          )
+        & TextField.setLeadingIcon
+          ( fmap
+              ( fieldIconSimple Leading "content_copy" mempty . \case
+                  CopyWidget -> Misc.copyIntoClipboardAction st txt
+                  _ -> error "constTextField unsupported widget"
+              )
+              (opts ^. #optsLeadingWidget)
+          )
+        & TextField.setAttributes
+          ( ( if opts ^. #optsFullWidth
+                then [class_ "fill"]
+                else mempty
+            )
+              <> ( opts ^. #optsExtraAttributes
+                 )
+          )
+    ]
 
 constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st =

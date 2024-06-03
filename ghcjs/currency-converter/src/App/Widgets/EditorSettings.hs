@@ -7,7 +7,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
-import qualified App.Widgets.Header as Header
+import qualified App.Widgets.Frame as Frame
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
@@ -17,7 +17,17 @@ import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
 editorSettings st =
-  [ Header.header "Share" Nothing,
+  [ Cell.bigCell
+      $ div_
+        [ style_
+            [ ("display", "flex"),
+              ("align-items", "center"),
+              ("justify-content", "center")
+            ]
+        ]
+        [ Cell.mediumCell
+            $ Frame.frame [text "Sharing"]
+        ],
     Cell.mediumCell
       $ Field.passwordField
         st

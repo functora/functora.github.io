@@ -187,6 +187,7 @@ swapCurrencies =
     ]
     [ Button.raised
         ( Button.config
+            & Button.setIcon (Just "swap_vertical_circle")
             & Button.setOnClick onClickAction
             & Button.setAttributes
               [ class_ "fill",

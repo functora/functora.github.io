@@ -7,7 +7,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
-import qualified App.Widgets.Frame as Frame
+import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
@@ -17,133 +17,143 @@ import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
 editorSettings st =
-  [ Cell.bigCell
-      $ div_
-        [ style_
-            [ ("display", "flex"),
-              ("align-items", "center"),
-              ("justify-content", "center")
-            ]
-        ]
-        [ Cell.mediumCell
-            $ Frame.frame [text "Sharing"]
-        ],
-    Cell.mediumCell
-      $ Field.passwordField
-        st
-        ( #modelState
-            . #stIkm
-        )
-        Field.defOpts,
-    Cell.mediumCell
-      $ Field.field
-        st
-        ( #modelState
-            . #stPre
-        )
-        ( Field.defOpts
-            & #optsPlaceholder
-            .~ ( "Preview - "
-                  <> ( st
-                        ^. #modelState
-                        . #stPre
-                        . #fieldType
-                        . to userFieldType
-                     )
-               )
-            & #optsLeadingWidget
-            .~ Just
-              ( Field.ModalWidget
-                  $ Field.ModalMiniWidget (#modelState . #stPre)
-              )
-        )
-        parseDynamicField
-        inspectDynamicField,
-    Cell.bigCell
-      . TextArea.filled
-      $ TextArea.config
-      & TextArea.setValue (Just viewerLink)
-      & TextArea.setLabel (Just "Viewer link")
-      & TextArea.setDisabled True
-      & TextArea.setFullwidth True,
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "content_copy")
-            & Button.setAttributes [class_ "fill"]
-            & Button.setOnClick (Misc.copyIntoClipboardAction st viewerLink)
-        )
-        "Viewer link",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick
-              ( PushUpdate $ do
-                  uri <- URI.mkURI $ from @String @Text viewerLink
-                  new <- newModel (Just $ st ^. #modelMarket) uri
-                  pure . ChanItem 0 $ const new
-              )
-        )
-        "Viewer link",
-    Cell.bigCell
-      . TextArea.filled
-      $ TextArea.config
-      & TextArea.setValue (Just editorLink)
-      & TextArea.setLabel (Just "Editor link")
-      & TextArea.setDisabled True
-      & TextArea.setFullwidth True,
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "content_copy")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick (Misc.copyIntoClipboardAction st editorLink)
-        )
-        "Editor link",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick
-              ( PushUpdate $ do
-                  uri <- URI.mkURI $ from @String @Text editorLink
-                  new <- newModel (Just $ st ^. #modelMarket) uri
-                  pure . ChanItem 0 $ const new
-              )
-        )
-        "Editor link",
-    Cell.bigCell
-      . TextArea.filled
-      $ TextArea.config
-      & TextArea.setValue (Just editorQrCode)
-      & TextArea.setLabel (Just "Editor QR code")
-      & TextArea.setDisabled True
-      & TextArea.setFullwidth True,
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "content_copy")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick (Misc.copyIntoClipboardAction st editorQrCode)
-        )
-        "Editor QR code",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick
-              ( PushUpdate $ do
-                  uri <- URI.mkURI $ from @String @Text editorQrCode
-                  new <- newModel (Just $ st ^. #modelMarket) uri
-                  pure . ChanItem 0 $ const new
-              )
-        )
-        "Editor QR code"
-  ]
+  Header.headerEditor
+    st
+    ( #modelState
+        . #stPre
+    )
+    ( Field.defOpts
+        & #optsPlaceholder
+        .~ ( "Preview - "
+              <> ( st
+                    ^. #modelState
+                    . #stPre
+                    . #fieldType
+                    . to userFieldType
+                 )
+           )
+        & #optsLeadingWidget
+        .~ Just
+          ( Field.ModalWidget
+              $ Field.ModalMiniWidget (#modelState . #stPre)
+          )
+    )
+    <> [ Cell.mediumCell
+          $ Field.field
+            st
+            ( #modelState
+                . #stPre
+            )
+            ( Field.defOpts
+                & #optsPlaceholder
+                .~ ( "Preview - "
+                      <> ( st
+                            ^. #modelState
+                            . #stPre
+                            . #fieldType
+                            . to userFieldType
+                         )
+                   )
+                & #optsLeadingWidget
+                .~ Just
+                  ( Field.ModalWidget
+                      $ Field.ModalMiniWidget (#modelState . #stPre)
+                  )
+            )
+            parseDynamicField
+            inspectDynamicField,
+         Cell.mediumCell
+          $ Field.passwordField
+            st
+            ( #modelState
+                . #stIkm
+            )
+            Field.defOpts,
+         Cell.bigCell
+          . TextArea.filled
+          $ TextArea.config
+          & TextArea.setValue (Just viewerLink)
+          & TextArea.setLabel (Just "Viewer link")
+          & TextArea.setDisabled True
+          & TextArea.setFullwidth True,
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "content_copy")
+                & Button.setAttributes [class_ "fill"]
+                & Button.setOnClick (Misc.copyIntoClipboardAction st viewerLink)
+            )
+            "Viewer link",
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "login")
+                & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+                & Button.setOnClick
+                  ( PushUpdate $ do
+                      uri <- URI.mkURI $ from @String @Text viewerLink
+                      new <- newModel (Just $ st ^. #modelMarket) uri
+                      pure . ChanItem 0 $ const new
+                  )
+            )
+            "Viewer link",
+         Cell.bigCell
+          . TextArea.filled
+          $ TextArea.config
+          & TextArea.setValue (Just editorLink)
+          & TextArea.setLabel (Just "Editor link")
+          & TextArea.setDisabled True
+          & TextArea.setFullwidth True,
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "content_copy")
+                & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+                & Button.setOnClick (Misc.copyIntoClipboardAction st editorLink)
+            )
+            "Editor link",
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "login")
+                & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+                & Button.setOnClick
+                  ( PushUpdate $ do
+                      uri <- URI.mkURI $ from @String @Text editorLink
+                      new <- newModel (Just $ st ^. #modelMarket) uri
+                      pure . ChanItem 0 $ const new
+                  )
+            )
+            "Editor link",
+         Cell.bigCell
+          . TextArea.filled
+          $ TextArea.config
+          & TextArea.setValue (Just editorQrCode)
+          & TextArea.setLabel (Just "Editor QR code")
+          & TextArea.setDisabled True
+          & TextArea.setFullwidth True,
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "content_copy")
+                & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+                & Button.setOnClick (Misc.copyIntoClipboardAction st editorQrCode)
+            )
+            "Editor QR code",
+         Cell.mediumCell
+          $ Button.raised
+            ( Button.config
+                & Button.setIcon (Just "login")
+                & Button.setAttributes [class_ "fill", Theme.secondaryBg]
+                & Button.setOnClick
+                  ( PushUpdate $ do
+                      uri <- URI.mkURI $ from @String @Text editorQrCode
+                      new <- newModel (Just $ st ^. #modelMarket) uri
+                      pure . ChanItem 0 $ const new
+                  )
+            )
+            "Editor QR code"
+       ]
   where
     viewerLink = shareLink Viewer st
     editorLink = shareLink Editor st

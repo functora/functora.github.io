@@ -26,12 +26,17 @@ fieldPairViewer st pair =
               [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
         ]
   )
-    <> [ cell
-          . div_ mempty
-          $ Field.dynamicFieldViewer st (pair ^. #fieldPairValue)
-       ]
+    <> ( if null k && null v
+          then mempty
+          else
+            [ cell
+                . div_ mempty
+                $ Field.dynamicFieldViewer st (pair ^. #fieldPairValue)
+            ]
+       )
   where
     k = pair ^. #fieldPairKey . #fieldOutput
+    v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
     cell =
       if null k
         then Cell.bigCell

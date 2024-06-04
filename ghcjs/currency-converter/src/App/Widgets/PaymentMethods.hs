@@ -1,5 +1,6 @@
 module App.Widgets.PaymentMethods
-  ( paymentMethods,
+  ( paymentMethodsViewer,
+    paymentMethods,
   )
 where
 
@@ -10,6 +11,22 @@ import qualified App.Widgets.FieldPairs as FieldPairs
 import Functora.Prelude as Prelude
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
+
+paymentMethodsViewer :: Model -> [PaymentMethod Unique] -> [View Action]
+paymentMethodsViewer st = (>>= paymentMethodViewer st)
+
+paymentMethodViewer :: Model -> PaymentMethod Unique -> [View Action]
+paymentMethodViewer st mtd =
+  Currency.moneyViewer
+    ( Currency.defOpts
+        & #optsLabel
+        .~ Just "Total"
+        & #optsShowZeroAmount
+        .~ False
+    )
+    ( mtd ^. #paymentMethodMoney
+    )
+    <> FieldPairs.fieldPairsViewer st (mtd ^. #paymentMethodFieldPairs)
 
 paymentMethods ::
   Model ->

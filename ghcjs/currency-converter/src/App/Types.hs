@@ -650,11 +650,11 @@ newPaymentMethod amt cur = do
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
-  qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
   desc <- newFieldPair label $ DynamicFieldText value
+  qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
   Asset
     <$> newMoney amt cur
-    <*> pure [qty, desc]
+    <*> pure [desc, qty]
     <*> pure Closed
 
 uniqueToIdentity :: (FunctorB f) => f Unique -> f Identity

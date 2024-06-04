@@ -282,6 +282,22 @@ screenWidget st@Model {modelState = St {stScreen = Viewer}} =
     <> FieldPairs.fieldPairsViewer
       st
       (st ^. #modelState . #stDoc . #stDocFieldPairs)
+    <> Header.headerWrapper
+      ( Field.dynamicFieldViewer
+          st
+          (st ^. #modelState . #stDoc . #stDocAssetsHeader)
+      )
+    <> Assets.assetsViewer
+      st
+      (st ^. #modelState . #stDoc . #stDocAssets)
+    <> Header.headerWrapper
+      ( Field.dynamicFieldViewer
+          st
+          (st ^. #modelState . #stDoc . #stDocPaymentMethodsHeader)
+      )
+    <> PaymentMethods.paymentMethodsViewer
+      st
+      (st ^. #modelState . #stDoc . #stDocPaymentMethods)
 
 tosWidget :: View Action
 tosWidget =

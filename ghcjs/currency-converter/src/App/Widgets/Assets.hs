@@ -1,5 +1,6 @@
 module App.Widgets.Assets
-  ( assets,
+  ( assetsViewer,
+    assets,
   )
 where
 
@@ -10,6 +11,14 @@ import qualified App.Widgets.FieldPairs as FieldPairs
 import Functora.Prelude
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
+
+assetsViewer :: Model -> [Asset Unique] -> [View Action]
+assetsViewer st = (>>= assetViewer st)
+
+assetViewer :: Model -> Asset Unique -> [View Action]
+assetViewer st asset =
+  FieldPairs.fieldPairsViewer st (asset ^. #assetFieldPairs)
+    <> Currency.moneyViewer Currency.defOpts (asset ^. #assetPrice)
 
 assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
 assets st optic = do

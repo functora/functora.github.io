@@ -1,13 +1,17 @@
 module App.Widgets.Currency
-  ( selectCurrency,
+  ( Opts (..),
+    defOpts,
+    moneyViewer,
+    selectCurrency,
     swapCurrencies,
   )
 where
 
 import App.Types
+import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified Data.List.NonEmpty as NonEmpty
-import Functora.Money hiding (Currency)
+import Functora.Money hiding (Currency, Money)
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -15,9 +19,51 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
 import qualified Material.Theme as Theme
+import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
+
+data Opts = Opts
+  { optsLabel :: Maybe Text,
+    optsShowZeroAmount :: Bool
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts
+defOpts =
+  Opts
+    { optsLabel = Just "Price",
+      optsShowZeroAmount = True
+    }
+
+moneyViewer :: Opts -> Money Unique -> [View Action]
+moneyViewer opts money =
+  catMaybes
+    [ fmap
+        ( \label ->
+            cell
+              $ strong_
+                [Typography.typography]
+                [text $ ms label]
+        )
+        (opts ^. #optsLabel),
+      Just
+        . cell
+        $ div_
+          [Typography.typography]
+          [ text
+              . ms
+              $ (money ^. #moneyAmount . #fieldInput . #uniqueValue)
+              <> " "
+              <> inspectCurrencyInfo (money ^. #moneyCurrency . #currencyOutput)
+          ]
+    ]
+  where
+    cell =
+      if isJust $ opts ^. #optsLabel
+        then Cell.mediumCell
+        else Cell.bigCell
 
 selectCurrency ::
   Model ->

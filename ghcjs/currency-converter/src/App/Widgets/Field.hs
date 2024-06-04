@@ -821,7 +821,7 @@ header txt =
     then mempty
     else
       [ div_
-          [ Typography.headline4,
+          [ Typography.headline5,
             class_ "fill",
             style_ [("text-align", "center")]
           ]

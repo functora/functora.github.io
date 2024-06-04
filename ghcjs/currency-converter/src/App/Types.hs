@@ -65,6 +65,7 @@ import qualified Text.URI as URI
 data Model = Model
   { modelHide :: Bool,
     modelMenu :: OpenedOrClosed,
+    modelShare :: OpenedOrClosed,
     modelState :: St Unique,
     --
     -- TODO : modelStateHistory :: [St Unique]
@@ -417,7 +418,7 @@ newModel mMark uri = do
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
-  defPre <- newDynamicTitleField "Document"
+  defPre <- newDynamicTitleField mempty
   let defSc = Editor
   let defDoc =
         StDoc
@@ -469,6 +470,7 @@ newModel mMark uri = do
         Model
           { modelHide = False,
             modelMenu = Closed,
+            modelShare = Closed,
             modelState =
               St
                 { stScreen = sc,

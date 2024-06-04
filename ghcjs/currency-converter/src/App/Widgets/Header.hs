@@ -47,7 +47,7 @@ headerViewer txt =
     else
       [ LayoutGrid.cell
           [ LayoutGrid.span12,
-            Typography.headline4,
+            Typography.headline5,
             style_ [("text-align", "center")]
           ]
           [ text $ ms txt

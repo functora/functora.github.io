@@ -149,27 +149,41 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         Currency.swapCurrencies
       ]
 screenWidget st@Model {modelState = St {stScreen = Editor}} =
-  EditorSettings.editorSettings st
-    <> Header.headerEditor
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocFieldPairsHeader
-      )
-      ( Field.defOpts
-          & #optsPlaceholder
-          .~ "Header"
-          & #optsLeadingWidget
-          .~ Nothing
-          & #optsTrailingWidget
-          .~ Just
-            ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newFieldPairAction
-                $ #modelState
-                . #stDoc
-                . #stDocFieldPairs
-            )
-      )
+  Header.headerEditor
+    st
+    ( #modelState
+        . #stDoc
+        . #stDocFieldPairsHeader
+    )
+    ( Field.defOpts
+        & #optsPlaceholder
+        .~ ( "Header - "
+              <> ( st
+                    ^. #modelState
+                    . #stDoc
+                    . #stDocFieldPairsHeader
+                    . #fieldType
+                    . to userFieldType
+                 )
+           )
+        & #optsLeadingWidget
+        .~ Just
+          ( Field.ModalWidget
+              $ Field.ModalMiniWidget
+                ( #modelState
+                    . #stDoc
+                    . #stDocFieldPairsHeader
+                )
+          )
+        & #optsTrailingWidget
+        .~ Just
+          ( Field.ActionWidget "add_box" [Theme.primary]
+              . Misc.newFieldPairAction
+              $ #modelState
+              . #stDoc
+              . #stDocFieldPairs
+          )
+    )
     <> FieldPairs.fieldPairs
       st
       ( #modelState
@@ -184,12 +198,27 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ "Assets"
+          .~ ( "Assets - "
+                <> ( st
+                      ^. #modelState
+                      . #stDoc
+                      . #stDocAssetsHeader
+                      . #fieldType
+                      . to userFieldType
+                   )
+             )
           & #optsLeadingWidget
-          .~ Nothing
+          .~ Just
+            ( Field.ModalWidget
+                $ Field.ModalMiniWidget
+                  ( #modelState
+                      . #stDoc
+                      . #stDocAssetsHeader
+                  )
+            )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add_circle" [Theme.primary]
+            ( Field.ActionWidget "add_box" [Theme.primary]
                 . Misc.newAssetAction st
                 $ #modelState
                 . #stDoc
@@ -210,12 +239,27 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ "Payments"
+          .~ ( "Payments - "
+                <> ( st
+                      ^. #modelState
+                      . #stDoc
+                      . #stDocPaymentMethodsHeader
+                      . #fieldType
+                      . to userFieldType
+                   )
+             )
           & #optsLeadingWidget
-          .~ Nothing
+          .~ Just
+            ( Field.ModalWidget
+                $ Field.ModalMiniWidget
+                  ( #modelState
+                      . #stDoc
+                      . #stDocPaymentMethodsHeader
+                  )
+            )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add" [Theme.primary]
+            ( Field.ActionWidget "add_box" [Theme.primary]
                 . Misc.newPaymentMethodAction st
                 $ #modelState
                 . #stDoc
@@ -228,6 +272,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           . #stDoc
           . #stDocPaymentMethods
       )
+    <> EditorSettings.editorSettings st
 screenWidget st@Model {modelState = St {stScreen = Viewer}} =
   Header.headerWrapper
     ( Field.dynamicFieldViewer

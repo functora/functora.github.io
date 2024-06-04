@@ -18,6 +18,7 @@ paymentMethodsViewer st = (>>= paymentMethodViewer st)
 paymentMethodViewer :: Model -> PaymentMethod Unique -> [View Action]
 paymentMethodViewer st mtd =
   Currency.moneyViewer
+    st
     ( Currency.defOpts
         & #optsLabel
         .~ (mtd ^. #paymentMethodMoneyLabel . #fieldOutput)

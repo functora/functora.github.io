@@ -17,14 +17,15 @@ assetsViewer st = (>>= assetViewer st)
 
 assetViewer :: Model -> Asset Unique -> [View Action]
 assetViewer st asset =
-  FieldPairs.fieldPairsViewer st (asset ^. #assetFieldPairs)
-    <> Currency.moneyViewer
-      ( Currency.defOpts
-          & #optsLabel
-          .~ (asset ^. #assetPriceLabel . #fieldOutput)
-      )
-      ( asset ^. #assetPrice
-      )
+  Currency.moneyViewer
+    st
+    ( Currency.defOpts
+        & #optsLabel
+        .~ (asset ^. #assetPriceLabel . #fieldOutput)
+    )
+    ( asset ^. #assetPrice
+    )
+    <> FieldPairs.fieldPairsViewer st (asset ^. #assetFieldPairs)
 
 assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
 assets st optic = do

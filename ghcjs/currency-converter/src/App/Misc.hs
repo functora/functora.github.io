@@ -227,8 +227,13 @@ getSomeCurrency st cur =
 newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
-    item <- newAsset mempty mempty 0 . getSomeCurrency st $ CurrencyCode "usd"
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
+    item <-
+      newAsset "Description" "Jeans" 0
+        . getSomeCurrency st
+        $ CurrencyCode "usd"
+    pure
+      . ChanItem 0
+      $ (& cloneTraversal optic %~ (<> [item]))
 
 newFieldPairAction ::
   ATraversal' Model [FieldPair DynamicField Unique] -> Action

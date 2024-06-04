@@ -37,8 +37,8 @@ defOpts =
       optsShowZeroAmount = True
     }
 
-moneyViewer :: Opts -> Money Unique -> [View Action]
-moneyViewer opts money =
+moneyViewer :: Model -> Opts -> Money Unique -> [View Action]
+moneyViewer st opts money =
   catMaybes
     [ if null label
         then Nothing
@@ -49,12 +49,19 @@ moneyViewer opts money =
       Just
         . cell
         $ div_
-          [Typography.typography]
-          [ text
-              . ms
-              $ (money ^. #moneyAmount . #fieldInput . #uniqueValue)
-              <> " "
-              <> inspectCurrencyInfo (money ^. #moneyCurrency . #currencyOutput)
+          [ class_ "fill",
+            style_ [("text-align", "center")]
+          ]
+          [ Field.constTextField
+              st
+              ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
+              )
+              ( Field.defOpts
+                  & #optsPlaceholder
+                  .~ inspectCurrencyInfo
+                    ( money ^. #moneyCurrency . #currencyOutput
+                    )
+              )
           ]
     ]
   where

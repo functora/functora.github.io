@@ -18,7 +18,6 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Qr as Qr
-import qualified App.Widgets.Switch as Switch
 import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
@@ -542,7 +541,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                   Static -> mempty
                   Dynamic ->
                     [ let typ :| typs = enumerateNE @FieldType
-                       in Cell.mediumCell
+                       in Cell.bigCell
                             $ Select.outlined
                               ( Select.config
                                   & Select.setLabel
@@ -588,18 +587,18 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                               typs
                     ]
               )
-            <> [ Cell.mediumCell
-                  $ Switch.switch
-                    st
-                    ( Switch.defOpts
-                        & #optsIcon
-                        .~ Just "content_copy"
-                        & #optsPlaceholder
-                        .~ "Allow copy"
-                    )
-                    ( cloneTraversal optic
-                        . #fieldAllowCopy
-                    ),
+            <> [ -- Cell.mediumCell
+                 --  $ Switch.switch
+                 --    st
+                 --    ( Switch.defOpts
+                 --        & #optsIcon
+                 --        .~ Just "content_copy"
+                 --        & #optsPlaceholder
+                 --        .~ "Allow copy"
+                 --    )
+                 --    ( cloneTraversal optic
+                 --        . #fieldAllowCopy
+                 --    ),
                  Cell.smallCell
                   $ Button.raised
                     ( Button.config
@@ -805,11 +804,12 @@ dynamicFieldViewer st value =
     FieldTypePercent -> plain out $ text . (<> "%")
     FieldTypeText -> plain out text
     FieldTypeTitle -> header out
-    FieldTypeQrCode -> Qr.qr st out Qr.defOpts
+    FieldTypeQrCode -> Qr.qr st out $ Qr.defOpts & #optsAllowCopy .~ allowCopy
     FieldTypeHtml -> plain out rawHtml
     FieldTypePassword -> plain out $ const "*****"
   where
     out = inspectDynamicField $ value ^. #fieldOutput
+    allowCopy = value ^. #fieldAllowCopy
 
 plain ::
   ( Container a,
@@ -823,7 +823,16 @@ plain out widget =
     then mempty
     else
       [ span_
-          [Typography.typography]
+          [ Typography.typography,
+            class_ "fill",
+            class_ "mdc-text-field",
+            class_ "mdc-text-field--filled",
+            style_
+              [ ("align-content", "center"),
+                ("align-items", "center"),
+                ("word-break", "break-all")
+              ]
+          ]
           [widget $ ms out]
       ]
 

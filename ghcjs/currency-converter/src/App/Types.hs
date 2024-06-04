@@ -642,24 +642,26 @@ newPaymentMethod ::
   CurrencyInfo ->
   m (PaymentMethod Unique)
 newPaymentMethod amt cur = do
-  label <- newTextField "Total"
-  address <- newFieldPair "Address" $ DynamicFieldText mempty
-  notes <- newFieldPair "Details" $ DynamicFieldText mempty
+  lbl <- newTextField "Total"
+  address <-
+    fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+      . newFieldPair "Address"
+      $ DynamicFieldText "EXAMPLE"
   PaymentMethod
     <$> newMoney amt cur
-    <*> pure label
-    <*> pure [address, notes]
+    <*> pure lbl
+    <*> pure [address]
     <*> pure Closed
 
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
-  price <- newTextField "Price"
+  lbl <- newTextField "Price"
   desc <- newFieldPair label $ DynamicFieldText value
   qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
   Asset
     <$> newMoney amt cur
-    <*> pure price
+    <*> pure lbl
     <*> pure [desc, qty]
     <*> pure Closed
 

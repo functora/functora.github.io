@@ -18,7 +18,13 @@ assetsViewer st = (>>= assetViewer st)
 assetViewer :: Model -> Asset Unique -> [View Action]
 assetViewer st asset =
   FieldPairs.fieldPairsViewer st (asset ^. #assetFieldPairs)
-    <> Currency.moneyViewer Currency.defOpts (asset ^. #assetPrice)
+    <> Currency.moneyViewer
+      ( Currency.defOpts
+          & #optsLabel
+          .~ (asset ^. #assetPriceLabel . #fieldOutput)
+      )
+      ( asset ^. #assetPrice
+      )
 
 assets :: Model -> ATraversal' Model [Asset Unique] -> [View Action]
 assets st optic = do
@@ -40,7 +46,10 @@ assetWidget st optic idx =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ("Price " <> idxTxt)
+          .~ ( if null label
+                then idxTxt
+                else label <> " " <> idxTxt
+             )
           & #optsLeadingWidget
           .~ Just
             ( Field.ModalWidget
@@ -48,6 +57,7 @@ assetWidget st optic idx =
                   optic
                   idx
                   #assetFieldPairs
+                  #assetPriceLabel
                   #assetModalState
             )
           & #optsTrailingWidget
@@ -72,3 +82,13 @@ assetWidget st optic idx =
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
+    label :: Text
+    label =
+      fromMaybe
+        mempty
+        ( st
+            ^? cloneTraversal optic
+            . ix idx
+            . #assetPriceLabel
+            . #fieldOutput
+        )

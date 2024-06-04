@@ -25,7 +25,7 @@ import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
 data Opts = Opts
-  { optsLabel :: Maybe Text,
+  { optsLabel :: Text,
     optsShowZeroAmount :: Bool
   }
   deriving stock (Generic)
@@ -33,21 +33,19 @@ data Opts = Opts
 defOpts :: Opts
 defOpts =
   Opts
-    { optsLabel = Just "Price",
+    { optsLabel = "Amount",
       optsShowZeroAmount = True
     }
 
 moneyViewer :: Opts -> Money Unique -> [View Action]
 moneyViewer opts money =
   catMaybes
-    [ fmap
-        ( \label ->
-            cell
-              $ strong_
-                [Typography.typography]
-                [text $ ms label]
-        )
-        (opts ^. #optsLabel),
+    [ if null label
+        then Nothing
+        else
+          Just
+            . cell
+            $ strong_ [Typography.typography] [text $ ms label],
       Just
         . cell
         $ div_
@@ -60,10 +58,11 @@ moneyViewer opts money =
           ]
     ]
   where
+    label = opts ^. #optsLabel
     cell =
-      if isJust $ opts ^. #optsLabel
-        then Cell.mediumCell
-        else Cell.bigCell
+      if null label
+        then Cell.bigCell
+        else Cell.mediumCell
 
 selectCurrency ::
   Model ->

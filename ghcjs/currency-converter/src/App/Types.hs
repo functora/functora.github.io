@@ -270,6 +270,7 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
+    paymentMethodMoneyLabel :: Field Text f,
     paymentMethodFieldPairs :: [FieldPair DynamicField f],
     paymentMethodModalState :: OpenedOrClosed
   }
@@ -360,6 +361,7 @@ data OpenedOrClosed
 
 data Asset f = Asset
   { assetPrice :: Money f,
+    assetPriceLabel :: Field Text f,
     assetFieldPairs :: [FieldPair DynamicField f],
     assetModalState :: OpenedOrClosed
   }
@@ -640,20 +642,24 @@ newPaymentMethod ::
   CurrencyInfo ->
   m (PaymentMethod Unique)
 newPaymentMethod amt cur = do
+  label <- newTextField "Total"
   address <- newFieldPair "Address" $ DynamicFieldText mempty
   notes <- newFieldPair "Details" $ DynamicFieldText mempty
   PaymentMethod
     <$> newMoney amt cur
+    <*> pure label
     <*> pure [address, notes]
     <*> pure Closed
 
 newAsset ::
   (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
 newAsset label value amt cur = do
+  price <- newTextField "Price"
   desc <- newFieldPair label $ DynamicFieldText value
   qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
   Asset
     <$> newMoney amt cur
+    <*> pure price
     <*> pure [desc, qty]
     <*> pure Closed
 

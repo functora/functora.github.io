@@ -65,6 +65,7 @@ data ModalWidget' where
     ATraversal' Model [a] ->
     Int ->
     ATraversal' a [FieldPair DynamicField Unique] ->
+    ATraversal' a (Field Text Unique) ->
     ATraversal' a OpenedOrClosed ->
     ModalWidget'
   ModalFieldWidget ::
@@ -323,7 +324,7 @@ fieldIcon st optic lot extraOnInput = \case
   DeleteWidget opt idx attrs ->
     fieldIconSimple lot "delete_forever" attrs
       $ Misc.removeAt opt idx
-  ModalWidget (ModalItemWidget opt idx _ ooc) ->
+  ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
     fieldIconSimple lot "settings" [Theme.primary]
       $ pureUpdate
         0
@@ -383,7 +384,7 @@ fieldModal ::
   Model ->
   ModalWidget' ->
   View Action
-fieldModal st (ModalItemWidget opt idx fps ooc) = do
+fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
   let closed =
         pureUpdate
           0
@@ -409,7 +410,18 @@ fieldModal st (ModalItemWidget opt idx fps ooc) = do
         Nothing
         [ Cell.grid
             mempty
-            [ Cell.bigCell
+            [ Cell.mediumCell
+                $ textField
+                  st
+                  ( cloneTraversal opt
+                      . ix idx
+                      . cloneTraversal lbl
+                  )
+                  ( defOpts
+                      & #optsPlaceholder
+                      .~ "Label"
+                  ),
+              Cell.mediumCell
                 $ Button.raised
                   ( Button.config
                       & Button.setOnClick

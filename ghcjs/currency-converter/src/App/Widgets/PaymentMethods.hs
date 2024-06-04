@@ -20,7 +20,7 @@ paymentMethodViewer st mtd =
   Currency.moneyViewer
     ( Currency.defOpts
         & #optsLabel
-        .~ Just "Total"
+        .~ (mtd ^. #paymentMethodMoneyLabel . #fieldOutput)
         & #optsShowZeroAmount
         .~ False
     )
@@ -51,7 +51,10 @@ paymentMethodWidget st optic idx =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ("Total " <> idxTxt)
+          .~ ( if null label
+                then idxTxt
+                else label <> " " <> idxTxt
+             )
           & #optsDisabled
           .~ True
           & #optsLeadingWidget
@@ -61,6 +64,7 @@ paymentMethodWidget st optic idx =
                   optic
                   idx
                   #paymentMethodFieldPairs
+                  #paymentMethodMoneyLabel
                   #paymentMethodModalState
             )
           & #optsTrailingWidget
@@ -85,3 +89,13 @@ paymentMethodWidget st optic idx =
   where
     idxTxt :: Text
     idxTxt = "#" <> inspect (idx + 1)
+    label :: Text
+    label =
+      fromMaybe
+        mempty
+        ( st
+            ^? cloneTraversal optic
+            . ix idx
+            . #paymentMethodMoneyLabel
+            . #fieldOutput
+        )

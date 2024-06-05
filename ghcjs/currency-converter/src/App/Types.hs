@@ -771,11 +771,7 @@ newField typ output newInput = do
 
 data FieldPair a f = FieldPair
   { fieldPairKey :: Field Text f,
-    fieldPairValue :: Field a f,
-    fieldPairValuePlainText :: Bool,
-    fieldPairValueQrCode :: Bool,
-    fieldPairValueLink :: Bool,
-    fieldPairValueHtml :: Bool
+    fieldPairValue :: Field a f
   }
   deriving stock (Generic)
 
@@ -807,10 +803,6 @@ newFieldPair key val =
   FieldPair
     <$> newTextField key
     <*> newDynamicField val
-    <*> pure True
-    <*> pure False
-    <*> pure False
-    <*> pure False
 
 unShareUri ::
   ( MonadThrow m,

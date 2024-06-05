@@ -32,6 +32,7 @@ where
 import App.Types
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Generics as Syb
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
@@ -115,8 +116,8 @@ textPopup st x =
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed
 
-textPopupPure :: (Show a, Data a) => Model -> a -> Model
-textPopupPure st x =
+textPopupPure :: (Show a, Data a) => a -> Model -> Model
+textPopupPure x st =
   st
     & #modelSnackbarQueue
     %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
@@ -157,6 +158,7 @@ verifyUid uid =
     $ consoleLog "UNEXPECTED NULL UID"
 
 duplicateAt ::
+  forall a.
   ( Data a
   ) =>
   ATraversal' Model [a] ->
@@ -167,11 +169,15 @@ duplicateAt optic idx =
     duplicator <- newUniqueDuplicator @Text
     let updater loc el =
           if loc == idx
-            then [el, duplicator el]
+            then [el, closed $ duplicator el]
             else [el]
     pure
       . ChanItem 0
-      $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+      $ (textPopupPure $ "Duplicated #" <> inspect @Text (idx + 1) <> "!")
+      . (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+  where
+    closed :: a -> a
+    closed = Syb.everywhere $ Syb.mkT $ const Closed
 
 removeAt ::
   ATraversal' Model [a] ->
@@ -185,21 +191,24 @@ removeAt optic idx =
             else [el]
     pure
       . ChanItem 0
-      $ (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+      $ (textPopupPure $ "Removed #" <> inspect @Text (idx + 1) <> "!")
+      . (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
 
 moveUp :: ATraversal' Model [a] -> Int -> Action
 moveUp optic idx =
   PushUpdate
     . pure
     . ChanItem 0
-    $ (& cloneTraversal optic %~ swapAt (idx - 1) idx)
+    $ (textPopupPure $ "Moved #" <> inspect @Text (idx + 1) <> " up!")
+    . (& cloneTraversal optic %~ swapAt (idx - 1) idx)
 
 moveDown :: ATraversal' Model [a] -> Int -> Action
 moveDown optic idx =
   PushUpdate
     . pure
     . ChanItem 0
-    $ (& cloneTraversal optic %~ swapAt idx (idx + 1))
+    $ (textPopupPure $ "Moved #" <> inspect @Text (idx + 1) <> " down!")
+    . (& cloneTraversal optic %~ swapAt idx (idx + 1))
 
 swapAt :: Int -> Int -> [a] -> [a]
 swapAt i j xs
@@ -233,21 +242,28 @@ newAssetAction st optic =
         $ CurrencyCode "usd"
     pure
       . ChanItem 0
-      $ (& cloneTraversal optic %~ (<> [item]))
+      $ (textPopupPure @Text "Added asset!")
+      . (& cloneTraversal optic %~ (<> [item]))
 
 newFieldPairAction ::
   ATraversal' Model [FieldPair DynamicField Unique] -> Action
 newFieldPairAction optic =
   PushUpdate $ do
     item <- newFieldPair mempty $ DynamicFieldText mempty
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
+    pure
+      . ChanItem 0
+      $ (textPopupPure @Text "Added details!")
+      . (& cloneTraversal optic %~ (<> [item]))
 
 newPaymentMethodAction ::
   Model -> ATraversal' Model [PaymentMethod Unique] -> Action
 newPaymentMethodAction st optic =
   PushUpdate $ do
     item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
-    pure . ChanItem 0 $ (& cloneTraversal optic %~ (<> [item]))
+    pure
+      . ChanItem 0
+      $ (textPopupPure @Text "Added payment!")
+      . (& cloneTraversal optic %~ (<> [item]))
 
 stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
 stQuery st = do

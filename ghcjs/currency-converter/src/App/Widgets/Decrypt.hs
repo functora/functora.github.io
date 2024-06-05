@@ -64,7 +64,7 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                 $ decodeBinary bDoc
          in case eDoc of
               Left e ->
-                Misc.textPopupPure st e
+                Misc.textPopupPure e st
               Right iDoc ->
                 fst . flip runState rnd0 $ do
                   uDoc <-

@@ -5,6 +5,7 @@ where
 
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Templates as Templates
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -62,6 +63,28 @@ menu st =
                           ]
                     )
                     "Editor",
+                Cell.mediumCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick (templates #modelTemplates)
+                        & Button.setIcon (Just "apps")
+                        & Button.setAttributes
+                          [ Theme.secondaryBg,
+                            class_ "fill"
+                          ]
+                    )
+                    "Templates",
+                Cell.mediumCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick (templates #modelExamples)
+                        & Button.setIcon (Just "login")
+                        & Button.setAttributes
+                          [ Theme.secondaryBg,
+                            class_ "fill"
+                          ]
+                    )
+                    "Examples",
                 Cell.bigCell
                   $ Button.raised
                     ( Button.config
@@ -75,6 +98,8 @@ menu st =
           mempty
       )
   ]
+    <> Templates.templates #modelTemplates Templates.unfilled Editor st
+    <> Templates.templates #modelExamples Templates.examples Viewer st
   where
     opened = pureUpdate 0 (& #modelMenu .~ Opened)
     closed = pureUpdate 0 (& #modelMenu .~ Closed)
@@ -82,3 +107,7 @@ menu st =
       pureUpdate 0
         $ (#modelMenu .~ Closed)
         . (#modelState . #stScreen .~ x)
+    templates opt =
+      pureUpdate 0
+        $ (opt .~ Opened)
+        . (#modelMenu .~ Closed)

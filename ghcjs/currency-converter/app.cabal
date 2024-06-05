@@ -38,6 +38,7 @@ common pkg
     App.Widgets.Qr
     App.Widgets.SwapAmounts
     App.Widgets.Switch
+    App.Widgets.Templates
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

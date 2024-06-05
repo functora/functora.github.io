@@ -41,6 +41,7 @@ module App.Types
     newRatioField,
     newTextField,
     newDynamicField,
+    newDynamicTitleField,
     newPasswordField,
     FieldPair (..),
     newFieldPair,
@@ -66,6 +67,8 @@ data Model = Model
   { modelHide :: Bool,
     modelMenu :: OpenedOrClosed,
     modelShare :: OpenedOrClosed,
+    modelTemplates :: OpenedOrClosed,
+    modelExamples :: OpenedOrClosed,
     modelState :: St Unique,
     --
     -- TODO : modelStateHistory :: [St Unique]
@@ -473,6 +476,8 @@ newModel mMark uri = do
           { modelHide = False,
             modelMenu = Closed,
             modelShare = Closed,
+            modelTemplates = Closed,
+            modelExamples = Closed,
             modelState =
               St
                 { stScreen = sc,

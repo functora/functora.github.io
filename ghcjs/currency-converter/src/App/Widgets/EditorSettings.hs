@@ -52,7 +52,7 @@ editorSettings st =
                       $ shareLink @Text Viewer st
                   )
             )
-            "Share",
+            "Link",
          Cell.smallCell
           $ Button.raised
             ( Button.config
@@ -74,8 +74,7 @@ shareModal st =
         Nothing
         [ Cell.grid
             mempty
-            $ Header.headerViewer "Share"
-            <> shareWidget st Viewer
+            $ shareWidget st Viewer
             <> shareWidget st Editor
             <> [ Cell.bigCell
                   $ Button.raised
@@ -98,17 +97,17 @@ shareWidget st screen =
       . TextArea.filled
       $ TextArea.config
       & TextArea.setValue (Just screenLink)
-      & TextArea.setLabel (Just $ inspect screen <> " link")
+      & TextArea.setLabel (Just "Link")
       & TextArea.setDisabled True
       & TextArea.setFullwidth True,
     Cell.mediumCell
       $ Button.raised
         ( Button.config
-            & Button.setIcon (Just "content_copy")
+            & Button.setIcon (Just "share")
             & Button.setAttributes [class_ "fill", Theme.secondaryBg]
             & Button.setOnClick (Misc.copyIntoClipboardAction st screenLink)
         )
-        ( inspect screen <> " link"
+        ( inspect screen
         ),
     Cell.mediumCell
       $ Button.raised
@@ -122,7 +121,7 @@ shareWidget st screen =
                   pure . ChanItem 0 $ const new
               )
         )
-        ( inspect screen <> " link"
+        ( inspect screen
         ),
     Cell.bigCell
       . TextArea.filled
@@ -134,11 +133,11 @@ shareWidget st screen =
     Cell.mediumCell
       $ Button.raised
         ( Button.config
-            & Button.setIcon (Just "content_copy")
+            & Button.setIcon (Just "share")
             & Button.setAttributes [class_ "fill", Theme.secondaryBg]
             & Button.setOnClick (Misc.copyIntoClipboardAction st screenQrCode)
         )
-        ( inspect screen <> " QR code"
+        ( inspect screen <> " QR"
         ),
     Cell.mediumCell
       $ Button.raised
@@ -152,7 +151,7 @@ shareWidget st screen =
                   pure . ChanItem 0 $ const new
               )
         )
-        ( inspect screen <> " QR code"
+        ( inspect screen <> " QR"
         )
   ]
   where

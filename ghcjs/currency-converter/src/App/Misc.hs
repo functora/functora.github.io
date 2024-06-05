@@ -9,6 +9,7 @@ module App.Misc
     copyIntoClipboardAction,
     textPopup,
     textPopupPure,
+    textPopupClear,
     textPopupClosed,
     drainTChan,
     verifyUid,
@@ -127,6 +128,10 @@ textPopupPure x st =
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed
+
+textPopupClear :: Model -> Model
+textPopupClear =
+  (& #modelSnackbarQueue %~ Snackbar.clearQueue)
 
 textPopupClosed :: Snackbar.MessageId -> Action
 textPopupClosed msg =

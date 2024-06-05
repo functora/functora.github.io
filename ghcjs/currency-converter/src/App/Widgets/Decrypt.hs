@@ -99,6 +99,7 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                     & #modelState
                     . #stScreen
                     .~ unQrCode (ext ^. #stExtScreen)
+                    & Misc.textPopupClear
 
 onKeyDownAction :: Model -> Uid -> KeyCode -> Action
 onKeyDownAction st uid code =

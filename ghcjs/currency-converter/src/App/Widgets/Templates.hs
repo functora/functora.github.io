@@ -86,8 +86,8 @@ unfilled :: [Template]
 unfilled =
   [ Template "Empty" emptyTemplate,
     Template "Text" plainTemplate,
-    Template "Invoice" invoiceExample,
-    Template "Portfolio" portfolioExample
+    Template "Portfolio" portfolioExample,
+    Template "Invoice" invoiceExample
   ]
 
 emptyTemplate :: IO (StDoc Unique)
@@ -129,8 +129,8 @@ examples :: [Template]
 examples =
   [ Template "Empty" emptyTemplate,
     Template "Text" plainExample,
-    Template "Invoice" invoiceExample,
-    Template "Portfolio" portfolioExample
+    Template "Portfolio" portfolioExample,
+    Template "Invoice" invoiceExample
   ]
 
 plainExample :: IO (StDoc Unique)
@@ -148,6 +148,52 @@ plainExample = do
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead
       }
+
+portfolioExample :: IO (StDoc Unique)
+portfolioExample = do
+  fhead <- newDynamicTitleField mempty
+  ahead <- newDynamicTitleField "Assets"
+  phead <- newDynamicTitleField "Net worth"
+  a0 <- mkAsset "Cash" 3000 usd
+  a1 <- mkAsset "US bank" 4500 usd
+  a2 <- mkAsset "EU bank" 2300 eur
+  a3 <- mkAsset "Mobile wallet" 0.042 btc
+  a4 <- mkAsset "Secret wallet" 13.2 xmr
+  mtdUsd <- newPayment usd
+  mtdBtc <- newPayment btc
+  pure
+    StDoc
+      { stDocFieldPairs = mempty,
+        stDocAssets = [a0, a1, a2, a3, a4],
+        stDocPaymentMethods = [mtdUsd, mtdBtc],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead
+      }
+  where
+    mkAsset label amt cur = do
+      lbl <-
+        newTextField
+          $ label
+          <> " ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      Asset
+        <$> newMoney amt cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
+    newPayment cur = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
 
 invoiceExample :: IO (StDoc Unique)
 invoiceExample = do
@@ -211,26 +257,6 @@ invoiceExample = do
         <*> pure lbl
         <*> pure [address]
         <*> pure Closed
-
-portfolioExample :: IO (StDoc Unique)
-portfolioExample = do
-  fhead <- newDynamicTitleField "Invoice #6102"
-  ahead <- newDynamicTitleField "Order items"
-  phead <- newDynamicTitleField "Payment methods"
-  issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice LLC"
-  client <- newFieldPair "Client" $ DynamicFieldText "Bob"
-  asset <- newAsset "Description" "Jeans" 100 usd
-  mtdBtc <- newPaymentMethod 0 btc
-  mtdXmr <- newPaymentMethod 0 xmr
-  pure
-    StDoc
-      { stDocFieldPairs = [issuer, client],
-        stDocAssets = [asset],
-        stDocPaymentMethods = [mtdBtc, mtdXmr],
-        stDocFieldPairsHeader = fhead,
-        stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
-      }
 
 --
 -- Misc

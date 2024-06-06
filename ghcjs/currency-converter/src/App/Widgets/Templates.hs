@@ -17,7 +17,9 @@ import Miso hiding (at, view)
 
 data Template = Template
   { templateName :: Text,
-    templateMaker :: IO (StDoc Unique)
+    templateDoc :: IO (StDoc Unique),
+    templateIkm :: IO (Maybe (Field Text Unique)),
+    templatePre :: IO (Maybe (Field DynamicField Unique))
   }
   deriving stock (Generic)
 
@@ -72,7 +74,7 @@ templates optic tpls sc st =
         . (& cloneLens optic .~ Closed)
     screen tpl =
       PushUpdate $ do
-        doc <- liftIO $ tpl ^. #templateMaker
+        doc <- liftIO $ tpl ^. #templateDoc
         pre <- newDynamicTitleField mempty
         pure
           $ ChanItem 0
@@ -88,12 +90,16 @@ templates optic tpls sc st =
 
 unfilled :: [Template]
 unfilled =
-  [ Template "Empty" emptyTemplate,
-    Template "Text" plainTemplate,
-    Template "Donate" donateTemplate,
-    Template "Portfolio" portfolioTemplate,
-    Template "Invoice" invoiceTemplate
+  [ Template "Empty" emptyTemplate nil nil,
+    Template "Text" plainTemplate nil nil,
+    Template "Secret" secretExample nil nil,
+    Template "Donate" donateTemplate nil nil,
+    Template "Portfolio" portfolioTemplate nil nil,
+    Template "Invoice" invoiceTemplate nil nil
   ]
+  where
+    nil :: IO (Maybe (Field a b))
+    nil = pure Nothing
 
 emptyTemplate :: IO (StDoc Unique)
 emptyTemplate = do
@@ -158,8 +164,8 @@ portfolioTemplate = do
   a0 <- mkAsset "Cash" 0 usd
   a1 <- mkAsset "Mobile wallet" 0 btc
   a2 <- mkAsset "Private wallet" 0 xmr
-  mtdUsd <- newPayment usd
-  mtdBtc <- newPayment btc
+  mtdUsd <- mkPayment usd Nothing
+  mtdBtc <- mkPayment btc Nothing
   pure
     StDoc
       { stDocFieldPairs = mempty,
@@ -170,26 +176,6 @@ portfolioTemplate = do
         stDocPaymentMethodsHeader = phead,
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
-  where
-    mkAsset label amt cur = do
-      lbl <-
-        newTextField
-          $ label
-          <> " ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
-      Asset
-        <$> newMoney amt cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
-    newPayment cur = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
 
 invoiceTemplate :: IO (StDoc Unique)
 invoiceTemplate = do
@@ -246,12 +232,16 @@ invoiceTemplate = do
 
 examples :: [Template]
 examples =
-  [ Template "Empty" emptyTemplate,
-    Template "Text" plainExample,
-    Template "Donate" donateExample,
-    Template "Portfolio" portfolioExample,
-    Template "Invoice" invoiceExample
+  [ Template "Empty" emptyTemplate nil nil,
+    Template "Text" plainExample nil nil,
+    Template "Secret" secretExample nil nil,
+    Template "Donate" donateExample nil nil,
+    Template "Portfolio" portfolioExample nil nil,
+    Template "Invoice" invoiceExample nil nil
   ]
+  where
+    nil :: IO (Maybe (Field a b))
+    nil = pure Nothing
 
 plainExample :: IO (StDoc Unique)
 plainExample = do
@@ -264,6 +254,26 @@ plainExample = do
       { stDocFieldPairs = [msg],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
+      }
+
+secretExample :: IO (StDoc Unique)
+secretExample = do
+  msg <- newFieldPair mempty $ DynamicFieldText exampleSecretText
+  fhead <- newDynamicTitleField "Dear Tommy,"
+  ahead <- newDynamicTitleField mempty
+  phead <- newDynamicTitleField mempty
+  stuff <- mkAsset "Stuff" 100 usd
+  delivery <- mkAsset "Delivery" 25 usd
+  method <- mkPayment xmr $ Just exampleXmrAddress
+  pure
+    StDoc
+      { stDocFieldPairs = [msg],
+        stDocAssets = [stuff, delivery],
+        stDocPaymentMethods = [method],
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead,
@@ -302,8 +312,8 @@ portfolioExample = do
   a2 <- mkAsset "EU bank" 2300 eur
   a3 <- mkAsset "Mobile wallet" 0.042 btc
   a4 <- mkAsset "Private wallet" 13.2 xmr
-  mtdUsd <- newPayment usd
-  mtdBtc <- newPayment btc
+  mtdUsd <- mkPayment usd Nothing
+  mtdBtc <- mkPayment btc Nothing
   pure
     StDoc
       { stDocFieldPairs = mempty,
@@ -314,26 +324,6 @@ portfolioExample = do
         stDocPaymentMethodsHeader = phead,
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
-  where
-    mkAsset label amt cur = do
-      lbl <-
-        newTextField
-          $ label
-          <> " ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
-      Asset
-        <$> newMoney amt cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
-    newPayment cur = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
 
 invoiceExample :: IO (StDoc Unique)
 invoiceExample = do
@@ -391,6 +381,33 @@ invoiceExample = do
 -- Misc
 --
 
+mkAsset :: Text -> Rational -> CurrencyInfo -> IO (Asset Unique)
+mkAsset label amt cur = do
+  lbl <- newTextField label
+  Asset
+    <$> newMoney amt cur
+    <*> pure lbl
+    <*> pure mempty
+    <*> pure Closed
+
+mkPayment :: CurrencyInfo -> Maybe Text -> IO (PaymentMethod Unique)
+mkPayment cur addr0 = do
+  lbl <- newTextField $ T.toUpper (inspectCurrencyInfo cur) <> " total"
+  addr1 <-
+    maybe
+      ( pure Nothing
+      )
+      ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
+          . newFieldPair (T.toUpper (inspectCurrencyInfo cur) <> " address")
+          . DynamicFieldText
+      )
+      addr0
+  PaymentMethod
+    <$> newMoney 0 cur
+    <*> pure lbl
+    <*> pure (maybeToList addr1)
+    <*> pure Closed
+
 btc :: CurrencyInfo
 btc =
   CurrencyInfo
@@ -428,6 +445,10 @@ exampleXmrAddress = "EXAMPLE"
 examplePlainText :: Text
 examplePlainText =
   "Executive Order 6102 required all persons to deliver on or before May 1, 1933, all but a small amount of gold coin, gold bullion, and gold certificates owned by them to the Federal Reserve in exchange for $20.67 (equivalent to $487 in 2023) per troy ounce. Under the Trading with the Enemy Act of 1917, as amended by the recently passed Emergency Banking Act of March 9, 1933, a violation of the order was punishable by fine up to $10,000 (equivalent to $235,000 in 2023), up to ten years in prison, or both."
+
+exampleSecretText :: Text
+exampleSecretText =
+  "Bobby messed it up again, dude! I'll send you the dead drop location in the next secret message after he sends the money. You know the password. Cheers!"
 
 exampleDonationText :: Text
 exampleDonationText =

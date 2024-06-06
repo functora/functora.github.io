@@ -139,7 +139,7 @@ donateTemplate = do
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText mempty
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText mempty
-  fhead <- newDynamicTitleField "Dear User,"
+  fhead <- newDynamicTitleField "Hello User!"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
@@ -185,8 +185,8 @@ invoiceTemplate = do
   issuer <- newFieldPair "Issuer" $ DynamicFieldText mempty
   client <- newFieldPair "Client" $ DynamicFieldText mempty
   asset <- newProduct usd
-  mtdUsd <- newFiatPayment usd
-  mtdBtc <- newCryptoPayment btc mempty
+  mtdUsd <- mkPayment usd Nothing
+  mtdBtc <- mkPayment btc Nothing
   pure
     StDoc
       { stDocFieldPairs = [issuer, client],
@@ -206,24 +206,6 @@ invoiceTemplate = do
         <$> newMoney 0 cur
         <*> pure lbl
         <*> pure [dsc, qty]
-        <*> pure Closed
-    newFiatPayment cur = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
-    newCryptoPayment cur addr = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      address <-
-        fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
-          . newFieldPair ("Address " <> T.toUpper (inspectCurrencyInfo cur))
-          $ DynamicFieldText addr
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure [address]
         <*> pure Closed
 
 --
@@ -285,7 +267,7 @@ donateExample = do
   msg <- newFieldPair mempty $ DynamicFieldText exampleDonationText
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
-  fhead <- newDynamicTitleField "Dear User,"
+  fhead <- newDynamicTitleField "Hello User!"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
@@ -334,10 +316,10 @@ invoiceExample = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   tomato <- newProduct "Tomato" 2 4 usd
   beef <- newProduct "Beef" 0.5 10 eur
-  mtdUsd <- newFiatPayment usd
-  mtdEur <- newFiatPayment eur
-  mtdBtc <- newCryptoPayment btc exampleBtcAddress
-  mtdXmr <- newCryptoPayment xmr exampleXmrAddress
+  mtdUsd <- mkPayment usd Nothing
+  mtdEur <- mkPayment eur Nothing
+  mtdBtc <- mkPayment btc $ Just exampleBtcAddress
+  mtdXmr <- mkPayment xmr $ Just exampleXmrAddress
   pure
     StDoc
       { stDocFieldPairs = [issuer, client],
@@ -357,24 +339,6 @@ invoiceExample = do
         <$> newMoney price cur
         <*> pure lbl
         <*> pure [dsc, qty]
-        <*> pure Closed
-    newFiatPayment cur = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure mempty
-        <*> pure Closed
-    newCryptoPayment cur addr = do
-      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
-      address <-
-        fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
-          . newFieldPair ("Address " <> T.toUpper (inspectCurrencyInfo cur))
-          $ DynamicFieldText addr
-      PaymentMethod
-        <$> newMoney 0 cur
-        <*> pure lbl
-        <*> pure [address]
         <*> pure Closed
 
 --

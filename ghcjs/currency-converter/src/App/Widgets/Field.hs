@@ -828,9 +828,14 @@ plain out widget =
             class_ "mdc-text-field",
             class_ "mdc-text-field--filled",
             style_
-              [ ("align-content", "center"),
-                ("align-items", "center"),
-                ("word-break", "break-all")
+              [ ("align-items", "center"),
+                ("align-content", "center"),
+                ("word-break", "normal"),
+                ("overflow-wrap", "anywhere"),
+                ("min-height", "56px"),
+                ("height", "auto"),
+                ("padding-top", "8px"),
+                ("padding-bottom", "8px")
               ]
           ]
           [widget $ ms out]

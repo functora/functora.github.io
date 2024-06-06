@@ -43,6 +43,7 @@ module App.Types
     newDynamicField,
     newDynamicTitleField,
     newPasswordField,
+    newMoney,
     FieldPair (..),
     newFieldPair,
     unShareUri,

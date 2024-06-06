@@ -56,7 +56,7 @@ menu st =
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (screen Editor)
-                        & Button.setIcon (Just "settings")
+                        & Button.setIcon (Just "build_circle")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"
@@ -78,7 +78,7 @@ menu st =
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick (templates #modelExamples)
-                        & Button.setIcon (Just "login")
+                        & Button.setIcon (Just "mood")
                         & Button.setAttributes
                           [ Theme.secondaryBg,
                             class_ "fill"

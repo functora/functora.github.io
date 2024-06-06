@@ -18,6 +18,7 @@ import qualified Data.Map as Map
 import Functora.Money hiding (Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
+import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
 import qualified Miso
@@ -178,13 +179,14 @@ syncInputs =
   where
     fun :: Unique Text -> JSM (Unique Text)
     fun txt = do
-      void
-        . JS.eval @Text
-        $ "var el = document.getElementById('"
-        <> htmlUid (txt ^. #uniqueUid)
-        <> "'); if (el && !(el.getElementsByTagName('input')[0] === document.activeElement)) el.value = '"
-        <> (txt ^. #uniqueValue)
-        <> "';"
+      el <- getElementById . ms . htmlUid @Text $ txt ^. #uniqueUid
+      elExist <- ghcjsPure $ JS.isTruthy el
+      when elExist $ do
+        inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)
+        inp <- inps !! 0
+        act <- JS.global ! ("document" :: Text) ! ("activeElement" :: Text)
+        elActive <- JS.strictEqual inp act
+        unless elActive $ el ^. JS.jss ("value" :: Text) (txt ^. #uniqueValue)
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model

@@ -7,6 +7,8 @@ where
 
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified Data.Text as T
+import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -83,7 +85,9 @@ templates optic tpls sc st =
 unfilled :: [Template]
 unfilled =
   [ Template "Empty" emptyTemplate,
-    Template "Text" plainTemplate
+    Template "Text" plainTemplate,
+    Template "Invoice" invoiceExample,
+    Template "Portfolio" portfolioExample
   ]
 
 emptyTemplate :: IO (StDoc Unique)
@@ -103,12 +107,13 @@ emptyTemplate = do
 
 plainTemplate :: IO (StDoc Unique)
 plainTemplate = do
+  msg <- newFieldPair mempty $ DynamicFieldText mempty
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = mempty,
+      { stDocFieldPairs = [msg],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -123,20 +128,148 @@ plainTemplate = do
 examples :: [Template]
 examples =
   [ Template "Empty" emptyTemplate,
-    Template "Text" plainExample
+    Template "Text" plainExample,
+    Template "Invoice" invoiceExample,
+    Template "Portfolio" portfolioExample
   ]
 
 plainExample :: IO (StDoc Unique)
 plainExample = do
+  msg <- newFieldPair mempty $ DynamicFieldText examplePlainText
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = mempty,
+      { stDocFieldPairs = [msg],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead
       }
+
+invoiceExample :: IO (StDoc Unique)
+invoiceExample = do
+  fhead <- newDynamicTitleField "Invoice #6102"
+  ahead <- newDynamicTitleField "Purchase items"
+  phead <- newDynamicTitleField "Payment methods"
+  issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice's Grocery Store"
+  client <- newFieldPair "Client" $ DynamicFieldText "Bob"
+  tomato <- newFood "Tomato" 2 4 usd
+  beef <- newFood "Beef" 0.5 10 eur
+  mtdUsd <- newFiatPayment usd
+  mtdEur <- newFiatPayment eur
+  mtdBtc <- newCryptoPayment btc exampleBtcAddress
+  mtdXmr <- newCryptoPayment xmr exampleXmrAddress
+  pure
+    StDoc
+      { stDocFieldPairs = [issuer, client],
+        stDocAssets = [tomato, beef],
+        stDocPaymentMethods = [mtdUsd, mtdEur, mtdBtc, mtdXmr],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead
+      }
+  where
+    newFood name weight price cur = do
+      lbl <- newTextField "Price (per kg)"
+      dsc <- newFieldPair "Product" $ DynamicFieldText name
+      qty <- newFieldPair "Weight (kg)" $ DynamicFieldNumber weight
+      Asset
+        <$> newMoney price cur
+        <*> pure lbl
+        <*> pure [dsc, qty]
+        <*> pure Closed
+    newFiatPayment cur = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
+    newCryptoPayment cur addr = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      address <-
+        fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+          . newFieldPair
+            ( "Address ("
+                <> T.toUpper (inspectCurrencyInfo cur)
+                <> ")"
+            )
+          $ DynamicFieldText addr
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure [address]
+        <*> pure Closed
+
+portfolioExample :: IO (StDoc Unique)
+portfolioExample = do
+  fhead <- newDynamicTitleField "Invoice #6102"
+  ahead <- newDynamicTitleField "Order items"
+  phead <- newDynamicTitleField "Payment methods"
+  issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice LLC"
+  client <- newFieldPair "Client" $ DynamicFieldText "Bob"
+  asset <- newAsset "Description" "Jeans" 100 usd
+  mtdBtc <- newPaymentMethod 0 btc
+  mtdXmr <- newPaymentMethod 0 xmr
+  pure
+    StDoc
+      { stDocFieldPairs = [issuer, client],
+        stDocAssets = [asset],
+        stDocPaymentMethods = [mtdBtc, mtdXmr],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead
+      }
+
+--
+-- Misc
+--
+
+btc :: CurrencyInfo
+btc =
+  CurrencyInfo
+    { currencyInfoCode = CurrencyCode "btc",
+      currencyInfoText = mempty
+    }
+
+xmr :: CurrencyInfo
+xmr =
+  CurrencyInfo
+    { currencyInfoCode = CurrencyCode "xmr",
+      currencyInfoText = mempty
+    }
+
+usd :: CurrencyInfo
+usd =
+  CurrencyInfo
+    { currencyInfoCode = CurrencyCode "usd",
+      currencyInfoText = mempty
+    }
+
+eur :: CurrencyInfo
+eur =
+  CurrencyInfo
+    { currencyInfoCode = CurrencyCode "eur",
+      currencyInfoText = mempty
+    }
+
+exampleBtcAddress :: Text
+exampleBtcAddress = "EXAMPLE"
+
+exampleXmrAddress :: Text
+exampleXmrAddress = "EXAMPLE"
+
+examplePlainText :: Text
+examplePlainText =
+  "Executive Order 6102 required all persons to deliver on or before May 1, 1933, all but a small amount of gold coin, gold bullion, and gold certificates owned by them to the Federal Reserve in exchange for $20.67 (equivalent to $487 in 2023) per troy ounce. Under the Trading with the Enemy Act of 1917, as amended by the recently passed Emergency Banking Act of March 9, 1933, a violation of the order was punishable by fine up to $10,000 (equivalent to $235,000 in 2023), up to ten years in prison, or both."

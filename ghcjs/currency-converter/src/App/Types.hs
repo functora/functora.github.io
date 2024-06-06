@@ -22,6 +22,7 @@ module App.Types
     LeadingOrTrailing (..),
     FilledOrOutlined (..),
     OpenedOrClosed (..),
+    AssetsAndPaymentsLayout (..),
     newModel,
     newUnique,
     newUniqueDuplicator,
@@ -201,7 +202,8 @@ data StDoc f = StDoc
     stDocPaymentMethods :: [PaymentMethod f],
     stDocFieldPairsHeader :: Field DynamicField f,
     stDocAssetsHeader :: Field DynamicField f,
-    stDocPaymentMethodsHeader :: Field DynamicField f
+    stDocPaymentMethodsHeader :: Field DynamicField f,
+    stDocAssetsAndPaymentsLayout :: AssetsAndPaymentsLayout
   }
   deriving stock (Generic)
 
@@ -363,6 +365,12 @@ data OpenedOrClosed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary, Serialise) via GenericType OpenedOrClosed
 
+data AssetsAndPaymentsLayout
+  = AssetsBeforePayments
+  | PaymentsBeforeAssets
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (Binary, Serialise) via GenericType AssetsAndPaymentsLayout
+
 data Asset f = Asset
   { assetPrice :: Money f,
     assetPriceLabel :: Field Text f,
@@ -433,7 +441,8 @@ newModel mMark uri = do
             stDocPaymentMethods = [paymentMethod],
             stDocFieldPairsHeader = fieldPairsHeader,
             stDocAssetsHeader = assetsHeader,
-            stDocPaymentMethodsHeader = paymentMethodsHeader
+            stDocPaymentMethodsHeader = paymentMethodsHeader,
+            stDocAssetsAndPaymentsLayout = AssetsBeforePayments
           }
   (sc, doc, pre, ext) <-
     maybe

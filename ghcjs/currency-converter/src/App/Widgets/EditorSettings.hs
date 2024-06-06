@@ -11,9 +11,12 @@ import qualified App.Widgets.Header as Header
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
+import qualified Material.Select as Select
+import qualified Material.Select.Item as SelectItem
 import qualified Material.TextArea as TextArea
 import qualified Material.Theme as Theme
 import Miso hiding (view)
+import Miso.String (ms)
 import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
@@ -42,7 +45,9 @@ editorSettings st =
     <> [ shareModal st,
          Cell.mediumCell
           $ Field.passwordField st (#modelState . #stIkm) Field.defOpts,
-         Cell.smallCell
+         Cell.mediumCell
+          $ selectLayoutWidget st,
+         Cell.mediumCell
           $ Button.raised
             ( Button.config
                 & Button.setIcon (Just "share")
@@ -53,7 +58,7 @@ editorSettings st =
                   )
             )
             "Link",
-         Cell.smallCell
+         Cell.mediumCell
           $ Button.raised
             ( Button.config
                 & Button.setIcon (Just "more_horiz")
@@ -62,6 +67,35 @@ editorSettings st =
             )
             "More"
        ]
+
+selectLayoutWidget :: Model -> View Action
+selectLayoutWidget st =
+  Select.outlined
+    ( Select.config
+        & Select.setLabel (Just "Layout")
+        & Select.setAttributes [class_ "fill-inner"]
+        & Select.setSelected (Just $ st ^. cloneLens optic)
+        & Select.setOnChange (\x -> pureUpdate 0 (& cloneLens optic .~ x))
+    )
+    ( SelectItem.selectItem
+        (SelectItem.config item)
+        [text . ms $ userMsg item]
+    )
+    $ fmap
+      ( \t ->
+          SelectItem.selectItem
+            (SelectItem.config t)
+            [text . ms $ userMsg t]
+      )
+      items
+  where
+    item :| items = enumerateNE @AssetsAndPaymentsLayout
+    optic :: ALens' Model AssetsAndPaymentsLayout
+    optic = #modelState . #stDoc . #stDocAssetsAndPaymentsLayout
+    userMsg :: AssetsAndPaymentsLayout -> Text
+    userMsg = \case
+      AssetsBeforePayments -> "Assets before payments"
+      PaymentsBeforeAssets -> "Payments before assets"
 
 shareModal :: Model -> View Action
 shareModal st =

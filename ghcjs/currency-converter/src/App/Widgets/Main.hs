@@ -274,30 +274,36 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
       )
     <> EditorSettings.editorSettings st
 screenWidget st@Model {modelState = St {stScreen = Viewer}} =
-  Header.headerWrapper
-    ( Field.dynamicFieldViewer
-        st
-        (st ^. #modelState . #stDoc . #stDocFieldPairsHeader)
-    )
-    <> FieldPairs.fieldPairsViewer
-      st
-      (st ^. #modelState . #stDoc . #stDocFieldPairs)
-    <> Header.headerWrapper
-      ( Field.dynamicFieldViewer
+  let assets =
+        Header.headerWrapper
+          ( Field.dynamicFieldViewer
+              st
+              (st ^. #modelState . #stDoc . #stDocAssetsHeader)
+          )
+          <> Assets.assetsViewer
+            st
+            (st ^. #modelState . #stDoc . #stDocAssets)
+      payments =
+        Header.headerWrapper
+          ( Field.dynamicFieldViewer
+              st
+              (st ^. #modelState . #stDoc . #stDocPaymentMethodsHeader)
+          )
+          <> PaymentMethods.paymentMethodsViewer
+            st
+            (st ^. #modelState . #stDoc . #stDocPaymentMethods)
+   in Header.headerWrapper
+        ( Field.dynamicFieldViewer
+            st
+            (st ^. #modelState . #stDoc . #stDocFieldPairsHeader)
+        )
+        <> FieldPairs.fieldPairsViewer
           st
-          (st ^. #modelState . #stDoc . #stDocAssetsHeader)
-      )
-    <> Assets.assetsViewer
-      st
-      (st ^. #modelState . #stDoc . #stDocAssets)
-    <> Header.headerWrapper
-      ( Field.dynamicFieldViewer
-          st
-          (st ^. #modelState . #stDoc . #stDocPaymentMethodsHeader)
-      )
-    <> PaymentMethods.paymentMethodsViewer
-      st
-      (st ^. #modelState . #stDoc . #stDocPaymentMethods)
+          (st ^. #modelState . #stDoc . #stDocFieldPairs)
+        <> ( case st ^. #modelState . #stDoc . #stDocAssetsAndPaymentsLayout of
+              AssetsBeforePayments -> assets <> payments
+              PaymentsBeforeAssets -> payments <> assets
+           )
 
 tosWidget :: View Action
 tosWidget =

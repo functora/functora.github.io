@@ -102,7 +102,8 @@ emptyTemplate = do
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
 plainTemplate :: IO (StDoc Unique)
@@ -118,7 +119,8 @@ plainTemplate = do
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
 portfolioTemplate :: IO (StDoc Unique)
@@ -138,7 +140,8 @@ portfolioTemplate = do
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
   where
     mkAsset label amt cur = do
@@ -182,7 +185,8 @@ invoiceTemplate = do
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
   where
     newProduct cur = do
@@ -250,7 +254,8 @@ plainExample = do
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
 portfolioExample :: IO (StDoc Unique)
@@ -272,7 +277,8 @@ portfolioExample = do
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
   where
     mkAsset label amt cur = do
@@ -319,7 +325,8 @@ invoiceExample = do
         stDocPaymentMethods = [mtdUsd, mtdEur, mtdBtc, mtdXmr],
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
   where
     newProduct name weight price cur = do

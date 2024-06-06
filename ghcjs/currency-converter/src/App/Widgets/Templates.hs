@@ -86,8 +86,8 @@ unfilled :: [Template]
 unfilled =
   [ Template "Empty" emptyTemplate,
     Template "Text" plainTemplate,
-    Template "Portfolio" portfolioExample,
-    Template "Invoice" invoiceExample
+    Template "Portfolio" portfolioTemplate,
+    Template "Invoice" invoiceTemplate
   ]
 
 emptyTemplate :: IO (StDoc Unique)
@@ -120,6 +120,110 @@ plainTemplate = do
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead
       }
+
+portfolioTemplate :: IO (StDoc Unique)
+portfolioTemplate = do
+  fhead <- newDynamicTitleField mempty
+  ahead <- newDynamicTitleField "Assets"
+  phead <- newDynamicTitleField "Net worth"
+  a0 <- mkAsset "Cash" 0 usd
+  a1 <- mkAsset "Mobile wallet" 0 btc
+  a2 <- mkAsset "Private wallet" 0 xmr
+  mtdUsd <- newPayment usd
+  mtdBtc <- newPayment btc
+  pure
+    StDoc
+      { stDocFieldPairs = mempty,
+        stDocAssets = [a0, a1, a2],
+        stDocPaymentMethods = [mtdUsd, mtdBtc],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead
+      }
+  where
+    mkAsset label amt cur = do
+      lbl <-
+        newTextField
+          $ label
+          <> " ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      Asset
+        <$> newMoney amt cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
+    newPayment cur = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
+
+invoiceTemplate :: IO (StDoc Unique)
+invoiceTemplate = do
+  fhead <- newDynamicTitleField "Invoice"
+  ahead <- newDynamicTitleField "Purchase items"
+  phead <- newDynamicTitleField "Payment methods"
+  issuer <- newFieldPair "Issuer" $ DynamicFieldText mempty
+  client <- newFieldPair "Client" $ DynamicFieldText mempty
+  asset <- newProduct usd
+  mtdUsd <- newFiatPayment usd
+  mtdBtc <- newCryptoPayment btc mempty
+  pure
+    StDoc
+      { stDocFieldPairs = [issuer, client],
+        stDocAssets = [asset],
+        stDocPaymentMethods = [mtdUsd, mtdBtc],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead
+      }
+  where
+    newProduct cur = do
+      lbl <- newTextField "Price"
+      dsc <- newFieldPair "Product" $ DynamicFieldText mempty
+      qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
+      Asset
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure [dsc, qty]
+        <*> pure Closed
+    newFiatPayment cur = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure mempty
+        <*> pure Closed
+    newCryptoPayment cur addr = do
+      lbl <-
+        newTextField
+          $ "Total ("
+          <> T.toUpper (inspectCurrencyInfo cur)
+          <> ")"
+      address <-
+        fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+          . newFieldPair
+            ( "Address ("
+                <> T.toUpper (inspectCurrencyInfo cur)
+                <> ")"
+            )
+          $ DynamicFieldText addr
+      PaymentMethod
+        <$> newMoney 0 cur
+        <*> pure lbl
+        <*> pure [address]
+        <*> pure Closed
 
 --
 -- Examples
@@ -158,7 +262,7 @@ portfolioExample = do
   a1 <- mkAsset "US bank" 4500 usd
   a2 <- mkAsset "EU bank" 2300 eur
   a3 <- mkAsset "Mobile wallet" 0.042 btc
-  a4 <- mkAsset "Secret wallet" 13.2 xmr
+  a4 <- mkAsset "Private wallet" 13.2 xmr
   mtdUsd <- newPayment usd
   mtdBtc <- newPayment btc
   pure
@@ -202,8 +306,8 @@ invoiceExample = do
   phead <- newDynamicTitleField "Payment methods"
   issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice's Grocery Store"
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
-  tomato <- newFood "Tomato" 2 4 usd
-  beef <- newFood "Beef" 0.5 10 eur
+  tomato <- newProduct "Tomato" 2 4 usd
+  beef <- newProduct "Beef" 0.5 10 eur
   mtdUsd <- newFiatPayment usd
   mtdEur <- newFiatPayment eur
   mtdBtc <- newCryptoPayment btc exampleBtcAddress
@@ -218,7 +322,7 @@ invoiceExample = do
         stDocPaymentMethodsHeader = phead
       }
   where
-    newFood name weight price cur = do
+    newProduct name weight price cur = do
       lbl <- newTextField "Price (per kg)"
       dsc <- newFieldPair "Product" $ DynamicFieldText name
       qty <- newFieldPair "Weight (kg)" $ DynamicFieldNumber weight

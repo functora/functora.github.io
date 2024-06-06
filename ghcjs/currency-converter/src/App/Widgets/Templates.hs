@@ -54,7 +54,7 @@ templates optic tpls sc st =
               <> [ Cell.bigCell
                     $ Button.raised
                       ( Button.config
-                          & Button.setOnClick closed
+                          & Button.setOnClick goback
                           & Button.setIcon (Just "arrow_back")
                           & Button.setAttributes [class_ "fill"]
                       )
@@ -66,6 +66,10 @@ templates optic tpls sc st =
   ]
   where
     closed = pureUpdate 0 (& cloneLens optic .~ Closed)
+    goback =
+      pureUpdate 0
+        $ (& #modelMenu .~ Opened)
+        . (& cloneLens optic .~ Closed)
     screen tpl =
       PushUpdate $ do
         doc <- liftIO $ tpl ^. #templateMaker
@@ -86,6 +90,7 @@ unfilled :: [Template]
 unfilled =
   [ Template "Empty" emptyTemplate,
     Template "Text" plainTemplate,
+    Template "Donate" donateTemplate,
     Template "Portfolio" portfolioTemplate,
     Template "Invoice" invoiceTemplate
   ]
@@ -123,6 +128,28 @@ plainTemplate = do
         stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
+donateTemplate :: IO (StDoc Unique)
+donateTemplate = do
+  msg <- newFieldPair mempty $ DynamicFieldText mempty
+  btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText mempty
+  xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText mempty
+  fhead <- newDynamicTitleField "Dear User,"
+  ahead <- newDynamicTitleField mempty
+  phead <- newDynamicTitleField mempty
+  pure
+    StDoc
+      { stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
+        stDocAssets = mempty,
+        stDocPaymentMethods = mempty,
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
+      }
+  where
+    qr :: FieldPair a b -> FieldPair a b
+    qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+
 portfolioTemplate :: IO (StDoc Unique)
 portfolioTemplate = do
   fhead <- newDynamicTitleField mempty
@@ -157,11 +184,7 @@ portfolioTemplate = do
         <*> pure mempty
         <*> pure Closed
     newPayment cur = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       PaymentMethod
         <$> newMoney 0 cur
         <*> pure lbl
@@ -199,29 +222,17 @@ invoiceTemplate = do
         <*> pure [dsc, qty]
         <*> pure Closed
     newFiatPayment cur = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       PaymentMethod
         <$> newMoney 0 cur
         <*> pure lbl
         <*> pure mempty
         <*> pure Closed
     newCryptoPayment cur addr = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       address <-
         fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
-          . newFieldPair
-            ( "Address ("
-                <> T.toUpper (inspectCurrencyInfo cur)
-                <> ")"
-            )
+          . newFieldPair ("Address " <> T.toUpper (inspectCurrencyInfo cur))
           $ DynamicFieldText addr
       PaymentMethod
         <$> newMoney 0 cur
@@ -237,6 +248,7 @@ examples :: [Template]
 examples =
   [ Template "Empty" emptyTemplate,
     Template "Text" plainExample,
+    Template "Donate" donateExample,
     Template "Portfolio" portfolioExample,
     Template "Invoice" invoiceExample
   ]
@@ -244,7 +256,7 @@ examples =
 plainExample :: IO (StDoc Unique)
 plainExample = do
   msg <- newFieldPair mempty $ DynamicFieldText examplePlainText
-  fhead <- newDynamicTitleField mempty
+  fhead <- newDynamicTitleField "6102"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
@@ -257,6 +269,28 @@ plainExample = do
         stDocPaymentMethodsHeader = phead,
         stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
+
+donateExample :: IO (StDoc Unique)
+donateExample = do
+  msg <- newFieldPair mempty $ DynamicFieldText exampleDonationText
+  btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
+  xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
+  fhead <- newDynamicTitleField "Dear User,"
+  ahead <- newDynamicTitleField mempty
+  phead <- newDynamicTitleField mempty
+  pure
+    StDoc
+      { stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
+        stDocAssets = mempty,
+        stDocPaymentMethods = mempty,
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
+      }
+  where
+    qr :: FieldPair a b -> FieldPair a b
+    qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
 portfolioExample :: IO (StDoc Unique)
 portfolioExample = do
@@ -294,11 +328,7 @@ portfolioExample = do
         <*> pure mempty
         <*> pure Closed
     newPayment cur = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       PaymentMethod
         <$> newMoney 0 cur
         <*> pure lbl
@@ -339,29 +369,17 @@ invoiceExample = do
         <*> pure [dsc, qty]
         <*> pure Closed
     newFiatPayment cur = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       PaymentMethod
         <$> newMoney 0 cur
         <*> pure lbl
         <*> pure mempty
         <*> pure Closed
     newCryptoPayment cur addr = do
-      lbl <-
-        newTextField
-          $ "Total ("
-          <> T.toUpper (inspectCurrencyInfo cur)
-          <> ")"
+      lbl <- newTextField $ "Total " <> T.toUpper (inspectCurrencyInfo cur)
       address <-
         fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
-          . newFieldPair
-            ( "Address ("
-                <> T.toUpper (inspectCurrencyInfo cur)
-                <> ")"
-            )
+          . newFieldPair ("Address " <> T.toUpper (inspectCurrencyInfo cur))
           $ DynamicFieldText addr
       PaymentMethod
         <$> newMoney 0 cur
@@ -410,3 +428,7 @@ exampleXmrAddress = "EXAMPLE"
 examplePlainText :: Text
 examplePlainText =
   "Executive Order 6102 required all persons to deliver on or before May 1, 1933, all but a small amount of gold coin, gold bullion, and gold certificates owned by them to the Federal Reserve in exchange for $20.67 (equivalent to $487 in 2023) per troy ounce. Under the Trading with the Enemy Act of 1917, as amended by the recently passed Emergency Banking Act of March 9, 1933, a violation of the order was punishable by fine up to $10,000 (equivalent to $235,000 in 2023), up to ten years in prison, or both."
+
+exampleDonationText :: Text
+exampleDonationText =
+  "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora."

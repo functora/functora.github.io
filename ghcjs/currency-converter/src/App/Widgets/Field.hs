@@ -835,7 +835,8 @@ plain out widget =
                 ("min-height", "56px"),
                 ("height", "auto"),
                 ("padding-top", "8px"),
-                ("padding-bottom", "8px")
+                ("padding-bottom", "8px"),
+                ("line-height", "150%")
               ]
           ]
           [widget $ ms out]

@@ -34,6 +34,9 @@ defOpts :: Opts
 defOpts =
   Opts
     { optsLabel = "Amount",
+      --
+      -- TODO : remove this, seems redundant?
+      --
       optsShowZeroAmount = True
     }
 

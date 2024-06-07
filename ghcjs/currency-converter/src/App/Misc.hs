@@ -17,7 +17,6 @@ module App.Misc
     removeAt,
     moveUp,
     moveDown,
-    getCurrency,
     newModel,
     newAssetAction,
     newFieldPairAction,
@@ -237,18 +236,6 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-getCurrency ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  MVar Market ->
-  CurrencyCode ->
-  m CurrencyInfo
-getCurrency mark cur =
-  withMarket mark $ do
-    eInfo <- tryMarket $ getCurrencyInfo cur
-    either (const . pure $ CurrencyInfo cur mempty) pure eInfo
-
 --
 -- TODO : simplify this !!!!
 --
@@ -264,14 +251,14 @@ newModel mMark uri = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- maybe newMarket pure mMark
-  btc <- getCurrency market $ CurrencyCode "btc"
-  usd <- getCurrency market $ CurrencyCode "usd"
+  btc <- newCurrencyInfo market $ CurrencyCode "btc"
+  usd <- newCurrencyInfo market $ CurrencyCode "usd"
   topMoney <- newMoney 0 btc
   bottomMoney <- newMoney 0 usd
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
-  defDoc <- liftIO Templates.invoiceTemplate
+  defDoc <- liftIO $ Templates.invoiceTemplate market
   defPre <- newDynamicTitleField mempty
   let defSc = Editor
   (sc, doc, pre, ext) <-
@@ -412,7 +399,7 @@ newModel mMark uri = do
 newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
-    cur <- getCurrency (st ^. #modelMarket) $ CurrencyCode "usd"
+    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "usd"
     item <- newAsset "Price" 0 cur
     pure
       . ChanItem 0
@@ -433,7 +420,7 @@ newPaymentMethodAction ::
   Model -> ATraversal' Model [PaymentMethod Unique] -> Action
 newPaymentMethodAction st optic =
   PushUpdate $ do
-    cur <- getCurrency (st ^. #modelMarket) $ CurrencyCode "btc"
+    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "btc"
     item <- newPaymentMethod cur $ Just mempty
     pure
       . ChanItem 0

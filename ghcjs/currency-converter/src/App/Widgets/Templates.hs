@@ -10,6 +10,7 @@ import App.Types
 import qualified App.Widgets.Cell as Cell
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
+import Functora.Rates (Market)
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Theme as Theme
@@ -17,7 +18,7 @@ import Miso hiding (at, view)
 
 data Template = Template
   { templateName :: Text,
-    templateDoc :: IO (StDoc Unique),
+    templateDoc :: MVar Market -> IO (StDoc Unique),
     templateIkm :: IO (Maybe (Field Text Unique)),
     templatePre :: IO (Maybe (Field DynamicField Unique))
   }
@@ -74,7 +75,7 @@ templates optic tpls sc st =
         . (& cloneLens optic .~ Closed)
     screen tpl =
       PushUpdate $ do
-        doc <- liftIO $ tpl ^. #templateDoc
+        doc <- liftIO $ tpl ^. #templateDoc $ st ^. #modelMarket
         pre <- newDynamicTitleField mempty
         pure
           $ ChanItem 0
@@ -90,11 +91,11 @@ templates optic tpls sc st =
 
 unfilled :: [Template]
 unfilled =
-  [ Template "Empty" emptyTemplate nil nil,
-    Template "Text" plainTemplate nil nil,
-    Template "Secret" secretExample nil nil,
-    Template "Donate" donateTemplate nil nil,
+  [ Template "Empty" (const emptyTemplate) nil nil,
+    Template "Text" (const plainTemplate) nil nil,
+    Template "Donate" (const donateTemplate) nil nil,
     Template "Portfolio" portfolioTemplate nil nil,
+    Template "Secret" secretExample nil nil,
     Template "Invoice" invoiceTemplate nil nil
   ]
   where
@@ -139,7 +140,7 @@ donateTemplate = do
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText mempty
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText mempty
-  fhead <- newDynamicTitleField "Hello User!"
+  fhead <- newDynamicTitleField "Hello, User!"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
@@ -156,8 +157,11 @@ donateTemplate = do
     qr :: FieldPair a b -> FieldPair a b
     qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
-portfolioTemplate :: IO (StDoc Unique)
-portfolioTemplate = do
+portfolioTemplate :: MVar Market -> IO (StDoc Unique)
+portfolioTemplate mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
+  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -177,8 +181,10 @@ portfolioTemplate = do
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
 
-invoiceTemplate :: IO (StDoc Unique)
-invoiceTemplate = do
+invoiceTemplate :: MVar Market -> IO (StDoc Unique)
+invoiceTemplate mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
   fhead <- newDynamicTitleField "Invoice"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -214,11 +220,11 @@ invoiceTemplate = do
 
 examples :: [Template]
 examples =
-  [ Template "Empty" emptyTemplate nil nil,
-    Template "Text" plainExample nil nil,
-    Template "Secret" secretExample nil nil,
-    Template "Donate" donateExample nil nil,
+  [ Template "Empty" (const emptyTemplate) nil nil,
+    Template "Text" (const plainExample) nil nil,
+    Template "Donate" (const donateExample) nil nil,
     Template "Portfolio" portfolioExample nil nil,
+    Template "Secret" secretExample nil nil,
     Template "Invoice" invoiceExample nil nil
   ]
   where
@@ -242,32 +248,12 @@ plainExample = do
         stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
-secretExample :: IO (StDoc Unique)
-secretExample = do
-  msg <- newFieldPair mempty $ DynamicFieldText exampleSecretText
-  fhead <- newDynamicTitleField "Dear Tommy,"
-  ahead <- newDynamicTitleField mempty
-  phead <- newDynamicTitleField mempty
-  stuff <- newAsset "Stuff" 100 usd
-  delivery <- newAsset "Delivery" 25 usd
-  method <- newPaymentMethod xmr $ Just exampleXmrAddress
-  pure
-    StDoc
-      { stDocFieldPairs = [msg],
-        stDocAssets = [stuff, delivery],
-        stDocPaymentMethods = [method],
-        stDocFieldPairsHeader = fhead,
-        stDocAssetsHeader = ahead,
-        stDocPaymentMethodsHeader = phead,
-        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
-      }
-
 donateExample :: IO (StDoc Unique)
 donateExample = do
   msg <- newFieldPair mempty $ DynamicFieldText exampleDonationText
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
-  fhead <- newDynamicTitleField "Hello User!"
+  fhead <- newDynamicTitleField "Hello, User!"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
@@ -284,8 +270,12 @@ donateExample = do
     qr :: FieldPair a b -> FieldPair a b
     qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
-portfolioExample :: IO (StDoc Unique)
-portfolioExample = do
+portfolioExample :: MVar Market -> IO (StDoc Unique)
+portfolioExample mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  eur <- newCurrencyInfo mkt $ CurrencyCode "eur"
+  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
+  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -307,8 +297,34 @@ portfolioExample = do
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
 
-invoiceExample :: IO (StDoc Unique)
-invoiceExample = do
+secretExample :: MVar Market -> IO (StDoc Unique)
+secretExample mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+  msg <- newFieldPair mempty $ DynamicFieldText exampleSecretText
+  fhead <- newDynamicTitleField "Dear Tommy,"
+  ahead <- newDynamicTitleField mempty
+  phead <- newDynamicTitleField mempty
+  stuff <- newAsset "Stuff" 100 usd
+  delivery <- newAsset "Delivery" 25 usd
+  method <- newPaymentMethod xmr $ Just exampleXmrAddress
+  pure
+    StDoc
+      { stDocFieldPairs = [msg],
+        stDocAssets = [stuff, delivery],
+        stDocPaymentMethods = [method],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
+      }
+
+invoiceExample :: MVar Market -> IO (StDoc Unique)
+invoiceExample mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  eur <- newCurrencyInfo mkt $ CurrencyCode "eur"
+  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
+  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
   fhead <- newDynamicTitleField "Invoice #6102"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -342,36 +358,8 @@ invoiceExample = do
         <*> pure Closed
 
 --
--- Misc
+-- Const
 --
-
-btc :: CurrencyInfo
-btc =
-  CurrencyInfo
-    { currencyInfoCode = CurrencyCode "btc",
-      currencyInfoText = mempty
-    }
-
-xmr :: CurrencyInfo
-xmr =
-  CurrencyInfo
-    { currencyInfoCode = CurrencyCode "xmr",
-      currencyInfoText = mempty
-    }
-
-usd :: CurrencyInfo
-usd =
-  CurrencyInfo
-    { currencyInfoCode = CurrencyCode "usd",
-      currencyInfoText = mempty
-    }
-
-eur :: CurrencyInfo
-eur =
-  CurrencyInfo
-    { currencyInfoCode = CurrencyCode "eur",
-      currencyInfoText = mempty
-    }
 
 exampleBtcAddress :: Text
 exampleBtcAddress = "EXAMPLE"

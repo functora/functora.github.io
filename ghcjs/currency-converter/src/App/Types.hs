@@ -44,6 +44,7 @@ module App.Types
     newDynamicTitleField,
     newPasswordField,
     newMoney,
+    newCurrencyInfo,
     FieldPair (..),
     newFieldPair,
     unShareUri,
@@ -433,6 +434,18 @@ newMoney amt cur =
     <$> newRatioField amt
     <*> newCurrency cur
 
+newCurrencyInfo ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  MVar Market ->
+  CurrencyCode ->
+  m CurrencyInfo
+newCurrencyInfo mark cur =
+  withMarket mark $ do
+    eInfo <- tryMarket $ getCurrencyInfo cur
+    either (const . pure $ CurrencyInfo cur mempty) pure eInfo
+
 --
 -- NOTE : In most cases we don't need JSM.
 --
@@ -472,11 +485,10 @@ newAsset ::
   m (Asset Unique)
 newAsset label amt cur = do
   lbl <- newTextField label
-  prod <- newFieldPair "Product" $ DynamicFieldText mempty
   Asset
     <$> newMoney amt cur
     <*> pure lbl
-    <*> pure [prod]
+    <*> pure mempty
     <*> pure Closed
 
 newPaymentMethod ::

@@ -8,11 +8,9 @@ where
 
 import App.Types
 import qualified App.Widgets.Cell as Cell
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
-import qualified Functora.Money as Money
 import Functora.Prelude hiding (Field)
 import Functora.Rates
 import Functora.Rates (Market)
@@ -85,6 +83,8 @@ templates optic tpls sc st =
         doc <- liftIO $ tpl ^. #templateDoc $ st ^. #modelMarket
         mPre <- liftIO $ tpl ^. #templatePre
         mIkm <- liftIO $ tpl ^. #templateIkm
+        noPre <- newDynamicField $ DynamicFieldText mempty
+        noIkm <- newPasswordField mempty
         let next =
               st
                 & cloneLens optic
@@ -97,10 +97,10 @@ templates optic tpls sc st =
                 .~ doc
                 & #modelState
                 . #stPre
-                %~ flip fromMaybe mPre
+                .~ fromMaybe noPre mPre
                 & #modelState
                 . #stIkm
-                %~ flip fromMaybe mIkm
+                .~ fromMaybe noIkm mIkm
                 & #modelState
                 . #stExt
                 .~ Nothing
@@ -388,10 +388,6 @@ invoiceExample mkt = do
         <*> pure [dsc, qty]
         <*> pure Closed
 
---
--- Misc
---
-
 newModel ::
   ( MonadThrow m,
     MonadUnliftIO m
@@ -406,14 +402,14 @@ newModel mMark uri = do
   market <- maybe newMarket pure mMark
   btc <- newCurrencyInfo market $ CurrencyCode "btc"
   usd <- newCurrencyInfo market $ CurrencyCode "usd"
-  topMoney <- newMoney 0 btc
+  topMoney <- newMoney 1 btc
   bottomMoney <- newMoney 0 usd
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
   defDoc <- liftIO $ invoiceTemplate market
   defPre <- newDynamicTitleField mempty
-  let defSc = Editor
+  let defSc = Converter
   (sc, doc, pre, ext) <-
     maybe
       ( pure (defSc, defDoc, defPre, Nothing)
@@ -482,82 +478,18 @@ newModel mMark uri = do
           }
   fmap (fromRight st) . tryMarket . withMarket market $ do
     currenciesInfo <- currenciesList <$> getCurrencies
-    baseCur <-
-      fmap (fromRight $ NonEmpty.head currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode btc
-    quoteCur <-
-      fmap (fromRight $ NonEmpty.last currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode usd
-    let baseAmt =
-          Tagged 1 ::
-            Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
-    quote <-
-      getQuote
-        (Funds baseAmt $ currencyInfoCode baseCur)
-        $ currencyInfoCode quoteCur
-    let quoteAmt = quoteMoneyAmount quote
-    pure
-      $ st
-      --
-      -- Converter
-      --
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged baseAmt)
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged baseAmt
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ baseCur
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged quoteAmt)
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged quoteAmt
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ quoteCur
-      --
-      -- Misc
-      --
-      & #modelCurrencies
-      .~ currenciesInfo
+    pure $ st & #modelCurrencies .~ currenciesInfo
 
 --
 -- Const
 --
 
 exampleBtcAddress :: Text
-exampleBtcAddress = "EXAMPLE"
+exampleBtcAddress = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"
 
 exampleXmrAddress :: Text
-exampleXmrAddress = "EXAMPLE"
+exampleXmrAddress =
+  "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG"
 
 examplePlainText :: Text
 examplePlainText =
@@ -571,7 +503,7 @@ exampleSecretPre :: Text
 exampleSecretPre =
   "The password is \""
     <> exampleSecretIkm
-    <> "\". THIS IS JUST AN EXAMPLE! NEVER SHARE REAL PASSWORDS THROUGH THE MESSAGE PREVIEW FEATURE!"
+    <> "\". THIS IS JUST AN EXAMPLE! NEVER SHARE REAL PASSWORDS THROUGH THE MESSAGE PREVIEW!"
 
 exampleSecretIkm :: Text
 exampleSecretIkm = "order6102"

@@ -17,7 +17,10 @@ import qualified System.Random as Random
 
 decrypt :: Model -> [View Action]
 decrypt st =
-  [ Cell.mediumCell
+  [ Cell.bigCell
+      . div_ mempty
+      $ Field.dynamicFieldViewer st (st ^. #modelState . #stPre),
+    Cell.mediumCell
       $ Field.passwordField
         st
         ( #modelState

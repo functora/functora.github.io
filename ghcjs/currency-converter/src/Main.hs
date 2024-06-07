@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Main
+import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)
@@ -29,7 +30,7 @@ main :: IO ()
 main =
   runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
     uri <- URI.mkURI . inspect =<< getCurrentURI
-    st <- Misc.newModel Nothing uri
+    st <- newModel Nothing uri
     startApp
       App
         { model = st & #modelHide .~ True,

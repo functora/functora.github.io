@@ -79,7 +79,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
         <> Qr.qr
           st
           ( either impureThrow URI.render
-              . Misc.stExtUri
+              . stExtUri
               $ ext
               & #stExtScreen
               %~ unQrCode
@@ -90,9 +90,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
                     ( Button.config
                         & Button.setIcon (Just "login")
                         & Button.setAttributes [class_ "fill"]
-                        & Button.setOnClick
-                          ( Misc.setExtScreenAction $ unQrCode sc
-                          )
+                        & Button.setOnClick (setExtScreenAction $ unQrCode sc)
                     )
                     "Open"
                  ]
@@ -100,7 +98,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  case Misc.stUri $ st & #modelState . #stScreen %~ unQrCode of
+  case stUri $ st & #modelState . #stScreen %~ unQrCode of
     Left e -> impureThrow e
     Right uri ->
       Header.headerWrapper
@@ -116,7 +114,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                     ( Button.config
                         & Button.setIcon (Just "login")
                         & Button.setAttributes [class_ "fill"]
-                        & Button.setOnClick (Misc.setScreenAction $ unQrCode sc)
+                        & Button.setOnClick (setScreenAction $ unQrCode sc)
                     )
                     "Open"
                  ]
@@ -321,5 +319,5 @@ tosWidget =
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text
         ". This software is 100% organic and AI-free. It is built and tested exclusively by humans. ",
-      Miso.text . ms $ "Version " <> Misc.vsn <> "."
+      Miso.text . ms $ "Version " <> vsn <> "."
     ]

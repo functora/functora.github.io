@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module App.Types
@@ -48,12 +49,22 @@ module App.Types
     FieldPair (..),
     newFieldPair,
     unShareUri,
+    stUri,
+    stExtUri,
+    setScreenPure,
+    setScreenAction,
+    setExtScreenAction,
+    shareLink,
+    vsn,
   )
 where
 
 import qualified Data.ByteString.Base64.URL as B64URL
+import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
+import qualified Data.Text as T
+import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
@@ -61,6 +72,7 @@ import Functora.Prelude hiding (Field (..))
 import Functora.Rates
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
+import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
 data Model = Model
@@ -699,3 +711,130 @@ qsGet ::
 qsGet qk = \case
   URI.QueryParam k x | k == qk -> Just $ URI.unRText x
   _ -> Nothing
+
+stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
+stQuery st = do
+  kDoc <- URI.mkQueryKey "d"
+  vDoc <-
+    (URI.mkQueryValue <=< encodeText)
+      . encodeBinary
+      . Aes.encryptHmac aes
+      $ encodeBinary (st ^. #stDoc)
+  kKm <- URI.mkQueryKey "k"
+  vKm <-
+    (URI.mkQueryValue <=< encodeText)
+      . encodeBinary
+      . fromEither
+      $ fmap (& #kmIkm .~ Ikm mempty) ekm
+  kSc <- URI.mkQueryKey "s"
+  vSc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stScreen)
+  kPre <- URI.mkQueryKey "p"
+  vPre <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stPre)
+  pure
+    [ URI.QueryParam kDoc vDoc,
+      URI.QueryParam kKm vKm,
+      URI.QueryParam kSc vSc,
+      URI.QueryParam kPre vPre
+    ]
+  where
+    aes :: Aes.SomeAesKey
+    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
+    ekm :: Either Aes.Km Aes.Km
+    ekm =
+      case st ^. #stIkm . #fieldOutput of
+        ikm | null ikm -> Left (st ^. #stKm)
+        ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText =
+      either throw pure
+        . decodeUtf8'
+        . B64URL.encode
+        . from @BL.ByteString @ByteString
+
+stExtQuery :: (MonadThrow m) => StExt Identity -> m [URI.QueryParam]
+stExtQuery st = do
+  kDoc <- URI.mkQueryKey "d"
+  vDoc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtDoc)
+  kKm <- URI.mkQueryKey "k"
+  vKm <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtKm)
+  kSc <- URI.mkQueryKey "s"
+  vSc <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtScreen)
+  kPre <- URI.mkQueryKey "p"
+  vPre <-
+    (URI.mkQueryValue <=< encodeText)
+      $ encodeBinary (st ^. #stExtPre)
+  pure
+    [ URI.QueryParam kDoc vDoc,
+      URI.QueryParam kKm vKm,
+      URI.QueryParam kSc vSc,
+      URI.QueryParam kPre vPre
+    ]
+  where
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText =
+      either throw pure
+        . decodeUtf8'
+        . B64URL.encode
+        . from @BL.ByteString @ByteString
+
+stUri :: (MonadThrow m) => Model -> m URI
+stUri st = do
+  uri <- mkURI baseUri
+  qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
+  pure
+    $ uri
+      { URI.uriQuery = qxs
+      }
+
+stExtUri :: (MonadThrow m) => StExt Unique -> m URI
+stExtUri ext = do
+  uri <- mkURI baseUri
+  qxs <- stExtQuery $ uniqueToIdentity ext
+  pure
+    $ uri
+      { URI.uriQuery = qxs
+      }
+
+baseUri :: Text
+#ifdef GHCID
+baseUri =
+  "http://localhost:8080"
+#else
+baseUri =
+  "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
+#endif
+
+setScreenPure :: Screen -> Model -> Model
+setScreenPure sc =
+  (& #modelState . #stScreen .~ sc)
+
+setScreenAction :: Screen -> Action
+setScreenAction =
+  pureUpdate 0 . setScreenPure
+
+setExtScreenAction :: Screen -> Action
+setExtScreenAction sc =
+  pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
+
+shareLink :: forall a. (From Text a) => Screen -> Model -> a
+shareLink sc =
+  from @Text @a
+    . either impureThrow URI.render
+    . stUri
+    . setScreenPure sc
+
+vsn :: Text
+vsn =
+  T.intercalate "."
+    . fmap inspect
+    $ Version.versionBranch Paths.version

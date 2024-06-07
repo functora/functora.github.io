@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module App.Misc
   ( getConverterAmountOptic,
     getConverterCurrencyOptic,
@@ -17,38 +15,19 @@ module App.Misc
     removeAt,
     moveUp,
     moveDown,
-    newModel,
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
-    stUri,
-    stExtUri,
-    setScreenPure,
-    setScreenAction,
-    setExtScreenAction,
-    vsn,
   )
 where
 
 import App.Types
-import qualified App.Widgets.Templates as Templates
-import qualified Data.ByteString.Base64.URL as B64URL
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.Generics as Syb
-import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Text as T
-import qualified Data.Version as Version
-import qualified Functora.Aes as Aes
-import Functora.Cfg
 import Functora.Money
-import qualified Functora.Money as Money
 import Functora.Prelude hiding (Field)
-import Functora.Rates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
-import qualified Paths_app as Paths
-import qualified Text.URI as URI
 import qualified Prelude
 
 getConverterAmountOptic ::
@@ -236,166 +215,6 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
---
--- TODO : simplify this !!!!
---
-newModel ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Maybe (MVar Market) ->
-  URI ->
-  m Model
-newModel mMark uri = do
-  ct <- getCurrentTime
-  prod <- liftIO newBroadcastTChanIO
-  cons <- liftIO . atomically $ dupTChan prod
-  market <- maybe newMarket pure mMark
-  btc <- newCurrencyInfo market $ CurrencyCode "btc"
-  usd <- newCurrencyInfo market $ CurrencyCode "usd"
-  topMoney <- newMoney 0 btc
-  bottomMoney <- newMoney 0 usd
-  ikm <- newPasswordField mempty
-  km <- Aes.randomKm 32
-  mApp <- unShareUri uri
-  defDoc <- liftIO $ Templates.invoiceTemplate market
-  defPre <- newDynamicTitleField mempty
-  let defSc = Editor
-  (sc, doc, pre, ext) <-
-    maybe
-      ( pure (defSc, defDoc, defPre, Nothing)
-      )
-      ( \ext -> do
-          let sc = ext ^. #stExtScreen
-          let pre = ext ^. #stExtPre
-          if null $ ext ^. #stExtKm . #kmIkm . #unIkm
-            then
-              pure
-                ( sc,
-                  defDoc,
-                  pre,
-                  Just ext
-                )
-            else do
-              bDoc :: ByteString <-
-                maybe
-                  ( throwString @Text "Failed to decrypt the document!"
-                  )
-                  pure
-                  $ Aes.unHmacDecrypt
-                    ( Aes.drvSomeAesKey @Aes.Word256 $ ext ^. #stExtKm
-                    )
-                    ( ext ^. #stExtDoc
-                    )
-              doc <-
-                identityToUnique
-                  =<< either (throwString . thd3) pure (decodeBinary bDoc)
-              pure
-                ( sc,
-                  doc,
-                  pre,
-                  Nothing
-                )
-      )
-      mApp
-  let st =
-        Model
-          { modelHide = False,
-            modelMenu = Closed,
-            modelShare = Closed,
-            modelTemplates = Closed,
-            modelExamples = Closed,
-            modelState =
-              St
-                { stScreen = sc,
-                  stConv =
-                    StConv
-                      { stConvTopMoney = topMoney,
-                        stConvBottomMoney = bottomMoney,
-                        stConvTopOrBottom = Top
-                      },
-                  stDoc = doc,
-                  stIkm = ikm,
-                  stKm = km,
-                  stPre = pre,
-                  stExt = ext
-                },
-            modelMarket = market,
-            modelCurrencies = [btc, usd],
-            modelSnackbarQueue = Snackbar.initialQueue,
-            modelProducerQueue = prod,
-            modelConsumerQueue = cons,
-            modelOnlineAt = ct
-          }
-  fmap (fromRight st) . tryMarket . withMarket market $ do
-    currenciesInfo <- currenciesList <$> getCurrencies
-    baseCur <-
-      fmap (fromRight $ NonEmpty.head currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode btc
-    quoteCur <-
-      fmap (fromRight $ NonEmpty.last currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode usd
-    let baseAmt =
-          Tagged 1 ::
-            Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
-    quote <-
-      getQuote
-        (Funds baseAmt $ currencyInfoCode baseCur)
-        $ currencyInfoCode quoteCur
-    let quoteAmt = quoteMoneyAmount quote
-    pure
-      $ st
-      --
-      -- Converter
-      --
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged baseAmt)
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged baseAmt
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ baseCur
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged quoteAmt)
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged quoteAmt
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ quoteCur
-      --
-      -- Misc
-      --
-      & #modelCurrencies
-      .~ currenciesInfo
-
 newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
@@ -426,123 +245,3 @@ newPaymentMethodAction st optic =
       . ChanItem 0
       $ (textPopupPure @Text "Added payment!")
       . (& cloneTraversal optic %~ (<> [item]))
-
-stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
-stQuery st = do
-  kDoc <- URI.mkQueryKey "d"
-  vDoc <-
-    (URI.mkQueryValue <=< encodeText)
-      . encodeBinary
-      . Aes.encryptHmac aes
-      $ encodeBinary (st ^. #stDoc)
-  kKm <- URI.mkQueryKey "k"
-  vKm <-
-    (URI.mkQueryValue <=< encodeText)
-      . encodeBinary
-      . fromEither
-      $ fmap (& #kmIkm .~ Ikm mempty) ekm
-  kSc <- URI.mkQueryKey "s"
-  vSc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stScreen)
-  kPre <- URI.mkQueryKey "p"
-  vPre <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stPre)
-  pure
-    [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kKm vKm,
-      URI.QueryParam kSc vSc,
-      URI.QueryParam kPre vPre
-    ]
-  where
-    aes :: Aes.SomeAesKey
-    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
-    ekm :: Either Aes.Km Aes.Km
-    ekm =
-      case st ^. #stIkm . #fieldOutput of
-        ikm | null ikm -> Left (st ^. #stKm)
-        ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
-    encodeText =
-      either throw pure
-        . decodeUtf8'
-        . B64URL.encode
-        . from @BL.ByteString @ByteString
-
-stExtQuery :: (MonadThrow m) => StExt Identity -> m [URI.QueryParam]
-stExtQuery st = do
-  kDoc <- URI.mkQueryKey "d"
-  vDoc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtDoc)
-  kKm <- URI.mkQueryKey "k"
-  vKm <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtKm)
-  kSc <- URI.mkQueryKey "s"
-  vSc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtScreen)
-  kPre <- URI.mkQueryKey "p"
-  vPre <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtPre)
-  pure
-    [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kKm vKm,
-      URI.QueryParam kSc vSc,
-      URI.QueryParam kPre vPre
-    ]
-  where
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
-    encodeText =
-      either throw pure
-        . decodeUtf8'
-        . B64URL.encode
-        . from @BL.ByteString @ByteString
-
-stUri :: (MonadThrow m) => Model -> m URI
-stUri st = do
-  uri <- mkURI baseUri
-  qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
-  pure
-    $ uri
-      { URI.uriQuery = qxs
-      }
-
-stExtUri :: (MonadThrow m) => StExt Unique -> m URI
-stExtUri st = do
-  uri <- mkURI baseUri
-  qxs <- stExtQuery $ uniqueToIdentity st
-  pure
-    $ uri
-      { URI.uriQuery = qxs
-      }
-
-baseUri :: Text
-#ifdef GHCID
-baseUri =
-  "http://localhost:8080"
-#else
-baseUri =
-  "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
-#endif
-
-setScreenPure :: Screen -> Model -> Model
-setScreenPure sc =
-  (& #modelState . #stScreen .~ sc)
-
-setScreenAction :: Screen -> Action
-setScreenAction =
-  pureUpdate 0 . setScreenPure
-
-setExtScreenAction :: Screen -> Action
-setExtScreenAction sc =
-  pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
-
-vsn :: Text
-vsn =
-  T.intercalate "."
-    . fmap inspect
-    $ Version.versionBranch Paths.version

@@ -8,6 +8,7 @@ import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
+import App.Widgets.Templates
 import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -151,7 +152,7 @@ shareWidget st screen =
             & Button.setOnClick
               ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenLink
-                  new <- Misc.newModel (Just $ st ^. #modelMarket) uri
+                  new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
               )
         )
@@ -181,7 +182,7 @@ shareWidget st screen =
             & Button.setOnClick
               ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenQrCode
-                  new <- Misc.newModel (Just $ st ^. #modelMarket) uri
+                  new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
               )
         )
@@ -191,10 +192,3 @@ shareWidget st screen =
   where
     screenLink = shareLink screen st
     screenQrCode = shareLink (QrCode screen) st
-
-shareLink :: forall a. (From Text a) => Screen -> Model -> a
-shareLink sc =
-  from @Text @a
-    . either impureThrow URI.render
-    . Misc.stUri
-    . Misc.setScreenPure sc

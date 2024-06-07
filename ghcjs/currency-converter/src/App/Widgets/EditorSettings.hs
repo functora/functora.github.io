@@ -132,7 +132,7 @@ shareWidget st screen =
       . TextArea.filled
       $ TextArea.config
       & TextArea.setValue (Just screenLink)
-      & TextArea.setLabel (Just "Link")
+      & TextArea.setLabel (Just $ inspect screen <> " link")
       & TextArea.setDisabled True
       & TextArea.setFullwidth True,
     Cell.mediumCell

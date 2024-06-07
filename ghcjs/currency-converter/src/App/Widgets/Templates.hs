@@ -23,6 +23,7 @@ import qualified Text.URI as URI
 
 data Template = Template
   { templateName :: Text,
+    templateIcon :: Text,
     templateDoc :: MVar Market -> IO (StDoc Unique),
     templatePre :: IO (Maybe (Field DynamicField Unique)),
     templateIkm :: IO (Maybe (Field Text Unique))
@@ -46,11 +47,14 @@ templates optic tpls sc st =
           [ Cell.grid mempty
               $ ( do
                     tpl <- tpls
+                    (icon, fun) <-
+                      [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
                     pure
                       . Cell.mediumCell
                       $ Button.raised
                         ( Button.config
-                            & Button.setOnClick (screen tpl)
+                            & Button.setIcon (Just $ from @Text @String icon)
+                            & Button.setOnClick (screen fun tpl)
                             & Button.setAttributes
                               [ Theme.secondaryBg,
                                 class_ "fill"
@@ -78,7 +82,7 @@ templates optic tpls sc st =
       pureUpdate 0
         $ (& #modelMenu .~ Opened)
         . (& cloneLens optic .~ Closed)
-    screen tpl =
+    screen fun tpl =
       PushUpdate $ do
         doc <- liftIO $ tpl ^. #templateDoc $ st ^. #modelMarket
         mPre <- liftIO $ tpl ^. #templatePre
@@ -91,7 +95,7 @@ templates optic tpls sc st =
                 .~ Closed
                 & #modelState
                 . #stScreen
-                .~ sc
+                .~ fun sc
                 & #modelState
                 . #stDoc
                 .~ doc
@@ -104,7 +108,7 @@ templates optic tpls sc st =
                 & #modelState
                 . #stExt
                 .~ Nothing
-        uri <- URI.mkURI $ shareLink sc next
+        uri <- URI.mkURI $ shareLink (fun sc) next
         new <- newModel (Just $ st ^. #modelMarket) uri
         pure . ChanItem 0 $ const new
 
@@ -114,12 +118,12 @@ templates optic tpls sc st =
 
 unfilled :: [Template]
 unfilled =
-  [ Template "Empty" (const emptyTemplate) nil nil,
-    Template "Text" (const plainTemplate) nil nil,
-    Template "Donate" (const donateTemplate) nil nil,
-    Template "Portfolio" portfolioTemplate nil nil,
-    Template "Secret" secretExample pre ikm,
-    Template "Invoice" invoiceTemplate nil nil
+  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
+    Template "Text" "font_download" (const plainTemplate) nil nil,
+    Template "Donate" "volunteer_activism" (const donateTemplate) nil nil,
+    Template "Portfolio" "work" portfolioTemplate nil nil,
+    Template "Secret" "lock" secretExample pre ikm,
+    Template "Invoice" "request_quote" invoiceTemplate nil nil
   ]
   where
     nil :: IO (Maybe (Field a b))
@@ -247,12 +251,12 @@ invoiceTemplate mkt = do
 
 examples :: [Template]
 examples =
-  [ Template "Empty" (const emptyTemplate) nil nil,
-    Template "Text" (const plainExample) nil nil,
-    Template "Donate" (const donateExample) nil nil,
-    Template "Portfolio" portfolioExample nil nil,
-    Template "Secret" secretExample pre ikm,
-    Template "Invoice" invoiceExample nil nil
+  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
+    Template "Text" "font_download" (const plainExample) nil nil,
+    Template "Donate" "volunteer_activism" (const donateExample) nil nil,
+    Template "Portfolio" "work" portfolioExample nil nil,
+    Template "Secret" "lock" secretExample pre ikm,
+    Template "Invoice" "request_quote" invoiceExample nil nil
   ]
   where
     nil :: IO (Maybe (Field a b))

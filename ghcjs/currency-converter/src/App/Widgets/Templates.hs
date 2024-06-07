@@ -2,12 +2,12 @@ module App.Widgets.Templates
   ( templates,
     unfilled,
     examples,
+    invoiceTemplate,
   )
 where
 
 import App.Types
 import qualified App.Widgets.Cell as Cell
-import qualified Data.Text as T
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import qualified Material.Button as Button
@@ -161,11 +161,11 @@ portfolioTemplate = do
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
-  a0 <- mkAsset "Cash" 0 usd
-  a1 <- mkAsset "Mobile wallet" 0 btc
-  a2 <- mkAsset "Private wallet" 0 xmr
-  mtdUsd <- mkPayment usd Nothing
-  mtdBtc <- mkPayment btc Nothing
+  a0 <- newAsset "Cash" 0 usd
+  a1 <- newAsset "Mobile wallet" 0 btc
+  a2 <- newAsset "Private wallet" 0 xmr
+  mtdUsd <- newPaymentMethod usd Nothing
+  mtdBtc <- newPaymentMethod btc Nothing
   pure
     StDoc
       { stDocFieldPairs = mempty,
@@ -185,8 +185,8 @@ invoiceTemplate = do
   issuer <- newFieldPair "Issuer" $ DynamicFieldText mempty
   client <- newFieldPair "Client" $ DynamicFieldText mempty
   asset <- newProduct usd
-  mtdUsd <- mkPayment usd Nothing
-  mtdBtc <- mkPayment btc Nothing
+  mtdUsd <- newPaymentMethod usd Nothing
+  mtdBtc <- newPaymentMethod btc $ Just mempty
   pure
     StDoc
       { stDocFieldPairs = [issuer, client],
@@ -248,9 +248,9 @@ secretExample = do
   fhead <- newDynamicTitleField "Dear Tommy,"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
-  stuff <- mkAsset "Stuff" 100 usd
-  delivery <- mkAsset "Delivery" 25 usd
-  method <- mkPayment xmr $ Just exampleXmrAddress
+  stuff <- newAsset "Stuff" 100 usd
+  delivery <- newAsset "Delivery" 25 usd
+  method <- newPaymentMethod xmr $ Just exampleXmrAddress
   pure
     StDoc
       { stDocFieldPairs = [msg],
@@ -289,13 +289,13 @@ portfolioExample = do
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
-  a0 <- mkAsset "Cash" 3000 usd
-  a1 <- mkAsset "US bank" 4500 usd
-  a2 <- mkAsset "EU bank" 2300 eur
-  a3 <- mkAsset "Mobile wallet" 0.042 btc
-  a4 <- mkAsset "Private wallet" 13.2 xmr
-  mtdUsd <- mkPayment usd Nothing
-  mtdBtc <- mkPayment btc Nothing
+  a0 <- newAsset "Cash" 3000 usd
+  a1 <- newAsset "US bank" 4500 usd
+  a2 <- newAsset "EU bank" 2300 eur
+  a3 <- newAsset "Mobile wallet" 0.042 btc
+  a4 <- newAsset "Private wallet" 13.2 xmr
+  mtdUsd <- newPaymentMethod usd Nothing
+  mtdBtc <- newPaymentMethod btc Nothing
   pure
     StDoc
       { stDocFieldPairs = mempty,
@@ -316,10 +316,10 @@ invoiceExample = do
   client <- newFieldPair "Client" $ DynamicFieldText "Bob"
   tomato <- newProduct "Tomato" 2 4 usd
   beef <- newProduct "Beef" 0.5 10 eur
-  mtdUsd <- mkPayment usd Nothing
-  mtdEur <- mkPayment eur Nothing
-  mtdBtc <- mkPayment btc $ Just exampleBtcAddress
-  mtdXmr <- mkPayment xmr $ Just exampleXmrAddress
+  mtdUsd <- newPaymentMethod usd Nothing
+  mtdEur <- newPaymentMethod eur Nothing
+  mtdBtc <- newPaymentMethod btc $ Just exampleBtcAddress
+  mtdXmr <- newPaymentMethod xmr $ Just exampleXmrAddress
   pure
     StDoc
       { stDocFieldPairs = [issuer, client],
@@ -344,33 +344,6 @@ invoiceExample = do
 --
 -- Misc
 --
-
-mkAsset :: Text -> Rational -> CurrencyInfo -> IO (Asset Unique)
-mkAsset label amt cur = do
-  lbl <- newTextField label
-  Asset
-    <$> newMoney amt cur
-    <*> pure lbl
-    <*> pure mempty
-    <*> pure Closed
-
-mkPayment :: CurrencyInfo -> Maybe Text -> IO (PaymentMethod Unique)
-mkPayment cur addr0 = do
-  lbl <- newTextField $ T.toUpper (inspectCurrencyInfo cur) <> " total"
-  addr1 <-
-    maybe
-      ( pure Nothing
-      )
-      ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
-          . newFieldPair (T.toUpper (inspectCurrencyInfo cur) <> " address")
-          . DynamicFieldText
-      )
-      addr0
-  PaymentMethod
-    <$> newMoney 0 cur
-    <*> pure lbl
-    <*> pure (maybeToList addr1)
-    <*> pure Closed
 
 btc :: CurrencyInfo
 btc =

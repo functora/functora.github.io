@@ -17,7 +17,8 @@ module App.Misc
     removeAt,
     moveUp,
     moveDown,
-    getSomeCurrency,
+    getCurrency,
+    newModel,
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
@@ -31,15 +32,19 @@ module App.Misc
 where
 
 import App.Types
+import qualified App.Widgets.Templates as Templates
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Generics as Syb
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as T
 import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money
+import qualified Functora.Money as Money
 import Functora.Prelude hiding (Field)
+import Functora.Rates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
@@ -232,19 +237,183 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-getSomeCurrency :: Model -> CurrencyCode -> CurrencyInfo
-getSomeCurrency st cur =
-  fromMaybe (head currencies) $ find ((== cur) . currencyInfoCode) currencies
-  where
-    currencies = st ^. #modelCurrencies
+getCurrency ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  MVar Market ->
+  CurrencyCode ->
+  m CurrencyInfo
+getCurrency mark cur =
+  withMarket mark $ do
+    eInfo <- tryMarket $ getCurrencyInfo cur
+    either (const . pure $ CurrencyInfo cur mempty) pure eInfo
+
+--
+-- TODO : simplify this !!!!
+--
+newModel ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Maybe (MVar Market) ->
+  URI ->
+  m Model
+newModel mMark uri = do
+  ct <- getCurrentTime
+  prod <- liftIO newBroadcastTChanIO
+  cons <- liftIO . atomically $ dupTChan prod
+  market <- maybe newMarket pure mMark
+  btc <- getCurrency market $ CurrencyCode "btc"
+  usd <- getCurrency market $ CurrencyCode "usd"
+  topMoney <- newMoney 0 btc
+  bottomMoney <- newMoney 0 usd
+  ikm <- newPasswordField mempty
+  km <- Aes.randomKm 32
+  mApp <- unShareUri uri
+  defDoc <- liftIO Templates.invoiceTemplate
+  defPre <- newDynamicTitleField mempty
+  let defSc = Editor
+  (sc, doc, pre, ext) <-
+    maybe
+      ( pure (defSc, defDoc, defPre, Nothing)
+      )
+      ( \ext -> do
+          let sc = ext ^. #stExtScreen
+          let pre = ext ^. #stExtPre
+          if null $ ext ^. #stExtKm . #kmIkm . #unIkm
+            then
+              pure
+                ( sc,
+                  defDoc,
+                  pre,
+                  Just ext
+                )
+            else do
+              bDoc :: ByteString <-
+                maybe
+                  ( throwString @Text "Failed to decrypt the document!"
+                  )
+                  pure
+                  $ Aes.unHmacDecrypt
+                    ( Aes.drvSomeAesKey @Aes.Word256 $ ext ^. #stExtKm
+                    )
+                    ( ext ^. #stExtDoc
+                    )
+              doc <-
+                identityToUnique
+                  =<< either (throwString . thd3) pure (decodeBinary bDoc)
+              pure
+                ( sc,
+                  doc,
+                  pre,
+                  Nothing
+                )
+      )
+      mApp
+  let st =
+        Model
+          { modelHide = False,
+            modelMenu = Closed,
+            modelShare = Closed,
+            modelTemplates = Closed,
+            modelExamples = Closed,
+            modelState =
+              St
+                { stScreen = sc,
+                  stConv =
+                    StConv
+                      { stConvTopMoney = topMoney,
+                        stConvBottomMoney = bottomMoney,
+                        stConvTopOrBottom = Top
+                      },
+                  stDoc = doc,
+                  stIkm = ikm,
+                  stKm = km,
+                  stPre = pre,
+                  stExt = ext
+                },
+            modelMarket = market,
+            modelCurrencies = [btc, usd],
+            modelSnackbarQueue = Snackbar.initialQueue,
+            modelProducerQueue = prod,
+            modelConsumerQueue = cons,
+            modelOnlineAt = ct
+          }
+  fmap (fromRight st) . tryMarket . withMarket market $ do
+    currenciesInfo <- currenciesList <$> getCurrencies
+    baseCur <-
+      fmap (fromRight $ NonEmpty.head currenciesInfo)
+        . tryMarket
+        . getCurrencyInfo
+        $ currencyInfoCode btc
+    quoteCur <-
+      fmap (fromRight $ NonEmpty.last currenciesInfo)
+        . tryMarket
+        . getCurrencyInfo
+        $ currencyInfoCode usd
+    let baseAmt =
+          Tagged 1 ::
+            Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
+    quote <-
+      getQuote
+        (Funds baseAmt $ currencyInfoCode baseCur)
+        $ currencyInfoCode quoteCur
+    let quoteAmt = quoteMoneyAmount quote
+    pure
+      $ st
+      --
+      -- Converter
+      --
+      & #modelState
+      . #stConv
+      . #stConvTopMoney
+      . #moneyAmount
+      . #fieldInput
+      . #uniqueValue
+      .~ inspectRatioDef (unTagged baseAmt)
+      & #modelState
+      . #stConv
+      . #stConvTopMoney
+      . #moneyAmount
+      . #fieldOutput
+      .~ unTagged baseAmt
+      & #modelState
+      . #stConv
+      . #stConvTopMoney
+      . #moneyCurrency
+      . #currencyOutput
+      .~ baseCur
+      & #modelState
+      . #stConv
+      . #stConvBottomMoney
+      . #moneyAmount
+      . #fieldInput
+      . #uniqueValue
+      .~ inspectRatioDef (unTagged quoteAmt)
+      & #modelState
+      . #stConv
+      . #stConvBottomMoney
+      . #moneyAmount
+      . #fieldOutput
+      .~ unTagged quoteAmt
+      & #modelState
+      . #stConv
+      . #stConvBottomMoney
+      . #moneyCurrency
+      . #currencyOutput
+      .~ quoteCur
+      --
+      -- Misc
+      --
+      & #modelCurrencies
+      .~ currenciesInfo
 
 newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
 newAssetAction st optic =
   PushUpdate $ do
-    item <-
-      newAsset "Description" "Jeans" 0
-        . getSomeCurrency st
-        $ CurrencyCode "usd"
+    cur <- getCurrency (st ^. #modelMarket) $ CurrencyCode "usd"
+    item <- newAsset "Price" 0 cur
     pure
       . ChanItem 0
       $ (textPopupPure @Text "Added asset!")
@@ -264,7 +433,8 @@ newPaymentMethodAction ::
   Model -> ATraversal' Model [PaymentMethod Unique] -> Action
 newPaymentMethodAction st optic =
   PushUpdate $ do
-    item <- newPaymentMethod 0 . getSomeCurrency st $ CurrencyCode "btc"
+    cur <- getCurrency (st ^. #modelMarket) $ CurrencyCode "btc"
+    item <- newPaymentMethod cur $ Just mempty
     pure
       . ChanItem 0
       $ (textPopupPure @Text "Added payment!")

@@ -23,12 +23,11 @@ module App.Types
     FilledOrOutlined (..),
     OpenedOrClosed (..),
     AssetsAndPaymentsLayout (..),
-    newModel,
     newUnique,
     newUniqueDuplicator,
     pureUpdate,
-    newPaymentMethod,
     newAsset,
+    newPaymentMethod,
     uniqueToIdentity,
     identityToUnique,
     FieldType (..),
@@ -54,11 +53,9 @@ where
 import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
-import qualified Functora.Money as Money
 import Functora.Prelude hiding (Field (..))
 import Functora.Rates
 import qualified Material.Snackbar as Snackbar
@@ -395,190 +392,6 @@ deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
 deriving via GenericType (Asset Identity) instance Serialise (Asset Identity)
 
---
--- TODO : simplify this !!!!
---
-newModel ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Maybe (MVar Market) ->
-  URI ->
-  m Model
-newModel mMark uri = do
-  ct <- getCurrentTime
-  prod <- liftIO newBroadcastTChanIO
-  cons <- liftIO . atomically $ dupTChan prod
-  market <- maybe newMarket pure mMark
-  let btc =
-        CurrencyInfo
-          { currencyInfoCode = CurrencyCode "btc",
-            currencyInfoText = mempty
-          }
-  let usd =
-        CurrencyInfo
-          { currencyInfoCode = CurrencyCode "usd",
-            currencyInfoText = mempty
-          }
-  topMoney <- newMoney 0 btc
-  bottomMoney <- newMoney 0 usd
-  issuer <- newFieldPair "Issuer" $ DynamicFieldText "Alice LLC"
-  client <- newFieldPair "Client" $ DynamicFieldText "Bob"
-  asset <- newAsset "Description" "Jeans" 100 usd
-  paymentMethod <- newPaymentMethod 0 btc
-  fieldPairsHeader <- newDynamicTitleField "Invoice #6102"
-  assetsHeader <- newDynamicTitleField "Line items"
-  paymentMethodsHeader <- newDynamicTitleField "Payment methods"
-  ikm <- newPasswordField mempty
-  km <- Aes.randomKm 32
-  mApp <- unShareUri uri
-  defPre <- newDynamicTitleField mempty
-  let defSc = Editor
-  let defDoc =
-        StDoc
-          { stDocFieldPairs = [issuer, client],
-            stDocAssets = [asset],
-            stDocPaymentMethods = [paymentMethod],
-            stDocFieldPairsHeader = fieldPairsHeader,
-            stDocAssetsHeader = assetsHeader,
-            stDocPaymentMethodsHeader = paymentMethodsHeader,
-            stDocAssetsAndPaymentsLayout = AssetsBeforePayments
-          }
-  (sc, doc, pre, ext) <-
-    maybe
-      ( pure (defSc, defDoc, defPre, Nothing)
-      )
-      ( \ext -> do
-          let sc = ext ^. #stExtScreen
-          let pre = ext ^. #stExtPre
-          if null $ ext ^. #stExtKm . #kmIkm . #unIkm
-            then
-              pure
-                ( sc,
-                  defDoc,
-                  pre,
-                  Just ext
-                )
-            else do
-              bDoc :: ByteString <-
-                maybe
-                  ( throwString @Text "Failed to decrypt the document!"
-                  )
-                  pure
-                  $ Aes.unHmacDecrypt
-                    ( Aes.drvSomeAesKey @Aes.Word256 $ ext ^. #stExtKm
-                    )
-                    ( ext ^. #stExtDoc
-                    )
-              doc <-
-                identityToUnique
-                  =<< either (throwString . thd3) pure (decodeBinary bDoc)
-              pure
-                ( sc,
-                  doc,
-                  pre,
-                  Nothing
-                )
-      )
-      mApp
-  let st =
-        Model
-          { modelHide = False,
-            modelMenu = Closed,
-            modelShare = Closed,
-            modelTemplates = Closed,
-            modelExamples = Closed,
-            modelState =
-              St
-                { stScreen = sc,
-                  stConv =
-                    StConv
-                      { stConvTopMoney = topMoney,
-                        stConvBottomMoney = bottomMoney,
-                        stConvTopOrBottom = Top
-                      },
-                  stDoc = doc,
-                  stIkm = ikm,
-                  stKm = km,
-                  stPre = pre,
-                  stExt = ext
-                },
-            modelMarket = market,
-            modelCurrencies = [btc, usd],
-            modelSnackbarQueue = Snackbar.initialQueue,
-            modelProducerQueue = prod,
-            modelConsumerQueue = cons,
-            modelOnlineAt = ct
-          }
-  fmap (fromRight st) . tryMarket . withMarket market $ do
-    currenciesInfo <- currenciesList <$> getCurrencies
-    baseCur <-
-      fmap (fromRight $ NonEmpty.head currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode btc
-    quoteCur <-
-      fmap (fromRight $ NonEmpty.last currenciesInfo)
-        . tryMarket
-        . getCurrencyInfo
-        $ currencyInfoCode usd
-    let baseAmt =
-          Tagged 1 ::
-            Money.Money (Tags 'Signed |+| 'Base |+| 'MoneyAmount)
-    quote <-
-      getQuote
-        (Funds baseAmt $ currencyInfoCode baseCur)
-        $ currencyInfoCode quoteCur
-    let quoteAmt = quoteMoneyAmount quote
-    pure
-      $ st
-      --
-      -- Converter
-      --
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged baseAmt)
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged baseAmt
-      & #modelState
-      . #stConv
-      . #stConvTopMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ baseCur
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef (unTagged quoteAmt)
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ unTagged quoteAmt
-      & #modelState
-      . #stConv
-      . #stConvBottomMoney
-      . #moneyCurrency
-      . #currencyOutput
-      .~ quoteCur
-      --
-      -- Misc
-      --
-      & #modelCurrencies
-      .~ currenciesInfo
-
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =
   newField FieldTypeNumber output inspectRatioDef
@@ -650,34 +463,43 @@ newUniqueDuplicator = do
       ( (& #uniqueUid %~ addUid uid) :: Unique b -> Unique b
       )
 
-newPaymentMethod ::
+newAsset ::
   ( MonadIO m
   ) =>
+  Text ->
   Rational ->
   CurrencyInfo ->
-  m (PaymentMethod Unique)
-newPaymentMethod amt cur = do
-  lbl <- newTextField "Total"
-  address <-
-    fmap (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
-      . newFieldPair "Address"
-      $ DynamicFieldText "EXAMPLE"
-  PaymentMethod
-    <$> newMoney amt cur
-    <*> pure lbl
-    <*> pure [address]
-    <*> pure Closed
-
-newAsset ::
-  (MonadIO m) => Text -> Text -> Rational -> CurrencyInfo -> m (Asset Unique)
-newAsset label value amt cur = do
-  lbl <- newTextField "Price"
-  desc <- newFieldPair label $ DynamicFieldText value
-  qty <- newFieldPair "Quantity" $ DynamicFieldNumber 1
+  m (Asset Unique)
+newAsset label amt cur = do
+  lbl <- newTextField label
+  prod <- newFieldPair "Product" $ DynamicFieldText mempty
   Asset
     <$> newMoney amt cur
     <*> pure lbl
-    <*> pure [desc, qty]
+    <*> pure [prod]
+    <*> pure Closed
+
+newPaymentMethod ::
+  ( MonadIO m
+  ) =>
+  CurrencyInfo ->
+  Maybe Text ->
+  m (PaymentMethod Unique)
+newPaymentMethod cur addr0 = do
+  lbl <- newTextField $ inspectCurrencyInfo cur <> " total"
+  addr1 <-
+    maybe
+      ( pure Nothing
+      )
+      ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
+          . newFieldPair (inspectCurrencyInfo cur <> " address")
+          . DynamicFieldText
+      )
+      addr0
+  PaymentMethod
+    <$> newMoney 0 cur
+    <*> pure lbl
+    <*> pure (maybeToList addr1)
     <*> pure Closed
 
 uniqueToIdentity :: (FunctorB f) => f Unique -> f Identity

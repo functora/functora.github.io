@@ -29,7 +29,7 @@ main :: IO ()
 main =
   runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
     uri <- URI.mkURI . inspect =<< getCurrentURI
-    st <- newModel Nothing uri
+    st <- Misc.newModel Nothing uri
     startApp
       App
         { model = st & #modelHide .~ True,

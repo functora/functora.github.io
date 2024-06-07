@@ -122,16 +122,12 @@ unfilled =
     Template "Text" "font_download" (const plainTemplate) nil nil,
     Template "Donate" "volunteer_activism" (const donateTemplate) nil nil,
     Template "Portfolio" "work" portfolioTemplate nil nil,
-    Template "Secret" "lock" secretExample pre ikm,
+    Template "Secret" "lock" secretTemplate nil nil,
     Template "Invoice" "request_quote" invoiceTemplate nil nil
   ]
   where
     nil :: IO (Maybe (Field a b))
     nil = pure Nothing
-    pre :: IO (Maybe (Field DynamicField Unique))
-    pre = fmap Just . newDynamicField $ DynamicFieldText exampleSecretPre
-    ikm :: IO (Maybe (Field Text Unique))
-    ikm = fmap Just $ newPasswordField exampleSecretIkm
 
 emptyTemplate :: IO (StDoc Unique)
 emptyTemplate = do
@@ -182,7 +178,7 @@ donateTemplate = do
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead,
-        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
   where
     qr :: FieldPair a b -> FieldPair a b
@@ -210,6 +206,28 @@ portfolioTemplate mkt = do
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead,
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
+      }
+
+secretTemplate :: MVar Market -> IO (StDoc Unique)
+secretTemplate mkt = do
+  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
+  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+  msg <- newFieldPair mempty $ DynamicFieldText mempty
+  fhead <- newDynamicTitleField mempty
+  ahead <- newDynamicTitleField mempty
+  phead <- newDynamicTitleField mempty
+  stuff <- newAsset "Product" 0 usd
+  delivery <- newAsset "Delivery" 0 usd
+  method <- newPaymentMethod xmr $ Just mempty
+  pure
+    StDoc
+      { stDocFieldPairs = [msg],
+        stDocAssets = [stuff, delivery],
+        stDocPaymentMethods = [method],
+        stDocFieldPairsHeader = fhead,
+        stDocAssetsHeader = ahead,
+        stDocPaymentMethodsHeader = phead,
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
 invoiceTemplate :: MVar Market -> IO (StDoc Unique)
@@ -299,7 +317,7 @@ donateExample = do
         stDocFieldPairsHeader = fhead,
         stDocAssetsHeader = ahead,
         stDocPaymentMethodsHeader = phead,
-        stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
+        stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
   where
     qr :: FieldPair a b -> FieldPair a b

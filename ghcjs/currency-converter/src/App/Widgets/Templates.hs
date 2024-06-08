@@ -429,7 +429,7 @@ newModel mMark uri = do
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
-  defDoc <- liftIO $ invoiceTemplate market
+  defDoc <- liftIO emptyTemplate
   defPre <- newDynamicTitleField mempty
   let defSc = Converter
   (sc, doc, pre, ext) <-

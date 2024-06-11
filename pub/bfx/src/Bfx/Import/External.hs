@@ -11,7 +11,6 @@ import Data.Aeson as X (FromJSON (..), FromJSONKey (..), ToJSON (..))
 import Data.ByteString.Lazy as X (ByteString)
 import Data.Coerce as X (coerce)
 import Data.Fixed as X (Fixed, HasResolution (..), showFixed)
-import Data.Maybe as X (listToMaybe)
 import Data.Metrology.Poly as X
   ( quOf,
     (*|),
@@ -26,7 +25,7 @@ import Data.Metrology.Poly as X
   )
 import Data.Ratio.Rounding as X (dpRound, sdRound)
 import Functora.Money as X
-import Functora.Prelude as X hiding (ByteString, Exchange (..))
+import Functora.Prelude as X hiding (ByteString, Exchange (..), at)
 import Functora.Sql as X
   ( PersistField (..),
     PersistFieldSql (..),

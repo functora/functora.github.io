@@ -13,15 +13,15 @@ import qualified Data.Aeson as A
 import Test.Hspec
 
 spec :: Spec
-spec = before sysEnv $
-  describe "ToJSON" $
-    itRight "Request" . const $ do
+spec =
+  before sysEnv $ describe "ToJSON" $ do
+    it "Request" . const $ do
+      adabtc <- newCurrencyPair "ADABTC"
       let req =
             SubmitOrder.Request
-              testAmt
-              [currencyPair|ADABTC|]
-              [quotePerBaseBuy|0.00081037|]
+              (testAmt @'Buy)
+              adabtc
+              (Tagged 0.00081037)
               SubmitOrder.optsPostOnly
-      liftIO $
-        A.encode req
-          `shouldBe` "{\"amount\":\"4.004004\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"
+      A.encode req
+        `shouldBe` "{\"amount\":\"4.004004\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"

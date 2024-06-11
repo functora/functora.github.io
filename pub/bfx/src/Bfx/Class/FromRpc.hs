@@ -19,7 +19,6 @@ import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Vector as V
-import Lens.Micro hiding (at)
 
 class FromRpc (method :: Method) res where
   fromRpc :: RawResponse -> Either Text res
@@ -30,7 +29,8 @@ instance FromRpc 'PlatformStatus PltStatus where
       maybeToRight
         "PltStatus is missing"
         $ raw
-        ^? nth 0 . _Integral
+        ^? nth 0
+        . _Integral
     case ss :: Natural of
       1 -> Right PltOperative
       0 -> Right PltMaintenance
@@ -67,7 +67,8 @@ instance (SingI act) => FromRpc 'SubmitOrder (Order act 'Remote) where
       maybeToRight
         "Order is missing"
         $ raw
-        ^? nth 4 . nth 0
+        ^? nth 4
+        . nth 0
     SomeOrder orderSing order <- parseOrder rawOrder
     case testEquality (sing :: Sing act) orderSing of
       Nothing -> Left "Incorrect ExchangeAction"
@@ -124,7 +125,10 @@ instance FromRpc 'FeeSummary FeeSummary.Response where
         )
           <=< maybeToRight (label <> " is missing")
           $ raw
-          ^? nth 4 . nth ix0 . nth ix1 . _Number
+          ^? nth 4
+          . nth ix0
+          . nth ix1
+          . _Number
 
 instance
   FromRpc
@@ -155,18 +159,21 @@ instance
         sym0 <-
           maybeToRight "Symbol is missing"
             $ x
-            ^? key "pair" . _String
+            ^? key "pair"
+            . _String
         sym <-
           first (const $ "Symbol is invalid " <> inspect sym0)
             $ newCurrencyPair sym0
         prec <-
           maybeToRight "Precision is missing"
             $ x
-            ^? key "price_precision" . _Integral
+            ^? key "price_precision"
+            . _Integral
         initMargin0 <-
           maybeToRight "Init Margin is missing"
             $ x
-            ^? key "initial_margin" . _String
+            ^? key "initial_margin"
+            . _String
         initMargin <-
           first
             ( const
@@ -177,7 +184,8 @@ instance
         minMargin0 <-
           maybeToRight "Min Margin is missing"
             $ x
-            ^? key "minimum_margin" . _String
+            ^? key "minimum_margin"
+            . _String
         minMargin <-
           first
             ( const
@@ -188,7 +196,8 @@ instance
         maxOrderAmt0 <-
           maybeToRight "Max Order Size is missing"
             $ x
-            ^? key "maximum_order_size" . _String
+            ^? key "maximum_order_size"
+            . _String
         maxOrderAmt <-
           first
             ( const
@@ -199,7 +208,8 @@ instance
         minOrderAmt0 <-
           maybeToRight "Min Order Size is missing"
             $ x
-            ^? key "minimum_order_size" . _String
+            ^? key "minimum_order_size"
+            . _String
         minOrderAmt <-
           first
             ( const

@@ -13,7 +13,6 @@ import Bfx.Data.Type
 import Bfx.Import.External
 import Data.Aeson.Lens
 import qualified Data.Map as Map
-import Lens.Micro hiding (at)
 import qualified Prelude
 
 parseOrder ::
@@ -28,7 +27,8 @@ parseOrder x = do
     maybeToRight (failure "OrderId is missing")
       $ OrderId
       <$> x
-      ^? nth 0 . _Integral
+      ^? nth 0
+      . _Integral
   gid <-
     maybeToRight (failure "OrderGroupId is missing")
       $ (Just . OrderGroupId <$> x ^? nth 1 . _Integral)
@@ -38,7 +38,8 @@ parseOrder x = do
                 . readEither
             )
               =<< x
-              ^? nth 1 . _String
+              ^? nth 1
+              . _String
           )
       <|> (Nothing <$ x ^? nth 1 . _Null)
   cid <-
@@ -48,7 +49,8 @@ parseOrder x = do
   sym0 <-
     maybeToRight (failure "Symbol is missing")
       $ x
-      ^? nth 3 . _String
+      ^? nth 3
+      . _String
   sym <-
     first (const $ failure "Symbol is invalid")
       $ newCurrencyPair sym0
@@ -56,7 +58,8 @@ parseOrder x = do
     maybeToRight (failure "OrderAmount is missing")
       $ toRational
       <$> x
-      ^? nth 7 . _Number
+      ^? nth 7
+      . _Number
   --
   -- TODO : handle zero amt???
   --
@@ -66,7 +69,8 @@ parseOrder x = do
   ss0 <-
     maybeToRight (failure "OrderStatus is missing")
       $ x
-      ^? nth 13 . _String
+      ^? nth 13
+      . _String
   ss1 <-
     first (failure . ("OrderStatus is not recognized " <>) . inspect)
       $ newOrderStatus ss0
@@ -74,7 +78,8 @@ parseOrder x = do
     maybeToRight
       (failure "ExchangeRate is missing")
       $ x
-      ^? nth 16 . _Number
+      ^? nth 16
+      . _Number
   rate <-
     first (const . failure $ "ExchangeRate is invalid " <> inspect price)
       $ tryFrom @Rational @(Ratio Natural) (toRational price)

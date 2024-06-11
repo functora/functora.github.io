@@ -95,7 +95,6 @@ common pkg-lib
     , katip
     , lens-aeson
     , memory
-    , microlens
     , siggy-chardust
     , template-haskell
     , temporary
@@ -212,7 +211,6 @@ test-suite bfx-test
       , katip
       , lens-aeson
       , memory
-      , microlens
       , siggy-chardust
       , template-haskell
       , temporary

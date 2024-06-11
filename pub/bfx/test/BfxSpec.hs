@@ -20,80 +20,78 @@ import Test.Hspec
 
 spec :: Spec
 spec = before sysEnv $ do
-  itRight "platformStatus succeeds" . const $ do
+  let adabtc = either impureThrow id $ newCurrencyPair "ADABTC"
+  it "platformStatus succeeds" . const $ do
     ss <- Bitfinex.platformStatus
-    liftIO $ ss `shouldBe` PltOperative
-  itRight "symbolsDetails succeeds" . const $ do
+    ss `shouldBe` PltOperative
+  it "symbolsDetails succeeds" . const $ do
     ss <- Bitfinex.symbolsDetails
-    liftIO
-      $ Map.lookup [currencyPair|ADABTC|] ss
+    Map.lookup adabtc ss
       `shouldBe` Just
         CurrencyPairConf
           { currencyPairPrecision = 5,
             currencyPairInitMargin = 30 % 1,
             currencyPairMinMargin = 15,
-            currencyPairMaxOrderAmt = [moneyBaseBuy|250000|],
-            currencyPairMinOrderAmt = [moneyBaseBuy|4|]
+            currencyPairMaxOrderAmt = Tagged 250000,
+            currencyPairMinOrderAmt = Tagged 4
           }
-  itRight "marketAveragePrice succeeds" . const $ do
-    let sym = [currencyPair|ADABTC|]
-    buyRate <-
-      Bitfinex.marketAveragePrice
-        (testAmt :: Money 'Base 'Buy)
-        sym
-    sellRate <-
-      Bitfinex.marketAveragePrice
-        (testAmt :: Money 'Base 'Sell)
-        sym
-    liftIO $ buyRate `shouldSatisfy` (> coerce sellRate)
-  itLeft "marketAveragePrice fails" . const $ do
-    let amt = testAmt :: Money 'Base 'Buy
-    let sym = [currencyPair|BTCADA|]
-    Bitfinex.marketAveragePrice amt sym
-  itRight
-    "feeSummary succeeds"
-    Bitfinex.feeSummary
-  itRight "submitOrderMaker and cancelOrderById succeeds" $ \env -> do
-    let amt = testAmt :: Money 'Base 'Buy
-    let sym = [currencyPair|ADABTC|]
+  it "marketAveragePrice succeeds" . const $ do
+    sym <- newCurrencyPair "ADABTC"
+    buyRate <- Bitfinex.marketAveragePrice (testAmt @'Buy) sym
+    sellRate <- Bitfinex.marketAveragePrice (testAmt @'Sell) sym
+    unTagged buyRate `shouldSatisfy` (> unTagged sellRate)
+  it "marketAveragePrice fails" . const $ do
+    let amt = testAmt @'Buy
+    sym <- newCurrencyPair "BTCADA"
+    res <- tryAny $ Bitfinex.marketAveragePrice amt sym
+    res `shouldSatisfy` isLeft
+  it "feeSummary succeeds" $ \env -> do
+    res <- tryAny $ Bitfinex.feeSummary env
+    res `shouldSatisfy` isRight
+  it "submitOrderMaker and cancelOrderById succeeds" $ \env -> do
+    let amt = testAmt @'Buy
     let opts = SubmitOrder.optsPostOnly
+    sym <- newCurrencyPair "ADABTC"
     curRate <- Bitfinex.marketAveragePrice amt sym
-    rate <-
-      tryErrorT
-        . roundQuotePerBase'
-        $ unQuotePerBase curRate
-        |* 0.5
+    rate <- (* 0.5) <$> roundQuotePerBase curRate
     order <- Bitfinex.submitOrderMaker env amt sym rate opts
-    Bitfinex.cancelOrderById env $ orderId order
-  itRight "retrieveOrders succeeds" $ \env ->
-    Bitfinex.retrieveOrders env
-      $ GetOrders.optsSym [currencyPair|ADABTC|]
-  itRight "ordersHistory succeeds" $ \env ->
-    Bitfinex.ordersHistory env
-      $ GetOrders.optsSym [currencyPair|ADABTC|]
-  itRight "getOrders succeeds" $ \env ->
-    Bitfinex.getOrders env
-      $ GetOrders.optsSym [currencyPair|ADABTC|]
-  itLeft "getOrder fails" $ \env ->
-    Bitfinex.getOrder env $ OrderId 0
-  itLeft "submitCounterOrderMaker fails" $ \env -> do
-    Bitfinex.submitCounterOrderMaker
-      env
-      (OrderId 0)
-      [feeRateMakerBase|0.001|]
-      [feeRateMakerQuote|0.001|]
-      [profitRate|0.001|]
-      SubmitOrder.optsPostOnly
-  itRight
-    "wallets succeeds"
-    (Bitfinex.wallets @'Base)
-  itRight "netWorth succeeds" $ \env ->
-    Bitfinex.netWorth env [ccQuote|BTC|]
-  itRight "candlesLast succeeds"
-    . const
-    $ Bitfinex.candlesLast Ctf1h [currencyPair|ADABTC|] Candles.optsDef
-  itRight "candlesHist succeeds" . const $ do
-    Bitfinex.candlesHist Ctf1h [currencyPair|ADABTC|] Candles.optsDef
+    res <- tryAny . Bitfinex.cancelOrderById env $ orderId order
+    res `shouldSatisfy` isRight
+  it "retrieveOrders succeeds" $ \env -> do
+    res <- tryAny . Bitfinex.retrieveOrders env $ GetOrders.optsSym adabtc
+    res `shouldSatisfy` isRight
+  it "ordersHistory succeeds" $ \env -> do
+    res <- tryAny . Bitfinex.ordersHistory env $ GetOrders.optsSym adabtc
+    res `shouldSatisfy` isRight
+  it "getOrders succeeds" $ \env -> do
+    res <- tryAny . Bitfinex.getOrders env $ GetOrders.optsSym adabtc
+    res `shouldSatisfy` isRight
+  it "getOrder fails" $ \env -> do
+    res <- tryAny . Bitfinex.getOrder env $ OrderId 0
+    res `shouldSatisfy` isLeft
+  it "submitCounterOrderMaker fails" $ \env -> do
+    res <-
+      tryAny
+        $ Bitfinex.submitCounterOrderMaker
+          env
+          (OrderId 0)
+          (Tagged 0.001)
+          (Tagged 0.001)
+          (Tagged 0.001)
+          SubmitOrder.optsPostOnly
+    res `shouldSatisfy` isLeft
+  it "wallets succeeds" $ \env -> do
+    res <- tryAny $ Bitfinex.wallets env
+    res `shouldSatisfy` isRight
+  it "netWorth succeeds" $ \env -> do
+    res <- tryAny . Bitfinex.netWorth env $ CurrencyCode "BTC"
+    res `shouldSatisfy` isRight
+  it "candlesLast succeeds" . const $ do
+    res <- tryAny $ Bitfinex.candlesLast Ctf1h adabtc Candles.optsDef
+    res `shouldSatisfy` isRight
+  it "candlesHist succeeds" . const $ do
+    res <- tryAny $ Bitfinex.candlesHist Ctf1h adabtc Candles.optsDef
+    res `shouldSatisfy` isRight
 
 --  it "chart" . const $ do
 --    Chart.newExample

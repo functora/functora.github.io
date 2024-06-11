@@ -18,12 +18,11 @@ eraseFirst =
 
 testAmt ::
   forall act.
-  (SingI act) =>
-  Money 'Base act
+  ( CashTags (Tags 'MoneyAmount |+| 'Unsigned |+| 'Base |+| act)
+  ) =>
+  Money (Tags 'MoneyAmount |+| 'Unsigned |+| 'Base |+| act)
 testAmt =
-  case sing :: Sing act of
-    SBuy -> [moneyBaseBuy|4.004004|]
-    SSell -> [moneyBaseSell|4.004004|]
+  Tagged 4.004004
 
 itRight ::
   ( Show a

@@ -469,52 +469,9 @@ in {
     };
 
     #
-    # Android
+    # Services
     #
     programs.adb.enable = true;
-
-    #
-    # Web eID
-    #
-    # Tell p11-kit to load/proxy opensc-pkcs11.so, providing all available slots
-    # (PIN1 for authentication/decryption, PIN2 for signing).
-    environment.etc."pkcs11/modules/opensc-pkcs11".text = ''
-      module: ${pkgs.opensc}/lib/opensc-pkcs11.so
-    '';
-    services.pcscd.enable = true;
-    services.pcscd.plugins = [pkgs.acsccid];
-    #
-    # Firefox
-    #
-    programs.firefox = {
-      enable = true;
-      # nativeMessagingHosts.euwebid = true;
-      nativeMessagingHosts.packages = [pkgs.web-eid-app];
-      policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
-    };
-    #
-    # Chromium
-    #
-    environment.etc."chromium/native-messaging-hosts/eu.webeid.json".source = "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
-    environment.etc."opt/chrome/native-messaging-hosts/eu.webeid.json".source = "${pkgs.web-eid-app}/share/web-eid/eu.webeid.json";
-    environment.systemPackages = with pkgs; [
-      # Wrapper script to tell to Chrome/Chromium to use p11-kit-proxy to load
-      # security devices, so they can be used for TLS client auth.
-      # Each user needs to run this themselves, it does not work on a system level
-      # due to a bug in Chromium:
-      #
-      # https://bugs.chromium.org/p/chromium/issues/detail?id=16387
-      (pkgs.writeShellScriptBin "setup-browser-eid" ''
-        NSSDB="''${HOME}/.pki/nssdb"
-        mkdir -p ''${NSSDB}
-
-        ${pkgs.nssTools}/bin/modutil -force -dbdir sql:$NSSDB -add p11-kit-proxy \
-          -libfile ${pkgs.p11-kit}/lib/p11-kit-proxy.so
-      '')
-      libdigidocpp
-      qdigidoc
-    ];
-
     services.tor.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
@@ -541,9 +498,24 @@ in {
         "adbusers"
         "networkmanager"
       ];
+      #
+      # Web eID
+      #
       packages = with pkgs; [
+        qdigidoc                # Digidoc
+        web-eid-app             # Signing in browswer
+        p11-kit                 # Signing in browswer
+        opensc                  # Signing in browswer
       ];
     };
+    services.pcscd.enable = true;
+    programs.firefox.enable = true;
+    programs.firefox.package = pkgs.firefox-esr;
+    programs.firefox.nativeMessagingHosts.packages = [ pkgs.web-eid-app ];
+    programs.firefox.policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
+    environment.etc."pkcs11/modules/opensc-pkcs11".text = ''
+      module: ${pkgs.opensc}/lib/opensc-pkcs11.so
+    '';
 
     # xdg-desktop-portal works by exposing a series of D-Bus interfaces
     # known as portals under a well-known name

@@ -1,6 +1,5 @@
 with (import ./project.nix);
 with pkgs; let
-  unst = import ./nixpkgs-unstable.nix;
   newpkgs = import ./newpkgs.nix;
   repoDir = builtins.toString ./..;
   hlintTest = pkgs.writeShellScriptBin "hlint-test" ''
@@ -10,7 +9,7 @@ with pkgs; let
       --ignore-glob=${repoDir}/pub/vi \
       --ignore-glob=${repoDir}/pub/dazzle/test
   '';
-  ormolu = unst.writeShellApplication {
+  ormolu = pkgs.writeShellApplication {
     name = "ormolu";
     text = ''
       ${newpkgs.haskellPackages.fourmolu}/bin/fourmolu \
@@ -45,9 +44,9 @@ with pkgs; let
     name = "prettier";
     text = ''
       ${
-        unst.nodePackages.prettier
+        pkgs.nodePackages.prettier
       }/bin/prettier --plugin ${
-        unst.nodePackages.prettier-plugin-toml
+        pkgs.nodePackages.prettier-plugin-toml
       }/lib/node_modules/prettier-plugin-toml/lib/api.js "$@"
     '';
   };
@@ -60,7 +59,7 @@ in [
   ormolu
   styleTest
   prettier
-  unst.alejandra
+  pkgs.alejandra
   newpkgs.haskellPackages.cabal-fmt
   pkgs.haskell-language-server
 ]

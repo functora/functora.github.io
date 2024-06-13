@@ -1,5 +1,4 @@
 with (import ./project.nix); let
-  unst = import ./nixpkgs-unstable.nix;
   misc = import ./misc.nix;
   newpkgs = import ./newpkgs.nix;
 in
@@ -15,10 +14,10 @@ in
         pkgs.hpack
         pkgs.hlint
         pkgs.ghcid
-        unst.gleam
-        unst.erlang
-        unst.elixir
-        unst.ollama
+        pkgs.gleam
+        pkgs.erlang
+        pkgs.elixir
+        pkgs.ollama
         newpkgs.haskellPackages.cabal2nix
         newpkgs.nix-prefetch-git
         newpkgs.litecli

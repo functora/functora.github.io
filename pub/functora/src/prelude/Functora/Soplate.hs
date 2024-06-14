@@ -21,10 +21,10 @@ instance
   ( GTo a,
     GFrom a,
     Generic a,
-    GCode a ~ (xs : xss),
-    All2 (Soplate s) (xs : xss)
+    GCode a ~ (xs ': xss),
+    All2 (Soplate s) (xs ': xss)
   ) =>
-  ChildsOf s a (xs : xss)
+  ChildsOf s a (xs ': xss)
   where
   childsOf f x = gto <$> childsOf_SOP (gfrom x)
     where

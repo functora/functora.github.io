@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -125,7 +125,7 @@ library
     , parallel
     , persistent
     , pretty
-    , reanimate
+    , reanimate >=1.1.6.0
     , siggy-chardust
     , singletons
     , singletons-base
@@ -196,6 +196,7 @@ test-suite bitfinex-client-test
     , bitfinex-client
     , containers
     , hspec
+  default-language: Haskell2010
   if flag(ghcid)
     other-modules:
         BitfinexClient
@@ -258,7 +259,7 @@ test-suite bitfinex-client-test
       , parallel
       , persistent
       , pretty
-      , reanimate
+      , reanimate >=1.1.6.0
       , siggy-chardust
       , singletons
       , singletons-base
@@ -276,4 +277,3 @@ test-suite bitfinex-client-test
   else
     build-depends:
         bitfinex-client
-  default-language: Haskell2010

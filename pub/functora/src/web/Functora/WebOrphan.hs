@@ -9,7 +9,6 @@ import Yesod.Core (PathPiece (..))
 import qualified Data.Data as Data
 import qualified Data.Streaming.Zlib as Zlib
 import qualified Network.HTTP.Client as Web
-import qualified Network.HTTP.Types as Web
 #endif
 
 #ifndef __GHCJS__
@@ -22,8 +21,6 @@ instance (Typeable a) => Data (Web.Response a) where
   gunfold _ z = z . Data.fromConstr
   toConstr _ = error "TODO : toConstr Web.Response"
   dataTypeOf _ = error "TODO : dataTypeOf Web.Response"
-
-deriving stock instance Data Web.Status
 
 deriving stock instance Data Web.HttpException
 

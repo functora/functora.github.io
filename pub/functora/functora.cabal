@@ -166,6 +166,7 @@ common pkg-web
   hs-source-dirs: src/web
   build-depends:
     , base
+    , http-types
     , modern-uri
     , network-uri
 
@@ -174,7 +175,6 @@ common pkg-web
       , bytestring
       , http-client
       , http-client-tls
-      , http-types
       , streaming-commons
       , yesod-core
 

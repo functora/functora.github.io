@@ -3,22 +3,24 @@
 
 module Functora.WebOrphan () where
 
-#ifdef __GHCJS__
-import qualified Network.HTTP.Types as Web
-#else
 import Functora.Prelude
+
+#if __GLASGOW_HASKELL__ < 904
+import qualified Network.HTTP.Types as Web
+#endif
+
+#ifndef __GHCJS__
 import Yesod.Core (PathPiece (..))
 import qualified Data.Data as Data
 import qualified Data.Streaming.Zlib as Zlib
 import qualified Network.HTTP.Client as Web
 #endif
 
-#ifdef __GHCJS__
-
+#if __GLASGOW_HASKELL__ < 904
 deriving stock instance Data Web.Status
+#endif
 
-#else
-
+#ifndef __GHCJS__
 instance Data Web.Request where
   gunfold _ z = z . Data.fromConstr
   toConstr _ = error "TODO : toConstr Web.Request"
@@ -41,5 +43,4 @@ instance PathPiece Natural where
     rightToMaybe $ tryFrom @Integer @Natural mid
   toPathPiece =
     toPathPiece . from @Natural @Integer
-
 #endif

@@ -90,6 +90,7 @@ common pkg
     , extra
     , generic-lens
     , generics-sop
+    , http-types
     , lens
     , lift-type
     , microlens
@@ -132,7 +133,6 @@ common pkg
     build-depends:
       , http-client
       , http-client-tls
-      , http-types
       , streaming-commons
       , yesod-core
 
@@ -167,7 +167,7 @@ test-suite functora-ghcjs-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  hs-source-dirs: prelude qr aes money web rates tags cfg
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso
   hs-source-dirs: test
   build-depends:
     , base
@@ -179,12 +179,15 @@ test-suite functora-ghcjs-test
     , qrcode-core
     , QuickCheck
     , quickcheck-instances
+    , regex-compat
+    , string-qq
     , text
     , universum
 
   other-modules:
     Functora.AesSpec
     Functora.CfgSpec
+    Functora.Elm2MisoSpec
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
@@ -197,6 +200,7 @@ test-suite functora-ghcjs-test
     Functora.AesOrphan
     Functora.Cfg
     Functora.CfgOrphan
+    Functora.Elm2Miso
     Functora.Money
     Functora.MoneyFgpt
     Functora.MoneySing

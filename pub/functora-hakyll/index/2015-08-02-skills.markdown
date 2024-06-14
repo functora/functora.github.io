@@ -7,19 +7,16 @@ fontawesome: "fab fa-bitcoin"
 
 <p class="padding-left">Haskell is my primary and the most favorte tool. I do have advanced level of Haskell including:</p>
 
-- Tagless final encoding, monad transformers, lifting and unlifting for efficient effects management.
-- DataKinds for better phantom type parameters and [Singletons](https://hackage.haskell.org/package/singletons) for dependent type programming.
 - [Lens](https://hackage.haskell.org/package/microlens) for efficient data manipulation and parsing.
-- [Units](https://hackage.haskell.org/package/units) for dimential analysis.
-- Template Haskell and Quasiquotation for compile-time computations.
+- [Singletons](https://hackage.haskell.org/package/singletons) for pseudo-dependent type programming.
 - [Presistent](https://hackage.haskell.org/package/persistent) and [Esqueleto](https://hackage.haskell.org/package/esqueleto) typed SQL drivers.
 - [Yesod](https://www.yesodweb.com/) enterprise web framework.
+- [Miso](https://haskell-miso.org/) frontend web framework.
+- [GHCJS](https://github.com/ghcjs/ghcjs) compiler and [JSaddle](https://hackage.haskell.org/package/jsaddle) EDSL.
 
 <p class="padding-left">I am also qualified in other useful areas:</p>
 
-- Nix - Strong medium level. Nix is the best tool for deterministic builds, tests and development environments.
-- [PostgreSQL](https://www.postgresql.org/) - Strong medium level. I am not database expert, but I am using everything what software developer should use to manipulate data storage. Queries, transactions, joins, locks.
-- Bitcoin and Lightning Network - Advanced level as application developer (not as protocol developer). Bitcoin is the greatest achievement of the new millennium, which brings financial freedom and sovereignty back to the people.
-- [Dhall](https://dhall-lang.org/) - Expert level. I am using Dhall configuration language as safe and typed alternative to YAML, JSON and XML.
+- [Nix](https://nixos.org/) and [NixOS](https://nixos.org/) - Strong medium level. Nix is the best tool for deterministic builds, tests and development environments. I'm using NixOS daily.
+- [Bitcoin](https://bitcoin.org/en/) and [Lightning Network](https://lightning.network/) - Advanced level as application developer (not as protocol developer). Bitcoin is the greatest achievement of the new millennium, which brings financial freedom and sovereignty back to the people.
+- [PostgreSQL](https://www.postgresql.org/) and [SQLite](https://sqlite.org/) - Strong medium level. I am not database expert, but I am using everything what software developer should use to manipulate data storage. Queries, transactions, joins, locks.
 - [Docker](https://www.docker.com/) and [Swarm](https://docs.docker.com/engine/swarm/) - Advanced close to expert level. I am using Docker and Swarm for development, builds and production. Docker is a very handy tool for MacOS and Linux compatibility.
-- Linux - Strong medium level. Definitely not a Linux guru, but happily using it every day.

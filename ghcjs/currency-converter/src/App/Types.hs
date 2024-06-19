@@ -104,6 +104,7 @@ data Action
   = Noop
   | InitUpdate
   | TimeUpdate
+  | SyncInputs
   | ChanUpdate Model
   | PushUpdate (JSM (ChanItem (Model -> Model)))
 

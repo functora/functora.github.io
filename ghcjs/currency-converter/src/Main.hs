@@ -106,12 +106,24 @@ updateModel TimeUpdate st = do
           $ ChanItem 0 id
         pure Noop
     ]
+updateModel SyncInputs st = do
+  batchEff
+    st
+    [ do
+        syncInputs st
+        pure Noop
+    ]
 updateModel (ChanUpdate prevSt) _ = do
   batchEff
     prevSt
     [ do
         syncInputs prevSt
-        pure Noop,
+        --
+        -- NOTE : syncInputs twice, workaround to fix
+        -- slow rendering after screen switch.
+        --
+        sleepMilliSeconds 300
+        pure SyncInputs,
       do
         actions <-
           Misc.drainTChan $ prevSt ^. #modelConsumerQueue
@@ -131,9 +143,9 @@ updateModel (PushUpdate newUpdater) st = do
     [ do
         updater <- newUpdater
         Misc.pushActionQueue st updater
-        void . spawnLink $ do
-          sleepMilliSeconds 300
-          Misc.pushActionQueue st $ ChanItem 0 id
+        -- void . spawnLink $ do
+        --   sleepMilliSeconds 300
+        --   Misc.pushActionQueue st $ ChanItem 0 id
         pure Noop
     ]
 

@@ -1962,7 +1962,7 @@ config.load_autoconfig(True)
 c.qt.highdpi = True
 c.zoom.default = '130%'
 c.tabs.last_close = "ignore"
-c.content.images = False
+c.content.images = True
 c.content.autoplay = False
 c.content.cookies.accept = "no-3rdparty"
 c.content.default_encoding = "utf-8"

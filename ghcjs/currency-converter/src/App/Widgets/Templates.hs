@@ -332,9 +332,9 @@ portfolioExample mkt = do
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
-  a0 <- newAsset "Cash" 3000 usd
+  a0 <- newAsset "Cash" 4000 usd
   a1 <- newAsset "US bank" 4500 usd
-  a2 <- newAsset "EU bank" 2300 eur
+  a2 <- newAsset "EU bank" 2400 eur
   a3 <- newAsset "Mobile wallet" 0.042 btc
   a4 <- newAsset "Private wallet" 13.2 xmr
   mtdUsd <- newPaymentMethod usd Nothing

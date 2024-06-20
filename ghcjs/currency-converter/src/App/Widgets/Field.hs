@@ -18,6 +18,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Icon as Icon
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Qr as Qr
 import Data.Maybe (listToMaybe)
@@ -26,7 +27,6 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
-import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (URI, view)
@@ -127,42 +127,96 @@ field st optic opts parser viewer =
                   _ -> mempty
               )
       )
-    <> [ case opts ^. #optsFilledOrOutlined of
-          Filled -> TextField.filled
-          Outlined -> TextField.outlined
-          $ TextField.config
-          & TextField.setType
-            ( fmap
-                (from @Text @String . htmlFieldType)
-                (st ^? cloneTraversal optic . #fieldType)
-            )
-          & TextField.setOnInput onInputAction
-          & TextField.setDisabled (opts ^. #optsDisabled)
-          & TextField.setLabel
-            ( Just . from @Text @String $ opts ^. #optsPlaceholder
-            )
-          & TextField.setLeadingIcon
-            ( fmap
-                (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
-                (opts ^. #optsLeadingWidget)
-            )
-          & TextField.setTrailingIcon
-            ( fmap
-                (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
-                (opts ^. #optsTrailingWidget)
-            )
-          & TextField.setAttributes
-            ( [ id_ . ms $ htmlUid @Text uid,
-                onKeyDown . optsOnKeyDownAction opts $ uid,
-                onBlur onBlurAction
+    <> [ div_
+          ( catMaybes
+              [ Just $ class_ "control",
+                if isJust (opts ^. #optsLeadingWidget)
+                  then Just $ class_ "has-icons-left"
+                  else Nothing,
+                if isJust (opts ^. #optsTrailingWidget)
+                  then Just $ class_ "has-icons-right"
+                  else Nothing
               ]
+              <> ( if opts ^. #optsFullWidth
+                    then [class_ "fill"]
+                    else mempty
+                 )
+              <> ( opts ^. #optsExtraAttributes
+                 )
+          )
+          $ catMaybes
+            [ Just
+                . input_
+                $ catMaybes
+                  [ fmap
+                      (type_ . ms . htmlFieldType)
+                      (st ^? cloneTraversal optic . #fieldType),
+                    Just
+                      $ onInput onInputAction,
+                    Just
+                      . disabled_
+                      $ optsDisabled opts,
+                    Just
+                      . placeholder_
+                      . ms
+                      $ optsPlaceholder opts
+                  ]
+                <> [ id_ . ms $ htmlUid @Text uid,
+                     onKeyDown . optsOnKeyDownAction opts $ uid,
+                     onBlur onBlurAction
+                   ]
                 <> ( if opts ^. #optsFullWidth
                       then [class_ "fill"]
                       else mempty
                    )
                 <> ( opts ^. #optsExtraAttributes
-                   )
-            )
+                   ),
+              fmap
+                (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
+                (opts ^. #optsLeadingWidget),
+              fmap
+                (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
+                (opts ^. #optsTrailingWidget)
+            ]
+            --
+            -- TODO : remove me
+            --
+            -- case opts ^. #optsFilledOrOutlined of
+            --  Filled -> TextField.filled
+            --  Outlined -> TextField.outlined
+            --  $ TextField.config
+            --  & TextField.setType
+            --    ( fmap
+            --        (from @Text @String . htmlFieldType)
+            --        (st ^? cloneTraversal optic . #fieldType)
+            --    )
+            --  & TextField.setOnInput onInputAction
+            --  & TextField.setDisabled (opts ^. #optsDisabled)
+            --  & TextField.setLabel
+            --    ( Just . from @Text @String $ opts ^. #optsPlaceholder
+            --    )
+            --  & TextField.setLeadingIcon
+            --    ( fmap
+            --        (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
+            --        (opts ^. #optsLeadingWidget)
+            --    )
+            --  & TextField.setTrailingIcon
+            --    ( fmap
+            --        (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
+            --        (opts ^. #optsTrailingWidget)
+            --    )
+            --  & TextField.setAttributes
+            --    ( [ id_ . ms $ htmlUid @Text uid,
+            --        onKeyDown . optsOnKeyDownAction opts $ uid,
+            --        onBlur onBlurAction
+            --      ]
+            --        <> ( if opts ^. #optsFullWidth
+            --              then [class_ "fill"]
+            --              else mempty
+            --           )
+            --        <> ( opts ^. #optsExtraAttributes
+            --           )
+            --    )
        ]
   where
     uid =
@@ -204,7 +258,7 @@ field st optic opts parser viewer =
                   & cloneTraversal optic
                   . #fieldInput
                   . #uniqueValue
-                  .~ from @String @Text txt
+                  .~ fromMisoString txt
                   & (opts ^. #optsExtraOnInput)
            in next
                 & cloneTraversal optic
@@ -279,7 +333,7 @@ fieldIcon ::
   ( Model -> Model
   ) ->
   OptsWidget ->
-  TextField.Icon Action
+  View Action
 fieldIcon st optic lot extraOnInput = \case
   CopyWidget ->
     fieldIconSimple lot "content_copy" mempty . PushUpdate $ do
@@ -354,28 +408,33 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ActionWidget icon attrs action ->
-    fieldIconSimple lot (from @Text @String icon) attrs action
+    fieldIconSimple lot icon attrs action
   where
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
 
 fieldIconSimple ::
+  forall action.
   LeadingOrTrailing ->
-  String ->
+  Text ->
   [Attribute action] ->
   action ->
-  TextField.Icon action
+  View action
 fieldIconSimple lot txt attrs action =
-  TextField.icon
-    ( [ class_ $ case lot of
-          Leading -> "mdc-text-field__icon--leading"
-          Trailing -> "mdc-text-field__icon--trailing",
-        style_ [("pointer-events", "auto")],
-        textProp "role" "button",
-        intProp "tabindex" 0,
-        onClick action
-      ]
-        <> attrs
+  Icon.icon
+    ( Icon.defOpts
+        & (#optsOnClick :: Lens' (Icon.Opts action) (Maybe action))
+        .~ Just action
+        & #optsExtraAttributes
+        .~ ( [ class_ $ case lot of
+                Leading -> "mdc-text-field__icon--leading"
+                Trailing -> "mdc-text-field__icon--trailing",
+               style_ [("pointer-events", "auto")],
+               textProp "role" "button",
+               intProp "tabindex" 0
+             ]
+              <> attrs
+           )
     )
     txt
 
@@ -415,77 +474,78 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
               ),
           Cell.mediumCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ ( Misc.newFieldPairAction
+              ( Button.defOpts @Action
+                  & #optsLabel
+                  .~ Just @Text "Add details"
+                  & #optsLeadingIcon
+                  .~ Just @Text "add"
+                  & #optsExtraAttributes
+                  .~ [Theme.secondaryBg]
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ ( Just
+                        . Misc.newFieldPairAction
                         $ cloneTraversal opt
                         . ix idx
                         . cloneTraversal fps
                      )
-                  & #optsLeadingIcon
-                  .~ Just "add"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & #optsLabel
-                  .~ Just "Add details"
               ),
           Cell.smallCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ Misc.moveDown opt idx
+              ( Button.defOpts @Action
+                  & #optsLabel
+                  .~ Just @Text "Down"
                   & #optsLeadingIcon
-                  .~ Just "keyboard_double_arrow_down"
+                  .~ Just @Text "keyboard_double_arrow_down"
                   & #optsExtraAttributes
                   .~ [Theme.secondaryBg]
-                  & #optsLabel
-                  .~ Just "Down"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just (Misc.moveDown opt idx)
               ),
           Cell.smallCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ Misc.moveUp opt idx
+              ( Button.defOpts @Action
+                  & #optsLabel
+                  .~ Just @Text "Up"
                   & #optsLeadingIcon
-                  .~ Just "keyboard_double_arrow_up"
+                  .~ Just @Text "keyboard_double_arrow_up"
                   & #optsExtraAttributes
                   .~ [Theme.secondaryBg]
-                  & #optsLabel
-                  .~ Just "Up"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just (Misc.moveUp opt idx)
               ),
           Cell.smallCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ Misc.duplicateAt opt idx
+              ( Button.defOpts @Action
+                  & #optsLabel
+                  .~ Just @Text "Clone"
                   & #optsLeadingIcon
-                  .~ Just "library_add"
+                  .~ Just @Text "library_add"
                   & #optsExtraAttributes
                   .~ [Theme.secondaryBg]
-                  & #optsLabel
-                  .~ Just "Clone"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just (Misc.duplicateAt opt idx)
               ),
           Cell.smallCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ Misc.removeAt opt idx
+              ( Button.defOpts @Action
+                  & #optsLabel
+                  .~ Just @Text "Delete"
                   & #optsLeadingIcon
-                  .~ Just "delete_forever"
+                  .~ Just @Text "delete_forever"
                   & #optsExtraAttributes
                   .~ [Theme.secondaryBg]
-                  & #optsLabel
-                  .~ Just "Delete"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just (Misc.removeAt opt idx)
               ),
           Cell.bigCell
             $ Button.button
               ( Button.defOpts
-                  & #optsOnClick
-                  .~ closed
-                  & #optsLeadingIcon
-                  .~ Just "arrow_back"
                   & #optsLabel
-                  .~ Just "Back"
+                  .~ Just @Text "Back"
+                  & #optsLeadingIcon
+                  .~ Just @Text "arrow_back"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just closed
               )
         ]
     ]
@@ -576,61 +636,61 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
              --    ),
              Cell.smallCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ Misc.moveDown opt idx
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Down"
                     & #optsLeadingIcon
-                    .~ Just "keyboard_double_arrow_down"
+                    .~ Just @Text "keyboard_double_arrow_down"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Down"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.moveDown opt idx)
                 ),
              Cell.smallCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ Misc.moveUp opt idx
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Up"
                     & #optsLeadingIcon
-                    .~ Just "keyboard_double_arrow_up"
+                    .~ Just @Text "keyboard_double_arrow_up"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Up"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.moveUp opt idx)
                 ),
              Cell.smallCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ Misc.duplicateAt opt idx
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Clone"
                     & #optsLeadingIcon
-                    .~ Just "library_add"
+                    .~ Just @Text "library_add"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Clone"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.duplicateAt opt idx)
                 ),
              Cell.smallCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ Misc.removeAt opt idx
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Delete"
                     & #optsLeadingIcon
-                    .~ Just "delete_forever"
+                    .~ Just @Text "delete_forever"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Delete"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.removeAt opt idx)
                 ),
              Cell.bigCell
               $ Button.button
                 ( Button.defOpts
-                    & #optsOnClick
-                    .~ closed
-                    & #optsLeadingIcon
-                    .~ Just "arrow_back"
                     & #optsLabel
-                    .~ Just "Back"
+                    .~ Just @Text "Back"
+                    & #optsLeadingIcon
+                    .~ Just @Text "arrow_back"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just closed
                 )
            ]
     ]
@@ -649,13 +709,13 @@ fieldModal st (ModalMiniWidget opt) = do
             $ selectTypeWidget st opt,
           Cell.bigCell
             $ Button.button
-              ( Button.defOpts
-                  & #optsOnClick
-                  .~ closed
-                  & #optsLeadingIcon
-                  .~ Just "arrow_back"
+              ( Button.defOpts @Action
                   & #optsLabel
-                  .~ Just "Back"
+                  .~ Just @Text "Back"
+                  & #optsLeadingIcon
+                  .~ Just @Text "arrow_back"
+                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                  .~ Just closed
               )
         ]
     ]
@@ -719,34 +779,70 @@ constTextField st txt opts =
           ("align-items", "center")
         ]
     ]
-    [ case opts ^. #optsFilledOrOutlined of
-        Filled -> TextField.filled
-        Outlined -> TextField.outlined
-        $ TextField.config
-        & TextField.setDisabled True
-        & TextField.setValue (Just $ from @Text @String txt)
-        & TextField.setType
-          ( Just . from @Text @String $ htmlFieldType FieldTypeText
-          )
-        & TextField.setLabel
-          ( Just . from @Text @String $ opts ^. #optsPlaceholder
-          )
-        & TextField.setLeadingIcon
-          ( fmap
+    [ div_
+        ( catMaybes
+            [ Just $ class_ "control",
+              if isJust (opts ^. #optsLeadingWidget)
+                then Just $ class_ "has-icons-left"
+                else Nothing,
+              if isJust (opts ^. #optsTrailingWidget)
+                then Just $ class_ "has-icons-right"
+                else Nothing
+            ]
+            <> ( if opts ^. #optsFullWidth
+                  then [class_ "fill"]
+                  else mempty
+               )
+            <> ( opts ^. #optsExtraAttributes
+               )
+        )
+        $ catMaybes
+          [ Just
+              $ input_
+                [ disabled_ True,
+                  value_ $ ms txt,
+                  type_ . ms $ htmlFieldType FieldTypeText,
+                  placeholder_ . ms $ opts ^. #optsPlaceholder
+                ],
+            fmap
               ( fieldIconSimple Leading "content_copy" mempty . \case
                   CopyWidget -> Misc.copyIntoClipboardAction st txt
                   _ -> error "constTextField unsupported widget"
               )
-              (opts ^. #optsLeadingWidget)
-          )
-        & TextField.setAttributes
-          ( ( if opts ^. #optsFullWidth
-                then [class_ "fill"]
-                else mempty
-            )
-              <> ( opts ^. #optsExtraAttributes
-                 )
-          )
+              ( opts ^. #optsLeadingWidget
+              )
+          ]
+          --
+          -- TODO : remove me
+          --
+          -- case opts ^. #optsFilledOrOutlined of
+          --   Filled -> TextField.filled
+          --   Outlined -> TextField.outlined
+          --   $ TextField.config
+          --   & TextField.setDisabled True
+          --   & TextField.setValue (Just $ from @Text @String txt)
+          --   & TextField.setType
+          --     ( Just . from @Text @String $ htmlFieldType FieldTypeText
+          --     )
+          --   & TextField.setLabel
+          --     ( Just . from @Text @String $ opts ^. #optsPlaceholder
+          --     )
+          --   & TextField.setLeadingIcon
+          --     ( fmap
+          --         ( fieldIconSimple Leading "content_copy" mempty . \case
+          --             CopyWidget -> Misc.copyIntoClipboardAction st txt
+          --             _ -> error "constTextField unsupported widget"
+          --         )
+          --         (opts ^. #optsLeadingWidget)
+          --     )
+          --   & TextField.setAttributes
+          --     ( ( if opts ^. #optsFullWidth
+          --           then [class_ "fill"]
+          --           else mempty
+          --       )
+          --         <> ( opts ^. #optsExtraAttributes
+          --            )
+          --     )
     ]
 
 constLinkField :: Model -> URI -> Opts -> View Action

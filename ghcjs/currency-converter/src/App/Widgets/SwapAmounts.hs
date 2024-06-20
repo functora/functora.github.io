@@ -20,14 +20,20 @@ swapAmounts =
     . (: mempty)
     $ Button.button
       ( Button.defOpts
-          & #optsOnClick
-          .~ onClickAction
-          & #optsLeadingIcon
-          .~ Just "swap_horizontal_circle"
-          & #optsExtraAttributes
-          .~ [Theme.secondaryBg]
           & #optsLabel
           .~ Just "Swap amounts"
+          & ( #optsOnClick ::
+                Lens' (Button.Opts Action) (Maybe Action)
+            )
+          .~ Just onClickAction
+          & ( #optsLeadingIcon ::
+                Lens' (Button.Opts Action) (Maybe Text)
+            )
+          .~ Just "swap_horizontal_circle"
+          & ( #optsExtraAttributes ::
+                Lens' (Button.Opts Action) [Attribute Action]
+            )
+          .~ [Theme.secondaryBg]
       )
   where
     onClickAction =

@@ -51,25 +51,31 @@ templates optic tpls sc st =
                   . Cell.mediumCell
                   $ Button.button
                     ( Button.defOpts
-                        & #optsLeadingIcon
-                        .~ Just icon
-                        & #optsOnClick
-                        .~ screen fun tpl
-                        & #optsExtraAttributes
-                        .~ [Theme.secondaryBg]
                         & #optsLabel
                         .~ Just (tpl ^. #templateName)
+                        & ( #optsOnClick ::
+                              Lens' (Button.Opts Action) (Maybe Action)
+                          )
+                        .~ Just (screen fun tpl)
+                        & #optsLeadingIcon
+                        .~ Just icon
+                        & #optsExtraAttributes
+                        .~ [Theme.secondaryBg]
                     )
             )
           <> [ Cell.bigCell
                 $ Button.button
                   ( Button.defOpts
-                      & #optsOnClick
-                      .~ goback
-                      & #optsLeadingIcon
-                      .~ Just "arrow_back"
                       & #optsLabel
                       .~ Just "Back"
+                      & ( #optsOnClick ::
+                            Lens' (Button.Opts Action) (Maybe Action)
+                        )
+                      .~ Just goback
+                      & ( #optsLeadingIcon ::
+                            Lens' (Button.Opts Action) (Maybe Text)
+                        )
+                      .~ Just "arrow_back"
                   )
              ]
       ]

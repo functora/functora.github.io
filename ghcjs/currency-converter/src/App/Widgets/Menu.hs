@@ -40,61 +40,61 @@ menu st =
           mempty
           [ Cell.mediumCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ screen Converter
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Converter"
                     & #optsLeadingIcon
-                    .~ Just "currency_exchange"
+                    .~ Just @Text "currency_exchange"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Converter"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (screen Converter)
                 ),
             Cell.mediumCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ screen Editor
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Editor"
                     & #optsLeadingIcon
-                    .~ Just "build_circle"
+                    .~ Just @Text "build_circle"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Editor"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (screen Editor)
                 ),
             Cell.mediumCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ templates #modelTemplates
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Templates"
                     & #optsLeadingIcon
-                    .~ Just "apps"
+                    .~ Just @Text "apps"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Templates"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (templates #modelTemplates)
                 ),
             Cell.mediumCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ templates #modelExamples
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Examples"
                     & #optsLeadingIcon
-                    .~ Just "mood"
+                    .~ Just @Text "mood"
                     & #optsExtraAttributes
                     .~ [Theme.secondaryBg]
-                    & #optsLabel
-                    .~ Just "Examples"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (templates #modelExamples)
                 ),
             Cell.bigCell
               $ Button.button
-                ( Button.defOpts
-                    & #optsOnClick
-                    .~ closed
-                    & #optsLeadingIcon
-                    .~ Just "arrow_back"
+                ( Button.defOpts @Action
                     & #optsLabel
-                    .~ Just "Back"
+                    .~ Just @Text "Back"
+                    & #optsLeadingIcon
+                    .~ Just @Text "arrow_back"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just closed
                 )
           ]
       ]

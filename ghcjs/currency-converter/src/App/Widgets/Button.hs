@@ -5,36 +5,34 @@ module App.Widgets.Button
   )
 where
 
-import App.Types
 import qualified App.Widgets.Icon as Icon
 import Functora.Prelude as Prelude
 import Miso hiding (view)
 import Miso.String (ms)
 
-data Opts = Opts
+data Opts action = Opts
   { optsLabel :: Maybe Text,
-    optsOnClick :: Action,
+    optsOnClick :: Maybe action,
     optsLeadingIcon :: Maybe Text,
-    optsExtraAttributes :: [Attribute Action]
+    optsExtraAttributes :: [Attribute action]
   }
   deriving stock (Generic)
 
-defOpts :: Opts
+defOpts :: Opts action
 defOpts =
   Opts
     { optsLabel = Nothing,
-      optsOnClick = Noop,
+      optsOnClick = Nothing,
       optsLeadingIcon = Nothing,
       optsExtraAttributes = mempty
     }
 
-button :: Opts -> View Action
+button :: Opts action -> View action
 button opts =
   button_
-    ( class_ "button"
-        : class_ "fill"
-        : onClick (opts ^. #optsOnClick)
-        : opts ^. #optsExtraAttributes
+    ( maybeToList (onClick <$> opts ^. #optsOnClick)
+        <> [class_ "button", class_ "fill"]
+        <> (opts ^. #optsExtraAttributes)
     )
     $ catMaybes
       [ Icon.icon Icon.defOpts <$> optsLeadingIcon opts,

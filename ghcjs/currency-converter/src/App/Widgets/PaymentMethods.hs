@@ -22,8 +22,6 @@ paymentMethodViewer st mtd =
     ( Currency.defOpts
         & #optsLabel
         .~ (mtd ^. #paymentMethodMoneyLabel . #fieldOutput)
-        & #optsShowZeroAmount
-        .~ False
     )
     ( mtd ^. #paymentMethodMoney
     )

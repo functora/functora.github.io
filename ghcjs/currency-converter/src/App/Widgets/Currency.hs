@@ -23,20 +23,15 @@ import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
-data Opts = Opts
-  { optsLabel :: Text,
-    optsShowZeroAmount :: Bool
+newtype Opts = Opts
+  { optsLabel :: Text
   }
   deriving stock (Generic)
 
 defOpts :: Opts
 defOpts =
   Opts
-    { optsLabel = "Amount",
-      --
-      -- TODO : remove this, seems redundant?
-      --
-      optsShowZeroAmount = True
+    { optsLabel = "Amount"
     }
 
 moneyViewer :: Model -> Opts -> Money Unique -> [View Action]
@@ -83,8 +78,6 @@ selectCurrency st optic =
     ]
     [ Button.button
         ( Button.defOpts
-            & #optsOnClick
-            .~ opened
             & #optsLabel
             .~ Just
               ( inspectCurrencyInfo
@@ -92,6 +85,8 @@ selectCurrency st optic =
                     (unexpectedCurrency ^. #currencyOutput)
                     (st ^? cloneTraversal optic . #currencyOutput)
               )
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ Just opened
         ),
       Modal.modal
         st
@@ -114,10 +109,10 @@ selectCurrency st optic =
             ),
           Button.button
             ( Button.defOpts
-                & #optsOnClick
-                .~ closed
                 & #optsLabel
                 .~ Just "Back"
+                & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                .~ Just closed
             )
         ]
     ]
@@ -235,12 +230,12 @@ swapCurrencies =
     ]
     [ Button.button
         ( Button.defOpts
-            & #optsOnClick
-            .~ onClickAction
-            & #optsLeadingIcon
-            .~ Just "arrows-up-down"
             & #optsLabel
-            .~ Just "Swap currencies"
+            .~ Just @Text "Swap currencies"
+            & #optsLeadingIcon
+            .~ Just @Text "arrows-up-down"
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ Just onClickAction
         )
     ]
   where

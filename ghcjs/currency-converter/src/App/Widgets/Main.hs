@@ -88,12 +88,14 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
               & #optsExtraWidgets
               .~ [ Button.button
                     ( Button.defOpts
-                        & #optsOnClick
-                        .~ setExtScreenAction (unQrCode sc)
-                        & #optsLeadingIcon
-                        .~ Just "login"
                         & #optsLabel
-                        .~ Just "Open"
+                        .~ Just @Text "Open"
+                        & #optsLeadingIcon
+                        .~ Just @Text "login"
+                        & ( #optsOnClick ::
+                              Lens' (Button.Opts Action) (Maybe Action)
+                          )
+                        .~ Just (setExtScreenAction $ unQrCode sc)
                     )
                  ]
           )
@@ -114,12 +116,14 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               & #optsExtraWidgets
               .~ [ Button.button
                     ( Button.defOpts
-                        & #optsOnClick
-                        .~ setScreenAction (unQrCode sc)
-                        & #optsLeadingIcon
-                        .~ Just "login"
                         & #optsLabel
-                        .~ Just "Open"
+                        .~ Just @Text "Open"
+                        & #optsLeadingIcon
+                        .~ Just @Text "login"
+                        & ( #optsOnClick ::
+                              Lens' (Button.Opts Action) (Maybe Action)
+                          )
+                        .~ Just (setScreenAction $ unQrCode sc)
                     )
                  ]
           )

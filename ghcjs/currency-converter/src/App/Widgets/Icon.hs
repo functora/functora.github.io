@@ -5,27 +5,35 @@ module App.Widgets.Icon
   )
 where
 
-import App.Types
 import Functora.Prelude as Prelude
 import Miso hiding (view)
 import Miso.String (ms)
 
-newtype Opts = Opts
-  { optsOnClick :: Action
+data Opts action = Opts
+  { optsOnClick :: Maybe action,
+    optsExtraAttributes :: [Attribute action]
   }
   deriving stock (Generic)
 
-defOpts :: Opts
+defOpts :: Opts action
 defOpts =
   Opts
-    { optsOnClick = Noop
+    { optsOnClick = Nothing,
+      optsExtraAttributes = mempty
     }
 
-icon :: Opts -> Text -> View Action
+icon :: Opts action -> Text -> View action
 icon opts label =
   span_
-    [ class_ "icon",
-      onClick $ opts ^. #optsOnClick
-    ]
-    [ i_ [class_ "fas", class_ . ms $ "fa-" <> label] mempty
+    ( catMaybes
+        [ Just $ class_ "icon",
+          onClick <$> opts ^. #optsOnClick
+        ]
+        <> optsExtraAttributes opts
+    )
+    [ i_
+        [ class_ "fas",
+          class_ . ms $ "fa-" <> label
+        ]
+        mempty
     ]

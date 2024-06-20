@@ -35,12 +35,12 @@ decrypt st =
     Cell.mediumCell
       $ Button.button
         ( Button.defOpts
-            & #optsOnClick
-            .~ decryptDoc st
-            & #optsLeadingIcon
-            .~ Just "login"
             & #optsLabel
-            .~ Just "Open"
+            .~ Just @Text "Open"
+            & #optsLeadingIcon
+            .~ Just @Text "login"
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ Just (decryptDoc st)
         )
   ]
 

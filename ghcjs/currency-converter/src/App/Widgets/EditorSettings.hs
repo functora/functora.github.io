@@ -51,24 +51,25 @@ editorSettings st =
          Cell.mediumCell
           $ Button.button
             ( Button.defOpts
-                & #optsLeadingIcon
-                .~ Just "share"
-                & #optsOnClick
-                .~ ( Misc.copyIntoClipboardAction st
-                      $ shareLink @Text Viewer st
-                   )
                 & #optsLabel
-                .~ Just "Link"
+                .~ Just @Text "Link"
+                & #optsLeadingIcon
+                .~ Just @Text "share"
+                & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                .~ Just
+                  ( Misc.copyIntoClipboardAction st
+                      $ shareLink @Text Viewer st
+                  )
             ),
          Cell.mediumCell
           $ Button.button
             ( Button.defOpts
-                & #optsLeadingIcon
-                .~ Just "more_horiz"
-                & #optsOnClick
-                .~ pureUpdate 0 (& #modelShare .~ Opened)
                 & #optsLabel
-                .~ Just "More"
+                .~ Just @Text "More"
+                & #optsLeadingIcon
+                .~ Just @Text "more_horiz"
+                & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                .~ Just (pureUpdate 0 (& #modelShare .~ Opened))
             )
        ]
 
@@ -114,12 +115,12 @@ shareModal st =
         <> [ Cell.bigCell
               $ Button.button
                 ( Button.defOpts
-                    & #optsOnClick
-                    .~ closed
-                    & #optsLeadingIcon
-                    .~ Just "arrow_back"
                     & #optsLabel
-                    .~ Just "Back"
+                    .~ Just @Text "Back"
+                    & #optsLeadingIcon
+                    .~ Just @Text "arrow_back"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just closed
                 )
            ]
     ]
@@ -137,31 +138,31 @@ shareWidget st screen =
       & TextArea.setFullwidth True,
     Cell.mediumCell
       $ Button.button
-        ( Button.defOpts
+        ( Button.defOpts @Action
+            & #optsLabel
+            .~ Just @Text (inspect screen)
             & #optsLeadingIcon
-            .~ Just "share"
+            .~ Just @Text "share"
             & #optsExtraAttributes
             .~ [Theme.secondaryBg]
-            & #optsOnClick
-            .~ Misc.copyIntoClipboardAction st screenLink
-            & #optsLabel
-            .~ Just (inspect screen)
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ Just (Misc.copyIntoClipboardAction st screenLink)
         ),
     Cell.mediumCell
       $ Button.button
-        ( Button.defOpts
+        ( Button.defOpts @Action
+            & #optsLabel
+            .~ Just @Text (inspect screen)
             & #optsLeadingIcon
-            .~ Just "login"
+            .~ Just @Text "login"
             & #optsExtraAttributes
             .~ [Theme.secondaryBg]
-            & #optsOnClick
-            .~ ( PushUpdate $ do
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ ( Just . PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenLink
                   new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
                )
-            & #optsLabel
-            .~ Just (inspect screen)
         ),
     Cell.bigCell
       . TextArea.filled
@@ -172,31 +173,31 @@ shareWidget st screen =
       & TextArea.setFullwidth True,
     Cell.mediumCell
       $ Button.button
-        ( Button.defOpts
+        ( Button.defOpts @Action
+            & #optsLabel
+            .~ Just @Text (inspect screen <> " QR")
             & #optsLeadingIcon
-            .~ Just "share"
+            .~ Just @Text "share"
             & #optsExtraAttributes
             .~ [Theme.secondaryBg]
-            & #optsOnClick
-            .~ Misc.copyIntoClipboardAction st screenQrCode
-            & #optsLabel
-            .~ Just (inspect screen <> " QR")
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ Just (Misc.copyIntoClipboardAction st screenQrCode)
         ),
     Cell.mediumCell
       $ Button.button
-        ( Button.defOpts
+        ( Button.defOpts @Action
+            & #optsLabel
+            .~ Just @Text (inspect screen <> " QR")
             & #optsLeadingIcon
-            .~ Just "login"
+            .~ Just @Text "login"
             & #optsExtraAttributes
             .~ [Theme.secondaryBg]
-            & #optsOnClick
-            .~ ( PushUpdate $ do
+            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+            .~ ( Just . PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenQrCode
                   new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
                )
-            & #optsLabel
-            .~ Just (inspect screen <> " QR")
         )
   ]
   where

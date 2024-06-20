@@ -3,6 +3,7 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.EditorSettings as EditorSettings
@@ -15,7 +16,6 @@ import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
@@ -86,13 +86,15 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
           )
           ( Qr.defOpts
               & #optsExtraWidgets
-              .~ [ Button.raised
-                    ( Button.config
-                        & Button.setIcon (Just "login")
-                        & Button.setAttributes [class_ "fill"]
-                        & Button.setOnClick (setExtScreenAction $ unQrCode sc)
+              .~ [ Button.button
+                    ( Button.defOpts
+                        & #optsOnClick
+                        .~ setExtScreenAction (unQrCode sc)
+                        & #optsLeadingIcon
+                        .~ Just "login"
+                        & #optsLabel
+                        .~ Just "Open"
                     )
-                    "Open"
                  ]
           )
     _ ->
@@ -110,13 +112,15 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
           )
           ( Qr.defOpts
               & #optsExtraWidgets
-              .~ [ Button.raised
-                    ( Button.config
-                        & Button.setIcon (Just "login")
-                        & Button.setAttributes [class_ "fill"]
-                        & Button.setOnClick (setScreenAction $ unQrCode sc)
+              .~ [ Button.button
+                    ( Button.defOpts
+                        & #optsOnClick
+                        .~ setScreenAction (unQrCode sc)
+                        & #optsLeadingIcon
+                        .~ Just "login"
+                        & #optsLabel
+                        .~ Just "Open"
                     )
-                    "Open"
                  ]
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =

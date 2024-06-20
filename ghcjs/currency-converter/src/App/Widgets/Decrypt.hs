@@ -5,13 +5,13 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
 import Miso hiding (at, view)
 import qualified System.Random as Random
 
@@ -33,13 +33,15 @@ decrypt st =
             .~ onKeyDownAction st
         ),
     Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick (decryptDoc st)
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill"]
+      $ Button.button
+        ( Button.defOpts
+            & #optsOnClick
+            .~ decryptDoc st
+            & #optsLeadingIcon
+            .~ Just "login"
+            & #optsLabel
+            .~ Just "Open"
         )
-        "Open"
   ]
 
 decryptDoc :: Model -> Action

@@ -7,11 +7,11 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
 import Functora.Prelude hiding (Field)
 import qualified Functora.Qr as Qr
-import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
 import Miso.String (ms)
@@ -51,13 +51,15 @@ qr st txt opts
               & TextArea.setDisabled True
               & TextArea.setFullwidth True,
             extraCell
-              $ Button.raised
-                ( Button.config
-                    & Button.setIcon (Just "content_copy")
-                    & Button.setAttributes [class_ "fill"]
-                    & Button.setOnClick (Misc.copyIntoClipboardAction st txt)
+              $ Button.button
+                ( Button.defOpts
+                    & #optsLabel
+                    .~ Just "Copy"
+                    & #optsOnClick
+                    .~ Misc.copyIntoClipboardAction st txt
+                    & #optsLeadingIcon
+                    .~ Just "content_copy"
                 )
-                "Copy"
           ]
 
 newQrImg :: Text -> Maybe Text

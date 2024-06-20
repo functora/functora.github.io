@@ -62,6 +62,7 @@ runApp app = do
     router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
+        ("webfonts" : _) -> staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #else
@@ -156,6 +157,8 @@ viewModel st =
     mempty
     [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
       link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
+      link_ [rel_ "stylesheet", href_ "static/fontawesome.min.css"],
+      link_ [rel_ "stylesheet", href_ "static/bulma.min.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget st
     ]

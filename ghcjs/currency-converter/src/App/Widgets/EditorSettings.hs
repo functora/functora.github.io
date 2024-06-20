@@ -5,13 +5,13 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
+import qualified App.Widgets.Modal as Modal
 import App.Widgets.Templates
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.TextArea as TextArea
@@ -49,24 +49,27 @@ editorSettings st =
          Cell.mediumCell
           $ selectLayoutWidget st,
          Cell.mediumCell
-          $ Button.raised
-            ( Button.config
-                & Button.setIcon (Just "share")
-                & Button.setAttributes [class_ "fill"]
-                & Button.setOnClick
-                  ( Misc.copyIntoClipboardAction st
+          $ Button.button
+            ( Button.defOpts
+                & #optsLeadingIcon
+                .~ Just "share"
+                & #optsOnClick
+                .~ ( Misc.copyIntoClipboardAction st
                       $ shareLink @Text Viewer st
-                  )
-            )
-            "Link",
+                   )
+                & #optsLabel
+                .~ Just "Link"
+            ),
          Cell.mediumCell
-          $ Button.raised
-            ( Button.config
-                & Button.setIcon (Just "more_horiz")
-                & Button.setAttributes [class_ "fill"]
-                & Button.setOnClick (pureUpdate 0 (& #modelShare .~ Opened))
+          $ Button.button
+            ( Button.defOpts
+                & #optsLeadingIcon
+                .~ Just "more_horiz"
+                & #optsOnClick
+                .~ pureUpdate 0 (& #modelShare .~ Opened)
+                & #optsLabel
+                .~ Just "More"
             )
-            "More"
        ]
 
 selectLayoutWidget :: Model -> View Action
@@ -100,29 +103,26 @@ selectLayoutWidget st =
 
 shareModal :: Model -> View Action
 shareModal st =
-  Dialog.dialog
-    ( Dialog.config
-        & Dialog.setOnClose closed
-        & Dialog.setOpen (Opened == st ^. #modelShare)
-    )
-    ( Dialog.dialogContent
-        Nothing
-        [ Cell.grid
-            mempty
-            $ shareWidget st Viewer
-            <> shareWidget st Editor
-            <> [ Cell.bigCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick closed
-                        & Button.setIcon (Just "arrow_back")
-                        & Button.setAttributes [class_ "fill"]
-                    )
-                    "Back"
-               ]
-        ]
+  Modal.modal
+    st
+    Modal.defOpts
+    #modelShare
+    [ Cell.grid
         mempty
-    )
+        $ shareWidget st Viewer
+        <> shareWidget st Editor
+        <> [ Cell.bigCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ closed
+                    & #optsLeadingIcon
+                    .~ Just "arrow_back"
+                    & #optsLabel
+                    .~ Just "Back"
+                )
+           ]
+    ]
   where
     closed = pureUpdate 0 (& #modelShare .~ Closed)
 
@@ -136,27 +136,32 @@ shareWidget st screen =
       & TextArea.setDisabled True
       & TextArea.setFullwidth True,
     Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "share")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick (Misc.copyIntoClipboardAction st screenLink)
-        )
-        ( inspect screen
+      $ Button.button
+        ( Button.defOpts
+            & #optsLeadingIcon
+            .~ Just "share"
+            & #optsExtraAttributes
+            .~ [Theme.secondaryBg]
+            & #optsOnClick
+            .~ Misc.copyIntoClipboardAction st screenLink
+            & #optsLabel
+            .~ Just (inspect screen)
         ),
     Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick
-              ( PushUpdate $ do
+      $ Button.button
+        ( Button.defOpts
+            & #optsLeadingIcon
+            .~ Just "login"
+            & #optsExtraAttributes
+            .~ [Theme.secondaryBg]
+            & #optsOnClick
+            .~ ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenLink
                   new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
-              )
-        )
-        ( inspect screen
+               )
+            & #optsLabel
+            .~ Just (inspect screen)
         ),
     Cell.bigCell
       . TextArea.filled
@@ -166,27 +171,32 @@ shareWidget st screen =
       & TextArea.setDisabled True
       & TextArea.setFullwidth True,
     Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "share")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick (Misc.copyIntoClipboardAction st screenQrCode)
-        )
-        ( inspect screen <> " QR"
+      $ Button.button
+        ( Button.defOpts
+            & #optsLeadingIcon
+            .~ Just "share"
+            & #optsExtraAttributes
+            .~ [Theme.secondaryBg]
+            & #optsOnClick
+            .~ Misc.copyIntoClipboardAction st screenQrCode
+            & #optsLabel
+            .~ Just (inspect screen <> " QR")
         ),
     Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill", Theme.secondaryBg]
-            & Button.setOnClick
-              ( PushUpdate $ do
+      $ Button.button
+        ( Button.defOpts
+            & #optsLeadingIcon
+            .~ Just "login"
+            & #optsExtraAttributes
+            .~ [Theme.secondaryBg]
+            & #optsOnClick
+            .~ ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenQrCode
                   new <- newModel (Just $ st ^. #modelMarket) uri
                   pure . ChanItem 0 $ const new
-              )
-        )
-        ( inspect screen <> " QR"
+               )
+            & #optsLabel
+            .~ Just (inspect screen <> " QR")
         )
   ]
   where

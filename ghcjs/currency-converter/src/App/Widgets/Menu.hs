@@ -4,11 +4,11 @@ module App.Widgets.Menu
 where
 
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Templates as Templates
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
@@ -32,71 +32,72 @@ menu st =
               ]
           ]
       ],
-    Dialog.dialog
-      ( Dialog.config
-          & Dialog.setOnClose closed
-          & Dialog.setOpen (Opened == st ^. #modelMenu)
-      )
-      ( Dialog.dialogContent
-          Nothing
-          [ Cell.grid
-              mempty
-              [ Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (screen Converter)
-                        & Button.setIcon (Just "currency_exchange")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Converter",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (screen Editor)
-                        & Button.setIcon (Just "build_circle")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Editor",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (templates #modelTemplates)
-                        & Button.setIcon (Just "apps")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Templates",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (templates #modelExamples)
-                        & Button.setIcon (Just "mood")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Examples",
-                Cell.bigCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick closed
-                        & Button.setIcon (Just "arrow_back")
-                        & Button.setAttributes [class_ "fill"]
-                    )
-                    "Back"
-              ]
-          ]
+    Modal.modal
+      st
+      Modal.defOpts
+      #modelMenu
+      [ Cell.grid
           mempty
-      )
+          [ Cell.mediumCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ screen Converter
+                    & #optsLeadingIcon
+                    .~ Just "currency_exchange"
+                    & #optsExtraAttributes
+                    .~ [Theme.secondaryBg]
+                    & #optsLabel
+                    .~ Just "Converter"
+                ),
+            Cell.mediumCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ screen Editor
+                    & #optsLeadingIcon
+                    .~ Just "build_circle"
+                    & #optsExtraAttributes
+                    .~ [Theme.secondaryBg]
+                    & #optsLabel
+                    .~ Just "Editor"
+                ),
+            Cell.mediumCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ templates #modelTemplates
+                    & #optsLeadingIcon
+                    .~ Just "apps"
+                    & #optsExtraAttributes
+                    .~ [Theme.secondaryBg]
+                    & #optsLabel
+                    .~ Just "Templates"
+                ),
+            Cell.mediumCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ templates #modelExamples
+                    & #optsLeadingIcon
+                    .~ Just "mood"
+                    & #optsExtraAttributes
+                    .~ [Theme.secondaryBg]
+                    & #optsLabel
+                    .~ Just "Examples"
+                ),
+            Cell.bigCell
+              $ Button.button
+                ( Button.defOpts
+                    & #optsOnClick
+                    .~ closed
+                    & #optsLeadingIcon
+                    .~ Just "arrow_back"
+                    & #optsLabel
+                    .~ Just "Back"
+                )
+          ]
+      ]
   ]
     <> Templates.templates #modelTemplates Templates.unfilled Editor st
     <> Templates.templates #modelExamples Templates.examples Viewer st

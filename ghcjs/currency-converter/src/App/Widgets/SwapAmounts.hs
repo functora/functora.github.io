@@ -4,8 +4,8 @@ module App.Widgets.SwapAmounts
 where
 
 import App.Types
+import qualified App.Widgets.Button as Button
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import Miso hiding (view)
@@ -18,16 +18,17 @@ swapAmounts =
       LayoutGrid.span2Phone
     ]
     . (: mempty)
-    $ Button.raised
-      ( Button.config
-          & Button.setIcon (Just "swap_horizontal_circle")
-          & Button.setOnClick onClickAction
-          & Button.setAttributes
-            [ class_ "fill",
-              Theme.secondaryBg
-            ]
+    $ Button.button
+      ( Button.defOpts
+          & #optsOnClick
+          .~ onClickAction
+          & #optsLeadingIcon
+          .~ Just "swap_horizontal_circle"
+          & #optsExtraAttributes
+          .~ [Theme.secondaryBg]
+          & #optsLabel
+          .~ Just "Swap amounts"
       )
-      "Swap amounts"
   where
     onClickAction =
       pureUpdate 0 $ \st ->

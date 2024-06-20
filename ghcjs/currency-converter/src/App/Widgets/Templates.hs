@@ -7,15 +7,15 @@ module App.Widgets.Templates
 where
 
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Modal as Modal
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
 import Functora.Rates (Market)
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
 import Miso hiding (URI, at, view)
@@ -37,47 +37,44 @@ templates ::
   Model ->
   [View Action]
 templates optic tpls sc st =
-  [ Dialog.dialog
-      ( Dialog.config
-          & Dialog.setOnClose closed
-          & Dialog.setOpen (Opened == st ^. cloneLens optic)
+  [ Modal.modal
+      st
+      Modal.defOpts
+      ( cloneLens optic
       )
-      ( Dialog.dialogContent
-          Nothing
-          [ Cell.grid mempty
-              $ ( do
-                    tpl <- tpls
-                    (icon, fun) <-
-                      [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
-                    pure
-                      . Cell.mediumCell
-                      $ Button.raised
-                        ( Button.config
-                            & Button.setIcon (Just $ from @Text @String icon)
-                            & Button.setOnClick (screen fun tpl)
-                            & Button.setAttributes
-                              [ Theme.secondaryBg,
-                                class_ "fill"
-                              ]
-                        )
-                        ( from @Text @String $ tpl ^. #templateName
-                        )
-                )
-              <> [ Cell.bigCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick goback
-                          & Button.setIcon (Just "arrow_back")
-                          & Button.setAttributes [class_ "fill"]
-                      )
-                      "Back"
-                 ]
-          ]
-          mempty
-      )
+      [ Cell.grid mempty
+          $ ( do
+                tpl <- tpls
+                (icon, fun) <-
+                  [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
+                pure
+                  . Cell.mediumCell
+                  $ Button.button
+                    ( Button.defOpts
+                        & #optsLeadingIcon
+                        .~ Just icon
+                        & #optsOnClick
+                        .~ screen fun tpl
+                        & #optsExtraAttributes
+                        .~ [Theme.secondaryBg]
+                        & #optsLabel
+                        .~ Just (tpl ^. #templateName)
+                    )
+            )
+          <> [ Cell.bigCell
+                $ Button.button
+                  ( Button.defOpts
+                      & #optsOnClick
+                      .~ goback
+                      & #optsLeadingIcon
+                      .~ Just "arrow_back"
+                      & #optsLabel
+                      .~ Just "Back"
+                  )
+             ]
+      ]
   ]
   where
-    closed = pureUpdate 0 (& cloneLens optic .~ Closed)
     goback =
       pureUpdate 0
         $ (& #modelMenu .~ Opened)

@@ -74,10 +74,12 @@ in rec {
     dontUnpack = true;
     installPhase = ''
       mkdir -p $out/static
+      mkdir -p $out/webfonts
       cp ${./static}/*.png $out/static/
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.webmanifest $out/
       cp ${./static}/*.ico $out/
+      cp ${./static}/webfonts/* $out/webfonts/
       ${functora-pkgs.html-minifier}/bin/html-minifier \
         --minify-js \
         --minify-css \
@@ -99,6 +101,8 @@ in rec {
         -o $out/static/all.css \
         ${./static}/material-components-web.min.css \
         ${./static}/material-icons.css \
+        ${./static}/bulma.min.css \
+        ${./static}/fontawesome.min.css \
         ${./static}/app.css
       ${functora-pkgs.closurecompiler}/bin/closure-compiler \
         --jscomp_off=checkVars \

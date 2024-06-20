@@ -8,17 +8,16 @@ module App.Widgets.Currency
 where
 
 import App.Types
+import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Modal as Modal
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude as Prelude
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
-import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
@@ -82,77 +81,71 @@ selectCurrency st optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
-    [ Button.raised
-        ( Button.setOnClick opened
-            . Button.setAttributes
-              [ class_ "fill"
-              ]
-            $ Button.config
-        )
-        . inspectCurrencyInfo
-        $ fromMaybe
-          (unexpectedCurrency ^. #currencyOutput)
-          (st ^? cloneTraversal optic . #currencyOutput),
-      Dialog.dialog
-        ( Dialog.config
-            & Dialog.setOnClose closed
-            & Dialog.setOpen
-              ( fromMaybe
-                  (unexpectedCurrency ^. #currencyOpen)
-                  (st ^? cloneTraversal optic . #currencyOpen)
+    [ Button.button
+        ( Button.defOpts
+            & #optsOnClick
+            .~ opened
+            & #optsLabel
+            .~ Just
+              ( inspectCurrencyInfo
+                  $ fromMaybe
+                    (unexpectedCurrency ^. #currencyOutput)
+                    (st ^? cloneTraversal optic . #currencyOutput)
               )
+        ),
+      Modal.modal
+        st
+        ( Modal.defOpts
+            & #optsExtraOnClose
+            .~ clearInput
         )
-        ( Dialog.dialogContent
-            Nothing
-            [ currencyListWidget st optic
-            ]
-            . (: mempty)
-            $ div_
-              [ class_ "fill"
-              ]
-              [ Field.textField
-                  st
-                  ( cloneTraversal optic
-                      . #currencyInput
-                  )
-                  ( Field.defOpts
-                      & #optsPlaceholder
-                      .~ "Search"
-                  ),
-                Button.raised
-                  ( Button.config
-                      & Button.setOnClick closed
-                      & Button.setAttributes
-                        [ class_ "fill"
-                        ]
-                  )
-                  "Back"
-              ]
+        ( cloneTraversal optic
+            . #currencyModalState
         )
+        [ currencyListWidget st optic,
+          Field.textField
+            st
+            ( cloneTraversal optic
+                . #currencyInput
+            )
+            ( Field.defOpts
+                & #optsPlaceholder
+                .~ "Search"
+            ),
+          Button.button
+            ( Button.defOpts
+                & #optsOnClick
+                .~ closed
+                & #optsLabel
+                .~ Just "Back"
+            )
+        ]
     ]
   where
     opened =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneTraversal optic
-          . #currencyOpen
-          .~ True
-          & cloneTraversal optic
-          . #currencyInput
-          . #fieldInput
-          . #uniqueValue
-          .~ mempty
+      pureUpdate 0
+        $ clearInput
+        . ( &
+              cloneTraversal optic
+                . #currencyModalState
+                .~ Opened
+          )
     closed =
-      pureUpdate 0 $ \st' ->
-        st'
-          & cloneTraversal optic
-          . #currencyOpen
-          .~ False
-          & cloneTraversal optic
-          . #currencyInput
-          . #fieldInput
-          . #uniqueValue
-          .~ mempty
+      pureUpdate 0
+        $ clearInput
+        . ( &
+              cloneTraversal optic
+                . #currencyModalState
+                .~ Closed
+          )
+    clearInput =
+      ( &
+          cloneTraversal optic
+            . #currencyInput
+            . #fieldInput
+            . #uniqueValue
+            .~ mempty
+      )
 
 currencyListWidget ::
   Model ->
@@ -214,8 +207,8 @@ currencyListItemWidget optic current fuzz =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneTraversal optic
-                . #currencyOpen
-                .~ False
+                . #currencyModalState
+                .~ Closed
                 & cloneTraversal optic
                 . #currencyInput
                 . #fieldInput
@@ -240,16 +233,15 @@ swapCurrencies =
       LayoutGrid.span4Tablet,
       LayoutGrid.span2Phone
     ]
-    [ Button.raised
-        ( Button.config
-            & Button.setIcon (Just "swap_vertical_circle")
-            & Button.setOnClick onClickAction
-            & Button.setAttributes
-              [ class_ "fill",
-                Theme.secondaryBg
-              ]
+    [ Button.button
+        ( Button.defOpts
+            & #optsOnClick
+            .~ onClickAction
+            & #optsLeadingIcon
+            .~ Just "arrows-up-down"
+            & #optsLabel
+            .~ Just "Swap currencies"
         )
-        "Swap currencies"
     ]
   where
     onClickAction =
@@ -289,8 +281,7 @@ swapCurrencies =
 unexpectedCurrency :: Currency Unique
 unexpectedCurrency =
   Currency
-    { currencyOpen = False,
-      currencyInput =
+    { currencyInput =
         Field
           { fieldType = FieldTypeText,
             fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
@@ -302,5 +293,6 @@ unexpectedCurrency =
         CurrencyInfo
           { currencyInfoCode = CurrencyCode "UNEXPECTED",
             currencyInfoText = "CURRENCY"
-          }
+          },
+      currencyModalState = Closed
     }

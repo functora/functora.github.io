@@ -36,6 +36,7 @@ common pkg
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.Modal
+    App.Widgets.Panel
     App.Widgets.PaymentMethods
     App.Widgets.Qr
     App.Widgets.SwapAmounts

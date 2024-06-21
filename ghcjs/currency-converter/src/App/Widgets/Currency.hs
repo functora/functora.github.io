@@ -12,12 +12,10 @@ import qualified App.Widgets.Button as Button
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Modal as Modal
-import qualified Data.List.NonEmpty as NonEmpty
+import qualified App.Widgets.Panel as Panel
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude as Prelude
 import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.List as List
-import qualified Material.List.Item as ListItem
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
@@ -147,13 +145,9 @@ currencyListWidget ::
   ATraversal' Model (Currency Unique) ->
   View Action
 currencyListWidget st optic =
-  List.list
-    List.config
-    ( currencyListItemWidget optic current
-        $ maybe currentFuzz NonEmpty.head matching
-    )
+  Panel.panel Nothing
     . fmap (currencyListItemWidget optic current)
-    $ maybe mempty NonEmpty.tail matching
+    $ matching
   where
     current =
       fromMaybe
@@ -170,7 +164,8 @@ currencyListWidget st optic =
         (unexpectedCurrency ^. #currencyInput . #fieldInput . #uniqueValue)
         (st ^? cloneTraversal optic . #currencyInput . #fieldInput . #uniqueValue)
     matching =
-      nonEmpty
+      fromMaybe [currentFuzz]
+        . nonEmpty
         --
         -- TODO : filter not by exact word order,
         -- but by all possible permutations as well,
@@ -189,17 +184,16 @@ currencyListItemWidget ::
   ATraversal' Model (Currency Unique) ->
   CurrencyInfo ->
   Fuzzy.Fuzzy CurrencyInfo Text ->
-  ListItem.ListItem Action
+  Panel.Opts Action
 currencyListItemWidget optic current fuzz =
-  ListItem.listItem
-    ( ListItem.config
-        & ListItem.setSelected
-          ( if current == item
-              then Just ListItem.activated
-              else Nothing
-          )
-        & ListItem.setOnClick
-          ( pureUpdate 0 $ \st ->
+  Panel.defOpts
+    & #optsActive
+    .~ (current == item)
+    & #optsContent
+    .~ [ a_
+          [ class_ "panel-block",
+            class_ "fill",
+            onClick . pureUpdate 0 $ \st ->
               st
                 & cloneTraversal optic
                 . #currencyModalState
@@ -212,12 +206,12 @@ currencyListItemWidget optic current fuzz =
                 & cloneTraversal optic
                 . #currencyOutput
                 .~ item
-          )
-    )
-    [ Miso.rawHtml
-        . toMisoString
-        $ Fuzzy.rendered fuzz
-    ]
+          ]
+          [ Miso.rawHtml
+              . toMisoString
+              $ Fuzzy.rendered fuzz
+          ]
+       ]
   where
     item = Fuzzy.original fuzz
 

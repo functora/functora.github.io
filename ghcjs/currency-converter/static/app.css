@@ -1,7 +1,5 @@
 html,
 body {
-  margin: 0;
-  padding: 0;
   width: 100vw;
   min-height: 100vh;
   display: flex;
@@ -18,23 +16,6 @@ textarea {
 
 .fill {
   width: 100%;
-}
-
-.fill-inner > div {
-  width: 100%;
-  min-width: 100%;
-}
-
-.container {
-  max-width: 550px;
-}
-
-.mdc-button {
-  height: 56px;
-}
-
-.micro-margin-left {
-  margin-left: 6px;
 }
 
 @media print {

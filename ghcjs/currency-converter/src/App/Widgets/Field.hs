@@ -103,6 +103,8 @@ field ::
   View Action
 field st optic opts parser viewer =
   Cell.mediumCell
+    . (: mempty)
+    . div_ [class_ "field"]
     $ ( maybeToList
           . fmap (fieldModal st)
           . listToMaybe
@@ -136,7 +138,8 @@ field st optic opts parser viewer =
             [ Just
                 . input_
                 $ catMaybes
-                  [ fmap
+                  [ Just $ class_ "input",
+                    fmap
                       (type_ . ms . htmlFieldType)
                       (st ^? cloneTraversal optic . #fieldType),
                     Just

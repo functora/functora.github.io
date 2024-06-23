@@ -23,20 +23,13 @@ import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  Cell.grid mempty
+  div_ [class_ "container"]
     $ if st ^. #modelHide
       then [div_ [class_ "lds-dual-ring"] mempty]
       else
         menu
-          <> screenWidget st
-          <> [ -- LayoutGrid.cell [LayoutGrid.span12]
-               --  . (: mempty)
-               --  $ div_
-               --    mempty
-               --    [ inspect . newIdentityState $ st ^. #modelState
-               --    ],
-               tosWidget
-             ]
+          <> [Cell.grid mempty $ screenWidget st]
+          <> [tosWidget]
   where
     sc =
       fromMaybe
@@ -292,7 +285,11 @@ screenWidget st@Model {modelState = St {stScreen = Viewer}} =
 
 tosWidget :: View Action
 tosWidget =
-  Cell.bigCell
+  footer_
+    [ class_ "content",
+      class_ "is-small",
+      class_ "has-text-centered"
+    ]
     [ Miso.text "\169 2024 Functora. All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
       a_ [href_ "license.html"] [Miso.text "Terms of Service"],

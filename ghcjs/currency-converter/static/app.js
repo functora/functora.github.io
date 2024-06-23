@@ -28,4 +28,5 @@
   x4.rel = "manifest";
   x4.href = "site.webmanifest";
   patch(x4);
+  document.body.classList.add("has-navbar-fixed-top");
 })();

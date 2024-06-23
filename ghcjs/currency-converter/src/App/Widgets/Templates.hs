@@ -16,8 +16,6 @@ import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
 import Functora.Rates (Market)
-import qualified Material.Snackbar as Snackbar
-import qualified Material.Theme as Theme
 import Miso hiding (URI, at, view)
 import qualified Text.URI as URI
 
@@ -48,35 +46,35 @@ templates optic tpls sc st =
                 (icon, fun) <-
                   [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
                 pure
-                  . Cell.mediumCell
-                  $ Button.button
+                  $ Cell.mediumCell
+                    [ Button.button
+                        ( Button.defOpts
+                            & #optsLabel
+                            .~ Just (tpl ^. #templateName)
+                            & ( #optsOnClick ::
+                                  Lens' (Button.Opts Action) (Maybe Action)
+                              )
+                            .~ Just (screen fun tpl)
+                            & #optsLeadingIcon
+                            .~ Just icon
+                        )
+                    ]
+            )
+          <> [ Cell.bigCell
+                [ Button.button
                     ( Button.defOpts
                         & #optsLabel
-                        .~ Just (tpl ^. #templateName)
+                        .~ Just "Back"
                         & ( #optsOnClick ::
                               Lens' (Button.Opts Action) (Maybe Action)
                           )
-                        .~ Just (screen fun tpl)
-                        & #optsLeadingIcon
-                        .~ Just icon
-                        & #optsExtraAttributes
-                        .~ [Theme.secondaryBg]
+                        .~ Just goback
+                        & ( #optsLeadingIcon ::
+                              Lens' (Button.Opts Action) (Maybe Text)
+                          )
+                        .~ Just "arrow_back"
                     )
-            )
-          <> [ Cell.bigCell
-                $ Button.button
-                  ( Button.defOpts
-                      & #optsLabel
-                      .~ Just "Back"
-                      & ( #optsOnClick ::
-                            Lens' (Button.Opts Action) (Maybe Action)
-                        )
-                      .~ Just goback
-                      & ( #optsLeadingIcon ::
-                            Lens' (Button.Opts Action) (Maybe Text)
-                        )
-                      .~ Just "arrow_back"
-                  )
+                ]
              ]
       ]
   ]
@@ -496,7 +494,6 @@ newModel mMark uri = do
                 },
             modelMarket = market,
             modelCurrencies = [btc, usd],
-            modelSnackbarQueue = Snackbar.initialQueue,
             modelProducerQueue = prod,
             modelConsumerQueue = cons,
             modelOnlineAt = ct

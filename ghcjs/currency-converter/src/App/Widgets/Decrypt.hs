@@ -18,30 +18,31 @@ import qualified System.Random as Random
 decrypt :: Model -> [View Action]
 decrypt st =
   [ Cell.bigCell
-      . div_ mempty
       $ Field.dynamicFieldViewer st (st ^. #modelState . #stPre),
     Cell.mediumCell
-      $ Field.passwordField
-        st
-        ( #modelState
-            . #stExt
-            . _Just
-            . #stExtIkm
-        )
-        ( Field.defOpts
-            & #optsOnKeyDownAction
-            .~ onKeyDownAction st
-        ),
+      [ Field.passwordField
+          st
+          ( #modelState
+              . #stExt
+              . _Just
+              . #stExtIkm
+          )
+          ( Field.defOpts
+              & #optsOnKeyDownAction
+              .~ onKeyDownAction st
+          )
+      ],
     Cell.mediumCell
-      $ Button.button
-        ( Button.defOpts
-            & #optsLabel
-            .~ Just @Text "Open"
-            & #optsLeadingIcon
-            .~ Just @Text "login"
-            & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-            .~ Just (decryptDoc st)
-        )
+      [ Button.button
+          ( Button.defOpts
+              & #optsLabel
+              .~ Just @Text "Open"
+              & #optsLeadingIcon
+              .~ Just @Text "login"
+              & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+              .~ Just (decryptDoc st)
+          )
+      ]
   ]
 
 decryptDoc :: Model -> Action

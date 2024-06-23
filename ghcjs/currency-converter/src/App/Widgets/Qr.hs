@@ -12,7 +12,6 @@ import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
 import Functora.Prelude hiding (Field)
 import qualified Functora.Qr as Qr
-import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
 import Miso.String (ms)
 
@@ -24,15 +23,16 @@ qr st txt opts
         [ fmap
             ( \img ->
                 Cell.bigCell
-                  $ img_
-                    [ class_ "fill",
-                      src_ $ ms img
-                    ]
+                  [ img_
+                      [ class_ "fill",
+                        src_ $ ms img
+                      ]
+                  ]
             )
             $ newQrImg txt
         ]
         <> copyWidget
-        <> fmap extraCell extraWidgets
+        <> fmap (\x -> extraCell [x]) extraWidgets
   where
     allowCopy = opts ^. #optsAllowCopy
     extraWidgets = opts ^. #optsExtraWidgets
@@ -45,23 +45,25 @@ qr st txt opts
         then mempty
         else
           [ Cell.bigCell
-              . TextArea.filled
-              $ TextArea.config
-              & TextArea.setValue (Just $ from @Text @String txt)
-              & TextArea.setDisabled True
-              & TextArea.setFullwidth True,
+              [ textarea_
+                  [ value_ $ ms txt,
+                    disabled_ True
+                  ]
+                  mempty
+              ],
             extraCell
-              $ Button.button
-                ( Button.defOpts
-                    & #optsLabel
-                    .~ Just "Copy"
-                    & ( #optsOnClick :: Lens' (Button.Opts Action) (Maybe Action)
-                      )
-                    .~ Just (Misc.copyIntoClipboardAction st txt)
-                    & ( #optsLeadingIcon :: Lens' (Button.Opts Action) (Maybe Text)
-                      )
-                    .~ Just "content_copy"
-                )
+              [ Button.button
+                  ( Button.defOpts
+                      & #optsLabel
+                      .~ Just "Copy"
+                      & ( #optsOnClick :: Lens' (Button.Opts Action) (Maybe Action)
+                        )
+                      .~ Just (Misc.copyIntoClipboardAction st txt)
+                      & ( #optsLeadingIcon :: Lens' (Button.Opts Action) (Maybe Text)
+                        )
+                      .~ Just "content_copy"
+                  )
+              ]
           ]
 
 newQrImg :: Text -> Maybe Text

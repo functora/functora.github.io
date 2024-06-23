@@ -21,17 +21,14 @@ import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Icon as Icon
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Qr as Qr
+import qualified App.Widgets.Select as Select
 import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Select as Select
-import qualified Material.Select.Item as SelectItem
-import qualified Material.Theme as Theme
-import qualified Material.Typography as Typography
 import Miso hiding (URI, view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
+import qualified Prelude
 
 data Opts = Opts
   { optsDisabled :: Bool,
@@ -105,16 +102,7 @@ field ::
   (a -> Text) ->
   View Action
 field st optic opts parser viewer =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      LayoutGrid.alignMiddle,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center")
-        ]
-    ]
+  Cell.mediumCell
     $ ( maybeToList
           . fmap (fieldModal st)
           . listToMaybe
@@ -378,7 +366,7 @@ fieldIcon st optic lot extraOnInput = \case
     fieldIconSimple lot "delete_forever" attrs
       $ Misc.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
-    fieldIconSimple lot "settings" [Theme.primary]
+    fieldIconSimple lot "settings" mempty
       $ pureUpdate
         0
         ( &
@@ -462,91 +450,88 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
     [ Cell.grid
         mempty
         [ Cell.mediumCell
-            $ textField
-              st
-              ( cloneTraversal opt
-                  . ix idx
-                  . cloneTraversal lbl
-              )
-              ( defOpts
-                  & #optsPlaceholder
-                  .~ "Label"
-              ),
+            [ textField
+                st
+                ( cloneTraversal opt
+                    . ix idx
+                    . cloneTraversal lbl
+                )
+                ( defOpts
+                    & #optsPlaceholder
+                    .~ "Label"
+                )
+            ],
           Cell.mediumCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Add details"
-                  & #optsLeadingIcon
-                  .~ Just @Text "add"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ ( Just
-                        . Misc.newFieldPairAction
-                        $ cloneTraversal opt
-                        . ix idx
-                        . cloneTraversal fps
-                     )
-              ),
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Add details"
+                    & #optsLeadingIcon
+                    .~ Just @Text "add"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ ( Just
+                          . Misc.newFieldPairAction
+                          $ cloneTraversal opt
+                          . ix idx
+                          . cloneTraversal fps
+                       )
+                )
+            ],
           Cell.smallCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Down"
-                  & #optsLeadingIcon
-                  .~ Just @Text "keyboard_double_arrow_down"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just (Misc.moveDown opt idx)
-              ),
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Down"
+                    & #optsLeadingIcon
+                    .~ Just @Text "keyboard_double_arrow_down"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.moveDown opt idx)
+                )
+            ],
           Cell.smallCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Up"
-                  & #optsLeadingIcon
-                  .~ Just @Text "keyboard_double_arrow_up"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just (Misc.moveUp opt idx)
-              ),
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Up"
+                    & #optsLeadingIcon
+                    .~ Just @Text "keyboard_double_arrow_up"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.moveUp opt idx)
+                )
+            ],
           Cell.smallCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Clone"
-                  & #optsLeadingIcon
-                  .~ Just @Text "library_add"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just (Misc.duplicateAt opt idx)
-              ),
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Clone"
+                    & #optsLeadingIcon
+                    .~ Just @Text "library_add"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.duplicateAt opt idx)
+                )
+            ],
           Cell.smallCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Delete"
-                  & #optsLeadingIcon
-                  .~ Just @Text "delete_forever"
-                  & #optsExtraAttributes
-                  .~ [Theme.secondaryBg]
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just (Misc.removeAt opt idx)
-              ),
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Delete"
+                    & #optsLeadingIcon
+                    .~ Just @Text "delete_forever"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just (Misc.removeAt opt idx)
+                )
+            ],
           Cell.bigCell
-            $ Button.button
-              ( Button.defOpts
-                  & #optsLabel
-                  .~ Just @Text "Back"
-                  & #optsLeadingIcon
-                  .~ Just @Text "arrow_back"
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just closed
-              )
+            [ Button.button
+                ( Button.defOpts
+                    & #optsLabel
+                    .~ Just @Text "Back"
+                    & #optsLeadingIcon
+                    .~ Just @Text "arrow_back"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just closed
+                )
+            ]
         ]
     ]
 fieldModal st (ModalFieldWidget opt idx access sod) = do
@@ -574,53 +559,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
         mempty
         $ ( case sod of
               Static -> mempty
-              Dynamic ->
-                [ let typ :| typs = enumerateNE @FieldType
-                   in Cell.bigCell
-                        $ Select.outlined
-                          ( Select.config
-                              & Select.setLabel
-                                ( Just "Type"
-                                )
-                              & Select.setAttributes
-                                [ class_ "fill-inner"
-                                ]
-                              & Select.setSelected
-                                ( st
-                                    ^? cloneTraversal optic
-                                    . #fieldType
-                                )
-                              & Select.setOnChange
-                                ( \x ->
-                                    pureUpdate
-                                      0
-                                      ( &
-                                          cloneTraversal optic
-                                            . #fieldType
-                                            .~ x
-                                      )
-                                )
-                          )
-                          --
-                          -- NOTE : maybe add icons:
-                          --
-                          -- "font_download"
-                          -- "qr_code_2"
-                          -- "link"
-                          -- "code"
-                          --
-                          ( SelectItem.selectItem
-                              (SelectItem.config typ)
-                              [text . ms $ userFieldType typ]
-                          )
-                        $ fmap
-                          ( \t ->
-                              SelectItem.selectItem
-                                (SelectItem.config t)
-                                [text . ms $ userFieldType t]
-                          )
-                          typs
-                ]
+              Dynamic -> [selectTypeWidget st optic]
           )
         <> [ -- Cell.mediumCell
              --  $ Switch.switch
@@ -635,63 +574,60 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
              --        . #fieldAllowCopy
              --    ),
              Cell.smallCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Down"
-                    & #optsLeadingIcon
-                    .~ Just @Text "keyboard_double_arrow_down"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (Misc.moveDown opt idx)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Down"
+                      & #optsLeadingIcon
+                      .~ Just @Text "keyboard_double_arrow_down"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (Misc.moveDown opt idx)
+                  )
+              ],
              Cell.smallCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Up"
-                    & #optsLeadingIcon
-                    .~ Just @Text "keyboard_double_arrow_up"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (Misc.moveUp opt idx)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Up"
+                      & #optsLeadingIcon
+                      .~ Just @Text "keyboard_double_arrow_up"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (Misc.moveUp opt idx)
+                  )
+              ],
              Cell.smallCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Clone"
-                    & #optsLeadingIcon
-                    .~ Just @Text "library_add"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (Misc.duplicateAt opt idx)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Clone"
+                      & #optsLeadingIcon
+                      .~ Just @Text "library_add"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (Misc.duplicateAt opt idx)
+                  )
+              ],
              Cell.smallCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Delete"
-                    & #optsLeadingIcon
-                    .~ Just @Text "delete_forever"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (Misc.removeAt opt idx)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Delete"
+                      & #optsLeadingIcon
+                      .~ Just @Text "delete_forever"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (Misc.removeAt opt idx)
+                  )
+              ],
              Cell.bigCell
-              $ Button.button
-                ( Button.defOpts
-                    & #optsLabel
-                    .~ Just @Text "Back"
-                    & #optsLeadingIcon
-                    .~ Just @Text "arrow_back"
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just closed
-                )
+              [ Button.button
+                  ( Button.defOpts
+                      & #optsLabel
+                      .~ Just @Text "Back"
+                      & #optsLeadingIcon
+                      .~ Just @Text "arrow_back"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just closed
+                  )
+              ]
            ]
     ]
 fieldModal st (ModalMiniWidget opt) = do
@@ -705,80 +641,77 @@ fieldModal st (ModalMiniWidget opt) = do
     )
     [ Cell.grid
         mempty
-        [ Cell.bigCell
-            $ selectTypeWidget st opt,
+        [ Cell.bigCell [selectTypeWidget st opt],
           Cell.bigCell
-            $ Button.button
-              ( Button.defOpts @Action
-                  & #optsLabel
-                  .~ Just @Text "Back"
-                  & #optsLeadingIcon
-                  .~ Just @Text "arrow_back"
-                  & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                  .~ Just closed
-              )
+            [ Button.button
+                ( Button.defOpts @Action
+                    & #optsLabel
+                    .~ Just @Text "Back"
+                    & #optsLeadingIcon
+                    .~ Just @Text "arrow_back"
+                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                    .~ Just closed
+                )
+            ]
         ]
     ]
 
 selectTypeWidget :: Model -> ATraversal' Model (Field a Unique) -> View Action
 selectTypeWidget st optic =
-  let typ :| typs = enumerateNE @FieldType
-   in Select.outlined
-        ( Select.config
-            & Select.setLabel
-              ( Just "Type"
-              )
-            & Select.setAttributes
-              [ class_ "fill-inner"
-              ]
-            & Select.setSelected
-              ( st
+  Cell.bigCell
+    [ Select.select
+        ( Select.defOpts @Action
+            & #optsLabel
+            .~ Just @Text "Type"
+            & (#optsSelected :: Lens' (Select.Opts Action) (Maybe Select.Item))
+            .~ ( fmap newItem
+                  $ st
                   ^? cloneTraversal optic
                   . #fieldType
-              )
-            & Select.setOnChange
+               )
+            & #optsOnChange
+            .~ Just
               ( \x ->
                   pureUpdate
                     0
                     ( &
                         cloneTraversal optic
                           . #fieldType
-                          .~ x
+                          .~ toEnum
+                            ( Prelude.read
+                                $ from @Text @String x
+                            )
                     )
               )
+            & (#optsItems :: Lens' (Select.Opts Action) [Select.Item])
+            .~ (
+                 --
+                 -- NOTE : maybe add icons:
+                 --
+                 -- "font_download"
+                 -- "qr_code_2"
+                 -- "link"
+                 -- "code"
+                 --
+                 fmap newItem
+                  $ enumerate @FieldType
+               )
         )
-        --
-        -- NOTE : maybe add icons:
-        --
-        -- "font_download"
-        -- "qr_code_2"
-        -- "link"
-        -- "code"
-        --
-        ( SelectItem.selectItem
-            (SelectItem.config typ)
-            [text . ms $ userFieldType typ]
-        )
-        $ fmap
-          ( \t ->
-              SelectItem.selectItem
-                (SelectItem.config t)
-                [text . ms $ userFieldType t]
-          )
-          typs
+    ]
+  where
+    newItem t =
+      Select.Item
+        { Select.itemLabel = userFieldType t,
+          Select.itemLeadingIcon = Nothing,
+          --
+          -- TODO : implement
+          --
+          Select.itemValue = userFieldType t
+        }
 
 constTextField :: Model -> Text -> Opts -> View Action
 constTextField st txt opts =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      LayoutGrid.alignMiddle,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center")
-        ]
-    ]
+  Cell.mediumCell
     [ div_
         ( catMaybes
             [ Just $ class_ "control",
@@ -879,8 +812,7 @@ plain out widget =
     then mempty
     else
       [ span_
-          [ Typography.typography,
-            class_ "fill",
+          [ class_ "fill",
             class_ "mdc-text-field",
             class_ "mdc-text-field--filled",
             style_
@@ -903,9 +835,8 @@ header txt =
   if null txt
     then mempty
     else
-      [ div_
-          [ Typography.headline5,
-            class_ "fill",
+      [ h5_
+          [ class_ "fill",
             style_ [("text-align", "center")]
           ]
           [ text $ ms txt

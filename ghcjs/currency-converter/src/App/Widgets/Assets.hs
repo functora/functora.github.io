@@ -9,7 +9,6 @@ import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import Functora.Prelude
-import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
 assetsViewer :: Model -> [Asset Unique] -> [View Action]
@@ -63,7 +62,7 @@ assetWidget st optic idx =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.DeleteWidget optic idx [Theme.primary]
+            ( Field.DeleteWidget optic idx mempty
             )
       ),
     Currency.selectCurrency

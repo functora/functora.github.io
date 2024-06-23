@@ -5,36 +5,27 @@ where
 
 import App.Types
 import qualified App.Widgets.Button as Button
+import qualified App.Widgets.Cell as Cell
 import Functora.Prelude as Prelude
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Theme as Theme
 import Miso hiding (view)
 
 swapAmounts :: View Action
 swapAmounts =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span2Phone
+  Cell.mediumCell
+    [ Button.button
+        ( Button.defOpts
+            & #optsLabel
+            .~ Just "Swap amounts"
+            & ( #optsOnClick ::
+                  Lens' (Button.Opts Action) (Maybe Action)
+              )
+            .~ Just onClickAction
+            & ( #optsLeadingIcon ::
+                  Lens' (Button.Opts Action) (Maybe Text)
+              )
+            .~ Just "swap_horizontal_circle"
+        )
     ]
-    . (: mempty)
-    $ Button.button
-      ( Button.defOpts
-          & #optsLabel
-          .~ Just "Swap amounts"
-          & ( #optsOnClick ::
-                Lens' (Button.Opts Action) (Maybe Action)
-            )
-          .~ Just onClickAction
-          & ( #optsLeadingIcon ::
-                Lens' (Button.Opts Action) (Maybe Text)
-            )
-          .~ Just "swap_horizontal_circle"
-          & ( #optsExtraAttributes ::
-                Lens' (Button.Opts Action) [Attribute Action]
-            )
-          .~ [Theme.secondaryBg]
-      )
   where
     onClickAction =
       pureUpdate 0 $ \st ->

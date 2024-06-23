@@ -8,7 +8,6 @@ import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import Functora.Prelude as Prelude
-import qualified Material.Typography as Typography
 import Miso hiding (at, view)
 import Miso.String (ms)
 
@@ -21,16 +20,16 @@ fieldPairViewer st pair =
       then mempty
       else
         [ cell
-            $ strong_
-              [Typography.typography]
-              [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
+            [ strong_
+                mempty
+                [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
+            ]
         ]
   )
     <> ( if null k && null v
           then mempty
           else
             [ cell
-                . div_ mempty
                 $ Field.dynamicFieldViewer st (pair ^. #fieldPairValue)
             ]
        )

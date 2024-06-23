@@ -8,7 +8,6 @@ module App.Misc
     textPopup,
     textPopupPure,
     textPopupClear,
-    textPopupClosed,
     drainTChan,
     verifyUid,
     duplicateAt,
@@ -26,7 +25,6 @@ import qualified Data.Generics as Syb
 import Functora.Money
 import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
 import qualified Prelude
 
@@ -87,38 +85,15 @@ copyIntoClipboardAction st x =
 textPopup :: (Show a, Data a) => Model -> a -> JSM ()
 textPopup st x =
   pushActionQueue st
-    $ ChanItem
-      0
-      ( &
-          #modelSnackbarQueue
-            %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
-      )
-  where
-    msg =
-      inspect x
-        & Snackbar.message
-        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick textPopupClosed
+    $ ChanItem 0 (error $ "TODO:textPopup " <> inspect @Text x)
 
 textPopupPure :: (Show a, Data a) => a -> Model -> Model
-textPopupPure x st =
-  st
-    & #modelSnackbarQueue
-    %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
-  where
-    msg =
-      inspect x
-        & Snackbar.message
-        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick textPopupClosed
+textPopupPure x _ =
+  error $ "TODO:textPopupPure " <> inspect @Text x
 
 textPopupClear :: Model -> Model
-textPopupClear =
-  (& #modelSnackbarQueue %~ Snackbar.clearQueue)
-
-textPopupClosed :: Snackbar.MessageId -> Action
-textPopupClosed msg =
-  pureUpdate 0 (& #modelSnackbarQueue %~ Snackbar.close msg)
+textPopupClear _ =
+  error "TODO:textPopupClear"
 
 drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
 drainTChan chan = do

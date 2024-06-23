@@ -4,6 +4,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Button as Button
+import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.EditorSettings as EditorSettings
@@ -16,48 +17,26 @@ import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
 import Functora.Prelude as Prelude
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Snackbar as Snackbar
-import qualified Material.Theme as Theme
-import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String (ms)
 import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  LayoutGrid.layoutGrid
-    [ LayoutGrid.alignMiddle
-    ]
-    $ [ LayoutGrid.inner
-          ( [ class_ "container"
-            ]
-              --
-              -- NOTE : Hiding widget on the first render to avoid flickering.
-              --
-              <> ( if st ^. #modelHide
-                    then [style_ [("display", "none")]]
-                    else mempty
-                 )
-          )
-          ( menu
-              <> screenWidget st
-              <> [ -- LayoutGrid.cell [LayoutGrid.span12]
-                   --  . (: mempty)
-                   --  $ div_
-                   --    mempty
-                   --    [ inspect . newIdentityState $ st ^. #modelState
-                   --    ],
-                   tosWidget,
-                   Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)
-                    $ modelSnackbarQueue st
-                 ]
-          )
-      ]
-    <> ( if st ^. #modelHide
-          then [div_ [class_ "lds-dual-ring"] mempty]
-          else mempty
-       )
+  Cell.grid mempty
+    $ if st ^. #modelHide
+      then [div_ [class_ "lds-dual-ring"] mempty]
+      else
+        menu
+          <> screenWidget st
+          <> [ -- LayoutGrid.cell [LayoutGrid.span12]
+               --  . (: mempty)
+               --  $ div_
+               --    mempty
+               --    [ inspect . newIdentityState $ st ^. #modelState
+               --    ],
+               tosWidget
+             ]
   where
     sc =
       fromMaybe
@@ -183,7 +162,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           )
         & #optsTrailingWidget
         .~ Just
-          ( Field.ActionWidget "add_box" [Theme.primary]
+          ( Field.ActionWidget "add_box" mempty
               . Misc.newFieldPairAction
               $ #modelState
               . #stDoc
@@ -224,7 +203,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add_box" [Theme.primary]
+            ( Field.ActionWidget "add_box" mempty
                 . Misc.newAssetAction st
                 $ #modelState
                 . #stDoc
@@ -265,7 +244,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add_box" [Theme.primary]
+            ( Field.ActionWidget "add_box" mempty
                 . Misc.newPaymentMethodAction st
                 $ #modelState
                 . #stDoc
@@ -313,13 +292,7 @@ screenWidget st@Model {modelState = St {stScreen = Viewer}} =
 
 tosWidget :: View Action
 tosWidget =
-  LayoutGrid.cell
-    [ LayoutGrid.span12,
-      Typography.caption,
-      style_
-        [ ("text-align", "center")
-        ]
-    ]
+  Cell.bigCell
     [ Miso.text "\169 2024 Functora. All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
       a_ [href_ "license.html"] [Miso.text "Terms of Service"],

@@ -70,7 +70,6 @@ import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field (..))
 import Functora.Rates
-import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
 import qualified Paths_app as Paths
 import qualified Text.URI as URI
@@ -87,7 +86,6 @@ data Model = Model
     --
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
-    modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
     modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
     modelOnlineAt :: UTCTime

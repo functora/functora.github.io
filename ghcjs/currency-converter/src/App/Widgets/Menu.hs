@@ -9,28 +9,20 @@ import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Templates as Templates
 import Functora.Prelude as Prelude
-import qualified Material.IconButton as IconButton
-import qualified Material.Theme as Theme
-import qualified Material.TopAppBar as TopAppBar
 import Miso hiding (view)
 
 menu :: Model -> [View Action]
 menu st =
-  [ TopAppBar.shortCollapsed
-      TopAppBar.config
-      [ TopAppBar.row
-          mempty
-          [ TopAppBar.section
-              [ TopAppBar.alignStart
-              ]
-              [ IconButton.iconButton
-                  ( IconButton.config
-                      & IconButton.setOnClick opened
-                      & IconButton.setAttributes [TopAppBar.navigationIcon]
-                  )
-                  "menu"
-              ]
-          ]
+  [ nav_
+      [ class_ "navbar",
+        class_ "is-fixed-top"
+      ]
+      [ Button.button
+          $ Button.defOpts
+          & #optsLabel
+          .~ Just @Text "Menu"
+          & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+          .~ Just opened
       ],
     Modal.modal
       st
@@ -39,63 +31,62 @@ menu st =
       [ Cell.grid
           mempty
           [ Cell.mediumCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Converter"
-                    & #optsLeadingIcon
-                    .~ Just @Text "currency_exchange"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (screen Converter)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Converter"
+                      & #optsLeadingIcon
+                      .~ Just @Text "currency_exchange"
+                      & ( #optsOnClick ::
+                            Lens' (Button.Opts Action) (Maybe Action)
+                        )
+                      .~ Just (screen Converter)
+                  )
+              ],
             Cell.mediumCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Editor"
-                    & #optsLeadingIcon
-                    .~ Just @Text "build_circle"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (screen Editor)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Editor"
+                      & #optsLeadingIcon
+                      .~ Just @Text "build_circle"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (screen Editor)
+                  )
+              ],
             Cell.mediumCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Templates"
-                    & #optsLeadingIcon
-                    .~ Just @Text "apps"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (templates #modelTemplates)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Templates"
+                      & #optsLeadingIcon
+                      .~ Just @Text "apps"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (templates #modelTemplates)
+                  )
+              ],
             Cell.mediumCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Examples"
-                    & #optsLeadingIcon
-                    .~ Just @Text "mood"
-                    & #optsExtraAttributes
-                    .~ [Theme.secondaryBg]
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just (templates #modelExamples)
-                ),
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Examples"
+                      & #optsLeadingIcon
+                      .~ Just @Text "mood"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just (templates #modelExamples)
+                  )
+              ],
             Cell.bigCell
-              $ Button.button
-                ( Button.defOpts @Action
-                    & #optsLabel
-                    .~ Just @Text "Back"
-                    & #optsLeadingIcon
-                    .~ Just @Text "arrow_back"
-                    & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
-                    .~ Just closed
-                )
+              [ Button.button
+                  ( Button.defOpts @Action
+                      & #optsLabel
+                      .~ Just @Text "Back"
+                      & #optsLeadingIcon
+                      .~ Just @Text "arrow_back"
+                      & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
+                      .~ Just closed
+                  )
+              ]
           ]
       ]
   ]

@@ -46,9 +46,7 @@ main =
 #ifndef __GHCJS__
 runApp :: JSM () -> IO ()
 runApp app = do
-  js0 <- BL.readFile "static/app.js"
-  js1 <- BL.readFile "static/material-components-web.min.js"
-  js2 <- BL.readFile "static/material-components-web-elm.min.js"
+  js <- BL.readFile "static/app.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -57,7 +55,7 @@ runApp app = do
     =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router $ js0 <> js1 <> js2)
+      (router js)
   where
     router js req =
       case Wai.pathInfo req of
@@ -155,9 +153,7 @@ viewModel :: Model -> View Action
 viewModel st =
   div_
     mempty
-    [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
-      link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
-      link_ [rel_ "stylesheet", href_ "static/fontawesome.min.css"],
+    [ link_ [rel_ "stylesheet", href_ "static/fontawesome.min.css"],
       link_ [rel_ "stylesheet", href_ "static/bulma.min.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget st

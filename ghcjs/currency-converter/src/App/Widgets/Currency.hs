@@ -15,8 +15,6 @@ import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Panel as Panel
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude as Prelude
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Typography as Typography
 import Miso hiding (view)
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
@@ -39,24 +37,26 @@ moneyViewer st opts money =
         then Nothing
         else
           Just
-            . cell
-            $ strong_ [Typography.typography] [text $ ms label],
+            $ cell
+              [ strong_ mempty [text $ ms label]
+              ],
       Just
-        . cell
-        $ div_
-          [ class_ "fill",
-            style_ [("text-align", "center")]
-          ]
-          [ Field.constTextField
-              st
-              ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
-              )
-              ( Field.defOpts
-                  & #optsPlaceholder
-                  .~ inspectCurrencyInfo
-                    ( money ^. #moneyCurrency . #currencyOutput
-                    )
-              )
+        $ cell
+          [ div_
+              [ class_ "fill",
+                style_ [("text-align", "center")]
+              ]
+              [ Field.constTextField
+                  st
+                  ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
+                  )
+                  ( Field.defOpts
+                      & #optsPlaceholder
+                      .~ inspectCurrencyInfo
+                        ( money ^. #moneyCurrency . #currencyOutput
+                        )
+                  )
+              ]
           ]
     ]
   where
@@ -71,9 +71,7 @@ selectCurrency ::
   ATraversal' Model (Currency Unique) ->
   View Action
 selectCurrency st optic =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop
-    ]
+  Cell.mediumCell
     [ Button.button
         ( Button.defOpts
             & #optsLabel
@@ -217,11 +215,7 @@ currencyListItemWidget optic current fuzz =
 
 swapCurrencies :: View Action
 swapCurrencies =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span2Phone
-    ]
+  Cell.mediumCell
     [ Button.button
         ( Button.defOpts
             & #optsLabel

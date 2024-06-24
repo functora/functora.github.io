@@ -38,8 +38,7 @@ data Opts = Opts
     optsLeadingWidget :: Maybe OptsWidget,
     optsTrailingWidget :: Maybe OptsWidget,
     optsOnKeyDownAction :: Uid -> KeyCode -> Action,
-    optsExtraAttributes :: [Attribute Action],
-    optsFilledOrOutlined :: FilledOrOutlined
+    optsExtraAttributes :: [Attribute Action]
   }
   deriving stock (Generic)
 
@@ -90,8 +89,7 @@ defOpts =
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
       optsOnKeyDownAction = Misc.onKeyDownAction,
-      optsExtraAttributes = mempty,
-      optsFilledOrOutlined = Filled
+      optsExtraAttributes = mempty
     }
 
 field ::
@@ -169,45 +167,6 @@ field st optic opts parser viewer =
                 (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
                 (opts ^. #optsTrailingWidget)
             ]
-            --
-            -- TODO : remove me
-            --
-            -- case opts ^. #optsFilledOrOutlined of
-            --  Filled -> TextField.filled
-            --  Outlined -> TextField.outlined
-            --  $ TextField.config
-            --  & TextField.setType
-            --    ( fmap
-            --        (from @Text @String . htmlFieldType)
-            --        (st ^? cloneTraversal optic . #fieldType)
-            --    )
-            --  & TextField.setOnInput onInputAction
-            --  & TextField.setDisabled (opts ^. #optsDisabled)
-            --  & TextField.setLabel
-            --    ( Just . from @Text @String $ opts ^. #optsPlaceholder
-            --    )
-            --  & TextField.setLeadingIcon
-            --    ( fmap
-            --        (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
-            --        (opts ^. #optsLeadingWidget)
-            --    )
-            --  & TextField.setTrailingIcon
-            --    ( fmap
-            --        (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
-            --        (opts ^. #optsTrailingWidget)
-            --    )
-            --  & TextField.setAttributes
-            --    ( [ id_ . ms $ htmlUid @Text uid,
-            --        onKeyDown . optsOnKeyDownAction opts $ uid,
-            --        onBlur onBlurAction
-            --      ]
-            --        <> ( if opts ^. #optsFullWidth
-            --              then [class_ "fill"]
-            --              else mempty
-            --           )
-            --        <> ( opts ^. #optsExtraAttributes
-            --           )
-            --    )
        ]
   where
     uid =
@@ -327,14 +286,14 @@ fieldIcon ::
   View Action
 fieldIcon st optic lot extraOnInput = \case
   CopyWidget ->
-    fieldIconSimple lot "content_copy" mempty . PushUpdate $ do
+    fieldIconSimple lot "copy" mempty . PushUpdate $ do
       Misc.verifyUid uid
       whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
         $ Misc.copyIntoClipboard st
       pure
         $ ChanItem 0 id
   ClearWidget ->
-    fieldIconSimple lot "close" mempty . PushUpdate $ do
+    fieldIconSimple lot "xmark" mempty . PushUpdate $ do
       Misc.verifyUid uid
       focus
         . ms
@@ -418,11 +377,9 @@ fieldIconSimple lot txt attrs action =
         .~ Just action
         & #optsExtraAttributes
         .~ ( [ class_ $ case lot of
-                Leading -> "mdc-text-field__icon--leading"
-                Trailing -> "mdc-text-field__icon--trailing",
-               style_ [("pointer-events", "auto")],
-               textProp "role" "button",
-               intProp "tabindex" 0
+                Leading -> "is-left"
+                Trailing -> "is-right",
+               style_ [("pointer-events", "auto")]
              ]
               <> attrs
            )
@@ -564,19 +521,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
               Static -> mempty
               Dynamic -> [selectTypeWidget st optic]
           )
-        <> [ -- Cell.mediumCell
-             --  $ Switch.switch
-             --    st
-             --    ( Switch.defOpts
-             --        & #optsIcon
-             --        .~ Just "content_copy"
-             --        & #optsPlaceholder
-             --        .~ "Allow copy"
-             --    )
-             --    ( cloneTraversal optic
-             --        . #fieldAllowCopy
-             --    ),
-             Cell.smallCell
+        <> [ Cell.smallCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -741,44 +686,13 @@ constTextField st txt opts =
                   placeholder_ . ms $ opts ^. #optsPlaceholder
                 ],
             fmap
-              ( fieldIconSimple Leading "content_copy" mempty . \case
+              ( fieldIconSimple Leading "copy" mempty . \case
                   CopyWidget -> Misc.copyIntoClipboardAction st txt
                   _ -> error "constTextField unsupported widget"
               )
               ( opts ^. #optsLeadingWidget
               )
           ]
-          --
-          -- TODO : remove me
-          --
-          -- case opts ^. #optsFilledOrOutlined of
-          --   Filled -> TextField.filled
-          --   Outlined -> TextField.outlined
-          --   $ TextField.config
-          --   & TextField.setDisabled True
-          --   & TextField.setValue (Just $ from @Text @String txt)
-          --   & TextField.setType
-          --     ( Just . from @Text @String $ htmlFieldType FieldTypeText
-          --     )
-          --   & TextField.setLabel
-          --     ( Just . from @Text @String $ opts ^. #optsPlaceholder
-          --     )
-          --   & TextField.setLeadingIcon
-          --     ( fmap
-          --         ( fieldIconSimple Leading "content_copy" mempty . \case
-          --             CopyWidget -> Misc.copyIntoClipboardAction st txt
-          --             _ -> error "constTextField unsupported widget"
-          --         )
-          --         (opts ^. #optsLeadingWidget)
-          --     )
-          --   & TextField.setAttributes
-          --     ( ( if opts ^. #optsFullWidth
-          --           then [class_ "fill"]
-          --           else mempty
-          --       )
-          --         <> ( opts ^. #optsExtraAttributes
-          --            )
-          --     )
     ]
 
 constLinkField :: Model -> URI -> Opts -> View Action

@@ -29,10 +29,7 @@ headerEditor st optic opts =
           [ Field.field
               st
               optic
-              ( opts
-                  & #optsFilledOrOutlined
-                  .~ Outlined
-              )
+              opts
               parseDynamicField
               inspectDynamicField
           ]

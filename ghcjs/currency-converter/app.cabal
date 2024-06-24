@@ -20,12 +20,12 @@ common pkg
     App.Types
     App.Widgets.Assets
     App.Widgets.Button
-    App.Widgets.Cell
     App.Widgets.Currency
     App.Widgets.Decrypt
     App.Widgets.EditorSettings
     App.Widgets.Field
     App.Widgets.FieldPairs
+    App.Widgets.Grid
     App.Widgets.Header
     App.Widgets.Icon
     App.Widgets.Main

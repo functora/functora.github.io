@@ -17,7 +17,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Grid as Grid
 import qualified App.Widgets.Icon as Icon
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Qr as Qr
@@ -100,7 +100,7 @@ field ::
   (a -> Text) ->
   View Action
 field st optic opts parser viewer =
-  Cell.mediumCell
+  Grid.mediumCell
     . (: mempty)
     . div_ [class_ "field"]
     $ ( maybeToList
@@ -407,9 +407,9 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
         . ix idx
         . cloneTraversal ooc
     )
-    [ Cell.grid
+    [ Grid.grid
         mempty
-        [ Cell.mediumCell
+        [ Grid.mediumCell
             [ textField
                 st
                 ( cloneTraversal opt
@@ -421,7 +421,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     .~ "Label"
                 )
             ],
-          Cell.mediumCell
+          Grid.mediumCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -437,7 +437,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                        )
                 )
             ],
-          Cell.smallCell
+          Grid.smallCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -448,7 +448,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     .~ Just (Misc.moveDown opt idx)
                 )
             ],
-          Cell.smallCell
+          Grid.smallCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -459,7 +459,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     .~ Just (Misc.moveUp opt idx)
                 )
             ],
-          Cell.smallCell
+          Grid.smallCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -470,7 +470,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     .~ Just (Misc.duplicateAt opt idx)
                 )
             ],
-          Cell.smallCell
+          Grid.smallCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -481,7 +481,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     .~ Just (Misc.removeAt opt idx)
                 )
             ],
-          Cell.bigCell
+          Grid.bigCell
             [ Button.button
                 ( Button.defOpts
                     & #optsLabel
@@ -515,13 +515,13 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
     ( cloneTraversal optic
         . #fieldModalState
     )
-    [ Cell.grid
+    [ Grid.grid
         mempty
         $ ( case sod of
               Static -> mempty
               Dynamic -> [selectTypeWidget st optic]
           )
-        <> [ Cell.smallCell
+        <> [ Grid.smallCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -532,7 +532,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       .~ Just (Misc.moveDown opt idx)
                   )
               ],
-             Cell.smallCell
+             Grid.smallCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -543,7 +543,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       .~ Just (Misc.moveUp opt idx)
                   )
               ],
-             Cell.smallCell
+             Grid.smallCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -554,7 +554,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       .~ Just (Misc.duplicateAt opt idx)
                   )
               ],
-             Cell.smallCell
+             Grid.smallCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -565,7 +565,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       .~ Just (Misc.removeAt opt idx)
                   )
               ],
-             Cell.bigCell
+             Grid.bigCell
               [ Button.button
                   ( Button.defOpts
                       & #optsLabel
@@ -587,10 +587,10 @@ fieldModal st (ModalMiniWidget opt) = do
     ( cloneTraversal opt
         . #fieldModalState
     )
-    [ Cell.grid
+    [ Grid.grid
         mempty
-        [ Cell.bigCell [selectTypeWidget st opt],
-          Cell.bigCell
+        [ Grid.bigCell [selectTypeWidget st opt],
+          Grid.bigCell
             [ Button.button
                 ( Button.defOpts @Action
                     & #optsLabel
@@ -606,7 +606,7 @@ fieldModal st (ModalMiniWidget opt) = do
 
 selectTypeWidget :: Model -> ATraversal' Model (Field a Unique) -> View Action
 selectTypeWidget st optic =
-  Cell.bigCell
+  Grid.bigCell
     [ Select.select
         ( Select.defOpts @Action
             & #optsLabel
@@ -659,7 +659,7 @@ selectTypeWidget st optic =
 
 constTextField :: Model -> Text -> Opts -> View Action
 constTextField st txt opts =
-  Cell.mediumCell
+  Grid.mediumCell
     [ div_
         ( catMaybes
             [ Just $ class_ "control",

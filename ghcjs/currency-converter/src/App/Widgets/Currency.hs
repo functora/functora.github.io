@@ -9,8 +9,8 @@ where
 
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Grid as Grid
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Panel as Panel
 import Functora.Money hiding (Currency, Money)
@@ -63,15 +63,15 @@ moneyViewer st opts money =
     label = opts ^. #optsLabel
     cell =
       if null label
-        then Cell.bigCell
-        else Cell.mediumCell
+        then Grid.bigCell
+        else Grid.mediumCell
 
 selectCurrency ::
   Model ->
   ATraversal' Model (Currency Unique) ->
   View Action
 selectCurrency st optic =
-  Cell.mediumCell
+  Grid.mediumCell
     [ Button.button
         ( Button.defOpts
             & #optsLabel
@@ -215,7 +215,7 @@ currencyListItemWidget optic current fuzz =
 
 swapCurrencies :: View Action
 swapCurrencies =
-  Cell.mediumCell
+  Grid.mediumCell
     [ Button.button
         ( Button.defOpts
             & #optsLabel

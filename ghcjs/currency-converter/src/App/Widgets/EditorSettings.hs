@@ -6,8 +6,8 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Grid as Grid
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Select as Select
@@ -42,13 +42,13 @@ editorSettings st =
           )
     )
     <> [ shareModal st,
-         Cell.mediumCell
+         Grid.mediumCell
           [ Field.passwordField st (#modelState . #stIkm) Field.defOpts
           ],
-         Cell.mediumCell
+         Grid.mediumCell
           [ selectLayoutWidget st
           ],
-         Cell.mediumCell
+         Grid.mediumCell
           [ Button.button
               ( Button.defOpts
                   & #optsLabel
@@ -62,7 +62,7 @@ editorSettings st =
                     )
               )
           ],
-         Cell.mediumCell
+         Grid.mediumCell
           [ Button.button
               ( Button.defOpts
                   & #optsLabel
@@ -121,11 +121,11 @@ shareModal st =
     st
     Modal.defOpts
     #modelShare
-    [ Cell.grid
+    [ Grid.grid
         mempty
         $ shareWidget st Viewer
         <> shareWidget st Editor
-        <> [ Cell.bigCell
+        <> [ Grid.bigCell
               [ Button.button
                   ( Button.defOpts
                       & #optsLabel
@@ -143,7 +143,7 @@ shareModal st =
 
 shareWidget :: Model -> Screen -> [View Action]
 shareWidget st screen =
-  [ Cell.bigCell
+  [ Grid.bigCell
       [ textarea_
           [ value_ $ ms screenLink,
             placeholder_ $ inspect screen <> " link",
@@ -151,7 +151,7 @@ shareWidget st screen =
           ]
           mempty
       ],
-    Cell.mediumCell
+    Grid.mediumCell
       [ Button.button
           ( Button.defOpts @Action
               & #optsLabel
@@ -162,7 +162,7 @@ shareWidget st screen =
               .~ Just (Misc.copyIntoClipboardAction st screenLink)
           )
       ],
-    Cell.mediumCell
+    Grid.mediumCell
       [ Button.button
           ( Button.defOpts @Action
               & #optsLabel
@@ -177,7 +177,7 @@ shareWidget st screen =
                  )
           )
       ],
-    Cell.bigCell
+    Grid.bigCell
       [ textarea_
           [ value_ $ ms screenQrCode,
             placeholder_ $ inspect screen <> " QR code",
@@ -185,7 +185,7 @@ shareWidget st screen =
           ]
           mempty
       ],
-    Cell.mediumCell
+    Grid.mediumCell
       [ Button.button
           ( Button.defOpts @Action
               & #optsLabel
@@ -196,7 +196,7 @@ shareWidget st screen =
               .~ Just (Misc.copyIntoClipboardAction st screenQrCode)
           )
       ],
-    Cell.mediumCell
+    Grid.mediumCell
       [ Button.button
           ( Button.defOpts @Action
               & #optsLabel

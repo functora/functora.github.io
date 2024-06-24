@@ -5,8 +5,8 @@ module App.Widgets.FieldPairs
 where
 
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Grid as Grid
 import Functora.Prelude as Prelude
 import Miso hiding (at, view)
 import Miso.String (ms)
@@ -38,8 +38,8 @@ fieldPairViewer st pair =
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
     cell =
       if null k
-        then Cell.bigCell
-        else Cell.mediumCell
+        then Grid.bigCell
+        else Grid.mediumCell
 
 fieldPairs ::
   Model ->

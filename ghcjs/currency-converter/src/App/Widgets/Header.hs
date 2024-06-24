@@ -6,8 +6,8 @@ module App.Widgets.Header
 where
 
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Grid as Grid
 import Functora.Prelude hiding (Field)
 import Miso hiding (at, view)
 import Miso.String (ms)
@@ -18,7 +18,7 @@ headerEditor ::
   Field.Opts ->
   [View Action]
 headerEditor st optic opts =
-  [ Cell.bigCell
+  [ Grid.bigCell
       [ div_
           [ style_
               [ ("display", "flex"),
@@ -40,10 +40,10 @@ headerViewer :: Text -> [View Action]
 headerViewer txt =
   if null txt
     then mempty
-    else [Cell.bigCell [text $ ms txt]]
+    else [Grid.bigCell [text $ ms txt]]
 
 headerWrapper :: [View Action] -> [View Action]
 headerWrapper xs =
   if null xs
     then mempty
-    else [Cell.bigCell xs]
+    else [Grid.bigCell xs]

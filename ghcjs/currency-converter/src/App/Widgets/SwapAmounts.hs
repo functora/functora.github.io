@@ -5,13 +5,13 @@ where
 
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Grid as Grid
 import Functora.Prelude as Prelude
 import Miso hiding (view)
 
 swapAmounts :: View Action
 swapAmounts =
-  Cell.mediumCell
+  Grid.mediumCell
     [ Button.button
         ( Button.defOpts
             & #optsLabel

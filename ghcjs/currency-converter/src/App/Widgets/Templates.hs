@@ -8,7 +8,7 @@ where
 
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Grid as Grid
 import qualified App.Widgets.Modal as Modal
 import qualified Functora.Aes as Aes
 import Functora.Cfg
@@ -40,13 +40,13 @@ templates optic tpls sc st =
       Modal.defOpts
       ( cloneLens optic
       )
-      [ Cell.grid mempty
+      [ Grid.grid mempty
           $ ( do
                 tpl <- tpls
                 (icon, fun) <-
                   [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
                 pure
-                  $ Cell.mediumCell
+                  $ Grid.mediumCell
                     [ Button.button
                         ( Button.defOpts
                             & #optsLabel
@@ -60,7 +60,7 @@ templates optic tpls sc st =
                         )
                     ]
             )
-          <> [ Cell.bigCell
+          <> [ Grid.bigCell
                 [ Button.button
                     ( Button.defOpts
                         & #optsLabel

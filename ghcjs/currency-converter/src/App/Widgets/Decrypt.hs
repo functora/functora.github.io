@@ -6,8 +6,8 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.Grid as Grid
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
 import Functora.Cfg
@@ -17,9 +17,9 @@ import qualified System.Random as Random
 
 decrypt :: Model -> [View Action]
 decrypt st =
-  [ Cell.bigCell
+  [ Grid.bigCell
       $ Field.dynamicFieldViewer st (st ^. #modelState . #stPre),
-    Cell.mediumCell
+    Grid.mediumCell
       [ Field.passwordField
           st
           ( #modelState
@@ -32,7 +32,7 @@ decrypt st =
               .~ onKeyDownAction st
           )
       ],
-    Cell.mediumCell
+    Grid.mediumCell
       [ Button.button
           ( Button.defOpts
               & #optsLabel

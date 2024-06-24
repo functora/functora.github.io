@@ -5,7 +5,7 @@ where
 
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Grid as Grid
 import qualified App.Widgets.Modal as Modal
 import qualified App.Widgets.Templates as Templates
 import Functora.Prelude as Prelude
@@ -28,9 +28,9 @@ menu st =
       st
       Modal.defOpts
       #modelMenu
-      [ Cell.grid
+      [ Grid.grid
           mempty
-          [ Cell.mediumCell
+          [ Grid.mediumCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -43,7 +43,7 @@ menu st =
                       .~ Just (screen Converter)
                   )
               ],
-            Cell.mediumCell
+            Grid.mediumCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -54,7 +54,7 @@ menu st =
                       .~ Just (screen Editor)
                   )
               ],
-            Cell.mediumCell
+            Grid.mediumCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -65,7 +65,7 @@ menu st =
                       .~ Just (templates #modelTemplates)
                   )
               ],
-            Cell.mediumCell
+            Grid.mediumCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel
@@ -76,7 +76,7 @@ menu st =
                       .~ Just (templates #modelExamples)
                   )
               ],
-            Cell.bigCell
+            Grid.bigCell
               [ Button.button
                   ( Button.defOpts @Action
                       & #optsLabel

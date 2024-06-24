@@ -8,7 +8,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Button as Button
-import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Grid as Grid
 import qualified Codec.QRCode as QRCode
 import Functora.Prelude hiding (Field)
 import qualified Functora.Qr as Qr
@@ -22,7 +22,7 @@ qr st txt opts
       catMaybes
         [ fmap
             ( \img ->
-                Cell.bigCell
+                Grid.bigCell
                   [ img_
                       [ class_ "fill",
                         src_ $ ms img
@@ -38,13 +38,13 @@ qr st txt opts
     extraWidgets = opts ^. #optsExtraWidgets
     extraCell =
       case mod (length extraWidgets + if allowCopy then 1 else 0) 2 of
-        0 -> Cell.mediumCell
-        _ -> Cell.bigCell
+        0 -> Grid.mediumCell
+        _ -> Grid.bigCell
     copyWidget =
       if not $ opts ^. #optsAllowCopy
         then mempty
         else
-          [ Cell.bigCell
+          [ Grid.bigCell
               [ textarea_
                   [ value_ $ ms txt,
                     disabled_ True

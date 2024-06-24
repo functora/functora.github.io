@@ -31,6 +31,10 @@ module App.Types
     newPaymentMethod,
     uniqueToIdentity,
     identityToUnique,
+    Style (..),
+    htmlStyle,
+    FaIcon (..),
+    htmlFaIcon,
     FieldType (..),
     htmlFieldType,
     userFieldType,
@@ -72,6 +76,7 @@ import Functora.Prelude hiding (Field (..))
 import Functora.Rates
 import Miso hiding (URI, view)
 import qualified Paths_app as Paths
+import qualified Text.Casing as Casing
 import qualified Text.URI as URI
 
 data Model = Model
@@ -532,6 +537,69 @@ uniqueToIdentity =
 identityToUnique :: (TraversableB f, MonadIO m) => f Identity -> m (f Unique)
 identityToUnique =
   btraverse $ newUnique . runIdentity
+
+data Style
+  = Light
+  | Dark
+  | White
+  | Black
+  | Link
+  | Primary
+  | Info
+  | Success
+  | Warning
+  | Danger
+  | Small
+  | Normal
+  | Medium
+  | Large
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (Binary, Serialise) via GenericType Style
+
+htmlStyle :: Style -> Text
+htmlStyle =
+  ("is-" <>)
+    . T.toLower
+    . inspect
+
+data FaIcon
+  = FaCopy
+  | FaClose
+  | FaEye
+  | FaEyeSlash
+  | FaTrash
+  | FaGear
+  | FaPlus
+  | FaClone
+  | FaArrowLeft
+  | FaArrowDown
+  | FaArrowUp
+  | FaArrowRight
+  | FaArrowsLeftRight
+  | FaArrowsUpDown
+  | FaArrowRightToBracket
+  | FaFile
+  | FaFont
+  | FaHandHoldingDollar
+  | FaBriefcase
+  | FaLock
+  | FaFileInvoiceDollar
+  | FaQrcode
+  | FaShare
+  | FaEllipsis
+  | FaCoins
+  | FaScrewdriverWrench
+  | FaTableCellsLarge
+  | FaSketch
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving (Binary, Serialise) via GenericType FaIcon
+
+htmlFaIcon :: FaIcon -> Text
+htmlFaIcon =
+  from @String @Text
+    . Casing.kebab
+    . from @Text @String
+    . inspect
 
 data FieldType
   = -- Rational

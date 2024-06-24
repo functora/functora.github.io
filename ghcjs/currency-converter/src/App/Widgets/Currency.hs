@@ -220,8 +220,10 @@ swapCurrencies =
         ( Button.defOpts
             & #optsLabel
             .~ Just @Text "Swap currencies"
+            & (#optsStyle :: Lens' (Button.Opts Action) (Set Style))
+            .~ [Info, Light]
             & #optsLeadingIcon
-            .~ Just @Text "arrows-up-down"
+            .~ Just FaArrowsUpDown
             & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
             .~ Just onClickAction
         )

@@ -5,6 +5,7 @@ module App.Widgets.Icon
   )
 where
 
+import App.Types
 import Functora.Prelude as Prelude
 import Miso hiding (view)
 import Miso.String (ms)
@@ -22,8 +23,8 @@ defOpts =
       optsExtraAttributes = mempty
     }
 
-icon :: Opts action -> Text -> View action
-icon opts label =
+icon :: Opts action -> FaIcon -> View action
+icon opts fa =
   span_
     ( catMaybes
         [ Just $ class_ "icon",
@@ -33,7 +34,7 @@ icon opts label =
     )
     [ i_
         [ class_ "fas",
-          class_ . ms $ "fa-" <> label
+          class_ . ms $ htmlFaIcon fa
         ]
         mempty
     ]

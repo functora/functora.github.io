@@ -49,7 +49,7 @@ data OptsWidget
   | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
-  | ActionWidget Text [Attribute Action] Action
+  | ActionWidget FaIcon [Attribute Action] Action
   | ModalWidget ModalWidget'
 
 data ModalWidget' where
@@ -286,14 +286,14 @@ fieldIcon ::
   View Action
 fieldIcon st optic lot extraOnInput = \case
   CopyWidget ->
-    fieldIconSimple lot "copy" mempty . PushUpdate $ do
+    fieldIconSimple lot FaCopy mempty . PushUpdate $ do
       Misc.verifyUid uid
       whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
         $ Misc.copyIntoClipboard st
       pure
         $ ChanItem 0 id
   ClearWidget ->
-    fieldIconSimple lot "xmark" mempty . PushUpdate $ do
+    fieldIconSimple lot FaClose mempty . PushUpdate $ do
       Misc.verifyUid uid
       focus
         . ms
@@ -313,22 +313,22 @@ fieldIcon st optic lot extraOnInput = \case
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
-        fieldIconSimple lot "visibility_off" mempty
+        fieldIconSimple lot FaEyeSlash mempty
           $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypeText)
       _ ->
-        fieldIconSimple lot "visibility" mempty
+        fieldIconSimple lot FaEye mempty
           $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
   UpWidget opt idx attrs ->
-    fieldIconSimple lot "keyboard_double_arrow_up" attrs
+    fieldIconSimple lot FaArrowUp attrs
       $ Misc.moveUp opt idx
   DownWidget opt idx attrs ->
-    fieldIconSimple lot "keyboard_double_arrow_down" attrs
+    fieldIconSimple lot FaArrowDown attrs
       $ Misc.moveDown opt idx
   DeleteWidget opt idx attrs ->
-    fieldIconSimple lot "delete_forever" attrs
+    fieldIconSimple lot FaTrash attrs
       $ Misc.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple lot FaGear mempty
       $ pureUpdate
         0
         ( &
@@ -338,7 +338,7 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ModalWidget (ModalFieldWidget opt idx access _) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple lot FaGear mempty
       $ pureUpdate
         0
         ( &
@@ -349,7 +349,7 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ModalWidget (ModalMiniWidget opt) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple lot FaGear mempty
       $ pureUpdate
         0
         ( &
@@ -366,11 +366,11 @@ fieldIcon st optic lot extraOnInput = \case
 fieldIconSimple ::
   forall action.
   LeadingOrTrailing ->
-  Text ->
+  FaIcon ->
   [Attribute action] ->
   action ->
   View action
-fieldIconSimple lot txt attrs action =
+fieldIconSimple lot fa attrs action =
   Icon.icon
     ( Icon.defOpts
         & (#optsOnClick :: Lens' (Icon.Opts action) (Maybe action))
@@ -384,7 +384,7 @@ fieldIconSimple lot txt attrs action =
               <> attrs
            )
     )
-    txt
+    fa
 
 fieldModal ::
   Model ->
@@ -427,7 +427,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Add details"
                     & #optsLeadingIcon
-                    .~ Just @Text "add"
+                    .~ Just FaPlus
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ ( Just
                           . Misc.newFieldPairAction
@@ -443,7 +443,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Down"
                     & #optsLeadingIcon
-                    .~ Just @Text "keyboard_double_arrow_down"
+                    .~ Just FaArrowDown
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just (Misc.moveDown opt idx)
                 )
@@ -454,7 +454,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Up"
                     & #optsLeadingIcon
-                    .~ Just @Text "keyboard_double_arrow_up"
+                    .~ Just FaArrowUp
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just (Misc.moveUp opt idx)
                 )
@@ -465,7 +465,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Clone"
                     & #optsLeadingIcon
-                    .~ Just @Text "library_add"
+                    .~ Just FaClone
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just (Misc.duplicateAt opt idx)
                 )
@@ -476,7 +476,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Delete"
                     & #optsLeadingIcon
-                    .~ Just @Text "delete_forever"
+                    .~ Just FaTrash
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just (Misc.removeAt opt idx)
                 )
@@ -487,7 +487,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                     & #optsLabel
                     .~ Just @Text "Back"
                     & #optsLeadingIcon
-                    .~ Just @Text "arrow_back"
+                    .~ Just FaArrowLeft
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just closed
                 )
@@ -527,7 +527,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       & #optsLabel
                       .~ Just @Text "Down"
                       & #optsLeadingIcon
-                      .~ Just @Text "keyboard_double_arrow_down"
+                      .~ Just FaArrowDown
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (Misc.moveDown opt idx)
                   )
@@ -538,7 +538,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       & #optsLabel
                       .~ Just @Text "Up"
                       & #optsLeadingIcon
-                      .~ Just @Text "keyboard_double_arrow_up"
+                      .~ Just FaArrowUp
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (Misc.moveUp opt idx)
                   )
@@ -549,7 +549,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       & #optsLabel
                       .~ Just @Text "Clone"
                       & #optsLeadingIcon
-                      .~ Just @Text "library_add"
+                      .~ Just FaClone
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (Misc.duplicateAt opt idx)
                   )
@@ -560,7 +560,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       & #optsLabel
                       .~ Just @Text "Delete"
                       & #optsLeadingIcon
-                      .~ Just @Text "delete_forever"
+                      .~ Just FaTrash
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (Misc.removeAt opt idx)
                   )
@@ -571,7 +571,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                       & #optsLabel
                       .~ Just @Text "Back"
                       & #optsLeadingIcon
-                      .~ Just @Text "arrow_back"
+                      .~ Just FaArrowLeft
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just closed
                   )
@@ -596,7 +596,7 @@ fieldModal st (ModalMiniWidget opt) = do
                     & #optsLabel
                     .~ Just @Text "Back"
                     & #optsLeadingIcon
-                    .~ Just @Text "arrow_back"
+                    .~ Just FaArrowLeft
                     & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                     .~ Just closed
                 )
@@ -686,7 +686,7 @@ constTextField st txt opts =
                   placeholder_ . ms $ opts ^. #optsPlaceholder
                 ],
             fmap
-              ( fieldIconSimple Leading "copy" mempty . \case
+              ( fieldIconSimple Leading FaCopy mempty . \case
                   CopyWidget -> Misc.copyIntoClipboardAction st txt
                   _ -> error "constTextField unsupported widget"
               )

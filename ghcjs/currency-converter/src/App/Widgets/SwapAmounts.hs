@@ -16,14 +16,16 @@ swapAmounts =
         ( Button.defOpts
             & #optsLabel
             .~ Just "Swap amounts"
+            & (#optsStyle :: Lens' (Button.Opts Action) (Set Style))
+            .~ [Info, Light]
             & ( #optsOnClick ::
                   Lens' (Button.Opts Action) (Maybe Action)
               )
             .~ Just onClickAction
             & ( #optsLeadingIcon ::
-                  Lens' (Button.Opts Action) (Maybe Text)
+                  Lens' (Button.Opts Action) (Maybe FaIcon)
               )
-            .~ Just "swap_horizontal_circle"
+            .~ Just FaArrowsLeftRight
         )
     ]
   where

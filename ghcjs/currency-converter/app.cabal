@@ -98,6 +98,7 @@ common pkg
     , base
     , base64-bytestring
     , bytestring
+    , casing
     , containers
     , functora-ghcjs
     , fuzzy

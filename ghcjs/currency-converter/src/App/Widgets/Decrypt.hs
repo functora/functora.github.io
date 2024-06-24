@@ -38,7 +38,7 @@ decrypt st =
               & #optsLabel
               .~ Just @Text "Open"
               & #optsLeadingIcon
-              .~ Just @Text "login"
+              .~ Just FaArrowRightToBracket
               & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
               .~ Just (decryptDoc st)
           )

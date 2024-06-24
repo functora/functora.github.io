@@ -54,7 +54,7 @@ editorSettings st =
                   & #optsLabel
                   .~ Just @Text "Link"
                   & #optsLeadingIcon
-                  .~ Just @Text "share"
+                  .~ Just FaShare
                   & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                   .~ Just
                     ( Misc.copyIntoClipboardAction st
@@ -68,7 +68,7 @@ editorSettings st =
                   & #optsLabel
                   .~ Just @Text "More"
                   & #optsLeadingIcon
-                  .~ Just @Text "more_horiz"
+                  .~ Just FaEllipsis
                   & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                   .~ Just (pureUpdate 0 (& #modelShare .~ Opened))
               )
@@ -131,7 +131,7 @@ shareModal st =
                       & #optsLabel
                       .~ Just @Text "Back"
                       & #optsLeadingIcon
-                      .~ Just @Text "arrow_back"
+                      .~ Just FaArrowLeft
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just closed
                   )
@@ -157,7 +157,7 @@ shareWidget st screen =
               & #optsLabel
               .~ Just @Text (inspect screen)
               & #optsLeadingIcon
-              .~ Just @Text "share"
+              .~ Just FaShare
               & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
               .~ Just (Misc.copyIntoClipboardAction st screenLink)
           )
@@ -168,7 +168,7 @@ shareWidget st screen =
               & #optsLabel
               .~ Just @Text (inspect screen)
               & #optsLeadingIcon
-              .~ Just @Text "login"
+              .~ Just FaArrowRightToBracket
               & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
               .~ ( Just . PushUpdate $ do
                     uri <- URI.mkURI $ from @String @Text screenLink
@@ -191,7 +191,7 @@ shareWidget st screen =
               & #optsLabel
               .~ Just @Text (inspect screen <> " QR")
               & #optsLeadingIcon
-              .~ Just @Text "share"
+              .~ Just FaShare
               & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
               .~ Just (Misc.copyIntoClipboardAction st screenQrCode)
           )
@@ -202,7 +202,7 @@ shareWidget st screen =
               & #optsLabel
               .~ Just @Text (inspect screen <> " QR")
               & #optsLeadingIcon
-              .~ Just @Text "login"
+              .~ Just FaArrowRightToBracket
               & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
               .~ ( Just . PushUpdate $ do
                     uri <- URI.mkURI $ from @String @Text screenQrCode

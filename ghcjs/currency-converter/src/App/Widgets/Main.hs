@@ -63,7 +63,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
                         & #optsLabel
                         .~ Just @Text "Open"
                         & #optsLeadingIcon
-                        .~ Just @Text "login"
+                        .~ Just FaArrowRightToBracket
                         & ( #optsOnClick ::
                               Lens' (Button.Opts Action) (Maybe Action)
                           )
@@ -91,7 +91,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                         & #optsLabel
                         .~ Just @Text "Open"
                         & #optsLeadingIcon
-                        .~ Just @Text "login"
+                        .~ Just FaArrowRightToBracket
                         & ( #optsOnClick ::
                               Lens' (Button.Opts Action) (Maybe Action)
                           )
@@ -155,7 +155,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           )
         & #optsTrailingWidget
         .~ Just
-          ( Field.ActionWidget "add_box" mempty
+          ( Field.ActionWidget FaPlus mempty
               . Misc.newFieldPairAction
               $ #modelState
               . #stDoc
@@ -196,7 +196,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add_box" mempty
+            ( Field.ActionWidget FaPlus mempty
                 . Misc.newAssetAction st
                 $ #modelState
                 . #stDoc
@@ -237,7 +237,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
             )
           & #optsTrailingWidget
           .~ Just
-            ( Field.ActionWidget "add_box" mempty
+            ( Field.ActionWidget FaPlus mempty
                 . Misc.newPaymentMethodAction st
                 $ #modelState
                 . #stDoc

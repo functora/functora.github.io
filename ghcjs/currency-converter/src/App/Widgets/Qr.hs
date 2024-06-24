@@ -56,12 +56,14 @@ qr st txt opts
                   ( Button.defOpts
                       & #optsLabel
                       .~ Just "Copy"
-                      & ( #optsOnClick :: Lens' (Button.Opts Action) (Maybe Action)
+                      & ( #optsOnClick ::
+                            Lens' (Button.Opts Action) (Maybe Action)
                         )
                       .~ Just (Misc.copyIntoClipboardAction st txt)
-                      & ( #optsLeadingIcon :: Lens' (Button.Opts Action) (Maybe Text)
+                      & ( #optsLeadingIcon ::
+                            Lens' (Button.Opts Action) (Maybe FaIcon)
                         )
-                      .~ Just "content_copy"
+                      .~ Just FaCopy
                   )
               ]
           ]

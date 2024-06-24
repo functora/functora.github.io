@@ -21,7 +21,7 @@ import qualified Text.URI as URI
 
 data Template = Template
   { templateName :: Text,
-    templateIcon :: Text,
+    templateIcon :: FaIcon,
     templateDoc :: MVar Market -> IO (StDoc Unique),
     templatePre :: IO (Maybe (Field DynamicField Unique)),
     templateIkm :: IO (Maybe (Field Text Unique))
@@ -44,7 +44,7 @@ templates optic tpls sc st =
           $ ( do
                 tpl <- tpls
                 (icon, fun) <-
-                  [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
+                  [(tpl ^. #templateIcon, id), (FaQrcode, QrCode)]
                 pure
                   $ Grid.mediumCell
                     [ Button.button
@@ -70,9 +70,9 @@ templates optic tpls sc st =
                           )
                         .~ Just goback
                         & ( #optsLeadingIcon ::
-                              Lens' (Button.Opts Action) (Maybe Text)
+                              Lens' (Button.Opts Action) (Maybe FaIcon)
                           )
-                        .~ Just "arrow_back"
+                        .~ Just FaArrowLeft
                     )
                 ]
              ]
@@ -119,12 +119,12 @@ templates optic tpls sc st =
 
 unfilled :: [Template]
 unfilled =
-  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
-    Template "Text" "font_download" (const plainTemplate) nil nil,
-    Template "Donate" "volunteer_activism" (const donateTemplate) nil nil,
-    Template "Portfolio" "work" portfolioTemplate nil nil,
-    Template "Secret" "lock" secretTemplate nil nil,
-    Template "Invoice" "request_quote" invoiceTemplate nil nil
+  [ Template "Empty" FaFile (const emptyTemplate) nil nil,
+    Template "Text" FaFont (const plainTemplate) nil nil,
+    Template "Donate" FaHandHoldingDollar (const donateTemplate) nil nil,
+    Template "Portfolio" FaBriefcase portfolioTemplate nil nil,
+    Template "Secret" FaLock secretTemplate nil nil,
+    Template "Invoice" FaFileInvoiceDollar invoiceTemplate nil nil
   ]
   where
     nil :: IO (Maybe (Field a b))
@@ -270,12 +270,12 @@ invoiceTemplate mkt = do
 
 examples :: [Template]
 examples =
-  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
-    Template "Text" "font_download" (const plainExample) nil nil,
-    Template "Donate" "volunteer_activism" (const donateExample) nil nil,
-    Template "Portfolio" "work" portfolioExample nil nil,
-    Template "Secret" "lock" secretExample pre ikm,
-    Template "Invoice" "request_quote" invoiceExample nil nil
+  [ Template "Empty" FaFile (const emptyTemplate) nil nil,
+    Template "Text" FaFont (const plainExample) nil nil,
+    Template "Donate" FaHandHoldingDollar (const donateExample) nil nil,
+    Template "Portfolio" FaBriefcase portfolioExample nil nil,
+    Template "Secret" FaLock secretExample pre ikm,
+    Template "Invoice" FaFileInvoiceDollar invoiceExample nil nil
   ]
   where
     nil :: IO (Maybe (Field a b))

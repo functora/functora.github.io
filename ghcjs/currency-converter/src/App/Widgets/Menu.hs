@@ -36,7 +36,7 @@ menu st =
                       & #optsLabel
                       .~ Just @Text "Converter"
                       & #optsLeadingIcon
-                      .~ Just @Text "currency_exchange"
+                      .~ Just FaCoins
                       & ( #optsOnClick ::
                             Lens' (Button.Opts Action) (Maybe Action)
                         )
@@ -49,7 +49,7 @@ menu st =
                       & #optsLabel
                       .~ Just @Text "Editor"
                       & #optsLeadingIcon
-                      .~ Just @Text "build_circle"
+                      .~ Just FaScrewdriverWrench
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (screen Editor)
                   )
@@ -60,7 +60,7 @@ menu st =
                       & #optsLabel
                       .~ Just @Text "Templates"
                       & #optsLeadingIcon
-                      .~ Just @Text "apps"
+                      .~ Just FaTableCellsLarge
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (templates #modelTemplates)
                   )
@@ -71,7 +71,7 @@ menu st =
                       & #optsLabel
                       .~ Just @Text "Examples"
                       & #optsLeadingIcon
-                      .~ Just @Text "mood"
+                      .~ Just FaSketch
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just (templates #modelExamples)
                   )
@@ -82,7 +82,7 @@ menu st =
                       & #optsLabel
                       .~ Just @Text "Back"
                       & #optsLeadingIcon
-                      .~ Just @Text "arrow_back"
+                      .~ Just FaArrowLeft
                       & (#optsOnClick :: Lens' (Button.Opts Action) (Maybe Action))
                       .~ Just closed
                   )

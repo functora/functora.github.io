@@ -53,6 +53,9 @@ common pkg
   if impl(ghc >8.10.7)
     ghc-options: -Wno-missing-kind-signatures
 
+  if impl(ghc >=9.10)
+    ghc-options: -Wno-missing-role-annotations
+
   cpp-options:        -Wno-trigraphs
   default-extensions:
     AllowAmbiguousTypes
@@ -100,7 +103,6 @@ common pkg
     , base
     , base64-bytestring
     , bytestring
-    , containers
     , functora-ghcjs
     , fuzzy
     , jsaddle
@@ -112,6 +114,17 @@ common pkg
     , syb
     , text
 
+  if os(wasi)
+    build-depends: jsaddle-wasm
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+
+executable app
+  import:        pkg
+  main-is:       Main.hs
+  ghcjs-options: -dedupe
+  build-depends: containers
+
   if !(impl(ghcjs) || os(wasi))
     build-depends:
       , jsaddle-warp
@@ -120,19 +133,15 @@ common pkg
       , warp
       , websockets
 
-executable app
-  import:        pkg
-  main-is:       Main.hs
-  ghcjs-options: -dedupe
-
   if impl(ghcjs)
     ghc-options: -Wno-missing-home-modules
     cpp-options: -DGHCJS_BROWSER
 
   if !flag(ghcid)
-    ghc-options:
-      -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts
-      -with-rtsopts=-N
+    ghc-options: -O2 -optc-O3 -funfolding-use-threshold=16
+
+  if (!flag(ghcid) && !os(wasi))
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
 
   if flag(ghcid)
     cpp-options: -DGHCID
@@ -150,5 +159,4 @@ test-suite app-test
     , aeson
     , hspec
     , optics-core
-    , QuickCheck
     , quickcheck-instances

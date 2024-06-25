@@ -153,7 +153,6 @@ library
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Money
-    Functora.MoneyFgpt
     Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan
@@ -207,7 +206,6 @@ test-suite functora-ghcjs-test
     Functora.CfgOrphan
     Functora.Elm2Miso
     Functora.Money
-    Functora.MoneyFgpt
     Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan

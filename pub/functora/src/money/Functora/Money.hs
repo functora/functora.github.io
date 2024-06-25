@@ -36,7 +36,6 @@ where
 import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Text as T
 import Functora.Cfg
-import Functora.MoneyFgpt as X ()
 import Functora.MoneySing as X
 import Functora.Prelude
 import Functora.Tags as X

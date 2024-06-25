@@ -3,6 +3,7 @@
 module Main (main) where
 
 #ifndef __GHCJS__
+#ifndef wasi_HOST_OS
 import Language.Javascript.JSaddle.Warp as JS
 import qualified Network.Wai as Wai
 import Network.Wai.Application.Static
@@ -10,6 +11,12 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
+#endif
+
+#ifdef wasi_HOST_OS
+import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
+#endif
+
 import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Main
@@ -25,6 +32,10 @@ import Miso hiding (view)
 import qualified Miso
 import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
+
+#ifdef wasi_HOST_OS
+foreign export javascript "hs_start" main :: IO ()
+#endif
 
 main :: IO ()
 main =
@@ -44,6 +55,7 @@ main =
         }
 
 #ifndef __GHCJS__
+#ifndef wasi_HOST_OS
 runApp :: JSM () -> IO ()
 runApp app = do
   js0 <- BL.readFile "static/app.js"
@@ -64,9 +76,17 @@ runApp app = do
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
-#else
+#endif
+#endif
+
+#ifdef __GHCJS__
 runApp :: IO () -> IO ()
 runApp = id
+#endif
+
+#ifdef wasi_HOST_OS
+runApp :: JSM () -> IO ()
+runApp = JSaddle.Wasm.run
 #endif
 
 updateModel :: Action -> Model -> Effect Action Model
@@ -151,6 +171,7 @@ updateModel (PushUpdate newUpdater) st = do
 
 viewModel :: Model -> View Action
 #ifndef __GHCJS__
+#ifndef wasi_HOST_OS
 viewModel st =
   div_
     mempty
@@ -159,7 +180,15 @@ viewModel st =
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget st
     ]
-#else
+#endif
+#endif
+
+#ifdef __GHCJS__
+viewModel st =
+  mainWidget st
+#endif
+
+#ifdef wasi_HOST_OS
 viewModel st =
   mainWidget st
 #endif

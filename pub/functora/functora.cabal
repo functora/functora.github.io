@@ -298,7 +298,6 @@ library money
   visibility:      public
   exposed-modules:
     Functora.Money
-    Functora.MoneyFgpt
     Functora.MoneySing
 
 library rates
@@ -382,7 +381,6 @@ test-suite functora-test
       Functora.CfgOrphan
       Functora.Elm2Miso
       Functora.Money
-      Functora.MoneyFgpt
       Functora.MoneySing
       Functora.Prelude
       Functora.PreludeOrphan

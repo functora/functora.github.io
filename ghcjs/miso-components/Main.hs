@@ -5,13 +5,16 @@
 -- | Haskell language pragma
 module Main where
 
-#ifndef __GHCJS__
+#ifdef wasi_HOST_OS
+import GHC.Wasm.Prim
+import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
+#else
 import           Language.Javascript.JSaddle.Warp as JSaddle
 import qualified Network.Wai.Handler.Warp         as Warp
 import           Network.WebSockets
+import qualified Data.ByteString.Lazy as B
 #endif
 import Control.Monad.IO.Class
-import qualified Data.ByteString.Lazy as B
 import qualified Data.Function
 import qualified Data.List as L
 import qualified Data.Map as M
@@ -62,6 +65,12 @@ import Miso.String
 
 (|>) = (Data.Function.&)
 
+#ifdef wasi_HOST_OS
+foreign export javascript "hs_start" hs_start :: JSString -> IO ()
+hs_start :: JSString -> IO ()
+hs_start = const main
+#endif
+
 -- | Type synonym for an application model
 data Model = Model
   { counter :: Int,
@@ -100,15 +109,15 @@ data Action
   | IconToggleClicked
   deriving (Show, Eq)
 
-#ifndef __GHCJS__
+#ifdef wasi_HOST_OS
+runApp :: JSM () -> IO ()
+runApp = JSaddle.Wasm.run
+#else
 runApp :: JSM () -> IO ()
 runApp f = do
   bString <- B.readFile "material-components-web-elm.min.js"
   jSaddle <- JSaddle.jsaddleOr defaultConnectionOptions (f >> syncPoint) (JSaddle.jsaddleAppWithJs (B.append (JSaddle.jsaddleJs False) bString))
-  Warp.runSettings (Warp.setPort 8081 (Warp.setTimeout 3600 Warp.defaultSettings)) jSaddle
-#else
-runApp :: IO () -> IO ()
-runApp app = app
+  Warp.runSettings (Warp.setPort 8000 (Warp.setTimeout 3600 Warp.defaultSettings)) jSaddle
 #endif
 
 extendedEvents :: M.Map MisoString Bool

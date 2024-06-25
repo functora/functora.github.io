@@ -1,2 +1,35 @@
-index-state: 2023-08-20T00:00:00Z
+index-state: 2024-05-13T07:56:22Z
 packages: *.cabal
+
+if arch(wasm32)
+  -- https://github.com/haskellari/splitmix/pull/73
+  source-repository-package
+    type: git
+    location: https://github.com/amesgen/splitmix
+    tag: 83b906c4bcdc2720546f1779a16eb65e8e12ecba
+  -- remove TemplateHaskell
+  source-repository-package
+    type: git
+    location: https://github.com/amesgen/miso
+    tag: 27dd5fc80be9d0a3b80a9ecc81ee3401bc610e01
+  -- wasm
+  source-repository-package
+    type: git
+    location: https://github.com/amesgen/jsaddle-wasm
+    tag: be129c788f8ca1ea2e9cc1515397c1a46d02bb41
+
+package aeson
+  flags: -ordered-keymap
+
+if impl(ghc >= 9.10)
+  allow-newer:
+    , base
+    , bytestring
+    , containers
+    , deepseq
+    , filepath
+    , ghc-prim
+    , template-haskell
+    , text
+    , time
+    , jsaddle:lens

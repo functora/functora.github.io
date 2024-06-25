@@ -1,4 +1,4 @@
-cabal-version: 2.2
+cabal-version: 3.0
 name:          miso-components
 version:       0.1.0.0
 synopsis:      Miso components
@@ -11,17 +11,8 @@ common pkg
   build-depends:
     , aeson
     , base
-    , bytestring
     , containers
     , miso
-
-  if !impl(ghcjs)
-    build-depends:
-      , jsaddle
-      , jsaddle-warp
-      , transformers
-      , warp
-      , websockets
 
   ghc-options:
     -Weverything -Wno-all-missed-specialisations
@@ -100,3 +91,18 @@ library
 executable miso-components-example
   import:  pkg
   main-is: Main.hs
+
+  if os(wasi)
+    build-depends:
+      , ghc-experimental
+      , jsaddle-wasm
+
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+
+  else
+    build-depends:
+      , bytestring
+      , jsaddle-warp
+      , warp
+      , websockets

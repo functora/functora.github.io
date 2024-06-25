@@ -13,7 +13,6 @@ import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
-import Functora.Rates (Market)
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Snackbar as Snackbar

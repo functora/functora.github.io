@@ -2,12 +2,14 @@
 
 module Functora.Soplate
   ( Soplate (..),
+    inspectSop,
   )
 where
 
+import qualified Data.ByteString.Lazy as BL
+import Functora.Prelude
 import Generics.SOP hiding (Generic)
 import Generics.SOP.GGP
-import Universum hiding (All)
 
 type MonadTraversal a s = forall f. (Monad f) => (s -> f s) -> a -> f a
 
@@ -38,3 +40,18 @@ instance (ChildsOf s a (GCode a)) => Soplate s a where
 
 instance {-# OVERLAPPING #-} (ChildsOf a a (GCode a)) => Soplate a a where
   soplate f x = f =<< childsOf @a @a @(GCode a) f x
+
+inspectSop ::
+  forall dst src.
+  ( Show src,
+    Typeable src,
+    Soplate ByteString src,
+    Soplate BL.ByteString src,
+    IsString dst
+  ) =>
+  src ->
+  dst
+inspectSop =
+  display @dst @src
+    . over soplate prettyByteString
+    . over soplate prettyLazyByteString

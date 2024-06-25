@@ -5,8 +5,9 @@
   outputs = inputs:
     inputs.ghc-wasm-meta.inputs.flake-utils.lib.eachDefaultSystem (system: let
       pkgs = inputs.ghc-wasm-meta.inputs.nixpkgs.legacyPackages.${system};
-      app-watch = pkgs.writeShellApplication rec {
-        name = "app-watch";
+      shell = import ../../nix/shell.nix;
+      app-serve = pkgs.writeShellApplication rec {
+        name = "app-serve";
         text = ''
           ${pkgs.simple-http-server}/bin/simple-http-server -p 3000 ./dist
         '';
@@ -16,12 +17,16 @@
       '';
     in {
       devShells.default = pkgs.mkShell {
-        packages = [
-          inputs.ghc-wasm-meta.packages.${system}.all_9_10
-          app-watch
-          app-ghcid
-          pkgs.cabal-install
-        ];
+        packages =
+          shell.ghc.all
+          ++ shell.buildInputs
+          ++ [
+            pkgs.libwebp
+            pkgs.pkg-config
+            inputs.ghc-wasm-meta.packages.${system}.all_9_10
+            app-serve
+            app-ghcid
+          ];
       };
     });
 }

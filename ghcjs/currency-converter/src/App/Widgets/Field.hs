@@ -18,7 +18,6 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Qr as Qr
-import Data.Maybe (listToMaybe)
 import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button

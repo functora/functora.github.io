@@ -53,7 +53,7 @@ data Market = Market
     marketQuotesPerBase :: Map CurrencyCode QuotesPerBaseAt
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (Binary, Serialise, FromJSON, ToJSON) via GenericType Market
+  deriving (Binary, FromJSON, ToJSON) via GenericType Market
 
 newMarket :: (MonadIO m) => m (MVar Market)
 newMarket = newEmptyMVar
@@ -90,7 +90,7 @@ data QuoteAt = QuoteAt
     quoteUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (Binary, Serialise, FromJSON, ToJSON) via GenericType QuoteAt
+  deriving (Binary, FromJSON, ToJSON) via GenericType QuoteAt
 
 getQuote ::
   ( MonadThrow m,
@@ -188,7 +188,7 @@ data Currencies = Currencies
     currenciesUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (Binary, Serialise, FromJSON, ToJSON) via GenericType Currencies
+  deriving (Binary, FromJSON, ToJSON) via GenericType Currencies
 
 fetchCurrencies ::
   ( MonadThrow m,
@@ -226,7 +226,7 @@ data QuotesPerBaseAt = QuotesPerBaseAt
     quotesPerBaseUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (Binary, Serialise, FromJSON, ToJSON) via GenericType QuotesPerBaseAt
+  deriving (Binary, FromJSON, ToJSON) via GenericType QuotesPerBaseAt
 
 fetchQuotesPerBase ::
   ( MonadThrow m,

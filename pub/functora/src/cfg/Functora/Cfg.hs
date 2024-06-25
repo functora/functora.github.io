@@ -18,11 +18,6 @@ module Functora.Cfg
     decodeToml,
     encodeToml,
 
-    -- * CBOR
-    -- $cbor
-    decodeCbor,
-    encodeCbor,
-
     -- * Binary
     -- $binary
     decodeBinary,
@@ -35,9 +30,6 @@ module Functora.Cfg
   )
 where
 
-import Codec.Serialise as X (Serialise)
-import qualified Codec.Serialise as Cbor
-import qualified Codec.Serialise.Class as Cbor
 import Data.Aeson as X
   ( FromJSON (..),
     FromJSONKey (..),
@@ -174,36 +166,6 @@ genericTomlCodec =
             ('_' : xs) -> xs
             xs -> xs
       }
-
--- $cbor
--- CBOR
-
-decodeCbor ::
-  forall inp out m.
-  ( From inp BL.ByteString,
-    Serialise out,
-    MonadThrow m
-  ) =>
-  inp ->
-  m out
-decodeCbor =
-  either throw pure
-    . Cbor.deserialiseOrFail
-    . from @inp @BL.ByteString
-
-encodeCbor :: (Serialise a) => a -> BL.ByteString
-encodeCbor = Cbor.serialise
-
-instance
-  ( Generic a,
-    Typeable a,
-    Cbor.GSerialiseEncode (Rep a),
-    Cbor.GSerialiseDecode (Rep a)
-  ) =>
-  Serialise (GenericType a)
-  where
-  encode = Cbor.gencode . Generics.from . unGenericType
-  decode = GenericType . Generics.to <$> Cbor.gdecode
 
 -- $binary
 -- Binary

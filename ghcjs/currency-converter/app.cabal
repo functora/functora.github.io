@@ -112,7 +112,7 @@ common pkg
     , syb
     , text
 
-  if !impl(ghcjs)
+  if !(impl(ghcjs) || os(wasi))
     build-depends:
       , jsaddle-warp
       , wai

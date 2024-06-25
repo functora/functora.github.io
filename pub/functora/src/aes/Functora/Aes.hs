@@ -30,7 +30,7 @@ data Crypto = Crypto
     cryptoValueHmac :: ByteString
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving (Binary, Serialise) via GenericType Crypto
+  deriving (Binary) via GenericType Crypto
 
 encryptHmac ::
   forall a.
@@ -122,7 +122,7 @@ data Km = Km
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
   deriving (Show) via Redacted Km
-  deriving (Binary, Serialise) via GenericType Km
+  deriving (Binary) via GenericType Km
 
 randomKm :: (MonadIO m) => Natural -> m Km
 randomKm size = do

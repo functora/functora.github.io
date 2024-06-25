@@ -96,7 +96,6 @@ common pkg-prelude
     , Crypto
     , extra
     , generic-lens
-    , generics-sop
     , lens
     , microlens
     , microlens-contra
@@ -107,7 +106,6 @@ common pkg-prelude
     , random
     , safe-exceptions
     , scientific
-    , serialise
     , stm
     , syb
     , tagged
@@ -122,7 +120,6 @@ common pkg-prelude
     , uniplate
     , universum
     , unliftio
-    , uuid
     , witch-mini
     , with-utf8
 
@@ -158,7 +155,6 @@ common pkg-cfg
     , bytestring
     , modern-uri
     , optparse-applicative
-    , serialise
     , tomland
 
 common pkg-web
@@ -170,16 +166,19 @@ common pkg-web
     , modern-uri
     , network-uri
 
-  if !impl(ghcjs)
+  if impl(ghcjs)
+    build-depends: ghcjs-base
+
+  if os(wasi)
+    build-depends: extism-pdk
+
+  if !(impl(ghcjs) || os(wasi))
     build-depends:
       , bytestring
       , http-client
       , http-client-tls
       , streaming-commons
       , yesod-core
-
-  else
-    build-depends: ghcjs-base
 
 common pkg-sql
   import:         pkg
@@ -228,6 +227,14 @@ common pkg-tags
     , template-haskell
     , type-level-sets
 
+common pkg-soplate
+  import:         pkg
+  hs-source-dirs: src/soplate
+  build-depends:
+    , base
+    , bytestring
+    , generics-sop
+
 common pkg-elm2miso
   import:         pkg
   hs-source-dirs: src/elm2miso
@@ -240,7 +247,6 @@ library
   exposed-modules:
     Functora.Prelude
     Functora.PreludeOrphan
-    Functora.Soplate
 
 library qr
   import:          pkg-qr
@@ -311,6 +317,13 @@ library tags
     Functora.TagsFamily
     Functora.TagsOrphan
 
+library soplate
+  import:          pkg-soplate
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Soplate
+
 library elm2miso-lib
   import:          pkg-elm2miso
   exposed:         True
@@ -359,7 +372,7 @@ test-suite functora-test
       pkg-prelude, pkg-qr, pkg-aes,
       pkg-cfg, pkg-web, pkg-sql,
       pkg-money, pkg-rates, pkg-tags,
-      pkg-elm2miso
+      pkg-soplate, pkg-elm2miso
 
     ghc-options:   -Wno-unused-packages
     other-modules:
@@ -393,4 +406,5 @@ test-suite functora-test
       , money
       , qr
       , rates
+      , soplate
       , tags

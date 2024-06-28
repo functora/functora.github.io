@@ -13,6 +13,7 @@ import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
+import qualified Functora.Web as Web
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Snackbar as Snackbar
@@ -23,7 +24,7 @@ import qualified Text.URI as URI
 data Template = Template
   { templateName :: Text,
     templateIcon :: Text,
-    templateDoc :: MVar Market -> IO (StDoc Unique),
+    templateDoc :: IO (StDoc Unique),
     templatePre :: IO (Maybe (Field DynamicField Unique)),
     templateIkm :: IO (Maybe (Field Text Unique))
   }
@@ -83,7 +84,7 @@ templates optic tpls sc st =
         . (& cloneLens optic .~ Closed)
     screen fun tpl =
       PushUpdate $ do
-        doc <- liftIO $ tpl ^. #templateDoc $ st ^. #modelMarket
+        doc <- liftIO $ tpl ^. #templateDoc
         mPre <- liftIO $ tpl ^. #templatePre
         mIkm <- liftIO $ tpl ^. #templateIkm
         noPre <- newDynamicField $ DynamicFieldText mempty
@@ -108,7 +109,7 @@ templates optic tpls sc st =
                 . #stExt
                 .~ Nothing
         uri <- URI.mkURI $ shareLink (fun sc) next
-        new <- newModel (Just $ st ^. #modelMarket) uri
+        new <- newModel (st ^. #modelWebOpts) (Just $ st ^. #modelMarket) uri
         pure . ChanItem 0 $ const new
 
 --
@@ -117,9 +118,9 @@ templates optic tpls sc st =
 
 unfilled :: [Template]
 unfilled =
-  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
-    Template "Text" "font_download" (const plainTemplate) nil nil,
-    Template "Donate" "volunteer_activism" (const donateTemplate) nil nil,
+  [ Template "Empty" "circle" emptyTemplate nil nil,
+    Template "Text" "font_download" plainTemplate nil nil,
+    Template "Donate" "volunteer_activism" donateTemplate nil nil,
     Template "Portfolio" "work" portfolioTemplate nil nil,
     Template "Secret" "lock" secretTemplate nil nil,
     Template "Invoice" "request_quote" invoiceTemplate nil nil
@@ -183,11 +184,8 @@ donateTemplate = do
     qr :: FieldPair a b -> FieldPair a b
     qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
-portfolioTemplate :: MVar Market -> IO (StDoc Unique)
-portfolioTemplate mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
-  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+portfolioTemplate :: IO (StDoc Unique)
+portfolioTemplate = do
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -207,10 +205,8 @@ portfolioTemplate mkt = do
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
 
-secretTemplate :: MVar Market -> IO (StDoc Unique)
-secretTemplate mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+secretTemplate :: IO (StDoc Unique)
+secretTemplate = do
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
@@ -229,10 +225,8 @@ secretTemplate mkt = do
         stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
-invoiceTemplate :: MVar Market -> IO (StDoc Unique)
-invoiceTemplate mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
+invoiceTemplate :: IO (StDoc Unique)
+invoiceTemplate = do
   fhead <- newDynamicTitleField "Invoice"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -268,9 +262,9 @@ invoiceTemplate mkt = do
 
 examples :: [Template]
 examples =
-  [ Template "Empty" "circle" (const emptyTemplate) nil nil,
-    Template "Text" "font_download" (const plainExample) nil nil,
-    Template "Donate" "volunteer_activism" (const donateExample) nil nil,
+  [ Template "Empty" "circle" emptyTemplate nil nil,
+    Template "Text" "font_download" plainExample nil nil,
+    Template "Donate" "volunteer_activism" donateExample nil nil,
     Template "Portfolio" "work" portfolioExample nil nil,
     Template "Secret" "lock" secretExample pre ikm,
     Template "Invoice" "request_quote" invoiceExample nil nil
@@ -322,12 +316,8 @@ donateExample = do
     qr :: FieldPair a b -> FieldPair a b
     qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
-portfolioExample :: MVar Market -> IO (StDoc Unique)
-portfolioExample mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  eur <- newCurrencyInfo mkt $ CurrencyCode "eur"
-  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
-  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+portfolioExample :: IO (StDoc Unique)
+portfolioExample = do
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -349,10 +339,8 @@ portfolioExample mkt = do
         stDocAssetsAndPaymentsLayout = PaymentsBeforeAssets
       }
 
-secretExample :: MVar Market -> IO (StDoc Unique)
-secretExample mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+secretExample :: IO (StDoc Unique)
+secretExample = do
   msg <- newFieldPair mempty $ DynamicFieldText exampleSecretText
   fhead <- newDynamicTitleField "Dear Tommy,"
   ahead <- newDynamicTitleField mempty
@@ -371,12 +359,8 @@ secretExample mkt = do
         stDocAssetsAndPaymentsLayout = AssetsBeforePayments
       }
 
-invoiceExample :: MVar Market -> IO (StDoc Unique)
-invoiceExample mkt = do
-  usd <- newCurrencyInfo mkt $ CurrencyCode "usd"
-  eur <- newCurrencyInfo mkt $ CurrencyCode "eur"
-  btc <- newCurrencyInfo mkt $ CurrencyCode "btc"
-  xmr <- newCurrencyInfo mkt $ CurrencyCode "xmr"
+invoiceExample :: IO (StDoc Unique)
+invoiceExample = do
   fhead <- newDynamicTitleField "Invoice #6102"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -413,16 +397,15 @@ newModel ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Web.Opts ->
   Maybe (MVar Market) ->
   URI ->
   m Model
-newModel mMark uri = do
+newModel webOpts mMark uri = do
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- maybe newMarket pure mMark
-  btc <- newCurrencyInfo market $ CurrencyCode "btc"
-  usd <- newCurrencyInfo market $ CurrencyCode "usd"
   topMoney <- newMoney 1 btc
   bottomMoney <- newMoney 0 usd
   ikm <- newPasswordField mempty
@@ -495,10 +478,11 @@ newModel mMark uri = do
             modelSnackbarQueue = Snackbar.initialQueue,
             modelProducerQueue = prod,
             modelConsumerQueue = cons,
-            modelOnlineAt = ct
+            modelOnlineAt = ct,
+            modelWebOpts = webOpts
           }
-  fmap (fromRight st) . tryMarket . withMarket market $ do
-    currenciesInfo <- currenciesList <$> getCurrencies
+  fmap (fromRight st) . tryMarket . withMarket webOpts market $ do
+    currenciesInfo <- currenciesList <$> getCurrencies webOpts
     pure $ st & #modelCurrencies .~ currenciesInfo
 
 --
@@ -532,3 +516,15 @@ exampleSecretIkm = "order6102"
 exampleDonationText :: Text
 exampleDonationText =
   "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora."
+
+usd :: CurrencyInfo
+usd = CurrencyInfo (CurrencyCode "usd") mempty
+
+eur :: CurrencyInfo
+eur = CurrencyInfo (CurrencyCode "eur") mempty
+
+btc :: CurrencyInfo
+btc = CurrencyInfo (CurrencyCode "btc") mempty
+
+xmr :: CurrencyInfo
+xmr = CurrencyInfo (CurrencyCode "xmr") mempty

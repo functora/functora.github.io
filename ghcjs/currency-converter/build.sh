@@ -27,7 +27,7 @@ fi
 hs_wasm_path=$(find ../../dist-newstyle -name "app.wasm")
 
 "$(wasm32-wasi-ghc --print-libdir)"/post-link.mjs \
-     --input "$hs_wasm_path" --output ghc_wasm_jsffi.js
+     --input "$hs_wasm_path" --output dist/ghc_wasm_jsffi.js
 
 if $dev_mode; then
     cp "$hs_wasm_path" dist/bin.wasm

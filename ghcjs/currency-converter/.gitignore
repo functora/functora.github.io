@@ -5,4 +5,3 @@ node_modules
 dist
 android
 capacitor-geckoview/capacitor/build
-ghc_wasm_jsffi.js

@@ -170,7 +170,11 @@ common pkg-web
     build-depends: ghcjs-base
 
   if os(wasi)
-    build-depends: extism-pdk
+    build-depends:
+      , extism-pdk
+      , ghcjs-dom
+      , http-media
+      , servant-jsaddle
 
   if !(impl(ghcjs) || os(wasi))
     build-depends:
@@ -406,3 +410,4 @@ test-suite functora-test
       , rates
       , soplate
       , tags
+      , web

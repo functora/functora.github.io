@@ -45,7 +45,6 @@ module App.Types
     newDynamicTitleField,
     newPasswordField,
     newMoney,
-    newCurrencyInfo,
     FieldPair (..),
     newFieldPair,
     unShareUri,
@@ -70,6 +69,7 @@ import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
 import Functora.Prelude hiding (Field (..))
 import Functora.Rates
+import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
 import qualified Paths_app as Paths
@@ -90,7 +90,8 @@ data Model = Model
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
     modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
-    modelOnlineAt :: UTCTime
+    modelOnlineAt :: UTCTime,
+    modelWebOpts :: Web.Opts
   }
   deriving stock (Eq, Generic)
 
@@ -420,18 +421,6 @@ newMoney amt cur =
   Money
     <$> newRatioField amt
     <*> newCurrency cur
-
-newCurrencyInfo ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  MVar Market ->
-  CurrencyCode ->
-  m CurrencyInfo
-newCurrencyInfo mark cur =
-  withMarket mark $ do
-    eInfo <- tryMarket $ getCurrencyInfo cur
-    either (const . pure $ CurrencyInfo cur mempty) pure eInfo
 
 --
 -- NOTE : In most cases we don't need JSM.

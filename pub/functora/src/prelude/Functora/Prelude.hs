@@ -59,6 +59,7 @@ module Functora.Prelude
     -- $parsers
     parseWords,
     parseRatio,
+    utf8FromLatin1,
 
     -- * QQ
     -- $qq
@@ -193,6 +194,7 @@ import qualified Data.Scientific as Scientific
 import qualified Data.Semigroup as Semigroup
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text as T
+import Data.Text.Encoding as X (decodeLatin1)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -688,6 +690,21 @@ parseRational str =
     Right (rat, "") -> pure rat
     Right e -> throwParseException str e
     Left e -> throwParseException str e
+
+utf8FromLatin1 ::
+  forall a.
+  ( From a ByteString,
+    From ByteString a
+  ) =>
+  a ->
+  a
+utf8FromLatin1 raw =
+  from @ByteString @a
+    . encodeUtf8
+    . either (const $ decodeLatin1 bs) id
+    $ decodeUtf8' bs
+  where
+    bs = from @a @ByteString raw
 
 -- $qq
 -- QQ

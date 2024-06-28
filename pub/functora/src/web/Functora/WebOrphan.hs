@@ -17,6 +17,11 @@ import qualified Network.HTTP.Client as Web
 #endif
 #endif
 
+#ifdef wasi_HOST_OS
+import Functora.Prelude
+import qualified GHCJS.DOM.Types as JSDOM
+#endif
+
 #if __GLASGOW_HASKELL__ < 904
 deriving stock instance Data Web.Status
 #endif
@@ -46,4 +51,12 @@ instance PathPiece Natural where
   toPathPiece =
     toPathPiece . from @Natural @Integer
 #endif
+#endif
+
+--
+-- NOTE : this is evil instance, ok for now..
+--
+#ifdef wasi_HOST_OS
+instance Eq JSDOM.JSContextRef where
+  _ == _ = True
 #endif

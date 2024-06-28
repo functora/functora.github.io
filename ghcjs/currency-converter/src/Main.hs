@@ -26,6 +26,7 @@ import qualified Data.Map as Map
 import Functora.Money hiding (Money)
 import Functora.Prelude hiding (Field)
 import Functora.Rates
+import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
@@ -39,20 +40,34 @@ foreign export javascript "hs_start" main :: IO ()
 
 main :: IO ()
 main =
-  runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
-    uri <- URI.mkURI . inspect =<< getCurrentURI
-    st <- newModel Nothing uri
-    startApp
-      App
-        { model = st & #modelHide .~ True,
-          update = updateModel,
-          Miso.view = viewModel,
-          subs = mempty,
-          events = extendedEvents,
-          initialAction = InitUpdate,
-          mountPoint = Nothing, -- defaults to 'body'
-          logLevel = Off
-        }
+  withUtf8
+    . runApp
+    . forever
+    . handleAny (\e -> maxAttention e >> sleepSeconds 5)
+    $ do
+      uri <- URI.mkURI . inspect =<< getCurrentURI
+      web <- getWebOpts
+      st <- newModel web Nothing uri
+      startApp
+        App
+          { model = st & #modelHide .~ True,
+            update = updateModel,
+            Miso.view = viewModel,
+            subs = mempty,
+            events = extendedEvents,
+            initialAction = InitUpdate,
+            mountPoint = Nothing, -- defaults to 'body'
+            logLevel = Off
+          }
+
+getWebOpts :: JSM Web.Opts
+getWebOpts = do
+#ifdef wasi_HOST_OS
+  ctx <- JS.askJSM
+  pure $ Web.defOpts ctx
+#else
+  pure Web.defOpts
+#endif
 
 #ifndef __GHCJS__
 #ifndef wasi_HOST_OS
@@ -236,10 +251,10 @@ evalModel raw = do
   new <-
     Syb.everywhereM
       ( Syb.mkM $ \cur ->
-          withMarket (raw ^. #modelMarket)
+          withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
             . fmap (fromRight cur)
             . tryMarket
-            . getCurrencyInfo
+            . getCurrencyInfo (raw ^. #modelWebOpts)
             $ currencyInfoCode cur
       )
       ( raw ^. #modelState
@@ -267,7 +282,7 @@ evalModel raw = do
   case baseAmtResult of
     Left {} -> pure st
     Right baseAmt ->
-      withMarket (st ^. #modelMarket) $ do
+      withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
         let funds =
               Funds
                 baseAmt
@@ -277,7 +292,7 @@ evalModel raw = do
                 . #currencyOutput
                 . #currencyInfoCode
         quote <-
-          getQuote funds
+          getQuote (st ^. #modelWebOpts) funds
             $ st
             ^. cloneLens quoteLens
             . #moneyCurrency
@@ -319,7 +334,7 @@ evalInvoice st = do
   mtds <- forM (st ^. #modelState . #stDoc . #stDocPaymentMethods) $ \mtd -> do
     total <-
       foldM
-        (\acc -> fmap (+ acc) . getTotalPayment mtd)
+        (\acc -> fmap (+ acc) . getTotalPayment st mtd)
         0
         (st ^. #modelState . #stDoc . #stDocAssets)
     pure
@@ -344,12 +359,15 @@ getTotalPayment ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Model ->
   PaymentMethod Unique ->
   Asset Unique ->
   ReaderT (MVar Market) m Rational
-getTotalPayment method asset = do
+getTotalPayment st method asset = do
   quote <-
     getQuote
+      ( st ^. #modelWebOpts
+      )
       ( Funds (Tagged total)
           $ asset
           ^. #assetPrice

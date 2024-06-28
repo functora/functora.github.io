@@ -62,13 +62,14 @@ withMarket ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   MVar Market ->
   ReaderT (MVar Market) m a ->
   m a
-withMarket var expr = do
+withMarket opts var expr = do
   mst <- tryReadMVar var
   when (isNothing mst) $ do
-    st <- Market <$> fetchCurrencies <*> pure mempty
+    st <- Market <$> fetchCurrencies opts <*> pure mempty
     void $ tryPutMVar var st
   runReaderT expr var
 
@@ -76,11 +77,12 @@ withNewMarket ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   ReaderT (MVar Market) m a ->
   m a
-withNewMarket expr = do
+withNewMarket opts expr = do
   var <- newMarket
-  withMarket var expr
+  withMarket opts var expr
 
 -- $stateful
 -- Stateful
@@ -96,12 +98,13 @@ getQuote ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   Funds (Tags 'Signed |+| 'Base |+| 'MoneyAmount) ->
   CurrencyCode ->
   ReaderT (MVar Market) m QuoteAt
-getQuote baseFunds quoteCurrency = do
+getQuote opts baseFunds quoteCurrency = do
   let baseCurrency = fundsCurrencyCode baseFunds
-  quotes <- getQuotesPerBase baseCurrency
+  quotes <- getQuotesPerBase opts baseCurrency
   case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
     Nothing ->
       throw
@@ -129,8 +132,9 @@ getCurrencies ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   ReaderT (MVar Market) m Currencies
-getCurrencies = do
+getCurrencies opts = do
   var <- ask
   modifyMVar var $ \st -> do
     ct <- getCurrentTime
@@ -138,17 +142,18 @@ getCurrencies = do
     if upToDate ct $ currenciesUpdatedAt prev
       then pure (st, prev)
       else do
-        next <- fetchCurrencies
+        next <- fetchCurrencies opts
         pure (st {marketCurrencies = next}, next)
 
 getCurrencyInfo ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   CurrencyCode ->
   ReaderT (MVar Market) m CurrencyInfo
-getCurrencyInfo code = do
-  xs <- currenciesList <$> getCurrencies
+getCurrencyInfo opts code = do
+  xs <- currenciesList <$> getCurrencies opts
   case find ((== code) . currencyInfoCode) xs of
     Nothing -> throw $ MarketExceptionMissingCurrencyCode code
     Just x -> pure x
@@ -157,14 +162,15 @@ getQuotesPerBase ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   CurrencyCode ->
   ReaderT (MVar Market) m QuotesPerBaseAt
-getQuotesPerBase cur = do
+getQuotesPerBase opts cur = do
   var <- ask
   modifyMVar var $ \st -> do
     let quotes = marketQuotesPerBase st
     let update = do
-          next <- fetchQuotesPerBase cur
+          next <- fetchQuotesPerBase opts cur
           pure (st {marketQuotesPerBase = Map.insert cur next quotes}, next)
     case Map.lookup cur quotes of
       Nothing -> update
@@ -194,20 +200,23 @@ fetchCurrencies ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   m Currencies
-fetchCurrencies = do
+fetchCurrencies opts = do
   uris <- newCurrenciesUris
-  eitherM throw pure $ altM tryFetchCurrencies uris
+  eitherM throw pure $ altM (tryFetchCurrencies opts) uris
 
 tryFetchCurrencies ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   URI ->
   m (Either MarketException Currencies)
-tryFetchCurrencies uri = tryMarket $ do
-  raw <- webFetch uri mempty
-  xs0 <- either throwString pure $ A.eitherDecode (A.mapStrict A.text) raw
+tryFetchCurrencies opts uri = tryMarket $ do
+  raw <- utf8FromLatin1 <$> webFetch uri opts
+  xs0 <-
+    either throwString pure $ A.eitherDecode (A.mapStrict A.text) raw
   xs1 <-
     maybe (throwString @Text "Zero currencies") pure . nonEmpty $ Map.toList xs0
   let xs2 =
@@ -232,21 +241,23 @@ fetchQuotesPerBase ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   CurrencyCode ->
   m QuotesPerBaseAt
-fetchQuotesPerBase cur = do
+fetchQuotesPerBase opts cur = do
   uris <- newQuotePerBaseUris cur
-  eitherM throw pure $ altM (tryFetchQuotesPerBase cur) uris
+  eitherM throw pure $ altM (tryFetchQuotesPerBase opts cur) uris
 
 tryFetchQuotesPerBase ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Opts ->
   CurrencyCode ->
   URI ->
   m (Either MarketException QuotesPerBaseAt)
-tryFetchQuotesPerBase cur uri = tryMarket $ do
-  bytes <- webFetch uri mempty
+tryFetchQuotesPerBase opts cur uri = tryMarket $ do
+  bytes <- utf8FromLatin1 <$> webFetch uri opts
   updatedAt <- getCurrentTime
   either throwString pure . flip A.eitherDecode bytes $ do
     createdAt <- A.at ["date"] A.day

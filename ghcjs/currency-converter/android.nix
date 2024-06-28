@@ -43,7 +43,6 @@ with (import ./default.nix); let
     text = ''
       (
         cd ${repo}
-        ${app-release-latest}/bin/app-release-latest
         ${pkgs.nodejs}/bin/npm i
         ${pkgs.nodejs}/bin/npx cap add android || true
         ${pkgs.nodejs}/bin/npx cap sync

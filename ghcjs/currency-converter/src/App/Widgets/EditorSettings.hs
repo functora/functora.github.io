@@ -152,8 +152,14 @@ shareWidget st screen =
             & Button.setOnClick
               ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenLink
-                  new <- newModel (Just $ st ^. #modelMarket) uri
-                  pure . ChanItem 0 $ const new
+                  new <-
+                    newModel
+                      (st ^. #modelWebOpts)
+                      (Just $ st ^. #modelMarket)
+                      uri
+                  pure
+                    . ChanItem 0
+                    $ const new
               )
         )
         ( inspect screen
@@ -182,8 +188,14 @@ shareWidget st screen =
             & Button.setOnClick
               ( PushUpdate $ do
                   uri <- URI.mkURI $ from @String @Text screenQrCode
-                  new <- newModel (Just $ st ^. #modelMarket) uri
-                  pure . ChanItem 0 $ const new
+                  new <-
+                    newModel
+                      (st ^. #modelWebOpts)
+                      (Just $ st ^. #modelMarket)
+                      uri
+                  pure
+                    . ChanItem 0
+                    $ const new
               )
         )
         ( inspect screen <> " QR"

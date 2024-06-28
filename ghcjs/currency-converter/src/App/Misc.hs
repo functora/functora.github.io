@@ -215,10 +215,10 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
-newAssetAction st optic =
+newAssetAction :: ATraversal' Model [Asset Unique] -> Action
+newAssetAction optic =
   PushUpdate $ do
-    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "usd"
+    let cur = CurrencyInfo (CurrencyCode "usd") mempty
     item <- newAsset "Price" 0 cur
     pure
       . ChanItem 0
@@ -235,11 +235,10 @@ newFieldPairAction optic =
       $ (textPopupPure @Text "Added details!")
       . (& cloneTraversal optic %~ (<> [item]))
 
-newPaymentMethodAction ::
-  Model -> ATraversal' Model [PaymentMethod Unique] -> Action
-newPaymentMethodAction st optic =
+newPaymentMethodAction :: ATraversal' Model [PaymentMethod Unique] -> Action
+newPaymentMethodAction optic =
   PushUpdate $ do
-    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "btc"
+    let cur = CurrencyInfo (CurrencyCode "btc") mempty
     item <- newPaymentMethod cur $ Just mempty
     pure
       . ChanItem 0

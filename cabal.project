@@ -48,6 +48,11 @@ if arch(wasm32)
     location: https://github.com/amesgen/jsaddle-wasm
     tag: be129c788f8ca1ea2e9cc1515397c1a46d02bb41
     --sha256: +hsNRMCK/i2EdHU2W4j/A36JAgtdorfOMKePBf7oys0=
+  source-repository-package
+    type: git
+    location: https://github.com/haskell-servant/servant-jsaddle.git
+    tag: 6ce40e9f28bc7c648a8ca139603002a600306fbf
+    --sha256: nz7UuNpux513axNFoeQ8KykBOhyny4FsqZUvw8mRk1k=
   package aeson
     flags: -ordered-keymap
   package cryptohash-sha256

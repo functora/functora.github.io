@@ -134,7 +134,11 @@ common pkg
     build-depends: ghcjs-base
 
   if os(wasi)
-    build-depends: extism-pdk
+    build-depends:
+      , ghcjs-dom
+      , http-media
+      , servant
+      , servant-jsaddle
 
   if !(impl(ghcjs) || os(wasi))
     build-depends:

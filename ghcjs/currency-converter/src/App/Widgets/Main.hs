@@ -217,7 +217,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           & #optsTrailingWidget
           .~ Just
             ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newAssetAction st
+                . Misc.newAssetAction
                 $ #modelState
                 . #stDoc
                 . #stDocAssets
@@ -258,7 +258,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           & #optsTrailingWidget
           .~ Just
             ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newPaymentMethodAction st
+                . Misc.newPaymentMethodAction
                 $ #modelState
                 . #stDoc
                 . #stDocPaymentMethods

@@ -17,8 +17,8 @@
             ./dist/latest
         '';
       };
-      app-build-wasm = pkgs.writeShellApplication {
-        name = "app-build-wasm";
+      app-release-wasm = pkgs.writeShellApplication {
+        name = "app-release-wasm";
         runtimeInputs = [inputs.ghc-wasm-meta.packages.${system}.all_9_10];
         text = ''
           out="./dist/wasm"
@@ -37,10 +37,10 @@
           wasm-tools strip -o "$out/bin.wasm" "$out/bin.wasm"
         '';
       };
-      app-build-latest = pkgs.writeShellApplication {
-        name = "app-build-latest";
+      app-release-latest = pkgs.writeShellApplication {
+        name = "app-release-latest";
         text = ''
-          ${app-build-wasm}/bin/app-build-wasm
+          ${app-release-wasm}/bin/app-release-wasm
           out="./dist/latest"
           rm -rf "$out"
           mkdir -p "$out/static"
@@ -102,14 +102,14 @@
       app-release-apk = pkgs.writeShellApplication {
         name = "app-release-apk";
         text = ''
-          ${app-build-latest}/bin/app-build-latest
+          ${app-release-latest}/bin/app-release-latest
           nix-shell ./android.nix --command "app-release-apk"
         '';
       };
       app-release-aab = pkgs.writeShellApplication {
         name = "app-release-aab";
         text = ''
-          ${app-build-latest}/bin/app-build-latest
+          ${app-release-latest}/bin/app-release-latest
           nix-shell ./android.nix --command "app-release-aab"
         '';
       };
@@ -125,8 +125,8 @@
             inputs.ghc-wasm-meta.packages.${system}.all_9_10
             app-ghcid
             app-serve-latest
-            app-build-wasm
-            app-build-latest
+            app-release-wasm
+            app-release-latest
             app-release-apk
             app-release-aab
           ];

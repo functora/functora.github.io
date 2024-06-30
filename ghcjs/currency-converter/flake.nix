@@ -94,7 +94,6 @@
             --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
             --create_source_map $out/all.js.map \
             --js ./static/app.js \
-            --js ./static/material-components-web.min.js \
             --js ./static/material-components-web-elm.min.js \
             --js_output_file $out/all.js
         '';

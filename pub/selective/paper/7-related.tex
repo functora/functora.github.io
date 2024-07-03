@@ -1,0 +1,200 @@
+\section{Related Work}\label{sec-related}
+
+Composing effectful computations is a rich research area and there is a vast
+body of related work. We build on the fundamental notions of applicative
+functors~\citep{mcbride2008applicative} and
+monads~\citep{moggi1991notions,1995_wadler_monads}, but these notions are not
+isolated: the space between them is inhabited by
+\emph{arrows}~\citep{hughes2000arrows} and \emph{generalised
+arrows}~\citep{megacz2011hardware}, which we discuss in~\S\ref{sec-arrows}.
+
+The idea of extending the \hs{Applicative} interface to gain more expressive
+power is not new.~Parser combinators by \citet{swierstra1996parsers} paved the
+way to the \hs{Alternative} type class~(\S\ref{sec-alternative-functors}).
+\citet{yallop2010phd} proposed to extend \hs{Applicative} with a method of type
+\hs{f}~\hs{Bool}~\hs{->}~\hs{f}~\hs{a}~\hs{->}~\hs{f}~\hs{a}~\hs{->}~\hs{f}~\hs{a}
+``for capturing computations where control flow is dynamic, but dataflow is
+static''; similar ideas were studied by hardware designers in the context of
+synchronous~\citep{dennis1975preliminary} and
+asynchronous~\citep{mokhov2009cpog,sokolov2018reconfigurable} control circuits.
+We have also found early online
+discussions~\citep{yorgey2009irc,permyakov2012irc} that searched for type
+classes like \hs{Selective} but did not progress further. \hs{ApplicativeFix}
+proposed by~\citet{devriese2013fixing} can be combined with selective functors
+to allow for static analysis of effectful computations with cycles.
+
+Many selective combinators appeared earlier on an ad hoc basis, including
+\Haxl's speculative execution functions \hs{pOr} and
+\hs{pAnd}~(\S\ref{sec-haxl}), the ``parallel conjunction'' operator (\hs{*&*})
+in Lazy SmallCheck~\citep{runciman2008smallcheck}, and various examples
+of the \cmd{if} statement using special optimisations instead of relying on the
+monadic interface~\citep{incremental_bind}. Finally, the type signature of
+\hs{select} resembles an \emph{exception handler}~\cite{benton2001exceptional}
+where the first argument may raise an exception to be handled by the second
+argument~---~this explains why the initial blog post exploring selective
+functors used \hs{handle} as the operator name instead of
+\hs{select}~\cite{mokhov2019selective}.
+
+Our free construction for rigid selective functors~(\S\ref{sec-free}) is
+inspired by the works on free applicative functors~\citep{free-applicatives},
+free monads~\citep{swierstra2008data}, and insightful blog posts
+by~\citet{fancher2016free,fancher2017static}. \emph{Batching and remote
+execution} of effectful computations~\citep{gill2015remote} can be greatly
+simplified by using free applicative functors, as
+demonstrated by~\citet{gibbons2016free}, and we believe that free selective
+functors uncover new opportunities in this area.
+
+\subsection{Arrows and Profunctors}\label{sec-arrows}
+
+Arrows, introduced by~\citet{hughes2000arrows}, generalise functors by making
+the \emph{input} of a computation explicit. Rather than giving the type
+\hs{f}~\hs{a} to an effectful computation that yields a value of type~\hs{a}, as
+we have done in this paper so far, arrows give the type \hs{a}~\hs{i}~\hs{o} to
+an effectful computation that takes values of type \hs{i} as input and yields
+values of type \hs{o} as output. There is a rich \emph{arrow hierarchy} of type
+classes, each providing a new ability, where \hs{ArrowChoice} is particularly
+relevant for us:
+
+\vspace{0.5mm}
+\begin{minted}[xleftmargin=10pt,fontsize=\small]{haskell}
+class Category a                  -- Identity arrow, sequential arrow composition
+class Category a => Arrow       a -- Pure arrows, parallel arrow composition
+class Arrow    a => ArrowChoice a -- Arrows with choice
+class Arrow    a => ArrowApply  a -- Arrows that take arrows as input
+class Arrow    a => ArrowLoop   a -- Arrows with loops
+\end{minted}
+\vspace{0.5mm}
+
+\noindent
+The relationships between applicative functors, monads and arrows have been
+studied in depth. It is known, e.g. see~\citet{lindley2011idioms}
+and~\citet{rivas2017notions}, that applicative functors correspond to so called
+\emph{static arrows}, for which there is an isomorphism between
+\hs{a}~\hs{()}~\hs{(}\hs{i}~\hs{->}~\hs{o)} and~\hs{a}~\hs{i}~\hs{o}. The
+standard module \cmd{Control.Arrow} therefore provides the following
+definitions:
+
+\vspace{0.5mm}
+\begin{minted}[xleftmargin=10pt,fontsize=\small]{haskell}
+newtype ArrowMonad a o = ArrowMonad (a () o) -- See Control.Arrow
+\end{minted}
+\vspace{0mm}
+\begin{minted}[xleftmargin=10pt,fontsize=\small]{haskell}
+instance Arrow       a => Functor     (ArrowMonad a)
+instance Arrow       a => Applicative (ArrowMonad a)
+instance ArrowChoice a => ...                           -- Missing?!
+instance ArrowApply  a => Monad       (ArrowMonad a)
+\end{minted}
+\vspace{0.5mm}
+
+\noindent
+Selective functors provide the missing counterpart for \hs{ArrowChoice} in the
+\emph{functor hierarchy}, as demonstrated by the following instance:
+
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+instance ArrowChoice a => Selective (ArrowMonad a) where
+    select (ArrowMonad x) y = ArrowMonad $ x >>> (toArrow y ||| returnA)
+\end{minted}
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+toArrow :: Arrow a => ArrowMonad a (i -> o) -> a i o
+toArrow (ArrowMonad f) = arr (\x -> ((), x)) >>> first f >>> arr (uncurry ($))
+\end{minted}
+\vspace{1mm}
+
+\noindent
+Here \hs{toArrow} witnesses one half of the aforementioned isomorphism between
+\hs{a}~\hs{()}~\hs{(}\hs{i}~\hs{->}~\hs{o)} and~\hs{a}~\hs{i}~\hs{o}. The
+obtained \hs{Selective} instance is lawful thanks to the \hs{ArrowChoice} laws.
+
+Arrows are more general and powerful than selective functors. We could have used
+arrows to solve our static analysis and speculative execution examples, and not
+just in theory --- \Dune is a great example of successful application of arrows
+in practice. However, introducing arrows to an existing codebase built around
+applicative functors and monads, such as \Haxl, would require pervasive changes
+to the whole abstraction stack, as well as rewriting all existing \Haxl user
+code in the arrow notation~\citep{paterson2001new}. Needless to say,
+introduction of selective functors to \Haxl is a much easier task, which we have
+accomplished by adding 13 lines of new code for the definition of the
+\hs{Selective}~\hs{Haxl} instance, and removing 26 lines of code corresponding
+to similarly-sized definitions of \hs{pOr} and \hs{pAnd}, reusing the selective
+combinators \hs{<||>} and \hs{<&&>} instead.
+
+\emph{Profunctors} is an abstraction closely related to arrows;
+see~\citep{pickering2017profunctor} for a good overview of profunctors in the
+context of modular data accessors, or \emph{lenses}. Similarly to
+\hs{ArrowChoice}, so-called \emph{Cocartesian profunctors} are counterparts of
+selective functors in the \emph{profunctor hierarchy}.
+
+Establishing a formal correspondence between \hs{ArrowChoice}, Cocartesian
+profunctors, and selective functors is beyond the scope of this paper and is
+left for future research.
+
+\subsection{Parser Combinators}\label{sec-alternative-functors}
+
+\hs{Alternative} is a type class originally motivated by non-monadic parsers;
+see, for example,~\citet{swierstra1996parsers}, where the methods of the
+\hs{Alternative} type class appear as part a bigger \hs{Parsing} type class. In
+modern Haskell, \hs{Alternative} is a subclass of \hs{Applicative}:
+
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+class Applicative f => Alternative f where
+    empty :: f a
+    (<|>) :: f a -> f a -> f a
+\end{minted}
+\vspace{1mm}
+
+\noindent
+The operator \hs{<|>} allows us to naturally express \emph{choice} in parsers.
+As an example, consider the task of parsing binary and hexadecimal numbers,
+which are prefixed with \hs{"0b"} and \hs{"0x"}, respectively. Following the
+classic parser combinator approach~\citep{hutton1998monadic}, let us assume the
+existence of the following parsers:
+
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+sat    :: (Char -> Bool) -> Parser Char   -- Parse a specified character
+string :: String         -> Parser String -- Parse a string literal
+bin    ::                   Parser Int    -- Parse a binary-encoded number
+hex    ::                   Parser Int    -- Parse a hexadecimal-encoded number
+\end{minted}
+\vspace{1mm}
+
+\noindent
+Now the desired parser can be obtained as a choice between parsers for binary
+and hexadecimal numbers, each augmented with the prefix-parsing part:
+
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+numberA :: Parser Int
+numberA = (string "0b" *> bin) <|> (string "0x" *> hex)
+\end{minted}
+\vspace{1mm}
+
+\noindent
+When parsing \hs{"0x7E3"}, the first parser fails (due to the prefix mismatch),
+but the second one succeeds. Note that parsing of the leading \hs{"0"} can be
+factored out into a separate parser \hs{string}~\hs{"0"} to avoid backtracking.
+
+Selective functors also allow us to implement the desired parser, and arguably
+in a more direct style that does not involve trying one parser after another:
+
+\vspace{1mm}
+\begin{minted}[xleftmargin=10pt]{haskell}
+numberS :: Parser Int
+numberS = string "0" *> ifS (('b'==) <$> sat (`elem` "bx")) bin hex
+\end{minted}
+\vspace{1mm}
+
+\noindent
+Here we first parse the leading \hs{"0"}, then the second character of the
+prefix, failing if it is neither \hs{"b"} nor \hs{"x"}, and finally select an
+appropriate subsequent parser using \hs{ifS}. Note that we can move the parser
+\hs{string}~\hs{"0"} in and out of the condition \hs{ifS} thanks to the
+interchange law (\S\ref{sec-laws}).
+
+Investigation of the relationship between \hs{Alternative} and \hs{Selective}
+type classes, as well as application of selective functors to parsers is an
+interesting research opportunity.

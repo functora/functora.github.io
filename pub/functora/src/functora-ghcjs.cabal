@@ -32,7 +32,7 @@ common pkg
   if impl(ghc >8.10.7)
     ghc-options: -Wno-missing-kind-signatures
 
-  if impl(ghc >=9.10)
+  if impl(ghc >=9.8)
     ghc-options:
       -Wno-missing-role-annotations -Wno-operator-whitespace
       -Wno-missing-poly-kind-signatures
@@ -130,7 +130,7 @@ common pkg
     , witch-mini
     , with-utf8
 
-  if impl(ghcjs)
+  if impl(ghcjs) || arch(javascript)
     build-depends: ghcjs-base
 
   if os(wasi)
@@ -140,7 +140,7 @@ common pkg
       , servant
       , servant-jsaddle
 
-  if !(impl(ghcjs) || os(wasi))
+  if !(impl(ghcjs) || arch(javascript) || os(wasi))
     build-depends:
       , http-client
       , http-client-tls
@@ -174,14 +174,13 @@ test-suite functora-ghcjs-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso soplate
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso
   hs-source-dirs: test
   build-depends:
     , base
     , bytestring
     , containers
     , cryptohash-sha256
-    , generics-sop
     , hspec
     , modern-uri
     , qrcode-core
@@ -215,7 +214,6 @@ test-suite functora-ghcjs-test
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
-    Functora.Soplate
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan

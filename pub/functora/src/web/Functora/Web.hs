@@ -14,16 +14,14 @@ import Functora.WebOrphan ()
 import qualified Network.URI as NetURI
 import qualified Text.URI as URI
 
-#ifndef __GHCJS__
-#ifndef wasi_HOST_OS
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import Functora.WebOrphan ()
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
 #endif
-#endif
 
-#ifdef __GHCJS__
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
 import qualified Data.JSString as JSString
 import qualified JavaScript.Web.XMLHttpRequest as Xhr
 #endif
@@ -84,8 +82,7 @@ webFetch prevUri opts = do
           $ URI.renderStr prevUri {URI.uriQuery = nextQuery}
 #endif
 
-#ifndef __GHCJS__
-#ifndef wasi_HOST_OS
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
   webRaw <- Web.parseRequest nextUri
   let ua :: ByteString =
         "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
@@ -110,9 +107,8 @@ webFetch prevUri opts = do
           <> " with body="
           <> inspect webResBody
 #endif
-#endif
 
-#ifdef __GHCJS__
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
   let webReq =
         Xhr.Request
           { Xhr.reqMethod = Xhr.GET,

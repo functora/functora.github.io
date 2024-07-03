@@ -100,7 +100,7 @@ executable miso-components-example
     ghc-options:
       -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
 
-  else
+  if !(arch(javascript) || os(wasi))
     build-depends:
       , bytestring
       , jsaddle-warp

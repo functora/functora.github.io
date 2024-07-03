@@ -53,7 +53,7 @@ common pkg
   if impl(ghc >8.10.7)
     ghc-options: -Wno-missing-kind-signatures
 
-  if impl(ghc >=9.10)
+  if impl(ghc >=9.8)
     ghc-options: -Wno-missing-role-annotations
 
   cpp-options:        -Wno-trigraphs
@@ -125,7 +125,7 @@ executable app
   ghcjs-options: -dedupe
   build-depends: containers
 
-  if !(impl(ghcjs) || os(wasi))
+  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
       , jsaddle-warp
       , wai

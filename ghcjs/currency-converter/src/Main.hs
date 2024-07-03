@@ -2,15 +2,13 @@
 
 module Main (main) where
 
-#ifndef __GHCJS__
-#ifndef wasi_HOST_OS
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import Language.Javascript.JSaddle.Warp as JS
 import qualified Network.Wai as Wai
 import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
-#endif
 #endif
 
 #ifdef wasi_HOST_OS
@@ -69,8 +67,7 @@ getWebOpts = do
   pure Web.defOpts
 #endif
 
-#ifndef __GHCJS__
-#ifndef wasi_HOST_OS
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
   js0 <- BL.readFile "static/app.js"
@@ -92,9 +89,8 @@ runApp app = do
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #endif
-#endif
 
-#ifdef __GHCJS__
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
 runApp :: IO () -> IO ()
 runApp = id
 #endif
@@ -185,8 +181,7 @@ updateModel (PushUpdate newUpdater) st = do
     ]
 
 viewModel :: Model -> View Action
-#ifndef __GHCJS__
-#ifndef wasi_HOST_OS
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 viewModel st =
   div_
     mempty
@@ -196,14 +191,8 @@ viewModel st =
       mainWidget st
     ]
 #endif
-#endif
 
-#ifdef __GHCJS__
-viewModel st =
-  mainWidget st
-#endif
-
-#ifdef wasi_HOST_OS
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
   mainWidget st
 #endif

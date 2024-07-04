@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy as B
 import Control.Monad.IO.Class
 import qualified Data.Function
 import qualified Data.List as L
+import Material.Prelude as Prelude
 import qualified Data.Map as M
 import Material.Button as MB
 import Material.Card as MC
@@ -117,7 +118,7 @@ runApp :: JSM () -> IO ()
 runApp f = do
   bString <- B.readFile "material-components-web-elm.min.js"
   jSaddle <- JSaddle.jsaddleOr defaultConnectionOptions (f >> syncPoint) (JSaddle.jsaddleAppWithJs (B.append (JSaddle.jsaddleJs False) bString))
-  Warp.runSettings (Warp.setPort 8000 (Warp.setTimeout 3600 Warp.defaultSettings)) jSaddle
+  Warp.runSettings (Warp.setPort 8080 (Warp.setTimeout 3600 Warp.defaultSettings)) jSaddle
 #endif
 
 extendedEvents :: M.Map MisoString Bool
@@ -169,7 +170,7 @@ updateModel SayHelloWorld m =
     liftIO (putStrLn "Hello World!") >> pure NoOp
 updateModel (ItemSelected item) m =
   m {selectedItem = (Just item)} <# do
-    liftIO (putStrLn item) >> pure NoOp
+    liftIO (putStrLn $ fromMisoString item) >> pure NoOp
 updateModel (SetActivated item) m@Model {queue = queue} =
   let message =
         Snackbar.message item
@@ -177,7 +178,7 @@ updateModel (SetActivated item) m@Model {queue = queue} =
           |> Snackbar.setOnActionIconClick SnackbarClosed
       newQueue = Snackbar.addMessage message queue
    in m {queue = newQueue} <# do
-        liftIO (putStrLn item) >> pure NoOp
+        liftIO (putStrLn $ fromMisoString item) >> pure NoOp
 updateModel (SnackbarClosed messageId) m@Model {queue = queue} =
   let newQueue = Snackbar.close messageId queue
    in m {queue = newQueue} <# do
@@ -189,7 +190,7 @@ updateModel (MenuOpened) m = noEff m {menuState = True}
 updateModel (MenuClosed) m = noEff m {menuState = False}
 updateModel (ActionChipClicked chip) m =
   m <# do
-    liftIO (putStrLn chip) >> pure NoOp
+    liftIO (putStrLn $ fromMisoString chip) >> pure NoOp
 updateModel (ColorChanged chip) m = noEff m {chipSetChoiceState = Just chip}
 updateModel (ChipClicked chip) m@Model {chipSetFilterState = (filterTops, filterShoes)} =
   case chip of
@@ -244,7 +245,7 @@ viewModel m@Model {counter = counter, switchState = switchState, sliderState = s
               MDD.appContent
             ]
             [ MB.text (MB.setOnClick AddOne $ MB.config) "+",
-              MHT.helperText (MHT.setPersistent True $ MHT.config) (show counter),
+              MHT.helperText (MHT.setPersistent True $ MHT.config) (ms $ show counter),
               MB.text (MB.setOnClick SubtractOne $ MB.config) "-",
               br_ [],
               MI.icon [MT.primary] "thumb_up",
@@ -286,7 +287,7 @@ viewModel m@Model {counter = counter, switchState = switchState, sliderState = s
               br_ [],
               myTabBar m,
               br_ [],
-              MHT.helperText (MHT.config |> MHT.setPersistent True) (show sliderState),
+              MHT.helperText (MHT.config |> MHT.setPersistent True) (ms $ show sliderState),
               mySlider m,
               br_ [],
               myMenu m,

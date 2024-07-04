@@ -7,6 +7,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Void as Void
 import qualified Material.Chip.Filter as Chip
 import qualified Material.Chip.Filter.Internal as Internal
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 import qualified Miso.Svg as Svg
@@ -18,7 +19,8 @@ import qualified Miso.Svg as Svg
 (<<) = (Data.Function..)
 
 -- | Filter chip set view function
-chipSet :: [Miso.Attribute msg] -> Chip.Chip msg -> [Chip.Chip msg] -> Miso.View msg
+chipSet ::
+  [Miso.Attribute msg] -> Chip.Chip msg -> [Chip.Chip msg] -> Miso.View msg
 chipSet additionalAttributes firstChip otherChips =
   Miso.nodeHtml
     "mdc-chip-set"
@@ -26,7 +28,10 @@ chipSet additionalAttributes firstChip otherChips =
     (Prelude.map chip (firstChip : otherChips))
 
 chip :: Chip.Chip msg -> Miso.View msg
-chip (Internal.Chip (config_@Internal.Config {Internal.additionalAttributes = additionalAttributes}) label) =
+chip ( Internal.Chip
+        (config_@Internal.Config {Internal.additionalAttributes = additionalAttributes})
+        label
+      ) =
   Miso.div_
     [Miso.class_ "mdc-touch-target-wrapper"]
     [ Miso.nodeHtml
@@ -107,18 +112,30 @@ leadingIconElt :: Chip.Config msg -> Maybe (Miso.View msg)
 leadingIconElt (Internal.Config {Internal.icon = icon, Internal.selected = selected}) =
   fmap (fmap Void.absurd)
     <| case icon of
-      Just (Internal.Icon {Internal.node = node, Internal.attributes = attributes, Internal.nodes = nodes}) ->
+      Just
+        ( Internal.Icon
+            { Internal.node = node,
+              Internal.attributes = attributes,
+              Internal.nodes = nodes
+            }
+          ) ->
         Just
           <| node
-            ( Miso.class_ "mdc-chip__icon mdc-chip__icon--leading" :
-              attributes
+            ( Miso.class_ "mdc-chip__icon mdc-chip__icon--leading"
+                : attributes
             )
             nodes
-      Just (Internal.SvgIcon {Internal.node = node, Internal.attributes = attributes, Internal.nodes = nodes}) ->
+      Just
+        ( Internal.SvgIcon
+            { Internal.node = node,
+              Internal.attributes = attributes,
+              Internal.nodes = nodes
+            }
+          ) ->
         Just
           <| node
-            ( Svg.class_' "mdc-chip__icon mdc-chip__icon--leading" :
-              attributes
+            ( Svg.class_' "mdc-chip__icon mdc-chip__icon--leading"
+                : attributes
             )
             nodes
       Nothing ->
@@ -153,7 +170,9 @@ primaryActionElt label =
 
 textElt :: String -> Maybe (Miso.View msg)
 textElt label =
-  Just (Miso.span_ [chipTextCs, buttonRole] [Miso.text (Miso.String.toMisoString label)])
+  Just
+    ( Miso.span_ [chipTextCs, buttonRole] [Miso.text (Miso.String.toMisoString label)]
+    )
 
 touchElt :: Maybe (Miso.View msg)
 touchElt =

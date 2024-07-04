@@ -16,6 +16,7 @@ where
 import qualified Data.Function
 import qualified Data.Maybe as Maybe
 import qualified Data.Void as Void
+import Material.Prelude as Prelude
 import qualified Material.Tab.Internal as Tab
 import qualified Miso
 import qualified Miso.String
@@ -118,30 +119,37 @@ activeTabIndexProp tabs =
    in fmap (Miso.intProp "activeTabIndex") activeTabIndex
 
 viewTab :: Config msg -> Tab.Tab msg -> Miso.View msg
-viewTab barConfig@Config {indicatorSpansContent = indicatorSpansContent} tab@(Tab.Tab tabConfig@Tab.Config {Tab.additionalAttributes = additionalAttributes, Tab.content = content}) =
-  Miso.button_
-    ( Maybe.mapMaybe
-        id
-        [ tabCs,
-          tabRoleAttr,
-          tabStackedCs barConfig,
-          tabMinWidthCs barConfig,
-          tabClickHandler tabConfig
-        ]
-        ++ additionalAttributes
-    )
-    ( Maybe.mapMaybe id
-        <| if indicatorSpansContent
-          then
-            [ tabContentElt barConfig tabConfig content,
-              tabRippleElt
-            ]
-          else
-            [ tabContentElt barConfig tabConfig content,
-              tabIndicatorElt tabConfig,
-              tabRippleElt
-            ]
-    )
+viewTab
+  barConfig@Config {indicatorSpansContent = indicatorSpansContent}
+  tab@( Tab.Tab
+          tabConfig@Tab.Config
+            { Tab.additionalAttributes = additionalAttributes,
+              Tab.content = content
+            }
+        ) =
+    Miso.button_
+      ( Maybe.mapMaybe
+          id
+          [ tabCs,
+            tabRoleAttr,
+            tabStackedCs barConfig,
+            tabMinWidthCs barConfig,
+            tabClickHandler tabConfig
+          ]
+          ++ additionalAttributes
+      )
+      ( Maybe.mapMaybe id
+          <| if indicatorSpansContent
+            then
+              [ tabContentElt barConfig tabConfig content,
+                tabRippleElt
+              ]
+            else
+              [ tabContentElt barConfig tabConfig content,
+                tabIndicatorElt tabConfig,
+                tabRippleElt
+              ]
+      )
 
 tabCs :: Maybe (Miso.Attribute msg)
 tabCs =
@@ -167,7 +175,8 @@ tabClickHandler :: Tab.Config msg -> Maybe (Miso.Attribute msg)
 tabClickHandler (Tab.Config {Tab.onClick = onClick}) =
   fmap (Miso.on "MDCTab:interacted" Miso.emptyDecoder << const) onClick
 
-tabContentElt :: Config msg -> Tab.Config msg -> Tab.Content -> Maybe (Miso.View msg)
+tabContentElt ::
+  Config msg -> Tab.Config msg -> Tab.Content -> Maybe (Miso.View msg)
 tabContentElt barConfig@Config {indicatorSpansContent = indicatorSpansContent} config_ content =
   Just
     ( Miso.div_
@@ -193,16 +202,22 @@ tabIconElt :: Tab.Content -> Maybe (Miso.View msg)
 tabIconElt Tab.Content {Tab.icon = icon} =
   fmap (fmap Void.absurd)
     <| case icon of
-      Just (Tab.Icon {Tab.node = node, Tab.attributes = attributes, Tab.nodes = nodes}) ->
-        Just (node (Miso.class_ "mdc-tab__icon" : attributes) nodes)
-      Just (Tab.SvgIcon {Tab.node = node, Tab.attributes = attributes, Tab.nodes = nodes}) ->
-        Just (node (Miso.class_ "mdc-tab__icon" : attributes) nodes)
+      Just
+        (Tab.Icon {Tab.node = node, Tab.attributes = attributes, Tab.nodes = nodes}) ->
+          Just (node (Miso.class_ "mdc-tab__icon" : attributes) nodes)
+      Just
+        (Tab.SvgIcon {Tab.node = node, Tab.attributes = attributes, Tab.nodes = nodes}) ->
+          Just (node (Miso.class_ "mdc-tab__icon" : attributes) nodes)
       Nothing ->
         Nothing
 
 tabTextLabelElt :: Tab.Content -> Maybe (Miso.View msg)
 tabTextLabelElt Tab.Content {Tab.label = label} =
-  Just (Miso.span_ [Miso.class_ "mdc-tab__text-label"] [Miso.text (Miso.String.toMisoString label)])
+  Just
+    ( Miso.span_
+        [Miso.class_ "mdc-tab__text-label"]
+        [Miso.text (Miso.String.toMisoString label)]
+    )
 
 tabIndicatorElt :: Tab.Config msg -> Maybe (Miso.View msg)
 tabIndicatorElt config_ =

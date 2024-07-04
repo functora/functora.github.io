@@ -16,6 +16,7 @@ module Material.Tab
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.Void as Void
 import qualified Material.Tab.Internal as Internal
 import qualified Miso

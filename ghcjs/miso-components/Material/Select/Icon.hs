@@ -11,6 +11,7 @@ module Material.Select.Icon
   )
 where
 
+import Material.Prelude as Prelude
 import Material.Select.Icon.Internal (Icon (..))
 import qualified Miso
 import Miso.String

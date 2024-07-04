@@ -13,6 +13,7 @@ module Material.Drawer.Permanent
 where
 
 import Data.Maybe
+import Material.Prelude as Prelude
 import Miso
 
 -- | Configuration of a permanent drawer

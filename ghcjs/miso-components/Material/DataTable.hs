@@ -20,6 +20,7 @@ import qualified Data.Function
 import qualified Data.Maybe as Maybe
 import qualified Material.Checkbox as Checkbox
 import qualified Material.Checkbox.Internal as Checkbox.Internal
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 
@@ -157,11 +158,13 @@ headerCell cell_ =
         )
         [ Checkbox.checkbox
             ( case config_ of
-                config__@Checkbox.Internal.Config {Checkbox.Internal.additionalAttributes = additionalAttributes} ->
+                config__@Checkbox.Internal.Config
+                  { Checkbox.Internal.additionalAttributes = additionalAttributes
+                  } ->
                   config__
                     { Checkbox.Internal.additionalAttributes =
-                        Miso.class_ "mdc-data-table__row-checkbox" :
-                        additionalAttributes
+                        Miso.class_ "mdc-data-table__row-checkbox"
+                          : additionalAttributes
                     }
             )
         ]
@@ -212,11 +215,13 @@ bodyCell cell_ =
         )
         [ Checkbox.checkbox
             ( case config_ of
-                config__@Checkbox.Internal.Config {Checkbox.Internal.additionalAttributes = additionalAttributes} ->
+                config__@Checkbox.Internal.Config
+                  { Checkbox.Internal.additionalAttributes = additionalAttributes
+                  } ->
                   config__
                     { Checkbox.Internal.additionalAttributes =
-                        Miso.class_ "mdc-data-table__row-checkbox" :
-                        additionalAttributes
+                        Miso.class_ "mdc-data-table__row-checkbox"
+                          : additionalAttributes
                     }
             )
         ]

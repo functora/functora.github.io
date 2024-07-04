@@ -1,5 +1,6 @@
 module Material.Checkbox.Internal (Config (..), State (..)) where
 
+import Material.Prelude as Prelude
 import Miso
 
 data Config msg = Config

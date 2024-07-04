@@ -25,6 +25,7 @@ import Elm.List
 import qualified Material.List as List
 import qualified Material.List.Item as ListItem
 import qualified Material.Menu as Menu
+import Material.Prelude as Prelude
 import qualified Material.Select.Icon as SelectIcon
 import qualified Material.Select.Icon.Internal as SelectIcon
 import qualified Material.Select.Item (SelectItem)
@@ -109,7 +110,13 @@ data Variant
   | Outlined
   deriving (Eq)
 
-select :: Eq a => Variant -> Config a msg -> SelectItem.SelectItem a msg -> [SelectItem.SelectItem a msg] -> Miso.View msg
+select ::
+  (Eq a) =>
+  Variant ->
+  Config a msg ->
+  SelectItem.SelectItem a msg ->
+  [SelectItem.SelectItem a msg] ->
+  Miso.View msg
 select variant (config_@Config {leadingIcon, selected, additionalAttributes, onChange}) firstSelectItem remainingSelectItems =
   let selectedIndex =
         indexedMap
@@ -155,12 +162,22 @@ select variant (config_@Config {leadingIcon, selected, additionalAttributes, onC
         ]
 
 -- | Filled select view function
-filled :: Eq a => Config a msg -> SelectItem.SelectItem a msg -> [SelectItem.SelectItem a msg] -> Miso.View msg
+filled ::
+  (Eq a) =>
+  Config a msg ->
+  SelectItem.SelectItem a msg ->
+  [SelectItem.SelectItem a msg] ->
+  Miso.View msg
 filled config_ firstSelectItem remainingSelectItems =
   select Filled config_ firstSelectItem remainingSelectItems
 
 -- | Outlined select view function
-outlined :: Eq a => Config a msg -> SelectItem.SelectItem a msg -> [SelectItem.SelectItem a msg] -> Miso.View msg
+outlined ::
+  (Eq a) =>
+  Config a msg ->
+  SelectItem.SelectItem a msg ->
+  [SelectItem.SelectItem a msg] ->
+  Miso.View msg
 outlined config_ firstSelectItem remainingSelectItems =
   select Outlined config_ firstSelectItem remainingSelectItems
 
@@ -176,7 +193,10 @@ outlinedCs variant =
 
 leadingIconCs :: Config a msg -> Maybe (Miso.Attribute msg)
 leadingIconCs (Config {leadingIcon}) =
-  Maybe.maybe Nothing (\_ -> Just $ Miso.class_ "mdc-select--with-leading-icon") leadingIcon
+  Maybe.maybe
+    Nothing
+    (\_ -> Just $ Miso.class_ "mdc-select--with-leading-icon")
+    leadingIcon
 
 disabledProp :: Config a msg -> Maybe (Miso.Attribute msg)
 disabledProp (Config {disabled}) =
@@ -211,36 +231,43 @@ leadingIconElt (Config {leadingIcon}) =
   case leadingIcon of
     Nothing ->
       Miso.text ""
-    Just (SelectIcon.Icon {SelectIcon.node, SelectIcon.attributes, SelectIcon.nodes, SelectIcon.onInteraction, SelectIcon.disabled}) ->
+    Just
+      ( SelectIcon.Icon
+          { SelectIcon.node,
+            SelectIcon.attributes,
+            SelectIcon.nodes,
+            SelectIcon.onInteraction,
+            SelectIcon.disabled
+          }
+        ) ->
       node
-        ( Miso.class_ "mdc-select__icon" :
-          ( case onInteraction of
-              Just msg ->
-                if not disabled
-                  then
-                    Miso.intProp "tabindex" 0 :
-                    Miso.stringProp "role" "button" :
-                    Miso.Html.Event.onClick msg
-                    {-- : Miso.Html.Event.onKeyDown
-                        (Miso.Event.Types.KeyCode
-                            |> Decode.andThen
-                                (\keyCode ->
-                                    if keyCode == 13 then
-                                        Decode.succeed msg
+        ( Miso.class_ "mdc-select__icon"
+            : ( case onInteraction of
+                  Just msg ->
+                    if not disabled
+                      then
+                        Miso.intProp "tabindex" 0
+                          : Miso.stringProp "role" "button"
+                          : Miso.Html.Event.onClick msg
+                          {-- : Miso.Html.Event.onKeyDown
+                              (Miso.Event.Types.KeyCode
+                                  |> Decode.andThen
+                                      (\keyCode ->
+                                          if keyCode == 13 then
+                                              Decode.succeed msg
 
-                                    else
-                                        Decode.fail ""
-                                )
-                        ) --}
-                    :
+                                          else
+                                              Decode.fail ""
+                                      )
+                              ) --}
+                          : attributes
+                      else
+                        Miso.stringProp "tabindex" "-1"
+                          : Miso.stringProp "role" "button"
+                          : attributes
+                  Nothing ->
                     attributes
-                  else
-                    Miso.stringProp "tabindex" "-1" :
-                    Miso.stringProp "role" "button" :
-                    attributes
-              Nothing ->
-                attributes
-          )
+              )
         )
         nodes
 
@@ -282,7 +309,9 @@ dropdownIconElt =
 
 floatingLabelElt :: Config a msg -> Miso.View msg
 floatingLabelElt (Config {label}) =
-  Miso.div_ [Miso.class_ "mdc-floating-label"] [Miso.text $ toMisoString $ Maybe.fromMaybe "" label]
+  Miso.div_
+    [Miso.class_ "mdc-floating-label"]
+    [Miso.text $ toMisoString $ Maybe.fromMaybe "" label]
 
 lineRippleElt :: Miso.View msg
 lineRippleElt =
@@ -302,7 +331,13 @@ notchedOutlineElt (Config {label}) =
       Miso.span_ [Miso.class_ "mdc-notched-outline__trailing"] []
     ]
 
-menuElt :: Maybe (SelectIcon.Icon msg) -> Maybe a -> Maybe (a -> msg) -> SelectItem.SelectItem a msg -> [SelectItem.SelectItem a msg] -> Miso.View msg
+menuElt ::
+  Maybe (SelectIcon.Icon msg) ->
+  Maybe a ->
+  Maybe (a -> msg) ->
+  SelectItem.SelectItem a msg ->
+  [SelectItem.SelectItem a msg] ->
+  Miso.View msg
 menuElt leadingIcon selected onChange firstSelectItem remainingSelectItems =
   Menu.menu
     ( Menu.config
@@ -317,7 +352,12 @@ menuElt leadingIcon selected onChange firstSelectItem remainingSelectItems =
         (Prelude.map (listItem leadingIcon selected onChange) remainingSelectItems)
     ]
 
-listItem :: Maybe (SelectIcon.Icon msg) -> Maybe a -> Maybe (a -> msg) -> SelectItem.SelectItem a msg -> ListItem.ListItem msg
+listItem ::
+  Maybe (SelectIcon.Icon msg) ->
+  Maybe a ->
+  Maybe (a -> msg) ->
+  SelectItem.SelectItem a msg ->
+  ListItem.ListItem msg
 listItem leadingIcon selected onChange (SelectItem.SelectItem config_ nodes) =
   ListItem.listItem
     (listItemConfig selected onChange config_)
@@ -326,16 +366,22 @@ listItem leadingIcon selected onChange (SelectItem.SelectItem config_ nodes) =
         else nodes
     )
 
-listItemConfig :: Maybe a -> Maybe (a -> msg) -> SelectItem.Config a msg -> ListItem.Config msg
-listItemConfig selectedValue onChange (SelectItem.Config {SelectItem.value, SelectItem.disabled, SelectItem.additionalAttributes}) =
+listItemConfig ::
+  Maybe a -> Maybe (a -> msg) -> SelectItem.Config a msg -> ListItem.Config msg
+listItemConfig selectedValue onChange ( SelectItem.Config
+                                          { SelectItem.value,
+                                            SelectItem.disabled,
+                                            SelectItem.additionalAttributes
+                                          }
+                                        ) =
   ListItem.config
     |> ListItem.setDisabled disabled
     |> ListItem.setAttributes additionalAttributes
     |> ( case onChange of
-           Just onChange_ ->
-             ListItem.setOnClick (onChange_ value)
-           Nothing ->
-             id
+          Just onChange_ ->
+            ListItem.setOnClick (onChange_ value)
+          Nothing ->
+            id
        )
 
 selectedTextElt :: Miso.View msg

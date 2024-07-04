@@ -16,6 +16,7 @@ module Material.IconToggle
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.Function
 import qualified Data.Maybe as Maybe
 import qualified Data.Void as Void

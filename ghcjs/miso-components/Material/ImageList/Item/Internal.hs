@@ -2,6 +2,7 @@
 
 module Material.ImageList.Item.Internal (Config (..), ImageListItem (..)) where
 
+import Material.Prelude as Prelude
 import qualified Miso
 
 data Config msg = Config

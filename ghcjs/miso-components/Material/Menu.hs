@@ -13,6 +13,7 @@ module Material.Menu
 where
 
 import qualified Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 
 -- | Configuration of a menu

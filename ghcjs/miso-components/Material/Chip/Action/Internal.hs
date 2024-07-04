@@ -3,6 +3,7 @@
 module Material.Chip.Action.Internal (Chip (..), Config (..), Icon (..)) where
 
 import qualified Data.Void as Void
+import Material.Prelude as Prelude
 import qualified Miso
 
 data Config msg = Config
@@ -16,12 +17,18 @@ data Chip msg
 
 data Icon
   = Icon
-      { node :: [Miso.Attribute Void.Void] -> [Miso.View Void.Void] -> Miso.View Void.Void,
+      { node ::
+          [Miso.Attribute Void.Void] ->
+          [Miso.View Void.Void] ->
+          Miso.View Void.Void,
         attributes :: [Miso.Attribute Void.Void],
         nodes :: [Miso.View Void.Void]
       }
   | SvgIcon
-      { node :: [Miso.Attribute Void.Void] -> [Miso.View Void.Void] -> Miso.View Void.Void,
+      { node ::
+          [Miso.Attribute Void.Void] ->
+          [Miso.View Void.Void] ->
+          Miso.View Void.Void,
         attributes :: [Miso.Attribute Void.Void],
         nodes :: [Miso.View Void.Void]
       }

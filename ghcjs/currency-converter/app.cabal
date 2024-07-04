@@ -16,6 +16,7 @@ common pkg
   hs-source-dirs:     src
   js-sources:
     static/app.js
+    static/hashable.js
     static/material-components-web.min.js
 
   other-modules:

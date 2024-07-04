@@ -75,10 +75,10 @@ if arch(javascript)
                time,
                lens,
                aeson,
-               hashable,
                os-string,
                ghc-prim,
                process,
+               hashable,
   package aeson
     flags: -ordered-keymap
   package cryptohash-sha256
@@ -98,3 +98,8 @@ if arch(javascript)
     process installed,
     time installed,
     unix installed,
+  source-repository-package
+    type: git
+    location: https://github.com/demaledetti/splitmix.git
+    tag: 543284f79879fbcd162a569c48e876c46653625e
+    --sha256: CV2fTv0bt26K0ZLEzOm5GAY4N2xhrxU7qIavGFrBcto=

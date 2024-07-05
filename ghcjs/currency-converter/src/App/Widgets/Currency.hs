@@ -7,12 +7,13 @@ module App.Widgets.Currency
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Money hiding (Currency, Money)
-import Functora.Prelude as Prelude
+import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
@@ -21,7 +22,6 @@ import qualified Material.List.Item as ListItem
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.Fuzzy as Fuzzy
 
 data Opts = Opts
@@ -43,7 +43,7 @@ defOpts =
 moneyViewer :: Model -> Opts -> Money Unique -> [View Action]
 moneyViewer st opts money =
   catMaybes
-    [ if null label
+    [ if label == mempty
         then Nothing
         else
           Just
@@ -70,7 +70,7 @@ moneyViewer st opts money =
   where
     label = opts ^. #optsLabel
     cell =
-      if null label
+      if label == mempty
         then Cell.bigCell
         else Cell.mediumCell
 
@@ -178,9 +178,10 @@ currencyListWidget st optic =
           Fuzzy.score = 0
         }
     search =
-      fromMaybe
-        (unexpectedCurrency ^. #currencyInput . #fieldInput . #uniqueValue)
-        (st ^? cloneTraversal optic . #currencyInput . #fieldInput . #uniqueValue)
+      fromMisoString
+        $ fromMaybe
+          (unexpectedCurrency ^. #currencyInput . #fieldInput . #uniqueValue)
+          (st ^? cloneTraversal optic . #currencyInput . #fieldInput . #uniqueValue)
     matching =
       nonEmpty
         --
@@ -200,7 +201,7 @@ currencyListWidget st optic =
 currencyListItemWidget ::
   ATraversal' Model (Currency Unique) ->
   CurrencyInfo ->
-  Fuzzy.Fuzzy CurrencyInfo Text ->
+  Fuzzy.Fuzzy CurrencyInfo Prelude.Text ->
   ListItem.ListItem Action
 currencyListItemWidget optic current fuzz =
   ListItem.listItem

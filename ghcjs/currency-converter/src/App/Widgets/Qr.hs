@@ -6,19 +6,19 @@ module App.Widgets.Qr
 where
 
 import qualified App.Misc as Misc
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
-import Functora.Prelude hiding (Field)
+import qualified Functora.Prelude as Prelude
 import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
-import Miso.String (ms)
 
 qr :: Model -> Text -> Opts -> [View Action]
 qr st txt opts
-  | null txt = mempty
+  | txt == mempty = mempty
   | otherwise =
       catMaybes
         [ fmap
@@ -29,7 +29,8 @@ qr st txt opts
                       src_ $ ms img
                     ]
             )
-            $ newQrImg txt
+            . newQrImg
+            $ fromMisoString txt
         ]
         <> copyWidget
         <> fmap extraCell extraWidgets
@@ -60,7 +61,7 @@ qr st txt opts
                 "Copy"
           ]
 
-newQrImg :: Text -> Maybe Text
+newQrImg :: Prelude.Text -> Maybe Prelude.Text
 newQrImg =
   ( fmap $ Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
   )

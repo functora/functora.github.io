@@ -4,20 +4,19 @@ module App.Widgets.FieldPairs
   )
 where
 
+import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
-import Functora.Prelude as Prelude
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
-import Miso.String (ms)
 
 fieldPairsViewer :: Model -> [FieldPair DynamicField Unique] -> [View Action]
 fieldPairsViewer st = (>>= fieldPairViewer st)
 
 fieldPairViewer :: Model -> FieldPair DynamicField Unique -> [View Action]
 fieldPairViewer st pair =
-  ( if null k
+  ( if k == mempty
       then mempty
       else
         [ cell
@@ -26,7 +25,7 @@ fieldPairViewer st pair =
               [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
         ]
   )
-    <> ( if null k && null v
+    <> ( if k == mempty && v == mempty
           then mempty
           else
             [ cell
@@ -38,7 +37,7 @@ fieldPairViewer st pair =
     k = pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
     cell =
-      if null k
+      if k == mempty
         then Cell.bigCell
         else Cell.mediumCell
 

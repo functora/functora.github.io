@@ -16,20 +16,19 @@ import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 #endif
 
 import qualified App.Misc as Misc
+import App.Prelude
 import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)
-import Functora.Prelude hiding (Field)
 import Functora.Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
 import qualified Miso
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
 
 #ifdef wasi_HOST_OS
@@ -259,7 +258,7 @@ evalModel raw = do
           . #fieldInput
           . #uniqueValue of
           amt
-            | null amt ->
+            | amt == mempty ->
                 inspectRatioDef
                   $ st
                   ^. cloneLens baseLens

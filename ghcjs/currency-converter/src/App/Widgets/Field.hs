@@ -15,10 +15,10 @@ module App.Widgets.Field
 where
 
 import qualified App.Misc as Misc
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Qr as Qr
-import Functora.Prelude hiding (Field (..), field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -29,7 +29,6 @@ import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (URI, view)
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
 
 data Opts = Opts
@@ -791,6 +790,7 @@ constTextField st txt opts =
 constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st =
   constTextField st
+    . ms
     . URI.render
 
 --
@@ -811,14 +811,15 @@ dynamicFieldViewer st value =
     allowCopy = value ^. #fieldAllowCopy
 
 plain ::
-  ( Container a,
+  ( Eq a,
+    Monoid a,
     ToMisoString a
   ) =>
   a ->
   (MisoString -> View action) ->
   [View action]
 plain out widget =
-  if null out
+  if out == mempty
     then mempty
     else
       [ span_
@@ -843,7 +844,7 @@ plain out widget =
 
 header :: Text -> [View Action]
 header txt =
-  if null txt
+  if txt == mempty
     then mempty
     else
       [ div_

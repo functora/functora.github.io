@@ -130,7 +130,7 @@ common pkg
     , witch-mini
     , with-utf8
 
-  if impl(ghcjs) || arch(javascript)
+  if (impl(ghcjs) || arch(javascript))
     build-depends: ghcjs-base
 
   if os(wasi)
@@ -140,7 +140,7 @@ common pkg
       , servant
       , servant-jsaddle
 
-  if !(impl(ghcjs) || arch(javascript) || os(wasi))
+  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
       , http-client
       , http-client-tls

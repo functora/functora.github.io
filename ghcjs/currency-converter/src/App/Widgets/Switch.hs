@@ -5,13 +5,12 @@ module App.Widgets.Switch
   )
 where
 
+import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Frame as Frame
-import Functora.Prelude as Prelude
 import qualified Material.Icon as Icon
 import qualified Material.Switch as Switch
 import Miso hiding (at, view)
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 
 data Opts = Opts
   { optsDisabled :: Bool,

@@ -25,6 +25,7 @@ where
 import qualified Data.Aeson
 import qualified Data.Maybe as Maybe
 import qualified Material.Icon as Icon
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.Html.Event
 import Miso.String (ms)
@@ -313,10 +314,12 @@ labelElt (Config {label = label, value = value}) =
                 then
                   Miso.class_
                     . ms
-                    $ floatingLabelCs ++ " " ++ floatingLabelFloatAboveCs
+                    $ floatingLabelCs
+                    ++ " "
+                    ++ floatingLabelFloatAboveCs
                 else
-                  Miso.class_ $
-                    ms floatingLabelCs,
+                  Miso.class_
+                    $ ms floatingLabelCs,
               Miso.textProp
                 "foucClassNames"
                 . ms

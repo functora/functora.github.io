@@ -58,6 +58,7 @@ module App.Types
   )
 where
 
+import App.Prelude
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
@@ -67,7 +68,7 @@ import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
-import Functora.Prelude hiding (Field (..))
+import qualified Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
@@ -661,7 +662,7 @@ unShareUri uri = do
 qsGet ::
   URI.RText 'URI.QueryKey ->
   URI.QueryParam ->
-  Maybe Text
+  Maybe Prelude.Text
 qsGet qk = \case
   URI.QueryParam k x | k == qk -> Just $ URI.unRText x
   _ -> Nothing
@@ -700,9 +701,9 @@ stQuery st = do
     ekm :: Either Aes.Km Aes.Km
     ekm =
       case st ^. #stIkm . #fieldOutput of
-        ikm | null ikm -> Left (st ^. #stKm)
+        ikm | ikm == mempty -> Left (st ^. #stKm)
         ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
     encodeText =
       either throw pure
         . decodeUtf8'
@@ -734,7 +735,7 @@ stExtQuery st = do
       URI.QueryParam kPre vPre
     ]
   where
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
     encodeText =
       either throw pure
         . decodeUtf8'
@@ -743,7 +744,7 @@ stExtQuery st = do
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
-  uri <- mkURI baseUri
+  uri <- mkURI $ from @Text @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
@@ -752,7 +753,7 @@ stUri st = do
 
 stExtUri :: (MonadThrow m) => StExt Unique -> m URI
 stExtUri ext = do
-  uri <- mkURI baseUri
+  uri <- mkURI $ from @Text @Prelude.Text baseUri
   qxs <- stExtQuery $ uniqueToIdentity ext
   pure
     $ uri
@@ -780,15 +781,16 @@ setExtScreenAction :: Screen -> Action
 setExtScreenAction sc =
   pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
-shareLink :: forall a. (From Text a) => Screen -> Model -> a
+shareLink :: forall a. (From Prelude.Text a) => Screen -> Model -> a
 shareLink sc =
-  from @Text @a
+  from @Prelude.Text @a
     . either impureThrow URI.render
     . stUri
     . setScreenPure sc
 
 vsn :: Text
 vsn =
-  T.intercalate "."
+  from @Prelude.Text @Text
+    . T.intercalate "."
     . fmap inspect
     $ Version.versionBranch Paths.version

@@ -21,10 +21,10 @@ module App.Misc
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified Data.Generics as Syb
 import Functora.Money
-import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
@@ -71,7 +71,7 @@ onKeyDownAction uid (KeyCode code) =
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do
   let txt = inspect @Text x
-  unless (null txt) $ do
+  unless (txt == mempty) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
     success <- JS.function $ \_ _ _ -> textPopup @Text st "Copied!"

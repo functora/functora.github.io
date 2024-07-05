@@ -6,12 +6,12 @@ module App.Widgets.Templates
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
-import Functora.Prelude hiding (Field)
 import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Button as Button

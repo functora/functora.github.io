@@ -32,7 +32,7 @@
                 doHoogle = false;
               }
             ];
-            compiler-nix-name = "ghc982";
+            compiler-nix-name = "ghc911";
             crossPlatforms = p: [p.ghcjs];
             shell.tools.cabal = "latest";
             shell.buildInputs =

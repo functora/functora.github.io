@@ -21,6 +21,7 @@ common pkg
 
   other-modules:
     App.Misc
+    App.Prelude
     App.Types
     App.Widgets.Assets
     App.Widgets.Cell
@@ -103,6 +104,7 @@ common pkg
     , barbies
     , base
     , base64-bytestring
+    , binary
     , bytestring
     , functora-ghcjs
     , fuzzy

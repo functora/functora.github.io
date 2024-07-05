@@ -1,10 +1,10 @@
 module App.TypesSpec (spec) where
 
+import App.Prelude
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Aeson as A
 import qualified Data.Generics as Syb
-import Functora.Prelude
 import qualified Optics.Generic as Ops
 import qualified Optics.Setter as Ops
 import Test.Hspec

@@ -4,12 +4,12 @@ module App.Widgets.EditorSettings
 where
 
 import qualified App.Misc as Misc
+import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import App.Widgets.Templates
-import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Select as Select
@@ -17,7 +17,6 @@ import qualified Material.Select.Item as SelectItem
 import qualified Material.TextArea as TextArea
 import qualified Material.Theme as Theme
 import Miso hiding (view)
-import Miso.String (ms)
 import qualified Text.URI as URI
 
 editorSettings :: Model -> [View Action]
@@ -151,7 +150,7 @@ shareWidget st screen =
             & Button.setAttributes [class_ "fill", Theme.secondaryBg]
             & Button.setOnClick
               ( PushUpdate $ do
-                  uri <- URI.mkURI $ from @String @Text screenLink
+                  uri <- URI.mkURI $ fromMisoString screenLink
                   new <-
                     newModel
                       (st ^. #modelWebOpts)
@@ -187,7 +186,7 @@ shareWidget st screen =
             & Button.setAttributes [class_ "fill", Theme.secondaryBg]
             & Button.setOnClick
               ( PushUpdate $ do
-                  uri <- URI.mkURI $ from @String @Text screenQrCode
+                  uri <- URI.mkURI $ fromMisoString screenQrCode
                   new <-
                     newModel
                       (st ^. #modelWebOpts)

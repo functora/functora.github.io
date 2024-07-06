@@ -79,13 +79,13 @@ selectLayoutWidget st =
     )
     ( SelectItem.selectItem
         (SelectItem.config item)
-        [text . ms $ userMsg item]
+        [text $ userMsg item]
     )
     $ fmap
       ( \t ->
           SelectItem.selectItem
             (SelectItem.config t)
-            [text . ms $ userMsg t]
+            [text $ userMsg t]
       )
       items
   where

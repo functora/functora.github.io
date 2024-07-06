@@ -247,7 +247,7 @@ deriving via GenericType (Money Identity) instance Binary (Money Identity)
 data Currency f = Currency
   { currencyInput :: Field Text f,
     currencyOutput :: CurrencyInfo,
-    currencyOpen :: Bool
+    currencyModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -415,7 +415,7 @@ newCurrency cur =
   Currency
     <$> newTextField mempty
     <*> pure cur
-    <*> pure False
+    <*> pure Closed
 
 newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
 newMoney amt cur =

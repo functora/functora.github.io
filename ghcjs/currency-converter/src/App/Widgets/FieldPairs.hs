@@ -22,7 +22,7 @@ fieldPairViewer st pair =
         [ cell
             $ strong_
               [Typography.typography]
-              [text . ms $ pair ^. #fieldPairKey . #fieldOutput]
+              [text $ pair ^. #fieldPairKey . #fieldOutput]
         ]
   )
     <> ( if k == mempty && v == mempty

@@ -49,7 +49,7 @@ headerViewer txt =
             Typography.headline5,
             style_ [("text-align", "center")]
           ]
-          [ text $ ms txt
+          [ text txt
           ]
       ]
 

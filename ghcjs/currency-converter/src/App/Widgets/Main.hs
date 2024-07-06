@@ -319,5 +319,5 @@ tosWidget =
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text
         ". This software is 100% organic and AI-free. It is built and tested exclusively by humans. ",
-      Miso.text . ms $ "Version " <> vsn <> "."
+      Miso.text $ "Version " <> vsn <> "."
     ]

@@ -224,7 +224,7 @@ syncInputs =
   where
     fun :: Unique Text -> JSM (Unique Text)
     fun txt = do
-      el <- getElementById . ms . htmlUid @Text $ txt ^. #uniqueUid
+      el <- getElementById . htmlUid @Text $ txt ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
         inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)

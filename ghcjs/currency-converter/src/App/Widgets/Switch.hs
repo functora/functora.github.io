@@ -35,7 +35,7 @@ switch st opts optic =
           $ optsIcon opts
       )
     <> [ Miso.rawHtml "&nbsp;",
-         Miso.text . ms $ opts ^. #optsPlaceholder,
+         Miso.text $ opts ^. #optsPlaceholder,
          Miso.rawHtml "&nbsp;&nbsp;",
          Switch.switch
           $ Switch.config

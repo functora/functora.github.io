@@ -48,7 +48,7 @@ moneyViewer st opts money =
         else
           Just
             . cell
-            $ strong_ [Typography.typography] [text $ ms label],
+            $ strong_ [Typography.typography] [text label],
       Just
         . cell
         $ div_
@@ -82,61 +82,61 @@ selectCurrency st optic =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop
     ]
-    [ Button.raised
-        ( Button.setOnClick opened
-            . Button.setAttributes
-              [ class_ "fill"
-              ]
-            $ Button.config
-        )
-        . inspectCurrencyInfo
-        $ fromMaybe
-          (unexpectedCurrency ^. #currencyOutput)
-          (st ^? cloneTraversal optic . #currencyOutput),
-      Dialog.dialog
-        ( Dialog.config
-            & Dialog.setOnClose closed
-            & Dialog.setOpen
-              ( fromMaybe
-                  (unexpectedCurrency ^. #currencyOpen)
-                  (st ^? cloneTraversal optic . #currencyOpen)
-              )
-        )
-        ( Dialog.dialogContent
-            Nothing
-            [ currencyListWidget st optic
-            ]
-            . (: mempty)
-            $ div_
-              [ class_ "fill"
-              ]
-              [ Field.textField
-                  st
-                  ( cloneTraversal optic
-                      . #currencyInput
-                  )
-                  ( Field.defOpts
-                      & #optsPlaceholder
-                      .~ "Search"
-                  ),
-                Button.raised
-                  ( Button.config
-                      & Button.setOnClick closed
-                      & Button.setAttributes
-                        [ class_ "fill"
-                        ]
-                  )
-                  "Back"
-              ]
-        )
-    ]
+    $ [ Button.raised
+          ( Button.setOnClick opened
+              . Button.setAttributes
+                [ class_ "fill"
+                ]
+              $ Button.config
+          )
+          . inspectCurrencyInfo
+          $ fromMaybe
+            (CurrencyInfo (CurrencyCode "XXX") mempty)
+            (st ^? cloneTraversal optic . #currencyOutput)
+      ]
+    <> if st ^? cloneTraversal optic . #currencyModalState /= Just Opened
+      then mempty
+      else
+        [ Dialog.dialog
+            ( Dialog.config
+                & Dialog.setOnClose closed
+                & Dialog.setOpen True
+            )
+            ( Dialog.dialogContent
+                Nothing
+                [ currencyListWidget st optic
+                ]
+                [ div_
+                    [ class_ "fill"
+                    ]
+                    [ Field.textField
+                        st
+                        ( cloneTraversal optic
+                            . #currencyInput
+                        )
+                        ( Field.defOpts
+                            & #optsPlaceholder
+                            .~ "Search"
+                        ),
+                      Button.raised
+                        ( Button.config
+                            & Button.setOnClick closed
+                            & Button.setAttributes
+                              [ class_ "fill"
+                              ]
+                        )
+                        "Back"
+                    ]
+                ]
+            )
+        ]
   where
     opened =
       pureUpdate 0 $ \st' ->
         st'
           & cloneTraversal optic
-          . #currencyOpen
-          .~ True
+          . #currencyModalState
+          .~ Opened
           & cloneTraversal optic
           . #currencyInput
           . #fieldInput
@@ -146,8 +146,8 @@ selectCurrency st optic =
       pureUpdate 0 $ \st' ->
         st'
           & cloneTraversal optic
-          . #currencyOpen
-          .~ False
+          . #currencyModalState
+          .~ Closed
           & cloneTraversal optic
           . #currencyInput
           . #fieldInput
@@ -162,41 +162,48 @@ currencyListWidget st optic =
   List.list
     List.config
     ( currencyListItemWidget optic current
-        $ maybe currentFuzz NonEmpty.head matching
+        $ maybe (newFuzz current) NonEmpty.head matching
     )
     . fmap (currencyListItemWidget optic current)
     $ maybe mempty NonEmpty.tail matching
   where
     current =
       fromMaybe
-        (unexpectedCurrency ^. #currencyOutput)
+        (CurrencyInfo (CurrencyCode "XXX") mempty)
         (st ^? cloneTraversal optic . #currencyOutput)
-    currentFuzz =
+    newFuzz cur =
       Fuzzy.Fuzzy
-        { Fuzzy.original = current,
-          Fuzzy.rendered = inspectCurrencyInfo current,
+        { Fuzzy.original = cur,
+          Fuzzy.rendered = inspectCurrencyInfo cur,
           Fuzzy.score = 0
         }
     search =
-      fromMisoString
-        $ fromMaybe
-          (unexpectedCurrency ^. #currencyInput . #fieldInput . #uniqueValue)
-          (st ^? cloneTraversal optic . #currencyInput . #fieldInput . #uniqueValue)
+      maybe
+        mempty
+        fromMisoString
+        $ st
+        ^? cloneTraversal optic
+        . #currencyInput
+        . #fieldInput
+        . #uniqueValue
     matching =
-      nonEmpty
-        --
-        -- TODO : filter not by exact word order,
-        -- but by all possible permutations as well,
-        -- with bigger priority for original query.
-        --
-        $ Fuzzy.filter
-          search
-          ( toList $ st ^. #modelCurrencies
-          )
-          "<b>"
-          "</b>"
-          inspectCurrencyInfo
-          False
+      if search == mempty
+        then Just . fmap newFuzz $ st ^. #modelCurrencies
+        else
+          nonEmpty
+            --
+            -- TODO : filter not by exact word order,
+            -- but by all possible permutations as well,
+            -- with bigger priority for original query.
+            --
+            $ Fuzzy.filter
+              search
+              ( toList $ st ^. #modelCurrencies
+              )
+              "<b>"
+              "</b>"
+              inspectCurrencyInfo
+              False
 
 currencyListItemWidget ::
   ATraversal' Model (Currency Unique) ->
@@ -215,8 +222,8 @@ currencyListItemWidget optic current fuzz =
           ( pureUpdate 0 $ \st ->
               st
                 & cloneTraversal optic
-                . #currencyOpen
-                .~ False
+                . #currencyModalState
+                .~ Closed
                 & cloneTraversal optic
                 . #currencyInput
                 . #fieldInput
@@ -228,7 +235,7 @@ currencyListItemWidget optic current fuzz =
           )
     )
     [ Miso.rawHtml
-        . toMisoString
+        . ms
         $ Fuzzy.rendered fuzz
     ]
   where
@@ -286,22 +293,3 @@ swapCurrencies =
               . #stConv
               . #stConvTopOrBottom
               .~ Top
-
-unexpectedCurrency :: Currency Unique
-unexpectedCurrency =
-  Currency
-    { currencyOpen = False,
-      currencyInput =
-        Field
-          { fieldType = FieldTypeText,
-            fieldInput = Unique nilUid "UNEXPECTED CURRENCY",
-            fieldOutput = "UNEXPECTED CURRENCY",
-            fieldAllowCopy = True,
-            fieldModalState = Closed
-          },
-      currencyOutput =
-        CurrencyInfo
-          { currencyInfoCode = CurrencyCode "UNEXPECTED",
-            currencyInfoText = "CURRENCY"
-          }
-    }

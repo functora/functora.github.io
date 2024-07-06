@@ -198,60 +198,62 @@ outlined config_ =
   textField True config_
 
 textField :: Bool -> Config msg -> Miso.View msg
-textField outlined_ ( config_@Config {additionalAttributes = additionalAttributes, fullwidth = fullwidth}
-                      ) =
-  Miso.nodeHtml
-    "mdc-text-field"
-    ( Maybe.mapMaybe
-        id
-        [ rootCs,
-          noLabelCs config_,
-          filledCs outlined_,
-          outlinedCs outlined_,
-          fullwidthCs config_,
-          disabledCs config_,
-          withLeadingIconCs config_,
-          withTrailingIconCs config_,
-          valueProp config_,
-          disabledProp config_,
-          requiredProp config_,
-          validProp config_,
-          patternProp config_,
-          minLengthProp config_,
-          maxLengthProp config_,
-          minProp config_,
-          maxProp config_,
-          stepProp config_
-        ]
-        ++ additionalAttributes
-    )
-    ( Prelude.concat
-        [ leadingIconElt config_,
-          if fullwidth
-            then
-              if outlined_
-                then
-                  [ inputElt config_,
-                    notchedOutlineElt config_
-                  ]
-                else
-                  [ inputElt config_,
-                    lineRippleElt
-                  ]
-            else
-              if outlined_
-                then
-                  [ inputElt config_,
-                    notchedOutlineElt config_
-                  ]
-                else
-                  [ inputElt config_,
-                    labelElt config_,
-                    lineRippleElt
-                  ],
-          trailingIconElt config_
-        ]
-    )
+textField
+  outlined_
+  ( config_@Config {additionalAttributes = additionalAttributes, fullwidth = fullwidth}
+    ) =
+    Miso.nodeHtml
+      "mdc-text-field"
+      ( Maybe.mapMaybe
+          id
+          [ rootCs,
+            noLabelCs config_,
+            filledCs outlined_,
+            outlinedCs outlined_,
+            fullwidthCs config_,
+            disabledCs config_,
+            withLeadingIconCs config_,
+            withTrailingIconCs config_,
+            valueProp config_,
+            disabledProp config_,
+            requiredProp config_,
+            validProp config_,
+            patternProp config_,
+            minLengthProp config_,
+            maxLengthProp config_,
+            minProp config_,
+            maxProp config_,
+            stepProp config_
+          ]
+          ++ additionalAttributes
+      )
+      ( Prelude.concat
+          [ leadingIconElt config_,
+            if fullwidth
+              then
+                if outlined_
+                  then
+                    [ inputElt config_,
+                      notchedOutlineElt config_
+                    ]
+                  else
+                    [ inputElt config_,
+                      lineRippleElt
+                    ]
+              else
+                if outlined_
+                  then
+                    [ inputElt config_,
+                      notchedOutlineElt config_
+                    ]
+                  else
+                    [ inputElt config_,
+                      labelElt config_,
+                      lineRippleElt
+                    ],
+            trailingIconElt config_
+          ]
+      )
 
 -- | A text field's icon, either leading or trailing
 icon :: [Miso.Attribute msg] -> String -> Icon msg
@@ -461,9 +463,7 @@ labelElt (Config {label = label, value = value}) =
         Just str ->
           Miso.div_
             [ if Maybe.fromMaybe "" value /= ""
-                then
-                  Miso.class_
-                    (Miso.String.toMisoString (floatingLabelCs ++ " " ++ floatingLabelFloatAboveCs))
+                then Miso.class_ (floatingLabelCs <> " " <> floatingLabelFloatAboveCs)
                 else Miso.class_ (Miso.String.toMisoString floatingLabelCs),
               Miso.textProp
                 "foucClassNames"

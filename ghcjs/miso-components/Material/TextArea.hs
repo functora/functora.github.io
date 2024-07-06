@@ -313,10 +313,9 @@ labelElt (Config {label = label, value = value}) =
             [ if Maybe.fromMaybe "" value /= ""
                 then
                   Miso.class_
-                    . ms
                     $ floatingLabelCs
-                    ++ " "
-                    ++ floatingLabelFloatAboveCs
+                    <> " "
+                    <> floatingLabelFloatAboveCs
                 else
                   Miso.class_
                     $ ms floatingLabelCs,

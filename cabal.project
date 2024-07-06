@@ -108,6 +108,7 @@ if arch(javascript)
     pub/witch-mini/*.cabal
     pub/selective/*.cabal
     pub/universum/*.cabal
+    pub/miso/*.cabal
     ghcjs/*/*.cabal
   constraints:
     directory installed,

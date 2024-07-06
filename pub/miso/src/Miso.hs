@@ -47,6 +47,11 @@ import           System.Mem.StableName
 import qualified Data.Sequence as S
 import qualified JavaScript.Object.Internal as OI
 
+#ifdef LOGVIEW
+import Data.Time.Clock (getCurrentTime, diffUTCTime)
+import Miso.String (ms)
+#endif
+
 #ifndef ghcjs_HOST_OS
 import           Language.Javascript.JSaddle (eval, waitForAnimationFrame)
 #ifdef IOS
@@ -128,7 +133,14 @@ common App {..} m getView = do
         newName <- liftIO $ newModel `seq` makeStableName newModel
         when (oldName /= newName && oldModel /= newModel) $ do
           swapCallbacks
+#ifdef LOGVIEW
+          ts0 <- liftIO getCurrentTime
           newVTree <- runView (view newModel) writeEvent
+          ts1 <- liftIO getCurrentTime
+          consoleLog . ms . show $ diffUTCTime ts1 ts0
+#else
+          newVTree <- runView (view newModel) writeEvent
+#endif
           oldVTree <- liftIO (readIORef viewRef)
           void $ waitForAnimationFrame
           (diff mountPoint) (Just oldVTree) (Just newVTree)

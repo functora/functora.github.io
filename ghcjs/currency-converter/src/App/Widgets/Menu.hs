@@ -31,75 +31,79 @@ menu st =
                   "menu"
               ]
           ]
-      ],
-    Dialog.dialog
-      ( Dialog.config
-          & Dialog.setOnClose closed
-          & Dialog.setOpen (Opened == st ^. #modelMenu)
-      )
-      ( Dialog.dialogContent
-          Nothing
-          [ Cell.grid
-              mempty
-              [ Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (screen Converter)
-                        & Button.setIcon (Just "currency_exchange")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Converter",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (screen Editor)
-                        & Button.setIcon (Just "build_circle")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Editor",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (templates #modelTemplates)
-                        & Button.setIcon (Just "apps")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Templates",
-                Cell.mediumCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick (templates #modelExamples)
-                        & Button.setIcon (Just "mood")
-                        & Button.setAttributes
-                          [ Theme.secondaryBg,
-                            class_ "fill"
-                          ]
-                    )
-                    "Examples",
-                Cell.bigCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick closed
-                        & Button.setIcon (Just "arrow_back")
-                        & Button.setAttributes [class_ "fill"]
-                    )
-                    "Back"
-              ]
-          ]
-          mempty
-      )
+      ]
   ]
     <> Templates.templates #modelTemplates Templates.unfilled Editor st
     <> Templates.templates #modelExamples Templates.examples Viewer st
+    <> if st ^. #modelMenu == Closed
+      then mempty
+      else
+        [ Dialog.dialog
+            ( Dialog.config
+                & Dialog.setOnClose closed
+                & Dialog.setOpen (Opened == st ^. #modelMenu)
+            )
+            ( Dialog.dialogContent
+                Nothing
+                [ Cell.grid
+                    mempty
+                    [ Cell.mediumCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick (screen Converter)
+                              & Button.setIcon (Just "currency_exchange")
+                              & Button.setAttributes
+                                [ Theme.secondaryBg,
+                                  class_ "fill"
+                                ]
+                          )
+                          "Converter",
+                      Cell.mediumCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick (screen Editor)
+                              & Button.setIcon (Just "build_circle")
+                              & Button.setAttributes
+                                [ Theme.secondaryBg,
+                                  class_ "fill"
+                                ]
+                          )
+                          "Editor",
+                      Cell.mediumCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick (templates #modelTemplates)
+                              & Button.setIcon (Just "apps")
+                              & Button.setAttributes
+                                [ Theme.secondaryBg,
+                                  class_ "fill"
+                                ]
+                          )
+                          "Templates",
+                      Cell.mediumCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick (templates #modelExamples)
+                              & Button.setIcon (Just "mood")
+                              & Button.setAttributes
+                                [ Theme.secondaryBg,
+                                  class_ "fill"
+                                ]
+                          )
+                          "Examples",
+                      Cell.bigCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick closed
+                              & Button.setIcon (Just "arrow_back")
+                              & Button.setAttributes [class_ "fill"]
+                          )
+                          "Back"
+                    ]
+                ]
+                mempty
+            )
+        ]
   where
     opened = pureUpdate 0 (& #modelMenu .~ Opened)
     closed = pureUpdate 0 (& #modelMenu .~ Closed)

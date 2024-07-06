@@ -37,45 +37,48 @@ templates ::
   Model ->
   [View Action]
 templates optic tpls sc st =
-  [ Dialog.dialog
-      ( Dialog.config
-          & Dialog.setOnClose closed
-          & Dialog.setOpen (Opened == st ^. cloneLens optic)
-      )
-      ( Dialog.dialogContent
-          Nothing
-          [ Cell.grid mempty
-              $ ( do
-                    tpl <- tpls
-                    (icon, fun) <-
-                      [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
-                    pure
-                      . Cell.mediumCell
-                      $ Button.raised
-                        ( Button.config
-                            & Button.setIcon (Just $ from @Text @String icon)
-                            & Button.setOnClick (screen fun tpl)
-                            & Button.setAttributes
-                              [ Theme.secondaryBg,
-                                class_ "fill"
-                              ]
-                        )
-                        ( from @Text @String $ tpl ^. #templateName
-                        )
-                )
-              <> [ Cell.bigCell
-                    $ Button.raised
-                      ( Button.config
-                          & Button.setOnClick goback
-                          & Button.setIcon (Just "arrow_back")
-                          & Button.setAttributes [class_ "fill"]
-                      )
-                      "Back"
-                 ]
-          ]
-          mempty
-      )
-  ]
+  if st ^. cloneLens optic == Closed
+    then mempty
+    else
+      [ Dialog.dialog
+          ( Dialog.config
+              & Dialog.setOnClose closed
+              & Dialog.setOpen True
+          )
+          ( Dialog.dialogContent
+              Nothing
+              [ Cell.grid mempty
+                  $ ( do
+                        tpl <- tpls
+                        (icon, fun) <-
+                          [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
+                        pure
+                          . Cell.mediumCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setIcon (Just $ from @Text @String icon)
+                                & Button.setOnClick (screen fun tpl)
+                                & Button.setAttributes
+                                  [ Theme.secondaryBg,
+                                    class_ "fill"
+                                  ]
+                            )
+                            ( from @Text @String $ tpl ^. #templateName
+                            )
+                    )
+                  <> [ Cell.bigCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick goback
+                              & Button.setIcon (Just "arrow_back")
+                              & Button.setAttributes [class_ "fill"]
+                          )
+                          "Back"
+                     ]
+              ]
+              mempty
+          )
+      ]
   where
     closed = pureUpdate 0 (& cloneLens optic .~ Closed)
     goback =

@@ -42,8 +42,8 @@ editorSettings st =
               $ Field.ModalMiniWidget (#modelState . #stPre)
           )
     )
-    <> [ shareModal st,
-         Cell.mediumCell
+    <> shareModal st
+    <> [ Cell.mediumCell
           $ Field.passwordField st (#modelState . #stIkm) Field.defOpts,
          Cell.mediumCell
           $ selectLayoutWidget st,
@@ -97,31 +97,35 @@ selectLayoutWidget st =
       AssetsBeforePayments -> "Assets before payments"
       PaymentsBeforeAssets -> "Payments before assets"
 
-shareModal :: Model -> View Action
+shareModal :: Model -> [View Action]
 shareModal st =
-  Dialog.dialog
-    ( Dialog.config
-        & Dialog.setOnClose closed
-        & Dialog.setOpen (Opened == st ^. #modelShare)
-    )
-    ( Dialog.dialogContent
-        Nothing
-        [ Cell.grid
-            mempty
-            $ shareWidget st Viewer
-            <> shareWidget st Editor
-            <> [ Cell.bigCell
-                  $ Button.raised
-                    ( Button.config
-                        & Button.setOnClick closed
-                        & Button.setIcon (Just "arrow_back")
-                        & Button.setAttributes [class_ "fill"]
-                    )
-                    "Back"
-               ]
-        ]
-        mempty
-    )
+  if st ^. #modelShare == Closed
+    then mempty
+    else
+      [ Dialog.dialog
+          ( Dialog.config
+              & Dialog.setOnClose closed
+              & Dialog.setOpen True
+          )
+          ( Dialog.dialogContent
+              Nothing
+              [ Cell.grid
+                  mempty
+                  $ shareWidget st Viewer
+                  <> shareWidget st Editor
+                  <> [ Cell.bigCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick closed
+                              & Button.setIcon (Just "arrow_back")
+                              & Button.setAttributes [class_ "fill"]
+                          )
+                          "Back"
+                     ]
+              ]
+              mempty
+          )
+      ]
   where
     closed = pureUpdate 0 (& #modelShare .~ Closed)
 

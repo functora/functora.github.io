@@ -41,6 +41,7 @@
                 pkgs.nodejs-slim
                 pkgs.pkg-config
                 pkgs.libwebp
+                pkgs.terser
                 app-ghcid
                 app-serve-latest
                 app-release-latest
@@ -114,10 +115,13 @@
 
           #
           # TODO : fix this!
-          # At the moment it gives division by zero runtime exception!
+          # At the moment closure compiler
+          # gives division by zero runtime exception!
           #
 
-          cp "$app_jsexe_path/all.js" $out/all.js
+          ${pkgs.terser}/bin/terser \
+            "$app_jsexe_path/all.js" -o $out/all.js \
+            --compress --mangle
 
           # ${pkgs.closurecompiler}/bin/closure-compiler \
           #   --jscomp_off=checkVars \
@@ -131,6 +135,9 @@
           #   --create_source_map $out/all.js.map \
           #   --js "$app_jsexe_path/all.js" \
           #   --js_output_file $out/all.js
+
+          ls -la "$app_jsexe_path/all.js"
+          ls -la "$out/all.js"
         '';
       };
       app-release-apk = pkgs.writeShellApplication {

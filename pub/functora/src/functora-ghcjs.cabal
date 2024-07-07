@@ -101,7 +101,6 @@ common pkg
     , microlens-ghc
     , microlens-th
     , modern-uri            >=0.3.4.4
-    , monad-chronicle
     , network-uri
     , optparse-applicative
     , pkcs7
@@ -116,8 +115,6 @@ common pkg
     , template-haskell
     , text
     , th-lift-instances
-    , these
-    , these-lens
     , time
     , tomland
     , transformers
@@ -146,7 +143,6 @@ common pkg
       , http-client-tls
       , http-types
       , streaming-commons
-      , yesod-core
 
 library
   import:          pkg
@@ -174,13 +170,14 @@ test-suite functora-ghcjs-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso soplate
   hs-source-dirs: test
   build-depends:
     , base
     , bytestring
     , containers
     , cryptohash-sha256
+    , generics-sop
     , hspec
     , modern-uri
     , qrcode-core
@@ -214,6 +211,7 @@ test-suite functora-ghcjs-test
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
+    Functora.Soplate
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan

@@ -1,4 +1,4 @@
-cabal-version: 3.0
+cabal-version: 2.2
 name:          miso-components
 version:       0.1.0.0
 synopsis:      Miso components
@@ -102,7 +102,7 @@ executable miso-components-example
     ghc-options:
       -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
 
-  if !(arch(javascript) || os(wasi))
+  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
       , bytestring
       , jsaddle-warp

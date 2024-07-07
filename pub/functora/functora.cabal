@@ -102,7 +102,6 @@ common pkg-prelude
     , microlens-ghc
     , microlens-th
     , modern-uri
-    , monad-chronicle
     , random
     , safe-exceptions
     , scientific
@@ -112,8 +111,6 @@ common pkg-prelude
     , template-haskell
     , text
     , th-lift-instances
-    , these
-    , these-lens
     , time
     , transformers
     , unbounded-delays
@@ -182,7 +179,6 @@ common pkg-web
       , http-client
       , http-client-tls
       , streaming-commons
-      , yesod-core
 
 common pkg-sql
   import:         pkg

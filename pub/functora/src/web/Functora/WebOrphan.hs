@@ -3,25 +3,19 @@
 
 module Functora.WebOrphan () where
 
-#if __GLASGOW_HASKELL__ < 904
-import qualified Network.HTTP.Types as Web
-#endif
-
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import Functora.Prelude
-import Yesod.Core (PathPiece (..))
 import qualified Data.Data as Data
 import qualified Data.Streaming.Zlib as Zlib
 import qualified Network.HTTP.Client as Web
+#if __GLASGOW_HASKELL__ < 904
+import qualified Network.HTTP.Types as Web
+#endif
 #endif
 
 #ifdef wasi_HOST_OS
 import Functora.Prelude
 import qualified GHCJS.DOM.Types as JSDOM
-#endif
-
-#if __GLASGOW_HASKELL__ < 904
-deriving stock instance Data Web.Status
 #endif
 
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
@@ -41,12 +35,10 @@ deriving stock instance Data Web.HttpExceptionContent
 
 deriving stock instance Data Zlib.ZlibException
 
-instance PathPiece Natural where
-  fromPathPiece raw = do
-    mid <- fromPathPiece raw
-    rightToMaybe $ tryFrom @Integer @Natural mid
-  toPathPiece =
-    toPathPiece . from @Natural @Integer
+#if __GLASGOW_HASKELL__ < 904
+deriving stock instance Data Web.Status
+#endif
+
 #endif
 
 --

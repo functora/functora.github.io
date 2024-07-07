@@ -8,7 +8,8 @@ module Main where
 #ifdef wasi_HOST_OS
 import GHC.Wasm.Prim
 import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
-#else
+#endif
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import           Language.Javascript.JSaddle.Warp as JSaddle
 import qualified Network.Wai.Handler.Warp         as Warp
 import           Network.WebSockets
@@ -113,7 +114,14 @@ data Action
 #ifdef wasi_HOST_OS
 runApp :: JSM () -> IO ()
 runApp = JSaddle.Wasm.run
-#else
+#endif
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
+runApp :: IO () -> IO ()
+runApp = id
+#endif
+
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp f = do
   bString <- B.readFile "material-components-web-elm.min.js"

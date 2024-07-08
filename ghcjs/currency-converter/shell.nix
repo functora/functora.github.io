@@ -34,6 +34,8 @@ in
         functora-pkgs.clean-css-cli
         functora-pkgs.html-minifier
         functora-pkgs.simple-http-server
+        functora-pkgs.pkg-config
+        functora-pkgs.libwebp
       ]
       ++ prev.buildInputs
       ++ pkgs.lib.lists.take (pkgs.lib.lists.length functora-tools - 1)

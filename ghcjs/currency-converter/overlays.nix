@@ -145,8 +145,12 @@
                   self.callCabal2nix
                   "singlethongs" "${functora}/pub/singlethongs" {};
                 miso =
-                  self.callCabal2nix
-                  "miso" "${functora}/pub/miso" {};
+                  pkgs.haskell.lib.enableCabalFlag
+                  (
+                    self.callCabal2nix
+                    "miso" "${functora}/pub/miso" {}
+                  )
+                  "logview";
                 miso-components =
                   self.callCabal2nix
                   "miso-components" "${functora}/ghcjs/miso-components" {};

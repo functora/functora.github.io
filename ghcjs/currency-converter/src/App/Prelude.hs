@@ -1,13 +1,11 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module App.Prelude (module X, String, Text) where
+module App.Prelude (module X, String, Text, inspectMiso) where
 
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import qualified Data.Binary as Binary (get, put)
-import qualified Functora.Prelude as Prelude
 #endif
-
 import Functora.Cfg
 import Functora.Prelude as X hiding
   ( Field (..),
@@ -15,6 +13,7 @@ import Functora.Prelude as X hiding
     Text,
     field,
   )
+import qualified Functora.Prelude as Prelude
 import Miso.String as X
   ( FromMisoString (..),
     MisoString,
@@ -22,6 +21,7 @@ import Miso.String as X
     fromMisoString,
     ms,
   )
+import Type.Reflection
 
 type String = MisoString
 
@@ -49,3 +49,9 @@ instance ConvertUtf8 MisoString ByteString where
   decodeUtf8 = from @Prelude.Text @MisoString . decodeUtf8
   decodeUtf8Strict = fmap (from @Prelude.Text @MisoString) . decodeUtf8Strict
 #endif
+
+inspectMiso :: (Show a, Data a) => a -> MisoString
+inspectMiso x =
+  case typeOf x `eqTypeRep` typeRep @MisoString of
+    Just HRefl -> x
+    Nothing -> ms $ Prelude.inspect @Prelude.Text x

@@ -70,7 +70,7 @@ onKeyDownAction uid (KeyCode code) =
 
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do
-  let txt = inspect @Text x
+  let txt = inspectMiso x
   unless (txt == mempty) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
@@ -95,7 +95,7 @@ textPopup st x =
       )
   where
     msg =
-      inspect x
+      inspectMiso x
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed
@@ -107,7 +107,7 @@ textPopupPure x st =
     %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
   where
     msg =
-      inspect x
+      inspectMiso x
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed

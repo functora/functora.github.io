@@ -3,6 +3,7 @@ module App.Widgets.Menu
   )
 where
 
+import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
@@ -16,7 +17,7 @@ import Miso hiding (view)
 
 menu :: Model -> [View Action]
 menu st =
-  [ TopAppBar.shortCollapsed
+  [ TopAppBar.short
       TopAppBar.config
       [ TopAppBar.row
           mempty
@@ -26,9 +27,42 @@ menu st =
               [ IconButton.iconButton
                   ( IconButton.config
                       & IconButton.setOnClick opened
-                      & IconButton.setAttributes [TopAppBar.navigationIcon]
+                      & IconButton.setAttributes
+                        [ TopAppBar.actionItem,
+                          TopAppBar.navigationIcon
+                        ]
                   )
-                  "menu"
+                  "menu",
+                span_
+                  [ TopAppBar.title
+                  ]
+                  [ text "Currency Converter"
+                  ]
+              ],
+            TopAppBar.section
+              [ TopAppBar.alignEnd
+              ]
+              [ IconButton.iconButton
+                  ( IconButton.config
+                      & IconButton.setOnClick
+                        ( Misc.copyIntoClipboardAction st
+                            $ shareLink @Text (st ^. #modelState . #stScreen) st
+                        )
+                      & IconButton.setAttributes
+                        [ TopAppBar.actionItem,
+                          TopAppBar.navigationIcon
+                        ]
+                  )
+                  "share",
+                IconButton.iconButton
+                  ( IconButton.config
+                      & IconButton.setOnClick opened
+                      & IconButton.setAttributes
+                        [ TopAppBar.actionItem,
+                          TopAppBar.navigationIcon
+                        ]
+                  )
+                  "download"
               ]
           ]
       ]

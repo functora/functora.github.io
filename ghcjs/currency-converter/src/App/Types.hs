@@ -129,7 +129,6 @@ type Hkt f =
 
 data St f = St
   { stScreen :: Screen,
-    stConv :: StConv f,
     stDoc :: StDoc f,
     stIkm :: Field Text f,
     stKm :: Aes.Km,
@@ -200,7 +199,8 @@ instance TraversableB StConv
 deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
-  { stDocFieldPairs :: [FieldPair DynamicField f],
+  { stDocConv :: StConv f,
+    stDocFieldPairs :: [FieldPair DynamicField f],
     stDocAssets :: [Asset f],
     stDocPaymentMethods :: [PaymentMethod f],
     stDocFieldPairsHeader :: Field DynamicField f,

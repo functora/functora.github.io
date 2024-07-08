@@ -134,12 +134,14 @@ unfilled =
 
 emptyTemplate :: IO (StDoc Unique)
 emptyTemplate = do
+  conv <- newStConv
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = mempty,
+      { stDocConv = conv,
+        stDocFieldPairs = mempty,
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -150,13 +152,15 @@ emptyTemplate = do
 
 plainTemplate :: IO (StDoc Unique)
 plainTemplate = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = [msg],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -167,6 +171,7 @@ plainTemplate = do
 
 donateTemplate :: IO (StDoc Unique)
 donateTemplate = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText mempty
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText mempty
@@ -175,7 +180,8 @@ donateTemplate = do
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -189,6 +195,7 @@ donateTemplate = do
 
 portfolioTemplate :: IO (StDoc Unique)
 portfolioTemplate = do
+  conv <- newStConv
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -199,7 +206,8 @@ portfolioTemplate = do
   mtdBtc <- newPaymentMethod btc Nothing
   pure
     StDoc
-      { stDocFieldPairs = mempty,
+      { stDocConv = conv,
+        stDocFieldPairs = mempty,
         stDocAssets = [a0, a1, a2],
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
@@ -210,6 +218,7 @@ portfolioTemplate = do
 
 secretTemplate :: IO (StDoc Unique)
 secretTemplate = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText mempty
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField mempty
@@ -219,7 +228,8 @@ secretTemplate = do
   method <- newPaymentMethod xmr $ Just mempty
   pure
     StDoc
-      { stDocFieldPairs = [msg],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg],
         stDocAssets = [stuff, delivery],
         stDocPaymentMethods = [method],
         stDocFieldPairsHeader = fhead,
@@ -230,6 +240,7 @@ secretTemplate = do
 
 invoiceTemplate :: IO (StDoc Unique)
 invoiceTemplate = do
+  conv <- newStConv
   fhead <- newDynamicTitleField "Invoice"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -240,7 +251,8 @@ invoiceTemplate = do
   mtdBtc <- newPaymentMethod btc $ Just mempty
   pure
     StDoc
-      { stDocFieldPairs = [issuer, client],
+      { stDocConv = conv,
+        stDocFieldPairs = [issuer, client],
         stDocAssets = [asset],
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
@@ -282,13 +294,15 @@ examples =
 
 plainExample :: IO (StDoc Unique)
 plainExample = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText examplePlainText
   fhead <- newDynamicTitleField "6102"
   ahead <- newDynamicTitleField mempty
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = [msg],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -299,6 +313,7 @@ plainExample = do
 
 donateExample :: IO (StDoc Unique)
 donateExample = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText exampleDonationText
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
@@ -307,7 +322,8 @@ donateExample = do
   phead <- newDynamicTitleField mempty
   pure
     StDoc
-      { stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg, qr btcMtd, qr xmrMtd],
         stDocAssets = mempty,
         stDocPaymentMethods = mempty,
         stDocFieldPairsHeader = fhead,
@@ -321,6 +337,7 @@ donateExample = do
 
 portfolioExample :: IO (StDoc Unique)
 portfolioExample = do
+  conv <- newStConv
   fhead <- newDynamicTitleField mempty
   ahead <- newDynamicTitleField "Assets"
   phead <- newDynamicTitleField "Net worth"
@@ -333,7 +350,8 @@ portfolioExample = do
   mtdBtc <- newPaymentMethod btc Nothing
   pure
     StDoc
-      { stDocFieldPairs = mempty,
+      { stDocConv = conv,
+        stDocFieldPairs = mempty,
         stDocAssets = [a0, a1, a2, a3, a4],
         stDocPaymentMethods = [mtdUsd, mtdBtc],
         stDocFieldPairsHeader = fhead,
@@ -344,6 +362,7 @@ portfolioExample = do
 
 secretExample :: IO (StDoc Unique)
 secretExample = do
+  conv <- newStConv
   msg <- newFieldPair mempty $ DynamicFieldText exampleSecretText
   fhead <- newDynamicTitleField "Dear Tommy,"
   ahead <- newDynamicTitleField mempty
@@ -353,7 +372,8 @@ secretExample = do
   method <- newPaymentMethod xmr $ Just exampleXmrAddress
   pure
     StDoc
-      { stDocFieldPairs = [msg],
+      { stDocConv = conv,
+        stDocFieldPairs = [msg],
         stDocAssets = [stuff, delivery],
         stDocPaymentMethods = [method],
         stDocFieldPairsHeader = fhead,
@@ -364,6 +384,7 @@ secretExample = do
 
 invoiceExample :: IO (StDoc Unique)
 invoiceExample = do
+  conv <- newStConv
   fhead <- newDynamicTitleField "Invoice #6102"
   ahead <- newDynamicTitleField "Purchase items"
   phead <- newDynamicTitleField "Payment methods"
@@ -377,7 +398,8 @@ invoiceExample = do
   mtdXmr <- newPaymentMethod xmr $ Just exampleXmrAddress
   pure
     StDoc
-      { stDocFieldPairs = [issuer, client],
+      { stDocConv = conv,
+        stDocFieldPairs = [issuer, client],
         stDocAssets = [tomato, beef],
         stDocPaymentMethods = [mtdUsd, mtdEur, mtdBtc, mtdXmr],
         stDocFieldPairsHeader = fhead,
@@ -396,6 +418,17 @@ invoiceExample = do
         <*> pure [dsc, qty]
         <*> pure Closed
 
+newStConv :: (MonadThrow m, MonadUnliftIO m) => m (StConv Unique)
+newStConv = do
+  topMoney <- newMoney 1 btc
+  bottomMoney <- newMoney 0 usd
+  pure
+    StConv
+      { stConvTopMoney = topMoney,
+        stConvBottomMoney = bottomMoney,
+        stConvTopOrBottom = Top
+      }
+
 newModel ::
   ( MonadThrow m,
     MonadUnliftIO m
@@ -409,8 +442,6 @@ newModel webOpts mMark uri = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   market <- maybe newMarket pure mMark
-  topMoney <- newMoney 1 btc
-  bottomMoney <- newMoney 0 usd
   ikm <- newPasswordField mempty
   km <- Aes.randomKm 32
   mApp <- unShareUri uri
@@ -464,12 +495,6 @@ newModel webOpts mMark uri = do
             modelState =
               St
                 { stScreen = sc,
-                  stConv =
-                    StConv
-                      { stConvTopMoney = topMoney,
-                        stConvBottomMoney = bottomMoney,
-                        stConvTopOrBottom = Top
-                      },
                   stDoc = doc,
                   stIkm = ikm,
                   stKm = km,

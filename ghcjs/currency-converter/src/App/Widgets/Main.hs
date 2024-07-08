@@ -19,6 +19,7 @@ import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
+import qualified Material.TopAppBar as TopAppBar
 import qualified Material.Typography as Typography
 import Miso hiding (view)
 import qualified Text.URI as URI
@@ -29,7 +30,8 @@ mainWidget st =
     [ LayoutGrid.alignMiddle
     ]
     $ [ LayoutGrid.inner
-          ( [ class_ "container"
+          ( [ class_ "container",
+              TopAppBar.shortFixedAdjust
             ]
               --
               -- NOTE : Hiding widget on the first render to avoid flickering.
@@ -127,7 +129,13 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
           )
           ( Field.defOpts
               & #optsExtraOnInput
-              .~ (& #modelState . #stConv . #stConvTopOrBottom .~ loc)
+              .~ ( &
+                    #modelState
+                      . #stDoc
+                      . #stDocConv
+                      . #stConvTopOrBottom
+                      .~ loc
+                 )
               & #optsPlaceholder
               .~ ( st
                     ^. cloneLens (Misc.getConverterCurrencyOptic loc)

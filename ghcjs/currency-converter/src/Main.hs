@@ -248,7 +248,7 @@ evalModel raw = do
       ( raw ^. #modelState
       )
   let st = raw & #modelState .~ new
-  let loc = st ^. #modelState . #stConv . #stConvTopOrBottom
+  let loc = st ^. #modelState . #stDoc . #stDocConv . #stConvTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
@@ -391,13 +391,13 @@ getTotalPayment st method asset = do
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
-  Top -> #modelState . #stConv . #stConvTopMoney
-  Bottom -> #modelState . #stConv . #stConvBottomMoney
+  Top -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
 
 getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getQuoteConverterMoneyLens = \case
-  Top -> #modelState . #stConv . #stConvBottomMoney
-  Bottom -> #modelState . #stConv . #stConvTopMoney
+  Top -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

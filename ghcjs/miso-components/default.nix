@@ -1,6 +1,6 @@
 let
   functora = ../..;
-  functora-miso = import "${functora}/ghcjs/miso/default.nix" {};
+  functora-miso = import "${functora}/pub/miso/default.nix" {};
 in
   with functora-miso; {
     inherit pkgs;

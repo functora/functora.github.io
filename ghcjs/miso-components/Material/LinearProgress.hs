@@ -14,6 +14,7 @@ where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Material.Prelude as Prelude
 import Miso
 
 -- | Linear progress configuration

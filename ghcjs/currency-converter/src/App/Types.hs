@@ -45,7 +45,6 @@ module App.Types
     newDynamicTitleField,
     newPasswordField,
     newMoney,
-    newCurrencyInfo,
     FieldPair (..),
     newFieldPair,
     unShareUri,
@@ -59,6 +58,7 @@ module App.Types
   )
 where
 
+import App.Prelude
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
@@ -68,8 +68,9 @@ import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Money hiding (Currency, Money)
-import Functora.Prelude hiding (Field (..))
+import qualified Functora.Prelude as Prelude
 import Functora.Rates
+import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
 import qualified Paths_app as Paths
@@ -90,7 +91,8 @@ data Model = Model
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
     modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
-    modelOnlineAt :: UTCTime
+    modelOnlineAt :: UTCTime,
+    modelWebOpts :: Web.Opts
   }
   deriving stock (Eq, Generic)
 
@@ -114,8 +116,7 @@ type Typ a =
     Ord a,
     Show a,
     Data a,
-    Binary a,
-    Serialise a
+    Binary a
   )
 
 type Hkt f =
@@ -151,8 +152,6 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
-deriving via GenericType (St Identity) instance Serialise (St Identity)
-
 data StExt f = StExt
   { stExtKm :: Aes.Km,
     stExtIkm :: Field Text f,
@@ -179,11 +178,6 @@ deriving via
   instance
     Binary (StExt Identity)
 
-deriving via
-  GenericType (StExt Identity)
-  instance
-    Serialise (StExt Identity)
-
 data StConv f = StConv
   { stConvTopMoney :: Money f,
     stConvBottomMoney :: Money f,
@@ -204,8 +198,6 @@ instance FunctorB StConv
 instance TraversableB StConv
 
 deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
-
-deriving via GenericType (StConv Identity) instance Serialise (StConv Identity)
 
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
@@ -232,8 +224,6 @@ instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 
-deriving via GenericType (StDoc Identity) instance Serialise (StDoc Identity)
-
 data Money f = Money
   { moneyAmount :: Field Rational f,
     moneyCurrency :: Currency f
@@ -254,12 +244,10 @@ instance TraversableB Money
 
 deriving via GenericType (Money Identity) instance Binary (Money Identity)
 
-deriving via GenericType (Money Identity) instance Serialise (Money Identity)
-
 data Currency f = Currency
   { currencyInput :: Field Text f,
     currencyOutput :: CurrencyInfo,
-    currencyOpen :: Bool
+    currencyModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -279,11 +267,6 @@ deriving via
   GenericType (Currency Identity)
   instance
     Binary (Currency Identity)
-
-deriving via
-  GenericType (Currency Identity)
-  instance
-    Serialise (Currency Identity)
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
@@ -310,11 +293,6 @@ deriving via
   instance
     Binary (PaymentMethod Identity)
 
-deriving via
-  GenericType (PaymentMethod Identity)
-  instance
-    Serialise (PaymentMethod Identity)
-
 data ChanItem a = ChanItem
   { chanItemDelay :: Natural,
     chanItemValue :: a
@@ -327,7 +305,7 @@ data Screen
   | Viewer
   | QrCode Screen
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary, Serialise) via GenericType Screen
+  deriving (Binary) via GenericType Screen
 
 unQrCode :: Screen -> Screen
 unQrCode = \case
@@ -338,49 +316,49 @@ data TopOrBottom
   = Top
   | Bottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType TopOrBottom
+  deriving (Binary) via GenericType TopOrBottom
 
 data HeaderOrFooter
   = Header
   | Footer
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType HeaderOrFooter
+  deriving (Binary) via GenericType HeaderOrFooter
 
 data OnlineOrOffline
   = Online
   | Offline
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType OnlineOrOffline
+  deriving (Binary) via GenericType OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType StaticOrDynamic
+  deriving (Binary) via GenericType StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType LeadingOrTrailing
+  deriving (Binary) via GenericType LeadingOrTrailing
 
 data FilledOrOutlined
   = Filled
   | Outlined
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType FilledOrOutlined
+  deriving (Binary) via GenericType FilledOrOutlined
 
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType OpenedOrClosed
+  deriving (Binary) via GenericType OpenedOrClosed
 
 data AssetsAndPaymentsLayout
   = AssetsBeforePayments
   | PaymentsBeforeAssets
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType AssetsAndPaymentsLayout
+  deriving (Binary) via GenericType AssetsAndPaymentsLayout
 
 data Asset f = Asset
   { assetPrice :: Money f,
@@ -403,8 +381,6 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
-
-deriving via GenericType (Asset Identity) instance Serialise (Asset Identity)
 
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =
@@ -439,25 +415,13 @@ newCurrency cur =
   Currency
     <$> newTextField mempty
     <*> pure cur
-    <*> pure False
+    <*> pure Closed
 
 newMoney :: (MonadIO m) => Rational -> CurrencyInfo -> m (Money Unique)
 newMoney amt cur =
   Money
     <$> newRatioField amt
     <*> newCurrency cur
-
-newCurrencyInfo ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  MVar Market ->
-  CurrencyCode ->
-  m CurrencyInfo
-newCurrencyInfo mark cur =
-  withMarket mark $ do
-    eInfo <- tryMarket $ getCurrencyInfo cur
-    either (const . pure $ CurrencyInfo cur mempty) pure eInfo
 
 --
 -- NOTE : In most cases we don't need JSM.
@@ -546,7 +510,7 @@ data FieldType
   | FieldTypeHtml
   | FieldTypePassword
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary, Serialise) via GenericType FieldType
+  deriving (Binary) via GenericType FieldType
 
 htmlFieldType :: FieldType -> Text
 htmlFieldType = \case
@@ -572,7 +536,7 @@ data DynamicField
   = DynamicFieldText Text
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary, Serialise) via GenericType DynamicField
+  deriving (Binary) via GenericType DynamicField
 
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
@@ -614,11 +578,6 @@ deriving via
   instance
     (Typ a) => Binary (Field a Identity)
 
-deriving via
-  GenericType (Field a Identity)
-  instance
-    (Typ a) => Serialise (Field a Identity)
-
 newField :: (MonadIO m) => FieldType -> a -> (a -> Text) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
@@ -653,11 +612,6 @@ deriving via
   GenericType (FieldPair a Identity)
   instance
     (Typ a) => Binary (FieldPair a Identity)
-
-deriving via
-  GenericType (FieldPair a Identity)
-  instance
-    (Typ a) => Serialise (FieldPair a Identity)
 
 newFieldPair ::
   (MonadIO m) => Text -> DynamicField -> m (FieldPair DynamicField Unique)
@@ -708,7 +662,7 @@ unShareUri uri = do
 qsGet ::
   URI.RText 'URI.QueryKey ->
   URI.QueryParam ->
-  Maybe Text
+  Maybe Prelude.Text
 qsGet qk = \case
   URI.QueryParam k x | k == qk -> Just $ URI.unRText x
   _ -> Nothing
@@ -747,9 +701,9 @@ stQuery st = do
     ekm :: Either Aes.Km Aes.Km
     ekm =
       case st ^. #stIkm . #fieldOutput of
-        ikm | null ikm -> Left (st ^. #stKm)
+        ikm | ikm == mempty -> Left (st ^. #stKm)
         ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
     encodeText =
       either throw pure
         . decodeUtf8'
@@ -781,7 +735,7 @@ stExtQuery st = do
       URI.QueryParam kPre vPre
     ]
   where
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
     encodeText =
       either throw pure
         . decodeUtf8'
@@ -790,7 +744,7 @@ stExtQuery st = do
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
-  uri <- mkURI baseUri
+  uri <- mkURI $ from @Text @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
@@ -799,7 +753,7 @@ stUri st = do
 
 stExtUri :: (MonadThrow m) => StExt Unique -> m URI
 stExtUri ext = do
-  uri <- mkURI baseUri
+  uri <- mkURI $ from @Text @Prelude.Text baseUri
   qxs <- stExtQuery $ uniqueToIdentity ext
   pure
     $ uri
@@ -827,15 +781,16 @@ setExtScreenAction :: Screen -> Action
 setExtScreenAction sc =
   pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
-shareLink :: forall a. (From Text a) => Screen -> Model -> a
+shareLink :: forall a. (From Prelude.Text a) => Screen -> Model -> a
 shareLink sc =
-  from @Text @a
+  from @Prelude.Text @a
     . either impureThrow URI.render
     . stUri
     . setScreenPure sc
 
 vsn :: Text
 vsn =
-  T.intercalate "."
+  from @Prelude.Text @Text
+    . T.intercalate "."
     . fmap inspect
     $ Version.versionBranch Paths.version

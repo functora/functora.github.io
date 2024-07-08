@@ -1,10 +1,10 @@
 let
   # functora = ../..;
   functora = fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/f088a4db6c9ec5fb02c778765e515614f1b35bf0.tar.gz";
-    sha256 = "15vlhhzbp9ln9m78h8l9xgja0sa44n2sa15382b3m11sj46j67c8";
+    url = "https://github.com/functora/functora.github.io/archive/114c7eee4af1771d6bf8cbb8b59f69a03bbc46d6.tar.gz";
+    sha256 = "0jnmykc1080fg2i2nz2c5zxfnq34y640r3azlifjqyk56p247sfm";
   };
-  functora-miso = import "${functora}/ghcjs/miso/default.nix" {
+  functora-miso = import "${functora}/pub/miso/default.nix" {
     overlays = import ./overlays.nix {inherit functora;};
   };
   pkgs = functora-miso.pkgs;
@@ -32,7 +32,7 @@ in rec {
     name = "app-serve-latest";
     text = ''
       ${functora-pkgs.simple-http-server}/bin/simple-http-server \
-        -p 3000 ${repo}/dist/latest
+        -p 8080 ${repo}/dist/latest
     '';
   };
   app-release-latest = functora-pkgs.writeShellApplication rec {
@@ -92,7 +92,7 @@ in rec {
         --minify-js \
         --minify-css \
         -o $out/index.html \
-        ${./static}/index.html
+        ${./static}/ghcjs.html
       ${functora-pkgs.clean-css-cli}/bin/cleancss \
         -O2 \
         --source-map \

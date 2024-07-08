@@ -16,6 +16,7 @@ module Material.Drawer.Dismissible
 where
 
 import Data.Maybe
+import Material.Prelude as Prelude
 import Miso
 
 -- | Configuration of a dismissible drawer

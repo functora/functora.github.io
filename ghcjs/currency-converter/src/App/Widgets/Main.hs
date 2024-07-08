@@ -1,6 +1,7 @@
 module App.Widgets.Main (mainWidget) where
 
 import qualified App.Misc as Misc
+import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Currency as Currency
@@ -14,14 +15,12 @@ import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
-import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import Miso hiding (view)
-import Miso.String (ms)
 import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
@@ -78,7 +77,8 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
         )
         <> Qr.qr
           st
-          ( either impureThrow URI.render
+          ( ms
+              . either impureThrow URI.render
               . stExtUri
               $ ext
               & #stExtScreen
@@ -106,7 +106,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
         )
         <> Qr.qr
           st
-          ( URI.render uri
+          ( ms $ URI.render uri
           )
           ( Qr.defOpts
               & #optsExtraWidgets
@@ -217,7 +217,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           & #optsTrailingWidget
           .~ Just
             ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newAssetAction st
+                . Misc.newAssetAction
                 $ #modelState
                 . #stDoc
                 . #stDocAssets
@@ -258,7 +258,7 @@ screenWidget st@Model {modelState = St {stScreen = Editor}} =
           & #optsTrailingWidget
           .~ Just
             ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newPaymentMethodAction st
+                . Misc.newPaymentMethodAction
                 $ #modelState
                 . #stDoc
                 . #stDocPaymentMethods
@@ -319,5 +319,5 @@ tosWidget =
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text
         ". This software is 100% organic and AI-free. It is built and tested exclusively by humans. ",
-      Miso.text . ms $ "Version " <> vsn <> "."
+      Miso.text $ "Version " <> vsn <> "."
     ]

@@ -3,8 +3,8 @@ module App.Widgets.IconToggles
   )
 where
 
+import App.Prelude
 import App.Types
-import Functora.Prelude
 import qualified Material.IconToggle as IconToggle
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme

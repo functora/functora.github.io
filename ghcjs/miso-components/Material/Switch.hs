@@ -12,6 +12,7 @@ module Material.Switch
 where
 
 import Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 
 -- | Configuration of a switch
@@ -97,7 +98,10 @@ checkboxTypeAttr =
 
 changeHandler :: Config msg -> Maybe (Miso.Attribute msg)
 changeHandler (Config {onChange = onChange}) =
-  Maybe.maybe Nothing (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x))) onChange
+  Maybe.maybe
+    Nothing
+    (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x)))
+    onChange
 
 trackElt :: Miso.View msg
 trackElt =

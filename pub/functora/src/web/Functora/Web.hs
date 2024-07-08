@@ -2,22 +2,61 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Functora.Web
-  ( webFetch,
+  ( Opts (..),
+    defOpts,
+    webFetch,
   )
 where
 
 import qualified Data.ByteString.Lazy as BL
 import Functora.Prelude
+import Functora.WebOrphan ()
 import qualified Network.URI as NetURI
 import qualified Text.URI as URI
-#ifndef __GHCJS__
+
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import Functora.WebOrphan ()
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
-#else
+#endif
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
 import qualified Data.JSString as JSString
 import qualified JavaScript.Web.XMLHttpRequest as Xhr
+#endif
+
+#ifdef wasi_HOST_OS
+import qualified Servant.Client.JSaddle as Srv
+import qualified Servant.API as Srv
+import qualified GHCJS.DOM.Types as JSDOM
+import qualified Network.HTTP.Media as M
+#endif
+
+#ifndef wasi_HOST_OS
+newtype Opts = Opts
+  { optsQueryString :: [(ByteString, Maybe ByteString)]
+  }
+  deriving stock (Eq, Generic)
+
+defOpts :: Opts
+defOpts =
+  Opts
+    { optsQueryString = mempty
+    }
+#else
+data Opts = Opts
+  { optsQueryString :: [(ByteString, Maybe ByteString)],
+    optsJSContextRef :: JSDOM.JSContextRef
+  }
+  deriving stock (Eq, Generic)
+
+defOpts :: JSDOM.JSContextRef -> Opts
+defOpts ctx =
+  Opts
+    { optsQueryString = mempty,
+      optsJSContextRef = ctx
+    }
 #endif
 
 webFetch ::
@@ -25,16 +64,25 @@ webFetch ::
     MonadThrow m
   ) =>
   URI ->
-  [(ByteString, Maybe ByteString)] ->
+  Opts ->
   m BL.ByteString
-webFetch prevUri qs = do
+webFetch prevUri opts = do
+
+--
+-- TODO : do not ignore qs, ua and nonce in wasm version!!!
+--
+#ifndef wasi_HOST_OS
+  let qs = optsQueryString opts
   nonce <- getCurrentPicos
   let prevQuery = URI.uriQuery prevUri
-  nextQuery <- mapM (uncurry newQueryParam) $ (inspect nonce, Nothing) : qs
+  optsQuery <- mapM (uncurry newQueryParam) $ (inspect nonce, Nothing) : qs
+  let nextQuery = prevQuery <> optsQuery
   let nextUri =
         NetURI.unEscapeString
-          $ URI.renderStr prevUri {URI.uriQuery = prevQuery <> nextQuery}
-#ifndef __GHCJS__
+          $ URI.renderStr prevUri {URI.uriQuery = nextQuery}
+#endif
+
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
   webRaw <- Web.parseRequest nextUri
   let ua :: ByteString =
         "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
@@ -58,7 +106,9 @@ webFetch prevUri qs = do
           <> inspect webRes
           <> " with body="
           <> inspect webResBody
-#else
+#endif
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
   let webReq =
         Xhr.Request
           { Xhr.reqMethod = Xhr.GET,
@@ -83,6 +133,18 @@ webFetch prevUri qs = do
           <> inspect webResBody
 #endif
 
+#ifdef wasi_HOST_OS
+  let webCtx = optsJSContextRef opts
+  let webClient =
+         Srv.client $ Proxy @(Srv.Get '[Everything] BL.ByteString)
+  webUri <- Srv.parseBaseUrl . NetURI.unEscapeString
+              $ URI.renderStr prevUri {URI.uriQuery = mempty}
+  let webClientEnv = Srv.mkClientEnv webUri
+  webResBody <- JSDOM.runJSM (Srv.runClientM webClient webClientEnv) webCtx
+  either throw pure webResBody
+#endif
+
+#ifndef wasi_HOST_OS
 newQueryParam ::
   (MonadThrow m) => ByteString -> Maybe ByteString -> m URI.QueryParam
 newQueryParam keyRaw valRaw = do
@@ -100,3 +162,14 @@ newQueryParam keyRaw valRaw = do
       valRaw
   val <- traverse URI.mkQueryValue valTxt
   pure $ maybe (URI.QueryFlag key) (URI.QueryParam key) val
+#endif
+
+#ifdef wasi_HOST_OS
+data Everything
+
+instance Srv.Accept Everything where
+  contentType _ = "*" M.// "*"
+
+instance Srv.MimeUnrender Everything BL.ByteString where
+  mimeUnrender _ = pure
+#endif

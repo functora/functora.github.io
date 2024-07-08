@@ -7,9 +7,11 @@ module Functora.Prelude
     -- * Show
     -- $show
     inspect,
-    inspectSop,
     inspectType,
     inspectSymbol,
+    display,
+    prettyByteString,
+    prettyLazyByteString,
     RatioFormat (..),
     DecimalPlacesOverflowFormat (..),
     defaultRatioFormat,
@@ -57,6 +59,7 @@ module Functora.Prelude
     -- $parsers
     parseWords,
     parseRatio,
+    utf8FromLatin1,
 
     -- * QQ
     -- $qq
@@ -92,10 +95,6 @@ module Functora.Prelude
     altM,
     altM',
     takeWhileAcc,
-    newUuid,
-    nilUuid,
-    nullUuid,
-    htmlUuid,
     randomList,
     randomListPure,
     randomByteString,
@@ -110,7 +109,6 @@ module Functora.Prelude
   )
 where
 
-import Codec.Serialise as X (Serialise)
 import Control.Concurrent.Async as X
   ( Async,
     asyncThreadId,
@@ -155,7 +153,6 @@ import Control.Monad.Extra as X
     fromMaybeM,
     maybeM,
   )
-import Control.Monad.Trans.Chronicle as X (ChronicleT (..), chronicle)
 import Control.Monad.Trans.Reader as X (mapReaderT)
 import Data.Binary as X (Binary)
 import qualified Data.ByteString as BS
@@ -196,13 +193,11 @@ import qualified Data.Scientific as Scientific
 import qualified Data.Semigroup as Semigroup
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text as T
+import Data.Text.Encoding as X (decodeLatin1)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Read as T
-import Data.These as X (These (..), these)
-import Data.These.Combinators as X (hasThere)
-import Data.These.Lens as X
 import Data.Time.Clock as X
   ( DiffTime,
     NominalDiffTime,
@@ -217,11 +212,7 @@ import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
 import Data.Tuple.Extra as X (thd3, uncurry3)
 import qualified Data.Typeable as Typeable
-import Data.UUID as X (UUID)
-import qualified Data.UUID as UUID
-import qualified Data.UUID.V4 as UUID
 import Functora.PreludeOrphan as X ()
-import Functora.Soplate as X
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
@@ -323,21 +314,6 @@ inspect =
   display @dst @src
     . Syb.everywhere (Syb.mkT prettyByteString)
     . Syb.everywhere (Syb.mkT prettyLazyByteString)
-
-inspectSop ::
-  forall dst src.
-  ( Show src,
-    Typeable src,
-    Soplate ByteString src,
-    Soplate BL.ByteString src,
-    IsString dst
-  ) =>
-  src ->
-  dst
-inspectSop =
-  display @dst @src
-    . over soplate prettyByteString
-    . over soplate prettyLazyByteString
 
 inspectType :: forall a b. (Typeable a, IsString b) => b
 inspectType =
@@ -711,6 +687,21 @@ parseRational str =
     Right e -> throwParseException str e
     Left e -> throwParseException str e
 
+utf8FromLatin1 ::
+  forall a.
+  ( From a ByteString,
+    From ByteString a
+  ) =>
+  a ->
+  a
+utf8FromLatin1 raw =
+  from @ByteString @a
+    . encodeUtf8
+    . either (const $ decodeLatin1 bs) id
+    $ decodeUtf8' bs
+  where
+    bs = from @a @ByteString raw
+
 -- $qq
 -- QQ
 
@@ -745,7 +736,7 @@ qq parser =
             Right x -> TH.lift x
     }
   where
-    failure :: Text -> any
+    failure :: forall any. Text -> any
     failure msg =
       error
         $ inspectType @out
@@ -763,35 +754,35 @@ newtype Ikm = Ikm
   { unIkm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary, Serialise)
+  deriving newtype (Binary)
   deriving (Show) via Redacted Ikm
 
 newtype Okm = Okm
   { unOkm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary, Serialise)
+  deriving newtype (Binary)
   deriving (Show) via Redacted Okm
 
 newtype SaltKm = SaltKm
   { unSaltKm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary, Serialise)
+  deriving newtype (Binary)
   deriving (Show) via Redacted SaltKm
 
 newtype InfoKm = InfoKm
   { unInfoKm :: ByteString
   }
   deriving stock (Eq, Ord, Read, Data, Generic)
-  deriving newtype (Binary, Serialise)
+  deriving newtype (Binary)
   deriving (Show) via Redacted InfoKm
 
 newtype OkmByteSize = OkmByteSize
   { unOkmByteSize :: Natural
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
-  deriving newtype (Binary, Serialise)
+  deriving newtype (Binary)
 
 sha256Hash :: forall a b. (From a [Word8], From [Word8] b) => a -> b
 sha256Hash =
@@ -923,18 +914,6 @@ takeWhileAcc f prev (x : xs) =
   case f x prev of
     Nothing -> []
     Just next -> x : takeWhileAcc f next xs
-
-newUuid :: (MonadIO m) => m UUID
-newUuid = liftIO UUID.nextRandom
-
-nilUuid :: UUID
-nilUuid = UUID.nil
-
-nullUuid :: UUID -> Bool
-nullUuid = UUID.null
-
-htmlUuid :: forall a. (From Text a) => UUID -> a
-htmlUuid = from @Text @a . ("uuid-" <>) . UUID.toText
 
 --
 -- NOTE : compat with older random

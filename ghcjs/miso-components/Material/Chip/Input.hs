@@ -19,6 +19,7 @@ where
 
 import qualified Data.Void as Void
 import qualified Material.Chip.Input.Internal as Internal
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 import qualified Miso.Svg as Svg

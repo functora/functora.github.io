@@ -14,6 +14,7 @@ where
 
 import qualified Data.List as List
 import Data.Maybe
+import Material.Prelude as Prelude
 import Miso.Event.Decoder
 import Miso.Html
 import Miso.Html.Event

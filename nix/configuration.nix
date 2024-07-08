@@ -502,16 +502,16 @@ in {
       # Web eID
       #
       packages = with pkgs; [
-        qdigidoc                # Digidoc
-        web-eid-app             # Signing in browswer
-        p11-kit                 # Signing in browswer
-        opensc                  # Signing in browswer
+        qdigidoc # Digidoc
+        web-eid-app # Signing in browswer
+        p11-kit # Signing in browswer
+        opensc # Signing in browswer
       ];
     };
     services.pcscd.enable = true;
     programs.firefox.enable = true;
     programs.firefox.package = pkgs.firefox-esr;
-    programs.firefox.nativeMessagingHosts.packages = [ pkgs.web-eid-app ];
+    programs.firefox.nativeMessagingHosts.packages = [pkgs.web-eid-app];
     programs.firefox.policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
     environment.etc."pkcs11/modules/opensc-pkcs11".text = ''
       module: ${pkgs.opensc}/lib/opensc-pkcs11.so
@@ -607,6 +607,7 @@ in {
         vial
         usbutils
         signal-desktop
+        pulsemixer
       ];
       programs.git = {
         enable = true;

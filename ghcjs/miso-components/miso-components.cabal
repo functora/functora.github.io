@@ -6,22 +6,14 @@ category:      Web
 build-type:    Simple
 
 common pkg
-  default-language: Haskell2010
-  js-sources:       material-components-web-elm.min.js
+  default-language:   Haskell2010
+  js-sources:         material-components-web-elm.min.js
+  default-extensions: NoImplicitPrelude
   build-depends:
     , aeson
     , base
-    , bytestring
     , containers
     , miso
-
-  if !impl(ghcjs)
-    build-depends:
-      , jsaddle
-      , jsaddle-warp
-      , transformers
-      , warp
-      , websockets
 
   ghc-options:
     -Weverything -Wno-all-missed-specialisations
@@ -78,6 +70,7 @@ library
     Material.List.Item
     Material.List.Item.Internal
     Material.Menu
+    Material.Prelude
     Material.Radio
     Material.Ripple
     Material.Select
@@ -100,3 +93,18 @@ library
 executable miso-components-example
   import:  pkg
   main-is: Main.hs
+
+  if os(wasi)
+    build-depends:
+      , ghc-experimental
+      , jsaddle-wasm
+
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+
+  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends:
+      , bytestring
+      , jsaddle-warp
+      , warp
+      , websockets

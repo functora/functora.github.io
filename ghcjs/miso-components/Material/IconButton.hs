@@ -14,6 +14,7 @@ where
 
 import Data.Maybe
 import Material.IconButton.Internal
+import Material.Prelude as Prelude
 import Miso.Html
 import Miso.Html.Event
 import Miso.String

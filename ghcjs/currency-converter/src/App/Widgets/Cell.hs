@@ -6,7 +6,7 @@ module App.Widgets.Cell
   )
 where
 
-import Functora.Prelude
+import App.Prelude
 import qualified Material.LayoutGrid as LayoutGrid
 import Miso hiding (at, view)
 

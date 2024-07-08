@@ -3,6 +3,8 @@ module Elm.List
   )
 where
 
+import Material.Prelude
+
 indexedMap :: (Int -> a -> b) -> [a] -> [b]
 indexedMap f xs =
   let indexedMapHelper _ [] _ = []

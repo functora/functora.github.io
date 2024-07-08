@@ -2,6 +2,7 @@
 
 module Material.Select.Item.Internal where
 
+import Material.Prelude as Prelude
 import qualified Miso
 
 data Config a msg = Config

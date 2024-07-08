@@ -12,6 +12,7 @@ module Material.HelperText
 where
 
 import Data.Maybe
+import Material.Prelude as Prelude
 import Miso.Html
 import Miso.String
 

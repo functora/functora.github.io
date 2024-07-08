@@ -23,6 +23,7 @@ module Material.Card
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.List as List
 import qualified Data.Map as M
 import Data.Maybe
@@ -179,7 +180,7 @@ mediaCs =
 
 backgroundImageAttr :: String -> Maybe (Attribute msg)
 backgroundImageAttr url =
-  Just (style_ $ M.singleton "background-image" (toMisoString ("url(\"" ++ url ++ "\")")))
+  Just (style_ $ M.singleton "background-image" (toMisoString ("url(\"" <> url <> "\")")))
 
 aspectCs :: Maybe Aspect -> Maybe (Attribute msg)
 aspectCs aspect =

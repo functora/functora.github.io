@@ -1,0 +1,171 @@
+name:               miso
+version:            1.8.4.0
+category:           Web, Miso, Data Structures
+license:            BSD3
+license-file:       LICENSE
+author:             David M. Johnson <djohnson.m@gmail.com>
+maintainer:         David M. Johnson <djohnson.m@gmail.com>
+homepage:           http://github.com/dmjio/miso
+copyright:          Copyright (c) 2017-2020 David M. Johnson
+bug-reports:        https://github.com/dmjio/miso/issues
+build-type:         Simple
+extra-source-files: README.md
+cabal-version:      1.22
+synopsis:           A tasty Haskell front-end framework
+description:
+  Miso is a small, production-ready, "isomorphic" Haskell front-end framework featuring a virtual-dom, recursive diffing / patching algorithm, event delegation, event batching, SVG, Server-sent events, Websockets, type-safe servant-style routing and an extensible Subscription-based subsystem. Inspired by Elm, Redux and Bobril. Miso is pure by default, but side effects (like XHR) can be introduced into the system via the Effect data type. Miso makes heavy use of the GHCJS FFI and therefore has minimal dependencies.
+
+extra-source-files: README.md
+
+flag logview
+  default:     False
+  description: Log runView evaluation time
+
+flag tests
+  default:     False
+  description: Builds Miso's tests
+
+flag jsaddle
+  manual:      True
+  default:     False
+  description: Compile with JSaddle
+
+flag ios
+  manual:      True
+  default:     False
+  description: Cross compile to iOS
+
+flag jsstring-only
+  manual:      True
+  default:     False
+  description: Always set MisoString = JSString
+
+executable tests
+  main-is: Main.hs
+
+  if (!(impl(ghcjs) || arch(javascript)) || !flag(tests))
+    buildable: False
+
+  else
+    ghcjs-options:    -dedupe
+    cpp-options:      -DGHCJS_BROWSER
+    hs-source-dirs:   tests
+    build-depends:
+        aeson
+      , base                  <5
+      , bytestring
+      , containers
+      , ghcjs-base
+      , http-api-data
+      , http-types
+      , miso
+      , network-uri
+      , QuickCheck
+      , quickcheck-instances
+      , scientific
+      , servant
+      , text
+      , transformers
+      , unordered-containers
+      , vector
+
+    default-language: Haskell2010
+
+library
+  default-language: Haskell2010
+  exposed-modules:
+    Miso
+    Miso.Delegate
+    Miso.Dev
+    Miso.Diff
+    Miso.Effect
+    Miso.Effect.DOM
+    Miso.Effect.Storage
+    Miso.Event
+    Miso.Event.Decoder
+    Miso.Event.Types
+    Miso.FFI
+    Miso.FFI.History
+    Miso.FFI.SSE
+    Miso.FFI.Storage
+    Miso.FFI.WebSocket
+    Miso.Html
+    Miso.Html.Element
+    Miso.Html.Event
+    Miso.Html.Property
+    Miso.Html.Types
+    Miso.JSBits
+    Miso.Mathml
+    Miso.Mathml.Element
+    Miso.Router
+    Miso.String
+    Miso.Subscription
+    Miso.Subscription.History
+    Miso.Subscription.Keyboard
+    Miso.Subscription.Mouse
+    Miso.Subscription.SSE
+    Miso.Subscription.WebSocket
+    Miso.Subscription.Window
+    Miso.Svg
+    Miso.Svg.Attribute
+    Miso.Svg.Element
+    Miso.Svg.Event
+    Miso.Types
+    Miso.Util
+    Miso.WebSocket
+
+  if !(impl(ghcjs) || arch(javascript))
+    exposed-modules: Miso.TypeLevel
+
+  other-modules:    Miso.Concurrent
+  ghc-options:      -Wall
+  hs-source-dirs:   src
+
+  if flag(logview)
+    cpp-options: -DLOGVIEW
+
+  if ((impl(ghcjs) || arch(javascript)) || flag(jsstring-only))
+    hs-source-dirs: jsstring-src
+
+  else
+    hs-source-dirs: text-src
+
+  build-depends:
+      aeson
+    , base           <5
+    , bytestring
+    , containers
+    , file-embed
+    , http-api-data
+    , http-types
+    , jsaddle
+    , lucid
+    , network-uri
+    , servant
+    , tagsoup
+    , text
+    , transformers
+
+  if flag(logview)
+    build-depends: time
+
+  if (impl(ghcjs) || arch(javascript))
+    build-depends: ghcjs-base
+
+  else
+    build-depends: servant-lucid
+
+  if ((impl(ghcjs) || arch(javascript)) || flag(jsaddle))
+    if flag(ios)
+      cpp-options: -DIOS
+
+  if (impl(ghcjs) || arch(javascript))
+    js-sources:
+      jsbits/delegate.js
+      jsbits/diff.js
+      jsbits/isomorphic.js
+      jsbits/util.js
+
+source-repository head
+  type:     git
+  location: https://github.com/dmjio/miso.git

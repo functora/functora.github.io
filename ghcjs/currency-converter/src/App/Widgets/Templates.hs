@@ -50,8 +50,7 @@ templates optic tpls sc st =
               [ Cell.grid mempty
                   $ ( do
                         tpl <- tpls
-                        (icon, fun) <-
-                          [(tpl ^. #templateIcon, id), ("qr_code_2", QrCode)]
+                        (icon, fun) <- [(tpl ^. #templateIcon, id)]
                         pure
                           . Cell.mediumCell
                           $ Button.raised

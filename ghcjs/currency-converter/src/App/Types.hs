@@ -743,7 +743,9 @@ stExtQuery st = do
         . from @BL.ByteString @ByteString
 
 stUri :: (MonadThrow m) => Model -> m URI
-stUri st = do
+stUri Model {modelState = St {stExt = Just ext}} =
+  stExtUri ext
+stUri st@Model {modelState = St {stExt = Nothing}} = do
   uri <- mkURI $ from @Text @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
@@ -772,6 +774,7 @@ baseUri =
 setScreenPure :: Screen -> Model -> Model
 setScreenPure sc =
   (& #modelState . #stScreen .~ sc)
+    . (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
 setScreenAction :: Screen -> Action
 setScreenAction =

@@ -488,7 +488,6 @@ newModel webOpts mMark uri = do
         Model
           { modelHide = False,
             modelMenu = Closed,
-            modelShare = Closed,
             modelTemplates = Closed,
             modelExamples = Closed,
             modelState =

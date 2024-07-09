@@ -50,6 +50,7 @@ module App.Types
     unShareUri,
     stUri,
     stExtUri,
+    baseUri,
     setScreenPure,
     setScreenAction,
     setExtScreenAction,
@@ -79,7 +80,6 @@ import qualified Text.URI as URI
 data Model = Model
   { modelHide :: Bool,
     modelMenu :: OpenedOrClosed,
-    modelShare :: OpenedOrClosed,
     modelTemplates :: OpenedOrClosed,
     modelExamples :: OpenedOrClosed,
     modelState :: St Unique,

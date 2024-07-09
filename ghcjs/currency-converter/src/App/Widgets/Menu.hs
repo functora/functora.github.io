@@ -39,7 +39,21 @@ menu st =
                   )
                   "menu",
                 navItem
-                  $ text "Currency Converter"
+                  $ a_
+                    [ style_ [("cursor", "pointer")],
+                      onClick . PushUpdate $ do
+                        uri <- URI.mkURI baseUri
+                        new <-
+                          newModel
+                            (st ^. #modelWebOpts)
+                            (Just $ st ^. #modelMarket)
+                            uri
+                        pure
+                          . ChanItem 0
+                          $ const new
+                    ]
+                    [ text "Currency Converter"
+                    ]
               ],
             TopAppBar.section
               [ TopAppBar.alignEnd

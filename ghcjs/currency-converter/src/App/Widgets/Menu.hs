@@ -42,7 +42,7 @@ menu st =
                   $ a_
                     [ style_ [("cursor", "pointer")],
                       onClick . PushUpdate $ do
-                        uri <- URI.mkURI baseUri
+                        uri <- URI.mkURI $ fromMisoString baseUri
                         new <-
                           newModel
                             (st ^. #modelWebOpts)

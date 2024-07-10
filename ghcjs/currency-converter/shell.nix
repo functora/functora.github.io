@@ -36,6 +36,7 @@ in
         functora-pkgs.simple-http-server
         functora-pkgs.pkg-config
         functora-pkgs.libwebp
+        functora-pkgs.nodejs
       ]
       ++ prev.buildInputs
       ++ pkgs.lib.lists.take (pkgs.lib.lists.length functora-tools - 1)

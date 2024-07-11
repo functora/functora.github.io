@@ -473,6 +473,12 @@ in {
     #
     programs.adb.enable = true;
     services.tor.enable = true;
+    hardware.sane.enable = true;
+    hardware.sane.extraBackends = [pkgs.hplip];
+    # hardware.sane.extraBackends = [pkgs.sane-airscan];
+    services.ipp-usb.enable = true;
+    services.printing.enable = true;
+    services.printing.drivers = [pkgs.hplip];
     services.tor.client.enable = true;
     networking.firewall.enable = true;
     networking.nameservers = ["8.8.8.8" "8.8.4.4"];
@@ -497,21 +503,23 @@ in {
         "plugdev"
         "adbusers"
         "networkmanager"
+        "scanner"
+        "lp"
       ];
       #
       # Web eID
       #
       packages = with pkgs; [
-        qdigidoc                # Digidoc
-        web-eid-app             # Signing in browswer
-        p11-kit                 # Signing in browswer
-        opensc                  # Signing in browswer
+        qdigidoc # Digidoc
+        web-eid-app # Signing in browswer
+        p11-kit # Signing in browswer
+        opensc # Signing in browswer
       ];
     };
     services.pcscd.enable = true;
     programs.firefox.enable = true;
     programs.firefox.package = pkgs.firefox-esr;
-    programs.firefox.nativeMessagingHosts.packages = [ pkgs.web-eid-app ];
+    programs.firefox.nativeMessagingHosts.packages = [pkgs.web-eid-app];
     programs.firefox.policies.SecurityDevices.p11-kit-proxy = "${pkgs.p11-kit}/lib/p11-kit-proxy.so";
     environment.etc."pkcs11/modules/opensc-pkcs11".text = ''
       module: ${pkgs.opensc}/lib/opensc-pkcs11.so
@@ -607,6 +615,8 @@ in {
         vial
         usbutils
         signal-desktop
+        gnome.simple-scan
+        system-config-printer
       ];
       programs.git = {
         enable = true;

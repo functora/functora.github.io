@@ -15,6 +15,7 @@ where
 
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 
 -- | Ripple configuration

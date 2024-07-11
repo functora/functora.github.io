@@ -16,6 +16,7 @@ module Material.Chip.Filter
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.Void as Void
 import qualified Material.Chip.Filter.Internal as Internal
 import qualified Miso

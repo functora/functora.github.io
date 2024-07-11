@@ -14,6 +14,7 @@ where
 
 import qualified Data.Function
 import qualified Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 

@@ -15,6 +15,7 @@ module Material.Chip.Action
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.Void as Void
 import qualified Material.Chip.Action.Internal as Internal
 import qualified Miso

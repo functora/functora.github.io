@@ -24,6 +24,7 @@ where
 
 import qualified Data.Maybe as Maybe
 import Material.List.Item.Internal (Config (..), ListItem (..), Selection (..))
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.Html.Property
 
@@ -161,16 +162,16 @@ activatedCs (Config {selection}) =
 ariaSelectedAttr :: Config msg -> Maybe (Miso.Attribute msg)
 ariaSelectedAttr (Config {selection}) =
   if selection /= Nothing
-    then Just (Miso.stringProp "aria-selected" "true")
+    then Just (Miso.textProp "aria-selected" "true")
     else Nothing
 
 hrefAttr :: Config msg -> Maybe (Miso.Attribute msg)
 hrefAttr (Config {href}) =
-  Maybe.maybe Nothing (\h -> Just (Miso.stringProp "href" h)) href
+  Maybe.maybe Nothing (\h -> Just (Miso.textProp "href" h)) href
 
 targetAttr :: Config msg -> Maybe (Miso.Attribute msg)
 targetAttr (Config {href, target}) =
-  Maybe.maybe Nothing (\h -> Just (Miso.stringProp "target" h)) target
+  Maybe.maybe Nothing (\h -> Just (Miso.textProp "target" h)) target
 
 data TwoLineListItemText msg = TwoLineListItemText
   { primary :: [Miso.View msg],
@@ -191,11 +192,15 @@ text additionalAttributes (TwoLineListItemText {primary, secondary}) =
 
 primaryText :: [Miso.Attribute msg] -> [Miso.View msg] -> Miso.View msg
 primaryText additionalAttributes nodes =
-  Miso.div_ (Miso.class_ "mdc-list-item__primary-text" : additionalAttributes) nodes
+  Miso.div_
+    (Miso.class_ "mdc-list-item__primary-text" : additionalAttributes)
+    nodes
 
 secondaryText :: [Miso.Attribute msg] -> [Miso.View msg] -> Miso.View msg
 secondaryText additionalAttributes nodes =
-  Miso.div_ (Miso.class_ "mdc-list-item__secondary-text" : additionalAttributes) nodes
+  Miso.div_
+    (Miso.class_ "mdc-list-item__secondary-text" : additionalAttributes)
+    nodes
 
 -- | A list item's graphic tile
 graphic :: [Miso.Attribute msg] -> [Miso.View msg] -> Miso.View msg

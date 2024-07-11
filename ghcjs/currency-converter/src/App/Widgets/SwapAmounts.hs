@@ -3,8 +3,8 @@ module App.Widgets.SwapAmounts
   )
 where
 
+import App.Prelude as Prelude
 import App.Types
-import Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
@@ -34,7 +34,8 @@ swapAmounts =
         let baseInput =
               st
                 ^. #modelState
-                . #stConv
+                . #stDoc
+                . #stDocConv
                 . #stConvTopMoney
                 . #moneyAmount
                 . #fieldInput
@@ -42,14 +43,16 @@ swapAmounts =
             baseOutput =
               st
                 ^. #modelState
-                . #stConv
+                . #stDoc
+                . #stDocConv
                 . #stConvTopMoney
                 . #moneyAmount
                 . #fieldOutput
             quoteInput =
               st
                 ^. #modelState
-                . #stConv
+                . #stDoc
+                . #stDocConv
                 . #stConvBottomMoney
                 . #moneyAmount
                 . #fieldInput
@@ -57,38 +60,44 @@ swapAmounts =
             quoteOutput =
               st
                 ^. #modelState
-                . #stConv
+                . #stDoc
+                . #stDocConv
                 . #stConvBottomMoney
                 . #moneyAmount
                 . #fieldOutput
          in st
               & #modelState
-              . #stConv
+              . #stDoc
+              . #stDocConv
               . #stConvTopMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ quoteInput
               & #modelState
-              . #stConv
+              . #stDoc
+              . #stDocConv
               . #stConvTopMoney
               . #moneyAmount
               . #fieldOutput
               .~ quoteOutput
               & #modelState
-              . #stConv
+              . #stDoc
+              . #stDocConv
               . #stConvBottomMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ baseInput
               & #modelState
-              . #stConv
+              . #stDoc
+              . #stDocConv
               . #stConvBottomMoney
               . #moneyAmount
               . #fieldOutput
               .~ baseOutput
               & #modelState
-              . #stConv
+              . #stDoc
+              . #stDocConv
               . #stConvTopOrBottom
               .~ Top

@@ -36,7 +36,6 @@ where
 import qualified Data.Aeson.Combinators.Decode as A
 import qualified Data.Text as T
 import Functora.Cfg
-import Functora.MoneyFgpt as X ()
 import Functora.MoneySing as X
 import Functora.Prelude
 import Functora.Tags as X
@@ -309,7 +308,7 @@ newtype CurrencyCode = CurrencyCode
   { unCurrencyCode :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
-  deriving newtype (Binary, Serialise, FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+  deriving newtype (Binary, FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 
 inspectCurrencyCode :: forall a. (From Text a) => CurrencyCode -> a
 inspectCurrencyCode =
@@ -322,7 +321,7 @@ data CurrencyInfo = CurrencyInfo
     currencyInfoText :: Text
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
-  deriving (Binary, Serialise, FromJSON, ToJSON) via GenericType CurrencyInfo
+  deriving (Binary, FromJSON, ToJSON) via GenericType CurrencyInfo
 
 inspectCurrencyInfo :: forall a. (From Text a) => CurrencyInfo -> a
 inspectCurrencyInfo input =

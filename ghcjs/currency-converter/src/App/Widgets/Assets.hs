@@ -4,11 +4,11 @@ module App.Widgets.Assets
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
-import Functora.Prelude
 import qualified Material.Theme as Theme
 import Miso hiding (at, view)
 
@@ -47,7 +47,7 @@ assetWidget st optic idx =
       )
       ( Field.defOpts
           & #optsPlaceholder
-          .~ ( if null label
+          .~ ( if label == mempty
                 then idxTxt
                 else label <> " " <> idxTxt
              )

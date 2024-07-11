@@ -15,6 +15,7 @@ import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Material.ImageList.Item (ImageListItem)
 import qualified Material.ImageList.Item.Internal as ImageListItem
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 
@@ -87,50 +88,70 @@ withTextProtectionCs (Config {withTextProtection = withTextProtection}) =
     else Nothing
 
 listItemElt :: Config msg -> ImageListItem.ImageListItem msg -> Miso.View msg
-listItemElt (config_@Config {masonry = masonry}) (listItem@(ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.href = href, ImageListItem.additionalAttributes = additionalAttributes}))) =
-  let inner =
-        [ if masonry
-            then imageElt masonry listItem
-            else imageAspectContainerElt masonry listItem,
-          supportingElt listItem
-        ]
-   in Miso.nodeHtml
-        "mdc-image-list-item"
-        (Miso.class_ "mdc-image-list__item" : additionalAttributes)
-        ( href
-            |> fmap (\href_ -> [Miso.a_ [Miso.href_ (Miso.String.toMisoString href_)] inner])
-            |> Maybe.fromMaybe inner
-        )
+listItemElt
+  (config_@Config {masonry = masonry})
+  ( listItem@( ImageListItem.ImageListItem
+                ( ImageListItem.Config
+                    { ImageListItem.href = href,
+                      ImageListItem.additionalAttributes = additionalAttributes
+                    }
+                  )
+              )
+    ) =
+    let inner =
+          [ if masonry
+              then imageElt masonry listItem
+              else imageAspectContainerElt masonry listItem,
+            supportingElt listItem
+          ]
+     in Miso.nodeHtml
+          "mdc-image-list-item"
+          (Miso.class_ "mdc-image-list__item" : additionalAttributes)
+          ( href
+              |> fmap (\href_ -> [Miso.a_ [Miso.href_ (Miso.String.toMisoString href_)] inner])
+              |> Maybe.fromMaybe inner
+          )
 
-imageAspectContainerElt :: Bool -> ImageListItem.ImageListItem msg -> Miso.View msg
-imageAspectContainerElt masonry (listItem@(ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.href = href}))) =
-  Miso.div_
-    ( Maybe.mapMaybe
-        id
-        [ Just (Miso.class_ "mdc-image-list__image-aspect-container"),
-          fmap (\_ -> Miso.class_ "mdc-ripple-surface") href
-        ]
-    )
-    [imageElt masonry listItem]
+imageAspectContainerElt ::
+  Bool -> ImageListItem.ImageListItem msg -> Miso.View msg
+imageAspectContainerElt
+  masonry
+  ( listItem@(ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.href = href}))
+    ) =
+    Miso.div_
+      ( Maybe.mapMaybe
+          id
+          [ Just (Miso.class_ "mdc-image-list__image-aspect-container"),
+            fmap (\_ -> Miso.class_ "mdc-ripple-surface") href
+          ]
+      )
+      [imageElt masonry listItem]
 
 imageElt :: Bool -> ImageListItem.ImageListItem msg -> Miso.View msg
-imageElt masonry (ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.href = href, ImageListItem.image = image})) =
-  let img =
-        Miso.img_
-          [ Miso.class_ "mdc-image-list__image",
-            Miso.src_ (Miso.String.toMisoString image)
-          ]
-   in if masonry
-        then
-          if href /= Nothing
-            then Miso.div_ [Miso.class_ "mdc-ripple-surface"] [img]
-            else img
-        else
-          Miso.div_
+imageElt
+  masonry
+  ( ImageListItem.ImageListItem
+      (ImageListItem.Config {ImageListItem.href = href, ImageListItem.image = image})
+    ) =
+    let img =
+          Miso.img_
             [ Miso.class_ "mdc-image-list__image",
-              Miso.style_ $ Map.singleton "background-image" (Miso.String.toMisoString ("url('" ++ image ++ "')"))
+              Miso.src_ (Miso.String.toMisoString image)
             ]
-            []
+     in if masonry
+          then
+            if href /= Nothing
+              then Miso.div_ [Miso.class_ "mdc-ripple-surface"] [img]
+              else img
+          else
+            Miso.div_
+              [ Miso.class_ "mdc-image-list__image",
+                Miso.style_
+                  $ Map.singleton
+                    "background-image"
+                    (Miso.String.toMisoString ("url('" <> image <> "')"))
+              ]
+              []
 
 supportingElt :: ImageListItem.ImageListItem msg -> Miso.View msg
 supportingElt (ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.label = label})) =
@@ -138,6 +159,9 @@ supportingElt (ImageListItem.ImageListItem (ImageListItem.Config {ImageListItem.
     Just string ->
       Miso.div_
         [Miso.class_ "mdc-image-list__supporting"]
-        [Miso.span_ [Miso.class_ "mdc-image-list__label"] [Miso.text (Miso.String.toMisoString string)]]
+        [ Miso.span_
+            [Miso.class_ "mdc-image-list__label"]
+            [Miso.text (Miso.String.toMisoString string)]
+        ]
     Nothing ->
       Miso.text ""

@@ -7,6 +7,7 @@ module Material.List.Item.Internal
   )
 where
 
+import Material.Prelude as Prelude
 import Miso
 
 data Config msg = Config

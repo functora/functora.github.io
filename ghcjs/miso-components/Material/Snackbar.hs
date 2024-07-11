@@ -28,6 +28,7 @@ module Material.Snackbar
   )
 where
 
+import Material.Prelude as Prelude
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Function
 import qualified Data.List as List

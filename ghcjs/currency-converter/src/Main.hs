@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-#ifndef __GHCJS__
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 import Language.Javascript.JSaddle.Warp as JS
 import qualified Network.Wai as Wai
 import Network.Wai.Application.Static
@@ -10,40 +10,63 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
 #endif
+
+#ifdef wasi_HOST_OS
+import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
+#endif
+
 import qualified App.Misc as Misc
+import App.Prelude
 import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import Functora.Money hiding (Money)
-import Functora.Prelude hiding (Field)
 import Functora.Rates
+import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import Miso hiding (view)
 import qualified Miso
-import Miso.String hiding (cons, foldl, intercalate, null, reverse)
 import qualified Text.URI as URI
+
+#ifdef wasi_HOST_OS
+foreign export javascript "hs_start" main :: IO ()
+#endif
 
 main :: IO ()
 main =
-  runApp . forever . handleAny (\e -> maxAttention e >> sleepSeconds 5) $ do
-    uri <- URI.mkURI . inspect =<< getCurrentURI
-    st <- newModel Nothing uri
-    startApp
-      App
-        { model = st & #modelHide .~ True,
-          update = updateModel,
-          Miso.view = viewModel,
-          subs = mempty,
-          events = extendedEvents,
-          initialAction = InitUpdate,
-          mountPoint = Nothing, -- defaults to 'body'
-          logLevel = Off
-        }
+  withUtf8
+    . runApp
+    . forever
+    . handleAny (\e -> maxAttention e >> sleepSeconds 5)
+    $ do
+      uri <- URI.mkURI . inspect =<< getCurrentURI
+      web <- getWebOpts
+      st <- newModel web Nothing uri
+      startApp
+        App
+          { model = st & #modelHide .~ True,
+            update = updateModel,
+            Miso.view = viewModel,
+            subs = mempty,
+            events = extendedEvents,
+            initialAction = InitUpdate,
+            mountPoint = Nothing, -- defaults to 'body'
+            logLevel = Off
+          }
 
-#ifndef __GHCJS__
+getWebOpts :: JSM Web.Opts
+getWebOpts = do
+#ifdef wasi_HOST_OS
+  ctx <- JS.askJSM
+  pure $ Web.defOpts ctx
+#else
+  pure Web.defOpts
+#endif
+
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
   js0 <- BL.readFile "static/app.js"
@@ -64,9 +87,16 @@ runApp app = do
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
-#else
+#endif
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS)
 runApp :: IO () -> IO ()
 runApp = id
+#endif
+
+#ifdef wasi_HOST_OS
+runApp :: JSM () -> IO ()
+runApp = JSaddle.Wasm.run
 #endif
 
 updateModel :: Action -> Model -> Effect Action Model
@@ -150,7 +180,7 @@ updateModel (PushUpdate newUpdater) st = do
     ]
 
 viewModel :: Model -> View Action
-#ifndef __GHCJS__
+#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 viewModel st =
   div_
     mempty
@@ -159,7 +189,9 @@ viewModel st =
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       mainWidget st
     ]
-#else
+#endif
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
   mainWidget st
 #endif
@@ -192,7 +224,7 @@ syncInputs =
   where
     fun :: Unique Text -> JSM (Unique Text)
     fun txt = do
-      el <- getElementById . ms . htmlUid @Text $ txt ^. #uniqueUid
+      el <- getElementById . htmlUid @Text $ txt ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
         inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)
@@ -207,16 +239,16 @@ evalModel raw = do
   new <-
     Syb.everywhereM
       ( Syb.mkM $ \cur ->
-          withMarket (raw ^. #modelMarket)
+          withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
             . fmap (fromRight cur)
             . tryMarket
-            . getCurrencyInfo
+            . getCurrencyInfo (raw ^. #modelWebOpts)
             $ currencyInfoCode cur
       )
       ( raw ^. #modelState
       )
   let st = raw & #modelState .~ new
-  let loc = st ^. #modelState . #stConv . #stConvTopOrBottom
+  let loc = st ^. #modelState . #stDoc . #stDocConv . #stConvTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
@@ -226,7 +258,7 @@ evalModel raw = do
           . #fieldInput
           . #uniqueValue of
           amt
-            | null amt ->
+            | amt == mempty ->
                 inspectRatioDef
                   $ st
                   ^. cloneLens baseLens
@@ -238,7 +270,7 @@ evalModel raw = do
   case baseAmtResult of
     Left {} -> pure st
     Right baseAmt ->
-      withMarket (st ^. #modelMarket) $ do
+      withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
         let funds =
               Funds
                 baseAmt
@@ -248,7 +280,7 @@ evalModel raw = do
                 . #currencyOutput
                 . #currencyInfoCode
         quote <-
-          getQuote funds
+          getQuote (st ^. #modelWebOpts) funds
             $ st
             ^. cloneLens quoteLens
             . #moneyCurrency
@@ -290,7 +322,7 @@ evalInvoice st = do
   mtds <- forM (st ^. #modelState . #stDoc . #stDocPaymentMethods) $ \mtd -> do
     total <-
       foldM
-        (\acc -> fmap (+ acc) . getTotalPayment mtd)
+        (\acc -> fmap (+ acc) . getTotalPayment st mtd)
         0
         (st ^. #modelState . #stDoc . #stDocAssets)
     pure
@@ -315,12 +347,15 @@ getTotalPayment ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
+  Model ->
   PaymentMethod Unique ->
   Asset Unique ->
   ReaderT (MVar Market) m Rational
-getTotalPayment method asset = do
+getTotalPayment st method asset = do
   quote <-
     getQuote
+      ( st ^. #modelWebOpts
+      )
       ( Funds (Tagged total)
           $ asset
           ^. #assetPrice
@@ -356,13 +391,13 @@ getTotalPayment method asset = do
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
-  Top -> #modelState . #stConv . #stConvTopMoney
-  Bottom -> #modelState . #stConv . #stConvBottomMoney
+  Top -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
 
 getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getQuoteConverterMoneyLens = \case
-  Top -> #modelState . #stConv . #stConvBottomMoney
-  Bottom -> #modelState . #stConv . #stConvTopMoney
+  Top -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

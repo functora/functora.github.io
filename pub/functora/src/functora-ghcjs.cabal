@@ -32,6 +32,11 @@ common pkg
   if impl(ghc >8.10.7)
     ghc-options: -Wno-missing-kind-signatures
 
+  if impl(ghc >=9.8)
+    ghc-options:
+      -Wno-missing-role-annotations -Wno-operator-whitespace
+      -Wno-missing-poly-kind-signatures
+
   default-extensions:
     AllowAmbiguousTypes
     ConstraintKinds
@@ -89,8 +94,6 @@ common pkg
     , Crypto
     , extra
     , generic-lens
-    , generics-sop
-    , http-types
     , lens
     , lift-type
     , microlens
@@ -98,7 +101,6 @@ common pkg
     , microlens-ghc
     , microlens-th
     , modern-uri            >=0.3.4.4
-    , monad-chronicle
     , network-uri
     , optparse-applicative
     , pkcs7
@@ -106,7 +108,6 @@ common pkg
     , random
     , safe-exceptions
     , scientific
-    , serialise
     , singlethongs
     , stm
     , syb
@@ -114,8 +115,6 @@ common pkg
     , template-haskell
     , text
     , th-lift-instances
-    , these
-    , these-lens
     , time
     , tomland
     , transformers
@@ -124,20 +123,26 @@ common pkg
     , uniplate
     , universum
     , unliftio
-    , uuid
     , vector
     , witch-mini
     , with-utf8
 
-  if !impl(ghcjs)
+  if (impl(ghcjs) || arch(javascript))
+    build-depends: ghcjs-base
+
+  if os(wasi)
+    build-depends:
+      , ghcjs-dom
+      , http-media
+      , servant
+      , servant-jsaddle
+
+  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
       , http-client
       , http-client-tls
+      , http-types
       , streaming-commons
-      , yesod-core
-
-  else
-    build-depends: ghcjs-base
 
 library
   import:          pkg
@@ -148,13 +153,11 @@ library
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Money
-    Functora.MoneyFgpt
     Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan
     Functora.Qr
     Functora.Rates
-    Functora.Soplate
     Functora.Tags
     Functora.Web
     Functora.WebOrphan
@@ -167,13 +170,14 @@ test-suite functora-ghcjs-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso soplate
   hs-source-dirs: test
   build-depends:
     , base
     , bytestring
     , containers
     , cryptohash-sha256
+    , generics-sop
     , hspec
     , modern-uri
     , qrcode-core
@@ -202,7 +206,6 @@ test-suite functora-ghcjs-test
     Functora.CfgOrphan
     Functora.Elm2Miso
     Functora.Money
-    Functora.MoneyFgpt
     Functora.MoneySing
     Functora.Prelude
     Functora.PreludeOrphan

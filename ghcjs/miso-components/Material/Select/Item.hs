@@ -12,6 +12,7 @@ module Material.Select.Item
   )
 where
 
+import Material.Prelude as Prelude
 import Material.Select.Item.Internal (Config (..), SelectItem (..))
 import qualified Miso
 

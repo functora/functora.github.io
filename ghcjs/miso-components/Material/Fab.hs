@@ -12,6 +12,7 @@ module Material.Fab
 where
 
 import qualified Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.String
 
@@ -98,7 +99,9 @@ rippleElt =
 
 iconElt :: String -> Miso.View msg
 iconElt iconName =
-  Miso.span_ [Miso.class_ "material-icons", Miso.class_ "mdc-fab__icon"] [Miso.text (Miso.String.toMisoString iconName)]
+  Miso.span_
+    [Miso.class_ "material-icons", Miso.class_ "mdc-fab__icon"]
+    [Miso.text (Miso.String.toMisoString iconName)]
 
 clickHandler :: Config msg -> Maybe (Miso.Attribute msg)
 clickHandler (Config {onClick = onClick}) = case onClick of

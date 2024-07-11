@@ -3,8 +3,8 @@ module App.Widgets.Chips
   )
 where
 
+import App.Prelude
 import App.Types
-import Functora.Prelude
 import qualified Material.Chip.Filter as Filter
 import qualified Material.ChipSet.Filter as Filter
 import qualified Material.LayoutGrid as LayoutGrid

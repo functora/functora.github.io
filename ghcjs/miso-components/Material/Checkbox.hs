@@ -18,6 +18,7 @@ where
 
 import Data.Maybe as Maybe
 import Material.Checkbox.Internal
+import Material.Prelude as Prelude
 import qualified Miso
 import Miso.Svg.Attribute
 import Miso.Svg.Element
@@ -88,8 +89,8 @@ checkbox config_@Config {touch = touch, additionalAttributes = additionalAttribu
         if touch
           then Miso.div_ [Miso.class_ "mdc-touch-target-wrapper"] [node]
           else node
-   in wrapTouch $
-        Miso.nodeHtml
+   in wrapTouch
+        $ Miso.nodeHtml
           "mdc-checkbox"
           ( mapMaybe
               id
@@ -129,7 +130,10 @@ disabledProp Config {disabled = disabled} =
 
 changeHandler :: Config msg -> Maybe (Miso.Attribute msg)
 changeHandler Config {state = state, onChange = onChange} =
-  Maybe.maybe Nothing (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x))) onChange
+  Maybe.maybe
+    Nothing
+    (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x)))
+    onChange
 
 nativeControlElt :: Config msg -> Miso.View msg
 nativeControlElt config_ =

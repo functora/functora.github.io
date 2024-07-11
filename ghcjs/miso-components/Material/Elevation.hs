@@ -29,6 +29,7 @@ module Material.Elevation
   )
 where
 
+import Material.Prelude as Prelude
 import Miso.Html
 import Miso.String
 

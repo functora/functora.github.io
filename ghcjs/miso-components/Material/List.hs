@@ -23,6 +23,7 @@ import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Material.List.Item (Config, ListItem)
 import qualified Material.List.Item.Internal as ListItem
+import Material.Prelude as Prelude
 import qualified Miso
 import qualified Miso.Html.Event
 import qualified Miso.String
@@ -101,7 +102,8 @@ setAttributes additionalAttributes config_ =
 -- The list view function takes its list items as two arguments. The first
 -- argument represents the first list item, and the second argument reresents the
 -- remaining list items. This way we guarantee lists to be non-empty.
-list :: Config msg -> ListItem.ListItem msg -> [ListItem.ListItem msg] -> Miso.View msg
+list ::
+  Config msg -> ListItem.ListItem msg -> [ListItem.ListItem msg] -> Miso.View msg
 list (config_@Config {additionalAttributes}) firstListItem remainingListItems =
   let listItems =
         firstListItem : remainingListItems

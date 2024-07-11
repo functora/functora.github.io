@@ -617,6 +617,7 @@ in {
         signal-desktop
         gnome.simple-scan
         system-config-printer
+        pulsemixer
       ];
       programs.git = {
         enable = true;

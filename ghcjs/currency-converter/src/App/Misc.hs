@@ -21,10 +21,10 @@ module App.Misc
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified Data.Generics as Syb
 import Functora.Money
-import Functora.Prelude hiding (Field)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import Miso hiding (URI, view)
@@ -36,8 +36,8 @@ getConverterAmountOptic ::
   TopOrBottom ->
   LensLike' f Model (Field Rational Unique)
 getConverterAmountOptic = \case
-  Top -> #modelState . #stConv . #stConvTopMoney . #moneyAmount
-  Bottom -> #modelState . #stConv . #stConvBottomMoney . #moneyAmount
+  Top -> #modelState . #stDoc . #stDocConv . #stConvTopMoney . #moneyAmount
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney . #moneyAmount
 
 getConverterCurrencyOptic ::
   ( Functor f
@@ -45,8 +45,8 @@ getConverterCurrencyOptic ::
   TopOrBottom ->
   LensLike' f Model (Currency Unique)
 getConverterCurrencyOptic = \case
-  Top -> #modelState . #stConv . #stConvTopMoney . #moneyCurrency
-  Bottom -> #modelState . #stConv . #stConvBottomMoney . #moneyCurrency
+  Top -> #modelState . #stDoc . #stDocConv . #stConvTopMoney . #moneyCurrency
+  Bottom -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney . #moneyCurrency
 
 pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> Model) -> m ()
 pushActionQueue st =
@@ -70,8 +70,8 @@ onKeyDownAction uid (KeyCode code) =
 
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do
-  let txt = inspect @Text x
-  unless (null txt) $ do
+  let txt = inspectMiso x
+  unless (txt == mempty) $ do
     clip <- JS.global JS.! ("navigator" :: Text) JS.! ("clipboard" :: Text)
     prom <- clip ^. JS.js1 ("writeText" :: Text) txt
     success <- JS.function $ \_ _ _ -> textPopup @Text st "Copied!"
@@ -95,7 +95,7 @@ textPopup st x =
       )
   where
     msg =
-      inspect x
+      inspectMiso x
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed
@@ -107,7 +107,7 @@ textPopupPure x st =
     %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
   where
     msg =
-      inspect x
+      inspectMiso x
         & Snackbar.message
         & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
         & Snackbar.setOnActionIconClick textPopupClosed
@@ -215,10 +215,10 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-newAssetAction :: Model -> ATraversal' Model [Asset Unique] -> Action
-newAssetAction st optic =
+newAssetAction :: ATraversal' Model [Asset Unique] -> Action
+newAssetAction optic =
   PushUpdate $ do
-    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "usd"
+    let cur = CurrencyInfo (CurrencyCode "usd") mempty
     item <- newAsset "Price" 0 cur
     pure
       . ChanItem 0
@@ -235,11 +235,10 @@ newFieldPairAction optic =
       $ (textPopupPure @Text "Added details!")
       . (& cloneTraversal optic %~ (<> [item]))
 
-newPaymentMethodAction ::
-  Model -> ATraversal' Model [PaymentMethod Unique] -> Action
-newPaymentMethodAction st optic =
+newPaymentMethodAction :: ATraversal' Model [PaymentMethod Unique] -> Action
+newPaymentMethodAction optic =
   PushUpdate $ do
-    cur <- newCurrencyInfo (st ^. #modelMarket) $ CurrencyCode "btc"
+    let cur = CurrencyInfo (CurrencyCode "btc") mempty
     item <- newPaymentMethod cur $ Just mempty
     pure
       . ChanItem 0

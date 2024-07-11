@@ -12,6 +12,7 @@ module Material.ImageList.Item
 where
 
 import Material.ImageList.Item.Internal (Config (..), ImageListItem (..))
+import Material.Prelude as Prelude
 import qualified Miso
 
 -- | Default configuration of an image list item

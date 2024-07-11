@@ -15,6 +15,7 @@ import qualified Data.Function
 import qualified Data.Maybe as Maybe
 import qualified Material.List.Item (ListItem)
 import qualified Material.List.Item.Internal as ListItem
+import Material.Prelude as Prelude
 import qualified Miso
 
 (<|) = (Data.Function.$)

@@ -2,7 +2,6 @@
 
 module Functora.PreludeOrphan () where
 
-import Codec.Serialise (Serialise)
 import Data.Binary (Binary)
 import qualified Data.Coerce as Coerce
 import qualified Data.Data as Data
@@ -29,21 +28,7 @@ instance Binary Authority
 
 instance Binary UserInfo
 
-instance Serialise URI
-
-instance Serialise (RText a)
-
-instance Serialise RTextLabel
-
-instance Serialise QueryParam
-
-instance Serialise Authority
-
-instance Serialise UserInfo
-
 deriving stock instance Generic (Ratio a)
-
-deriving newtype instance (Serialise rep) => Serialise (Tagged tag rep)
 
 instance (Typeable a) => Show (MVar a) where
   show =

@@ -21,6 +21,7 @@ where
 
 import Data.Maybe
 import Material.Button.Internal
+import Material.Prelude as Prelude
 import Miso.Html hiding (Text)
 import Miso.Html.Event
 import Miso.String
@@ -115,8 +116,8 @@ button
           if touch
             then div_ [class_ "mdc-touch-target-wrapper"] [node]
             else node
-     in wrapTouch $
-          nodeHtml
+     in wrapTouch
+          $ nodeHtml
             "mdc-button"
             (mapMaybe id [disabledProp config_])
             [ ( if href /= Nothing

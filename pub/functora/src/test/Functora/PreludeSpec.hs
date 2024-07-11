@@ -5,6 +5,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import Functora.Prelude
+import Functora.Soplate
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Instances ()

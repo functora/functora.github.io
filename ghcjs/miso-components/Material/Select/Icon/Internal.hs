@@ -2,6 +2,7 @@
 
 module Material.Select.Icon.Internal where
 
+import Material.Prelude as Prelude
 import qualified Miso
 
 data Icon msg = Icon

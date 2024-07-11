@@ -5,14 +5,13 @@ module App.Widgets.Header
   )
 where
 
+import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
-import Functora.Prelude hiding (Field)
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
-import Miso.String (ms)
 
 headerEditor ::
   Model ->
@@ -42,7 +41,7 @@ headerEditor st optic opts =
 
 headerViewer :: Text -> [View Action]
 headerViewer txt =
-  if null txt
+  if txt == mempty
     then mempty
     else
       [ LayoutGrid.cell
@@ -50,7 +49,7 @@ headerViewer txt =
             Typography.headline5,
             style_ [("text-align", "center")]
           ]
-          [ text $ ms txt
+          [ text txt
           ]
       ]
 

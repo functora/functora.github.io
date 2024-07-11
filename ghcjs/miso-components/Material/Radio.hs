@@ -13,6 +13,7 @@ module Material.Radio
 where
 
 import qualified Data.Maybe as Maybe
+import Material.Prelude as Prelude
 import qualified Miso
 
 -- | Radio button configuration
@@ -74,8 +75,8 @@ radio (config_@Config {touch = touch, additionalAttributes = additionalAttribute
         if touch
           then Miso.div_ [Miso.class_ "mdc-touch-target-wrapper"] [node]
           else node
-   in wrapTouch $
-        Miso.nodeHtml
+   in wrapTouch
+        $ Miso.nodeHtml
           "mdc-radio"
           ( Maybe.mapMaybe
               id
@@ -111,7 +112,10 @@ disabledProp (Config {disabled = disabled}) =
 
 changeHandler :: Config msg -> Maybe (Miso.Attribute msg)
 changeHandler (Config {checked = checked, onChange = onChange}) =
-  Maybe.maybe Nothing (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x))) onChange
+  Maybe.maybe
+    Nothing
+    (\x -> Just (Miso.on "change" Miso.emptyDecoder (const x)))
+    onChange
 
 nativeControlElt :: Config msg -> Miso.View msg
 nativeControlElt config_ =

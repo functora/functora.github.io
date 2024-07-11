@@ -44,6 +44,7 @@ with (import ./default.nix); let
       (
         cd ${repo}
         ${pkgs.nodejs}/bin/npm i
+        ${pkgs.nodejs}/bin/npm run build
         ${pkgs.nodejs}/bin/npx cap add android || true
         ${pkgs.nodejs}/bin/npx cap sync
         cp ${repo}/static/android-chrome-512x512.png ${repo}/static/logo.png

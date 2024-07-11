@@ -44,6 +44,8 @@ in rec {
     text = ''
       (
         cd ${repo}
+        ${functora-pkgs.nodejs}/bin/npm i
+        ${functora-pkgs.nodejs}/bin/npm run build
         nix-build -A releaseDer
         rm -rf ./dist/latest
         mkdir -p ./dist/latest
@@ -82,6 +84,10 @@ in rec {
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.webmanifest $out/
       cp ${./static}/*.ico $out/
+      ${functora-pkgs.terser}/bin/terser \
+        ${./static}/web.js -o $out/web.js --compress --mangle --source-map
+      ${functora-pkgs.terser}/bin/terser \
+        ${./static}/main.js -o $out/main.js --compress --mangle --source-map
       ${functora-pkgs.html-minifier}/bin/html-minifier \
         --minify-js \
         --minify-css \

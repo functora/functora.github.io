@@ -85,6 +85,8 @@ runApp app = do
     router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
+        ("web.js" : _) -> staticApp (defaultWebAppSettings "static") req
+        ("main.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #endif

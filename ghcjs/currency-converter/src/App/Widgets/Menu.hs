@@ -63,7 +63,11 @@ menu st =
                     ( IconButton.config
                         & IconButton.setOnClick
                           ( PushUpdate $ do
-                              void $ JS.eval @Text "window.print();"
+                              void
+                                $ JS.global
+                                ^. JS.js1
+                                  ("printCurrentPage" :: Text)
+                                  ("currency-converter" :: Text)
                               pure $ ChanItem 0 id
                           )
                         & IconButton.setAttributes

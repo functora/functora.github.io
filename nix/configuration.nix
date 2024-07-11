@@ -531,6 +531,7 @@ in {
     # (/org/freedesktop/portal/desktop).
     # The portal interfaces include APIs for file access, opening URIs,
     # printing and others.
+    # If still there are some issues, try to rm -rf ~/.config/dconf
     services.dbus.enable = true;
     xdg.portal = {
       enable = true;

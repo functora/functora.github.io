@@ -10,6 +10,8 @@ import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
+import qualified Data.Function.Memoize as Memo
+import qualified Data.Text.Lazy as TL
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
@@ -26,10 +28,14 @@ qr st txt opts
                 Cell.bigCell
                   $ img_
                     [ class_ "fill",
-                      src_ $ ms img
+                      src_ img
                     ]
             )
-            . newQrImg
+            --
+            -- TODO : Research how this works!
+            -- It might be leaking memory or something..
+            --
+            . Memo.memoize newQrImg
             $ fromMisoString txt
         ]
         <> copyWidget
@@ -61,9 +67,9 @@ qr st txt opts
                 "Copy"
           ]
 
-newQrImg :: Prelude.Text -> Maybe Prelude.Text
+newQrImg :: Prelude.String -> Maybe MisoString
 newQrImg =
-  ( fmap $ Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
+  ( fmap $ ms @TL.Text . Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
   )
     . QRCode.encodeAutomatic
       ( QRCode.defaultQRCodeOptions QRCode.L

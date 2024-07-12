@@ -114,6 +114,7 @@ common pkg
     , functora-ghcjs
     , fuzzy
     , jsaddle
+    , memoize
     , miso
     , miso-components
     , modern-uri

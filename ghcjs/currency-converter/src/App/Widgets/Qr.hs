@@ -2,6 +2,7 @@ module App.Widgets.Qr
   ( qr,
     Opts (..),
     defOpts,
+    newQrImg,
   )
 where
 
@@ -10,15 +11,14 @@ import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
-import qualified Data.Function.Memoize as Memo
+import qualified Data.MemoUgly as Memo
 import qualified Data.Text.Lazy as TL
-import qualified Functora.Prelude as Prelude
 import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
 import Miso hiding (at, view)
 
-qr :: Model -> Text -> Opts -> [View Action]
+qr :: Model -> MisoString -> Opts -> [View Action]
 qr st txt opts
   | txt == mempty = mempty
   | otherwise =
@@ -35,7 +35,7 @@ qr st txt opts
             -- TODO : Research how this works!
             -- It might be leaking memory or something..
             --
-            . Memo.memoize newQrImg
+            . Memo.memo newQrImg
             $ fromMisoString txt
         ]
         <> copyWidget
@@ -67,7 +67,7 @@ qr st txt opts
                 "Copy"
           ]
 
-newQrImg :: Prelude.String -> Maybe MisoString
+newQrImg :: MisoString -> Maybe MisoString
 newQrImg =
   ( fmap $ ms @TL.Text . Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
   )
@@ -75,6 +75,7 @@ newQrImg =
       ( QRCode.defaultQRCodeOptions QRCode.L
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
+    . fromMisoString @TL.Text
 
 data Opts = Opts
   { optsAllowCopy :: Bool,

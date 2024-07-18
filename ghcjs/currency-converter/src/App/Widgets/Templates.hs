@@ -111,7 +111,7 @@ templates optic tpls sc st =
                 . #stExt
                 .~ Nothing
         uri <- URI.mkURI $ shareLink (fun sc) next
-        new <- newModel (st ^. #modelWebOpts) (Just $ st ^. #modelMarket) uri
+        new <- newModel (st ^. #modelWebOpts) (Just st) uri
         pure . ChanItem 0 $ const new
 
 --
@@ -433,23 +433,48 @@ newModel ::
     MonadUnliftIO m
   ) =>
   Web.Opts ->
-  Maybe (MVar Market) ->
+  Maybe Model ->
   URI ->
   m Model
-newModel webOpts mMark uri = do
+newModel webOpts mSt uri = do
   ct <- getCurrentTime
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
-  market <- maybe newMarket pure mMark
-  ikm <- newPasswordField mempty
-  km <- Aes.randomKm 32
+  market <-
+    maybe
+      newMarket
+      pure
+      (mSt ^? _Just . #modelMarket)
+  ikm <-
+    maybe
+      (newPasswordField mempty)
+      pure
+      (mSt ^? _Just . #modelState . #stIkm)
+  km <-
+    maybe
+      (Aes.randomKm 32)
+      pure
+      (mSt ^? _Just . #modelState . #stKm)
+  defDoc <-
+    maybe
+      (liftIO emptyTemplate)
+      pure
+      (mSt ^? _Just . #modelState . #stDoc)
+  defPre <-
+    maybe
+      (newDynamicTitleField mempty)
+      pure
+      (mSt ^? _Just . #modelState . #stPre)
+  let defSc =
+        fromMaybe
+          Converter
+          (mSt ^? _Just . #modelState . #stScreen)
+  let defExt =
+        mSt ^? _Just . #modelState . #stExt . _Just
   mApp <- unShareUri uri
-  defDoc <- liftIO emptyTemplate
-  defPre <- newDynamicTitleField mempty
-  let defSc = Converter
   (sc, doc, pre, ext) <-
     maybe
-      ( pure (defSc, defDoc, defPre, Nothing)
+      ( pure (defSc, defDoc, defPre, defExt)
       )
       ( \ext -> do
           let sc = ext ^. #stExtScreen
@@ -480,36 +505,39 @@ newModel webOpts mMark uri = do
                 ( sc,
                   doc,
                   pre,
-                  Nothing
+                  defExt
                 )
       )
       mApp
-  let st =
-        Model
-          { modelHide = False,
-            modelMenu = Closed,
-            modelTemplates = Closed,
-            modelExamples = Closed,
-            modelState =
-              St
-                { stScreen = sc,
-                  stDoc = doc,
-                  stIkm = ikm,
-                  stKm = km,
-                  stPre = pre,
-                  stExt = ext
-                },
-            modelMarket = market,
-            modelCurrencies = [btc, usd],
-            modelSnackbarQueue = Snackbar.initialQueue,
-            modelProducerQueue = prod,
-            modelConsumerQueue = cons,
-            modelOnlineAt = ct,
-            modelWebOpts = webOpts
-          }
-  fmap (fromRight st) . tryMarket . withMarket webOpts market $ do
-    currenciesInfo <- currenciesList <$> getCurrencies webOpts
-    pure $ st & #modelCurrencies .~ currenciesInfo
+  pure
+    Model
+      { modelHide = False,
+        modelMenu = Closed,
+        modelTemplates = Closed,
+        modelExamples = Closed,
+        modelState =
+          St
+            { stScreen = sc,
+              stDoc = doc,
+              stIkm = ikm,
+              stKm = km,
+              stPre = pre,
+              stExt = ext
+            },
+        modelMarket = market,
+        modelCurrencies =
+          fromMaybe
+            [btc, usd]
+            (mSt ^? _Just . #modelCurrencies),
+        modelSnackbarQueue =
+          fromMaybe
+            Snackbar.initialQueue
+            (mSt ^? _Just . #modelSnackbarQueue),
+        modelProducerQueue = prod,
+        modelConsumerQueue = cons,
+        modelOnlineAt = fromMaybe ct (mSt ^? _Just . #modelOnlineAt),
+        modelWebOpts = webOpts
+      }
 
 --
 -- Const

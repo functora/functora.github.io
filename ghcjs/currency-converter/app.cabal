@@ -106,15 +106,16 @@ common pkg
     TypeOperators
 
   build-depends:
+    , async
     , barbies
     , base
     , base64-bytestring
     , binary
     , bytestring
+    , containers
     , functora-ghcjs
     , fuzzy
     , jsaddle
-    , memoize
     , miso
     , miso-components
     , modern-uri
@@ -122,6 +123,7 @@ common pkg
     , random
     , syb
     , text
+    , uglymemo
 
   if os(wasi)
     build-depends: jsaddle-wasm

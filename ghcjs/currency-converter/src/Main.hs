@@ -175,9 +175,6 @@ updateModel (PushUpdate newUpdater) st = do
     [ do
         updater <- newUpdater
         Misc.pushActionQueue st updater
-        -- void . spawnLink $ do
-        --   sleepMilliSeconds 300
-        --   Misc.pushActionQueue st $ ChanItem 0 id
         pure Noop
     ]
 
@@ -249,7 +246,13 @@ evalModel raw = do
       )
       ( raw ^. #modelState
       )
-  let st = raw & #modelState .~ new
+  curs <-
+    withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+      . fmap (fromRight $ raw ^. #modelCurrencies)
+      . tryMarket
+      . fmap (^. #currenciesList)
+      $ getCurrencies (raw ^. #modelWebOpts)
+  let st = raw & #modelState .~ new & #modelCurrencies .~ curs
   let loc = st ^. #modelState . #stDoc . #stDocConv . #stConvTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc

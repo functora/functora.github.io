@@ -43,11 +43,7 @@ menu st =
                     [ style_ [("cursor", "pointer")],
                       onClick . PushUpdate $ do
                         uri <- URI.mkURI $ fromMisoString baseUri
-                        new <-
-                          newModel
-                            (st ^. #modelWebOpts)
-                            (Just $ st ^. #modelMarket)
-                            uri
+                        new <- newModel (st ^. #modelWebOpts) (Just st) uri
                         pure
                           . ChanItem 0
                           $ const new
@@ -181,7 +177,7 @@ menu st =
     screen fun =
       PushUpdate $ do
         uri <- URI.mkURI $ shareLink (fun sc) st
-        new <- newModel (st ^. #modelWebOpts) (Just $ st ^. #modelMarket) uri
+        new <- newModel (st ^. #modelWebOpts) (Just st) uri
         pure . ChanItem 0 $ const new
     sc =
       fromMaybe

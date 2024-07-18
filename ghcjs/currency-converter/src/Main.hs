@@ -226,6 +226,13 @@ syncInputs =
       el <- getElementById . htmlUid @Text $ txt ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
+        tf <- el ! ("textField_" :: Text)
+        tn <- tf ! ("input_" :: Text) ! ("tagName" :: Text)
+        tnIn <- JS.toJSVal ("INPUT" :: Text)
+        tnEq <- JS.strictEqual tn tnIn
+        unless tnEq $ do
+          void $ tf ^. JS.js0 ("destroy" :: Text)
+          void $ tf ^. JS.js0 ("initialize" :: Text)
         inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)
         inp <- inps !! 0
         act <- JS.global ! ("document" :: Text) ! ("activeElement" :: Text)

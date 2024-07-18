@@ -157,6 +157,7 @@ library
     Functora.Prelude
     Functora.PreludeOrphan
     Functora.Qr
+    Functora.QrOrphan
     Functora.Rates
     Functora.Tags
     Functora.Web
@@ -210,6 +211,7 @@ test-suite functora-ghcjs-test
     Functora.Prelude
     Functora.PreludeOrphan
     Functora.Qr
+    Functora.QrOrphan
     Functora.Rates
     Functora.Soplate
     Functora.Tags

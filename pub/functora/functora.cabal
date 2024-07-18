@@ -253,7 +253,9 @@ library qr
   build-depends:   functora
   exposed:         True
   visibility:      public
-  exposed-modules: Functora.Qr
+  exposed-modules:
+    Functora.Qr
+    Functora.QrOrphan
 
 library aes
   import:          pkg-aes
@@ -385,6 +387,7 @@ test-suite functora-test
       Functora.Prelude
       Functora.PreludeOrphan
       Functora.Qr
+      Functora.QrOrphan
       Functora.Rates
       Functora.Soplate
       Functora.Sql

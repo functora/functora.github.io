@@ -4,9 +4,9 @@ import qualified Codec.QRCode as QR
 import qualified Codec.QRCode as QRCode
 import Functora.Prelude
 import Functora.Qr
+import Functora.QrOrphan ()
 import Test.Hspec
-
--- import qualified Prelude
+import qualified Prelude
 
 sample :: Maybe QR.QRImage
 sample =
@@ -22,17 +22,16 @@ sampleUri =
 spec :: Spec
 spec = do
   it "sampleUri" $ do
-    -- ts0 <- liftIO getCurrentTime
-    let res :: Maybe Text =
-          fmap (qrToBmpDataUrlTL (Border 0) (Scale 5))
-            $ QRCode.encodeAutomatic
-              (QRCode.defaultQRCodeOptions QRCode.L)
-              QRCode.Iso8859_1OrUtf8WithoutECI
-              sampleUri
-    -- putStrLn $ Prelude.show res
-    -- ts1 <- liftIO getCurrentTime
-    -- putStrLn . Prelude.show $ diffUTCTime ts1 ts0
-    res `shouldSatisfy` isJust
+    ts0 <- liftIO getCurrentTime
+    let qr =
+          QRCode.encodeAutomatic
+            (QRCode.defaultQRCodeOptions QRCode.L)
+            QRCode.Iso8859_1OrUtf8WithoutECI
+            sampleUri
+    let bmp1 = qrToBmp 0 5 <$> qr
+    ts1 <- deepseq bmp1 $ liftIO getCurrentTime
+    putStrLn . Prelude.show $ diffUTCTime ts1 ts0
+    True `shouldBe` True
   it "qrToBmpDataUrlTL/0/0" $ do
     qrToBmpDataUrlTL @Text 0 0 <$> sample
       `shouldBe` Just

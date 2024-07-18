@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Functora.Qr
   ( -- * Image
     Border (..),
@@ -50,18 +48,18 @@ qrToBmp ::
   -- | The QRImage
   QRImage ->
   BMP
-qrToBmp border scale QRImage {..}
+qrToBmp border scale QRImage {qrImageSize = qrSize, qrImageData = qrData}
   | border <= 0 && scale <= 1 =
       BMP.packRGBA32ToBMP
-        qrImageSize
-        qrImageSize
+        qrSize
+        qrSize
         . BS.pack
         . (>>= (\x -> [x, x, x, xff]))
-        $ map (bool xff x00) (UV.toList qrImageData)
-qrToBmp border' scale' QRImage {..} =
+        $ map (bool xff x00) (UV.toList qrData)
+qrToBmp border' scale' QRImage {qrImageSize = qrSize, qrImageData = qrData} =
   let border = border' `max` 0
       scale = scale' `max` 1
-      size = (qrImageSize + 2 * (unBorder border)) * (unScale scale)
+      size = (qrSize + 2 * (unBorder border)) * (unScale scale)
    in BMP.packRGBA32ToBMP
         size
         size
@@ -70,19 +68,19 @@ qrToBmp border' scale' QRImage {..} =
         . concat
         . doScale scale
         . addBorder border
-        $ toMatrix qrImageData
+        $ toMatrix qrData
   where
     toMatrix :: UV.Vector Bool -> [[Word8]]
     toMatrix img
       | UV.null img = []
       | otherwise =
-          let (h, t) = UV.splitAt qrImageSize img
+          let (h, t) = UV.splitAt qrSize img
            in map (bool xff x00) (UV.toList h) : toMatrix t
     addBorder :: Border -> [[Word8]] -> [[Word8]]
     addBorder 0 img = img
     addBorder (Border n) img = topBottom ++ addLeftRight img ++ topBottom
       where
-        topBottom = [replicate ((qrImageSize + 2 * n) * n) xff]
+        topBottom = [replicate ((qrSize + 2 * n) * n) xff]
         leftRight = replicate n xff
         addLeftRight = map (\x -> leftRight ++ x ++ leftRight)
     doScale :: Scale -> [[Word8]] -> [[Word8]]

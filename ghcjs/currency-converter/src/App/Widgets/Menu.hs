@@ -43,10 +43,8 @@ menu st =
                     [ style_ [("cursor", "pointer")],
                       onClick . PushUpdate $ do
                         uri <- URI.mkURI $ fromMisoString baseUri
-                        new <- newModel (st ^. #modelWebOpts) (Just st) uri
-                        pure
-                          . ChanItem 0
-                          $ const new
+                        new <- newModel (st ^. #modelWebOpts) Nothing uri
+                        pure . ChanItem 0 $ const new
                     ]
                     [ text "Currency Converter"
                     ]
@@ -176,12 +174,12 @@ menu st =
     closed = pureUpdate 0 (& #modelMenu .~ Closed)
     screen fun =
       PushUpdate $ do
-        let next = fun sc
-        let hide = (next /= sc) && (next /= unQrCode next)
-        uri <- URI.mkURI $ shareLink next st
+        let nextSc = fun prevSc
+        let loading = (nextSc /= prevSc) && (nextSc /= unQrCode nextSc)
+        uri <- URI.mkURI $ shareLink nextSc st
         new <- newModel (st ^. #modelWebOpts) (Just st) uri
-        pure . ChanItem 0 . const $ new & #modelHide .~ hide
-    sc =
+        pure . ChanItem 0 . const $ new & #modelLoading .~ loading
+    prevSc =
       fromMaybe
         (st ^. #modelState . #stScreen)
         (st ^? #modelState . #stExt . _Just . #stExtScreen)
@@ -192,7 +190,10 @@ menu st =
     navItem x =
       div_
         [ TopAppBar.title,
-          style_ [("padding", "0")]
+          style_
+            [ ("padding-left", "0"),
+              ("padding-right", "10px")
+            ]
         ]
         [ x
         ]

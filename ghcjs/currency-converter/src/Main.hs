@@ -47,7 +47,7 @@ main =
       st <- newModel web Nothing uri
       startApp
         App
-          { model = st & #modelHide .~ True,
+          { model = st & #modelLoading .~ True,
             update = updateModel,
             Miso.view = viewModel,
             subs = mempty,
@@ -122,7 +122,7 @@ updateModel InitUpdate prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelHide .~ False)
+        Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
         pure $ ChanUpdate nextSt
     ]
 updateModel TimeUpdate st = do
@@ -163,18 +163,18 @@ updateModel (ChanUpdate prevSt) _ = do
           handleAny
             ( \e -> do
                 maxAttention e
-                pure $ prevSt & #modelHide .~ False
+                pure $ prevSt & #modelLoading .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-        if nextSt ^. #modelHide
+        if nextSt ^. #modelLoading
           then do
             void
               . spawnLink
               . deepseq (viewModel nextSt)
               . Misc.pushActionQueue prevSt
-              $ ChanItem 0 (const $ nextSt & #modelHide .~ False)
+              $ ChanItem 0 (const $ nextSt & #modelLoading .~ False)
             pure
-              $ ChanUpdate (prevSt & #modelHide .~ True)
+              $ ChanUpdate (prevSt & #modelLoading .~ True)
           else
             pure
               $ ChanUpdate nextSt

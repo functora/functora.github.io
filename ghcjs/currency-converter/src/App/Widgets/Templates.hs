@@ -511,10 +511,10 @@ newModel webOpts mSt uri = do
       mApp
   pure
     Model
-      { modelHide = False,
-        modelMenu = Closed,
+      { modelMenu = Closed,
         modelTemplates = Closed,
         modelExamples = Closed,
+        modelLoading = False,
         modelState =
           St
             { stScreen = sc,

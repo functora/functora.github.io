@@ -36,7 +36,7 @@ mainWidget st =
               --
               -- NOTE : Hiding widget on the first render to avoid flickering.
               --
-              <> ( if st ^. #modelHide
+              <> ( if st ^. #modelLoading
                     then [style_ [("display", "none")]]
                     else mempty
                  )
@@ -55,7 +55,7 @@ mainWidget st =
                  ]
           )
       ]
-    <> ( if st ^. #modelHide
+    <> ( if st ^. #modelLoading
           then [div_ [class_ "lds-dual-ring"] mempty]
           else mempty
        )

@@ -78,10 +78,10 @@ import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelHide :: Bool,
-    modelMenu :: OpenedOrClosed,
+  { modelMenu :: OpenedOrClosed,
     modelTemplates :: OpenedOrClosed,
     modelExamples :: OpenedOrClosed,
+    modelLoading :: Bool,
     modelState :: St Unique,
     --
     -- TODO : modelStateHistory :: [St Unique]

@@ -176,9 +176,11 @@ menu st =
     closed = pureUpdate 0 (& #modelMenu .~ Closed)
     screen fun =
       PushUpdate $ do
-        uri <- URI.mkURI $ shareLink (fun sc) st
+        let next = fun sc
+        let hide = (next /= sc) && (next /= unQrCode next)
+        uri <- URI.mkURI $ shareLink next st
         new <- newModel (st ^. #modelWebOpts) (Just st) uri
-        pure . ChanItem 0 $ const new
+        pure . ChanItem 0 . const $ new & #modelHide .~ hide
     sc =
       fromMaybe
         (st ^. #modelState . #stScreen)

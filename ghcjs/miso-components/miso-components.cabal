@@ -13,6 +13,7 @@ common pkg
     , aeson
     , base
     , containers
+    , deepseq
     , miso
 
   ghc-options:

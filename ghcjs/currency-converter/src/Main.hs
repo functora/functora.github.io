@@ -166,8 +166,18 @@ updateModel (ChanUpdate prevSt) _ = do
                 pure $ prevSt & #modelHide .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-        pure
-          $ ChanUpdate nextSt
+        if nextSt ^. #modelHide
+          then do
+            void
+              . spawnLink
+              . deepseq (viewModel nextSt)
+              . Misc.pushActionQueue prevSt
+              $ ChanItem 0 (const $ nextSt & #modelHide .~ False)
+            pure
+              $ ChanUpdate (prevSt & #modelHide .~ True)
+          else
+            pure
+              $ ChanUpdate nextSt
     ]
 updateModel (PushUpdate newUpdater) st = do
   batchEff

@@ -47,7 +47,7 @@ main =
       st <- newModel web Nothing uri
       startApp
         App
-          { model = st & #modelLoading .~ True,
+          { model = st,
             update = updateModel,
             Miso.view = viewModel,
             subs = mempty,

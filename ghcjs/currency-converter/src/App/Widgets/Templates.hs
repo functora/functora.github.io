@@ -111,7 +111,7 @@ templates optic tpls sc st =
                 . #stExt
                 .~ Nothing
         uri <- URI.mkURI $ shareLink (fun sc) next
-        new <- newModel (st ^. #modelWebOpts) (Just st) uri
+        new <- newModel (st ^. #modelWebOpts) (Just next) uri
         pure . ChanItem 0 $ const new
 
 --
@@ -514,7 +514,7 @@ newModel webOpts mSt uri = do
       { modelMenu = Closed,
         modelTemplates = Closed,
         modelExamples = Closed,
-        modelLoading = False,
+        modelLoading = True,
         modelState =
           St
             { stScreen = sc,

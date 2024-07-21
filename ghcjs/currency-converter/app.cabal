@@ -33,7 +33,6 @@ common pkg
     App.Widgets.Chips
     App.Widgets.Currency
     App.Widgets.Decrypt
-    App.Widgets.EditorSettings
     App.Widgets.Field
     App.Widgets.FieldPairs
     App.Widgets.Frame

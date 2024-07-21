@@ -108,10 +108,6 @@ menu st =
     navItemRight x =
       div_
         [ TopAppBar.title
-        -- style_
-        --   [ ("padding-right", "14px"),
-        --     ("padding-right", "0")
-        --   ]
         ]
         [ x
         ]

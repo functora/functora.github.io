@@ -3,15 +3,11 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
-import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
-import qualified App.Widgets.EditorSettings as EditorSettings
 import qualified App.Widgets.Field as Field
-import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
-import qualified App.Widgets.PaymentMethods as PaymentMethods
 import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Money
@@ -161,162 +157,6 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               . to inspect
           ]
       ]
-screenWidget st@Model {modelState = St {stScreen = Editor}} =
-  Header.headerEditor
-    st
-    ( #modelState
-        . #stDoc
-        . #stDocFieldPairsHeader
-    )
-    ( Field.defOpts
-        & #optsPlaceholder
-        .~ ( "Header - "
-              <> ( st
-                    ^. #modelState
-                    . #stDoc
-                    . #stDocFieldPairsHeader
-                    . #fieldType
-                    . to userFieldType
-                 )
-           )
-        & #optsLeadingWidget
-        .~ Just
-          ( Field.ModalWidget
-              $ Field.ModalMiniWidget
-                ( #modelState
-                    . #stDoc
-                    . #stDocFieldPairsHeader
-                )
-          )
-        & #optsTrailingWidget
-        .~ Just
-          ( Field.ActionWidget "add_box" [Theme.primary]
-              . Misc.newFieldPairAction
-              $ #modelState
-              . #stDoc
-              . #stDocFieldPairs
-          )
-    )
-    <> FieldPairs.fieldPairs
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocFieldPairs
-      )
-    <> Header.headerEditor
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocAssetsHeader
-      )
-      ( Field.defOpts
-          & #optsPlaceholder
-          .~ ( "Assets - "
-                <> ( st
-                      ^. #modelState
-                      . #stDoc
-                      . #stDocAssetsHeader
-                      . #fieldType
-                      . to userFieldType
-                   )
-             )
-          & #optsLeadingWidget
-          .~ Just
-            ( Field.ModalWidget
-                $ Field.ModalMiniWidget
-                  ( #modelState
-                      . #stDoc
-                      . #stDocAssetsHeader
-                  )
-            )
-          & #optsTrailingWidget
-          .~ Just
-            ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newAssetAction
-                $ #modelState
-                . #stDoc
-                . #stDocAssets
-            )
-      )
-    <> Assets.assets
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocAssets
-      )
-    <> Header.headerEditor
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocPaymentMethodsHeader
-      )
-      ( Field.defOpts
-          & #optsPlaceholder
-          .~ ( "Payments - "
-                <> ( st
-                      ^. #modelState
-                      . #stDoc
-                      . #stDocPaymentMethodsHeader
-                      . #fieldType
-                      . to userFieldType
-                   )
-             )
-          & #optsLeadingWidget
-          .~ Just
-            ( Field.ModalWidget
-                $ Field.ModalMiniWidget
-                  ( #modelState
-                      . #stDoc
-                      . #stDocPaymentMethodsHeader
-                  )
-            )
-          & #optsTrailingWidget
-          .~ Just
-            ( Field.ActionWidget "add_box" [Theme.primary]
-                . Misc.newPaymentMethodAction
-                $ #modelState
-                . #stDoc
-                . #stDocPaymentMethods
-            )
-      )
-    <> PaymentMethods.paymentMethods
-      st
-      ( #modelState
-          . #stDoc
-          . #stDocPaymentMethods
-      )
-    <> EditorSettings.editorSettings st
-screenWidget st@Model {modelState = St {stScreen = Viewer}} =
-  let assets =
-        Header.headerWrapper
-          ( Field.dynamicFieldViewer
-              st
-              (st ^. #modelState . #stDoc . #stDocAssetsHeader)
-          )
-          <> Assets.assetsViewer
-            st
-            (st ^. #modelState . #stDoc . #stDocAssets)
-      payments =
-        Header.headerWrapper
-          ( Field.dynamicFieldViewer
-              st
-              (st ^. #modelState . #stDoc . #stDocPaymentMethodsHeader)
-          )
-          <> PaymentMethods.paymentMethodsViewer
-            st
-            (st ^. #modelState . #stDoc . #stDocPaymentMethods)
-   in Header.headerWrapper
-        ( Field.dynamicFieldViewer
-            st
-            (st ^. #modelState . #stDoc . #stDocFieldPairsHeader)
-        )
-        <> FieldPairs.fieldPairsViewer
-          st
-          (st ^. #modelState . #stDoc . #stDocFieldPairs)
-        <> ( case st ^. #modelState . #stDoc . #stDocAssetsAndPaymentsLayout of
-              AssetsBeforePayments -> assets <> payments
-              PaymentsBeforeAssets -> payments <> assets
-           )
 
 tosWidget :: View Action
 tosWidget =

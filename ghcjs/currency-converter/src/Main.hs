@@ -309,10 +309,9 @@ evalModel raw = do
             . #currencyOutput
             . #currencyInfoCode
         let quoteAmt = quoteMoneyAmount quote
-        next <- evalInvoice st
         ct <- getCurrentTime
         pure
-          $ next
+          $ st
           & cloneLens baseLens
           . #moneyAmount
           . #fieldInput
@@ -338,83 +337,6 @@ evalModel raw = do
           .~ quoteCreatedAt quote
           & #modelOnlineAt
           .~ ct
-
-evalInvoice ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Model ->
-  ReaderT (MVar Market) m Model
-evalInvoice st = do
-  mtds <- forM (st ^. #modelState . #stDoc . #stDocPaymentMethods) $ \mtd -> do
-    total <-
-      foldM
-        (\acc -> fmap (+ acc) . getTotalPayment st mtd)
-        0
-        (st ^. #modelState . #stDoc . #stDocAssets)
-    pure
-      $ mtd
-      & #paymentMethodMoney
-      . #moneyAmount
-      . #fieldInput
-      . #uniqueValue
-      .~ inspectRatioDef @Text total
-      & #paymentMethodMoney
-      . #moneyAmount
-      . #fieldOutput
-      .~ total
-  pure
-    $ st
-    & #modelState
-    . #stDoc
-    . #stDocPaymentMethods
-    .~ mtds
-
-getTotalPayment ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Model ->
-  PaymentMethod Unique ->
-  Asset Unique ->
-  ReaderT (MVar Market) m Rational
-getTotalPayment st method asset = do
-  quote <-
-    getQuote
-      ( st ^. #modelWebOpts
-      )
-      ( Funds (Tagged total)
-          $ asset
-          ^. #assetPrice
-          . #moneyCurrency
-          . #currencyOutput
-          . #currencyInfoCode
-      )
-      ( method
-          ^. #paymentMethodMoney
-          . #moneyCurrency
-          . #currencyOutput
-          . #currencyInfoCode
-      )
-  pure $ quote ^. #quoteMoneyAmount . to unTagged
-  where
-    price = asset ^. #assetPrice . #moneyAmount . #fieldOutput
-    total =
-      foldl
-        ( \acc Field {fieldType = typ, fieldOutput = out} ->
-            case out of
-              DynamicFieldNumber x
-                | typ == FieldTypeNumber ->
-                    acc * x
-              DynamicFieldNumber x
-                | typ == FieldTypePercent ->
-                    acc * (1 + (x / 100))
-              _ ->
-                acc
-        )
-        price
-        ( fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
-        )
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case

@@ -79,8 +79,6 @@ import qualified Text.URI as URI
 
 data Model = Model
   { modelMenu :: OpenedOrClosed,
-    modelTemplates :: OpenedOrClosed,
-    modelExamples :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelMarket :: MVar Market,
@@ -198,13 +196,7 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
   { stDocConv :: StConv f,
-    stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocAssets :: [Asset f],
-    stDocPaymentMethods :: [PaymentMethod f],
-    stDocFieldPairsHeader :: Field DynamicField f,
-    stDocAssetsHeader :: Field DynamicField f,
-    stDocPaymentMethodsHeader :: Field DynamicField f,
-    stDocAssetsAndPaymentsLayout :: AssetsAndPaymentsLayout
+    stDocFieldPairs :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
 
@@ -299,8 +291,6 @@ data ChanItem a = ChanItem
 
 data Screen
   = Converter
-  | Editor
-  | Viewer
   | QrCode Screen
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType Screen

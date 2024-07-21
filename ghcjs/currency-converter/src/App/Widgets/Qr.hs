@@ -56,7 +56,8 @@ qr st txt opts
               $ TextArea.config
               & TextArea.setValue (Just $ from @Text @String txt)
               & TextArea.setDisabled True
-              & TextArea.setFullwidth True,
+              & TextArea.setFullwidth True
+              & TextArea.setInnerView [text txt],
             extraCell
               $ Button.raised
                 ( Button.config

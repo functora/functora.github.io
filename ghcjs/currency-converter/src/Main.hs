@@ -226,23 +226,19 @@ extendedEvents =
 -- https://github.com/dmjio/miso/issues/272
 --
 syncInputs :: Model -> JSM ()
-syncInputs =
+syncInputs st = do
+  void
+    . JS.eval @Text
+    $ "Array.from(document.getElementsByTagName('mdc-text-field')).forEach( function (x) { if ( (x.getElementsByTagName('input')[0] && x.textField_.input_.tagName != 'INPUT') || (x.getElementsByTagName('textarea')[0] && x.textField_.input_.tagName != 'TEXTAREA')) { x.textField_.destroy(); x.textField_.initialize(); } });"
   void
     . Syb.everywhereM (Syb.mkM fun)
-    . modelState
+    $ modelState st
   where
     fun :: Unique Text -> JSM (Unique Text)
     fun txt = do
       el <- getElementById . htmlUid @Text $ txt ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
-        tf <- el ! ("textField_" :: Text)
-        tn <- tf ! ("input_" :: Text) ! ("tagName" :: Text)
-        tnIn <- JS.toJSVal ("INPUT" :: Text)
-        tnEq <- JS.strictEqual tn tnIn
-        unless tnEq $ do
-          void $ tf ^. JS.js0 ("destroy" :: Text)
-          void $ tf ^. JS.js0 ("initialize" :: Text)
         inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)
         inp <- inps !! 0
         act <- JS.global ! ("document" :: Text) ! ("activeElement" :: Text)

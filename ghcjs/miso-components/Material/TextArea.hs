@@ -5,6 +5,7 @@ module Material.TextArea
     config,
     setOnInput,
     setOnChange,
+    setInnerView,
     setLabel,
     setFullwidth,
     setValue,
@@ -46,7 +47,8 @@ data Config msg = Config
     maxLength :: Maybe Int,
     additionalAttributes :: [Miso.Attribute msg],
     onInput :: Maybe (String -> msg),
-    onChange :: Maybe (String -> msg)
+    onChange :: Maybe (String -> msg),
+    innerView :: [Miso.View msg]
   }
 
 -- | Default configuration of a text area
@@ -66,7 +68,8 @@ config =
       maxLength = Nothing,
       additionalAttributes = [],
       onInput = Nothing,
-      onChange = Nothing
+      onChange = Nothing,
+      innerView = []
     }
 
 -- | Specify a text area's label
@@ -142,6 +145,10 @@ setOnInput onInput config_ =
 setOnChange :: (String -> msg) -> Config msg -> Config msg
 setOnChange onChange config_ =
   config_ {onChange = Just onChange}
+
+setInnerView :: [Miso.View msg] -> Config msg -> Config msg
+setInnerView innerView config_ =
+  config_ {innerView = innerView}
 
 -- | Filled text area view function
 filled :: Config msg -> Miso.View msg
@@ -271,7 +278,7 @@ inputElt config_ =
           maxLengthAttr config_
         ]
     )
-    []
+    $ innerView config_
 
 inputCs :: Maybe (Miso.Attribute msg)
 inputCs =

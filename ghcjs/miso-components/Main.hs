@@ -64,6 +64,7 @@ import Material.TopAppBar as MTAB
 import Material.Typography as MTY
 import Miso
 import Miso.String
+import qualified Material.TextArea as TextArea
 
 (|>) = (Data.Function.&)
 

@@ -273,6 +273,7 @@ inputElt config_ =
           colsAttr config_,
           placeholderAttr config_,
           inputHandler config_,
+          disabledProp config_,
           changeHandler config_,
           minLengthAttr config_,
           maxLengthAttr config_

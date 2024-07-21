@@ -89,6 +89,7 @@ withNewMarket opts expr = do
 
 data QuoteAt = QuoteAt
   { quoteMoneyAmount :: Money (Tags 'Signed |+| 'Quote |+| 'MoneyAmount),
+    quoteCreatedAt :: UTCTime,
     quoteUpdatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -115,8 +116,8 @@ getQuote opts baseFunds quoteCurrency = do
           { quoteMoneyAmount =
               exchangeMoney @(Tags 'Signed) quotesPerBase
                 $ fundsMoneyAmount baseFunds,
-            quoteUpdatedAt =
-              quotesPerBaseUpdatedAt quotes
+            quoteCreatedAt = quotesPerBaseCreatedAt quotes,
+            quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
           }
 
 getMarket ::

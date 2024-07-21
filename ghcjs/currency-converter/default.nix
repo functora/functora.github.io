@@ -1,8 +1,8 @@
 let
   # functora = ../..;
   functora = fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/65d39ac85819dfd020849edd6756ec0c08df67fd.tar.gz";
-    sha256 = "0mldaxb9qhhbpqxs1jafw370aiv05afdxvb759rrzl9y6926pw1i";
+    url = "https://github.com/functora/functora.github.io/archive/1efa0f262248da24940f4b8cdd74fb72ac19c327.tar.gz";
+    sha256 = "1y74sram3brxffnkw0myfsw4w9s4fzi31cymj37zwb2jayfzwydq";
   };
   legacy = fetchTarball {
     url = "https://github.com/functora/functora.github.io/archive/7a06c850a579058f495ca2d7e5e2f8682ea0998f.tar.gz";

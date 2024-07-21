@@ -46,6 +46,9 @@ textarea {
   .no-print {
     display: none !important;
   }
+  .mdc-top-app-bar--short-fixed-adjust {
+    padding-top: 0 !important;
+  }
   @page {
     size: A4;
     margin: 15mm;

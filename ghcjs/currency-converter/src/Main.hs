@@ -331,6 +331,11 @@ evalModel raw = do
           . #moneyAmount
           . #fieldOutput
           .~ unTagged quoteAmt
+          & #modelState
+          . #stDoc
+          . #stDocConv
+          . #stConvCreatedAt
+          .~ quoteCreatedAt quote
           & #modelOnlineAt
           .~ ct
 

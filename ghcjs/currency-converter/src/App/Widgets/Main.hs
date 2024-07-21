@@ -142,7 +142,24 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         amountWidget' Bottom,
         currencyWidget' Bottom,
         SwapAmounts.swapAmounts,
-        Currency.swapCurrencies
+        Currency.swapCurrencies,
+        LayoutGrid.cell
+          [ LayoutGrid.span12,
+            Typography.caption,
+            style_
+              [ ("text-align", "center")
+              ]
+          ]
+          [ Miso.text
+              . ("Rates updated at " <>)
+              $ st
+              ^. #modelState
+              . #stDoc
+              . #stDocConv
+              . #stConvCreatedAt
+              . to utctDay
+              . to inspect
+          ]
       ]
 screenWidget st@Model {modelState = St {stScreen = Editor}} =
   Header.headerEditor
@@ -306,6 +323,7 @@ tosWidget =
   LayoutGrid.cell
     [ LayoutGrid.span12,
       Typography.caption,
+      Theme.textDisabledOnBackground,
       class_ "no-print",
       style_
         [ ("text-align", "center")

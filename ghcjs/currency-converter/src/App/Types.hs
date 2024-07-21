@@ -83,9 +83,6 @@ data Model = Model
     modelExamples :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    --
-    -- TODO : modelStateHistory :: [St Unique]
-    --
     modelMarket :: MVar Market,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
@@ -180,7 +177,8 @@ deriving via
 data StConv f = StConv
   { stConvTopMoney :: Money f,
     stConvBottomMoney :: Money f,
-    stConvTopOrBottom :: TopOrBottom
+    stConvTopOrBottom :: TopOrBottom,
+    stConvCreatedAt :: UTCTime
   }
   deriving stock (Generic)
 

@@ -419,13 +419,15 @@ invoiceExample = do
 
 newStConv :: (MonadThrow m, MonadUnliftIO m) => m (StConv Unique)
 newStConv = do
+  ct <- getCurrentTime
   topMoney <- newMoney 1 btc
   bottomMoney <- newMoney 0 usd
   pure
     StConv
       { stConvTopMoney = topMoney,
         stConvBottomMoney = bottomMoney,
-        stConvTopOrBottom = Top
+        stConvTopOrBottom = Top,
+        stConvCreatedAt = ct
       }
 
 newModel ::

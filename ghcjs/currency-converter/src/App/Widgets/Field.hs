@@ -790,6 +790,16 @@ constTextField st txt opts =
               )
               (opts ^. #optsLeadingWidget)
           )
+        & TextField.setTrailingIcon
+          ( fmap
+              ( \case
+                  ActionWidget icon attrs action ->
+                    fieldIconSimple Trailing icon attrs action
+                  _ ->
+                    error "constTextField unsupported widget"
+              )
+              (opts ^. #optsTrailingWidget)
+          )
         & TextField.setAttributes
           ( ( if opts ^. #optsFullWidth
                 then [class_ "fill"]

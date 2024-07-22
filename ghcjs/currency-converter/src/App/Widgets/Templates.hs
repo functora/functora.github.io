@@ -19,7 +19,8 @@ newStDoc = do
   pure
     StDoc
       { stDocConv = conv,
-        stDocFieldPairs = mempty
+        stDocFieldPairs = mempty,
+        stDocOnlineOrOffline = Online
       }
 
 newStConv :: (MonadThrow m, MonadUnliftIO m) => m (StConv Unique)

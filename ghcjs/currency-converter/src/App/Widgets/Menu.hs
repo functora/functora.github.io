@@ -7,11 +7,14 @@ import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Field as Field
 import App.Widgets.Templates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
+import qualified Material.Select as Select
+import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import Miso hiding (view)
@@ -42,7 +45,11 @@ menu st =
                     [ style_ [("cursor", "pointer")],
                       onClick . PushUpdate $ do
                         doc <- liftIO newStDoc
-                        pure . ChanItem 0 $ (& #modelState . #stDoc .~ doc)
+                        pure
+                          . ChanItem 0
+                          $ (& #modelState . #stDoc .~ doc)
+                          . (& #modelState . #stExt .~ Nothing)
+                          . (& #modelState . #stScreen .~ Converter)
                     ]
                     [ text "Currency Converter"
                     ]
@@ -113,7 +120,7 @@ menu st =
                 Nothing
                 [ Cell.grid
                     mempty
-                    [ Cell.bigCell
+                    [ Cell.mediumCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick
@@ -136,6 +143,74 @@ menu st =
                         $ if unQrCode sc == sc
                           then "QR"
                           else "Converter",
+                      let item :| items = enumerateNE @OnlineOrOffline
+                       in Cell.mediumCell
+                            $ Select.outlined
+                              ( Select.config
+                                  & Select.setLabel
+                                    ( Just "Exchange rates"
+                                    )
+                                  & Select.setAttributes
+                                    [ class_ "fill-inner"
+                                    ]
+                                  & Select.setSelected
+                                    ( Just
+                                        $ st
+                                        ^. #modelState
+                                        . #stDoc
+                                        . #stDocOnlineOrOffline
+                                    )
+                                  & Select.setOnChange
+                                    ( \x ->
+                                        pureUpdate
+                                          0
+                                          ( &
+                                              #modelState
+                                                . #stDoc
+                                                . #stDocOnlineOrOffline
+                                                .~ x
+                                          )
+                                    )
+                              )
+                              ( SelectItem.selectItem
+                                  (SelectItem.config item)
+                                  [text $ inspect item]
+                              )
+                            $ fmap
+                              ( \x ->
+                                  SelectItem.selectItem
+                                    (SelectItem.config x)
+                                    [text $ inspect x]
+                              )
+                              items,
+                      Cell.mediumCell
+                        $ Field.field
+                          st
+                          ( #modelState . #stPre
+                          )
+                          ( Field.defOpts
+                              & #optsPlaceholder
+                              .~ ( "Preview - "
+                                    <> ( st
+                                          ^. #modelState
+                                          . #stPre
+                                          . #fieldType
+                                          . to userFieldType
+                                       )
+                                 )
+                              & #optsLeadingWidget
+                              .~ Just
+                                ( Field.ModalWidget
+                                    $ Field.ModalMiniWidget (#modelState . #stPre)
+                                )
+                          )
+                          parseDynamicField
+                          inspectDynamicField,
+                      Cell.mediumCell
+                        $ Field.passwordField
+                          st
+                          (#modelState . #stIkm)
+                          Field.defOpts,
                       Cell.bigCell
                         $ Button.raised
                           ( Button.config

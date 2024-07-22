@@ -40,7 +40,7 @@ main =
   withUtf8
     . runApp
     . forever
-    . handleAny (\e -> maxAttention e >> sleepSeconds 5)
+    . handleAny (\e -> log e >> sleepSeconds 5)
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
       ext <- unShareUri uri
@@ -174,7 +174,7 @@ updateModel (ChanUpdate prevSt) _ = do
         nextSt <-
           handleAny
             ( \e -> do
-                maxAttention e
+                log e
                 pure $ prevSt & #modelLoading .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
@@ -363,10 +363,8 @@ upToDate lhs rhs =
   where
     diff = abs . toRational $ diffUTCTime lhs rhs
 
-maxAttention :: (Show a, Data a) => a -> JSM ()
-maxAttention e = do
-  consoleLog $ inspectMiso e
-  alert $ inspectMiso e
+log :: (Show a, Data a) => a -> JSM ()
+log = consoleLog . inspectMiso
 
 insertCurrentUri :: Model -> JSM ()
 insertCurrentUri st = do
@@ -377,22 +375,19 @@ insertCurrentUri st = do
 
 selectCurrentUri :: (Maybe URI.URI -> JSM ()) -> JSM ()
 selectCurrentUri after = do
-  success <-
-    JS.function $ \_ _ -> \case
+  success <- JS.function $ \_ _ ->
+    handleAny (\e -> log e >> after Nothing) . \case
       [val] -> do
         valExist <- ghcjsPure $ JS.isTruthy val
         if not valExist
           then after Nothing
           else do
-            mStr <- JS.fromJSVal @Text val
-            case mStr of
-              Nothing -> maxAttention @Text "Storage bad type!"
-              Just str ->
-                case URI.mkURI $ fromMisoString str of
-                  Left e -> maxAttention $ "Storage bad URI " <> inspect @Text e
-                  Right uri -> after $ Just uri
+            raw <- JS.fromJSVal @Text val
+            str <- maybe (throwString @Text "Storage bad type!") pure raw
+            uri <- URI.mkURI $ fromMisoString str
+            after $ Just uri
       _ ->
-        maxAttention @Text "Storage bad argv!"
-  failure <- JS.function $ \_ _ _ -> maxAttention @Text "Storage reader failure!"
+        throwString @Text "Storage bad argv!"
+  failure <- JS.function $ \_ _ _ -> log @Text "Storage reader failure!"
   prom <- JS.global ^. JS.js1 ("selectStorage" :: Text) ("current-" <> vsn)
   void $ prom ^. JS.js2 ("then" :: Text) success failure

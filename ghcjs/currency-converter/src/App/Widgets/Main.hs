@@ -133,30 +133,40 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         Currency.selectCurrency st
           . cloneLens
           . Misc.getConverterCurrencyOptic
-   in [ amountWidget' Top,
-        currencyWidget' Top,
-        amountWidget' Bottom,
-        currencyWidget' Bottom,
-        SwapAmounts.swapAmounts,
-        Currency.swapCurrencies,
-        LayoutGrid.cell
-          [ LayoutGrid.span12,
-            Typography.caption,
-            style_
-              [ ("text-align", "center")
+   in Header.headerWrapper
+        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
+        )
+        <> [ amountWidget' Top,
+             currencyWidget' Top,
+             amountWidget' Bottom,
+             currencyWidget' Bottom,
+             SwapAmounts.swapAmounts,
+             Currency.swapCurrencies,
+             LayoutGrid.cell
+              [ LayoutGrid.span12,
+                Typography.caption,
+                style_
+                  [ ("text-align", "center")
+                  ]
               ]
-          ]
-          [ Miso.text
-              . ("Rates updated at " <>)
-              $ st
-              ^. #modelState
-              . #stDoc
-              . #stDocConv
-              . #stConvCreatedAt
-              . to utctDay
-              . to inspect
-          ]
-      ]
+              [ Miso.text
+                  $ inspectMiso
+                    ( st
+                        ^. #modelState
+                        . #stDoc
+                        . #stDocOnlineOrOffline
+                    )
+                  <> " exchange rates on "
+                  <> ( st
+                        ^. #modelState
+                        . #stDoc
+                        . #stDocConv
+                        . #stConvCreatedAt
+                        . to utctDay
+                        . to inspect
+                     )
+              ]
+           ]
 
 tosWidget :: View Action
 tosWidget =

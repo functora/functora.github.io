@@ -196,7 +196,8 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
   { stDocConv :: StConv f,
-    stDocFieldPairs :: [FieldPair DynamicField f]
+    stDocFieldPairs :: [FieldPair DynamicField f],
+    stDocOnlineOrOffline :: OnlineOrOffline
   }
   deriving stock (Generic)
 

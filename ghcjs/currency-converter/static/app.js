@@ -28,10 +28,4 @@
   x4.rel = "manifest";
   x4.href = "site.webmanifest";
   patch(x4);
-  var x5 = document.createElement("script");
-  x5.language = "javascript";
-  x5.src = "web.js";
-  x5.defer = "defer";
-  x5.type = "module";
-  patch(x5);
 })();

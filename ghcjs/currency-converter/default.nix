@@ -87,6 +87,8 @@ in rec {
       ${functora-pkgs.terser}/bin/terser \
         ${./static}/web.js -o $out/web.js --compress --mangle --source-map
       ${functora-pkgs.terser}/bin/terser \
+        ${./static}/web2.js -o $out/web2.js --compress --mangle --source-map
+      ${functora-pkgs.terser}/bin/terser \
         ${./static}/main.js -o $out/main.js --compress --mangle --source-map
       ${functora-pkgs.html-minifier}/bin/html-minifier \
         --minify-js \

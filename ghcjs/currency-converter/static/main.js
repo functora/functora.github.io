@@ -576,10 +576,22 @@ registerPlugin("CapacitorHttp", {
 const WebviewPrint = registerPlugin("WebviewPrint", {
   web: () => __vitePreload(() => import("./web.js"), true ? [] : void 0).then((m) => new m.WebviewPrintWeb())
 });
+const Preferences = registerPlugin("Preferences", {
+  web: () => __vitePreload(() => import("./web2.js"), true ? [] : void 0).then((m) => new m.PreferencesWeb())
+});
 async function printCurrentPage(name) {
   await WebviewPrint.print({ name });
 }
+async function selectStorage(key) {
+  const { value } = await Preferences.get({ key });
+  return value;
+}
+async function insertStorage(key, value) {
+  await Preferences.set({ key, value });
+}
 globalThis.printCurrentPage = printCurrentPage;
+globalThis.selectStorage = selectStorage;
+globalThis.insertStorage = insertStorage;
 export {
   WebPlugin as W
 };

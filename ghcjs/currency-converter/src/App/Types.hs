@@ -99,7 +99,7 @@ data Unique a = Unique
 
 data Action
   = Noop
-  | InitUpdate
+  | InitUpdate (Maybe (StExt Unique))
   | TimeUpdate
   | SyncInputs
   | ChanUpdate Model

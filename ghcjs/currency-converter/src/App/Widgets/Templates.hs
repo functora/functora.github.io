@@ -1,5 +1,6 @@
 module App.Widgets.Templates
-  ( newModel,
+  ( newStDoc,
+    newModel,
   )
 where
 
@@ -12,8 +13,8 @@ import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
 
-emptyTemplate :: IO (StDoc Unique)
-emptyTemplate = do
+newStDoc :: IO (StDoc Unique)
+newStDoc = do
   conv <- newStConv
   pure
     StDoc
@@ -63,7 +64,7 @@ newModel webOpts mSt uri = do
       (mSt ^? _Just . #modelState . #stKm)
   defDoc <-
     maybe
-      (liftIO emptyTemplate)
+      (liftIO newStDoc)
       pure
       (mSt ^? _Just . #modelState . #stDoc)
   defPre <-

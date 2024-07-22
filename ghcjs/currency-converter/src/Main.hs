@@ -43,6 +43,7 @@ main =
     . handleAny (\e -> maxAttention e >> sleepSeconds 5)
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
+      ext <- unShareUri uri
       web <- getWebOpts
       st <- newModel web Nothing uri
       startApp
@@ -52,7 +53,7 @@ main =
             Miso.view = viewModel,
             subs = mempty,
             events = extendedEvents,
-            initialAction = InitUpdate,
+            initialAction = InitUpdate ext,
             mountPoint = Nothing, -- defaults to 'body'
             logLevel = Off
           }
@@ -69,6 +70,7 @@ getWebOpts = do
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
+  let cap = "const cap = document.createElement('script'); cap.language = 'javascript'; cap.src = 'main.js'; cap.defer = 'defer'; cap.type = 'module'; document.getElementsByTagName('head')[0].appendChild(cap);" :: BL.ByteString
   js0 <- BL.readFile "static/app.js"
   js1 <- BL.readFile "static/material-components-web.min.js"
   js2 <- BL.readFile "static/material-components-web-elm.min.js"
@@ -80,12 +82,13 @@ runApp app = do
     =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router $ js0 <> js1 <> js2)
+      (router $ cap <> js0 <> js1 <> js2 )
   where
     router js req =
       case Wai.pathInfo req of
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
         ("web.js" : _) -> staticApp (defaultWebAppSettings "static") req
+        ("web2.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("main.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
@@ -103,7 +106,7 @@ runApp = JSaddle.Wasm.run
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel InitUpdate prevSt = do
+updateModel (InitUpdate ext) prevSt = do
   batchEff
     prevSt
     [ do
@@ -122,8 +125,17 @@ updateModel InitUpdate prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
-        pure $ ChanUpdate nextSt
+        if isJust ext
+          then Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
+          else selectCurrentUri $ \case
+            Nothing ->
+              Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
+            Just uri -> do
+              finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
+              Misc.pushActionQueue nextSt
+                $ ChanItem 0 (const $ finSt & #modelLoading .~ False)
+        pure
+          $ ChanUpdate nextSt
     ]
 updateModel TimeUpdate st = do
   batchEff
@@ -166,6 +178,7 @@ updateModel (ChanUpdate prevSt) _ = do
                 pure $ prevSt & #modelLoading .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
+        insertCurrentUri nextSt
         if nextSt ^. #modelLoading
           then do
             void
@@ -350,7 +363,36 @@ upToDate lhs rhs =
   where
     diff = abs . toRational $ diffUTCTime lhs rhs
 
-maxAttention :: SomeException -> JSM ()
+maxAttention :: (Show a, Data a) => a -> JSM ()
 maxAttention e = do
-  consoleLog $ inspect e
-  alert $ inspect e
+  consoleLog $ inspectMiso e
+  alert $ inspectMiso e
+
+insertCurrentUri :: Model -> JSM ()
+insertCurrentUri st = do
+  uri <- URI.mkURI $ shareLink (st ^. #modelState . #stScreen) st
+  void
+    $ JS.global
+    ^. JS.js2 ("insertStorage" :: Text) ("current-" <> vsn) (ms $ URI.render uri)
+
+selectCurrentUri :: (Maybe URI.URI -> JSM ()) -> JSM ()
+selectCurrentUri after = do
+  success <-
+    JS.function $ \_ _ -> \case
+      [val] -> do
+        valExist <- ghcjsPure $ JS.isTruthy val
+        if not valExist
+          then after Nothing
+          else do
+            mStr <- JS.fromJSVal @Text val
+            case mStr of
+              Nothing -> maxAttention @Text "Storage bad type!"
+              Just str ->
+                case URI.mkURI $ fromMisoString str of
+                  Left e -> maxAttention $ "Storage bad URI " <> inspect @Text e
+                  Right uri -> after $ Just uri
+      _ ->
+        maxAttention @Text "Storage bad argv!"
+  failure <- JS.function $ \_ _ _ -> maxAttention @Text "Storage reader failure!"
+  prom <- JS.global ^. JS.js1 ("selectStorage" :: Text) ("current-" <> vsn)
+  void $ prom ^. JS.js2 ("then" :: Text) success failure

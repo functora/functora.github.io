@@ -7,7 +7,7 @@ import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
-import qualified App.Widgets.Templates as Templates
+import App.Widgets.Templates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -40,7 +40,9 @@ menu st =
                 navItemLeft
                   $ a_
                     [ style_ [("cursor", "pointer")],
-                      onClick . screen $ const Converter
+                      onClick . PushUpdate $ do
+                        doc <- liftIO newStDoc
+                        pure . ChanItem 0 $ (& #modelState . #stDoc .~ doc)
                     ]
                     [ text "Currency Converter"
                     ]
@@ -153,7 +155,7 @@ menu st =
     screen fun =
       PushUpdate $ do
         uri <- URI.mkURI $ shareLink (fun sc) st
-        new <- Templates.newModel (st ^. #modelWebOpts) (Just st) uri
+        new <- newModel (st ^. #modelWebOpts) (Just st) uri
         pure . ChanItem 0 $ const new
     sc =
       fromMaybe

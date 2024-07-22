@@ -14,6 +14,7 @@ module App.Types
     PaymentMethod (..),
     ChanItem (..),
     Screen (..),
+    isQrCode,
     unQrCode,
     Asset (..),
     TopOrBottom (..),
@@ -295,6 +296,11 @@ data Screen
   | QrCode Screen
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType Screen
+
+isQrCode :: Screen -> Bool
+isQrCode = \case
+  QrCode {} -> True
+  _ -> False
 
 unQrCode :: Screen -> Screen
 unQrCode = \case

@@ -18,7 +18,6 @@ import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import Miso hiding (view)
-import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
@@ -62,18 +61,18 @@ menu st =
                     ( IconButton.config
                         & IconButton.setOnClick
                           ( screen
-                              $ if unQrCode sc == sc
-                                then QrCode . unQrCode
-                                else unQrCode
+                              $ if isQrCode sc
+                                then unQrCode sc
+                                else QrCode sc
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
                             TopAppBar.navigationIcon
                           ]
                     )
-                  $ if unQrCode sc == sc
-                    then "qr_code_2"
-                    else "currency_exchange",
+                  $ if isQrCode sc
+                    then "currency_exchange"
+                    else "qr_code_2",
                 navItemRight
                   $ IconButton.iconButton
                     ( IconButton.config
@@ -125,24 +124,24 @@ menu st =
                           ( Button.config
                               & Button.setOnClick
                                 ( screen
-                                    $ if unQrCode sc == sc
-                                      then QrCode . unQrCode
-                                      else unQrCode
+                                    $ if isQrCode sc
+                                      then unQrCode sc
+                                      else QrCode sc
                                 )
                               & Button.setIcon
                                 ( Just
-                                    $ if unQrCode sc == sc
-                                      then "qr_code_2"
-                                      else "currency_exchange"
+                                    $ if isQrCode sc
+                                      then "currency_exchange"
+                                      else "qr_code_2"
                                 )
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
                                   class_ "fill"
                                 ]
                           )
-                        $ if unQrCode sc == sc
-                          then "QR"
-                          else "Converter",
+                        $ if isQrCode sc
+                          then "Converter"
+                          else "QR",
                       let item :| items = enumerateNE @OnlineOrOffline
                        in Cell.mediumCell
                             $ Select.outlined
@@ -227,11 +226,12 @@ menu st =
   where
     opened = pureUpdate 0 (& #modelMenu .~ Opened)
     closed = pureUpdate 0 (& #modelMenu .~ Closed)
-    screen fun =
-      PushUpdate $ do
-        uri <- URI.mkURI $ shareLink (fun sc) st
-        new <- newModel (st ^. #modelWebOpts) (Just st) uri
-        pure . ChanItem 0 $ const new
+    screen next =
+      pureUpdate 0
+        $ (& #modelMenu .~ Closed)
+        . (& #modelLoading .~ isQrCode next)
+        . (& #modelState . #stScreen .~ next)
+        . (& #modelState . #stExt . _Just . #stExtScreen .~ next)
     sc =
       fromMaybe
         (st ^. #modelState . #stScreen)

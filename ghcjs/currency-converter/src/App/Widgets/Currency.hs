@@ -134,6 +134,13 @@ selectCurrency st optic =
     opened =
       pureUpdate 0 $ \st' ->
         st'
+          --
+          -- TODO : Widget first render is slow for some reason.
+          -- Blocking view makes it look a bit better.
+          -- Need to make widget first render fast.
+          --
+          & #modelLoading
+          .~ True
           & cloneTraversal optic
           . #currencyModalState
           .~ Opened

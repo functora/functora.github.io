@@ -52,7 +52,7 @@ menu st =
                           . (& #modelState . #stExt .~ Nothing)
                           . (& #modelState . #stScreen .~ Converter)
                     ]
-                    [ text "Currency Converter"
+                    [ text "Converter"
                     ]
               ],
             TopAppBar.section

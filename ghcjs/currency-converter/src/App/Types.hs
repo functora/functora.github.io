@@ -17,6 +17,7 @@ module App.Types
     isQrCode,
     unQrCode,
     Asset (..),
+    Fav (..),
     TopOrBottom (..),
     HeaderOrFooter (..),
     OnlineOrOffline (..),
@@ -199,7 +200,7 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
   { stDocConv :: StConv f,
-    stDocFavName :: Field DynamicField f,
+    stDocPreFavName :: Field Text f,
     stDocFieldPairs :: [FieldPair DynamicField f],
     stDocOnlineOrOffline :: OnlineOrOffline
   }

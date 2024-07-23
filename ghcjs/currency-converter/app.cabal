@@ -116,6 +116,7 @@ common pkg
     , functora-ghcjs
     , fuzzy
     , jsaddle
+    , microlens
     , miso
     , miso-components
     , modern-uri

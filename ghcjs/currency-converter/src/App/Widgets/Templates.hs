@@ -16,11 +16,11 @@ import qualified Material.Snackbar as Snackbar
 newStDoc :: IO (StDoc Unique)
 newStDoc = do
   conv <- newStConv
-  favn <- newDynamicField $ DynamicFieldText mempty
+  pfav <- newTextField mempty
   pure
     StDoc
       { stDocConv = conv,
-        stDocFavName = favn,
+        stDocPreFavName = pfav,
         stDocFieldPairs = mempty,
         stDocOnlineOrOffline = Online
       }

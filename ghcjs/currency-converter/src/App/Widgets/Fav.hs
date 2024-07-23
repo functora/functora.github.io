@@ -3,14 +3,17 @@ module App.Widgets.Fav
   )
 where
 
+import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import Lens.Micro (non)
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Theme as Theme
-import Miso hiding (view)
+import Miso hiding (at, view)
+import qualified Text.URI as URI
 
 fav :: Model -> [View Action]
 fav st =
@@ -27,39 +30,22 @@ fav st =
               [ Cell.grid
                   mempty
                   $ [ Cell.mediumCell
-                        $ Field.field
+                        $ Field.textField
                           st
-                          ( #modelState . #stPre
+                          ( #modelState
+                              . #stDoc
+                              . #stDocPreFavName
                           )
                           ( Field.defOpts
                               & #optsPlaceholder
-                              .~ ( "Name - "
-                                    <> ( st
-                                          ^. #modelState
-                                          . #stDoc
-                                          . #stDocFavName
-                                          . #fieldType
-                                          . to userFieldType
-                                       )
-                                 )
-                              & #optsLeadingWidget
-                              .~ Just
-                                ( Field.ModalWidget
-                                    $ Field.ModalMiniWidget
-                                      ( #modelState
-                                          . #stDoc
-                                          . #stDocFavName
-                                      )
-                                )
+                              .~ "Label"
                               & #optsFilledOrOutlined
                               .~ Outlined
-                          )
-                          parseDynamicField
-                          inspectDynamicField,
+                          ),
                       Cell.smallCell
                         $ Button.raised
                           ( Button.config
-                              & Button.setOnClick Noop
+                              & Button.setOnClick save
                               & Button.setIcon (Just "add_box")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
@@ -93,3 +79,45 @@ fav st =
       ]
   where
     closed = pureUpdate 0 (& #modelFav .~ Closed)
+    fullFavName = makeFavName st
+    save = PushUpdate $ do
+      ct <- getCurrentTime
+      uri <- URI.mkURI $ shareLink (st ^. #modelState . #stScreen) st
+      let nextFav =
+            Fav
+              { favUri = uri,
+                favCreatedAt = ct
+              }
+      pure
+        . ChanItem 0
+        $ (Misc.textPopupPure $ "Saved " <> fullFavName <> "!")
+        . (& #modelFavMap . at fullFavName . non nextFav . #favUri .~ uri)
+
+makeFavName :: Model -> Text
+makeFavName st =
+  preFavName
+    <> ( if preFavName == mempty
+          then mempty
+          else " "
+       )
+    <> getCode #stConvTopMoney
+    <> "/"
+    <> getCode #stConvBottomMoney
+  where
+    preFavName =
+      st
+        ^. #modelState
+        . #stDoc
+        . #stDocPreFavName
+        . #fieldOutput
+    getCode optic =
+      st
+        ^. #modelState
+        . #stDoc
+        . #stDocConv
+        . cloneLens optic
+        . #moneyCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . #unCurrencyCode
+        . to toMisoString

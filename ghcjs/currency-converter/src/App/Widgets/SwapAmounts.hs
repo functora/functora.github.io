@@ -24,6 +24,7 @@ swapAmounts =
           & Button.setOnClick onClickAction
           & Button.setAttributes
             [ class_ "fill",
+              class_ "no-print",
               Theme.secondaryBg
             ]
       )

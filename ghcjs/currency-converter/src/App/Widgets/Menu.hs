@@ -7,6 +7,7 @@ import qualified App.Misc as Misc
 import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
+import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import App.Widgets.Templates
@@ -61,19 +62,14 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( screen
-                              $ if isQrCode sc
-                                then unQrCode sc
-                                else QrCode sc
+                          ( pureUpdate 0 (& #modelFav .~ Opened)
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
                             TopAppBar.navigationIcon
                           ]
                     )
-                  $ if isQrCode sc
-                    then "currency_exchange"
-                    else "qr_code_2",
+                    "favorite",
                 navItemRight
                   $ IconButton.iconButton
                     ( IconButton.config
@@ -108,6 +104,7 @@ menu st =
           ]
       ]
   ]
+    <> Fav.fav st
     <> if st ^. #modelMenu == Closed
       then mempty
       else

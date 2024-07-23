@@ -16,9 +16,11 @@ import qualified Material.Snackbar as Snackbar
 newStDoc :: IO (StDoc Unique)
 newStDoc = do
   conv <- newStConv
+  favn <- newDynamicField $ DynamicFieldText mempty
   pure
     StDoc
       { stDocConv = conv,
+        stDocFavName = favn,
         stDocFieldPairs = mempty,
         stDocOnlineOrOffline = Online
       }
@@ -119,7 +121,8 @@ newModel webOpts mSt uri = do
       mApp
   pure
     Model
-      { modelMenu = Closed,
+      { modelFav = Closed,
+        modelMenu = Closed,
         modelLoading = True,
         modelState =
           St
@@ -131,6 +134,7 @@ newModel webOpts mSt uri = do
               stExt = ext
             },
         modelMarket = market,
+        modelFavMap = mempty,
         modelCurrencies =
           fromMaybe
             [btc, usd]

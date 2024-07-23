@@ -79,10 +79,12 @@ import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelMenu :: OpenedOrClosed,
+  { modelFav :: OpenedOrClosed,
+    modelMenu :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelMarket :: MVar Market,
+    modelFavMap :: Map Text Fav,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
@@ -197,6 +199,7 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
   { stDocConv :: StConv f,
+    stDocFavName :: Field DynamicField f,
     stDocFieldPairs :: [FieldPair DynamicField f],
     stDocOnlineOrOffline :: OnlineOrOffline
   }
@@ -376,6 +379,12 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
+
+data Fav = Fav
+  { favUri :: URI,
+    favCreatedAt :: UTCTime
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =

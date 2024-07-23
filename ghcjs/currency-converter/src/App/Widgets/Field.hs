@@ -438,7 +438,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                                 Theme.secondaryBg
                               ]
                         )
-                        "Add details",
+                        "Add note",
                     Cell.smallCell
                       $ Button.raised
                         ( Button.config

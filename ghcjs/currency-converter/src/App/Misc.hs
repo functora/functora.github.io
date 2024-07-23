@@ -232,7 +232,7 @@ newFieldPairAction optic =
     item <- newFieldPair mempty $ DynamicFieldText mempty
     pure
       . ChanItem 0
-      $ (textPopupPure @Text "Added details!")
+      $ (textPopupPure @Text "Added note!")
       . (& cloneTraversal optic %~ (<> [item]))
 
 newPaymentMethodAction :: ATraversal' Model [PaymentMethod Unique] -> Action

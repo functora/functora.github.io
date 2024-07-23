@@ -8,6 +8,7 @@ import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.FieldPairs as FieldPairs
 import App.Widgets.Templates
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -119,106 +120,141 @@ menu st =
                 Nothing
                 [ Cell.grid
                     mempty
-                    [ Cell.mediumCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick
-                                ( screen
-                                    $ if isQrCode sc
-                                      then unQrCode sc
-                                      else QrCode sc
-                                )
-                              & Button.setIcon
-                                ( Just
-                                    $ if isQrCode sc
-                                      then "currency_exchange"
-                                      else "qr_code_2"
-                                )
-                              & Button.setAttributes
-                                [ Theme.secondaryBg,
-                                  class_ "fill"
-                                ]
-                          )
-                        $ if isQrCode sc
-                          then "Converter"
-                          else "QR",
-                      let item :| items = enumerateNE @OnlineOrOffline
-                       in Cell.mediumCell
-                            $ Select.outlined
-                              ( Select.config
-                                  & Select.setLabel
-                                    ( Just "Exchange rates"
-                                    )
-                                  & Select.setAttributes
-                                    [ class_ "fill-inner"
-                                    ]
-                                  & Select.setSelected
-                                    ( Just
-                                        $ st
-                                        ^. #modelState
-                                        . #stDoc
-                                        . #stDocOnlineOrOffline
-                                    )
-                                  & Select.setOnChange
-                                    ( \x ->
-                                        pureUpdate
-                                          0
-                                          ( &
-                                              #modelState
-                                                . #stDoc
-                                                . #stDocOnlineOrOffline
-                                                .~ x
-                                          )
-                                    )
-                              )
-                              ( SelectItem.selectItem
-                                  (SelectItem.config item)
-                                  [text $ inspect item]
-                              )
-                            $ fmap
-                              ( \x ->
-                                  SelectItem.selectItem
-                                    (SelectItem.config x)
-                                    [text $ inspect x]
-                              )
-                              items,
-                      Cell.mediumCell
-                        $ Field.field
-                          st
-                          ( #modelState . #stPre
-                          )
-                          ( Field.defOpts
-                              & #optsPlaceholder
-                              .~ ( "Preview - "
-                                    <> ( st
+                    $ [ Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick
+                                  ( screen
+                                      $ if isQrCode sc
+                                        then unQrCode sc
+                                        else QrCode sc
+                                  )
+                                & Button.setIcon
+                                  ( Just
+                                      $ if isQrCode sc
+                                        then "currency_exchange"
+                                        else "qr_code_2"
+                                  )
+                                & Button.setAttributes
+                                  [ Theme.secondaryBg,
+                                    class_ "fill"
+                                  ]
+                            )
+                          $ if isQrCode sc
+                            then "Rate"
+                            else "QR",
+                        Cell.smallCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick
+                                  ( Misc.newFieldPairAction
+                                      $ #modelState
+                                      . #stDoc
+                                      . #stDocFieldPairs
+                                  )
+                                & Button.setIcon
+                                  ( Just "add_box"
+                                  )
+                                & Button.setAttributes
+                                  [ Theme.secondaryBg,
+                                    class_ "fill"
+                                  ]
+                            )
+                            "Note",
+                        let item :| items = enumerateNE @OnlineOrOffline
+                         in Cell.mediumCell
+                              $ Select.outlined
+                                ( Select.config
+                                    & Select.setLabel
+                                      ( Just "Exchange rate"
+                                      )
+                                    & Select.setAttributes
+                                      [ class_ "fill-inner"
+                                      ]
+                                    & Select.setSelected
+                                      ( Just
+                                          $ st
                                           ^. #modelState
-                                          . #stPre
-                                          . #fieldType
-                                          . to userFieldType
-                                       )
-                                 )
-                              & #optsLeadingWidget
-                              .~ Just
-                                ( Field.ModalWidget
-                                    $ Field.ModalMiniWidget (#modelState . #stPre)
+                                          . #stDoc
+                                          . #stDocOnlineOrOffline
+                                      )
+                                    & Select.setOnChange
+                                      ( \x ->
+                                          pureUpdate
+                                            0
+                                            ( &
+                                                #modelState
+                                                  . #stDoc
+                                                  . #stDocOnlineOrOffline
+                                                  .~ x
+                                            )
+                                      )
                                 )
-                          )
-                          parseDynamicField
-                          inspectDynamicField,
-                      Cell.mediumCell
-                        $ Field.passwordField
-                          st
-                          (#modelState . #stIkm)
-                          Field.defOpts,
-                      Cell.bigCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick closed
-                              & Button.setIcon (Just "arrow_back")
-                              & Button.setAttributes [class_ "fill"]
-                          )
-                          "Back"
-                    ]
+                                ( SelectItem.selectItem
+                                    (SelectItem.config item)
+                                    [text $ inspect item]
+                                )
+                              $ fmap
+                                ( \x ->
+                                    SelectItem.selectItem
+                                      (SelectItem.config x)
+                                      [text $ inspect x]
+                                )
+                                items,
+                        Cell.mediumCell
+                          $ Field.field
+                            st
+                            ( #modelState . #stPre
+                            )
+                            ( Field.defOpts
+                                & #optsPlaceholder
+                                .~ ( "Preview - "
+                                      <> ( st
+                                            ^. #modelState
+                                            . #stPre
+                                            . #fieldType
+                                            . to userFieldType
+                                         )
+                                   )
+                                & #optsLeadingWidget
+                                .~ Just
+                                  ( Field.ModalWidget
+                                      $ Field.ModalMiniWidget
+                                        ( #modelState
+                                            . #stPre
+                                        )
+                                  )
+                                & #optsFilledOrOutlined
+                                .~ Outlined
+                            )
+                            parseDynamicField
+                            inspectDynamicField,
+                        Cell.mediumCell
+                          $ Field.passwordField
+                            st
+                            ( #modelState
+                                . #stIkm
+                            )
+                            ( Field.defOpts
+                                & #optsFilledOrOutlined
+                                .~ Outlined
+                            )
+                      ]
+                    <> FieldPairs.fieldPairs
+                      st
+                      ( #modelState
+                          . #stDoc
+                          . #stDocFieldPairs
+                      )
+                    <> [ Cell.bigCell
+                          $ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closed
+                                & Button.setIcon (Just "arrow_back")
+                                & Button.setAttributes [class_ "fill"]
+                            )
+                            "Back"
+                       ]
                 ]
                 mempty
             )

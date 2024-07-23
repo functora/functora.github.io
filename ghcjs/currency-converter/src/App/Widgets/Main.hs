@@ -6,6 +6,7 @@ import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Field as Field
+import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.Qr as Qr
@@ -108,7 +109,12 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                  ]
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
-  let amountWidget' loc =
+  let conn =
+        st
+          ^. #modelState
+          . #stDoc
+          . #stDocOnlineOrOffline
+      amountWidget' loc =
         Field.ratioField
           st
           ( Misc.getConverterAmountOptic loc
@@ -133,9 +139,14 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         Currency.selectCurrency st
           . cloneLens
           . Misc.getConverterCurrencyOptic
-   in Header.headerWrapper
-        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
-        )
+   in ( FieldPairs.fieldPairsViewer
+          st
+          ( st
+              ^. #modelState
+              . #stDoc
+              . #stDocFieldPairs
+          )
+      )
         <> [ amountWidget' Top,
              currencyWidget' Top,
              amountWidget' Bottom,
@@ -150,20 +161,20 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                   ]
               ]
               [ Miso.text
-                  $ inspectMiso
-                    ( st
-                        ^. #modelState
-                        . #stDoc
-                        . #stDocOnlineOrOffline
-                    )
-                  <> " exchange rates on "
-                  <> ( st
-                        ^. #modelState
-                        . #stDoc
-                        . #stDocConv
-                        . #stConvCreatedAt
-                        . to utctDay
-                        . to inspect
+                  $ inspectMiso conn
+                  <> " exchange rate"
+                  <> ( case conn of
+                        Offline -> mempty
+                        Online ->
+                          " on "
+                            <> ( st
+                                  ^. #modelState
+                                  . #stDoc
+                                  . #stDocConv
+                                  . #stConvCreatedAt
+                                  . to utctDay
+                                  . to inspect
+                               )
                      )
               ]
            ]

@@ -56,7 +56,7 @@ fav st =
                           )
                           parseDynamicField
                           inspectDynamicField,
-                      Cell.mediumCell
+                      Cell.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick Noop
@@ -66,7 +66,18 @@ fav st =
                                   class_ "fill"
                                 ]
                           )
-                          "Add favorite",
+                          "Save",
+                      Cell.smallCell
+                        $ Button.raised
+                          ( Button.config
+                              & Button.setOnClick Noop
+                              & Button.setIcon (Just "delete_forever")
+                              & Button.setAttributes
+                                [ Theme.secondaryBg,
+                                  class_ "fill"
+                                ]
+                          )
+                          "Delete",
                       Cell.bigCell
                         $ Button.raised
                           ( Button.config

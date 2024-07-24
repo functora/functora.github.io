@@ -44,7 +44,7 @@ mainWidget st =
                    --  . (: mempty)
                    --  $ div_
                    --    mempty
-                   --    [ inspect . newIdentityState $ st ^. #modelState
+                   --    [ inspect $ st ^. #modelFavMap
                    --    ],
                    tosWidget,
                    Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)

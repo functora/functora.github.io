@@ -8,7 +8,8 @@ import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
-import Lens.Micro (non)
+import App.Widgets.Templates
+import qualified Data.Map as Map
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Theme as Theme
@@ -22,14 +23,15 @@ fav st =
     else
       [ Dialog.dialog
           ( Dialog.config
-              & Dialog.setOnClose closed
+              & Dialog.setOnClose closeAction
               & Dialog.setOpen (Opened == st ^. #modelFav)
           )
           ( Dialog.dialogContent
               Nothing
               [ Cell.grid
                   mempty
-                  $ [ Cell.mediumCell
+                  $ favItems st
+                  <> [ Cell.mediumCell
                         $ Field.textField
                           st
                           ( #modelState
@@ -38,14 +40,12 @@ fav st =
                           )
                           ( Field.defOpts
                               & #optsPlaceholder
-                              .~ "Label"
-                              & #optsFilledOrOutlined
-                              .~ Outlined
+                              .~ ("Name - " <> fullFavName)
                           ),
-                      Cell.smallCell
+                       Cell.smallCell
                         $ Button.raised
                           ( Button.config
-                              & Button.setOnClick save
+                              & Button.setOnClick saveAction
                               & Button.setIcon (Just "add_box")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
@@ -53,7 +53,7 @@ fav st =
                                 ]
                           )
                           "Save",
-                      Cell.smallCell
+                       Cell.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick Noop
@@ -64,23 +64,23 @@ fav st =
                                 ]
                           )
                           "Delete",
-                      Cell.bigCell
+                       Cell.bigCell
                         $ Button.raised
                           ( Button.config
-                              & Button.setOnClick closed
+                              & Button.setOnClick closeAction
                               & Button.setIcon (Just "arrow_back")
                               & Button.setAttributes [class_ "fill"]
                           )
                           "Back"
-                    ]
+                     ]
               ]
               mempty
           )
       ]
   where
-    closed = pureUpdate 0 (& #modelFav .~ Closed)
     fullFavName = makeFavName st
-    save = PushUpdate $ do
+    closeAction = pureUpdate 0 (& #modelFav .~ Closed)
+    saveAction = PushUpdate $ do
       ct <- getCurrentTime
       uri <- URI.mkURI $ shareLink (st ^. #modelState . #stScreen) st
       let nextFav =
@@ -90,8 +90,16 @@ fav st =
               }
       pure
         . ChanItem 0
-        $ (Misc.textPopupPure $ "Saved " <> fullFavName <> "!")
-        . (& #modelFavMap . at fullFavName . non nextFav . #favUri .~ uri)
+        $ ( Misc.textPopupPure
+              $ "Saved "
+              <> fullFavName
+              <> "!"
+          )
+        . ( &
+              #modelFavMap
+                . at fullFavName
+                %~ (Just . maybe nextFav (& #favUri .~ uri))
+          )
 
 makeFavName :: Model -> Text
 makeFavName st =
@@ -121,3 +129,30 @@ makeFavName st =
         . #currencyInfoCode
         . #unCurrencyCode
         . to toMisoString
+
+favItems :: Model -> [View Action]
+favItems st =
+  fmap (uncurry $ favItem st)
+    . reverse
+    . sortOn (favCreatedAt . snd)
+    . Map.toList
+    $ st
+    ^. #modelFavMap
+
+favItem :: Model -> Text -> Fav -> View Action
+favItem st label Fav {favUri = uri} =
+  Cell.bigCell
+    $ Button.raised
+      ( Button.config
+          & Button.setOnClick opened
+          & Button.setAttributes [class_ "fill"]
+      )
+      label
+  where
+    opened = PushUpdate $ do
+      next <- newModel (st ^. #modelWebOpts) (Just st) uri
+      pure
+        . ChanItem 0
+        $ (#modelFav .~ Closed)
+        . (#modelLoading .~ True)
+        . (#modelState .~ modelState next)

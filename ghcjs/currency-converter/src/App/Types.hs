@@ -386,6 +386,7 @@ data Fav = Fav
     favCreatedAt :: UTCTime
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving (ToJSON, FromJSON) via GenericType Fav
 
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =

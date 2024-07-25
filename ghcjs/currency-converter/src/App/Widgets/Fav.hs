@@ -40,7 +40,7 @@ fav st =
                           )
                           ( Field.defOpts
                               & #optsPlaceholder
-                              .~ ("Name - " <> fullFavName)
+                              .~ ("Name - " <> makeFavName st)
                           ),
                        Cell.smallCell
                         $ Button.raised
@@ -56,7 +56,7 @@ fav st =
                        Cell.smallCell
                         $ Button.raised
                           ( Button.config
-                              & Button.setOnClick Noop
+                              & Button.setOnClick deleteAction
                               & Button.setIcon (Just "delete_forever")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
@@ -78,28 +78,43 @@ fav st =
           )
       ]
   where
-    fullFavName = makeFavName st
     closeAction = pureUpdate 0 (& #modelFav .~ Closed)
     saveAction = PushUpdate $ do
       ct <- getCurrentTime
-      uri <- URI.mkURI $ shareLink (st ^. #modelState . #stScreen) st
-      let nextFav =
-            Fav
-              { favUri = uri,
-                favCreatedAt = ct
-              }
-      pure
-        . ChanItem 0
-        $ ( Misc.textPopupPure
-              $ "Saved "
-              <> fullFavName
-              <> "!"
-          )
-        . ( &
-              #modelFavMap
-                . at fullFavName
-                %~ (Just . maybe nextFav (& #favUri .~ uri))
-          )
+      pure . ChanItem 0 $ \nextSt ->
+        let uri =
+              either impureThrow id
+                . URI.mkURI
+                $ shareLink (nextSt ^. #modelState . #stScreen) nextSt
+            nextFav = do
+              Fav
+                { favUri = uri,
+                  favCreatedAt = ct
+                }
+            nextFavName =
+              makeFavName nextSt
+         in nextSt
+              & ( Misc.textPopupPure
+                    $ "Saved "
+                    <> nextFavName
+                    <> "!"
+                )
+              & #modelFavMap
+              . at nextFavName
+              %~ ( Just
+                    . maybe nextFav (& #favUri .~ uri)
+                 )
+    deleteAction = pureUpdate 0 $ \nextSt ->
+      let nextFavName = makeFavName nextSt
+       in nextSt
+            & ( Misc.textPopupPure
+                  $ "Removed "
+                  <> nextFavName
+                  <> "!"
+              )
+            & #modelFavMap
+            . at nextFavName
+            .~ Nothing
 
 makeFavName :: Model -> Text
 makeFavName st =
@@ -144,12 +159,15 @@ favItem st label Fav {favUri = uri} =
   Cell.bigCell
     $ Button.raised
       ( Button.config
-          & Button.setOnClick opened
+          & Button.setOnClick openAction
           & Button.setAttributes [class_ "fill"]
       )
       label
   where
-    opened = PushUpdate $ do
+    openAction = PushUpdate $ do
+      --
+      -- TODO : Implement here pure, less costly equivalent of newModel.
+      --
       next <- newModel (st ^. #modelWebOpts) (Just st) uri
       pure
         . ChanItem 0

@@ -16,18 +16,18 @@ import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 #endif
 
 import qualified App.Misc as Misc
-import App.Prelude
 import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
+import Functora.Miso.Prelude
+import qualified Functora.Miso.Storage as Storage
 import Functora.Money hiding (Money)
 import Functora.Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
-import Miso hiding (view)
 import qualified Miso
 import qualified Text.URI as URI
 
@@ -40,7 +40,7 @@ main =
   withUtf8
     . runApp
     . forever
-    . handleAny (\e -> log e >> sleepSeconds 5)
+    . handleAny (\e -> consoleLog e >> sleepSeconds 5)
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
       ext <- unShareUri uri
@@ -127,7 +127,7 @@ updateModel (InitUpdate ext) prevSt = do
                 }
         if isJust ext
           then Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
-          else selectCurrentUri $ \case
+          else Storage.selectStorage ("current-" <> vsn) $ \case
             Nothing ->
               Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
             Just uri -> do
@@ -174,11 +174,12 @@ updateModel (ChanUpdate prevSt) _ = do
         nextSt <-
           handleAny
             ( \e -> do
-                log e
+                consoleLog e
                 pure $ prevSt & #modelLoading .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-        insertCurrentUri nextSt
+        uri <- URI.mkURI $ shareLink (nextSt ^. #modelState . #stScreen) nextSt
+        Storage.insertStorage ("current-" <> vsn) uri
         if nextSt ^. #modelLoading
           then do
             void
@@ -241,22 +242,23 @@ extendedEvents =
 syncInputs :: Model -> JSM ()
 syncInputs st = do
   void
-    . JS.eval @Text
+    . JS.eval @MisoString
     $ "Array.from(document.getElementsByTagName('mdc-text-field')).forEach( function (x) { if ( (x.getElementsByTagName('input')[0] && x.textField_.input_.tagName != 'INPUT') || (x.getElementsByTagName('textarea')[0] && x.textField_.input_.tagName != 'TEXTAREA')) { x.textField_.destroy(); x.textField_.initialize(); } });"
   void
     . Syb.everywhereM (Syb.mkM fun)
     $ modelState st
   where
-    fun :: Unique Text -> JSM (Unique Text)
+    fun :: Unique MisoString -> JSM (Unique MisoString)
     fun txt = do
-      el <- getElementById . htmlUid @Text $ txt ^. #uniqueUid
+      el <- getElementById . htmlUid @MisoString $ txt ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
-        inps <- el ^. JS.js1 ("getElementsByTagName" :: Text) ("input" :: Text)
+        inps <-
+          el ^. JS.js1 ("getElementsByTagName" :: MisoString) ("input" :: MisoString)
         inp <- inps !! 0
-        act <- JS.global ! ("document" :: Text) ! ("activeElement" :: Text)
+        act <- JS.global ! ("document" :: MisoString) ! ("activeElement" :: MisoString)
         elActive <- JS.strictEqual inp act
-        unless elActive $ el ^. JS.jss ("value" :: Text) (txt ^. #uniqueValue)
+        unless elActive $ el ^. JS.jss ("value" :: MisoString) (txt ^. #uniqueValue)
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
@@ -362,32 +364,3 @@ upToDate lhs rhs =
   diff < 3600
   where
     diff = abs . toRational $ diffUTCTime lhs rhs
-
-log :: (Show a, Data a) => a -> JSM ()
-log = consoleLog . inspectMiso
-
-insertCurrentUri :: Model -> JSM ()
-insertCurrentUri st = do
-  uri <- URI.mkURI $ shareLink (st ^. #modelState . #stScreen) st
-  void
-    $ JS.global
-    ^. JS.js2 ("insertStorage" :: Text) ("current-" <> vsn) (ms $ URI.render uri)
-
-selectCurrentUri :: (Maybe URI.URI -> JSM ()) -> JSM ()
-selectCurrentUri after = do
-  success <- JS.function $ \_ _ ->
-    handleAny (\e -> log e >> after Nothing) . \case
-      [val] -> do
-        valExist <- ghcjsPure $ JS.isTruthy val
-        if not valExist
-          then after Nothing
-          else do
-            raw <- JS.fromJSVal @Text val
-            str <- maybe (throwString @Text "Storage bad type!") pure raw
-            uri <- URI.mkURI $ fromMisoString str
-            after $ Just uri
-      _ ->
-        throwString @Text "Storage bad argv!"
-  failure <- JS.function $ \_ _ _ -> log @Text "Storage reader failure!"
-  prom <- JS.global ^. JS.js1 ("selectStorage" :: Text) ("current-" <> vsn)
-  void $ prom ^. JS.js2 ("then" :: Text) success failure

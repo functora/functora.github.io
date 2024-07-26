@@ -62,7 +62,16 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( pureUpdate 0 (& #modelFav .~ Opened)
+                          ( pureUpdate 0
+                              $ (& #modelFav .~ Opened)
+                              . ( &
+                                    #modelState
+                                      . #stDoc
+                                      . #stDocPreFavName
+                                      . #fieldInput
+                                      . #uniqueValue
+                                      .~ mempty
+                                )
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,

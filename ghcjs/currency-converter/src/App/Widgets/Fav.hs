@@ -46,7 +46,7 @@ fav st =
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick saveAction
-                              & Button.setIcon (Just "add_box")
+                              & Button.setIcon (Just "favorite")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
                                   class_ "fill"

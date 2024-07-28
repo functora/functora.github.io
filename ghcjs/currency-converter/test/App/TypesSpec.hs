@@ -1,10 +1,10 @@
 module App.TypesSpec (spec) where
 
-import App.Prelude
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Aeson as A
 import qualified Data.Generics as Syb
+import Functora.Miso.Prelude hiding (prop)
 import qualified Functora.Web as Web
 import qualified Optics.Generic as Ops
 import qualified Optics.Setter as Ops
@@ -32,7 +32,7 @@ fun = \case
 spec :: Spec
 spec = do
   prop "Identity/JSON" $ \txt -> do
-    let wrap :: Identity Text = Identity txt
+    let wrap :: Identity MisoString = Identity txt
     let txtJson = A.encode txt
     let wrapJson = A.encode wrap
     wrap ^. #runIdentity `shouldBe` txt

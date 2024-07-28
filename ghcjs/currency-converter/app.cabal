@@ -47,6 +47,7 @@ common pkg
     App.Widgets.Templates
     Functora.Miso.Prelude
     Functora.Miso.Storage
+    Functora.Miso.Types
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

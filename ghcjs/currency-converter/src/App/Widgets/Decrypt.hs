@@ -4,15 +4,14 @@ module App.Widgets.Decrypt
 where
 
 import qualified App.Misc as Misc
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
 import Functora.Cfg
+import Functora.Miso.Prelude
 import qualified Material.Button as Button
-import Miso hiding (at, view)
 import qualified System.Random as Random
 
 decrypt :: Model -> [View Action]
@@ -45,7 +44,7 @@ decrypt st =
 decryptDoc :: Model -> Action
 decryptDoc st@Model {modelState = St {stExt = Nothing}} =
   PushUpdate $ do
-    Misc.textPopup @Text st "Nothing to decrypt!"
+    Misc.textPopup @MisoString st "Nothing to decrypt!"
     pure $ ChanItem 0 id
 decryptDoc Model {modelState = St {stExt = Just {}}} =
   PushUpdate $ do

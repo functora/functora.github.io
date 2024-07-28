@@ -6,6 +6,7 @@ where
 
 import qualified Data.Text.Lazy.Encoding as TL
 import Functora.Miso.Prelude
+import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 
 insertStorage :: (ToJSON a) => MisoString -> a -> JSM ()
@@ -28,7 +29,7 @@ selectStorage key after = do
         if not valExist
           then after Nothing
           else do
-            raw <- JS.fromJSVal @MisoString val
+            raw <- JS.fromJSVal @Prelude.Text val
             str <- maybe (throwString @MisoString "Storage bad type!") pure raw
             res <- either throwString pure $ decodeJson str
             after $ Just res

@@ -3,12 +3,11 @@ module App.Widgets.Frame
   )
 where
 
-import App.Prelude as Prelude
 import App.Types
+import Functora.Miso.Prelude
 import qualified Material.DataTable as DataTable
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
-import Miso hiding (at, view)
 
 frame :: [View Action] -> View Action
 frame content =

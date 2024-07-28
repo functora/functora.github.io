@@ -24,6 +24,7 @@ import qualified Data.Map as Map
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Storage as Storage
 import Functora.Money hiding (Money)
+import qualified Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
@@ -42,7 +43,7 @@ main =
     . forever
     . handleAny (\e -> consoleLog e >> sleepSeconds 5)
     $ do
-      uri <- URI.mkURI . inspect =<< getCurrentURI
+      uri <- URI.mkURI . Prelude.inspect =<< getCurrentURI
       ext <- unShareUri uri
       web <- getWebOpts
       st <- newModel web Nothing uri

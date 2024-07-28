@@ -3,12 +3,11 @@ module App.Widgets.SwapAmounts
   )
 where
 
-import App.Prelude as Prelude
 import App.Types
+import Functora.Miso.Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
-import Miso hiding (view)
 
 swapAmounts :: View Action
 swapAmounts =

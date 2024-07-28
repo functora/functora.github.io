@@ -7,12 +7,12 @@ module App.Widgets.Currency
   )
 where
 
-import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified Data.List.NonEmpty as NonEmpty
-import Functora.Money hiding (Currency, Money)
+import Functora.Miso.Prelude
+import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -21,11 +21,11 @@ import qualified Material.List as List
 import qualified Material.List.Item as ListItem
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
-import Miso hiding (view)
+import qualified Miso
 import qualified Text.Fuzzy as Fuzzy
 
 data Opts = Opts
-  { optsLabel :: Text,
+  { optsLabel :: MisoString,
     optsShowZeroAmount :: Bool
   }
   deriving stock (Generic)
@@ -242,7 +242,7 @@ currencyListItemWidget optic current fuzz =
           )
     )
     [ Miso.rawHtml
-        . ms
+        . toMisoString
         $ Fuzzy.rendered fuzz
     ]
   where

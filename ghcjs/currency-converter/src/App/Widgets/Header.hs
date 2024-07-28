@@ -5,13 +5,12 @@ module App.Widgets.Header
   )
 where
 
-import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import Functora.Miso.Prelude
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
-import Miso hiding (at, view)
 
 headerEditor ::
   Model ->
@@ -39,7 +38,7 @@ headerEditor st optic opts =
         ]
   ]
 
-headerViewer :: Text -> [View Action]
+headerViewer :: MisoString -> [View Action]
 headerViewer txt =
   if txt == mempty
     then mempty

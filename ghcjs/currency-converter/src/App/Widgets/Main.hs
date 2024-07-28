@@ -1,7 +1,6 @@
 module App.Widgets.Main (mainWidget) where
 
 import qualified App.Misc as Misc
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
@@ -11,7 +10,8 @@ import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
-import Functora.Money
+import Functora.Miso.Prelude
+import Functora.Money hiding (Text)
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
@@ -66,7 +66,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
         )
         <> Qr.qr
           st
-          ( ms
+          ( toMisoString
               . either impureThrow URI.render
               . stExtUri
               $ ext
@@ -95,7 +95,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
         )
         <> Qr.qr
           st
-          ( ms $ URI.render uri
+          ( toMisoString $ URI.render uri
           )
           ( Qr.defOpts
               & #optsExtraWidgets
@@ -132,7 +132,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               .~ ( st
                     ^. cloneLens (Misc.getConverterCurrencyOptic loc)
                     . #currencyOutput
-                    . to (inspectCurrencyInfo @Text)
+                    . to (inspectCurrencyInfo @MisoString)
                  )
           )
       currencyWidget' =
@@ -161,7 +161,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                   ]
               ]
               [ Miso.text
-                  $ inspectMiso conn
+                  $ inspect conn
                   <> " exchange rate"
                   <> ( case conn of
                         Offline -> mempty

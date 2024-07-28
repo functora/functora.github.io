@@ -4,13 +4,13 @@ module App.Widgets.Menu
 where
 
 import qualified App.Misc as Misc
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import App.Widgets.Templates
+import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -19,7 +19,6 @@ import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
-import Miso hiding (view)
 
 menu :: Model -> [View Action]
 menu st =
@@ -87,8 +86,8 @@ menu st =
                               void
                                 $ JS.global
                                 ^. JS.js1
-                                  ("printCurrentPage" :: Text)
-                                  ("currency-converter" :: Text)
+                                  ("printCurrentPage" :: MisoString)
+                                  ("currency-converter" :: MisoString)
                               pure $ ChanItem 0 id
                           )
                         & IconButton.setAttributes
@@ -101,7 +100,10 @@ menu st =
                   ( IconButton.config
                       & IconButton.setOnClick
                         ( Misc.copyIntoClipboardAction st
-                            $ shareLink @Text (st ^. #modelState . #stScreen) st
+                            $ shareLink
+                              @MisoString
+                              (st ^. #modelState . #stScreen)
+                              st
                         )
                       & IconButton.setAttributes
                         [ TopAppBar.actionItem,

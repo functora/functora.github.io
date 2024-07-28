@@ -7,16 +7,15 @@ module App.Widgets.Qr
 where
 
 import qualified App.Misc as Misc
-import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified Codec.QRCode as QRCode
 import qualified Data.MemoUgly as Memo
 import qualified Data.Text.Lazy as TL
+import Functora.Miso.Prelude
 import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
-import Miso hiding (at, view)
 
 qr :: Model -> MisoString -> Opts -> [View Action]
 qr st txt opts
@@ -54,7 +53,7 @@ qr st txt opts
           [ Cell.bigCell
               . TextArea.filled
               $ TextArea.config
-              & TextArea.setValue (Just $ from @Text @String txt)
+              & TextArea.setValue (Just txt)
               & TextArea.setDisabled True
               & TextArea.setFullwidth True
               & TextArea.setInnerView [text txt],
@@ -70,7 +69,9 @@ qr st txt opts
 
 newQrImg :: MisoString -> Maybe MisoString
 newQrImg =
-  ( fmap $ ms @TL.Text . Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
+  ( fmap
+      $ toMisoString @TL.Text
+      . Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
   )
     . QRCode.encodeAutomatic
       ( QRCode.defaultQRCodeOptions QRCode.L

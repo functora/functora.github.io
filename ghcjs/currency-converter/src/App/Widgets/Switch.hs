@@ -5,17 +5,17 @@ module App.Widgets.Switch
   )
 where
 
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Frame as Frame
+import Functora.Miso.Prelude
 import qualified Material.Icon as Icon
 import qualified Material.Switch as Switch
 import Miso hiding (at, view)
 
 data Opts = Opts
   { optsDisabled :: Bool,
-    optsPlaceholder :: Text,
-    optsIcon :: Maybe Text
+    optsPlaceholder :: MisoString,
+    optsIcon :: Maybe MisoString
   }
   deriving stock (Generic)
 
@@ -31,7 +31,7 @@ switch :: Model -> Opts -> ATraversal' Model Bool -> View Action
 switch st opts optic =
   Frame.frame
     $ maybeToList
-      ( fmap (Icon.icon mempty . from @Text @String)
+      ( fmap (Icon.icon mempty)
           $ optsIcon opts
       )
     <> [ Miso.rawHtml "&nbsp;",

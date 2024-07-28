@@ -4,12 +4,11 @@ module App.Widgets.FieldPairs
   )
 where
 
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
+import Functora.Miso.Prelude
 import qualified Material.Typography as Typography
-import Miso hiding (at, view)
 
 fieldPairsViewer :: Model -> [FieldPair DynamicField Unique] -> [View Action]
 fieldPairsViewer st = (>>= fieldPairViewer st)
@@ -102,5 +101,5 @@ fieldPairWidget st optic idx =
       )
   ]
   where
-    idxTxt :: Text
+    idxTxt :: MisoString
     idxTxt = "#" <> inspect (idx + 1)

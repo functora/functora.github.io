@@ -22,6 +22,7 @@ import Functora.Prelude as X hiding
 import qualified Functora.Prelude as Prelude
 import Miso as X hiding
   ( Key,
+    Text,
     URI,
     at,
     consoleLog,

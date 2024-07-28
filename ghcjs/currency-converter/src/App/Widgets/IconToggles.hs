@@ -3,17 +3,16 @@ module App.Widgets.IconToggles
   )
 where
 
-import App.Prelude
 import App.Types
+import Functora.Miso.Prelude
 import qualified Material.IconToggle as IconToggle
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
-import Miso hiding (at, view)
 
 iconToggles ::
   Model ->
   NonEmpty
-    ( Text,
+    ( MisoString,
       IconToggle.Icon,
       IconToggle.Icon,
       ATraversal' Model Bool
@@ -36,7 +35,7 @@ iconToggles st items =
 
 iconToggleWidget ::
   Model ->
-  ( Text,
+  ( MisoString,
     IconToggle.Icon,
     IconToggle.Icon,
     ATraversal' Model Bool
@@ -45,7 +44,7 @@ iconToggleWidget ::
 iconToggleWidget st (label, onIcon, offIcon, optic) =
   IconToggle.iconToggle
     ( IconToggle.config
-        & IconToggle.setLabel (Just $ from @Text @String label)
+        & IconToggle.setLabel (Just label)
         & IconToggle.setOn (fromMaybe False $ st ^? cloneTraversal optic)
         & IconToggle.setOnChange (pureUpdate 0 (& cloneTraversal optic %~ not))
         & ( if st ^? cloneTraversal optic == Just True

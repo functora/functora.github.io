@@ -4,11 +4,11 @@ module App.Widgets.Templates
   )
 where
 
-import App.Prelude
 import App.Types
 import qualified Functora.Aes as Aes
 import Functora.Cfg
-import Functora.Money hiding (Currency, Money)
+import Functora.Miso.Prelude
+import Functora.Money hiding (Currency, Money, Text)
 import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
@@ -100,7 +100,7 @@ newModel webOpts mSt uri = do
             else do
               bDoc :: ByteString <-
                 maybe
-                  ( throwString @Text "Failed to decrypt the document!"
+                  ( throwString @MisoString "Failed to decrypt the document!"
                   )
                   pure
                   $ Aes.unHmacDecrypt

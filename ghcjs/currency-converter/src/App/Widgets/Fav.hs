@@ -4,16 +4,15 @@ module App.Widgets.Fav
 where
 
 import qualified App.Misc as Misc
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import App.Widgets.Templates
 import qualified Data.Map as Map
+import Functora.Miso.Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Theme as Theme
-import Miso hiding (at, view)
 import qualified Text.URI as URI
 
 fav :: Model -> [View Action]
@@ -116,7 +115,7 @@ fav st =
             . at nextFavName
             .~ Nothing
 
-makeFavName :: Model -> Text
+makeFavName :: Model -> MisoString
 makeFavName st =
   preFavName
     <> ( if preFavName == mempty
@@ -154,7 +153,7 @@ favItems st =
     $ st
     ^. #modelFavMap
 
-favItem :: Model -> Text -> Fav -> View Action
+favItem :: Model -> MisoString -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
   Cell.bigCell
     $ Button.raised

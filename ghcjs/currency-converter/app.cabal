@@ -26,7 +26,6 @@ common pkg
 
   other-modules:
     App.Misc
-    App.Prelude
     App.Types
     App.Widgets.Assets
     App.Widgets.Cell

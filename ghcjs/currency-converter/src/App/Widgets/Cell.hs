@@ -6,9 +6,8 @@ module App.Widgets.Cell
   )
 where
 
-import App.Prelude
+import Functora.Miso.Prelude
 import qualified Material.LayoutGrid as LayoutGrid
-import Miso hiding (at, view)
 
 grid :: [Attribute action] -> [View action] -> View action
 grid attrs cells =

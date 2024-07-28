@@ -61,7 +61,6 @@ module App.Types
   )
 where
 
-import App.Prelude
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
@@ -70,12 +69,12 @@ import qualified Data.Text as T
 import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
-import Functora.Money hiding (Currency, Money)
+import Functora.Miso.Prelude
+import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
-import Miso hiding (URI, view)
 import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
@@ -85,7 +84,7 @@ data Model = Model
     modelLoading :: Bool,
     modelState :: St Unique,
     modelMarket :: MVar Market,
-    modelFavMap :: Map Text Fav,
+    modelFavMap :: Map MisoString Fav,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
@@ -120,16 +119,16 @@ type Typ a =
 
 type Hkt f =
   ( Typeable f,
-    Eq (f Text),
-    Ord (f Text),
-    Show (f Text),
-    Data (f Text)
+    Eq (f MisoString),
+    Ord (f MisoString),
+    Show (f MisoString),
+    Data (f MisoString)
   )
 
 data St f = St
   { stScreen :: Screen,
     stDoc :: StDoc f,
-    stIkm :: Field Text f,
+    stIkm :: Field MisoString f,
     stKm :: Aes.Km,
     stPre :: Field DynamicField f,
     stExt :: Maybe (StExt f)
@@ -152,7 +151,7 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 data StExt f = StExt
   { stExtKm :: Aes.Km,
-    stExtIkm :: Field Text f,
+    stExtIkm :: Field MisoString f,
     stExtDoc :: Aes.Crypto,
     stExtPre :: Field DynamicField f,
     stExtScreen :: Screen
@@ -200,7 +199,7 @@ deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
 
 data StDoc f = StDoc
   { stDocConv :: StConv f,
-    stDocPreFavName :: Field Text f,
+    stDocPreFavName :: Field MisoString f,
     stDocFieldPairs :: [FieldPair DynamicField f],
     stDocOnlineOrOffline :: OnlineOrOffline
   }
@@ -241,7 +240,7 @@ instance TraversableB Money
 deriving via GenericType (Money Identity) instance Binary (Money Identity)
 
 data Currency f = Currency
-  { currencyInput :: Field Text f,
+  { currencyInput :: Field MisoString f,
     currencyOutput :: CurrencyInfo,
     currencyModalState :: OpenedOrClosed
   }
@@ -266,7 +265,7 @@ deriving via
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodMoneyLabel :: Field Text f,
+    paymentMethodMoneyLabel :: Field MisoString f,
     paymentMethodFieldPairs :: [FieldPair DynamicField f],
     paymentMethodModalState :: OpenedOrClosed
   }
@@ -361,7 +360,7 @@ data AssetsAndPaymentsLayout
 
 data Asset f = Asset
   { assetPrice :: Money f,
-    assetPriceLabel :: Field Text f,
+    assetPriceLabel :: Field MisoString f,
     assetFieldPairs :: [FieldPair DynamicField f],
     assetModalState :: OpenedOrClosed
   }
@@ -392,7 +391,7 @@ newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =
   newField FieldTypeNumber output inspectRatioDef
 
-newTextField :: (MonadIO m) => Text -> m (Field Text Unique)
+newTextField :: (MonadIO m) => MisoString -> m (Field MisoString Unique)
 newTextField output =
   newField FieldTypeText output id
 
@@ -406,13 +405,14 @@ newDynamicField output =
     output
     inspectDynamicField
 
-newDynamicTitleField :: (MonadIO m) => Text -> m (Field DynamicField Unique)
+newDynamicTitleField ::
+  (MonadIO m) => MisoString -> m (Field DynamicField Unique)
 newDynamicTitleField =
   fmap (& #fieldType .~ FieldTypeTitle)
     . newDynamicField
     . DynamicFieldText
 
-newPasswordField :: (MonadIO m) => Text -> m (Field Text Unique)
+newPasswordField :: (MonadIO m) => MisoString -> m (Field MisoString Unique)
 newPasswordField output =
   newField FieldTypePassword output id
 
@@ -462,7 +462,7 @@ newUniqueDuplicator = do
 newAsset ::
   ( MonadIO m
   ) =>
-  Text ->
+  MisoString ->
   Rational ->
   CurrencyInfo ->
   m (Asset Unique)
@@ -478,7 +478,7 @@ newPaymentMethod ::
   ( MonadIO m
   ) =>
   CurrencyInfo ->
-  Maybe Text ->
+  Maybe MisoString ->
   m (PaymentMethod Unique)
 newPaymentMethod cur addr0 = do
   lbl <- newTextField $ inspectCurrencyInfo cur <> " total"
@@ -509,7 +509,7 @@ data FieldType
   = -- Rational
     FieldTypeNumber
   | FieldTypePercent
-  | -- Text
+  | -- Textual
     FieldTypeText
   | FieldTypeTitle
   | FieldTypeQrCode
@@ -518,7 +518,7 @@ data FieldType
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType FieldType
 
-htmlFieldType :: FieldType -> Text
+htmlFieldType :: FieldType -> MisoString
 htmlFieldType = \case
   FieldTypeNumber -> "number"
   FieldTypePercent -> "number"
@@ -528,7 +528,7 @@ htmlFieldType = \case
   FieldTypeHtml -> "text"
   FieldTypePassword -> "password"
 
-userFieldType :: FieldType -> Text
+userFieldType :: FieldType -> MisoString
 userFieldType = \case
   FieldTypeNumber -> "Number"
   FieldTypePercent -> "Percent"
@@ -539,7 +539,7 @@ userFieldType = \case
   FieldTypePassword -> "Password"
 
 data DynamicField
-  = DynamicFieldText Text
+  = DynamicFieldText MisoString
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType DynamicField
@@ -553,14 +553,14 @@ parseDynamicField value =
   where
     input = value ^. #fieldInput . #uniqueValue
 
-inspectDynamicField :: DynamicField -> Text
+inspectDynamicField :: DynamicField -> MisoString
 inspectDynamicField = \case
   DynamicFieldText x -> x
   DynamicFieldNumber x -> inspectRatioDef x
 
 data Field a f = Field
   { fieldType :: FieldType,
-    fieldInput :: f Text,
+    fieldInput :: f MisoString,
     fieldOutput :: a,
     fieldAllowCopy :: Bool,
     fieldModalState :: OpenedOrClosed
@@ -584,7 +584,8 @@ deriving via
   instance
     (Typ a) => Binary (Field a Identity)
 
-newField :: (MonadIO m) => FieldType -> a -> (a -> Text) -> m (Field a Unique)
+newField ::
+  (MonadIO m) => FieldType -> a -> (a -> MisoString) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
   pure
@@ -597,7 +598,7 @@ newField typ output newInput = do
       }
 
 data FieldPair a f = FieldPair
-  { fieldPairKey :: Field Text f,
+  { fieldPairKey :: Field MisoString f,
     fieldPairValue :: Field a f
   }
   deriving stock (Generic)
@@ -620,7 +621,7 @@ deriving via
     (Typ a) => Binary (FieldPair a Identity)
 
 newFieldPair ::
-  (MonadIO m) => Text -> DynamicField -> m (FieldPair DynamicField Unique)
+  (MonadIO m) => MisoString -> DynamicField -> m (FieldPair DynamicField Unique)
 newFieldPair key val =
   FieldPair
     <$> newTextField key
@@ -752,7 +753,7 @@ stUri :: (MonadThrow m) => Model -> m URI
 stUri Model {modelState = St {stExt = Just ext}} =
   stExtUri ext
 stUri st@Model {modelState = St {stExt = Nothing}} = do
-  uri <- mkURI $ from @Text @Prelude.Text baseUri
+  uri <- mkURI $ from @MisoString @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
@@ -761,14 +762,14 @@ stUri st@Model {modelState = St {stExt = Nothing}} = do
 
 stExtUri :: (MonadThrow m) => StExt Unique -> m URI
 stExtUri ext = do
-  uri <- mkURI $ from @Text @Prelude.Text baseUri
+  uri <- mkURI $ from @MisoString @Prelude.Text baseUri
   qxs <- stExtQuery $ uniqueToIdentity ext
   pure
     $ uri
       { URI.uriQuery = qxs
       }
 
-baseUri :: Text
+baseUri :: MisoString
 #ifdef GHCID
 baseUri =
   "http://localhost:8080"
@@ -797,9 +798,9 @@ shareLink sc =
     . stUri
     . setScreenPure sc
 
-vsn :: Text
+vsn :: MisoString
 vsn =
-  from @Prelude.Text @Text
+  from @Prelude.Text @MisoString
     . T.intercalate "."
-    . fmap inspect
+    . fmap Prelude.inspect
     $ Version.versionBranch Paths.version

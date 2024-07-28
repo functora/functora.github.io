@@ -4,13 +4,12 @@ module App.Widgets.Assets
   )
 where
 
-import App.Prelude
 import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
+import Functora.Miso.Prelude
 import qualified Material.Theme as Theme
-import Miso hiding (at, view)
 
 assetsViewer :: Model -> [Asset Unique] -> [View Action]
 assetsViewer st = (>>= assetViewer st)
@@ -81,9 +80,9 @@ assetWidget st optic idx =
           . #assetFieldPairs
       )
   where
-    idxTxt :: Text
+    idxTxt :: MisoString
     idxTxt = "#" <> inspect (idx + 1)
-    label :: Text
+    label :: MisoString
     label =
       fromMaybe
         mempty

@@ -15,10 +15,10 @@ module App.Widgets.Field
 where
 
 import qualified App.Misc as Misc
-import App.Prelude
 import App.Types
 import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Qr as Qr
+import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -28,13 +28,12 @@ import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
-import Miso hiding (URI, view)
 import qualified Text.URI as URI
 
 data Opts = Opts
   { optsDisabled :: Bool,
     optsFullWidth :: Bool,
-    optsPlaceholder :: Text,
+    optsPlaceholder :: MisoString,
     optsExtraOnInput :: Model -> Model,
     optsLeadingWidget :: Maybe OptsWidget,
     optsTrailingWidget :: Maybe OptsWidget,
@@ -51,7 +50,7 @@ data OptsWidget
   | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
   | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
-  | ActionWidget Text [Attribute Action] Action
+  | ActionWidget MisoString [Attribute Action] Action
   | ModalWidget ModalWidget'
 
 data ModalWidget' where
@@ -62,7 +61,7 @@ data ModalWidget' where
     ATraversal' Model [a] ->
     Int ->
     ATraversal' a [FieldPair DynamicField Unique] ->
-    ATraversal' a (Field Text Unique) ->
+    ATraversal' a (Field MisoString Unique) ->
     ATraversal' a OpenedOrClosed ->
     ModalWidget'
   ModalFieldWidget ::
@@ -100,7 +99,7 @@ field ::
   ATraversal' Model (Field a Unique) ->
   Opts ->
   (Field a Unique -> Maybe a) ->
-  (a -> Text) ->
+  (a -> MisoString) ->
   View Action
 field st optic opts parser viewer =
   LayoutGrid.cell
@@ -130,14 +129,12 @@ field st optic opts parser viewer =
           Outlined -> TextField.outlined
           $ TextField.config
           & TextField.setType
-            ( fmap
-                (from @Text @String . htmlFieldType)
-                (st ^? cloneTraversal optic . #fieldType)
+            ( fmap htmlFieldType (st ^? cloneTraversal optic . #fieldType)
             )
           & TextField.setOnInput onInputAction
           & TextField.setDisabled (opts ^. #optsDisabled)
           & TextField.setLabel
-            ( Just . from @Text @String $ opts ^. #optsPlaceholder
+            ( Just $ opts ^. #optsPlaceholder
             )
           & TextField.setLeadingIcon
             ( fmap
@@ -150,7 +147,7 @@ field st optic opts parser viewer =
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
-            ( [ id_ $ htmlUid @Text uid,
+            ( [ id_ $ htmlUid @MisoString uid,
                 onKeyDown . optsOnKeyDownAction opts $ uid,
                 onBlur onBlurAction
               ]
@@ -202,7 +199,7 @@ field st optic opts parser viewer =
                   & cloneTraversal optic
                   . #fieldInput
                   . #uniqueValue
-                  .~ from @String @Text txt
+                  .~ txt
                   & (opts ^. #optsExtraOnInput)
            in next
                 & cloneTraversal optic
@@ -225,7 +222,7 @@ ratioField st optic opts =
 
 textField ::
   Model ->
-  ATraversal' Model (Field Text Unique) ->
+  ATraversal' Model (Field MisoString Unique) ->
   Opts ->
   View Action
 textField st optic opts =
@@ -256,7 +253,7 @@ dynamicField st optic idx opts =
 
 passwordField ::
   Model ->
-  ATraversal' Model (Field Text Unique) ->
+  ATraversal' Model (Field MisoString Unique) ->
   Opts ->
   View Action
 passwordField st optic opts =
@@ -290,10 +287,10 @@ fieldIcon st optic lot extraOnInput = \case
     fieldIconSimple lot "close" mempty . PushUpdate $ do
       Misc.verifyUid uid
       focus
-        . ms
-        $ htmlUid @Text uid
+        . toMisoString
+        $ htmlUid @MisoString uid
       void
-        . JS.eval @Text
+        . JS.eval @MisoString
         $ "var el = document.getElementById('"
         <> htmlUid uid
         <> "'); if (el) el.value = '';"
@@ -352,14 +349,14 @@ fieldIcon st optic lot extraOnInput = \case
               .~ Opened
         )
   ActionWidget icon attrs action ->
-    fieldIconSimple lot (from @Text @String icon) attrs action
+    fieldIconSimple lot icon attrs action
   where
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
 
 fieldIconSimple ::
   LeadingOrTrailing ->
-  String ->
+  MisoString ->
   [Attribute action] ->
   action ->
   TextField.Icon action
@@ -758,7 +755,7 @@ selectTypeWidget st optic =
           )
           typs
 
-constTextField :: Model -> Text -> Opts -> View Action
+constTextField :: Model -> MisoString -> Opts -> View Action
 constTextField st txt opts =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
@@ -775,12 +772,12 @@ constTextField st txt opts =
         Outlined -> TextField.outlined
         $ TextField.config
         & TextField.setDisabled True
-        & TextField.setValue (Just $ from @Text @String txt)
+        & TextField.setValue (Just txt)
         & TextField.setType
-          ( Just . from @Text @String $ htmlFieldType FieldTypeText
+          ( Just $ htmlFieldType FieldTypeText
           )
         & TextField.setLabel
-          ( Just . from @Text @String $ opts ^. #optsPlaceholder
+          ( Just $ opts ^. #optsPlaceholder
           )
         & TextField.setLeadingIcon
           ( fmap
@@ -813,7 +810,7 @@ constTextField st txt opts =
 constLinkField :: Model -> URI -> Opts -> View Action
 constLinkField st =
   constTextField st
-    . ms
+    . toMisoString
     . URI.render
 
 --
@@ -862,10 +859,10 @@ plain out widget =
                 ("line-height", "150%")
               ]
           ]
-          [widget $ ms out]
+          [widget $ toMisoString out]
       ]
 
-header :: Text -> [View Action]
+header :: MisoString -> [View Action]
 header txt =
   if txt == mempty
     then mempty

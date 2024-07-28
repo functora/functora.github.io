@@ -3,17 +3,16 @@ module App.Widgets.Chips
   )
 where
 
-import App.Prelude
 import App.Types
+import Functora.Miso.Prelude
 import qualified Material.Chip.Filter as Filter
 import qualified Material.ChipSet.Filter as Filter
 import qualified Material.LayoutGrid as LayoutGrid
-import Miso hiding (at, view)
 
 chips ::
   Model ->
   NonEmpty
-    ( Text,
+    ( MisoString,
       Maybe Filter.Icon,
       ATraversal' Model Bool
     ) ->
@@ -45,7 +44,7 @@ chips st items =
 
 chipWidget ::
   Model ->
-  Text ->
+  MisoString ->
   Maybe Filter.Icon ->
   ATraversal' Model Bool ->
   Filter.Chip Action
@@ -56,4 +55,4 @@ chipWidget st label icon optic =
         & Filter.setOnChange (pureUpdate 0 (& cloneTraversal optic %~ not))
         & Filter.setIcon icon
     )
-    $ from @Text @String label
+    label

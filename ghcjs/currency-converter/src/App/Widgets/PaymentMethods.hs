@@ -4,13 +4,12 @@ module App.Widgets.PaymentMethods
   )
 where
 
-import App.Prelude as Prelude
 import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
+import Functora.Miso.Prelude
 import qualified Material.Theme as Theme
-import Miso hiding (at, view)
 
 paymentMethodsViewer :: Model -> [PaymentMethod Unique] -> [View Action]
 paymentMethodsViewer st = (>>= paymentMethodViewer st)
@@ -88,9 +87,9 @@ paymentMethodWidget st optic idx =
           . #paymentMethodFieldPairs
       )
   where
-    idxTxt :: Text
+    idxTxt :: MisoString
     idxTxt = "#" <> inspect (idx + 1)
-    label :: Text
+    label :: MisoString
     label =
       fromMaybe
         mempty

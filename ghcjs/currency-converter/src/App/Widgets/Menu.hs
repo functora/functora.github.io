@@ -9,7 +9,6 @@ import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
-import App.Widgets.Templates
 import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -48,7 +47,7 @@ menu st =
                         pure
                           . ChanItem 0
                           $ (& #modelState . #stDoc .~ doc)
-                          . (& #modelState . #stExt .~ Nothing)
+                          . (& #modelState . #stCpt .~ Nothing)
                           . (& #modelState . #stScreen .~ Converter)
                     ]
                     [ text "Converter"
@@ -272,11 +271,8 @@ menu st =
         $ (& #modelMenu .~ Closed)
         . (& #modelLoading .~ isQrCode next)
         . (& #modelState . #stScreen .~ next)
-        . (& #modelState . #stExt . _Just . #stExtScreen .~ next)
     sc =
-      fromMaybe
-        (st ^. #modelState . #stScreen)
-        (st ^? #modelState . #stExt . _Just . #stExtScreen)
+      st ^. #modelState . #stScreen
     navItemLeft x =
       div_
         [ TopAppBar.title,

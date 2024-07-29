@@ -1,6 +1,5 @@
 module App.Widgets.Templates
-  ( newStDoc,
-    newModel,
+  ( newModel,
   )
 where
 
@@ -8,27 +7,9 @@ import App.Types
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Money hiding (Currency, Money, Text)
 import Functora.Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
-
-newStDoc :: IO (StDoc Unique)
-newStDoc = do
-  ct <- getCurrentTime
-  topMoney <- newMoney 1 btc
-  bottomMoney <- newMoney 0 usd
-  preFavName <- newTextField mempty
-  pure
-    StDoc
-      { stDocTopMoney = topMoney,
-        stDocBottomMoney = bottomMoney,
-        stDocTopOrBottom = Top,
-        stDocPreFavName = preFavName,
-        stDocFieldPairs = mempty,
-        stDocOnlineOrOffline = Online,
-        stDocCreatedAt = ct
-      }
 
 newModel ::
   ( MonadThrow m,
@@ -47,16 +28,16 @@ newModel webOpts mSt uri = do
       newMarket
       pure
       (mSt ^? _Just . #modelMarket)
-  ikm <-
-    maybe
-      (newPasswordField mempty)
-      pure
-      (mSt ^? _Just . #modelState . #stIkm)
-  km <-
+  defKm <-
     maybe
       (Aes.randomKm 32)
       pure
       (mSt ^? _Just . #modelState . #stKm)
+  defIkm <-
+    maybe
+      (newPasswordField mempty)
+      pure
+      (mSt ^? _Just . #modelState . #stIkm)
   defDoc <-
     maybe
       (liftIO newStDoc)
@@ -71,44 +52,47 @@ newModel webOpts mSt uri = do
         fromMaybe
           Converter
           (mSt ^? _Just . #modelState . #stScreen)
-  let defExt =
-        mSt ^? _Just . #modelState . #stExt . _Just
+  let defCpt =
+        mSt ^? _Just . #modelState . #stCpt . _Just
   mApp <- unShareUri uri
-  (sc, doc, pre, ext) <-
+  st <-
     maybe
-      ( pure (defSc, defDoc, defPre, defExt)
+      ( pure
+          St
+            { stKm = defKm,
+              stIkm = defIkm,
+              stDoc = defDoc,
+              stPre = defPre,
+              stScreen = defSc,
+              stCpt = defCpt
+            }
       )
-      ( \ext -> do
-          let sc = ext ^. #stExtScreen
-          let pre = ext ^. #stExtPre
-          if null $ ext ^. #stExtKm . #kmIkm . #unIkm
-            then
-              pure
-                ( sc,
-                  defDoc,
-                  pre,
-                  Just ext
-                )
-            else do
-              bDoc :: ByteString <-
-                maybe
-                  ( throwString @MisoString "Failed to decrypt the document!"
-                  )
-                  pure
-                  $ Aes.unHmacDecrypt
-                    ( Aes.drvSomeAesKey @Aes.Word256 $ ext ^. #stExtKm
+      ( \st -> do
+          if null $ st ^. #stKm . #kmIkm . #unIkm
+            then pure st
+            else case st ^. #stCpt of
+              Nothing -> pure st
+              Just cpt -> do
+                bDoc :: ByteString <-
+                  maybe
+                    ( throwString
+                        @MisoString
+                        "Failed to decrypt the document!"
                     )
-                    ( ext ^. #stExtDoc
-                    )
-              doc <-
-                identityToUnique
-                  =<< either (throwString . thd3) pure (decodeBinary bDoc)
-              pure
-                ( sc,
-                  doc,
-                  pre,
-                  defExt
-                )
+                    pure
+                    $ Aes.unHmacDecrypt
+                      ( Aes.drvSomeAesKey @Aes.Word256 $ st ^. #stKm
+                      )
+                      cpt
+                doc <-
+                  identityToUnique
+                    =<< either (throwString . thd3) pure (decodeBinary bDoc)
+                pure
+                  $ st
+                  & #stDoc
+                  .~ doc
+                  & (#stCpt :: Lens' (St Unique) (Maybe Aes.Crypto))
+                  .~ Nothing
       )
       mApp
   pure
@@ -116,15 +100,7 @@ newModel webOpts mSt uri = do
       { modelFav = Closed,
         modelMenu = Closed,
         modelLoading = True,
-        modelState =
-          St
-            { stKm = km,
-              stIkm = ikm,
-              stDoc = doc,
-              stPre = pre,
-              stScreen = sc,
-              stExt = ext
-            },
+        modelState = st,
         modelMarket = market,
         modelFavMap = mempty,
         modelCurrencies =
@@ -140,13 +116,3 @@ newModel webOpts mSt uri = do
         modelOnlineAt = fromMaybe ct (mSt ^? _Just . #modelOnlineAt),
         modelWebOpts = webOpts
       }
-
---
--- Const
---
-
-usd :: CurrencyInfo
-usd = CurrencyInfo (CurrencyCode "usd") mempty
-
-btc :: CurrencyInfo
-btc = CurrencyInfo (CurrencyCode "btc") mempty

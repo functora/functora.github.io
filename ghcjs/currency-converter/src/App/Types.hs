@@ -6,20 +6,20 @@ module App.Types
     Action (..),
     St (..),
     StDoc (..),
-    StExt (..),
+    newStDoc,
     Screen (..),
     isQrCode,
     unQrCode,
     pureUpdate,
     unShareUri,
     stUri,
-    stExtUri,
     baseUri,
     setScreenPure,
     setScreenAction,
-    setExtScreenAction,
     shareLink,
     vsn,
+    usd,
+    btc,
     module X,
   )
 where
@@ -59,7 +59,7 @@ data Model = Model
 
 data Action
   = Noop
-  | InitUpdate (Maybe (StExt Unique))
+  | InitUpdate (Maybe Aes.Crypto)
   | TimeUpdate
   | SyncInputs
   | ChanUpdate Model
@@ -71,7 +71,7 @@ data St f = St
     stDoc :: StDoc f,
     stPre :: Field DynamicField f,
     stScreen :: Screen,
-    stExt :: Maybe (StExt f)
+    stCpt :: Maybe Aes.Crypto
   }
   deriving stock (Generic)
 
@@ -88,29 +88,6 @@ instance FunctorB St
 instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
-
-data StExt f = StExt
-  { stExtKm :: Aes.Km,
-    stExtIkm :: Field MisoString f,
-    stExtDoc :: Aes.Crypto,
-    stExtPre :: Field DynamicField f,
-    stExtScreen :: Screen
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (StExt f)
-
-deriving stock instance (Hkt f) => Ord (StExt f)
-
-deriving stock instance (Hkt f) => Show (StExt f)
-
-deriving stock instance (Hkt f) => Data (StExt f)
-
-instance FunctorB StExt
-
-instance TraversableB StExt
-
-deriving via GenericType (StExt Identity) instance Binary (StExt Identity)
 
 data StDoc f = StDoc
   { stDocTopMoney :: Money f,
@@ -136,6 +113,23 @@ instance FunctorB StDoc
 instance TraversableB StDoc
 
 deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
+
+newStDoc :: (MonadIO m) => m (StDoc Unique)
+newStDoc = do
+  ct <- getCurrentTime
+  topMoney <- newMoney 1 btc
+  bottomMoney <- newMoney 0 usd
+  preFavName <- newTextField mempty
+  pure
+    StDoc
+      { stDocTopMoney = topMoney,
+        stDocBottomMoney = bottomMoney,
+        stDocTopOrBottom = Top,
+        stDocPreFavName = preFavName,
+        stDocFieldPairs = mempty,
+        stDocOnlineOrOffline = Online,
+        stDocCreatedAt = ct
+      }
 
 data Screen
   = Converter
@@ -167,7 +161,7 @@ unShareUri ::
     MonadIO m
   ) =>
   URI ->
-  m (Maybe (StExt Unique))
+  m (Maybe (St Unique))
 unShareUri uri = do
   kKm <- URI.mkQueryKey "k"
   kDoc <- URI.mkQueryKey "d"
@@ -180,25 +174,27 @@ unShareUri uri = do
     <*> qsGet kSc qs
     <*> qsGet kPre qs of
     Nothing -> pure Nothing
-    Just (vDoc, vKm, vSc, vPre) -> do
+    Just (vCpt, vKm, vSc, vPre) -> do
       bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
-      bDoc <- either throwString pure . B64URL.decode $ encodeUtf8 vDoc
+      bCpt <- either throwString pure . B64URL.decode $ encodeUtf8 vCpt
       bSc <- either throwString pure . B64URL.decode $ encodeUtf8 vSc
       bPre <- either throwString pure . B64URL.decode $ encodeUtf8 vPre
       km <- either (throwString . thd3) pure $ decodeBinary bKm
       ikm <- newPasswordField mempty
-      doc <- either (throwString . thd3) pure $ decodeBinary bDoc
+      cpt <- either (throwString . thd3) pure $ decodeBinary bCpt
       sc <- either (throwString . thd3) pure $ decodeBinary bSc
       iPre <- either (throwString . thd3) pure $ decodeBinary bPre
       pre <- identityToUnique iPre
+      doc <- newStDoc
       pure
         $ Just
-          StExt
-            { stExtKm = km,
-              stExtIkm = ikm,
-              stExtDoc = doc,
-              stExtPre = pre,
-              stExtScreen = sc
+          St
+            { stKm = km,
+              stIkm = ikm,
+              stDoc = doc,
+              stPre = pre,
+              stScreen = sc,
+              stCpt = Just cpt
             }
 
 stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
@@ -207,8 +203,9 @@ stQuery st = do
   vDoc <-
     (URI.mkQueryValue <=< encodeText)
       . encodeBinary
-      . Aes.encryptHmac aes
-      $ encodeBinary (st ^. #stDoc)
+      $ fromMaybe
+        (Aes.encryptHmac aes . encodeBinary $ st ^. #stDoc)
+        (st ^. #stCpt)
   kKm <- URI.mkQueryKey "k"
   vKm <-
     (URI.mkQueryValue <=< encodeText)
@@ -244,53 +241,10 @@ stQuery st = do
         . B64URL.encode
         . from @BL.ByteString @ByteString
 
-stExtQuery :: (MonadThrow m) => StExt Identity -> m [URI.QueryParam]
-stExtQuery st = do
-  kDoc <- URI.mkQueryKey "d"
-  vDoc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtDoc)
-  kKm <- URI.mkQueryKey "k"
-  vKm <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtKm)
-  kSc <- URI.mkQueryKey "s"
-  vSc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtScreen)
-  kPre <- URI.mkQueryKey "p"
-  vPre <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stExtPre)
-  pure
-    [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kKm vKm,
-      URI.QueryParam kSc vSc,
-      URI.QueryParam kPre vPre
-    ]
-  where
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
-    encodeText =
-      either throw pure
-        . decodeUtf8'
-        . B64URL.encode
-        . from @BL.ByteString @ByteString
-
 stUri :: (MonadThrow m) => Model -> m URI
-stUri Model {modelState = St {stExt = Just ext}} =
-  stExtUri ext
-stUri st@Model {modelState = St {stExt = Nothing}} = do
+stUri st = do
   uri <- mkURI $ from @MisoString @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
-  pure
-    $ uri
-      { URI.uriQuery = qxs
-      }
-
-stExtUri :: (MonadThrow m) => StExt Unique -> m URI
-stExtUri ext = do
-  uri <- mkURI $ from @MisoString @Prelude.Text baseUri
-  qxs <- stExtQuery $ uniqueToIdentity ext
   pure
     $ uri
       { URI.uriQuery = qxs
@@ -308,15 +262,10 @@ baseUri =
 setScreenPure :: Screen -> Model -> Model
 setScreenPure sc =
   (& #modelState . #stScreen .~ sc)
-    . (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
 setScreenAction :: Screen -> Action
 setScreenAction =
   pureUpdate 0 . setScreenPure
-
-setExtScreenAction :: Screen -> Action
-setExtScreenAction sc =
-  pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
 shareLink :: forall a. (From Prelude.Text a) => Model -> a
 shareLink =
@@ -330,3 +279,9 @@ vsn =
     . T.intercalate "."
     . fmap Prelude.inspect
     $ Version.versionBranch Paths.version
+
+usd :: CurrencyInfo
+usd = CurrencyInfo (CurrencyCode "usd") mempty
+
+btc :: CurrencyInfo
+btc = CurrencyInfo (CurrencyCode "btc") mempty

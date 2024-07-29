@@ -23,9 +23,7 @@ decrypt st =
       $ Field.passwordField
         st
         ( #modelState
-            . #stExt
-            . _Just
-            . #stExtIkm
+            . #stIkm
         )
         ( Field.defOpts
             & #optsOnKeyDownAction
@@ -42,26 +40,26 @@ decrypt st =
   ]
 
 decryptDoc :: Model -> Action
-decryptDoc st@Model {modelState = St {stExt = Nothing}} =
+decryptDoc st@Model {modelState = St {stCpt = Nothing}} =
   PushUpdate $ do
     Misc.textPopup @MisoString st "Nothing to decrypt!"
     pure $ ChanItem 0 id
-decryptDoc Model {modelState = St {stExt = Just {}}} =
+decryptDoc Model {modelState = St {stCpt = Just {}}} =
   PushUpdate $ do
     rnd0 <- liftIO Random.newStdGen
     pure $ ChanItem 0 $ \case
-      st@Model {modelState = St {stExt = Nothing}} -> st
-      st@Model {modelState = St {stExt = Just ext}} ->
-        let ikm = ext ^. #stExtIkm . #fieldOutput
+      st@Model {modelState = St {stCpt = Nothing}} -> st
+      st@Model {modelState = St {stCpt = Just cpt}} ->
+        let ikm = st ^. #modelState . #stIkm . #fieldOutput
             aes =
               Aes.drvSomeAesKey @Aes.Word256
-                $ (ext ^. #stExtKm)
+                $ (st ^. #modelState . #stKm)
                 & #kmIkm
                 .~ Ikm (encodeUtf8 ikm)
             eDoc = do
               bDoc <-
                 maybe (Left "Incorrect password!") Right
-                  $ Aes.unHmacDecrypt @ByteString aes (ext ^. #stExtDoc)
+                  $ Aes.unHmacDecrypt @ByteString aes cpt
               first thd3
                 $ decodeBinary bDoc
          in case eDoc of
@@ -81,7 +79,7 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                   pure
                     $ st
                     & #modelState
-                    . #stExt
+                    . #stCpt
                     .~ Nothing
                     & #modelState
                     . #stIkm
@@ -97,10 +95,10 @@ decryptDoc Model {modelState = St {stExt = Just {}}} =
                     .~ uDoc
                     & #modelState
                     . #stPre
-                    .~ (ext ^. #stExtPre)
+                    .~ (st ^. #modelState . #stPre)
                     & #modelState
                     . #stScreen
-                    .~ unQrCode (ext ^. #stExtScreen)
+                    .~ unQrCode (st ^. #modelState . #stScreen)
                     & Misc.textPopupClear
 
 onKeyDownAction :: Model -> Uid -> KeyCode -> Action

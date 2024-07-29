@@ -58,19 +58,20 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st@Model {modelState = St {stExt = Just ext}} =
-  case ext ^. #stExtScreen of
+screenWidget st@Model {modelState = St {stCpt = Just {}}} =
+  case st ^. #modelState . #stScreen of
     QrCode sc ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer st (ext ^. #stExtPre)
+        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
         )
         <> Qr.qr
           st
           ( toMisoString
               . either impureThrow URI.render
-              . stExtUri
-              $ ext
-              & #stExtScreen
+              . stUri
+              $ st
+              & #modelState
+              . #stScreen
               %~ unQrCode
           )
           ( Qr.defOpts
@@ -79,7 +80,7 @@ screenWidget st@Model {modelState = St {stExt = Just ext}} =
                     ( Button.config
                         & Button.setIcon (Just "login")
                         & Button.setAttributes [class_ "fill"]
-                        & Button.setOnClick (setExtScreenAction $ unQrCode sc)
+                        & Button.setOnClick (setScreenAction $ unQrCode sc)
                     )
                     "Open"
                  ]

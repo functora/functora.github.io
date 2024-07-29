@@ -21,6 +21,7 @@ import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
+import qualified Functora.Aes as Aes
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Storage as Storage
 import Functora.Money hiding (Money)
@@ -44,7 +45,7 @@ main =
     . handleAny (\e -> consoleLog e >> sleepSeconds 5)
     $ do
       uri <- URI.mkURI . Prelude.inspect =<< getCurrentURI
-      ext <- unShareUri uri
+      mSt <- unShareUri uri
       web <- getWebOpts
       st <- newModel web Nothing uri
       startApp
@@ -54,7 +55,7 @@ main =
             Miso.view = viewModel,
             subs = mempty,
             events = extendedEvents,
-            initialAction = InitUpdate ext,
+            initialAction = InitUpdate $ mSt ^? _Just . #stCpt . _Just,
             mountPoint = Nothing, -- defaults to 'body'
             logLevel = Off
           }
@@ -281,7 +282,18 @@ evalModel raw = do
       . tryMarket
       . fmap (^. #currenciesList)
       $ getCurrencies (raw ^. #modelWebOpts)
-  let st = raw & #modelState .~ new & #modelCurrencies .~ curs
+  km <-
+    if (new ^. #stKm . #kmIkm . #unIkm == mempty)
+      && (new ^. #stIkm . #fieldOutput == mempty)
+      && isNothing (new ^. #stCpt)
+      then Aes.randomKm 32
+      else pure $ new ^. #stKm
+  let st =
+        raw
+          & #modelState
+          .~ (new & #stKm .~ km)
+          & #modelCurrencies
+          .~ curs
   let loc = st ^. #modelState . #stDoc . #stDocTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc

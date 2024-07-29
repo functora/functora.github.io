@@ -84,7 +84,7 @@ fav st =
         let uri =
               either impureThrow id
                 . URI.mkURI
-                $ shareLink (nextSt ^. #modelState . #stScreen) nextSt
+                $ shareLink nextSt
             nextFav = do
               Fav
                 { favUri = uri,
@@ -122,9 +122,9 @@ makeFavName st =
           then mempty
           else " "
        )
-    <> getCode #stConvTopMoney
+    <> getCode #stDocTopMoney
     <> "/"
-    <> getCode #stConvBottomMoney
+    <> getCode #stDocBottomMoney
   where
     preFavName =
       st
@@ -136,7 +136,6 @@ makeFavName st =
       st
         ^. #modelState
         . #stDoc
-        . #stDocConv
         . cloneLens optic
         . #moneyCurrency
         . #currencyOutput

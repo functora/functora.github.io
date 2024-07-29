@@ -5,7 +5,6 @@ module App.Types
   ( Model (..),
     Action (..),
     St (..),
-    StConv (..),
     StDoc (..),
     StExt (..),
     Screen (..),
@@ -67,11 +66,11 @@ data Action
   | PushUpdate (JSM (ChanItem (Model -> Model)))
 
 data St f = St
-  { stScreen :: Screen,
-    stDoc :: StDoc f,
+  { stKm :: Aes.Km,
     stIkm :: Field MisoString f,
-    stKm :: Aes.Km,
+    stDoc :: StDoc f,
     stPre :: Field DynamicField f,
+    stScreen :: Screen,
     stExt :: Maybe (StExt f)
   }
   deriving stock (Generic)
@@ -111,38 +110,16 @@ instance FunctorB StExt
 
 instance TraversableB StExt
 
-deriving via
-  GenericType (StExt Identity)
-  instance
-    Binary (StExt Identity)
-
-data StConv f = StConv
-  { stConvTopMoney :: Money f,
-    stConvBottomMoney :: Money f,
-    stConvTopOrBottom :: TopOrBottom,
-    stConvCreatedAt :: UTCTime
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (StConv f)
-
-deriving stock instance (Hkt f) => Ord (StConv f)
-
-deriving stock instance (Hkt f) => Show (StConv f)
-
-deriving stock instance (Hkt f) => Data (StConv f)
-
-instance FunctorB StConv
-
-instance TraversableB StConv
-
-deriving via GenericType (StConv Identity) instance Binary (StConv Identity)
+deriving via GenericType (StExt Identity) instance Binary (StExt Identity)
 
 data StDoc f = StDoc
-  { stDocConv :: StConv f,
+  { stDocTopMoney :: Money f,
+    stDocBottomMoney :: Money f,
+    stDocTopOrBottom :: TopOrBottom,
     stDocPreFavName :: Field MisoString f,
     stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocOnlineOrOffline :: OnlineOrOffline
+    stDocOnlineOrOffline :: OnlineOrOffline,
+    stDocCreatedAt :: UTCTime
   }
   deriving stock (Generic)
 
@@ -341,12 +318,11 @@ setExtScreenAction :: Screen -> Action
 setExtScreenAction sc =
   pureUpdate 0 (& #modelState . #stExt . _Just . #stExtScreen .~ sc)
 
-shareLink :: forall a. (From Prelude.Text a) => Screen -> Model -> a
-shareLink sc =
+shareLink :: forall a. (From Prelude.Text a) => Model -> a
+shareLink =
   from @Prelude.Text @a
     . either impureThrow URI.render
     . stUri
-    . setScreenPure sc
 
 vsn :: MisoString
 vsn =

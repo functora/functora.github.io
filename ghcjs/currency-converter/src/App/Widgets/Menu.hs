@@ -100,10 +100,7 @@ menu st =
                   ( IconButton.config
                       & IconButton.setOnClick
                         ( Misc.copyIntoClipboardAction st
-                            $ shareLink
-                              @MisoString
-                              (st ^. #modelState . #stScreen)
-                              st
+                            $ shareLink @MisoString st
                         )
                       & IconButton.setAttributes
                         [ TopAppBar.actionItem,

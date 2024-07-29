@@ -15,27 +15,19 @@ import qualified Material.Snackbar as Snackbar
 
 newStDoc :: IO (StDoc Unique)
 newStDoc = do
-  conv <- newStConv
-  pfav <- newTextField mempty
-  pure
-    StDoc
-      { stDocConv = conv,
-        stDocPreFavName = pfav,
-        stDocFieldPairs = mempty,
-        stDocOnlineOrOffline = Online
-      }
-
-newStConv :: (MonadThrow m, MonadUnliftIO m) => m (StConv Unique)
-newStConv = do
   ct <- getCurrentTime
   topMoney <- newMoney 1 btc
   bottomMoney <- newMoney 0 usd
+  preFavName <- newTextField mempty
   pure
-    StConv
-      { stConvTopMoney = topMoney,
-        stConvBottomMoney = bottomMoney,
-        stConvTopOrBottom = Top,
-        stConvCreatedAt = ct
+    StDoc
+      { stDocTopMoney = topMoney,
+        stDocBottomMoney = bottomMoney,
+        stDocTopOrBottom = Top,
+        stDocPreFavName = preFavName,
+        stDocFieldPairs = mempty,
+        stDocOnlineOrOffline = Online,
+        stDocCreatedAt = ct
       }
 
 newModel ::
@@ -126,11 +118,11 @@ newModel webOpts mSt uri = do
         modelLoading = True,
         modelState =
           St
-            { stScreen = sc,
-              stDoc = doc,
+            { stKm = km,
               stIkm = ikm,
-              stKm = km,
+              stDoc = doc,
               stPre = pre,
+              stScreen = sc,
               stExt = ext
             },
         modelMarket = market,

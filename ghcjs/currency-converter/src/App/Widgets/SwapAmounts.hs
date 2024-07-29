@@ -35,8 +35,7 @@ swapAmounts =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvTopMoney
+                . #stDocTopMoney
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
@@ -44,16 +43,14 @@ swapAmounts =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvTopMoney
+                . #stDocTopMoney
                 . #moneyAmount
                 . #fieldOutput
             quoteInput =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvBottomMoney
+                . #stDocBottomMoney
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
@@ -61,43 +58,37 @@ swapAmounts =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvBottomMoney
+                . #stDocBottomMoney
                 . #moneyAmount
                 . #fieldOutput
          in st
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvTopMoney
+              . #stDocTopMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ quoteInput
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvTopMoney
+              . #stDocTopMoney
               . #moneyAmount
               . #fieldOutput
               .~ quoteOutput
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvBottomMoney
+              . #stDocBottomMoney
               . #moneyAmount
               . #fieldInput
               . #uniqueValue
               .~ baseInput
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvBottomMoney
+              . #stDocBottomMoney
               . #moneyAmount
               . #fieldOutput
               .~ baseOutput
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvTopOrBottom
+              . #stDocTopOrBottom
               .~ Top

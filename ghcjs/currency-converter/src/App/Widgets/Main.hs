@@ -124,8 +124,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               .~ ( &
                     #modelState
                       . #stDoc
-                      . #stDocConv
-                      . #stConvTopOrBottom
+                      . #stDocTopOrBottom
                       .~ loc
                  )
               & #optsPlaceholder
@@ -170,8 +169,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                             <> ( st
                                   ^. #modelState
                                   . #stDoc
-                                  . #stDocConv
-                                  . #stConvCreatedAt
+                                  . #stDocCreatedAt
                                   . to utctDay
                                   . to inspect
                                )

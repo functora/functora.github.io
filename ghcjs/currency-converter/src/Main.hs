@@ -179,7 +179,7 @@ updateModel (ChanUpdate prevSt) _ = do
                 pure $ prevSt & #modelLoading .~ False
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
-        uri <- URI.mkURI $ shareLink (nextSt ^. #modelState . #stScreen) nextSt
+        uri <- URI.mkURI $ shareLink nextSt
         Storage.insertStorage ("current-" <> vsn) uri
         if nextSt ^. #modelLoading
           then do
@@ -282,7 +282,7 @@ evalModel raw = do
       . fmap (^. #currenciesList)
       $ getCurrencies (raw ^. #modelWebOpts)
   let st = raw & #modelState .~ new & #modelCurrencies .~ curs
-  let loc = st ^. #modelState . #stDoc . #stDocConv . #stConvTopOrBottom
+  let loc = st ^. #modelState . #stDoc . #stDocTopOrBottom
   let baseLens = getBaseConverterMoneyLens loc
   let quoteLens = getQuoteConverterMoneyLens loc
   let baseAmtInput =
@@ -344,21 +344,20 @@ evalModel raw = do
           .~ unTagged quoteAmt
           & #modelState
           . #stDoc
-          . #stDocConv
-          . #stConvCreatedAt
+          . #stDocCreatedAt
           .~ quoteCreatedAt quote
           & #modelOnlineAt
           .~ ct
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case
-  Top -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
-  Bottom -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
+  Top -> #modelState . #stDoc . #stDocTopMoney
+  Bottom -> #modelState . #stDoc . #stDocBottomMoney
 
 getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getQuoteConverterMoneyLens = \case
-  Top -> #modelState . #stDoc . #stDocConv . #stConvBottomMoney
-  Bottom -> #modelState . #stDoc . #stDocConv . #stConvTopMoney
+  Top -> #modelState . #stDoc . #stDocBottomMoney
+  Bottom -> #modelState . #stDoc . #stDocTopMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

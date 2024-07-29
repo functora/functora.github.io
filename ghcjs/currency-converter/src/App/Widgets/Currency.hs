@@ -274,35 +274,30 @@ swapCurrencies =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvTopMoney
+                . #stDocTopMoney
                 . #moneyCurrency
                 . #currencyOutput
             quoteCurrency =
               st
                 ^. #modelState
                 . #stDoc
-                . #stDocConv
-                . #stConvBottomMoney
+                . #stDocBottomMoney
                 . #moneyCurrency
                 . #currencyOutput
          in st
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvTopMoney
+              . #stDocTopMoney
               . #moneyCurrency
               . #currencyOutput
               .~ quoteCurrency
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvBottomMoney
+              . #stDocBottomMoney
               . #moneyCurrency
               . #currencyOutput
               .~ baseCurrency
               & #modelState
               . #stDoc
-              . #stDocConv
-              . #stConvTopOrBottom
+              . #stDocTopOrBottom
               .~ Top

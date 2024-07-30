@@ -9,6 +9,7 @@ import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import App.Widgets.Templates
 import qualified Data.Map as Map
+import qualified Data.Text as T
 import Functora.Miso.Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -39,7 +40,14 @@ fav st =
                           )
                           ( Field.defOpts
                               & #optsPlaceholder
-                              .~ ("Name - " <> makeFavName st)
+                              .~ ( let name = makeFavName st
+                                    in "Name"
+                                        <> ( if name == mempty
+                                              then mempty
+                                              else " - "
+                                           )
+                                        <> name
+                                 )
                           ),
                        Cell.smallCell
                         $ Button.raised
@@ -94,7 +102,11 @@ fav st =
               makeFavName nextSt
          in nextSt
               & ( Misc.textPopupPure
-                    $ "Saved "
+                    $ "Saved"
+                    <> ( if nextFavName == mempty
+                          then mempty
+                          else " "
+                       )
                     <> nextFavName
                     <> "!"
                 )
@@ -117,14 +129,9 @@ fav st =
 
 makeFavName :: Model -> MisoString
 makeFavName st =
-  preFavName
-    <> ( if preFavName == mempty
-          then mempty
-          else " "
-       )
-    <> getCode #stDocTopMoney
-    <> "/"
-    <> getCode #stDocBottomMoney
+  toMisoString
+    . T.toUpper
+    $ fromMisoString preFavName
   where
     preFavName =
       st
@@ -132,16 +139,6 @@ makeFavName st =
         . #stDoc
         . #stDocPreFavName
         . #fieldOutput
-    getCode optic =
-      st
-        ^. #modelState
-        . #stDoc
-        . cloneLens optic
-        . #moneyCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . #unCurrencyCode
-        . to toMisoString
 
 favItems :: Model -> [View Action]
 favItems st =

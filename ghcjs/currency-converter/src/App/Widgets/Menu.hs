@@ -60,16 +60,16 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( pureUpdate 0
-                              $ (& #modelFav .~ Opened)
-                              . ( &
-                                    #modelState
-                                      . #stDoc
-                                      . #stDocPreFavName
-                                      . #fieldInput
-                                      . #uniqueValue
-                                      .~ mempty
-                                )
+                          ( pureUpdate 0 $ \next ->
+                              next
+                                & #modelFav
+                                .~ Opened
+                                & #modelState
+                                . #stDoc
+                                . #stDocPreFavName
+                                . #fieldInput
+                                . #uniqueValue
+                                .~ defFavName next
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -150,6 +150,7 @@ menu st =
                         Cell.smallCell
                           $ Button.raised
                             ( Button.config
+                                & Button.setDisabled disabled
                                 & Button.setOnClick
                                   ( Misc.newFieldPairAction
                                       $ #modelState
@@ -169,6 +170,7 @@ menu st =
                          in Cell.mediumCell
                               $ Select.outlined
                                 ( Select.config
+                                    & Select.setDisabled disabled
                                     & Select.setLabel
                                       ( Just "Exchange rate"
                                       )
@@ -211,6 +213,8 @@ menu st =
                             ( #modelState . #stPre
                             )
                             ( Field.defOpts
+                                & #optsDisabled
+                                .~ disabled
                                 & #optsPlaceholder
                                 .~ ( "Preview - "
                                       <> ( st
@@ -240,16 +244,22 @@ menu st =
                                 . #stIkm
                             )
                             ( Field.defOpts
+                                & #optsDisabled
+                                .~ disabled
                                 & #optsFilledOrOutlined
                                 .~ Outlined
                             )
                       ]
-                    <> FieldPairs.fieldPairs
-                      st
-                      ( #modelState
-                          . #stDoc
-                          . #stDocFieldPairs
-                      )
+                    <> ( if disabled
+                          then mempty
+                          else
+                            FieldPairs.fieldPairs
+                              st
+                              ( #modelState
+                                  . #stDoc
+                                  . #stDocFieldPairs
+                              )
+                       )
                     <> [ Cell.bigCell
                           $ Button.raised
                             ( Button.config
@@ -273,6 +283,8 @@ menu st =
         . (& #modelState . #stScreen .~ next)
     sc =
       st ^. #modelState . #stScreen
+    disabled =
+      isJust $ st ^. #modelState . #stCpt
     navItemLeft x =
       div_
         [ TopAppBar.title,
@@ -293,3 +305,21 @@ menu st =
         ]
         [ x
         ]
+
+defFavName :: Model -> MisoString
+defFavName st =
+  if isJust (st ^. #modelState . #stCpt)
+    || (st ^. #modelState . #stIkm . #fieldOutput /= mempty)
+    then mempty
+    else getCode #stDocTopMoney <> "/" <> getCode #stDocBottomMoney
+  where
+    getCode optic =
+      st
+        ^. #modelState
+        . #stDoc
+        . cloneLens optic
+        . #moneyCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . #unCurrencyCode
+        . to toMisoString

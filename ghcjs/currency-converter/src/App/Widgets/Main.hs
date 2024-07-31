@@ -27,17 +27,9 @@ mainWidget st =
     [ LayoutGrid.alignMiddle
     ]
     $ [ LayoutGrid.inner
-          ( [ class_ "container",
-              TopAppBar.shortFixedAdjust
-            ]
-              --
-              -- NOTE : Hiding widget on the first render to avoid flickering.
-              --
-              <> ( if st ^. #modelLoading
-                    then [style_ [("display", "none")]]
-                    else mempty
-                 )
-          )
+          [ class_ "container",
+            TopAppBar.shortFixedAdjust
+          ]
           ( Menu.menu st
               <> screenWidget st
               <> [ -- LayoutGrid.cell [LayoutGrid.span12]
@@ -53,7 +45,15 @@ mainWidget st =
           )
       ]
     <> ( if st ^. #modelLoading
-          then [div_ [class_ "lds-dual-ring"] mempty]
+          then
+            [ div_
+                [ class_
+                    "mdc-dialog mdc-dialog--fullscreen fullscreen-dialog mdc-dialog--open mdc-dialog-scroll-divider-footer mdc-dialog--scrollable"
+                ]
+                [ div_ [class_ "mdc-dialog__scrim"] mempty,
+                  div_ [class_ "lds-dual-ring"] mempty
+                ]
+            ]
           else mempty
        )
 

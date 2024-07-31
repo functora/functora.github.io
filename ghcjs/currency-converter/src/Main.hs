@@ -199,8 +199,7 @@ updateModel (ChanUpdate prevSt) _ = do
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
         uri <- URI.mkURI $ shareLink nextSt
-        let fm = nextSt ^. #modelFavMap
-        when (fm /= mempty) $ Storage.insertStorage ("favorite-" <> vsn) fm
+        Storage.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Storage.insertStorage ("current-" <> vsn) uri
         if nextSt ^. #modelLoading
           then do

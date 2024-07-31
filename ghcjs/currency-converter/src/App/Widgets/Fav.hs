@@ -135,6 +135,7 @@ makeFavName :: Model -> MisoString
 makeFavName st =
   toMisoString
     . T.toUpper
+    . T.strip
     $ fromMisoString preFavName
   where
     preFavName =

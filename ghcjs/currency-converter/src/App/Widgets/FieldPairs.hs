@@ -20,11 +20,26 @@ fieldPairViewer st pair =
       else
         [ cell
             $ strong_
-              [Typography.typography]
+              [ Typography.typography,
+                class_ "fill",
+                class_ "mdc-text-field",
+                class_ "mdc-text-field--filled",
+                style_
+                  [ ("align-items", "center"),
+                    ("align-content", "center"),
+                    ("word-break", "normal"),
+                    ("overflow-wrap", "anywhere"),
+                    ("min-height", "56px"),
+                    ("height", "auto"),
+                    ("padding-top", "8px"),
+                    ("padding-bottom", "8px"),
+                    ("line-height", "150%")
+                  ]
+              ]
               [text $ pair ^. #fieldPairKey . #fieldOutput]
         ]
   )
-    <> ( if k == mempty && v == mempty
+    <> ( if v == mempty
           then mempty
           else
             [ cell
@@ -36,7 +51,7 @@ fieldPairViewer st pair =
     k = pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
     cell =
-      if k == mempty
+      if k == mempty || v == mempty
         then Cell.bigCell
         else Cell.mediumCell
 

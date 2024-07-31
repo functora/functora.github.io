@@ -68,8 +68,8 @@ textarea {
   height: 64px;
   margin: 8px;
   border-radius: 50%;
-  border: 6px solid #6200ee;
-  border-color: #6200ee transparent #6200ee transparent;
+  border: 6px solid #ffffff;
+  border-color: #ffffff transparent #ffffff transparent;
   animation: lds-dual-ring 1.2s linear infinite;
 }
 @keyframes lds-dual-ring {

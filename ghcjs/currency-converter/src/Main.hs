@@ -284,23 +284,32 @@ syncInputs st = do
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
 evalModel raw = do
+  let oof = raw ^. #modelState . #stDoc . #stDocOnlineOrOffline
   new <-
-    Syb.everywhereM
-      ( Syb.mkM $ \cur ->
-          Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
-            . fmap (fromRight cur)
-            . Rates.tryMarket
-            . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
-            $ currencyInfoCode cur
-      )
-      ( raw ^. #modelState
-      )
+    case oof of
+      Online ->
+        Syb.everywhereM
+          ( Syb.mkM $ \cur ->
+              Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+                . fmap (fromRight cur)
+                . Rates.tryMarket
+                . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
+                $ currencyInfoCode cur
+          )
+          ( raw ^. #modelState
+          )
+      Offline ->
+        pure $ raw ^. #modelState
   curs <-
-    Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
-      . fmap (fromRight $ raw ^. #modelCurrencies)
-      . Rates.tryMarket
-      . fmap (^. #currenciesList)
-      $ Rates.getCurrencies (raw ^. #modelWebOpts)
+    case oof of
+      Online ->
+        Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+          . fmap (fromRight $ raw ^. #modelCurrencies)
+          . Rates.tryMarket
+          . fmap (^. #currenciesList)
+          $ Rates.getCurrencies (raw ^. #modelWebOpts)
+      Offline ->
+        pure $ raw ^. #modelCurrencies
   km <-
     if (new ^. #stKm . #kmIkm . #unIkm == mempty)
       && (new ^. #stIkm . #fieldOutput == mempty)
@@ -335,50 +344,54 @@ evalModel raw = do
   case baseAmtResult of
     Left {} -> pure st
     Right baseAmt ->
-      Rates.withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
-        let funds =
-              Funds
-                baseAmt
+      case oof of
+        Offline ->
+          pure st
+        Online ->
+          Rates.withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
+            let funds =
+                  Funds
+                    baseAmt
+                    $ st
+                    ^. cloneLens baseLens
+                    . #moneyCurrency
+                    . #currencyOutput
+                    . #currencyInfoCode
+            quote <-
+              Rates.getQuote (st ^. #modelWebOpts) funds
                 $ st
-                ^. cloneLens baseLens
+                ^. cloneLens quoteLens
                 . #moneyCurrency
                 . #currencyOutput
                 . #currencyInfoCode
-        quote <-
-          Rates.getQuote (st ^. #modelWebOpts) funds
-            $ st
-            ^. cloneLens quoteLens
-            . #moneyCurrency
-            . #currencyOutput
-            . #currencyInfoCode
-        let quoteAmt = quote ^. #quoteMoneyAmount
-        ct <- getCurrentTime
-        pure
-          $ st
-          & cloneLens baseLens
-          . #moneyAmount
-          . #fieldInput
-          . #uniqueValue
-          .~ baseAmtInput
-          & cloneLens baseLens
-          . #moneyAmount
-          . #fieldOutput
-          .~ unTagged baseAmt
-          & cloneLens quoteLens
-          . #moneyAmount
-          . #fieldInput
-          . #uniqueValue
-          .~ inspectRatioDef (unTagged quoteAmt)
-          & cloneLens quoteLens
-          . #moneyAmount
-          . #fieldOutput
-          .~ unTagged quoteAmt
-          & #modelState
-          . #stDoc
-          . #stDocCreatedAt
-          .~ (quote ^. #quoteCreatedAt)
-          & #modelOnlineAt
-          .~ ct
+            let quoteAmt = quote ^. #quoteMoneyAmount
+            ct <- getCurrentTime
+            pure
+              $ st
+              & cloneLens baseLens
+              . #moneyAmount
+              . #fieldInput
+              . #uniqueValue
+              .~ baseAmtInput
+              & cloneLens baseLens
+              . #moneyAmount
+              . #fieldOutput
+              .~ unTagged baseAmt
+              & cloneLens quoteLens
+              . #moneyAmount
+              . #fieldInput
+              . #uniqueValue
+              .~ inspectRatioDef (unTagged quoteAmt)
+              & cloneLens quoteLens
+              . #moneyAmount
+              . #fieldOutput
+              .~ unTagged quoteAmt
+              & #modelState
+              . #stDoc
+              . #stDocCreatedAt
+              .~ (quote ^. #quoteCreatedAt)
+              & #modelOnlineAt
+              .~ ct
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case

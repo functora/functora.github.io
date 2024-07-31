@@ -110,7 +110,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                  ]
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
-  let conn =
+  let oof =
         st
           ^. #modelState
           . #stDoc
@@ -157,13 +157,16 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               [ LayoutGrid.span12,
                 Typography.caption,
                 style_
-                  [ ("text-align", "center")
-                  ]
+                  $ [("text-align", "center")]
+                  <> ( if oof == Offline
+                        then [("color", "#B00020")]
+                        else mempty
+                     )
               ]
               [ Miso.text
-                  $ inspect conn
+                  $ inspect oof
                   <> " exchange rate"
-                  <> ( case conn of
+                  <> ( case oof of
                         Offline -> mempty
                         Online ->
                           " on "

@@ -7,7 +7,7 @@ import App.Types
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Rates
+import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
 
@@ -25,7 +25,7 @@ newModel webOpts mSt uri = do
   cons <- liftIO . atomically $ dupTChan prod
   market <-
     maybe
-      newMarket
+      Rates.newMarket
       pure
       (mSt ^? _Just . #modelMarket)
   defKm <-

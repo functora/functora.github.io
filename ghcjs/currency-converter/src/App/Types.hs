@@ -35,7 +35,7 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
-import Functora.Rates
+import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import qualified Material.Snackbar as Snackbar
 import qualified Paths_app as Paths
@@ -46,7 +46,7 @@ data Model = Model
     modelMenu :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    modelMarket :: MVar Market,
+    modelMarket :: MVar Rates.Market,
     modelFavMap :: Map MisoString Fav,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,

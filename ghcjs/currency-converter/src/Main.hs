@@ -26,7 +26,7 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Storage as Storage
 import Functora.Money hiding (Money)
 import qualified Functora.Prelude as Prelude
-import Functora.Rates
+import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
@@ -287,20 +287,20 @@ evalModel raw = do
   new <-
     Syb.everywhereM
       ( Syb.mkM $ \cur ->
-          withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+          Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
             . fmap (fromRight cur)
-            . tryMarket
-            . getCurrencyInfo (raw ^. #modelWebOpts)
+            . Rates.tryMarket
+            . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
             $ currencyInfoCode cur
       )
       ( raw ^. #modelState
       )
   curs <-
-    withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+    Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
       . fmap (fromRight $ raw ^. #modelCurrencies)
-      . tryMarket
+      . Rates.tryMarket
       . fmap (^. #currenciesList)
-      $ getCurrencies (raw ^. #modelWebOpts)
+      $ Rates.getCurrencies (raw ^. #modelWebOpts)
   km <-
     if (new ^. #stKm . #kmIkm . #unIkm == mempty)
       && (new ^. #stIkm . #fieldOutput == mempty)
@@ -335,7 +335,7 @@ evalModel raw = do
   case baseAmtResult of
     Left {} -> pure st
     Right baseAmt ->
-      withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
+      Rates.withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
         let funds =
               Funds
                 baseAmt
@@ -345,13 +345,13 @@ evalModel raw = do
                 . #currencyOutput
                 . #currencyInfoCode
         quote <-
-          getQuote (st ^. #modelWebOpts) funds
+          Rates.getQuote (st ^. #modelWebOpts) funds
             $ st
             ^. cloneLens quoteLens
             . #moneyCurrency
             . #currencyOutput
             . #currencyInfoCode
-        let quoteAmt = quoteMoneyAmount quote
+        let quoteAmt = quote ^. #quoteMoneyAmount
         ct <- getCurrentTime
         pure
           $ st
@@ -376,7 +376,7 @@ evalModel raw = do
           & #modelState
           . #stDoc
           . #stDocCreatedAt
-          .~ quoteCreatedAt quote
+          .~ (quote ^. #quoteCreatedAt)
           & #modelOnlineAt
           .~ ct
 

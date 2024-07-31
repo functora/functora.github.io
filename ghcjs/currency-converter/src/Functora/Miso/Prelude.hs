@@ -61,6 +61,12 @@ instance ConvertUtf8 MisoString ByteString where
   encodeUtf8 = encodeUtf8 . from @MisoString @Prelude.Text
   decodeUtf8 = from @Prelude.Text @MisoString . decodeUtf8
   decodeUtf8Strict = fmap (from @Prelude.Text @MisoString) . decodeUtf8Strict
+
+instance ToJSONKey MisoString where
+  toJSONKey = contramap (fromMisoString @Prelude.Text) $ toJSONKey
+
+instance FromJSONKey MisoString where
+  fromJSONKey = fmap toMisoString $ fromJSONKey @Prelude.Text
 #endif
 
 inspect :: (Show a, Data a) => a -> MisoString

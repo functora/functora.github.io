@@ -127,15 +127,33 @@ updateModel (InitUpdate ext) prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        if isJust ext
-          then Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
-          else Storage.selectStorage ("current-" <> vsn) $ \case
-            Nothing ->
-              Misc.pushActionQueue nextSt $ ChanItem 0 (& #modelLoading .~ False)
-            Just uri -> do
-              finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
-              Misc.pushActionQueue nextSt
-                $ ChanItem 0 (const $ finSt & #modelLoading .~ False)
+        Storage.selectStorage ("favorite-" <> vsn) $ \mFav -> do
+          let fav = mergeMap (const id) $ fromMaybe mempty mFav
+          if isJust ext
+            then
+              Misc.pushActionQueue
+                nextSt
+                . ChanItem 0
+                $ (& #modelFavMap %~ fav)
+                . (& #modelLoading .~ False)
+            else Storage.selectStorage ("current-" <> vsn) $ \case
+              Nothing ->
+                Misc.pushActionQueue nextSt
+                  . ChanItem 0
+                  $ (& #modelFavMap %~ fav)
+                  . (& #modelLoading .~ False)
+              Just uri -> do
+                finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
+                Misc.pushActionQueue nextSt
+                  $ ChanItem
+                    0
+                    ( const
+                        $ finSt
+                        & #modelFavMap
+                        %~ fav
+                        & #modelLoading
+                        .~ False
+                    )
         pure
           $ ChanUpdate nextSt
     ]
@@ -181,6 +199,8 @@ updateModel (ChanUpdate prevSt) _ = do
             )
             $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
         uri <- URI.mkURI $ shareLink nextSt
+        let fm = nextSt ^. #modelFavMap
+        when (fm /= mempty) $ Storage.insertStorage ("favorite-" <> vsn) fm
         Storage.insertStorage ("current-" <> vsn) uri
         if nextSt ^. #modelLoading
           then do

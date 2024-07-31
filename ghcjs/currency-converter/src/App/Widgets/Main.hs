@@ -44,7 +44,7 @@ mainWidget st =
                    --  . (: mempty)
                    --  $ div_
                    --    mempty
-                   --    [ inspect $ st ^. #modelFavMap
+                   --    [ text . inspect $ st ^. #modelFavMap
                    --    ],
                    tosWidget,
                    Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)

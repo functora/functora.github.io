@@ -119,7 +119,11 @@ fav st =
       let nextFavName = makeFavName nextSt
        in nextSt
             & ( Misc.textPopupPure
-                  $ "Removed "
+                  $ "Removed"
+                  <> ( if nextFavName == mempty
+                        then mempty
+                        else " "
+                     )
                   <> nextFavName
                   <> "!"
               )
@@ -138,7 +142,8 @@ makeFavName st =
         ^. #modelState
         . #stDoc
         . #stDocPreFavName
-        . #fieldOutput
+        . #fieldInput
+        . #uniqueValue
 
 favItems :: Model -> [View Action]
 favItems st =

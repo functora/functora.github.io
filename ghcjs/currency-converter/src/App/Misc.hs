@@ -19,6 +19,7 @@ module App.Misc
     newFieldPairAction,
     newPaymentMethodAction,
     openBrowserPageAction,
+    browserLink,
   )
 where
 
@@ -26,6 +27,7 @@ import App.Types
 import qualified Data.Generics as Syb
 import Functora.Miso.Prelude
 import Functora.Money hiding (Text)
+import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
 import qualified Text.URI as URI
@@ -250,3 +252,15 @@ openBrowserPageAction uri =
   PushUpdate $ do
     void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
     pure $ ChanItem 0 id
+
+browserLink :: Prelude.Text -> MisoString -> View Action
+browserLink uri txt =
+  a_
+    [ href_ "#!",
+      onClick
+        . openBrowserPageAction
+        . either impureThrow id
+        $ URI.mkURI uri
+    ]
+    [ text txt
+    ]

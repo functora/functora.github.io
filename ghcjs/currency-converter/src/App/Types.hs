@@ -20,6 +20,11 @@ module App.Types
     vsn,
     usd,
     btc,
+    googlePlayLink,
+    testGroupLink,
+    functoraLink,
+    sourceLink,
+    apkLink,
     module X,
   )
 where
@@ -44,6 +49,7 @@ import qualified Text.URI as URI
 data Model = Model
   { modelFav :: OpenedOrClosed,
     modelMenu :: OpenedOrClosed,
+    modelLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelMarket :: MVar Rates.Market,
@@ -285,3 +291,24 @@ usd = CurrencyInfo (CurrencyCode "usd") mempty
 
 btc :: CurrencyInfo
 btc = CurrencyInfo (CurrencyCode "btc") mempty
+
+googlePlayLink :: Prelude.Text
+googlePlayLink = "https://play.google.com/apps/testing/com.functora.currency_converter"
+
+testGroupLink :: Prelude.Text
+testGroupLink = "https://groups.google.com/g/currency-converter"
+
+functoraLink :: Prelude.Text
+functoraLink = "https://functora.github.io/"
+
+sourceLink :: Prelude.Text
+sourceLink =
+  "https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter"
+
+apkLink :: Prelude.Text
+apkLink =
+  "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
+    <> fromMisoString vsn
+    <> "/currency-converter-v"
+    <> fromMisoString vsn
+    <> ".apk"

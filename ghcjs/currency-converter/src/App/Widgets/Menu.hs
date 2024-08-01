@@ -328,82 +328,133 @@ defFavName st =
         . to toMisoString
 
 linksWidget :: Model -> [View Action]
-linksWidget _ =
-  [ Cell.mediumCell
+linksWidget st =
+  [ Cell.bigCell
       $ Button.raised
         ( Button.config
-            & Button.setOnClick
-              ( open
-                  "https://groups.google.com/g/currency-converter"
-              )
+            & Button.setOnClick openWidget
             & Button.setIcon (Just "android")
             & Button.setAttributes [class_ "fill"]
         )
-        "Join testing (closed beta)",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick
-              ( open
-                  "https://play.google.com/apps/testing/com.functora.currency_converter"
-              )
-            & Button.setIcon (Just "android")
-            & Button.setAttributes [class_ "fill"]
-        )
-        "Google Play (closed beta)",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick
-              ( open
-                  $ "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
-                  <> fromMisoString vsn
-                  <> "/currency-converter-v"
-                  <> fromMisoString vsn
-                  <> ".apk"
-              )
-            & Button.setIcon (Just "download")
-            & Button.setAttributes [class_ "fill"]
-        )
-        "Download APK",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick
-              ( open
-                  "https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter"
-              )
-            & Button.setIcon (Just "code")
-            & Button.setAttributes [class_ "fill"]
-        )
-        "Source",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick (open "https://functora.github.io/")
-            & Button.setIcon (Just "person")
-            & Button.setAttributes [class_ "fill"]
-        )
-        "Author",
-    Cell.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick
-              ( PushUpdate $ do
-                  doc <- liftIO Templates.newDonateDoc
-                  pure
-                    . ChanItem 0
-                    $ (& #modelMenu .~ Closed)
-                    . (& #modelLoading .~ True)
-                    . (& #modelState . #stDoc .~ doc)
-              )
-            & Button.setIcon (Just "volunteer_activism")
-            & Button.setAttributes [class_ "fill"]
-        )
-        "Donate"
+        "App"
   ]
+    <> ( if st ^. #modelLinks == Closed
+          then mempty
+          else
+            [ Dialog.dialog
+                ( Dialog.config
+                    & Dialog.setOnClose closeWidget
+                    & Dialog.setOpen (Opened == st ^. #modelLinks)
+                )
+                ( Dialog.dialogContent
+                    Nothing
+                    [ Cell.grid
+                        mempty
+                        [ Cell.bigCell
+                            $ span_
+                              mempty
+                              [ text
+                                  "The Android app is in closed beta. To install it, join the ",
+                                Misc.browserLink testGroupLink "closed beta group",
+                                text " and then install the app from ",
+                                Misc.browserLink googlePlayLink "Google Play",
+                                text ", or download the ",
+                                Misc.browserLink apkLink "APK file",
+                                text " directly."
+                              ],
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "android")
+                                  & Button.setOnClick (openBrowser testGroupLink)
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Join testing (closed beta)",
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "android")
+                                  & Button.setOnClick (openBrowser googlePlayLink)
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Google Play (closed beta)",
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "download")
+                                  & Button.setOnClick (openBrowser apkLink)
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Download APK",
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "code")
+                                  & Button.setOnClick (openBrowser sourceLink)
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Source",
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "person")
+                                  & Button.setOnClick (openBrowser functoraLink)
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Author",
+                          Cell.mediumCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setIcon (Just "volunteer_activism")
+                                  & Button.setOnClick
+                                    ( PushUpdate $ do
+                                        doc <- liftIO Templates.newDonateDoc
+                                        pure
+                                          . ChanItem 0
+                                          $ (& #modelMenu .~ Closed)
+                                          . (& #modelLinks .~ Closed)
+                                          . (& #modelLoading .~ True)
+                                          . (& #modelState . #stDoc .~ doc)
+                                    )
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      class_ "fill"
+                                    ]
+                              )
+                              "Donate",
+                          Cell.bigCell
+                            $ Button.raised
+                              ( Button.config
+                                  & Button.setOnClick closeWidget
+                                  & Button.setIcon (Just "arrow_back")
+                                  & Button.setAttributes [class_ "fill"]
+                              )
+                              "Back"
+                        ]
+                    ]
+                    mempty
+                )
+            ]
+       )
   where
-    open =
+    openWidget = pureUpdate 0 (& #modelLinks .~ Opened)
+    closeWidget = pureUpdate 0 (& #modelLinks .~ Closed)
+    openBrowser =
       Misc.openBrowserPageAction
         . either impureThrow id
         . URI.mkURI

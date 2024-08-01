@@ -100,6 +100,7 @@ newModel webOpts mSt uri = do
     Model
       { modelFav = Closed,
         modelMenu = Closed,
+        modelLinks = Closed,
         modelLoading = True,
         modelState = st,
         modelMarket = market,

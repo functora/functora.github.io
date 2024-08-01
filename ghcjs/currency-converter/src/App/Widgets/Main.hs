@@ -12,7 +12,6 @@ import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Miso.Prelude
 import Functora.Money hiding (Text)
-import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
@@ -240,23 +239,11 @@ tosWidget =
         ]
     ]
     [ Miso.text "\169 2024 ",
-      browserLink "https://functora.github.io/" "Functora",
+      Misc.browserLink "https://functora.github.io/" "Functora",
       Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
       a_ [href_ "license.html"] [Miso.text "Terms of Service"],
       Miso.text " and ",
       a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text $ ". Version " <> vsn <> "."
-    ]
-
-browserLink :: Prelude.Text -> MisoString -> View Action
-browserLink uri txt =
-  a_
-    [ href_ "#!",
-      onClick
-        . Misc.openBrowserPageAction
-        . either impureThrow id
-        $ URI.mkURI uri
-    ]
-    [ Miso.text txt
     ]

@@ -1,9 +1,10 @@
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
 import { Browser } from "@capacitor/browser";
+import { Share } from "@capacitor/share";
 
 async function printCurrentPage(name) {
-  await WebviewPrint.print({ name: name });
+  return await WebviewPrint.print({ name: name });
 }
 
 async function selectStorage(key) {
@@ -12,14 +13,23 @@ async function selectStorage(key) {
 }
 
 async function insertStorage(key, value) {
-  await Preferences.set({ key: key, value: value });
+  return await Preferences.set({ key: key, value: value });
 }
 
 async function openBrowserPage(url) {
   try {
-    await Browser.open({ url: url });
+    return await Browser.open({ url: url });
   } catch (e) {
-    window.open(url, "_blank").focus();
+    return window.open(url, "_blank").focus();
+  }
+}
+
+async function shareText(text) {
+  const { value } = await Share.canShare();
+  if (value) {
+    return await Share.share({ text: text });
+  } else {
+    return await navigator.clipboard.writeText(text);
   }
 }
 
@@ -27,3 +37,4 @@ globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
 globalThis.insertStorage = insertStorage;
 globalThis.openBrowserPage = openBrowserPage;
+globalThis.shareText = shareText;

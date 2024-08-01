@@ -73,9 +73,7 @@ copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do
   let txt = inspect x
   unless (txt == mempty) $ do
-    clip <-
-      JS.global JS.! ("navigator" :: MisoString) JS.! ("clipboard" :: MisoString)
-    prom <- clip ^. JS.js1 ("writeText" :: MisoString) txt
+    prom <- JS.global ^. JS.js1 ("shareText" :: MisoString) txt
     success <- JS.function $ \_ _ _ -> textPopup @MisoString st "Copied!"
     failure <- JS.function $ \_ _ _ -> textPopup @MisoString st "Failed to copy!"
     void $ prom ^. JS.js2 ("then" :: MisoString) success failure

@@ -582,27 +582,39 @@ const Preferences = registerPlugin("Preferences", {
 const Browser = registerPlugin("Browser", {
   web: () => __vitePreload(() => import("./web3.js"), true ? [] : void 0).then((m) => new m.BrowserWeb())
 });
+const Share = registerPlugin("Share", {
+  web: () => __vitePreload(() => import("./web4.js"), true ? [] : void 0).then((m) => new m.ShareWeb())
+});
 async function printCurrentPage(name) {
-  await WebviewPrint.print({ name });
+  return await WebviewPrint.print({ name });
 }
 async function selectStorage(key) {
   const { value } = await Preferences.get({ key });
   return value;
 }
 async function insertStorage(key, value) {
-  await Preferences.set({ key, value });
+  return await Preferences.set({ key, value });
 }
 async function openBrowserPage(url) {
   try {
-    await Browser.open({ url });
+    return await Browser.open({ url });
   } catch (e) {
-    window.open(url, "_blank").focus();
+    return window.open(url, "_blank").focus();
+  }
+}
+async function shareText(text) {
+  const { value } = await Share.canShare();
+  if (value) {
+    return await Share.share({ text });
+  } else {
+    return await navigator.clipboard.writeText(text);
   }
 }
 globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
 globalThis.insertStorage = insertStorage;
 globalThis.openBrowserPage = openBrowserPage;
+globalThis.shareText = shareText;
 export {
   WebPlugin as W
 };

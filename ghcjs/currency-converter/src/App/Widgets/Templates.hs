@@ -1,5 +1,6 @@
 module App.Widgets.Templates
   ( newModel,
+    newDonateDoc,
   )
 where
 
@@ -116,3 +117,37 @@ newModel webOpts mSt uri = do
         modelOnlineAt = fromMaybe ct (mSt ^? _Just . #modelOnlineAt),
         modelWebOpts = webOpts
       }
+
+newDonateDoc :: IO (StDoc Unique)
+newDonateDoc = do
+  doc <- newStDoc
+  title <- newFieldPair mempty $ DynamicFieldText "Hello, User!"
+  message <- newFieldPair mempty $ DynamicFieldText exampleDonationText
+  btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
+  xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
+  pure
+    doc
+      { stDocFieldPairs =
+          [ title
+              & #fieldPairValue
+              . #fieldType
+              .~ FieldTypeTitle,
+            message,
+            qr btcMtd,
+            qr xmrMtd
+          ]
+      }
+  where
+    qr :: FieldPair a b -> FieldPair a b
+    qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+
+exampleBtcAddress :: MisoString
+exampleBtcAddress = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"
+
+exampleXmrAddress :: MisoString
+exampleXmrAddress =
+  "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG"
+
+exampleDonationText :: MisoString
+exampleDonationText =
+  "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora."

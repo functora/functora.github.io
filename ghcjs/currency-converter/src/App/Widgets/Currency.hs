@@ -228,6 +228,8 @@ currencyListItemWidget optic current fuzz =
         & ListItem.setOnClick
           ( pureUpdate 0 $ \st ->
               st
+                & #modelLoading
+                .~ True
                 & cloneTraversal optic
                 . #currencyModalState
                 .~ Closed

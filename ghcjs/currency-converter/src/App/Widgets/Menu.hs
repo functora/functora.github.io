@@ -9,6 +9,7 @@ import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
+import qualified App.Widgets.Templates as Templates
 import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -18,6 +19,7 @@ import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
+import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
@@ -260,6 +262,7 @@ menu st =
                                   . #stDocFieldPairs
                               )
                        )
+                    <> linksWidget st
                     <> [ Cell.bigCell
                           $ Button.raised
                             ( Button.config
@@ -323,3 +326,84 @@ defFavName st =
         . #currencyInfoCode
         . #unCurrencyCode
         . to toMisoString
+
+linksWidget :: Model -> [View Action]
+linksWidget _ =
+  [ Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick
+              ( open
+                  "https://groups.google.com/g/currency-converter"
+              )
+            & Button.setIcon (Just "android")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Join testing (closed beta)",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick
+              ( open
+                  "https://play.google.com/apps/testing/com.functora.currency_converter"
+              )
+            & Button.setIcon (Just "android")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Google Play (closed beta)",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick
+              ( open
+                  $ "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
+                  <> fromMisoString vsn
+                  <> "/currency-converter-v"
+                  <> fromMisoString vsn
+                  <> ".apk"
+              )
+            & Button.setIcon (Just "download")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Download APK",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick
+              ( open
+                  "https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter"
+              )
+            & Button.setIcon (Just "code")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Source",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick (open "https://functora.github.io/")
+            & Button.setIcon (Just "person")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Author",
+    Cell.mediumCell
+      $ Button.raised
+        ( Button.config
+            & Button.setOnClick
+              ( PushUpdate $ do
+                  doc <- liftIO Templates.newDonateDoc
+                  pure
+                    . ChanItem 0
+                    $ (& #modelMenu .~ Closed)
+                    . (& #modelLoading .~ True)
+                    . (& #modelState . #stDoc .~ doc)
+              )
+            & Button.setIcon (Just "volunteer_activism")
+            & Button.setAttributes [class_ "fill"]
+        )
+        "Donate"
+  ]
+  where
+    open =
+      Misc.openBrowserPageAction
+        . either impureThrow id
+        . URI.mkURI

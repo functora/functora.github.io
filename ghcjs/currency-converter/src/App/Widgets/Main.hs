@@ -243,34 +243,9 @@ tosWidget =
       browserLink "https://functora.github.io/" "Functora",
       Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
-      a_
-        [ href_ "license.html"
-        ]
-        [ Miso.text "Terms of Service"
-        ],
+      a_ [href_ "license.html"] [Miso.text "Terms of Service"],
       Miso.text " and ",
-      a_
-        [ href_ "privacy.html"
-        ]
-        [ Miso.text "Privacy Policy"
-        ],
-      Miso.text ". To install the ",
-      browserLink
-        "https://play.google.com/apps/testing/com.functora.currency_converter"
-        "Android app",
-      Miso.text ", either join the ",
-      browserLink
-        "https://groups.google.com/g/currency-converter"
-        "testing group",
-      Miso.text " or download the ",
-      browserLink
-        ( "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
-            <> fromMisoString vsn
-            <> "/currency-converter-v"
-            <> fromMisoString vsn
-            <> ".apk"
-        )
-        "APK file",
+      a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
       Miso.text $ ". Version " <> vsn <> "."
     ]
 

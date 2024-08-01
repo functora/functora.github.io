@@ -12,6 +12,7 @@ import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Miso.Prelude
 import Functora.Money hiding (Text)
+import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Snackbar as Snackbar
@@ -180,6 +181,7 @@ ratesWidget st =
         . #currencyOutput
         . #currencyInfoCode
         . #unCurrencyCode
+        . to toMisoString
     bottom = st ^. #modelState . #stDoc . #stDocBottomMoney
     bottomAmt = bottom ^. #moneyAmount . #fieldOutput
     bottomCur =
@@ -188,6 +190,7 @@ ratesWidget st =
         . #currencyOutput
         . #currencyInfoCode
         . #unCurrencyCode
+        . to toMisoString
     bottomPerTop =
       if topAmt == 0
         then 0
@@ -236,12 +239,49 @@ tosWidget =
         [ ("text-align", "center")
         ]
     ]
-    [ Miso.text "\169 2024 Functora. All rights reserved. ",
+    [ Miso.text "\169 2024 ",
+      browserLink "https://functora.github.io/" "Functora",
+      Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
-      a_ [href_ "license.html"] [Miso.text "Terms of Service"],
+      a_
+        [ href_ "license.html"
+        ]
+        [ Miso.text "Terms of Service"
+        ],
       Miso.text " and ",
-      a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
-      Miso.text
-        ". This software is 100% organic and AI-free. It is built and tested exclusively by humans. ",
-      Miso.text $ "Version " <> vsn <> "."
+      a_
+        [ href_ "privacy.html"
+        ]
+        [ Miso.text "Privacy Policy"
+        ],
+      Miso.text ". To install the ",
+      browserLink
+        "https://play.google.com/apps/testing/com.functora.currency_converter"
+        "Android app",
+      Miso.text ", either join the ",
+      browserLink
+        "https://groups.google.com/g/currency-converter"
+        "testing group",
+      Miso.text " or download the ",
+      browserLink
+        ( "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
+            <> fromMisoString vsn
+            <> "/currency-converter-v"
+            <> fromMisoString vsn
+            <> ".apk"
+        )
+        "APK file",
+      Miso.text $ ". Version " <> vsn <> "."
+    ]
+
+browserLink :: Prelude.Text -> MisoString -> View Action
+browserLink uri txt =
+  a_
+    [ href_ "#!",
+      onClick
+        . Misc.openBrowserPageAction
+        . either impureThrow id
+        $ URI.mkURI uri
+    ]
+    [ Miso.text txt
     ]

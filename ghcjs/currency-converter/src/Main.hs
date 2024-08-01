@@ -91,6 +91,7 @@ runApp app = do
         ("static" : _) -> staticApp (defaultWebAppSettings ".") req
         ("web.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("web2.js" : _) -> staticApp (defaultWebAppSettings "static") req
+        ("web3.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("main.js" : _) -> staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
         _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req

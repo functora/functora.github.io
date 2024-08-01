@@ -18,6 +18,7 @@ module App.Misc
     newAssetAction,
     newFieldPairAction,
     newPaymentMethodAction,
+    openBrowserPageAction,
   )
 where
 
@@ -27,6 +28,7 @@ import Functora.Miso.Prelude
 import Functora.Money hiding (Text)
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Snackbar as Snackbar
+import qualified Text.URI as URI
 import qualified Prelude
 
 getConverterAmountOptic ::
@@ -244,3 +246,9 @@ newPaymentMethodAction optic =
       . ChanItem 0
       $ (textPopupPure @MisoString "Added payment!")
       . (& cloneTraversal optic %~ (<> [item]))
+
+openBrowserPageAction :: URI -> Action
+openBrowserPageAction uri =
+  PushUpdate $ do
+    void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
+    pure $ ChanItem 0 id

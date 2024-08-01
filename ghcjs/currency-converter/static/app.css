@@ -10,6 +10,10 @@ body {
   justify-content: center;
 }
 
+a {
+  color: inherit;
+}
+
 textarea {
   resize: vertical;
   pointer-events: auto;

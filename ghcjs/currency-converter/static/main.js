@@ -579,6 +579,9 @@ const WebviewPrint = registerPlugin("WebviewPrint", {
 const Preferences = registerPlugin("Preferences", {
   web: () => __vitePreload(() => import("./web2.js"), true ? [] : void 0).then((m) => new m.PreferencesWeb())
 });
+const Browser = registerPlugin("Browser", {
+  web: () => __vitePreload(() => import("./web3.js"), true ? [] : void 0).then((m) => new m.BrowserWeb())
+});
 async function printCurrentPage(name) {
   await WebviewPrint.print({ name });
 }
@@ -589,9 +592,17 @@ async function selectStorage(key) {
 async function insertStorage(key, value) {
   await Preferences.set({ key, value });
 }
+async function openBrowserPage(url) {
+  try {
+    await Browser.open({ url });
+  } catch (e) {
+    window.open(url, "_blank").focus();
+  }
+}
 globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
 globalThis.insertStorage = insertStorage;
+globalThis.openBrowserPage = openBrowserPage;
 export {
   WebPlugin as W
 };

@@ -145,7 +145,7 @@ menu st =
                                   ]
                             )
                           $ if isQrCode sc
-                            then "Rate"
+                            then "Rates"
                             else "QR",
                         Cell.smallCell
                           $ Button.raised
@@ -172,7 +172,7 @@ menu st =
                                 ( Select.config
                                     & Select.setDisabled disabled
                                     & Select.setLabel
-                                      ( Just "Exchange rate"
+                                      ( Just "Exchange rates"
                                       )
                                     & Select.setAttributes
                                       [ class_ "fill-inner"

@@ -110,12 +110,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                  ]
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
-  let oof =
-        st
-          ^. #modelState
-          . #stDoc
-          . #stDocOnlineOrOffline
-      amountWidget' loc =
+  let amountWidget' loc =
         Field.ratioField
           st
           ( Misc.getConverterAmountOptic loc
@@ -153,33 +148,82 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
              currencyWidget' Bottom,
              SwapAmounts.swapAmounts,
              Currency.swapCurrencies,
-             LayoutGrid.cell
-              [ LayoutGrid.span12,
-                Typography.caption,
-                style_
-                  $ [("text-align", "center")]
-                  <> ( if oof == Offline
-                        then [("color", "#B00020")]
-                        else mempty
-                     )
-              ]
-              [ Miso.text
-                  $ inspect oof
-                  <> " exchange rate"
-                  <> ( case oof of
-                        Offline -> mempty
-                        Online ->
-                          " on "
-                            <> ( st
-                                  ^. #modelState
-                                  . #stDoc
-                                  . #stDocCreatedAt
-                                  . to utctDay
-                                  . to inspect
-                               )
-                     )
-              ]
+             ratesWidget st
            ]
+
+ratesWidget :: Model -> View Action
+ratesWidget st =
+  LayoutGrid.cell
+    [ LayoutGrid.span12,
+      Typography.caption,
+      style_
+        $ [("text-align", "center")]
+        <> ( case oof of
+              Offline -> [("color", "#B00020")]
+              Online -> mempty
+           )
+    ]
+    [ a_
+        [ style_ [("cursor", "pointer")],
+          onClick $ Misc.copyIntoClipboardAction st msg
+        ]
+        [ Miso.text msg
+        ]
+    ]
+  where
+    oof = st ^. #modelState . #stDoc . #stDocOnlineOrOffline
+    top = st ^. #modelState . #stDoc . #stDocTopMoney
+    topAmt = top ^. #moneyAmount . #fieldOutput
+    topCur =
+      top
+        ^. #moneyCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . #unCurrencyCode
+    bottom = st ^. #modelState . #stDoc . #stDocBottomMoney
+    bottomAmt = bottom ^. #moneyAmount . #fieldOutput
+    bottomCur =
+      bottom
+        ^. #moneyCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . #unCurrencyCode
+    bottomPerTop =
+      if topAmt == 0
+        then 0
+        else bottomAmt / topAmt
+    topPerBottom =
+      if bottomAmt == 0
+        then 0
+        else topAmt / bottomAmt
+    msg =
+      inspect oof
+        <> " exchange rates"
+        <> ( case oof of
+              Offline -> mempty
+              Online ->
+                " on "
+                  <> ( st
+                        ^. #modelState
+                        . #stDoc
+                        . #stDocCreatedAt
+                        . to utctDay
+                        . to inspect
+                     )
+           )
+        <> ": 1 "
+        <> topCur
+        <> " \8776 "
+        <> inspectRatioDef bottomPerTop
+        <> " "
+        <> bottomCur
+        <> ", 1 "
+        <> bottomCur
+        <> " \8776 "
+        <> inspectRatioDef topPerBottom
+        <> " "
+        <> topCur
+        <> "."
 
 tosWidget :: View Action
 tosWidget =

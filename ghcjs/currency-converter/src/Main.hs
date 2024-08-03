@@ -31,6 +31,7 @@ import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
+import qualified Network.URI as URI (parseURI)
 import qualified Text.URI as URI
 
 #ifdef wasi_HOST_OS
@@ -199,10 +200,12 @@ updateModel (ChanUpdate prevSt) _ = do
                 consoleLog e
                 pure $ prevSt & #modelLoading .~ False
             )
-            $ foldlM (\acc updater -> evalModel $ updater acc) prevSt actions
+            . evalModel
+            $ foldl (&) prevSt actions
         uri <- URI.mkURI $ shareLink nextSt
         Storage.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Storage.insertStorage ("current-" <> vsn) uri
+        syncUri uri
         if nextSt ^. #modelLoading
           then do
             void
@@ -394,6 +397,19 @@ evalModel raw = do
               .~ (quote ^. #quoteCreatedAt)
               & #modelOnlineAt
               .~ ct
+
+syncUri :: URI -> JSM ()
+syncUri uri = do
+  textUri <- fmap Prelude.inspect getCurrentURI
+  prevUri <- URI.mkURI textUri
+  let nextUri = prevUri {URI.uriQuery = URI.uriQuery uri}
+  when (nextUri /= prevUri)
+    $ pushURI
+    =<< ( maybe (throwString $ "Bad URI " <> textUri) pure
+            . URI.parseURI
+            . from @Prelude.Text @Prelude.String
+            $ URI.render nextUri
+        )
 
 getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
 getBaseConverterMoneyLens = \case

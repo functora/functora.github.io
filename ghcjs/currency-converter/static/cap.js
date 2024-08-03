@@ -18,7 +18,7 @@ async function insertStorage(key, value) {
 
 async function openBrowserPage(url) {
   try {
-    return await Browser.open({ url: url });
+    return await Browser.open({ url: url, windowName: "_blank" });
   } catch (e) {
     return window.open(url, "_blank").focus();
   }

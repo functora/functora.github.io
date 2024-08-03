@@ -60,7 +60,7 @@ qr st txt opts
             extraCell
               $ Button.raised
                 ( Button.config
-                    & Button.setIcon (Just "content_copy")
+                    & Button.setIcon (Just "share")
                     & Button.setAttributes [class_ "fill"]
                     & Button.setOnClick (Misc.copyIntoClipboardAction st txt)
                 )

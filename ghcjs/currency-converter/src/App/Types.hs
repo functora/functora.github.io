@@ -13,7 +13,6 @@ module App.Types
     pureUpdate,
     unShareUri,
     stUri,
-    baseUri,
     setScreenPure,
     setScreenAction,
     shareLink,
@@ -249,7 +248,7 @@ stQuery st = do
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
-  uri <- mkURI $ from @MisoString @Prelude.Text baseUri
+  uri <- mkURI $ fromMisoString baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri

@@ -355,8 +355,8 @@ linksWidget st =
                               mempty
                               [ text
                                   "The Android app is in closed beta. To install it, join the ",
-                                Misc.browserLink testGroupLink "closed beta group",
-                                text " and then install the app from ",
+                                Misc.browserLink testGroupLink "closed beta",
+                                text " group and then install the app from ",
                                 Misc.browserLink googlePlayLink "Google Play",
                                 text ", or download the ",
                                 Misc.browserLink apkLink "APK file",

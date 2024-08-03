@@ -64,7 +64,9 @@ menu st =
                         & IconButton.setOnClick
                           ( pureUpdate 0 $ \next ->
                               next
-                                & #modelFav
+                                & #modelState
+                                . #stDoc
+                                . #stDocFavModalState
                                 .~ Opened
                                 & #modelState
                                 . #stDoc
@@ -114,13 +116,13 @@ menu st =
       ]
   ]
     <> Fav.fav st
-    <> if st ^. #modelMenu == Closed
+    <> if st ^. #modelState . #stDoc . #stDocMenuModalState == Closed
       then mempty
       else
         [ Dialog.dialog
             ( Dialog.config
                 & Dialog.setOnClose closed
-                & Dialog.setOpen (Opened == st ^. #modelMenu)
+                & Dialog.setOpen True
             )
             ( Dialog.dialogContent
                 Nothing
@@ -277,13 +279,15 @@ menu st =
             )
         ]
   where
-    opened = pureUpdate 0 (& #modelMenu .~ Opened)
-    closed = pureUpdate 0 (& #modelMenu .~ Closed)
+    opened =
+      pureUpdate 0 (& #modelState . #stDoc . #stDocMenuModalState .~ Opened)
+    closed =
+      pureUpdate 0 (& #modelState . #stDoc . #stDocMenuModalState .~ Closed)
     screen next =
       pureUpdate 0
-        $ (& #modelMenu .~ Closed)
-        . (& #modelLoading .~ isQrCode next)
+        $ (& #modelLoading .~ isQrCode next)
         . (& #modelState . #stScreen .~ next)
+        . (& #modelState . #stDoc . #stDocMenuModalState .~ Closed)
     sc =
       st ^. #modelState . #stScreen
     disabled =
@@ -338,13 +342,13 @@ linksWidget st =
         )
         "App"
   ]
-    <> ( if st ^. #modelLinks == Closed
+    <> ( if st ^. #modelState . #stDoc . #stDocLinksModalState == Closed
           then mempty
           else
             [ Dialog.dialog
                 ( Dialog.config
                     & Dialog.setOnClose closeWidget
-                    & Dialog.setOpen (Opened == st ^. #modelLinks)
+                    & Dialog.setOpen True
                 )
                 ( Dialog.dialogContent
                     Nothing
@@ -355,8 +359,8 @@ linksWidget st =
                               mempty
                               [ text
                                   "The Android app is in closed beta. To install it, join the ",
-                                Misc.browserLink testGroupLink "closed beta group",
-                                text " and then install the app from ",
+                                Misc.browserLink testGroupLink "closed beta",
+                                text " group and then install the app from ",
                                 Misc.browserLink googlePlayLink "Google Play",
                                 text ", or download the ",
                                 Misc.browserLink apkLink "APK file",
@@ -426,9 +430,7 @@ linksWidget st =
                                         doc <- liftIO Templates.newDonateDoc
                                         pure
                                           . ChanItem 0
-                                          $ (& #modelMenu .~ Closed)
-                                          . (& #modelLinks .~ Closed)
-                                          . (& #modelLoading .~ True)
+                                          $ (& #modelLoading .~ True)
                                           . (& #modelState . #stDoc .~ doc)
                                     )
                                   & Button.setAttributes
@@ -452,8 +454,10 @@ linksWidget st =
             ]
        )
   where
-    openWidget = pureUpdate 0 (& #modelLinks .~ Opened)
-    closeWidget = pureUpdate 0 (& #modelLinks .~ Closed)
+    openWidget =
+      pureUpdate 0 (& #modelState . #stDoc . #stDocLinksModalState .~ Opened)
+    closeWidget =
+      pureUpdate 0 (& #modelState . #stDoc . #stDocLinksModalState .~ Closed)
     openBrowser =
       Misc.openBrowserPageAction
         . either impureThrow id

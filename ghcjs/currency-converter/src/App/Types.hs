@@ -46,10 +46,7 @@ import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelFav :: OpenedOrClosed,
-    modelMenu :: OpenedOrClosed,
-    modelLinks :: OpenedOrClosed,
-    modelLoading :: Bool,
+  { modelLoading :: Bool,
     modelState :: St Unique,
     modelMarket :: MVar Rates.Market,
     modelFavMap :: Map MisoString Fav,
@@ -100,6 +97,9 @@ data StDoc f = StDoc
     stDocTopOrBottom :: TopOrBottom,
     stDocPreFavName :: Field MisoString f,
     stDocFieldPairs :: [FieldPair DynamicField f],
+    stDocFavModalState :: OpenedOrClosed,
+    stDocMenuModalState :: OpenedOrClosed,
+    stDocLinksModalState :: OpenedOrClosed,
     stDocOnlineOrOffline :: OnlineOrOffline,
     stDocCreatedAt :: UTCTime
   }
@@ -132,6 +132,9 @@ newStDoc = do
         stDocTopOrBottom = Top,
         stDocPreFavName = preFavName,
         stDocFieldPairs = mempty,
+        stDocFavModalState = Closed,
+        stDocMenuModalState = Closed,
+        stDocLinksModalState = Closed,
         stDocOnlineOrOffline = Online,
         stDocCreatedAt = ct
       }

@@ -98,10 +98,7 @@ newModel webOpts mSt uri = do
       mApp
   pure
     Model
-      { modelFav = Closed,
-        modelMenu = Closed,
-        modelLinks = Closed,
-        modelLoading = True,
+      { modelLoading = True,
         modelState = st,
         modelMarket = market,
         modelFavMap = mempty,

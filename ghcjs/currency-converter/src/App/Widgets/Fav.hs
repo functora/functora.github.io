@@ -18,13 +18,13 @@ import qualified Text.URI as URI
 
 fav :: Model -> [View Action]
 fav st =
-  if st ^. #modelState . #stDoc . #stDocFavModalState == Closed
+  if st ^. #modelFav == Closed
     then mempty
     else
       [ Dialog.dialog
           ( Dialog.config
               & Dialog.setOnClose closeAction
-              & Dialog.setOpen True
+              & Dialog.setOpen (Opened == st ^. #modelFav)
           )
           ( Dialog.dialogContent
               Nothing
@@ -85,8 +85,7 @@ fav st =
           )
       ]
   where
-    closeAction =
-      pureUpdate 0 (& #modelState . #stDoc . #stDocFavModalState .~ Closed)
+    closeAction = pureUpdate 0 (& #modelFav .~ Closed)
     saveAction = PushUpdate $ do
       ct <- getCurrentTime
       pure . ChanItem 0 $ \nextSt ->
@@ -173,6 +172,6 @@ favItem st label Fav {favUri = uri} =
       next <- newModel (st ^. #modelWebOpts) (Just st) uri
       pure
         . ChanItem 0
-        $ (#modelLoading .~ True)
+        $ (#modelFav .~ Closed)
+        . (#modelLoading .~ True)
         . (#modelState .~ modelState next)
-        . (#modelState . #stDoc . #stDocFavModalState .~ Closed)

@@ -273,6 +273,9 @@ syncInputs st = do
   void
     . Syb.everywhereM (Syb.mkM fun)
     $ modelState st
+  void
+    . Syb.everywhereM (Syb.mkM fun)
+    $ modelFavName st
   where
     fun :: Unique MisoString -> JSM (Unique MisoString)
     fun txt = do

@@ -145,7 +145,7 @@
                   self.callCabal2nix
                   "singlethongs" "${functora}/pub/singlethongs" {};
                 miso =
-                  pkgs.haskell.lib.enableCabalFlag
+                  pkgs.haskell.lib.disableCabalFlag
                   (
                     self.callCabal2nix
                     "miso" "${functora}/pub/miso" {}

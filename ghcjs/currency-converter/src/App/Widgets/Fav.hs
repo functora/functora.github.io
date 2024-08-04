@@ -34,9 +34,7 @@ fav st =
                   <> [ Cell.mediumCell
                         $ Field.textField
                           st
-                          ( #modelState
-                              . #stDoc
-                              . #stDocPreFavName
+                          ( #modelFavName
                           )
                           ( Field.defOpts
                               & #optsPlaceholder
@@ -139,12 +137,7 @@ makeFavName st =
     $ fromMisoString preFavName
   where
     preFavName =
-      st
-        ^. #modelState
-        . #stDoc
-        . #stDocPreFavName
-        . #fieldInput
-        . #uniqueValue
+      st ^. #modelFavName . #fieldInput . #uniqueValue
 
 favItems :: Model -> [View Action]
 favItems st =

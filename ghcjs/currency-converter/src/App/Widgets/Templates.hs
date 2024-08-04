@@ -55,6 +55,7 @@ newModel webOpts mSt uri = do
           (mSt ^? _Just . #modelState . #stScreen)
   let defCpt =
         mSt ^? _Just . #modelState . #stCpt . _Just
+  favName <- newTextField mempty
   mApp <- unShareUri uri
   st <-
     maybe
@@ -105,6 +106,7 @@ newModel webOpts mSt uri = do
         modelState = st,
         modelMarket = market,
         modelFavMap = mempty,
+        modelFavName = favName,
         modelCurrencies =
           fromMaybe
             [btc, usd]

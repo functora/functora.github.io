@@ -53,6 +53,7 @@ data Model = Model
     modelState :: St Unique,
     modelMarket :: MVar Rates.Market,
     modelFavMap :: Map MisoString Fav,
+    modelFavName :: Field MisoString Unique,
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
@@ -98,7 +99,6 @@ data StDoc f = StDoc
   { stDocTopMoney :: Money f,
     stDocBottomMoney :: Money f,
     stDocTopOrBottom :: TopOrBottom,
-    stDocPreFavName :: Field MisoString f,
     stDocFieldPairs :: [FieldPair DynamicField f],
     stDocOnlineOrOffline :: OnlineOrOffline,
     stDocCreatedAt :: UTCTime
@@ -124,13 +124,11 @@ newStDoc = do
   ct <- getCurrentTime
   topMoney <- newMoney 1 btc
   bottomMoney <- newMoney 0 usd
-  preFavName <- newTextField mempty
   pure
     StDoc
       { stDocTopMoney = topMoney,
         stDocBottomMoney = bottomMoney,
         stDocTopOrBottom = Top,
-        stDocPreFavName = preFavName,
         stDocFieldPairs = mempty,
         stDocOnlineOrOffline = Online,
         stDocCreatedAt = ct

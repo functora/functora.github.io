@@ -66,9 +66,7 @@ menu st =
                               next
                                 & #modelFav
                                 .~ Opened
-                                & #modelState
-                                . #stDoc
-                                . #stDocPreFavName
+                                & #modelFavName
                                 . #fieldInput
                                 . #uniqueValue
                                 .~ defFavName next

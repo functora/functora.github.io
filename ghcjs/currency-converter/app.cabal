@@ -48,6 +48,8 @@ common pkg
     Functora.Miso.Prelude
     Functora.Miso.Storage
     Functora.Miso.Types
+    Functora.Miso.Widgets.Grid
+    Functora.Miso.Widgets.Qr
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

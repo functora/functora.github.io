@@ -1,24 +1,37 @@
-module App.Widgets.IconToggles
-  ( iconToggles,
+module Functora.Miso.Widgets.IconToggles
+  ( Opts (..),
+    defOpts,
+    iconToggles,
   )
 where
 
-import App.Types
 import Functora.Miso.Prelude
 import qualified Material.IconToggle as IconToggle
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 
+newtype Opts model action = Opts
+  { optsOnChange :: Maybe ((model -> model) -> action)
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts model action
+defOpts =
+  Opts
+    { optsOnChange = Nothing
+    }
+
 iconToggles ::
-  Model ->
+  model ->
+  Opts model action ->
   NonEmpty
     ( MisoString,
       IconToggle.Icon,
       IconToggle.Icon,
-      ATraversal' Model Bool
+      ATraversal' model Bool
     ) ->
-  View Action
-iconToggles st items =
+  View action
+iconToggles st opts items =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -30,23 +43,30 @@ iconToggles st items =
         ]
     ]
     . toList
-    $ iconToggleWidget st
+    $ iconToggleWidget st opts
     <$> items
 
 iconToggleWidget ::
-  Model ->
+  model ->
+  Opts model action ->
   ( MisoString,
     IconToggle.Icon,
     IconToggle.Icon,
-    ATraversal' Model Bool
+    ATraversal' model Bool
   ) ->
-  View Action
-iconToggleWidget st (label, onIcon, offIcon, optic) =
+  View action
+iconToggleWidget st opts (label, onIcon, offIcon, optic) =
   IconToggle.iconToggle
     ( IconToggle.config
         & IconToggle.setLabel (Just label)
         & IconToggle.setOn (fromMaybe False $ st ^? cloneTraversal optic)
-        & IconToggle.setOnChange (pureUpdate 0 (& cloneTraversal optic %~ not))
+        & ( maybe
+              id
+              ( \f ->
+                  IconToggle.setOnChange $ f (& cloneTraversal optic %~ not)
+              )
+              $ optsOnChange opts
+          )
         & ( if st ^? cloneTraversal optic == Just True
               then IconToggle.setAttributes [Theme.secondary]
               else id

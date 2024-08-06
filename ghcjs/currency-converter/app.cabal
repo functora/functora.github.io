@@ -28,14 +28,12 @@ common pkg
     App.Misc
     App.Types
     App.Widgets.Assets
-    App.Widgets.Chips
     App.Widgets.Currency
     App.Widgets.Decrypt
     App.Widgets.Fav
     App.Widgets.Field
     App.Widgets.FieldPairs
     App.Widgets.Header
-    App.Widgets.IconToggles
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.PaymentMethods
@@ -44,8 +42,10 @@ common pkg
     Functora.Miso.Prelude
     Functora.Miso.Storage
     Functora.Miso.Types
+    Functora.Miso.Widgets.Chips
     Functora.Miso.Widgets.Frame
     Functora.Miso.Widgets.Grid
+    Functora.Miso.Widgets.IconToggles
     Functora.Miso.Widgets.Qr
     Functora.Miso.Widgets.Switch
 

@@ -1,6 +1,5 @@
 module Functora.Miso.Widgets.IconToggles
   ( Opts (..),
-    defOpts,
     iconToggles,
   )
 where
@@ -11,15 +10,9 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 
 newtype Opts model action = Opts
-  { optsOnChange :: Maybe ((model -> model) -> action)
+  { optsOnChange :: (model -> model) -> action
   }
   deriving stock (Generic)
-
-defOpts :: Opts model action
-defOpts =
-  Opts
-    { optsOnChange = Nothing
-    }
 
 iconToggles ::
   model ->
@@ -60,12 +53,8 @@ iconToggleWidget st opts (label, onIcon, offIcon, optic) =
     ( IconToggle.config
         & IconToggle.setLabel (Just label)
         & IconToggle.setOn (fromMaybe False $ st ^? cloneTraversal optic)
-        & ( maybe
-              id
-              ( \f ->
-                  IconToggle.setOnChange $ f (& cloneTraversal optic %~ not)
-              )
-              $ optsOnChange opts
+        & IconToggle.setOnChange
+          ( optsOnChange opts (& cloneTraversal optic %~ not)
           )
         & ( if st ^? cloneTraversal optic == Just True
               then IconToggle.setAttributes [Theme.secondary]

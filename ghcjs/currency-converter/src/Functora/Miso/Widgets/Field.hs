@@ -1,4 +1,4 @@
-module App.Widgets.Field
+module Functora.Miso.Widgets.Field
   ( Opts (..),
     OptsWidget (..),
     ModalWidget' (..),

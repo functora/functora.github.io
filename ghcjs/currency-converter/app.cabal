@@ -43,6 +43,8 @@ common pkg
     Functora.Miso.Storage
     Functora.Miso.Types
     Functora.Miso.Widgets.Chips
+    Functora.Miso.Widgets.Dialog
+    Functora.Miso.Widgets.Field
     Functora.Miso.Widgets.Frame
     Functora.Miso.Widgets.Grid
     Functora.Miso.Widgets.IconToggles

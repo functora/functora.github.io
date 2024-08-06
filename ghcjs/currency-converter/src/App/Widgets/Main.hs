@@ -84,7 +84,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                     )
                     "Open"
                  ]
-              & ( #optsCopyIntoClipboardAction ::
+              & ( #optsOnButtonClick ::
                     Lens'
                       (Qr.Opts Model Action)
                       (Maybe (Model -> MisoString -> Action))
@@ -114,7 +114,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                     )
                     "Open"
                  ]
-              & ( #optsCopyIntoClipboardAction ::
+              & ( #optsOnButtonClick ::
                     Lens'
                       (Qr.Opts Model Action)
                       (Maybe (Model -> MisoString -> Action))

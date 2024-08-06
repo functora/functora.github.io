@@ -1,6 +1,5 @@
 module Functora.Miso.Widgets.Chips
   ( Opts (..),
-    defOpts,
     chips,
   )
 where
@@ -11,15 +10,9 @@ import qualified Material.ChipSet.Filter as Filter
 import qualified Material.LayoutGrid as LayoutGrid
 
 newtype Opts model action = Opts
-  { optsOnChange :: Maybe ((model -> model) -> action)
+  { optsOnChange :: (model -> model) -> action
   }
   deriving stock (Generic)
-
-defOpts :: Opts model action
-defOpts =
-  Opts
-    { optsOnChange = Nothing
-    }
 
 chips ::
   model ->
@@ -67,12 +60,6 @@ chipWidget st opts label icon optic =
     ( Filter.config
         & Filter.setIcon icon
         & Filter.setSelected (fromMaybe False $ st ^? cloneTraversal optic)
-        & ( maybe
-              id
-              ( \f ->
-                  Filter.setOnChange $ f (& cloneTraversal optic %~ not)
-              )
-              $ optsOnChange opts
-          )
+        & Filter.setOnChange (optsOnChange opts (& cloneTraversal optic %~ not))
     )
     label

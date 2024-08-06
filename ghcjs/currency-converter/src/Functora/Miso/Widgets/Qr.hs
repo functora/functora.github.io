@@ -1,8 +1,7 @@
 module Functora.Miso.Widgets.Qr
-  ( qr,
-    Opts (..),
+  ( Opts (..),
     defOpts,
-    newQrImg,
+    qr,
   )
 where
 
@@ -14,6 +13,21 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
+
+data Opts model action = Opts
+  { optsAllowCopy :: Bool,
+    optsExtraWidgets :: [View action],
+    optsOnButtonClick :: Maybe (model -> MisoString -> action)
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts model action
+defOpts =
+  Opts
+    { optsAllowCopy = True,
+      optsExtraWidgets = mempty,
+      optsOnButtonClick = Nothing
+    }
 
 qr :: model -> MisoString -> Opts model action -> [View action]
 qr st txt opts
@@ -61,7 +75,7 @@ qr st txt opts
                     & Button.setIcon (Just "share")
                     & Button.setAttributes [class_ "fill"]
                     & ( maybe id (\f -> Button.setOnClick $ f st txt)
-                          $ optsCopyIntoClipboardAction opts
+                          $ optsOnButtonClick opts
                       )
                 )
                 "Copy"
@@ -78,18 +92,3 @@ newQrImg =
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
     . fromMisoString @TL.Text
-
-data Opts model action = Opts
-  { optsAllowCopy :: Bool,
-    optsExtraWidgets :: [View action],
-    optsCopyIntoClipboardAction :: Maybe (model -> MisoString -> action)
-  }
-  deriving stock (Generic)
-
-defOpts :: Opts model action
-defOpts =
-  Opts
-    { optsAllowCopy = True,
-      optsExtraWidgets = mempty,
-      optsCopyIntoClipboardAction = Nothing
-    }

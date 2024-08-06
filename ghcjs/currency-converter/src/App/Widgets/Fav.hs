@@ -5,12 +5,12 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import App.Widgets.Templates
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.Theme as Theme
@@ -28,10 +28,10 @@ fav st =
           )
           ( Dialog.dialogContent
               Nothing
-              [ Cell.grid
+              [ Grid.grid
                   mempty
                   $ favItems st
-                  <> [ Cell.mediumCell
+                  <> [ Grid.mediumCell
                         $ Field.textField
                           st
                           ( #modelFavName
@@ -47,7 +47,7 @@ fav st =
                                         <> name
                                  )
                           ),
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick saveAction
@@ -58,7 +58,7 @@ fav st =
                                 ]
                           )
                           "Save",
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick deleteAction
@@ -69,7 +69,7 @@ fav st =
                                 ]
                           )
                           "Delete",
-                       Cell.bigCell
+                       Grid.bigCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick closeAction
@@ -150,7 +150,7 @@ favItems st =
 
 favItem :: Model -> MisoString -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
-  Cell.bigCell
+  Grid.bigCell
     $ Button.raised
       ( Button.config
           & Button.setOnClick openAction

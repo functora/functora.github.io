@@ -5,12 +5,12 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Templates as Templates
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -122,9 +122,9 @@ menu st =
             )
             ( Dialog.dialogContent
                 Nothing
-                [ Cell.grid
+                [ Grid.grid
                     mempty
-                    $ [ Cell.smallCell
+                    $ [ Grid.smallCell
                           $ Button.raised
                             ( Button.config
                                 & Button.setOnClick
@@ -147,7 +147,7 @@ menu st =
                           $ if isQrCode sc
                             then "Rates"
                             else "QR",
-                        Cell.smallCell
+                        Grid.smallCell
                           $ Button.raised
                             ( Button.config
                                 & Button.setDisabled disabled
@@ -167,7 +167,7 @@ menu st =
                             )
                             "Note",
                         let item :| items = enumerateNE @OnlineOrOffline
-                         in Cell.mediumCell
+                         in Grid.mediumCell
                               $ Select.outlined
                                 ( Select.config
                                     & Select.setDisabled disabled
@@ -207,7 +207,7 @@ menu st =
                                       [text $ inspect x]
                                 )
                                 items,
-                        Cell.mediumCell
+                        Grid.mediumCell
                           $ Field.field
                             st
                             ( #modelState . #stPre
@@ -237,7 +237,7 @@ menu st =
                             )
                             parseDynamicField
                             inspectDynamicField,
-                        Cell.mediumCell
+                        Grid.mediumCell
                           $ Field.passwordField
                             st
                             ( #modelState
@@ -261,7 +261,7 @@ menu st =
                               )
                        )
                     <> linksWidget st
-                    <> [ Cell.bigCell
+                    <> [ Grid.bigCell
                           $ Button.raised
                             ( Button.config
                                 & Button.setOnClick closed
@@ -327,7 +327,7 @@ defFavName st =
 
 linksWidget :: Model -> [View Action]
 linksWidget st =
-  [ Cell.bigCell
+  [ Grid.bigCell
       $ Button.raised
         ( Button.config
             & Button.setOnClick openWidget
@@ -346,9 +346,9 @@ linksWidget st =
                 )
                 ( Dialog.dialogContent
                     Nothing
-                    [ Cell.grid
+                    [ Grid.grid
                         mempty
-                        [ Cell.bigCell
+                        [ Grid.bigCell
                             $ span_
                               mempty
                               [ text
@@ -360,7 +360,7 @@ linksWidget st =
                                 Misc.browserLink apkLink "APK file",
                                 text " directly."
                               ],
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "android")
@@ -371,7 +371,7 @@ linksWidget st =
                                     ]
                               )
                               "Join testing (closed beta)",
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "android")
@@ -382,7 +382,7 @@ linksWidget st =
                                     ]
                               )
                               "Google Play (closed beta)",
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "download")
@@ -393,7 +393,7 @@ linksWidget st =
                                     ]
                               )
                               "Download APK",
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "code")
@@ -404,7 +404,7 @@ linksWidget st =
                                     ]
                               )
                               "Source",
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "person")
@@ -415,7 +415,7 @@ linksWidget st =
                                     ]
                               )
                               "Author",
-                          Cell.mediumCell
+                          Grid.mediumCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setIcon (Just "volunteer_activism")
@@ -435,7 +435,7 @@ linksWidget st =
                                     ]
                               )
                               "Donate",
-                          Cell.bigCell
+                          Grid.bigCell
                             $ Button.raised
                               ( Button.config
                                   & Button.setOnClick closeWidget

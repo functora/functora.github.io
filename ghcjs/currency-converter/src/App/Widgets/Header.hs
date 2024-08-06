@@ -6,9 +6,9 @@ module App.Widgets.Header
 where
 
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 
@@ -18,7 +18,7 @@ headerEditor ::
   Field.Opts ->
   [View Action]
 headerEditor st optic opts =
-  [ Cell.bigCell
+  [ Grid.bigCell
       $ div_
         [ style_
             [ ("display", "flex"),

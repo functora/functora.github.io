@@ -8,10 +8,10 @@ module App.Widgets.Currency
 where
 
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import qualified Data.List.NonEmpty as NonEmpty
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
@@ -71,8 +71,8 @@ moneyViewer st opts money =
     label = opts ^. #optsLabel
     cell =
       if label == mempty
-        then Cell.bigCell
-        else Cell.mediumCell
+        then Grid.bigCell
+        else Grid.mediumCell
 
 selectCurrency ::
   Model ->

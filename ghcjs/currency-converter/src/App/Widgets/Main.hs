@@ -8,9 +8,9 @@ import qualified App.Widgets.Field as Field
 import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
-import qualified App.Widgets.Qr as Qr
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Qr as Qr
 import Functora.Money hiding (Text)
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
@@ -74,7 +74,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
               . #stScreen
               %~ unQrCode
           )
-          ( Qr.defOpts
+          ( Qr.defOpts @Model @Action
               & #optsExtraWidgets
               .~ [ Button.raised
                     ( Button.config
@@ -84,6 +84,12 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                     )
                     "Open"
                  ]
+              & ( #optsCopyIntoClipboardAction ::
+                    Lens'
+                      (Qr.Opts Model Action)
+                      (Maybe (Model -> MisoString -> Action))
+                )
+              .~ Just Misc.copyIntoClipboardAction
           )
     _ ->
       Decrypt.decrypt st
@@ -98,7 +104,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
           st
           ( toMisoString $ URI.render uri
           )
-          ( Qr.defOpts
+          ( Qr.defOpts @Model @Action
               & #optsExtraWidgets
               .~ [ Button.raised
                     ( Button.config
@@ -108,6 +114,12 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                     )
                     "Open"
                  ]
+              & ( #optsCopyIntoClipboardAction ::
+                    Lens'
+                      (Qr.Opts Model Action)
+                      (Maybe (Model -> MisoString -> Action))
+                )
+              .~ Just Misc.copyIntoClipboardAction
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =

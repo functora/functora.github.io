@@ -5,9 +5,9 @@ module App.Widgets.FieldPairs
 where
 
 import App.Types
-import qualified App.Widgets.Cell as Cell
 import qualified App.Widgets.Field as Field
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Typography as Typography
 
 fieldPairsViewer :: Model -> [FieldPair DynamicField Unique] -> [View Action]
@@ -52,8 +52,8 @@ fieldPairViewer st pair =
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
     cell =
       if k == mempty || v == mempty
-        then Cell.bigCell
-        else Cell.mediumCell
+        then Grid.bigCell
+        else Grid.mediumCell
 
 fieldPairs ::
   Model ->

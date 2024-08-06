@@ -16,9 +16,9 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Cell as Cell
-import qualified App.Widgets.Qr as Qr
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -405,9 +405,9 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
           )
           ( Dialog.dialogContent
               Nothing
-              [ Cell.grid
+              [ Grid.grid
                   mempty
-                  [ Cell.mediumCell
+                  [ Grid.mediumCell
                       $ textField
                         st
                         ( cloneTraversal opt
@@ -418,7 +418,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                             & #optsPlaceholder
                             .~ "Label"
                         ),
-                    Cell.mediumCell
+                    Grid.mediumCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick
@@ -436,7 +436,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                               ]
                         )
                         "Add note",
-                    Cell.smallCell
+                    Grid.smallCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick
@@ -451,7 +451,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                               ]
                         )
                         "Down",
-                    Cell.smallCell
+                    Grid.smallCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick
@@ -466,7 +466,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                               ]
                         )
                         "Up",
-                    Cell.smallCell
+                    Grid.smallCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick
@@ -481,7 +481,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                               ]
                         )
                         "Clone",
-                    Cell.smallCell
+                    Grid.smallCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick
@@ -496,7 +496,7 @@ fieldModal st (ModalItemWidget opt idx fps lbl ooc) = do
                               ]
                         )
                         "Delete",
-                    Cell.bigCell
+                    Grid.bigCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick closed
@@ -539,13 +539,13 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
           )
           ( Dialog.dialogContent
               Nothing
-              [ Cell.grid
+              [ Grid.grid
                   mempty
                   $ ( case sod of
                         Static -> mempty
                         Dynamic ->
                           [ let typ :| typs = enumerateNE @FieldType
-                             in Cell.bigCell
+                             in Grid.bigCell
                                   $ Select.outlined
                                     ( Select.config
                                         & Select.setLabel
@@ -591,7 +591,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                                     typs
                           ]
                     )
-                  <> [ -- Cell.mediumCell
+                  <> [ -- Grid.mediumCell
                        --  $ Switch.switch
                        --    st
                        --    ( Switch.defOpts
@@ -603,7 +603,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                        --    ( cloneTraversal optic
                        --        . #fieldAllowCopy
                        --    ),
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick
@@ -618,7 +618,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                                 ]
                           )
                           "Down",
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick
@@ -633,7 +633,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                                 ]
                           )
                           "Up",
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick
@@ -648,7 +648,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                                 ]
                           )
                           "Clone",
-                       Cell.smallCell
+                       Grid.smallCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick
@@ -663,7 +663,7 @@ fieldModal st (ModalFieldWidget opt idx access sod) = do
                                 ]
                           )
                           "Delete",
-                       Cell.bigCell
+                       Grid.bigCell
                         $ Button.raised
                           ( Button.config
                               & Button.setOnClick closed
@@ -691,11 +691,11 @@ fieldModal st (ModalMiniWidget opt) = do
           )
           ( Dialog.dialogContent
               Nothing
-              [ Cell.grid
+              [ Grid.grid
                   mempty
-                  [ Cell.bigCell
+                  [ Grid.bigCell
                       $ selectTypeWidget st opt,
-                    Cell.bigCell
+                    Grid.bigCell
                       $ Button.raised
                         ( Button.config
                             & Button.setOnClick closed
@@ -823,9 +823,15 @@ dynamicFieldViewer st value =
     FieldTypePercent -> plain out $ text . (<> "%")
     FieldTypeText -> plain out text
     FieldTypeTitle -> header out
-    FieldTypeQrCode -> Qr.qr st out $ Qr.defOpts & #optsAllowCopy .~ allowCopy
     FieldTypeHtml -> plain out rawHtml
     FieldTypePassword -> plain out $ const "*****"
+    FieldTypeQrCode ->
+      Qr.qr st out
+        $ Qr.defOpts @Model @Action
+        & #optsAllowCopy
+        .~ allowCopy
+        & #optsCopyIntoClipboardAction
+        .~ Just Misc.copyIntoClipboardAction
   where
     out = inspectDynamicField $ value ^. #fieldOutput
     allowCopy = value ^. #fieldAllowCopy

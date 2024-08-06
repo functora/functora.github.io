@@ -28,7 +28,6 @@ common pkg
     App.Misc
     App.Types
     App.Widgets.Assets
-    App.Widgets.Cell
     App.Widgets.Chips
     App.Widgets.Currency
     App.Widgets.Decrypt
@@ -41,7 +40,6 @@ common pkg
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.PaymentMethods
-    App.Widgets.Qr
     App.Widgets.SwapAmounts
     App.Widgets.Switch
     App.Widgets.Templates

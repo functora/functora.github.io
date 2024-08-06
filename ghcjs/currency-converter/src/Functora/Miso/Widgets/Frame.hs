@@ -1,15 +1,14 @@
-module App.Widgets.Frame
+module Functora.Miso.Widgets.Frame
   ( frame,
   )
 where
 
-import App.Types
 import Functora.Miso.Prelude
 import qualified Material.DataTable as DataTable
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 
-frame :: [View Action] -> View Action
+frame :: [View action] -> View action
 frame content =
   DataTable.dataTable
     ( DataTable.config

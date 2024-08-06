@@ -34,20 +34,20 @@ common pkg
     App.Widgets.Fav
     App.Widgets.Field
     App.Widgets.FieldPairs
-    App.Widgets.Frame
     App.Widgets.Header
     App.Widgets.IconToggles
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.PaymentMethods
     App.Widgets.SwapAmounts
-    App.Widgets.Switch
     App.Widgets.Templates
     Functora.Miso.Prelude
     Functora.Miso.Storage
     Functora.Miso.Types
+    Functora.Miso.Widgets.Frame
     Functora.Miso.Widgets.Grid
     Functora.Miso.Widgets.Qr
+    Functora.Miso.Widgets.Switch
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations

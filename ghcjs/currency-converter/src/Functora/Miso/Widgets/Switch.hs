@@ -1,33 +1,34 @@
-module App.Widgets.Switch
+module Functora.Miso.Widgets.Switch
   ( Opts (..),
     defOpts,
     switch,
   )
 where
 
-import App.Types
-import qualified App.Widgets.Frame as Frame
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Frame as Frame
 import qualified Material.Icon as Icon
 import qualified Material.Switch as Switch
 import Miso hiding (at, view)
 
-data Opts = Opts
+data Opts model action = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: MisoString,
-    optsIcon :: Maybe MisoString
+    optsIcon :: Maybe MisoString,
+    optsOnChange :: Maybe ((model -> model) -> action)
   }
   deriving stock (Generic)
 
-defOpts :: Opts
+defOpts :: Opts model action
 defOpts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,
-      optsIcon = Nothing
+      optsIcon = Nothing,
+      optsOnChange = Nothing
     }
 
-switch :: Model -> Opts -> ATraversal' Model Bool -> View Action
+switch :: model -> Opts model action -> ATraversal' model Bool -> View action
 switch st opts optic =
   Frame.frame
     $ maybeToList
@@ -42,7 +43,11 @@ switch st opts optic =
           & Switch.setChecked
             ( fromMaybe False $ st ^? cloneTraversal optic
             )
-          & Switch.setOnChange
-            ( pureUpdate 0 (& cloneTraversal optic %~ not)
+          & ( maybe
+                id
+                ( \f ->
+                    Switch.setOnChange $ f (& cloneTraversal optic %~ not)
+                )
+                $ optsOnChange opts
             )
        ]

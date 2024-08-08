@@ -39,6 +39,7 @@ common pkg
     App.Widgets.PaymentMethods
     App.Widgets.SwapAmounts
     App.Widgets.Templates
+    Functora.Miso.Jsm
     Functora.Miso.Prelude
     Functora.Miso.Storage
     Functora.Miso.Types

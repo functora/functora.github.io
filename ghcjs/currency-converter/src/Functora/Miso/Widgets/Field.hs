@@ -15,6 +15,7 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -286,7 +287,7 @@ fieldIcon lot opts full@Full {fullArgs = Args {argsAction = action}} = \case
       . action
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
         Nothing -> pure id
-        Just txt -> shareText txt
+        Just txt -> Jsm.shareText txt
   ClearWidget ->
     fieldIconSimple lot "close" mempty . action $ do
       focus
@@ -317,15 +318,15 @@ fieldIcon lot opts full@Full {fullArgs = Args {argsAction = action}} = \case
   UpWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_up" attrs
       . action
-      $ moveUp opt idx
+      $ Jsm.moveUp opt idx
   DownWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_down" attrs
       . action
-      $ moveDown opt idx
+      $ Jsm.moveDown opt idx
   DeleteWidget opt idx attrs ->
     fieldIconSimple lot "delete_forever" attrs
       . action
-      $ removeAt opt idx
+      $ Jsm.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
     fieldIconSimple lot "settings" [Theme.primary]
       . action
@@ -409,7 +410,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                 ( Button.config
                     & Button.setOnClick
                       ( action
-                          . newFieldPairJsm
+                          . Jsm.addFieldPair
                           $ cloneTraversal opt
                           . ix idx
                           . cloneTraversal fps
@@ -427,7 +428,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
               $ Button.raised
                 ( Button.config
                     & Button.setOnClick
-                      ( action $ moveDown opt idx
+                      ( action $ Jsm.moveDown opt idx
                       )
                     & Button.setIcon
                       ( Just "keyboard_double_arrow_down"
@@ -442,7 +443,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
               $ Button.raised
                 ( Button.config
                     & Button.setOnClick
-                      ( action $ moveUp opt idx
+                      ( action $ Jsm.moveUp opt idx
                       )
                     & Button.setIcon
                       ( Just "keyboard_double_arrow_up"
@@ -457,7 +458,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
               $ Button.raised
                 ( Button.config
                     & Button.setOnClick
-                      ( action $ duplicateAtJsm opt idx
+                      ( action $ Jsm.duplicateAt opt idx
                       )
                     & Button.setIcon
                       ( Just "library_add"
@@ -472,7 +473,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
               $ Button.raised
                 ( Button.config
                     & Button.setOnClick
-                      ( action $ removeAt opt idx
+                      ( action $ Jsm.removeAt opt idx
                       )
                     & Button.setIcon
                       ( Just "delete_forever"
@@ -558,7 +559,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick
-                          ( action $ moveDown opt idx
+                          ( action $ Jsm.moveDown opt idx
                           )
                         & Button.setIcon
                           ( Just "keyboard_double_arrow_down"
@@ -573,7 +574,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick
-                          ( action $ moveUp opt idx
+                          ( action $ Jsm.moveUp opt idx
                           )
                         & Button.setIcon
                           ( Just "keyboard_double_arrow_up"
@@ -588,7 +589,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick
-                          ( action $ duplicateAtJsm opt idx
+                          ( action $ Jsm.duplicateAt opt idx
                           )
                         & Button.setIcon
                           ( Just "library_add"
@@ -603,7 +604,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                   $ Button.raised
                     ( Button.config
                         & Button.setOnClick
-                          ( action $ removeAt opt idx
+                          ( action $ Jsm.removeAt opt idx
                           )
                         & Button.setIcon
                           ( Just "delete_forever"
@@ -703,7 +704,7 @@ constTextField txt opts action =
         & TextField.setLeadingIcon
           ( fmap
               ( fieldIconSimple Leading "content_copy" mempty . \case
-                  CopyWidget -> action $ shareText txt
+                  CopyWidget -> action $ Jsm.shareText txt
                   _ -> error "constTextField unsupported widget"
               )
               (opts ^. #optsLeadingWidget)

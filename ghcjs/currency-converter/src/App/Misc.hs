@@ -25,7 +25,7 @@ where
 
 import App.Types
 import qualified Data.Generics as Syb
-import Functora.Miso.Prelude hiding (moveDown, moveUp, removeAt, textPopup)
+import Functora.Miso.Prelude
 import Functora.Money hiding (Text)
 import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS

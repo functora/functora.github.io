@@ -9,6 +9,7 @@ where
 import qualified Codec.QRCode as QRCode
 import qualified Data.MemoUgly as Memo
 import qualified Data.Text.Lazy as TL
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
@@ -81,7 +82,7 @@ qr args opts
                 ( Button.config
                     & Button.setIcon (Just "share")
                     & Button.setAttributes [class_ "fill"]
-                    & Button.setOnClick (action $ shareText txt)
+                    & Button.setOnClick (action $ Jsm.shareText txt)
                 )
                 "Copy"
           ]

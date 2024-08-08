@@ -10,11 +10,11 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Typography as Typography
 
-fieldPairsViewer :: Model -> [FieldPair DynamicField Unique] -> [View Action]
-fieldPairsViewer st = (>>= fieldPairViewer st)
+fieldPairsViewer :: [FieldPair DynamicField Unique] -> [View Action]
+fieldPairsViewer = (>>= fieldPairViewer)
 
-fieldPairViewer :: Model -> FieldPair DynamicField Unique -> [View Action]
-fieldPairViewer st pair =
+fieldPairViewer :: FieldPair DynamicField Unique -> [View Action]
+fieldPairViewer pair =
   ( if k == mempty
       then mempty
       else
@@ -44,7 +44,7 @@ fieldPairViewer st pair =
           else
             [ cell
                 . div_ mempty
-                $ Field.dynamicFieldViewer st (pair ^. #fieldPairValue)
+                $ Field.dynamicFieldViewer (pair ^. #fieldPairValue)
             ]
        )
   where

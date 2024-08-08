@@ -1,5 +1,5 @@
 module Functora.Miso.Widgets.Dialog
-  ( Opts (..),
+  ( Args (..),
     dialog,
   )
 where
@@ -10,36 +10,33 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 
-newtype Opts model action = Opts
-  { optsOnClose :: (model -> model) -> action
+data Args model action = Args
+  { argsModel :: model,
+    argsOptic :: ATraversal' model OpenedOrClosed,
+    argsAction :: JSM (model -> model) -> action,
+    argsContent :: [View action]
   }
   deriving stock (Generic)
 
-dialog ::
-  forall model action.
-  model ->
-  Opts model action ->
-  ATraversal' model OpenedOrClosed ->
-  [View action] ->
-  [View action]
-dialog st opts optic content =
-  if st ^? cloneTraversal optic /= Just Opened
+dialog :: forall model action. Args model action -> [View action]
+dialog args =
+  if args ^? #argsModel . cloneTraversal optic /= Just Opened
     then mempty
     else
       [ Dialog.dialog
           ( Dialog.config
               & Dialog.setOpen True
-              & onClose Dialog.setOnClose
+              & action Dialog.setOnClose
           )
           ( Dialog.dialogContent
               Nothing
               [ Grid.grid
                   mempty
-                  $ content
+                  $ (args ^. #argsContent)
                   <> [ Grid.bigCell
                         $ Button.raised
                           ( Button.config
-                              & onClose Button.setOnClick
+                              & action Button.setOnClick
                               & Button.setIcon (Just "arrow_back")
                               & Button.setAttributes [class_ "fill"]
                           )
@@ -50,5 +47,7 @@ dialog st opts optic content =
           )
       ]
   where
-    onClose :: (action -> f action -> f action) -> f action -> f action
-    onClose = ($ optsOnClose opts (& cloneTraversal optic .~ Closed))
+    optic :: ATraversal' model OpenedOrClosed
+    optic = args ^. #argsOptic
+    action :: (action -> f action -> f action) -> f action -> f action
+    action = ($ args ^. #argsAction $ pure (& cloneTraversal optic .~ Closed))

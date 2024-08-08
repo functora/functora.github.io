@@ -18,7 +18,7 @@ decrypt :: Model -> [View Action]
 decrypt st =
   [ Grid.bigCell
       . div_ mempty
-      $ Field.dynamicFieldViewer st (st ^. #modelState . #stPre),
+      $ Field.dynamicFieldViewer (st ^. #modelState . #stPre),
     Grid.mediumCell
       $ Field.passwordField
         st
@@ -105,4 +105,4 @@ onKeyDownAction :: Model -> Uid -> KeyCode -> Action
 onKeyDownAction st uid code =
   if code == KeyCode 13
     then decryptDoc st
-    else Misc.onKeyDownAction uid code
+    else PushUpdate . fmap (ChanItem 0) $ Misc.onKeyDownAction uid code

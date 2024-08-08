@@ -25,7 +25,7 @@ where
 
 import App.Types
 import qualified Data.Generics as Syb
-import Functora.Miso.Prelude
+import Functora.Miso.Prelude hiding (moveDown, moveUp, removeAt, textPopup)
 import Functora.Money hiding (Text)
 import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
@@ -57,19 +57,17 @@ pushActionQueue st =
     . atomically
     . writeTChan (st ^. #modelProducerQueue)
 
-onKeyDownAction :: Uid -> KeyCode -> Action
-onKeyDownAction uid (KeyCode code) =
-  PushUpdate $ do
-    verifyUid uid
-    let enterOrEscape = [13, 27] :: [Int]
-    when (code `elem` enterOrEscape)
-      . void
-      . JS.eval @MisoString
-      $ "document.getElementById('"
-      <> htmlUid uid
-      <> "').getElementsByTagName('input')[0].blur();"
-    pure
-      $ ChanItem 300 id
+onKeyDownAction :: Uid -> KeyCode -> JSM (model -> model)
+onKeyDownAction uid (KeyCode code) = do
+  verifyUid uid
+  let enterOrEscape = [13, 27] :: [Int]
+  when (code `elem` enterOrEscape)
+    . void
+    . JS.eval @MisoString
+    $ "document.getElementById('"
+    <> htmlUid uid
+    <> "').getElementsByTagName('input')[0].blur();"
+  pure id
 
 copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
 copyIntoClipboard st x = do

@@ -6,10 +6,9 @@ module Functora.Miso.Widgets.Field
     field,
     ratioField,
     textField,
-    dynamicField,
+    -- dynamicField,
     passwordField,
     constTextField,
-    constLinkField,
     dynamicFieldViewer,
   )
 where
@@ -28,59 +27,72 @@ import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
-import qualified Text.URI as URI
 
-data Opts = Opts
+data Args model action item = Args
+  { argsModel :: model,
+    argsOptic :: ATraversal' model (Field item Unique),
+    argsAction :: JSM (model -> model) -> action
+  }
+  deriving stock (Generic)
+
+data Full model action item = Full
+  { fullArgs :: Args model action item,
+    fullParser :: Field item Unique -> Maybe item,
+    fullViewer :: item -> MisoString
+  }
+  deriving stock (Generic)
+
+data Opts model action = Opts
   { optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: MisoString,
-    optsExtraOnInput :: Model -> Model,
-    optsLeadingWidget :: Maybe OptsWidget,
-    optsTrailingWidget :: Maybe OptsWidget,
-    optsOnKeyDownAction :: Uid -> KeyCode -> Action,
-    optsExtraAttributes :: [Attribute Action],
+    optsExtraOnInput :: model -> model,
+    optsLeadingWidget :: Maybe (OptsWidget model action),
+    optsTrailingWidget :: Maybe (OptsWidget model action),
+    optsOnKeyDownAction :: Uid -> KeyCode -> JSM (model -> model),
+    optsExtraAttributes :: [Attribute action],
     optsFilledOrOutlined :: FilledOrOutlined
   }
   deriving stock (Generic)
 
-data OptsWidget
+data OptsWidget model action
   = CopyWidget
   | ClearWidget
   | ShowOrHideWidget
-  | forall a. UpWidget (ATraversal' Model [a]) Int [Attribute Action]
-  | forall a. DownWidget (ATraversal' Model [a]) Int [Attribute Action]
-  | forall a. DeleteWidget (ATraversal' Model [a]) Int [Attribute Action]
-  | ActionWidget MisoString [Attribute Action] Action
-  | ModalWidget ModalWidget'
+  | ModalWidget (ModalWidget' model)
+  | ActionWidget MisoString [Attribute action] action
+  | forall item. UpWidget (ATraversal' model [item]) Int [Attribute action]
+  | forall item. DownWidget (ATraversal' model [item]) Int [Attribute action]
+  | forall item. DeleteWidget (ATraversal' model [item]) Int [Attribute action]
 
-data ModalWidget' where
+data ModalWidget' model where
   ModalItemWidget ::
-    forall a.
+    forall model a.
     ( Data a
     ) =>
-    ATraversal' Model [a] ->
+    ATraversal' model [a] ->
     Int ->
     ATraversal' a [FieldPair DynamicField Unique] ->
     ATraversal' a (Field MisoString Unique) ->
     ATraversal' a OpenedOrClosed ->
-    ModalWidget'
+    ModalWidget' model
   ModalFieldWidget ::
-    forall a b.
+    forall model a b.
     ( Data a
     ) =>
-    ATraversal' Model [a] ->
+    ATraversal' model [a] ->
     Int ->
     ATraversal' a (Field b Unique) ->
     StaticOrDynamic ->
-    ModalWidget'
+    ModalWidget' model
   ModalMiniWidget ::
-    forall a.
+    forall model a.
     ( Data a
     ) =>
-    ATraversal' Model (Field a Unique) ->
-    ModalWidget'
+    ATraversal' model (Field a Unique) ->
+    ModalWidget' model
 
-defOpts :: Opts
+defOpts :: Opts model action
 defOpts =
   Opts
     { optsDisabled = False,
@@ -95,13 +107,10 @@ defOpts =
     }
 
 field ::
-  Model ->
-  ATraversal' Model (Field a Unique) ->
-  Opts ->
-  (Field a Unique -> Maybe a) ->
-  (a -> MisoString) ->
-  View Action
-field st optic opts parser viewer =
+  Opts model action ->
+  Full model action item ->
+  View action
+field opts full =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -122,7 +131,7 @@ field st optic opts parser viewer =
             case x0 of
               ModalWidget w -> pure w
               _ -> mempty
-          fieldModal st x1
+          fieldModal args x1
       )
     <> [ case opts ^. #optsFilledOrOutlined of
           Filled -> TextField.filled
@@ -138,17 +147,17 @@ field st optic opts parser viewer =
             )
           & TextField.setLeadingIcon
             ( fmap
-                (fieldIcon st optic Leading $ opts ^. #optsExtraOnInput)
+                (fieldIcon Leading opts full)
                 (opts ^. #optsLeadingWidget)
             )
           & TextField.setTrailingIcon
             ( fmap
-                (fieldIcon st optic Trailing $ opts ^. #optsExtraOnInput)
+                (fieldIcon Trailing opts full)
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
             ( [ id_ $ htmlUid @MisoString uid,
-                onKeyDown . optsOnKeyDownAction opts $ uid,
+                onKeyDown $ action . optsOnKeyDownAction opts uid,
                 onBlur onBlurAction
               ]
                 <> ( if opts ^. #optsFullWidth
@@ -160,6 +169,12 @@ field st optic opts parser viewer =
             )
        ]
   where
+    args = fullArgs full
+    st = argsModel args
+    optic = argsOptic args
+    action = argsAction args
+    parser = fullParser full
+    viewer = fullViewer full
     uid =
       fromMaybe nilUid
         $ st
@@ -179,113 +194,101 @@ field st optic opts parser viewer =
         then Nothing
         else Just out
     onBlurAction =
-      PushUpdate $ do
-        Misc.verifyUid uid
-        pure . ChanItem 300 $ \st' ->
-          st'
-            & cloneTraversal optic
-            . #fieldInput
-            . #uniqueValue
-            %~ maybe id (const . viewer) (getInputReplacement st')
-            & cloneTraversal optic
-            . #fieldOutput
-            %~ maybe id (const . id) (getOutput st')
+      action . pure $ \prev ->
+        prev
+          & cloneTraversal optic
+          . #fieldInput
+          . #uniqueValue
+          %~ maybe id (const . viewer) (getInputReplacement prev)
+          & cloneTraversal optic
+          . #fieldOutput
+          %~ maybe id (const . id) (getOutput prev)
     onInputAction txt =
-      PushUpdate $ do
-        Misc.verifyUid uid
-        pure . ChanItem 300 $ \prev ->
-          let next =
-                prev
-                  & cloneTraversal optic
-                  . #fieldInput
-                  . #uniqueValue
-                  .~ txt
-                  & (opts ^. #optsExtraOnInput)
-           in next
+      action . pure $ \prev ->
+        let next =
+              prev
                 & cloneTraversal optic
-                . #fieldOutput
-                %~ maybe id (const . id) (getOutput next)
+                . #fieldInput
+                . #uniqueValue
+                .~ txt
+                & (opts ^. #optsExtraOnInput)
+         in next
+              & cloneTraversal optic
+              . #fieldOutput
+              %~ maybe id (const . id) (getOutput next)
 
 ratioField ::
-  Model ->
-  ATraversal' Model (Field Rational Unique) ->
-  Opts ->
-  View Action
-ratioField st optic opts =
+  Opts model action ->
+  Args model action Rational ->
+  View action
+ratioField opts args =
   field
-    st
-    optic
     opts
-    ( parseRatio . view (#fieldInput . #uniqueValue)
-    )
-    inspectRatioDef
+    Full
+      { fullArgs = args,
+        fullParser = parseRatio . (^. #fieldInput . #uniqueValue),
+        fullViewer = inspectRatioDef
+      }
 
 textField ::
-  Model ->
-  ATraversal' Model (Field MisoString Unique) ->
-  Opts ->
-  View Action
-textField st optic opts =
+  Opts model action ->
+  Args model action MisoString ->
+  View action
+textField opts args =
   field
-    st
-    optic
     opts
-    ( Just . view (#fieldInput . #uniqueValue)
-    )
-    id
+    Full
+      { fullArgs = args,
+        fullParser = Just . (^. #fieldInput . #uniqueValue),
+        fullViewer = id
+      }
 
-dynamicField ::
-  Model ->
-  ATraversal' Model [FieldPair DynamicField Unique] ->
-  Int ->
-  Opts ->
-  View Action
-dynamicField st optic idx opts =
-  field
-    st
-    ( cloneTraversal optic
-        . ix idx
-        . #fieldPairValue
-    )
-    opts
-    parseDynamicField
-    inspectDynamicField
+-- dynamicField ::
+--   model ->
+--   ATraversal' model [FieldPair DynamicField Unique] ->
+--   Int ->
+--   Opts model action ->
+--   View action
+-- dynamicField st optic idx opts =
+--   field
+--     st
+--     ( cloneTraversal optic
+--         . ix idx
+--         . #fieldPairValue
+--     )
+--     opts
+--     parseDynamicField
+--     inspectDynamicField
 
 passwordField ::
-  Model ->
-  ATraversal' Model (Field MisoString Unique) ->
-  Opts ->
-  View Action
-passwordField st optic opts =
+  Opts model action ->
+  Args model action MisoString ->
+  View action
+passwordField opts args =
   textField
-    st
-    optic
     ( opts
         & #optsPlaceholder
-        .~ "Password"
+        .~ ("Password" :: MisoString)
         & #optsLeadingWidget
         .~ Just ShowOrHideWidget
     )
+    args
 
 fieldIcon ::
-  Model ->
-  ATraversal' Model (Field a Unique) ->
   LeadingOrTrailing ->
-  ( Model -> Model
-  ) ->
-  OptsWidget ->
-  TextField.Icon Action
-fieldIcon st optic lot extraOnInput = \case
+  Opts model action ->
+  Full model action item ->
+  OptsWidget model action ->
+  TextField.Icon action
+fieldIcon lot opts full@Full {fullArgs = Args {argsAction = action}} = \case
   CopyWidget ->
-    fieldIconSimple lot "content_copy" mempty . PushUpdate $ do
-      Misc.verifyUid uid
-      whenJust (st ^? cloneTraversal optic . #fieldInput . #uniqueValue)
-        $ Misc.copyIntoClipboard st
-      pure
-        $ ChanItem 0 id
+    fieldIconSimple lot "content_copy" mempty
+      . action
+      $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
+        Nothing -> pure id
+        Just txt -> shareText txt
   ClearWidget ->
-    fieldIconSimple lot "close" mempty . PushUpdate $ do
-      Misc.verifyUid uid
+    fieldIconSimple lot "close" mempty . action $ do
       focus
         . toMisoString
         $ htmlUid @MisoString uid
@@ -294,8 +297,8 @@ fieldIcon st optic lot extraOnInput = \case
         $ "var el = document.getElementById('"
         <> htmlUid uid
         <> "'); if (el) el.value = '';"
-      pure . ChanItem 300 $ \st' ->
-        st'
+      pure $ \prev ->
+        prev
           & cloneTraversal optic
           . #fieldInput
           . #uniqueValue
@@ -305,23 +308,28 @@ fieldIcon st optic lot extraOnInput = \case
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
         fieldIconSimple lot "visibility_off" mempty
-          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypeText)
+          . action
+          $ pure (& cloneTraversal optic . #fieldType .~ FieldTypeText)
       _ ->
         fieldIconSimple lot "visibility" mempty
-          $ pureUpdate 0 (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
+          . action
+          $ pure (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
   UpWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_up" attrs
-      $ Misc.moveUp opt idx
+      . action
+      $ moveUp opt idx
   DownWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_down" attrs
-      $ Misc.moveDown opt idx
+      . action
+      $ moveDown opt idx
   DeleteWidget opt idx attrs ->
     fieldIconSimple lot "delete_forever" attrs
-      $ Misc.removeAt opt idx
+      . action
+      $ removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
     fieldIconSimple lot "settings" [Theme.primary]
-      $ pureUpdate
-        0
+      . action
+      $ pure
         ( &
             cloneTraversal opt
               . ix idx
@@ -330,8 +338,8 @@ fieldIcon st optic lot extraOnInput = \case
         )
   ModalWidget (ModalFieldWidget opt idx access _) ->
     fieldIconSimple lot "settings" mempty
-      $ pureUpdate
-        0
+      . action
+      $ pure
         ( &
             cloneTraversal opt
               . ix idx
@@ -341,18 +349,24 @@ fieldIcon st optic lot extraOnInput = \case
         )
   ModalWidget (ModalMiniWidget opt) ->
     fieldIconSimple lot "settings" mempty
-      $ pureUpdate
-        0
+      . action
+      $ pure
         ( &
             cloneTraversal opt
               . #fieldModalState
               .~ Opened
         )
-  ActionWidget icon attrs action ->
-    fieldIconSimple lot icon attrs action
+  ActionWidget icon attrs act ->
+    fieldIconSimple lot icon attrs act
   where
+    st =
+      full ^. #fullArgs . #argsModel
     uid =
       fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
+    optic =
+      full ^. #fullArgs . #argsOptic
+    extraOnInput =
+      opts ^. #optsExtraOnInput
 
 fieldIconSimple ::
   LeadingOrTrailing ->
@@ -374,236 +388,251 @@ fieldIconSimple lot txt attrs action =
     )
     txt
 
-fieldModal :: Model -> ModalWidget' -> [View Action]
-fieldModal st (ModalItemWidget opt idx fps lbl ooc) =
+fieldModal :: Args model action item -> ModalWidget' model -> [View action]
+fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc) =
   Dialog.dialog
-    st
-    (Dialog.Opts $ pureUpdate 0)
-    (cloneTraversal opt . ix idx . cloneTraversal ooc)
-    [ Grid.mediumCell
-        $ textField
-          st
-          ( cloneTraversal opt
-              . ix idx
-              . cloneTraversal lbl
-          )
-          ( defOpts
-              & #optsPlaceholder
-              .~ "Label"
-          ),
-      Grid.mediumCell
-        $ Button.raised
-          ( Button.config
-              & Button.setOnClick
-                ( Misc.newFieldPairAction
-                    $ cloneTraversal opt
-                    . ix idx
-                    . cloneTraversal fps
+    Dialog.Args
+      { Dialog.argsModel = args ^. #argsModel,
+        Dialog.argsOptic = cloneTraversal opt . ix idx . cloneTraversal ooc,
+        Dialog.argsAction = args ^. #argsAction,
+        Dialog.argsContent =
+          [ Grid.mediumCell
+              $ textField
+                (defOpts & #optsPlaceholder .~ "Label")
+                Args
+                  { argsModel = args ^. #argsModel,
+                    argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
+                    argsAction = args ^. #argsAction
+                  },
+            Grid.mediumCell
+              $ Button.raised
+                ( Button.config
+                    & Button.setOnClick
+                      ( action
+                          . newFieldPairJsm
+                          $ cloneTraversal opt
+                          . ix idx
+                          . cloneTraversal fps
+                      )
+                    & Button.setIcon
+                      ( Just "add"
+                      )
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
                 )
-              & Button.setIcon
-                ( Just "add"
+                "Add note",
+            Grid.smallCell
+              $ Button.raised
+                ( Button.config
+                    & Button.setOnClick
+                      ( action $ moveDown opt idx
+                      )
+                    & Button.setIcon
+                      ( Just "keyboard_double_arrow_down"
+                      )
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
                 )
-              & Button.setAttributes
-                [ class_ "fill",
-                  Theme.secondaryBg
-                ]
-          )
-          "Add note",
-      Grid.smallCell
-        $ Button.raised
-          ( Button.config
-              & Button.setOnClick
-                ( Misc.moveDown opt idx
+                "Down",
+            Grid.smallCell
+              $ Button.raised
+                ( Button.config
+                    & Button.setOnClick
+                      ( action $ moveUp opt idx
+                      )
+                    & Button.setIcon
+                      ( Just "keyboard_double_arrow_up"
+                      )
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
                 )
-              & Button.setIcon
-                ( Just "keyboard_double_arrow_down"
+                "Up",
+            Grid.smallCell
+              $ Button.raised
+                ( Button.config
+                    & Button.setOnClick
+                      ( action $ duplicateAtJsm opt idx
+                      )
+                    & Button.setIcon
+                      ( Just "library_add"
+                      )
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
                 )
-              & Button.setAttributes
-                [ class_ "fill",
-                  Theme.secondaryBg
-                ]
-          )
-          "Down",
-      Grid.smallCell
-        $ Button.raised
-          ( Button.config
-              & Button.setOnClick
-                ( Misc.moveUp opt idx
+                "Clone",
+            Grid.smallCell
+              $ Button.raised
+                ( Button.config
+                    & Button.setOnClick
+                      ( action $ removeAt opt idx
+                      )
+                    & Button.setIcon
+                      ( Just "delete_forever"
+                      )
+                    & Button.setAttributes
+                      [ class_ "fill",
+                        Theme.secondaryBg
+                      ]
                 )
-              & Button.setIcon
-                ( Just "keyboard_double_arrow_up"
-                )
-              & Button.setAttributes
-                [ class_ "fill",
-                  Theme.secondaryBg
-                ]
-          )
-          "Up",
-      Grid.smallCell
-        $ Button.raised
-          ( Button.config
-              & Button.setOnClick
-                ( Misc.duplicateAt opt idx
-                )
-              & Button.setIcon
-                ( Just "library_add"
-                )
-              & Button.setAttributes
-                [ class_ "fill",
-                  Theme.secondaryBg
-                ]
-          )
-          "Clone",
-      Grid.smallCell
-        $ Button.raised
-          ( Button.config
-              & Button.setOnClick
-                ( Misc.removeAt opt idx
-                )
-              & Button.setIcon
-                ( Just "delete_forever"
-                )
-              & Button.setAttributes
-                [ class_ "fill",
-                  Theme.secondaryBg
-                ]
-          )
-          "Delete"
-    ]
-fieldModal st (ModalFieldWidget opt idx access sod) = do
+                "Delete"
+          ]
+      }
+fieldModal args (ModalFieldWidget opt idx access sod) = do
   let optic =
         cloneTraversal opt
           . ix idx
           . cloneTraversal access
+  let action =
+        args ^. #argsAction
   Dialog.dialog
-    st
-    (Dialog.Opts $ pureUpdate 0)
-    (cloneTraversal optic . #fieldModalState)
-    $ ( case sod of
-          Static -> mempty
-          Dynamic ->
-            [ let typ :| typs = enumerateNE @FieldType
-               in Grid.bigCell
-                    $ Select.outlined
-                      ( Select.config
-                          & Select.setLabel
-                            ( Just "Type"
-                            )
-                          & Select.setAttributes
-                            [ class_ "fill-inner"
-                            ]
-                          & Select.setSelected
-                            ( st
-                                ^? cloneTraversal optic
-                                . #fieldType
-                            )
-                          & Select.setOnChange
-                            ( \x ->
-                                pureUpdate
-                                  0
-                                  ( &
-                                      cloneTraversal optic
-                                        . #fieldType
-                                        .~ x
-                                  )
-                            )
-                      )
-                      ( SelectItem.selectItem
-                          (SelectItem.config typ)
-                          [text $ userFieldType typ]
-                      )
-                    $ fmap
-                      ( \t ->
-                          SelectItem.selectItem
-                            (SelectItem.config t)
-                            [text $ userFieldType t]
-                      )
-                      typs
-            ]
-      )
-    <> [ -- Grid.mediumCell
-         --  $ Switch.switch
-         --    st
-         --    ( Switch.defOpts
-         --        & #optsIcon
-         --        .~ Just "content_copy"
-         --        & #optsPlaceholder
-         --        .~ "Allow copy"
-         --    )
-         --    ( cloneTraversal optic
-         --        . #fieldAllowCopy
-         --    ),
-         Grid.smallCell
-          $ Button.raised
-            ( Button.config
-                & Button.setOnClick
-                  ( Misc.moveDown opt idx
-                  )
-                & Button.setIcon
-                  ( Just "keyboard_double_arrow_down"
-                  )
-                & Button.setAttributes
-                  [ class_ "fill",
-                    Theme.secondaryBg
-                  ]
-            )
-            "Down",
-         Grid.smallCell
-          $ Button.raised
-            ( Button.config
-                & Button.setOnClick
-                  ( Misc.moveUp opt idx
-                  )
-                & Button.setIcon
-                  ( Just "keyboard_double_arrow_up"
-                  )
-                & Button.setAttributes
-                  [ class_ "fill",
-                    Theme.secondaryBg
-                  ]
-            )
-            "Up",
-         Grid.smallCell
-          $ Button.raised
-            ( Button.config
-                & Button.setOnClick
-                  ( Misc.duplicateAt opt idx
-                  )
-                & Button.setIcon
-                  ( Just "library_add"
-                  )
-                & Button.setAttributes
-                  [ class_ "fill",
-                    Theme.secondaryBg
-                  ]
-            )
-            "Clone",
-         Grid.smallCell
-          $ Button.raised
-            ( Button.config
-                & Button.setOnClick
-                  ( Misc.removeAt opt idx
-                  )
-                & Button.setIcon
-                  ( Just "delete_forever"
-                  )
-                & Button.setAttributes
-                  [ class_ "fill",
-                    Theme.secondaryBg
-                  ]
-            )
-            "Delete"
-       ]
-fieldModal st (ModalMiniWidget opt) =
+    Dialog.Args
+      { Dialog.argsModel = args ^. #argsModel,
+        Dialog.argsOptic = cloneTraversal optic . #fieldModalState,
+        Dialog.argsAction = args ^. #argsAction,
+        Dialog.argsContent =
+          ( case sod of
+              Static -> mempty
+              Dynamic ->
+                [ let typ :| typs = enumerateNE @FieldType
+                   in Grid.bigCell
+                        $ Select.outlined
+                          ( Select.config
+                              & Select.setLabel
+                                ( Just "Type"
+                                )
+                              & Select.setAttributes
+                                [ class_ "fill-inner"
+                                ]
+                              & Select.setSelected
+                                ( args
+                                    ^? #argsModel
+                                    . cloneTraversal optic
+                                    . #fieldType
+                                )
+                              & Select.setOnChange
+                                ( \x ->
+                                    args
+                                      ^. #argsAction
+                                      $ pure
+                                        ( &
+                                            cloneTraversal optic
+                                              . #fieldType
+                                              .~ x
+                                        )
+                                )
+                          )
+                          ( SelectItem.selectItem
+                              (SelectItem.config typ)
+                              [text $ userFieldType typ]
+                          )
+                        $ fmap
+                          ( \t ->
+                              SelectItem.selectItem
+                                (SelectItem.config t)
+                                [text $ userFieldType t]
+                          )
+                          typs
+                ]
+          )
+            <> [ -- Grid.mediumCell
+                 --  $ Switch.switch
+                 --    st
+                 --    ( Switch.defOpts
+                 --        & #optsIcon
+                 --        .~ Just "content_copy"
+                 --        & #optsPlaceholder
+                 --        .~ "Allow copy"
+                 --    )
+                 --    ( cloneTraversal optic
+                 --        . #fieldAllowCopy
+                 --    ),
+                 Grid.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( action $ moveDown opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "keyboard_double_arrow_down"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Down",
+                 Grid.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( action $ moveUp opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "keyboard_double_arrow_up"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Up",
+                 Grid.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( action $ duplicateAtJsm opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "library_add"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Clone",
+                 Grid.smallCell
+                  $ Button.raised
+                    ( Button.config
+                        & Button.setOnClick
+                          ( action $ removeAt opt idx
+                          )
+                        & Button.setIcon
+                          ( Just "delete_forever"
+                          )
+                        & Button.setAttributes
+                          [ class_ "fill",
+                            Theme.secondaryBg
+                          ]
+                    )
+                    "Delete"
+               ]
+      }
+fieldModal args (ModalMiniWidget opt) =
   Dialog.dialog
-    st
-    (Dialog.Opts $ pureUpdate 0)
-    (cloneTraversal opt . #fieldModalState)
-    [ Grid.bigCell $ selectTypeWidget st opt
-    ]
+    Dialog.Args
+      { Dialog.argsModel = args ^. #argsModel,
+        Dialog.argsOptic = cloneTraversal opt . #fieldModalState,
+        Dialog.argsAction = args ^. #argsAction,
+        Dialog.argsContent =
+          [ Grid.bigCell
+              $ selectTypeWidget args opt
+          ]
+      }
 
-selectTypeWidget :: Model -> ATraversal' Model (Field a Unique) -> View Action
-selectTypeWidget st optic =
+selectTypeWidget ::
+  Args model action item ->
+  ATraversal' model (Field a Unique) ->
+  View action
+selectTypeWidget args optic =
   let typ :| typs = enumerateNE @FieldType
    in Select.outlined
         ( Select.config
@@ -614,19 +643,21 @@ selectTypeWidget st optic =
               [ class_ "fill-inner"
               ]
             & Select.setSelected
-              ( st
-                  ^? cloneTraversal optic
+              ( args
+                  ^? #argsModel
+                  . cloneTraversal optic
                   . #fieldType
               )
             & Select.setOnChange
               ( \x ->
-                  pureUpdate
-                    0
-                    ( &
-                        cloneTraversal optic
-                          . #fieldType
-                          .~ x
-                    )
+                  args
+                    ^. #argsAction
+                    $ pure
+                      ( &
+                          cloneTraversal optic
+                            . #fieldType
+                            .~ x
+                      )
               )
         )
         ( SelectItem.selectItem
@@ -641,8 +672,12 @@ selectTypeWidget st optic =
           )
           typs
 
-constTextField :: Model -> MisoString -> Opts -> View Action
-constTextField st txt opts =
+constTextField ::
+  MisoString ->
+  Opts model action ->
+  (JSM (model -> model) -> action) ->
+  View action
+constTextField txt opts action =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -668,7 +703,7 @@ constTextField st txt opts =
         & TextField.setLeadingIcon
           ( fmap
               ( fieldIconSimple Leading "content_copy" mempty . \case
-                  CopyWidget -> Misc.copyIntoClipboardAction st txt
+                  CopyWidget -> action $ shareText txt
                   _ -> error "constTextField unsupported widget"
               )
               (opts ^. #optsLeadingWidget)
@@ -676,8 +711,8 @@ constTextField st txt opts =
         & TextField.setTrailingIcon
           ( fmap
               ( \case
-                  ActionWidget icon attrs action ->
-                    fieldIconSimple Trailing icon attrs action
+                  ActionWidget icon attrs act ->
+                    fieldIconSimple Trailing icon attrs act
                   _ ->
                     error "constTextField unsupported widget"
               )
@@ -693,17 +728,15 @@ constTextField st txt opts =
           )
     ]
 
-constLinkField :: Model -> URI -> Opts -> View Action
-constLinkField st =
-  constTextField st
-    . toMisoString
-    . URI.render
-
 --
 -- TODO : support optional copying widgets
 --
-dynamicFieldViewer :: Model -> Field DynamicField Unique -> [View Action]
-dynamicFieldViewer st value =
+dynamicFieldViewer ::
+  forall model action.
+  Field DynamicField Unique ->
+  (JSM (model -> model) -> action) ->
+  [View action]
+dynamicFieldViewer value action =
   case value ^. #fieldType of
     FieldTypeNumber -> plain out text
     FieldTypePercent -> plain out $ text . (<> "%")
@@ -712,12 +745,14 @@ dynamicFieldViewer st value =
     FieldTypeHtml -> plain out rawHtml
     FieldTypePassword -> plain out $ const "*****"
     FieldTypeQrCode ->
-      Qr.qr st out
-        $ Qr.defOpts @Model @Action
+      Qr.qr
+        Qr.Args
+          { Qr.argsValue = out,
+            Qr.argsAction = action
+          }
+        $ Qr.defOpts @action
         & #optsAllowCopy
         .~ allowCopy
-        & #optsOnButtonClick
-        .~ Just Misc.copyIntoClipboardAction
   where
     out = inspectDynamicField $ value ^. #fieldOutput
     allowCopy = value ^. #fieldAllowCopy
@@ -754,7 +789,7 @@ plain out widget =
           [widget $ toMisoString out]
       ]
 
-header :: MisoString -> [View Action]
+header :: MisoString -> [View action]
 header txt =
   if txt == mempty
     then mempty

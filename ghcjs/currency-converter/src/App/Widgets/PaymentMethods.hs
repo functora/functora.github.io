@@ -26,7 +26,7 @@ paymentMethodViewer st mtd =
     )
     ( mtd ^. #paymentMethodMoney
     )
-    <> FieldPairs.fieldPairsViewer st (mtd ^. #paymentMethodFieldPairs)
+    <> FieldPairs.fieldPairsViewer (mtd ^. #paymentMethodFieldPairs)
 
 paymentMethods ::
   Model ->

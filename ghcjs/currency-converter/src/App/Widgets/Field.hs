@@ -89,7 +89,11 @@ defOpts =
       optsExtraOnInput = id,
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
-      optsOnKeyDownAction = Misc.onKeyDownAction,
+      optsOnKeyDownAction =
+        \uid code ->
+          PushUpdate
+            . fmap (ChanItem 0)
+            $ Misc.onKeyDownAction uid code,
       optsExtraAttributes = mempty,
       optsFilledOrOutlined = Filled
     }
@@ -816,8 +820,8 @@ constLinkField st =
 --
 -- TODO : support optional copying widgets
 --
-dynamicFieldViewer :: Model -> Field DynamicField Unique -> [View Action]
-dynamicFieldViewer st value =
+dynamicFieldViewer :: Field DynamicField Unique -> [View Action]
+dynamicFieldViewer value =
   case value ^. #fieldType of
     FieldTypeNumber -> plain out text
     FieldTypePercent -> plain out $ text . (<> "%")
@@ -826,12 +830,14 @@ dynamicFieldViewer st value =
     FieldTypeHtml -> plain out rawHtml
     FieldTypePassword -> plain out $ const "*****"
     FieldTypeQrCode ->
-      Qr.qr st out
-        $ Qr.defOpts @Model @Action
+      Qr.qr
+        Qr.Args
+          { Qr.argsValue = out,
+            Qr.argsAction = PushUpdate . fmap (ChanItem 0)
+          }
+        $ Qr.defOpts @Action
         & #optsAllowCopy
         .~ allowCopy
-        & #optsOnButtonClick
-        .~ Just Misc.copyIntoClipboardAction
   where
     out = inspectDynamicField $ value ^. #fieldOutput
     allowCopy = value ^. #fieldAllowCopy

@@ -1,5 +1,6 @@
 module Functora.Miso.Widgets.Qr
-  ( Opts (..),
+  ( Args (..),
+    Opts (..),
     defOpts,
     qr,
   )
@@ -14,23 +15,27 @@ import qualified Functora.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.TextArea as TextArea
 
-data Opts model action = Opts
-  { optsAllowCopy :: Bool,
-    optsExtraWidgets :: [View action],
-    optsOnButtonClick :: Maybe (model -> MisoString -> action)
+data Args model action = Args
+  { argsValue :: MisoString,
+    argsAction :: JSM (model -> model) -> action
   }
   deriving stock (Generic)
 
-defOpts :: Opts model action
+data Opts action = Opts
+  { optsAllowCopy :: Bool,
+    optsExtraWidgets :: [View action]
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts action
 defOpts =
   Opts
     { optsAllowCopy = True,
-      optsExtraWidgets = mempty,
-      optsOnButtonClick = Nothing
+      optsExtraWidgets = mempty
     }
 
-qr :: model -> MisoString -> Opts model action -> [View action]
-qr st txt opts
+qr :: Args model action -> Opts action -> [View action]
+qr args opts
   | txt == mempty = mempty
   | otherwise =
       catMaybes
@@ -52,6 +57,8 @@ qr st txt opts
         <> copyWidget
         <> fmap extraCell extraWidgets
   where
+    txt = args ^. #argsValue
+    action = args ^. #argsAction
     allowCopy = opts ^. #optsAllowCopy
     extraWidgets = opts ^. #optsExtraWidgets
     extraCell =
@@ -74,9 +81,7 @@ qr st txt opts
                 ( Button.config
                     & Button.setIcon (Just "share")
                     & Button.setAttributes [class_ "fill"]
-                    & ( maybe id (\f -> Button.setOnClick $ f st txt)
-                          $ optsOnButtonClick opts
-                      )
+                    & Button.setOnClick (action $ shareText txt)
                 )
                 "Copy"
           ]

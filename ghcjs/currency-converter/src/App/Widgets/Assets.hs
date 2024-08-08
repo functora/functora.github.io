@@ -16,7 +16,7 @@ assetsViewer st = (>>= assetViewer st)
 
 assetViewer :: Model -> Asset Unique -> [View Action]
 assetViewer st asset =
-  FieldPairs.fieldPairsViewer st (asset ^. #assetFieldPairs)
+  FieldPairs.fieldPairsViewer (asset ^. #assetFieldPairs)
     <> Currency.moneyViewer
       st
       ( Currency.defOpts

@@ -6,6 +6,7 @@ module Functora.Miso.Types
     Unique (..),
     newUnique,
     newUniqueDuplicator,
+    duplicateAtJsm,
     Field (..),
     newField,
     newRatioField,
@@ -21,6 +22,7 @@ module Functora.Miso.Types
     userFieldType,
     FieldPair (..),
     newFieldPair,
+    newFieldPairJsm,
     Currency (..),
     newCurrency,
     Money (..),
@@ -96,6 +98,25 @@ newUniqueDuplicator = do
     $ Syb.mkT
       ( (& #uniqueUid %~ addUid uid) :: Unique b -> Unique b
       )
+
+duplicateAtJsm ::
+  forall model item.
+  ( Data item
+  ) =>
+  ATraversal' model [item] ->
+  Int ->
+  JSM (model -> model)
+duplicateAtJsm optic idx = do
+  textPopup @MisoString $ "Duplicated #" <> inspect (idx + 1) <> "!"
+  duplicator <- newUniqueDuplicator @MisoString
+  let updater loc el =
+        if loc == idx
+          then [el, closed $ duplicator el]
+          else [el]
+  pure (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+  where
+    closed :: item -> item
+    closed = Syb.everywhere $ Syb.mkT $ const Closed
 
 data Field a f = Field
   { fieldType :: FieldType,
@@ -247,6 +268,13 @@ newFieldPair key val =
   FieldPair
     <$> newTextField key
     <*> newDynamicField val
+
+newFieldPairJsm ::
+  ATraversal' model [FieldPair DynamicField Unique] -> JSM (model -> model)
+newFieldPairJsm optic = do
+  textPopup @MisoString "Added note!"
+  item <- newFieldPair mempty $ DynamicFieldText mempty
+  pure (& cloneTraversal optic %~ (<> [item]))
 
 data Currency f = Currency
   { currencyInput :: Field MisoString f,

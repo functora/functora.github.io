@@ -62,19 +62,23 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
   case st ^. #modelState . #stScreen of
     QrCode sc ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
+        ( Field.dynamicFieldViewer $ st ^. #modelState . #stPre
         )
         <> Qr.qr
-          st
-          ( toMisoString
-              . either impureThrow URI.render
-              . stUri
-              $ st
-              & #modelState
-              . #stScreen
-              %~ unQrCode
-          )
-          ( Qr.defOpts @Model @Action
+          Qr.Args
+            { Qr.argsValue =
+                toMisoString
+                  . either impureThrow URI.render
+                  . stUri
+                  $ st
+                  & #modelState
+                  . #stScreen
+                  %~ unQrCode,
+              Qr.argsAction =
+                PushUpdate
+                  . fmap (ChanItem 0)
+            }
+          ( Qr.defOpts @Action
               & #optsExtraWidgets
               .~ [ Button.raised
                     ( Button.config
@@ -84,12 +88,6 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                     )
                     "Open"
                  ]
-              & ( #optsOnButtonClick ::
-                    Lens'
-                      (Qr.Opts Model Action)
-                      (Maybe (Model -> MisoString -> Action))
-                )
-              .~ Just Misc.copyIntoClipboardAction
           )
     _ ->
       Decrypt.decrypt st
@@ -98,13 +96,14 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
     Left e -> impureThrow e
     Right uri ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer st (st ^. #modelState . #stPre)
+        ( Field.dynamicFieldViewer $ st ^. #modelState . #stPre
         )
         <> Qr.qr
-          st
-          ( toMisoString $ URI.render uri
-          )
-          ( Qr.defOpts @Model @Action
+          Qr.Args
+            { Qr.argsValue = toMisoString $ URI.render uri,
+              Qr.argsAction = PushUpdate . fmap (ChanItem 0)
+            }
+          ( Qr.defOpts @Action
               & #optsExtraWidgets
               .~ [ Button.raised
                     ( Button.config
@@ -114,12 +113,6 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                     )
                     "Open"
                  ]
-              & ( #optsOnButtonClick ::
-                    Lens'
-                      (Qr.Opts Model Action)
-                      (Maybe (Model -> MisoString -> Action))
-                )
-              .~ Just Misc.copyIntoClipboardAction
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
@@ -147,12 +140,10 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
           . cloneLens
           . Misc.getConverterCurrencyOptic
    in ( FieldPairs.fieldPairsViewer
-          st
-          ( st
-              ^. #modelState
-              . #stDoc
-              . #stDocFieldPairs
-          )
+          $ st
+          ^. #modelState
+          . #stDoc
+          . #stDocFieldPairs
       )
         <> [ amountWidget' Top,
              currencyWidget' Top,

@@ -1,4 +1,4 @@
-module App.Widgets.Money
+module Functora.Miso.Widgets.Money
   ( Args (..),
     Opts (..),
     defOpts,

@@ -5,19 +5,18 @@ module App.Widgets.Header
   )
 where
 
-import App.Types
-import qualified App.Widgets.Field as Field
 import Functora.Miso.Prelude
+import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 
 headerEditor ::
-  Model ->
-  ATraversal' Model (Field DynamicField Unique) ->
-  Field.Opts ->
-  [View Action]
-headerEditor st optic opts =
+  Field.Args model action DynamicField ->
+  Field.Opts model action ->
+  [View action]
+headerEditor args opts =
   [ Grid.bigCell
       $ div_
         [ style_
@@ -26,19 +25,16 @@ headerEditor st optic opts =
               ("justify-content", "center")
             ]
         ]
-        [ Field.field
-            st
-            optic
+        [ Field.dynamicField
+            args
             ( opts
                 & #optsFilledOrOutlined
                 .~ Outlined
             )
-            parseDynamicField
-            inspectDynamicField
         ]
   ]
 
-headerViewer :: MisoString -> [View Action]
+headerViewer :: MisoString -> [View action]
 headerViewer txt =
   if txt == mempty
     then mempty
@@ -52,7 +48,7 @@ headerViewer txt =
           ]
       ]
 
-headerWrapper :: [View Action] -> [View Action]
+headerWrapper :: [View action] -> [View action]
 headerWrapper xs =
   if null xs
     then mempty

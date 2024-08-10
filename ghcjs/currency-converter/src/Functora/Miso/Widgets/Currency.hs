@@ -1,4 +1,4 @@
-module App.Widgets.Currency
+module Functora.Miso.Widgets.Currency
   ( Args (..),
     selectCurrency,
   )

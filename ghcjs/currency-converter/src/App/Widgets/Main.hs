@@ -2,14 +2,14 @@ module App.Widgets.Main (mainWidget) where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
-import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified App.Widgets.SwapCurrencies as SwapCurrencies
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Currency as Currency
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Qr as Qr
 import Functora.Money hiding (Text)
@@ -63,7 +63,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
   case st ^. #modelState . #stScreen of
     QrCode sc ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer $ st ^. #modelState . #stPre
+        ( Field.dynamicFieldViewer pushUpdate (st ^. #modelState . #stPre)
         )
         <> Qr.qr
           Qr.Args
@@ -97,7 +97,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
     Left e -> impureThrow e
     Right uri ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer $ st ^. #modelState . #stPre
+        ( Field.dynamicFieldViewer pushUpdate (st ^. #modelState . #stPre)
         )
         <> Qr.qr
           Qr.Args
@@ -118,10 +118,12 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   let amountWidget' loc =
         Field.ratioField
-          st
-          ( Misc.getConverterAmountOptic loc
-          )
-          ( Field.defOpts
+          Field.Args
+            { Field.argsModel = st,
+              Field.argsOptic = Misc.getConverterAmountOptic loc,
+              Field.argsAction = pushUpdate
+            }
+          ( Field.defOpts @Model @Action
               & #optsExtraOnInput
               .~ ( &
                     #modelState

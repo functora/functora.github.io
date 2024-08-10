@@ -6,9 +6,9 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
-import qualified App.Widgets.Field as Field
 import qualified App.Widgets.Templates as Templates
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Language.Javascript.JSaddle as JS
@@ -208,11 +208,13 @@ menu st =
                                 )
                                 items,
                         Grid.mediumCell
-                          $ Field.field
-                            st
-                            ( #modelState . #stPre
-                            )
-                            ( Field.defOpts
+                          $ Field.dynamicField
+                            Field.Args
+                              { Field.argsModel = st,
+                                Field.argsOptic = #modelState . #stPre,
+                                Field.argsAction = pushUpdate
+                              }
+                            ( Field.defOpts @Model @Action
                                 & #optsDisabled
                                 .~ disabled
                                 & #optsPlaceholder
@@ -234,15 +236,14 @@ menu st =
                                   )
                                 & #optsFilledOrOutlined
                                 .~ Outlined
-                            )
-                            parseDynamicField
-                            inspectDynamicField,
+                            ),
                         Grid.mediumCell
                           $ Field.passwordField
-                            st
-                            ( #modelState
-                                . #stIkm
-                            )
+                            Field.Args
+                              { Field.argsModel = st,
+                                Field.argsOptic = #modelState . #stIkm,
+                                Field.argsAction = pushUpdate
+                              }
                             ( Field.defOpts
                                 & #optsDisabled
                                 .~ disabled

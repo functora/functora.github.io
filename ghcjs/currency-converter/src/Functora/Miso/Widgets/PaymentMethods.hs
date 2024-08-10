@@ -1,15 +1,15 @@
-module App.Widgets.PaymentMethods
+module Functora.Miso.Widgets.PaymentMethods
   ( paymentMethodsViewer,
     paymentMethods,
   )
 where
 
 import App.Types
-import qualified App.Widgets.Currency as Currency
-import qualified App.Widgets.Money as Money
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Money as Money
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Material.Theme as Theme
 
@@ -69,7 +69,8 @@ paymentMethods args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
   paymentMethodWidget args idx
 
-paymentMethodWidget :: Args model action -> Int -> [View action]
+paymentMethodWidget ::
+  forall model action. Args model action -> Int -> [View action]
 paymentMethodWidget
   Args
     { argsModel = st,
@@ -88,7 +89,7 @@ paymentMethodWidget
                 . #moneyAmount,
             Field.argsAction = action
           }
-        ( Field.defOpts
+        ( Field.defOpts @model @action
             & #optsPlaceholder
             .~ ( if label == mempty
                   then idxTxt
@@ -96,11 +97,7 @@ paymentMethodWidget
                )
             & #optsDisabled
             .~ True
-            & ( #optsLeadingWidget ::
-                  Lens'
-                    (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
-              )
+            & #optsLeadingWidget
             .~ Just
               ( Field.ModalWidget
                   $ Field.ModalItemWidget

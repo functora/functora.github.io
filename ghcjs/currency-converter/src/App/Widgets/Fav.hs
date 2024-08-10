@@ -5,11 +5,11 @@ where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Field as Field
 import App.Widgets.Templates
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -33,9 +33,11 @@ fav st =
                   $ favItems st
                   <> [ Grid.mediumCell
                         $ Field.textField
-                          st
-                          ( #modelFavName
-                          )
+                          Field.Args
+                            { Field.argsModel = st,
+                              Field.argsOptic = #modelFavName,
+                              Field.argsAction = pushUpdate
+                            }
                           ( Field.defOpts
                               & #optsPlaceholder
                               .~ ( let name = makeFavName st

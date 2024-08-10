@@ -1,15 +1,15 @@
-module App.Widgets.Assets
+module Functora.Miso.Widgets.Assets
   ( assetsViewer,
     assets,
   )
 where
 
 import App.Types
-import qualified App.Widgets.Currency as Currency
-import qualified App.Widgets.Money as Money
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Money as Money
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Material.Theme as Theme
 

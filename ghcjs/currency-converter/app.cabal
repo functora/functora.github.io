@@ -27,16 +27,11 @@ common pkg
   other-modules:
     App.Misc
     App.Types
-    App.Widgets.Assets
-    App.Widgets.Currency
     App.Widgets.Decrypt
     App.Widgets.Fav
-    App.Widgets.Field
     App.Widgets.Header
     App.Widgets.Main
     App.Widgets.Menu
-    App.Widgets.Money
-    App.Widgets.PaymentMethods
     App.Widgets.SwapAmounts
     App.Widgets.SwapCurrencies
     App.Widgets.Templates
@@ -44,13 +39,17 @@ common pkg
     Functora.Miso.Prelude
     Functora.Miso.Storage
     Functora.Miso.Types
+    Functora.Miso.Widgets.Assets
     Functora.Miso.Widgets.Chips
+    Functora.Miso.Widgets.Currency
     Functora.Miso.Widgets.Dialog
     Functora.Miso.Widgets.Field
     Functora.Miso.Widgets.FieldPairs
     Functora.Miso.Widgets.Frame
     Functora.Miso.Widgets.Grid
     Functora.Miso.Widgets.IconToggles
+    Functora.Miso.Widgets.Money
+    Functora.Miso.Widgets.PaymentMethods
     Functora.Miso.Widgets.Qr
     Functora.Miso.Widgets.Switch
 

@@ -7,9 +7,9 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Field as Field
-import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Templates as Templates
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
@@ -254,11 +254,14 @@ menu st =
                           then mempty
                           else
                             FieldPairs.fieldPairs
-                              st
-                              ( #modelState
-                                  . #stDoc
-                                  . #stDocFieldPairs
-                              )
+                              FieldPairs.Args
+                                { FieldPairs.argsModel = st,
+                                  FieldPairs.argsOptic =
+                                    #modelState
+                                      . #stDoc
+                                      . #stDocFieldPairs,
+                                  FieldPairs.argsAction = pushUpdate
+                                }
                        )
                     <> linksWidget st
                     <> [ Grid.bigCell

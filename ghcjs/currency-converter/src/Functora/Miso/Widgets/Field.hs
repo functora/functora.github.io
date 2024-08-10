@@ -1,12 +1,14 @@
 module Functora.Miso.Widgets.Field
-  ( Opts (..),
+  ( Args (..),
+    Full (..),
+    Opts (..),
+    defOpts,
     OptsWidget (..),
     ModalWidget' (..),
-    defOpts,
     field,
     ratioField,
     textField,
-    -- dynamicField,
+    dynamicField,
     passwordField,
     constTextField,
     dynamicFieldViewer,
@@ -56,6 +58,20 @@ data Opts model action = Opts
   }
   deriving stock (Generic)
 
+defOpts :: Opts model action
+defOpts =
+  Opts
+    { optsDisabled = False,
+      optsFullWidth = True,
+      optsPlaceholder = mempty,
+      optsExtraOnInput = id,
+      optsLeadingWidget = Just CopyWidget,
+      optsTrailingWidget = Just ClearWidget,
+      optsOnKeyDownAction = Misc.onKeyDownAction,
+      optsExtraAttributes = mempty,
+      optsFilledOrOutlined = Filled
+    }
+
 data OptsWidget model action
   = CopyWidget
   | ClearWidget
@@ -93,25 +109,11 @@ data ModalWidget' model where
     ATraversal' model (Field a Unique) ->
     ModalWidget' model
 
-defOpts :: Opts model action
-defOpts =
-  Opts
-    { optsDisabled = False,
-      optsFullWidth = True,
-      optsPlaceholder = mempty,
-      optsExtraOnInput = id,
-      optsLeadingWidget = Just CopyWidget,
-      optsTrailingWidget = Just ClearWidget,
-      optsOnKeyDownAction = Misc.onKeyDownAction,
-      optsExtraAttributes = mempty,
-      optsFilledOrOutlined = Filled
-    }
-
 field ::
-  Opts model action ->
   Full model action item ->
+  Opts model action ->
   View action
-field opts full =
+field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -148,12 +150,12 @@ field opts full =
             )
           & TextField.setLeadingIcon
             ( fmap
-                (fieldIcon Leading opts full)
+                (fieldIcon Leading args opts)
                 (opts ^. #optsLeadingWidget)
             )
           & TextField.setTrailingIcon
             ( fmap
-                (fieldIcon Trailing opts full)
+                (fieldIcon Trailing args opts)
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
@@ -170,12 +172,9 @@ field opts full =
             )
        ]
   where
-    args = fullArgs full
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
-    parser = fullParser full
-    viewer = fullViewer full
     uid =
       fromMaybe nilUid
         $ st
@@ -219,12 +218,11 @@ field opts full =
               %~ maybe id (const . id) (getOutput next)
 
 ratioField ::
-  Opts model action ->
   Args model action Rational ->
+  Opts model action ->
   View action
-ratioField opts args =
+ratioField args =
   field
-    opts
     Full
       { fullArgs = args,
         fullParser = parseRatio . (^. #fieldInput . #uniqueValue),
@@ -232,56 +230,50 @@ ratioField opts args =
       }
 
 textField ::
-  Opts model action ->
   Args model action MisoString ->
+  Opts model action ->
   View action
-textField opts args =
+textField args =
   field
-    opts
     Full
       { fullArgs = args,
         fullParser = Just . (^. #fieldInput . #uniqueValue),
         fullViewer = id
       }
 
--- dynamicField ::
---   model ->
---   ATraversal' model [FieldPair DynamicField Unique] ->
---   Int ->
---   Opts model action ->
---   View action
--- dynamicField st optic idx opts =
---   field
---     st
---     ( cloneTraversal optic
---         . ix idx
---         . #fieldPairValue
---     )
---     opts
---     parseDynamicField
---     inspectDynamicField
+dynamicField ::
+  Args model action DynamicField ->
+  Opts model action ->
+  View action
+dynamicField args =
+  field
+    Full
+      { fullArgs = args,
+        fullParser = parseDynamicField,
+        fullViewer = inspectDynamicField
+      }
 
 passwordField ::
-  Opts model action ->
   Args model action MisoString ->
+  Opts model action ->
   View action
-passwordField opts args =
+passwordField args opts =
   textField
+    args
     ( opts
         & #optsPlaceholder
         .~ ("Password" :: MisoString)
         & #optsLeadingWidget
         .~ Just ShowOrHideWidget
     )
-    args
 
 fieldIcon ::
   LeadingOrTrailing ->
+  Args model action item ->
   Opts model action ->
-  Full model action item ->
   OptsWidget model action ->
   TextField.Icon action
-fieldIcon lot opts full@Full {fullArgs = Args {argsAction = action}} = \case
+fieldIcon lot args opts = \case
   CopyWidget ->
     fieldIconSimple lot "content_copy" mempty
       . action
@@ -360,14 +352,16 @@ fieldIcon lot opts full@Full {fullArgs = Args {argsAction = action}} = \case
   ActionWidget icon attrs act ->
     fieldIconSimple lot icon attrs act
   where
-    st =
-      full ^. #fullArgs . #argsModel
+    st = args ^. #argsModel
+    optic = args ^. #argsOptic
+    action = args ^. #argsAction
+    extraOnInput = opts ^. #optsExtraOnInput
     uid =
-      fromMaybe nilUid $ st ^? cloneTraversal optic . #fieldInput . #uniqueUid
-    optic =
-      full ^. #fullArgs . #argsOptic
-    extraOnInput =
-      opts ^. #optsExtraOnInput
+      fromMaybe nilUid
+        $ st
+        ^? cloneTraversal optic
+        . #fieldInput
+        . #uniqueUid
 
 fieldIconSimple ::
   LeadingOrTrailing ->
@@ -399,12 +393,15 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
         Dialog.argsContent =
           [ Grid.mediumCell
               $ textField
-                (defOpts & #optsPlaceholder .~ "Label")
                 Args
                   { argsModel = args ^. #argsModel,
                     argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
                     argsAction = args ^. #argsAction
-                  },
+                  }
+                ( defOpts
+                    & #optsPlaceholder
+                    .~ "Label"
+                ),
             Grid.mediumCell
               $ Button.raised
                 ( Button.config
@@ -734,10 +731,10 @@ constTextField txt opts action =
 --
 dynamicFieldViewer ::
   forall model action.
-  Field DynamicField Unique ->
   (JSM (model -> model) -> action) ->
+  Field DynamicField Unique ->
   [View action]
-dynamicFieldViewer value action =
+dynamicFieldViewer action value =
   case value ^. #fieldType of
     FieldTypeNumber -> plain out text
     FieldTypePercent -> plain out $ text . (<> "%")

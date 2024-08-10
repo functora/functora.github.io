@@ -10,6 +10,7 @@ module App.Types
     Screen (..),
     isQrCode,
     unQrCode,
+    pushUpdate,
     pureUpdate,
     unShareUri,
     stUri,
@@ -149,6 +150,11 @@ unQrCode :: Screen -> Screen
 unQrCode = \case
   QrCode sc -> unQrCode sc
   sc -> sc
+
+pushUpdate :: JSM (Model -> Model) -> Action
+pushUpdate =
+  PushUpdate
+    . fmap (ChanItem 0)
 
 --
 -- NOTE : In most cases we don't need JSM.

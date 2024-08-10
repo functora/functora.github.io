@@ -5,11 +5,12 @@ import App.Types
 import qualified App.Widgets.Currency as Currency
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Field as Field
-import qualified App.Widgets.FieldPairs as FieldPairs
 import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.SwapAmounts as SwapAmounts
+import qualified App.Widgets.SwapCurrencies as SwapCurrencies
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Qr as Qr
 import Functora.Money hiding (Text)
 import qualified Material.Button as Button
@@ -135,22 +136,30 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                     . to (inspectCurrencyInfo @MisoString)
                  )
           )
-      currencyWidget' =
-        Currency.selectCurrency st
-          . cloneLens
-          . Misc.getConverterCurrencyOptic
+      currencyWidget' tob =
+        Currency.selectCurrency
+          Currency.Args
+            { Currency.argsModel = st,
+              Currency.argsOptic = Misc.getConverterCurrencyOptic tob,
+              Currency.argsAction = pushUpdate,
+              Currency.argsCurrencies = #modelCurrencies
+            }
    in ( FieldPairs.fieldPairsViewer
-          $ st
-          ^. #modelState
-          . #stDoc
-          . #stDocFieldPairs
+          FieldPairs.Args
+            { FieldPairs.argsModel = st,
+              FieldPairs.argsOptic =
+                #modelState
+                  . #stDoc
+                  . #stDocFieldPairs,
+              FieldPairs.argsAction = pushUpdate
+            }
       )
         <> [ amountWidget' Top,
              currencyWidget' Top,
              amountWidget' Bottom,
              currencyWidget' Bottom,
              SwapAmounts.swapAmounts,
-             Currency.swapCurrencies,
+             SwapCurrencies.swapCurrencies,
              ratesWidget st
            ]
 

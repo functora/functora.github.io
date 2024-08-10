@@ -1,20 +1,33 @@
-module App.Widgets.FieldPairs
-  ( fieldPairsViewer,
+module Functora.Miso.Widgets.FieldPairs
+  ( Args (..),
+    fieldPairsViewer,
     fieldPairs,
   )
 where
 
-import App.Types
-import qualified App.Widgets.Field as Field
 import Functora.Miso.Prelude
+import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Typography as Typography
 
-fieldPairsViewer :: [FieldPair DynamicField Unique] -> [View Action]
-fieldPairsViewer = (>>= fieldPairViewer)
+data Args model action = Args
+  { argsModel :: model,
+    argsOptic :: ATraversal' model [FieldPair DynamicField Unique],
+    argsAction :: JSM (model -> model) -> action
+  }
+  deriving stock (Generic)
 
-fieldPairViewer :: FieldPair DynamicField Unique -> [View Action]
-fieldPairViewer pair =
+fieldPairsViewer :: Args model action -> [View action]
+fieldPairsViewer args@Args {argsOptic = optic} = do
+  item <- fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
+  fieldPairViewer args item
+
+fieldPairViewer ::
+  Args model action ->
+  FieldPair DynamicField Unique ->
+  [View action]
+fieldPairViewer args pair =
   ( if k == mempty
       then mempty
       else
@@ -44,7 +57,9 @@ fieldPairViewer pair =
           else
             [ cell
                 . div_ mempty
-                $ Field.dynamicFieldViewer (pair ^. #fieldPairValue)
+                $ Field.dynamicFieldViewer
+                  (args ^. #argsAction)
+                  (pair ^. #fieldPairValue)
             ]
        )
   where
@@ -55,38 +70,41 @@ fieldPairViewer pair =
         then Grid.bigCell
         else Grid.mediumCell
 
-fieldPairs ::
-  Model ->
-  ATraversal' Model [FieldPair DynamicField Unique] ->
-  [View Action]
-fieldPairs st optic = do
+fieldPairs :: Args model action -> [View action]
+fieldPairs args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  fieldPairWidget st optic idx
+  fieldPairWidget args idx
 
 fieldPairWidget ::
-  Model ->
-  ATraversal' Model [FieldPair DynamicField Unique] ->
+  forall model action.
+  Args model action ->
   Int ->
-  [View Action]
-fieldPairWidget st optic idx =
+  [View action]
+fieldPairWidget Args {argsModel = st, argsOptic = optic, argsAction = action} idx =
   [ Field.textField
-      st
-      ( cloneTraversal optic
-          . ix idx
-          . #fieldPairKey
-      )
-      ( Field.defOpts
+      Field.Args
+        { Field.argsModel = st,
+          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
+          Field.argsAction = action
+        }
+      ( Field.defOpts @model @action
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
-          & #optsLeadingWidget
+          & ( #optsLeadingWidget ::
+                Lens'
+                  (Field.Opts model action)
+                  (Maybe (Field.OptsWidget model action))
+            )
           .~ Just (Field.DownWidget optic idx mempty)
           & #optsTrailingWidget
           .~ Just (Field.UpWidget optic idx mempty)
       ),
     Field.dynamicField
-      st
-      optic
-      idx
+      Field.Args
+        { Field.argsModel = st,
+          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
+          Field.argsAction = action
+        }
       ( Field.defOpts
           & #optsPlaceholder
           .~ ( "Value "
@@ -100,7 +118,11 @@ fieldPairWidget st optic idx =
                       . to userFieldType
                    )
              )
-          & #optsLeadingWidget
+          & ( #optsLeadingWidget ::
+                Lens'
+                  (Field.Opts model action)
+                  (Maybe (Field.OptsWidget model action))
+            )
           .~ Just
             ( Field.ModalWidget
                 $ Field.ModalFieldWidget

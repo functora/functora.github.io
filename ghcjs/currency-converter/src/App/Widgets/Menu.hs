@@ -254,7 +254,7 @@ menu st =
                     <> ( if disabled
                           then mempty
                           else
-                            FieldPairs.fieldPairs
+                            FieldPairs.fieldPairsEditor
                               FieldPairs.Args
                                 { FieldPairs.argsModel = st,
                                   FieldPairs.argsOptic =

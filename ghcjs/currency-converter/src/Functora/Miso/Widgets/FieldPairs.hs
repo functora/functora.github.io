@@ -1,7 +1,7 @@
 module Functora.Miso.Widgets.FieldPairs
   ( Args (..),
     fieldPairsViewer,
-    fieldPairs,
+    fieldPairsEditor,
   )
 where
 
@@ -70,17 +70,17 @@ fieldPairViewer args pair =
         then Grid.bigCell
         else Grid.mediumCell
 
-fieldPairs :: Args model action -> [View action]
-fieldPairs args@Args {argsModel = st, argsOptic = optic} = do
+fieldPairsEditor :: Args model action -> [View action]
+fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  fieldPairWidget args idx
+  fieldPairEditor args idx
 
-fieldPairWidget ::
+fieldPairEditor ::
   forall model action.
   Args model action ->
   Int ->
   [View action]
-fieldPairWidget Args {argsModel = st, argsOptic = optic, argsAction = action} idx =
+fieldPairEditor Args {argsModel = st, argsOptic = optic, argsAction = action} idx =
   [ Field.textField
       Field.Args
         { Field.argsModel = st,

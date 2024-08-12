@@ -1,5 +1,5 @@
 module Functora.Miso.Widgets.IconToggles
-  ( Opts (..),
+  ( Args (..),
     iconToggles,
   )
 where
@@ -9,22 +9,21 @@ import qualified Material.IconToggle as IconToggle
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 
-newtype Opts model action = Opts
-  { optsOnChange :: (model -> model) -> action
+data Args model action = Args
+  { argsModel :: model,
+    argsOptic ::
+      NonEmpty
+        ( MisoString,
+          IconToggle.Icon,
+          IconToggle.Icon,
+          ATraversal' model Bool
+        ),
+    argsAction :: JSM (model -> model) -> action
   }
   deriving stock (Generic)
 
-iconToggles ::
-  model ->
-  Opts model action ->
-  NonEmpty
-    ( MisoString,
-      IconToggle.Icon,
-      IconToggle.Icon,
-      ATraversal' model Bool
-    ) ->
-  View action
-iconToggles st opts items =
+iconToggles :: Args model action -> View action
+iconToggles args@Args {argsOptic = items} =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -36,30 +35,32 @@ iconToggles st opts items =
         ]
     ]
     . toList
-    $ iconToggleWidget st opts
+    $ iconToggleWidget args
     <$> items
 
 iconToggleWidget ::
-  model ->
-  Opts model action ->
+  Args model action ->
   ( MisoString,
     IconToggle.Icon,
     IconToggle.Icon,
     ATraversal' model Bool
   ) ->
   View action
-iconToggleWidget st opts (label, onIcon, offIcon, optic) =
-  IconToggle.iconToggle
-    ( IconToggle.config
-        & IconToggle.setLabel (Just label)
-        & IconToggle.setOn (fromMaybe False $ st ^? cloneTraversal optic)
-        & IconToggle.setOnChange
-          ( optsOnChange opts (& cloneTraversal optic %~ not)
-          )
-        & ( if st ^? cloneTraversal optic == Just True
-              then IconToggle.setAttributes [Theme.secondary]
-              else id
-          )
-    )
-    onIcon
-    offIcon
+iconToggleWidget
+  Args
+    { argsModel = st,
+      argsAction = action
+    }
+  (label, onIcon, offIcon, optic) =
+    IconToggle.iconToggle
+      ( IconToggle.config
+          & IconToggle.setLabel (Just label)
+          & IconToggle.setOn (fromMaybe False $ st ^? cloneTraversal optic)
+          & IconToggle.setOnChange (action $ pure (& cloneTraversal optic %~ not))
+          & ( if st ^? cloneTraversal optic == Just True
+                then IconToggle.setAttributes [Theme.secondary]
+                else id
+            )
+      )
+      onIcon
+      offIcon

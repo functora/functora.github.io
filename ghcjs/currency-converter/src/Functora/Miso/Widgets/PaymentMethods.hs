@@ -1,11 +1,11 @@
 module Functora.Miso.Widgets.PaymentMethods
   ( paymentMethodsViewer,
-    paymentMethods,
+    paymentMethodsEditor,
   )
 where
 
-import App.Types
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -64,14 +64,14 @@ paymentMethodViewer
             FieldPairs.argsAction = action
           }
 
-paymentMethods :: Args model action -> [View action]
-paymentMethods args@Args {argsModel = st, argsOptic = optic} = do
+paymentMethodsEditor :: Args model action -> [View action]
+paymentMethodsEditor args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  paymentMethodWidget args idx
+  paymentMethodEditor args idx
 
-paymentMethodWidget ::
+paymentMethodEditor ::
   forall model action. Args model action -> Int -> [View action]
-paymentMethodWidget
+paymentMethodEditor
   Args
     { argsModel = st,
       argsOptic = optic,
@@ -128,7 +128,7 @@ paymentMethodWidget
             Currency.argsCurrencies = currencies
           }
     ]
-      <> FieldPairs.fieldPairs
+      <> FieldPairs.fieldPairsEditor
         FieldPairs.Args
           { FieldPairs.argsModel = st,
             FieldPairs.argsOptic =

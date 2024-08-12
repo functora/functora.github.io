@@ -1,5 +1,5 @@
 module Functora.Miso.Widgets.Chips
-  ( Opts (..),
+  ( Args (..),
     chips,
   )
 where
@@ -9,21 +9,20 @@ import qualified Material.Chip.Filter as Filter
 import qualified Material.ChipSet.Filter as Filter
 import qualified Material.LayoutGrid as LayoutGrid
 
-newtype Opts model action = Opts
-  { optsOnChange :: (model -> model) -> action
+data Args model action = Args
+  { argsModel :: model,
+    argsOptic ::
+      NonEmpty
+        ( MisoString,
+          Maybe Filter.Icon,
+          ATraversal' model Bool
+        ),
+    argsAction :: JSM (model -> model) -> action
   }
   deriving stock (Generic)
 
-chips ::
-  model ->
-  Opts model action ->
-  NonEmpty
-    ( MisoString,
-      Maybe Filter.Icon,
-      ATraversal' model Bool
-    ) ->
-  View action
-chips st opts items =
+chips :: Args model action -> View action
+chips args@Args {argsOptic = items} =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
       LayoutGrid.span4Tablet,
@@ -40,26 +39,25 @@ chips st opts items =
               ("justify-content", "space-between")
             ]
         ]
-        ( uncurry3 (chipWidget st opts)
+        ( uncurry3 (chipEditor args)
             $ head items
         )
-        ( uncurry3 (chipWidget st opts)
+        ( uncurry3 (chipEditor args)
             <$> tail items
         )
     ]
 
-chipWidget ::
-  model ->
-  Opts model action ->
+chipEditor ::
+  Args model action ->
   MisoString ->
   Maybe Filter.Icon ->
   ATraversal' model Bool ->
   Filter.Chip action
-chipWidget st opts label icon optic =
+chipEditor Args {argsModel = st, argsAction = action} label icon optic =
   Filter.chip
     ( Filter.config
         & Filter.setIcon icon
         & Filter.setSelected (fromMaybe False $ st ^? cloneTraversal optic)
-        & Filter.setOnChange (optsOnChange opts (& cloneTraversal optic %~ not))
+        & Filter.setOnChange (action $ pure (& cloneTraversal optic %~ not))
     )
     label

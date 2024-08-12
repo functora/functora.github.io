@@ -16,9 +16,9 @@ module Functora.Miso.Widgets.Field
 where
 
 import qualified App.Misc as Misc
-import App.Types
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr

@@ -1,11 +1,11 @@
 module Functora.Miso.Widgets.Assets
   ( assetsViewer,
-    assets,
+    assetsEditor,
   )
 where
 
-import App.Types
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -62,13 +62,13 @@ assetViewer
               )
         )
 
-assets :: Args model action -> [View action]
-assets args@Args {argsModel = st, argsOptic = optic} = do
+assetsEditor :: Args model action -> [View action]
+assetsEditor args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  assetWidget args idx
+  assetEditor args idx
 
-assetWidget :: Args model action -> Int -> [View action]
-assetWidget
+assetEditor :: Args model action -> Int -> [View action]
+assetEditor
   Args
     { argsModel = st,
       argsOptic = optic,
@@ -127,7 +127,7 @@ assetWidget
             Currency.argsCurrencies = currencies
           }
     ]
-      <> FieldPairs.fieldPairs
+      <> FieldPairs.fieldPairsEditor
         FieldPairs.Args
           { FieldPairs.argsModel = st,
             FieldPairs.argsOptic =

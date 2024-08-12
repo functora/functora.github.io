@@ -11,11 +11,17 @@ import qualified Material.Icon as Icon
 import qualified Material.Switch as Switch
 import Miso hiding (at, view)
 
+data Args model action = Args
+  { argsModel :: model,
+    argsOptic :: ATraversal' model Bool,
+    argsAction :: JSM (model -> model) -> action
+  }
+  deriving stock (Generic)
+
 data Opts model action = Opts
   { optsDisabled :: Bool,
     optsPlaceholder :: MisoString,
-    optsIcon :: Maybe MisoString,
-    optsOnChange :: Maybe ((model -> model) -> action)
+    optsIcon :: Maybe MisoString
   }
   deriving stock (Generic)
 
@@ -24,12 +30,14 @@ defOpts =
   Opts
     { optsDisabled = False,
       optsPlaceholder = mempty,
-      optsIcon = Nothing,
-      optsOnChange = Nothing
+      optsIcon = Nothing
     }
 
-switch :: model -> Opts model action -> ATraversal' model Bool -> View action
-switch st opts optic =
+switch ::
+  Args model action ->
+  Opts model action ->
+  View action
+switch Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
   Frame.frame
     $ maybeToList
       ( fmap (Icon.icon mempty)
@@ -43,11 +51,5 @@ switch st opts optic =
           & Switch.setChecked
             ( fromMaybe False $ st ^? cloneTraversal optic
             )
-          & ( maybe
-                id
-                ( \f ->
-                    Switch.setOnChange $ f (& cloneTraversal optic %~ not)
-                )
-                $ optsOnChange opts
-            )
+          & Switch.setOnChange (action $ pure (& cloneTraversal optic %~ not))
        ]

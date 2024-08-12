@@ -1,7 +1,9 @@
+import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
 import { Browser } from "@capacitor/browser";
 import { Share } from "@capacitor/share";
+import { Toast } from "@capacitor/toast";
 
 async function printCurrentPage(name) {
   return await WebviewPrint.print({ name: name });
@@ -33,8 +35,14 @@ async function shareText(text) {
   }
 }
 
+async function popupText(text) {
+  return await Toast.show({ text: text });
+}
+
+defineCustomElements(window);
 globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
 globalThis.insertStorage = insertStorage;
 globalThis.openBrowserPage = openBrowserPage;
 globalThis.shareText = shareText;
+globalThis.popupText = popupText;

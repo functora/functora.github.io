@@ -9,6 +9,7 @@ import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text as T
 #endif
 
 #ifdef wasi_HOST_OS
@@ -89,14 +90,16 @@ runApp app = do
   where
     router js req =
       case Wai.pathInfo req of
-        ("static" : _) -> staticApp (defaultWebAppSettings ".") req
-        ("web.js" : _) -> staticApp (defaultWebAppSettings "static") req
-        ("web2.js" : _) -> staticApp (defaultWebAppSettings "static") req
-        ("web3.js" : _) -> staticApp (defaultWebAppSettings "static") req
-        ("web4.js" : _) -> staticApp (defaultWebAppSettings "static") req
-        ("main.js" : _) -> staticApp (defaultWebAppSettings "static") req
-        ("site.webmanifest" : _) -> staticApp (defaultWebAppSettings "static") req
-        _ -> JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
+        ("static" : _) ->
+          staticApp (defaultWebAppSettings ".") req
+        ("favicon.ico" : _) ->
+          staticApp (defaultWebAppSettings "static") req
+        ("site.webmanifest" : _) ->
+          staticApp (defaultWebAppSettings "static") req
+        (file : _) | T.isInfixOf ".js" file ->
+          staticApp (defaultWebAppSettings "static") req
+        _ ->
+          JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
 #endif
 
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS)

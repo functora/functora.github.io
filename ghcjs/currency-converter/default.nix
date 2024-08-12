@@ -84,14 +84,14 @@ in rec {
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.webmanifest $out/
       cp ${./static}/*.ico $out/
-      ${functora-pkgs.terser}/bin/terser \
-        ${./static}/web.js -o $out/web.js --compress --mangle --source-map
-      ${functora-pkgs.terser}/bin/terser \
-        ${./static}/web2.js -o $out/web2.js --compress --mangle --source-map
-      ${functora-pkgs.terser}/bin/terser \
-        ${./static}/web3.js -o $out/web3.js --compress --mangle --source-map
-      ${functora-pkgs.terser}/bin/terser \
-        ${./static}/web4.js -o $out/web4.js --compress --mangle --source-map
+      for FILE in ${./static}/web*.js; do
+        ${functora-pkgs.terser}/bin/terser \
+          $FILE -o $out/$(basename $FILE) --compress --mangle --source-map
+      done
+      for FILE in ${./static}/pwa*.js; do
+        ${functora-pkgs.terser}/bin/terser \
+          $FILE -o $out/$(basename $FILE) --compress --mangle --source-map
+      done
       ${functora-pkgs.terser}/bin/terser \
         ${./static}/main.js -o $out/main.js --compress --mangle --source-map
       ${functora-pkgs.html-minifier}/bin/html-minifier \

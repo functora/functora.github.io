@@ -31,6 +31,8 @@ module Functora.Miso.Types
     newPaymentMethod,
     Fav (..),
     ChanItem (..),
+    chanItemDelay,
+    chanItemValue,
     qsGet,
     uniqueToIdentity,
     identityToUnique,
@@ -397,11 +399,20 @@ data Fav = Fav
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Fav
 
-data ChanItem a = ChanItem
-  { chanItemDelay :: Natural,
-    chanItemValue :: a
-  }
+data ChanItem a
+  = InstantChanItem a
+  | DelayedChanItem Natural a
   deriving stock (Eq, Ord, Show, Data, Generic)
+
+chanItemDelay :: ChanItem a -> Natural
+chanItemDelay = \case
+  InstantChanItem {} -> 0
+  DelayedChanItem delay _ -> delay
+
+chanItemValue :: ChanItem a -> a
+chanItemValue = \case
+  InstantChanItem x -> x
+  DelayedChanItem _ x -> x
 
 qsGet :: URI.RText 'URI.QueryKey -> [URI.QueryParam] -> Maybe Prelude.Text
 qsGet key =

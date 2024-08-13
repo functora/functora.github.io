@@ -48,7 +48,7 @@ menu st =
                       onClick . PushUpdate $ do
                         doc <- liftIO newStDoc
                         pure
-                          . ChanItem 0
+                          . InstantChanItem
                           $ (& #modelState . #stDoc .~ doc)
                           . (& #modelState . #stCpt .~ Nothing)
                           . (& #modelState . #stScreen .~ Converter)
@@ -88,7 +88,7 @@ menu st =
                                 ^. JS.js1
                                   ("printCurrentPage" :: MisoString)
                                   ("currency-converter" :: MisoString)
-                              pure $ ChanItem 0 id
+                              pure $ InstantChanItem id
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -430,7 +430,7 @@ linksWidget st =
                                     ( PushUpdate $ do
                                         doc <- liftIO Templates.newDonateDoc
                                         pure
-                                          . ChanItem 0
+                                          . InstantChanItem
                                           $ (& #modelMenu .~ Closed)
                                           . (& #modelLinks .~ Closed)
                                           . (& #modelLoading .~ True)

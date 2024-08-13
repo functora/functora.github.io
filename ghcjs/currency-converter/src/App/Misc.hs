@@ -81,7 +81,7 @@ openBrowserPageAction :: URI -> Action
 openBrowserPageAction uri =
   PushUpdate $ do
     void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
-    pure $ ChanItem 0 id
+    pure $ InstantChanItem id
 
 browserLink :: Prelude.Text -> MisoString -> View Action
 browserLink uri txt =

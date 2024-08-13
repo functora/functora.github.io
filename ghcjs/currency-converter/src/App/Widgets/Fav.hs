@@ -97,7 +97,7 @@ fav st =
            )
         <> txt
         <> "!"
-      pure . ChanItem 0 $ \nextSt ->
+      pure . InstantChanItem $ \nextSt ->
         let uri =
               either impureThrow id
                 . URI.mkURI
@@ -123,7 +123,7 @@ fav st =
            )
         <> txt
         <> "!"
-      pure . ChanItem 0 $ \nextSt ->
+      pure . InstantChanItem $ \nextSt ->
         let nextFavName = makeFavName nextSt
          in nextSt
               & #modelFavMap
@@ -165,7 +165,7 @@ favItem st label Fav {favUri = uri} =
       --
       next <- newModel (st ^. #modelWebOpts) (Just st) uri
       pure
-        . ChanItem 0
+        . InstantChanItem
         $ (#modelFav .~ Closed)
         . (#modelLoading .~ True)
         . (#modelState .~ modelState next)

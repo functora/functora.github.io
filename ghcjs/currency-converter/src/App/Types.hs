@@ -152,7 +152,7 @@ unQrCode = \case
 pushUpdate :: JSM (Model -> Model) -> Action
 pushUpdate =
   PushUpdate
-    . fmap (ChanItem 0)
+    . fmap InstantChanItem
 
 --
 -- NOTE : In most cases we don't need JSM.
@@ -161,7 +161,7 @@ pureUpdate :: Natural -> (Model -> Model) -> Action
 pureUpdate delay =
   PushUpdate
     . pure
-    . ChanItem delay
+    . DelayedChanItem delay
 
 unShareUri ::
   ( MonadThrow m,

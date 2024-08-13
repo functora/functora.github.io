@@ -7,6 +7,7 @@ import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified App.Widgets.SwapCurrencies as SwapCurrencies
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
@@ -15,7 +16,6 @@ import qualified Functora.Miso.Widgets.Qr as Qr
 import Functora.Money hiding (Text)
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Snackbar as Snackbar
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Material.Typography as Typography
@@ -39,9 +39,7 @@ mainWidget st =
                    --    mempty
                    --    [ text . inspect $ st ^. #modelFavMap
                    --    ],
-                   tosWidget,
-                   Snackbar.snackbar (Snackbar.config Misc.textPopupClosed)
-                    $ modelSnackbarQueue st
+                   tosWidget
                  ]
           )
       ]
@@ -179,7 +177,7 @@ ratesWidget st =
     ]
     [ a_
         [ style_ [("cursor", "pointer")],
-          onClick $ Misc.copyIntoClipboardAction st msg
+          onClick . pushUpdate $ Jsm.shareText msg
         ]
         [ Miso.text msg
         ]

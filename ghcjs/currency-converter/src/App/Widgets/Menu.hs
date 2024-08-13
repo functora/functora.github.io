@@ -7,6 +7,7 @@ import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Templates as Templates
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -98,7 +99,8 @@ menu st =
                 IconButton.iconButton
                   ( IconButton.config
                       & IconButton.setOnClick
-                        ( Misc.copyIntoClipboardAction st
+                        ( pushUpdate
+                            . Jsm.shareText
                             $ shareLink @MisoString st
                         )
                       & IconButton.setAttributes
@@ -152,7 +154,8 @@ menu st =
                             ( Button.config
                                 & Button.setDisabled disabled
                                 & Button.setOnClick
-                                  ( Misc.newFieldPairAction
+                                  ( pushUpdate
+                                      . Jsm.addFieldPair
                                       $ #modelState
                                       . #stDoc
                                       . #stDocFieldPairs

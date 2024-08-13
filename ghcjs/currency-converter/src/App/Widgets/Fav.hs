@@ -3,11 +3,11 @@ module App.Widgets.Fav
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -88,6 +88,15 @@ fav st =
     closeAction = pureUpdate 0 (& #modelFav .~ Closed)
     saveAction = PushUpdate $ do
       ct <- getCurrentTime
+      let txt = makeFavName st
+      Jsm.popupText
+        $ "Saved"
+        <> ( if txt == mempty
+              then mempty
+              else " "
+           )
+        <> txt
+        <> "!"
       pure . ChanItem 0 $ \nextSt ->
         let uri =
               either impureThrow id
@@ -101,35 +110,25 @@ fav st =
             nextFavName =
               makeFavName nextSt
          in nextSt
-              & ( Misc.textPopupPure
-                    $ "Saved"
-                    <> ( if nextFavName == mempty
-                          then mempty
-                          else " "
-                       )
-                    <> nextFavName
-                    <> "!"
-                )
               & #modelFavMap
               . at nextFavName
-              %~ ( Just
-                    . maybe nextFav (& #favUri .~ uri)
-                 )
-    deleteAction = pureUpdate 0 $ \nextSt ->
-      let nextFavName = makeFavName nextSt
-       in nextSt
-            & ( Misc.textPopupPure
-                  $ "Removed"
-                  <> ( if nextFavName == mempty
-                        then mempty
-                        else " "
-                     )
-                  <> nextFavName
-                  <> "!"
-              )
-            & #modelFavMap
-            . at nextFavName
-            .~ Nothing
+              %~ (Just . maybe nextFav (& #favUri .~ uri))
+    deleteAction = PushUpdate $ do
+      let txt = makeFavName st
+      Jsm.popupText
+        $ "Removed"
+        <> ( if txt == mempty
+              then mempty
+              else " "
+           )
+        <> txt
+        <> "!"
+      pure . ChanItem 0 $ \nextSt ->
+        let nextFavName = makeFavName nextSt
+         in nextSt
+              & #modelFavMap
+              . at nextFavName
+              .~ Nothing
 
 makeFavName :: Model -> MisoString
 makeFavName st =

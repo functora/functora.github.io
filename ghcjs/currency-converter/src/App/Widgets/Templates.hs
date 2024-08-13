@@ -10,7 +10,6 @@ import Functora.Cfg
 import Functora.Miso.Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
-import qualified Material.Snackbar as Snackbar
 
 newModel ::
   ( MonadThrow m,
@@ -111,10 +110,6 @@ newModel webOpts mSt uri = do
           fromMaybe
             [btc, usd]
             (mSt ^? _Just . #modelCurrencies),
-        modelSnackbarQueue =
-          fromMaybe
-            Snackbar.initialQueue
-            (mSt ^? _Just . #modelSnackbarQueue),
         modelProducerQueue = prod,
         modelConsumerQueue = cons,
         modelOnlineAt = fromMaybe ct (mSt ^? _Just . #modelOnlineAt),

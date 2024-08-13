@@ -3,35 +3,18 @@ module App.Misc
     getConverterCurrencyOptic,
     pushActionQueue,
     onKeyDownAction,
-    copyIntoClipboard,
-    copyIntoClipboardAction,
-    textPopup,
-    textPopupPure,
-    textPopupClear,
-    textPopupClosed,
     drainTChan,
     verifyUid,
-    duplicateAt,
-    removeAt,
-    moveUp,
-    moveDown,
-    newAssetAction,
-    newFieldPairAction,
-    newPaymentMethodAction,
     openBrowserPageAction,
     browserLink,
   )
 where
 
 import App.Types
-import qualified Data.Generics as Syb
 import Functora.Miso.Prelude
-import Functora.Money hiding (Text)
 import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.Snackbar as Snackbar
 import qualified Text.URI as URI
-import qualified Prelude
 
 getConverterAmountOptic ::
   ( Functor f
@@ -69,57 +52,6 @@ onKeyDownAction uid (KeyCode code) = do
     <> "').getElementsByTagName('input')[0].blur();"
   pure id
 
-copyIntoClipboard :: (Show a, Data a) => Model -> a -> JSM ()
-copyIntoClipboard st x = do
-  let txt = inspect x
-  unless (txt == mempty) $ do
-    prom <- JS.global ^. JS.js1 ("shareText" :: MisoString) txt
-    success <- JS.function $ \_ _ _ -> textPopup @MisoString st "Copied!"
-    failure <- JS.function $ \_ _ _ -> textPopup @MisoString st "Failed to copy!"
-    void $ prom ^. JS.js2 ("then" :: MisoString) success failure
-
-copyIntoClipboardAction :: (Show a, Data a) => Model -> a -> Action
-copyIntoClipboardAction st x =
-  PushUpdate $ do
-    copyIntoClipboard st x
-    pure $ ChanItem 0 id
-
-textPopup :: (Show a, Data a) => Model -> a -> JSM ()
-textPopup st x =
-  pushActionQueue st
-    $ ChanItem
-      0
-      ( &
-          #modelSnackbarQueue
-            %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
-      )
-  where
-    msg =
-      inspect x
-        & Snackbar.message
-        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick textPopupClosed
-
-textPopupPure :: (Show a, Data a) => a -> Model -> Model
-textPopupPure x st =
-  st
-    & #modelSnackbarQueue
-    %~ (Snackbar.addMessage msg . Snackbar.clearQueue)
-  where
-    msg =
-      inspect x
-        & Snackbar.message
-        & Snackbar.setActionIcon (Just (Snackbar.icon "close"))
-        & Snackbar.setOnActionIconClick textPopupClosed
-
-textPopupClear :: Model -> Model
-textPopupClear =
-  (& #modelSnackbarQueue %~ Snackbar.clearQueue)
-
-textPopupClosed :: Snackbar.MessageId -> Action
-textPopupClosed msg =
-  pureUpdate 0 (& #modelSnackbarQueue %~ Snackbar.close msg)
-
 drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
 drainTChan chan = do
   item <- liftIO . atomically $ readTChan chan
@@ -144,106 +76,6 @@ verifyUid :: Uid -> JSM ()
 verifyUid uid =
   when (nullUid uid)
     $ consoleLog @MisoString "UNEXPECTED NULL UID"
-
-duplicateAt ::
-  forall a.
-  ( Data a
-  ) =>
-  ATraversal' Model [a] ->
-  Int ->
-  Action
-duplicateAt optic idx =
-  PushUpdate $ do
-    duplicator <- newUniqueDuplicator @MisoString
-    let updater loc el =
-          if loc == idx
-            then [el, closed $ duplicator el]
-            else [el]
-    pure
-      . ChanItem 0
-      $ (textPopupPure @MisoString $ "Duplicated #" <> inspect (idx + 1) <> "!")
-      . (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
-  where
-    closed :: a -> a
-    closed = Syb.everywhere $ Syb.mkT $ const Closed
-
-removeAt ::
-  ATraversal' Model [a] ->
-  Int ->
-  Action
-removeAt optic idx =
-  PushUpdate $ do
-    let updater loc el =
-          if loc == idx
-            then mempty
-            else [el]
-    pure
-      . ChanItem 0
-      $ (textPopupPure @MisoString $ "Removed #" <> inspect (idx + 1) <> "!")
-      . (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
-
-moveUp :: ATraversal' Model [a] -> Int -> Action
-moveUp optic idx =
-  PushUpdate
-    . pure
-    . ChanItem 0
-    $ (textPopupPure @MisoString $ "Moved #" <> inspect (idx + 1) <> " up!")
-    . (& cloneTraversal optic %~ swapAt (idx - 1) idx)
-
-moveDown :: ATraversal' Model [a] -> Int -> Action
-moveDown optic idx =
-  PushUpdate
-    . pure
-    . ChanItem 0
-    $ (textPopupPure @MisoString $ "Moved #" <> inspect (idx + 1) <> " down!")
-    . (& cloneTraversal optic %~ swapAt idx (idx + 1))
-
-swapAt :: Int -> Int -> [a] -> [a]
-swapAt i j xs
-  | i == j = xs
-  | i < 0 || i >= len = xs
-  | j < 0 || j >= len = xs
-  | otherwise = do
-      (idx, val) <- zip [0 ..] xs
-      pure
-        $ if
-          | idx == i -> jval
-          | idx == j -> ival
-          | otherwise -> val
-  where
-    len = length xs
-    ival = xs Prelude.!! i
-    jval = xs Prelude.!! j
-
-newAssetAction :: ATraversal' Model [Asset Unique] -> Action
-newAssetAction optic =
-  PushUpdate $ do
-    let cur = CurrencyInfo (CurrencyCode "usd") mempty
-    item <- newAsset "Price" 0 cur
-    pure
-      . ChanItem 0
-      $ (textPopupPure @MisoString "Added asset!")
-      . (& cloneTraversal optic %~ (<> [item]))
-
-newFieldPairAction ::
-  ATraversal' Model [FieldPair DynamicField Unique] -> Action
-newFieldPairAction optic =
-  PushUpdate $ do
-    item <- newFieldPair mempty $ DynamicFieldText mempty
-    pure
-      . ChanItem 0
-      $ (textPopupPure @MisoString "Added note!")
-      . (& cloneTraversal optic %~ (<> [item]))
-
-newPaymentMethodAction :: ATraversal' Model [PaymentMethod Unique] -> Action
-newPaymentMethodAction optic =
-  PushUpdate $ do
-    let cur = CurrencyInfo (CurrencyCode "btc") mempty
-    item <- newPaymentMethod cur $ Just mempty
-    pure
-      . ChanItem 0
-      $ (textPopupPure @MisoString "Added payment!")
-      . (& cloneTraversal optic %~ (<> [item]))
 
 openBrowserPageAction :: URI -> Action
 openBrowserPageAction uri =

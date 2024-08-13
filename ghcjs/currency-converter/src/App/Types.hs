@@ -42,7 +42,6 @@ import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
-import qualified Material.Snackbar as Snackbar
 import qualified Paths_app as Paths
 import qualified Text.URI as URI
 
@@ -56,7 +55,6 @@ data Model = Model
     modelFavMap :: Map MisoString Fav,
     modelFavName :: Field MisoString Unique,
     modelCurrencies :: NonEmpty CurrencyInfo,
-    modelSnackbarQueue :: Snackbar.Queue Action,
     modelProducerQueue :: TChan (ChanItem (Model -> Model)),
     modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
     modelOnlineAt :: UTCTime,

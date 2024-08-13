@@ -65,8 +65,9 @@ decryptDoc Model {modelState = St {stCpt = Just {}}} = do
             first thd3
               $ decodeBinary bDoc
        in case eDoc of
-            Left e ->
-              Misc.textPopupPure e st
+            Left {} ->
+              -- Jsm.popupText e
+              st
             Right iDoc ->
               fst . flip runState rnd0 $ do
                 uDoc <-
@@ -101,7 +102,6 @@ decryptDoc Model {modelState = St {stCpt = Just {}}} = do
                   & #modelState
                   . #stScreen
                   .~ unQrCode (st ^. #modelState . #stScreen)
-                  & Misc.textPopupClear
 
 onKeyDownAction :: Model -> Uid -> KeyCode -> JSM (Model -> Model)
 onKeyDownAction st uid code =

@@ -2,6 +2,8 @@ module Functora.Miso.Jsm
   ( popupText,
     shareText,
     addFieldPair,
+    addAsset,
+    addPaymentMethod,
     moveUp,
     moveDown,
     removeAt,
@@ -12,11 +14,15 @@ where
 import qualified Data.Generics as Syb
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import Functora.Money (CurrencyCode (..), CurrencyInfo (..))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Prelude ((!!))
 
 popupText :: (Show a, Data a) => a -> JSM ()
-popupText = consoleLog
+popupText x =
+  void
+    $ JS.global
+    ^. JS.js1 ("popupText" :: MisoString) (inspect x :: MisoString)
 
 shareText :: (Show a, Data a) => a -> JSM (model -> model)
 shareText x = do
@@ -33,6 +39,22 @@ addFieldPair ::
 addFieldPair optic = do
   popupText @MisoString "Added note!"
   item <- newFieldPair mempty $ DynamicFieldText mempty
+  pure (& cloneTraversal optic %~ (<> [item]))
+
+addAsset :: ATraversal' model [Asset Unique] -> JSM (model -> model)
+addAsset optic = do
+  popupText @MisoString "Added asset!"
+  let cur = CurrencyInfo (CurrencyCode "usd") mempty
+  item <- newAsset "Price" 0 cur
+  pure (& cloneTraversal optic %~ (<> [item]))
+
+addPaymentMethod ::
+  ATraversal' model [PaymentMethod Unique] ->
+  JSM (model -> model)
+addPaymentMethod optic = do
+  popupText @MisoString "Added payment!"
+  let cur = CurrencyInfo (CurrencyCode "btc") mempty
+  item <- newPaymentMethod cur $ Just mempty
   pure (& cloneTraversal optic %~ (<> [item]))
 
 moveUp :: ATraversal' model [item] -> Int -> JSM (model -> model)

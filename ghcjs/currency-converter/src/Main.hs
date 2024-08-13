@@ -96,7 +96,7 @@ runApp app = do
           staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) ->
           staticApp (defaultWebAppSettings "static") req
-        (file : _) | T.isInfixOf ".js" file ->
+        (file : _) | (T.isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
           staticApp (defaultWebAppSettings "static") req
         _ ->
           JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req

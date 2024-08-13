@@ -40,6 +40,7 @@ common pkg
     Functora.Miso.Storage
     Functora.Miso.Types
     Functora.Miso.Widgets.Assets
+    Functora.Miso.Widgets.BrowserLink
     Functora.Miso.Widgets.Chips
     Functora.Miso.Widgets.Currency
     Functora.Miso.Widgets.Dialog

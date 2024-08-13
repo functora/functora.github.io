@@ -195,7 +195,7 @@ updateModel (ChanUpdate prevSt) _ = do
         pure SyncInputs,
       do
         actions <-
-          Misc.drainTChan $ prevSt ^. #modelConsumerQueue
+          drainTChan $ prevSt ^. #modelConsumerQueue
         nextSt <-
           handleAny
             ( \e -> do

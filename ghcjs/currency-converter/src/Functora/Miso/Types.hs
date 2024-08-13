@@ -33,6 +33,7 @@ module Functora.Miso.Types
     ChanItem (..),
     chanItemDelay,
     chanItemValue,
+    drainTChan,
     qsGet,
     uniqueToIdentity,
     identityToUnique,
@@ -413,6 +414,26 @@ chanItemValue :: ChanItem a -> a
 chanItemValue = \case
   InstantChanItem x -> x
   DelayedChanItem _ x -> x
+
+drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
+drainTChan chan = do
+  item <- liftIO . atomically $ readTChan chan
+  liftIO
+    . fmap ((chanItemValue item :) . reverse)
+    . drainInto []
+    $ chanItemDelay item
+  where
+    drainInto acc delay = do
+      item <- atomically $ tryReadTChan chan
+      case item of
+        Nothing | delay == 0 -> pure acc
+        Nothing -> do
+          sleepMilliSeconds $ from @Natural @Integer delay
+          drainInto acc 0
+        Just next ->
+          drainInto (chanItemValue next : acc)
+            . max delay
+            $ chanItemDelay next
 
 qsGet :: URI.RText 'URI.QueryKey -> [URI.QueryParam] -> Maybe Prelude.Text
 qsGet key =

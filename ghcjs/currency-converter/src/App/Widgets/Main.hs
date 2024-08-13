@@ -9,6 +9,7 @@ import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified App.Widgets.SwapCurrencies as SwapCurrencies
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -251,7 +252,12 @@ tosWidget =
         ]
     ]
     [ Miso.text "\169 2024 ",
-      Misc.browserLink "https://functora.github.io/" "Functora",
+      BrowserLink.browserLink
+        BrowserLink.Args
+          { BrowserLink.argsLink = "https://functora.github.io/",
+            BrowserLink.argsLabel = "Functora",
+            BrowserLink.argsAction = pushUpdate
+          },
       Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",
       a_ [href_ "license.html"] [Miso.text "Terms of Service"],

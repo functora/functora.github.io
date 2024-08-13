@@ -3,12 +3,12 @@ module App.Widgets.Menu
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Templates as Templates
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -360,11 +360,26 @@ linksWidget st =
                               mempty
                               [ text
                                   "The Android app is in closed beta. To install it, join the ",
-                                Misc.browserLink testGroupLink "closed beta",
+                                BrowserLink.browserLink
+                                  BrowserLink.Args
+                                    { BrowserLink.argsLink = testGroupLink,
+                                      BrowserLink.argsLabel = "closed beta",
+                                      BrowserLink.argsAction = pushUpdate
+                                    },
                                 text " group and then install the app from ",
-                                Misc.browserLink googlePlayLink "Google Play",
+                                BrowserLink.browserLink
+                                  BrowserLink.Args
+                                    { BrowserLink.argsLink = googlePlayLink,
+                                      BrowserLink.argsLabel = "Google Play",
+                                      BrowserLink.argsAction = pushUpdate
+                                    },
                                 text ", or download the ",
-                                Misc.browserLink apkLink "APK file",
+                                BrowserLink.browserLink
+                                  BrowserLink.Args
+                                    { BrowserLink.argsLink = apkLink,
+                                      BrowserLink.argsLabel = "APK file",
+                                      BrowserLink.argsAction = pushUpdate
+                                    },
                                 text " directly."
                               ],
                           Grid.mediumCell
@@ -460,6 +475,7 @@ linksWidget st =
     openWidget = pureUpdate 0 (& #modelLinks .~ Opened)
     closeWidget = pureUpdate 0 (& #modelLinks .~ Closed)
     openBrowser =
-      Misc.openBrowserPageAction
+      pushUpdate
+        . Jsm.openBrowserPage
         . either impureThrow id
         . URI.mkURI

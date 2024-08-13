@@ -15,7 +15,6 @@ module Functora.Miso.Widgets.Field
   )
 where
 
-import qualified App.Misc as Misc
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
@@ -67,7 +66,7 @@ defOpts =
       optsExtraOnInput = id,
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
-      optsOnKeyDownAction = Misc.onKeyDownAction,
+      optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
       optsExtraAttributes = mempty,
       optsFilledOrOutlined = Filled
     }

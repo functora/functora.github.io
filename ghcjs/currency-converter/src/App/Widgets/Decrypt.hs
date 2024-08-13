@@ -3,7 +3,6 @@ module App.Widgets.Decrypt
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
@@ -107,4 +106,4 @@ onKeyDownAction :: Model -> Uid -> KeyCode -> JSM (Model -> Model)
 onKeyDownAction st uid code =
   if code == KeyCode 13
     then decryptDoc st
-    else Misc.onKeyDownAction uid code
+    else Jsm.enterOrEscapeBlur uid code

@@ -8,6 +8,8 @@ module Functora.Miso.Jsm
     moveDown,
     removeAt,
     duplicateAt,
+    openBrowserPage,
+    enterOrEscapeBlur,
   )
 where
 
@@ -16,6 +18,7 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types
 import Functora.Money (CurrencyCode (..), CurrencyInfo (..))
 import qualified Language.Javascript.JSaddle as JS
+import qualified Text.URI as URI
 import qualified Prelude ((!!))
 
 popupText :: (Show a, Data a) => a -> JSM ()
@@ -112,3 +115,19 @@ swapAt i j xs
     len = length xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
+
+openBrowserPage :: URI -> JSM (model -> model)
+openBrowserPage uri = do
+  void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
+  pure id
+
+enterOrEscapeBlur :: Uid -> KeyCode -> JSM (model -> model)
+enterOrEscapeBlur uid (KeyCode code) = do
+  let enterOrEscape = [13, 27] :: [Int]
+  when (code `elem` enterOrEscape)
+    . void
+    . JS.eval @MisoString
+    $ "document.getElementById('"
+    <> htmlUid uid
+    <> "').getElementsByTagName('input')[0].blur();"
+  pure id

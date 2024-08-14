@@ -45,13 +45,19 @@ menu st =
                 navItemLeft
                   $ a_
                     [ style_ [("cursor", "pointer")],
-                      onClick . PushUpdate $ do
+                      onClick . pureUpdate 0 $ \next -> do
                         doc <- liftIO newStDoc
                         pure
-                          . InstantChanItem
-                          $ (& #modelState . #stDoc .~ doc)
-                          . (& #modelState . #stCpt .~ Nothing)
-                          . (& #modelState . #stScreen .~ Converter)
+                          $ next
+                          & #modelState
+                          . #stDoc
+                          .~ doc
+                          & #modelState
+                          . #stCpt
+                          .~ Nothing
+                          & #modelState
+                          . #stScreen
+                          .~ Converter
                     ]
                     [ text "Converter"
                     ]
@@ -64,7 +70,8 @@ menu st =
                     ( IconButton.config
                         & IconButton.setOnClick
                           ( pureUpdate 0 $ \next ->
-                              next
+                              pure
+                                $ next
                                 & #modelFav
                                 .~ Opened
                                 & #modelFavName
@@ -82,13 +89,13 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( PushUpdate $ do
+                          ( pureUpdate 0 $ \next -> do
                               void
                                 $ JS.global
                                 ^. JS.js1
                                   ("printCurrentPage" :: MisoString)
                                   ("currency-converter" :: MisoString)
-                              pure $ InstantChanItem id
+                              pure next
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -189,14 +196,14 @@ menu st =
                                       )
                                     & Select.setOnChange
                                       ( \x ->
-                                          pureUpdate
-                                            0
-                                            ( &
-                                                #modelState
-                                                  . #stDoc
-                                                  . #stDocOnlineOrOffline
-                                                  .~ x
-                                            )
+                                          pureUpdate 0
+                                            $ pure
+                                            . ( &
+                                                  #modelState
+                                                    . #stDoc
+                                                    . #stDocOnlineOrOffline
+                                                    .~ x
+                                              )
                                       )
                                 )
                                 ( SelectItem.selectItem
@@ -282,11 +289,12 @@ menu st =
             )
         ]
   where
-    opened = pureUpdate 0 (& #modelMenu .~ Opened)
-    closed = pureUpdate 0 (& #modelMenu .~ Closed)
+    opened = pureUpdate 0 $ pure . (& #modelMenu .~ Opened)
+    closed = pureUpdate 0 $ pure . (& #modelMenu .~ Closed)
     screen next =
       pureUpdate 0
-        $ (& #modelMenu .~ Closed)
+        $ pure
+        . (& #modelMenu .~ Closed)
         . (& #modelLoading .~ isQrCode next)
         . (& #modelState . #stScreen .~ next)
     sc =
@@ -442,14 +450,19 @@ linksWidget st =
                               ( Button.config
                                   & Button.setIcon (Just "volunteer_activism")
                                   & Button.setOnClick
-                                    ( PushUpdate $ do
+                                    ( pureUpdate 0 $ \next -> do
                                         doc <- liftIO Templates.newDonateDoc
                                         pure
-                                          . InstantChanItem
-                                          $ (& #modelMenu .~ Closed)
-                                          . (& #modelLinks .~ Closed)
-                                          . (& #modelLoading .~ True)
-                                          . (& #modelState . #stDoc .~ doc)
+                                          $ next
+                                          & #modelMenu
+                                          .~ Closed
+                                          & #modelLinks
+                                          .~ Closed
+                                          & #modelLoading
+                                          .~ True
+                                          & #modelState
+                                          . #stDoc
+                                          .~ doc
                                     )
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
@@ -472,8 +485,8 @@ linksWidget st =
             ]
        )
   where
-    openWidget = pureUpdate 0 (& #modelLinks .~ Opened)
-    closeWidget = pureUpdate 0 (& #modelLinks .~ Closed)
+    openWidget = pureUpdate 0 $ pure . (& #modelLinks .~ Opened)
+    closeWidget = pureUpdate 0 $ pure . (& #modelLinks .~ Closed)
     openBrowser =
       pushUpdate
         . Jsm.openBrowserPage

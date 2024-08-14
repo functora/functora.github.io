@@ -12,7 +12,7 @@ import qualified Text.URI as URI
 data Args model action = Args
   { argsLink :: Prelude.Text,
     argsLabel :: MisoString,
-    argsAction :: JSM (model -> model) -> action
+    argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 

@@ -33,7 +33,7 @@ import qualified Material.Typography as Typography
 data Args model action item = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Field item Unique),
-    argsAction :: JSM (model -> model) -> action
+    argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 
@@ -51,7 +51,7 @@ data Opts model action = Opts
     optsExtraOnInput :: model -> model,
     optsLeadingWidget :: Maybe (OptsWidget model action),
     optsTrailingWidget :: Maybe (OptsWidget model action),
-    optsOnKeyDownAction :: Uid -> KeyCode -> JSM (model -> model),
+    optsOnKeyDownAction :: Uid -> KeyCode -> model -> JSM model,
     optsExtraAttributes :: [Attribute action],
     optsFilledOrOutlined :: FilledOrOutlined
   }
@@ -193,8 +193,9 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
         then Nothing
         else Just out
     onBlurAction =
-      action . pure $ \prev ->
-        prev
+      action $ \prev ->
+        pure
+          $ prev
           & cloneTraversal optic
           . #fieldInput
           . #uniqueValue
@@ -203,7 +204,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
           . #fieldOutput
           %~ maybe id (const . id) (getOutput prev)
     onInputAction txt =
-      action . pure $ \prev ->
+      action $ \prev ->
         let next =
               prev
                 & cloneTraversal optic
@@ -211,7 +212,8 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                 . #uniqueValue
                 .~ txt
                 & (opts ^. #optsExtraOnInput)
-         in next
+         in pure
+              $ next
               & cloneTraversal optic
               . #fieldOutput
               %~ maybe id (const . id) (getOutput next)
@@ -277,10 +279,10 @@ fieldIcon lot args opts = \case
     fieldIconSimple lot "content_copy" mempty
       . action
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
-        Nothing -> pure id
+        Nothing -> pure . id
         Just txt -> Jsm.shareText txt
   ClearWidget ->
-    fieldIconSimple lot "close" mempty . action $ do
+    fieldIconSimple lot "close" mempty . action $ \prev -> do
       focus
         . toMisoString
         $ htmlUid @MisoString uid
@@ -289,23 +291,25 @@ fieldIcon lot args opts = \case
         $ "var el = document.getElementById('"
         <> htmlUid uid
         <> "'); if (el) el.value = '';"
-      pure $ \prev ->
-        prev
-          & cloneTraversal optic
-          . #fieldInput
-          . #uniqueValue
-          .~ mempty
-          & extraOnInput
+      pure
+        $ prev
+        & cloneTraversal optic
+        . #fieldInput
+        . #uniqueValue
+        .~ mempty
+        & extraOnInput
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
         fieldIconSimple lot "visibility_off" mempty
           . action
-          $ pure (& cloneTraversal optic . #fieldType .~ FieldTypeText)
+          $ pure
+          . (& cloneTraversal optic . #fieldType .~ FieldTypeText)
       _ ->
         fieldIconSimple lot "visibility" mempty
           . action
-          $ pure (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
+          $ pure
+          . (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
   UpWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_up" attrs
       . action
@@ -322,7 +326,7 @@ fieldIcon lot args opts = \case
     fieldIconSimple lot "settings" [Theme.primary]
       . action
       $ pure
-        ( &
+      . ( &
             cloneTraversal opt
               . ix idx
               . cloneTraversal ooc
@@ -332,7 +336,7 @@ fieldIcon lot args opts = \case
     fieldIconSimple lot "settings" mempty
       . action
       $ pure
-        ( &
+      . ( &
             cloneTraversal opt
               . ix idx
               . cloneTraversal access
@@ -343,7 +347,7 @@ fieldIcon lot args opts = \case
     fieldIconSimple lot "settings" mempty
       . action
       $ pure
-        ( &
+      . ( &
             cloneTraversal opt
               . #fieldModalState
               .~ Opened
@@ -516,10 +520,9 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                                 )
                               & Select.setOnChange
                                 ( \x ->
-                                    args
-                                      ^. #argsAction
+                                    action
                                       $ pure
-                                        ( &
+                                      . ( &
                                             cloneTraversal optic
                                               . #fieldType
                                               .~ x
@@ -629,7 +632,7 @@ selectTypeWidget ::
   Args model action item ->
   ATraversal' model (Field a Unique) ->
   View action
-selectTypeWidget args optic =
+selectTypeWidget args@Args {argsAction = action} optic =
   let typ :| typs = enumerateNE @FieldType
    in Select.outlined
         ( Select.config
@@ -647,10 +650,9 @@ selectTypeWidget args optic =
               )
             & Select.setOnChange
               ( \x ->
-                  args
-                    ^. #argsAction
+                  action
                     $ pure
-                      ( &
+                    . ( &
                           cloneTraversal optic
                             . #fieldType
                             .~ x
@@ -672,7 +674,7 @@ selectTypeWidget args optic =
 constTextField ::
   MisoString ->
   Opts model action ->
-  (JSM (model -> model) -> action) ->
+  ((model -> JSM model) -> action) ->
   View action
 constTextField txt opts action =
   LayoutGrid.cell
@@ -730,7 +732,7 @@ constTextField txt opts action =
 --
 dynamicFieldViewer ::
   forall model action.
-  (JSM (model -> model) -> action) ->
+  ((model -> JSM model) -> action) ->
   Field DynamicField Unique ->
   [View action]
 dynamicFieldViewer action value =

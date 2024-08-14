@@ -85,10 +85,13 @@ fav st =
           )
       ]
   where
-    closeAction = pureUpdate 0 (& #modelFav .~ Closed)
-    saveAction = PushUpdate $ do
+    closeAction = pureUpdate 0 $ pure . (& #modelFav .~ Closed)
+    saveAction = pureUpdate 0 $ \nextSt -> do
       ct <- getCurrentTime
       let txt = makeFavName st
+      let uri = either impureThrow id . URI.mkURI $ shareLink nextSt
+      let nextFav = Fav {favUri = uri, favCreatedAt = ct}
+      let nextFavName = makeFavName nextSt
       Jsm.popupText
         $ "Saved"
         <> ( if txt == mempty
@@ -97,24 +100,14 @@ fav st =
            )
         <> txt
         <> "!"
-      pure . InstantChanItem $ \nextSt ->
-        let uri =
-              either impureThrow id
-                . URI.mkURI
-                $ shareLink nextSt
-            nextFav = do
-              Fav
-                { favUri = uri,
-                  favCreatedAt = ct
-                }
-            nextFavName =
-              makeFavName nextSt
-         in nextSt
-              & #modelFavMap
-              . at nextFavName
-              %~ (Just . maybe nextFav (& #favUri .~ uri))
-    deleteAction = PushUpdate $ do
+      pure
+        $ nextSt
+        & #modelFavMap
+        . at nextFavName
+        %~ (Just . maybe nextFav (& #favUri .~ uri))
+    deleteAction = pureUpdate 0 $ \nextSt -> do
       let txt = makeFavName st
+      let nextFavName = makeFavName nextSt
       Jsm.popupText
         $ "Removed"
         <> ( if txt == mempty
@@ -123,12 +116,11 @@ fav st =
            )
         <> txt
         <> "!"
-      pure . InstantChanItem $ \nextSt ->
-        let nextFavName = makeFavName nextSt
-         in nextSt
-              & #modelFavMap
-              . at nextFavName
-              .~ Nothing
+      pure
+        $ nextSt
+        & #modelFavMap
+        . at nextFavName
+        .~ Nothing
 
 makeFavName :: Model -> MisoString
 makeFavName st =
@@ -159,13 +151,16 @@ favItem st label Fav {favUri = uri} =
       )
       label
   where
-    openAction = PushUpdate $ do
+    openAction = pureUpdate 0 $ \nextSt -> do
       --
       -- TODO : Implement here pure, less costly equivalent of newModel.
       --
       next <- newModel (st ^. #modelWebOpts) (Just st) uri
       pure
-        . InstantChanItem
-        $ (#modelFav .~ Closed)
-        . (#modelLoading .~ True)
-        . (#modelState .~ modelState next)
+        $ nextSt
+        & #modelFav
+        .~ Closed
+        & #modelLoading
+        .~ True
+        & #modelState
+        .~ modelState next

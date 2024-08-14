@@ -27,53 +27,52 @@ popupText x =
     $ JS.global
     ^. JS.js1 ("popupText" :: MisoString) (inspect x :: MisoString)
 
-shareText :: (Show a, Data a) => a -> JSM (model -> model)
-shareText x = do
+shareText :: (Show a, Data a) => a -> model -> JSM model
+shareText x st = do
   let txt = inspect x
   unless (txt == mempty) $ do
     prom <- JS.global ^. JS.js1 ("shareText" :: MisoString) txt
     success <- JS.function $ \_ _ _ -> popupText @MisoString "Copied!"
     failure <- JS.function $ \_ _ _ -> popupText @MisoString "Failed to copy!"
     void $ prom ^. JS.js2 ("then" :: MisoString) success failure
-  pure id
+  pure st
 
 addFieldPair ::
-  ATraversal' model [FieldPair DynamicField Unique] -> JSM (model -> model)
-addFieldPair optic = do
-  popupText @MisoString "Added note!"
+  ATraversal' model [FieldPair DynamicField Unique] -> model -> JSM model
+addFieldPair optic st = do
   item <- newFieldPair mempty $ DynamicFieldText mempty
-  pure (& cloneTraversal optic %~ (<> [item]))
+  popupText @MisoString "Added note!"
+  pure $ st & cloneTraversal optic %~ (<> [item])
 
-addAsset :: ATraversal' model [Asset Unique] -> JSM (model -> model)
-addAsset optic = do
-  popupText @MisoString "Added asset!"
+addAsset :: ATraversal' model [Asset Unique] -> model -> JSM model
+addAsset optic st = do
   let cur = CurrencyInfo (CurrencyCode "usd") mempty
   item <- newAsset "Price" 0 cur
-  pure (& cloneTraversal optic %~ (<> [item]))
+  popupText @MisoString "Added asset!"
+  pure $ st & cloneTraversal optic %~ (<> [item])
 
 addPaymentMethod ::
-  ATraversal' model [PaymentMethod Unique] ->
-  JSM (model -> model)
-addPaymentMethod optic = do
-  popupText @MisoString "Added payment!"
+  ATraversal' model [PaymentMethod Unique] -> model -> JSM model
+addPaymentMethod optic st = do
   let cur = CurrencyInfo (CurrencyCode "btc") mempty
   item <- newPaymentMethod cur $ Just mempty
-  pure (& cloneTraversal optic %~ (<> [item]))
+  popupText @MisoString "Added payment!"
+  pure $ st & cloneTraversal optic %~ (<> [item])
 
-moveUp :: ATraversal' model [item] -> Int -> JSM (model -> model)
-moveUp optic idx = do
+moveUp :: ATraversal' model [item] -> Int -> model -> JSM model
+moveUp optic idx st = do
   popupText @MisoString $ "Moved #" <> inspect (idx + 1) <> " up!"
-  pure (& cloneTraversal optic %~ swapAt (idx - 1) idx)
+  pure $ st & cloneTraversal optic %~ swapAt (idx - 1) idx
 
-moveDown :: ATraversal' model [item] -> Int -> JSM (model -> model)
-moveDown optic idx = do
+moveDown :: ATraversal' model [item] -> Int -> model -> JSM model
+moveDown optic idx st = do
   popupText @MisoString $ "Moved #" <> inspect (idx + 1) <> " down!"
-  pure (& cloneTraversal optic %~ swapAt idx (idx + 1))
+  pure $ st & cloneTraversal optic %~ swapAt idx (idx + 1)
 
-removeAt :: ATraversal' model [a] -> Int -> JSM (model -> model)
-removeAt optic idx = do
+removeAt :: ATraversal' model [a] -> Int -> model -> JSM model
+removeAt optic idx st = do
   popupText @MisoString $ "Removed #" <> inspect (idx + 1) <> "!"
-  pure (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+  pure $ st & cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..])
   where
     updater loc el =
       if loc == idx
@@ -86,15 +85,16 @@ duplicateAt ::
   ) =>
   ATraversal' model [item] ->
   Int ->
-  JSM (model -> model)
-duplicateAt optic idx = do
-  popupText @MisoString $ "Duplicated #" <> inspect (idx + 1) <> "!"
+  model ->
+  JSM model
+duplicateAt optic idx st = do
   duplicator <- newUniqueDuplicator @MisoString
   let updater loc el =
         if loc == idx
           then [el, closed $ duplicator el]
           else [el]
-  pure (& cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..]))
+  popupText @MisoString $ "Duplicated #" <> inspect (idx + 1) <> "!"
+  pure $ st & cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..])
   where
     closed :: item -> item
     closed = Syb.everywhere $ Syb.mkT $ const Closed
@@ -116,13 +116,13 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-openBrowserPage :: URI -> JSM (model -> model)
-openBrowserPage uri = do
+openBrowserPage :: URI -> model -> JSM model
+openBrowserPage uri st = do
   void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
-  pure id
+  pure st
 
-enterOrEscapeBlur :: Uid -> KeyCode -> JSM (model -> model)
-enterOrEscapeBlur uid (KeyCode code) = do
+enterOrEscapeBlur :: Uid -> KeyCode -> model -> JSM model
+enterOrEscapeBlur uid (KeyCode code) st = do
   let enterOrEscape = [13, 27] :: [Int]
   when (code `elem` enterOrEscape)
     . void
@@ -130,4 +130,4 @@ enterOrEscapeBlur uid (KeyCode code) = do
     $ "document.getElementById('"
     <> htmlUid uid
     <> "').getElementsByTagName('input')[0].blur();"
-  pure id
+  pure st

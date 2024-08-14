@@ -30,7 +30,7 @@ swapCurrencies =
     ]
   where
     onClickAction =
-      pureUpdate 0 $ \st ->
+      pureUpdate 0 $ \st -> do
         let baseCurrency =
               st
                 ^. #modelState
@@ -38,27 +38,28 @@ swapCurrencies =
                 . #stDocTopMoney
                 . #moneyCurrency
                 . #currencyOutput
-            quoteCurrency =
+        let quoteCurrency =
               st
                 ^. #modelState
                 . #stDoc
                 . #stDocBottomMoney
                 . #moneyCurrency
                 . #currencyOutput
-         in st
-              & #modelState
-              . #stDoc
-              . #stDocTopMoney
-              . #moneyCurrency
-              . #currencyOutput
-              .~ quoteCurrency
-              & #modelState
-              . #stDoc
-              . #stDocBottomMoney
-              . #moneyCurrency
-              . #currencyOutput
-              .~ baseCurrency
-              & #modelState
-              . #stDoc
-              . #stDocTopOrBottom
-              .~ Top
+        pure
+          $ st
+          & #modelState
+          . #stDoc
+          . #stDocTopMoney
+          . #moneyCurrency
+          . #currencyOutput
+          .~ quoteCurrency
+          & #modelState
+          . #stDoc
+          . #stDocBottomMoney
+          . #moneyCurrency
+          . #currencyOutput
+          .~ baseCurrency
+          & #modelState
+          . #stDoc
+          . #stDocTopOrBottom
+          .~ Top

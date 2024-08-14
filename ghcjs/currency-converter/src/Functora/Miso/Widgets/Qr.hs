@@ -18,7 +18,7 @@ import qualified Material.TextArea as TextArea
 
 data Args model action = Args
   { argsValue :: MisoString,
-    argsAction :: JSM (model -> model) -> action
+    argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 

@@ -76,7 +76,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                   %~ unQrCode,
               Qr.argsAction =
                 PushUpdate
-                  . fmap InstantChanItem
+                  . InstantChanItem
             }
           ( Qr.defOpts @Action
               & #optsExtraWidgets
@@ -101,7 +101,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
         <> Qr.qr
           Qr.Args
             { Qr.argsValue = toMisoString $ URI.render uri,
-              Qr.argsAction = PushUpdate . fmap InstantChanItem
+              Qr.argsAction = PushUpdate . InstantChanItem
             }
           ( Qr.defOpts @Action
               & #optsExtraWidgets

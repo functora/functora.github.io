@@ -16,7 +16,7 @@ import qualified Material.Theme as Theme
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model [Asset Unique],
-    argsAction :: JSM (model -> model) -> action,
+    argsAction :: (model -> JSM model) -> action,
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)

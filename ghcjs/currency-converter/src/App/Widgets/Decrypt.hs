@@ -30,80 +30,77 @@ decrypt st =
           }
         ( Field.defOpts @Model @Action
             & #optsOnKeyDownAction
-            .~ onKeyDownAction st
+            .~ onKeyDownAction
         ),
     Grid.mediumCell
       $ Button.raised
         ( Button.config
-            & Button.setOnClick (pushUpdate $ decryptDoc st)
+            & Button.setOnClick (pushUpdate decryptDoc)
             & Button.setIcon (Just "login")
             & Button.setAttributes [class_ "fill"]
         )
         "Open"
   ]
 
-decryptDoc :: Model -> JSM (Model -> Model)
-decryptDoc Model {modelState = St {stCpt = Nothing}} = do
+decryptDoc :: Model -> JSM Model
+decryptDoc st@Model {modelState = St {stCpt = Nothing}} = do
   Jsm.popupText @MisoString "Nothing to decrypt!"
-  pure id
-decryptDoc Model {modelState = St {stCpt = Just {}}} = do
-  rnd0 <- liftIO Random.newStdGen
-  pure $ \case
-    st@Model {modelState = St {stCpt = Nothing}} -> st
-    st@Model {modelState = St {stCpt = Just cpt}} ->
-      let ikm = st ^. #modelState . #stIkm . #fieldOutput
-          aes =
-            Aes.drvSomeAesKey @Aes.Word256
-              $ (st ^. #modelState . #stKm)
-              & #kmIkm
-              .~ Ikm (encodeUtf8 ikm)
-          eDoc = do
-            bDoc <-
-              maybe (Left "Incorrect password!") Right
-                $ Aes.unHmacDecrypt @ByteString aes cpt
-            first thd3
-              $ decodeBinary bDoc
-       in case eDoc of
-            Left {} ->
-              -- Jsm.popupText e
-              st
-            Right iDoc ->
-              fst . flip runState rnd0 $ do
-                uDoc <-
-                  btraverse
-                    ( \(Identity val) -> do
-                        rnd1 <- get
-                        let (uid, rnd2) = randomByteStringPure 32 rnd1
-                        put rnd2
-                        pure $ Unique (Uid uid) val
-                    )
-                    iDoc
-                pure
-                  $ st
-                  & #modelState
-                  . #stCpt
-                  .~ Nothing
-                  & #modelState
-                  . #stIkm
-                  . #fieldInput
-                  . #uniqueValue
-                  .~ ikm
-                  & #modelState
-                  . #stIkm
-                  . #fieldOutput
-                  .~ ikm
-                  & #modelState
-                  . #stDoc
-                  .~ uDoc
-                  & #modelState
-                  . #stPre
-                  .~ (st ^. #modelState . #stPre)
-                  & #modelState
-                  . #stScreen
-                  .~ unQrCode (st ^. #modelState . #stScreen)
+  pure st
+decryptDoc st@Model {modelState = St {stCpt = Just cpt}} = do
+  let ikm = st ^. #modelState . #stIkm . #fieldOutput
+  let aes =
+        Aes.drvSomeAesKey @Aes.Word256
+          $ (st ^. #modelState . #stKm)
+          & #kmIkm
+          .~ Ikm (encodeUtf8 ikm)
+  let eDoc = do
+        bDoc <-
+          maybe (Left "Incorrect password!") Right
+            $ Aes.unHmacDecrypt @ByteString aes cpt
+        first thd3
+          $ decodeBinary bDoc
+  case eDoc of
+    Left e -> do
+      Jsm.popupText e
+      pure st
+    Right iDoc -> do
+      rnd0 <- liftIO Random.newStdGen
+      pure . fst . flip runState rnd0 $ do
+        uDoc <-
+          btraverse
+            ( \(Identity val) -> do
+                rnd1 <- get
+                let (uid, rnd2) = randomByteStringPure 32 rnd1
+                put rnd2
+                pure $ Unique (Uid uid) val
+            )
+            iDoc
+        pure
+          $ st
+          & #modelState
+          . #stCpt
+          .~ Nothing
+          & #modelState
+          . #stIkm
+          . #fieldInput
+          . #uniqueValue
+          .~ ikm
+          & #modelState
+          . #stIkm
+          . #fieldOutput
+          .~ ikm
+          & #modelState
+          . #stDoc
+          .~ uDoc
+          & #modelState
+          . #stPre
+          .~ (st ^. #modelState . #stPre)
+          & #modelState
+          . #stScreen
+          .~ unQrCode (st ^. #modelState . #stScreen)
 
-onKeyDownAction :: Model -> Uid -> KeyCode -> JSM (Model -> Model)
-onKeyDownAction st uid code =
+onKeyDownAction :: Uid -> KeyCode -> Model -> JSM Model
+onKeyDownAction uid code =
   if code == KeyCode 13
-    then decryptDoc st
+    then decryptDoc
     else Jsm.enterOrEscapeBlur uid code

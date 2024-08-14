@@ -30,7 +30,7 @@ swapAmounts =
       "Swap amounts"
   where
     onClickAction =
-      pureUpdate 0 $ \st ->
+      pureUpdate 0 $ \st -> do
         let baseInput =
               st
                 ^. #modelState
@@ -39,14 +39,14 @@ swapAmounts =
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
-            baseOutput =
+        let baseOutput =
               st
                 ^. #modelState
                 . #stDoc
                 . #stDocTopMoney
                 . #moneyAmount
                 . #fieldOutput
-            quoteInput =
+        let quoteInput =
               st
                 ^. #modelState
                 . #stDoc
@@ -54,41 +54,42 @@ swapAmounts =
                 . #moneyAmount
                 . #fieldInput
                 . #uniqueValue
-            quoteOutput =
+        let quoteOutput =
               st
                 ^. #modelState
                 . #stDoc
                 . #stDocBottomMoney
                 . #moneyAmount
                 . #fieldOutput
-         in st
-              & #modelState
-              . #stDoc
-              . #stDocTopMoney
-              . #moneyAmount
-              . #fieldInput
-              . #uniqueValue
-              .~ quoteInput
-              & #modelState
-              . #stDoc
-              . #stDocTopMoney
-              . #moneyAmount
-              . #fieldOutput
-              .~ quoteOutput
-              & #modelState
-              . #stDoc
-              . #stDocBottomMoney
-              . #moneyAmount
-              . #fieldInput
-              . #uniqueValue
-              .~ baseInput
-              & #modelState
-              . #stDoc
-              . #stDocBottomMoney
-              . #moneyAmount
-              . #fieldOutput
-              .~ baseOutput
-              & #modelState
-              . #stDoc
-              . #stDocTopOrBottom
-              .~ Top
+        pure
+          $ st
+          & #modelState
+          . #stDoc
+          . #stDocTopMoney
+          . #moneyAmount
+          . #fieldInput
+          . #uniqueValue
+          .~ quoteInput
+          & #modelState
+          . #stDoc
+          . #stDocTopMoney
+          . #moneyAmount
+          . #fieldOutput
+          .~ quoteOutput
+          & #modelState
+          . #stDoc
+          . #stDocBottomMoney
+          . #moneyAmount
+          . #fieldInput
+          . #uniqueValue
+          .~ baseInput
+          & #modelState
+          . #stDoc
+          . #stDocBottomMoney
+          . #moneyAmount
+          . #fieldOutput
+          .~ baseOutput
+          & #modelState
+          . #stDoc
+          . #stDocTopOrBottom
+          .~ Top

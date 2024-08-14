@@ -140,19 +140,22 @@ updateModel (InitUpdate ext) prevSt = do
               Misc.pushActionQueue
                 nextSt
                 . InstantChanItem
-                $ (& #modelFavMap %~ fav)
+                $ pure
+                . (& #modelFavMap %~ fav)
                 . (& #modelLoading .~ False)
             else Storage.selectStorage ("current-" <> vsn) $ \case
               Nothing ->
                 Misc.pushActionQueue nextSt
                   . InstantChanItem
-                  $ (& #modelFavMap %~ fav)
+                  $ pure
+                  . (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
                 finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
                 Misc.pushActionQueue nextSt
                   $ InstantChanItem
                     ( const
+                        . pure
                         $ finSt
                         & #modelFavMap
                         %~ fav
@@ -172,7 +175,9 @@ updateModel TimeUpdate st = do
         ct <- getCurrentTime
         unless (upToDate ct $ st ^. #modelOnlineAt)
           . Misc.pushActionQueue st
-          $ InstantChanItem id
+          . InstantChanItem
+          $ pure
+          . id
         pure Noop
     ]
 updateModel SyncInputs st = do
@@ -202,8 +207,8 @@ updateModel (ChanUpdate prevSt) _ = do
                 consoleLog e
                 pure $ prevSt & #modelLoading .~ False
             )
-            . evalModel
-            $ foldl (&) prevSt actions
+            $ evalModel
+            =<< foldlM (&) prevSt actions
         uri <- URI.mkURI $ shareLink nextSt
         Storage.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Storage.insertStorage ("current-" <> vsn) uri
@@ -214,18 +219,17 @@ updateModel (ChanUpdate prevSt) _ = do
               . spawnLink
               . deepseq (viewModel nextSt)
               . Misc.pushActionQueue prevSt
-              $ InstantChanItem (const $ nextSt & #modelLoading .~ False)
+              $ InstantChanItem (const . pure $ nextSt & #modelLoading .~ False)
             pure
               $ ChanUpdate (prevSt & #modelLoading .~ True)
           else
             pure
               $ ChanUpdate nextSt
     ]
-updateModel (PushUpdate newUpdater) st = do
+updateModel (PushUpdate updater) st = do
   batchEff
     st
     [ do
-        updater <- newUpdater
         Misc.pushActionQueue st updater
         pure Noop
     ]

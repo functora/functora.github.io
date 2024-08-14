@@ -21,7 +21,7 @@ import qualified Text.Fuzzy as Fuzzy
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Currency Unique),
-    argsAction :: JSM (model -> model) -> action,
+    argsAction :: (model -> JSM model) -> action,
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
@@ -89,8 +89,9 @@ selectCurrency
           ]
     where
       opened =
-        action . pure $ \prev ->
-          prev
+        action $ \prev ->
+          pure
+            $ prev
             --
             -- TODO : Widget first render is slow for some reason.
             -- Blocking view makes it look a bit better.
@@ -107,8 +108,9 @@ selectCurrency
             . #uniqueValue
             .~ mempty
       closed =
-        action . pure $ \prev ->
-          prev
+        action $ \prev ->
+          pure
+            $ prev
             & cloneTraversal optic
             . #currencyModalState
             .~ Closed
@@ -191,8 +193,9 @@ currencyListItemWidget
                 else Nothing
             )
           & ListItem.setOnClick
-            ( action . pure $ \st ->
-                st
+            ( action $ \st ->
+                pure
+                  $ st
                   -- & #modelLoading
                   -- .~ True
                   & cloneTraversal optic

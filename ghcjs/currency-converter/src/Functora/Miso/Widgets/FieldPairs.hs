@@ -14,7 +14,7 @@ import qualified Material.Typography as Typography
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model [FieldPair DynamicField Unique],
-    argsAction :: JSM (model -> model) -> action
+    argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 

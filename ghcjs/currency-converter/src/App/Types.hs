@@ -55,8 +55,8 @@ data Model = Model
     modelFavMap :: Map MisoString Fav,
     modelFavName :: Field MisoString Unique,
     modelCurrencies :: NonEmpty CurrencyInfo,
-    modelProducerQueue :: TChan (ChanItem (Model -> Model)),
-    modelConsumerQueue :: TChan (ChanItem (Model -> Model)),
+    modelProducerQueue :: TChan (ChanItem (Model -> JSM Model)),
+    modelConsumerQueue :: TChan (ChanItem (Model -> JSM Model)),
     modelOnlineAt :: UTCTime,
     modelWebOpts :: Web.Opts
   }
@@ -68,7 +68,7 @@ data Action
   | TimeUpdate
   | SyncInputs
   | ChanUpdate Model
-  | PushUpdate (JSM (ChanItem (Model -> Model)))
+  | PushUpdate (ChanItem (Model -> JSM Model))
 
 data St f = St
   { stKm :: Aes.Km,
@@ -149,18 +149,17 @@ unQrCode = \case
   QrCode sc -> unQrCode sc
   sc -> sc
 
-pushUpdate :: JSM (Model -> Model) -> Action
+pushUpdate :: (Model -> JSM Model) -> Action
 pushUpdate =
   PushUpdate
-    . fmap InstantChanItem
+    . InstantChanItem
 
 --
 -- NOTE : In most cases we don't need JSM.
 --
-pureUpdate :: Natural -> (Model -> Model) -> Action
+pureUpdate :: Natural -> (Model -> JSM Model) -> Action
 pureUpdate delay =
   PushUpdate
-    . pure
     . DelayedChanItem delay
 
 unShareUri ::
@@ -266,9 +265,9 @@ baseUri =
   "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
 #endif
 
-setScreenPure :: Screen -> Model -> Model
+setScreenPure :: Screen -> Model -> JSM Model
 setScreenPure sc =
-  (& #modelState . #stScreen .~ sc)
+  pure . (& #modelState . #stScreen .~ sc)
 
 setScreenAction :: Screen -> Action
 setScreenAction =

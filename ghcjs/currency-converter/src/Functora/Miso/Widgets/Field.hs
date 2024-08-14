@@ -48,7 +48,7 @@ data Opts model action = Opts
   { optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: MisoString,
-    optsExtraOnInput :: model -> model,
+    optsOnInputAction :: Maybe ((model -> JSM model) -> action),
     optsLeadingWidget :: Maybe (OptsWidget model action),
     optsTrailingWidget :: Maybe (OptsWidget model action),
     optsOnKeyDownAction :: Uid -> KeyCode -> model -> JSM model,
@@ -63,7 +63,7 @@ defOpts =
     { optsDisabled = False,
       optsFullWidth = True,
       optsPlaceholder = mempty,
-      optsExtraOnInput = id,
+      optsOnInputAction = Nothing,
       optsLeadingWidget = Just CopyWidget,
       optsTrailingWidget = Just ClearWidget,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
@@ -204,14 +204,13 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
           . #fieldOutput
           %~ maybe id (const . id) (getOutput prev)
     onInputAction txt =
-      action $ \prev ->
+      fromMaybe action (optsOnInputAction opts) $ \prev ->
         let next =
               prev
                 & cloneTraversal optic
                 . #fieldInput
                 . #uniqueValue
                 .~ txt
-                & (opts ^. #optsExtraOnInput)
          in pure
               $ next
               & cloneTraversal optic
@@ -282,22 +281,25 @@ fieldIcon lot args opts = \case
         Nothing -> pure . id
         Just txt -> Jsm.shareText txt
   ClearWidget ->
-    fieldIconSimple lot "close" mempty . action $ \prev -> do
-      focus
-        . toMisoString
-        $ htmlUid @MisoString uid
-      void
-        . JS.eval @MisoString
-        $ "var el = document.getElementById('"
-        <> htmlUid uid
-        <> "'); if (el) el.value = '';"
-      pure
-        $ prev
-        & cloneTraversal optic
-        . #fieldInput
-        . #uniqueValue
-        .~ mempty
-        & extraOnInput
+    fieldIconSimple lot "close" mempty
+      . ( fromMaybe action
+            $ optsOnInputAction opts
+        )
+      $ \prev -> do
+        focus
+          . toMisoString
+          $ htmlUid @MisoString uid
+        void
+          . JS.eval @MisoString
+          $ "var el = document.getElementById('"
+          <> htmlUid uid
+          <> "'); if (el) el.value = '';"
+        pure
+          $ prev
+          & cloneTraversal optic
+          . #fieldInput
+          . #uniqueValue
+          .~ mempty
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
@@ -358,7 +360,6 @@ fieldIcon lot args opts = \case
     st = args ^. #argsModel
     optic = args ^. #argsOptic
     action = args ^. #argsAction
-    extraOnInput = opts ^. #optsExtraOnInput
     uid =
       fromMaybe nilUid
         $ st

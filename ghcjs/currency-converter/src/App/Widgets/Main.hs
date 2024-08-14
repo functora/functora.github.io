@@ -123,13 +123,19 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.argsAction = pushUpdate
             }
           ( Field.defOpts @Model @Action
-              & #optsExtraOnInput
-              .~ ( &
-                    #modelState
-                      . #stDoc
-                      . #stDocTopOrBottom
-                      .~ loc
-                 )
+              & #optsOnInputAction
+              .~ Just
+                ( pureUpdate 300
+                    . ( >=>
+                          pure
+                            . ( &
+                                  #modelState
+                                    . #stDoc
+                                    . #stDocTopOrBottom
+                                    .~ loc
+                              )
+                      )
+                )
               & #optsPlaceholder
               .~ ( st
                     ^. cloneLens (Misc.getConverterCurrencyOptic loc)

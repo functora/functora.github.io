@@ -1,5 +1,8 @@
 module Functora.Miso.Widgets.Assets
-  ( assetsViewer,
+  ( Args (..),
+    Opts (..),
+    defOpts,
+    assetsViewer,
     assetsEditor,
   )
 where
@@ -20,6 +23,17 @@ data Args model action = Args
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
+
+newtype Opts model = Opts
+  { optsExtraOnClick :: model -> model
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts model
+defOpts =
+  Opts
+    { optsExtraOnClick = id
+    }
 
 assetsViewer :: Args model action -> [View action]
 assetsViewer args@Args {argsModel = st, argsOptic = optic} = do
@@ -62,18 +76,21 @@ assetViewer
               )
         )
 
-assetsEditor :: Args model action -> [View action]
-assetsEditor args@Args {argsModel = st, argsOptic = optic} = do
+assetsEditor :: Args model action -> Opts model -> [View action]
+assetsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  assetEditor args idx
+  assetEditor args opts idx
 
-assetEditor :: Args model action -> Int -> [View action]
+assetEditor :: Args model action -> Opts model -> Int -> [View action]
 assetEditor
   Args
     { argsModel = st,
       argsOptic = optic,
       argsAction = action,
       argsCurrencies = currencies
+    }
+  Opts
+    { optsExtraOnClick = extraOnClick
     }
   idx =
     [ Field.ratioField
@@ -125,6 +142,9 @@ assetEditor
                 . #moneyCurrency,
             Currency.argsAction = action,
             Currency.argsCurrencies = currencies
+          }
+        Currency.Opts
+          { Currency.optsExtraOnClick = extraOnClick
           }
     ]
       <> FieldPairs.fieldPairsEditor

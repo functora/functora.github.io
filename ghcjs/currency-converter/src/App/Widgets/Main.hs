@@ -145,6 +145,9 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Currency.argsAction = pushUpdate,
               Currency.argsCurrencies = #modelCurrencies
             }
+          Currency.Opts
+            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
+            }
    in ( FieldPairs.fieldPairsViewer
           FieldPairs.Args
             { FieldPairs.argsModel = st,

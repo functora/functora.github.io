@@ -1,5 +1,7 @@
 module Functora.Miso.Widgets.Currency
   ( Args (..),
+    Opts (..),
+    defOpts,
     selectCurrency,
   )
 where
@@ -26,13 +28,25 @@ data Args model action = Args
   }
   deriving stock (Generic)
 
-selectCurrency :: Args model action -> View action
+newtype Opts model = Opts
+  { optsExtraOnClick :: model -> model
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts model
+defOpts =
+  Opts
+    { optsExtraOnClick = id
+    }
+
+selectCurrency :: Args model action -> Opts model -> View action
 selectCurrency
   args@Args
     { argsModel = st,
       argsOptic = optic,
       argsAction = action
-    } =
+    }
+  opts@Opts {optsExtraOnClick = extraOnClick} =
     LayoutGrid.cell
       [ LayoutGrid.span6Desktop
       ]
@@ -58,7 +72,7 @@ selectCurrency
               )
               ( Dialog.dialogContent
                   Nothing
-                  [ currencyListWidget args
+                  [ currencyListWidget args opts
                   ]
                   [ div_
                       [ class_ "fill"
@@ -92,13 +106,6 @@ selectCurrency
         action $ \prev ->
           pure
             $ prev
-            --
-            -- TODO : Widget first render is slow for some reason.
-            -- Blocking view makes it look a bit better.
-            -- Need to make widget first render fast.
-            --
-            -- & #modelLoading
-            -- .~ True
             & cloneTraversal optic
             . #currencyModalState
             .~ Opened
@@ -107,6 +114,7 @@ selectCurrency
             . #fieldInput
             . #uniqueValue
             .~ mempty
+            & extraOnClick
       closed =
         action $ \prev ->
           pure
@@ -120,19 +128,20 @@ selectCurrency
             . #uniqueValue
             .~ mempty
 
-currencyListWidget :: Args model action -> View action
+currencyListWidget :: Args model action -> Opts model -> View action
 currencyListWidget
   args@Args
     { argsModel = st,
       argsOptic = optic,
       argsCurrencies = currencies
-    } =
+    }
+  opts =
     List.list
       List.config
-      ( currencyListItemWidget args current
+      ( currencyListItemWidget args opts current
           $ maybe (newFuzz current) NonEmpty.head matching
       )
-      . fmap (currencyListItemWidget args current)
+      . fmap (currencyListItemWidget args opts current)
       $ maybe mempty NonEmpty.tail matching
     where
       current =
@@ -175,6 +184,7 @@ currencyListWidget
 
 currencyListItemWidget ::
   Args model action ->
+  Opts model ->
   CurrencyInfo ->
   Fuzzy.Fuzzy CurrencyInfo Prelude.Text ->
   ListItem.ListItem action
@@ -182,6 +192,9 @@ currencyListItemWidget
   Args
     { argsOptic = optic,
       argsAction = action
+    }
+  Opts
+    { optsExtraOnClick = extraOnClick
     }
   current
   fuzz =
@@ -196,8 +209,6 @@ currencyListItemWidget
             ( action $ \st ->
                 pure
                   $ st
-                  -- & #modelLoading
-                  -- .~ True
                   & cloneTraversal optic
                   . #currencyModalState
                   .~ Closed
@@ -209,6 +220,7 @@ currencyListItemWidget
                   & cloneTraversal optic
                   . #currencyOutput
                   .~ item
+                  & extraOnClick
             )
       )
       [ Miso.rawHtml

@@ -191,10 +191,8 @@ updateModel (ChanUpdate prevSt) _ = do
   batchEff
     prevSt
     [ do
-        syncInputs prevSt
         --
-        -- NOTE : syncInputs twice, workaround to fix
-        -- slow rendering after screen switch.
+        -- NOTE : Workaround to fix slow rendering after screen switch.
         --
         sleepMilliSeconds 300
         pure SyncInputs,

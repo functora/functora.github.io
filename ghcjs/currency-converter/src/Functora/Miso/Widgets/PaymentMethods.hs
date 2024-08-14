@@ -1,5 +1,8 @@
 module Functora.Miso.Widgets.PaymentMethods
-  ( paymentMethodsViewer,
+  ( Args (..),
+    Opts (..),
+    defOpts,
+    paymentMethodsViewer,
     paymentMethodsEditor,
   )
 where
@@ -20,6 +23,17 @@ data Args model action = Args
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
+
+newtype Opts model = Opts
+  { optsExtraOnClick :: model -> model
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts model
+defOpts =
+  Opts
+    { optsExtraOnClick = id
+    }
 
 paymentMethodsViewer :: Args model action -> [View action]
 paymentMethodsViewer args@Args {argsModel = st, argsOptic = optic} = do
@@ -64,19 +78,22 @@ paymentMethodViewer
             FieldPairs.argsAction = action
           }
 
-paymentMethodsEditor :: Args model action -> [View action]
-paymentMethodsEditor args@Args {argsModel = st, argsOptic = optic} = do
+paymentMethodsEditor :: Args model action -> Opts model -> [View action]
+paymentMethodsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  paymentMethodEditor args idx
+  paymentMethodEditor args opts idx
 
 paymentMethodEditor ::
-  forall model action. Args model action -> Int -> [View action]
+  forall model action. Args model action -> Opts model -> Int -> [View action]
 paymentMethodEditor
   Args
     { argsModel = st,
       argsOptic = optic,
       argsAction = action,
       argsCurrencies = currencies
+    }
+  Opts
+    { optsExtraOnClick = extraOnClick
     }
   idx =
     [ Field.ratioField
@@ -126,6 +143,9 @@ paymentMethodEditor
                 . #moneyCurrency,
             Currency.argsAction = action,
             Currency.argsCurrencies = currencies
+          }
+        Currency.Opts
+          { Currency.optsExtraOnClick = extraOnClick
           }
     ]
       <> FieldPairs.fieldPairsEditor

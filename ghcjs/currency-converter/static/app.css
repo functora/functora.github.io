@@ -20,7 +20,7 @@ textarea {
   min-height: 72px;
 }
 
-.fill-inner > div {
+.mdc-select__anchor {
   width: 100%;
   min-width: 100%;
 }
@@ -31,10 +31,6 @@ textarea {
 
 .mdc-button {
   height: 56px;
-}
-
-.micro-margin-left {
-  margin-left: 6px;
 }
 
 @media print {

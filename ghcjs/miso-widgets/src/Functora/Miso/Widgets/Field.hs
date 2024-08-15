@@ -511,9 +511,6 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                               & Select.setLabel
                                 ( Just "Type"
                                 )
-                              & Select.setAttributes
-                                [ class_ "fill-inner"
-                                ]
                               & Select.setSelected
                                 ( args
                                     ^? #argsModel
@@ -641,9 +638,6 @@ selectTypeWidget args@Args {argsAction = action} optic =
             & Select.setLabel
               ( Just "Type"
               )
-            & Select.setAttributes
-              [ class_ "fill-inner"
-              ]
             & Select.setSelected
               ( args
                   ^? #argsModel

@@ -187,9 +187,6 @@ menu st =
                                     & Select.setLabel
                                       ( Just "Exchange rates"
                                       )
-                                    & Select.setAttributes
-                                      [ class_ "fill-inner"
-                                      ]
                                     & Select.setSelected
                                       ( Just
                                           $ st

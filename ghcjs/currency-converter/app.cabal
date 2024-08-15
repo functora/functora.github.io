@@ -35,23 +35,6 @@ common pkg
     App.Widgets.SwapAmounts
     App.Widgets.SwapCurrencies
     App.Widgets.Templates
-    Functora.Miso.Jsm
-    Functora.Miso.Prelude
-    Functora.Miso.Types
-    Functora.Miso.Widgets.Assets
-    Functora.Miso.Widgets.BrowserLink
-    Functora.Miso.Widgets.Chips
-    Functora.Miso.Widgets.Currency
-    Functora.Miso.Widgets.Dialog
-    Functora.Miso.Widgets.Field
-    Functora.Miso.Widgets.FieldPairs
-    Functora.Miso.Widgets.Frame
-    Functora.Miso.Widgets.Grid
-    Functora.Miso.Widgets.IconToggles
-    Functora.Miso.Widgets.Money
-    Functora.Miso.Widgets.PaymentMethods
-    Functora.Miso.Widgets.Qr
-    Functora.Miso.Widgets.Switch
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
@@ -124,6 +107,7 @@ common pkg
     , jsaddle
     , miso
     , miso-components
+    , miso-widgets
     , modern-uri
     , network-uri
     , qrcode-core

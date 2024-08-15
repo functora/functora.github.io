@@ -11,26 +11,7 @@ flag ghcid
 
 common pkg
   default-language:   Haskell2010
-  hs-source-dirs:     src
-  other-modules:
-    Functora.Miso.Jsm
-    Functora.Miso.Prelude
-    Functora.Miso.Types
-    Functora.Miso.Widgets.Assets
-    Functora.Miso.Widgets.BrowserLink
-    Functora.Miso.Widgets.Chips
-    Functora.Miso.Widgets.Currency
-    Functora.Miso.Widgets.Dialog
-    Functora.Miso.Widgets.Field
-    Functora.Miso.Widgets.FieldPairs
-    Functora.Miso.Widgets.Frame
-    Functora.Miso.Widgets.Grid
-    Functora.Miso.Widgets.IconToggles
-    Functora.Miso.Widgets.Money
-    Functora.Miso.Widgets.PaymentMethods
-    Functora.Miso.Widgets.Qr
-    Functora.Miso.Widgets.Switch
-
+  other-modules:      Paths_miso_widgets
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
     -Wno-missed-specialisations -Wno-missing-exported-signatures
@@ -110,14 +91,34 @@ common pkg
     , uglymemo
 
 library
-  import:        pkg
-  build-depends: containers
+  import:          pkg
+  hs-source-dirs:  src
+  build-depends:   containers
 
   if flag(ghcid)
     cpp-options: -DGHCID
 
   if (flag(ghcid) && impl(ghc >=8.10.7))
     ghc-options: -Wno-unused-packages
+
+  exposed-modules:
+    Functora.Miso.Jsm
+    Functora.Miso.Prelude
+    Functora.Miso.Types
+    Functora.Miso.Widgets.Assets
+    Functora.Miso.Widgets.BrowserLink
+    Functora.Miso.Widgets.Chips
+    Functora.Miso.Widgets.Currency
+    Functora.Miso.Widgets.Dialog
+    Functora.Miso.Widgets.Field
+    Functora.Miso.Widgets.FieldPairs
+    Functora.Miso.Widgets.Frame
+    Functora.Miso.Widgets.Grid
+    Functora.Miso.Widgets.IconToggles
+    Functora.Miso.Widgets.Money
+    Functora.Miso.Widgets.PaymentMethods
+    Functora.Miso.Widgets.Qr
+    Functora.Miso.Widgets.Switch
 
 test-suite miso-widgets-test
   import:         pkg
@@ -130,3 +131,27 @@ test-suite miso-widgets-test
     , hspec
     , optics-core
     , quickcheck-instances
+
+  if flag(ghcid)
+    hs-source-dirs: src
+    other-modules:
+      Functora.Miso.Jsm
+      Functora.Miso.Prelude
+      Functora.Miso.Types
+      Functora.Miso.Widgets.Assets
+      Functora.Miso.Widgets.BrowserLink
+      Functora.Miso.Widgets.Chips
+      Functora.Miso.Widgets.Currency
+      Functora.Miso.Widgets.Dialog
+      Functora.Miso.Widgets.Field
+      Functora.Miso.Widgets.FieldPairs
+      Functora.Miso.Widgets.Frame
+      Functora.Miso.Widgets.Grid
+      Functora.Miso.Widgets.IconToggles
+      Functora.Miso.Widgets.Money
+      Functora.Miso.Widgets.PaymentMethods
+      Functora.Miso.Widgets.Qr
+      Functora.Miso.Widgets.Switch
+
+  else
+    build-depends: miso-widgets

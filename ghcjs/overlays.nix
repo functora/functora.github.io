@@ -153,7 +153,13 @@
                   "logview";
                 miso-components =
                   self.callCabal2nix
-                  "miso-components" "${functora}/ghcjs/miso-components" {};
+                  "miso-components"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./miso-components/.gitignore
+                    ./miso-components
+                  )
+                  {};
                 functora-ghcjs =
                   self.callCabal2nix
                   "functora-ghcjs" "${functora}/pub/functora/src" {};

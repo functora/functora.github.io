@@ -9,7 +9,7 @@ let
     sha256 = "06w7wrjgccqnjfqrpc72p4j4b1841y65m5kplfqqlyryy2b4ci6l";
   };
   functora-miso = import "${functora}/pub/miso/default.nix" {
-    overlays = import ./overlays.nix {inherit functora;};
+    overlays = import ../overlays.nix {inherit functora;};
   };
   pkgs = functora-miso.pkgs;
   doCheck = pkgs.haskell.lib.doCheck;

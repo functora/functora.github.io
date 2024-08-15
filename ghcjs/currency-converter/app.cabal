@@ -37,7 +37,6 @@ common pkg
     App.Widgets.Templates
     Functora.Miso.Jsm
     Functora.Miso.Prelude
-    Functora.Miso.Storage
     Functora.Miso.Types
     Functora.Miso.Widgets.Assets
     Functora.Miso.Widgets.BrowserLink

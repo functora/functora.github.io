@@ -23,8 +23,8 @@ import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import qualified Functora.Aes as Aes
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
-import qualified Functora.Miso.Storage as Storage
 import Functora.Money hiding (Money)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
@@ -133,7 +133,7 @@ updateModel (InitUpdate ext) prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        Storage.selectStorage ("favorite-" <> vsn) $ \mFav -> do
+        Jsm.selectStorage ("favorite-" <> vsn) $ \mFav -> do
           let fav = mergeMap (const id) $ fromMaybe mempty mFav
           if isJust ext
             then
@@ -143,7 +143,7 @@ updateModel (InitUpdate ext) prevSt = do
                 $ pure
                 . (& #modelFavMap %~ fav)
                 . (& #modelLoading .~ False)
-            else Storage.selectStorage ("current-" <> vsn) $ \case
+            else Jsm.selectStorage ("current-" <> vsn) $ \case
               Nothing ->
                 Misc.pushActionQueue nextSt
                   . Instant
@@ -208,8 +208,8 @@ updateModel (ChanUpdate prevSt) _ = do
             $ evalModel
             =<< foldlM (&) prevSt actions
         uri <- URI.mkURI $ shareLink nextSt
-        Storage.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
-        Storage.insertStorage ("current-" <> vsn) uri
+        Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
+        Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
         if nextSt ^. #modelLoading
           then do

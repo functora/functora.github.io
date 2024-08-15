@@ -10,13 +10,17 @@ module Functora.Miso.Jsm
     duplicateAt,
     openBrowserPage,
     enterOrEscapeBlur,
+    insertStorage,
+    selectStorage,
   )
 where
 
 import qualified Data.Generics as Syb
+import qualified Data.Text.Lazy.Encoding as TL
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import Functora.Money (CurrencyCode (..), CurrencyInfo (..))
+import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
 import qualified Prelude ((!!))
@@ -131,3 +135,37 @@ enterOrEscapeBlur uid (KeyCode code) st = do
     <> htmlUid uid
     <> "').getElementsByTagName('input')[0].blur();"
   pure st
+
+insertStorage :: (ToJSON a) => MisoString -> a -> JSM ()
+insertStorage key raw = do
+  val <-
+    either throw (pure . toMisoString)
+      . TL.decodeUtf8'
+      . unTagged
+      $ encodeJson raw
+  void
+    $ JS.global
+    ^. JS.js2 @MisoString "insertStorage" key val
+
+selectStorage :: (FromJSON a) => MisoString -> (Maybe a -> JSM ()) -> JSM ()
+selectStorage key after = do
+  success <- JS.function $ \_ _ ->
+    handleAny (\e -> consoleLog e >> after Nothing) . \case
+      [val] -> do
+        valExist <- ghcjsPure $ JS.isTruthy val
+        if not valExist
+          then after Nothing
+          else do
+            raw <- JS.fromJSVal @Prelude.Text val
+            str <- maybe (throwString @MisoString "Storage bad type!") pure raw
+            res <- either throwString pure $ decodeJson str
+            after $ Just res
+      _ ->
+        throwString @MisoString "Storage bad argv!"
+  failure <-
+    JS.function $ \_ _ _ -> consoleLog @MisoString "Storage reader failure!"
+  prom <-
+    JS.global ^. JS.js1 @MisoString "selectStorage" key
+  void
+    $ prom
+    ^. JS.js2 @MisoString "then" success failure

@@ -30,9 +30,9 @@ module Functora.Miso.Types
     PaymentMethod (..),
     newPaymentMethod,
     Fav (..),
-    ChanItem (..),
-    chanItemDelay,
-    chanItemValue,
+    InstantOrDelayed (..),
+    instantOrDelayedTime,
+    instantOrDelayedValue,
     drainTChan,
     qsGet,
     uniqueToIdentity,
@@ -400,28 +400,28 @@ data Fav = Fav
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Fav
 
-data ChanItem a
-  = InstantChanItem a
-  | DelayedChanItem Natural a
+data InstantOrDelayed a
+  = Instant a
+  | Delayed Natural a
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-chanItemDelay :: ChanItem a -> Natural
-chanItemDelay = \case
-  InstantChanItem {} -> 0
-  DelayedChanItem delay _ -> delay
+instantOrDelayedTime :: InstantOrDelayed a -> Natural
+instantOrDelayedTime = \case
+  Instant {} -> 0
+  Delayed delay _ -> delay
 
-chanItemValue :: ChanItem a -> a
-chanItemValue = \case
-  InstantChanItem x -> x
-  DelayedChanItem _ x -> x
+instantOrDelayedValue :: InstantOrDelayed a -> a
+instantOrDelayedValue = \case
+  Instant x -> x
+  Delayed _ x -> x
 
-drainTChan :: (MonadIO m) => TChan (ChanItem a) -> m [a]
+drainTChan :: (MonadIO m) => TChan (InstantOrDelayed a) -> m [a]
 drainTChan chan = do
   item <- liftIO . atomically $ readTChan chan
   liftIO
-    . fmap ((chanItemValue item :) . reverse)
+    . fmap ((instantOrDelayedValue item :) . reverse)
     . drainInto []
-    $ chanItemDelay item
+    $ instantOrDelayedTime item
   where
     drainInto acc delay = do
       item <- atomically $ tryReadTChan chan
@@ -431,9 +431,9 @@ drainTChan chan = do
           sleepMilliSeconds $ from @Natural @Integer delay
           drainInto acc 0
         Just next ->
-          drainInto (chanItemValue next : acc)
+          drainInto (instantOrDelayedValue next : acc)
             . max delay
-            $ chanItemDelay next
+            $ instantOrDelayedTime next
 
 qsGet :: URI.RText 'URI.QueryKey -> [URI.QueryParam] -> Maybe Prelude.Text
 qsGet key =

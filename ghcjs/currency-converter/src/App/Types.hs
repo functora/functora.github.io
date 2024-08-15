@@ -10,8 +10,6 @@ module App.Types
     Screen (..),
     isQrCode,
     unQrCode,
-    pushUpdate,
-    pureUpdate,
     unShareUri,
     stUri,
     setScreenPure,
@@ -55,8 +53,8 @@ data Model = Model
     modelFavMap :: Map MisoString Fav,
     modelFavName :: Field MisoString Unique,
     modelCurrencies :: NonEmpty CurrencyInfo,
-    modelProducerQueue :: TChan (ChanItem (Model -> JSM Model)),
-    modelConsumerQueue :: TChan (ChanItem (Model -> JSM Model)),
+    modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
+    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
     modelOnlineAt :: UTCTime,
     modelWebOpts :: Web.Opts
   }
@@ -68,7 +66,7 @@ data Action
   | TimeUpdate
   | SyncInputs
   | ChanUpdate Model
-  | PushUpdate (ChanItem (Model -> JSM Model))
+  | PushUpdate (InstantOrDelayed (Model -> JSM Model))
 
 data St f = St
   { stKm :: Aes.Km,
@@ -148,19 +146,6 @@ unQrCode :: Screen -> Screen
 unQrCode = \case
   QrCode sc -> unQrCode sc
   sc -> sc
-
-pushUpdate :: (Model -> JSM Model) -> Action
-pushUpdate =
-  PushUpdate
-    . InstantChanItem
-
---
--- NOTE : In most cases we don't need JSM.
---
-pureUpdate :: Natural -> (Model -> JSM Model) -> Action
-pureUpdate delay =
-  PushUpdate
-    . DelayedChanItem delay
 
 unShareUri ::
   ( MonadThrow m,
@@ -271,7 +256,9 @@ setScreenPure sc =
 
 setScreenAction :: Screen -> Action
 setScreenAction =
-  pureUpdate 0 . setScreenPure
+  PushUpdate
+    . Instant
+    . setScreenPure
 
 shareLink :: forall a. (From Prelude.Text a) => Model -> a
 shareLink =

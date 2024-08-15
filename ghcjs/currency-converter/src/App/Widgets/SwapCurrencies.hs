@@ -30,7 +30,7 @@ swapCurrencies =
     ]
   where
     onClickAction =
-      pureUpdate 0 $ \st -> do
+      PushUpdate . Instant $ \st -> do
         let baseCurrency =
               st
                 ^. #modelState

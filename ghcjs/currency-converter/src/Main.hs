@@ -139,21 +139,21 @@ updateModel (InitUpdate ext) prevSt = do
             then
               Misc.pushActionQueue
                 nextSt
-                . InstantChanItem
+                . Instant
                 $ pure
                 . (& #modelFavMap %~ fav)
                 . (& #modelLoading .~ False)
             else Storage.selectStorage ("current-" <> vsn) $ \case
               Nothing ->
                 Misc.pushActionQueue nextSt
-                  . InstantChanItem
+                  . Instant
                   $ pure
                   . (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
                 finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
                 Misc.pushActionQueue nextSt
-                  $ InstantChanItem
+                  $ Instant
                     ( const
                         . pure
                         $ finSt
@@ -175,7 +175,7 @@ updateModel TimeUpdate st = do
         ct <- getCurrentTime
         unless (upToDate ct $ st ^. #modelOnlineAt)
           . Misc.pushActionQueue st
-          . InstantChanItem
+          . Instant
           $ pure
           . id
         pure Noop
@@ -217,7 +217,7 @@ updateModel (ChanUpdate prevSt) _ = do
               . spawnLink
               . deepseq (viewModel nextSt)
               . Misc.pushActionQueue prevSt
-              $ InstantChanItem (const . pure $ nextSt & #modelLoading .~ False)
+              $ Instant (const . pure $ nextSt & #modelLoading .~ False)
             pure
               $ ChanUpdate (prevSt & #modelLoading .~ True)
           else

@@ -26,7 +26,12 @@ getConverterCurrencyOptic = \case
   Top -> #modelState . #stDoc . #stDocTopMoney . #moneyCurrency
   Bottom -> #modelState . #stDoc . #stDocBottomMoney . #moneyCurrency
 
-pushActionQueue :: (MonadIO m) => Model -> ChanItem (Model -> JSM Model) -> m ()
+pushActionQueue ::
+  ( MonadIO m
+  ) =>
+  Model ->
+  InstantOrDelayed (Model -> JSM Model) ->
+  m ()
 pushActionQueue st =
   liftIO
     . atomically

@@ -19,14 +19,14 @@ decrypt st =
   [ Grid.bigCell
       . div_ mempty
       $ Field.dynamicFieldViewer
-        pushUpdate
+        (PushUpdate . Instant)
         (st ^. #modelState . #stPre),
     Grid.mediumCell
       $ Field.passwordField
         Field.Args
           { Field.argsModel = st,
             Field.argsOptic = #modelState . #stIkm,
-            Field.argsAction = pushUpdate
+            Field.argsAction = PushUpdate . Instant
           }
         ( Field.defOpts @Model @Action
             & #optsOnKeyDownAction
@@ -35,7 +35,7 @@ decrypt st =
     Grid.mediumCell
       $ Button.raised
         ( Button.config
-            & Button.setOnClick (pushUpdate decryptDoc)
+            & Button.setOnClick (PushUpdate $ Instant decryptDoc)
             & Button.setIcon (Just "login")
             & Button.setAttributes [class_ "fill"]
         )

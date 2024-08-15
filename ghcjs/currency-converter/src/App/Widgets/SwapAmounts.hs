@@ -30,7 +30,7 @@ swapAmounts =
       "Swap amounts"
   where
     onClickAction =
-      pureUpdate 0 $ \st -> do
+      PushUpdate . Instant $ \st -> do
         let baseInput =
               st
                 ^. #modelState

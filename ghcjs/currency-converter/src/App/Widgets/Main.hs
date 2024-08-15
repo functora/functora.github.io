@@ -62,7 +62,9 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
   case st ^. #modelState . #stScreen of
     QrCode sc ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer pushUpdate (st ^. #modelState . #stPre)
+        ( Field.dynamicFieldViewer
+            (PushUpdate . Instant)
+            (st ^. #modelState . #stPre)
         )
         <> Qr.qr
           Qr.Args
@@ -76,7 +78,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                   %~ unQrCode,
               Qr.argsAction =
                 PushUpdate
-                  . InstantChanItem
+                  . Instant
             }
           ( Qr.defOpts @Action
               & #optsExtraWidgets
@@ -96,12 +98,14 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
     Left e -> impureThrow e
     Right uri ->
       Header.headerWrapper
-        ( Field.dynamicFieldViewer pushUpdate (st ^. #modelState . #stPre)
+        ( Field.dynamicFieldViewer
+            (PushUpdate . Instant)
+            (st ^. #modelState . #stPre)
         )
         <> Qr.qr
           Qr.Args
             { Qr.argsValue = toMisoString $ URI.render uri,
-              Qr.argsAction = PushUpdate . InstantChanItem
+              Qr.argsAction = PushUpdate . Instant
             }
           ( Qr.defOpts @Action
               & #optsExtraWidgets
@@ -120,12 +124,13 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
           Field.Args
             { Field.argsModel = st,
               Field.argsOptic = Misc.getConverterAmountOptic loc,
-              Field.argsAction = pushUpdate
+              Field.argsAction = PushUpdate . Instant
             }
           ( Field.defOpts @Model @Action
               & #optsOnInputAction
               .~ Just
-                ( pureUpdate 300
+                ( PushUpdate
+                    . Delayed 300
                     . ( >=>
                           pure
                             . ( &
@@ -148,7 +153,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
           Currency.Args
             { Currency.argsModel = st,
               Currency.argsOptic = Misc.getConverterCurrencyOptic tob,
-              Currency.argsAction = pushUpdate,
+              Currency.argsAction = PushUpdate . Instant,
               Currency.argsCurrencies = #modelCurrencies
             }
           Currency.Opts
@@ -161,7 +166,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                 #modelState
                   . #stDoc
                   . #stDocFieldPairs,
-              FieldPairs.argsAction = pushUpdate
+              FieldPairs.argsAction = PushUpdate . Instant
             }
       )
         <> [ amountWidget' Top,
@@ -187,7 +192,7 @@ ratesWidget st =
     ]
     [ a_
         [ style_ [("cursor", "pointer")],
-          onClick . pushUpdate $ Jsm.shareText msg
+          onClick . PushUpdate . Instant $ Jsm.shareText msg
         ]
         [ Miso.text msg
         ]
@@ -265,7 +270,7 @@ tosWidget =
         BrowserLink.Args
           { BrowserLink.argsLink = "https://functora.github.io/",
             BrowserLink.argsLabel = "Functora",
-            BrowserLink.argsAction = pushUpdate
+            BrowserLink.argsAction = PushUpdate . Instant
           },
       Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",

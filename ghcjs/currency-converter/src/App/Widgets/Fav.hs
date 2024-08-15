@@ -36,7 +36,7 @@ fav st =
                           Field.Args
                             { Field.argsModel = st,
                               Field.argsOptic = #modelFavName,
-                              Field.argsAction = pushUpdate
+                              Field.argsAction = PushUpdate . Instant
                             }
                           ( Field.defOpts
                               & #optsPlaceholder
@@ -85,8 +85,8 @@ fav st =
           )
       ]
   where
-    closeAction = pureUpdate 0 $ pure . (& #modelFav .~ Closed)
-    saveAction = pureUpdate 0 $ \nextSt -> do
+    closeAction = PushUpdate . Instant $ pure . (& #modelFav .~ Closed)
+    saveAction = PushUpdate . Instant $ \nextSt -> do
       ct <- getCurrentTime
       let txt = makeFavName st
       let uri = either impureThrow id . URI.mkURI $ shareLink nextSt
@@ -105,7 +105,7 @@ fav st =
         & #modelFavMap
         . at nextFavName
         %~ (Just . maybe nextFav (& #favUri .~ uri))
-    deleteAction = pureUpdate 0 $ \nextSt -> do
+    deleteAction = PushUpdate . Instant $ \nextSt -> do
       let txt = makeFavName st
       let nextFavName = makeFavName nextSt
       Jsm.popupText
@@ -151,7 +151,7 @@ favItem st label Fav {favUri = uri} =
       )
       label
   where
-    openAction = pureUpdate 0 $ \nextSt -> do
+    openAction = PushUpdate . Instant $ \nextSt -> do
       --
       -- TODO : Implement here pure, less costly equivalent of newModel.
       --

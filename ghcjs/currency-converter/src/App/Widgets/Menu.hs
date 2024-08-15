@@ -45,7 +45,7 @@ menu st =
                 navItemLeft
                   $ a_
                     [ style_ [("cursor", "pointer")],
-                      onClick . pureUpdate 0 $ \next -> do
+                      onClick . PushUpdate . Instant $ \next -> do
                         doc <- liftIO newStDoc
                         pure
                           $ next
@@ -69,7 +69,7 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( pureUpdate 0 $ \next ->
+                          ( PushUpdate . Instant $ \next ->
                               pure
                                 $ next
                                 & #modelFav
@@ -89,7 +89,7 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( pureUpdate 0 $ \next -> do
+                          ( PushUpdate . Instant $ \next -> do
                               void
                                 $ JS.global
                                 ^. JS.js1
@@ -106,7 +106,8 @@ menu st =
                 IconButton.iconButton
                   ( IconButton.config
                       & IconButton.setOnClick
-                        ( pushUpdate
+                        ( PushUpdate
+                            . Instant
                             . Jsm.shareText
                             $ shareLink @MisoString st
                         )
@@ -161,7 +162,8 @@ menu st =
                             ( Button.config
                                 & Button.setDisabled disabled
                                 & Button.setOnClick
-                                  ( pushUpdate
+                                  ( PushUpdate
+                                      . Instant
                                       . Jsm.addFieldPair
                                       $ #modelState
                                       . #stDoc
@@ -196,7 +198,8 @@ menu st =
                                       )
                                     & Select.setOnChange
                                       ( \x ->
-                                          pureUpdate 0
+                                          PushUpdate
+                                            . Instant
                                             $ pure
                                             . ( &
                                                   #modelState
@@ -222,7 +225,7 @@ menu st =
                             Field.Args
                               { Field.argsModel = st,
                                 Field.argsOptic = #modelState . #stPre,
-                                Field.argsAction = pushUpdate
+                                Field.argsAction = PushUpdate . Instant
                               }
                             ( Field.defOpts @Model @Action
                                 & #optsDisabled
@@ -252,7 +255,7 @@ menu st =
                             Field.Args
                               { Field.argsModel = st,
                                 Field.argsOptic = #modelState . #stIkm,
-                                Field.argsAction = pushUpdate
+                                Field.argsAction = PushUpdate . Instant
                               }
                             ( Field.defOpts
                                 & #optsDisabled
@@ -271,7 +274,7 @@ menu st =
                                     #modelState
                                       . #stDoc
                                       . #stDocFieldPairs,
-                                  FieldPairs.argsAction = pushUpdate
+                                  FieldPairs.argsAction = PushUpdate . Instant
                                 }
                        )
                     <> linksWidget st
@@ -289,10 +292,11 @@ menu st =
             )
         ]
   where
-    opened = pureUpdate 0 $ pure . (& #modelMenu .~ Opened)
-    closed = pureUpdate 0 $ pure . (& #modelMenu .~ Closed)
+    opened = PushUpdate . Instant $ pure . (& #modelMenu .~ Opened)
+    closed = PushUpdate . Instant $ pure . (& #modelMenu .~ Closed)
     screen next =
-      pureUpdate 0
+      PushUpdate
+        . Instant
         $ pure
         . (& #modelMenu .~ Closed)
         . (& #modelLoading .~ isQrCode next)
@@ -372,21 +376,27 @@ linksWidget st =
                                   BrowserLink.Args
                                     { BrowserLink.argsLink = testGroupLink,
                                       BrowserLink.argsLabel = "closed beta",
-                                      BrowserLink.argsAction = pushUpdate
+                                      BrowserLink.argsAction =
+                                        PushUpdate
+                                          . Instant
                                     },
                                 text " group and then install the app from ",
                                 BrowserLink.browserLink
                                   BrowserLink.Args
                                     { BrowserLink.argsLink = googlePlayLink,
                                       BrowserLink.argsLabel = "Google Play",
-                                      BrowserLink.argsAction = pushUpdate
+                                      BrowserLink.argsAction =
+                                        PushUpdate
+                                          . Instant
                                     },
                                 text ", or download the ",
                                 BrowserLink.browserLink
                                   BrowserLink.Args
                                     { BrowserLink.argsLink = apkLink,
                                       BrowserLink.argsLabel = "APK file",
-                                      BrowserLink.argsAction = pushUpdate
+                                      BrowserLink.argsAction =
+                                        PushUpdate
+                                          . Instant
                                     },
                                 text " directly."
                               ],
@@ -450,7 +460,7 @@ linksWidget st =
                               ( Button.config
                                   & Button.setIcon (Just "volunteer_activism")
                                   & Button.setOnClick
-                                    ( pureUpdate 0 $ \next -> do
+                                    ( PushUpdate . Instant $ \next -> do
                                         doc <- liftIO Templates.newDonateDoc
                                         pure
                                           $ next
@@ -485,10 +495,11 @@ linksWidget st =
             ]
        )
   where
-    openWidget = pureUpdate 0 $ pure . (& #modelLinks .~ Opened)
-    closeWidget = pureUpdate 0 $ pure . (& #modelLinks .~ Closed)
+    openWidget = PushUpdate . Instant $ pure . (& #modelLinks .~ Opened)
+    closeWidget = PushUpdate . Instant $ pure . (& #modelLinks .~ Closed)
     openBrowser =
-      pushUpdate
+      PushUpdate
+        . Instant
         . Jsm.openBrowserPage
         . either impureThrow id
         . URI.mkURI

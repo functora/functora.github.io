@@ -7,6 +7,7 @@ import App.Types
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
 import Functora.Cfg
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Field as Field
@@ -37,7 +38,7 @@ decrypt st =
         ( Button.config
             & Button.setOnClick (PushUpdate $ Instant decryptDoc)
             & Button.setIcon (Just "login")
-            & Button.setAttributes [class_ "fill"]
+            & Button.setAttributes [Css.fullWidth]
         )
         "Open"
   ]

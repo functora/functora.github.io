@@ -9,6 +9,7 @@ where
 import qualified Codec.QRCode as QRCode
 import qualified Data.MemoUgly as Memo
 import qualified Data.Text.Lazy as TL
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -44,7 +45,7 @@ qr args opts
             ( \img ->
                 Grid.bigCell
                   $ img_
-                    [ class_ "fill",
+                    [ Css.fullWidth,
                       src_ img
                     ]
             )
@@ -81,7 +82,7 @@ qr args opts
               $ Button.raised
                 ( Button.config
                     & Button.setIcon (Just "share")
-                    & Button.setAttributes [class_ "fill"]
+                    & Button.setAttributes [Css.fullWidth]
                     & Button.setOnClick (action $ Jsm.shareText txt)
                 )
                 "Copy"

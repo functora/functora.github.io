@@ -3,6 +3,7 @@ module Functora.Miso.Widgets.Frame
   )
 where
 
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import qualified Material.DataTable as DataTable
 import qualified Material.LayoutGrid as LayoutGrid
@@ -13,7 +14,7 @@ frame content =
   DataTable.dataTable
     ( DataTable.config
         & DataTable.setAttributes
-          [ class_ "fill",
+          [ Css.fullWidth,
             class_ "mdc-text-field--outlined"
           ]
     )

@@ -7,6 +7,7 @@ import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified App.Widgets.SwapCurrencies as SwapCurrencies
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -85,7 +86,7 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
               .~ [ Button.raised
                     ( Button.config
                         & Button.setIcon (Just "login")
-                        & Button.setAttributes [class_ "fill"]
+                        & Button.setAttributes [Css.fullWidth]
                         & Button.setOnClick (setScreenAction $ unQrCode sc)
                     )
                     "Open"
@@ -112,7 +113,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               .~ [ Button.raised
                     ( Button.config
                         & Button.setIcon (Just "login")
-                        & Button.setAttributes [class_ "fill"]
+                        & Button.setAttributes [Css.fullWidth]
                         & Button.setOnClick (setScreenAction $ unQrCode sc)
                     )
                     "Open"

@@ -7,6 +7,7 @@ import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Field as Field
@@ -56,7 +57,7 @@ fav st =
                               & Button.setIcon (Just "favorite")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
-                                  class_ "fill"
+                                  Css.fullWidth
                                 ]
                           )
                           "Save",
@@ -67,7 +68,7 @@ fav st =
                               & Button.setIcon (Just "delete_forever")
                               & Button.setAttributes
                                 [ Theme.secondaryBg,
-                                  class_ "fill"
+                                  Css.fullWidth
                                 ]
                           )
                           "Delete",
@@ -76,7 +77,7 @@ fav st =
                           ( Button.config
                               & Button.setOnClick closeAction
                               & Button.setIcon (Just "arrow_back")
-                              & Button.setAttributes [class_ "fill"]
+                              & Button.setAttributes [Css.fullWidth]
                           )
                           "Back"
                      ]
@@ -147,7 +148,7 @@ favItem st label Fav {favUri = uri} =
     $ Button.raised
       ( Button.config
           & Button.setOnClick openAction
-          & Button.setAttributes [class_ "fill"]
+          & Button.setAttributes [Css.fullWidth]
       )
       label
   where

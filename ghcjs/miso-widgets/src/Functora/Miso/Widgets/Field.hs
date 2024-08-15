@@ -15,6 +15,7 @@ module Functora.Miso.Widgets.Field
   )
 where
 
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
@@ -163,7 +164,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                 onBlur onBlurAction
               ]
                 <> ( if opts ^. #optsFullWidth
-                      then [class_ "fill"]
+                      then [Css.fullWidth]
                       else mempty
                    )
                 <> ( opts ^. #optsExtraAttributes
@@ -420,7 +421,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       ( Just "add"
                       )
                     & Button.setAttributes
-                      [ class_ "fill",
+                      [ Css.fullWidth,
                         Theme.secondaryBg
                       ]
                 )
@@ -435,7 +436,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       ( Just "keyboard_double_arrow_down"
                       )
                     & Button.setAttributes
-                      [ class_ "fill",
+                      [ Css.fullWidth,
                         Theme.secondaryBg
                       ]
                 )
@@ -450,7 +451,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       ( Just "keyboard_double_arrow_up"
                       )
                     & Button.setAttributes
-                      [ class_ "fill",
+                      [ Css.fullWidth,
                         Theme.secondaryBg
                       ]
                 )
@@ -465,7 +466,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       ( Just "library_add"
                       )
                     & Button.setAttributes
-                      [ class_ "fill",
+                      [ Css.fullWidth,
                         Theme.secondaryBg
                       ]
                 )
@@ -480,7 +481,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       ( Just "delete_forever"
                       )
                     & Button.setAttributes
-                      [ class_ "fill",
+                      [ Css.fullWidth,
                         Theme.secondaryBg
                       ]
                 )
@@ -565,7 +566,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                           ( Just "keyboard_double_arrow_down"
                           )
                         & Button.setAttributes
-                          [ class_ "fill",
+                          [ Css.fullWidth,
                             Theme.secondaryBg
                           ]
                     )
@@ -580,7 +581,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                           ( Just "keyboard_double_arrow_up"
                           )
                         & Button.setAttributes
-                          [ class_ "fill",
+                          [ Css.fullWidth,
                             Theme.secondaryBg
                           ]
                     )
@@ -595,7 +596,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                           ( Just "library_add"
                           )
                         & Button.setAttributes
-                          [ class_ "fill",
+                          [ Css.fullWidth,
                             Theme.secondaryBg
                           ]
                     )
@@ -610,7 +611,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                           ( Just "delete_forever"
                           )
                         & Button.setAttributes
-                          [ class_ "fill",
+                          [ Css.fullWidth,
                             Theme.secondaryBg
                           ]
                     )
@@ -720,7 +721,7 @@ constTextField txt opts action =
           )
         & TextField.setAttributes
           ( ( if opts ^. #optsFullWidth
-                then [class_ "fill"]
+                then [Css.fullWidth]
                 else mempty
             )
               <> ( opts ^. #optsExtraAttributes
@@ -771,7 +772,7 @@ plain out widget =
     else
       [ span_
           [ Typography.typography,
-            class_ "fill",
+            Css.fullWidth,
             class_ "mdc-text-field",
             class_ "mdc-text-field--filled",
             style_
@@ -796,7 +797,7 @@ header txt =
     else
       [ div_
           [ Typography.headline5,
-            class_ "fill",
+            Css.fullWidth,
             style_ [("text-align", "center")]
           ]
           [ text txt

@@ -6,6 +6,7 @@ where
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Widgets.Templates as Templates
+import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -151,7 +152,7 @@ menu st =
                                   )
                                 & Button.setAttributes
                                   [ Theme.secondaryBg,
-                                    class_ "fill"
+                                    Css.fullWidth
                                   ]
                             )
                           $ if isQrCode sc
@@ -174,7 +175,7 @@ menu st =
                                   )
                                 & Button.setAttributes
                                   [ Theme.secondaryBg,
-                                    class_ "fill"
+                                    Css.fullWidth
                                   ]
                             )
                             "Note",
@@ -283,7 +284,7 @@ menu st =
                             ( Button.config
                                 & Button.setOnClick closed
                                 & Button.setIcon (Just "arrow_back")
-                                & Button.setAttributes [class_ "fill"]
+                                & Button.setAttributes [Css.fullWidth]
                             )
                             "Back"
                        ]
@@ -351,7 +352,7 @@ linksWidget st =
         ( Button.config
             & Button.setOnClick openWidget
             & Button.setIcon (Just "android")
-            & Button.setAttributes [class_ "fill"]
+            & Button.setAttributes [Css.fullWidth]
         )
         "App"
   ]
@@ -407,7 +408,7 @@ linksWidget st =
                                   & Button.setOnClick (openBrowser testGroupLink)
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Join testing (closed beta)",
@@ -418,7 +419,7 @@ linksWidget st =
                                   & Button.setOnClick (openBrowser googlePlayLink)
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Google Play (closed beta)",
@@ -429,7 +430,7 @@ linksWidget st =
                                   & Button.setOnClick (openBrowser apkLink)
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Download APK",
@@ -440,7 +441,7 @@ linksWidget st =
                                   & Button.setOnClick (openBrowser sourceLink)
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Source",
@@ -451,7 +452,7 @@ linksWidget st =
                                   & Button.setOnClick (openBrowser functoraLink)
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Author",
@@ -476,7 +477,7 @@ linksWidget st =
                                     )
                                   & Button.setAttributes
                                     [ Theme.secondaryBg,
-                                      class_ "fill"
+                                      Css.fullWidth
                                     ]
                               )
                               "Donate",
@@ -485,7 +486,7 @@ linksWidget st =
                               ( Button.config
                                   & Button.setOnClick closeWidget
                                   & Button.setIcon (Just "arrow_back")
-                                  & Button.setAttributes [class_ "fill"]
+                                  & Button.setAttributes [Css.fullWidth]
                               )
                               "Back"
                         ]

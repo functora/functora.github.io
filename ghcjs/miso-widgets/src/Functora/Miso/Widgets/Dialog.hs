@@ -4,6 +4,7 @@ module Functora.Miso.Widgets.Dialog
   )
 where
 
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -38,7 +39,7 @@ dialog args =
                           ( Button.config
                               & action Button.setOnClick
                               & Button.setIcon (Just "arrow_back")
-                              & Button.setAttributes [class_ "fill"]
+                              & Button.setAttributes [Css.fullWidth]
                           )
                           "Back"
                      ]

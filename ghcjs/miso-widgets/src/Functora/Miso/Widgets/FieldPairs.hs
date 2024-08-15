@@ -5,6 +5,7 @@ module Functora.Miso.Widgets.FieldPairs
   )
 where
 
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
@@ -34,7 +35,7 @@ fieldPairViewer args pair =
         [ cell
             $ strong_
               [ Typography.typography,
-                class_ "fill",
+                Css.fullWidth,
                 class_ "mdc-text-field",
                 class_ "mdc-text-field--filled",
                 style_

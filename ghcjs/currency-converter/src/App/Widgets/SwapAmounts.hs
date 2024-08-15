@@ -4,6 +4,7 @@ module App.Widgets.SwapAmounts
 where
 
 import App.Types
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
@@ -22,7 +23,7 @@ swapAmounts =
           & Button.setIcon (Just "swap_horizontal_circle")
           & Button.setOnClick onClickAction
           & Button.setAttributes
-            [ class_ "fill",
+            [ Css.fullWidth,
               class_ "no-print",
               Theme.secondaryBg
             ]

@@ -7,6 +7,7 @@ module Functora.Miso.Widgets.Currency
 where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
@@ -53,7 +54,7 @@ selectCurrency
       $ [ Button.raised
             ( Button.setOnClick opened
                 . Button.setAttributes
-                  [ class_ "fill"
+                  [ Css.fullWidth
                   ]
                 $ Button.config
             )
@@ -75,7 +76,7 @@ selectCurrency
                   [ currencyListWidget args opts
                   ]
                   [ div_
-                      [ class_ "fill"
+                      [ Css.fullWidth
                       ]
                       [ Field.textField
                           Field.Args
@@ -93,7 +94,7 @@ selectCurrency
                           ( Button.config
                               & Button.setOnClick closed
                               & Button.setAttributes
-                                [ class_ "fill"
+                                [ Css.fullWidth
                                 ]
                           )
                           "Back"

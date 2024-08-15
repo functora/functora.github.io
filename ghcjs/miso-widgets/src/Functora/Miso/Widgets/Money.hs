@@ -6,6 +6,7 @@ module Functora.Miso.Widgets.Money
   )
 where
 
+import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
@@ -51,7 +52,7 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
           Just
             . cell
             $ div_
-              [ class_ "fill",
+              [ Css.fullWidth,
                 style_ [("text-align", "center")]
               ]
               [ Field.constTextField

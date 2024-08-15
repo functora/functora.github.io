@@ -102,6 +102,7 @@ library
     ghc-options: -Wno-unused-packages
 
   exposed-modules:
+    Functora.Miso.Css
     Functora.Miso.Jsm
     Functora.Miso.Prelude
     Functora.Miso.Types
@@ -135,6 +136,7 @@ test-suite miso-widgets-test
   if flag(ghcid)
     hs-source-dirs: src
     other-modules:
+      Functora.Miso.Css
       Functora.Miso.Jsm
       Functora.Miso.Prelude
       Functora.Miso.Types

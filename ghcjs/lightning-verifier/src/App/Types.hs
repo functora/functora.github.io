@@ -40,7 +40,7 @@ import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
-import qualified Paths_app as Paths
+import qualified Paths_lightning_verifier as Paths
 import qualified Text.URI as URI
 
 data Model = Model

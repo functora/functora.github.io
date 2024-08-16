@@ -31,6 +31,7 @@ in rec {
   });
   app = pkgs.haskell.packages.ghcjs86.callCabal2nix "app" source {};
   vsn = app.passthru.version;
+  label = app.passthru.pname;
   repo = builtins.toString ./.;
   app-serve-latest = functora-pkgs.writeShellApplication rec {
     name = "app-serve-latest";
@@ -119,13 +120,13 @@ in rec {
       ${functora-pkgs.closurecompiler}/bin/closure-compiler \
         --jscomp_off=checkVars \
         --compilation_level ADVANCED_OPTIMIZATIONS \
-        --externs ${app}/bin/app.jsexe/all.js.externs \
+        --externs ${app}/bin/${label}.jsexe/all.js.externs \
         --externs ${./static}/app.js \
         --externs ${./static}/material-components-web.min.js \
         --externs ${./static}/material-components-web-elm.min.js \
         --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
         --create_source_map $out/all.js.map \
-        --js ${app}/bin/app.jsexe/all.js \
+        --js ${app}/bin/${label}.jsexe/all.js \
         --js_output_file $out/all.js
     '';
   };
@@ -208,18 +209,4 @@ in rec {
       )
     '';
   };
-  #
-  # NOTE : broken atm https://github.com/NixOS/nixpkgs/issues/187853
-  #
-  # emulateAndroidDer = android-pkgs.androidenv.emulateApp {
-  #   name = "emulateAndroidDer";
-  #   platformVersion = "33";
-  #   abiVersion = "armeabi-v7a";
-  #   systemImageType = "default";
-  #   app =
-  #     ./android/app/build/outputs/apk/release/app-release-unsigned.apk;
-  #   package = "App";
-  #   activity = "MainActivity";
-  #   sdkExtraArgs = android-sdk-args;
-  # };
 }

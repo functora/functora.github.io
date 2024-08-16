@@ -1,5 +1,5 @@
 --restart=.ghcid
---restart=app.cabal
+--restart=lightning-verifier.cabal
 --restart=cabal.config
 --restart=cabal.project
 --restart=static

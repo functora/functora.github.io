@@ -3,7 +3,6 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Decrypt as Decrypt
-import qualified App.Widgets.Header as Header
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.SwapAmounts as SwapAmounts
 import qualified App.Widgets.SwapCurrencies as SwapCurrencies
@@ -14,6 +13,7 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Miso.Widgets.Qr as Qr
 import Functora.Money hiding (Text)
 import qualified Material.Button as Button

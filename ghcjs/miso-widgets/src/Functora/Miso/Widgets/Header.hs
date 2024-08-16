@@ -1,4 +1,4 @@
-module App.Widgets.Header
+module Functora.Miso.Widgets.Header
   ( headerEditor,
     headerViewer,
     headerWrapper,

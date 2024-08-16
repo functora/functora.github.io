@@ -115,6 +115,7 @@ library
     Functora.Miso.Widgets.FieldPairs
     Functora.Miso.Widgets.Frame
     Functora.Miso.Widgets.Grid
+    Functora.Miso.Widgets.Header
     Functora.Miso.Widgets.IconToggles
     Functora.Miso.Widgets.Money
     Functora.Miso.Widgets.PaymentMethods
@@ -149,6 +150,7 @@ test-suite miso-widgets-test
       Functora.Miso.Widgets.FieldPairs
       Functora.Miso.Widgets.Frame
       Functora.Miso.Widgets.Grid
+      Functora.Miso.Widgets.Header
       Functora.Miso.Widgets.IconToggles
       Functora.Miso.Widgets.Money
       Functora.Miso.Widgets.PaymentMethods

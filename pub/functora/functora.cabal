@@ -242,6 +242,18 @@ common pkg-elm2miso
     , base
     , regex-compat
 
+common pkg-bolt11
+  import:         pkg
+  hs-source-dirs: src/bolt11
+  build-depends:
+    , aeson
+    , array
+    , attoparsec
+    , base
+    , base16-bytestring
+    , bytestring
+    , text
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -331,6 +343,15 @@ library elm2miso-lib
   visibility:      public
   exposed-modules: Functora.Elm2Miso
 
+library bolt11
+  import:          pkg-bolt11
+  exposed:         True
+  visibility:      public
+  exposed-modules:
+    Functora.Bech32
+    Functora.Bolt11
+    Functora.Denomination
+
 executable elm2miso
   import:        pkg-elm2miso, exe
   main-is:       Main.hs
@@ -359,6 +380,7 @@ test-suite functora-test
 
   other-modules:
     Functora.AesSpec
+    Functora.Bolt11Spec
     Functora.CfgSpec
     Functora.Elm2MisoSpec
     Functora.PreludeSpec
@@ -373,14 +395,17 @@ test-suite functora-test
       pkg-prelude, pkg-qr, pkg-aes,
       pkg-cfg, pkg-web, pkg-sql,
       pkg-money, pkg-rates, pkg-tags,
-      pkg-soplate, pkg-elm2miso
+      pkg-soplate, pkg-elm2miso, pkg-bolt11
 
     ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
       Functora.AesOrphan
+      Functora.Bech32
+      Functora.Bolt11
       Functora.Cfg
       Functora.CfgOrphan
+      Functora.Denomination
       Functora.Elm2Miso
       Functora.Money
       Functora.MoneySing
@@ -401,6 +426,7 @@ test-suite functora-test
   else
     build-depends:
       , aes
+      , bolt11
       , cfg
       , elm2miso-lib
       , functora

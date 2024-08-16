@@ -1,0 +1,26 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "author": "functora",
+  "license": "ISC",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/browser": "^6.0.1",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/preferences": "^6.0.1",
+    "@capacitor/share": "^6.0.1",
+    "@capacitor/toast": "^6.0.2",
+    "@ionic/pwa-elements": "^3.3.0",
+    "capacitor-webview-print": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.4",
+    "@capacitor/cli": "^6.0.0",
+    "@trapezedev/configure": "^7.0.10",
+    "vite": "^5.3.3"
+  }
+}

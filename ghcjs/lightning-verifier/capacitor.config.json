@@ -1,0 +1,8 @@
+{
+  "appId": "com.functora.app",
+  "appName": "app",
+  "webDir": "dist/latest",
+  "server": {
+    "androidScheme": "https"
+  }
+}

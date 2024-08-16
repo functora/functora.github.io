@@ -1,7 +1,6 @@
 with (import ./default.nix); let
   pkgs = android-pkgs;
   repo = toString ./.;
-  geckoview = false;
   android-sdk =
     (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
   app-keygen-android = pkgs.writeShellApplication {
@@ -52,11 +51,6 @@ with (import ./default.nix); let
           --android --assetPath static
         ${pkgs.nodejs}/bin/npx trapeze run trapeze.yaml -y \
           --android-project android
-        ${
-        if geckoview
-        then ''printf "include ':capacitor-android'\nproject(':capacitor-android').projectDir = new File('../capacitor-geckoview/capacitor')" > ./android/capacitor.settings.gradle''
-        else ""
-      }
       )
     '';
   };

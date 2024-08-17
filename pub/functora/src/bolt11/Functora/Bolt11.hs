@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 
 module Functora.Bolt11
   ( Bolt11 (..),
@@ -42,10 +43,21 @@ instance Show Hex where
 instance IsString Hex where
   fromString =
     Hex
-      . either error id
+      . handler
       . B16.decode
       . T.encodeUtf8
       . T.pack
+    where
+#if MIN_VERSION_base16_bytestring(1,0,0)
+      handler :: Either String ByteString -> ByteString
+      handler =
+        either error id
+#else
+      handler :: (ByteString, ByteString) -> ByteString
+      handler = \case
+        (success, "") -> success
+        failure -> error $ "Non-Hex bytestring " <> show failure
+#endif
 
 data Tag
   = PaymentHash Hex

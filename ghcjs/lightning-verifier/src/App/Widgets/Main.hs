@@ -1,21 +1,15 @@
 module App.Widgets.Main (mainWidget) where
 
-import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Menu as Menu
-import qualified App.Widgets.SwapAmounts as SwapAmounts
-import qualified App.Widgets.SwapCurrencies as SwapCurrencies
 import qualified Functora.Miso.Css as Css
-import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
-import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Miso.Widgets.Qr as Qr
-import Functora.Money hiding (Text)
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
@@ -120,140 +114,25 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                  ]
           )
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
-  let amountWidget' loc =
-        Field.ratioField
+  FieldPairs.fieldPairsViewer
+    FieldPairs.Args
+      { FieldPairs.argsModel = st,
+        FieldPairs.argsOptic = #modelState . #stDoc . #stDocFieldPairs,
+        FieldPairs.argsAction = PushUpdate . Instant
+      }
+    <> [ Field.textField
           Field.Args
             { Field.argsModel = st,
-              Field.argsOptic = Misc.getConverterAmountOptic loc,
-              Field.argsAction = PushUpdate . Instant
+              Field.argsOptic = #modelState . #stDoc . #stDocLnInvoice,
+              Field.argsAction = PushUpdate . Delayed 300
             }
           ( Field.defOpts @Model @Action
-              & #optsOnInputAction
-              .~ Just
-                ( PushUpdate
-                    . Delayed 300
-                    . ( >=>
-                          pure
-                            . ( &
-                                  #modelState
-                                    . #stDoc
-                                    . #stDocTopOrBottom
-                                    .~ loc
-                              )
-                      )
-                )
+              & #optsFullWidth
+              .~ True
               & #optsPlaceholder
-              .~ ( st
-                    ^. cloneLens (Misc.getConverterCurrencyOptic loc)
-                    . #currencyOutput
-                    . to (inspectCurrencyInfo @MisoString)
-                 )
+              .~ "Lightning Invoice"
           )
-      currencyWidget' tob =
-        Currency.selectCurrency
-          Currency.Args
-            { Currency.argsModel = st,
-              Currency.argsOptic = Misc.getConverterCurrencyOptic tob,
-              Currency.argsAction = PushUpdate . Instant,
-              Currency.argsCurrencies = #modelCurrencies
-            }
-          Currency.Opts
-            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
-            }
-   in ( FieldPairs.fieldPairsViewer
-          FieldPairs.Args
-            { FieldPairs.argsModel = st,
-              FieldPairs.argsOptic =
-                #modelState
-                  . #stDoc
-                  . #stDocFieldPairs,
-              FieldPairs.argsAction = PushUpdate . Instant
-            }
-      )
-        <> [ amountWidget' Top,
-             currencyWidget' Top,
-             amountWidget' Bottom,
-             currencyWidget' Bottom,
-             SwapAmounts.swapAmounts,
-             SwapCurrencies.swapCurrencies,
-             ratesWidget st
-           ]
-
-ratesWidget :: Model -> View Action
-ratesWidget st =
-  LayoutGrid.cell
-    [ LayoutGrid.span12,
-      Typography.caption,
-      style_
-        $ [("text-align", "center")]
-        <> ( case oof of
-              Offline -> [("color", "#B00020")]
-              Online -> mempty
-           )
-    ]
-    [ a_
-        [ style_ [("cursor", "pointer")],
-          onClick . PushUpdate . Instant $ Jsm.shareText msg
-        ]
-        [ Miso.text msg
-        ]
-    ]
-  where
-    oof = st ^. #modelState . #stDoc . #stDocOnlineOrOffline
-    top = st ^. #modelState . #stDoc . #stDocTopMoney
-    topAmt = top ^. #moneyAmount . #fieldOutput
-    topCur =
-      top
-        ^. #moneyCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . #unCurrencyCode
-        . to toMisoString
-    bottom = st ^. #modelState . #stDoc . #stDocBottomMoney
-    bottomAmt = bottom ^. #moneyAmount . #fieldOutput
-    bottomCur =
-      bottom
-        ^. #moneyCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . #unCurrencyCode
-        . to toMisoString
-    bottomPerTop =
-      if topAmt == 0
-        then 0
-        else bottomAmt / topAmt
-    topPerBottom =
-      if bottomAmt == 0
-        then 0
-        else topAmt / bottomAmt
-    msg =
-      inspect oof
-        <> " exchange rates"
-        <> ( case oof of
-              Offline -> mempty
-              Online ->
-                " on "
-                  <> ( st
-                        ^. #modelState
-                        . #stDoc
-                        . #stDocCreatedAt
-                        . to utctDay
-                        . to inspect
-                     )
-           )
-        <> ": 1 "
-        <> topCur
-        <> " \8776 "
-        <> inspectRatioDef bottomPerTop
-        <> " "
-        <> bottomCur
-        <> ", 1 "
-        <> bottomCur
-        <> " \8776 "
-        <> inspectRatioDef topPerBottom
-        <> " "
-        <> topCur
-        <> "."
+       ]
 
 tosWidget :: View Action
 tosWidget =

@@ -119,17 +119,13 @@ newModel webOpts mSt uri = do
 newDonateDoc :: IO (StDoc Unique)
 newDonateDoc = do
   doc <- newStDoc
-  topMoney <- newMoney 5 usd
-  bottomMoney <- newMoney 0 btc
   title <- newFieldPair mempty $ DynamicFieldText "Hello, User!"
   message <- newFieldPair mempty $ DynamicFieldText exampleDonationText
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
   pure
     doc
-      { stDocTopMoney = topMoney,
-        stDocBottomMoney = bottomMoney,
-        stDocFieldPairs =
+      { stDocFieldPairs =
           [ title
               & #fieldPairValue
               . #fieldType

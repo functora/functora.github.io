@@ -31,8 +31,6 @@ common pkg
     App.Widgets.Fav
     App.Widgets.Main
     App.Widgets.Menu
-    App.Widgets.SwapAmounts
-    App.Widgets.SwapCurrencies
     App.Widgets.Templates
 
   ghc-options:

@@ -62,7 +62,7 @@ defOpts :: Opts model action
 defOpts =
   Opts
     { optsDisabled = False,
-      optsFullWidth = True,
+      optsFullWidth = False,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
       optsLeadingWidget = Just CopyWidget,
@@ -114,16 +114,7 @@ field ::
   Opts model action ->
   View action
 field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      LayoutGrid.alignMiddle,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center")
-        ]
-    ]
+  cell opts
     $ ( do
           x0 <-
             catMaybes
@@ -161,12 +152,9 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
           & TextField.setAttributes
             ( [ id_ $ htmlUid @MisoString uid,
                 onKeyDown $ action . optsOnKeyDownAction opts uid,
-                onBlur onBlurAction
+                onBlur onBlurAction,
+                Css.fullWidth
               ]
-                <> ( if opts ^. #optsFullWidth
-                      then [Css.fullWidth]
-                      else mempty
-                   )
                 <> ( opts ^. #optsExtraAttributes
                    )
             )
@@ -673,16 +661,8 @@ constTextField ::
   ((model -> JSM model) -> action) ->
   View action
 constTextField txt opts action =
-  LayoutGrid.cell
-    [ LayoutGrid.span6Desktop,
-      LayoutGrid.span4Tablet,
-      LayoutGrid.span4Phone,
-      LayoutGrid.alignMiddle,
-      style_
-        [ ("display", "flex"),
-          ("align-items", "center")
-        ]
-    ]
+  cell
+    opts
     [ case opts ^. #optsFilledOrOutlined of
         Filled -> TextField.filled
         Outlined -> TextField.outlined
@@ -714,12 +694,7 @@ constTextField txt opts action =
               (opts ^. #optsTrailingWidget)
           )
         & TextField.setAttributes
-          ( ( if opts ^. #optsFullWidth
-                then [Css.fullWidth]
-                else mempty
-            )
-              <> ( opts ^. #optsExtraAttributes
-                 )
+          ( [Css.fullWidth] <> (opts ^. #optsExtraAttributes)
           )
     ]
 
@@ -797,3 +772,28 @@ header txt =
           [ text txt
           ]
       ]
+
+cell :: Opts model action -> [View action] -> View action
+cell Opts {optsFullWidth = full} =
+  LayoutGrid.cell
+    $ if full
+      then
+        [ LayoutGrid.span12Desktop,
+          LayoutGrid.span8Tablet,
+          LayoutGrid.span4Phone,
+          LayoutGrid.alignMiddle,
+          style_
+            [ ("display", "flex"),
+              ("align-items", "center")
+            ]
+        ]
+      else
+        [ LayoutGrid.span6Desktop,
+          LayoutGrid.span4Tablet,
+          LayoutGrid.span4Phone,
+          LayoutGrid.alignMiddle,
+          style_
+            [ ("display", "flex"),
+              ("align-items", "center")
+            ]
+        ]

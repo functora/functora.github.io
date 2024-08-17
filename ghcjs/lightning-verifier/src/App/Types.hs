@@ -93,11 +93,8 @@ instance TraversableB St
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
 data StDoc f = StDoc
-  { stDocTopMoney :: Money f,
-    stDocBottomMoney :: Money f,
-    stDocTopOrBottom :: TopOrBottom,
-    stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocOnlineOrOffline :: OnlineOrOffline,
+  { stDocFieldPairs :: [FieldPair DynamicField f],
+    stDocLnInvoice :: Field MisoString f,
     stDocCreatedAt :: UTCTime
   }
   deriving stock (Generic)
@@ -119,15 +116,11 @@ deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 newStDoc :: (MonadIO m) => m (StDoc Unique)
 newStDoc = do
   ct <- getCurrentTime
-  topMoney <- newMoney 1 btc
-  bottomMoney <- newMoney 0 usd
+  ln <- newTextField mempty
   pure
     StDoc
-      { stDocTopMoney = topMoney,
-        stDocBottomMoney = bottomMoney,
-        stDocTopOrBottom = Top,
-        stDocFieldPairs = mempty,
-        stDocOnlineOrOffline = Online,
+      { stDocFieldPairs = mempty,
+        stDocLnInvoice = ln,
         stDocCreatedAt = ct
       }
 

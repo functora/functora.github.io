@@ -17,8 +17,6 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
-import qualified Material.Select as Select
-import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Text.URI as URI
@@ -179,45 +177,6 @@ menu st =
                                   ]
                             )
                             "Note",
-                        let item :| items = enumerateNE @OnlineOrOffline
-                         in Grid.mediumCell
-                              $ Select.outlined
-                                ( Select.config
-                                    & Select.setDisabled disabled
-                                    & Select.setLabel
-                                      ( Just "Exchange rates"
-                                      )
-                                    & Select.setSelected
-                                      ( Just
-                                          $ st
-                                          ^. #modelState
-                                          . #stDoc
-                                          . #stDocOnlineOrOffline
-                                      )
-                                    & Select.setOnChange
-                                      ( \x ->
-                                          PushUpdate
-                                            . Instant
-                                            $ pure
-                                            . ( &
-                                                  #modelState
-                                                    . #stDoc
-                                                    . #stDocOnlineOrOffline
-                                                    .~ x
-                                              )
-                                      )
-                                )
-                                ( SelectItem.selectItem
-                                    (SelectItem.config item)
-                                    [text $ inspect item]
-                                )
-                              $ fmap
-                                ( \x ->
-                                    SelectItem.selectItem
-                                      (SelectItem.config x)
-                                      [text $ inspect x]
-                                )
-                                items,
                         Grid.mediumCell
                           $ Field.dynamicField
                             Field.Args
@@ -329,18 +288,7 @@ defFavName st =
   if isJust (st ^. #modelState . #stCpt)
     || (st ^. #modelState . #stIkm . #fieldOutput /= mempty)
     then mempty
-    else getCode #stDocTopMoney <> "/" <> getCode #stDocBottomMoney
-  where
-    getCode optic =
-      st
-        ^. #modelState
-        . #stDoc
-        . cloneLens optic
-        . #moneyCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . #unCurrencyCode
-        . to toMisoString
+    else mempty
 
 linksWidget :: Model -> [View Action]
 linksWidget st =

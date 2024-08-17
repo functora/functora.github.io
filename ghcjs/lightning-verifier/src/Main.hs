@@ -25,9 +25,7 @@ import qualified Data.Map as Map
 import qualified Functora.Aes as Aes
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
-import Functora.Money hiding (Money)
 import qualified Functora.Prelude as Prelude
-import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
@@ -287,123 +285,32 @@ syncInputs st = do
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
         inps <-
-          el ^. JS.js1 ("getElementsByTagName" :: MisoString) ("input" :: MisoString)
+          el
+            ^. JS.js1
+              ("getElementsByTagName" :: MisoString)
+              ("input" :: MisoString)
         inp <- inps !! 0
-        act <- JS.global ! ("document" :: MisoString) ! ("activeElement" :: MisoString)
+        act <-
+          JS.global
+            ! ("document" :: MisoString)
+            ! ("activeElement" :: MisoString)
         elActive <- JS.strictEqual inp act
         unless elActive $ el ^. JS.jss ("value" :: MisoString) (txt ^. #uniqueValue)
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
-evalModel raw = do
-  let oof = raw ^. #modelState . #stDoc . #stDocOnlineOrOffline
-  new <-
-    case oof of
-      Online ->
-        Syb.everywhereM
-          ( Syb.mkM $ \cur ->
-              Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
-                . fmap (fromRight cur)
-                . Rates.tryMarket
-                . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
-                $ currencyInfoCode cur
-          )
-          ( raw ^. #modelState
-          )
-      Offline ->
-        pure $ raw ^. #modelState
-  curs <-
-    case oof of
-      Online ->
-        Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
-          . fmap (fromRight $ raw ^. #modelCurrencies)
-          . Rates.tryMarket
-          . fmap (^. #currenciesList)
-          $ Rates.getCurrencies (raw ^. #modelWebOpts)
-      Offline ->
-        pure $ raw ^. #modelCurrencies
+evalModel st@Model {modelState = st0} = do
   km <-
-    if (new ^. #stKm . #kmIkm . #unIkm == mempty)
-      && (new ^. #stIkm . #fieldOutput == mempty)
-      && isNothing (new ^. #stCpt)
+    if (st0 ^. #stKm . #kmIkm . #unIkm == mempty)
+      && (st0 ^. #stIkm . #fieldOutput == mempty)
+      && isNothing (st0 ^. #stCpt)
       then Aes.randomKm 32
-      else pure $ new ^. #stKm
-  let st =
-        raw
-          & #modelState
-          .~ (new & #stKm .~ km)
-          & #modelCurrencies
-          .~ curs
-  let loc = st ^. #modelState . #stDoc . #stDocTopOrBottom
-  let baseLens = getBaseConverterMoneyLens loc
-  let quoteLens = getQuoteConverterMoneyLens loc
-  let baseAmtInput =
-        case st
-          ^. cloneLens baseLens
-          . #moneyAmount
-          . #fieldInput
-          . #uniqueValue of
-          amt
-            | amt == mempty ->
-                inspectRatioDef
-                  $ st
-                  ^. cloneLens baseLens
-                  . #moneyAmount
-                  . #fieldOutput
-          amt -> amt
-  baseAmtResult <-
-    tryAny $ parseMoney baseAmtInput
-  case baseAmtResult of
-    Left {} -> pure st
-    Right baseAmt ->
-      case oof of
-        Offline ->
-          pure st
-        Online ->
-          Rates.withMarket (st ^. #modelWebOpts) (st ^. #modelMarket) $ do
-            let funds =
-                  Funds
-                    baseAmt
-                    $ st
-                    ^. cloneLens baseLens
-                    . #moneyCurrency
-                    . #currencyOutput
-                    . #currencyInfoCode
-            quote <-
-              Rates.getQuote (st ^. #modelWebOpts) funds
-                $ st
-                ^. cloneLens quoteLens
-                . #moneyCurrency
-                . #currencyOutput
-                . #currencyInfoCode
-            let quoteAmt = quote ^. #quoteMoneyAmount
-            ct <- getCurrentTime
-            pure
-              $ st
-              & cloneLens baseLens
-              . #moneyAmount
-              . #fieldInput
-              . #uniqueValue
-              .~ baseAmtInput
-              & cloneLens baseLens
-              . #moneyAmount
-              . #fieldOutput
-              .~ unTagged baseAmt
-              & cloneLens quoteLens
-              . #moneyAmount
-              . #fieldInput
-              . #uniqueValue
-              .~ inspectRatioDef (unTagged quoteAmt)
-              & cloneLens quoteLens
-              . #moneyAmount
-              . #fieldOutput
-              .~ unTagged quoteAmt
-              & #modelState
-              . #stDoc
-              . #stDocCreatedAt
-              .~ (quote ^. #quoteCreatedAt)
-              & #modelOnlineAt
-              .~ ct
+      else pure $ st0 ^. #stKm
+  pure
+    $ st
+    & #modelState
+    . #stKm
+    .~ km
 
 syncUri :: URI -> JSM ()
 syncUri uri = do
@@ -417,16 +324,6 @@ syncUri uri = do
             . from @Prelude.Text @Prelude.String
             $ URI.render nextUri
         )
-
-getBaseConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
-getBaseConverterMoneyLens = \case
-  Top -> #modelState . #stDoc . #stDocTopMoney
-  Bottom -> #modelState . #stDoc . #stDocBottomMoney
-
-getQuoteConverterMoneyLens :: TopOrBottom -> ALens' Model (Money Unique)
-getQuoteConverterMoneyLens = \case
-  Top -> #modelState . #stDoc . #stDocBottomMoney
-  Bottom -> #modelState . #stDoc . #stDocTopMoney
 
 upToDate :: UTCTime -> UTCTime -> Bool
 upToDate lhs rhs =

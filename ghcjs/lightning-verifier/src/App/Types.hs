@@ -38,8 +38,6 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
-import qualified Functora.Rates as Rates
-import qualified Functora.Web as Web
 import qualified Paths_lightning_verifier as Paths
 import qualified Text.URI as URI
 
@@ -49,21 +47,16 @@ data Model = Model
     modelLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    modelMarket :: MVar Rates.Market,
     modelFavMap :: Map MisoString Fav,
     modelFavName :: Field MisoString Unique,
-    modelCurrencies :: NonEmpty CurrencyInfo,
     modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
-    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
-    modelOnlineAt :: UTCTime,
-    modelWebOpts :: Web.Opts
+    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model))
   }
   deriving stock (Eq, Generic)
 
 data Action
   = Noop
   | InitUpdate (Maybe Aes.Crypto)
-  | TimeUpdate
   | SyncInputs
   | ChanUpdate Model
   | PushUpdate (InstantOrDelayed (Model -> JSM Model))
@@ -94,8 +87,8 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocLnInvoice :: Field MisoString f,
-    stDocCreatedAt :: UTCTime
+    stDocLnPreimage :: Field MisoString f,
+    stDocLnInvoice :: Field MisoString f
   }
   deriving stock (Generic)
 
@@ -115,13 +108,13 @@ deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
 
 newStDoc :: (MonadIO m) => m (StDoc Unique)
 newStDoc = do
-  ct <- getCurrentTime
+  r <- newTextField mempty
   ln <- newTextField mempty
   pure
     StDoc
       { stDocFieldPairs = mempty,
-        stDocLnInvoice = ln,
-        stDocCreatedAt = ct
+        stDocLnPreimage = r,
+        stDocLnInvoice = ln
       }
 
 data Screen

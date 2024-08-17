@@ -8,26 +8,11 @@ import App.Types
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
-import qualified Functora.Rates as Rates
-import qualified Functora.Web as Web
 
-newModel ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Web.Opts ->
-  Maybe Model ->
-  URI ->
-  m Model
-newModel webOpts mSt uri = do
-  ct <- getCurrentTime
+newModel :: (MonadThrow m, MonadUnliftIO m) => Maybe Model -> URI -> m Model
+newModel mSt uri = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
-  market <-
-    maybe
-      Rates.newMarket
-      pure
-      (mSt ^? _Just . #modelMarket)
   defKm <-
     maybe
       (Aes.randomKm 32)
@@ -103,17 +88,10 @@ newModel webOpts mSt uri = do
         modelLinks = Closed,
         modelLoading = True,
         modelState = st,
-        modelMarket = market,
         modelFavMap = mempty,
         modelFavName = favName,
-        modelCurrencies =
-          fromMaybe
-            [btc, usd]
-            (mSt ^? _Just . #modelCurrencies),
         modelProducerQueue = prod,
-        modelConsumerQueue = cons,
-        modelOnlineAt = fromMaybe ct (mSt ^? _Just . #modelOnlineAt),
-        modelWebOpts = webOpts
+        modelConsumerQueue = cons
       }
 
 newDonateDoc :: IO (StDoc Unique)

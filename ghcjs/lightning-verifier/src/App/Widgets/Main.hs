@@ -127,10 +127,18 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.argsAction = PushUpdate . Delayed 300
             }
           ( Field.defOpts @Model @Action
-              & #optsFullWidth
-              .~ True
               & #optsPlaceholder
-              .~ "Lightning Invoice"
+              .~ "Invoice"
+          ),
+         Field.textField
+          Field.Args
+            { Field.argsModel = st,
+              Field.argsOptic = #modelState . #stDoc . #stDocLnPreimage,
+              Field.argsAction = PushUpdate . Delayed 300
+            }
+          ( Field.defOpts @Model @Action
+              & #optsPlaceholder
+              .~ "Preimage"
           )
        ]
 

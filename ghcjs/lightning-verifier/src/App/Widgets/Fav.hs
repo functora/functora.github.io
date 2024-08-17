@@ -156,7 +156,7 @@ favItem st label Fav {favUri = uri} =
       --
       -- TODO : Implement here pure, less costly equivalent of newModel.
       --
-      next <- newModel (st ^. #modelWebOpts) (Just st) uri
+      next <- newModel (Just st) uri
       pure
         $ nextSt
         & #modelFav

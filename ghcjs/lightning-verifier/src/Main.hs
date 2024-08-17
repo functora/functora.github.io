@@ -26,7 +26,6 @@ import qualified Functora.Aes as Aes
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Prelude as Prelude
-import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
@@ -46,8 +45,7 @@ main =
     $ do
       uri <- URI.mkURI . Prelude.inspect =<< getCurrentURI
       mSt <- unShareUri uri
-      web <- getWebOpts
-      st <- newModel web Nothing uri
+      st <- newModel Nothing uri
       startApp
         App
           { model = st,
@@ -59,15 +57,6 @@ main =
             mountPoint = Nothing, -- defaults to 'body'
             logLevel = Off
           }
-
-getWebOpts :: JSM Web.Opts
-getWebOpts = do
-#ifdef wasi_HOST_OS
-  ctx <- JS.askJSM
-  pure $ Web.defOpts ctx
-#else
-  pure Web.defOpts
-#endif
 
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
@@ -116,9 +105,6 @@ updateModel (InitUpdate ext) prevSt = do
   batchEff
     prevSt
     [ do
-        sleepSeconds 60
-        pure TimeUpdate,
-      do
         --
         -- NOTE : making a new pair of TChans to avoid deadlocks
         -- when running in ghcid mode and reloading page without
@@ -149,7 +135,7 @@ updateModel (InitUpdate ext) prevSt = do
                   . (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
-                finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
+                finSt <- newModel (Just nextSt) uri
                 Misc.pushActionQueue nextSt
                   $ Instant
                     ( const
@@ -162,21 +148,6 @@ updateModel (InitUpdate ext) prevSt = do
                     )
         pure
           $ ChanUpdate nextSt
-    ]
-updateModel TimeUpdate st = do
-  batchEff
-    st
-    [ do
-        sleepSeconds 60
-        pure TimeUpdate,
-      do
-        ct <- getCurrentTime
-        unless (upToDate ct $ st ^. #modelOnlineAt)
-          . Misc.pushActionQueue st
-          . Instant
-          $ pure
-          . id
-        pure Noop
     ]
 updateModel SyncInputs st = do
   batchEff
@@ -324,9 +295,3 @@ syncUri uri = do
             . from @Prelude.Text @Prelude.String
             $ URI.render nextUri
         )
-
-upToDate :: UTCTime -> UTCTime -> Bool
-upToDate lhs rhs =
-  diff < 3600
-  where
-    diff = abs . toRational $ diffUTCTime lhs rhs

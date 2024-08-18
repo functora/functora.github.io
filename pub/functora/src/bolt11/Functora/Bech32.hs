@@ -40,6 +40,7 @@ import Data.Bits
   )
 import qualified Data.ByteString as B
 import Data.Char (toUpper)
+import qualified Data.Data as D
 import Data.Foldable (foldl')
 import Data.Functor.Identity (Identity, runIdentity)
 import Data.Ix (Ix (..))
@@ -47,6 +48,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Word (Word8)
+import GHC.Generics (Generic)
 import Prelude
 
 -- | Bech32 human-readable string.
@@ -66,6 +68,7 @@ type Data = [Word8]
 newtype Word5
   = UnsafeWord5 Word8
   deriving newtype (Eq, Ord, Num)
+  deriving stock (D.Data, Generic)
 
 instance Show Word5 where
   show (UnsafeWord5 w8) = show w8

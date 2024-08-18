@@ -171,7 +171,13 @@
                   {};
                 functora-ghcjs =
                   self.callCabal2nix
-                  "functora-ghcjs" "${functora}/pub/functora/src" {};
+                  "functora-ghcjs"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./../.gitignore
+                    ./../pub/functora/src
+                  )
+                  {};
               }
             );
         });

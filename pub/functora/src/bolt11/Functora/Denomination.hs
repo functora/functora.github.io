@@ -21,9 +21,11 @@ module Functora.Denomination
 where
 
 import Data.Aeson
+import Data.Data (Data)
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
+import GHC.Generics (Generic)
 import Text.Printf
 import Prelude
 
@@ -35,15 +37,19 @@ class Denomination a where
 
 newtype MSats = MSats {getMsats :: Int64}
   deriving newtype (FromJSON, ToJSON, Num, Ord, Eq)
+  deriving stock (Data, Generic)
 
 newtype Sats = Sats {getSats :: Rational}
   deriving newtype (FromJSON, ToJSON, Num, Ord, Eq)
+  deriving stock (Data, Generic)
 
 newtype Bits = Bits {getBits :: Rational}
   deriving newtype (FromJSON, ToJSON, Num, Ord, Eq)
+  deriving stock (Data, Generic)
 
 newtype Btc = Btc {getBtc :: Rational}
   deriving newtype (FromJSON, ToJSON, Num, Ord, Eq)
+  deriving stock (Data, Generic)
 
 instance Denomination MSats where
   toMsats a = a

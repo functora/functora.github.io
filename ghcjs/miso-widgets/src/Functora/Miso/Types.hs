@@ -8,6 +8,7 @@ module Functora.Miso.Types
     newUniqueDuplicator,
     Field (..),
     newField,
+    newFieldId,
     newRatioField,
     newTextField,
     newPasswordField,
@@ -21,6 +22,7 @@ module Functora.Miso.Types
     userFieldType,
     FieldPair (..),
     newFieldPair,
+    newFieldPairId,
     Currency (..),
     newCurrency,
     Money (..),
@@ -139,6 +141,16 @@ newField typ output newInput = do
         fieldModalState = Closed
       }
 
+newFieldId :: FieldType -> a -> Field a Identity
+newFieldId typ output =
+  Field
+    { fieldType = typ,
+      fieldInput = mempty,
+      fieldOutput = output,
+      fieldAllowCopy = True,
+      fieldModalState = Closed
+    }
+
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =
   newField FieldTypeNumber output inspectRatioDef
@@ -250,6 +262,18 @@ newFieldPair key val =
   FieldPair
     <$> newTextField key
     <*> newDynamicField val
+
+newFieldPairId :: MisoString -> DynamicField -> FieldPair DynamicField Identity
+newFieldPairId key val =
+  FieldPair
+    (newFieldId FieldTypeText key)
+    ( newFieldId
+        ( case val of
+            DynamicFieldNumber {} -> FieldTypeNumber
+            DynamicFieldText {} -> FieldTypeText
+        )
+        val
+    )
 
 data Currency f = Currency
   { currencyInput :: Field MisoString f,

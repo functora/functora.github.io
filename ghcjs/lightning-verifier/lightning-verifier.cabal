@@ -27,6 +27,7 @@ common pkg
   other-modules:
     App.Misc
     App.Types
+    App.Widgets.Bolt11
     App.Widgets.Decrypt
     App.Widgets.Fav
     App.Widgets.Main

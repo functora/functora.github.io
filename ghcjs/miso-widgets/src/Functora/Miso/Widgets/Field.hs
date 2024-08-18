@@ -702,9 +702,9 @@ constTextField txt opts action =
 -- TODO : support optional copying widgets
 --
 dynamicFieldViewer ::
-  forall model action.
+  forall model action f.
   ((model -> JSM model) -> action) ->
-  Field DynamicField Unique ->
+  Field DynamicField f ->
   [View action]
 dynamicFieldViewer action value =
   case value ^. #fieldType of

@@ -1,6 +1,7 @@
 module App.Widgets.Main (mainWidget) where
 
 import App.Types
+import qualified App.Widgets.Bolt11 as Bolt11
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Menu as Menu
 import qualified Functora.Miso.Css as Css
@@ -141,6 +142,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               .~ "Preimage"
           )
        ]
+    <> Bolt11.bolt11 st
 
 tosWidget :: View Action
 tosWidget =

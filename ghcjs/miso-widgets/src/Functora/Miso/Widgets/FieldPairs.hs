@@ -12,21 +12,21 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Typography as Typography
 
-data Args model action = Args
+data Args model action f = Args
   { argsModel :: model,
-    argsOptic :: ATraversal' model [FieldPair DynamicField Unique],
+    argsOptic :: ATraversal' model [FieldPair DynamicField f],
     argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 
-fieldPairsViewer :: Args model action -> [View action]
+fieldPairsViewer :: Args model action f -> [View action]
 fieldPairsViewer args@Args {argsOptic = optic} = do
   item <- fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
   fieldPairViewer args item
 
 fieldPairViewer ::
-  Args model action ->
-  FieldPair DynamicField Unique ->
+  Args model action f ->
+  FieldPair DynamicField f ->
   [View action]
 fieldPairViewer args pair =
   ( if k == mempty
@@ -71,14 +71,14 @@ fieldPairViewer args pair =
         then Grid.bigCell
         else Grid.mediumCell
 
-fieldPairsEditor :: Args model action -> [View action]
+fieldPairsEditor :: Args model action Unique -> [View action]
 fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
   fieldPairEditor args idx
 
 fieldPairEditor ::
   forall model action.
-  Args model action ->
+  Args model action Unique ->
   Int ->
   [View action]
 fieldPairEditor Args {argsModel = st, argsOptic = optic, argsAction = action} idx =

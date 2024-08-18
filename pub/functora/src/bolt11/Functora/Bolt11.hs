@@ -23,6 +23,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Data (Data)
 import Data.Foldable (foldl')
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
@@ -32,10 +33,12 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as T
 import Functora.Bech32 (Word5 (..), bech32Decode, toBase256)
 import Functora.Denomination (Denomination (toMsats), MSats, btc)
+import GHC.Generics (Generic)
 import Prelude
 
 newtype Hex = Hex {getHex :: ByteString}
   deriving newtype (Eq, Ord)
+  deriving stock (Data, Generic)
 
 instance Show Hex where
   show (Hex bs) = BL.unpack (BS.toLazyByteString (BS.byteStringHex bs))
@@ -70,7 +73,7 @@ data Tag
   | OnchainFallback Hex -- TODO: address type
   | ExtraRouteInfo
   | FeatureBits [Word5]
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
@@ -81,16 +84,17 @@ isDescription Description {} = True
 isDescription _ = False
 
 data Multiplier = Milli | Micro | Nano | Pico
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Currency
   = Bitcoin
   | BitcoinTestnet
   | BitcoinRegtest
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Int, Multiplier)}
   deriving newtype (Eq, Ord)
+  deriving stock (Data, Generic)
 
 instance Show Bolt11Amount where
   show amt = show (bolt11Msats amt)
@@ -99,7 +103,7 @@ data Bolt11HRP = Bolt11HRP
   { bolt11Currency :: Currency,
     bolt11Amount :: Maybe Bolt11Amount
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Bolt11 = Bolt11
   { bolt11HRP :: Bolt11HRP,
@@ -107,7 +111,7 @@ data Bolt11 = Bolt11
     bolt11Tags :: [Tag], -- posix
     bolt11Signature :: Hex
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 parseCurrency :: Parser Currency
 parseCurrency =
@@ -185,7 +189,7 @@ tagParser ws@(UnsafeWord5 typ : d1 : d2 : rest)
 data MSig
   = Sig [Word5]
   | Unk [Word5]
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 tagsParser :: [Word5] -> ([Tag], MSig)
 tagsParser ws

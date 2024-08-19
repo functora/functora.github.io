@@ -58,7 +58,7 @@ menu st =
                           . #stScreen
                           .~ Converter
                     ]
-                    [ text "Converter"
+                    [ text "LN Verifier"
                     ]
               ],
             TopAppBar.section
@@ -93,7 +93,7 @@ menu st =
                                 $ JS.global
                                 ^. JS.js1
                                   ("printCurrentPage" :: MisoString)
-                                  ("currency-converter" :: MisoString)
+                                  ("lightning-verifier" :: MisoString)
                               pure next
                           )
                         & IconButton.setAttributes
@@ -133,7 +133,7 @@ menu st =
                 Nothing
                 [ Grid.grid
                     mempty
-                    $ [ Grid.smallCell
+                    $ [ Grid.mediumCell
                           $ Button.raised
                             ( Button.config
                                 & Button.setOnClick
@@ -145,7 +145,7 @@ menu st =
                                 & Button.setIcon
                                   ( Just
                                       $ if isQrCode sc
-                                        then "currency_exchange"
+                                        then "bolt"
                                         else "qr_code_2"
                                   )
                                 & Button.setAttributes
@@ -154,9 +154,9 @@ menu st =
                                   ]
                             )
                           $ if isQrCode sc
-                            then "Rates"
+                            then "LN Verifier"
                             else "QR",
-                        Grid.smallCell
+                        Grid.mediumCell
                           $ Button.raised
                             ( Button.config
                                 & Button.setDisabled disabled

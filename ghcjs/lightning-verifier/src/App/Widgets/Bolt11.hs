@@ -25,10 +25,18 @@ bolt11 st =
       (\bsR -> if bsR == mempty then mempty else preimageWidget rawR bsR)
       r
   where
+    rawLn :: MisoString
     rawLn = st ^. #modelState . #stDoc . #stDocLnInvoice . #fieldOutput
+    rawR :: MisoString
     rawR = st ^. #modelState . #stDoc . #stDocLnPreimage . #fieldOutput
-    ln = first (mappend "Bad invoice - " . inspect) $ B11.decodeBolt11 rawLn
+    ln :: Either MisoString B11.Bolt11
+    ln =
+      first (mappend "Bad invoice - " . from @Prelude.String @MisoString)
+        . B11.decodeBolt11
+        $ from @MisoString @Prelude.Text rawLn
+    rh :: Either MisoString ByteString
     rh = ln >>= parsePreimageHash
+    r :: Either MisoString ByteString
     r = parsePreimage rawR
 
 parserWidget :: MisoString -> Either MisoString a -> [View Action]
@@ -49,34 +57,54 @@ invoiceWidget :: B11.Bolt11 -> [View Action]
 invoiceWidget ln =
   Header.headerViewer "Invoice Details"
     <> pairs
-      ( [ simple "Network" . B11.bolt11Currency $ B11.bolt11HRP ln,
-          simple "Amount" . B11.bolt11Amount $ B11.bolt11HRP ln,
-          simple "Timestamp" $ B11.bolt11Timestamp ln
+      ( [ pair "Network"
+            $ case B11.bolt11Currency $ B11.bolt11HRP ln of
+              B11.Bitcoin -> "Bitcoin Mainnet"
+              B11.BitcoinTestnet -> "Bitcoin Testnet"
+              B11.BitcoinRegtest -> "Bitcoin Regtest",
+          pair "Amount"
+            . maybe "0" defShow
+            . B11.bolt11Amount
+            $ B11.bolt11HRP ln,
+          pair "Timestamp"
+            . inspect
+            $ B11.bolt11Timestamp ln
         ]
-          <> fmap (simple "Tag") (B11.bolt11Tags ln)
-          <> [ simple "Signature" $ B11.bolt11Signature ln
+          <> ( B11.bolt11Tags ln
+                >>= invoiceTagWidget
+             )
+          <> [ pair "Signature"
+                . defShow
+                $ B11.bolt11Signature ln
              ]
       )
+
+invoiceTagWidget :: B11.Tag -> [FieldPair DynamicField Identity]
+invoiceTagWidget = \case
+  B11.PaymentHash x -> simple "Preimage Hash" x
+  B11.PaymentSecret x -> simple "Payment Secret" x
+  B11.Description x -> pure . pair "Description" $ inspect x
+  B11.PayeePubkey x -> simple "Payee Pubkey" x
+  B11.DescriptionHash x -> simple "Description Hash" x
+  B11.Expiry x -> simple "Expiry" x
+  B11.MinFinalCltvExpiry x -> simple "Min Final CLTV Expiry" x
+  B11.OnchainFallback x -> simple "Onchain Fallback" x
+  B11.ExtraRouteInfo -> mempty
+  B11.FeatureBits x -> simple "Feature Bits" x
   where
-    simple :: (Show a) => MisoString -> a -> FieldPair DynamicField Identity
+    simple :: (Show a) => MisoString -> a -> [FieldPair DynamicField Identity]
     simple x =
-      newFieldPairId x
-        . DynamicFieldText
-        . from @Prelude.String @MisoString
-        . Prelude.show
+      pure
+        . pair x
+        . defShow
 
 preimageWidget :: MisoString -> ByteString -> [View Action]
 preimageWidget rawR r =
   Header.headerViewer "Preimage Details"
     <> pairs
-      [ simple "Preimage" rawR,
-        simple "Preimage Hash" . inspect @ByteString $ sha256Hash r
+      [ pair "Preimage" rawR,
+        pair "Preimage Hash" . inspect @ByteString $ sha256Hash r
       ]
-  where
-    simple :: MisoString -> MisoString -> FieldPair DynamicField Identity
-    simple x =
-      newFieldPairId x
-        . DynamicFieldText
 
 parsePreimage :: MisoString -> Either MisoString ByteString
 parsePreimage rawR =
@@ -93,6 +121,11 @@ parsePreimageHash ln =
     Just (B11.PaymentHash (B11.Hex rh)) -> Right rh
     _ -> Left "Bad invoice - no preimage hash"
 
+pair :: MisoString -> MisoString -> FieldPair DynamicField Identity
+pair x =
+  newFieldPairId x
+    . DynamicFieldText
+
 pairs :: [FieldPair DynamicField f] -> [View Action]
 pairs xs =
   FieldPairs.fieldPairsViewer
@@ -104,6 +137,11 @@ pairs xs =
             void $ fun xs
             pure next
       }
+
+defShow :: (Show a) => a -> MisoString
+defShow =
+  from @Prelude.String @MisoString
+    . Prelude.show
 
 success :: MisoString -> [View Action]
 success msg =

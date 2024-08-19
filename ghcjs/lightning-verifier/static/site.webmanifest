@@ -1,6 +1,6 @@
 {
-  "name": "Currency Converter",
-  "short_name": "Currency Converter",
+  "name": "Lightning Verifier",
+  "short_name": "Lightning Verifier",
   "icons": [
     {
       "src": "static/android-chrome-192x192.png",

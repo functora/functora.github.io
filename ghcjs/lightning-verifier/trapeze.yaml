@@ -1,9 +1,9 @@
 platforms:
   android:
-    appName: Currency Converter
+    appName: Lightning Verifier
     versionCode: 1
     versionName: 0.1.0.1
-    packageName: com.functora.currency_converter
+    packageName: com.functora.lightning_verifier
     manifest:
       - file: AndroidManifest.xml
         target: manifest/application/activity

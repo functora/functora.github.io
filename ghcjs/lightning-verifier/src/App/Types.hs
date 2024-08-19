@@ -233,7 +233,7 @@ baseUri =
   "http://localhost:8080"
 #else
 baseUri =
-  "https://functora.github.io/apps/currency-converter/" <> vsn <> "/index.html"
+  "https://functora.github.io/apps/lightning-verifier/" <> vsn <> "/index.html"
 #endif
 
 setScreenPure :: Screen -> Model -> JSM Model
@@ -266,7 +266,7 @@ btc :: CurrencyInfo
 btc = CurrencyInfo (CurrencyCode "btc") mempty
 
 googlePlayLink :: Prelude.Text
-googlePlayLink = "https://play.google.com/apps/testing/com.functora.currency_converter"
+googlePlayLink = "https://play.google.com/apps/testing/com.functora.lightning_verifier"
 
 testGroupLink :: Prelude.Text
 testGroupLink = "https://groups.google.com/g/currency-converter"
@@ -276,12 +276,12 @@ functoraLink = "https://functora.github.io/"
 
 sourceLink :: Prelude.Text
 sourceLink =
-  "https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter"
+  "https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier"
 
 apkLink :: Prelude.Text
 apkLink =
-  "https://github.com/functora/functora.github.io/releases/download/currency-converter-v"
+  "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
     <> fromMisoString vsn
-    <> "/currency-converter-v"
+    <> "/lightning-verifier-v"
     <> fromMisoString vsn
     <> ".apk"

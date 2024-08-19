@@ -195,17 +195,17 @@ in rec {
     text = ''
       (
         ${app-release-stable}/bin/app-release-stable
-        if [ -d "${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}" ]
+        if [ -d "${repo}/../../pub/functora-hakyll/apps/${label}/${vsn}" ]
         then
           echo "Version ${vsn} does already exist!"
           exit 1
         else
-          mkdir -p ${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}
+          mkdir -p ${repo}/../../pub/functora-hakyll/apps/${label}/${vsn}
         fi
         ${safeCopy} ${repo}/dist/${vsn}/* \
-          ${repo}/../../pub/functora-hakyll/apps/currency-converter/${vsn}
+          ${repo}/../../pub/functora-hakyll/apps/${label}/${vsn}
         ${forceCopy} ${repo}/dist/index.html \
-          ${repo}/../../pub/functora-hakyll/apps/currency-converter
+          ${repo}/../../pub/functora-hakyll/apps/${label}
       )
     '';
   };

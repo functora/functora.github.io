@@ -96,6 +96,7 @@ common pkg
     , async
     , barbies
     , base
+    , base16-bytestring
     , base64-bytestring
     , binary
     , bytestring

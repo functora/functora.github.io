@@ -33,6 +33,16 @@ textarea {
   height: 56px;
 }
 
+.app-success > div > span {
+  color: white;
+  background-color: #018786 !important;
+}
+
+.app-failure > div > span {
+  color: white;
+  background-color: #b00020 !important;
+}
+
 @media print {
   body {
     color-adjust: exact !important;

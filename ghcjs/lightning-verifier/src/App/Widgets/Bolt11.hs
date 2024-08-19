@@ -22,12 +22,12 @@ bolt11 st =
     <> either (const mempty) invoiceWidget ln
     <> either
       (const mempty)
-      (\x -> if x == mempty then mempty else preimageWidget x)
+      (\bsR -> if bsR == mempty then mempty else preimageWidget rawR bsR)
       r
   where
     rawLn = st ^. #modelState . #stDoc . #stDocLnInvoice . #fieldOutput
     rawR = st ^. #modelState . #stDoc . #stDocLnPreimage . #fieldOutput
-    ln = first inspect $ B11.decodeBolt11 rawLn
+    ln = first (mappend "Bad invoice - " . inspect) $ B11.decodeBolt11 rawLn
     rh = ln >>= parsePreimageHash
     r = parsePreimage rawR
 
@@ -42,8 +42,8 @@ verifierWidget src rh r =
     then mempty
     else
       if rh == sha256Hash r
-        then success "Invoice and preimage match!"
-        else failure "Invoice and preimage mismatch!"
+        then success "The preimage matches the invoice"
+        else failure "The preimage does not match the invoice"
 
 invoiceWidget :: B11.Bolt11 -> [View Action]
 invoiceWidget ln =
@@ -65,31 +65,33 @@ invoiceWidget ln =
         . from @Prelude.String @MisoString
         . Prelude.show
 
-preimageWidget :: ByteString -> [View Action]
-preimageWidget r =
+preimageWidget :: MisoString -> ByteString -> [View Action]
+preimageWidget rawR r =
   Header.headerViewer "Preimage Details"
     <> pairs
-      [ simple "Preimage" r,
-        simple "Preimage Hash" $ sha256Hash r
+      [ simple "Preimage" rawR,
+        simple "Preimage Hash" . inspect @ByteString $ sha256Hash r
       ]
   where
-    simple :: MisoString -> ByteString -> FieldPair DynamicField Identity
+    simple :: MisoString -> MisoString -> FieldPair DynamicField Identity
     simple x =
       newFieldPairId x
         . DynamicFieldText
-        . inspect
 
 parsePreimage :: MisoString -> Either MisoString ByteString
 parsePreimage rawR =
   case B16.decode . T.encodeUtf8 $ from @MisoString @Prelude.Text rawR of
     (r, "") -> Right r
-    res -> Left $ "Bad preimage " <> inspect res
+    (_, e) ->
+      Left
+        $ "Bad preimage - non hex leftover "
+        <> from @Prelude.String @MisoString (Prelude.show e)
 
 parsePreimageHash :: B11.Bolt11 -> Either MisoString ByteString
 parsePreimageHash ln =
   case find B11.isPaymentHash $ B11.bolt11Tags ln of
     Just (B11.PaymentHash (B11.Hex rh)) -> Right rh
-    _ -> Left "Bad invoice without preimage hash!"
+    _ -> Left "Bad invoice - no preimage hash"
 
 pairs :: [FieldPair DynamicField f] -> [View Action]
 pairs xs =

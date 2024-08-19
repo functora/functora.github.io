@@ -36,11 +36,15 @@ textarea {
 .app-success > div > span {
   color: white;
   background-color: #018786 !important;
+  display: flex;
+  justify-content: center;
 }
 
 .app-failure > div > span {
   color: white;
   background-color: #b00020 !important;
+  display: flex;
+  justify-content: center;
 }
 
 @media print {

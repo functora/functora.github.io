@@ -128,6 +128,8 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.argsAction = PushUpdate . Delayed 300
             }
           ( Field.defOpts @Model @Action
+              & #optsFilledOrOutlined
+              .~ Outlined
               & #optsPlaceholder
               .~ "Invoice"
           ),
@@ -138,6 +140,8 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.argsAction = PushUpdate . Delayed 300
             }
           ( Field.defOpts @Model @Action
+              & #optsFilledOrOutlined
+              .~ Outlined
               & #optsPlaceholder
               .~ "Preimage"
           )

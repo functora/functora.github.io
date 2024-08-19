@@ -31,7 +31,11 @@ bolt11 st =
   where
     -- r = st ^. #modelState . #stDoc . #stDocLnPreimage . #fieldOutput
     ln = st ^. #modelState . #stDoc . #stDocLnInvoice . #fieldOutput
-    simple x = newFieldPairId x . DynamicFieldText . inspect
+    simple x =
+      newFieldPairId x
+        . DynamicFieldText
+        . from @Prelude.String @MisoString
+        . Prelude.show
     widget xs =
       FieldPairs.fieldPairsViewer
         FieldPairs.Args

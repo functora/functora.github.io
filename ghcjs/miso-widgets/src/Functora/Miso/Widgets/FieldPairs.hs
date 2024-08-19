@@ -37,7 +37,6 @@ fieldPairViewer args pair =
               [ Typography.typography,
                 Css.fullWidth,
                 class_ "mdc-text-field",
-                class_ "mdc-text-field--filled",
                 style_
                   [ ("align-items", "center"),
                     ("align-content", "center"),

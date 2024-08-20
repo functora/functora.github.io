@@ -127,7 +127,7 @@ pair x =
     . DynamicFieldText
 
 pairs :: [FieldPair DynamicField f] -> [View Action]
-pairs xs =
+pairs raw =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args
       { FieldPairs.argsModel = xs,
@@ -137,6 +137,14 @@ pairs xs =
             void $ fun xs
             pure next
       }
+  where
+    xs =
+      filter
+        ( \x ->
+            inspectDynamicField (x ^. #fieldPairValue . #fieldOutput)
+              /= mempty
+        )
+        raw
 
 defShow :: (Show a) => a -> MisoString
 defShow =

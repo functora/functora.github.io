@@ -12,10 +12,12 @@ module Functora.Miso.Jsm
     enterOrEscapeBlur,
     insertStorage,
     selectStorage,
+    selectClipboard,
   )
 where
 
 import qualified Data.Generics as Syb
+import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Functora.Miso.Prelude
 import Functora.Miso.Types
@@ -166,6 +168,30 @@ selectStorage key after = do
     JS.function $ \_ _ _ -> consoleLog @MisoString "Storage reader failure!"
   prom <-
     JS.global ^. JS.js1 @MisoString "selectStorage" key
+  void
+    $ prom
+    ^. JS.js2 @MisoString "then" success failure
+
+selectClipboard :: (Maybe MisoString -> JSM ()) -> JSM ()
+selectClipboard after = do
+  success <- JS.function $ \_ _ ->
+    handleAny (\e -> consoleLog e >> after Nothing) . \case
+      [val] -> do
+        valExist <- ghcjsPure $ JS.isTruthy val
+        if not valExist
+          then after Nothing
+          else do
+            raw <- JS.fromJSVal @Prelude.Text val
+            str <- maybe (throwString @MisoString "Clipboard bad type!") pure raw
+            popupText @MisoString "Inserted!"
+            after . Just . from @Prelude.Text @MisoString $ T.strip str
+      _ ->
+        throwString @MisoString "Clipboard bad argv!"
+  failure <-
+    JS.function $ \_ _ _ ->
+      popupText @MisoString "Failed to paste!"
+  prom <-
+    JS.global ^. JS.js0 @MisoString "selectClipboard"
   void
     $ prom
     ^. JS.js2 @MisoString "then" success failure

@@ -1,6 +1,7 @@
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
+import { Clipboard } from "@capacitor/clipboard";
 import { Browser } from "@capacitor/browser";
 import { Share } from "@capacitor/share";
 import { Toast } from "@capacitor/toast";
@@ -16,6 +17,11 @@ async function selectStorage(key) {
 
 async function insertStorage(key, value) {
   return await Preferences.set({ key: key, value: value });
+}
+
+async function selectClipboard() {
+  const { value } = await Clipboard.read();
+  return value;
 }
 
 async function openBrowserPage(url) {
@@ -43,6 +49,7 @@ defineCustomElements(window);
 globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
 globalThis.insertStorage = insertStorage;
+globalThis.selectClipboard = selectClipboard;
 globalThis.openBrowserPage = openBrowserPage;
 globalThis.shareText = shareText;
 globalThis.popupText = popupText;

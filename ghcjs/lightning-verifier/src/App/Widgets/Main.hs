@@ -1,10 +1,12 @@
 module App.Widgets.Main (mainWidget) where
 
+import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Bolt11 as Bolt11
 import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Menu as Menu
 import qualified Functora.Miso.Css as Css
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
@@ -121,17 +123,18 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         FieldPairs.argsOptic = #modelState . #stDoc . #stDocFieldPairs,
         FieldPairs.argsAction = PushUpdate . Instant
       }
-    <> [ Field.textField
+    <> [ Field.textField @Model @Action
           Field.Args
             { Field.argsModel = st,
               Field.argsOptic = #modelState . #stDoc . #stDocLnInvoice,
               Field.argsAction = PushUpdate . Delayed 300
             }
-          ( Field.defOpts @Model @Action
-              & #optsFilledOrOutlined
-              .~ Outlined
-              & #optsPlaceholder
-              .~ "Invoice"
+          ( Field.defOpts
+              { Field.optsFilledOrOutlined = Outlined,
+                Field.optsPlaceholder = "Invoice",
+                Field.optsLeadingWidget =
+                  pasteWidget $ #modelState . #stDoc . #stDocLnInvoice
+              }
           ),
          Field.textField
           Field.Args
@@ -139,14 +142,34 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.argsOptic = #modelState . #stDoc . #stDocLnPreimage,
               Field.argsAction = PushUpdate . Delayed 300
             }
-          ( Field.defOpts @Model @Action
-              & #optsFilledOrOutlined
-              .~ Outlined
-              & #optsPlaceholder
-              .~ "Preimage"
-          )
+          Field.defOpts
+            { Field.optsFilledOrOutlined = Outlined,
+              Field.optsPlaceholder = "Preimage",
+              Field.optsLeadingWidget =
+                pasteWidget $ #modelState . #stDoc . #stDocLnPreimage
+            }
        ]
     <> Bolt11.bolt11 st
+
+pasteWidget ::
+  ATraversal' Model (Field MisoString Unique) ->
+  Maybe (Field.OptsWidget Model Action)
+pasteWidget optic =
+  Just
+    . Field.ActionWidget "content_paste" mempty
+    . PushUpdate
+    . Instant
+    $ \prev -> do
+      Jsm.selectClipboard $ \case
+        Nothing ->
+          Jsm.popupText @MisoString "Failed to paste!"
+        Just clip ->
+          Misc.pushActionQueue prev
+            . Instant
+            $ pure
+            . (& cloneTraversal optic . #fieldOutput .~ clip)
+            . (& cloneTraversal optic . #fieldInput . #uniqueValue .~ clip)
+      pure prev
 
 tosWidget :: View Action
 tosWidget =

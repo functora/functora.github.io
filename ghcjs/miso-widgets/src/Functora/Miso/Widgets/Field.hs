@@ -24,6 +24,7 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
+import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
@@ -708,12 +709,12 @@ dynamicFieldViewer ::
   [View action]
 dynamicFieldViewer action value =
   case value ^. #fieldType of
-    FieldTypeNumber -> plain out text
-    FieldTypePercent -> plain out $ text . (<> "%")
-    FieldTypeText -> plain out text
+    FieldTypeNumber -> plain action value text
+    FieldTypePercent -> plain action value $ text . (<> "%")
+    FieldTypeText -> plain action value text
     FieldTypeTitle -> header out
-    FieldTypeHtml -> plain out rawHtml
-    FieldTypePassword -> plain out $ const "*****"
+    FieldTypeHtml -> plain action value rawHtml
+    FieldTypePassword -> plain action value $ const "*****"
     FieldTypeQrCode ->
       Qr.qr
         Qr.Args
@@ -728,14 +729,11 @@ dynamicFieldViewer action value =
     allowCopy = value ^. #fieldAllowCopy
 
 plain ::
-  ( Eq a,
-    Monoid a,
-    ToMisoString a
-  ) =>
-  a ->
+  ((model -> JSM model) -> action) ->
+  Field DynamicField f ->
   (MisoString -> View action) ->
   [View action]
-plain out widget =
+plain action value widget =
   if out == mempty
     then mempty
     else
@@ -757,8 +755,22 @@ plain out widget =
                 ("line-height", "150%")
               ]
           ]
-          [widget $ toMisoString out]
+          $ [ widget $ toMisoString out
+            ]
+          <> ( if not allowCopy
+                then mempty
+                else
+                  [ IconButton.iconButton
+                      ( IconButton.config
+                          & IconButton.setOnClick (action $ Jsm.shareText out)
+                      )
+                      "content_copy"
+                  ]
+             )
       ]
+  where
+    out = inspectDynamicField $ value ^. #fieldOutput
+    allowCopy = value ^. #fieldAllowCopy
 
 header :: MisoString -> [View action]
 header txt =

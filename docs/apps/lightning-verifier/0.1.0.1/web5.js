@@ -1,0 +1,1 @@
+import{W as WebPlugin}from"./main.js";class ToastWeb extends WebPlugin{async show(e){if("undefined"!=typeof document){let t=2e3;e.duration&&(t="long"===e.duration?3500:2e3);const n=document.createElement("pwa-toast");n.duration=t,n.message=e.text,document.body.appendChild(n)}}}export{ToastWeb};

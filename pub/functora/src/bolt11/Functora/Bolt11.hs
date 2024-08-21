@@ -3,7 +3,6 @@
 
 module Functora.Bolt11
   ( Bolt11 (..),
-    bolt11Msats,
     decodeBolt11,
     Hex (..),
     Multiplier (..),
@@ -35,7 +34,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as T
-import Functora.Denomination (Denomination (toMsats), MSats, btc)
 import GHC.Generics (Generic)
 import Prelude
 
@@ -101,7 +99,11 @@ newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Integer, Multiplier)}
   deriving stock (Data, Generic)
 
 instance Show Bolt11Amount where
-  show amt = show (bolt11Msats amt)
+  show (Bolt11Amount (amt, mul)) =
+    show msat <> " msats"
+    where
+      msat :: Integer
+      msat = round $ (amt % 1) * multiplierRatio mul * 1000_0000_0000
 
 data Bolt11HRP = Bolt11HRP
   { bolt11Currency :: Network,
@@ -221,7 +223,3 @@ multiplierRatio m =
     Micro -> 1 % 1000000
     Nano -> 1 % 1000000000
     Pico -> 1 % 1000000000000
-
-bolt11Msats :: Bolt11Amount -> MSats
-bolt11Msats (Bolt11Amount (amt, multi)) =
-  toMsats (btc (multiplierRatio multi * toRational amt))

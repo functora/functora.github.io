@@ -348,9 +348,7 @@ library bolt11
   import:          pkg-bolt11
   exposed:         True
   visibility:      public
-  exposed-modules:
-    Functora.Bolt11
-    Functora.Denomination
+  exposed-modules: Functora.Bolt11
 
 executable elm2miso
   import:        pkg-elm2miso, exe
@@ -404,7 +402,6 @@ test-suite functora-test
       Functora.Bolt11
       Functora.Cfg
       Functora.CfgOrphan
-      Functora.Denomination
       Functora.Elm2Miso
       Functora.Money
       Functora.MoneySing

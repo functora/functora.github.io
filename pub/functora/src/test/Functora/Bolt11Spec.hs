@@ -10,7 +10,7 @@ goodSamples =
       Bolt11
         { bolt11HRP =
             Bolt11HRP
-              { bolt11Currency = Bitcoin,
+              { bolt11Currency = BitcoinMainnet,
                 bolt11Amount = Nothing
               },
           bolt11Timestamp = 1496314658,
@@ -28,5 +28,7 @@ goodSamples =
 
 spec :: Spec
 spec = do
-  it "goodSamples" . forM_ goodSamples . uncurry $
-    \lhs rhs -> decodeBolt11 lhs `shouldBe` Right rhs
+  it "goodSamples"
+    . forM_ goodSamples
+    . uncurry
+    $ \lhs rhs -> decodeBolt11 lhs `shouldBe` Right rhs

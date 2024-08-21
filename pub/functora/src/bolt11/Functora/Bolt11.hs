@@ -7,7 +7,7 @@ module Functora.Bolt11
     decodeBolt11,
     Hex (..),
     Multiplier (..),
-    Currency (..),
+    Network (..),
     Tag (..),
     Bolt11HRP (..),
     isPaymentHash,
@@ -26,6 +26,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Data (Data)
 import Data.Foldable (foldl')
 import Data.Maybe (fromMaybe)
+import Data.Ratio ((%))
 import Data.String (IsString (..))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -86,13 +87,14 @@ isDescription _ = False
 data Multiplier = Milli | Micro | Nano | Pico
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-data Currency
-  = Bitcoin
+data Network
+  = BitcoinMainnet
   | BitcoinTestnet
   | BitcoinRegtest
+  | BitcoinSignet
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Int, Multiplier)}
+newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Integer, Multiplier)}
   deriving newtype (Eq, Ord)
   deriving stock (Data, Generic)
 
@@ -100,7 +102,7 @@ instance Show Bolt11Amount where
   show amt = show (bolt11Msats amt)
 
 data Bolt11HRP = Bolt11HRP
-  { bolt11Currency :: Currency,
+  { bolt11Currency :: Network,
     bolt11Amount :: Maybe Bolt11Amount
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
@@ -113,11 +115,12 @@ data Bolt11 = Bolt11
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-parseCurrency :: Parser Currency
-parseCurrency =
-  (string "bc" *> pure Bitcoin)
+parseNetwork :: Parser Network
+parseNetwork =
+  (string "bcrt" *> pure BitcoinRegtest)
+    <|> (string "bc" *> pure BitcoinMainnet)
+    <|> (string "tbs" *> pure BitcoinSignet)
     <|> (string "tb" *> pure BitcoinTestnet)
-    <|> (string "bcrt" *> pure BitcoinRegtest)
 
 parseMultiplier :: Parser Multiplier
 parseMultiplier = do
@@ -133,19 +136,15 @@ parseHrpAmount :: Parser Bolt11Amount
 parseHrpAmount = do
   amt <- decimal
   multi <- parseMultiplier
-  return (Bolt11Amount (amt, multi))
+  pure (Bolt11Amount (amt, multi))
 
 hrpParser :: Parser Bolt11HRP
 hrpParser = do
   _ <- char 'l'
   _ <- char 'n'
-  currency <- parseCurrency
-  mamt <- optional parseHrpAmount
-  return (Bolt11HRP currency mamt)
-
-maybeToRight :: b -> Maybe a -> Either b a
-maybeToRight _ (Just x) = Right x
-maybeToRight y Nothing = Left y
+  net <- parseNetwork
+  amt <- optional parseHrpAmount
+  pure (Bolt11HRP net amt)
 
 w5int :: [Word5] -> Int
 w5int bytes = foldl' decodeInt 0 (zip [0 ..] (Prelude.take 7 (reverse bytes)))
@@ -204,7 +203,7 @@ tagsParser ws
 
 decodeBolt11 :: Text -> Either String Bolt11
 decodeBolt11 txt = do
-  (hrp, w5s) <- maybeToRight "error decoding bech32" (bech32Decode txt)
+  (hrp, w5s) <- maybe (Left "error decoding bech32") Right $ bech32Decode txt
   let (timestampBits, rest) = splitAt 7 w5s
       timestamp = w5int timestampBits
       (tags, leftover) = tagsParser rest
@@ -217,10 +216,10 @@ decodeBolt11 txt = do
 multiplierRatio :: Multiplier -> Rational
 multiplierRatio m =
   case m of
-    Milli -> 1 / 1000
-    Micro -> 1 / 1000000
-    Nano -> 1 / 1000000000
-    Pico -> 1 / 1000000000000
+    Milli -> 1 % 1000
+    Micro -> 1 % 1000000
+    Nano -> 1 % 1000000000
+    Pico -> 1 % 1000000000000
 
 bolt11Msats :: Bolt11Amount -> MSats
 bolt11Msats (Bolt11Amount (amt, multi)) =

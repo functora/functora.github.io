@@ -59,9 +59,10 @@ invoiceWidget ln =
     <> pairs
       ( [ pair "Network"
             $ case B11.bolt11Currency $ B11.bolt11HRP ln of
-              B11.Bitcoin -> "Bitcoin Mainnet"
+              B11.BitcoinMainnet -> "Bitcoin Mainnet"
               B11.BitcoinTestnet -> "Bitcoin Testnet"
-              B11.BitcoinRegtest -> "Bitcoin Regtest",
+              B11.BitcoinRegtest -> "Bitcoin Regtest"
+              B11.BitcoinSignet -> "Bitcoin Signet",
           pair "Amount"
             . maybe "0" defShow
             . B11.bolt11Amount

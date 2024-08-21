@@ -2,15 +2,17 @@
 {-# LANGUAGE CPP #-}
 
 module Functora.Bolt11
-  ( Bolt11 (..),
-    decodeBolt11,
-    Hex (..),
-    Multiplier (..),
-    Network (..),
+  ( Hex (..),
+    inspectHex,
     Tag (..),
-    Bolt11Hrp (..),
-    Bolt11HrpAmt (..),
     isPaymentHash,
+    Network (..),
+    Multiplier (..),
+    Bolt11HrpAmt (..),
+    inspectBolt11HrpAmt,
+    Bolt11Hrp (..),
+    Bolt11 (..),
+    decodeBolt11,
   )
 where
 
@@ -31,11 +33,15 @@ import Prelude (Show (..), error, splitAt, take)
 newtype Hex = Hex
   { unHex :: ByteString
   }
-  deriving newtype (Eq, Ord)
-  deriving stock (Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
-instance Show Hex where
-  show (Hex bs) = BL.unpack (BS.toLazyByteString (BS.byteStringHex bs))
+inspectHex :: forall a. (From String a) => Hex -> a
+inspectHex =
+  from @String @a
+    . BL.unpack
+    . BS.toLazyByteString
+    . BS.byteStringHex
+    . unHex
 
 instance IsString Hex where
   fromString =
@@ -73,9 +79,6 @@ isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
 isPaymentHash _ = False
 
-data Multiplier = Milli | Micro | Nano | Pico
-  deriving stock (Eq, Ord, Show, Data, Generic)
-
 data Network
   = BitcoinMainnet
   | BitcoinTestnet
@@ -83,27 +86,62 @@ data Network
   | BitcoinSignet
   deriving stock (Eq, Ord, Show, Data, Generic)
 
+data Multiplier = Milli | Micro | Nano | Pico
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
 data Bolt11HrpAmt = Bolt11HrpAmt
   { bolt11HrpAmtNum :: Integer,
     bolt11HrpAmtMul :: Multiplier
   }
-  deriving stock (Eq, Ord, Data, Generic)
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
-instance Show Bolt11HrpAmt where
-  show (Bolt11HrpAmt amt mul) =
-    if sat > 1_000_000
-      then inspectBtcNum btc <> " BTC"
-      else
-        if (round sat) % 1 == sat
-          then inspectBtcNum sat <> " Satoshi"
-          else inspectBtcNum msat <> " Millisatoshi"
-    where
-      btc :: Rational
-      btc = (amt % 1) * multiplierRatio mul
-      sat :: Rational
-      sat = btc * 1_0000_0000
-      msat :: Rational
-      msat = sat * 1000
+inspectBolt11HrpAmt ::
+  ( From String a,
+    Semigroup a,
+    IsString a
+  ) =>
+  Bolt11HrpAmt ->
+  a
+inspectBolt11HrpAmt (Bolt11HrpAmt amt mul) =
+  if sat > 1_000_000
+    then inspectBolt11HrpAmt' btc <> " BTC"
+    else
+      if (round sat) % 1 == sat
+        then inspectBolt11HrpAmt' sat <> " Satoshi"
+        else inspectBolt11HrpAmt' msat <> " Millisatoshi"
+  where
+    btc :: Rational
+    btc = (amt % 1) * multiplierRatio mul
+    sat :: Rational
+    sat = btc * 1_0000_0000
+    msat :: Rational
+    msat = sat * 1000
+
+inspectBolt11HrpAmt' ::
+  forall a b.
+  ( From String a,
+    From b Integer,
+    Integral b
+  ) =>
+  Ratio b ->
+  a
+inspectBolt11HrpAmt' =
+  inspectRatio
+    RatioFormat
+      { ratioFormatDoRounding = True,
+        ratioFormatThousandsSeparator = mempty,
+        ratioFormatDecimalPlacesAfterNonZero = Just 12, -- Pico
+        ratioFormatDecimalPlacesTotalLimit = Just 12, -- Pico
+        ratioFormatDecimalPlacesTotalLimitOverflow = DecimalPlacesOverflowExponent
+      }
+
+multiplierRatio :: Multiplier -> Rational
+multiplierRatio m =
+  case m of
+    Milli -> 1 % 1000
+    Micro -> 1 % 1000000
+    Nano -> 1 % 1000000000
+    Pico -> 1 % 1000000000000
 
 data Bolt11Hrp = Bolt11Hrp
   { bolt11HrpNet :: Network,
@@ -142,8 +180,8 @@ parseHrpAmount = do
   mul <- parseMultiplier
   pure $ Bolt11HrpAmt amt mul
 
-hrpParser :: Parser Bolt11Hrp
-hrpParser = do
+parseHrp :: Parser Bolt11Hrp
+parseHrp = do
   _ <- char 'l'
   _ <- char 'n'
   net <- parseNetwork
@@ -205,39 +243,13 @@ tagsParser ws
             mtag
 
 decodeBolt11 :: Text -> Either String Bolt11
-decodeBolt11 txt = do
-  (hrp, w5s) <- first show $ Bech32.decodeLenient txt
-  let (timestampBits, rest) = splitAt 7 $ Bech32.dataPartToWords w5s
+decodeBolt11 raw = do
+  (rawHrp, rawDp) <- first show $ Bech32.decodeLenient raw
+  let (timestampBits, rest) = splitAt 7 $ Bech32.dataPartToWords rawDp
       timestamp = w5int timestampBits
       (tags, leftover) = tagsParser rest
   sig <- case leftover of
     Sig ws -> maybe (Left "corrupt") Right (Bech32.toBase256 ws)
     Unk left -> Left ("corrupt, leftover: " ++ show (Hex (w5bs left)))
-  parsedHrp <- parseOnly hrpParser $ Bech32.humanReadablePartToText hrp
-  Right (Bolt11 parsedHrp timestamp tags (Hex (BS.pack sig)))
-
-multiplierRatio :: Multiplier -> Rational
-multiplierRatio m =
-  case m of
-    Milli -> 1 % 1000
-    Micro -> 1 % 1000000
-    Nano -> 1 % 1000000000
-    Pico -> 1 % 1000000000000
-
-inspectBtcNum ::
-  forall a b.
-  ( From String a,
-    From b Integer,
-    Integral b
-  ) =>
-  Ratio b ->
-  a
-inspectBtcNum =
-  inspectRatio
-    RatioFormat
-      { ratioFormatDoRounding = True,
-        ratioFormatThousandsSeparator = mempty,
-        ratioFormatDecimalPlacesAfterNonZero = Just 12, -- Pico
-        ratioFormatDecimalPlacesTotalLimit = Just 12, -- Pico
-        ratioFormatDecimalPlacesTotalLimitOverflow = DecimalPlacesOverflowExponent
-      }
+  hrp <- parseOnly parseHrp $ Bech32.humanReadablePartToText rawHrp
+  Right (Bolt11 hrp timestamp tags (Hex (BS.pack sig)))

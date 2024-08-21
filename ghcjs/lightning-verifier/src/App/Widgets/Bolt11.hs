@@ -64,7 +64,7 @@ invoiceWidget ln =
               B11.BitcoinRegtest -> "Bitcoin Regtest"
               B11.BitcoinSignet -> "Bitcoin Signet",
           pair "Amount"
-            . maybe "0" defShow
+            . maybe "0" B11.inspectBolt11HrpAmt
             . B11.bolt11HrpAmt
             $ B11.bolt11Hrp ln,
           pair "Timestamp"
@@ -75,29 +75,33 @@ invoiceWidget ln =
                 >>= invoiceTagWidget
              )
           <> [ pair "Signature"
-                . defShow
+                . B11.inspectHex
                 $ B11.bolt11Signature ln
              ]
       )
 
 invoiceTagWidget :: B11.Tag -> [FieldPair DynamicField Identity]
 invoiceTagWidget = \case
-  B11.PaymentHash x -> simple "Preimage Hash" x
-  B11.PaymentSecret x -> simple "Payment Secret" x
+  B11.PaymentHash x -> hex "Preimage Hash" x
+  B11.PaymentSecret x -> hex "Payment Secret" x
   B11.Description x -> pure . pair "Description" $ inspect x
-  B11.PayeePubkey x -> simple "Payee Pubkey" x
-  B11.DescriptionHash x -> simple "Description Hash" x
-  B11.Expiry x -> simple "Expiry" x
-  B11.MinFinalCltvExpiry x -> simple "Min Final CLTV Expiry" x
-  B11.OnchainFallback x -> simple "Onchain Fallback" x
+  B11.PayeePubkey x -> hex "Payee Pubkey" x
+  B11.DescriptionHash x -> hex "Description Hash" x
+  B11.Expiry x -> pure . pair "Expiry" $ inspect x
+  B11.MinFinalCltvExpiry x -> pure . pair "Min Final CLTV Expiry" $ inspect x
+  B11.OnchainFallback x -> hex "Onchain Fallback" x
   B11.ExtraRouteInfo -> mempty
-  B11.FeatureBits x -> simple "Feature Bits" x
+  B11.FeatureBits x ->
+    pure
+      . pair "Feature Bits"
+      . from @Prelude.String @MisoString
+      $ Prelude.show x
   where
-    simple :: (Show a) => MisoString -> a -> [FieldPair DynamicField Identity]
-    simple x =
+    hex :: MisoString -> B11.Hex -> [FieldPair DynamicField Identity]
+    hex x =
       pure
         . pair x
-        . defShow
+        . B11.inspectHex
 
 preimageWidget :: MisoString -> ByteString -> [View Action]
 preimageWidget rawR r =
@@ -146,11 +150,6 @@ pairs raw =
               /= mempty
         )
         raw
-
-defShow :: (Show a) => a -> MisoString
-defShow =
-  from @Prelude.String @MisoString
-    . Prelude.show
 
 success :: MisoString -> [View Action]
 success msg =

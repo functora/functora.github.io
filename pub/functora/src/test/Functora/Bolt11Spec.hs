@@ -18,7 +18,7 @@ goodSamples =
             [ PaymentSecret "1111111111111111111111111111111111111111111111111111111111111111",
               PaymentHash "0001020304050607080900010203040506070809000102030405060708090102",
               Description "Please consider supporting this project",
-              FeatureBits [16, 8, 0]
+              FeatureBits $ fmap toEnum [16, 8, 0]
             ],
           bolt11Signature =
             "8d3ce9e28357337f62da0162d9454df827f83cfe499aeb1c1db349d4d81127425e434ca29929406c23bba1ae8ac6ca32880b38d4bf6ff874024cac34ba9625f101"

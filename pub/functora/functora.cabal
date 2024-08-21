@@ -251,6 +251,7 @@ common pkg-bolt11
     , attoparsec
     , base
     , base16-bytestring
+    , bech32
     , bytestring
     , text
 
@@ -348,7 +349,6 @@ library bolt11
   exposed:         True
   visibility:      public
   exposed-modules:
-    Functora.Bech32
     Functora.Bolt11
     Functora.Denomination
 
@@ -401,7 +401,6 @@ test-suite functora-test
     other-modules:
       Functora.Aes
       Functora.AesOrphan
-      Functora.Bech32
       Functora.Bolt11
       Functora.Cfg
       Functora.CfgOrphan

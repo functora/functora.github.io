@@ -88,6 +88,7 @@ common pkg
     , base16-bytestring
     , base58-bytestring
     , base64-bytestring
+    , bech32
     , binary
     , binary-instances
     , bmp
@@ -152,7 +153,6 @@ library
   exposed-modules:
     Functora.Aes
     Functora.AesOrphan
-    Functora.Bech32
     Functora.Bolt11
     Functora.Cfg
     Functora.CfgOrphan
@@ -211,7 +211,6 @@ test-suite functora-ghcjs-test
   other-modules:
     Functora.Aes
     Functora.AesOrphan
-    Functora.Bech32
     Functora.Bolt11
     Functora.Cfg
     Functora.CfgOrphan

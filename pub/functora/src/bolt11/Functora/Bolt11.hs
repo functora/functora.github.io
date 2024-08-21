@@ -15,8 +15,11 @@ module Functora.Bolt11
   )
 where
 
+import Codec.Binary.Bech32 (Word5)
+import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
 import Data.Attoparsec.Text
+import Data.Bifunctor (first)
 import Data.Bits (shiftL, (.|.))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
@@ -32,7 +35,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as T
-import Functora.Bech32 (Word5 (..), bech32Decode, toBase256)
 import Functora.Denomination (Denomination (toMsats), MSats, btc)
 import GHC.Generics (Generic)
 import Prelude
@@ -74,7 +76,7 @@ data Tag
   | OnchainFallback Hex -- TODO: address type
   | ExtraRouteInfo
   | FeatureBits [Word5]
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
 
 isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
@@ -113,7 +115,7 @@ data Bolt11 = Bolt11
     bolt11Tags :: [Tag], -- posix
     bolt11Signature :: Hex
   }
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
 
 parseNetwork :: Parser Network
 parseNetwork =
@@ -149,11 +151,11 @@ hrpParser = do
 w5int :: [Word5] -> Int
 w5int bytes = foldl' decodeInt 0 (zip [0 ..] (Prelude.take 7 (reverse bytes)))
   where
-    decodeInt !n (i, UnsafeWord5 byte) =
-      n .|. fromIntegral byte `shiftL` (i * 5)
+    decodeInt !n (i, byte) =
+      n .|. fromEnum byte `shiftL` (i * 5)
 
 w5bs :: [Word5] -> ByteString
-w5bs = BS.pack . fromMaybe (error "what") . toBase256
+w5bs = BS.pack . fromMaybe (error "what") . Bech32.toBase256
 
 w5txt :: [Word5] -> Text
 w5txt = decodeUtf8 . w5bs
@@ -164,7 +166,7 @@ tagParser ws@[_] = (Nothing, ws)
 tagParser ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
 tagParser ws
   | length ws < 8 = (Nothing, ws)
-tagParser ws@(UnsafeWord5 typ : d1 : d2 : rest)
+tagParser ws@(typ : d1 : d2 : rest)
   | length rest < 7 = (Nothing, ws)
   | otherwise = (Just tag, leftovers)
   where
@@ -172,7 +174,7 @@ tagParser ws@(UnsafeWord5 typ : d1 : d2 : rest)
     (dat, leftovers) = Prelude.splitAt dataLen rest
     datBs = Hex (w5bs dat)
     tag =
-      case typ of
+      case fromEnum typ of
         1 -> PaymentHash datBs
         16 -> PaymentSecret datBs
         23 -> DescriptionHash datBs -- (w5bs dat)
@@ -188,14 +190,13 @@ tagParser ws@(UnsafeWord5 typ : d1 : d2 : rest)
 data MSig
   = Sig [Word5]
   | Unk [Word5]
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
 
 tagsParser :: [Word5] -> ([Tag], MSig)
 tagsParser ws
   | length ws == 104 = ([], Sig ws)
   | otherwise =
       let (mtag, rest) = tagParser ws
-          first fn (a, b) = (fn a, b)
        in maybe
             ([], Unk rest)
             (\tag -> first (tag :) (tagsParser rest))
@@ -203,14 +204,14 @@ tagsParser ws
 
 decodeBolt11 :: Text -> Either String Bolt11
 decodeBolt11 txt = do
-  (hrp, w5s) <- maybe (Left "error decoding bech32") Right $ bech32Decode txt
-  let (timestampBits, rest) = splitAt 7 w5s
+  (hrp, w5s) <- first show $ Bech32.decodeLenient txt
+  let (timestampBits, rest) = splitAt 7 $ Bech32.dataPartToWords w5s
       timestamp = w5int timestampBits
       (tags, leftover) = tagsParser rest
   sig <- case leftover of
-    Sig ws -> maybe (Left "corrupt") Right (toBase256 ws)
+    Sig ws -> maybe (Left "corrupt") Right (Bech32.toBase256 ws)
     Unk left -> Left ("corrupt, leftover: " ++ show (Hex (w5bs left)))
-  parsedHrp <- parseOnly hrpParser hrp
+  parsedHrp <- parseOnly hrpParser $ Bech32.humanReadablePartToText hrp
   Right (Bolt11 parsedHrp timestamp tags (Hex (BS.pack sig)))
 
 multiplierRatio :: Multiplier -> Rational

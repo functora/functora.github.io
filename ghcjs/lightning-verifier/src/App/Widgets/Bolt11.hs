@@ -58,15 +58,15 @@ invoiceWidget ln =
   Header.headerViewer "Invoice Details"
     <> pairs
       ( [ pair "Network"
-            $ case B11.bolt11Currency $ B11.bolt11HRP ln of
+            $ case B11.bolt11HrpNet $ B11.bolt11Hrp ln of
               B11.BitcoinMainnet -> "Bitcoin Mainnet"
               B11.BitcoinTestnet -> "Bitcoin Testnet"
               B11.BitcoinRegtest -> "Bitcoin Regtest"
               B11.BitcoinSignet -> "Bitcoin Signet",
           pair "Amount"
             . maybe "0" defShow
-            . B11.bolt11Amount
-            $ B11.bolt11HRP ln,
+            . B11.bolt11HrpAmt
+            $ B11.bolt11Hrp ln,
           pair "Timestamp"
             . inspect
             $ B11.bolt11Timestamp ln

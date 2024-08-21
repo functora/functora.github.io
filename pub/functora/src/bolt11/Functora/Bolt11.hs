@@ -8,9 +8,9 @@ module Functora.Bolt11
     Multiplier (..),
     Network (..),
     Tag (..),
-    Bolt11HRP (..),
+    Bolt11Hrp (..),
+    Bolt11HrpAmt (..),
     isPaymentHash,
-    isDescription,
   )
 where
 
@@ -73,10 +73,6 @@ isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
 isPaymentHash _ = False
 
-isDescription :: Tag -> Bool
-isDescription Description {} = True
-isDescription _ = False
-
 data Multiplier = Milli | Micro | Nano | Pico
   deriving stock (Eq, Ord, Show, Data, Generic)
 
@@ -87,18 +83,20 @@ data Network
   | BitcoinSignet
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Integer, Multiplier)}
-  deriving newtype (Eq, Ord)
-  deriving stock (Data, Generic)
+data Bolt11HrpAmt = Bolt11HrpAmt
+  { bolt11HrpAmtNum :: Integer,
+    bolt11HrpAmtMul :: Multiplier
+  }
+  deriving stock (Eq, Ord, Data, Generic)
 
-instance Show Bolt11Amount where
-  show (Bolt11Amount (amt, mul)) =
-    if (round sat) % 1 /= sat
-      then show msat <> " Millisatoshi"
+instance Show Bolt11HrpAmt where
+  show (Bolt11HrpAmt amt mul) =
+    if sat > 1_000_000
+      then inspectBtcNum btc <> " BTC"
       else
-        if sat < 1_000_000
-          then show sat <> " Satoshi"
-          else show btc <> " BTC"
+        if (round sat) % 1 == sat
+          then inspectBtcNum sat <> " Satoshi"
+          else inspectBtcNum msat <> " Millisatoshi"
     where
       btc :: Rational
       btc = (amt % 1) * multiplierRatio mul
@@ -107,14 +105,14 @@ instance Show Bolt11Amount where
       msat :: Rational
       msat = sat * 1000
 
-data Bolt11HRP = Bolt11HRP
-  { bolt11Network :: Network,
-    bolt11Amount :: Maybe Bolt11Amount
+data Bolt11Hrp = Bolt11Hrp
+  { bolt11HrpNet :: Network,
+    bolt11HrpAmt :: Maybe Bolt11HrpAmt
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Bolt11 = Bolt11
-  { bolt11HRP :: Bolt11HRP,
+  { bolt11Hrp :: Bolt11Hrp,
     bolt11Timestamp :: Int, -- posix
     bolt11Tags :: [Tag], -- posix
     bolt11Signature :: Hex
@@ -138,19 +136,19 @@ parseMultiplier = do
     'p' -> pure Pico
     _ -> fail "unhandled case in parseMultiplier"
 
-parseHrpAmount :: Parser Bolt11Amount
+parseHrpAmount :: Parser Bolt11HrpAmt
 parseHrpAmount = do
   amt <- decimal
-  multi <- parseMultiplier
-  pure (Bolt11Amount (amt, multi))
+  mul <- parseMultiplier
+  pure $ Bolt11HrpAmt amt mul
 
-hrpParser :: Parser Bolt11HRP
+hrpParser :: Parser Bolt11Hrp
 hrpParser = do
   _ <- char 'l'
   _ <- char 'n'
   net <- parseNetwork
   amt <- optional parseHrpAmount
-  pure (Bolt11HRP net amt)
+  pure (Bolt11Hrp net amt)
 
 w5int :: [Word5] -> Int
 w5int bytes = foldl' decodeInt 0 (zip [0 ..] (Prelude.take 7 (reverse bytes)))
@@ -225,3 +223,21 @@ multiplierRatio m =
     Micro -> 1 % 1000000
     Nano -> 1 % 1000000000
     Pico -> 1 % 1000000000000
+
+inspectBtcNum ::
+  forall a b.
+  ( From String a,
+    From b Integer,
+    Integral b
+  ) =>
+  Ratio b ->
+  a
+inspectBtcNum =
+  inspectRatio
+    RatioFormat
+      { ratioFormatDoRounding = True,
+        ratioFormatThousandsSeparator = mempty,
+        ratioFormatDecimalPlacesAfterNonZero = Just 12, -- Pico
+        ratioFormatDecimalPlacesTotalLimit = Just 12, -- Pico
+        ratioFormatDecimalPlacesTotalLimitOverflow = DecimalPlacesOverflowExponent
+      }

@@ -8,10 +8,10 @@ goodSamples :: [(Text, Bolt11)]
 goodSamples =
   [ ( "lnbc1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq9qrsgq357wnc5r2ueh7ck6q93dj32dlqnls087fxdwk8qakdyafkq3yap9us6v52vjjsrvywa6rt52cm9r9zqt8r2t7mlcwspyetp5h2tztugp9lfyql",
       Bolt11
-        { bolt11HRP =
-            Bolt11HRP
-              { bolt11Network = BitcoinMainnet,
-                bolt11Amount = Nothing
+        { bolt11Hrp =
+            Bolt11Hrp
+              { bolt11HrpNet = BitcoinMainnet,
+                bolt11HrpAmt = Nothing
               },
           bolt11Timestamp = 1496314658,
           bolt11Tags =

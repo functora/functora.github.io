@@ -246,8 +246,6 @@ common pkg-bolt11
   import:         pkg
   hs-source-dirs: src/bolt11
   build-depends:
-    , aeson
-    , array
     , attoparsec
     , base
     , base16-bytestring
@@ -346,6 +344,7 @@ library elm2miso-lib
 
 library bolt11
   import:          pkg-bolt11
+  build-depends:   functora
   exposed:         True
   visibility:      public
   exposed-modules: Functora.Bolt11

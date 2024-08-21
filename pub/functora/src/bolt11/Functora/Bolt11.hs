@@ -18,26 +18,19 @@ import Codec.Binary.Bech32 (Word5)
 import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
 import Data.Attoparsec.Text
-import Data.Bifunctor (first)
 import Data.Bits (shiftL, (.|.))
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
-import Data.Data (Data)
-import Data.Foldable (foldl')
-import Data.Maybe (fromMaybe)
-import Data.Ratio ((%))
-import Data.String (IsString (..))
-import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Encoding as T
-import GHC.Generics (Generic)
-import Prelude
+import Functora.Prelude hiding (error)
+import Prelude (Show (..), error, splitAt, take)
 
-newtype Hex = Hex {getHex :: ByteString}
+newtype Hex = Hex
+  { unHex :: ByteString
+  }
   deriving newtype (Eq, Ord)
   deriving stock (Data, Generic)
 
@@ -100,13 +93,22 @@ newtype Bolt11Amount = Bolt11Amount {_getBolt11Amount :: (Integer, Multiplier)}
 
 instance Show Bolt11Amount where
   show (Bolt11Amount (amt, mul)) =
-    show msat <> " msats"
+    if (round sat) % 1 /= sat
+      then show msat <> " Millisatoshi"
+      else
+        if sat < 1_000_000
+          then show sat <> " Satoshi"
+          else show btc <> " BTC"
     where
-      msat :: Integer
-      msat = round $ (amt % 1) * multiplierRatio mul * 1000_0000_0000
+      btc :: Rational
+      btc = (amt % 1) * multiplierRatio mul
+      sat :: Rational
+      sat = btc * 1_0000_0000
+      msat :: Rational
+      msat = sat * 1000
 
 data Bolt11HRP = Bolt11HRP
-  { bolt11Currency :: Network,
+  { bolt11Network :: Network,
     bolt11Amount :: Maybe Bolt11Amount
   }
   deriving stock (Eq, Ord, Show, Data, Generic)

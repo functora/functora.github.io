@@ -81,7 +81,6 @@ common pkg
   build-depends:
     , aeson
     , aeson-combinators
-    , array
     , async
     , attoparsec
     , base

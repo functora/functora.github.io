@@ -10,7 +10,7 @@ goodSamples =
       Bolt11
         { bolt11HRP =
             Bolt11HRP
-              { bolt11Currency = BitcoinMainnet,
+              { bolt11Network = BitcoinMainnet,
                 bolt11Amount = Nothing
               },
           bolt11Timestamp = 1496314658,

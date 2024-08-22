@@ -11,6 +11,7 @@ module Functora.Bolt11
     Bolt11HrpAmt (..),
     inspectBolt11HrpAmt,
     Bolt11Hrp (..),
+    Bolt11Sig (..),
     Bolt11 (..),
     decodeBolt11,
   )
@@ -33,7 +34,10 @@ import Prelude (Show (..), error, splitAt, take)
 newtype Hex = Hex
   { unHex :: ByteString
   }
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Eq, Ord, Data, Generic)
+
+instance Show Hex where
+  show = inspectHex
 
 inspectHex :: forall a. (From String a) => Hex -> a
 inspectHex =
@@ -70,7 +74,7 @@ data Tag
   | DescriptionHash Hex
   | Expiry Int
   | MinFinalCltvExpiry Int
-  | OnchainFallback Hex -- TODO: address type
+  | OnchainFallback -- TODO: address type
   | ExtraRouteInfo
   | FeatureBits [Word5]
   deriving stock (Eq, Ord, Show, Generic)
@@ -149,11 +153,17 @@ data Bolt11Hrp = Bolt11Hrp
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
+data Bolt11Sig = Bolt11Sig
+  { bolt11SigVal :: Hex,
+    bolt11SigRecoveryFlag :: Int
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
 data Bolt11 = Bolt11
   { bolt11Hrp :: Bolt11Hrp,
     bolt11Timestamp :: Int, -- posix
     bolt11Tags :: [Tag], -- posix
-    bolt11Signature :: Hex
+    bolt11Signature :: Bolt11Sig
   }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -200,13 +210,13 @@ w5bs = BS.pack . fromMaybe (error "what") . Bech32.toBase256
 w5txt :: [Word5] -> Text
 w5txt = decodeUtf8 . w5bs
 
-tagParser :: [Word5] -> (Maybe Tag, [Word5])
-tagParser [] = (Nothing, [])
-tagParser ws@[_] = (Nothing, ws)
-tagParser ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
-tagParser ws
+parseTag :: [Word5] -> (Maybe Tag, [Word5])
+parseTag [] = (Nothing, [])
+parseTag ws@[_] = (Nothing, ws)
+parseTag ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
+parseTag ws
   | length ws < 8 = (Nothing, ws)
-tagParser ws@(typ : d1 : d2 : rest)
+parseTag ws@(typ : d1 : d2 : rest)
   | length rest < 7 = (Nothing, ws)
   | otherwise = (Just tag, leftovers)
   where
@@ -222,7 +232,7 @@ tagParser ws@(typ : d1 : d2 : rest)
         19 -> PayeePubkey datBs
         6 -> Expiry (w5int dat)
         24 -> MinFinalCltvExpiry (w5int dat)
-        9 -> OnchainFallback datBs
+        9 -> OnchainFallback
         3 -> ExtraRouteInfo
         5 -> FeatureBits dat
         n -> error ("unhandled typ " ++ show n)
@@ -232,24 +242,35 @@ data MSig
   | Unk [Word5]
   deriving stock (Eq, Ord, Show, Generic)
 
-tagsParser :: [Word5] -> ([Tag], MSig)
-tagsParser ws
+parseTags :: [Word5] -> ([Tag], MSig)
+parseTags ws
   | length ws == 104 = ([], Sig ws)
   | otherwise =
-      let (mtag, rest) = tagParser ws
+      let (mtag, rest) = parseTag ws
        in maybe
             ([], Unk rest)
-            (\tag -> first (tag :) (tagsParser rest))
+            (\tag -> first (tag :) (parseTags rest))
             mtag
 
 decodeBolt11 :: Text -> Either String Bolt11
 decodeBolt11 raw = do
   (rawHrp, rawDp) <- first show $ Bech32.decodeLenient raw
-  let (timestampBits, rest) = splitAt 7 $ Bech32.dataPartToWords rawDp
-      timestamp = w5int timestampBits
-      (tags, leftover) = tagsParser rest
-  sig <- case leftover of
-    Sig ws -> maybe (Left "corrupt") Right (Bech32.toBase256 ws)
-    Unk left -> Left ("corrupt, leftover: " ++ show (Hex (w5bs left)))
   hrp <- parseOnly parseHrp $ Bech32.humanReadablePartToText rawHrp
-  Right (Bolt11 hrp timestamp tags (Hex (BS.pack sig)))
+  let (ts, rest) = splitAt 7 $ Bech32.dataPartToWords rawDp
+  let (tags, leftover) = parseTags rest
+  (rawSig, recFlag) <- case leftover of
+    Sig ws -> Right $ splitAt 103 ws
+    Unk left -> Left ("corrupt, leftover: " ++ show (Hex (w5bs left)))
+  sig <-
+    maybe (Left "corrupt") Right $ Bech32.toBase256 rawSig
+  Right
+    Bolt11
+      { bolt11Hrp = hrp,
+        bolt11Timestamp = w5int ts,
+        bolt11Tags = tags,
+        bolt11Signature =
+          Bolt11Sig
+            { bolt11SigVal = Hex $ BS.pack sig,
+              bolt11SigRecoveryFlag = w5int recFlag
+            }
+      }

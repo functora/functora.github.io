@@ -76,9 +76,14 @@ invoiceWidget ln =
              )
           <> [ pair "Signature"
                 . B11.inspectHex
-                $ B11.bolt11Signature ln
+                $ B11.bolt11SigVal sig,
+               pair "Pubkey Recovery Flag"
+                . inspect
+                $ B11.bolt11SigRecoveryFlag sig
              ]
       )
+  where
+    sig = B11.bolt11Signature ln
 
 invoiceTagWidget :: B11.Tag -> [FieldPair DynamicField Identity]
 invoiceTagWidget = \case
@@ -89,7 +94,7 @@ invoiceTagWidget = \case
   B11.DescriptionHash x -> hex "Description Hash" x
   B11.Expiry x -> pure . pair "Expiry" $ inspect x
   B11.MinFinalCltvExpiry x -> pure . pair "Min Final CLTV Expiry" $ inspect x
-  B11.OnchainFallback x -> hex "Onchain Fallback" x
+  B11.OnchainFallback -> mempty
   B11.ExtraRouteInfo -> mempty
   B11.FeatureBits x ->
     pure

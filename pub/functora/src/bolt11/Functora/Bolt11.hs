@@ -20,7 +20,7 @@ where
 import Codec.Binary.Bech32 (Word5)
 import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
-import Data.Attoparsec.Text
+import qualified Data.Attoparsec.Text as Atto
 import Data.Bits (shiftL, (.|.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
@@ -29,7 +29,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Functora.Prelude hiding (error)
-import Prelude (Show (..), error, splitAt, take)
+import Prelude (Show (..), error)
 
 newtype Hex = Hex
   { unHex :: ByteString
@@ -70,6 +70,7 @@ data Tag
   = PaymentHash Hex
   | PaymentSecret Hex
   | Description Text
+  | AdditionalMetadata [Word5]
   | PayeePubkey Hex
   | DescriptionHash Hex
   | Expiry Int
@@ -77,6 +78,8 @@ data Tag
   | OnchainFallback -- TODO: address type
   | ExtraRouteInfo
   | FeatureBits [Word5]
+  | UnknownTag Int [Word5]
+  | UnparsedTag Int [Word5] String
   deriving stock (Eq, Ord, Show, Generic)
 
 isPaymentHash :: Tag -> Bool
@@ -167,16 +170,16 @@ data Bolt11 = Bolt11
   }
   deriving stock (Eq, Ord, Show, Generic)
 
-parseNetwork :: Parser Network
+parseNetwork :: Atto.Parser Network
 parseNetwork =
-  (string "bcrt" *> pure BitcoinRegtest)
-    <|> (string "bc" *> pure BitcoinMainnet)
-    <|> (string "tbs" *> pure BitcoinSignet)
-    <|> (string "tb" *> pure BitcoinTestnet)
+  (Atto.string "bcrt" *> pure BitcoinRegtest)
+    <|> (Atto.string "bc" *> pure BitcoinMainnet)
+    <|> (Atto.string "tbs" *> pure BitcoinSignet)
+    <|> (Atto.string "tb" *> pure BitcoinTestnet)
 
-parseMultiplier :: Parser Multiplier
+parseMultiplier :: Atto.Parser Multiplier
 parseMultiplier = do
-  c <- satisfy (`elem` ("munp" :: String))
+  c <- Atto.satisfy (`elem` ("munp" :: String))
   case c of
     'm' -> pure Milli
     'u' -> pure Micro
@@ -184,31 +187,38 @@ parseMultiplier = do
     'p' -> pure Pico
     _ -> fail "unhandled case in parseMultiplier"
 
-parseHrpAmount :: Parser Bolt11HrpAmt
+parseHrpAmount :: Atto.Parser Bolt11HrpAmt
 parseHrpAmount = do
-  amt <- decimal
+  amt <- Atto.decimal
   mul <- parseMultiplier
   pure $ Bolt11HrpAmt amt mul
 
-parseHrp :: Parser Bolt11Hrp
+parseHrp :: Atto.Parser Bolt11Hrp
 parseHrp = do
-  _ <- char 'l'
-  _ <- char 'n'
+  _ <- Atto.char 'l'
+  _ <- Atto.char 'n'
   net <- parseNetwork
   amt <- optional parseHrpAmount
   pure (Bolt11Hrp net amt)
 
+w5bs :: [Word5] -> Either String ByteString
+w5bs =
+  maybe (Left "Non-Base256 bits") (Right . BS.pack)
+    . Bech32.toBase256
+
+w5hex :: [Word5] -> Either String Hex
+w5hex =
+  second Hex . w5bs
+
+w5txt :: [Word5] -> Either String Text
+w5txt =
+  first displayException . decodeUtf8' <=< w5bs
+
 w5int :: [Word5] -> Int
-w5int bytes = foldl' decodeInt 0 (zip [0 ..] (Prelude.take 7 (reverse bytes)))
+w5int bytes = foldl' decodeInt 0 (zip [0 ..] (take 7 (reverse bytes)))
   where
     decodeInt !n (i, byte) =
       n .|. fromEnum byte `shiftL` (i * 5)
-
-w5bs :: [Word5] -> ByteString
-w5bs = BS.pack . fromMaybe (error "what") . Bech32.toBase256
-
-w5txt :: [Word5] -> Text
-w5txt = decodeUtf8 . w5bs
 
 parseTag :: [Word5] -> (Maybe Tag, [Word5])
 parseTag [] = (Nothing, [])
@@ -216,26 +226,31 @@ parseTag ws@[_] = (Nothing, ws)
 parseTag ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
 parseTag ws
   | length ws < 8 = (Nothing, ws)
-parseTag ws@(typ : d1 : d2 : rest)
+parseTag ws@(t0 : d1 : d2 : rest)
   | length rest < 7 = (Nothing, ws)
   | otherwise = (Just tag, leftovers)
   where
-    dataLen = w5int [d1, d2]
-    (dat, leftovers) = Prelude.splitAt dataLen rest
-    datBs = Hex (w5bs dat)
+    typ = fromEnum t0
+    len = w5int [d1, d2]
+    (dat, leftovers) = splitAt len rest
+    hex = w5hex dat
+    txt = w5txt dat
+    mkt :: (a -> Tag) -> Either String a -> Tag
+    mkt con = either (UnparsedTag typ dat) con
     tag =
-      case fromEnum typ of
-        1 -> PaymentHash datBs
-        16 -> PaymentSecret datBs
-        23 -> DescriptionHash datBs -- (w5bs dat)
-        13 -> Description (w5txt dat)
-        19 -> PayeePubkey datBs
-        6 -> Expiry (w5int dat)
-        24 -> MinFinalCltvExpiry (w5int dat)
+      case typ of
+        1 -> mkt PaymentHash hex
+        16 -> mkt PaymentSecret hex
+        13 -> mkt Description txt
+        27 -> AdditionalMetadata dat
+        19 -> mkt PayeePubkey hex
+        23 -> mkt DescriptionHash hex
+        6 -> Expiry $ w5int dat
+        24 -> MinFinalCltvExpiry $ w5int dat
         9 -> OnchainFallback
         3 -> ExtraRouteInfo
         5 -> FeatureBits dat
-        n -> error ("unhandled typ " ++ show n)
+        n -> UnknownTag n dat
 
 data MSig
   = Sig [Word5]
@@ -255,12 +270,12 @@ parseTags ws
 decodeBolt11 :: Text -> Either String Bolt11
 decodeBolt11 raw = do
   (rawHrp, rawDp) <- first show $ Bech32.decodeLenient raw
-  hrp <- parseOnly parseHrp $ Bech32.humanReadablePartToText rawHrp
+  hrp <- Atto.parseOnly parseHrp $ Bech32.humanReadablePartToText rawHrp
   let (ts, rest) = splitAt 7 $ Bech32.dataPartToWords rawDp
   let (tags, leftover) = parseTags rest
   (rawSig, recFlag) <- case leftover of
     Sig ws -> Right $ splitAt 103 ws
-    Unk left -> Left ("corrupt, leftover: " ++ show (Hex (w5bs left)))
+    Unk left -> Left ("corrupt, leftover: " <> show left)
   sig <-
     maybe (Left "corrupt") Right $ Bech32.toBase256 rawSig
   Right

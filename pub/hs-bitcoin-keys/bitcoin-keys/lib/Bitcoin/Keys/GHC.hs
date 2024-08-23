@@ -1,28 +1,29 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 -- | Implementation to be used when compiled with GHC
 module Bitcoin.Keys.GHC
-  ( Prv
-  , parsePrv
-  , prvRaw
-  , prvToPub
-  , prvAddTweak
-
-  , Pub
-  , parsePubCompressed
-  , pubCompressed
-  , pubUncompressed
-  , pubAddTweak
-
-  , Tweak
-  , parseTweak
-  ) where
+  ( Prv,
+    parsePrv,
+    prvRaw,
+    prvToPub,
+    prvAddTweak,
+    Pub,
+    parsePubCompressed,
+    pubCompressed,
+    pubUncompressed,
+    pubAddTweak,
+    Tweak,
+    parseTweak,
+  )
+where
 
 import Control.Monad
 import qualified Crypto.Secp256k1 as K
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified System.IO.Unsafe as Unsafe
 
 --------------------------------------------------------------------------------
 
@@ -38,9 +39,10 @@ instance Ord Prv where
 
 -- | Big-endian base-16.
 instance Show Prv where
-  showsPrec n p = showParen (n > 10) $
-    showString "Prv " .
-    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (prvRaw p))))
+  showsPrec n p =
+    showParen (n > 10) $
+      showString "Prv "
+        . mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (prvRaw p))))
 
 -- | Obtain the 32 raw bytes inside a 'Prv' (big-endian).
 --
@@ -49,7 +51,7 @@ instance Show Prv where
 -- @
 prvRaw :: Prv -> B.ByteString
 {-# INLINE prvRaw #-}
-prvRaw (Prv x) = K.getSecKey x
+prvRaw (Prv (K.SecKey x)) = x
 
 -- | Construct a 'Prv' key from its raw 32 bytes (big-endian).
 --
@@ -67,7 +69,7 @@ parsePrv x = do
 -- | Obtain the 'Pub' key for 'Prv'.
 prvToPub :: Prv -> Pub
 {-# INLINE prvToPub #-}
-prvToPub (Prv x) = Pub (K.derivePubKey x)
+prvToPub (Prv x) = Pub $ (withCtx K.derivePubKey) x
 
 -- | Tweak a 'Prv'ate key by adding 'Tweak' times the generator to it.
 --
@@ -78,7 +80,7 @@ prvToPub (Prv x) = Pub (K.derivePubKey x)
 -- @
 prvAddTweak :: Tweak -> Prv -> Maybe Prv
 {-# INLINE prvAddTweak #-}
-prvAddTweak (Tweak t) (Prv p) = Prv <$> K.tweakAddSecKey p t
+prvAddTweak (Tweak t) (Prv p) = Prv <$> (withCtx K.tweakAddSecKey) p t
 
 --------------------------------------------------------------------------------
 
@@ -94,9 +96,10 @@ instance Ord Pub where
 
 -- | SEC compressed base-16.
 instance Show Pub where
-  showsPrec n p = showParen (n > 10) $
-    showString "Pub " .
-    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (pubCompressed p))))
+  showsPrec n p =
+    showParen (n > 10) $
+      showString "Pub "
+        . mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (pubCompressed p))))
 
 -- | Obtain the 33-bytes contatining the SEC compressed 'Pub'lic key.
 --
@@ -105,7 +108,7 @@ instance Show Pub where
 -- @
 pubCompressed :: Pub -> B.ByteString
 {-# INLINE pubCompressed #-}
-pubCompressed (Pub x) = K.exportPubKey True x
+pubCompressed (Pub x) = (withCtx K.exportPubKey) True x
 
 -- | Obtain the 65-bytes contatining the SEC uncompressed 'Pub'lic key.
 --
@@ -114,7 +117,7 @@ pubCompressed (Pub x) = K.exportPubKey True x
 -- @
 pubUncompressed :: Pub -> B.ByteString
 {-# INLINE pubUncompressed #-}
-pubUncompressed (Pub x) = K.exportPubKey False x
+pubUncompressed (Pub x) = (withCtx K.exportPubKey) False x
 
 -- | Builds a public key from its compressed SEC-encoded bytes.
 --
@@ -129,7 +132,7 @@ parsePubCompressed :: B.ByteString -> Maybe Pub
 {-# INLINE parsePubCompressed #-}
 parsePubCompressed x = do
   guard (B.length x == 33)
-  Pub <$> K.importPubKey x
+  Pub <$> (withCtx K.importPubKey) x
 
 -- | Tweak a 'Pub'lic key by adding 'Tweak' times the generator to it.
 --
@@ -140,7 +143,7 @@ parsePubCompressed x = do
 -- @
 pubAddTweak :: Tweak -> Pub -> Maybe Pub
 {-# INLINE pubAddTweak #-}
-pubAddTweak (Tweak t) (Pub p) = Pub <$> K.tweakAddPubKey p t
+pubAddTweak (Tweak t) (Pub p) = Pub <$> (withCtx K.tweakAddPubKey) p t
 
 --------------------------------------------------------------------------------
 
@@ -150,13 +153,14 @@ newtype Tweak = Tweak K.Tweak
   deriving newtype (Eq)
 
 instance Ord Tweak where
-  compare (Tweak a) (Tweak b) = compare (K.getTweak a) (K.getTweak b)
+  compare (Tweak (K.Tweak a)) (Tweak (K.Tweak b)) = compare a b
 
 -- | Big-endian base-16.
 instance Show Tweak where
-  showsPrec n (Tweak x) = showParen (n > 10) $
-    showString "Tweak " .
-    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (K.getTweak x))))
+  showsPrec n (Tweak (K.Tweak x)) =
+    showParen (n > 10) $
+      showString "Tweak "
+        . mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex x)))
 
 -- | Construct a 'Tweak' from its raw 32 bytes (big-endian).
 --
@@ -166,3 +170,6 @@ parseTweak :: B.ByteString -> Maybe Tweak
 parseTweak x = do
   guard (B.length x == 32)
   Tweak <$> K.tweak x
+
+withCtx :: (K.Ctx -> a) -> a
+withCtx f = Unsafe.unsafePerformIO $ K.withContext (pure . f)

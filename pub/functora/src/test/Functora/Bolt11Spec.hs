@@ -1,5 +1,8 @@
 module Functora.Bolt11Spec (spec) where
 
+import qualified Bitcoin.Address as Btc
+import qualified Bitcoin.Address.Hash as Btc
+import qualified Bitcoin.Address.Settings as Btc
 import Functora.Bolt11
 import Functora.Prelude
 import Test.Hspec
@@ -45,7 +48,11 @@ goodSamples =
             [ PaymentHash "0001020304050607080900010203040506070809000102030405060708090102",
               DescriptionHash
                 "3925b6f67e2c340036ed12093dd44e0368df1b6ea26c53dbe4811f58fd5db8c1",
-              OnchainFallback,
+              OnchainFallback
+                . Btc.P2PKH (Btc.PrefixP2PKH 0)
+                . fromMaybe (error "BADHASH")
+                . Btc.parsePubHash160
+                $ unHex "04b61f7dc1ea0dc99424464cc4064dc564d91e89",
               ExtraRouteInfo
             ],
           bolt11Signature =

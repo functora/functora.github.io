@@ -2,7 +2,8 @@
 {-# LANGUAGE CPP #-}
 
 module Functora.Bolt11
-  ( Hex (..),
+  ( Word5,
+    Hex (..),
     inspectHex,
     Tag (..),
     isPaymentHash,
@@ -17,6 +18,10 @@ module Functora.Bolt11
   )
 where
 
+import qualified Bitcoin.Address as Btc
+import qualified Bitcoin.Address.Hash as Btc
+import qualified Bitcoin.Address.SegWit as SegWit
+import qualified Bitcoin.Address.Settings as Btc
 import Codec.Binary.Bech32 (Word5)
 import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
@@ -75,7 +80,7 @@ data Tag
   | DescriptionHash Hex
   | Expiry Int
   | MinFinalCltvExpiry Int
-  | OnchainFallback -- TODO: address type
+  | OnchainFallback Btc.Address
   | ExtraRouteInfo
   | FeatureBits [Word5]
   | UnknownTag Int [Word5]
@@ -92,6 +97,21 @@ data Network
   | BitcoinRegtest
   | BitcoinSignet
   deriving stock (Eq, Ord, Show, Data, Generic)
+
+networkSettings :: Network -> Btc.Settings
+networkSettings = \case
+  BitcoinMainnet -> Btc.btc
+  BitcoinTestnet -> Btc.btcTestnet
+  BitcoinRegtest ->
+    Btc.btcTestnet
+      { Btc.settings_prefixSegWit =
+          fromMaybe (error "Bad prefixSegWit") $ Btc.prefixSegWit "bcrt"
+      }
+  BitcoinSignet ->
+    Btc.btcTestnet
+      { Btc.settings_prefixSegWit =
+          fromMaybe (error "Bad prefixSegWit") $ Btc.prefixSegWit "tbs"
+      }
 
 data Multiplier = Milli | Micro | Nano | Pico
   deriving stock (Eq, Ord, Show, Data, Generic)
@@ -220,13 +240,43 @@ w5int bytes = foldl' decodeInt 0 (zip [0 ..] (take 7 (reverse bytes)))
     decodeInt !n (i, byte) =
       n .|. fromEnum byte `shiftL` (i * 5)
 
-parseTag :: [Word5] -> (Maybe Tag, [Word5])
-parseTag [] = (Nothing, [])
-parseTag ws@[_] = (Nothing, ws)
-parseTag ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
-parseTag ws
+w5addr :: Network -> [Word5] -> Either String Btc.Address
+w5addr _ [] = Left "Empty Onchain Fallback Address"
+w5addr net (v0 : rest) =
+  case fromEnum v0 of
+    -- SegWit
+    vsn | vsn <= 16 -> do
+      sv0 <- first displayException $ tryFrom @Int @Word8 vsn
+      sv1 <-
+        maybe
+          (Left $ "Bad SegWit verion " <> inspect sv0)
+          Right
+          $ SegWit.version sv0
+      raw <- w5bs rest
+      res <- maybe (Left "Bad SegWit program") Right $ SegWit.program sv1 raw
+      pure $ Btc.SegWit (Btc.settings_prefixSegWit cfg) res
+    -- P2PKH
+    17 -> do
+      raw <- w5bs rest
+      res <- maybe (Left "Bad PubHash160") Right $ Btc.parsePubHash160 raw
+      pure $ Btc.P2PKH (Btc.settings_prefixP2PKH cfg) res
+    -- P2SH
+    18 -> do
+      raw <- w5bs rest
+      res <- maybe (Left "Bad ScriptHash160") Right $ Btc.parseScriptHash160 raw
+      pure $ Btc.P2SH (Btc.settings_prefixP2SH cfg) res
+    vsn -> do
+      Left $ "Bad Onchain Fallback verion " <> inspect vsn
+  where
+    cfg = networkSettings net
+
+parseTag :: Network -> [Word5] -> (Maybe Tag, [Word5])
+parseTag _ [] = (Nothing, [])
+parseTag _ ws@[_] = (Nothing, ws)
+parseTag _ ws@[_, _] = (Nothing, ws) -- appease the compiler warning gods
+parseTag _ ws
   | length ws < 8 = (Nothing, ws)
-parseTag ws@(t0 : d1 : d2 : rest)
+parseTag net ws@(t0 : d1 : d2 : rest)
   | length rest < 7 = (Nothing, ws)
   | otherwise = (Just tag, leftovers)
   where
@@ -247,7 +297,7 @@ parseTag ws@(t0 : d1 : d2 : rest)
         23 -> mkt DescriptionHash hex
         6 -> Expiry $ w5int dat
         24 -> MinFinalCltvExpiry $ w5int dat
-        9 -> OnchainFallback
+        9 -> mkt OnchainFallback $ w5addr net dat
         3 -> ExtraRouteInfo
         5 -> FeatureBits dat
         n -> UnknownTag n dat
@@ -257,14 +307,14 @@ data MSig
   | Unk [Word5]
   deriving stock (Eq, Ord, Show, Generic)
 
-parseTags :: [Word5] -> ([Tag], MSig)
-parseTags ws
+parseTags :: Network -> [Word5] -> ([Tag], MSig)
+parseTags net ws
   | length ws == 104 = ([], Sig ws)
   | otherwise =
-      let (mtag, rest) = parseTag ws
+      let (mtag, rest) = parseTag net ws
        in maybe
             ([], Unk rest)
-            (\tag -> first (tag :) (parseTags rest))
+            (\tag -> first (tag :) (parseTags net rest))
             mtag
 
 decodeBolt11 :: Text -> Either String Bolt11
@@ -272,7 +322,7 @@ decodeBolt11 raw = do
   (rawHrp, rawDp) <- first show $ Bech32.decodeLenient raw
   hrp <- Atto.parseOnly parseHrp $ Bech32.humanReadablePartToText rawHrp
   let (ts, rest) = splitAt 7 $ Bech32.dataPartToWords rawDp
-  let (tags, leftover) = parseTags rest
+  let (tags, leftover) = parseTags (bolt11HrpNet hrp) rest
   (rawSig, recFlag) <- case leftover of
     Sig ws -> Right $ splitAt 103 ws
     Unk left -> Left ("corrupt, leftover: " <> show left)

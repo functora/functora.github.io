@@ -90,6 +90,7 @@ common pkg
     , bech32
     , binary
     , binary-instances
+    , bitcoin-address
     , bmp
     , bytestring
     , containers

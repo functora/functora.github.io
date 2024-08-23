@@ -250,6 +250,7 @@ common pkg-bolt11
     , base
     , base16-bytestring
     , bech32
+    , bitcoin-address
     , bytestring
     , text
 
@@ -362,6 +363,7 @@ test-suite functora-test
   build-depends:
     , base
     , base16-bytestring
+    , bitcoin-address
     , bytestring
     , containers
     , Crypto

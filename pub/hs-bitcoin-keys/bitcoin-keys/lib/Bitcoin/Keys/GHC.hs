@@ -1,0 +1,168 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- | Implementation to be used when compiled with GHC
+module Bitcoin.Keys.GHC
+  ( Prv
+  , parsePrv
+  , prvRaw
+  , prvToPub
+  , prvAddTweak
+
+  , Pub
+  , parsePubCompressed
+  , pubCompressed
+  , pubUncompressed
+  , pubAddTweak
+
+  , Tweak
+  , parseTweak
+  ) where
+
+import Control.Monad
+import qualified Crypto.Secp256k1 as K
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.ByteString.Builder as BB
+
+--------------------------------------------------------------------------------
+
+-- | Private key.
+--
+-- Construct with 'parsePrv'.
+newtype Prv = Prv K.SecKey
+  deriving newtype (Eq)
+
+instance Ord Prv where
+  compare a b = compare (prvRaw a) (prvRaw b)
+  {-# INLINE compare #-}
+
+-- | Big-endian base-16.
+instance Show Prv where
+  showsPrec n p = showParen (n > 10) $
+    showString "Prv " .
+    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (prvRaw p))))
+
+-- | Obtain the 32 raw bytes inside a 'Prv' (big-endian).
+--
+-- @
+-- 'Just' == 'parsePrv' . 'prvRaw'
+-- @
+prvRaw :: Prv -> B.ByteString
+{-# INLINE prvRaw #-}
+prvRaw (Prv x) = K.getSecKey x
+
+-- | Construct a 'Prv' key from its raw 32 bytes (big-endian).
+--
+-- Returns 'Nothing' if something is not satisfied.
+--
+-- @
+-- 'Just' == 'parsePrv' . 'prvRaw'
+-- @
+parsePrv :: B.ByteString -> Maybe Prv
+{-# INLINE parsePrv #-}
+parsePrv x = do
+  guard (B.length x == 32)
+  Prv <$> K.secKey x
+
+-- | Obtain the 'Pub' key for 'Prv'.
+prvToPub :: Prv -> Pub
+{-# INLINE prvToPub #-}
+prvToPub (Prv x) = Pub (K.derivePubKey x)
+
+-- | Tweak a 'Prv'ate key by adding 'Tweak' times the generator to it.
+--
+-- Returns 'Nothing' if the resulting 'Prv' would be invalid.
+--
+-- @
+-- 'pubAddTweak' t . 'prvToPub' == fmap 'prvToPub' . 'prvAddTweak' t
+-- @
+prvAddTweak :: Tweak -> Prv -> Maybe Prv
+{-# INLINE prvAddTweak #-}
+prvAddTweak (Tweak t) (Prv p) = Prv <$> K.tweakAddSecKey p t
+
+--------------------------------------------------------------------------------
+
+-- | Public key.
+--
+-- Construct with 'Bitcoin.Keys.parsePub'.
+newtype Pub = Pub K.PubKey
+  deriving newtype (Eq)
+
+instance Ord Pub where
+  compare a b = compare (pubCompressed a) (pubCompressed b)
+  {-# INLINE compare #-}
+
+-- | SEC compressed base-16.
+instance Show Pub where
+  showsPrec n p = showParen (n > 10) $
+    showString "Pub " .
+    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (pubCompressed p))))
+
+-- | Obtain the 33-bytes contatining the SEC compressed 'Pub'lic key.
+--
+-- @
+-- 'Just' == 'Bitcoin.Keys.parsePub' . 'pubCompressed'
+-- @
+pubCompressed :: Pub -> B.ByteString
+{-# INLINE pubCompressed #-}
+pubCompressed (Pub x) = K.exportPubKey True x
+
+-- | Obtain the 65-bytes contatining the SEC uncompressed 'Pub'lic key.
+--
+-- @
+-- 'Just' == 'Bitcoin.Keys.parsePub' . 'pubUncompressed'
+-- @
+pubUncompressed :: Pub -> B.ByteString
+{-# INLINE pubUncompressed #-}
+pubUncompressed (Pub x) = K.exportPubKey False x
+
+-- | Builds a public key from its compressed SEC-encoded bytes.
+--
+-- * Compressed keys are 33 bytes. The leftmost byte is @0x02@ if the @y@
+-- coordinate is even, or @0x03@ if odd. The remaining 32 bytes
+-- are the big-endian encoded @x@ coordinate.
+--
+-- @
+-- 'Just' == 'Bitcoin.Keys.parsePub' . 'pubCompressed'
+-- @
+parsePubCompressed :: B.ByteString -> Maybe Pub
+{-# INLINE parsePubCompressed #-}
+parsePubCompressed x = do
+  guard (B.length x == 33)
+  Pub <$> K.importPubKey x
+
+-- | Tweak a 'Pub'lic key by adding 'Tweak' times the generator to it.
+--
+-- Returns 'Nothing' if the resulting 'Pub' would be invalid.
+--
+-- @
+-- 'pubAddTweak' t . 'prvToPub' == fmap 'prvToPub' . 'prvAddTweak' t
+-- @
+pubAddTweak :: Tweak -> Pub -> Maybe Pub
+{-# INLINE pubAddTweak #-}
+pubAddTweak (Tweak t) (Pub p) = Pub <$> K.tweakAddPubKey p t
+
+--------------------------------------------------------------------------------
+
+-- | A 32-byte number used to modify a 'Pub' or 'Prv' using 'prvAddTweak'
+-- or 'pubAddTweak'.
+newtype Tweak = Tweak K.Tweak
+  deriving newtype (Eq)
+
+instance Ord Tweak where
+  compare (Tweak a) (Tweak b) = compare (K.getTweak a) (K.getTweak b)
+
+-- | Big-endian base-16.
+instance Show Tweak where
+  showsPrec n (Tweak x) = showParen (n > 10) $
+    showString "Tweak " .
+    mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex (K.getTweak x))))
+
+-- | Construct a 'Tweak' from its raw 32 bytes (big-endian).
+--
+-- Returns 'Nothing' if something is not satisfied.
+parseTweak :: B.ByteString -> Maybe Tweak
+{-# INLINE parseTweak #-}
+parseTweak x = do
+  guard (B.length x == 32)
+  Tweak <$> K.tweak x

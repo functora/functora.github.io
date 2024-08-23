@@ -1,0 +1,15 @@
+{
+  "name": "bitcoin-keys",
+  "version": "0.1.0",
+  "description": "Bitcoin keys",
+  "main": "index.js",
+  "author": "Renzo Carbonara",
+  "license": "BSD3",
+  "dependencies": {
+    "secp256k1": "^4.0.1"
+  },
+  "devDependencies": {
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.1"
+  }
+}

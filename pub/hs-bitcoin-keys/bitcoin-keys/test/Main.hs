@@ -15,6 +15,7 @@ import Data.Word
 import Hedgehog (MonadGen, forAll, property, (===))
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
+import Main.Utf8 (withUtf8)
 import qualified System.IO as IO
 import Test.Tasty (TestTree, testGroup)
 import qualified Test.Tasty as Tasty
@@ -25,7 +26,7 @@ import qualified Test.Tasty.Runners as Tasty
 --------------------------------------------------------------------------------
 
 main :: IO ()
-main = do
+main = withUtf8 $ do
   IO.hSetBuffering IO.stdout IO.LineBuffering
   IO.hSetBuffering IO.stderr IO.LineBuffering
   Tasty.defaultMainWithIngredients
@@ -197,8 +198,7 @@ pub1u = maybe (error "pub1u") id (S.parsePub pub1u_raw)
 pub1u_raw :: B.ByteString
 pub1u_raw =
   fromBase16
-    "044ed59d3f6548c41172ec26b9144f547185cb2a9f28fccb6e3ae53dc4f1827154\
-    \ba3a12d8b383bfff1dacd6930285f4a51a01ee64e102652d5bc137c49b97815e"
+    "044ed59d3f6548c41172ec26b9144f547185cb2a9f28fccb6e3ae53dc4f1827154ba3a12d8b383bfff1dacd6930285f4a51a01ee64e102652d5bc137c49b97815e"
 
 --------------------------------------------------------------------------------
 -- BIP39 mnemonic: abandon abandon arm
@@ -233,8 +233,7 @@ pub2u = maybe (error "pub2u") id (S.parsePub pub2u_raw)
 pub2u_raw :: B.ByteString
 pub2u_raw =
   fromBase16
-    "0415bd146d8b45383ad431a8204717dc9f46a7a46c1f44eeaab02d49f4511ccff0\
-    \7d7817de34c0a281b45691eec966e95d936554b2320462214cd2a17aebcf460f"
+    "0415bd146d8b45383ad431a8204717dc9f46a7a46c1f44eeaab02d49f4511ccff07d7817de34c0a281b45691eec966e95d936554b2320462214cd2a17aebcf460f"
 
 --------------------------------------------------------------------------------
 -- Randomly generated

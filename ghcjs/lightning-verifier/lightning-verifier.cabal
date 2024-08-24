@@ -99,6 +99,7 @@ common pkg
     , base16-bytestring
     , base64-bytestring
     , binary
+    , bitcoin-address
     , bytestring
     , containers
     , functora-ghcjs

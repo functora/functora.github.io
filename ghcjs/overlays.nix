@@ -135,6 +135,32 @@
                   ver = "1.7.16";
                   sha256 = "Eu6I/ZARmObjCfpymyybQDPpakMcqCf3W9gYrT7AR3g=";
                 } {};
+                bech32 = self.callHackageDirect {
+                  pkg = "bech32";
+                  ver = "1.1.1";
+                  sha256 = "3bzizRrab+AmN3RQoDbbGIr8mc/z0qf7Ki4dsyjD5dM=";
+                } {};
+                bitcoin-address = self.callHackageDirect {
+                  pkg = "bitcoin-address";
+                  ver = "0.1";
+                  sha256 = "s4v3i6pV02anbYgLqAsbeX3ypzUXhSOqMrkbFxV/jj0=";
+                } {};
+                bitcoin-hash = self.callHackageDirect {
+                  pkg = "bitcoin-hash";
+                  ver = "0.1";
+                  sha256 = "c18kUghhJB0GjLxHHrgJ8djtNlQXbsJcbnM61zvHwzY=";
+                } {};
+                secp256k1-haskell = self.callHackageDirect {
+                  pkg = "secp256k1-haskell";
+                  ver = "0.6.1";
+                  sha256 = "R4zG6prtWN2bX++hMhVt4VMQoyAVbBZnkMcMA0zFoiQ=";
+                } {};
+                base16 = doJailbreak (self.callHackageDirect {
+                  pkg = "base16";
+                  ver = "0.3.2.0";
+                  sha256 = "EziiFX/1e105Y7zbO0DLwF6yCzYv4IX/vF9l7B55o7Y=";
+                } {});
+                libsecp256k1 = pkgs.secp256k1;
                 #
                 # Local
                 #
@@ -176,6 +202,24 @@
                     pkgs.nix-gitignore.gitignoreSourcePure
                     ./../.gitignore
                     ./../pub/functora/src
+                  )
+                  {};
+                bitcoin-script =
+                  self.callCabal2nix
+                  "bitcoin-script"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./../pub/haskell-bitcoin-script/.gitignore
+                    ./../pub/haskell-bitcoin-script
+                  )
+                  {};
+                bitcoin-keys =
+                  self.callCabal2nix
+                  "bitcoin-keys"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./../pub/hs-bitcoin-keys/.gitignore
+                    ./../pub/hs-bitcoin-keys/bitcoin-keys
                   )
                   {};
               }

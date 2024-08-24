@@ -122,6 +122,8 @@ in rec {
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/${label}.jsexe/all.js.externs \
         --externs ${./static}/app.js \
+        --externs ${./static/hs-bitcoin-hash.js} \
+        --externs ${./static/hs-bitcoin-keys.js} \
         --externs ${./static}/material-components-web.min.js \
         --externs ${./static}/material-components-web-elm.min.js \
         --output_wrapper "%output%//# sourceMappingURL=all.js.map" \

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
@@ -51,7 +52,14 @@ instance Show Prv where
 -- @
 prvRaw :: Prv -> B.ByteString
 {-# INLINE prvRaw #-}
-prvRaw (Prv (K.SecKey x)) = x
+prvRaw (Prv x) = getSecKey x
+
+#if MIN_VERSION_secp256k1_haskell(1,0,0)
+getSecKey :: K.SecKey -> B.ByteString
+getSecKey (K.SecKey x) = x
+#else
+getSecKey = K.getSecKey
+#endif
 
 -- | Construct a 'Prv' key from its raw 32 bytes (big-endian).
 --
@@ -153,14 +161,23 @@ newtype Tweak = Tweak K.Tweak
   deriving newtype (Eq)
 
 instance Ord Tweak where
-  compare (Tweak (K.Tweak a)) (Tweak (K.Tweak b)) = compare a b
+  compare (Tweak a) (Tweak b) = compare (getTweak a) (getTweak b)
+
+#if MIN_VERSION_secp256k1_haskell(1,0,0)
+getTweak :: K.Tweak -> B.ByteString
+getTweak (K.Tweak x) = x
+#else
+getTweak = K.getTweak
+#endif
 
 -- | Big-endian base-16.
 instance Show Tweak where
-  showsPrec n (Tweak (K.Tweak x)) =
+  showsPrec n (Tweak x) =
     showParen (n > 10) $
       showString "Tweak "
-        . mappend (BL8.unpack (BB.toLazyByteString (BB.byteStringHex x)))
+        . mappend
+          ( BL8.unpack (BB.toLazyByteString (BB.byteStringHex (getTweak x)))
+          )
 
 -- | Construct a 'Tweak' from its raw 32 bytes (big-endian).
 --
@@ -171,5 +188,10 @@ parseTweak x = do
   guard (B.length x == 32)
   Tweak <$> K.tweak x
 
+#if MIN_VERSION_secp256k1_haskell(1,0,0)
 withCtx :: (K.Ctx -> a) -> a
 withCtx f = Unsafe.unsafePerformIO $ K.withContext (pure . f)
+#else
+withCtx :: a -> a
+withCtx = id
+#endif

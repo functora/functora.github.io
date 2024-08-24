@@ -4,6 +4,7 @@ module App.Widgets.Bolt11
 where
 
 import App.Types
+import qualified Bitcoin.Address as Btc
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.Text.Encoding as T
 import qualified Functora.Bolt11 as B11
@@ -90,18 +91,28 @@ invoiceTagWidget = \case
   B11.PaymentHash x -> hex "Preimage Hash" x
   B11.PaymentSecret x -> hex "Payment Secret" x
   B11.Description x -> pure . pair "Description" $ inspect x
+  B11.AdditionalMetadata x -> w5s "Additional Metadata" x
   B11.PayeePubkey x -> hex "Payee Pubkey" x
   B11.DescriptionHash x -> hex "Description Hash" x
   B11.Expiry x -> pure . pair "Expiry" $ inspect x
   B11.MinFinalCltvExpiry x -> pure . pair "Min Final CLTV Expiry" $ inspect x
-  B11.OnchainFallback -> mempty
+  B11.OnchainFallback x -> do
+    --
+    -- TODO : do not ignore failure?
+    --
+    txt <- either (const mempty) pure . decodeUtf8' $ Btc.renderAddress x
+    pure $ pair "Onchain Fallback" $ from @Prelude.Text @MisoString txt
   B11.ExtraRouteInfo -> mempty
-  B11.FeatureBits x ->
-    pure
-      . pair "Feature Bits"
-      . from @Prelude.String @MisoString
-      $ Prelude.show x
+  B11.FeatureBits x -> w5s "Feature Bits" x
+  B11.UnknownTag {} -> mempty
+  B11.UnparsedTag {} -> mempty
   where
+    w5s :: MisoString -> [B11.Word5] -> [FieldPair DynamicField Identity]
+    w5s x =
+      pure
+        . pair x
+        . inspect
+        . fmap fromEnum
     hex :: MisoString -> B11.Hex -> [FieldPair DynamicField Identity]
     hex x =
       pure

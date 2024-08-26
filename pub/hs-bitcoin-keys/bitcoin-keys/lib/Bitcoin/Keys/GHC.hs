@@ -16,6 +16,9 @@ module Bitcoin.Keys.GHC
     pubAddTweak,
     Tweak,
     parseTweak,
+    Sig (..),
+    mkSigDer,
+    unSigDer,
   )
 where
 
@@ -187,6 +190,19 @@ parseTweak :: B.ByteString -> Maybe Tweak
 parseTweak x = do
   guard (B.length x == 32)
   Tweak <$> K.tweak x
+
+newtype Sig = Sig
+  { unSig :: K.Sig
+  }
+  deriving stock (Eq, Show)
+
+mkSigDer :: B.ByteString -> Maybe Sig
+mkSigDer =
+  fmap Sig . withCtx K.importSig
+
+unSigDer :: Sig -> B.ByteString
+unSigDer =
+  withCtx K.exportSig . unSig
 
 #if MIN_VERSION_secp256k1_haskell(1,0,0)
 withCtx :: (K.Ctx -> a) -> a

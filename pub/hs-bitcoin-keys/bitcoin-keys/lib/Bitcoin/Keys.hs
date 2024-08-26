@@ -3,23 +3,24 @@
 -- | This module exports tools for working with Bitcoin keys.
 module Bitcoin.Keys
   ( -- * Private
-    I.Prv
-  , I.parsePrv
-  , I.prvRaw
-  , I.prvToPub
+    I.Prv,
+    I.parsePrv,
+    I.prvRaw,
+    I.prvToPub,
 
-   -- * Public
-  , I.Pub
-  , parsePub
-  , I.pubCompressed
-  , I.pubUncompressed
+    -- * Public
+    I.Pub,
+    parsePub,
+    I.pubCompressed,
+    I.pubUncompressed,
 
-   -- * Tweak
-  , I.Tweak
-  , I.parseTweak
-  , I.pubAddTweak
-  , I.prvAddTweak
-  ) where
+    -- * Tweak
+    I.Tweak,
+    I.parseTweak,
+    I.pubAddTweak,
+    I.prvAddTweak,
+  )
+where
 
 import Control.Applicative
 import Control.Monad
@@ -61,5 +62,3 @@ parsePubUncompressed b = do
   guard (B.length b == 65 && B.index b 0 == 0x04)
   let w0 = 0x02 + (B.index b 64 .&. 0x01)
   I.parsePubCompressed (B.cons w0 (B.take 32 (B.drop 1 b)))
-
-

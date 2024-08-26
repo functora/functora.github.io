@@ -103,7 +103,7 @@ invoiceTagWidget = \case
     txt <- either (const mempty) pure . decodeUtf8' $ Btc.renderAddress x
     pure $ pair "Onchain Fallback" $ from @Prelude.Text @MisoString txt
   B11.ExtraRouteInfo -> mempty
-  B11.FeatureBits x -> w5s "Feature Bits" x
+  B11.Features x -> pure . pair "Feature Bits" $ inspect x
   B11.UnknownTag {} -> mempty
   B11.UnparsedTag {} -> mempty
   where

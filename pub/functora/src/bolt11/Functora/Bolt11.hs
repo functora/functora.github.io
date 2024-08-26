@@ -6,6 +6,9 @@ module Functora.Bolt11
     Hex (..),
     inspectHex,
     Tag (..),
+    Feature (..),
+    FeatureName (..),
+    RequiredOrSupported (..),
     isPaymentHash,
     Network (..),
     Multiplier (..),
@@ -26,7 +29,7 @@ import Codec.Binary.Bech32 (Word5)
 import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
 import qualified Data.Attoparsec.Text as Atto
-import Data.Bits (shiftL, (.|.))
+import Data.Bits (shiftL, (.&.), (.|.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
@@ -82,10 +85,97 @@ data Tag
   | MinFinalCltvExpiry Int
   | OnchainFallback Btc.Address
   | ExtraRouteInfo
-  | FeatureBits [Word5]
+  | Features [Feature]
   | UnknownTag Int [Word5]
   | UnparsedTag Int [Word5] String
   deriving stock (Eq, Ord, Show, Generic)
+
+data Feature = Feature
+  { featureBits :: Int,
+    featureName :: FeatureName,
+    featureRequiredOrSuported :: RequiredOrSupported
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+data FeatureName
+  = Option_data_loss_protect
+  | Option_upfront_shutdown_script
+  | Gossip_queries
+  | Var_onion_optin
+  | Gossip_queries_ex
+  | Option_static_remotekey
+  | Payment_secret
+  | Basic_mpp
+  | Option_support_large_channel
+  | Option_anchors
+  | Option_route_blinding
+  | Option_shutdown_anysegwit
+  | Option_dual_fund
+  | Option_quiesce
+  | Option_onion_messages
+  | Option_channel_type
+  | Option_scid_alias
+  | Option_payment_metadata
+  | Option_zeroconf
+  | Unknown_feature
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+parseFeatures :: [Word5] -> [Feature]
+parseFeatures [] = mempty
+parseFeatures ws = sort . nubOrd $ do
+  (w, idx) <- zip ws [0 ..]
+  i <- [0 .. bsize - 1]
+  if fromEnum w .&. shiftL 1 i == 0
+    then mempty
+    else do
+      let end = length ws - 1
+      let bit = (end - idx) * bsize + i
+      pure $ parseFeature bit
+  where
+    bsize :: Int
+    bsize = 5
+
+parseFeature :: Int -> Feature
+parseFeature bit =
+  Feature
+    { featureBits = bit,
+      featureName = name,
+      featureRequiredOrSuported =
+        if even bit
+          then Required
+          else Supported
+    }
+  where
+    bits :: [Int] -> Bool
+    bits = elem bit
+    name :: FeatureName
+    name =
+      if
+        | bits [0, 1] -> Option_data_loss_protect
+        | bits [4, 5] -> Option_upfront_shutdown_script
+        | bits [6, 7] -> Gossip_queries
+        | bits [8, 9] -> Var_onion_optin
+        | bits [10, 11] -> Gossip_queries_ex
+        | bits [12, 13] -> Option_static_remotekey
+        | bits [14, 15] -> Payment_secret
+        | bits [16, 17] -> Basic_mpp
+        | bits [18, 19] -> Option_support_large_channel
+        | bits [22, 23] -> Option_anchors
+        | bits [24, 25] -> Option_route_blinding
+        | bits [26, 27] -> Option_shutdown_anysegwit
+        | bits [28, 29] -> Option_dual_fund
+        | bits [34, 35] -> Option_quiesce
+        | bits [38, 39] -> Option_onion_messages
+        | bits [44, 45] -> Option_channel_type
+        | bits [46, 47] -> Option_scid_alias
+        | bits [48, 49] -> Option_payment_metadata
+        | bits [50, 51] -> Option_zeroconf
+        | otherwise -> Unknown_feature
+
+data RequiredOrSupported
+  = Required
+  | Supported
+  deriving stock (Eq, Ord, Show, Data, Generic)
 
 isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
@@ -221,10 +311,14 @@ parseHrp = do
   amt <- optional parseHrpAmount
   pure (Bolt11Hrp net amt)
 
+w5w8 :: [Word5] -> Either String [Word8]
+w5w8 =
+  maybe (Left "Non-Base256 bits") Right
+    . Bech32.toBase256
+
 w5bs :: [Word5] -> Either String ByteString
 w5bs =
-  maybe (Left "Non-Base256 bits") (Right . BS.pack)
-    . Bech32.toBase256
+  fmap BS.pack . w5w8
 
 w5hex :: [Word5] -> Either String Hex
 w5hex =
@@ -299,7 +393,7 @@ parseTag net ws@(t0 : d1 : d2 : rest)
         24 -> MinFinalCltvExpiry $ w5int dat
         9 -> mkt OnchainFallback $ w5addr net dat
         3 -> ExtraRouteInfo
-        5 -> FeatureBits dat
+        5 -> Features $ parseFeatures dat
         n -> UnknownTag n dat
 
 data MSig

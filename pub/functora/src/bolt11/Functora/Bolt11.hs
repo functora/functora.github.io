@@ -8,6 +8,8 @@ module Functora.Bolt11
     Tag (..),
     Feature (..),
     FeatureName (..),
+    inspectFeature,
+    inspectFeatures,
     RequiredOrSupported (..),
     isPaymentHash,
     Network (..),
@@ -119,6 +121,22 @@ data FeatureName
   | Option_zeroconf
   | Unknown_feature
   deriving stock (Eq, Ord, Show, Data, Generic)
+
+inspectFeature :: forall a. (From Text a) => Feature -> a
+inspectFeature x =
+  from @Text @a
+    $ "("
+    <> inspect (featureBits x)
+    <> ") "
+    <> T.toLower (inspect $ featureName x)
+    <> " "
+    <> T.toLower (inspect $ featureRequiredOrSuported x)
+
+inspectFeatures :: forall a. (From Text a) => [Feature] -> a
+inspectFeatures =
+  from @Text @a
+    . T.intercalate ", "
+    . fmap inspectFeature
 
 parseFeatures :: [Word5] -> [Feature]
 parseFeatures [] = mempty

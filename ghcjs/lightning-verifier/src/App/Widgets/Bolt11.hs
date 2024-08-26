@@ -68,12 +68,12 @@ invoiceWidget ln =
             . maybe "0" B11.inspectBolt11HrpAmt
             . B11.bolt11HrpAmt
             $ B11.bolt11Hrp ln,
-          pair "Timestamp"
-            . inspect
+          pair "Created At"
+            . inspectTimestamp
             $ B11.bolt11Timestamp ln
         ]
           <> ( B11.bolt11Tags ln
-                >>= invoiceTagWidget
+                >>= invoiceTagWidget ln
              )
           <> [ pair "Signature"
                 . B11.inspectHex
@@ -86,16 +86,18 @@ invoiceWidget ln =
   where
     sig = B11.bolt11Signature ln
 
-invoiceTagWidget :: B11.Tag -> [FieldPair DynamicField Identity]
-invoiceTagWidget = \case
+invoiceTagWidget :: B11.Bolt11 -> B11.Tag -> [FieldPair DynamicField Identity]
+invoiceTagWidget ln = \case
   B11.PaymentHash x -> hex "Preimage Hash" x
   B11.PaymentSecret x -> hex "Payment Secret" x
   B11.Description x -> pure . pair "Description" $ inspect x
   B11.AdditionalMetadata x -> w5s "Additional Metadata" x
   B11.PayeePubkey x -> hex "Payee Pubkey" x
   B11.DescriptionHash x -> hex "Description Hash" x
-  B11.Expiry x -> pure . pair "Expiry" $ inspect x
-  B11.MinFinalCltvExpiry x -> pure . pair "Min Final CLTV Expiry" $ inspect x
+  B11.Expiry x ->
+    pure . pair "Expires At" . inspectTimestamp $ x + B11.bolt11Timestamp ln
+  B11.MinFinalCltvExpiry x ->
+    pure . pair "Min Final CLTV Expiry" $ inspect x <> " Blocks"
   B11.OnchainFallback x -> do
     --
     -- TODO : do not ignore failure?
@@ -103,7 +105,7 @@ invoiceTagWidget = \case
     txt <- either (const mempty) pure . decodeUtf8' $ Btc.renderAddress x
     pure $ pair "Onchain Fallback" $ from @Prelude.Text @MisoString txt
   B11.ExtraRouteInfo -> mempty
-  B11.Features x -> pure . pair "Feature Bits" $ inspect x
+  B11.Features x -> pure . pair "Feature Bits" $ B11.inspectFeatures x
   B11.UnknownTag {} -> mempty
   B11.UnparsedTag {} -> mempty
   where
@@ -181,3 +183,10 @@ css :: MisoString -> [View action] -> [View action]
 css x = fmap $ \case
   Node x0 x1 x2 x3 x4 -> Node x0 x1 x2 (class_ x : x3) x4
   html -> html
+
+inspectTimestamp :: Int -> MisoString
+inspectTimestamp =
+  inspect
+    . posixSecondsToUTCTime
+    . Prelude.fromInteger
+    . from @Int @Integer

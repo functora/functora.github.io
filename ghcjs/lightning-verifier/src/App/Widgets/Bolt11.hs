@@ -5,7 +5,9 @@ where
 
 import App.Types
 import qualified Bitcoin.Address as Btc
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Encoding as T
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
@@ -104,7 +106,13 @@ invoiceTagWidget ln = \case
     --
     txt <- either (const mempty) pure . decodeUtf8' $ Btc.renderAddress x
     pure $ pair "Onchain Fallback" $ from @Prelude.Text @MisoString txt
-  B11.ExtraRouteInfo -> mempty
+  B11.ExtraRouteInfo x ->
+    pure
+      . pair "Extra Routing Info"
+      . either (const mempty) (from @Prelude.Text @MisoString)
+      . decodeUtf8'
+      . from @BL.ByteString @ByteString
+      $ A.encode x
   B11.Features x -> pure . pair "Feature Bits" $ B11.inspectFeatures x
   B11.UnknownTag {} -> mempty
   B11.UnparsedTag {} -> mempty

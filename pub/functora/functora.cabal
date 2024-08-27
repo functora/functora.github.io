@@ -246,10 +246,12 @@ common pkg-bolt11
   import:         pkg
   hs-source-dirs: src/bolt11
   build-depends:
+    , aeson
     , attoparsec
     , base
     , base16-bytestring
     , bech32
+    , binary
     , bitcoin-address
     , bytestring
     , text

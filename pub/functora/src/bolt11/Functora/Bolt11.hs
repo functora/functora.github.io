@@ -11,6 +11,7 @@ module Functora.Bolt11
     inspectFeature,
     inspectFeatures,
     RequiredOrSupported (..),
+    Route (..),
     isPaymentHash,
     Network (..),
     Multiplier (..),
@@ -19,6 +20,7 @@ module Functora.Bolt11
     Bolt11Hrp (..),
     Bolt11Sig (..),
     Bolt11 (..),
+    inspectW5,
     decodeBolt11,
   )
 where
@@ -30,7 +32,9 @@ import qualified Bitcoin.Address.Settings as Btc
 import Codec.Binary.Bech32 (Word5)
 import qualified Codec.Binary.Bech32.Internal as Bech32
 import Control.Applicative
+import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Text as Atto
+import qualified Data.Binary.Get as BG
 import Data.Bits (shiftL, (.&.), (.|.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
@@ -86,7 +90,7 @@ data Tag
   | Expiry Int
   | MinFinalCltvExpiry Int
   | OnchainFallback Btc.Address
-  | ExtraRouteInfo
+  | ExtraRouteInfo [Route]
   | Features [Feature]
   | UnknownTag Int [Word5]
   | UnparsedTag Int [Word5] String
@@ -194,6 +198,59 @@ data RequiredOrSupported
   = Required
   | Supported
   deriving stock (Eq, Ord, Show, Data, Generic)
+
+data Route = Route
+  { routePubKey :: Hex,
+    routeShortChanId :: Hex,
+    routeFeeBaseMsat :: Word32,
+    routeFeePropMillionth :: Word32,
+    routeCltvExpiryDelta :: Word16
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+instance A.ToJSON Route where
+  toJSON x =
+    A.object
+      [ "pubkey" A..= inspectHex @Text (routePubKey x),
+        "short_channel_id" A..= inspectHex @Text (routeShortChanId x),
+        "fee_base_msat" A..= routeFeeBaseMsat x,
+        "fee_proportional_millionths" A..= routeFeePropMillionth x,
+        "cltv_expiry_delta" A..= routeCltvExpiryDelta x
+      ]
+  toEncoding x =
+    A.pairs
+      $ "pubkey"
+      A..= inspectHex @Text (routePubKey x)
+        <> "short_channel_id"
+      A..= inspectHex @Text (routeShortChanId x)
+        <> "fee_base_msat"
+      A..= routeFeeBaseMsat x
+        <> "fee_proportional_millionths"
+      A..= routeFeePropMillionth x
+        <> "cltv_expiry_delta"
+      A..= routeCltvExpiryDelta x
+
+parseRoutes :: ByteString -> Either String [Route]
+parseRoutes =
+  bimap thd3 thd3
+    . BG.runGetOrFail
+      ( many
+          $ do
+            pub <- BG.getByteString 33
+            chan <- BG.getByteString 8
+            base <- BG.getWord32be
+            prop <- BG.getWord32be
+            cltv <- BG.getWord16be
+            pure
+              Route
+                { routePubKey = Hex pub,
+                  routeShortChanId = Hex chan,
+                  routeFeeBaseMsat = base,
+                  routeFeePropMillionth = prop,
+                  routeCltvExpiryDelta = cltv
+                }
+      )
+    . BL.fromStrict
 
 isPaymentHash :: Tag -> Bool
 isPaymentHash PaymentHash {} = True
@@ -382,6 +439,13 @@ w5addr net (v0 : rest) =
   where
     cfg = networkSettings net
 
+inspectW5 :: forall a. (From Text a) => [Word5] -> a
+inspectW5 ws =
+  from @Text @a
+    . either (const . inspect $ fmap fromEnum ws) id
+    $ w5txt ws
+    <|> fmap inspect (w5bs ws)
+
 parseTag :: Network -> [Word5] -> (Maybe Tag, [Word5])
 parseTag _ [] = (Nothing, [])
 parseTag _ ws@[_] = (Nothing, ws)
@@ -410,7 +474,7 @@ parseTag net ws@(t0 : d1 : d2 : rest)
         6 -> Expiry $ w5int dat
         24 -> MinFinalCltvExpiry $ w5int dat
         9 -> mkt OnchainFallback $ w5addr net dat
-        3 -> ExtraRouteInfo
+        3 -> mkt ExtraRouteInfo $ parseRoutes =<< w5bs dat
         5 -> Features $ parseFeatures dat
         n -> UnknownTag n dat
 

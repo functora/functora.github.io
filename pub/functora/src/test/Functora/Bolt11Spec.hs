@@ -57,6 +57,23 @@ goodSamples =
                 . Btc.parsePubHash160
                 $ unHex "04b61f7dc1ea0dc99424464cc4064dc564d91e89",
               ExtraRouteInfo
+                [ Route
+                    { routePubKey =
+                        "029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255",
+                      routeShortChanId = "0102030405060708",
+                      routeFeeBaseMsat = 1,
+                      routeFeePropMillionth = 20,
+                      routeCltvExpiryDelta = 3
+                    },
+                  Route
+                    { routePubKey =
+                        "039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255",
+                      routeShortChanId = "030405060708090a",
+                      routeFeeBaseMsat = 2,
+                      routeFeePropMillionth = 30,
+                      routeCltvExpiryDelta = 4
+                    }
+                ]
             ],
           bolt11Signature =
             Bolt11Sig

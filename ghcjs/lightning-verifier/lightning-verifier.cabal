@@ -93,6 +93,7 @@ common pkg
     TypeOperators
 
   build-depends:
+    , aeson
     , async
     , barbies
     , base

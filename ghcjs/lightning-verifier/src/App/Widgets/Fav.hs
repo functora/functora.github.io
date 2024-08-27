@@ -14,7 +14,6 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
-import qualified Material.Theme as Theme
 import qualified Text.URI as URI
 
 fav :: Model -> [View Action]
@@ -32,46 +31,31 @@ fav st =
               [ Grid.grid
                   mempty
                   $ favItems st
-                  <> [ Grid.mediumCell
+                  <> [ Grid.bigCell
                         $ Field.textField
                           Field.Args
                             { Field.argsModel = st,
                               Field.argsOptic = #modelFavName,
                               Field.argsAction = PushUpdate . Instant
                             }
-                          ( Field.defOpts
-                              & #optsPlaceholder
-                              .~ ( let name = makeFavName st
-                                    in "Name"
-                                        <> ( if name == mempty
-                                              then mempty
-                                              else " - "
-                                           )
-                                        <> name
-                                 )
-                          ),
-                       Grid.smallCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick saveAction
-                              & Button.setIcon (Just "favorite")
-                              & Button.setAttributes
-                                [ Theme.secondaryBg,
-                                  Css.fullWidth
-                                ]
-                          )
-                          "Save",
-                       Grid.smallCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick deleteAction
-                              & Button.setIcon (Just "delete_forever")
-                              & Button.setAttributes
-                                [ Theme.secondaryBg,
-                                  Css.fullWidth
-                                ]
-                          )
-                          "Delete",
+                          Field.defOpts
+                            { Field.optsPlaceholder = "Name",
+                              Field.optsFilledOrOutlined = Outlined,
+                              Field.optsOnKeyDownAction = onKeyDownAction,
+                              Field.optsTrailingWidget =
+                                Just
+                                  . Field.ActionWidget
+                                    "favorite"
+                                    mempty
+                                  . PushUpdate
+                                  $ Instant saveAction,
+                              Field.optsLeadingWidget =
+                                Just
+                                  $ Field.ActionWidget
+                                    "delete_forever"
+                                    mempty
+                                    deleteAction
+                            },
                        Grid.bigCell
                         $ Button.raised
                           ( Button.config
@@ -87,7 +71,7 @@ fav st =
       ]
   where
     closeAction = PushUpdate . Instant $ pure . (& #modelFav .~ Closed)
-    saveAction = PushUpdate . Instant $ \nextSt -> do
+    saveAction nextSt = do
       ct <- getCurrentTime
       let txt = makeFavName st
       let uri = either impureThrow id . URI.mkURI $ shareLink nextSt
@@ -122,6 +106,10 @@ fav st =
         & #modelFavMap
         . at nextFavName
         .~ Nothing
+    onKeyDownAction uid code =
+      if code == KeyCode 13
+        then saveAction
+        else Jsm.enterOrEscapeBlur uid code
 
 makeFavName :: Model -> MisoString
 makeFavName st =

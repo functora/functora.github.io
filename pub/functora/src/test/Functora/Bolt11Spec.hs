@@ -82,6 +82,41 @@ goodSamples =
                 bolt11SigRecoveryFlag = 0
               }
         }
+    ),
+    ( "lnbc2500u1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpu9qrsgquk0rl77nj30yxdy8j9vdx85fkpmdla2087ne0xh8nhedh8w27kyke0lp53ut353s06fv3qfegext0eh0ymjpf39tuven09sam30g4vgpfna3rh",
+      Bolt11
+        { bolt11Hrp =
+            Bolt11Hrp
+              { bolt11HrpNet = BitcoinMainnet,
+                bolt11HrpAmt =
+                  Just (Bolt11HrpAmt {bolt11HrpAmtNum = 2500, bolt11HrpAmtMul = Micro})
+              },
+          bolt11Timestamp = 1496314658,
+          bolt11Tags =
+            [ PaymentSecret "1111111111111111111111111111111111111111111111111111111111111111",
+              PaymentHash "0001020304050607080900010203040506070809000102030405060708090102",
+              Description "1 cup coffee",
+              Expiry 60,
+              Features
+                [ Feature
+                    { featureBits = 8,
+                      featureName = Var_onion_optin,
+                      featureRequiredOrSuported = Required
+                    },
+                  Feature
+                    { featureBits = 14,
+                      featureName = Payment_secret,
+                      featureRequiredOrSuported = Required
+                    }
+                ]
+            ],
+          bolt11Signature =
+            Bolt11Sig
+              { bolt11SigVal =
+                  "e59e3ffbd3945e4334879158d31e89b076dff54f3fa7979ae79df2db9dcaf5896cbfe1a478b8d2307e92c88139464cb7e6ef26e414c4abe33337961ddc5e8ab1",
+                bolt11SigRecoveryFlag = 1
+              }
+        }
     )
   ]
 

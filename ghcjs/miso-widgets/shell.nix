@@ -19,6 +19,7 @@ in
         functora-pkgs.libwebp
         functora-pkgs.nodejs
         functora-pkgs.terser
+        functora-pkgs.secp256k1
       ]
       ++ prev.buildInputs
       ++ pkgs.lib.lists.take (pkgs.lib.lists.length functora-tools - 1)

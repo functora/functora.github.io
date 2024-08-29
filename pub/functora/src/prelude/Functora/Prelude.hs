@@ -169,6 +169,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Digest.SHA256 as SHA256
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
+import Data.Foldable1 as X (Foldable1, fold1, foldMap1)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
 import qualified Data.Generics as Syb

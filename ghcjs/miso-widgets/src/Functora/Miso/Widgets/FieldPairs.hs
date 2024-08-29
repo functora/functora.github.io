@@ -19,12 +19,14 @@ data Args model action f = Args
   }
   deriving stock (Generic)
 
-fieldPairsViewer :: Args model action f -> [View action]
+fieldPairsViewer :: (Foldable1 f) => Args model action f -> [View action]
 fieldPairsViewer args@Args {argsOptic = optic} = do
   item <- fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
   fieldPairViewer args item
 
 fieldPairViewer ::
+  ( Foldable1 f
+  ) =>
   Args model action f ->
   FieldPair DynamicField f ->
   [View action]

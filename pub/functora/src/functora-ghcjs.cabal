@@ -96,6 +96,7 @@ common pkg
     , containers
     , Crypto
     , extra
+    , foldable1-classes-compat
     , generic-lens
     , lens
     , lift-type
@@ -103,7 +104,7 @@ common pkg
     , microlens-contra
     , microlens-ghc
     , microlens-th
-    , modern-uri            >=0.3.4.4
+    , modern-uri                >=0.3.4.4
     , network-uri
     , optparse-applicative
     , pkcs7

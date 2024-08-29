@@ -157,7 +157,7 @@ pair x =
   newFieldPairId x
     . DynamicFieldText
 
-pairs :: [FieldPair DynamicField f] -> [View Action]
+pairs :: (Foldable1 f) => [FieldPair DynamicField f] -> [View Action]
 pairs raw =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args

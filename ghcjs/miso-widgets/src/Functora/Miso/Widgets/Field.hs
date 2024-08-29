@@ -24,7 +24,6 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
-import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
@@ -704,17 +703,19 @@ constTextField txt opts action =
 --
 dynamicFieldViewer ::
   forall model action f.
+  ( Foldable1 f
+  ) =>
   ((model -> JSM model) -> action) ->
   Field DynamicField f ->
   [View action]
 dynamicFieldViewer action value =
   case value ^. #fieldType of
-    FieldTypeNumber -> plain action value text
-    FieldTypePercent -> plain action value $ text . (<> "%")
-    FieldTypeText -> plain action value text
+    FieldTypeNumber -> genericFieldViewer action value text
+    FieldTypePercent -> genericFieldViewer action value $ text . (<> "%")
+    FieldTypeText -> genericFieldViewer action value text
     FieldTypeTitle -> header out
-    FieldTypeHtml -> plain action value rawHtml
-    FieldTypePassword -> plain action value $ const "*****"
+    FieldTypeHtml -> genericFieldViewer action value rawHtml
+    FieldTypePassword -> genericFieldViewer action value $ const "*****"
     FieldTypeQrCode ->
       Qr.qr
         Qr.Args
@@ -725,50 +726,9 @@ dynamicFieldViewer action value =
         & #optsAllowCopy
         .~ allowCopy
   where
-    out = inspectDynamicField $ value ^. #fieldOutput
-    allowCopy = value ^. #fieldAllowCopy
-
-plain ::
-  ((model -> JSM model) -> action) ->
-  Field DynamicField f ->
-  (MisoString -> View action) ->
-  [View action]
-plain action value widget =
-  if out == mempty
-    then mempty
-    else
-      [ span_
-          [ Typography.typography,
-            Css.fullWidth,
-            class_ "mdc-text-field",
-            class_ "mdc-text-field--filled",
-            style_
-              [ ("align-items", "center"),
-                ("align-content", "center"),
-                ("word-break", "normal"),
-                ("overflow-wrap", "anywhere"),
-                ("min-height", "56px"),
-                ("height", "auto"),
-                ("padding-top", "8px"),
-                ("padding-bottom", "8px"),
-                ("border-radius", "4px"),
-                ("line-height", "150%")
-              ]
-          ]
-          $ [ widget $ toMisoString out
-            ]
-          <> ( if not allowCopy
-                then mempty
-                else
-                  [ IconButton.iconButton
-                      ( IconButton.config
-                          & IconButton.setOnClick (action $ Jsm.shareText out)
-                      )
-                      "content_copy"
-                  ]
-             )
-      ]
-  where
+    --
+    -- TODO : use input instead!!!
+    --
     out = inspectDynamicField $ value ^. #fieldOutput
     allowCopy = value ^. #fieldAllowCopy
 

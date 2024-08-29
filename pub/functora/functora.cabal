@@ -95,6 +95,7 @@ common pkg-prelude
     , containers
     , Crypto
     , extra
+    , foldable1-classes-compat
     , generic-lens
     , lens
     , microlens

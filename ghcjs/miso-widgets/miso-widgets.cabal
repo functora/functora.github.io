@@ -104,6 +104,8 @@ library
   exposed-modules:
     Functora.Miso.Css
     Functora.Miso.Jsm
+    Functora.Miso.Jsm.Generic
+    Functora.Miso.Jsm.Specific
     Functora.Miso.Prelude
     Functora.Miso.Types
     Functora.Miso.Widgets.Assets
@@ -139,6 +141,8 @@ test-suite miso-widgets-test
     other-modules:
       Functora.Miso.Css
       Functora.Miso.Jsm
+      Functora.Miso.Jsm.Generic
+      Functora.Miso.Jsm.Specific
       Functora.Miso.Prelude
       Functora.Miso.Types
       Functora.Miso.Widgets.Assets

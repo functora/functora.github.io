@@ -10,12 +10,10 @@ import qualified Codec.QRCode as QRCode
 import qualified Data.MemoUgly as Memo
 import qualified Data.Text.Lazy as TL
 import qualified Functora.Miso.Css as Css
-import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
-import qualified Material.Button as Button
-import qualified Material.TextArea as TextArea
 
 data Args model action = Args
   { argsValue :: MisoString,
@@ -61,10 +59,10 @@ qr args opts
   where
     txt = args ^. #argsValue
     action = args ^. #argsAction
-    allowCopy = opts ^. #optsAllowCopy
+    -- allowCopy = opts ^. #optsAllowCopy
     extraWidgets = opts ^. #optsExtraWidgets
     extraCell =
-      case mod (length extraWidgets + if allowCopy then 1 else 0) 2 of
+      case mod (length extraWidgets) 2 of
         0 -> Grid.mediumCell
         _ -> Grid.bigCell
     copyWidget =
@@ -72,20 +70,11 @@ qr args opts
         then mempty
         else
           [ Grid.bigCell
-              . TextArea.filled
-              $ TextArea.config
-              & TextArea.setValue (Just txt)
-              & TextArea.setDisabled True
-              & TextArea.setFullwidth True
-              & TextArea.setInnerView [text txt],
-            extraCell
-              $ Button.raised
-                ( Button.config
-                    & Button.setIcon (Just "share")
-                    & Button.setAttributes [Css.fullWidth]
-                    & Button.setOnClick (action $ Jsm.shareText txt)
-                )
-                "Copy"
+              . div_ mempty
+              $ genericFieldViewer
+                action
+                (newFieldId FieldTypeText id txt)
+                text
           ]
 
 newQrImg :: MisoString -> Maybe MisoString

@@ -228,8 +228,7 @@ genericFieldViewer action value widget =
               <> ( if not allowCopy
                     then mempty
                     else
-                      [ span_ mempty [text " "],
-                        IconButton.iconButton
+                      [ IconButton.iconButton
                           ( IconButton.config
                               & IconButton.setOnClick
                                 ( action $ Jsm.shareText input
@@ -238,10 +237,9 @@ genericFieldViewer action value widget =
                                 [ Theme.primary,
                                   style_
                                     [ ("height", "auto"),
-                                      ("width", "inherit"),
-                                      ("padding", "inherit"),
-                                      ("line-height", "inherit"),
-                                      ("font-size", "85%")
+                                      ("padding-top", "inherit"),
+                                      ("padding-bottom", "inherit"),
+                                      ("vertical-align", "middle")
                                     ]
                                 ]
                           )

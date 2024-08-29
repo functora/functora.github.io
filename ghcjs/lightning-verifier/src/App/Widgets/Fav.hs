@@ -32,38 +32,40 @@ fav st =
                   mempty
                   $ favItems st
                   <> [ Grid.bigCell
-                        $ Field.textField
-                          Field.Args
-                            { Field.argsModel = st,
-                              Field.argsOptic = #modelFavName,
-                              Field.argsAction = PushUpdate . Instant
-                            }
-                          Field.defOpts
-                            { Field.optsPlaceholder = "Name",
-                              Field.optsFilledOrOutlined = Outlined,
-                              Field.optsOnKeyDownAction = onKeyDownAction,
-                              Field.optsTrailingWidget =
-                                Just
-                                  . Field.ActionWidget
-                                    "favorite"
-                                    mempty
-                                  . PushUpdate
-                                  $ Instant saveAction,
-                              Field.optsLeadingWidget =
-                                Just
-                                  $ Field.ActionWidget
-                                    "delete_forever"
-                                    mempty
-                                    deleteAction
-                            },
+                        [ Field.textField
+                            Field.Args
+                              { Field.argsModel = st,
+                                Field.argsOptic = #modelFavName,
+                                Field.argsAction = PushUpdate . Instant
+                              }
+                            Field.defOpts
+                              { Field.optsPlaceholder = "Name",
+                                Field.optsFilledOrOutlined = Outlined,
+                                Field.optsOnKeyDownAction = onKeyDownAction,
+                                Field.optsTrailingWidget =
+                                  Just
+                                    . Field.ActionWidget
+                                      "favorite"
+                                      mempty
+                                    . PushUpdate
+                                    $ Instant saveAction,
+                                Field.optsLeadingWidget =
+                                  Just
+                                    $ Field.ActionWidget
+                                      "delete_forever"
+                                      mempty
+                                      deleteAction
+                              }
+                        ],
                        Grid.bigCell
-                        $ Button.raised
-                          ( Button.config
-                              & Button.setOnClick closeAction
-                              & Button.setIcon (Just "arrow_back")
-                              & Button.setAttributes [Css.fullWidth]
-                          )
-                          "Back"
+                        [ Button.raised
+                            ( Button.config
+                                & Button.setOnClick closeAction
+                                & Button.setIcon (Just "arrow_back")
+                                & Button.setAttributes [Css.fullWidth]
+                            )
+                            "Back"
+                        ]
                      ]
               ]
               mempty
@@ -133,12 +135,13 @@ favItems st =
 favItem :: Model -> MisoString -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
   Grid.bigCell
-    $ Button.raised
-      ( Button.config
-          & Button.setOnClick openAction
-          & Button.setAttributes [Css.fullWidth]
-      )
-      label
+    [ Button.raised
+        ( Button.config
+            & Button.setOnClick openAction
+            & Button.setAttributes [Css.fullWidth]
+        )
+        label
+    ]
   where
     openAction = PushUpdate . Instant $ \nextSt -> do
       --

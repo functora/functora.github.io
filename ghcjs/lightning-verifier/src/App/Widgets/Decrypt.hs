@@ -18,29 +18,30 @@ import qualified System.Random as Random
 decrypt :: Model -> [View Action]
 decrypt st =
   [ Grid.bigCell
-      . div_ mempty
       $ Field.dynamicFieldViewer
         (PushUpdate . Instant)
         (st ^. #modelState . #stPre),
     Grid.mediumCell
-      $ Field.passwordField
-        Field.Args
-          { Field.argsModel = st,
-            Field.argsOptic = #modelState . #stIkm,
-            Field.argsAction = PushUpdate . Instant
-          }
-        ( Field.defOpts @Model @Action
-            & #optsOnKeyDownAction
-            .~ onKeyDownAction
-        ),
+      [ Field.passwordField
+          Field.Args
+            { Field.argsModel = st,
+              Field.argsOptic = #modelState . #stIkm,
+              Field.argsAction = PushUpdate . Instant
+            }
+          ( Field.defOpts @Model @Action
+              & #optsOnKeyDownAction
+              .~ onKeyDownAction
+          )
+      ],
     Grid.mediumCell
-      $ Button.raised
-        ( Button.config
-            & Button.setOnClick (PushUpdate $ Instant decryptDoc)
-            & Button.setIcon (Just "login")
-            & Button.setAttributes [Css.fullWidth]
-        )
-        "Open"
+      [ Button.raised
+          ( Button.config
+              & Button.setOnClick (PushUpdate $ Instant decryptDoc)
+              & Button.setIcon (Just "login")
+              & Button.setAttributes [Css.fullWidth]
+          )
+          "Open"
+      ]
   ]
 
 decryptDoc :: Model -> JSM Model

@@ -17,7 +17,7 @@ grid attrs cells =
     [ LayoutGrid.inner attrs cells
     ]
 
-bigCell :: View action -> View action
+bigCell :: [View action] -> View action
 bigCell =
   LayoutGrid.cell
     [ LayoutGrid.span12Desktop,
@@ -26,9 +26,8 @@ bigCell =
       LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
-    . (: mempty)
 
-mediumCell :: View action -> View action
+mediumCell :: [View action] -> View action
 mediumCell =
   LayoutGrid.cell
     [ LayoutGrid.span6Desktop,
@@ -37,9 +36,8 @@ mediumCell =
       LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
-    . (: mempty)
 
-smallCell :: View action -> View action
+smallCell :: [View action] -> View action
 smallCell =
   LayoutGrid.cell
     [ LayoutGrid.span3Desktop,
@@ -48,4 +46,3 @@ smallCell =
       LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]
-    . (: mempty)

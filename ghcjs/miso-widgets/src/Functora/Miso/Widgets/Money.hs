@@ -47,24 +47,26 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
             then Nothing
             else
               Just
-                . cell
-                $ strong_ [Typography.typography] [text label],
+                $ cell
+                  [ strong_ [Typography.typography] [text label]
+                  ],
           Just
-            . cell
-            $ div_
-              [ Css.fullWidth,
-                style_ [("text-align", "center")]
-              ]
-              [ Field.constTextField
-                  ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
-                  )
-                  ( Field.defOpts
-                      & #optsPlaceholder
-                      .~ inspectCurrencyInfo
-                        ( money ^. #moneyCurrency . #currencyOutput
-                        )
-                  )
-                  action
+            $ cell
+              [ div_
+                  [ Css.fullWidth,
+                    style_ [("text-align", "center")]
+                  ]
+                  [ Field.constTextField
+                      ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
+                      )
+                      ( Field.defOpts
+                          & #optsPlaceholder
+                          .~ inspectCurrencyInfo
+                            ( money ^. #moneyCurrency . #currencyOutput
+                            )
+                      )
+                      action
+                  ]
               ]
         ]
   where

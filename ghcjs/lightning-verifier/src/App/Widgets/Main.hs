@@ -11,6 +11,7 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Material.Button as Button
@@ -58,64 +59,66 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stCpt = Just {}}} =
   case st ^. #modelState . #stScreen of
-    QrCode sc ->
+    QrCode sc -> do
+      let out =
+            toMisoString
+              . either impureThrow URI.render
+              . stUri
+              $ st
+              & #modelState
+              . #stScreen
+              %~ unQrCode
       Header.headerWrapper
         ( Field.dynamicFieldViewer
             (PushUpdate . Instant)
             (st ^. #modelState . #stPre)
         )
-        <> Qr.qr
-          Qr.Args
-            { Qr.argsValue =
-                toMisoString
-                  . either impureThrow URI.render
-                  . stUri
-                  $ st
-                  & #modelState
-                  . #stScreen
-                  %~ unQrCode,
-              Qr.argsAction =
-                PushUpdate
-                  . Instant
-            }
-          ( Qr.defOpts @Action
-              & #optsExtraWidgets
-              .~ [ Button.raised
-                    ( Button.config
-                        & Button.setIcon (Just "login")
-                        & Button.setAttributes [Css.fullWidth]
-                        & Button.setOnClick (setScreenAction $ unQrCode sc)
-                    )
-                    "Open"
-                 ]
-          )
+        <> Qr.qr out
+        <> [ Grid.bigCell
+              $ genericFieldViewer
+                (PushUpdate . Instant)
+                (newFieldId FieldTypeText id out)
+                text
+           ]
+        <> [ Grid.bigCell
+              [ Button.raised
+                  ( Button.config
+                      & Button.setIcon (Just "login")
+                      & Button.setAttributes [Css.fullWidth]
+                      & Button.setOnClick (setScreenAction $ unQrCode sc)
+                  )
+                  "Open"
+              ]
+           ]
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   case stUri $ st & #modelState . #stScreen %~ unQrCode of
     Left e -> impureThrow e
-    Right uri ->
+    Right uri -> do
+      let out = toMisoString $ URI.render uri
       Header.headerWrapper
         ( Field.dynamicFieldViewer
             (PushUpdate . Instant)
             (st ^. #modelState . #stPre)
         )
-        <> Qr.qr
-          Qr.Args
-            { Qr.argsValue = toMisoString $ URI.render uri,
-              Qr.argsAction = PushUpdate . Instant
-            }
-          ( Qr.defOpts @Action
-              & #optsExtraWidgets
-              .~ [ Button.raised
-                    ( Button.config
-                        & Button.setIcon (Just "login")
-                        & Button.setAttributes [Css.fullWidth]
-                        & Button.setOnClick (setScreenAction $ unQrCode sc)
-                    )
-                    "Open"
-                 ]
-          )
+        <> Qr.qr out
+        <> [ Grid.bigCell
+              $ genericFieldViewer
+                (PushUpdate . Instant)
+                (newFieldId FieldTypeText id out)
+                text
+           ]
+        <> [ Grid.bigCell
+              [ Button.raised
+                  ( Button.config
+                      & Button.setIcon (Just "login")
+                      & Button.setAttributes [Css.fullWidth]
+                      & Button.setOnClick (setScreenAction $ unQrCode sc)
+                  )
+                  "Open"
+              ]
+           ]
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args

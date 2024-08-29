@@ -35,30 +35,31 @@ fieldPairViewer args pair =
       then mempty
       else
         [ cell
-            $ strong_
-              [ Typography.typography,
-                Css.fullWidth,
-                class_ "mdc-text-field",
-                style_
-                  [ ("align-items", "center"),
-                    ("align-content", "center"),
-                    ("word-break", "normal"),
-                    ("overflow-wrap", "anywhere"),
-                    ("min-height", "56px"),
-                    ("height", "auto"),
-                    ("padding-top", "8px"),
-                    ("padding-bottom", "8px"),
-                    ("line-height", "150%")
-                  ]
-              ]
-              [text $ pair ^. #fieldPairKey . #fieldOutput]
+            [ strong_
+                [ Typography.typography,
+                  Css.fullWidth,
+                  class_ "mdc-text-field",
+                  style_
+                    [ ("align-items", "center"),
+                      ("align-content", "center"),
+                      ("word-break", "normal"),
+                      ("overflow-wrap", "anywhere"),
+                      ("min-height", "56px"),
+                      ("height", "auto"),
+                      ("padding-top", "8px"),
+                      ("padding-bottom", "8px"),
+                      ("line-height", "150%")
+                    ]
+                ]
+                [ text $ pair ^. #fieldPairKey . #fieldOutput
+                ]
+            ]
         ]
   )
     <> ( if v == mempty
           then mempty
           else
             [ cell
-                . div_ mempty
                 $ Field.dynamicFieldViewer
                   (args ^. #argsAction)
                   (pair ^. #fieldPairValue)

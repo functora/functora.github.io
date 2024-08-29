@@ -35,13 +35,14 @@ dialog args =
                   mempty
                   $ (args ^. #argsContent)
                   <> [ Grid.bigCell
-                        $ Button.raised
-                          ( Button.config
-                              & action Button.setOnClick
-                              & Button.setIcon (Just "arrow_back")
-                              & Button.setAttributes [Css.fullWidth]
-                          )
-                          "Back"
+                        [ Button.raised
+                            ( Button.config
+                                & action Button.setOnClick
+                                & Button.setIcon (Just "arrow_back")
+                                & Button.setAttributes [Css.fullWidth]
+                            )
+                            "Back"
+                        ]
                      ]
               ]
               mempty

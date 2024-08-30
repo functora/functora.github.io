@@ -24,6 +24,7 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
+import qualified Material.IconButton as IconButton
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
@@ -710,45 +711,6 @@ constTextField txt opts action =
           )
     ]
 
---
--- TODO : support optional copying widgets
---
-dynamicFieldViewer ::
-  forall model action f.
-  ( Foldable1 f
-  ) =>
-  ((model -> JSM model) -> action) ->
-  Field DynamicField f ->
-  [View action]
-dynamicFieldViewer action value =
-  case value ^. #fieldType of
-    FieldTypeNumber -> genericFieldViewer action value text
-    FieldTypePercent -> genericFieldViewer action value $ text . (<> "%")
-    FieldTypeText -> genericFieldViewer action value text
-    FieldTypeTitle -> header out
-    FieldTypeHtml -> genericFieldViewer action value rawHtml
-    FieldTypePassword -> genericFieldViewer action value $ const "*****"
-    FieldTypeQrCode -> Qr.qr out
-  where
-    --
-    -- TODO : use input instead!!!
-    --
-    out = inspectDynamicField $ value ^. #fieldOutput
-
-header :: MisoString -> [View action]
-header txt =
-  if txt == mempty
-    then mempty
-    else
-      [ div_
-          [ Typography.headline5,
-            Css.fullWidth,
-            style_ [("text-align", "center")]
-          ]
-          [ text txt
-          ]
-      ]
-
 cell :: Opts model action -> [View action] -> View action
 cell Opts {optsFullWidth = full} =
   LayoutGrid.cell
@@ -773,3 +735,101 @@ cell Opts {optsFullWidth = full} =
               ("align-items", "center")
             ]
         ]
+
+--
+-- TODO : support optional copying widgets
+--
+dynamicFieldViewer ::
+  forall model action f.
+  ( Foldable1 f
+  ) =>
+  ((model -> JSM model) -> action) ->
+  Field DynamicField f ->
+  [View action]
+dynamicFieldViewer action value =
+  case value ^. #fieldType of
+    FieldTypeNumber -> genericFieldViewer action value text
+    FieldTypePercent -> genericFieldViewer action value $ text . (<> "%")
+    FieldTypeText -> genericFieldViewer action value text
+    FieldTypeTitle -> header out
+    FieldTypeHtml -> genericFieldViewer action value rawHtml
+    FieldTypePassword -> genericFieldViewer action value $ const "*****"
+    FieldTypeQrCode -> Qr.qr out <> genericFieldViewer action value text
+  where
+    --
+    -- TODO : use input instead!!!
+    --
+    out = inspectDynamicField $ value ^. #fieldOutput
+
+header :: MisoString -> [View action]
+header txt =
+  if txt == mempty
+    then mempty
+    else
+      [ div_
+          [ Typography.headline5,
+            Css.fullWidth,
+            style_ [("text-align", "center")]
+          ]
+          [ text txt
+          ]
+      ]
+
+genericFieldViewer ::
+  ( Foldable1 f
+  ) =>
+  ((model -> JSM model) -> action) ->
+  Field typ f ->
+  (MisoString -> View action) ->
+  [View action]
+genericFieldViewer action value widget =
+  if input == mempty
+    then mempty
+    else
+      [ span_
+          [ Typography.typography,
+            Css.fullWidth,
+            class_ "mdc-text-field",
+            class_ "mdc-text-field--filled",
+            style_
+              [ ("align-items", "center"),
+                ("align-content", "center"),
+                ("word-break", "normal"),
+                ("overflow-wrap", "anywhere"),
+                ("min-height", "56px"),
+                ("height", "auto"),
+                ("padding-top", "8px"),
+                ("padding-bottom", "8px"),
+                ("border-radius", "4px"),
+                ("line-height", "150%")
+              ]
+          ]
+          [ div_ mempty
+              $ [ widget $ toMisoString input
+                ]
+              <> ( if not allowCopy
+                    then mempty
+                    else
+                      [ IconButton.iconButton
+                          ( IconButton.config
+                              & IconButton.setOnClick
+                                ( action $ Jsm.shareText input
+                                )
+                              & IconButton.setAttributes
+                                [ Theme.primary,
+                                  style_
+                                    [ ("height", "auto"),
+                                      ("padding-top", "inherit"),
+                                      ("padding-bottom", "inherit"),
+                                      ("vertical-align", "middle")
+                                    ]
+                                ]
+                          )
+                          "content_copy"
+                      ]
+                 )
+          ]
+      ]
+  where
+    input = fold1 $ value ^. #fieldInput
+    allowCopy = value ^. #fieldAllowCopy

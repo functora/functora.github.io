@@ -75,10 +75,9 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
         )
         <> Qr.qr out
         <> [ Grid.bigCell
-              $ genericFieldViewer
+              $ Field.dynamicFieldViewer
                 (PushUpdate . Instant)
-                (newFieldId FieldTypeText id out)
-                text
+                (newDynamicFieldId $ DynamicFieldText out)
            ]
         <> [ Grid.bigCell
               [ Button.raised
@@ -104,10 +103,9 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
         )
         <> Qr.qr out
         <> [ Grid.bigCell
-              $ genericFieldViewer
+              $ Field.dynamicFieldViewer
                 (PushUpdate . Instant)
-                (newFieldId FieldTypeText id out)
-                text
+                (newDynamicFieldId $ DynamicFieldText out)
            ]
         <> [ Grid.bigCell
               [ Button.raised

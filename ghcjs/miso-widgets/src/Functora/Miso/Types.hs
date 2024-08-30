@@ -13,8 +13,8 @@ module Functora.Miso.Types
     newTextField,
     newPasswordField,
     newDynamicField,
+    newDynamicFieldId,
     newDynamicTitleField,
-    genericFieldViewer,
     DynamicField (..),
     parseDynamicField,
     inspectDynamicField,
@@ -55,14 +55,9 @@ import Data.Foldable (Foldable (..))
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import Functora.Cfg
-import qualified Functora.Miso.Css as Css
-import qualified Functora.Miso.Jsm.Generic as Jsm
 import Functora.Miso.Prelude
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
-import qualified Material.IconButton as IconButton
-import qualified Material.Theme as Theme
-import qualified Material.Typography as Typography
 import qualified Text.URI as URI
 
 type Typ a =
@@ -186,71 +181,22 @@ newDynamicField output =
     output
     inspectDynamicField
 
+newDynamicFieldId :: DynamicField -> Field DynamicField Identity
+newDynamicFieldId output =
+  newFieldId
+    ( case output of
+        DynamicFieldNumber {} -> FieldTypeNumber
+        DynamicFieldText {} -> FieldTypeText
+    )
+    inspectDynamicField
+    output
+
 newDynamicTitleField ::
   (MonadIO m) => MisoString -> m (Field DynamicField Unique)
 newDynamicTitleField =
   fmap (& #fieldType .~ FieldTypeTitle)
     . newDynamicField
     . DynamicFieldText
-
-genericFieldViewer ::
-  ( Foldable1 f
-  ) =>
-  ((model -> JSM model) -> action) ->
-  Field typ f ->
-  (MisoString -> View action) ->
-  [View action]
-genericFieldViewer action value widget =
-  if input == mempty
-    then mempty
-    else
-      [ span_
-          [ Typography.typography,
-            Css.fullWidth,
-            class_ "mdc-text-field",
-            class_ "mdc-text-field--filled",
-            style_
-              [ ("align-items", "center"),
-                ("align-content", "center"),
-                ("word-break", "normal"),
-                ("overflow-wrap", "anywhere"),
-                ("min-height", "56px"),
-                ("height", "auto"),
-                ("padding-top", "8px"),
-                ("padding-bottom", "8px"),
-                ("border-radius", "4px"),
-                ("line-height", "150%")
-              ]
-          ]
-          [ div_ mempty
-              $ [ widget $ toMisoString input
-                ]
-              <> ( if not allowCopy
-                    then mempty
-                    else
-                      [ IconButton.iconButton
-                          ( IconButton.config
-                              & IconButton.setOnClick
-                                ( action $ Jsm.shareText input
-                                )
-                              & IconButton.setAttributes
-                                [ Theme.primary,
-                                  style_
-                                    [ ("height", "auto"),
-                                      ("padding-top", "inherit"),
-                                      ("padding-bottom", "inherit"),
-                                      ("vertical-align", "middle")
-                                    ]
-                                ]
-                          )
-                          "content_copy"
-                      ]
-                 )
-          ]
-      ]
-  where
-    input = fold1 $ value ^. #fieldInput
-    allowCopy = value ^. #fieldAllowCopy
 
 data DynamicField
   = DynamicFieldText MisoString
@@ -339,14 +285,7 @@ newFieldPairId :: MisoString -> DynamicField -> FieldPair DynamicField Identity
 newFieldPairId key val =
   FieldPair
     (newFieldId FieldTypeText id key)
-    ( newFieldId
-        ( case val of
-            DynamicFieldNumber {} -> FieldTypeNumber
-            DynamicFieldText {} -> FieldTypeText
-        )
-        inspectDynamicField
-        val
-    )
+    (newDynamicFieldId val)
 
 data Currency f = Currency
   { currencyInput :: Field MisoString f,

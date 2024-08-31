@@ -60,9 +60,13 @@ fieldPairViewer args pair =
           then mempty
           else
             [ cell
-                $ Field.dynamicFieldViewer
-                  (args ^. #argsAction)
-                  (pair ^. #fieldPairValue)
+                $ Field.fieldViewer
+                  Field.ViewerArgs
+                    { Field.viewerArgsModel = args ^. #argsModel,
+                      Field.viewerArgsOptic = to . const $ pair ^. #fieldPairValue,
+                      Field.viewerArgsAction = args ^. #argsAction
+                    }
+                  Field.defViewerOpts
             ]
        )
   where

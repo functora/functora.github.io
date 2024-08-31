@@ -5,13 +5,16 @@ module Functora.Miso.Widgets.Field
     defOpts,
     OptsWidget (..),
     ModalWidget' (..),
+    ViewerArgs (..),
+    ViewerOpts (..),
+    defViewerOpts,
     field,
     ratioField,
     textField,
     dynamicField,
     passwordField,
     constTextField,
-    dynamicFieldViewer,
+    fieldViewer,
   )
 where
 
@@ -109,6 +112,28 @@ data ModalWidget' model where
     ) =>
     ATraversal' model (Field a Unique) ->
     ModalWidget' model
+
+data ViewerArgs model action t f = ViewerArgs
+  { viewerArgsModel :: model,
+    viewerArgsOptic :: Getter' model (Field t f),
+    viewerArgsAction :: (model -> JSM model) -> action
+  }
+  deriving stock (Generic)
+
+data ViewerOpts model = ViewerOpts
+  { viewerOptsQrOptic :: Maybe (ATraversal' model OpenedOrClosed),
+    viewerOptsTruncateOptic :: Maybe (ATraversal' model OpenedOrClosed),
+    viewerOptsTruncateLimit :: Natural
+  }
+  deriving stock (Generic)
+
+defViewerOpts :: ViewerOpts model
+defViewerOpts =
+  ViewerOpts
+    { viewerOptsQrOptic = Nothing,
+      viewerOptsTruncateOptic = Nothing,
+      viewerOptsTruncateLimit = 67
+    }
 
 field ::
   Full model action item ->
@@ -739,27 +764,25 @@ cell Opts {optsFullWidth = full} =
 --
 -- TODO : support optional copying widgets
 --
-dynamicFieldViewer ::
-  forall model action f.
+fieldViewer ::
   ( Foldable1 f
   ) =>
-  ((model -> JSM model) -> action) ->
-  Field DynamicField f ->
+  ViewerArgs model action t f ->
+  ViewerOpts model ->
   [View action]
-dynamicFieldViewer action value =
+fieldViewer args _ =
   case value ^. #fieldType of
     FieldTypeNumber -> genericFieldViewer action value text
     FieldTypePercent -> genericFieldViewer action value $ text . (<> "%")
     FieldTypeText -> genericFieldViewer action value text
-    FieldTypeTitle -> header out
+    FieldTypeTitle -> header input
     FieldTypeHtml -> genericFieldViewer action value rawHtml
     FieldTypePassword -> genericFieldViewer action value $ const "*****"
-    FieldTypeQrCode -> Qr.qr out <> genericFieldViewer action value text
+    FieldTypeQrCode -> Qr.qr input <> genericFieldViewer action value text
   where
-    --
-    -- TODO : use input instead!!!
-    --
-    out = inspectDynamicField $ value ^. #fieldOutput
+    value = args ^. #viewerArgsModel . viewerArgsOptic args
+    input = fold1 $ value ^. #fieldInput
+    action = args ^. #viewerArgsAction
 
 header :: MisoString -> [View action]
 header txt =
@@ -779,7 +802,7 @@ genericFieldViewer ::
   ( Foldable1 f
   ) =>
   ((model -> JSM model) -> action) ->
-  Field typ f ->
+  Field t f ->
   (MisoString -> View action) ->
   [View action]
 genericFieldViewer action value widget =

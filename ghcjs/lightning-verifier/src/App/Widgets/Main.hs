@@ -69,15 +69,27 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
               . #stScreen
               %~ unQrCode
       Header.headerWrapper
-        ( Field.dynamicFieldViewer
-            (PushUpdate . Instant)
-            (st ^. #modelState . #stPre)
+        ( Field.fieldViewer
+            Field.ViewerArgs
+              { Field.viewerArgsModel = st,
+                Field.viewerArgsOptic = #modelState . #stPre,
+                Field.viewerArgsAction = PushUpdate . Instant
+              }
+            Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
-              $ Field.dynamicFieldViewer
-                (PushUpdate . Instant)
-                (newDynamicFieldId $ DynamicFieldText out)
+              $ Field.fieldViewer
+                Field.ViewerArgs
+                  { Field.viewerArgsModel = st,
+                    Field.viewerArgsOptic =
+                      to
+                        . const
+                        . newDynamicFieldId
+                        $ DynamicFieldText out,
+                    Field.viewerArgsAction = PushUpdate . Instant
+                  }
+                Field.defViewerOpts
            ]
         <> [ Grid.bigCell
               [ Button.raised
@@ -97,15 +109,27 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
     Right uri -> do
       let out = toMisoString $ URI.render uri
       Header.headerWrapper
-        ( Field.dynamicFieldViewer
-            (PushUpdate . Instant)
-            (st ^. #modelState . #stPre)
+        ( Field.fieldViewer
+            Field.ViewerArgs
+              { Field.viewerArgsModel = st,
+                Field.viewerArgsOptic = #modelState . #stPre,
+                Field.viewerArgsAction = PushUpdate . Instant
+              }
+            Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
-              $ Field.dynamicFieldViewer
-                (PushUpdate . Instant)
-                (newDynamicFieldId $ DynamicFieldText out)
+              $ Field.fieldViewer
+                Field.ViewerArgs
+                  { Field.viewerArgsModel = st,
+                    Field.viewerArgsOptic =
+                      to
+                        . const
+                        . newDynamicFieldId
+                        $ DynamicFieldText out,
+                    Field.viewerArgsAction = PushUpdate . Instant
+                  }
+                Field.defViewerOpts
            ]
         <> [ Grid.bigCell
               [ Button.raised

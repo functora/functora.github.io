@@ -18,9 +18,13 @@ import qualified System.Random as Random
 decrypt :: Model -> [View Action]
 decrypt st =
   [ Grid.bigCell
-      $ Field.dynamicFieldViewer
-        (PushUpdate . Instant)
-        (st ^. #modelState . #stPre),
+      $ Field.fieldViewer
+        Field.ViewerArgs
+          { Field.viewerArgsModel = st,
+            Field.viewerArgsOptic = #modelState . #stPre,
+            Field.viewerArgsAction = PushUpdate . Instant
+          }
+        Field.defViewerOpts,
     Grid.mediumCell
       [ Field.passwordField
           Field.Args

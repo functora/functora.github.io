@@ -18,6 +18,7 @@ module Functora.Miso.Widgets.Field
   )
 where
 
+import qualified Data.Text as T
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
@@ -25,6 +26,7 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
+import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.IconButton as IconButton
@@ -123,7 +125,7 @@ data ViewerArgs model action t f = ViewerArgs
 data ViewerOpts model = ViewerOpts
   { viewerOptsQrOptic :: Maybe (ATraversal' model OpenedOrClosed),
     viewerOptsTruncateOptic :: Maybe (ATraversal' model OpenedOrClosed),
-    viewerOptsTruncateLimit :: Natural
+    viewerOptsTruncateLimit :: Int
   }
   deriving stock (Generic)
 
@@ -770,19 +772,18 @@ fieldViewer ::
   ViewerArgs model action t f ->
   ViewerOpts model ->
   [View action]
-fieldViewer args _ =
+fieldViewer args opts =
   case value ^. #fieldType of
-    FieldTypeNumber -> genericFieldViewer action value text
-    FieldTypePercent -> genericFieldViewer action value $ text . (<> "%")
-    FieldTypeText -> genericFieldViewer action value text
+    FieldTypeNumber -> genericFieldViewer args opts text
+    FieldTypePercent -> genericFieldViewer args opts $ text . (<> "%")
+    FieldTypeText -> genericFieldViewer args opts text
     FieldTypeTitle -> header input
-    FieldTypeHtml -> genericFieldViewer action value rawHtml
-    FieldTypePassword -> genericFieldViewer action value $ const "*****"
-    FieldTypeQrCode -> Qr.qr input <> genericFieldViewer action value text
+    FieldTypeHtml -> genericFieldViewer args opts rawHtml
+    FieldTypePassword -> genericFieldViewer args opts $ const "*****"
+    FieldTypeQrCode -> Qr.qr input <> genericFieldViewer args opts text
   where
     value = args ^. #viewerArgsModel . viewerArgsOptic args
     input = fold1 $ value ^. #fieldInput
-    action = args ^. #viewerArgsAction
 
 header :: MisoString -> [View action]
 header txt =
@@ -801,11 +802,11 @@ header txt =
 genericFieldViewer ::
   ( Foldable1 f
   ) =>
-  ((model -> JSM model) -> action) ->
-  Field t f ->
+  ViewerArgs model action t f ->
+  ViewerOpts model ->
   (MisoString -> View action) ->
   [View action]
-genericFieldViewer action value widget =
+genericFieldViewer args opts widget =
   if input == mempty
     then mempty
     else
@@ -828,7 +829,8 @@ genericFieldViewer action value widget =
               ]
           ]
           [ div_ mempty
-              $ [ widget $ toMisoString input
+              $ [ widget
+                    $ truncateFieldViewer (args ^. #viewerArgsModel) opts input
                 ]
               <> ( if not allowCopy
                     then mempty
@@ -854,5 +856,34 @@ genericFieldViewer action value widget =
           ]
       ]
   where
+    value = args ^. #viewerArgsModel . viewerArgsOptic args
     input = fold1 $ value ^. #fieldInput
+    action = args ^. #viewerArgsAction
     allowCopy = value ^. #fieldAllowCopy
+
+truncateFieldViewer :: model -> ViewerOpts model -> MisoString -> MisoString
+truncateFieldViewer st opts raw =
+  if limit >= 0 && state == Closed
+    then truncateFieldViewer' limit raw
+    else raw
+  where
+    limit =
+      opts ^. #viewerOptsTruncateLimit
+    state =
+      fromMaybe Closed
+        $ st
+        ^? maybe
+          (to $ const Closed)
+          cloneTraversal
+          (viewerOptsTruncateOptic opts)
+
+truncateFieldViewer' :: Int -> MisoString -> MisoString
+truncateFieldViewer' limit raw =
+  if T.length full <= limit
+    then raw
+    else toMisoString $ T.take half full <> "..." <> T.takeEnd half full
+  where
+    full :: Prelude.Text
+    full = fromMisoString raw
+    half :: Int
+    half = limit `div` 2

@@ -19,7 +19,7 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Material.Typography as Typography
-import Miso hiding (view)
+import Miso hiding (at, view)
 import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
@@ -148,6 +148,26 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         FieldPairs.argsOptic = #modelState . #stDoc . #stDocFieldPairs,
         FieldPairs.argsAction = PushUpdate . Instant
       }
+    ( \idx ->
+        Field.defViewerOpts
+          { Field.viewerOptsQrOptic =
+              Just
+                $ #modelState
+                . #stDoc
+                . #stDocFieldPairsViewer
+                . at idx
+                . _Just
+                . #stViewerQr,
+            Field.viewerOptsTruncateOptic =
+              Just
+                $ #modelState
+                . #stDoc
+                . #stDocFieldPairsViewer
+                . at idx
+                . _Just
+                . #stViewerTruncate
+          }
+    )
     <> [ Field.textField @Model @Action
           Field.Args
             { Field.argsModel = st,

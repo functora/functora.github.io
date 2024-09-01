@@ -11,9 +11,11 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Encoding as T
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Prelude as Prelude
+import Type.Reflection
 import qualified Prelude
 
 bolt11 :: Model -> [View Action]
@@ -22,10 +24,10 @@ bolt11 st =
     <> (if isRight ln then parserWidget rawLn rh else mempty)
     <> parserWidget rawR r
     <> fromRight mempty (verifierWidget [rawLn, rawR] <$> rh <*> r)
-    <> either (const mempty) invoiceWidget ln
+    <> either (const mempty) (invoiceWidget st) ln
     <> either
       (const mempty)
-      (\bsR -> if bsR == mempty then mempty else preimageWidget rawR bsR)
+      (\bsR -> if bsR == mempty then mempty else preimageWidget st rawR bsR)
       r
   where
     rawLn :: MisoString
@@ -56,10 +58,11 @@ verifierWidget src rh r =
         then success "The preimage matches the invoice"
         else failure "The preimage does not match the invoice"
 
-invoiceWidget :: B11.Bolt11 -> [View Action]
-invoiceWidget ln =
+invoiceWidget :: Model -> B11.Bolt11 -> [View Action]
+invoiceWidget st ln =
   Header.headerViewer "Invoice Details"
     <> pairs
+      st
       ( [ pair "Network"
             $ case B11.bolt11HrpNet $ B11.bolt11Hrp ln of
               B11.BitcoinMainnet -> "Bitcoin Mainnet"
@@ -75,7 +78,7 @@ invoiceWidget ln =
             $ B11.bolt11Timestamp ln
         ]
           <> ( B11.bolt11Tags ln
-                >>= invoiceTagWidget ln
+                >>= invoiceTag ln
              )
           <> [ pair "Signature"
                 . B11.inspectHex
@@ -88,8 +91,8 @@ invoiceWidget ln =
   where
     sig = B11.bolt11Signature ln
 
-invoiceTagWidget :: B11.Bolt11 -> B11.Tag -> [FieldPair DynamicField Identity]
-invoiceTagWidget ln = \case
+invoiceTag :: B11.Bolt11 -> B11.Tag -> [FieldPair DynamicField Identity]
+invoiceTag ln = \case
   B11.PaymentHash x -> hex "Preimage Hash" x
   B11.PaymentSecret x -> hex "Payment Secret" x
   B11.Description x -> pure . pair "Description" $ inspect x
@@ -129,10 +132,11 @@ invoiceTagWidget ln = \case
         . pair x
         . B11.inspectHex
 
-preimageWidget :: MisoString -> ByteString -> [View Action]
-preimageWidget rawR r =
+preimageWidget :: Model -> MisoString -> ByteString -> [View Action]
+preimageWidget st rawR r =
   Header.headerViewer "Preimage Details"
     <> pairs
+      st
       [ pair "Preimage" rawR,
         pair "Preimage Hash" . inspect @ByteString $ sha256Hash r
       ]
@@ -157,17 +161,62 @@ pair x =
   newFieldPairId x
     . DynamicFieldText
 
-pairs :: (Foldable1 f) => [FieldPair DynamicField f] -> [View Action]
-pairs raw =
-  FieldPairs.fieldPairsViewer
-    FieldPairs.Args
-      { FieldPairs.argsModel = xs,
-        FieldPairs.argsOptic = id,
-        FieldPairs.argsAction =
-          \fun -> PushUpdate . Instant $ \next -> do
-            void $ fun xs
-            pure next
-      }
+pairs ::
+  ( Typeable model,
+    Foldable1 f
+  ) =>
+  model ->
+  [FieldPair DynamicField f] ->
+  [View Action]
+pairs st raw =
+  case typeOf st `eqTypeRep` typeRep @Model of
+    Just HRefl ->
+      FieldPairs.fieldPairsViewer
+        FieldPairs.Args
+          { FieldPairs.argsModel = st,
+            FieldPairs.argsOptic = constTraversal xs,
+            FieldPairs.argsAction = PushUpdate . Instant
+          }
+        ( \idx ->
+            Field.defViewerOpts
+              { Field.viewerOptsQrOptic =
+                  Just
+                    $ #modelState
+                    . #stDoc
+                    . #stDocLnInvoiceViewer
+                    . at idx
+                    . non
+                      StViewer
+                        { stViewerQr = Closed,
+                          stViewerTruncate = Closed
+                        }
+                    . #stViewerQr,
+                Field.viewerOptsTruncateOptic =
+                  Just
+                    $ #modelState
+                    . #stDoc
+                    . #stDocLnInvoiceViewer
+                    . at idx
+                    . non
+                      StViewer
+                        { stViewerQr = Closed,
+                          stViewerTruncate = Closed
+                        }
+                    . #stViewerTruncate
+              }
+        )
+    Nothing ->
+      FieldPairs.fieldPairsViewer
+        FieldPairs.Args
+          { FieldPairs.argsModel = st,
+            FieldPairs.argsOptic = constTraversal xs,
+            FieldPairs.argsAction =
+              \fun -> PushUpdate . Instant $ \next -> do
+                void $ fun st
+                pure next
+          }
+        ( const Field.defViewerOpts
+        )
   where
     xs =
       filter
@@ -180,12 +229,12 @@ pairs raw =
 success :: MisoString -> [View Action]
 success msg =
   css "app-success"
-    $ pairs [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
 
 failure :: MisoString -> [View Action]
 failure msg =
   css "app-failure"
-    $ pairs [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
 
 css :: MisoString -> [View action] -> [View action]
 css x = fmap $ \case

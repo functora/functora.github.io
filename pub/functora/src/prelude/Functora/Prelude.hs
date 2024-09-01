@@ -28,6 +28,7 @@ module Functora.Prelude
     (^.),
     Getter',
     mkGetters,
+    constTraversal,
 
     -- * DerivingVia
     -- $derivingVia
@@ -141,6 +142,7 @@ import Control.Lens.Combinators as X
     first1Of,
     ix,
     makePrisms,
+    non,
     review,
     to,
     _Just,
@@ -518,6 +520,9 @@ type Getter' s a = Getting (Semigroup.First a) s a
 mkGetters :: TH.Name -> TH.DecsQ
 mkGetters =
   TH.makeLensesWith $ TH.lensRules & TH.generateUpdateableOptics .~ False
+
+constTraversal :: a -> ATraversal' s a
+constTraversal a = \f s -> const s <$> f a
 
 -- $derivingVia
 -- Newtypes to simplify deriving via.

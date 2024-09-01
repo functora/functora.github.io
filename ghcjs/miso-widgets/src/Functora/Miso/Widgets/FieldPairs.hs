@@ -19,18 +19,28 @@ data Args model action f = Args
   }
   deriving stock (Generic)
 
-fieldPairsViewer :: (Foldable1 f) => Args model action f -> [View action]
-fieldPairsViewer args@Args {argsOptic = optic} = do
-  item <- fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
-  fieldPairViewer args item
+fieldPairsViewer ::
+  ( Foldable1 f
+  ) =>
+  Args model action f ->
+  (Int -> Field.ViewerOpts model) ->
+  [View action]
+fieldPairsViewer args@Args {argsOptic = optic} opts = do
+  (idx, item) <-
+    zip [0 ..] . fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
+  fieldPairViewer
+    args
+    (opts idx)
+    item
 
 fieldPairViewer ::
   ( Foldable1 f
   ) =>
   Args model action f ->
+  Field.ViewerOpts model ->
   FieldPair DynamicField f ->
   [View action]
-fieldPairViewer args pair =
+fieldPairViewer args opts pair =
   ( if k == mempty
       then mempty
       else
@@ -66,7 +76,7 @@ fieldPairViewer args pair =
                       Field.viewerArgsOptic = to . const $ pair ^. #fieldPairValue,
                       Field.viewerArgsAction = args ^. #argsAction
                     }
-                  Field.defViewerOpts
+                  opts
             ]
        )
   where

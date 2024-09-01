@@ -6,6 +6,7 @@ module App.Types
     Action (..),
     St (..),
     StDoc (..),
+    StViewer (..),
     newStDoc,
     Screen (..),
     isQrCode,
@@ -85,10 +86,21 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
+data StViewer = StViewer
+  { stViewerQr :: OpenedOrClosed,
+    stViewerTruncate :: OpenedOrClosed
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+deriving via GenericType StViewer instance Binary StViewer
+
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
+    stDocFieldPairsViewer :: Map Int StViewer,
     stDocLnPreimage :: Field MisoString f,
-    stDocLnInvoice :: Field MisoString f
+    stDocLnPreimageViewer :: Map Int StViewer,
+    stDocLnInvoice :: Field MisoString f,
+    stDocLnInvoiceViewer :: Map Int StViewer
   }
   deriving stock (Generic)
 
@@ -113,8 +125,11 @@ newStDoc = do
   pure
     StDoc
       { stDocFieldPairs = mempty,
+        stDocFieldPairsViewer = mempty,
         stDocLnPreimage = r,
-        stDocLnInvoice = ln
+        stDocLnPreimageViewer = mempty,
+        stDocLnInvoice = ln,
+        stDocLnInvoiceViewer = mempty
       }
 
 data Screen

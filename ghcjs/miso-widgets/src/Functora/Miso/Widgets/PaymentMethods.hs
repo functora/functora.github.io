@@ -77,6 +77,8 @@ paymentMethodViewer
                 . #paymentMethodFieldPairs,
             FieldPairs.argsAction = action
           }
+        ( const Field.defViewerOpts
+        )
 
 paymentMethodsEditor :: Args model action -> Opts model -> [View action]
 paymentMethodsEditor args@Args {argsModel = st, argsOptic = optic} opts = do

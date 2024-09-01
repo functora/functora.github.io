@@ -26,7 +26,6 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
-import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.IconButton as IconButton
@@ -125,7 +124,7 @@ data ViewerArgs model action t f = ViewerArgs
 data ViewerOpts model = ViewerOpts
   { viewerOptsQrOptic :: Maybe (ATraversal' model OpenedOrClosed),
     viewerOptsTruncateOptic :: Maybe (ATraversal' model OpenedOrClosed),
-    viewerOptsTruncateLimit :: Int
+    viewerOptsTruncateLimit :: Maybe Int
   }
   deriving stock (Generic)
 
@@ -134,8 +133,11 @@ defViewerOpts =
   ViewerOpts
     { viewerOptsQrOptic = Nothing,
       viewerOptsTruncateOptic = Nothing,
-      viewerOptsTruncateLimit = 67
+      viewerOptsTruncateLimit = Just defTruncateLimit
     }
+
+defTruncateLimit :: Int
+defTruncateLimit = 67
 
 field ::
   Full model action item ->
@@ -778,7 +780,8 @@ fieldViewer args opts =
     FieldTypePercent -> genericFieldViewer args opts $ text . (<> "%")
     FieldTypeText -> genericFieldViewer args opts text
     FieldTypeTitle -> header input
-    FieldTypeHtml -> genericFieldViewer args opts rawHtml
+    FieldTypeHtml ->
+      genericFieldViewer args opts {viewerOptsTruncateLimit = Nothing} rawHtml
     FieldTypePassword -> genericFieldViewer args opts $ const "*****"
     FieldTypeQrCode -> Qr.qr input <> genericFieldViewer args opts text
   where
@@ -830,60 +833,82 @@ genericFieldViewer args opts widget =
           ]
           [ div_ mempty
               $ [ widget
-                    $ truncateFieldViewer (args ^. #viewerArgsModel) opts input
+                    $ truncateFieldInput allowTrunc stateTrunc opts input
                 ]
+              <> ( if not allowTrunc
+                    then mempty
+                    else do
+                      let icon = case stateTrunc of
+                            Closed -> "open_in_full"
+                            Opened -> "close_fullscreen"
+                      trav <- maybeToList opticTrunc
+                      pure
+                        . fieldViewerIcon icon
+                        . action
+                        $ pure
+                        . ( &
+                              cloneTraversal trav
+                                %~ ( \case
+                                      Closed -> Opened
+                                      Opened -> Closed
+                                   )
+                          )
+                 )
               <> ( if not allowCopy
                     then mempty
                     else
-                      [ IconButton.iconButton
-                          ( IconButton.config
-                              & IconButton.setOnClick
-                                ( action $ Jsm.shareText input
-                                )
-                              & IconButton.setAttributes
-                                [ Theme.primary,
-                                  style_
-                                    [ ("height", "auto"),
-                                      ("padding-top", "inherit"),
-                                      ("padding-bottom", "inherit"),
-                                      ("vertical-align", "middle")
-                                    ]
-                                ]
-                          )
-                          "content_copy"
+                      [ fieldViewerIcon "content_copy"
+                          . action
+                          $ Jsm.shareText input
                       ]
                  )
           ]
       ]
   where
-    value = args ^. #viewerArgsModel . viewerArgsOptic args
+    st = args ^. #viewerArgsModel
+    value = st ^. viewerArgsOptic args
     input = fold1 $ value ^. #fieldInput
     action = args ^. #viewerArgsAction
     allowCopy = value ^. #fieldAllowCopy
+    allowTrunc =
+      maybe False (length input >)
+        $ opts
+        ^. #viewerOptsTruncateLimit
+    opticTrunc =
+      opts ^. #viewerOptsTruncateOptic
+    stateTrunc = fromMaybe Closed $ do
+      trav <- opticTrunc
+      st ^? cloneTraversal trav
 
-truncateFieldViewer :: model -> ViewerOpts model -> MisoString -> MisoString
-truncateFieldViewer st opts raw =
-  if limit >= 0 && state == Closed
-    then truncateFieldViewer' limit raw
-    else raw
-  where
-    limit =
-      opts ^. #viewerOptsTruncateLimit
-    state =
-      fromMaybe Closed
-        $ st
-        ^? maybe
-          (to $ const Closed)
-          cloneTraversal
-          (viewerOptsTruncateOptic opts)
+fieldViewerIcon :: MisoString -> action -> View action
+fieldViewerIcon icon action =
+  IconButton.iconButton
+    ( IconButton.config
+        & IconButton.setOnClick action
+        & IconButton.setAttributes
+          [ Theme.primary,
+            style_
+              [ ("height", "auto"),
+                ("padding-top", "inherit"),
+                ("padding-bottom", "inherit"),
+                ("vertical-align", "middle")
+              ]
+          ]
+    )
+    icon
 
-truncateFieldViewer' :: Int -> MisoString -> MisoString
-truncateFieldViewer' limit raw =
-  if T.length full <= limit
-    then raw
-    else toMisoString $ T.take half full <> "..." <> T.takeEnd half full
-  where
-    full :: Prelude.Text
-    full = fromMisoString raw
-    half :: Int
-    half = limit `div` 2
+truncateFieldInput ::
+  Bool ->
+  OpenedOrClosed ->
+  ViewerOpts model ->
+  MisoString ->
+  MisoString
+truncateFieldInput True Closed opts raw =
+  let full = fromMisoString raw
+      half = fromMaybe defTruncateLimit (viewerOptsTruncateLimit opts) `div` 2
+   in toMisoString
+        $ T.take half full
+        <> "..."
+        <> T.takeEnd half full
+truncateFieldInput _ _ _ raw =
+  raw

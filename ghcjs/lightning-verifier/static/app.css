@@ -33,18 +33,26 @@ textarea {
   height: 56px;
 }
 
-.app-success > div > span {
+.app-success > span {
   color: white;
   background-color: #018786 !important;
   display: flex;
   justify-content: center;
 }
 
-.app-failure > div > span {
+.app-success > span > div > .mdc-icon-button {
+  color: white !important;
+}
+
+.app-failure > span {
   color: white;
   background-color: #b00020 !important;
   display: flex;
   justify-content: center;
+}
+
+.app-failure > span > div > .mdc-icon-button {
+  color: white !important;
 }
 
 @media print {

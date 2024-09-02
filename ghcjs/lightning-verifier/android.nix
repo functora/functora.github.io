@@ -92,6 +92,7 @@ in
       glibc
       jdk
       zulu
+      kotlin
       nodejs
       app-release-apk
       app-release-aab

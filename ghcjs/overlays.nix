@@ -150,16 +150,26 @@
                   ver = "0.1";
                   sha256 = "c18kUghhJB0GjLxHHrgJ8djtNlQXbsJcbnM61zvHwzY=";
                 } {};
-                secp256k1-haskell = self.callHackageDirect {
-                  pkg = "secp256k1-haskell";
-                  ver = "0.6.1";
-                  sha256 = "R4zG6prtWN2bX++hMhVt4VMQoyAVbBZnkMcMA0zFoiQ=";
+                bifunctor-classes-compat = self.callHackageDirect {
+                  pkg = "bifunctor-classes-compat";
+                  ver = "0.1";
+                  sha256 = "MkLhIuwjfLomAbbzV3ZI1SWKEKHufFwTcxgCtda4ohI=";
+                } {};
+                base-orphans = self.callHackageDirect {
+                  pkg = "base-orphans";
+                  ver = "0.8.8.2";
+                  sha256 = "QbcpILVWIiOa1cc0qhEpd9/wA4vbFmiN1x0FhoXYSB4=";
                 } {};
                 base16 = doJailbreak (self.callHackageDirect {
                   pkg = "base16";
                   ver = "0.3.2.0";
                   sha256 = "EziiFX/1e105Y7zbO0DLwF6yCzYv4IX/vF9l7B55o7Y=";
                 } {});
+                secp256k1-haskell = self.callHackageDirect {
+                  pkg = "secp256k1-haskell";
+                  ver = "0.6.1";
+                  sha256 = "R4zG6prtWN2bX++hMhVt4VMQoyAVbBZnkMcMA0zFoiQ=";
+                } {};
                 libsecp256k1 = pkgs.secp256k1;
                 #
                 # Local

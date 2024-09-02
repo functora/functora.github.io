@@ -35,6 +35,7 @@ import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
+import qualified Miso.String as MS
 
 data Args model action item = Args
   { argsModel :: model,
@@ -854,7 +855,7 @@ genericFieldViewer args opts widget =
     allowCopy =
       value ^. #fieldAllowCopy
     allowTrunc =
-      maybe False (length input >)
+      maybe False (MS.length input >)
         $ opts
         ^. #viewerOptsTruncateLimit
     opticTrunc =

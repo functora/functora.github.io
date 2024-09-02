@@ -4,10 +4,6 @@ let
     url = "https://github.com/functora/functora.github.io/archive/27d58e2f02ed0d17c94e3346f7d45731f8f6b06c.tar.gz";
     sha256 = "0mh2fygiclggyl31jhjbgzxpbl933nx10xmz3xl1798bpc0wl2j2";
   };
-  legacy = fetchTarball {
-    url = "https://github.com/functora/functora.github.io/archive/7a06c850a579058f495ca2d7e5e2f8682ea0998f.tar.gz";
-    sha256 = "06w7wrjgccqnjfqrpc72p4j4b1841y65m5kplfqqlyryy2b4ci6l";
-  };
   functora-miso = import "${functora}/pub/miso/default.nix" {
     overlays = import ../overlays.nix {inherit functora;};
   };
@@ -16,7 +12,7 @@ let
   functora-pkgs = import "${functora}/nix/nixpkgs.nix";
   safeCopy = "cp -RL --no-preserve=mode,ownership";
   forceCopy = "cp -RLf --no-preserve=mode,ownership";
-  android-pkgs = import "${legacy}/nix/android.nix";
+  android-pkgs = import "${functora}/nix/android.nix";
   android-sdk-args = {
     platformVersions = ["34"];
     buildToolsVersions = ["30.0.3" "34.0.0"];

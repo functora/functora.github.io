@@ -1,3 +1,4 @@
+import { CapacitorBarcodeScanner } from "@capacitor/barcode-scanner";
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
@@ -45,6 +46,11 @@ async function popupText(text) {
   return await Toast.show({ text: text });
 }
 
+async function scanBarcode() {
+  const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({});
+  return ScanResult;
+}
+
 defineCustomElements(window);
 globalThis.printCurrentPage = printCurrentPage;
 globalThis.selectStorage = selectStorage;
@@ -53,3 +59,4 @@ globalThis.selectClipboard = selectClipboard;
 globalThis.openBrowserPage = openBrowserPage;
 globalThis.shareText = shareText;
 globalThis.popupText = popupText;
+globalThis.scanBarcode = scanBarcode;

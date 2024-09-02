@@ -1,24 +1,18 @@
 import { W as WebPlugin } from "./main.js";
-class ShareWeb extends WebPlugin {
-  async canShare() {
-    if (typeof navigator === "undefined" || !navigator.share) {
-      return { value: false };
-    } else {
-      return { value: true };
+class ToastWeb extends WebPlugin {
+  async show(options) {
+    if (typeof document !== "undefined") {
+      let duration = 2e3;
+      if (options.duration) {
+        duration = options.duration === "long" ? 3500 : 2e3;
+      }
+      const toast = document.createElement("pwa-toast");
+      toast.duration = duration;
+      toast.message = options.text;
+      document.body.appendChild(toast);
     }
-  }
-  async share(options) {
-    if (typeof navigator === "undefined" || !navigator.share) {
-      throw this.unavailable("Share API not available in this browser");
-    }
-    await navigator.share({
-      title: options.title,
-      text: options.text,
-      url: options.url
-    });
-    return {};
   }
 }
 export {
-  ShareWeb
+  ToastWeb
 };

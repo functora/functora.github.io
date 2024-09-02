@@ -836,12 +836,21 @@ genericFieldViewer args opts widget =
                     ("line-height", "150%")
                   ]
               ]
-              [ div_ mempty
+              [ div_
+                  [ Css.fullWidth
+                  ]
                   $ [ widget $ truncateFieldInput allowTrunc stateTrunc opts input
                     ]
-                  <> ( if null extraWidgets then mempty else [br_ mempty]
+                  <> ( if null extraWidgets
+                        then mempty
+                        else
+                          [ div_
+                              [ Css.fullWidth,
+                                style_ [("text-align", "right")]
+                              ]
+                              extraWidgets
+                          ]
                      )
-                  <> extraWidgets
               ]
            ]
   where
@@ -911,7 +920,6 @@ fieldViewerIcon icon action =
   IconButton.iconButton
     ( IconButton.config
         & IconButton.setOnClick action
-        & IconButton.setAttributes [Theme.primary]
     )
     icon
 

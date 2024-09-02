@@ -40,19 +40,11 @@ textarea {
   justify-content: center;
 }
 
-.app-success > span > div > .mdc-icon-button {
-  color: white !important;
-}
-
 .app-failure > span {
   color: white;
   background-color: #b00020 !important;
   display: flex;
   justify-content: center;
-}
-
-.app-failure > span > div > .mdc-icon-button {
-  color: white !important;
 }
 
 @media print {

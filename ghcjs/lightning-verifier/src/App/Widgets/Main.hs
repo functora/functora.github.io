@@ -178,7 +178,19 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               { Field.optsFilledOrOutlined = Outlined,
                 Field.optsPlaceholder = "Invoice",
                 Field.optsLeadingWidget =
-                  pasteWidget $ #modelState . #stDoc . #stDocLnInvoice
+                  pasteWidget
+                    "content_paste"
+                    Jsm.selectClipboard
+                    $ #modelState
+                    . #stDoc
+                    . #stDocLnInvoice,
+                Field.optsTrailingWidget =
+                  pasteWidget
+                    "qr_code_scanner"
+                    Jsm.selectBarcode
+                    $ #modelState
+                    . #stDoc
+                    . #stDocLnInvoice
               }
           ),
          Field.textField
@@ -191,29 +203,44 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
             { Field.optsFilledOrOutlined = Outlined,
               Field.optsPlaceholder = "Preimage",
               Field.optsLeadingWidget =
-                pasteWidget $ #modelState . #stDoc . #stDocLnPreimage
+                pasteWidget
+                  "content_paste"
+                  Jsm.selectClipboard
+                  $ #modelState
+                  . #stDoc
+                  . #stDocLnPreimage,
+              Field.optsTrailingWidget =
+                pasteWidget
+                  "qr_code_scanner"
+                  Jsm.selectBarcode
+                  $ #modelState
+                  . #stDoc
+                  . #stDocLnPreimage
             }
        ]
     <> Bolt11.bolt11 st
 
 pasteWidget ::
+  MisoString ->
+  ((Maybe MisoString -> JSM ()) -> JSM ()) ->
   ATraversal' Model (Field MisoString Unique) ->
   Maybe (Field.OptsWidget Model Action)
-pasteWidget optic =
+pasteWidget icon selector optic =
   Just
-    . Field.ActionWidget "content_paste" mempty
+    . Field.ActionWidget icon mempty
     . PushUpdate
     . Instant
     $ \prev -> do
-      Jsm.selectClipboard $ \case
+      selector $ \case
         Nothing ->
-          Jsm.popupText @MisoString "Failed to paste!"
-        Just clip ->
+          Jsm.popupText @MisoString "Failure!"
+        Just res -> do
           Misc.pushActionQueue prev
             . Instant
             $ pure
-            . (& cloneTraversal optic . #fieldOutput .~ clip)
-            . (& cloneTraversal optic . #fieldInput . #uniqueValue .~ clip)
+            . (& cloneTraversal optic . #fieldOutput .~ res)
+            . (& cloneTraversal optic . #fieldInput . #uniqueValue .~ res)
+          Jsm.popupText @MisoString "Success!"
       pure prev
 
 tosWidget :: View Action

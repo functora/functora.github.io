@@ -8,15 +8,17 @@ module Functora.Miso.Jsm.Generic
     enterOrEscapeBlur,
     insertStorage,
     selectStorage,
+    selectBarcode,
     selectClipboard,
+    genericPromise,
   )
 where
 
-import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Functora.Miso.Prelude
 import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
+import qualified Miso.String as MS
 import qualified Text.URI as URI
 import qualified Prelude ((!!))
 
@@ -101,30 +103,36 @@ insertStorage key raw = do
     ^. JS.js2 @MisoString "insertStorage" key val
 
 selectStorage :: (FromJSON a) => MisoString -> (Maybe a -> JSM ()) -> JSM ()
-selectStorage key after = do
-  success <- JS.function $ \_ _ ->
-    handleAny (\e -> consoleLog e >> after Nothing) . \case
-      [val] -> do
-        valExist <- ghcjsPure $ JS.isTruthy val
-        if not valExist
-          then after Nothing
-          else do
-            raw <- JS.fromJSVal @Prelude.Text val
-            str <- maybe (throwString @MisoString "Storage bad type!") pure raw
-            res <- either throwString pure $ decodeJson str
-            after $ Just res
-      _ ->
-        throwString @MisoString "Storage bad argv!"
-  failure <-
-    JS.function $ \_ _ _ -> consoleLog @MisoString "Storage reader failure!"
-  prom <-
-    JS.global ^. JS.js1 @MisoString "selectStorage" key
-  void
-    $ prom
-    ^. JS.js2 @MisoString "then" success failure
+selectStorage key after =
+  genericPromise "selectStorage" (Just key) $ \case
+    Nothing ->
+      after Nothing
+    Just str ->
+      case decodeJson $ from @MisoString @Prelude.Text str of
+        Left e -> do
+          consoleLog e
+          after Nothing
+        Right res ->
+          after $ Just res
+
+selectBarcode :: (Maybe MisoString -> JSM ()) -> JSM ()
+selectBarcode after =
+  genericPromise "selectBarcode" Nothing
+    $ after
+    . fmap MS.strip
 
 selectClipboard :: (Maybe MisoString -> JSM ()) -> JSM ()
-selectClipboard after = do
+selectClipboard after =
+  genericPromise "selectClipboard" Nothing
+    $ after
+    . fmap MS.strip
+
+genericPromise ::
+  MisoString ->
+  Maybe MisoString ->
+  (Maybe MisoString -> JSM ()) ->
+  JSM ()
+genericPromise fun marg after = do
   success <- JS.function $ \_ _ ->
     handleAny (\e -> consoleLog e >> after Nothing) . \case
       [val] -> do
@@ -132,17 +140,20 @@ selectClipboard after = do
         if not valExist
           then after Nothing
           else do
-            raw <- JS.fromJSVal @Prelude.Text val
-            str <- maybe (throwString @MisoString "Clipboard bad type!") pure raw
-            popupText @MisoString "Inserted!"
-            after . Just . from @Prelude.Text @MisoString $ T.strip str
+            raw <- JS.fromJSVal @MisoString val
+            res <- maybe (throwString @MisoString "Failure, bad type!") pure raw
+            after $ Just res
       _ ->
-        throwString @MisoString "Clipboard bad argv!"
+        throwString @MisoString "Failure, bad argv!"
   failure <-
-    JS.function $ \_ _ _ ->
-      popupText @MisoString "Failed to paste!"
+    JS.function $ \_ _ e -> do
+      msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
+      consoleLog @MisoString $ "Failure, " <> inspect msg <> "!"
+      after Nothing
   prom <-
-    JS.global ^. JS.js0 @MisoString "selectClipboard"
+    case marg of
+      Nothing -> JS.global ^. JS.js0 fun
+      Just arg -> JS.global ^. JS.js1 fun arg
   void
     $ prom
     ^. JS.js2 @MisoString "then" success failure

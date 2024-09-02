@@ -1,4 +1,3 @@
-import { CapacitorBarcodeScanner } from "@capacitor/barcode-scanner";
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
@@ -6,6 +5,12 @@ import { Clipboard } from "@capacitor/clipboard";
 import { Browser } from "@capacitor/browser";
 import { Share } from "@capacitor/share";
 import { Toast } from "@capacitor/toast";
+import { Capacitor } from "@capacitor/core";
+import { Html5Qrcode } from "html5-qrcode";
+import {
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerTypeHint,
+} from "@capacitor/barcode-scanner";
 
 async function printCurrentPage(name) {
   return await WebviewPrint.print({ name: name });
@@ -46,8 +51,16 @@ async function popupText(text) {
   return await Toast.show({ text: text });
 }
 
-async function scanBarcode() {
-  const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({});
+async function selectBarcode() {
+  if (!Capacitor.isNativePlatform()) {
+    const devices = await Html5Qrcode.getCameras();
+    if (!(devices && devices.length)) {
+      throw new Error("Camera not found!");
+    }
+  }
+  const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({
+    hint: CapacitorBarcodeScannerTypeHint.ALL,
+  });
   return ScanResult;
 }
 
@@ -59,4 +72,4 @@ globalThis.selectClipboard = selectClipboard;
 globalThis.openBrowserPage = openBrowserPage;
 globalThis.shareText = shareText;
 globalThis.popupText = popupText;
-globalThis.scanBarcode = scanBarcode;
+globalThis.selectBarcode = selectBarcode;

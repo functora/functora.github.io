@@ -63,6 +63,7 @@ invoiceWidget st ln =
   Header.headerViewer "Invoice Details"
     <> pairs
       st
+      #stDocLnInvoiceViewer
       ( [ pair "Network"
             $ case B11.bolt11HrpNet $ B11.bolt11Hrp ln of
               B11.BitcoinMainnet -> "Bitcoin Mainnet"
@@ -137,6 +138,7 @@ preimageWidget st rawR r =
   Header.headerViewer "Preimage Details"
     <> pairs
       st
+      #stDocLnPreimageViewer
       [ pair "Preimage" rawR,
         pair "Preimage Hash" . inspect @ByteString $ sha256Hash r
       ]
@@ -166,9 +168,10 @@ pairs ::
     Foldable1 f
   ) =>
   model ->
+  ATraversal' (StDoc Unique) (Map Int StViewer) ->
   [FieldPair DynamicField f] ->
   [View Action]
-pairs st raw =
+pairs st optic raw =
   case typeOf st `eqTypeRep` typeRep @Model of
     Just HRefl ->
       FieldPairs.fieldPairsViewer
@@ -183,7 +186,7 @@ pairs st raw =
                   Just
                     $ #modelState
                     . #stDoc
-                    . #stDocLnInvoiceViewer
+                    . cloneTraversal optic
                     . at idx
                     . non
                       StViewer
@@ -195,7 +198,7 @@ pairs st raw =
                   Just
                     $ #modelState
                     . #stDoc
-                    . #stDocLnInvoiceViewer
+                    . cloneTraversal optic
                     . at idx
                     . non
                       StViewer
@@ -229,12 +232,12 @@ pairs st raw =
 success :: MisoString -> [View Action]
 success msg =
   css "app-success"
-    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () voidTraversal [newFieldPairId mempty $ DynamicFieldText msg]
 
 failure :: MisoString -> [View Action]
 failure msg =
   css "app-failure"
-    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () voidTraversal [newFieldPairId mempty $ DynamicFieldText msg]
 
 css :: MisoString -> [View action] -> [View action]
 css x = fmap $ \case

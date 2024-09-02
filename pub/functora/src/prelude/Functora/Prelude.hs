@@ -28,6 +28,7 @@ module Functora.Prelude
     (^.),
     Getter',
     mkGetters,
+    voidTraversal,
     constTraversal,
 
     -- * DerivingVia
@@ -520,6 +521,9 @@ type Getter' s a = Getting (Semigroup.First a) s a
 mkGetters :: TH.Name -> TH.DecsQ
 mkGetters =
   TH.makeLensesWith $ TH.lensRules & TH.generateUpdateableOptics .~ False
+
+voidTraversal :: ATraversal' s a
+voidTraversal = const pure
 
 constTraversal :: a -> ATraversal' s a
 constTraversal a = \f s -> const s <$> f a

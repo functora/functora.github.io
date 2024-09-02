@@ -813,63 +813,46 @@ genericFieldViewer args opts widget =
   if input == mempty
     then mempty
     else
-      [ span_
-          [ Typography.typography,
-            Css.fullWidth,
-            class_ "mdc-text-field",
-            class_ "mdc-text-field--filled",
-            style_
-              [ ("align-items", "center"),
-                ("align-content", "center"),
-                ("word-break", "normal"),
-                ("overflow-wrap", "anywhere"),
-                ("min-height", "56px"),
-                ("height", "auto"),
-                ("padding-top", "8px"),
-                ("padding-bottom", "8px"),
-                ("border-radius", "4px"),
-                ("line-height", "150%")
+      ( case stateQr of
+          Opened -> Qr.qr input
+          Closed -> mempty
+      )
+        <> [ span_
+              [ Typography.typography,
+                Css.fullWidth,
+                class_ "mdc-text-field",
+                class_ "mdc-text-field--filled",
+                style_
+                  [ ("align-items", "center"),
+                    ("align-content", "center"),
+                    ("word-break", "normal"),
+                    ("overflow-wrap", "anywhere"),
+                    ("min-height", "56px"),
+                    ("height", "auto"),
+                    ("padding-top", "8px"),
+                    ("padding-bottom", "8px"),
+                    ("border-radius", "4px"),
+                    ("line-height", "150%")
+                  ]
               ]
-          ]
-          [ div_ mempty
-              $ [ widget
-                    $ truncateFieldInput allowTrunc stateTrunc opts input
-                ]
-              <> ( if not allowTrunc
-                    then mempty
-                    else do
-                      let icon = case stateTrunc of
-                            Closed -> "open_in_full"
-                            Opened -> "close_fullscreen"
-                      trav <- maybeToList opticTrunc
-                      pure
-                        . fieldViewerIcon icon
-                        . action
-                        $ pure
-                        . ( &
-                              cloneTraversal trav
-                                %~ ( \case
-                                      Closed -> Opened
-                                      Opened -> Closed
-                                   )
-                          )
-                 )
-              <> ( if not allowCopy
-                    then mempty
-                    else
-                      [ fieldViewerIcon "content_copy"
-                          . action
-                          $ Jsm.shareText input
-                      ]
-                 )
-          ]
-      ]
+              [ div_ mempty
+                  $ [ widget $ truncateFieldInput allowTrunc stateTrunc opts input
+                    ]
+                  <> ( if null extraWidgets then mempty else [br_ mempty]
+                     )
+                  <> extraWidgets
+              ]
+           ]
   where
     st = args ^. #viewerArgsModel
     value = st ^. viewerArgsOptic args
     input = fold1 $ value ^. #fieldInput
     action = args ^. #viewerArgsAction
-    allowCopy = value ^. #fieldAllowCopy
+    stateQr = fromMaybe Closed $ do
+      trav <- opts ^. #viewerOptsQrOptic
+      st ^? cloneTraversal trav
+    allowCopy =
+      value ^. #fieldAllowCopy
     allowTrunc =
       maybe False (length input >)
         $ opts
@@ -879,21 +862,55 @@ genericFieldViewer args opts widget =
     stateTrunc = fromMaybe Closed $ do
       trav <- opticTrunc
       st ^? cloneTraversal trav
+    extraWidgets =
+      ( if not allowTrunc
+          then mempty
+          else do
+            let icon = case stateTrunc of
+                  Closed -> "open_in_full"
+                  Opened -> "close_fullscreen"
+            trav <- maybeToList opticTrunc
+            pure
+              . fieldViewerIcon icon
+              . action
+              $ pure
+              . ( &
+                    cloneTraversal trav
+                      %~ ( \case
+                            Closed -> Opened
+                            Opened -> Closed
+                         )
+                )
+      )
+        <> ( do
+              trav <- maybeToList $ opts ^. #viewerOptsQrOptic
+              pure
+                . fieldViewerIcon "qr_code_2"
+                . action
+                $ pure
+                . ( &
+                      cloneTraversal trav
+                        %~ ( \case
+                              Closed -> Opened
+                              Opened -> Closed
+                           )
+                  )
+           )
+        <> ( if not allowCopy
+              then mempty
+              else
+                [ fieldViewerIcon "content_copy"
+                    . action
+                    $ Jsm.shareText input
+                ]
+           )
 
 fieldViewerIcon :: MisoString -> action -> View action
 fieldViewerIcon icon action =
   IconButton.iconButton
     ( IconButton.config
         & IconButton.setOnClick action
-        & IconButton.setAttributes
-          [ Theme.primary,
-            style_
-              [ ("height", "auto"),
-                ("padding-top", "inherit"),
-                ("padding-bottom", "inherit"),
-                ("vertical-align", "middle")
-              ]
-          ]
+        & IconButton.setAttributes [Theme.primary]
     )
     icon
 

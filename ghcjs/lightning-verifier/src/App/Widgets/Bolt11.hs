@@ -11,7 +11,6 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Encoding as T
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
-import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Prelude as Prelude
@@ -63,7 +62,6 @@ invoiceWidget st ln =
   Header.headerViewer "Invoice Details"
     <> pairs
       st
-      #stDocLnInvoiceViewer
       ( [ pair "Network"
             $ case B11.bolt11HrpNet $ B11.bolt11Hrp ln of
               B11.BitcoinMainnet -> "Bitcoin Mainnet"
@@ -138,7 +136,6 @@ preimageWidget st rawR r =
   Header.headerViewer "Preimage Details"
     <> pairs
       st
-      #stDocLnPreimageViewer
       [ pair "Preimage" rawR,
         pair "Preimage Hash" . inspect @ByteString $ sha256Hash r
       ]
@@ -168,10 +165,9 @@ pairs ::
     Foldable1 f
   ) =>
   model ->
-  ATraversal' (StDoc Unique) (Map Int StViewer) ->
   [FieldPair DynamicField f] ->
   [View Action]
-pairs st optic raw =
+pairs st raw =
   case typeOf st `eqTypeRep` typeRep @Model of
     Just HRefl ->
       FieldPairs.fieldPairsViewer
@@ -180,34 +176,6 @@ pairs st optic raw =
             FieldPairs.argsOptic = constTraversal xs,
             FieldPairs.argsAction = PushUpdate . Instant
           }
-        ( \idx ->
-            Field.defViewerOpts
-              { Field.viewerOptsQrOptic =
-                  Just
-                    $ #modelState
-                    . #stDoc
-                    . cloneTraversal optic
-                    . at idx
-                    . non
-                      StViewer
-                        { stViewerQr = Closed,
-                          stViewerTruncate = Closed
-                        }
-                    . #stViewerQr,
-                Field.viewerOptsTruncateOptic =
-                  Just
-                    $ #modelState
-                    . #stDoc
-                    . cloneTraversal optic
-                    . at idx
-                    . non
-                      StViewer
-                        { stViewerQr = Closed,
-                          stViewerTruncate = Closed
-                        }
-                    . #stViewerTruncate
-              }
-        )
     Nothing ->
       FieldPairs.fieldPairsViewer
         FieldPairs.Args
@@ -218,8 +186,6 @@ pairs st optic raw =
                 void $ fun st
                 pure next
           }
-        ( const Field.defViewerOpts
-        )
   where
     xs =
       filter
@@ -232,12 +198,12 @@ pairs st optic raw =
 success :: MisoString -> [View Action]
 success msg =
   css "app-success"
-    $ pairs () voidTraversal [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
 
 failure :: MisoString -> [View Action]
 failure msg =
   css "app-failure"
-    $ pairs () voidTraversal [newFieldPairId mempty $ DynamicFieldText msg]
+    $ pairs () [newFieldPairId mempty $ DynamicFieldText msg]
 
 css :: MisoString -> [View action] -> [View action]
 css x = fmap $ \case

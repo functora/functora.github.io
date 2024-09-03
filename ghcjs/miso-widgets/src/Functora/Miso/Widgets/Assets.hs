@@ -57,8 +57,6 @@ assetViewer
               . #assetFieldPairs,
           FieldPairs.argsAction = action
         }
-      ( const Field.defViewerOpts
-      )
       <> Money.moneyViewer
         Money.Args
           { Money.argsModel = st,

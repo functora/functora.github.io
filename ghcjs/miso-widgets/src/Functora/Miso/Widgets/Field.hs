@@ -5,8 +5,6 @@ module Functora.Miso.Widgets.Field
     defOpts,
     OptsWidget (..),
     ModalWidget' (..),
-    ViewerOpts (..),
-    defViewerOpts,
     field,
     ratioField,
     textField,
@@ -113,24 +111,6 @@ data ModalWidget' model where
     ) =>
     ATraversal' model (Field a Unique) ->
     ModalWidget' model
-
-data ViewerOpts model = ViewerOpts
-  { viewerOptsQrOptic :: Maybe (ATraversal' model OpenedOrClosed),
-    viewerOptsTruncateOptic :: Maybe (ATraversal' model OpenedOrClosed),
-    viewerOptsTruncateLimit :: Maybe Int
-  }
-  deriving stock (Generic)
-
-defViewerOpts :: ViewerOpts model
-defViewerOpts =
-  ViewerOpts
-    { viewerOptsQrOptic = Nothing,
-      viewerOptsTruncateOptic = Nothing,
-      viewerOptsTruncateLimit = Just defTruncateLimit
-    }
-
-defTruncateLimit :: Int
-defTruncateLimit = 67
 
 field ::
   Full model action t Unique ->
@@ -765,25 +745,31 @@ fieldViewer ::
   ( Foldable1 f
   ) =>
   Args model action t f ->
-  ViewerOpts model ->
   [View action]
-fieldViewer args opts =
+fieldViewer args =
   case typ of
-    FieldTypeNumber -> genericFieldViewer args opts text
-    FieldTypePercent -> genericFieldViewer args opts $ text . (<> "%")
-    FieldTypeText -> genericFieldViewer args opts text
+    FieldTypeNumber -> genericFieldViewer args text
+    FieldTypePercent -> genericFieldViewer args $ text . (<> "%")
+    FieldTypeText -> genericFieldViewer args text
     FieldTypeTitle -> header val
     FieldTypeHtml ->
-      genericFieldViewer args opts {viewerOptsTruncateLimit = Nothing} rawHtml
-    FieldTypePassword -> genericFieldViewer args opts $ const "*****"
-    FieldTypeQrCode -> Qr.qr val <> genericFieldViewer args opts text
+      genericFieldViewer
+        ( args
+            & cloneTraversal optic
+            . #fieldOpts
+            . #fieldOptsTruncateLimit
+            .~ Nothing
+        )
+        rawHtml
+    FieldTypePassword -> genericFieldViewer args $ const "*****"
+    FieldTypeQrCode -> Qr.qr val <> genericFieldViewer args text
   where
-    opt =
+    optic =
       #argsModel . argsOptic args
     typ =
-      fromMaybe FieldTypeText $ args ^? cloneTraversal opt . #fieldType
+      fromMaybe FieldTypeText $ args ^? cloneTraversal optic . #fieldType
     val =
-      maybe mempty fold1 $ args ^? cloneTraversal opt . #fieldInput
+      maybe mempty fold1 $ args ^? cloneTraversal optic . #fieldInput
 
 header :: MisoString -> [View action]
 header txt =
@@ -803,10 +789,9 @@ genericFieldViewer ::
   ( Foldable1 f
   ) =>
   Args model action t f ->
-  ViewerOpts model ->
   (MisoString -> View action) ->
   [View action]
-genericFieldViewer args opts widget =
+genericFieldViewer args widget =
   if input == mempty
     then mempty
     else
@@ -835,7 +820,12 @@ genericFieldViewer args opts widget =
               [ div_
                   [ Css.fullWidth
                   ]
-                  $ [ widget $ truncateFieldInput allowTrunc stateTrunc opts input
+                  $ [ widget
+                        $ truncateFieldInput
+                          allowTrunc
+                          stateTrunc
+                          (opts ^. #fieldOptsTruncateLimit)
+                          input
                     ]
                   <> ( if null extraWidgets
                         then mempty
@@ -850,24 +840,21 @@ genericFieldViewer args opts widget =
               ]
            ]
   where
-    opt =
-      #argsModel . argsOptic args
+    st = argsModel args
+    optic = argsOptic args
+    action = argsAction args
     input =
-      maybe mempty fold1 $ args ^? cloneTraversal opt . #fieldInput
-    action =
-      args ^. #argsAction
-    fopts =
-      fromMaybe defFieldOpts $ args ^? cloneTraversal opt . #fieldOpts
+      maybe mempty fold1 $ st ^? cloneTraversal optic . #fieldInput
+    opts =
+      fromMaybe defFieldOpts $ st ^? cloneTraversal optic . #fieldOpts
     stateQr =
-      fromMaybe Closed $ fopts ^. #fieldOptsQrState
+      fromMaybe Closed $ opts ^. #fieldOptsQrState
     allowCopy =
-      fopts ^. #fieldOptsAllowCopy
+      opts ^. #fieldOptsAllowCopy
     allowTrunc =
-      maybe False (MS.length input >) $ fopts ^. #fieldOptsTruncateLimit
-    opticTrunc =
-      opts ^. #viewerOptsTruncateOptic
+      maybe False (MS.length input >) $ opts ^. #fieldOptsTruncateLimit
     stateTrunc =
-      fromMaybe Closed $ fopts ^. #fieldOptsTruncateState
+      fromMaybe Closed $ opts ^. #fieldOptsTruncateState
     extraWidgets =
       ( if not allowTrunc
           then mempty
@@ -875,13 +862,15 @@ genericFieldViewer args opts widget =
             let icon = case stateTrunc of
                   Closed -> "open_in_full"
                   Opened -> "close_fullscreen"
-            trav <- maybeToList opticTrunc
             pure
               . fieldViewerIcon icon
               . action
               $ pure
               . ( &
-                    cloneTraversal trav
+                    cloneTraversal optic
+                      . #fieldOpts
+                      . #fieldOptsTruncateState
+                      . _Just
                       %~ ( \case
                             Closed -> Opened
                             Opened -> Closed
@@ -892,13 +881,15 @@ genericFieldViewer args opts widget =
               let icon = case stateQr of
                     Closed -> "qr_code_2"
                     Opened -> "grid_off"
-              trav <- maybeToList $ opts ^. #viewerOptsQrOptic
               pure
                 . fieldViewerIcon icon
                 . action
                 $ pure
                 . ( &
-                      cloneTraversal trav
+                      cloneTraversal optic
+                        . #fieldOpts
+                        . #fieldOptsQrState
+                        . _Just
                         %~ ( \case
                               Closed -> Opened
                               Opened -> Closed
@@ -925,12 +916,12 @@ fieldViewerIcon icon action =
 truncateFieldInput ::
   Bool ->
   OpenedOrClosed ->
-  ViewerOpts model ->
+  Maybe Int ->
   MisoString ->
   MisoString
-truncateFieldInput True Closed opts raw =
+truncateFieldInput True Closed limit raw =
   let full = fromMisoString raw
-      half = fromMaybe defTruncateLimit (viewerOptsTruncateLimit opts) `div` 2
+      half = fromMaybe defTruncateLimit limit `div` 2
    in toMisoString
         $ T.take half full
         <> "..."

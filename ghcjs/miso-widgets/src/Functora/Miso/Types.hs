@@ -9,6 +9,7 @@ module Functora.Miso.Types
     Field (..),
     FieldOpts (..),
     defFieldOpts,
+    defTruncateLimit,
     newField,
     newFieldId,
     newRatioField,
@@ -152,10 +153,13 @@ defFieldOpts :: FieldOpts
 defFieldOpts =
   FieldOpts
     { fieldOptsAllowCopy = True,
-      fieldOptsTruncateLimit = Just 67,
+      fieldOptsTruncateLimit = Just defTruncateLimit,
       fieldOptsTruncateState = Just Closed,
       fieldOptsQrState = Just Closed
     }
+
+defTruncateLimit :: Int
+defTruncateLimit = 67
 
 newField ::
   (MonadIO m) => FieldType -> a -> (a -> MisoString) -> m (Field a Unique)

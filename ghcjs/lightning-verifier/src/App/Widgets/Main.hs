@@ -75,7 +75,6 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                 Field.argsOptic = #modelState . #stPre,
                 Field.argsAction = PushUpdate . Instant
               }
-            Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
@@ -88,7 +87,6 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                         $ DynamicFieldText out,
                     Field.argsAction = PushUpdate . Instant
                   }
-                Field.defViewerOpts
            ]
         <> [ Grid.bigCell
               [ Button.raised
@@ -114,7 +112,6 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                 Field.argsOptic = #modelState . #stPre,
                 Field.argsAction = PushUpdate . Instant
               }
-            Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
@@ -127,7 +124,6 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
                         $ DynamicFieldText out,
                     Field.argsAction = PushUpdate . Instant
                   }
-                Field.defViewerOpts
            ]
         <> [ Grid.bigCell
               [ Button.raised
@@ -146,26 +142,6 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
         FieldPairs.argsOptic = #modelState . #stDoc . #stDocFieldPairs,
         FieldPairs.argsAction = PushUpdate . Instant
       }
-    ( \idx ->
-        Field.defViewerOpts
-          { Field.viewerOptsQrOptic =
-              Just
-                $ #modelState
-                . #stDoc
-                . #stDocFieldPairsViewer
-                . at idx
-                . _Just
-                . #stViewerQr,
-            Field.viewerOptsTruncateOptic =
-              Just
-                $ #modelState
-                . #stDoc
-                . #stDocFieldPairsViewer
-                . at idx
-                . _Just
-                . #stViewerTruncate
-          }
-    )
     <> [ Field.textField @Model @Action
           Field.Args
             { Field.argsModel = st,

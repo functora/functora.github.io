@@ -23,8 +23,7 @@ decrypt st =
           { Field.argsModel = st,
             Field.argsOptic = #modelState . #stPre,
             Field.argsAction = PushUpdate . Instant
-          }
-        Field.defViewerOpts,
+          },
     Grid.mediumCell
       [ Field.passwordField
           Field.Args

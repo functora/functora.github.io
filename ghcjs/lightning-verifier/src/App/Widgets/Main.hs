@@ -179,7 +179,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                 Field.optsPlaceholder = "Invoice",
                 Field.optsLeadingWidget =
                   pasteWidget
-                    "content_paste"
+                    "content_paste_go"
                     Jsm.selectClipboard
                     $ #modelState
                     . #stDoc
@@ -204,7 +204,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               Field.optsPlaceholder = "Preimage",
               Field.optsLeadingWidget =
                 pasteWidget
-                  "content_paste"
+                  "content_paste_go"
                   Jsm.selectClipboard
                   $ #modelState
                   . #stDoc

@@ -893,9 +893,12 @@ genericFieldViewer args opts widget =
                 )
       )
         <> ( do
+              let icon = case stateQr of
+                    Closed -> "qr_code_2"
+                    Opened -> "grid_off"
               trav <- maybeToList $ opts ^. #viewerOptsQrOptic
               pure
-                . fieldViewerIcon "qr_code_2"
+                . fieldViewerIcon icon
                 . action
                 $ pure
                 . ( &

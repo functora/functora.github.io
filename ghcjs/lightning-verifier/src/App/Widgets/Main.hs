@@ -70,24 +70,23 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
               %~ unQrCode
       Header.headerWrapper
         ( Field.fieldViewer
-            Field.ViewerArgs
-              { Field.viewerArgsModel = st,
-                Field.viewerArgsOptic = #modelState . #stPre,
-                Field.viewerArgsAction = PushUpdate . Instant
+            Field.Args
+              { Field.argsModel = st,
+                Field.argsOptic = #modelState . #stPre,
+                Field.argsAction = PushUpdate . Instant
               }
             Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
               $ Field.fieldViewer
-                Field.ViewerArgs
-                  { Field.viewerArgsModel = st,
-                    Field.viewerArgsOptic =
-                      to
-                        . const
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic =
+                      constTraversal
                         . newDynamicFieldId
                         $ DynamicFieldText out,
-                    Field.viewerArgsAction = PushUpdate . Instant
+                    Field.argsAction = PushUpdate . Instant
                   }
                 Field.defViewerOpts
            ]
@@ -110,24 +109,23 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
       let out = toMisoString $ URI.render uri
       Header.headerWrapper
         ( Field.fieldViewer
-            Field.ViewerArgs
-              { Field.viewerArgsModel = st,
-                Field.viewerArgsOptic = #modelState . #stPre,
-                Field.viewerArgsAction = PushUpdate . Instant
+            Field.Args
+              { Field.argsModel = st,
+                Field.argsOptic = #modelState . #stPre,
+                Field.argsAction = PushUpdate . Instant
               }
             Field.defViewerOpts
         )
         <> Qr.qr out
         <> [ Grid.bigCell
               $ Field.fieldViewer
-                Field.ViewerArgs
-                  { Field.viewerArgsModel = st,
-                    Field.viewerArgsOptic =
-                      to
-                        . const
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic =
+                      constTraversal
                         . newDynamicFieldId
                         $ DynamicFieldText out,
-                    Field.viewerArgsAction = PushUpdate . Instant
+                    Field.argsAction = PushUpdate . Instant
                   }
                 Field.defViewerOpts
            ]

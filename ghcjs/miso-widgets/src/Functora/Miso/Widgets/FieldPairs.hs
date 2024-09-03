@@ -71,10 +71,10 @@ fieldPairViewer args opts pair =
           else
             [ cell
                 $ Field.fieldViewer
-                  Field.ViewerArgs
-                    { Field.viewerArgsModel = args ^. #argsModel,
-                      Field.viewerArgsOptic = to . const $ pair ^. #fieldPairValue,
-                      Field.viewerArgsAction = args ^. #argsAction
+                  Field.Args
+                    { Field.argsModel = args ^. #argsModel,
+                      Field.argsOptic = constTraversal $ pair ^. #fieldPairValue,
+                      Field.argsAction = args ^. #argsAction
                     }
                   opts
             ]

@@ -5,7 +5,6 @@ module Functora.Miso.Widgets.Field
     defOpts,
     OptsWidget (..),
     ModalWidget' (..),
-    ViewerArgs (..),
     ViewerOpts (..),
     defViewerOpts,
     field,
@@ -37,17 +36,17 @@ import qualified Material.Theme as Theme
 import qualified Material.Typography as Typography
 import qualified Miso.String as MS
 
-data Args model action item = Args
+data Args model action t f = Args
   { argsModel :: model,
-    argsOptic :: ATraversal' model (Field item Unique),
+    argsOptic :: ATraversal' model (Field t f),
     argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
 
-data Full model action item = Full
-  { fullArgs :: Args model action item,
-    fullParser :: Field item Unique -> Maybe item,
-    fullViewer :: item -> MisoString
+data Full model action t f = Full
+  { fullArgs :: Args model action t f,
+    fullParser :: Field t f -> Maybe t,
+    fullViewer :: t -> MisoString
   }
   deriving stock (Generic)
 
@@ -115,13 +114,6 @@ data ModalWidget' model where
     ATraversal' model (Field a Unique) ->
     ModalWidget' model
 
-data ViewerArgs model action t f = ViewerArgs
-  { viewerArgsModel :: model,
-    viewerArgsOptic :: Getter' model (Field t f),
-    viewerArgsAction :: (model -> JSM model) -> action
-  }
-  deriving stock (Generic)
-
 data ViewerOpts model = ViewerOpts
   { viewerOptsQrOptic :: Maybe (ATraversal' model OpenedOrClosed),
     viewerOptsTruncateOptic :: Maybe (ATraversal' model OpenedOrClosed),
@@ -141,7 +133,7 @@ defTruncateLimit :: Int
 defTruncateLimit = 67
 
 field ::
-  Full model action item ->
+  Full model action t Unique ->
   Opts model action ->
   View action
 field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
@@ -238,7 +230,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
               %~ maybe id (const . id) (getOutput next)
 
 ratioField ::
-  Args model action Rational ->
+  Args model action Rational Unique ->
   Opts model action ->
   View action
 ratioField args =
@@ -250,7 +242,7 @@ ratioField args =
       }
 
 textField ::
-  Args model action MisoString ->
+  Args model action MisoString Unique ->
   Opts model action ->
   View action
 textField args =
@@ -262,7 +254,7 @@ textField args =
       }
 
 dynamicField ::
-  Args model action DynamicField ->
+  Args model action DynamicField Unique ->
   Opts model action ->
   View action
 dynamicField args =
@@ -274,7 +266,7 @@ dynamicField args =
       }
 
 passwordField ::
-  Args model action MisoString ->
+  Args model action MisoString Unique ->
   Opts model action ->
   View action
 passwordField args opts =
@@ -289,7 +281,7 @@ passwordField args opts =
 
 fieldIcon ::
   LeadingOrTrailing ->
-  Args model action item ->
+  Args model action t Unique ->
   Opts model action ->
   OptsWidget model action ->
   TextField.Icon action
@@ -407,7 +399,7 @@ fieldIconSimple lot txt attrs action =
     )
     txt
 
-fieldModal :: Args model action item -> ModalWidget' model -> [View action]
+fieldModal :: Args model action t f -> ModalWidget' model -> [View action]
 fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc) =
   Dialog.dialog
     Dialog.Args
@@ -659,7 +651,7 @@ fieldModal args (ModalMiniWidget opt) =
       }
 
 selectTypeWidget ::
-  Args model action item ->
+  Args model action t f ->
   ATraversal' model (Field a Unique) ->
   View action
 selectTypeWidget args@Args {argsAction = action} optic =
@@ -772,22 +764,26 @@ cell Opts {optsFullWidth = full} =
 fieldViewer ::
   ( Foldable1 f
   ) =>
-  ViewerArgs model action t f ->
+  Args model action t f ->
   ViewerOpts model ->
   [View action]
 fieldViewer args opts =
-  case value ^. #fieldType of
+  case typ of
     FieldTypeNumber -> genericFieldViewer args opts text
     FieldTypePercent -> genericFieldViewer args opts $ text . (<> "%")
     FieldTypeText -> genericFieldViewer args opts text
-    FieldTypeTitle -> header input
+    FieldTypeTitle -> header val
     FieldTypeHtml ->
       genericFieldViewer args opts {viewerOptsTruncateLimit = Nothing} rawHtml
     FieldTypePassword -> genericFieldViewer args opts $ const "*****"
-    FieldTypeQrCode -> Qr.qr input <> genericFieldViewer args opts text
+    FieldTypeQrCode -> Qr.qr val <> genericFieldViewer args opts text
   where
-    value = args ^. #viewerArgsModel . viewerArgsOptic args
-    input = fold1 $ value ^. #fieldInput
+    opt =
+      #argsModel . argsOptic args
+    typ =
+      fromMaybe FieldTypeText $ args ^? cloneTraversal opt . #fieldType
+    val =
+      maybe mempty fold1 $ args ^? cloneTraversal opt . #fieldInput
 
 header :: MisoString -> [View action]
 header txt =
@@ -806,7 +802,7 @@ header txt =
 genericFieldViewer ::
   ( Foldable1 f
   ) =>
-  ViewerArgs model action t f ->
+  Args model action t f ->
   ViewerOpts model ->
   (MisoString -> View action) ->
   [View action]
@@ -854,24 +850,24 @@ genericFieldViewer args opts widget =
               ]
            ]
   where
-    st = args ^. #viewerArgsModel
-    value = st ^. viewerArgsOptic args
-    input = fold1 $ value ^. #fieldInput
-    action = args ^. #viewerArgsAction
-    stateQr = fromMaybe Closed $ do
-      trav <- opts ^. #viewerOptsQrOptic
-      st ^? cloneTraversal trav
+    opt =
+      #argsModel . argsOptic args
+    input =
+      maybe mempty fold1 $ args ^? cloneTraversal opt . #fieldInput
+    action =
+      args ^. #argsAction
+    fopts =
+      fromMaybe defFieldOpts $ args ^? cloneTraversal opt . #fieldOpts
+    stateQr =
+      fromMaybe Closed $ fopts ^. #fieldOptsQrState
     allowCopy =
-      value ^. #fieldAllowCopy
+      fopts ^. #fieldOptsAllowCopy
     allowTrunc =
-      maybe False (MS.length input >)
-        $ opts
-        ^. #viewerOptsTruncateLimit
+      maybe False (MS.length input >) $ fopts ^. #fieldOptsTruncateLimit
     opticTrunc =
       opts ^. #viewerOptsTruncateOptic
-    stateTrunc = fromMaybe Closed $ do
-      trav <- opticTrunc
-      st ^? cloneTraversal trav
+    stateTrunc =
+      fromMaybe Closed $ fopts ^. #fieldOptsTruncateState
     extraWidgets =
       ( if not allowTrunc
           then mempty

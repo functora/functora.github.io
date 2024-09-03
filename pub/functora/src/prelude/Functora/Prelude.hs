@@ -108,6 +108,8 @@ module Functora.Prelude
     nubOrdByNE,
     nubOrdOnNE,
     enumerateNE,
+    nextEnum,
+    prevEnum,
   )
 where
 
@@ -976,3 +978,13 @@ nubOrdOnNE f = fromList . nubOrdOn f . toList
 
 enumerateNE :: forall a. (Ord a, Enum a, Bounded a) => NonEmpty a
 enumerateNE = nubOrdNE $ minBound :| enumerate @a
+
+nextEnum :: (Eq a, Enum a, Bounded a) => a -> a
+nextEnum x
+  | x == maxBound = minBound
+  | otherwise = succ x
+
+prevEnum :: (Eq a, Enum a, Bounded a) => a -> a
+prevEnum x
+  | x == minBound = maxBound
+  | otherwise = pred x

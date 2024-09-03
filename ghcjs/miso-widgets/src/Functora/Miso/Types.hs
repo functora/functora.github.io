@@ -7,6 +7,8 @@ module Functora.Miso.Types
     newUnique,
     newUniqueDuplicator,
     Field (..),
+    FieldOpts (..),
+    defFieldOpts,
     newField,
     newFieldId,
     newRatioField,
@@ -114,8 +116,8 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f MisoString,
     fieldOutput :: a,
-    fieldAllowCopy :: Bool,
-    fieldModalState :: OpenedOrClosed
+    fieldModalState :: OpenedOrClosed,
+    fieldOpts :: FieldOpts
   }
   deriving stock (Generic)
 
@@ -136,6 +138,25 @@ deriving via
   instance
     (Typ a) => Binary (Field a Identity)
 
+data FieldOpts = FieldOpts
+  { fieldOptsAllowCopy :: Bool,
+    fieldOptsTruncateLimit :: Maybe Int,
+    fieldOptsTruncateState :: Maybe OpenedOrClosed,
+    fieldOptsQrState :: Maybe OpenedOrClosed
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+deriving via GenericType FieldOpts instance Binary FieldOpts
+
+defFieldOpts :: FieldOpts
+defFieldOpts =
+  FieldOpts
+    { fieldOptsAllowCopy = True,
+      fieldOptsTruncateLimit = Just 67,
+      fieldOptsTruncateState = Just Closed,
+      fieldOptsQrState = Just Closed
+    }
+
 newField ::
   (MonadIO m) => FieldType -> a -> (a -> MisoString) -> m (Field a Unique)
 newField typ output newInput = do
@@ -145,8 +166,8 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldAllowCopy = True,
-        fieldModalState = Closed
+        fieldModalState = Closed,
+        fieldOpts = defFieldOpts
       }
 
 newFieldId :: FieldType -> (a -> MisoString) -> a -> Field a Identity
@@ -155,8 +176,8 @@ newFieldId typ viewer output =
     { fieldType = typ,
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
-      fieldAllowCopy = True,
-      fieldModalState = Closed
+      fieldModalState = Closed,
+      fieldOpts = defFieldOpts
     }
 
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)

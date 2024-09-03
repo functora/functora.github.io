@@ -13,7 +13,7 @@ import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Typography as Typography
 
 headerEditor ::
-  Field.Args model action DynamicField ->
+  Field.Args model action DynamicField Unique ->
   Field.Opts model action ->
   [View action]
 headerEditor args opts =

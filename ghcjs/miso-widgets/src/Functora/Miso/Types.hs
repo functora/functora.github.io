@@ -27,6 +27,7 @@ module Functora.Miso.Types
     FieldPair (..),
     newFieldPair,
     newFieldPairId,
+    mergeFieldPairs,
     Currency (..),
     newCurrency,
     Money (..),
@@ -311,6 +312,38 @@ newFieldPairId key val =
   FieldPair
     (newFieldId FieldTypeText id key)
     (newDynamicFieldId val)
+
+mergeFieldPairs ::
+  ( Foldable1 f
+  ) =>
+  [FieldPair t f] ->
+  [FieldPair t f] ->
+  [FieldPair t f]
+mergeFieldPairs next prev =
+  if fmap inputs next /= fmap inputs prev
+    then next
+    else fmap (uncurry merge) $ zip next prev
+  where
+    merge :: FieldPair t f -> FieldPair t f -> FieldPair t f
+    merge new old =
+      old
+        & #fieldPairKey
+        . #fieldInput
+        .~ (new ^. #fieldPairKey . #fieldInput)
+        & #fieldPairKey
+        . #fieldOutput
+        .~ (new ^. #fieldPairKey . #fieldOutput)
+        & #fieldPairValue
+        . #fieldInput
+        .~ (new ^. #fieldPairValue . #fieldInput)
+        & #fieldPairValue
+        . #fieldOutput
+        .~ (new ^. #fieldPairValue . #fieldOutput)
+    inputs :: (Foldable1 f) => FieldPair t f -> (MisoString, MisoString)
+    inputs x =
+      ( fold1 $ x ^. #fieldPairKey . #fieldInput,
+        fold1 $ x ^. #fieldPairValue . #fieldInput
+      )
 
 data Currency f = Currency
   { currencyInput :: Field MisoString f,

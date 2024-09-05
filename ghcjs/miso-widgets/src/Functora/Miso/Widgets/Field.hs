@@ -761,8 +761,18 @@ fieldViewer args =
             .~ Nothing
         )
         rawHtml
-    FieldTypePassword -> genericFieldViewer args $ const "*****"
-    FieldTypeQrCode -> Qr.qr val <> genericFieldViewer args text
+    FieldTypePassword ->
+      genericFieldViewer args
+        $ const "*****"
+    FieldTypeQrCode ->
+      genericFieldViewer
+        ( args
+            & cloneTraversal optic
+            . #fieldOpts
+            . #fieldOptsQrState
+            .~ Just Opened
+        )
+        text
   where
     optic =
       #argsModel . argsOptic args

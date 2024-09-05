@@ -6,7 +6,6 @@ module App.Types
     Action (..),
     St (..),
     StDoc (..),
-    StViewer (..),
     newStDoc,
     Screen (..),
     isQrCode,
@@ -50,6 +49,7 @@ data Model = Model
     modelState :: St Unique,
     modelFavMap :: Map MisoString Fav,
     modelFavName :: Field MisoString Unique,
+    modelUriViewer :: [FieldPair DynamicField Unique],
     modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
     modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model))
   }
@@ -86,21 +86,14 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
-data StViewer = StViewer
-  { stViewerQr :: OpenedOrClosed,
-    stViewerTruncate :: OpenedOrClosed
-  }
-  deriving stock (Eq, Ord, Show, Data, Generic)
-
-deriving via GenericType StViewer instance Binary StViewer
-
 data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocFieldPairsViewer :: Map Int StViewer,
+    stDocSuccessViewer :: [FieldPair DynamicField f],
+    stDocFailureViewer :: [FieldPair DynamicField f],
     stDocLnPreimage :: Field MisoString f,
-    stDocLnPreimageViewer :: Map Int StViewer,
+    stDocLnPreimageViewer :: [FieldPair DynamicField f],
     stDocLnInvoice :: Field MisoString f,
-    stDocLnInvoiceViewer :: Map Int StViewer
+    stDocLnInvoiceViewer :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
 
@@ -125,7 +118,8 @@ newStDoc = do
   pure
     StDoc
       { stDocFieldPairs = mempty,
-        stDocFieldPairsViewer = mempty,
+        stDocSuccessViewer = mempty,
+        stDocFailureViewer = mempty,
         stDocLnPreimage = r,
         stDocLnPreimageViewer = mempty,
         stDocLnInvoice = ln,

@@ -13,14 +13,12 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Header as Header
-import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Material.Button as Button
 import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Material.Typography as Typography
 import Miso hiding (at, view)
-import qualified Text.URI as URI
 
 mainWidget :: Model -> View Action
 mainWidget st =
@@ -59,15 +57,7 @@ mainWidget st =
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stCpt = Just {}}} =
   case st ^. #modelState . #stScreen of
-    QrCode sc -> do
-      let out =
-            toMisoString
-              . either impureThrow URI.render
-              . stUri
-              $ st
-              & #modelState
-              . #stScreen
-              %~ unQrCode
+    QrCode sc ->
       Header.headerWrapper
         ( Field.fieldViewer
             Field.Args
@@ -76,16 +66,12 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
                 Field.argsAction = PushUpdate . Instant
               }
         )
-        <> Qr.qr out
         <> [ Grid.bigCell
-              $ Field.fieldViewer
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic =
-                      constTraversal
-                        . newDynamicFieldId
-                        $ DynamicFieldText out,
-                    Field.argsAction = PushUpdate . Instant
+              $ FieldPairs.fieldPairsViewer
+                FieldPairs.Args
+                  { FieldPairs.argsModel = st,
+                    FieldPairs.argsOptic = #modelUriViewer,
+                    FieldPairs.argsAction = PushUpdate . Instant
                   }
            ]
         <> [ Grid.bigCell
@@ -101,40 +87,32 @@ screenWidget st@Model {modelState = St {stCpt = Just {}}} =
     _ ->
       Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  case stUri $ st & #modelState . #stScreen %~ unQrCode of
-    Left e -> impureThrow e
-    Right uri -> do
-      let out = toMisoString $ URI.render uri
-      Header.headerWrapper
-        ( Field.fieldViewer
-            Field.Args
-              { Field.argsModel = st,
-                Field.argsOptic = #modelState . #stPre,
-                Field.argsAction = PushUpdate . Instant
+  Header.headerWrapper
+    ( Field.fieldViewer
+        Field.Args
+          { Field.argsModel = st,
+            Field.argsOptic = #modelState . #stPre,
+            Field.argsAction = PushUpdate . Instant
+          }
+    )
+    <> [ Grid.bigCell
+          $ FieldPairs.fieldPairsViewer
+            FieldPairs.Args
+              { FieldPairs.argsModel = st,
+                FieldPairs.argsOptic = #modelUriViewer,
+                FieldPairs.argsAction = PushUpdate . Instant
               }
-        )
-        <> Qr.qr out
-        <> [ Grid.bigCell
-              $ Field.fieldViewer
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic =
-                      constTraversal
-                        . newDynamicFieldId
-                        $ DynamicFieldText out,
-                    Field.argsAction = PushUpdate . Instant
-                  }
-           ]
-        <> [ Grid.bigCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setIcon (Just "login")
-                      & Button.setAttributes [Css.fullWidth]
-                      & Button.setOnClick (setScreenAction $ unQrCode sc)
-                  )
-                  "Open"
-              ]
-           ]
+       ]
+    <> [ Grid.bigCell
+          [ Button.raised
+              ( Button.config
+                  & Button.setIcon (Just "login")
+                  & Button.setAttributes [Css.fullWidth]
+                  & Button.setOnClick (setScreenAction $ unQrCode sc)
+              )
+              "Open"
+          ]
+       ]
 screenWidget st@Model {modelState = St {stScreen = Converter}} =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args
@@ -192,7 +170,7 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
                   . #stDocLnPreimage
             }
        ]
-    <> Bolt11.bolt11 st
+    <> Bolt11.bolt11Viewer st
 
 pasteWidget ::
   MisoString ->

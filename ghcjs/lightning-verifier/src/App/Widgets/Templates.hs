@@ -90,6 +90,7 @@ newModel mSt uri = do
         modelState = st,
         modelFavMap = mempty,
         modelFavName = favName,
+        modelUriViewer = mempty,
         modelProducerQueue = prod,
         modelConsumerQueue = cons
       }

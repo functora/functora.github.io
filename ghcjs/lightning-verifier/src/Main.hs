@@ -18,6 +18,7 @@ import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Bolt11 as B11
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
@@ -180,18 +181,34 @@ updateModel (ChanUpdate prevSt) _ = do
         Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
-        if nextSt ^. #modelLoading
+        nextUri <- stUri $ nextSt & #modelState . #stScreen %~ unQrCode
+        uriViewer <-
+          newFieldPair mempty
+            . DynamicFieldText
+            . toMisoString
+            $ URI.render nextUri
+        let finSt =
+              nextSt
+                & #modelUriViewer
+                %~ mergeFieldPairs
+                  [ uriViewer
+                      & #fieldPairValue
+                      . #fieldOpts
+                      . #fieldOptsQrState
+                      .~ Just Opened
+                  ]
+        if finSt ^. #modelLoading
           then do
             void
               . spawnLink
-              . deepseq (viewModel nextSt)
+              . deepseq (viewModel finSt)
               . Misc.pushActionQueue prevSt
-              $ Instant (const . pure $ nextSt & #modelLoading .~ False)
+              $ Instant (const . pure $ finSt & #modelLoading .~ False)
             pure
               $ ChanUpdate (prevSt & #modelLoading .~ True)
           else
             pure
-              $ ChanUpdate nextSt
+              $ ChanUpdate finSt
     ]
 updateModel (PushUpdate updater) st = do
   batchEff
@@ -277,11 +294,16 @@ evalModel st@Model {modelState = st0} = do
       && isNothing (st0 ^. #stCpt)
       then Aes.randomKm 32
       else pure $ st0 ^. #stKm
+  doc <-
+    B11.evalBolt11 $ st0 ^. #stDoc
   pure
     $ st
     & #modelState
     . #stKm
     .~ km
+    & #modelState
+    . #stDoc
+    .~ doc
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

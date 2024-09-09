@@ -5,6 +5,7 @@ module App.Widgets.Templates
 where
 
 import App.Types
+import qualified App.Widgets.Bolt11 as B11
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
@@ -72,7 +73,15 @@ newModel mSt uri = do
                       cpt
                 doc <-
                   identityToUnique
-                    =<< either (throwString . thd3) pure (decodeBinary bDoc)
+                    =<< either
+                      (throwString . thd3)
+                      ( \doc ->
+                          pure
+                            $ B11.mergeBolt11Viewers
+                              (B11.makeBolt11Viewer doc)
+                              doc
+                      )
+                      (decodeBinary bDoc)
                 pure
                   $ st
                   & #stDoc

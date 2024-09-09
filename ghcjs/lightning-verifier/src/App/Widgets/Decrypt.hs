@@ -4,6 +4,7 @@ module App.Widgets.Decrypt
 where
 
 import App.Types
+import qualified App.Widgets.Bolt11 as B11
 import Data.Functor.Barbie
 import qualified Functora.Aes as Aes
 import Functora.Cfg
@@ -62,7 +63,9 @@ decryptDoc st@Model {modelState = St {stCpt = Just cpt}} = do
         bDoc <-
           maybe (Left "Incorrect password!") Right
             $ Aes.unHmacDecrypt @ByteString aes cpt
-        first thd3
+        bimap
+          thd3
+          (\doc -> B11.mergeBolt11Viewers (B11.makeBolt11Viewer doc) doc)
           $ decodeBinary bDoc
   case eDoc of
     Left e -> do

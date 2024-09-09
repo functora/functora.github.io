@@ -190,7 +190,7 @@ stQuery st = do
     (URI.mkQueryValue <=< encodeText)
       . encodeBinary
       $ fromMaybe
-        (Aes.encryptHmac aes . encodeBinary $ st ^. #stDoc)
+        (Aes.encryptHmac aes . encodeBinary . compressViewers $ st ^. #stDoc)
         (st ^. #stCpt)
   kKm <- URI.mkQueryKey "k"
   vKm <-
@@ -235,6 +235,36 @@ stUri st = do
     $ uri
       { URI.uriQuery = qxs
       }
+
+compressViewers :: StDoc Identity -> StDoc Identity
+compressViewers st =
+  st
+    & #stDocSuccessViewer
+    %~ fmap compress
+    & #stDocFailureViewer
+    %~ fmap compress
+    & #stDocLnPreimageViewer
+    %~ fmap compress
+    & #stDocLnInvoiceViewer
+    %~ fmap compress
+  where
+    compress ::
+      FieldPair DynamicField Identity ->
+      FieldPair DynamicField Identity
+    compress pair =
+      pair
+        & #fieldPairKey
+        . #fieldInput
+        .~ Identity (mempty :: MisoString)
+        & #fieldPairKey
+        . #fieldOutput
+        .~ (mempty :: MisoString)
+        & #fieldPairValue
+        . #fieldInput
+        .~ Identity (mempty :: MisoString)
+        & #fieldPairValue
+        . #fieldOutput
+        .~ DynamicFieldText mempty
 
 baseUri :: MisoString
 #ifdef GHCID

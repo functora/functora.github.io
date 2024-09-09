@@ -55,7 +55,7 @@ module Functora.Miso.Types
   )
 where
 
-import Data.Foldable (Foldable (..))
+import Data.Foldable (foldMap)
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import Functora.Cfg
@@ -320,10 +320,17 @@ mergeFieldPairs ::
   [FieldPair t f] ->
   [FieldPair t f]
 mergeFieldPairs next prev =
-  if fmap inputs next /= fmap inputs prev
-    then next
-    else fmap (uncurry merge) $ zip next prev
+  if ( (length next == length prev)
+        && (all (== (mempty, mempty)) prevInputs)
+     )
+    || (nextInputs == prevInputs)
+    then fmap (uncurry merge) $ zip next prev
+    else next
   where
+    nextInputs :: [(MisoString, MisoString)]
+    nextInputs = fmap inputs next
+    prevInputs :: [(MisoString, MisoString)]
+    prevInputs = fmap inputs prev
     merge :: FieldPair t f -> FieldPair t f -> FieldPair t f
     merge new old =
       old

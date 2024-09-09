@@ -295,7 +295,11 @@ evalModel st@Model {modelState = st0} = do
       then Aes.randomKm 32
       else pure $ st0 ^. #stKm
   doc <-
-    B11.evalBolt11 $ st0 ^. #stDoc
+    identityToUnique
+      . B11.makeBolt11Viewer
+      . uniqueToIdentity
+      $ st0
+      ^. #stDoc
   pure
     $ st
     & #modelState
@@ -303,7 +307,7 @@ evalModel st@Model {modelState = st0} = do
     .~ km
     & #modelState
     . #stDoc
-    .~ doc
+    %~ B11.mergeBolt11Viewers doc
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

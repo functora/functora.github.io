@@ -1,13 +1,13 @@
 module App.Widgets.Bolt11
   ( bolt11Viewer,
-    evalBolt11,
+    makeBolt11Viewer,
+    mergeBolt11Viewers,
   )
 where
 
 import App.Types
 import qualified Bitcoin.Address as Btc
 import qualified Data.Aeson as A
-import Data.Bitraversable (bimapM)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Encoding as T
@@ -88,36 +88,34 @@ inspectTimestamp =
     . Prelude.fromInteger
     . from @Int @Integer
 
-evalBolt11 :: (MonadIO m) => StDoc Unique -> m (StDoc Unique)
-evalBolt11 st = do
-  lnFields <-
-    if rawLn == mempty
-      then pure $ Right mempty
-      else bimapM plainM (mapM identityToUnique . invoiceFields) ln
-  preFields <-
-    if rawR == mempty
-      then pure $ Right mempty
-      else bimapM plainM (mapM identityToUnique . preimageFields rawR) r
-  verifierFields <-
-    if any @[MisoString] (== mempty) [rawLn, rawR]
-      then pure $ Right mempty
-      else case verifyPreimage <$> rh <*> r of
-        Left {} -> pure $ Right mempty
-        Right x -> bimapM plainM plainM x
-  pure
-    $ st
-    & #stDocSuccessViewer
-    %~ mergeFieldPairs (fromRight mempty verifierFields)
-    & #stDocFailureViewer
-    %~ mergeFieldPairs
-      ( fromLeft mempty lnFields
-          <> fromLeft mempty preFields
-          <> fromLeft mempty verifierFields
-      )
-    & #stDocLnInvoiceViewer
-    %~ mergeFieldPairs (fromRight mempty lnFields)
-    & #stDocLnPreimageViewer
-    %~ mergeFieldPairs (fromRight mempty preFields)
+makeBolt11Viewer :: StDoc Identity -> StDoc Identity
+makeBolt11Viewer st =
+  let lnFields =
+        if rawLn == mempty
+          then pure mempty
+          else bimap plain invoiceFields ln
+      preFields =
+        if rawR == mempty
+          then pure mempty
+          else bimap plain (preimageFields rawR) r
+      verifierFields =
+        if any @[MisoString] (== mempty) [rawLn, rawR]
+          then pure mempty
+          else case verifyPreimage <$> rh <*> r of
+            Left {} -> pure mempty
+            Right x -> bimap plain plain x
+   in st
+        & #stDocSuccessViewer
+        .~ fromRight mempty verifierFields
+        & #stDocFailureViewer
+        .~ ( fromLeft mempty lnFields
+              <> fromLeft mempty preFields
+              <> fromLeft mempty verifierFields
+           )
+        & #stDocLnInvoiceViewer
+        .~ fromRight mempty lnFields
+        & #stDocLnPreimageViewer
+        .~ fromRight mempty preFields
   where
     rawLn :: MisoString
     rawLn = st ^. #stDocLnInvoice . #fieldOutput
@@ -133,9 +131,21 @@ evalBolt11 st = do
     r :: Either MisoString ByteString
     r = parsePreimage rawR
 
-plainM :: (MonadIO m) => MisoString -> m [FieldPair DynamicField Unique]
-plainM =
-  fmap (: mempty) . newFieldPair mempty . DynamicFieldText
+mergeBolt11Viewers :: (Foldable1 f) => StDoc f -> StDoc f -> StDoc f
+mergeBolt11Viewers next prev =
+  prev
+    & #stDocSuccessViewer
+    %~ mergeFieldPairs (stDocSuccessViewer next)
+    & #stDocFailureViewer
+    %~ mergeFieldPairs (stDocFailureViewer next)
+    & #stDocLnInvoiceViewer
+    %~ mergeFieldPairs (stDocLnInvoiceViewer next)
+    & #stDocLnPreimageViewer
+    %~ mergeFieldPairs (stDocLnPreimageViewer next)
+
+plain :: MisoString -> [FieldPair DynamicField Identity]
+plain =
+  (: mempty) . newFieldPairId mempty . DynamicFieldText
 
 parsePreimage :: MisoString -> Either MisoString ByteString
 parsePreimage rawR =

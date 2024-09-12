@@ -83,12 +83,16 @@ common pkg
     , miso
     , miso-components
     , modern-uri
+    , monoid-subclasses
     , network-uri
     , qrcode-core
     , random
     , syb
     , text
     , uglymemo
+
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends: ghcjs-base
 
 library
   import:          pkg
@@ -106,6 +110,7 @@ library
     Functora.Miso.Jsm
     Functora.Miso.Jsm.Generic
     Functora.Miso.Jsm.Specific
+    Functora.Miso.Orphan
     Functora.Miso.Prelude
     Functora.Miso.Types
     Functora.Miso.Widgets.Assets
@@ -143,6 +148,7 @@ test-suite miso-widgets-test
       Functora.Miso.Jsm
       Functora.Miso.Jsm.Generic
       Functora.Miso.Jsm.Specific
+      Functora.Miso.Orphan
       Functora.Miso.Prelude
       Functora.Miso.Types
       Functora.Miso.Widgets.Assets

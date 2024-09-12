@@ -155,6 +155,16 @@
                   ver = "0.1";
                   sha256 = "MkLhIuwjfLomAbbzV3ZI1SWKEKHufFwTcxgCtda4ohI=";
                 } {};
+                monoid-subclasses = self.callHackageDirect {
+                  pkg = "monoid-subclasses";
+                  ver = "1.2.5.1";
+                  sha256 = "E4MrV6/j5EDC9SdD0uEnViQpm9lrxpofyfp+gjWBQes=";
+                } {};
+                commutative-semigroups = self.callHackageDirect {
+                  pkg = "commutative-semigroups";
+                  ver = "0.2.0.1";
+                  sha256 = "awswOPDumlMe0AmCb6GgfM2qABp1Y/UxQahMLfj6OEg=";
+                } {};
                 base-orphans = self.callHackageDirect {
                   pkg = "base-orphans";
                   ver = "0.8.8.2";

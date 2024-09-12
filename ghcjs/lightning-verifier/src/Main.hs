@@ -323,6 +323,5 @@ syncUri uri = do
     $ pushURI
     =<< ( maybe (throwString $ "Bad URI " <> textUri) pure
             . URI.parseURI
-            . from @Prelude.Text @Prelude.String
-            $ URI.render nextUri
+            $ URI.renderStr nextUri
         )

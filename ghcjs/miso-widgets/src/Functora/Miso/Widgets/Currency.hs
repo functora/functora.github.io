@@ -153,13 +153,14 @@ currencyListWidget
       newFuzz cur =
         Fuzzy.Fuzzy
           { Fuzzy.original = cur,
-            Fuzzy.rendered = inspectCurrencyInfo cur,
+            Fuzzy.rendered =
+              toMisoString @Prelude.Text
+                $ inspectCurrencyInfo cur,
             Fuzzy.score = 0
           }
       search =
-        maybe
+        fromMaybe
           mempty
-          (fromMisoString @Prelude.Text)
           $ st
           ^? cloneTraversal optic
           . #currencyInput
@@ -181,14 +182,15 @@ currencyListWidget
                 )
                 "<b>"
                 "</b>"
-                inspectCurrencyInfo
+                ( toMisoString @Prelude.Text . inspectCurrencyInfo
+                )
                 False
 
 currencyListItemWidget ::
   Args model action ->
   Opts model ->
   CurrencyInfo ->
-  Fuzzy.Fuzzy CurrencyInfo Prelude.Text ->
+  Fuzzy.Fuzzy CurrencyInfo MisoString ->
   ListItem.ListItem action
 currencyListItemWidget
   Args

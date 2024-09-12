@@ -1,8 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Witch.Mini.Instances where
@@ -46,7 +48,7 @@ import qualified Witch.Mini.TryFromException as TryFromException
 import qualified Witch.Mini.Utility as Utility
 
 -- | Uses 'id'.
-instance From.From a a where
+instance {-# OVERLAPS #-} (a ~ b) => From.From a b where
   from = id
 
 -- Int8

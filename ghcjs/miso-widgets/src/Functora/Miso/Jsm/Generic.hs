@@ -14,12 +14,12 @@ module Functora.Miso.Jsm.Generic
   )
 where
 
-import qualified Data.Text.Lazy.Encoding as TL
+import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
-import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso.String as MS
 import qualified Text.URI as URI
+import qualified Prelude
 import qualified Prelude ((!!))
 
 popupText :: (Show a, Data a) => a -> JSM ()
@@ -85,22 +85,18 @@ enterOrEscapeBlur uid (KeyCode code) st = do
   let enterOrEscape = [13, 27] :: [Int]
   when (code `elem` enterOrEscape)
     . void
-    . JS.eval @MisoString
+    . JS.eval
+    . toMisoString @(UTF_8 ByteString)
     $ "document.getElementById('"
     <> htmlUid uid
     <> "').getElementsByTagName('input')[0].blur();"
   pure st
 
 insertStorage :: (ToJSON a) => MisoString -> a -> JSM ()
-insertStorage key raw = do
-  val <-
-    either throw (pure . toMisoString)
-      . TL.decodeUtf8'
-      . unTagged
-      $ encodeJson raw
-  void
-    $ JS.global
-    ^. JS.js2 @MisoString "insertStorage" key val
+insertStorage key raw =
+  void $ JS.global ^. JS.js2 @MisoString "insertStorage" key val
+  where
+    val = toMisoString @(UTF_8 BL.ByteString) $ encodeJson raw
 
 selectStorage :: (FromJSON a) => MisoString -> (Maybe a -> JSM ()) -> JSM ()
 selectStorage key after =
@@ -108,7 +104,7 @@ selectStorage key after =
     Nothing ->
       after Nothing
     Just str ->
-      case decodeJson $ from @MisoString @Prelude.Text str of
+      case decodeJson $ fromMisoString @(UTF_8 BL.ByteString) str of
         Left e -> do
           consoleLog e
           after Nothing
@@ -140,11 +136,14 @@ genericPromise fun marg after = do
         if not valExist
           then after Nothing
           else do
-            raw <- JS.fromJSVal @MisoString val
-            res <- maybe (throwString @MisoString "Failure, bad type!") pure raw
-            after $ Just res
+            raw <-
+              JS.fromJSVal @MisoString val
+            res <-
+              maybe (throwString @Prelude.String "Failure, bad type!") pure raw
+            after
+              $ Just res
       _ ->
-        throwString @MisoString "Failure, bad argv!"
+        throwString @Prelude.String "Failure, bad argv!"
   failure <-
     JS.function $ \_ _ e -> do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e

@@ -12,6 +12,7 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import Functora.Money hiding (Currency, Money, Text)
+import qualified Functora.Prelude as Prelude
 import qualified Material.Typography as Typography
 
 data Args model action = Args
@@ -57,12 +58,19 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
                     style_ [("text-align", "center")]
                   ]
                   [ Field.constTextField
-                      ( inspectRatioDef $ money ^. #moneyAmount . #fieldOutput
+                      ( toMisoString @Prelude.String
+                          . inspectRatioDef
+                          $ money
+                          ^. #moneyAmount
+                          . #fieldOutput
                       )
                       ( Field.defOpts
                           & #optsPlaceholder
-                          .~ inspectCurrencyInfo
-                            ( money ^. #moneyCurrency . #currencyOutput
+                          .~ toMisoString @Prelude.Text
+                            ( inspectCurrencyInfo
+                                $ money
+                                ^. #moneyCurrency
+                                . #currencyOutput
                             )
                       )
                       action

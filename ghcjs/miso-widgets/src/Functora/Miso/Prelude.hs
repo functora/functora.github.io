@@ -31,11 +31,10 @@ import Miso as X hiding
   )
 import qualified Miso
 import Miso.String as X
-  ( FromMisoString,
+  ( FromMisoString (..),
     MisoString,
-    ToMisoString,
+    ToMisoString (..),
     fromMisoString,
-    toMisoString,
   )
 import Type.Reflection
 
@@ -44,23 +43,10 @@ instance Binary MisoString where
   put = Binary.put . fromMisoString @Prelude.Text
   get = fmap (toMisoString @Prelude.Text) Binary.get
 
-instance From Prelude.Text MisoString where
-  from = toMisoString
-
-instance From Prelude.String MisoString where
-  from = toMisoString
-
-instance From MisoString Prelude.Text where
-  from = fromMisoString
-
-
-instance From MisoString Prelude.String where
-  from = fromMisoString
-
 instance ConvertUtf8 MisoString ByteString where
-  encodeUtf8 = encodeUtf8 . from @MisoString @Prelude.Text
-  decodeUtf8 = from @Prelude.Text @MisoString . decodeUtf8
-  decodeUtf8Strict = fmap (from @Prelude.Text @MisoString) . decodeUtf8Strict
+  encodeUtf8 = encodeUtf8 . fromMisoString @Prelude.Text
+  decodeUtf8 = toMisoString @Prelude.Text . decodeUtf8
+  decodeUtf8Strict = fmap (toMisoString @Prelude.Text) . decodeUtf8Strict
 
 instance ToJSONKey MisoString where
   toJSONKey = contramap (fromMisoString @Prelude.Text) $ toJSONKey
@@ -68,6 +54,12 @@ instance ToJSONKey MisoString where
 instance FromJSONKey MisoString where
   fromJSONKey = fmap toMisoString $ fromJSONKey @Prelude.Text
 #endif
+
+instance (ToMisoString a) => ToMisoString (Tagged "UTF-8" a) where
+  toMisoString = toMisoString . unTagged
+
+instance (FromMisoString a) => FromMisoString (Tagged "UTF-8" a) where
+  fromMisoStringEither = Right . Tagged @"UTF-8" . fromMisoString
 
 inspect :: (Show a, Data a) => a -> MisoString
 inspect x =

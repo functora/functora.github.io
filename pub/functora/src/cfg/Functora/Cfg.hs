@@ -124,9 +124,16 @@ decodeJson raw =
   A.eitherDecode
     $ via @(UTF_8 BL.ByteString) @inp @BL.ByteString raw
 
-encodeJson :: (ToJSON a) => a -> UTF_8 BL.ByteString
+encodeJson ::
+  forall inp out.
+  ( ToJSON inp,
+    From (UTF_8 BL.ByteString) out
+  ) =>
+  inp ->
+  out
 encodeJson =
-  Tagged @"UTF-8"
+  from @(UTF_8 BL.ByteString) @out
+    . Tagged @"UTF-8"
     . A.encode
 
 -- $toml

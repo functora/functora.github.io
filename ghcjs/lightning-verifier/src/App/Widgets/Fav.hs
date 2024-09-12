@@ -6,7 +6,6 @@ where
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
-import qualified Data.Text as T
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
@@ -14,7 +13,7 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
-import qualified Text.URI as URI
+import qualified Miso.String as MS
 
 fav :: Model -> [View Action]
 fav st =
@@ -75,8 +74,8 @@ fav st =
     closeAction = PushUpdate . Instant $ pure . (& #modelFav .~ Closed)
     saveAction nextSt = do
       ct <- getCurrentTime
+      uri <- stUri nextSt
       let txt = makeFavName st
-      let uri = either impureThrow id . URI.mkURI $ shareLink nextSt
       let nextFav = Fav {favUri = uri, favCreatedAt = ct}
       let nextFavName = makeFavName nextSt
       Jsm.popupText
@@ -114,14 +113,10 @@ fav st =
         else Jsm.enterOrEscapeBlur uid code
 
 makeFavName :: Model -> MisoString
-makeFavName st =
-  toMisoString
-    . T.toUpper
-    . T.strip
-    $ fromMisoString preFavName
-  where
-    preFavName =
-      st ^. #modelFavName . #fieldInput . #uniqueValue
+makeFavName =
+  MS.toUpper
+    . MS.strip
+    . (^. #modelFavName . #fieldInput . #uniqueValue)
 
 favItems :: Model -> [View Action]
 favItems st =

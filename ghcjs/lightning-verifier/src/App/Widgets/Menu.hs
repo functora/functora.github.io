@@ -20,6 +20,7 @@ import qualified Material.IconButton as IconButton
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Text.URI as URI
+import qualified Prelude
 
 menu :: Model -> [View Action]
 menu st =
@@ -108,7 +109,9 @@ menu st =
                         ( PushUpdate
                             . Instant
                             . Jsm.shareText
-                            $ shareLink @MisoString st
+                            . toMisoString @Prelude.String
+                            . either impureThrow URI.renderStr
+                            $ stUri st
                         )
                       & IconButton.setAttributes
                         [ TopAppBar.actionItem,
@@ -458,5 +461,3 @@ linksWidget st =
       PushUpdate
         . Instant
         . Jsm.openBrowserPage
-        . either impureThrow id
-        . URI.mkURI

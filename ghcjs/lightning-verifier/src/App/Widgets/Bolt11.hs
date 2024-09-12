@@ -10,7 +10,6 @@ import qualified Bitcoin.Address as Btc
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text.Encoding as T
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -123,9 +122,9 @@ makeBolt11Viewer st =
     rawR = st ^. #stDocLnPreimage . #fieldOutput
     ln :: Either MisoString B11.Bolt11
     ln =
-      first (mappend "Bad invoice - " . from @Prelude.String @MisoString)
+      first (mappend "Bad invoice - " . toMisoString @Prelude.String)
         . B11.decodeBolt11
-        $ from @MisoString @Prelude.Text rawLn
+        $ fromMisoString @Prelude.Text rawLn
     rh :: Either MisoString ByteString
     rh = ln >>= parsePreimageHash
     r :: Either MisoString ByteString
@@ -149,12 +148,13 @@ plain =
 
 parsePreimage :: MisoString -> Either MisoString ByteString
 parsePreimage rawR =
-  case B16.decode . T.encodeUtf8 $ from @MisoString @Prelude.Text rawR of
+  case B16.decode $ fromMisoString @ByteString rawR of
     (r, "") -> Right r
     (_, e) ->
       Left
+        . toMisoString @Prelude.String
         $ "Bad preimage - non hex leftover "
-        <> from @Prelude.String @MisoString (Prelude.show e)
+        <> Prelude.show e
 
 parsePreimageHash :: B11.Bolt11 -> Either MisoString ByteString
 parsePreimageHash ln =
@@ -180,7 +180,11 @@ invoiceFields ln =
         B11.BitcoinRegtest -> "Bitcoin Regtest"
         B11.BitcoinSignet -> "Bitcoin Signet",
     pair "Amount"
-      . maybe "0" B11.inspectBolt11HrpAmt
+      . maybe
+        "0"
+        ( toMisoString @Prelude.String
+            . B11.inspectBolt11HrpAmt
+        )
       . B11.bolt11HrpAmt
       $ B11.bolt11Hrp ln,
     pair "Created At"
@@ -191,6 +195,7 @@ invoiceFields ln =
           >>= invoiceFieldsTag ln
        )
     <> [ pair "Signature"
+          . toMisoString @Prelude.String
           . B11.inspectHex
           $ B11.bolt11SigVal sig,
          pair "Pubkey Recovery Flag"
@@ -212,20 +217,21 @@ invoiceFieldsTag ln = \case
     pure . pair "Expires At" . inspectTimestamp $ x + B11.bolt11Timestamp ln
   B11.MinFinalCltvExpiry x ->
     pure . pair "Min Final CLTV Expiry" $ inspect x <> " Blocks"
-  B11.OnchainFallback x -> do
-    --
-    -- TODO : do not ignore failure?
-    --
-    txt <- either (const mempty) pure . decodeUtf8' $ Btc.renderAddress x
-    pure $ pair "Onchain Fallback" $ from @Prelude.Text @MisoString txt
+  B11.OnchainFallback x ->
+    pure
+      . pair "Onchain Fallback"
+      . toMisoString @ByteString
+      $ Btc.renderAddress x
   B11.ExtraRouteInfo x ->
     pure
       . pair "Extra Routing Info"
-      . either (const mempty) (from @Prelude.Text @MisoString)
-      . decodeUtf8'
-      . from @BL.ByteString @ByteString
+      . toMisoString @BL.ByteString
       $ A.encode x
-  B11.Features x -> pure . pair "Feature Bits" $ B11.inspectFeatures x
+  B11.Features x ->
+    pure
+      . pair "Feature Bits"
+      . toMisoString @Prelude.Text
+      $ B11.inspectFeatures x
   B11.UnknownTag {} -> mempty
   B11.UnparsedTag {} -> mempty
   where
@@ -239,6 +245,7 @@ invoiceFieldsTag ln = \case
     hex x =
       pure
         . pair x
+        . toMisoString @Prelude.String
         . B11.inspectHex
 
 preimageFields :: MisoString -> ByteString -> [FieldPair DynamicField Identity]

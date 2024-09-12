@@ -4,12 +4,13 @@ module Functora.Miso.Widgets.Qr
 where
 
 import qualified Codec.QRCode as QRCode
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.MemoUgly as Memo
-import qualified Data.Text.Lazy as TL
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
+import qualified Prelude
 
 qr :: MisoString -> [View action]
 qr txt
@@ -29,18 +30,17 @@ qr txt
             -- TODO : Research how this works!
             -- It might be leaking memory or something..
             --
-            . Memo.memo newQrImg
-            $ fromMisoString txt
+            $ Memo.memo newQrImg txt
         ]
 
 newQrImg :: MisoString -> Maybe MisoString
 newQrImg =
   ( fmap
-      $ toMisoString @TL.Text
-      . Qr.qrToBmpDataUrlTL (Qr.Border 0) (Qr.Scale 5)
+      $ toMisoString @BL.ByteString
+      . Qr.qrToBmpDataUrlBL (Qr.Border 0) (Qr.Scale 5)
   )
     . QRCode.encodeAutomatic
       ( QRCode.defaultQRCodeOptions QRCode.L
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
-    . fromMisoString @TL.Text
+    . fromMisoString @Prelude.String

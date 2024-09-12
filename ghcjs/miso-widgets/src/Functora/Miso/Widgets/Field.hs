@@ -15,7 +15,6 @@ module Functora.Miso.Widgets.Field
   )
 where
 
-import qualified Data.Text as T
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
@@ -23,6 +22,7 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
+import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.IconButton as IconButton
@@ -153,7 +153,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
-            ( [ id_ $ htmlUid @MisoString uid,
+            ( [ id_ . toMisoString @(UTF_8 ByteString) $ htmlUid uid,
                 onKeyDown $ action . optsOnKeyDownAction opts uid,
                 onBlur onBlurAction,
                 Css.fullWidth
@@ -217,8 +217,13 @@ ratioField args =
   field
     Full
       { fullArgs = args,
-        fullParser = parseRatio . (^. #fieldInput . #uniqueValue),
-        fullViewer = inspectRatioDef
+        fullParser =
+          parseRatio
+            . fromMisoString @Prelude.Text
+            . (^. #fieldInput . #uniqueValue),
+        fullViewer =
+          toMisoString @Prelude.String
+            . inspectRatioDef
       }
 
 textField ::
@@ -279,10 +284,11 @@ fieldIcon lot args opts = \case
         )
       $ \prev -> do
         focus
-          . toMisoString
-          $ htmlUid @MisoString uid
+          . toMisoString @(UTF_8 ByteString)
+          $ htmlUid uid
         void
-          . JS.eval @MisoString
+          . JS.eval
+          . toMisoString @(UTF_8 ByteString)
           $ "var el = document.getElementById('"
           <> htmlUid uid
           <> "'); if (el) el.value = '';"
@@ -929,12 +935,10 @@ truncateFieldInput ::
   Maybe Int ->
   MisoString ->
   MisoString
-truncateFieldInput True Closed limit raw =
-  let full = fromMisoString raw
-      half = fromMaybe defTruncateLimit limit `div` 2
-   in toMisoString
-        $ T.take half full
+truncateFieldInput True Closed limit full =
+  let half = fromMaybe defTruncateLimit limit `div` 2
+   in MS.take half full
         <> "..."
-        <> T.takeEnd half full
-truncateFieldInput _ _ _ raw =
-  raw
+        <> MS.takeEnd half full
+truncateFieldInput _ _ _ full =
+  full

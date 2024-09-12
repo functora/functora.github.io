@@ -870,12 +870,10 @@ nilUid = Uid $ BS.replicate 32 0
 nullUid :: Uid -> Bool
 nullUid = (== nilUid)
 
-htmlUid :: forall a. (From Text a) => Uid -> a
+htmlUid :: Uid -> UTF_8 ByteString
 htmlUid =
-  from @Text @a
+  Tagged @"UTF-8"
     . ("uid-" <>)
-    . unsafeFrom @(UTF_8 ByteString) @Text
-    . Tagged @"UTF-8"
     . encodeBase58 bitcoinAlphabet
     . unUid
 

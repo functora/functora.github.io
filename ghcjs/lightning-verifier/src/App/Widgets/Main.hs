@@ -209,7 +209,7 @@ tosWidget =
     [ Miso.text "\169 2024 ",
       BrowserLink.browserLink
         BrowserLink.Args
-          { BrowserLink.argsLink = "https://functora.github.io/",
+          { BrowserLink.argsLink = functoraLink,
             BrowserLink.argsLabel = "Functora",
             BrowserLink.argsAction = PushUpdate . Instant
           },

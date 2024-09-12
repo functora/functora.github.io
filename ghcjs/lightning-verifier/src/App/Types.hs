@@ -14,7 +14,6 @@ module App.Types
     stUri,
     setScreenPure,
     setScreenAction,
-    shareLink,
     vsn,
     usd,
     btc,
@@ -30,7 +29,6 @@ where
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
-import qualified Data.Text as T
 import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
@@ -38,8 +36,11 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
+import qualified Miso.String as MS
 import qualified Paths_lightning_verifier as Paths
 import qualified Text.URI as URI
+import qualified Text.URI.QQ as URI
+import qualified Prelude
 
 data Model = Model
   { modelFav :: OpenedOrClosed,
@@ -229,7 +230,7 @@ stQuery st = do
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
-  uri <- mkURI $ fromMisoString baseUri
+  uri <- mkURI $ fromMisoString @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
@@ -285,17 +286,10 @@ setScreenAction =
     . Instant
     . setScreenPure
 
-shareLink :: forall a. (From Prelude.Text a) => Model -> a
-shareLink =
-  from @Prelude.Text @a
-    . either impureThrow URI.render
-    . stUri
-
 vsn :: MisoString
 vsn =
-  from @Prelude.Text @MisoString
-    . T.intercalate "."
-    . fmap Prelude.inspect
+  MS.intercalate "."
+    . fmap (toMisoString @Prelude.String . Prelude.show)
     $ Version.versionBranch Paths.version
 
 usd :: CurrencyInfo
@@ -304,23 +298,29 @@ usd = CurrencyInfo (CurrencyCode "usd") mempty
 btc :: CurrencyInfo
 btc = CurrencyInfo (CurrencyCode "btc") mempty
 
-googlePlayLink :: Prelude.Text
-googlePlayLink = "https://play.google.com/apps/testing/com.functora.lightning_verifier"
+googlePlayLink :: URI
+googlePlayLink =
+  [URI.uri|https://play.google.com/apps/testing/com.functora.lightning_verifier|]
 
-testGroupLink :: Prelude.Text
-testGroupLink = "https://groups.google.com/g/currency-converter"
+testGroupLink :: URI
+testGroupLink =
+  [URI.uri|https://groups.google.com/g/currency-converter|]
 
-functoraLink :: Prelude.Text
-functoraLink = "https://functora.github.io/"
+functoraLink :: URI
+functoraLink =
+  [URI.uri|https://functora.github.io/|]
 
-sourceLink :: Prelude.Text
+sourceLink :: URI
 sourceLink =
-  "https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier"
+  [URI.uri|https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier|]
 
-apkLink :: Prelude.Text
+apkLink :: URI
 apkLink =
-  "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
-    <> fromMisoString vsn
+  either impureThrow id
+    . URI.mkURI
+    . fromMisoString @Prelude.Text
+    $ "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
+    <> vsn
     <> "/lightning-verifier-v"
-    <> fromMisoString vsn
+    <> vsn
     <> ".apk"

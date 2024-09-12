@@ -175,16 +175,35 @@
                 # Local
                 #
                 witch-mini = doJailbreak (
-                  self.callCabal2nix "witch-mini" "${functora}/pub/witch-mini" {}
+                  self.callCabal2nix
+                  "witch-mini"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./../.gitignore
+                    ./../pub/witch-mini
+                  )
+                  {}
                 );
                 singlethongs =
                   self.callCabal2nix
-                  "singlethongs" "${functora}/pub/singlethongs" {};
+                  "singlethongs"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./../pub/singlethongs/.gitignore
+                    ./../pub/singlethongs
+                  )
+                  {};
                 miso =
                   pkgs.haskell.lib.disableCabalFlag
                   (
                     self.callCabal2nix
-                    "miso" "${functora}/pub/miso" {}
+                    "miso"
+                    (
+                      pkgs.nix-gitignore.gitignoreSourcePure
+                      ./../pub/miso/.gitignore
+                      ./../pub/miso
+                    )
+                    {}
                   )
                   "logview";
                 miso-components =

@@ -9,6 +9,7 @@ import qualified App.Widgets.Bolt11 as B11
 import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
+import qualified Prelude
 
 newModel :: (MonadThrow m, MonadUnliftIO m) => Maybe Model -> URI -> m Model
 newModel mSt uri = do
@@ -63,7 +64,7 @@ newModel mSt uri = do
                 bDoc :: ByteString <-
                   maybe
                     ( throwString
-                        @MisoString
+                        @Prelude.String
                         "Failed to decrypt the document!"
                     )
                     pure

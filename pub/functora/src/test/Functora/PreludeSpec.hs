@@ -54,8 +54,9 @@ spec = do
     inspect @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
   it "uid" $ do
-    htmlUid @Text nilUid `shouldBe` "uid-11111111111111111111111111111111"
-    htmlUid @Text (addUid nilUid nilUid)
+    unsafeFrom @(UTF_8 ByteString) @Text (htmlUid nilUid)
+      `shouldBe` "uid-11111111111111111111111111111111"
+    unsafeFrom @(UTF_8 ByteString) @Text (htmlUid $ addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
   it "soplate/fun"
     $ over soplate fun expr

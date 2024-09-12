@@ -9,7 +9,7 @@ import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text as T
+import qualified Miso.String as MS
 #endif
 
 #ifdef wasi_HOST_OS
@@ -84,7 +84,7 @@ runApp app = do
           staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) ->
           staticApp (defaultWebAppSettings "static") req
-        (file : _) | (T.isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
+        (file : _) | (MS.isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
           staticApp (defaultWebAppSettings "static") req
         _ ->
           JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
@@ -177,7 +177,7 @@ updateModel (ChanUpdate prevSt) _ = do
             )
             $ evalModel
             =<< foldlM (&) prevSt actions
-        uri <- URI.mkURI $ shareLink nextSt
+        uri <- stUri nextSt
         Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
@@ -185,8 +185,8 @@ updateModel (ChanUpdate prevSt) _ = do
         uriViewer <-
           newFieldPair mempty
             . DynamicFieldText
-            . toMisoString
-            $ URI.render nextUri
+            . toMisoString @Prelude.String
+            $ URI.renderStr nextUri
         let finSt =
               nextSt
                 & #modelUriViewer
@@ -269,7 +269,12 @@ syncInputs st = do
   where
     fun :: Unique MisoString -> JSM (Unique MisoString)
     fun txt = do
-      el <- getElementById . htmlUid @MisoString $ txt ^. #uniqueUid
+      el <-
+        getElementById
+          . toMisoString @(UTF_8 ByteString)
+          . htmlUid
+          $ txt
+          ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
         inps <-

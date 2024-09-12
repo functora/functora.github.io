@@ -187,7 +187,12 @@ newFieldId typ viewer output =
 
 newRatioField :: (MonadIO m) => Rational -> m (Field Rational Unique)
 newRatioField output =
-  newField FieldTypeNumber output inspectRatioDef
+  newField
+    FieldTypeNumber
+    output
+    ( toMisoString @Prelude.String
+        . inspectRatioDef
+    )
 
 newTextField :: (MonadIO m) => MisoString -> m (Field MisoString Unique)
 newTextField output =
@@ -233,16 +238,17 @@ data DynamicField
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
   case value ^. #fieldType of
-    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio input
-    FieldTypePercent -> DynamicFieldNumber <$> parseRatio input
-    _ -> Just $ DynamicFieldText input
+    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio txt
+    FieldTypePercent -> DynamicFieldNumber <$> parseRatio txt
+    _ -> Just $ DynamicFieldText str
   where
-    input = value ^. #fieldInput . #uniqueValue
+    str = value ^. #fieldInput . #uniqueValue
+    txt = fromMisoString @Prelude.Text str
 
 inspectDynamicField :: DynamicField -> MisoString
 inspectDynamicField = \case
   DynamicFieldText x -> x
-  DynamicFieldNumber x -> inspectRatioDef x
+  DynamicFieldNumber x -> toMisoString @Prelude.String $ inspectRatioDef x
 
 data FieldType
   = -- Rational
@@ -478,13 +484,21 @@ newPaymentMethod ::
   Maybe MisoString ->
   m (PaymentMethod Unique)
 newPaymentMethod cur addr0 = do
-  lbl <- newTextField $ inspectCurrencyInfo cur <> " total"
+  lbl <-
+    newTextField
+      . toMisoString @Prelude.Text
+      $ inspectCurrencyInfo cur
+      <> " total"
   addr1 <-
     maybe
       ( pure Nothing
       )
       ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
-          . newFieldPair (inspectCurrencyInfo cur <> " address")
+          . newFieldPair
+            ( toMisoString @Prelude.Text
+                $ inspectCurrencyInfo cur
+                <> " address"
+            )
           . DynamicFieldText
       )
       addr0

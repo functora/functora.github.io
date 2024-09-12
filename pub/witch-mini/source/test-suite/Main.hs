@@ -74,6 +74,14 @@ spec = describe "Witch" $ do
       it "works" $ do
         Witch.via @Int.Int16 @Int.Int8 @Int.Int32 1 `shouldBe` 1
 
+    describe "via-overlap" $ do
+      it "works" $ do
+        Witch.via @(Witch.UTF_8 LazyByteString.ByteString)
+          @(Witch.UTF_8 LazyByteString.ByteString)
+          @LazyByteString.ByteString
+          (Tagged.Tagged $ LazyByteString.pack [0x0f, 0xf0])
+          `shouldBe` LazyByteString.pack [0x0f, 0xf0]
+
     describe "tryInto" $ do
       let f = hush . Witch.tryInto @Int.Int8 @Int.Int16
       it "works" $ do

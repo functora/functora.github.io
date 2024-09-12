@@ -58,6 +58,7 @@ selectCurrency
                   ]
                 $ Button.config
             )
+            . toMisoString @Prelude.Text
             . inspectCurrencyInfo
             $ fromMaybe
               (CurrencyInfo (CurrencyCode "XXX") mempty)
@@ -158,7 +159,7 @@ currencyListWidget
       search =
         maybe
           mempty
-          fromMisoString
+          (fromMisoString @Prelude.Text)
           $ st
           ^? cloneTraversal optic
           . #currencyInput

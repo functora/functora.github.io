@@ -10,6 +10,7 @@ import qualified Bitcoin.Address as Btc
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text.Lazy as TL
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -195,7 +196,7 @@ invoiceFields ln =
           >>= invoiceFieldsTag ln
        )
     <> [ pair "Signature"
-          . toMisoString @Prelude.String
+          . toMisoString @TL.Text
           . B11.inspectHex
           $ B11.bolt11SigVal sig,
          pair "Pubkey Recovery Flag"
@@ -245,7 +246,7 @@ invoiceFieldsTag ln = \case
     hex x =
       pure
         . pair x
-        . toMisoString @Prelude.String
+        . toMisoString @TL.Text
         . B11.inspectHex
 
 preimageFields :: MisoString -> ByteString -> [FieldPair DynamicField Identity]

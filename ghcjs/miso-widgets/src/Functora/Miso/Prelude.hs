@@ -17,6 +17,7 @@ import Functora.Prelude as X hiding
   ( Field (..),
     String,
     Text,
+    cons,
     field,
     inspect,
   )
@@ -45,9 +46,9 @@ instance Binary MisoString where
   get = fmap (toMisoString @Prelude.Text) Binary.get
 
 instance ConvertUtf8 MisoString ByteString where
-  encodeUtf8 = encodeUtf8 . fromMisoString @Prelude.Text
-  decodeUtf8 = toMisoString @Prelude.Text . decodeUtf8
-  decodeUtf8Strict = fmap (toMisoString @Prelude.Text) . decodeUtf8Strict
+  encodeUtf8 = encodeUtf8 . fromMisoString @Prelude.String
+  decodeUtf8 = toMisoString @Prelude.String . decodeUtf8
+  decodeUtf8Strict = fmap (toMisoString @Prelude.String) . decodeUtf8Strict
 
 instance ToJSONKey MisoString where
   toJSONKey = contramap (fromMisoString @Prelude.Text) $ toJSONKey

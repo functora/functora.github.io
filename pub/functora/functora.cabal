@@ -103,6 +103,7 @@ common pkg-prelude
     , microlens-ghc
     , microlens-th
     , modern-uri
+    , mono-traversable
     , random
     , safe-exceptions
     , scientific
@@ -130,7 +131,6 @@ common pkg-qr
     , bmp
     , bytestring
     , qrcode-core
-    , text
     , vector
 
 common pkg-aes

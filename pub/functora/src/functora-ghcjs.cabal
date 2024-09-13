@@ -105,6 +105,7 @@ common pkg
     , microlens-ghc
     , microlens-th
     , modern-uri                >=0.3.4.4
+    , mono-traversable
     , network-uri
     , optparse-applicative
     , pkcs7

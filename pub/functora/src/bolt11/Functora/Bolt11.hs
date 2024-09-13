@@ -40,8 +40,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as TL
 import Functora.Prelude hiding (error)
 import Prelude (Show (..), error)
 
@@ -51,12 +50,13 @@ newtype Hex = Hex
   deriving stock (Eq, Ord, Data, Generic)
 
 instance Show Hex where
-  show = inspectHex
+  show =
+    from @TL.Text @String
+      . inspectHex
 
-inspectHex :: forall a. (From String a) => Hex -> a
+inspectHex :: Hex -> TL.Text
 inspectHex =
-  from @String @a
-    . BL.unpack
+  decodeUtf8
     . BS.toLazyByteString
     . BS.byteStringHex
     . unHex
@@ -66,8 +66,7 @@ instance IsString Hex where
     Hex
       . handler
       . B16.decode
-      . T.encodeUtf8
-      . T.pack
+      . encodeUtf8 @String @ByteString
     where
 #if MIN_VERSION_base16_bytestring(1,0,0)
       handler :: Either String ByteString -> ByteString
@@ -126,20 +125,18 @@ data FeatureName
   | Unknown_feature
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-inspectFeature :: forall a. (From Text a) => Feature -> a
+inspectFeature :: forall a. (Textual a) => Feature -> a
 inspectFeature x =
-  from @Text @a
-    $ "("
+  "("
     <> inspect (featureBits x)
     <> ") "
-    <> T.toLower (inspect $ featureName x)
+    <> toLower (inspect $ featureName x)
     <> " "
-    <> T.toLower (inspect $ featureRequiredOrSuported x)
+    <> toLower (inspect $ featureRequiredOrSuported x)
 
-inspectFeatures :: forall a. (From Text a) => [Feature] -> a
+inspectFeatures :: (Textual a) => [Feature] -> a
 inspectFeatures =
-  from @Text @a
-    . T.intercalate ", "
+  intercalate ", "
     . fmap inspectFeature
 
 parseFeatures :: [Word5] -> [Feature]
@@ -211,8 +208,8 @@ data Route = Route
 instance A.ToJSON Route where
   toJSON x =
     A.object
-      [ "pubkey" A..= inspectHex @Text (routePubKey x),
-        "short_channel_id" A..= inspectHex @Text (routeShortChanId x),
+      [ "pubkey" A..= inspectHex (routePubKey x),
+        "short_channel_id" A..= inspectHex (routeShortChanId x),
         "fee_base_msat" A..= routeFeeBaseMsat x,
         "fee_proportional_millionths" A..= routeFeePropMillionth x,
         "cltv_expiry_delta" A..= routeCltvExpiryDelta x
@@ -220,9 +217,9 @@ instance A.ToJSON Route where
   toEncoding x =
     A.pairs
       $ "pubkey"
-      A..= inspectHex @Text (routePubKey x)
+      A..= inspectHex (routePubKey x)
         <> "short_channel_id"
-      A..= inspectHex @Text (routeShortChanId x)
+      A..= inspectHex (routeShortChanId x)
         <> "fee_base_msat"
       A..= routeFeeBaseMsat x
         <> "fee_proportional_millionths"

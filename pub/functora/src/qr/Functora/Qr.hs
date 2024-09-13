@@ -6,7 +6,6 @@ module Functora.Qr
 
     -- * URL
     qrToBmpDataUrlBL,
-    qrToBmpDataUrlTL,
   )
 where
 
@@ -16,8 +15,6 @@ import Codec.QRCode (QRImage (..))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64.Lazy as B64L
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC8
-import qualified Data.Text.Lazy as TL
 import qualified Data.Vector.Unboxed as UV
 import Functora.Prelude
 
@@ -109,21 +106,3 @@ qrToBmpDataUrlBL border scale =
     . B64L.encode
     . BMP.renderBMP
     . qrToBmp border scale
-
--- | Convert an QR code into a text-like Uri.
---   Has the same arguments as `qrToBmp`.
---   This can be used to display a image in HTML without creating a temporary file.
-qrToBmpDataUrlTL ::
-  forall a.
-  ( From TL.Text a
-  ) =>
-  Border ->
-  Scale ->
-  QRImage ->
-  a
-{-# INLINE qrToBmpDataUrlTL #-}
-qrToBmpDataUrlTL border scale =
-  from @TL.Text @a
-    . TL.pack
-    . BLC8.unpack
-    . qrToBmpDataUrlBL border scale

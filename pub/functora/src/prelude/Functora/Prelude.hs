@@ -59,7 +59,6 @@ module Functora.Prelude
 
     -- * Parsers
     -- $parsers
-    parseWords,
     parseRatio,
     utf8FromLatin1,
 
@@ -110,6 +109,11 @@ module Functora.Prelude
     enumerateNE,
     nextEnum,
     prevEnum,
+    Textual,
+    strip,
+    Mono,
+    dropAround,
+    dropWhileEnd,
   )
 where
 
@@ -171,6 +175,7 @@ import Data.ByteString.Base58 as X
     rippleAlphabet,
   )
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Char as Char
 import qualified Data.Digest.SHA256 as SHA256
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X (Pico)
@@ -193,10 +198,41 @@ import qualified Data.HMAC as HMAC
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Maybe as X (listToMaybe)
+import qualified Data.MonoTraversable as Mono
+import Data.MonoTraversable.Unprefixed as X (intercalate)
 import Data.Ratio as X ((%))
 import Data.Scientific as X (Scientific)
 import qualified Data.Scientific as Scientific
 import qualified Data.Semigroup as Semigroup
+import Data.Sequences as X hiding
+  ( Textual,
+    Utf8 (..),
+    break,
+    catMaybes,
+    drop,
+    dropWhile,
+    filter,
+    filterM,
+    find,
+    fromList,
+    group,
+    groupBy,
+    intersperse,
+    isPrefixOf,
+    permutations,
+    replicate,
+    replicateM,
+    reverse,
+    sort,
+    sortBy,
+    sortOn,
+    splitAt,
+    subsequences,
+    take,
+    takeWhile,
+    uncons,
+  )
+import qualified Data.Sequences as Seq
 import Data.Tagged as X (Tagged (..))
 import qualified Data.Text as T
 import Data.Text.Encoding as X (decodeLatin1)
@@ -252,7 +288,11 @@ import Universum as X hiding
     finally,
     fromInteger,
     fromIntegral,
+    fromStrict,
     handleAny,
+    inits,
+    intercalate,
+    lines,
     on,
     over,
     preview,
@@ -261,10 +301,15 @@ import Universum as X hiding
     show,
     state,
     swap,
+    tails,
     throwM,
+    toStrict,
     try,
     tryAny,
+    unlines,
+    unwords,
     view,
+    words,
     (%~),
     (.~),
     (^.),
@@ -644,9 +689,6 @@ throwString =
 -- $parsers
 -- Parsers
 
-parseWords :: forall a. (From a Text) => a -> [Text]
-parseWords = filter (not . null) . T.splitOn " " . from @a @Text
-
 parseRatio ::
   forall str int m.
   ( From str Text,
@@ -986,3 +1028,32 @@ prevEnum :: (Eq a, Enum a, Bounded a) => a -> a
 prevEnum x
   | x == minBound = maxBound
   | otherwise = pred x
+
+type Textual mono =
+  ( Seq.Textual mono,
+    Container mono
+  )
+
+strip :: (Textual mono) => mono -> mono
+strip =
+  dropAround Char.isSpace
+
+type Mono a mono =
+  ( a ~ Mono.Element mono,
+    Seq.IsSequence mono,
+    Container mono
+  )
+
+dropAround :: (Mono a mono) => (a -> Bool) -> mono -> mono
+dropAround f =
+  Seq.dropWhile f . dropWhileEnd f
+
+dropWhileEnd :: (Mono a mono) => (a -> Bool) -> mono -> mono
+dropWhileEnd f =
+  Mono.ofoldr
+    ( \x xs ->
+        if f x && null xs
+          then mempty
+          else Seq.cons x xs
+    )
+    mempty

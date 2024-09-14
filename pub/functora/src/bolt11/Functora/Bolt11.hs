@@ -284,13 +284,7 @@ data Bolt11HrpAmt = Bolt11HrpAmt
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-inspectBolt11HrpAmt ::
-  ( From String a,
-    Semigroup a,
-    IsString a
-  ) =>
-  Bolt11HrpAmt ->
-  a
+inspectBolt11HrpAmt :: (IsString a, Semigroup a) => Bolt11HrpAmt -> a
 inspectBolt11HrpAmt (Bolt11HrpAmt amt mul) =
   if sat > 1_000_000
     then inspectBolt11HrpAmt' btc <> " BTC"
@@ -308,7 +302,7 @@ inspectBolt11HrpAmt (Bolt11HrpAmt amt mul) =
 
 inspectBolt11HrpAmt' ::
   forall a b.
-  ( From String a,
+  ( IsString a,
     From b Integer,
     Integral b
   ) =>

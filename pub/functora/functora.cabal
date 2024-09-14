@@ -122,6 +122,9 @@ common pkg-prelude
     , witch-mini
     , with-utf8
 
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends: ghcjs-base
+
 common pkg-qr
   import:         pkg
   hs-source-dirs: src/qr

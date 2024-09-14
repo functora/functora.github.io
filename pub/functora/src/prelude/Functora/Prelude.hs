@@ -1,8 +1,11 @@
+{-# LANGUAGE CPP #-}
+
 module Functora.Prelude
   ( -- * Reexport
     -- $reexport
     module X,
     LiftTH,
+    Unicode,
 
     -- * Show
     -- $show
@@ -351,16 +354,33 @@ import UnliftIO as X
 import UnliftIO.MVar as X (modifyMVar)
 import Witch.Mini as X
 import qualified Prelude
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
+import qualified Data.JSString as JS
+#endif
 
 -- $reexport
 -- Reexport
 
 type LiftTH = TH.Lift
 
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
+type Unicode = JS.JSString
+#else
+type Unicode = Text
+#endif
+
 -- $show
 -- Show
 
-inspect :: forall dst src. (Show src, Data src, IsString dst) => src -> dst
+inspect ::
+  forall dst src.
+  ( Show src,
+    Data src,
+    Typeable dst,
+    IsString dst
+  ) =>
+  src ->
+  dst
 inspect =
   display @dst @src
     . Syb.everywhere (Syb.mkT prettyByteString)
@@ -404,7 +424,7 @@ defaultRatioFormat =
 
 inspectRatio ::
   forall a b.
-  ( From String a,
+  ( IsString a,
     From b Integer,
     Integral b
   ) =>
@@ -432,14 +452,14 @@ inspectRatio fmt signedRational =
                 >= limit
                 && ratioFormatDecimalPlacesTotalLimitOverflow fmt
                 == DecimalPlacesOverflowExponent ->
-                from @String @a
+                fromString @a
                   . Scientific.formatScientific Scientific.Exponent Nothing
                   . either fst fst
                   . Scientific.fromRationalRepetend Nothing
                   $ signedNumerator
                   % signedDenominator
           _ ->
-            from @String @a
+            fromString @a
               $ (if signedRational < 0 then "-" else mempty)
               <> Prelude.shows
                 quotient
@@ -481,7 +501,7 @@ inspectRatio fmt signedRational =
 
 inspectRatioDef ::
   forall a b.
-  ( From String a,
+  ( IsString a,
     From b Integer,
     Integral b
   ) =>
@@ -496,8 +516,18 @@ roundRational decimalPlaces input =
   where
     mult = 10 ^ decimalPlaces
 
-display :: forall dst src. (Show src, Typeable src, IsString dst) => src -> dst
+display ::
+  forall dst src.
+  ( Show src,
+    Typeable src,
+    Typeable dst,
+    IsString dst
+  ) =>
+  src ->
+  dst
 display x
+  | Just HRefl <- typeOf x `eqTypeRep` typeRep @dst =
+      x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @String =
       fromString x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @Text =
@@ -515,7 +545,18 @@ display x
         (fromString . from @TL.Text @String)
         (TLE.decodeUtf8' x)
   | otherwise =
+      defDisplay
+  where
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
+    defDisplay 
+      | Just HRefl <- typeOf x `eqTypeRep` typeRep @JS.JSString =
+          fromString $ JS.unpack x
+      | otherwise =
+          Universum.show x
+#else
+    defDisplay =
       Universum.show x
+#endif
 
 prettyByteString :: ByteString -> ByteString
 prettyByteString raw =
@@ -761,7 +802,7 @@ utf8FromLatin1 raw =
 
 qq ::
   forall inp out e.
-  ( From String inp,
+  ( IsString inp,
     Typeable out,
     TH.Lift out,
     Data e,
@@ -785,7 +826,7 @@ qq parser =
                   <> ") with the failure ("
                   <> inspect e
                   <> ")"
-          case parser $ from @String @inp x0 of
+          case parser $ fromString @inp x0 of
             Left e -> fatal e
             Right x -> TH.lift x
     }
@@ -1031,7 +1072,8 @@ prevEnum x
 
 type Textual mono =
   ( Seq.Textual mono,
-    Container mono
+    Container mono,
+    Typeable mono
   )
 
 strip :: (Textual mono) => mono -> mono

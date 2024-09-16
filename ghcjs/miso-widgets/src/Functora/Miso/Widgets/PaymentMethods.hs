@@ -158,9 +158,9 @@ paymentMethodEditor
             FieldPairs.argsAction = action
           }
     where
-      idxTxt :: MisoString
+      idxTxt :: Unicode
       idxTxt = "#" <> inspect (idx + 1)
-      label :: MisoString
+      label :: Unicode
       label =
         fromMaybe
           mempty

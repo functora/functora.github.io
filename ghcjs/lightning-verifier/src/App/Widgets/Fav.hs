@@ -112,7 +112,7 @@ fav st =
         then saveAction
         else Jsm.enterOrEscapeBlur uid code
 
-makeFavName :: Model -> MisoString
+makeFavName :: Model -> Unicode
 makeFavName =
   MS.toUpper
     . MS.strip
@@ -127,7 +127,7 @@ favItems st =
     $ st
     ^. #modelFavMap
 
-favItem :: Model -> MisoString -> Fav -> View Action
+favItem :: Model -> Unicode -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
   Grid.bigCell
     [ Button.raised

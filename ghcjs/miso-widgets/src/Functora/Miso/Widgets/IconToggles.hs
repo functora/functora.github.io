@@ -13,7 +13,7 @@ data Args model action = Args
   { argsModel :: model,
     argsOptic ::
       NonEmpty
-        ( MisoString,
+        ( Unicode,
           IconToggle.Icon,
           IconToggle.Icon,
           ATraversal' model Bool
@@ -40,7 +40,7 @@ iconToggles args@Args {argsOptic = items} =
 
 iconToggleWidget ::
   Args model action ->
-  ( MisoString,
+  ( Unicode,
     IconToggle.Icon,
     IconToggle.Icon,
     ATraversal' model Bool

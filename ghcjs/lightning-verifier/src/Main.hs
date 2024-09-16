@@ -185,7 +185,7 @@ updateModel (ChanUpdate prevSt) _ = do
         uriViewer <-
           newFieldPair mempty
             . DynamicFieldText
-            . toMisoString @Prelude.String
+            . from @Prelude.String @Unicode
             $ URI.renderStr nextUri
         let finSt =
               nextSt
@@ -235,7 +235,7 @@ viewModel st =
   mainWidget st
 #endif
 
-extendedEvents :: Map MisoString Bool
+extendedEvents :: Map Unicode Bool
 extendedEvents =
   defaultEvents
     & Map.insert "MDCDialog:close" True
@@ -258,7 +258,7 @@ extendedEvents =
 syncInputs :: Model -> JSM ()
 syncInputs st = do
   void
-    . JS.eval @MisoString
+    . JS.eval @Unicode
     $ "Array.from(document.getElementsByTagName('mdc-text-field')).forEach( function (x) { if ( (x.getElementsByTagName('input')[0] && x.textField_.input_.tagName != 'INPUT') || (x.getElementsByTagName('textarea')[0] && x.textField_.input_.tagName != 'TEXTAREA')) { x.textField_.destroy(); x.textField_.initialize(); } });"
   void
     . Syb.everywhereM (Syb.mkM fun)
@@ -267,11 +267,13 @@ syncInputs st = do
     . Syb.everywhereM (Syb.mkM fun)
     $ modelFavName st
   where
-    fun :: Unique MisoString -> JSM (Unique MisoString)
+    fun :: Unique Unicode -> JSM (Unique Unicode)
     fun txt = do
       el <-
         getElementById
-          . toMisoString @(UTF_8 ByteString)
+          . either impureThrow id
+          . decodeUtf8Strict
+          . unTagged
           . htmlUid
           $ txt
           ^. #uniqueUid
@@ -280,15 +282,15 @@ syncInputs st = do
         inps <-
           el
             ^. JS.js1
-              ("getElementsByTagName" :: MisoString)
-              ("input" :: MisoString)
+              ("getElementsByTagName" :: Unicode)
+              ("input" :: Unicode)
         inp <- inps !! 0
         act <-
           JS.global
-            ! ("document" :: MisoString)
-            ! ("activeElement" :: MisoString)
+            ! ("document" :: Unicode)
+            ! ("activeElement" :: Unicode)
         elActive <- JS.strictEqual inp act
-        unless elActive $ el ^. JS.jss ("value" :: MisoString) (txt ^. #uniqueValue)
+        unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model

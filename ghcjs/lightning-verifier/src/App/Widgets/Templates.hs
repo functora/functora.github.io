@@ -128,13 +128,13 @@ newDonateDoc = do
     qr :: FieldPair a b -> FieldPair a b
     qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
 
-exampleBtcAddress :: MisoString
+exampleBtcAddress :: Unicode
 exampleBtcAddress = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"
 
-exampleXmrAddress :: MisoString
+exampleXmrAddress :: Unicode
 exampleXmrAddress =
   "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG"
 
-exampleDonationText :: MisoString
+exampleDonationText :: Unicode
 exampleDonationText =
   "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora."

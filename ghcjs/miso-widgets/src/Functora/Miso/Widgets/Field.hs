@@ -22,7 +22,6 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
-import qualified Functora.Prelude as Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.IconButton as IconButton
@@ -44,14 +43,14 @@ data Args model action t f = Args
 data Full model action t f = Full
   { fullArgs :: Args model action t f,
     fullParser :: Field t f -> Maybe t,
-    fullViewer :: t -> MisoString
+    fullViewer :: t -> Unicode
   }
   deriving stock (Generic)
 
 data Opts model action = Opts
   { optsDisabled :: Bool,
     optsFullWidth :: Bool,
-    optsPlaceholder :: MisoString,
+    optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe ((model -> JSM model) -> action),
     optsLeadingWidget :: Maybe (OptsWidget model action),
     optsTrailingWidget :: Maybe (OptsWidget model action),
@@ -80,7 +79,7 @@ data OptsWidget model action
   | ClearWidget
   | ShowOrHideWidget
   | ModalWidget (ModalWidget' model)
-  | ActionWidget MisoString [Attribute action] action
+  | ActionWidget Unicode [Attribute action] action
   | forall item. UpWidget (ATraversal' model [item]) Int [Attribute action]
   | forall item. DownWidget (ATraversal' model [item]) Int [Attribute action]
   | forall item. DeleteWidget (ATraversal' model [item]) Int [Attribute action]
@@ -93,7 +92,7 @@ data ModalWidget' model where
     ATraversal' model [a] ->
     Int ->
     ATraversal' a [FieldPair DynamicField Unique] ->
-    ATraversal' a (Field MisoString Unique) ->
+    ATraversal' a (Field Unicode Unique) ->
     ATraversal' a OpenedOrClosed ->
     ModalWidget' model
   ModalFieldWidget ::
@@ -153,7 +152,11 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                 (opts ^. #optsTrailingWidget)
             )
           & TextField.setAttributes
-            ( [ id_ . toMisoString @(UTF_8 ByteString) $ htmlUid uid,
+            ( [ id_
+                  . either impureThrow id
+                  . decodeUtf8Strict
+                  . unTagged
+                  $ htmlUid uid,
                 onKeyDown $ action . optsOnKeyDownAction opts uid,
                 onBlur onBlurAction,
                 Css.fullWidth
@@ -217,17 +220,12 @@ ratioField args =
   field
     Full
       { fullArgs = args,
-        fullParser =
-          parseRatio
-            . fromMisoString @Prelude.Text
-            . (^. #fieldInput . #uniqueValue),
-        fullViewer =
-          toMisoString @Prelude.String
-            . inspectRatioDef
+        fullParser = parseRatio . (^. #fieldInput . #uniqueValue),
+        fullViewer = inspectRatioDef
       }
 
 textField ::
-  Args model action MisoString Unique ->
+  Args model action Unicode Unique ->
   Opts model action ->
   View action
 textField args =
@@ -251,7 +249,7 @@ dynamicField args =
       }
 
 passwordField ::
-  Args model action MisoString Unique ->
+  Args model action Unicode Unique ->
   Opts model action ->
   View action
 passwordField args opts =
@@ -259,7 +257,7 @@ passwordField args opts =
     args
     ( opts
         & #optsPlaceholder
-        .~ ("Password" :: MisoString)
+        .~ ("Password" :: Unicode)
         & #optsLeadingWidget
         .~ Just ShowOrHideWidget
     )
@@ -284,11 +282,15 @@ fieldIcon lot args opts = \case
         )
       $ \prev -> do
         focus
-          . toMisoString @(UTF_8 ByteString)
+          . either impureThrow id
+          . decodeUtf8Strict @Unicode
+          . unTagged
           $ htmlUid uid
         void
           . JS.eval
-          . toMisoString @(UTF_8 ByteString)
+          . either impureThrow id
+          . decodeUtf8Strict @Unicode
+          . unTagged
           $ "var el = document.getElementById('"
           <> htmlUid uid
           <> "'); if (el) el.value = '';"
@@ -367,7 +369,7 @@ fieldIcon lot args opts = \case
 
 fieldIconSimple ::
   LeadingOrTrailing ->
-  MisoString ->
+  Unicode ->
   [Attribute action] ->
   action ->
   TextField.Icon action
@@ -677,7 +679,7 @@ selectTypeWidget args@Args {argsAction = action} optic =
           typs
 
 constTextField ::
-  MisoString ->
+  Unicode ->
   Opts model action ->
   ((model -> JSM model) -> action) ->
   View action
@@ -787,7 +789,7 @@ fieldViewer args =
     val =
       maybe mempty fold1 $ args ^? cloneTraversal optic . #fieldInput
 
-header :: MisoString -> [View action]
+header :: Unicode -> [View action]
 header txt =
   if txt == mempty
     then mempty
@@ -805,7 +807,7 @@ genericFieldViewer ::
   ( Foldable1 f
   ) =>
   Args model action t f ->
-  (MisoString -> View action) ->
+  (Unicode -> View action) ->
   [View action]
 genericFieldViewer args widget =
   if input == mempty
@@ -921,7 +923,7 @@ genericFieldViewer args widget =
                 ]
            )
 
-fieldViewerIcon :: MisoString -> action -> View action
+fieldViewerIcon :: Unicode -> action -> View action
 fieldViewerIcon icon action =
   IconButton.iconButton
     ( IconButton.config
@@ -933,8 +935,8 @@ truncateFieldInput ::
   Bool ->
   OpenedOrClosed ->
   Maybe Int ->
-  MisoString ->
-  MisoString
+  Unicode ->
+  Unicode
 truncateFieldInput True Closed limit full =
   let half = fromMaybe defTruncateLimit limit `div` 2
    in MS.take half full

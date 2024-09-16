@@ -28,7 +28,7 @@ fun = \case
 spec :: Spec
 spec = do
   prop "Identity/JSON" $ \txt -> do
-    let wrap :: Identity MisoString = Identity txt
+    let wrap :: Identity Unicode = Identity txt
     let txtJson = A.encode txt
     let wrapJson = A.encode wrap
     wrap ^. #runIdentity `shouldBe` txt

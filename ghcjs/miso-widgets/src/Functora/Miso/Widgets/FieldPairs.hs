@@ -152,5 +152,5 @@ fieldPairEditor Args {argsModel = st, argsOptic = optic, argsAction = action} id
       )
   ]
   where
-    idxTxt :: MisoString
+    idxTxt :: Unicode
     idxTxt = "#" <> inspect (idx + 1)

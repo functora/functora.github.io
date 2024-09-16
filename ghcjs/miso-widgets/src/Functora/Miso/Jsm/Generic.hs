@@ -26,31 +26,31 @@ popupText :: (Show a, Data a) => a -> JSM ()
 popupText x =
   void
     $ JS.global
-    ^. JS.js1 ("popupText" :: MisoString) (inspect x :: MisoString)
+    ^. JS.js1 ("popupText" :: Unicode) (inspect x :: Unicode)
 
 shareText :: (Show a, Data a) => a -> model -> JSM model
 shareText x st = do
-  let txt = inspect x
+  let txt = inspect @Unicode x
   unless (txt == mempty) $ do
-    prom <- JS.global ^. JS.js1 ("shareText" :: MisoString) txt
-    success <- JS.function $ \_ _ _ -> popupText @MisoString "Copied!"
-    failure <- JS.function $ \_ _ _ -> popupText @MisoString "Failed to copy!"
-    void $ prom ^. JS.js2 ("then" :: MisoString) success failure
+    prom <- JS.global ^. JS.js1 ("shareText" :: Unicode) txt
+    success <- JS.function $ \_ _ _ -> popupText @Unicode "Copied!"
+    failure <- JS.function $ \_ _ _ -> popupText @Unicode "Failed to copy!"
+    void $ prom ^. JS.js2 ("then" :: Unicode) success failure
   pure st
 
 moveUp :: ATraversal' model [item] -> Int -> model -> JSM model
 moveUp optic idx st = do
-  popupText @MisoString $ "Moved #" <> inspect (idx + 1) <> " up!"
+  popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " up!"
   pure $ st & cloneTraversal optic %~ swapAt (idx - 1) idx
 
 moveDown :: ATraversal' model [item] -> Int -> model -> JSM model
 moveDown optic idx st = do
-  popupText @MisoString $ "Moved #" <> inspect (idx + 1) <> " down!"
+  popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " down!"
   pure $ st & cloneTraversal optic %~ swapAt idx (idx + 1)
 
 removeAt :: ATraversal' model [a] -> Int -> model -> JSM model
 removeAt optic idx st = do
-  popupText @MisoString $ "Removed #" <> inspect (idx + 1) <> "!"
+  popupText @Unicode $ "Removed #" <> inspect (idx + 1) <> "!"
   pure $ st & cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..])
   where
     updater loc el =
@@ -77,56 +77,66 @@ swapAt i j xs
 
 openBrowserPage :: URI -> model -> JSM model
 openBrowserPage uri st = do
-  void $ JS.global ^. JS.js1 @MisoString "openBrowserPage" (URI.render uri)
+  void $ JS.global ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
   pure st
 
 enterOrEscapeBlur :: Uid -> KeyCode -> model -> JSM model
 enterOrEscapeBlur uid (KeyCode code) st = do
   let enterOrEscape = [13, 27] :: [Int]
-  when (code `elem` enterOrEscape)
-    . void
-    . JS.eval
-    . toMisoString @(UTF_8 ByteString)
-    $ "document.getElementById('"
-    <> htmlUid uid
-    <> "').getElementsByTagName('input')[0].blur();"
+  when (code `elem` enterOrEscape) $ do
+    res <-
+      either throw pure
+        . decodeUtf8Strict @Unicode
+        . unTagged
+        $ "document.getElementById('"
+        <> htmlUid uid
+        <> "').getElementsByTagName('input')[0].blur();"
+    void
+      $ JS.eval res
   pure st
 
-insertStorage :: (ToJSON a) => MisoString -> a -> JSM ()
-insertStorage key raw =
-  void $ JS.global ^. JS.js2 @MisoString "insertStorage" key val
-  where
-    val = toMisoString @(UTF_8 BL.ByteString) $ encodeJson raw
+insertStorage :: (ToJSON a) => Unicode -> a -> JSM ()
+insertStorage key raw = do
+  val <-
+    either throw pure
+      . decodeUtf8Strict @Unicode @BL.ByteString
+      . unTagged
+      $ encodeJson raw
+  void
+    $ JS.global
+    ^. JS.js2 @Unicode "insertStorage" key val
 
-selectStorage :: (FromJSON a) => MisoString -> (Maybe a -> JSM ()) -> JSM ()
+selectStorage :: (FromJSON a) => Unicode -> (Maybe a -> JSM ()) -> JSM ()
 selectStorage key after =
   genericPromise "selectStorage" (Just key) $ \case
     Nothing ->
       after Nothing
     Just str ->
-      case decodeJson $ fromMisoString @(UTF_8 BL.ByteString) str of
+      case decodeJson
+        . Tagged @"UTF-8"
+        $ encodeUtf8 @Unicode @BL.ByteString str of
         Left e -> do
           consoleLog e
           after Nothing
         Right res ->
           after $ Just res
 
-selectBarcode :: (Maybe MisoString -> JSM ()) -> JSM ()
+selectBarcode :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectBarcode after =
   genericPromise "selectBarcode" Nothing
     $ after
     . fmap MS.strip
 
-selectClipboard :: (Maybe MisoString -> JSM ()) -> JSM ()
+selectClipboard :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectClipboard after =
   genericPromise "selectClipboard" Nothing
     $ after
     . fmap MS.strip
 
 genericPromise ::
-  MisoString ->
-  Maybe MisoString ->
-  (Maybe MisoString -> JSM ()) ->
+  Unicode ->
+  Maybe Unicode ->
+  (Maybe Unicode -> JSM ()) ->
   JSM ()
 genericPromise fun marg after = do
   success <- JS.function $ \_ _ ->
@@ -137,7 +147,7 @@ genericPromise fun marg after = do
           then after Nothing
           else do
             raw <-
-              JS.fromJSVal @MisoString val
+              JS.fromJSVal @Unicode val
             res <-
               maybe (throwString @Prelude.String "Failure, bad type!") pure raw
             after
@@ -147,7 +157,7 @@ genericPromise fun marg after = do
   failure <-
     JS.function $ \_ _ e -> do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
-      consoleLog @MisoString $ "Failure, " <> inspect msg <> "!"
+      consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
       after Nothing
   prom <-
     case marg of
@@ -155,4 +165,4 @@ genericPromise fun marg after = do
       Just arg -> JS.global ^. JS.js1 fun arg
   void
     $ prom
-    ^. JS.js2 @MisoString "then" success failure
+    ^. JS.js2 @Unicode "then" success failure

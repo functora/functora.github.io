@@ -50,7 +50,7 @@ decrypt st =
 
 decryptDoc :: Model -> JSM Model
 decryptDoc st@Model {modelState = St {stCpt = Nothing}} = do
-  Jsm.popupText @MisoString "Nothing to decrypt!"
+  Jsm.popupText @Unicode "Nothing to decrypt!"
   pure st
 decryptDoc st@Model {modelState = St {stCpt = Just cpt}} = do
   let ikm = st ^. #modelState . #stIkm . #fieldOutput

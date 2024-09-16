@@ -173,9 +173,9 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
     <> Bolt11.bolt11Viewer st
 
 pasteWidget ::
-  MisoString ->
-  ((Maybe MisoString -> JSM ()) -> JSM ()) ->
-  ATraversal' Model (Field MisoString Unique) ->
+  Unicode ->
+  ((Maybe Unicode -> JSM ()) -> JSM ()) ->
+  ATraversal' Model (Field Unicode Unique) ->
   Maybe (Field.OptsWidget Model Action)
 pasteWidget icon selector optic =
   Just
@@ -185,14 +185,14 @@ pasteWidget icon selector optic =
     $ \prev -> do
       selector $ \case
         Nothing ->
-          Jsm.popupText @MisoString "Failure!"
+          Jsm.popupText @Unicode "Failure!"
         Just res -> do
           Misc.pushActionQueue prev
             . Instant
             $ pure
             . (& cloneTraversal optic . #fieldOutput .~ res)
             . (& cloneTraversal optic . #fieldInput . #uniqueValue .~ res)
-          Jsm.popupText @MisoString "Success!"
+          Jsm.popupText @Unicode "Success!"
       pure prev
 
 tosWidget :: View Action

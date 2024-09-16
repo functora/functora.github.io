@@ -10,7 +10,6 @@ import qualified Bitcoin.Address as Btc
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text.Lazy as TL
 import qualified Functora.Bolt11 as B11
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -65,7 +64,7 @@ pairs st header optic =
             FieldPairs.argsAction = PushUpdate . Instant
           }
 
-pair :: MisoString -> MisoString -> FieldPair DynamicField Identity
+pair :: Unicode -> Unicode -> FieldPair DynamicField Identity
 pair x =
   newFieldPairId x
     . DynamicFieldText
@@ -76,12 +75,12 @@ success = css "app-success"
 failure :: [View Action] -> [View Action]
 failure = css "app-failure"
 
-css :: MisoString -> [View action] -> [View action]
+css :: Unicode -> [View action] -> [View action]
 css x = fmap $ \case
   Node x0 x1 x2 x3 x4 -> Node x0 x1 x2 (class_ x : x3) x4
   html -> html
 
-inspectTimestamp :: Int -> MisoString
+inspectTimestamp :: Int -> Unicode
 inspectTimestamp =
   inspect
     . posixSecondsToUTCTime
@@ -99,7 +98,7 @@ makeBolt11Viewer st =
           then pure mempty
           else bimap plain (preimageFields rawR) r
       verifierFields =
-        if any @[MisoString] (== mempty) [rawLn, rawR]
+        if any @[Unicode] (== mempty) [rawLn, rawR]
           then pure mempty
           else case verifyPreimage <$> rh <*> r of
             Left {} -> pure mempty
@@ -117,18 +116,18 @@ makeBolt11Viewer st =
         & #stDocLnPreimageViewer
         .~ fromRight mempty preFields
   where
-    rawLn :: MisoString
+    rawLn :: Unicode
     rawLn = st ^. #stDocLnInvoice . #fieldOutput
-    rawR :: MisoString
+    rawR :: Unicode
     rawR = st ^. #stDocLnPreimage . #fieldOutput
-    ln :: Either MisoString B11.Bolt11
+    ln :: Either Unicode B11.Bolt11
     ln =
-      first (mappend "Bad invoice - " . toMisoString @Prelude.String)
+      first (mappend "Bad invoice - " . from @Prelude.String @Unicode)
         . B11.decodeBolt11
-        $ fromMisoString @Prelude.Text rawLn
-    rh :: Either MisoString ByteString
+        $ from @Unicode @Prelude.Text rawLn
+    rh :: Either Unicode ByteString
     rh = ln >>= parsePreimageHash
-    r :: Either MisoString ByteString
+    r :: Either Unicode ByteString
     r = parsePreimage rawR
 
 mergeBolt11Viewers :: (Foldable1 f) => StDoc f -> StDoc f -> StDoc f
@@ -143,21 +142,17 @@ mergeBolt11Viewers next prev =
     & #stDocLnPreimageViewer
     %~ mergeFieldPairs (stDocLnPreimageViewer next)
 
-plain :: MisoString -> [FieldPair DynamicField Identity]
+plain :: Unicode -> [FieldPair DynamicField Identity]
 plain =
   (: mempty) . newFieldPairId mempty . DynamicFieldText
 
-parsePreimage :: MisoString -> Either MisoString ByteString
+parsePreimage :: Unicode -> Either Unicode ByteString
 parsePreimage rawR =
-  case B16.decode $ fromMisoString @ByteString rawR of
+  case B16.decode $ encodeUtf8 rawR of
     (r, "") -> Right r
-    (_, e) ->
-      Left
-        . toMisoString @Prelude.String
-        $ "Bad preimage - non hex leftover "
-        <> Prelude.show e
+    (_, e) -> Left $ "Bad preimage - non hex leftover " <> inspect @Unicode e
 
-parsePreimageHash :: B11.Bolt11 -> Either MisoString ByteString
+parsePreimageHash :: B11.Bolt11 -> Either Unicode ByteString
 parsePreimageHash ln =
   case find B11.isPaymentHash $ B11.bolt11Tags ln of
     Just (B11.PaymentHash (B11.Hex rh)) -> Right rh
@@ -166,7 +161,7 @@ parsePreimageHash ln =
 verifyPreimage ::
   ByteString ->
   ByteString ->
-  Either MisoString MisoString
+  Either Unicode Unicode
 verifyPreimage rh r =
   if rh == sha256Hash r
     then Right "The preimage matches the invoice"
@@ -181,11 +176,7 @@ invoiceFields ln =
         B11.BitcoinRegtest -> "Bitcoin Regtest"
         B11.BitcoinSignet -> "Bitcoin Signet",
     pair "Amount"
-      . maybe
-        "0"
-        ( toMisoString @Prelude.String
-            . B11.inspectBolt11HrpAmt
-        )
+      . maybe "0" B11.inspectBolt11HrpAmt
       . B11.bolt11HrpAmt
       $ B11.bolt11Hrp ln,
     pair "Created At"
@@ -196,7 +187,6 @@ invoiceFields ln =
           >>= invoiceFieldsTag ln
        )
     <> [ pair "Signature"
-          . toMisoString @TL.Text
           . B11.inspectHex
           $ B11.bolt11SigVal sig,
          pair "Pubkey Recovery Flag"
@@ -221,36 +211,39 @@ invoiceFieldsTag ln = \case
   B11.OnchainFallback x ->
     pure
       . pair "Onchain Fallback"
-      . toMisoString @ByteString
+      . either impureThrow id
+      . decodeUtf8Strict @Unicode @ByteString
       $ Btc.renderAddress x
   B11.ExtraRouteInfo x ->
     pure
       . pair "Extra Routing Info"
-      . toMisoString @BL.ByteString
+      . either impureThrow id
+      . decodeUtf8Strict @Unicode @BL.ByteString
       $ A.encode x
   B11.Features x ->
     pure
       . pair "Feature Bits"
-      . toMisoString @Prelude.Text
       $ B11.inspectFeatures x
   B11.UnknownTag {} -> mempty
   B11.UnparsedTag {} -> mempty
   where
-    w5s :: MisoString -> [B11.Word5] -> [FieldPair DynamicField Identity]
+    w5s :: Unicode -> [B11.Word5] -> [FieldPair DynamicField Identity]
     w5s x =
       pure
         . pair x
         . inspect
         . fmap fromEnum
-    hex :: MisoString -> B11.Hex -> [FieldPair DynamicField Identity]
+    hex :: Unicode -> B11.Hex -> [FieldPair DynamicField Identity]
     hex x =
       pure
         . pair x
-        . toMisoString @TL.Text
         . B11.inspectHex
 
-preimageFields :: MisoString -> ByteString -> [FieldPair DynamicField Identity]
+preimageFields :: Unicode -> ByteString -> [FieldPair DynamicField Identity]
 preimageFields rawR r =
   [ pair "Preimage" rawR,
-    pair "Preimage Hash" . inspect @ByteString $ sha256Hash r
+    pair "Preimage Hash"
+      . either impureThrow id
+      . decodeUtf8Strict @Unicode @ByteString
+      $ sha256Hash r
   ]

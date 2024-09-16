@@ -35,7 +35,7 @@ headerEditor args opts =
       ]
   ]
 
-headerViewer :: MisoString -> [View action]
+headerViewer :: Unicode -> [View action]
 headerViewer txt =
   if txt == mempty
     then mempty

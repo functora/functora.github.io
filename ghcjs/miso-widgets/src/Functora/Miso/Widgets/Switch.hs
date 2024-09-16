@@ -20,8 +20,8 @@ data Args model action = Args
 
 data Opts model action = Opts
   { optsDisabled :: Bool,
-    optsPlaceholder :: MisoString,
-    optsIcon :: Maybe MisoString
+    optsPlaceholder :: Unicode,
+    optsIcon :: Maybe Unicode
   }
   deriving stock (Generic)
 

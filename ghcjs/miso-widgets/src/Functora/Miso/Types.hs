@@ -60,7 +60,7 @@ import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Money hiding (Currency, Money, Text)
+import Functora.Money hiding (Currency, Money)
 import qualified Functora.Prelude as Prelude
 import qualified Text.URI as URI
 
@@ -75,10 +75,10 @@ type Typ a =
 
 type Hkt f =
   ( Typeable f,
-    Eq (f MisoString),
-    Ord (f MisoString),
-    Show (f MisoString),
-    Data (f MisoString)
+    Eq (f Unicode),
+    Ord (f Unicode),
+    Show (f Unicode),
+    Data (f Unicode)
   )
 
 data Unique a = Unique
@@ -116,7 +116,7 @@ newUniqueDuplicator = do
 
 data Field a f = Field
   { fieldType :: FieldType,
-    fieldInput :: f MisoString,
+    fieldInput :: f Unicode,
     fieldOutput :: a,
     fieldModalState :: OpenedOrClosed,
     fieldOpts :: FieldOpts
@@ -163,7 +163,7 @@ defTruncateLimit :: Int
 defTruncateLimit = 67
 
 newField ::
-  (MonadIO m) => FieldType -> a -> (a -> MisoString) -> m (Field a Unique)
+  (MonadIO m) => FieldType -> a -> (a -> Unicode) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
   pure
@@ -175,7 +175,7 @@ newField typ output newInput = do
         fieldOpts = defFieldOpts
       }
 
-newFieldId :: FieldType -> (a -> MisoString) -> a -> Field a Identity
+newFieldId :: FieldType -> (a -> Unicode) -> a -> Field a Identity
 newFieldId typ viewer output =
   Field
     { fieldType = typ,
@@ -190,15 +190,13 @@ newRatioField output =
   newField
     FieldTypeNumber
     output
-    ( toMisoString @Prelude.String
-        . inspectRatioDef
-    )
+    inspectRatioDef
 
-newTextField :: (MonadIO m) => MisoString -> m (Field MisoString Unique)
+newTextField :: (MonadIO m) => Unicode -> m (Field Unicode Unique)
 newTextField output =
   newField FieldTypeText output id
 
-newPasswordField :: (MonadIO m) => MisoString -> m (Field MisoString Unique)
+newPasswordField :: (MonadIO m) => Unicode -> m (Field Unicode Unique)
 newPasswordField output =
   newField FieldTypePassword output id
 
@@ -223,14 +221,14 @@ newDynamicFieldId output =
     output
 
 newDynamicTitleField ::
-  (MonadIO m) => MisoString -> m (Field DynamicField Unique)
+  (MonadIO m) => Unicode -> m (Field DynamicField Unique)
 newDynamicTitleField =
   fmap (& #fieldType .~ FieldTypeTitle)
     . newDynamicField
     . DynamicFieldText
 
 data DynamicField
-  = DynamicFieldText MisoString
+  = DynamicFieldText Unicode
   | DynamicFieldNumber Rational
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType DynamicField
@@ -238,17 +236,16 @@ data DynamicField
 parseDynamicField :: Field DynamicField Unique -> Maybe DynamicField
 parseDynamicField value =
   case value ^. #fieldType of
-    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio txt
-    FieldTypePercent -> DynamicFieldNumber <$> parseRatio txt
+    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio str
+    FieldTypePercent -> DynamicFieldNumber <$> parseRatio str
     _ -> Just $ DynamicFieldText str
   where
     str = value ^. #fieldInput . #uniqueValue
-    txt = fromMisoString @Prelude.Text str
 
-inspectDynamicField :: DynamicField -> MisoString
+inspectDynamicField :: DynamicField -> Unicode
 inspectDynamicField = \case
   DynamicFieldText x -> x
-  DynamicFieldNumber x -> toMisoString @Prelude.String $ inspectRatioDef x
+  DynamicFieldNumber x -> inspectRatioDef x
 
 data FieldType
   = -- Rational
@@ -263,7 +260,7 @@ data FieldType
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType FieldType
 
-htmlFieldType :: FieldType -> MisoString
+htmlFieldType :: FieldType -> Unicode
 htmlFieldType = \case
   FieldTypeNumber -> "number"
   FieldTypePercent -> "number"
@@ -273,7 +270,7 @@ htmlFieldType = \case
   FieldTypeHtml -> "text"
   FieldTypePassword -> "password"
 
-userFieldType :: FieldType -> MisoString
+userFieldType :: FieldType -> Unicode
 userFieldType = \case
   FieldTypeNumber -> "Number"
   FieldTypePercent -> "Percent"
@@ -284,7 +281,7 @@ userFieldType = \case
   FieldTypePassword -> "Password"
 
 data FieldPair a f = FieldPair
-  { fieldPairKey :: Field MisoString f,
+  { fieldPairKey :: Field Unicode f,
     fieldPairValue :: Field a f
   }
   deriving stock (Generic)
@@ -307,13 +304,13 @@ deriving via
     (Typ a) => Binary (FieldPair a Identity)
 
 newFieldPair ::
-  (MonadIO m) => MisoString -> DynamicField -> m (FieldPair DynamicField Unique)
+  (MonadIO m) => Unicode -> DynamicField -> m (FieldPair DynamicField Unique)
 newFieldPair key val =
   FieldPair
     <$> newTextField key
     <*> newDynamicField val
 
-newFieldPairId :: MisoString -> DynamicField -> FieldPair DynamicField Identity
+newFieldPairId :: Unicode -> DynamicField -> FieldPair DynamicField Identity
 newFieldPairId key val =
   FieldPair
     (newFieldId FieldTypeText id key)
@@ -333,9 +330,9 @@ mergeFieldPairs next prev =
     then fmap (uncurry merge) $ zip next prev
     else next
   where
-    nextInputs :: [(MisoString, MisoString)]
+    nextInputs :: [(Unicode, Unicode)]
     nextInputs = fmap inputs next
-    prevInputs :: [(MisoString, MisoString)]
+    prevInputs :: [(Unicode, Unicode)]
     prevInputs = fmap inputs prev
     merge :: FieldPair t f -> FieldPair t f -> FieldPair t f
     merge new old =
@@ -352,14 +349,14 @@ mergeFieldPairs next prev =
         & #fieldPairValue
         . #fieldOutput
         .~ (new ^. #fieldPairValue . #fieldOutput)
-    inputs :: (Foldable1 f) => FieldPair t f -> (MisoString, MisoString)
+    inputs :: (Foldable1 f) => FieldPair t f -> (Unicode, Unicode)
     inputs x =
       ( fold1 $ x ^. #fieldPairKey . #fieldInput,
         fold1 $ x ^. #fieldPairValue . #fieldInput
       )
 
 data Currency f = Currency
-  { currencyInput :: Field MisoString f,
+  { currencyInput :: Field Unicode f,
     currencyOutput :: CurrencyInfo,
     currencyModalState :: OpenedOrClosed
   }
@@ -417,7 +414,7 @@ newMoney amt cur =
 
 data Asset f = Asset
   { assetPrice :: Money f,
-    assetPriceLabel :: Field MisoString f,
+    assetPriceLabel :: Field Unicode f,
     assetFieldPairs :: [FieldPair DynamicField f],
     assetModalState :: OpenedOrClosed
   }
@@ -440,7 +437,7 @@ deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 newAsset ::
   ( MonadIO m
   ) =>
-  MisoString ->
+  Unicode ->
   Rational ->
   CurrencyInfo ->
   m (Asset Unique)
@@ -454,7 +451,7 @@ newAsset label amt cur = do
 
 data PaymentMethod f = PaymentMethod
   { paymentMethodMoney :: Money f,
-    paymentMethodMoneyLabel :: Field MisoString f,
+    paymentMethodMoneyLabel :: Field Unicode f,
     paymentMethodFieldPairs :: [FieldPair DynamicField f],
     paymentMethodModalState :: OpenedOrClosed
   }
@@ -481,7 +478,7 @@ newPaymentMethod ::
   ( MonadIO m
   ) =>
   CurrencyInfo ->
-  Maybe MisoString ->
+  Maybe Unicode ->
   m (PaymentMethod Unique)
 newPaymentMethod cur addr0 = do
   lbl <-

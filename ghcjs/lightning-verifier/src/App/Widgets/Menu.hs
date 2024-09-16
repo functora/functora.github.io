@@ -93,8 +93,8 @@ menu st =
                               void
                                 $ JS.global
                                 ^. JS.js1
-                                  ("printCurrentPage" :: MisoString)
-                                  ("lightning-verifier" :: MisoString)
+                                  ("printCurrentPage" :: Unicode)
+                                  ("lightning-verifier" :: Unicode)
                               pure next
                           )
                         & IconButton.setAttributes
@@ -109,7 +109,7 @@ menu st =
                         ( PushUpdate
                             . Instant
                             . Jsm.shareText
-                            . toMisoString @Prelude.String
+                            . from @Prelude.String @Unicode
                             . either impureThrow URI.renderStr
                             $ stUri st
                         )
@@ -291,7 +291,7 @@ menu st =
         [ x
         ]
 
-defFavName :: Model -> MisoString
+defFavName :: Model -> Unicode
 defFavName st =
   if isJust (st ^. #modelState . #stCpt)
     || (st ^. #modelState . #stIkm . #fieldOutput /= mempty)

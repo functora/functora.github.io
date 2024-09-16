@@ -185,7 +185,7 @@ currencyListItemWidget ::
   Args model action ->
   Opts model ->
   CurrencyInfo ->
-  Fuzzy.Fuzzy CurrencyInfo MisoString ->
+  Fuzzy.Fuzzy CurrencyInfo Unicode ->
   ListItem.ListItem action
 currencyListItemWidget
   Args
@@ -223,7 +223,6 @@ currencyListItemWidget
             )
       )
       [ Miso.rawHtml
-          . toMisoString
           $ Fuzzy.rendered fuzz
       ]
     where

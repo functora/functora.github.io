@@ -9,7 +9,7 @@ import Functora.Miso.Prelude
 
 data Args model action = Args
   { argsLink :: URI,
-    argsLabel :: MisoString,
+    argsLabel :: Unicode,
     argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)

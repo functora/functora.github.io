@@ -12,7 +12,7 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
 import qualified Prelude
 
-qr :: MisoString -> [View action]
+qr :: Unicode -> [View action]
 qr txt
   | txt == mempty = mempty
   | otherwise =
@@ -33,14 +33,14 @@ qr txt
             $ Memo.memo newQrImg txt
         ]
 
-newQrImg :: MisoString -> Maybe MisoString
+newQrImg :: Unicode -> Maybe Unicode
 newQrImg =
-  ( fmap
-      $ toMisoString @BL.ByteString
+  ( rightToMaybe
+      . decodeUtf8Strict @Unicode @BL.ByteString
       . Qr.qrToBmpDataUrlBL (Qr.Border 0) (Qr.Scale 5)
   )
-    . QRCode.encodeAutomatic
+    <=< QRCode.encodeAutomatic
       ( QRCode.defaultQRCodeOptions QRCode.L
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
-    . fromMisoString @Prelude.String
+    . from @Unicode @Prelude.String

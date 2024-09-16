@@ -13,7 +13,7 @@ data Args model action = Args
   { argsModel :: model,
     argsOptic ::
       NonEmpty
-        ( MisoString,
+        ( Unicode,
           Maybe Filter.Icon,
           ATraversal' model Bool
         ),
@@ -49,7 +49,7 @@ chips args@Args {argsOptic = items} =
 
 chipEditor ::
   Args model action ->
-  MisoString ->
+  Unicode ->
   Maybe Filter.Icon ->
   ATraversal' model Bool ->
   Filter.Chip action

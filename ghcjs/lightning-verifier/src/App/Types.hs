@@ -36,11 +36,9 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
-import qualified Miso.String as MS
 import qualified Paths_lightning_verifier as Paths
 import qualified Text.URI as URI
 import qualified Text.URI.QQ as URI
-import qualified Prelude
 
 data Model = Model
   { modelFav :: OpenedOrClosed,
@@ -48,8 +46,8 @@ data Model = Model
     modelLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    modelFavMap :: Map MisoString Fav,
-    modelFavName :: Field MisoString Unique,
+    modelFavMap :: Map Unicode Fav,
+    modelFavName :: Field Unicode Unique,
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
     modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model))
@@ -65,7 +63,7 @@ data Action
 
 data St f = St
   { stKm :: Aes.Km,
-    stIkm :: Field MisoString f,
+    stIkm :: Field Unicode f,
     stDoc :: StDoc f,
     stPre :: Field DynamicField f,
     stScreen :: Screen,
@@ -91,9 +89,9 @@ data StDoc f = StDoc
   { stDocFieldPairs :: [FieldPair DynamicField f],
     stDocSuccessViewer :: [FieldPair DynamicField f],
     stDocFailureViewer :: [FieldPair DynamicField f],
-    stDocLnPreimage :: Field MisoString f,
+    stDocLnPreimage :: Field Unicode f,
     stDocLnPreimageViewer :: [FieldPair DynamicField f],
-    stDocLnInvoice :: Field MisoString f,
+    stDocLnInvoice :: Field Unicode f,
     stDocLnInvoiceViewer :: [FieldPair DynamicField f]
   }
   deriving stock (Generic)
@@ -230,7 +228,7 @@ stQuery st = do
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
-  uri <- mkURI $ fromMisoString @Prelude.Text baseUri
+  uri <- mkURI $ from @Unicode @Prelude.Text baseUri
   qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
   pure
     $ uri
@@ -256,18 +254,18 @@ compressViewers st =
       pair
         & #fieldPairKey
         . #fieldInput
-        .~ Identity (mempty :: MisoString)
+        .~ Identity (mempty :: Unicode)
         & #fieldPairKey
         . #fieldOutput
-        .~ (mempty :: MisoString)
+        .~ (mempty :: Unicode)
         & #fieldPairValue
         . #fieldInput
-        .~ Identity (mempty :: MisoString)
+        .~ Identity (mempty :: Unicode)
         & #fieldPairValue
         . #fieldOutput
         .~ DynamicFieldText mempty
 
-baseUri :: MisoString
+baseUri :: Unicode
 #ifdef GHCID
 baseUri =
   "http://localhost:8080"
@@ -286,10 +284,10 @@ setScreenAction =
     . Instant
     . setScreenPure
 
-vsn :: MisoString
+vsn :: Unicode
 vsn =
-  MS.intercalate "."
-    . fmap (toMisoString @Prelude.String . Prelude.show)
+  intercalate "."
+    . fmap inspect
     $ Version.versionBranch Paths.version
 
 usd :: CurrencyInfo
@@ -318,7 +316,7 @@ apkLink :: URI
 apkLink =
   either impureThrow id
     . URI.mkURI
-    . fromMisoString @Prelude.Text
+    . from @Unicode @Prelude.Text
     $ "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
     <> vsn
     <> "/lightning-verifier-v"

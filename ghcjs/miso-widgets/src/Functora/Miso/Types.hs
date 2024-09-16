@@ -61,7 +61,6 @@ import qualified Data.Generics as Syb
 import Functora.Cfg
 import Functora.Miso.Prelude
 import Functora.Money hiding (Currency, Money)
-import qualified Functora.Prelude as Prelude
 import qualified Text.URI as URI
 
 type Typ a =
@@ -540,7 +539,7 @@ drainTChan chan = do
             . max delay
             $ instantOrDelayedTime next
 
-qsGet :: URI.RText 'URI.QueryKey -> [URI.QueryParam] -> Maybe Prelude.Text
+qsGet :: URI.RText 'URI.QueryKey -> [URI.QueryParam] -> Maybe Text
 qsGet key =
   asumMap $ \case
     URI.QueryParam k x | k == key -> Just $ URI.unRText x

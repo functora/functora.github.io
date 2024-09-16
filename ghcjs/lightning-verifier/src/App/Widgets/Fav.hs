@@ -13,6 +13,7 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
+import qualified Material.Theme as Theme
 
 fav :: Model -> [View Action]
 fav st =
@@ -132,7 +133,10 @@ favItem st label Fav {favUri = uri} =
     [ Button.raised
         ( Button.config
             & Button.setOnClick openAction
-            & Button.setAttributes [Css.fullWidth]
+            & Button.setAttributes
+              [ Css.fullWidth,
+                Theme.secondaryBg
+              ]
         )
         label
     ]

@@ -335,7 +335,8 @@ data Bolt11Sig = Bolt11Sig
   deriving stock (Eq, Ord, Show, Data, Generic)
 
 data Bolt11 = Bolt11
-  { bolt11Hrp :: Bolt11Hrp,
+  { bolt11Raw :: Unicode,
+    bolt11Hrp :: Bolt11Hrp,
     bolt11Timestamp :: Int, -- posix
     bolt11Tags :: [Tag], -- posix
     bolt11Signature :: Bolt11Sig
@@ -486,7 +487,8 @@ decodeBolt11 raw = do
     maybe (Left "corrupt") Right $ Bech32.toBase256 rawSig
   Right
     Bolt11
-      { bolt11Hrp = hrp,
+      { bolt11Raw = from @Text @Unicode raw,
+        bolt11Hrp = hrp,
         bolt11Timestamp = w5int ts,
         bolt11Tags = tags,
         bolt11Signature =

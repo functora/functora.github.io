@@ -8,8 +8,6 @@ import Functora.Cfg as X
 import Functora.Miso.Orphan as X ()
 import Functora.Prelude as X hiding
   ( Field (..),
-    String,
-    Text,
     cons,
     field,
   )

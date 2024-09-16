@@ -41,7 +41,7 @@ in rec {
     text = ''
       (
         cd ${repo}
-        ${functora-pkgs.nodejs}/bin/npm i
+        ${functora-pkgs.nodejs}/bin/npm i --prefer-offline
         ${functora-pkgs.nodejs}/bin/npm run build
         nix-build -A releaseDer
         rm -rf ./dist/latest

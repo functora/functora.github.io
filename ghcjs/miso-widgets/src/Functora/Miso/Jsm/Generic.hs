@@ -18,7 +18,6 @@ import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
-import qualified Prelude
 import qualified Prelude ((!!))
 
 popupText :: (Show a, Data a) => a -> JSM ()
@@ -144,11 +143,11 @@ genericPromise fun marg after = do
             raw <-
               JS.fromJSVal @Unicode val
             res <-
-              maybe (throwString @Prelude.String "Failure, bad type!") pure raw
+              maybe (throwString @String "Failure, bad type!") pure raw
             after
               $ Just res
       _ ->
-        throwString @Prelude.String "Failure, bad argv!"
+        throwString @String "Failure, bad argv!"
   failure <-
     JS.function $ \_ _ e -> do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e

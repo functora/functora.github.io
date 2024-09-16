@@ -122,7 +122,7 @@ makeBolt11Viewer st =
     rawR = st ^. #stDocLnPreimage . #fieldOutput
     ln :: Either Unicode B11.Bolt11
     ln =
-      first (mappend "Bad invoice - " . from @Prelude.String @Unicode)
+      first (mappend "Bad invoice - " . from @String @Unicode)
         . B11.decodeBolt11
         $ from @Unicode @Prelude.Text rawLn
     rh :: Either Unicode ByteString
@@ -169,7 +169,9 @@ verifyPreimage rh r =
 
 invoiceFields :: B11.Bolt11 -> [FieldPair DynamicField Identity]
 invoiceFields ln =
-  [ pair "Network"
+  [ pair "Invoice"
+      $ B11.bolt11Raw ln,
+    pair "Network"
       $ case B11.bolt11HrpNet $ B11.bolt11Hrp ln of
         B11.BitcoinMainnet -> "Bitcoin Mainnet"
         B11.BitcoinTestnet -> "Bitcoin Testnet"
@@ -245,5 +247,6 @@ preimageFields rawR r =
     pair "Preimage Hash"
       . either impureThrow id
       . decodeUtf8Strict @Unicode @ByteString
+      . B16.encode
       $ sha256Hash r
   ]

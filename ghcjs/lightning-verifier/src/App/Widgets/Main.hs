@@ -130,12 +130,24 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
               { Field.optsFilledOrOutlined = Outlined,
                 Field.optsPlaceholder = "Invoice",
                 Field.optsLeadingWidget =
-                  pasteWidget
-                    "content_paste_go"
-                    Jsm.selectClipboard
-                    $ #modelState
-                    . #stDoc
-                    . #stDocLnInvoice,
+                  if null
+                    ( st
+                        ^. #modelState
+                        . #stDoc
+                        . #stDocLnInvoice
+                        . #fieldInput
+                        . #uniqueValue
+                    )
+                    then
+                      pasteWidget
+                        "content_paste_go"
+                        Jsm.selectClipboard
+                        $ #modelState
+                        . #stDoc
+                        . #stDocLnInvoice
+                    else
+                      Just
+                        Field.ClearWidget,
                 Field.optsTrailingWidget =
                   pasteWidget
                     "qr_code_scanner"
@@ -155,12 +167,24 @@ screenWidget st@Model {modelState = St {stScreen = Converter}} =
             { Field.optsFilledOrOutlined = Outlined,
               Field.optsPlaceholder = "Preimage",
               Field.optsLeadingWidget =
-                pasteWidget
-                  "content_paste_go"
-                  Jsm.selectClipboard
-                  $ #modelState
-                  . #stDoc
-                  . #stDocLnPreimage,
+                if null
+                  ( st
+                      ^. #modelState
+                      . #stDoc
+                      . #stDocLnPreimage
+                      . #fieldInput
+                      . #uniqueValue
+                  )
+                  then
+                    pasteWidget
+                      "content_paste_go"
+                      Jsm.selectClipboard
+                      $ #modelState
+                      . #stDoc
+                      . #stDocLnPreimage
+                  else
+                    Just
+                      Field.ClearWidget,
               Field.optsTrailingWidget =
                 pasteWidget
                   "qr_code_scanner"

@@ -219,7 +219,7 @@ stQuery st = do
       case st ^. #stIkm . #fieldOutput of
         ikm | ikm == mempty -> Left (st ^. #stKm)
         ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
+    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
     encodeText =
       either throw pure
         . decodeUtf8Strict
@@ -302,7 +302,7 @@ googlePlayLink =
 
 testGroupLink :: URI
 testGroupLink =
-  [URI.uri|https://groups.google.com/g/currency-converter|]
+  [URI.uri|https://groups.google.com/g/functora|]
 
 functoraLink :: URI
 functoraLink =
@@ -316,7 +316,7 @@ apkLink :: URI
 apkLink =
   either impureThrow id
     . URI.mkURI
-    . from @Unicode @Prelude.Text
+    . from @Unicode @Text
     $ "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
     <> vsn
     <> "/lightning-verifier-v"

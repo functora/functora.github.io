@@ -43,7 +43,7 @@ main =
     . forever
     . handleAny (\e -> consoleLog e >> sleepSeconds 5)
     $ do
-      uri <- URI.mkURI . Prelude.inspect =<< getCurrentURI
+      uri <- URI.mkURI . inspect =<< getCurrentURI
       mSt <- unShareUri uri
       st <- newModel Nothing uri
       startApp
@@ -317,7 +317,7 @@ evalModel st@Model {modelState = st0} = do
 
 syncUri :: URI -> JSM ()
 syncUri uri = do
-  textUri <- fmap Prelude.inspect getCurrentURI
+  textUri <- fmap inspect getCurrentURI
   prevUri <- URI.mkURI textUri
   let nextUri = prevUri {URI.uriQuery = URI.uriQuery uri}
   when (nextUri /= prevUri)

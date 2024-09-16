@@ -20,7 +20,6 @@ import qualified Material.IconButton as IconButton
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Text.URI as URI
-import qualified Prelude
 
 menu :: Model -> [View Action]
 menu st =
@@ -109,7 +108,7 @@ menu st =
                         ( PushUpdate
                             . Instant
                             . Jsm.shareText
-                            . from @Prelude.String @Unicode
+                            . from @String @Unicode
                             . either impureThrow URI.renderStr
                             $ stUri st
                         )

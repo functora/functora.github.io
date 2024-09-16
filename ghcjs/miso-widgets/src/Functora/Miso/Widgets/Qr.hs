@@ -10,7 +10,6 @@ import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
-import qualified Prelude
 
 qr :: Unicode -> [View action]
 qr txt
@@ -43,4 +42,4 @@ newQrImg =
       ( QRCode.defaultQRCodeOptions QRCode.L
       )
       QRCode.Iso8859_1OrUtf8WithoutECI
-    . from @Unicode @Prelude.String
+    . from @Unicode @String

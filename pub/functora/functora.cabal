@@ -123,7 +123,10 @@ common pkg-prelude
     , with-utf8
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
-    build-depends: ghcjs-base
+    build-depends:
+      , aeson
+      , jsaddle
+      , miso
 
 common pkg-qr
   import:         pkg
@@ -206,7 +209,6 @@ common pkg-money
     , cfg
     , tags
     , template-haskell
-    , text
 
 common pkg-rates
   import:         pkg
@@ -258,7 +260,6 @@ common pkg-bolt11
     , binary
     , bitcoin-address
     , bytestring
-    , text
 
 library
   import:          pkg-prelude

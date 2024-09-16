@@ -8,9 +8,6 @@ module Functora.Miso.Prelude
   )
 where
 
-#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
-import qualified Data.Binary as Binary (get, put)
-#endif
 import Functora.Cfg as X
 import Functora.Miso.Orphan as X ()
 import Functora.Prelude as X hiding
@@ -39,23 +36,6 @@ import Miso.String as X
     fromMisoString,
   )
 import Type.Reflection
-
-#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
-instance Binary MisoString where
-  put = Binary.put . fromMisoString @Prelude.Text
-  get = fmap (toMisoString @Prelude.Text) Binary.get
-
-instance ConvertUtf8 MisoString ByteString where
-  encodeUtf8 = encodeUtf8 . fromMisoString @Prelude.String
-  decodeUtf8 = toMisoString @Prelude.String . decodeUtf8
-  decodeUtf8Strict = fmap (toMisoString @Prelude.String) . decodeUtf8Strict
-
-instance ToJSONKey MisoString where
-  toJSONKey = contramap (fromMisoString @Prelude.Text) $ toJSONKey
-
-instance FromJSONKey MisoString where
-  fromJSONKey = fmap toMisoString $ fromJSONKey @Prelude.Text
-#endif
 
 instance (ToMisoString a) => ToMisoString (Tagged "UTF-8" a) where
   toMisoString = toMisoString . unTagged

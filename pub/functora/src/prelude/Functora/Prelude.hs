@@ -288,6 +288,7 @@ import Universum as X hiding
     bracket,
     catch,
     catchAny,
+    decodeUtf8',
     finally,
     fromInteger,
     fromIntegral,
@@ -372,35 +373,27 @@ type Unicode = Text
 -- $show
 -- Show
 
-inspect ::
-  forall dst src.
-  ( Show src,
-    Data src,
-    Typeable dst,
-    IsString dst
-  ) =>
-  src ->
-  dst
+inspect :: forall dst src. (Show src, Data src, Textual dst) => src -> dst
 inspect =
   display @dst @src
     . Syb.everywhere (Syb.mkT prettyByteString)
     . Syb.everywhere (Syb.mkT prettyLazyByteString)
 
-inspectType :: forall a b. (Typeable a, IsString b) => b
+inspectType :: forall a b. (Typeable a, Textual b) => b
 inspectType =
   Universum.show
     . Typeable.typeRep
     $ Proxy @a
 
-inspectSymbol :: forall a b. (KnownSymbol a, IsString b) => b
+inspectSymbol :: forall a b. (KnownSymbol a, Textual b) => b
 inspectSymbol =
-  fromString
+  from @String @b
     . TypeLits.symbolVal
     $ Proxy @a
 
 data RatioFormat = RatioFormat
   { ratioFormatDoRounding :: Bool,
-    ratioFormatThousandsSeparator :: String,
+    ratioFormatThousandsSeparator :: Unicode,
     ratioFormatDecimalPlacesAfterNonZero :: Maybe Natural,
     ratioFormatDecimalPlacesTotalLimit :: Maybe Natural,
     ratioFormatDecimalPlacesTotalLimitOverflow :: DecimalPlacesOverflowFormat
@@ -424,7 +417,7 @@ defaultRatioFormat =
 
 inspectRatio ::
   forall a b.
-  ( IsString a,
+  ( Textual a,
     From b Integer,
     Integral b
   ) =>
@@ -452,14 +445,14 @@ inspectRatio fmt signedRational =
                 >= limit
                 && ratioFormatDecimalPlacesTotalLimitOverflow fmt
                 == DecimalPlacesOverflowExponent ->
-                fromString @a
+                from @String @a
                   . Scientific.formatScientific Scientific.Exponent Nothing
                   . either fst fst
                   . Scientific.fromRationalRepetend Nothing
                   $ signedNumerator
                   % signedDenominator
           _ ->
-            fromString @a
+            from @String @a
               $ (if signedRational < 0 then "-" else mempty)
               <> Prelude.shows
                 quotient
@@ -501,7 +494,7 @@ inspectRatio fmt signedRational =
 
 inspectRatioDef ::
   forall a b.
-  ( IsString a,
+  ( Textual a,
     From b Integer,
     Integral b
   ) =>
@@ -516,41 +509,27 @@ roundRational decimalPlaces input =
   where
     mult = 10 ^ decimalPlaces
 
-display ::
-  forall dst src.
-  ( Show src,
-    Typeable src,
-    Typeable dst,
-    IsString dst
-  ) =>
-  src ->
-  dst
+display :: forall dst src. (Show src, Typeable src, Textual dst) => src -> dst
 display x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @dst =
       x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @String =
-      fromString x
+      from @String @dst x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @Text =
-      fromString $ from @Text @String x
+      from @Text @dst x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @TL.Text =
-      fromString $ from @TL.Text @String x
+      from @TL.Text @dst x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @ByteString =
-      either
-        (const $ Universum.show x)
-        (fromString . from @Text @String)
-        (TE.decodeUtf8' x)
+      either (const $ Universum.show x) id $ decodeUtf8Strict x
   | Just HRefl <- typeOf x `eqTypeRep` typeRep @BL.ByteString =
-      either
-        (const $ Universum.show x)
-        (fromString . from @TL.Text @String)
-        (TLE.decodeUtf8' x)
+      either (const $ Universum.show x) id $ decodeUtf8Strict x
   | otherwise =
       defDisplay
   where
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
-    defDisplay 
+    defDisplay
       | Just HRefl <- typeOf x `eqTypeRep` typeRep @JS.JSString =
-          fromString $ JS.unpack x
+          from @String @dst $ from @JS.JSString @String x
       | otherwise =
           Universum.show x
 #else
@@ -685,10 +664,10 @@ getCurrentPicos = do
 -- Exceptions
 
 data ParseException = ParseException
-  { parseExceptionSource :: Text,
+  { parseExceptionSource :: String,
     parseExceptionSourceType :: SomeTypeRep,
     parseExceptionTargetType :: SomeTypeRep,
-    parseExceptionFailure :: Text
+    parseExceptionFailure :: String
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
@@ -757,9 +736,9 @@ parseRatio str =
         then pure rat
         else
           throwParseException str
-            $ inspectType @int
+            $ inspectType @int @String
             <> " numerator or denominator seems to be out of bounds, expected "
-            <> inspect @Text rhsRat
+            <> inspect rhsRat
             <> " but got "
             <> inspect lhsRat
     Right e ->
@@ -793,7 +772,7 @@ utf8FromLatin1 raw =
   from @ByteString @a
     . encodeUtf8
     . either (const $ decodeLatin1 bs) id
-    $ decodeUtf8' bs
+    $ decodeUtf8Strict bs
   where
     bs = from @a @ByteString raw
 
@@ -802,7 +781,7 @@ utf8FromLatin1 raw =
 
 qq ::
   forall inp out e.
-  ( IsString inp,
+  ( Textual inp,
     Typeable out,
     TH.Lift out,
     Data e,
@@ -826,7 +805,7 @@ qq parser =
                   <> ") with the failure ("
                   <> inspect e
                   <> ")"
-          case parser $ fromString @inp x0 of
+          case parser $ from @String @inp x0 of
             Left e -> fatal e
             Right x -> TH.lift x
     }
@@ -1071,9 +1050,14 @@ prevEnum x
   | otherwise = pred x
 
 type Textual mono =
-  ( Seq.Textual mono,
+  ( Typeable mono,
     Container mono,
-    Typeable mono
+    Seq.Textual mono,
+    From String mono,
+    From Text mono,
+    From TL.Text mono,
+    ConvertUtf8 mono ByteString,
+    ConvertUtf8 mono BL.ByteString
   )
 
 strip :: (Textual mono) => mono -> mono

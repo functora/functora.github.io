@@ -223,8 +223,8 @@ tryFetchCurrencies opts uri = tryMarket $ do
   let xs2 =
         flip fmap xs1 . uncurry $ \code text ->
           CurrencyInfo
-            { currencyInfoCode = CurrencyCode code,
-              currencyInfoText = text
+            { currencyInfoCode = CurrencyCode $ from @Text @Unicode code,
+              currencyInfoText = from @Text @Unicode text
             }
   ct <- getCurrentTime
   pure Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
@@ -261,15 +261,23 @@ tryFetchQuotesPerBase opts cur uri = tryMarket $ do
   bytes <- utf8FromLatin1 <$> webFetch uri opts
   updatedAt <- getCurrentTime
   either throwString pure . flip A.eitherDecode bytes $ do
-    createdAt <- A.at ["date"] A.day
+    createdAt <-
+      A.at ["date"] A.day
     quotesMap <-
-      A.at [fromString . from @Text @String $ unCurrencyCode cur]
+      A.at
+        [ A.fromText
+            . from @Unicode @Text
+            $ unCurrencyCode cur
+        ]
         $ A.mapStrict unJsonMoney
     pure
       QuotesPerBaseAt
-        { quotesPerBaseQuotesMap = Map.mapKeys CurrencyCode quotesMap,
-          quotesPerBaseCreatedAt = UTCTime {utctDay = createdAt, utctDayTime = 0},
-          quotesPerBaseUpdatedAt = updatedAt
+        { quotesPerBaseQuotesMap =
+            Map.mapKeys (CurrencyCode . from @Text @Unicode) quotesMap,
+          quotesPerBaseCreatedAt =
+            UTCTime {utctDay = createdAt, utctDayTime = 0},
+          quotesPerBaseUpdatedAt =
+            updatedAt
         }
 
 -- $uris
@@ -297,9 +305,18 @@ newQuotePerBaseUris :: (MonadThrow m) => CurrencyCode -> m (NonEmpty URI)
 newQuotePerBaseUris cur = do
   uris <- newRootUris
   fmap sconcat . forM uris $ \uri -> do
-    pre <- URI.mkPathPiece "currencies"
-    pp0 <- URI.mkPathPiece $ unCurrencyCode cur <> ".min.json"
-    pp1 <- URI.mkPathPiece $ unCurrencyCode cur <> ".json"
+    pre <-
+      URI.mkPathPiece "currencies"
+    pp0 <-
+      URI.mkPathPiece
+        . from @Unicode @Text
+        $ unCurrencyCode cur
+        <> ".min.json"
+    pp1 <-
+      URI.mkPathPiece
+        . from @Unicode @Text
+        $ unCurrencyCode cur
+        <> ".json"
     pure
       [ uri & URILens.uriPath %~ (<> [pre, pp0]),
         uri & URILens.uriPath %~ (<> [pre, pp1])

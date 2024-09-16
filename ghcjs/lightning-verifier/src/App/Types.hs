@@ -224,7 +224,7 @@ stQuery st = do
     encodeText :: (MonadThrow m) => BL.ByteString -> m Prelude.Text
     encodeText =
       either throw pure
-        . decodeUtf8'
+        . decodeUtf8Strict
         . B64URL.encode
         . from @BL.ByteString @ByteString
 

@@ -34,12 +34,10 @@ module Functora.Money
 where
 
 import qualified Data.Aeson.Combinators.Decode as A
-import qualified Data.Text as T
 import Functora.Cfg
 import Functora.MoneySing as X
 import Functora.Prelude
 import Functora.Tags as X
-import qualified Language.Haskell.TH.Syntax as TH
 
 type IntRep tags = IntRepFamily (GetTag SignedOrUnsigned tags)
 
@@ -305,32 +303,30 @@ unJsonUnsignedMoneyGOL =
   newUnsignedMoneyGOL @tags <$> unJsonRational
 
 newtype CurrencyCode = CurrencyCode
-  { unCurrencyCode :: Text
+  { unCurrencyCode :: Unicode
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving newtype (Binary, FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 
-inspectCurrencyCode :: forall a. (From Text a) => CurrencyCode -> a
+inspectCurrencyCode :: CurrencyCode -> Unicode
 inspectCurrencyCode =
-  from @Text @a
-    . T.strip
+  strip
     . unCurrencyCode
 
 data CurrencyInfo = CurrencyInfo
   { currencyInfoCode :: CurrencyCode,
-    currencyInfoText :: Text
+    currencyInfoText :: Unicode
   }
-  deriving stock (Eq, Ord, Show, Read, Data, Generic, TH.Lift)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving (Binary, FromJSON, ToJSON) via GenericType CurrencyInfo
 
-inspectCurrencyInfo :: forall a. (From Text a) => CurrencyInfo -> a
+inspectCurrencyInfo :: CurrencyInfo -> Unicode
 inspectCurrencyInfo input =
-  from @Text @a
-    $ if null info
-      then code
-      else code <> " - " <> info
+  if null info
+    then code
+    else code <> " - " <> info
   where
-    info = T.strip $ currencyInfoText input
+    info = strip $ currencyInfoText input
     code = inspectCurrencyCode $ currencyInfoCode input
 
 --

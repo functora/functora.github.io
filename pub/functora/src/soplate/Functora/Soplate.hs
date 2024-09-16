@@ -47,8 +47,7 @@ inspectSop ::
     Typeable src,
     Soplate ByteString src,
     Soplate BL.ByteString src,
-    Typeable dst,
-    IsString dst
+    Textual dst
   ) =>
   src ->
   dst

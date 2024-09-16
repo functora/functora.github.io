@@ -12,7 +12,6 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
 import Functora.Money hiding (Currency, Money, Text)
-import qualified Functora.Prelude as Prelude
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.LayoutGrid as LayoutGrid
@@ -58,7 +57,6 @@ selectCurrency
                   ]
                 $ Button.config
             )
-            . toMisoString @Prelude.Text
             . inspectCurrencyInfo
             $ fromMaybe
               (CurrencyInfo (CurrencyCode "XXX") mempty)
@@ -153,9 +151,7 @@ currencyListWidget
       newFuzz cur =
         Fuzzy.Fuzzy
           { Fuzzy.original = cur,
-            Fuzzy.rendered =
-              toMisoString @Prelude.Text
-                $ inspectCurrencyInfo cur,
+            Fuzzy.rendered = inspectCurrencyInfo cur,
             Fuzzy.score = 0
           }
       search =
@@ -182,8 +178,7 @@ currencyListWidget
                 )
                 "<b>"
                 "</b>"
-                ( toMisoString @Prelude.Text . inspectCurrencyInfo
-                )
+                inspectCurrencyInfo
                 False
 
 currencyListItemWidget ::

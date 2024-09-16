@@ -485,20 +485,13 @@ newPaymentMethod ::
   m (PaymentMethod Unique)
 newPaymentMethod cur addr0 = do
   lbl <-
-    newTextField
-      . toMisoString @Prelude.Text
-      $ inspectCurrencyInfo cur
-      <> " total"
+    newTextField $ inspectCurrencyInfo cur <> " total"
   addr1 <-
     maybe
       ( pure Nothing
       )
       ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
-          . newFieldPair
-            ( toMisoString @Prelude.Text
-                $ inspectCurrencyInfo cur
-                <> " address"
-            )
+          . newFieldPair (inspectCurrencyInfo cur <> " address")
           . DynamicFieldText
       )
       addr0

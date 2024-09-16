@@ -66,9 +66,8 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
                       )
                       ( Field.defOpts
                           & #optsPlaceholder
-                          .~ toMisoString @Prelude.Text
-                            ( inspectCurrencyInfo
-                                $ money
+                          .~ inspectCurrencyInfo
+                            ( money
                                 ^. #moneyCurrency
                                 . #currencyOutput
                             )

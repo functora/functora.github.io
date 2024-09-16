@@ -47,7 +47,7 @@ spec = do
       `shouldBe` "Buz {_unBuz = fromList [(\"buf\",123),(\"j\\246\\171\\231\\231\\166y\",321)]}"
     inspect @Text x
       `shouldBe` "Buz {_unBuz = fromList [(\"6af6abe7e7a679\",321),(\"buf\",123)]}"
-  it "inspect/IsString" $ do
+  it "inspect/Textual" $ do
     inspect @Text ("HELLO" :: String) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: Text) `shouldBe` "HELLO"
     inspect @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
@@ -139,7 +139,7 @@ spec = do
   inspectParseRatioUnsigned @Word16
   inspectParseRatioUnsigned @Word32
   inspectParseRatioUnsigned @Word64
-  it "inspectSop/IsString" $ do
+  it "inspectSop/Textual" $ do
     inspectSop @Text ("HELLO" :: String) `shouldBe` "HELLO"
     inspectSop @Text ("HELLO" :: Text) `shouldBe` "HELLO"
     inspectSop @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"

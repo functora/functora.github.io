@@ -133,7 +133,9 @@ common pkg
     , with-utf8
 
   if (impl(ghcjs) || arch(javascript))
-    build-depends: ghcjs-base
+    build-depends:
+      , ghcjs-base
+      , miso
 
   if os(wasi)
     build-depends:

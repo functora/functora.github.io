@@ -35,7 +35,7 @@ import qualified Network.HTTP.Media as M
 
 #ifndef wasi_HOST_OS
 newtype Opts = Opts
-  { optsQueryString :: [(ByteString, Maybe ByteString)]
+  { optsQueryString :: [(Unicode, Maybe Unicode)]
   }
   deriving stock (Eq, Generic)
 
@@ -46,7 +46,7 @@ defOpts =
     }
 #else
 data Opts = Opts
-  { optsQueryString :: [(ByteString, Maybe ByteString)],
+  { optsQueryString :: [(Unicode, Maybe Unicode)],
     optsJSContextRef :: JSDOM.JSContextRef
   }
   deriving stock (Eq, Generic)
@@ -145,22 +145,10 @@ webFetch prevUri opts = do
 #endif
 
 #ifndef wasi_HOST_OS
-newQueryParam ::
-  (MonadThrow m) => ByteString -> Maybe ByteString -> m URI.QueryParam
+newQueryParam :: (MonadThrow m) => Unicode -> Maybe Unicode -> m URI.QueryParam
 newQueryParam keyRaw valRaw = do
-  keyTxt <-
-    either throw pure
-      . tryFrom @(UTF_8 ByteString) @Text
-      $ Tagged @"UTF-8" keyRaw
-  key <- URI.mkQueryKey keyTxt
-  valTxt <-
-    traverse
-      ( either throw pure
-          . tryFrom @(UTF_8 ByteString) @Text
-          . Tagged @"UTF-8"
-      )
-      valRaw
-  val <- traverse URI.mkQueryValue valTxt
+  key <- URI.mkQueryKey $ from @Unicode @Text keyRaw
+  val <- traverse URI.mkQueryValue $ fmap (from @Unicode @Text) valRaw
   pure $ maybe (URI.QueryFlag key) (URI.QueryParam key) val
 #endif
 

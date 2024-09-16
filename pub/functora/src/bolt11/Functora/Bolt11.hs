@@ -20,7 +20,6 @@ module Functora.Bolt11
     Bolt11Hrp (..),
     Bolt11Sig (..),
     Bolt11 (..),
-    inspectW5,
     decodeBolt11,
   )
 where
@@ -40,7 +39,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Data.Text.Lazy as TL
 import Functora.Prelude hiding (error)
 import Prelude (Show (..), error)
 
@@ -50,11 +48,9 @@ newtype Hex = Hex
   deriving stock (Eq, Ord, Data, Generic)
 
 instance Show Hex where
-  show =
-    from @TL.Text @String
-      . inspectHex
+  show = inspectHex @String
 
-inspectHex :: Hex -> TL.Text
+inspectHex :: (Textual a) => Hex -> a
 inspectHex =
   decodeUtf8
     . BS.toLazyByteString
@@ -82,7 +78,7 @@ instance IsString Hex where
 data Tag
   = PaymentHash Hex
   | PaymentSecret Hex
-  | Description Text
+  | Description Unicode
   | AdditionalMetadata [Word5]
   | PayeePubkey Hex
   | DescriptionHash Hex
@@ -208,8 +204,8 @@ data Route = Route
 instance A.ToJSON Route where
   toJSON x =
     A.object
-      [ "pubkey" A..= inspectHex (routePubKey x),
-        "short_channel_id" A..= inspectHex (routeShortChanId x),
+      [ "pubkey" A..= inspectHex @String (routePubKey x),
+        "short_channel_id" A..= inspectHex @String (routeShortChanId x),
         "fee_base_msat" A..= routeFeeBaseMsat x,
         "fee_proportional_millionths" A..= routeFeePropMillionth x,
         "cltv_expiry_delta" A..= routeCltvExpiryDelta x
@@ -217,9 +213,9 @@ instance A.ToJSON Route where
   toEncoding x =
     A.pairs
       $ "pubkey"
-      A..= inspectHex (routePubKey x)
+      A..= inspectHex @String (routePubKey x)
         <> "short_channel_id"
-      A..= inspectHex (routeShortChanId x)
+      A..= inspectHex @String (routeShortChanId x)
         <> "fee_base_msat"
       A..= routeFeeBaseMsat x
         <> "fee_proportional_millionths"
@@ -284,7 +280,7 @@ data Bolt11HrpAmt = Bolt11HrpAmt
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-inspectBolt11HrpAmt :: (IsString a, Semigroup a) => Bolt11HrpAmt -> a
+inspectBolt11HrpAmt :: forall a. (Textual a) => Bolt11HrpAmt -> a
 inspectBolt11HrpAmt (Bolt11HrpAmt amt mul) =
   if sat > 1_000_000
     then inspectBolt11HrpAmt' btc <> " BTC"
@@ -302,9 +298,9 @@ inspectBolt11HrpAmt (Bolt11HrpAmt amt mul) =
 
 inspectBolt11HrpAmt' ::
   forall a b.
-  ( IsString a,
-    From b Integer,
-    Integral b
+  ( Textual a,
+    Integral b,
+    From b Integer
   ) =>
   Ratio b ->
   a
@@ -390,9 +386,9 @@ w5hex :: [Word5] -> Either String Hex
 w5hex =
   second Hex . w5bs
 
-w5txt :: [Word5] -> Either String Text
+w5txt :: [Word5] -> Either String Unicode
 w5txt =
-  first displayException . decodeUtf8' <=< w5bs
+  first displayException . decodeUtf8Strict <=< w5bs
 
 w5int :: [Word5] -> Int
 w5int bytes = foldl' decodeInt 0 (zip [0 ..] (take 7 (reverse bytes)))
@@ -429,13 +425,6 @@ w5addr net (v0 : rest) =
       Left $ "Bad Onchain Fallback verion " <> inspect vsn
   where
     cfg = networkSettings net
-
-inspectW5 :: forall a. (From Text a) => [Word5] -> a
-inspectW5 ws =
-  from @Text @a
-    . either (const . inspect $ fmap fromEnum ws) id
-    $ w5txt ws
-    <|> fmap inspect (w5bs ws)
 
 parseTag :: Network -> [Word5] -> (Maybe Tag, [Word5])
 parseTag _ [] = (Nothing, [])

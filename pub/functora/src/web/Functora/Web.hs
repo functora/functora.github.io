@@ -99,7 +99,7 @@ webFetch prevUri opts = do
     else
       throwString $
         "Bad HTTP status="
-          <> inspect @Text webResCode
+          <> inspect @Unicode webResCode
           <> " of req="
           <> inspect webReq
           <> " with res="
@@ -126,7 +126,7 @@ webFetch prevUri opts = do
     else
       throwString $
         "Bad HTTP status="
-          <> inspect @Text webResCode
+          <> inspect @Unicode webResCode
           <> " of req="
           <> inspect nextUri
           <> " with res="

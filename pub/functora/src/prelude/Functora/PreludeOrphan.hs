@@ -154,11 +154,15 @@ instance ConvertUtf8 JSString BL.ByteString where
   decodeUtf8Strict = fmap JS.pack . decodeUtf8Strict
 
 instance Binary JSString where
-  put = Binary.put . from @JSString @Text
-  get = fmap (from @Text @JSString) Binary.get
+  put = Binary.put . encodeUtf8 @JSString @ByteString
+  get = do
+    bs <- Binary.get
+    case decodeUtf8Strict @JSString @ByteString bs of
+      Right x -> pure x
+      Left e -> fail $ displayException e
 
 instance A.ToJSONKey JSString where
-  toJSONKey = contramap (from @JSString @Text) $ A.toJSONKey
+  toJSONKey = contramap (from @JSString @Text) $ A.toJSONKey @Text
 
 instance A.FromJSONKey JSString where
   fromJSONKey = fmap (from @Text @JSString) $ A.fromJSONKey @Text

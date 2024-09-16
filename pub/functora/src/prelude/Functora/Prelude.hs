@@ -529,7 +529,7 @@ display x
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
     defDisplay
       | Just HRefl <- typeOf x `eqTypeRep` typeRep @JS.JSString =
-          from @String @dst $ from @JS.JSString @String x
+          from @JS.JSString @dst x
       | otherwise =
           Universum.show x
 #else
@@ -664,10 +664,10 @@ getCurrentPicos = do
 -- Exceptions
 
 data ParseException = ParseException
-  { parseExceptionSource :: String,
+  { parseExceptionSource :: Unicode,
     parseExceptionSourceType :: SomeTypeRep,
     parseExceptionTargetType :: SomeTypeRep,
-    parseExceptionFailure :: String
+    parseExceptionFailure :: Unicode
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
@@ -736,7 +736,7 @@ parseRatio str =
         then pure rat
         else
           throwParseException str
-            $ inspectType @int @String
+            $ inspectType @int @Unicode
             <> " numerator or denominator seems to be out of bounds, expected "
             <> inspect rhsRat
             <> " but got "
@@ -1056,6 +1056,7 @@ type Textual mono =
     From String mono,
     From Text mono,
     From TL.Text mono,
+    From Unicode mono,
     ConvertUtf8 mono ByteString,
     ConvertUtf8 mono BL.ByteString
   )

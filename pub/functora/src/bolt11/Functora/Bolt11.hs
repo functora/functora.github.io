@@ -204,8 +204,8 @@ data Route = Route
 instance A.ToJSON Route where
   toJSON x =
     A.object
-      [ "pubkey" A..= inspectHex @String (routePubKey x),
-        "short_channel_id" A..= inspectHex @String (routeShortChanId x),
+      [ "pubkey" A..= inspectHex @Unicode (routePubKey x),
+        "short_channel_id" A..= inspectHex @Unicode (routeShortChanId x),
         "fee_base_msat" A..= routeFeeBaseMsat x,
         "fee_proportional_millionths" A..= routeFeePropMillionth x,
         "cltv_expiry_delta" A..= routeCltvExpiryDelta x
@@ -213,9 +213,9 @@ instance A.ToJSON Route where
   toEncoding x =
     A.pairs
       $ "pubkey"
-      A..= inspectHex @String (routePubKey x)
+      A..= inspectHex @Unicode (routePubKey x)
         <> "short_channel_id"
-      A..= inspectHex @String (routeShortChanId x)
+      A..= inspectHex @Unicode (routeShortChanId x)
         <> "fee_base_msat"
       A..= routeFeeBaseMsat x
         <> "fee_proportional_millionths"

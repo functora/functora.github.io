@@ -9,7 +9,6 @@ import Network.Wai.Application.Static
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.WebSockets as Ws
 import qualified Data.ByteString.Lazy as BL
-import qualified Miso.String as MS
 #endif
 
 #ifdef wasi_HOST_OS
@@ -84,7 +83,7 @@ runApp app = do
           staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) ->
           staticApp (defaultWebAppSettings "static") req
-        (file : _) | (MS.isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
+        (file : _) | (isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
           staticApp (defaultWebAppSettings "static") req
         _ ->
           JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req

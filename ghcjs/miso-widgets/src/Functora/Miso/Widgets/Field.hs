@@ -870,7 +870,7 @@ genericFieldViewer args widget =
     allowCopy =
       opts ^. #fieldOptsAllowCopy
     allowTrunc =
-      maybe False (MS.length input >) $ opts ^. #fieldOptsTruncateLimit
+      maybe False (length input >) $ opts ^. #fieldOptsTruncateLimit
     stateTrunc =
       fromMaybe Closed $ opts ^. #fieldOptsTruncateState
     extraWidgets =
@@ -939,7 +939,7 @@ truncateFieldInput ::
   Unicode
 truncateFieldInput True Closed limit full =
   let half = fromMaybe defTruncateLimit limit `div` 2
-   in MS.take half full
+   in take half full
         <> "..."
         <> MS.takeEnd half full
 truncateFieldInput _ _ _ full =

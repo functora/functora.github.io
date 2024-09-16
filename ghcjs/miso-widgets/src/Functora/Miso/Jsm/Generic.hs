@@ -17,7 +17,6 @@ where
 import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
 import qualified Language.Javascript.JSaddle as JS
-import qualified Miso.String as MS
 import qualified Text.URI as URI
 import qualified Prelude
 import qualified Prelude ((!!))
@@ -123,15 +122,11 @@ selectStorage key after =
 
 selectBarcode :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectBarcode after =
-  genericPromise "selectBarcode" Nothing
-    $ after
-    . fmap MS.strip
+  genericPromise "selectBarcode" Nothing $ after . fmap strip
 
 selectClipboard :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectClipboard after =
-  genericPromise "selectClipboard" Nothing
-    $ after
-    . fmap MS.strip
+  genericPromise "selectClipboard" Nothing $ after . fmap strip
 
 genericPromise ::
   Unicode ->

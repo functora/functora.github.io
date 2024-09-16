@@ -231,7 +231,6 @@ import Data.Sequences as X hiding
     sortOn,
     splitAt,
     subsequences,
-    take,
     takeWhile,
     uncons,
   )
@@ -306,6 +305,7 @@ import Universum as X hiding
     state,
     swap,
     tails,
+    take,
     throwM,
     toStrict,
     try,

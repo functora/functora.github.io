@@ -13,7 +13,6 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
-import qualified Miso.String as MS
 
 fav :: Model -> [View Action]
 fav st =
@@ -114,8 +113,8 @@ fav st =
 
 makeFavName :: Model -> Unicode
 makeFavName =
-  MS.toUpper
-    . MS.strip
+  toUpper
+    . strip
     . (^. #modelFavName . #fieldInput . #uniqueValue)
 
 favItems :: Model -> [View Action]

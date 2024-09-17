@@ -13,7 +13,6 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Language.Javascript.JSaddle as JS
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
@@ -89,11 +88,7 @@ menu st =
                     ( IconButton.config
                         & IconButton.setOnClick
                           ( PushUpdate . Instant $ \next -> do
-                              void
-                                $ JS.global
-                                ^. JS.js1
-                                  ("printCurrentPage" :: Unicode)
-                                  ("lightning-verifier" :: Unicode)
+                              Jsm.printCurrentPage "lightning-verifier"
                               pure next
                           )
                         & IconButton.setAttributes

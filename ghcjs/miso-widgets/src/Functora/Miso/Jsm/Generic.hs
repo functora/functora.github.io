@@ -11,6 +11,7 @@ module Functora.Miso.Jsm.Generic
     selectBarcode,
     selectClipboard,
     genericPromise,
+    printCurrentPage,
   )
 where
 
@@ -171,3 +172,8 @@ genericPromise fun marg after = do
   void
     $ prom
     ^. JS.js2 @Unicode "then" success failure
+
+printCurrentPage :: Unicode -> JSM ()
+printCurrentPage name = do
+  pkg <- getPkg
+  void $ pkg ^. JS.js1 ("printCurrentPage" :: Unicode) name

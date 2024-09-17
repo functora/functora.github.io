@@ -1,0 +1,1 @@
+import{W as WebPlugin}from"./main.js";class WebviewPrintWeb extends WebPlugin{async print(e){const t=document.title;return document.title=e.name,window.onafterprint=()=>document.title=t,window.print()}}export{WebviewPrintWeb};

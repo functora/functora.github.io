@@ -64,8 +64,11 @@ with (import ./default.nix); let
         ./gradlew assembleRelease
         ${app-keygen-android}/bin/app-keygen-android
         rm ${repo}/android/app.apk || true
+        rm ${repo}/android/${label}-v${vsn}.apk || true
         ${app-sign-apk}/bin/app-sign-apk
+        cp ${repo}/android/app.apk ${repo}/android/${label}-v${vsn}.apk
         ls -la ${repo}/android/app.apk
+        ls -la ${repo}/android/${label}-v${vsn}.apk
       )
     '';
   };

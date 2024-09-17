@@ -1,0 +1,52 @@
+platforms:
+  android:
+    appName: Lightning Verifier
+    versionCode: 2
+    versionName: 0.1.0.2
+    packageName: com.functora.lightning_verifier
+    manifest:
+      - file: AndroidManifest.xml
+        target: manifest/application/activity
+        attrs:
+          android:label: "@string/app_name"
+    gradle:
+      - file: variables.gradle
+        target:
+          ext:
+            minSdkVersion:
+        replace:
+          minSdkVersion: 26
+      - file: ../node_modules/@capacitor/barcode-scanner/android/build.gradle
+        target:
+          android:
+            compileOptions:
+        replace:
+          compileOptions: |
+            {
+                sourceCompatibility JavaVersion.VERSION_21
+                targetCompatibility JavaVersion.VERSION_21
+            }
+      - file: build.gradle
+        target:
+          allprojects:
+            repositories:
+        replace:
+          repositories: |
+            {
+                google()
+                mavenCentral()
+                maven {
+                    url 'https://maven.mozilla.org/maven2/'
+                }
+                maven {
+                    url 'https://pkgs.dev.azure.com/OutSystemsRD/9e79bc5b-69b2-4476-9ca5-d67594972a52/_packaging/PublicArtifactRepository/maven/v1'
+                    name 'Azure'
+                    credentials {
+                        username = "optional"
+                        password = ""
+                    }
+                    content {
+                        includeGroup "com.github.outsystems"
+                    }
+                }
+            }

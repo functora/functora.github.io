@@ -93,6 +93,7 @@ common pkg
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends: ghcjs-base
+    js-sources:    js/main.min.js
 
 library
   import:          pkg

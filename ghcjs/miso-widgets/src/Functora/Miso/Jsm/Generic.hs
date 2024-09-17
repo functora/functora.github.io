@@ -20,17 +20,25 @@ import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
 import qualified Prelude ((!!))
 
+--
+-- TODO : better code with JS foreign import???
+--
+
+getPkg :: JSM JS.JSVal
+getPkg =
+  JS.global JS.! ("h$miso_widgets" :: Unicode)
+
 popupText :: (Show a, Data a) => a -> JSM ()
-popupText x =
-  void
-    $ JS.global
-    ^. JS.js1 ("popupText" :: Unicode) (inspect x :: Unicode)
+popupText x = do
+  pkg <- getPkg
+  void $ pkg ^. JS.js1 ("popupText" :: Unicode) (inspect x :: Unicode)
 
 shareText :: (Show a, Data a) => a -> model -> JSM model
 shareText x st = do
   let txt = inspect @Unicode x
   unless (txt == mempty) $ do
-    prom <- JS.global ^. JS.js1 ("shareText" :: Unicode) txt
+    pkg <- getPkg
+    prom <- pkg ^. JS.js1 ("shareText" :: Unicode) txt
     success <- JS.function $ \_ _ _ -> popupText @Unicode "Copied!"
     failure <- JS.function $ \_ _ _ -> popupText @Unicode "Failed to copy!"
     void $ prom ^. JS.js2 ("then" :: Unicode) success failure
@@ -75,7 +83,8 @@ swapAt i j xs
 
 openBrowserPage :: URI -> model -> JSM model
 openBrowserPage uri st = do
-  void $ JS.global ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
+  pkg <- getPkg
+  void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
   pure st
 
 enterOrEscapeBlur :: Uid -> KeyCode -> model -> JSM model
@@ -100,8 +109,9 @@ insertStorage key raw = do
       . decodeUtf8Strict @Unicode @BL.ByteString
       . unTagged
       $ encodeJson raw
+  pkg <- getPkg
   void
-    $ JS.global
+    $ pkg
     ^. JS.js2 @Unicode "insertStorage" key val
 
 selectStorage :: (FromJSON a) => Unicode -> (Maybe a -> JSM ()) -> JSM ()
@@ -153,10 +163,11 @@ genericPromise fun marg after = do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
       consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
       after Nothing
+  pkg <- getPkg
   prom <-
     case marg of
-      Nothing -> JS.global ^. JS.js0 fun
-      Just arg -> JS.global ^. JS.js1 fun arg
+      Nothing -> pkg ^. JS.js0 fun
+      Just arg -> pkg ^. JS.js1 fun arg
   void
     $ prom
     ^. JS.js2 @Unicode "then" success failure

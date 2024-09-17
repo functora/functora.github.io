@@ -42,7 +42,6 @@ in rec {
       (
         cd ${repo}
         ${functora-pkgs.nodejs}/bin/npm i --prefer-offline
-        ${functora-pkgs.nodejs}/bin/npm run build
         nix-build -A releaseDer
         rm -rf ./dist/latest
         mkdir -p ./dist/latest
@@ -81,16 +80,6 @@ in rec {
       cp ${./static}/*.woff2 $out/static/
       cp ${./static}/*.webmanifest $out/
       cp ${./static}/*.ico $out/
-      for FILE in ${./static}/web*.js; do
-        ${functora-pkgs.terser}/bin/terser \
-          $FILE -o $out/$(basename $FILE) --compress --mangle --source-map
-      done
-      for FILE in ${./static}/pwa*.js; do
-        ${functora-pkgs.terser}/bin/terser \
-          $FILE -o $out/$(basename $FILE) --compress --mangle --source-map
-      done
-      ${functora-pkgs.terser}/bin/terser \
-        ${./static}/main.js -o $out/main.js --compress --mangle --source-map
       ${functora-pkgs.html-minifier}/bin/html-minifier \
         --minify-js \
         --minify-css \
@@ -105,23 +94,28 @@ in rec {
         --minify-js \
         --minify-css \
         -o $out/index.html \
-        ${./static}/ghcjs.html
+        ${./static/ghcjs.html}
       ${functora-pkgs.clean-css-cli}/bin/cleancss \
         -O2 \
         --source-map \
         -o $out/static/all.css \
-        ${./static}/material-components-web.min.css \
-        ${./static}/material-icons.css \
-        ${./static}/app.css
+        ${./static/material-components-web.min.css} \
+        ${./static/material-icons.css} \
+        ${./static/app.css}
       ${functora-pkgs.closurecompiler}/bin/closure-compiler \
         --jscomp_off=checkVars \
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/${label}.jsexe/all.js.externs \
-        --externs ${./static}/app.js \
-        --externs ${./static/hs-bitcoin-hash.js} \
-        --externs ${./static/hs-bitcoin-keys.js} \
-        --externs ${./static}/material-components-web.min.js \
-        --externs ${./static}/material-components-web-elm.min.js \
+        --externs ${./static/app.js} \
+        --externs ${
+        pkgs.haskell.packages.ghc865.bitcoin-hash.src
+      }/js/index.compiled.js \
+        --externs ${
+        pkgs.haskell.packages.ghc865.bitcoin-keys.src
+      }/js/index.compiled.js \
+        --externs ${../miso-widgets/js/main.min.js} \
+        --externs ${../miso-components/material-components-web.min.js} \
+        --externs ${../miso-components/material-components-web-elm.min.js} \
         --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
         --create_source_map $out/all.js.map \
         --js ${app}/bin/${label}.jsexe/all.js \

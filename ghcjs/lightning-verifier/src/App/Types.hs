@@ -38,7 +38,6 @@ import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Paths_lightning_verifier as Paths
 import qualified Text.URI as URI
-import qualified Text.URI.QQ as URI
 
 data Model = Model
   { modelFav :: OpenedOrClosed,
@@ -298,19 +297,24 @@ btc = CurrencyInfo (CurrencyCode "btc") mempty
 
 googlePlayLink :: URI
 googlePlayLink =
-  [URI.uri|https://play.google.com/apps/testing/com.functora.lightning_verifier|]
+  either impureThrow id
+    $ mkURI "https://play.google.com/apps/testing/com.functora.lightning_verifier"
 
 testGroupLink :: URI
 testGroupLink =
-  [URI.uri|https://groups.google.com/g/functora|]
+  either impureThrow id
+    $ mkURI "https://groups.google.com/g/functora"
 
 functoraLink :: URI
 functoraLink =
-  [URI.uri|https://functora.github.io/|]
+  either impureThrow id
+    $ mkURI "https://functora.github.io/"
 
 sourceLink :: URI
 sourceLink =
-  [URI.uri|https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier|]
+  either impureThrow id
+    $ mkURI
+      "https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier"
 
 apkLink :: URI
 apkLink =

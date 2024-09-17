@@ -7,7 +7,10 @@ build-type:    Simple
 
 common pkg
   default-language:   Haskell2010
-  js-sources:         material-components-web-elm.min.js
+  js-sources:
+    material-components-web-elm.min.js
+    material-components-web.min.js
+
   default-extensions: NoImplicitPrelude
   build-depends:
     , aeson

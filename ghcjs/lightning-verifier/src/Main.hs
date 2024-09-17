@@ -61,10 +61,10 @@ main =
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
-  let cap = "const cap = document.createElement('script'); cap.language = 'javascript'; cap.src = 'main.js'; cap.defer = 'defer'; cap.type = 'module'; document.getElementsByTagName('head')[0].appendChild(cap);" :: BL.ByteString
+  cap <- BL.readFile "../miso-widgets/js/main.min.js"
   js0 <- BL.readFile "static/app.js"
-  js1 <- BL.readFile "static/material-components-web.min.js"
-  js2 <- BL.readFile "static/material-components-web-elm.min.js"
+  js1 <- BL.readFile "../miso-components/material-components-web.min.js"
+  js2 <- BL.readFile "../miso-components/material-components-web-elm.min.js"
   Warp.runSettings
     ( Warp.setPort
         8080

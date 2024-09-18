@@ -1,9 +1,7 @@
-module App.Widgets.Main (mainWidget) where
+module App.Widgets.Main (mainWidget, pasteWidget) where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Bolt11 as Bolt11
-import qualified App.Widgets.Decrypt as Decrypt
 import qualified App.Widgets.Menu as Menu
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
@@ -55,43 +53,12 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st@Model {modelState = St {stCpt = Just {}}} =
-  case st ^. #modelState . #stScreen of
-    QrCode sc ->
-      Header.headerWrapper
-        ( Field.fieldViewer
-            Field.Args
-              { Field.argsModel = st,
-                Field.argsOptic = #modelState . #stPre,
-                Field.argsAction = PushUpdate . Instant
-              }
-        )
-        <> [ Grid.bigCell
-              $ FieldPairs.fieldPairsViewer
-                FieldPairs.Args
-                  { FieldPairs.argsModel = st,
-                    FieldPairs.argsOptic = #modelUriViewer,
-                    FieldPairs.argsAction = PushUpdate . Instant
-                  }
-           ]
-        <> [ Grid.bigCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setIcon (Just "login")
-                      & Button.setAttributes [Css.fullWidth]
-                      & Button.setOnClick (setScreenAction $ unQrCode sc)
-                  )
-                  "Open"
-              ]
-           ]
-    _ ->
-      Decrypt.decrypt st
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   Header.headerWrapper
     ( Field.fieldViewer
         Field.Args
           { Field.argsModel = st,
-            Field.argsOptic = #modelState . #stPre,
+            Field.argsOptic = #modelState . #stPreview,
             Field.argsAction = PushUpdate . Instant
           }
     )
@@ -113,88 +80,15 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               "Open"
           ]
        ]
-screenWidget st@Model {modelState = St {stScreen = Converter}} =
+screenWidget Model {modelState = St {stScreen = Main}} =
+  mempty
+screenWidget st@Model {modelState = St {stScreen = Donate}} =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args
       { FieldPairs.argsModel = st,
-        FieldPairs.argsOptic = #modelState . #stDoc . #stDocFieldPairs,
+        FieldPairs.argsOptic = #modelDonateViewer,
         FieldPairs.argsAction = PushUpdate . Instant
       }
-    <> [ Field.textField @Model @Action
-          Field.Args
-            { Field.argsModel = st,
-              Field.argsOptic = #modelState . #stDoc . #stDocLnInvoice,
-              Field.argsAction = PushUpdate . Delayed 300
-            }
-          ( Field.defOpts
-              { Field.optsFilledOrOutlined = Outlined,
-                Field.optsPlaceholder = "Invoice",
-                Field.optsLeadingWidget =
-                  if null
-                    ( st
-                        ^. #modelState
-                        . #stDoc
-                        . #stDocLnInvoice
-                        . #fieldInput
-                        . #uniqueValue
-                    )
-                    then
-                      pasteWidget
-                        "content_paste_go"
-                        Jsm.selectClipboard
-                        $ #modelState
-                        . #stDoc
-                        . #stDocLnInvoice
-                    else
-                      Just
-                        Field.ClearWidget,
-                Field.optsTrailingWidget =
-                  pasteWidget
-                    "qr_code_scanner"
-                    Jsm.selectBarcode
-                    $ #modelState
-                    . #stDoc
-                    . #stDocLnInvoice
-              }
-          ),
-         Field.textField
-          Field.Args
-            { Field.argsModel = st,
-              Field.argsOptic = #modelState . #stDoc . #stDocLnPreimage,
-              Field.argsAction = PushUpdate . Delayed 300
-            }
-          Field.defOpts
-            { Field.optsFilledOrOutlined = Outlined,
-              Field.optsPlaceholder = "Preimage",
-              Field.optsLeadingWidget =
-                if null
-                  ( st
-                      ^. #modelState
-                      . #stDoc
-                      . #stDocLnPreimage
-                      . #fieldInput
-                      . #uniqueValue
-                  )
-                  then
-                    pasteWidget
-                      "content_paste_go"
-                      Jsm.selectClipboard
-                      $ #modelState
-                      . #stDoc
-                      . #stDocLnPreimage
-                  else
-                    Just
-                      Field.ClearWidget,
-              Field.optsTrailingWidget =
-                pasteWidget
-                  "qr_code_scanner"
-                  Jsm.selectBarcode
-                  $ #modelState
-                  . #stDoc
-                  . #stDocLnPreimage
-            }
-       ]
-    <> Bolt11.bolt11Viewer st
 
 pasteWidget ::
   Unicode ->

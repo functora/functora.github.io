@@ -5,13 +5,11 @@ where
 
 import App.Types
 import qualified App.Widgets.Fav as Fav
-import qualified App.Widgets.Templates as Templates
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
@@ -44,18 +42,8 @@ menu st =
                   $ a_
                     [ style_ [("cursor", "pointer")],
                       onClick . PushUpdate . Instant $ \next -> do
-                        doc <- liftIO newStDoc
-                        pure
-                          $ next
-                          & #modelState
-                          . #stDoc
-                          .~ doc
-                          & #modelState
-                          . #stCpt
-                          .~ Nothing
-                          & #modelState
-                          . #stScreen
-                          .~ Converter
+                        doc <- liftIO newSt
+                        pure $ next & #modelState .~ doc
                     ]
                     [ text "Delivery Calculator"
                     ]
@@ -72,10 +60,6 @@ menu st =
                                 $ next
                                 & #modelFav
                                 .~ Opened
-                                & #modelFavName
-                                . #fieldInput
-                                . #uniqueValue
-                                .~ defFavName next
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -155,42 +139,18 @@ menu st =
                                 else "QR"
                           ],
                         Grid.mediumCell
-                          [ Button.raised
-                              ( Button.config
-                                  & Button.setDisabled disabled
-                                  & Button.setOnClick
-                                    ( PushUpdate
-                                        . Instant
-                                        . Jsm.addFieldPair
-                                        $ #modelState
-                                        . #stDoc
-                                        . #stDocFieldPairs
-                                    )
-                                  & Button.setIcon
-                                    ( Just "add_box"
-                                    )
-                                  & Button.setAttributes
-                                    [ Theme.secondaryBg,
-                                      Css.fullWidth
-                                    ]
-                              )
-                              "Note"
-                          ],
-                        Grid.mediumCell
-                          [ Field.dynamicField
+                          [ Field.textField
                               Field.Args
                                 { Field.argsModel = st,
-                                  Field.argsOptic = #modelState . #stPre,
+                                  Field.argsOptic = #modelState . #stPreview,
                                   Field.argsAction = PushUpdate . Instant
                                 }
                               ( Field.defOpts @Model @Action
-                                  & #optsDisabled
-                                  .~ disabled
                                   & #optsPlaceholder
                                   .~ ( "Preview - "
                                         <> ( st
                                               ^. #modelState
-                                              . #stPre
+                                              . #stPreview
                                               . #fieldType
                                               . to userFieldType
                                            )
@@ -200,41 +160,14 @@ menu st =
                                     ( Field.ModalWidget
                                         $ Field.ModalMiniWidget
                                           ( #modelState
-                                              . #stPre
+                                              . #stPreview
                                           )
                                     )
                                   & #optsFilledOrOutlined
                                   .~ Outlined
                               )
-                          ],
-                        Grid.mediumCell
-                          [ Field.passwordField
-                              Field.Args
-                                { Field.argsModel = st,
-                                  Field.argsOptic = #modelState . #stIkm,
-                                  Field.argsAction = PushUpdate . Instant
-                                }
-                              ( Field.defOpts
-                                  & #optsDisabled
-                                  .~ disabled
-                                  & #optsFilledOrOutlined
-                                  .~ Outlined
-                              )
                           ]
                       ]
-                    <> ( if disabled
-                          then mempty
-                          else
-                            FieldPairs.fieldPairsEditor
-                              FieldPairs.Args
-                                { FieldPairs.argsModel = st,
-                                  FieldPairs.argsOptic =
-                                    #modelState
-                                      . #stDoc
-                                      . #stDocFieldPairs,
-                                  FieldPairs.argsAction = PushUpdate . Instant
-                                }
-                       )
                     <> linksWidget st
                     <> [ Grid.bigCell
                           [ Button.raised
@@ -262,8 +195,6 @@ menu st =
         . (& #modelState . #stScreen .~ next)
     sc =
       st ^. #modelState . #stScreen
-    disabled =
-      isJust $ st ^. #modelState . #stCpt
     navItemLeft x =
       div_
         [ TopAppBar.title,
@@ -284,13 +215,6 @@ menu st =
         ]
         [ x
         ]
-
-defFavName :: Model -> Unicode
-defFavName st =
-  if isJust (st ^. #modelState . #stCpt)
-    || (st ^. #modelState . #stIkm . #fieldOutput /= mempty)
-    then mempty
-    else mempty
 
 linksWidget :: Model -> [View Action]
 linksWidget st =
@@ -411,21 +335,7 @@ linksWidget st =
                             [ Button.raised
                                 ( Button.config
                                     & Button.setIcon (Just "volunteer_activism")
-                                    & Button.setOnClick
-                                      ( PushUpdate . Instant $ \next -> do
-                                          doc <- liftIO Templates.newDonateDoc
-                                          pure
-                                            $ next
-                                            & #modelMenu
-                                            .~ Closed
-                                            & #modelLinks
-                                            .~ Closed
-                                            & #modelLoading
-                                            .~ True
-                                            & #modelState
-                                            . #stDoc
-                                            .~ doc
-                                      )
+                                    & Button.setOnClick (setScreenAction Donate)
                                     & Button.setAttributes
                                       [ Theme.secondaryBg,
                                         Css.fullWidth

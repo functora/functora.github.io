@@ -34,7 +34,7 @@ fav st =
                         [ Field.textField
                             Field.Args
                               { Field.argsModel = st,
-                                Field.argsOptic = #modelFavName,
+                                Field.argsOptic = #modelState . #stFavName,
                                 Field.argsAction = PushUpdate . Instant
                               }
                             Field.defOpts
@@ -116,7 +116,7 @@ makeFavName :: Model -> Unicode
 makeFavName =
   toUpper
     . strip
-    . (^. #modelFavName . #fieldInput . #uniqueValue)
+    . (^. #modelState . #stFavName . #fieldInput . #uniqueValue)
 
 favItems :: Model -> [View Action]
 favItems st =

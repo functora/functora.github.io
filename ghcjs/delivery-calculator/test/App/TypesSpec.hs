@@ -58,5 +58,5 @@ spec = do
     st0 <- newModel Nothing =<< URI.mkURI "http://localhost"
     uri <- stUri st0
     st1 <- newModel Nothing uri
-    (st0 ^. #modelState . #stDoc . to uniqueToIdentity)
-      `shouldBe` (st1 ^. #modelState . #stDoc . to uniqueToIdentity)
+    (st0 ^. #modelState . to uniqueToIdentity)
+      `shouldBe` (st1 ^. #modelState . to uniqueToIdentity)

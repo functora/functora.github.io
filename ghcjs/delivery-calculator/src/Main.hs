@@ -17,12 +17,10 @@ import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Bolt11 as B11
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
-import qualified Functora.Aes as Aes
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Prelude as Prelude
@@ -53,8 +51,8 @@ main =
             Miso.view = viewModel,
             subs = mempty,
             events = extendedEvents,
-            initialAction = InitUpdate $ mSt ^? _Just . #stCpt . _Just,
-            mountPoint = Nothing, -- defaults to 'body'
+            initialAction = InitUpdate mSt,
+            mountPoint = Nothing,
             logLevel = Off
           }
 
@@ -262,9 +260,6 @@ syncInputs st = do
   void
     . Syb.everywhereM (Syb.mkM fun)
     $ modelState st
-  void
-    . Syb.everywhereM (Syb.mkM fun)
-    $ modelFavName st
   where
     fun :: Unique Unicode -> JSM (Unique Unicode)
     fun txt = do
@@ -292,28 +287,12 @@ syncInputs st = do
         unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
-evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
-evalModel st@Model {modelState = st0} = do
-  km <-
-    if (st0 ^. #stKm . #kmIkm . #unIkm == mempty)
-      && (st0 ^. #stIkm . #fieldOutput == mempty)
-      && isNothing (st0 ^. #stCpt)
-      then Aes.randomKm 32
-      else pure $ st0 ^. #stKm
-  doc <-
-    identityToUnique
-      . B11.makeBolt11Viewer
-      . uniqueToIdentity
-      $ st0
-      ^. #stDoc
-  pure
-    $ st
-    & #modelState
-    . #stKm
-    .~ km
-    & #modelState
-    . #stDoc
-    %~ B11.mergeBolt11Viewers doc
+evalModel :: (MonadThrow m) => Model -> m Model
+evalModel st@Model {} =
+  --
+  -- TODO !!!!
+  --
+  pure st
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

@@ -5,8 +5,7 @@ module App.Types
   ( Model (..),
     Action (..),
     St (..),
-    StDoc (..),
-    newStDoc,
+    newSt,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -17,6 +16,8 @@ module App.Types
     vsn,
     usd,
     btc,
+    cny,
+    rub,
     googlePlayLink,
     testGroupLink,
     functoraLink,
@@ -30,10 +31,9 @@ import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
 import qualified Data.Version as Version
-import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Miso.Types as X
+import Functora.Miso.Types as X hiding (Asset (..))
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Paths_delivery_calculator as Paths
@@ -46,8 +46,8 @@ data Model = Model
     modelLoading :: Bool,
     modelState :: St Unique,
     modelFavMap :: Map Unicode Fav,
-    modelFavName :: Field Unicode Unique,
     modelUriViewer :: [FieldPair DynamicField Unique],
+    modelDonateViewer :: [FieldPair DynamicField Unique],
     modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
     modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model))
   }
@@ -55,18 +55,20 @@ data Model = Model
 
 data Action
   = Noop
-  | InitUpdate (Maybe Aes.Crypto)
+  | InitUpdate (Maybe (St Unique))
   | SyncInputs
   | ChanUpdate Model
   | PushUpdate (InstantOrDelayed (Model -> JSM Model))
 
 data St f = St
-  { stKm :: Aes.Km,
-    stIkm :: Field Unicode f,
-    stDoc :: StDoc f,
-    stPre :: Field DynamicField f,
-    stScreen :: Screen,
-    stCpt :: Maybe Aes.Crypto
+  { stAssets :: [Asset f],
+    stPayments :: [Money f],
+    stFeePercent :: Field Rational f,
+    stDefAssetCurrency :: Currency f,
+    stDefPaymentCurrency :: Currency f,
+    stFavName :: Field Unicode f,
+    stPreview :: Field Unicode f,
+    stScreen :: Screen
   }
   deriving stock (Generic)
 
@@ -84,48 +86,50 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
-data StDoc f = StDoc
-  { stDocFieldPairs :: [FieldPair DynamicField f],
-    stDocSuccessViewer :: [FieldPair DynamicField f],
-    stDocFailureViewer :: [FieldPair DynamicField f],
-    stDocLnPreimage :: Field Unicode f,
-    stDocLnPreimageViewer :: [FieldPair DynamicField f],
-    stDocLnInvoice :: Field Unicode f,
-    stDocLnInvoiceViewer :: [FieldPair DynamicField f]
+newSt :: (MonadIO m) => m (St Unique)
+newSt = do
+  fee <- newRatioField 2
+  assetCur <- newCurrency cny
+  paymentCur <- newCurrency rub
+  fav <- newTextField mempty
+  pre <- newTextField mempty
+  pure
+    St
+      { stAssets = mempty,
+        stPayments = mempty,
+        stFeePercent = fee,
+        stDefAssetCurrency = assetCur,
+        stDefPaymentCurrency = paymentCur,
+        stFavName = fav,
+        stPreview = pre,
+        stScreen = Main
+      }
+
+data Asset f = Asset
+  { assetLink :: Field URI f,
+    assetPhoto :: Field URI f,
+    assetPrice :: Money f,
+    assetQty :: Field Natural f
   }
   deriving stock (Generic)
 
-deriving stock instance (Hkt f) => Eq (StDoc f)
+deriving stock instance (Hkt f) => Eq (Asset f)
 
-deriving stock instance (Hkt f) => Ord (StDoc f)
+deriving stock instance (Hkt f) => Ord (Asset f)
 
-deriving stock instance (Hkt f) => Show (StDoc f)
+deriving stock instance (Hkt f) => Show (Asset f)
 
-deriving stock instance (Hkt f) => Data (StDoc f)
+deriving stock instance (Hkt f) => Data (Asset f)
 
-instance FunctorB StDoc
+instance FunctorB Asset
 
-instance TraversableB StDoc
+instance TraversableB Asset
 
-deriving via GenericType (StDoc Identity) instance Binary (StDoc Identity)
-
-newStDoc :: (MonadIO m) => m (StDoc Unique)
-newStDoc = do
-  r <- newTextField mempty
-  ln <- newTextField mempty
-  pure
-    StDoc
-      { stDocFieldPairs = mempty,
-        stDocSuccessViewer = mempty,
-        stDocFailureViewer = mempty,
-        stDocLnPreimage = r,
-        stDocLnPreimageViewer = mempty,
-        stDocLnInvoice = ln,
-        stDocLnInvoiceViewer = mempty
-      }
+deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
 data Screen
-  = Converter
+  = Main
+  | Donate
   | QrCode Screen
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType Screen
@@ -140,91 +144,6 @@ unQrCode = \case
   QrCode sc -> unQrCode sc
   sc -> sc
 
-unShareUri ::
-  ( MonadThrow m,
-    MonadIO m
-  ) =>
-  URI ->
-  m (Maybe (St Unique))
-unShareUri uri = do
-  kKm <- URI.mkQueryKey "k"
-  kDoc <- URI.mkQueryKey "d"
-  kSc <- URI.mkQueryKey "s"
-  kPre <- URI.mkQueryKey "p"
-  let qs = URI.uriQuery uri
-  case (,,,)
-    <$> qsGet kDoc qs
-    <*> qsGet kKm qs
-    <*> qsGet kSc qs
-    <*> qsGet kPre qs of
-    Nothing -> pure Nothing
-    Just (vCpt, vKm, vSc, vPre) -> do
-      bKm <- either throwString pure . B64URL.decode $ encodeUtf8 vKm
-      bCpt <- either throwString pure . B64URL.decode $ encodeUtf8 vCpt
-      bSc <- either throwString pure . B64URL.decode $ encodeUtf8 vSc
-      bPre <- either throwString pure . B64URL.decode $ encodeUtf8 vPre
-      km <- either (throwString . thd3) pure $ decodeBinary bKm
-      ikm <- newPasswordField mempty
-      cpt <- either (throwString . thd3) pure $ decodeBinary bCpt
-      sc <- either (throwString . thd3) pure $ decodeBinary bSc
-      iPre <- either (throwString . thd3) pure $ decodeBinary bPre
-      pre <- identityToUnique iPre
-      doc <- newStDoc
-      pure
-        $ Just
-          St
-            { stKm = km,
-              stIkm = ikm,
-              stDoc = doc,
-              stPre = pre,
-              stScreen = sc,
-              stCpt = Just cpt
-            }
-
-stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
-stQuery st = do
-  kDoc <- URI.mkQueryKey "d"
-  vDoc <-
-    (URI.mkQueryValue <=< encodeText)
-      . encodeBinary
-      $ fromMaybe
-        (Aes.encryptHmac aes . encodeBinary . compressViewers $ st ^. #stDoc)
-        (st ^. #stCpt)
-  kKm <- URI.mkQueryKey "k"
-  vKm <-
-    (URI.mkQueryValue <=< encodeText)
-      . encodeBinary
-      . fromEither
-      $ fmap (& #kmIkm .~ Ikm mempty) ekm
-  kSc <- URI.mkQueryKey "s"
-  vSc <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stScreen)
-  kPre <- URI.mkQueryKey "p"
-  vPre <-
-    (URI.mkQueryValue <=< encodeText)
-      $ encodeBinary (st ^. #stPre)
-  pure
-    [ URI.QueryParam kDoc vDoc,
-      URI.QueryParam kKm vKm,
-      URI.QueryParam kSc vSc,
-      URI.QueryParam kPre vPre
-    ]
-  where
-    aes :: Aes.SomeAesKey
-    aes = Aes.drvSomeAesKey @Aes.Word256 $ fromEither ekm
-    ekm :: Either Aes.Km Aes.Km
-    ekm =
-      case st ^. #stIkm . #fieldOutput of
-        ikm | ikm == mempty -> Left (st ^. #stKm)
-        ikm -> Right $ (st ^. #stKm) & #kmIkm .~ Ikm (encodeUtf8 ikm)
-    encodeText :: (MonadThrow m) => BL.ByteString -> m Text
-    encodeText =
-      either throw pure
-        . decodeUtf8Strict
-        . B64URL.encode
-        . from @BL.ByteString @ByteString
-
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
@@ -234,35 +153,34 @@ stUri st = do
       { URI.uriQuery = qxs
       }
 
-compressViewers :: StDoc Identity -> StDoc Identity
-compressViewers st =
-  st
-    & #stDocSuccessViewer
-    %~ fmap compress
-    & #stDocFailureViewer
-    %~ fmap compress
-    & #stDocLnPreimageViewer
-    %~ fmap compress
-    & #stDocLnInvoiceViewer
-    %~ fmap compress
+stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
+stQuery st = do
+  kSt <- URI.mkQueryKey "d"
+  vSt <- URI.mkQueryValue <=< encode $ encodeBinary st
+  pure [URI.QueryParam kSt vSt]
   where
-    compress ::
-      FieldPair DynamicField Identity ->
-      FieldPair DynamicField Identity
-    compress pair =
-      pair
-        & #fieldPairKey
-        . #fieldInput
-        .~ Identity (mempty :: Unicode)
-        & #fieldPairKey
-        . #fieldOutput
-        .~ (mempty :: Unicode)
-        & #fieldPairValue
-        . #fieldInput
-        .~ Identity (mempty :: Unicode)
-        & #fieldPairValue
-        . #fieldOutput
-        .~ DynamicFieldText mempty
+    encode :: (MonadThrow m) => BL.ByteString -> m Text
+    encode =
+      either throw pure
+        . decodeUtf8Strict
+        . B64URL.encode
+        . from @BL.ByteString @ByteString
+
+unShareUri ::
+  ( MonadIO m,
+    MonadThrow m
+  ) =>
+  URI ->
+  m (Maybe (St Unique))
+unShareUri uri = do
+  kSt <- URI.mkQueryKey "d"
+  case qsGet kSt $ URI.uriQuery uri of
+    Nothing -> pure Nothing
+    Just tSt -> do
+      bSt <- either throwString pure . B64URL.decode $ encodeUtf8 tSt
+      iSt <- either (throwString . thd3) pure $ decodeBinary bSt
+      uSt <- identityToUnique iSt
+      pure $ Just uSt
 
 baseUri :: Unicode
 #ifdef GHCID
@@ -294,6 +212,12 @@ usd = CurrencyInfo (CurrencyCode "usd") mempty
 
 btc :: CurrencyInfo
 btc = CurrencyInfo (CurrencyCode "btc") mempty
+
+cny :: CurrencyInfo
+cny = CurrencyInfo (CurrencyCode "cny") mempty
+
+rub :: CurrencyInfo
+rub = CurrencyInfo (CurrencyCode "rub") mempty
 
 googlePlayLink :: URI
 googlePlayLink =

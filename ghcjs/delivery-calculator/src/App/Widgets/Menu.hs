@@ -120,13 +120,13 @@ menu st =
                                   & Button.setOnClick
                                     ( screen
                                         $ if isQrCode sc
-                                          then unQrCode sc
+                                          then Main
                                           else QrCode sc
                                     )
                                   & Button.setIcon
                                     ( Just
                                         $ if isQrCode sc
-                                          then "bolt"
+                                          then "local_shipping"
                                           else "qr_code_2"
                                     )
                                   & Button.setAttributes

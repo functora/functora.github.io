@@ -211,7 +211,11 @@ baseUri =
 
 setScreenPure :: Screen -> Model -> JSM Model
 setScreenPure sc =
-  pure . (& #modelState . #stScreen .~ sc)
+  pure
+    . (& #modelFav .~ Closed)
+    . (& #modelMenu .~ Closed)
+    . (& #modelLinks .~ Closed)
+    . (& #modelState . #stScreen .~ sc)
 
 setScreenAction :: Screen -> Action
 setScreenAction =

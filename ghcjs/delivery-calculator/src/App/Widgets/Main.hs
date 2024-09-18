@@ -54,14 +54,18 @@ mainWidget st =
 
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  Header.headerWrapper
-    ( Field.fieldViewer
-        Field.Args
-          { Field.argsModel = st,
-            Field.argsOptic = #modelState . #stPreview,
-            Field.argsAction = PushUpdate . Instant
-          }
-    )
+  ( if unQrCode sc == Donate
+      then mempty
+      else
+        Header.headerWrapper
+          ( Field.fieldViewer
+              Field.Args
+                { Field.argsModel = st,
+                  Field.argsOptic = #modelState . #stPreview,
+                  Field.argsAction = PushUpdate . Instant
+                }
+          )
+  )
     <> [ Grid.bigCell
           $ FieldPairs.fieldPairsViewer
             FieldPairs.Args
@@ -87,6 +91,16 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
         FieldPairs.argsOptic = #modelDonateViewer,
         FieldPairs.argsAction = PushUpdate . Instant
       }
+    <> [ Grid.bigCell
+          [ Button.raised
+              ( Button.config
+                  & Button.setIcon (Just "login")
+                  & Button.setAttributes [Css.fullWidth]
+                  & Button.setOnClick (setScreenAction Main)
+              )
+              "Open"
+          ]
+       ]
 screenWidget Model {modelState = St {stScreen = Main}} =
   [ Grid.mediumCell
       [ Button.raised

@@ -23,7 +23,10 @@ import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import qualified Functora.Money as Money
 import qualified Functora.Prelude as Prelude
+import qualified Functora.Rates as Rates
+import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!), (!!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
@@ -43,7 +46,8 @@ main =
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
       mSt <- unShareUri uri
-      st <- newModel Nothing uri
+      web <- getWebOpts
+      st <- newModel web Nothing uri
       startApp
         App
           { model = st,
@@ -55,6 +59,15 @@ main =
             mountPoint = Nothing,
             logLevel = Off
           }
+
+getWebOpts :: JSM Web.Opts
+getWebOpts = do
+#ifdef wasi_HOST_OS
+  ctx <- JS.askJSM
+  pure $ Web.defOpts ctx
+#else
+  pure Web.defOpts
+#endif
 
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
@@ -133,7 +146,7 @@ updateModel (InitUpdate ext) prevSt = do
                   . (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
-                finSt <- newModel (Just nextSt) uri
+                finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
                 Misc.pushActionQueue nextSt
                   $ Instant
                     ( const
@@ -287,12 +300,40 @@ syncInputs st = do
         unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
-evalModel :: (MonadThrow m) => Model -> m Model
-evalModel st@Model {} =
-  --
-  -- TODO !!!!
-  --
-  pure st
+evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
+evalModel raw = do
+  let oof = raw ^. #modelState . #stOnlineOrOffline
+  new <-
+    case oof of
+      Online ->
+        Syb.everywhereM
+          ( Syb.mkM $ \cur ->
+              Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+                . fmap (fromRight cur)
+                . Rates.tryMarket
+                . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
+                $ Money.currencyInfoCode cur
+          )
+          ( raw ^. #modelState
+          )
+      Offline ->
+        pure $ raw ^. #modelState
+  curs <-
+    case oof of
+      Online ->
+        Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+          . fmap (fromRight $ raw ^. #modelCurrencies)
+          . Rates.tryMarket
+          . fmap (^. #currenciesList)
+          $ Rates.getCurrencies (raw ^. #modelWebOpts)
+      Offline ->
+        pure $ raw ^. #modelCurrencies
+  pure
+    $ raw
+    & #modelState
+    .~ new
+    & #modelCurrencies
+    .~ curs
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

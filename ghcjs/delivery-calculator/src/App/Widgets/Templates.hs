@@ -5,14 +5,24 @@ where
 
 import App.Types
 import Functora.Miso.Prelude
+import qualified Functora.Rates as Rates
+import qualified Functora.Web as Web
 
-newModel :: (MonadThrow m, MonadUnliftIO m) => Maybe Model -> URI -> m Model
-newModel mSt uri = do
+newModel ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  Web.Opts ->
+  Maybe Model ->
+  URI ->
+  m Model
+newModel webOpts mSt uri = do
   prod <- liftIO newBroadcastTChanIO
   cons <- liftIO . atomically $ dupTChan prod
   defSt <- maybe (liftIO newSt) pure $ mSt ^? _Just . #modelState
   mApp <- unShareUri uri
   donate <- newDonateViewer
+  market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
   pure
     Model
       { modelFav = Closed,
@@ -24,7 +34,11 @@ newModel mSt uri = do
         modelUriViewer = mempty,
         modelDonateViewer = donate,
         modelProducerQueue = prod,
-        modelConsumerQueue = cons
+        modelConsumerQueue = cons,
+        modelCurrencies =
+          fromMaybe [btc, usd, rub, cny] (mSt ^? _Just . #modelCurrencies),
+        modelWebOpts = webOpts,
+        modelMarket = market
       }
 
 newDonateViewer :: (MonadIO m) => m [FieldPair DynamicField Unique]

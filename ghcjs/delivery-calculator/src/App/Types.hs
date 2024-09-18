@@ -37,6 +37,8 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X hiding (Asset (..))
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
+import qualified Functora.Rates as Rates
+import qualified Functora.Web as Web
 import qualified Paths_delivery_calculator as Paths
 import qualified Text.URI as URI
 
@@ -50,7 +52,10 @@ data Model = Model
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelDonateViewer :: [FieldPair DynamicField Unique],
     modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
-    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model))
+    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
+    modelCurrencies :: NonEmpty CurrencyInfo,
+    modelWebOpts :: Web.Opts,
+    modelMarket :: MVar Rates.Market
   }
   deriving stock (Eq, Generic)
 
@@ -63,9 +68,10 @@ data Action
 
 data St f = St
   { stAssets :: [Asset f],
-    stPayment :: Money f,
+    stPaymentMoney :: Money f,
     stMerchantTele :: Field Unicode f,
     stMerchantFeePercent :: Field Rational f,
+    stOnlineOrOffline :: OnlineOrOffline,
     stDefAssetCurrency :: Currency f,
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
@@ -90,7 +96,7 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 newSt :: (MonadIO m) => m (St Unique)
 newSt = do
   fee <- newRatioField 2
-  payment <- newMoney 0 rub
+  paymentMoney <- newMoney 0 rub
   defAssetCur <- newCurrency cny
   fav <- newTextField mempty
   pre <- newTextField "Delivery Calculator"
@@ -98,9 +104,10 @@ newSt = do
   pure
     St
       { stAssets = mempty,
-        stPayment = payment,
+        stPaymentMoney = paymentMoney,
         stMerchantTele = tele,
         stMerchantFeePercent = fee,
+        stOnlineOrOffline = Online,
         stDefAssetCurrency = defAssetCur,
         stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,

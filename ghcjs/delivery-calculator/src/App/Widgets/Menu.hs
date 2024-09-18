@@ -9,11 +9,14 @@ import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
+import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
+import qualified Material.Select as Select
+import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Text.URI as URI
@@ -114,44 +117,69 @@ menu st =
                 Nothing
                 [ Grid.grid
                     mempty
-                    $ [ Grid.mediumCell
-                          [ Button.raised
-                              ( Button.config
-                                  & Button.setOnClick
-                                    ( screen
-                                        $ if isQrCode sc
-                                          then Main
-                                          else QrCode sc
+                    $ [ Currency.selectCurrency
+                          Currency.Args
+                            { Currency.argsModel = st,
+                              Currency.argsOptic =
+                                #modelState . #stDefAssetCurrency,
+                              Currency.argsAction =
+                                PushUpdate . Instant,
+                              Currency.argsCurrencies =
+                                #modelCurrencies
+                            }
+                          Currency.Opts
+                            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
+                            },
+                        Currency.selectCurrency
+                          Currency.Args
+                            { Currency.argsModel = st,
+                              Currency.argsOptic =
+                                #modelState . #stPaymentMoney . #moneyCurrency,
+                              Currency.argsAction =
+                                PushUpdate . Instant,
+                              Currency.argsCurrencies =
+                                #modelCurrencies
+                            }
+                          Currency.Opts
+                            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
+                            },
+                        let item :| items = enumerateNE @OnlineOrOffline
+                         in Grid.mediumCell
+                              [ Select.outlined
+                                  ( Select.config
+                                      & Select.setLabel
+                                        ( Just "Exchange rate"
+                                        )
+                                      & Select.setSelected
+                                        ( Just
+                                            $ st
+                                            ^. #modelState
+                                            . #stOnlineOrOffline
+                                        )
+                                      & Select.setOnChange
+                                        ( \x ->
+                                            PushUpdate
+                                              . Instant
+                                              $ pure
+                                              . ( &
+                                                    #modelState
+                                                      . #stOnlineOrOffline
+                                                      .~ x
+                                                )
+                                        )
+                                  )
+                                  ( SelectItem.selectItem
+                                      (SelectItem.config item)
+                                      [text $ inspect item]
+                                  )
+                                  $ fmap
+                                    ( \x ->
+                                        SelectItem.selectItem
+                                          (SelectItem.config x)
+                                          [text $ inspect x]
                                     )
-                                  & Button.setIcon
-                                    ( Just
-                                        $ if isQrCode sc
-                                          then "local_shipping"
-                                          else "qr_code_2"
-                                    )
-                                  & Button.setAttributes
-                                    [ Theme.secondaryBg,
-                                      Css.fullWidth
-                                    ]
-                              )
-                              $ if isQrCode sc
-                                then "Delivery Calculator"
-                                else "QR"
-                          ],
-                        Grid.mediumCell
-                          [ Field.textField
-                              Field.Args
-                                { Field.argsModel = st,
-                                  Field.argsOptic = #modelState . #stPreview,
-                                  Field.argsAction = PushUpdate . Instant
-                                }
-                              ( Field.defOpts @Model @Action
-                                  & #optsPlaceholder
-                                  .~ ("QR title" :: Unicode)
-                                  & #optsFilledOrOutlined
-                                  .~ Outlined
-                              )
-                          ],
+                                    items
+                              ],
                         Grid.mediumCell
                           [ Field.ratioField
                               Field.Args
@@ -181,6 +209,44 @@ menu st =
                                   & #optsFilledOrOutlined
                                   .~ Outlined
                               )
+                          ],
+                        Grid.mediumCell
+                          [ Field.textField
+                              Field.Args
+                                { Field.argsModel = st,
+                                  Field.argsOptic = #modelState . #stPreview,
+                                  Field.argsAction = PushUpdate . Instant
+                                }
+                              ( Field.defOpts @Model @Action
+                                  & #optsPlaceholder
+                                  .~ ("QR title" :: Unicode)
+                                  & #optsFilledOrOutlined
+                                  .~ Outlined
+                              )
+                          ],
+                        Grid.mediumCell
+                          [ Button.raised
+                              ( Button.config
+                                  & Button.setOnClick
+                                    ( screen
+                                        $ if isQrCode sc
+                                          then Main
+                                          else QrCode sc
+                                    )
+                                  & Button.setIcon
+                                    ( Just
+                                        $ if isQrCode sc
+                                          then "local_shipping"
+                                          else "qr_code_2"
+                                    )
+                                  & Button.setAttributes
+                                    [ Theme.secondaryBg,
+                                      Css.fullWidth
+                                    ]
+                              )
+                              $ if isQrCode sc
+                                then "Delivery Calculator"
+                                else "QR"
                           ]
                       ]
                     <> linksWidget st
@@ -238,7 +304,10 @@ linksWidget st =
           ( Button.config
               & Button.setOnClick openWidget
               & Button.setIcon (Just "android")
-              & Button.setAttributes [Css.fullWidth]
+              & Button.setAttributes
+                [ Css.fullWidth,
+                  Theme.secondaryBg
+                ]
           )
           "App"
       ]

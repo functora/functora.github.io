@@ -6,6 +6,8 @@ module App.Types
     Action (..),
     St (..),
     newSt,
+    Asset (..),
+    newAsset,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -34,7 +36,7 @@ import Data.Functor.Barbie
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Miso.Types as X hiding (Asset (..))
+import Functora.Miso.Types as X hiding (Asset (..), newAsset)
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
@@ -121,10 +123,11 @@ newSt = do
       }
 
 data Asset f = Asset
-  { assetLink :: Field URI f,
-    assetPhoto :: Field URI f,
+  { assetLink :: Field Unicode f,
+    assetPhoto :: Field Unicode f,
     assetPrice :: Field Rational f,
-    assetQty :: Field Rational f
+    assetQty :: Field Rational f,
+    assetOoc :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -141,6 +144,21 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
+
+newAsset :: (MonadIO m) => m (Asset Unique)
+newAsset = do
+  link <- newTextField mempty
+  photo <- newTextField mempty
+  price <- newRatioField 0
+  qty <- newRatioField 1
+  pure
+    Asset
+      { assetLink = link,
+        assetPhoto = photo,
+        assetPrice = price,
+        assetQty = qty,
+        assetOoc = Opened
+      }
 
 data Screen
   = Main

@@ -107,7 +107,11 @@ screenWidget Model {modelState = St {stScreen = Main}} =
           ( Button.config
               & Button.setIcon (Just "add_box")
               & Button.setAttributes [Css.fullWidth]
-              & Button.setOnClick Noop
+              & Button.setOnClick
+                ( PushUpdate . Instant $ \st -> do
+                    asset <- newAsset
+                    pure $ st & #modelState . #stAssets %~ flip snoc asset
+                )
           )
           "Add item"
       ],

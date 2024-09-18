@@ -80,8 +80,6 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               "Open"
           ]
        ]
-screenWidget Model {modelState = St {stScreen = Main}} =
-  mempty
 screenWidget st@Model {modelState = St {stScreen = Donate}} =
   FieldPairs.fieldPairsViewer
     FieldPairs.Args
@@ -89,6 +87,30 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
         FieldPairs.argsOptic = #modelDonateViewer,
         FieldPairs.argsAction = PushUpdate . Instant
       }
+screenWidget Model {modelState = St {stScreen = Main}} =
+  [ Grid.mediumCell
+      [ Button.raised
+          ( Button.config
+              & Button.setIcon (Just "add_box")
+              & Button.setAttributes [Css.fullWidth]
+              & Button.setOnClick Noop
+          )
+          "Add item"
+      ],
+    Grid.mediumCell
+      [ Button.raised
+          ( Button.config
+              & Button.setIcon (Just "send")
+              & Button.setAttributes [Css.fullWidth]
+              & Button.setOnClick
+                ( PushUpdate
+                    . Instant
+                    $ \next -> flip Jsm.openBrowserPage next =<< stTeleUri next
+                )
+          )
+          "Order via Telegram"
+      ]
+  ]
 
 pasteWidget ::
   Unicode ->

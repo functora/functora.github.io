@@ -11,6 +11,7 @@ module App.Types
     unQrCode,
     unShareUri,
     stUri,
+    stTeleUri,
     setScreenPure,
     setScreenAction,
     vsn,
@@ -62,10 +63,10 @@ data Action
 
 data St f = St
   { stAssets :: [Asset f],
-    stPayments :: [Money f],
-    stFeePercent :: Field Rational f,
+    stPayment :: Money f,
+    stMerchantTele :: Field Unicode f,
+    stMerchantFeePercent :: Field Rational f,
     stDefAssetCurrency :: Currency f,
-    stDefPaymentCurrency :: Currency f,
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
     stScreen :: Screen
@@ -89,19 +90,20 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 newSt :: (MonadIO m) => m (St Unique)
 newSt = do
   fee <- newRatioField 2
-  assetCur <- newCurrency cny
-  paymentCur <- newCurrency rub
+  payment <- newMoney 0 rub
+  defAssetCur <- newCurrency cny
   fav <- newTextField mempty
-  pre <- newTextField mempty
+  pre <- newTextField "Delivery Calculator"
+  tele <- newTextField "Functora"
   pure
     St
       { stAssets = mempty,
-        stPayments = mempty,
-        stFeePercent = fee,
-        stDefAssetCurrency = assetCur,
-        stDefPaymentCurrency = paymentCur,
+        stPayment = payment,
+        stMerchantTele = tele,
+        stMerchantFeePercent = fee,
+        stDefAssetCurrency = defAssetCur,
         stFavName = fav,
-        stPreview = pre,
+        stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main
       }
 
@@ -165,6 +167,22 @@ stQuery st = do
         . decodeUtf8Strict
         . B64URL.encode
         . from @BL.ByteString @ByteString
+
+stTeleUri :: (MonadThrow m) => Model -> m URI
+stTeleUri st = do
+  base <- URI.mkURI "https://t.me"
+  user <- URI.mkPathPiece $ st ^. #modelState . #stMerchantTele . #fieldOutput
+  link <- stUri st
+  key <- URI.mkQueryKey "text"
+  val <-
+    URI.mkQueryValue
+      $ "Hello, I have a question about the delivery of the following items: "
+      <> URI.render link
+  pure
+    $ base
+      { URI.uriPath = Just (False, [user]),
+        URI.uriQuery = [URI.QueryParam key val]
+      }
 
 unShareUri ::
   ( MonadIO m,

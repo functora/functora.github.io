@@ -147,22 +147,37 @@ menu st =
                                 }
                               ( Field.defOpts @Model @Action
                                   & #optsPlaceholder
-                                  .~ ( "Preview - "
-                                        <> ( st
-                                              ^. #modelState
-                                              . #stPreview
-                                              . #fieldType
-                                              . to userFieldType
-                                           )
-                                     )
-                                  & #optsLeadingWidget
-                                  .~ Just
-                                    ( Field.ModalWidget
-                                        $ Field.ModalMiniWidget
-                                          ( #modelState
-                                              . #stPreview
-                                          )
-                                    )
+                                  .~ ("QR title" :: Unicode)
+                                  & #optsFilledOrOutlined
+                                  .~ Outlined
+                              )
+                          ],
+                        Grid.mediumCell
+                          [ Field.ratioField
+                              Field.Args
+                                { Field.argsModel = st,
+                                  Field.argsOptic =
+                                    #modelState . #stMerchantFeePercent,
+                                  Field.argsAction =
+                                    PushUpdate . Instant
+                                }
+                              ( Field.defOpts
+                                  & #optsPlaceholder
+                                  .~ ("Merchant fee %" :: Unicode)
+                                  & #optsFilledOrOutlined
+                                  .~ Outlined
+                              )
+                          ],
+                        Grid.mediumCell
+                          [ Field.textField
+                              Field.Args
+                                { Field.argsModel = st,
+                                  Field.argsOptic = #modelState . #stMerchantTele,
+                                  Field.argsAction = PushUpdate . Instant
+                                }
+                              ( Field.defOpts
+                                  & #optsPlaceholder
+                                  .~ ("Merchant telegram" :: Unicode)
                                   & #optsFilledOrOutlined
                                   .~ Outlined
                               )

@@ -1,9 +1,9 @@
 platforms:
   android:
-    appName: Lightning Verifier
-    versionCode: 2
-    versionName: 0.1.0.2
-    packageName: com.functora.lightning_verifier
+    appName: Delivery Calculator
+    versionCode: 1
+    versionName: 0.1.0.1
+    packageName: com.functora.delivery_calculator
     manifest:
       - file: AndroidManifest.xml
         target: manifest/application/activity

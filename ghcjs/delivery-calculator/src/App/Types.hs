@@ -36,7 +36,7 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types as X
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
-import qualified Paths_lightning_verifier as Paths
+import qualified Paths_delivery_calculator as Paths
 import qualified Text.URI as URI
 
 data Model = Model
@@ -270,7 +270,7 @@ baseUri =
   "http://localhost:8080"
 #else
 baseUri =
-  "https://functora.github.io/apps/lightning-verifier/" <> vsn <> "/index.html"
+  "https://functora.github.io/apps/delivery-calculator/" <> vsn <> "/index.html"
 #endif
 
 setScreenPure :: Screen -> Model -> JSM Model
@@ -298,7 +298,7 @@ btc = CurrencyInfo (CurrencyCode "btc") mempty
 googlePlayLink :: URI
 googlePlayLink =
   either impureThrow id
-    $ mkURI "https://play.google.com/apps/testing/com.functora.lightning_verifier"
+    $ mkURI "https://play.google.com/apps/testing/com.functora.delivery_calculator"
 
 testGroupLink :: URI
 testGroupLink =
@@ -314,15 +314,15 @@ sourceLink :: URI
 sourceLink =
   either impureThrow id
     $ mkURI
-      "https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier"
+      "https://github.com/functora/functora.github.io/tree/master/ghcjs/delivery-calculator"
 
 apkLink :: URI
 apkLink =
   either impureThrow id
     . URI.mkURI
     . from @Unicode @Text
-    $ "https://github.com/functora/functora.github.io/releases/download/lightning-verifier-v"
+    $ "https://github.com/functora/functora.github.io/releases/download/delivery-calculator-v"
     <> vsn
-    <> "/lightning-verifier-v"
+    <> "/delivery-calculator-v"
     <> vsn
     <> ".apk"

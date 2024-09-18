@@ -57,7 +57,7 @@ menu st =
                           . #stScreen
                           .~ Converter
                     ]
-                    [ text "LN Verifier"
+                    [ text "Delivery Calculator"
                     ]
               ],
             TopAppBar.section
@@ -88,7 +88,7 @@ menu st =
                     ( IconButton.config
                         & IconButton.setOnClick
                           ( PushUpdate . Instant $ \next -> do
-                              Jsm.printCurrentPage "lightning-verifier"
+                              Jsm.printCurrentPage "delivery-calculator"
                               pure next
                           )
                         & IconButton.setAttributes
@@ -151,7 +151,7 @@ menu st =
                                     ]
                               )
                               $ if isQrCode sc
-                                then "LN Verifier"
+                                then "Delivery Calculator"
                                 else "QR"
                           ],
                         Grid.mediumCell

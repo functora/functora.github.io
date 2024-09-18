@@ -68,11 +68,13 @@ data Action
 
 data St f = St
   { stAssets :: [Asset f],
-    stPaymentMoney :: Money f,
+    stAssetCurrency :: Currency f,
+    stExchangeRate :: Field Rational f,
+    stExchangeRateAt :: UTCTime,
+    stMerchantCurrency :: Currency f,
     stMerchantTele :: Field Unicode f,
     stMerchantFeePercent :: Field Rational f,
     stOnlineOrOffline :: OnlineOrOffline,
-    stDefAssetCurrency :: Currency f,
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
     stScreen :: Screen
@@ -95,20 +97,24 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 newSt :: (MonadIO m) => m (St Unique)
 newSt = do
+  assetCur <- newCurrency cny
+  rate <- newRatioField 1
+  ct <- getCurrentTime
+  merchantCur <- newCurrency rub
+  tele <- newTextField "Functora"
   fee <- newRatioField 2
-  paymentMoney <- newMoney 0 rub
-  defAssetCur <- newCurrency cny
   fav <- newTextField mempty
   pre <- newTextField "Delivery Calculator"
-  tele <- newTextField "Functora"
   pure
     St
       { stAssets = mempty,
-        stPaymentMoney = paymentMoney,
+        stAssetCurrency = assetCur,
+        stExchangeRate = rate,
+        stExchangeRateAt = ct,
+        stMerchantCurrency = merchantCur,
         stMerchantTele = tele,
         stMerchantFeePercent = fee,
         stOnlineOrOffline = Online,
-        stDefAssetCurrency = defAssetCur,
         stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main
@@ -117,8 +123,8 @@ newSt = do
 data Asset f = Asset
   { assetLink :: Field URI f,
     assetPhoto :: Field URI f,
-    assetPrice :: Money f,
-    assetQty :: Field Natural f
+    assetPrice :: Field Rational f,
+    assetQty :: Field Rational f
   }
   deriving stock (Generic)
 

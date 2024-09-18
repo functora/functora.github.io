@@ -28,15 +28,17 @@ data Args model action = Args
   }
   deriving stock (Generic)
 
-newtype Opts model = Opts
-  { optsExtraOnClick :: model -> model
+data Opts model = Opts
+  { optsExtraOnClick :: model -> model,
+    optsButtonViewer :: CurrencyInfo -> Unicode
   }
   deriving stock (Generic)
 
 defOpts :: Opts model
 defOpts =
   Opts
-    { optsExtraOnClick = id
+    { optsExtraOnClick = id,
+      optsButtonViewer = inspectCurrencyInfo
     }
 
 selectCurrency :: Args model action -> Opts model -> View action
@@ -57,7 +59,8 @@ selectCurrency
                   ]
                 $ Button.config
             )
-            . inspectCurrencyInfo
+            . ( optsButtonViewer opts
+              )
             $ fromMaybe
               (CurrencyInfo (CurrencyCode "XXX") mempty)
               (st ^? cloneTraversal optic . #currencyOutput)

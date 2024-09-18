@@ -144,7 +144,7 @@ paymentMethodEditor
             Currency.argsAction = action,
             Currency.argsCurrencies = currencies
           }
-        Currency.Opts
+        Currency.defOpts
           { Currency.optsExtraOnClick = extraOnClick
           }
     ]

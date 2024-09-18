@@ -12,6 +12,7 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Money as Money
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
@@ -121,27 +122,37 @@ menu st =
                           Currency.Args
                             { Currency.argsModel = st,
                               Currency.argsOptic =
-                                #modelState . #stDefAssetCurrency,
+                                #modelState . #stAssetCurrency,
                               Currency.argsAction =
                                 PushUpdate . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
                             }
-                          Currency.Opts
-                            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
+                          Currency.defOpts
+                            { Currency.optsExtraOnClick =
+                                (& #modelLoading .~ True),
+                              Currency.optsButtonViewer =
+                                mappend "Marketplace - "
+                                  . Money.inspectCurrencyCode
+                                  . Money.currencyInfoCode
                             },
                         Currency.selectCurrency
                           Currency.Args
                             { Currency.argsModel = st,
                               Currency.argsOptic =
-                                #modelState . #stPaymentMoney . #moneyCurrency,
+                                #modelState . #stMerchantCurrency,
                               Currency.argsAction =
                                 PushUpdate . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
                             }
-                          Currency.Opts
-                            { Currency.optsExtraOnClick = (& #modelLoading .~ True)
+                          Currency.defOpts
+                            { Currency.optsExtraOnClick =
+                                (& #modelLoading .~ True),
+                              Currency.optsButtonViewer =
+                                mappend "Merchant - "
+                                  . Money.inspectCurrencyCode
+                                  . Money.currencyInfoCode
                             },
                         let item :| items = enumerateNE @OnlineOrOffline
                          in Grid.mediumCell
@@ -180,6 +191,51 @@ menu st =
                                     )
                                     items
                               ],
+                        Grid.mediumCell
+                          [ Field.ratioField
+                              Field.Args
+                                { Field.argsModel = st,
+                                  Field.argsOptic =
+                                    #modelState . #stExchangeRate,
+                                  Field.argsAction =
+                                    PushUpdate . Instant
+                                }
+                              ( let disabled =
+                                      st
+                                        ^. #modelState
+                                        . #stOnlineOrOffline
+                                        == Online
+                                 in Field.defOpts @Model @Action
+                                      & #optsDisabled
+                                      .~ disabled
+                                      & #optsPlaceholder
+                                      .~ ( "1 "
+                                            <> toUpper
+                                              ( Money.inspectCurrencyCode
+                                                  $ st
+                                                  ^. #modelState
+                                                  . #stAssetCurrency
+                                                  . #currencyOutput
+                                                  . #currencyInfoCode
+                                              )
+                                            <> " \8776 X "
+                                            <> toUpper
+                                              ( Money.inspectCurrencyCode
+                                                  $ st
+                                                  ^. #modelState
+                                                  . #stMerchantCurrency
+                                                  . #currencyOutput
+                                                  . #currencyInfoCode
+                                              )
+                                         )
+                                      & #optsFilledOrOutlined
+                                      .~ Outlined
+                                      & ( if disabled
+                                            then #optsTrailingWidget .~ Nothing
+                                            else id
+                                        )
+                              )
+                          ],
                         Grid.mediumCell
                           [ Field.ratioField
                               Field.Args

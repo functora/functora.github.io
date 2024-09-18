@@ -301,39 +301,76 @@ syncInputs st = do
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
-evalModel raw = do
-  let oof = raw ^. #modelState . #stOnlineOrOffline
+evalModel prev = do
+  let oof = prev ^. #modelState . #stOnlineOrOffline
   new <-
     case oof of
       Online ->
         Syb.everywhereM
           ( Syb.mkM $ \cur ->
-              Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
+              Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
                 . fmap (fromRight cur)
                 . Rates.tryMarket
-                . Rates.getCurrencyInfo (raw ^. #modelWebOpts)
+                . Rates.getCurrencyInfo (prev ^. #modelWebOpts)
                 $ Money.currencyInfoCode cur
           )
-          ( raw ^. #modelState
+          ( prev ^. #modelState
           )
       Offline ->
-        pure $ raw ^. #modelState
+        pure $ prev ^. #modelState
   curs <-
     case oof of
       Online ->
-        Rates.withMarket (raw ^. #modelWebOpts) (raw ^. #modelMarket)
-          . fmap (fromRight $ raw ^. #modelCurrencies)
+        Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
+          . fmap (fromRight $ prev ^. #modelCurrencies)
           . Rates.tryMarket
           . fmap (^. #currenciesList)
-          $ Rates.getCurrencies (raw ^. #modelWebOpts)
+          $ Rates.getCurrencies (prev ^. #modelWebOpts)
       Offline ->
-        pure $ raw ^. #modelCurrencies
-  pure
-    $ raw
-    & #modelState
-    .~ new
-    & #modelCurrencies
-    .~ curs
+        pure $ prev ^. #modelCurrencies
+  let next =
+        prev
+          & #modelState
+          .~ new
+          & #modelCurrencies
+          .~ curs
+  case oof of
+    Offline -> pure next
+    Online ->
+      Rates.withMarket (next ^. #modelWebOpts) (next ^. #modelMarket) $ do
+        let base =
+              Money.Funds
+                1
+                $ next
+                ^. #modelState
+                . #stAssetCurrency
+                . #currencyOutput
+                . #currencyInfoCode
+        quote <-
+          Rates.getQuote (next ^. #modelWebOpts) base
+            $ next
+            ^. #modelState
+            . #stMerchantCurrency
+            . #currencyOutput
+            . #currencyInfoCode
+        let rate =
+              unTagged
+                $ quote
+                ^. #quoteMoneyAmount
+        pure
+          $ next
+          & #modelState
+          . #stExchangeRate
+          . #fieldInput
+          . #uniqueValue
+          .~ inspectRatioDef rate
+          & #modelState
+          . #stExchangeRate
+          . #fieldOutput
+          .~ rate
+          & #modelState
+          . #stExchangeRateAt
+          .~ (quote ^. #quoteCreatedAt)
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

@@ -3,6 +3,7 @@ module App.Widgets.Fav
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
@@ -35,25 +36,31 @@ fav st =
                             Field.Args
                               { Field.argsModel = st,
                                 Field.argsOptic = #modelState . #stFavName,
-                                Field.argsAction = PushUpdate . Instant
+                                Field.argsAction = PushUpdate . Instant,
+                                Field.argsEmitter =
+                                  Misc.pushActionQueue st . Instant
                               }
                             Field.defOpts
                               { Field.optsPlaceholder = "Name",
                                 Field.optsFilledOrOutlined = Outlined,
                                 Field.optsOnKeyDownAction = onKeyDownAction,
                                 Field.optsTrailingWidget =
-                                  Just
-                                    . Field.ActionWidget
-                                      "favorite"
-                                      mempty
-                                    . PushUpdate
-                                    $ Instant saveAction,
+                                  let w =
+                                        Field.ActionWidget
+                                          "favorite"
+                                          mempty
+                                          . PushUpdate
+                                          $ Instant saveAction
+                                   in Just
+                                        $ Field.OptsWidgetPair w w,
                                 Field.optsLeadingWidget =
-                                  Just
-                                    $ Field.ActionWidget
-                                      "delete_forever"
-                                      mempty
-                                      deleteAction
+                                  let w =
+                                        Field.ActionWidget
+                                          "delete_forever"
+                                          mempty
+                                          deleteAction
+                                   in Just
+                                        $ Field.OptsWidgetPair w w
                               }
                         ],
                        Grid.bigCell

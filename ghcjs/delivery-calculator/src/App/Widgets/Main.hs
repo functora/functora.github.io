@@ -63,7 +63,8 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               Field.Args
                 { Field.argsModel = st,
                   Field.argsOptic = #modelState . #stPreview,
-                  Field.argsAction = PushUpdate . Instant
+                  Field.argsAction = PushUpdate . Instant,
+                  Field.argsEmitter = Misc.pushActionQueue st . Instant
                 }
           )
   )
@@ -72,7 +73,8 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
             FieldPairs.Args
               { FieldPairs.argsModel = st,
                 FieldPairs.argsOptic = #modelUriViewer,
-                FieldPairs.argsAction = PushUpdate . Instant
+                FieldPairs.argsAction = PushUpdate . Instant,
+                FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
               }
        ]
     <> [ Grid.bigCell
@@ -90,7 +92,8 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
     FieldPairs.Args
       { FieldPairs.argsModel = st,
         FieldPairs.argsOptic = #modelDonateViewer,
-        FieldPairs.argsAction = PushUpdate . Instant
+        FieldPairs.argsAction = PushUpdate . Instant,
+        FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
       }
     <> [ Grid.bigCell
           [ Button.raised

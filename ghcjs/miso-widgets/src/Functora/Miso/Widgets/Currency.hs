@@ -24,6 +24,7 @@ data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Currency Unique),
     argsAction :: (model -> JSM model) -> action,
+    argsEmitter :: (model -> JSM model) -> JSM (),
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
@@ -46,7 +47,8 @@ selectCurrency
   args@Args
     { argsModel = st,
       argsOptic = optic,
-      argsAction = action
+      argsAction = action,
+      argsEmitter = emitter
     }
   opts@Opts {optsExtraOnClick = extraOnClick} =
     LayoutGrid.cell
@@ -86,7 +88,8 @@ selectCurrency
                               Field.argsOptic =
                                 cloneTraversal optic
                                   . #currencyInput,
-                              Field.argsAction = action
+                              Field.argsAction = action,
+                              Field.argsEmitter = emitter
                             }
                           ( Field.defOpts
                               & #optsPlaceholder

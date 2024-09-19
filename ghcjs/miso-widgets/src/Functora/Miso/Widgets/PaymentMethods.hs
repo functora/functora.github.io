@@ -20,6 +20,7 @@ data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model [PaymentMethod Unique],
     argsAction :: (model -> JSM model) -> action,
+    argsEmitter :: (model -> JSM model) -> JSM (),
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
@@ -45,7 +46,8 @@ paymentMethodViewer
   Args
     { argsModel = st,
       argsOptic = optic,
-      argsAction = action
+      argsAction = action,
+      argsEmitter = emitter
     }
   idx =
     Money.moneyViewer
@@ -75,7 +77,8 @@ paymentMethodViewer
               cloneTraversal optic
                 . ix idx
                 . #paymentMethodFieldPairs,
-            FieldPairs.argsAction = action
+            FieldPairs.argsAction = action,
+            FieldPairs.argsEmitter = emitter
           }
 
 paymentMethodsEditor :: Args model action -> Opts model -> [View action]
@@ -90,6 +93,7 @@ paymentMethodEditor
     { argsModel = st,
       argsOptic = optic,
       argsAction = action,
+      argsEmitter = emitter,
       argsCurrencies = currencies
     }
   Opts
@@ -104,7 +108,8 @@ paymentMethodEditor
                 . ix idx
                 . #paymentMethodMoney
                 . #moneyAmount,
-            Field.argsAction = action
+            Field.argsAction = action,
+            Field.argsEmitter = emitter
           }
         ( Field.defOpts @model @action
             & #optsPlaceholder
@@ -116,21 +121,24 @@ paymentMethodEditor
             .~ True
             & #optsLeadingWidget
             .~ Just
-              ( Field.ModalWidget
-                  $ Field.ModalItemWidget
-                    optic
-                    idx
-                    #paymentMethodFieldPairs
-                    #paymentMethodMoneyLabel
-                    #paymentMethodModalState
+              ( let w =
+                      Field.ModalWidget
+                        $ Field.ModalItemWidget
+                          optic
+                          idx
+                          #paymentMethodFieldPairs
+                          #paymentMethodMoneyLabel
+                          #paymentMethodModalState
+                 in Field.OptsWidgetPair w w
               )
             & ( #optsTrailingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
             .~ Just
-              ( Field.DeleteWidget optic idx [Theme.primary]
+              ( let w = Field.DeleteWidget optic idx [Theme.primary]
+                 in Field.OptsWidgetPair w w
               )
         ),
       Currency.selectCurrency
@@ -142,6 +150,7 @@ paymentMethodEditor
                 . #paymentMethodMoney
                 . #moneyCurrency,
             Currency.argsAction = action,
+            Currency.argsEmitter = emitter,
             Currency.argsCurrencies = currencies
           }
         Currency.defOpts
@@ -155,7 +164,8 @@ paymentMethodEditor
               cloneTraversal optic
                 . ix idx
                 . #paymentMethodFieldPairs,
-            FieldPairs.argsAction = action
+            FieldPairs.argsAction = action,
+            FieldPairs.argsEmitter = emitter
           }
         FieldPairs.defOpts
     where

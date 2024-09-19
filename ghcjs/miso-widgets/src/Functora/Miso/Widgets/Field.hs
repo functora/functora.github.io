@@ -4,6 +4,7 @@ module Functora.Miso.Widgets.Field
     Opts (..),
     defOpts,
     OptsWidget (..),
+    OptsWidgetPair (..),
     ModalWidget' (..),
     field,
     ratioField,
@@ -36,7 +37,8 @@ import qualified Miso.String as MS
 data Args model action t f = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Field t f),
-    argsAction :: (model -> JSM model) -> action
+    argsAction :: (model -> JSM model) -> action,
+    argsEmitter :: (model -> JSM model) -> JSM ()
   }
   deriving stock (Generic)
 
@@ -52,11 +54,17 @@ data Opts model action = Opts
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe ((model -> JSM model) -> action),
-    optsLeadingWidget :: Maybe (OptsWidget model action),
-    optsTrailingWidget :: Maybe (OptsWidget model action),
+    optsLeadingWidget :: Maybe (OptsWidgetPair model action),
+    optsTrailingWidget :: Maybe (OptsWidgetPair model action),
     optsOnKeyDownAction :: Uid -> KeyCode -> model -> JSM model,
     optsExtraAttributes :: [Attribute action],
     optsFilledOrOutlined :: FilledOrOutlined
+  }
+  deriving stock (Generic)
+
+data OptsWidgetPair model action = OptsWidgetPair
+  { optsWidgetPairEmpty :: OptsWidget model action,
+    optsWidgetPairNonEmpty :: OptsWidget model action
   }
   deriving stock (Generic)
 
@@ -67,8 +75,8 @@ defOpts =
       optsFullWidth = False,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
-      optsLeadingWidget = Just CopyWidget,
-      optsTrailingWidget = Just ClearWidget,
+      optsLeadingWidget = Just $ OptsWidgetPair PasteWidget CopyWidget,
+      optsTrailingWidget = Just $ OptsWidgetPair ScanQrWidget ClearWidget,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
       optsExtraAttributes = mempty,
       optsFilledOrOutlined = Filled
@@ -77,6 +85,8 @@ defOpts =
 data OptsWidget model action
   = CopyWidget
   | ClearWidget
+  | PasteWidget
+  | ScanQrWidget
   | ShowOrHideWidget
   | ModalWidget (ModalWidget' model)
   | ActionWidget Unicode [Attribute action] action
@@ -115,13 +125,19 @@ field ::
   Full model action t Unique ->
   Opts model action ->
   View action
-field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
+field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   cell opts
     $ ( do
           x0 <-
             catMaybes
-              [ opts ^. #optsLeadingWidget,
-                opts ^. #optsTrailingWidget
+              [ opts
+                  ^? #optsLeadingWidget
+                  . _Just
+                  . cloneTraversal widgetOptic,
+                opts
+                  ^? #optsTrailingWidget
+                  . _Just
+                  . cloneTraversal widgetOptic
               ]
           x1 <-
             case x0 of
@@ -144,13 +160,13 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
             )
           & TextField.setLeadingIcon
             ( fmap
-                (fieldIcon Leading args opts)
-                (opts ^. #optsLeadingWidget)
+                (fieldIcon Leading full opts)
+                (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
             )
           & TextField.setTrailingIcon
             ( fmap
-                (fieldIcon Trailing args opts)
-                (opts ^. #optsTrailingWidget)
+                (fieldIcon Trailing full opts)
+                (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
             )
           & TextField.setAttributes
             ( [ id_
@@ -170,6 +186,10 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
+    widgetOptic =
+      if null . fromMaybe mempty $ getInput st
+        then #optsWidgetPairEmpty
+        else #optsWidgetPairNonEmpty
     uid =
       fromMaybe nilUid
         $ st
@@ -260,16 +280,16 @@ passwordField args opts =
         & #optsPlaceholder
         .~ ("Password" :: Unicode)
         & #optsLeadingWidget
-        .~ Just ShowOrHideWidget
+        .~ Just (OptsWidgetPair ShowOrHideWidget ShowOrHideWidget)
     )
 
 fieldIcon ::
   LeadingOrTrailing ->
-  Args model action t Unique ->
+  Full model action t Unique ->
   Opts model action ->
   OptsWidget model action ->
   TextField.Icon action
-fieldIcon lot args opts = \case
+fieldIcon lot full opts = \case
   CopyWidget ->
     fieldIconSimple lot "content_copy" mempty
       . action
@@ -301,6 +321,12 @@ fieldIcon lot args opts = \case
           . #fieldInput
           . #uniqueValue
           .~ mempty
+  PasteWidget ->
+    fieldIconSimple lot "content_paste_go" mempty
+      $ insertAction full Jsm.selectClipboard
+  ScanQrWidget ->
+    fieldIconSimple lot "qr_code_scanner" mempty
+      $ insertAction full Jsm.selectBarcode
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
@@ -358,9 +384,9 @@ fieldIcon lot args opts = \case
   ActionWidget icon attrs act ->
     fieldIconSimple lot icon attrs act
   where
-    st = args ^. #argsModel
-    optic = args ^. #argsOptic
-    action = args ^. #argsAction
+    st = full ^. #fullArgs . #argsModel
+    optic = full ^. #fullArgs . #argsOptic
+    action = full ^. #fullArgs . #argsAction
     uid =
       fromMaybe nilUid
         $ st
@@ -401,7 +427,8 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                   Args
                     { argsModel = args ^. #argsModel,
                       argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
-                      argsAction = args ^. #argsAction
+                      argsAction = args ^. #argsAction,
+                      argsEmitter = args ^. #argsEmitter
                     }
                   ( defOpts
                       & #optsPlaceholder
@@ -705,7 +732,7 @@ constTextField txt opts action =
                   CopyWidget -> action $ Jsm.shareText txt
                   _ -> error "constTextField unsupported widget"
               )
-              (opts ^. #optsLeadingWidget)
+              (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
           )
         & TextField.setTrailingIcon
           ( fmap
@@ -715,12 +742,17 @@ constTextField txt opts action =
                   _ ->
                     error "constTextField unsupported widget"
               )
-              (opts ^. #optsTrailingWidget)
+              (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
           )
         & TextField.setAttributes
           ( [Css.fullWidth] <> (opts ^. #optsExtraAttributes)
           )
     ]
+  where
+    widgetOptic =
+      if null txt
+        then #optsWidgetPairEmpty
+        else #optsWidgetPairNonEmpty
 
 cell :: Opts model action -> [View action] -> View action
 cell Opts {optsFullWidth = full} =
@@ -947,3 +979,37 @@ truncateFieldInput True Closed limit full =
         <> MS.takeEnd half full
 truncateFieldInput _ _ _ full =
   full
+
+insertAction ::
+  Full model action t Unique ->
+  ((Maybe Unicode -> JSM ()) -> JSM ()) ->
+  action
+insertAction Full {fullArgs = args, fullParser = parser} selector =
+  action $ \prev -> do
+    selector $ \case
+      Nothing -> Jsm.popupText @Unicode "Failure!"
+      Just inp -> do
+        let next =
+              prev
+                & cloneTraversal optic
+                . #fieldInput
+                . #uniqueValue
+                .~ inp
+        case next ^? cloneTraversal optic >>= parser of
+          Nothing -> Jsm.popupText @Unicode "Failure!"
+          Just out ->
+            args ^. #argsEmitter $ \st -> do
+              Jsm.popupText @Unicode "Success!"
+              pure
+                $ st
+                & cloneTraversal optic
+                . #fieldInput
+                . #uniqueValue
+                .~ inp
+                & cloneTraversal optic
+                . #fieldOutput
+                .~ out
+    pure prev
+  where
+    optic = args ^. #argsOptic
+    action = args ^. #argsAction

@@ -3,6 +3,7 @@ module App.Widgets.Assets
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -37,5 +38,7 @@ assetViewer st idx =
           FieldPairs.argsOptic =
             #modelState . #stAssets . ix idx . #assetFieldPairs,
           FieldPairs.argsAction =
-            PushUpdate . Instant
+            PushUpdate . Instant,
+          FieldPairs.argsEmitter =
+            Misc.pushActionQueue st . Instant
         }

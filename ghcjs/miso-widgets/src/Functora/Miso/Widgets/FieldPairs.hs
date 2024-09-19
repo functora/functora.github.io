@@ -17,7 +17,8 @@ import qualified Material.Typography as Typography
 data Args model action f = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model [FieldPair DynamicField f],
-    argsAction :: (model -> JSM model) -> action
+    argsAction :: (model -> JSM model) -> action,
+    argsEmitter :: (model -> JSM model) -> JSM ()
   }
   deriving stock (Generic)
 
@@ -85,7 +86,9 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
                       Field.argsOptic =
                         cloneTraversal optic . ix idx . #fieldPairValue,
                       Field.argsAction =
-                        args ^. #argsAction
+                        args ^. #argsAction,
+                      Field.argsEmitter =
+                        args ^. #argsEmitter
                     }
             ]
        )
@@ -112,7 +115,8 @@ fieldPairEditor
   Args
     { argsModel = st,
       argsOptic = optic,
-      argsAction = action
+      argsAction = action,
+      argsEmitter = emitter
     }
   Opts
     { optsAdvanced = False
@@ -122,7 +126,8 @@ fieldPairEditor
         Field.Args
           { Field.argsModel = st,
             Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
-            Field.argsAction = action
+            Field.argsAction = action,
+            Field.argsEmitter = emitter
           }
         ( Field.defOpts
             & #optsPlaceholder
@@ -136,19 +141,22 @@ fieldPairEditor
             & ( #optsLeadingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
             .~ Just
-              ( Field.ModalWidget
-                  $ Field.ModalFieldWidget
-                    optic
-                    idx
-                    #fieldPairValue
-                    Dynamic
+              ( let w =
+                      Field.ModalWidget
+                        $ Field.ModalFieldWidget
+                          optic
+                          idx
+                          #fieldPairValue
+                          Dynamic
+                 in Field.OptsWidgetPair w w
               )
             & #optsTrailingWidget
             .~ Just
-              ( Field.DeleteWidget optic idx mempty
+              ( let w = Field.DeleteWidget optic idx mempty
+                 in Field.OptsWidgetPair w w
               )
         )
     ]
@@ -156,7 +164,8 @@ fieldPairEditor
   Args
     { argsModel = st,
       argsOptic = optic,
-      argsAction = action
+      argsAction = action,
+      argsEmitter = emitter
     }
   Opts
     { optsAdvanced = True
@@ -166,7 +175,8 @@ fieldPairEditor
         Field.Args
           { Field.argsModel = st,
             Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
-            Field.argsAction = action
+            Field.argsAction = action,
+            Field.argsEmitter = emitter
           }
         ( Field.defOpts @model @action
             & #optsPlaceholder
@@ -174,17 +184,24 @@ fieldPairEditor
             & ( #optsLeadingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
-            .~ Just (Field.DownWidget optic idx mempty)
+            .~ Just
+              ( let w = Field.DownWidget optic idx mempty
+                 in Field.OptsWidgetPair w w
+              )
             & #optsTrailingWidget
-            .~ Just (Field.UpWidget optic idx mempty)
+            .~ Just
+              ( let w = Field.UpWidget optic idx mempty
+                 in Field.OptsWidgetPair w w
+              )
         ),
       Field.dynamicField
         Field.Args
           { Field.argsModel = st,
             Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
-            Field.argsAction = action
+            Field.argsAction = action,
+            Field.argsEmitter = emitter
           }
         ( Field.defOpts
             & #optsPlaceholder
@@ -202,19 +219,22 @@ fieldPairEditor
             & ( #optsLeadingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
             .~ Just
-              ( Field.ModalWidget
-                  $ Field.ModalFieldWidget
-                    optic
-                    idx
-                    #fieldPairValue
-                    Dynamic
+              ( let w =
+                      Field.ModalWidget
+                        $ Field.ModalFieldWidget
+                          optic
+                          idx
+                          #fieldPairValue
+                          Dynamic
+                 in Field.OptsWidgetPair w w
               )
             & #optsTrailingWidget
             .~ Just
-              ( Field.DeleteWidget optic idx mempty
+              ( let w = Field.DeleteWidget optic idx mempty
+                 in Field.OptsWidgetPair w w
               )
         )
     ]

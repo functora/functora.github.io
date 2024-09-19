@@ -20,6 +20,7 @@ data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model [Asset Unique],
     argsAction :: (model -> JSM model) -> action,
+    argsEmitter :: (model -> JSM model) -> JSM (),
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
@@ -45,7 +46,8 @@ assetViewer
   Args
     { argsModel = st,
       argsOptic = optic,
-      argsAction = action
+      argsAction = action,
+      argsEmitter = emitter
     }
   idx =
     FieldPairs.fieldPairsViewer
@@ -55,7 +57,8 @@ assetViewer
             cloneTraversal optic
               . ix idx
               . #assetFieldPairs,
-          FieldPairs.argsAction = action
+          FieldPairs.argsAction = action,
+          FieldPairs.argsEmitter = emitter
         }
       <> Money.moneyViewer
         Money.Args
@@ -87,6 +90,7 @@ assetEditor
     { argsModel = st,
       argsOptic = optic,
       argsAction = action,
+      argsEmitter = emitter,
       argsCurrencies = currencies
     }
   Opts
@@ -101,7 +105,8 @@ assetEditor
                 . ix idx
                 . #assetPrice
                 . #moneyAmount,
-            Field.argsAction = action
+            Field.argsAction = action,
+            Field.argsEmitter = emitter
           }
         ( Field.defOpts
             & #optsPlaceholder
@@ -112,24 +117,27 @@ assetEditor
             & ( #optsLeadingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
             .~ Just
-              ( Field.ModalWidget
-                  $ Field.ModalItemWidget
-                    optic
-                    idx
-                    #assetFieldPairs
-                    #assetPriceLabel
-                    #assetModalState
+              ( let w =
+                      Field.ModalWidget
+                        $ Field.ModalItemWidget
+                          optic
+                          idx
+                          #assetFieldPairs
+                          #assetPriceLabel
+                          #assetModalState
+                 in Field.OptsWidgetPair w w
               )
             & ( #optsTrailingWidget ::
                   Lens'
                     (Field.Opts model action)
-                    (Maybe (Field.OptsWidget model action))
+                    (Maybe (Field.OptsWidgetPair model action))
               )
             .~ Just
-              ( Field.DeleteWidget optic idx [Theme.primary]
+              ( let w = Field.DeleteWidget optic idx [Theme.primary]
+                 in Field.OptsWidgetPair w w
               )
         ),
       Currency.selectCurrency
@@ -141,6 +149,7 @@ assetEditor
                 . #assetPrice
                 . #moneyCurrency,
             Currency.argsAction = action,
+            Currency.argsEmitter = emitter,
             Currency.argsCurrencies = currencies
           }
         Currency.defOpts
@@ -154,7 +163,8 @@ assetEditor
               cloneTraversal optic
                 . ix idx
                 . #assetFieldPairs,
-            FieldPairs.argsAction = action
+            FieldPairs.argsAction = action,
+            FieldPairs.argsEmitter = emitter
           }
         FieldPairs.defOpts
     where

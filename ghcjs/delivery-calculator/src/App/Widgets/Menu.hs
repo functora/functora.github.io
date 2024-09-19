@@ -3,6 +3,7 @@ module App.Widgets.Menu
   )
 where
 
+import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified Functora.Miso.Css as Css
@@ -125,6 +126,8 @@ menu st =
                                 #modelState . #stAssetCurrency,
                               Currency.argsAction =
                                 PushUpdate . Instant,
+                              Currency.argsEmitter =
+                                Misc.pushActionQueue st . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
                             }
@@ -143,6 +146,8 @@ menu st =
                                 #modelState . #stMerchantCurrency,
                               Currency.argsAction =
                                 PushUpdate . Instant,
+                              Currency.argsEmitter =
+                                Misc.pushActionQueue st . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
                             }
@@ -198,7 +203,9 @@ menu st =
                                   Field.argsOptic =
                                     #modelState . #stExchangeRate,
                                   Field.argsAction =
-                                    PushUpdate . Instant
+                                    PushUpdate . Instant,
+                                  Field.argsEmitter =
+                                    Misc.pushActionQueue st . Instant
                                 }
                               ( let disabled =
                                       st
@@ -243,7 +250,9 @@ menu st =
                                   Field.argsOptic =
                                     #modelState . #stMerchantFeePercent,
                                   Field.argsAction =
-                                    PushUpdate . Instant
+                                    PushUpdate . Instant,
+                                  Field.argsEmitter =
+                                    Misc.pushActionQueue st . Instant
                                 }
                               ( Field.defOpts
                                   & #optsPlaceholder
@@ -257,7 +266,9 @@ menu st =
                               Field.Args
                                 { Field.argsModel = st,
                                   Field.argsOptic = #modelState . #stMerchantTele,
-                                  Field.argsAction = PushUpdate . Instant
+                                  Field.argsAction = PushUpdate . Instant,
+                                  Field.argsEmitter =
+                                    Misc.pushActionQueue st . Instant
                                 }
                               ( Field.defOpts
                                   & #optsPlaceholder
@@ -271,7 +282,9 @@ menu st =
                               Field.Args
                                 { Field.argsModel = st,
                                   Field.argsOptic = #modelState . #stPreview,
-                                  Field.argsAction = PushUpdate . Instant
+                                  Field.argsAction = PushUpdate . Instant,
+                                  Field.argsEmitter =
+                                    Misc.pushActionQueue st . Instant
                                 }
                               ( Field.defOpts @Model @Action
                                   & #optsPlaceholder

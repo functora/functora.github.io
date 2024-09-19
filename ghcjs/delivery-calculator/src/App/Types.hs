@@ -8,6 +8,7 @@ module App.Types
     newSt,
     Asset (..),
     newAsset,
+    newFieldPair,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -36,7 +37,8 @@ import Data.Functor.Barbie
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Miso.Types as X hiding (Asset (..), newAsset)
+import Functora.Miso.Types as X hiding (Asset (..), newAsset, newFieldPair)
+import qualified Functora.Miso.Types as FM
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
@@ -123,11 +125,8 @@ newSt = do
       }
 
 data Asset f = Asset
-  { assetLink :: Field Unicode f,
-    assetPhoto :: Field Unicode f,
-    assetPrice :: Field Rational f,
-    assetQty :: Field Rational f,
-    assetOoc :: OpenedOrClosed
+  { assetFieldPairs :: [FieldPair DynamicField f],
+    assetModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -147,18 +146,36 @@ deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
 newAsset :: (MonadIO m) => m (Asset Unique)
 newAsset = do
-  link <- newTextField mempty
-  photo <- newTextField mempty
-  price <- newRatioField 0
-  qty <- newRatioField 1
+  link <-
+    newFieldPair "Link"
+      $ DynamicFieldText "https://bitcoin.org/en/"
+  photo <-
+    newFieldPair "Photo"
+      $ DynamicFieldText "https://bitcoin.org/img/home/bitcoin-img.svg?1725887272"
+  price <-
+    newFieldPair "Price" $ DynamicFieldNumber 0
+  qty <-
+    newFieldPair "Quantity" $ DynamicFieldNumber 1
   pure
     Asset
-      { assetLink = link,
-        assetPhoto = photo,
-        assetPrice = price,
-        assetQty = qty,
-        assetOoc = Opened
+      { assetFieldPairs = [link, photo, price, qty],
+        assetModalState = Opened
       }
+
+newFieldPair ::
+  ( MonadIO m
+  ) =>
+  Unicode ->
+  DynamicField ->
+  m (FieldPair DynamicField Unique)
+newFieldPair key val = do
+  res <- FM.newFieldPair key val
+  pure
+    $ res
+    & #fieldPairValue
+    . #fieldOpts
+    . #fieldOptsQrState
+    .~ Nothing
 
 data Screen
   = Main

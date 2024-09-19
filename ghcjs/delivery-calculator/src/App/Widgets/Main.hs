@@ -2,6 +2,7 @@ module App.Widgets.Main (mainWidget, pasteWidget) where
 
 import qualified App.Misc as Misc
 import App.Types
+import qualified App.Widgets.Assets as Assets
 import qualified App.Widgets.Menu as Menu
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
@@ -101,34 +102,35 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
               "Open"
           ]
        ]
-screenWidget Model {modelState = St {stScreen = Main}} =
-  [ Grid.mediumCell
-      [ Button.raised
-          ( Button.config
-              & Button.setIcon (Just "add_box")
-              & Button.setAttributes [Css.fullWidth]
-              & Button.setOnClick
-                ( PushUpdate . Instant $ \st -> do
-                    asset <- newAsset
-                    pure $ st & #modelState . #stAssets %~ flip snoc asset
-                )
-          )
-          "Add item"
-      ],
-    Grid.mediumCell
-      [ Button.raised
-          ( Button.config
-              & Button.setIcon (Just "send")
-              & Button.setAttributes [Css.fullWidth]
-              & Button.setOnClick
-                ( PushUpdate
-                    . Instant
-                    $ \next -> flip Jsm.openBrowserPage next =<< stTeleUri next
-                )
-          )
-          "Order via Telegram"
-      ]
-  ]
+screenWidget st@Model {modelState = St {stScreen = Main}} =
+  Assets.assetsViewer st
+    <> [ Grid.mediumCell
+          [ Button.raised
+              ( Button.config
+                  & Button.setIcon (Just "add_box")
+                  & Button.setAttributes [Css.fullWidth]
+                  & Button.setOnClick
+                    ( PushUpdate . Instant $ \next -> do
+                        asset <- newAsset
+                        pure $ next & #modelState . #stAssets %~ flip snoc asset
+                    )
+              )
+              "Add item"
+          ],
+         Grid.mediumCell
+          [ Button.raised
+              ( Button.config
+                  & Button.setIcon (Just "send")
+                  & Button.setAttributes [Css.fullWidth]
+                  & Button.setOnClick
+                    ( PushUpdate
+                        . Instant
+                        $ \next -> flip Jsm.openBrowserPage next =<< stTeleUri next
+                    )
+              )
+              "Order via Telegram"
+          ]
+       ]
 
 pasteWidget ::
   Unicode ->

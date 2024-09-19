@@ -44,6 +44,7 @@ module Functora.Miso.Types
     qsGet,
     uniqueToIdentity,
     identityToUnique,
+    keyed,
     TopOrBottom (..),
     HeaderOrFooter (..),
     OnlineOrOffline (..),
@@ -61,6 +62,7 @@ import qualified Data.Generics as Syb
 import Functora.Cfg
 import Functora.Miso.Prelude
 import Functora.Money hiding (Currency, Money)
+import qualified Miso.Html.Types as Miso
 import qualified Text.URI as URI
 
 type Typ a =
@@ -552,6 +554,25 @@ uniqueToIdentity =
 identityToUnique :: (TraversableB f, MonadIO m) => f Identity -> m (f Unique)
 identityToUnique =
   btraverse $ newUnique . runIdentity
+
+keyed :: Uid -> View action -> View action
+keyed uid = \case
+  Node x0 x1 Nothing x2 x3
+    | not (nullUid uid) ->
+        Node
+          x0
+          x1
+          ( Just
+              . Miso.Key
+              . either impureThrow id
+              . decodeUtf8Strict
+              . unTagged
+              $ htmlUid uid
+          )
+          x2
+          x3
+  x ->
+    x
 
 data TopOrBottom
   = Top

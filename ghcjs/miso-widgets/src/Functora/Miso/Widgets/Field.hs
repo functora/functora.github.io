@@ -129,9 +129,10 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
               _ -> mempty
           fieldModal args x1
       )
-    <> [ case opts ^. #optsFilledOrOutlined of
-          Filled -> TextField.filled
-          Outlined -> TextField.outlined
+    <> [ keyed uid
+          $ case opts ^. #optsFilledOrOutlined of
+            Filled -> TextField.filled
+            Outlined -> TextField.outlined
           $ TextField.config
           & TextField.setType
             ( fmap htmlFieldType (st ^? cloneTraversal optic . #fieldType)
@@ -895,24 +896,26 @@ genericFieldViewer args widget =
                          )
                 )
       )
-        <> ( do
-              let icon = case stateQr of
-                    Closed -> "qr_code_2"
-                    Opened -> "grid_off"
-              pure
-                . fieldViewerIcon icon
-                . action
-                $ pure
-                . ( &
-                      cloneTraversal optic
-                        . #fieldOpts
-                        . #fieldOptsQrState
-                        . _Just
-                        %~ ( \case
-                              Closed -> Opened
-                              Opened -> Closed
-                           )
-                  )
+        <> ( if isNothing $ opts ^. #fieldOptsQrState
+              then mempty
+              else do
+                let icon = case stateQr of
+                      Closed -> "qr_code_2"
+                      Opened -> "grid_off"
+                pure
+                  . fieldViewerIcon icon
+                  . action
+                  $ pure
+                  . ( &
+                        cloneTraversal optic
+                          . #fieldOpts
+                          . #fieldOptsQrState
+                          . _Just
+                          %~ ( \case
+                                Closed -> Opened
+                                Opened -> Closed
+                             )
+                    )
            )
         <> ( if not allowCopy
               then mempty

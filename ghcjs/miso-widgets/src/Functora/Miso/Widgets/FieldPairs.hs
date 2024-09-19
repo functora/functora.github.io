@@ -1,5 +1,7 @@
 module Functora.Miso.Widgets.FieldPairs
   ( Args (..),
+    Opts (..),
+    defOpts,
     fieldPairsViewer,
     fieldPairsEditor,
   )
@@ -18,6 +20,17 @@ data Args model action f = Args
     argsAction :: (model -> JSM model) -> action
   }
   deriving stock (Generic)
+
+newtype Opts = Opts
+  { optsAdvanced :: Bool
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+defOpts :: Opts
+defOpts =
+  Opts
+    { optsAdvanced = True
+    }
 
 fieldPairsViewer :: (Foldable1 f) => Args model action f -> [View action]
 fieldPairsViewer args@Args {argsOptic = optic} = do
@@ -84,73 +97,127 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
         then Grid.bigCell
         else Grid.mediumCell
 
-fieldPairsEditor :: Args model action Unique -> [View action]
-fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} = do
+fieldPairsEditor :: Args model action Unique -> Opts -> [View action]
+fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
-  fieldPairEditor args idx
+  fieldPairEditor args opts idx
 
 fieldPairEditor ::
   forall model action.
   Args model action Unique ->
+  Opts ->
   Int ->
   [View action]
-fieldPairEditor Args {argsModel = st, argsOptic = optic, argsAction = action} idx =
-  [ Field.textField
-      Field.Args
-        { Field.argsModel = st,
-          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
-          Field.argsAction = action
-        }
-      ( Field.defOpts @model @action
-          & #optsPlaceholder
-          .~ ("Label " <> idxTxt)
-          & ( #optsLeadingWidget ::
-                Lens'
-                  (Field.Opts model action)
-                  (Maybe (Field.OptsWidget model action))
-            )
-          .~ Just (Field.DownWidget optic idx mempty)
-          & #optsTrailingWidget
-          .~ Just (Field.UpWidget optic idx mempty)
-      ),
-    Field.dynamicField
-      Field.Args
-        { Field.argsModel = st,
-          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
-          Field.argsAction = action
-        }
-      ( Field.defOpts
-          & #optsPlaceholder
-          .~ ( "Value "
-                <> idxTxt
-                <> ( maybe mempty (" - " <>)
-                      $ st
-                      ^? cloneTraversal optic
-                      . ix idx
-                      . #fieldPairValue
-                      . #fieldType
-                      . to userFieldType
-                   )
-             )
-          & ( #optsLeadingWidget ::
-                Lens'
-                  (Field.Opts model action)
-                  (Maybe (Field.OptsWidget model action))
-            )
-          .~ Just
-            ( Field.ModalWidget
-                $ Field.ModalFieldWidget
-                  optic
-                  idx
-                  #fieldPairValue
-                  Dynamic
-            )
-          & #optsTrailingWidget
-          .~ Just
-            ( Field.DeleteWidget optic idx mempty
-            )
-      )
-  ]
-  where
-    idxTxt :: Unicode
-    idxTxt = "#" <> inspect (idx + 1)
+fieldPairEditor
+  Args
+    { argsModel = st,
+      argsOptic = optic,
+      argsAction = action
+    }
+  Opts
+    { optsAdvanced = False
+    }
+  idx =
+    [ Field.dynamicField
+        Field.Args
+          { Field.argsModel = st,
+            Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
+            Field.argsAction = action
+          }
+        ( Field.defOpts
+            & #optsPlaceholder
+            .~ ( fromMaybe ("#" <> inspect (idx + 1))
+                  $ st
+                  ^? cloneTraversal optic
+                  . ix idx
+                  . #fieldPairKey
+                  . #fieldOutput
+               )
+            & ( #optsLeadingWidget ::
+                  Lens'
+                    (Field.Opts model action)
+                    (Maybe (Field.OptsWidget model action))
+              )
+            .~ Just
+              ( Field.ModalWidget
+                  $ Field.ModalFieldWidget
+                    optic
+                    idx
+                    #fieldPairValue
+                    Dynamic
+              )
+            & #optsTrailingWidget
+            .~ Just
+              ( Field.DeleteWidget optic idx mempty
+              )
+        )
+    ]
+fieldPairEditor
+  Args
+    { argsModel = st,
+      argsOptic = optic,
+      argsAction = action
+    }
+  Opts
+    { optsAdvanced = True
+    }
+  idx =
+    [ Field.textField
+        Field.Args
+          { Field.argsModel = st,
+            Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
+            Field.argsAction = action
+          }
+        ( Field.defOpts @model @action
+            & #optsPlaceholder
+            .~ ("Label " <> idxTxt)
+            & ( #optsLeadingWidget ::
+                  Lens'
+                    (Field.Opts model action)
+                    (Maybe (Field.OptsWidget model action))
+              )
+            .~ Just (Field.DownWidget optic idx mempty)
+            & #optsTrailingWidget
+            .~ Just (Field.UpWidget optic idx mempty)
+        ),
+      Field.dynamicField
+        Field.Args
+          { Field.argsModel = st,
+            Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
+            Field.argsAction = action
+          }
+        ( Field.defOpts
+            & #optsPlaceholder
+            .~ ( "Value "
+                  <> idxTxt
+                  <> ( maybe mempty (" - " <>)
+                        $ st
+                        ^? cloneTraversal optic
+                        . ix idx
+                        . #fieldPairValue
+                        . #fieldType
+                        . to userFieldType
+                     )
+               )
+            & ( #optsLeadingWidget ::
+                  Lens'
+                    (Field.Opts model action)
+                    (Maybe (Field.OptsWidget model action))
+              )
+            .~ Just
+              ( Field.ModalWidget
+                  $ Field.ModalFieldWidget
+                    optic
+                    idx
+                    #fieldPairValue
+                    Dynamic
+              )
+            & #optsTrailingWidget
+            .~ Just
+              ( Field.DeleteWidget optic idx mempty
+              )
+        )
+    ]
+    where
+      idxTxt :: Unicode
+      idxTxt = "#" <> inspect (idx + 1)

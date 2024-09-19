@@ -14,9 +14,28 @@ assetsViewer st = do
 
 assetViewer :: Model -> Int -> [View Action]
 assetViewer st idx =
-  FieldPairs.fieldPairsViewer
-    FieldPairs.Args
-      { FieldPairs.argsModel = st,
-        FieldPairs.argsOptic = #modelState . #stAssets . ix idx . #assetFieldPairs,
-        FieldPairs.argsAction = PushUpdate . Instant
-      }
+  ( FieldPairs.fieldPairsViewer args
+  )
+    <> ( if st
+          ^? #modelState
+          . #stAssets
+          . ix idx
+          . #assetModalState
+          == Just Opened
+          then
+            FieldPairs.fieldPairsEditor
+              args
+              $ FieldPairs.defOpts
+              & #optsAdvanced
+              .~ False
+          else mempty
+       )
+  where
+    args =
+      FieldPairs.Args
+        { FieldPairs.argsModel = st,
+          FieldPairs.argsOptic =
+            #modelState . #stAssets . ix idx . #assetFieldPairs,
+          FieldPairs.argsAction =
+            PushUpdate . Instant
+        }

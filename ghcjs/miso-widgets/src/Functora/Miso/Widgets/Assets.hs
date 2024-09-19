@@ -156,6 +156,7 @@ assetEditor
                 . #assetFieldPairs,
             FieldPairs.argsAction = action
           }
+        FieldPairs.defOpts
     where
       idxTxt :: Unicode
       idxTxt = "#" <> inspect (idx + 1)

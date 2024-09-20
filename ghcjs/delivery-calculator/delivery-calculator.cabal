@@ -32,6 +32,7 @@ common pkg
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.Templates
+    App.Xlsx
 
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
@@ -116,6 +117,7 @@ common pkg
     , syb
     , text
     , uglymemo
+    , xlsx
 
   if os(wasi)
     build-depends: jsaddle-wasm

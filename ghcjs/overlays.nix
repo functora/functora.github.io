@@ -175,6 +175,26 @@
                   ver = "0.3.2.0";
                   sha256 = "EziiFX/1e105Y7zbO0DLwF6yCzYv4IX/vF9l7B55o7Y=";
                 } {});
+                network = self.callHackageDirect {
+                  pkg = "network";
+                  ver = "3.1.2.6";
+                  sha256 = "PAnsrKV2vRXJaMQrBFlL2dZQe9i13bEGb/maIjJF2sM=";
+                } {};
+                socks = self.callHackageDirect {
+                  pkg = "socks";
+                  ver = "0.6.1";
+                  sha256 = "Iqkmih5QFqxPTY2k1IeSXr+VKXwZos86hYAL0Vh6oBw=";
+                } {};
+                connection = self.callHackageDirect {
+                  pkg = "connection";
+                  ver = "0.3.1";
+                  sha256 = "wMfrtQkkOqtFbz6apiztg6KOKp8Wfs2Otuvr3p34TWI=";
+                } {};
+                websockets = doJailbreak (self.callHackageDirect {
+                  pkg = "websockets";
+                  ver = "0.12.7.3";
+                  sha256 = "zQY5xQclPNZk7b14ut6Wzcgaolkx+brOxDO5FrZAzk8=";
+                } {});
                 secp256k1-haskell = self.callHackageDirect {
                   pkg = "secp256k1-haskell";
                   ver = "0.6.1";

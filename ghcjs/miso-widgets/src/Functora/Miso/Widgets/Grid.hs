@@ -3,6 +3,7 @@ module Functora.Miso.Widgets.Grid
     bigCell,
     mediumCell,
     smallCell,
+    microCell,
   )
 where
 
@@ -43,6 +44,16 @@ smallCell =
     [ LayoutGrid.span3Desktop,
       LayoutGrid.span2Tablet,
       LayoutGrid.span2Phone,
+      LayoutGrid.alignMiddle,
+      style_ [("align-content", "center")]
+    ]
+
+microCell :: [View action] -> View action
+microCell =
+  LayoutGrid.cell
+    [ LayoutGrid.span3Desktop,
+      LayoutGrid.span2Tablet,
+      LayoutGrid.span1Phone,
       LayoutGrid.alignMiddle,
       style_ [("align-content", "center")]
     ]

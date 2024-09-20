@@ -138,26 +138,6 @@ fieldPairEditor
                   . #fieldPairKey
                   . #fieldOutput
                )
-            & ( #optsLeadingWidget ::
-                  Lens'
-                    (Field.Opts model action)
-                    (Maybe (Field.OptsWidgetPair model action))
-              )
-            .~ Just
-              ( let w =
-                      Field.ModalWidget
-                        $ Field.ModalFieldWidget
-                          optic
-                          idx
-                          #fieldPairValue
-                          Dynamic
-                 in Field.OptsWidgetPair w w
-              )
-            & #optsTrailingWidget
-            .~ Just
-              ( let w = Field.DeleteWidget optic idx mempty
-                 in Field.OptsWidgetPair w w
-              )
         )
     ]
 fieldPairEditor

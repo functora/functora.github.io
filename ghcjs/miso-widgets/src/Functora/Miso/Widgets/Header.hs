@@ -35,18 +35,24 @@ headerEditor args opts =
       ]
   ]
 
-headerViewer :: Unicode -> [View action]
-headerViewer txt =
+headerViewer :: Unicode -> [View action] -> [View action]
+headerViewer txt widgets =
   if txt == mempty
     then mempty
     else
       [ LayoutGrid.cell
           [ LayoutGrid.span12,
             Typography.headline5,
-            style_ [("text-align", "center")]
+            style_
+              [ ("display", "flex"),
+                ("text-align", "center"),
+                ("align-items", "center"),
+                ("justify-content", "center")
+              ]
           ]
-          [ text txt
-          ]
+          $ [ text txt
+            ]
+          <> widgets
       ]
 
 headerWrapper :: [View action] -> [View action]

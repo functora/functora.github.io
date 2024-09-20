@@ -244,7 +244,7 @@ menu st =
                               )
                           ],
                         Grid.mediumCell
-                          [ Field.ratioField
+                          [ Field.dynamicField
                               Field.Args
                                 { Field.argsModel = st,
                                   Field.argsOptic =

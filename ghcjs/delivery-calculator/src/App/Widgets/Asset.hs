@@ -6,6 +6,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified Functora.Miso.Css as Css
+import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -38,7 +39,6 @@ assetViewer st idx =
         )
         "settings"
     ]
-    <> FieldPairs.fieldPairsViewer args
     <> ( if st ^? cloneTraversal modalOptic /= Just Opened
           then mempty
           else
@@ -51,20 +51,38 @@ assetViewer st idx =
                     Nothing
                     [ Grid.grid
                         mempty
-                        $ ( FieldPairs.fieldPairsEditor
+                        $ Header.headerViewer title mempty
+                        <> ( FieldPairs.fieldPairsEditor
                               args
                               $ FieldPairs.defOpts
                               & #optsAdvanced
                               .~ False
-                          )
-                        <> [ Grid.bigCell
+                           )
+                        <> [ Grid.mediumCell
+                              [ Button.raised
+                                  ( Button.config
+                                      & Button.setIcon (Just "delete_forever")
+                                      & Button.setAttributes [Css.fullWidth]
+                                      & Button.setOnClick
+                                        ( PushUpdate
+                                            . Instant
+                                            $ Jsm.removeAt
+                                              ( #modelState
+                                                  . #stAssets
+                                              )
+                                              idx
+                                        )
+                                  )
+                                  "Remove"
+                              ],
+                             Grid.mediumCell
                               [ Button.raised
                                   ( Button.config
                                       & Button.setOnClick closeAction
-                                      & Button.setIcon (Just "arrow_back")
+                                      & Button.setIcon (Just "save")
                                       & Button.setAttributes [Css.fullWidth]
                                   )
-                                  "Back"
+                                  "Save"
                               ]
                            ]
                     ]
@@ -72,6 +90,7 @@ assetViewer st idx =
                 )
             ]
        )
+    <> FieldPairs.fieldPairsViewer args
   where
     args =
       FieldPairs.Args

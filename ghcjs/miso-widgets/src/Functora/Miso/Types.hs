@@ -14,6 +14,7 @@ module Functora.Miso.Types
     newFieldId,
     newRatioField,
     newTextField,
+    newTextFieldId,
     newPasswordField,
     newDynamicField,
     newDynamicFieldId,
@@ -196,6 +197,10 @@ newRatioField output =
 newTextField :: (MonadIO m) => Unicode -> m (Field Unicode Unique)
 newTextField output =
   newField FieldTypeText output id
+
+newTextFieldId :: Unicode -> Field Unicode Identity
+newTextFieldId output =
+  newFieldId FieldTypeText id output
 
 newPasswordField :: (MonadIO m) => Unicode -> m (Field Unicode Unique)
 newPasswordField output =

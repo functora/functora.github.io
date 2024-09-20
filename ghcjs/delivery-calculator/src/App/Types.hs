@@ -9,6 +9,7 @@ module App.Types
     Asset (..),
     newAsset,
     newFieldPair,
+    newFieldPairId,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -37,7 +38,12 @@ import Data.Functor.Barbie
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
-import Functora.Miso.Types as X hiding (Asset (..), newAsset, newFieldPair)
+import Functora.Miso.Types as X hiding
+  ( Asset (..),
+    newAsset,
+    newFieldPair,
+    newFieldPairId,
+  )
 import qualified Functora.Miso.Types as FM
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
@@ -77,7 +83,7 @@ data St f = St
     stExchangeRateAt :: UTCTime,
     stMerchantCurrency :: Currency f,
     stMerchantTele :: Field Unicode f,
-    stMerchantFeePercent :: Field Rational f,
+    stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
@@ -106,7 +112,7 @@ newSt = do
   ct <- getCurrentTime
   merchantCur <- newCurrency rub
   tele <- newTextField "Functora"
-  fee <- newRatioField 2
+  fee <- newDynamicField $ DynamicFieldNumber 2
   fav <- newTextField mempty
   pre <- newTextField "Delivery Calculator"
   pure
@@ -117,7 +123,7 @@ newSt = do
         stExchangeRateAt = ct,
         stMerchantCurrency = merchantCur,
         stMerchantTele = tele,
-        stMerchantFeePercent = fee,
+        stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
         stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
@@ -153,7 +159,7 @@ newAsset = do
     newFieldPair "Photo"
       $ DynamicFieldText "https://bitcoin.org/img/home/bitcoin-img.svg?1725887272"
   price <-
-    newFieldPair "Price" $ DynamicFieldNumber 0
+    newFieldPair "Price" $ DynamicFieldNumber 10
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
   pure
@@ -172,6 +178,17 @@ newFieldPair key val = do
   res <- FM.newFieldPair key val
   pure
     $ res
+    & #fieldPairValue
+    . #fieldOpts
+    . #fieldOptsQrState
+    .~ Nothing
+
+newFieldPairId ::
+  Unicode ->
+  DynamicField ->
+  FieldPair DynamicField Identity
+newFieldPairId key val = do
+  FM.newFieldPairId key val
     & #fieldPairValue
     . #fieldOpts
     . #fieldOptsQrState
@@ -218,10 +235,19 @@ stQuery st = do
 
 stTeleUri :: (MonadThrow m) => Model -> m URI
 stTeleUri st = do
-  base <- URI.mkURI "https://t.me"
-  user <- URI.mkPathPiece $ st ^. #modelState . #stMerchantTele . #fieldOutput
-  link <- stUri st
-  key <- URI.mkQueryKey "text"
+  base <-
+    URI.mkURI "https://t.me"
+  user <-
+    URI.mkPathPiece
+      . from @Unicode @Text
+      $ st
+      ^. #modelState
+      . #stMerchantTele
+      . #fieldOutput
+  link <-
+    stUri st
+  key <-
+    URI.mkQueryKey "text"
   val <-
     URI.mkQueryValue
       $ "Hello, I have a question about the delivery of the following items: "

@@ -1,4 +1,4 @@
-module App.Widgets.Assets
+module App.Widgets.Asset
   ( assetsViewer,
   )
 where

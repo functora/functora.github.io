@@ -27,7 +27,7 @@ common pkg
   other-modules:
     App.Misc
     App.Types
-    App.Widgets.Assets
+    App.Widgets.Asset
     App.Widgets.Fav
     App.Widgets.Main
     App.Widgets.Menu

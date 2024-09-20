@@ -2,7 +2,7 @@ module App.Widgets.Main (mainWidget, pasteWidget) where
 
 import qualified App.Misc as Misc
 import App.Types
-import qualified App.Widgets.Assets as Assets
+import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.Menu as Menu
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
@@ -106,7 +106,7 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
           ]
        ]
 screenWidget st@Model {modelState = St {stScreen = Main}} =
-  Assets.assetsViewer st
+  Asset.assetsViewer st
     <> [ Grid.mediumCell
           [ Button.raised
               ( Button.config

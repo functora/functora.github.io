@@ -6,6 +6,7 @@ where
 import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
+import qualified App.Xlsx as Xlsx
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
@@ -78,6 +79,23 @@ menu st =
                         & IconButton.setOnClick
                           ( PushUpdate . Instant $ \next -> do
                               Jsm.printCurrentPage "delivery-calculator"
+                              pure next
+                          )
+                        & IconButton.setAttributes
+                          [ TopAppBar.actionItem,
+                            TopAppBar.navigationIcon
+                          ]
+                    )
+                    "print",
+                navItemRight
+                  $ IconButton.iconButton
+                    ( IconButton.config
+                        & IconButton.setOnClick
+                          ( PushUpdate . Instant $ \next -> do
+                              Jsm.saveFile
+                                "delivery-calculator.xlsx"
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                Xlsx.newXlsx
                               pure next
                           )
                         & IconButton.setAttributes

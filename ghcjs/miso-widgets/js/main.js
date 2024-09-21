@@ -7,6 +7,7 @@ import { Share } from "@capacitor/share";
 import { Toast } from "@capacitor/toast";
 import { Capacitor } from "@capacitor/core";
 import { Html5Qrcode } from "html5-qrcode";
+import { saveAs } from "file-saver";
 import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerTypeHint,
@@ -62,6 +63,18 @@ export async function selectBarcode() {
     hint: CapacitorBarcodeScannerTypeHint.ALL,
   });
   return ScanResult;
+}
+
+export async function saveFile(name, mime, bytes) {
+  return saveAs(new Blob([bytes], { type: mime }), name);
+}
+
+export function newUint8Array(buf, off, len) {
+  return new Uint8Array(buf, off, len);
+}
+
+export function emptyUint8Array() {
+  return new Uint8Array(0);
 }
 
 defineCustomElements(window);

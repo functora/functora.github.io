@@ -1,12 +1,17 @@
 module App.Xlsx (newXlsx) where
 
 import Codec.Xlsx
+import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
 import Lens.Micro ((?~))
 
-newXlsx :: Xlsx
+newXlsx :: ByteString
 newXlsx =
-  def & atSheet "List1" ?~ sheet
+  from @BL.ByteString @ByteString
+    . fromXlsx 0
+    $ def
+    & atSheet "List1"
+    ?~ sheet
   where
     sheet =
       def

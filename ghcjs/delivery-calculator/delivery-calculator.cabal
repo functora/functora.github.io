@@ -114,10 +114,10 @@ common pkg
     , network-uri
     , qrcode-core
     , random
+    , SpreadsheetML
     , syb
     , text
     , uglymemo
-    , xlsx
 
   if os(wasi)
     build-depends: jsaddle-wasm

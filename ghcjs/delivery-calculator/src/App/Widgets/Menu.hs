@@ -93,8 +93,8 @@ menu st =
                         & IconButton.setOnClick
                           ( PushUpdate . Instant $ \next -> do
                               Jsm.saveFile
-                                "delivery-calculator.xlsx"
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "delivery-calculator.xls"
+                                "application/vnd.ms-excel"
                                 Xlsx.newXlsx
                               pure next
                           )

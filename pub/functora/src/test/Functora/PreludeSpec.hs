@@ -5,7 +5,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import Functora.Prelude
-import Functora.Soplate
 import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Instances ()
@@ -30,15 +29,6 @@ data NoData = NoData
   }
   deriving stock (Eq, Ord, Show, Generic)
 
-expr :: Expr
-expr = Add (Sub (Lit 1) (Lit 2)) (Lit 3)
-
-fun :: Expr -> Expr
-fun = \case
-  Add a b -> Mul a b
-  Lit i -> Lit (i + 1)
-  a -> a
-
 spec :: Spec
 spec = do
   it "inspect/data" $ do
@@ -58,12 +48,6 @@ spec = do
       `shouldBe` "uid-11111111111111111111111111111111"
     unsafeFrom @(UTF_8 ByteString) @Text (htmlUid $ addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
-  it "soplate/fun"
-    $ over soplate fun expr
-    `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
-  it "soplate/plus"
-    $ over soplate (+ (1 :: Int)) expr
-    `shouldBe` Add (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
     `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"
@@ -139,27 +123,6 @@ spec = do
   inspectParseRatioUnsigned @Word16
   inspectParseRatioUnsigned @Word32
   inspectParseRatioUnsigned @Word64
-  it "inspectSop/Textual" $ do
-    inspectSop @Text ("HELLO" :: String) `shouldBe` "HELLO"
-    inspectSop @Text ("HELLO" :: Text) `shouldBe` "HELLO"
-    inspectSop @Text ("HELLO" :: TL.Text) `shouldBe` "HELLO"
-    inspectSop @Text ("HELLO" :: ByteString) `shouldBe` "HELLO"
-    inspectSop @Text ("HELLO" :: BL.ByteString) `shouldBe` "HELLO"
-  it "inspectSop/NoData" $ do
-    let nodata =
-          NoData
-            { noDataExpr = expr,
-              noDataByte = "example",
-              noDataSelf =
-                Just
-                  NoData
-                    { noDataExpr = Lit 1,
-                      noDataByte = BS.pack [106, 246, 171, 231, 231, 166, 121],
-                      noDataSelf = Nothing
-                    }
-            }
-    inspectSop @Text nodata
-      `shouldBe` "NoData {noDataExpr = Add (Sub (Lit 1) (Lit 2)) (Lit 3), noDataByte = \"example\", noDataSelf = Just (NoData {noDataExpr = Lit 1, noDataByte = \"6af6abe7e7a679\", noDataSelf = Nothing})}"
   it "expBackOff" $ do
     let xs :: NonEmpty Natural = expBackOff @Natural <$> [0 .. 17]
     head xs `shouldBe` 1

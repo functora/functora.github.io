@@ -13,13 +13,30 @@ allow-newer: base,
              filepath,
              os-string,
              directory,
+             secp256k1,
              geojson:*,
+             stopwatch:*,
+             Cabal
 
 package unix
   flags: +os-string
 
 package directory
   flags: +os-string
+
+source-repository-package
+  type: git
+  location: https://github.com/dorchard/type-level-sets.git
+  tag: d71becf49c092cd7697f39e4f4fb55b289af3d31
+  --sha256: qr2x4XbY66pXK/8u5PcGrXWrupG6Rt3yXshgOqKCsBs=
+
+if impl(ghc >= 9)
+  source-repository-package
+    type: git
+    location: https://github.com/hamishmack/foundation.git
+    tag: b424e329db3a8e57af177e872e7a26cebf72d6b3
+    --sha256: lTrb3qh1ktwrV8PEBjYa7POETvzSbEq2HFXDKqsGRmY=
+    subdir: basement
 
 if !arch(javascript)
   if impl(ghc >= 9)
@@ -47,20 +64,9 @@ if !arch(javascript)
       --sha256: Xd6P82FepedcjjWRGjVNmdbDKRIH3Zl0haLiF3v1GDw=
     source-repository-package
       type: git
-      location: https://github.com/dorchard/type-level-sets.git
-      tag: d71becf49c092cd7697f39e4f4fb55b289af3d31
-      --sha256: qr2x4XbY66pXK/8u5PcGrXWrupG6Rt3yXshgOqKCsBs=
-    source-repository-package
-      type: git
       location: https://github.com/lagunoff/hs-gauge.git
       tag: 2b803d12c8bae8d5971748d74234dd5cbb5025a1
       --sha256: n4BBVxcsYNYQRTacSfYn7BNFvom8Haf7DXiHT45RAf0=
-    source-repository-package
-      type: git
-      location: https://github.com/hamishmack/foundation.git
-      tag: b424e329db3a8e57af177e872e7a26cebf72d6b3
-      --sha256: lTrb3qh1ktwrV8PEBjYa7POETvzSbEq2HFXDKqsGRmY=
-      subdir: basement
     source-repository-package
       type: git
       location: https://github.com/hedgehogqa/haskell-hedgehog.git
@@ -103,6 +109,8 @@ if arch(wasm32)
 
 if arch(javascript)
   packages:
+    pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
+    pub/haskell-bitcoin-script/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal

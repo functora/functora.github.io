@@ -84,7 +84,12 @@ assetsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
   assetEditor args opts idx
 
-assetEditor :: Args model action -> Opts model -> Int -> [View action]
+assetEditor ::
+  forall model action.
+  Args model action ->
+  Opts model ->
+  Int ->
+  [View action]
 assetEditor
   Args
     { argsModel = st,

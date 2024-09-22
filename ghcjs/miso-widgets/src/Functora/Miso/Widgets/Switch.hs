@@ -34,6 +34,7 @@ defOpts =
     }
 
 switch ::
+  forall model action.
   Args model action ->
   Opts model action ->
   View action

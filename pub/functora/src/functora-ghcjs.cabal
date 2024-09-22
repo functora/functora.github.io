@@ -96,7 +96,6 @@ common pkg
     , containers
     , Crypto
     , extra
-    , foldable1-classes-compat
     , generic-lens
     , lens
     , lift-type
@@ -104,7 +103,7 @@ common pkg
     , microlens-contra
     , microlens-ghc
     , microlens-th
-    , modern-uri                >=0.3.4.4
+    , modern-uri            >=0.3.4.4
     , mono-traversable
     , network-uri
     , optparse-applicative
@@ -131,6 +130,9 @@ common pkg
     , vector
     , witch-mini
     , with-utf8
+
+  if impl(ghc <9.6.1)
+    build-depends: foldable1-classes-compat
 
   if (impl(ghcjs) || arch(javascript))
     build-depends:
@@ -179,16 +181,15 @@ test-suite functora-ghcjs-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
+  cpp-options:    -DNOSOP
   hs-source-dirs:
-    prelude qr aes money web rates tags cfg elm2miso soplate bolt11
-    test
+    prelude qr aes money web rates tags cfg elm2miso bolt11 test
 
   build-depends:
     , base
     , bytestring
     , containers
     , cryptohash-sha256
-    , generics-sop
     , hspec
     , modern-uri
     , qrcode-core
@@ -207,6 +208,7 @@ test-suite functora-ghcjs-test
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
+    Functora.SoplateSpec
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec
@@ -225,7 +227,6 @@ test-suite functora-ghcjs-test
     Functora.Qr
     Functora.QrOrphan
     Functora.Rates
-    Functora.Soplate
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan

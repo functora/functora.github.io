@@ -95,7 +95,6 @@ common pkg-prelude
     , containers
     , Crypto
     , extra
-    , foldable1-classes-compat
     , generic-lens
     , lens
     , microlens
@@ -121,6 +120,9 @@ common pkg-prelude
     , unliftio
     , witch-mini
     , with-utf8
+
+  if impl(ghc <9.6.1)
+    build-depends: foldable1-classes-compat
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
@@ -392,6 +394,7 @@ test-suite functora-test
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
+    Functora.SoplateSpec
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec

@@ -26,7 +26,8 @@ common pkg
     ghc-options: -Wno-missing-kind-signatures
 
   if impl(ghc >=9.8)
-    ghc-options: -Wno-missing-role-annotations
+    ghc-options:
+      -Wno-missing-role-annotations -Wno-missing-poly-kind-signatures
 
   default-extensions:
     AllowAmbiguousTypes
@@ -70,13 +71,9 @@ common pkg
     TypeOperators
 
   build-depends:
-    , async
     , barbies
     , base
-    , base64-bytestring
-    , binary
     , bytestring
-    , containers
     , functora-ghcjs
     , fuzzy
     , jsaddle
@@ -84,11 +81,8 @@ common pkg
     , miso-components
     , modern-uri
     , monoid-subclasses
-    , network-uri
     , qrcode-core
-    , random
     , syb
-    , text
     , uglymemo
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
@@ -98,7 +92,6 @@ common pkg
 library
   import:          pkg
   hs-source-dirs:  src
-  build-depends:   containers
 
   if flag(ghcid)
     cpp-options: -DGHCID

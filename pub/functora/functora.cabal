@@ -124,6 +124,9 @@ common pkg-prelude
   if impl(ghc <9.6.1)
     build-depends: foldable1-classes-compat
 
+  if arch(javascript)
+    js-sources: src/js/hashable.js
+
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends:
       , aeson

@@ -134,6 +134,9 @@ common pkg
   if impl(ghc <9.6.1)
     build-depends: foldable1-classes-compat
 
+  if arch(javascript)
+    js-sources: js/hashable.js
+
   if (impl(ghcjs) || arch(javascript))
     build-depends:
       , ghcjs-base

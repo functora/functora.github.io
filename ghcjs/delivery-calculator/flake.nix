@@ -11,6 +11,7 @@
   }: let
     def = import ./default.nix;
     vsn = def.vsn;
+    repo = def.repo;
     label = def.label;
     supportedSystems = [
       "x86_64-linux"
@@ -68,6 +69,9 @@
       app-release-latest = pkgs.writeShellApplication {
         name = "app-release-latest";
         text = ''
+          export EM_CACHE=~/tmp/emscripten
+          mkdir -p $EM_CACHE
+
           javascript-unknown-ghcjs-cabal build
           out="./dist/latest"
           rm -rf "$out"

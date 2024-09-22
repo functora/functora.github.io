@@ -13,7 +13,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const param = urlParams.get(name);
         if (param !== null) {
-          return decodeURIComponent(param.replace(/\+/g, "%20"));
+          return decodeURIComponent(param.replace(/\%2B/g, "+"));
         } else {
           return null;
         }

@@ -1,0 +1,16 @@
+dist-newstyle*
+.*.sw[a-p]
+*~
+.ghc.environment.*
+cabal*.project.local
+result
+*.lock
+dist
+dist-newstyle
+dist-ghc
+dist-ghcjs
+tags
+tmp
+result-*
+node_modules/
+package-lock.json

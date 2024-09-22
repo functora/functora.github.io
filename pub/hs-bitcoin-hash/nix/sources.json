@@ -1,0 +1,38 @@
+{
+    "niv": {
+        "branch": "master",
+        "description": "Easy dependency management for Nix projects",
+        "homepage": "https://github.com/nmattia/niv",
+        "owner": "nmattia",
+        "repo": "niv",
+        "rev": "f73bf8d584148677b01859677a63191c31911eae",
+        "sha256": "0jlmrx633jvqrqlyhlzpvdrnim128gc81q5psz2lpp2af8p8q9qs",
+        "type": "tarball",
+        "url": "https://github.com/nmattia/niv/archive/f73bf8d584148677b01859677a63191c31911eae.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-20.03",
+        "description": "A read-only mirror of NixOS/nixpkgs tracking the released channels. Send issues and PRs to",
+        "homepage": "https://github.com/NixOS/nixpkgs",
+        "owner": "NixOS",
+        "repo": "nixpkgs-channels",
+        "rev": "b0e3df2f8437767667bd041bb336e9d62a97ee81",
+        "sha256": "0d34k96l0gzsdpv14vnxdfslgk66gb0nsjz7qcqz1ykb0i7n3n07",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs-channels/archive/b0e3df2f8437767667bd041bb336e9d62a97ee81.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "terminal-size": {
+        "branch": "patch-1",
+        "description": "Get terminal window width and height",
+        "homepage": "http://biegunka.github.io/terminal-size",
+        "owner": "angerman",
+        "repo": "terminal-size",
+        "rev": "0f805a63492e94718753aacf425d4a63641d8d14",
+        "sha256": "08brqsv3d3kwmgnblz82q18gbazm446pafd4c2gcqcvfckgqcp76",
+        "type": "tarball",
+        "url": "https://github.com/angerman/terminal-size/archive/0f805a63492e94718753aacf425d4a63641d8d14.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}

@@ -19,10 +19,9 @@ common pkg
     js-sources: static/app.js
 
   else
-    js-sources:
-      static/app.js
-      static/hashable.js
-      static/material-components-web.min.js
+    -- static/hashable.js
+    -- static/material-components-web.min.js
+    js-sources: static/app.js
 
   other-modules:
     App.Misc
@@ -94,7 +93,6 @@ common pkg
     TypeOperators
 
   build-depends:
-    , aeson
     , barbies
     , base
     , base64-bytestring
@@ -125,7 +123,12 @@ executable delivery-calculator
   ghcjs-options: -dedupe
   build-depends: containers
 
-  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends:
+      , jsaddle
+      , network-uri
+
+  else
     build-depends:
       , jsaddle-warp
       , wai

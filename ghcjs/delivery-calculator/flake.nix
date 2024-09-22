@@ -114,7 +114,7 @@
             ./static/material-icons.css \
             ./static/app.css
 
-          app_jsexe_path=$(find ../../dist-newstyle -name "app.jsexe")
+          app_jsexe_path=$(find ../../dist-newstyle -name "${label}.jsexe")
 
           #
           # TODO : fix this!

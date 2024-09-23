@@ -104,8 +104,8 @@ common pkg
     , miso-components
     , miso-widgets
     , modern-uri
-    , SpreadsheetML
     , syb
+    , xlsx
 
   if flag(ghcid)
     build-depends:

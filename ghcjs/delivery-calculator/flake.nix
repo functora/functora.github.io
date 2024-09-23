@@ -36,7 +36,7 @@
                 doHoogle = false;
               }
             ];
-            compiler-nix-name = "ghc911";
+            compiler-nix-name = "ghc9101";
             crossPlatforms = p: [p.ghcjs];
             shell.tools.cabal = "latest";
             shell.buildInputs =

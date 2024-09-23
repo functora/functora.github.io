@@ -1,4 +1,4 @@
-index-state: 2024-06-25T16:09:29Z
+index-state: 2024-09-20T16:09:29Z
 allow-newer: base,
              text,
              template-haskell,
@@ -16,7 +16,6 @@ allow-newer: base,
              secp256k1,
              geojson:*,
              stopwatch:*,
-             Cabal
 
 package unix
   flags: +os-string
@@ -24,17 +23,29 @@ package unix
 package directory
   flags: +os-string
 
+package postgresql-libpq
+  flags: +use-pkg-config
+
 source-repository-package
   type: git
   location: https://github.com/dorchard/type-level-sets.git
   tag: d71becf49c092cd7697f39e4f4fb55b289af3d31
   --sha256: qr2x4XbY66pXK/8u5PcGrXWrupG6Rt3yXshgOqKCsBs=
 
-source-repository-package
-  type: git
-  location: https://github.com/hamishmack/hs-memory.git
-  tag: 8a4784839354826c5dcd27656f7fd83e4814048d
-  --sha256: 2oOkNRGcDawzxDkX++8B4AOdXYclkhKlKH9StFmPs7Y=
+if impl(ghcjs) || arch(javascript) || arch(wasm32)
+  package zip
+    flags: +disable-bzip2 +disable-zstd
+  package hexpat
+    flags: +bundle
+  package digest
+    flags: -pkg-config
+  package zlib
+    flags: -pkg-config +bundled-c-zlib
+  source-repository-package
+    type: git
+    location: https://github.com/hamishmack/hs-memory.git
+    tag: 8a4784839354826c5dcd27656f7fd83e4814048d
+    --sha256: 2oOkNRGcDawzxDkX++8B4AOdXYclkhKlKH9StFmPs7Y=
 
 if impl(ghc >= 9)
   source-repository-package

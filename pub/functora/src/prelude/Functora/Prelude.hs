@@ -5,7 +5,6 @@ module Functora.Prelude
     -- $reexport
     module X,
     LiftTH,
-    Unicode,
 
     -- * Show
     -- $show
@@ -257,6 +256,7 @@ import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
 import Data.Tuple.Extra as X (thd3, uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
+import Functora.Unicode as X (Unicode)
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
@@ -363,12 +363,6 @@ import qualified Data.JSString as JS
 -- Reexport
 
 type LiftTH = TH.Lift
-
-#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
-type Unicode = JS.JSString
-#else
-type Unicode = Text
-#endif
 
 -- $show
 -- Show

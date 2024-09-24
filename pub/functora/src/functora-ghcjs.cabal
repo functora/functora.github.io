@@ -68,7 +68,6 @@ common pkg
     PackageImports
     PolyKinds
     QuantifiedConstraints
-    QuasiQuotes
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
@@ -82,15 +81,12 @@ common pkg
     , aeson
     , aeson-combinators
     , async
-    , attoparsec
     , base
     , base16-bytestring
     , base58-bytestring
     , base64-bytestring
-    , bech32
     , binary
     , binary-instances
-    , bitcoin-address
     , bmp
     , bytestring
     , containers
@@ -146,10 +142,22 @@ common pkg
     build-depends:
       , ghcjs-dom
       , http-media
+      , jsaddle
+      , miso
       , servant
       , servant-jsaddle
 
-  if !((impl(ghcjs) || arch(javascript)) || os(wasi))
+  else
+    build-depends:
+      , attoparsec
+      , bech32
+      , bitcoin-address
+
+  if (((impl(ghcjs) || arch(javascript)) || arch(wasm32)) || os(wasi))
+    hs-source-dirs: unicode/ghcjs
+
+  else
+    hs-source-dirs: unicode/ghc
     build-depends:
       , http-client
       , http-client-tls
@@ -158,11 +166,15 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  prelude qr aes money web rates tags cfg bolt11
+  hs-source-dirs:  prelude qr aes money web rates tags cfg
+
+  if !os(wasi)
+    hs-source-dirs:  bolt11
+    exposed-modules: Functora.Bolt11
+
   exposed-modules:
     Functora.Aes
     Functora.AesOrphan
-    Functora.Bolt11
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Money
@@ -173,6 +185,7 @@ library
     Functora.QrOrphan
     Functora.Rates
     Functora.Tags
+    Functora.Unicode
     Functora.Web
     Functora.WebOrphan
 
@@ -185,8 +198,13 @@ test-suite functora-ghcjs-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   cpp-options:    -DNOSOP
-  hs-source-dirs:
-    prelude qr aes money web rates tags cfg elm2miso bolt11 test
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso test
+
+  if !os(wasi)
+    hs-source-dirs: bolt11
+    other-modules:
+      Functora.Bolt11
+      Functora.Bolt11Spec
 
   build-depends:
     , base
@@ -205,7 +223,6 @@ test-suite functora-ghcjs-test
 
   other-modules:
     Functora.AesSpec
-    Functora.Bolt11Spec
     Functora.CfgSpec
     Functora.Elm2MisoSpec
     Functora.PreludeSpec
@@ -219,7 +236,6 @@ test-suite functora-ghcjs-test
   other-modules:
     Functora.Aes
     Functora.AesOrphan
-    Functora.Bolt11
     Functora.Cfg
     Functora.CfgOrphan
     Functora.Elm2Miso
@@ -233,5 +249,6 @@ test-suite functora-ghcjs-test
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan
+    Functora.Unicode
     Functora.Web
     Functora.WebOrphan

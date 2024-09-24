@@ -37,7 +37,7 @@ library
   hs-source-dirs:  lib
   exposed-modules: Bitcoin.Keys
 
-  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+  if (impl(ghcjs) || arch(javascript))
     other-modules: Bitcoin.Keys.GHCJS
     build-depends: ghcjs-base
 
@@ -46,7 +46,7 @@ library
 
   else
     other-modules: Bitcoin.Keys.GHC
-    build-depends: secp256k1-haskell >=1.0.0
+    build-depends: secp256k1-haskell
 
 test-suite test
   import:         basic

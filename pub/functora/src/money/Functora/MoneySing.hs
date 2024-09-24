@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-export-lists -Wno-unused-type-patterns #-}
 
 module Functora.MoneySing where

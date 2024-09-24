@@ -41,16 +41,17 @@ library
 
   other-modules:   Bitcoin.Hash.Internal
 
-  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+  if (impl(ghcjs) || arch(javascript))
     other-modules: Bitcoin.Hash.GHCJS
     build-depends: ghcjs-base
+
+    -- This file is generated. See README.md.
     js-sources:    js/index.compiled.js
 
-  -- This file is generated. See README.md.
   else
     other-modules: Bitcoin.Hash.GHC
     build-depends:
-      , cryptonite
+      , crypton
       , memory
 
 test-suite test

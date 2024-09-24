@@ -60,7 +60,6 @@ common pkg
     PackageImports
     PolyKinds
     QuantifiedConstraints
-    QuasiQuotes
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
@@ -85,7 +84,7 @@ common pkg
     , syb
     , uglymemo
 
-  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+  if (impl(ghcjs) || arch(javascript))
     build-depends: ghcjs-base
     js-sources:    js/main.min.js
 

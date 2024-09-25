@@ -3,21 +3,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.DataValidation
   ( ValidationExpression (..),
     ValidationType (..),
-    dvAllowBlank,
-    dvError,
-    dvErrorStyle,
-    dvErrorTitle,
-    dvPrompt,
-    dvPromptTitle,
-    dvShowDropDown,
-    dvShowErrorMessage,
-    dvShowInputMessage,
-    dvValidationType,
     ErrorStyle (..),
     DataValidation (..),
     ListOrRangeExpression (..),
@@ -114,22 +103,20 @@ instance NFData ErrorStyle
 
 -- See 18.3.1.32 "dataValidation (Data Validation)" (p. 1614/1624)
 data DataValidation = DataValidation
-  { _dvAllowBlank :: Bool,
-    _dvError :: Maybe Text,
-    _dvErrorStyle :: ErrorStyle,
-    _dvErrorTitle :: Maybe Text,
-    _dvPrompt :: Maybe Text,
-    _dvPromptTitle :: Maybe Text,
-    _dvShowDropDown :: Bool,
-    _dvShowErrorMessage :: Bool,
-    _dvShowInputMessage :: Bool,
-    _dvValidationType :: ValidationType
+  { dvAllowBlank :: Bool,
+    dvError :: Maybe Text,
+    dvErrorStyle :: ErrorStyle,
+    dvErrorTitle :: Maybe Text,
+    dvPrompt :: Maybe Text,
+    dvPromptTitle :: Maybe Text,
+    dvShowDropDown :: Bool,
+    dvShowErrorMessage :: Bool,
+    dvShowInputMessage :: Bool,
+    dvValidationType :: ValidationType
   }
   deriving (Eq, Show, Generic)
 
 instance NFData DataValidation
-
-makeLenses ''DataValidation
 
 instance Default DataValidation where
   def =
@@ -163,35 +150,35 @@ instance FromAttrBs ErrorStyle where
 
 instance FromCursor DataValidation where
   fromCursor cur = do
-    _dvAllowBlank <- fromAttributeDef "allowBlank" False cur
-    _dvError <- maybeAttribute "error" cur
-    _dvErrorStyle <- fromAttributeDef "errorStyle" ErrorStyleStop cur
-    _dvErrorTitle <- maybeAttribute "errorTitle" cur
+    dvAllowBlank <- fromAttributeDef "allowBlank" False cur
+    dvError <- maybeAttribute "error" cur
+    dvErrorStyle <- fromAttributeDef "errorStyle" ErrorStyleStop cur
+    dvErrorTitle <- maybeAttribute "errorTitle" cur
     mop <- fromAttributeDef "operator" "between" cur
-    _dvPrompt <- maybeAttribute "prompt" cur
-    _dvPromptTitle <- maybeAttribute "promptTitle" cur
-    _dvShowDropDown <- fromAttributeDef "showDropDown" False cur
-    _dvShowErrorMessage <- fromAttributeDef "showErrorMessage" False cur
-    _dvShowInputMessage <- fromAttributeDef "showInputMessage" False cur
+    dvPrompt <- maybeAttribute "prompt" cur
+    dvPromptTitle <- maybeAttribute "promptTitle" cur
+    dvShowDropDown <- fromAttributeDef "showDropDown" False cur
+    dvShowErrorMessage <- fromAttributeDef "showErrorMessage" False cur
+    dvShowInputMessage <- fromAttributeDef "showInputMessage" False cur
     mtype <- fromAttributeDef "type" "none" cur
-    _dvValidationType <- readValidationType mop mtype cur
+    dvValidationType <- readValidationType mop mtype cur
     return DataValidation {..}
 
 instance FromXenoNode DataValidation where
   fromXenoNode root = do
     (op, atype, genDV) <- parseAttributes root $ do
-      _dvAllowBlank <- fromAttrDef "allowBlank" False
-      _dvError <- maybeAttr "error"
-      _dvErrorStyle <- fromAttrDef "errorStyle" ErrorStyleStop
-      _dvErrorTitle <- maybeAttr "errorTitle"
-      _dvPrompt <- maybeAttr "prompt"
-      _dvPromptTitle <- maybeAttr "promptTitle"
-      _dvShowDropDown <- fromAttrDef "showDropDown" False
-      _dvShowErrorMessage <- fromAttrDef "showErrorMessage" False
-      _dvShowInputMessage <- fromAttrDef "showInputMessage" False
+      dvAllowBlank <- fromAttrDef "allowBlank" False
+      dvError <- maybeAttr "error"
+      dvErrorStyle <- fromAttrDef "errorStyle" ErrorStyleStop
+      dvErrorTitle <- maybeAttr "errorTitle"
+      dvPrompt <- maybeAttr "prompt"
+      dvPromptTitle <- maybeAttr "promptTitle"
+      dvShowDropDown <- fromAttrDef "showDropDown" False
+      dvShowErrorMessage <- fromAttrDef "showErrorMessage" False
+      dvShowInputMessage <- fromAttrDef "showInputMessage" False
       op <- fromAttrDef "operator" "between"
       typ <- fromAttrDef "type" "none"
-      return (op, typ, \_dvValidationType -> DataValidation {..})
+      return (op, typ, \dvValidationType -> DataValidation {..})
     valType <- parseValidationType op atype
     return $ genDV valType
     where
@@ -333,17 +320,17 @@ instance ToElement DataValidation where
       { elementName = nm,
         elementAttributes =
           M.fromList . catMaybes $
-            [ Just $ "allowBlank" .= _dvAllowBlank,
-              "error" .=? _dvError,
-              Just $ "errorStyle" .= _dvErrorStyle,
-              "errorTitle" .=? _dvErrorTitle,
+            [ Just $ "allowBlank" .= dvAllowBlank,
+              "error" .=? dvError,
+              Just $ "errorStyle" .= dvErrorStyle,
+              "errorTitle" .=? dvErrorTitle,
               "operator" .=? op,
-              "prompt" .=? _dvPrompt,
-              "promptTitle" .=? _dvPromptTitle,
-              Just $ "showDropDown" .= _dvShowDropDown,
-              Just $ "showErrorMessage" .= _dvShowErrorMessage,
-              Just $ "showInputMessage" .= _dvShowInputMessage,
-              Just $ "type" .= _dvValidationType
+              "prompt" .=? dvPrompt,
+              "promptTitle" .=? dvPromptTitle,
+              Just $ "showDropDown" .= dvShowDropDown,
+              Just $ "showErrorMessage" .= dvShowErrorMessage,
+              Just $ "showInputMessage" .= dvShowInputMessage,
+              Just $ "type" .= dvValidationType
             ],
         elementNodes =
           catMaybes
@@ -356,7 +343,7 @@ instance ToElement DataValidation where
 
       op :: Maybe Text
       f1, f2 :: Maybe Formula
-      (op, f1, f2) = case _dvValidationType of
+      (op, f1, f2) = case dvValidationType of
         ValidationTypeNone -> (Nothing, Nothing, Nothing)
         ValidationTypeCustom f -> (Nothing, Just f, Nothing)
         ValidationTypeDate f -> opExp $ viewValidationExpression f

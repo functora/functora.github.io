@@ -13,6 +13,7 @@ where
 
 #ifdef USE_MICROLENS
 
+import Data.Generics.Labels
 import Test.Tasty (TestName, TestTree, testGroup)
 tests :: TestTree
 tests = testGroup
@@ -281,10 +282,10 @@ cellRich firstClause secondClause = CellRich
           { _runPropertiesBold = Nothing
           , _runPropertiesCharset = Just 1
           , _runPropertiesColor = Just Color
-              { _colorAutomatic = Nothing
-              , _colorARGB = Nothing
-              , _colorTheme = Just 1
-              , _colorTint = Nothing
+              { colorAutomatic = Nothing
+              , colorARGB = Nothing
+              , colorTheme = Just 1
+              , colorTint = Nothing
               }
           , _runPropertiesCondense = Nothing
           , _runPropertiesExtend = Nothing
@@ -306,10 +307,10 @@ cellRich firstClause secondClause = CellRich
           { _runPropertiesBold = Just True
           , _runPropertiesCharset = Just 1
           , _runPropertiesColor = Just Color
-              { _colorAutomatic = Nothing
-              , _colorARGB = Just "FFFF0000"
-              , _colorTheme = Nothing
-              , _colorTint = Nothing
+              { colorAutomatic = Nothing
+              , colorARGB = Just "FFFF0000"
+              , colorTheme = Nothing
+              , colorTint = Nothing
               }
           , _runPropertiesCondense = Nothing
           , _runPropertiesExtend = Nothing

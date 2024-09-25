@@ -310,7 +310,7 @@ testCellMap2 =
               & runPropertiesItalic
               ?~ True
               & runPropertiesColor
-              ?~ (def & colorARGB ?~ "FF000080")
+              ?~ (def & #colorARGB ?~ "FF000080")
            )
 
 testTime :: POSIXTime
@@ -323,34 +323,34 @@ fromRight (Left x) = error $ "Right _ was expected but Left " ++ show x ++ " fou
 testStyleSheet :: StyleSheet
 testStyleSheet =
   minimalStyleSheet
-    & styleSheetDxfs
+    & #styleSheetDxfs
     .~ [dxf1, dxf2, dxf3]
-    & styleSheetNumFmts
+    & #styleSheetNumFmts
     .~ M.fromList [(164, "0.000")]
-    & styleSheetCellXfs
+    & #styleSheetCellXfs
     %~ (++ [cellXf1, cellXf2])
   where
     dxf1 =
       def
-        & dxfFont
+        & #dxfFont
         ?~ ( def
-              & fontBold
+              & #fontBold
               ?~ True
-              & fontSize
+              & #fontSize
               ?~ 12
            )
-    dxf2 = def & dxfFill ?~ (def & fillPattern ?~ (def & fillPatternBgColor ?~ red))
-    dxf3 = def & dxfNumFmt ?~ NumFmt 164 "0.000"
-    red = def & colorARGB ?~ "FFFF0000"
+    dxf2 = def & #dxfFill ?~ (def & #fillPattern ?~ (def & #fillPatternBgColor ?~ red))
+    dxf3 = def & #dxfNumFmt ?~ NumFmt 164 "0.000"
+    red = def & #colorARGB ?~ "FFFF0000"
     cellXf1 =
       def
-        { _cellXfApplyNumberFormat = Just True,
-          _cellXfNumFmtId = Just 2
+        { cellXfApplyNumberFormat = Just True,
+          cellXfNumFmtId = Just 2
         }
     cellXf2 =
       def
-        { _cellXfApplyNumberFormat = Just True,
-          _cellXfNumFmtId = Just 164
+        { cellXfApplyNumberFormat = Just True,
+          cellXfNumFmtId = Just 164
         }
 
 withSingleUnderline :: SharedStringTable -> SharedStringTable
@@ -587,38 +587,38 @@ testFormattedResult = Formatted cm styleSheet merges
     merges = []
     styleSheet =
       minimalStyleSheet
-        & styleSheetCellXfs
+        & #styleSheetCellXfs
         %~ (++ [cellXf1, cellXf2, cellXf3])
-        & styleSheetFonts
+        & #styleSheetFonts
         %~ (++ [font1, font2])
-        & styleSheetNumFmts
+        & #styleSheetNumFmts
         .~ numFmts
-    nextFontId = length (minimalStyleSheet ^. styleSheetFonts)
+    nextFontId = length (minimalStyleSheet ^. #styleSheetFonts)
     cellXf1 =
       def
-        { _cellXfApplyFont = Just True,
-          _cellXfFontId = Just nextFontId
+        { cellXfApplyFont = Just True,
+          cellXfFontId = Just nextFontId
         }
     font1 =
       def
-        { _fontName = Just "Calibri",
-          _fontBold = Just True
+        { fontName = Just "Calibri",
+          fontBold = Just True
         }
     cellXf2 =
       def
-        { _cellXfApplyFont = Just True,
-          _cellXfFontId = Just (nextFontId + 1),
-          _cellXfApplyNumberFormat = Just True,
-          _cellXfNumFmtId = Just 164
+        { cellXfApplyFont = Just True,
+          cellXfFontId = Just (nextFontId + 1),
+          cellXfApplyNumberFormat = Just True,
+          cellXfNumFmtId = Just 164
         }
     font2 =
       def
-        { _fontItalic = Just True
+        { fontItalic = Just True
         }
     cellXf3 =
       def
-        { _cellXfApplyNumberFormat = Just True,
-          _cellXfNumFmtId = Just 2
+        { cellXfApplyNumberFormat = Just True,
+          cellXfNumFmtId = Just 2
         }
     numFmts = M.fromList [(164, "0.0000")]
 
@@ -628,9 +628,9 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
     formattedCellMap = flip execState def $ do
       let font1 =
             def
-              & fontBold
+              & #fontBold
               ?~ True
-              & fontName
+              & #fontName
               ?~ "Calibri"
       at (1, 1)
         ?= ( def
@@ -649,7 +649,7 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
               & #formattedFormat
               . #formatFont
               . non def
-              . fontItalic
+              . #fontItalic
               ?~ True
               & #formattedFormat
               . #formatNumberFormat
@@ -701,22 +701,22 @@ testFormatWorkbookResult =
       ]
     style =
       minimalStyleSheet
-        & styleSheetNumFmts
+        & #styleSheetNumFmts
         .~ M.fromList [(164, "DD.MM.YYYY")]
-        & styleSheetCellXfs
+        & #styleSheetCellXfs
         .~ [cellXf1, cellXf2]
     cellXf1 =
       def
-        & cellXfBorderId
+        & #cellXfBorderId
         .~ Just 0
-        & cellXfFillId
+        & #cellXfFillId
         .~ Just 0
-        & cellXfFontId
+        & #cellXfFontId
         .~ Just 0
     cellXf2 =
       def
-        { _cellXfApplyNumberFormat = Just True,
-          _cellXfNumFmtId = Just 164
+        { cellXfApplyNumberFormat = Just True,
+          cellXfNumFmtId = Just 164
         }
 
 testFormatWorkbook :: Xlsx
@@ -746,11 +746,11 @@ testCondFormattedResult :: CondFormatted
 testCondFormattedResult = CondFormatted styleSheet formattings
   where
     styleSheet =
-      minimalStyleSheet & styleSheetDxfs .~ dxfs
+      minimalStyleSheet & #styleSheetDxfs .~ dxfs
     dxfs =
-      [ def & dxfFont ?~ (def & fontUnderline ?~ FontUnderlineSingle),
-        def & dxfFont ?~ (def & fontStrikeThrough ?~ True),
-        def & dxfFont ?~ (def & fontBold ?~ True)
+      [ def & #dxfFont ?~ (def & #fontUnderline ?~ FontUnderlineSingle),
+        def & #dxfFont ?~ (def & #fontStrikeThrough ?~ True),
+        def & #dxfFont ?~ (def & #fontBold ?~ True)
       ]
     formattings =
       M.fromList
@@ -791,20 +791,20 @@ testFormattedCells = flip execState def $ do
           & #formattedFormat
           . #formatBorder
           . non def
-          . borderTop
+          . #borderTop
           . non def
-          . borderStyleLine
+          . #borderStyleLine
           ?~ LineStyleDashed
           & #formattedFormat
           . #formatBorder
           . non def
-          . borderBottom
+          . #borderBottom
           . non def
-          . borderStyleLine
+          . #borderStyleLine
           ?~ LineStyleDashed
        )
   at (10, 2)
-    ?= (def & #formattedFormat . #formatFont . non def . fontBold ?~ True)
+    ?= (def & #formattedFormat . #formatFont . non def . #fontBold ?~ True)
 
 testRunCondFormatted :: CondFormatted
 testRunCondFormatted = conditionallyFormatted condFmts minimalStyleSheet
@@ -815,27 +815,27 @@ testRunCondFormatted = conditionallyFormatted condFmts minimalStyleSheet
               & #condfmtCondition
               .~ ContainsBlanks
               & #condfmtDxf
-              . dxfFont
+              . #dxfFont
               . non def
-              . fontUnderline
+              . #fontUnderline
               ?~ FontUnderlineSingle
           cfRule2 =
             def
               & #condfmtCondition
               .~ BeginsWith "foo"
               & #condfmtDxf
-              . dxfFont
+              . #dxfFont
               . non def
-              . fontStrikeThrough
+              . #fontStrikeThrough
               ?~ True
           cfRule3 =
             def
               & #condfmtCondition
               .~ CellIs (OpGreaterThan (Formula "A1"))
               & #condfmtDxf
-              . dxfFont
+              . #dxfFont
               . non def
-              . fontBold
+              . #fontBold
               ?~ True
       at (CellRef "A1:A2") ?= [cfRule1, cfRule2]
       at (CellRef "B2:B3") ?= [cfRule1, cfRule2]
@@ -850,44 +850,44 @@ validations =
       ),
       ( SqRef [CellRef "A1", CellRef "B2:C3"],
         def
-          { _dvAllowBlank = True,
-            _dvError = Just "incorrect data",
-            _dvErrorStyle = ErrorStyleInformation,
-            _dvErrorTitle = Just "error title",
-            _dvPrompt = Just "enter data",
-            _dvPromptTitle = Just "prompt title",
-            _dvShowDropDown = True,
-            _dvShowErrorMessage = True,
-            _dvShowInputMessage = True,
-            _dvValidationType = ValidationTypeList $ ListExpression ["aaaa", "bbbb", "cccc"]
+          { dvAllowBlank = True,
+            dvError = Just "incorrect data",
+            dvErrorStyle = ErrorStyleInformation,
+            dvErrorTitle = Just "error title",
+            dvPrompt = Just "enter data",
+            dvPromptTitle = Just "prompt title",
+            dvShowDropDown = True,
+            dvShowErrorMessage = True,
+            dvShowInputMessage = True,
+            dvValidationType = ValidationTypeList $ ListExpression ["aaaa", "bbbb", "cccc"]
           }
       ),
       ( SqRef [CellRef "A6", CellRef "I2"],
         def
-          { _dvAllowBlank = False,
-            _dvError = Just "aaa",
-            _dvErrorStyle = ErrorStyleWarning,
-            _dvErrorTitle = Just "bbb",
-            _dvPrompt = Just "ccc",
-            _dvPromptTitle = Just "ddd",
-            _dvShowDropDown = False,
-            _dvShowErrorMessage = False,
-            _dvShowInputMessage = False,
-            _dvValidationType = ValidationTypeDecimal $ ValGreaterThan $ Formula "10"
+          { dvAllowBlank = False,
+            dvError = Just "aaa",
+            dvErrorStyle = ErrorStyleWarning,
+            dvErrorTitle = Just "bbb",
+            dvPrompt = Just "ccc",
+            dvPromptTitle = Just "ddd",
+            dvShowDropDown = False,
+            dvShowErrorMessage = False,
+            dvShowInputMessage = False,
+            dvValidationType = ValidationTypeDecimal $ ValGreaterThan $ Formula "10"
           }
       ),
       ( SqRef [CellRef "A7"],
         def
-          { _dvAllowBlank = False,
-            _dvError = Just "aaa",
-            _dvErrorStyle = ErrorStyleStop,
-            _dvErrorTitle = Just "bbb",
-            _dvPrompt = Just "ccc",
-            _dvPromptTitle = Just "ddd",
-            _dvShowDropDown = False,
-            _dvShowErrorMessage = False,
-            _dvShowInputMessage = False,
-            _dvValidationType =
+          { dvAllowBlank = False,
+            dvError = Just "aaa",
+            dvErrorStyle = ErrorStyleStop,
+            dvErrorTitle = Just "bbb",
+            dvPrompt = Just "ccc",
+            dvPromptTitle = Just "ddd",
+            dvShowDropDown = False,
+            dvShowErrorMessage = False,
+            dvShowInputMessage = False,
+            dvValidationType =
               ValidationTypeWhole $ ValNotBetween (Formula "10") (Formula "12")
           }
       )
@@ -901,16 +901,16 @@ foreignValidations =
   M.fromList
     [ ( SqRef [testForeignDvRange],
         def
-          { _dvAllowBlank = True,
-            _dvError = Just "incorrect data",
-            _dvErrorStyle = ErrorStyleInformation,
-            _dvErrorTitle = Just "error title",
-            _dvPrompt = Just "Input kebab string",
-            _dvPromptTitle = Just "I love kebab-case",
-            _dvShowDropDown = True,
-            _dvShowErrorMessage = True,
-            _dvShowInputMessage = True,
-            _dvValidationType =
+          { dvAllowBlank = True,
+            dvError = Just "incorrect data",
+            dvErrorStyle = ErrorStyleInformation,
+            dvErrorTitle = Just "error title",
+            dvPrompt = Just "Input kebab string",
+            dvPromptTitle = Just "I love kebab-case",
+            dvShowDropDown = True,
+            dvShowErrorMessage = True,
+            dvShowInputMessage = True,
+            dvValidationType =
               ValidationTypeList $ RangeExpression $ CellRef "'cellrange DV source'!$A$1:$B$2"
           }
       )

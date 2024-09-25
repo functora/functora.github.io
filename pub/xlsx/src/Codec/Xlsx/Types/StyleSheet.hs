@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Support for writing (but not reading) style sheets
 module Codec.Xlsx.Types.StyleSheet
@@ -37,105 +36,6 @@ module Codec.Xlsx.Types.StyleSheet
     PatternType (..),
     ReadingOrder (..),
 
-    -- * Lenses
-
-    -- ** StyleSheet
-    styleSheetBorders,
-    styleSheetFonts,
-    styleSheetFills,
-    styleSheetCellXfs,
-    styleSheetDxfs,
-    styleSheetNumFmts,
-
-    -- ** CellXf
-    cellXfApplyAlignment,
-    cellXfApplyBorder,
-    cellXfApplyFill,
-    cellXfApplyFont,
-    cellXfApplyNumberFormat,
-    cellXfApplyProtection,
-    cellXfBorderId,
-    cellXfFillId,
-    cellXfFontId,
-    cellXfNumFmtId,
-    cellXfPivotButton,
-    cellXfQuotePrefix,
-    cellXfId,
-    cellXfAlignment,
-    cellXfProtection,
-
-    -- ** Dxf
-    dxfAlignment,
-    dxfBorder,
-    dxfFill,
-    dxfFont,
-    dxfNumFmt,
-    dxfProtection,
-
-    -- ** Alignment
-    alignmentHorizontal,
-    alignmentIndent,
-    alignmentJustifyLastLine,
-    alignmentReadingOrder,
-    alignmentRelativeIndent,
-    alignmentShrinkToFit,
-    alignmentTextRotation,
-    alignmentVertical,
-    alignmentWrapText,
-
-    -- ** Border
-    borderDiagonalDown,
-    borderDiagonalUp,
-    borderOutline,
-    borderBottom,
-    borderDiagonal,
-    borderEnd,
-    borderHorizontal,
-    borderStart,
-    borderTop,
-    borderVertical,
-    borderLeft,
-    borderRight,
-
-    -- ** BorderStyle
-    borderStyleColor,
-    borderStyleLine,
-
-    -- ** Color
-    colorAutomatic,
-    colorARGB,
-    colorTheme,
-    colorTint,
-
-    -- ** Fill
-    fillPattern,
-
-    -- ** FillPattern
-    fillPatternBgColor,
-    fillPatternFgColor,
-    fillPatternType,
-
-    -- ** Font
-    fontBold,
-    fontCharset,
-    fontColor,
-    fontCondense,
-    fontExtend,
-    fontFamily,
-    fontItalic,
-    fontName,
-    fontOutline,
-    fontScheme,
-    fontShadow,
-    fontStrikeThrough,
-    fontSize,
-    fontUnderline,
-    fontVertAlign,
-
-    -- ** Protection
-    protectionHidden,
-    protectionLocked,
-
     -- * Helpers
 
     -- ** Number formats
@@ -157,6 +57,7 @@ import Codec.Xlsx.Parser.Internal
 import Codec.Xlsx.Writer.Internal
 import Control.DeepSeq (NFData)
 import Data.Default
+import Data.Generics.Labels
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Maybe (catMaybes, maybeToList)
@@ -210,7 +111,7 @@ data StyleSheet = StyleSheet
     -- border definitions for all cells in the workbook.
     --
     -- Section 18.8.5, "borders (Borders)" (p. 1760)
-    _styleSheetBorders :: [Border],
+    styleSheetBorders :: [Border],
     -- | Cell formats
     --
     -- This element contains the master formatting records (xf) which define the
@@ -219,18 +120,18 @@ data StyleSheet = StyleSheet
     -- Sheet Part reference the xf records by zero-based index.
     --
     -- Section 18.8.10, "cellXfs (Cell Formats)" (p. 1764)
-    _styleSheetCellXfs :: [CellXf],
+    styleSheetCellXfs :: [CellXf],
     -- | This element defines the cell fills portion of the Styles part,
     -- consisting of a sequence of fill records. A cell fill consists of a
     -- background color, foreground color, and pattern to be applied across the
     -- cell.
     --
     -- Section 18.8.21, "fills (Fills)" (p. 1768)
-    _styleSheetFills :: [Fill],
+    styleSheetFills :: [Fill],
     -- | This element contains all font definitions for this workbook.
     --
     -- Section 18.8.23 "fonts (Fonts)" (p. 1769)
-    _styleSheetFonts :: [Font],
+    styleSheetFonts :: [Font],
     -- | Differential formatting
     --
     -- This element contains the master differential formatting records (dxf's)
@@ -243,13 +144,13 @@ data StyleSheet = StyleSheet
     -- present on the object using the dxf record.
     --
     -- Section 18.8.15, "dxfs (Formats)" (p. 1765)
-    _styleSheetDxfs :: [Dxf],
+    styleSheetDxfs :: [Dxf],
     -- | Number formats
     --
     -- This element contains custom number formats defined in this style sheet
     --
     -- Section 18.8.31, "numFmts (Number Formats)" (p. 1784)
-    _styleSheetNumFmts :: Map Int FormatCode
+    styleSheetNumFmts :: Map Int FormatCode
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -263,49 +164,49 @@ instance NFData StyleSheet
 data CellXf = CellXf
   { -- | A boolean value indicating whether the alignment formatting specified
     -- for this xf should be applied.
-    _cellXfApplyAlignment :: Maybe Bool,
+    cellXfApplyAlignment :: Maybe Bool,
     -- | A boolean value indicating whether the border formatting specified for
     -- this xf should be applied.
-    _cellXfApplyBorder :: Maybe Bool,
+    cellXfApplyBorder :: Maybe Bool,
     -- | A boolean value indicating whether the fill formatting specified for
     -- this xf should be applied.
-    _cellXfApplyFill :: Maybe Bool,
+    cellXfApplyFill :: Maybe Bool,
     -- | A boolean value indicating whether the font formatting specified for
     -- this xf should be applied.
-    _cellXfApplyFont :: Maybe Bool,
+    cellXfApplyFont :: Maybe Bool,
     -- | A boolean value indicating whether the number formatting specified for
     -- this xf should be applied.
-    _cellXfApplyNumberFormat :: Maybe Bool,
+    cellXfApplyNumberFormat :: Maybe Bool,
     -- | A boolean value indicating whether the protection formatting specified
     -- for this xf should be applied.
-    _cellXfApplyProtection :: Maybe Bool,
+    cellXfApplyProtection :: Maybe Bool,
     -- | Zero-based index of the border record used by this cell format.
     --
     -- (18.18.2, p. 2437).
-    _cellXfBorderId :: Maybe Int,
+    cellXfBorderId :: Maybe Int,
     -- | Zero-based index of the fill record used by this cell format.
     --
     -- (18.18.30, p. 2455)
-    _cellXfFillId :: Maybe Int,
+    cellXfFillId :: Maybe Int,
     -- | Zero-based index of the font record used by this cell format.
     --
     -- An integer that represents a zero based index into the `styleSheetFonts`
     -- collection in the style sheet (18.18.32, p. 2456).
-    _cellXfFontId :: Maybe Int,
+    cellXfFontId :: Maybe Int,
     -- | Id of the number format (numFmt) record used by this cell format.
     --
     -- This simple type defines the identifier to a style sheet number format
     -- entry in CT_NumFmts. Number formats are written to the styles part
     -- (18.18.47, p. 2468). See also 18.8.31 (p. 1784) for more information on
     -- number formats.
-    _cellXfNumFmtId :: Maybe Int,
+    cellXfNumFmtId :: Maybe Int,
     -- | A boolean value indicating whether the cell rendering includes a pivot
     -- table dropdown button.
-    _cellXfPivotButton :: Maybe Bool,
+    cellXfPivotButton :: Maybe Bool,
     -- | A boolean value indicating whether the text string in a cell should be
     -- prefixed by a single quote mark (e.g., 'text). In these cases, the quote
     -- is not stored in the Shared Strings Part.
-    _cellXfQuotePrefix :: Maybe Bool,
+    cellXfQuotePrefix :: Maybe Bool,
     -- | For xf records contained in cellXfs this is the zero-based index of an
     -- xf record contained in cellStyleXfs corresponding to the cell style
     -- applied to the cell.
@@ -315,15 +216,15 @@ data CellXf = CellXf
     -- Used by xf records and cellStyle records to reference xf records defined
     -- in the cellStyleXfs collection. (18.18.10, p. 2442)
     -- TODO: the cellStyleXfs field of a style sheet not currently implemented.
-    _cellXfId :: Maybe Int,
+    cellXfId :: Maybe Int,
     -- | Formatting information pertaining to text alignment in cells. There are
     -- a variety of choices for how text is aligned both horizontally and
     -- vertically, as well as indentation settings, and so on.
-    _cellXfAlignment :: Maybe Alignment,
+    cellXfAlignment :: Maybe Alignment,
     -- | Contains protection properties associated with the cell. Each cell has
     -- protection properties that can be set. The cell protection properties do
     -- not take effect unless the sheet has been protected.
-    _cellXfProtection :: Maybe Protection
+    cellXfProtection :: Maybe Protection
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -380,42 +281,42 @@ data Border = Border
   { -- | A boolean value indicating if the cell's diagonal border includes a
     -- diagonal line, starting at the top left corner of the cell and moving
     -- down to the bottom right corner of the cell.
-    _borderDiagonalDown :: Maybe Bool,
+    borderDiagonalDown :: Maybe Bool,
     -- | A boolean value indicating if the cell's diagonal border includes a
     -- diagonal line, starting at the bottom left corner of the cell and moving
     -- up to the top right corner of the cell.
-    _borderDiagonalUp :: Maybe Bool,
+    borderDiagonalUp :: Maybe Bool,
     -- | A boolean value indicating if left, right, top, and bottom borders
     -- should be applied only to outside borders of a cell range.
-    _borderOutline :: Maybe Bool,
+    borderOutline :: Maybe Bool,
     -- | Bottom border
-    _borderBottom :: Maybe BorderStyle,
+    borderBottom :: Maybe BorderStyle,
     -- | Diagonal
-    _borderDiagonal :: Maybe BorderStyle,
+    borderDiagonal :: Maybe BorderStyle,
     -- | Trailing edge border
     --
     -- See also 'borderRight'
-    _borderEnd :: Maybe BorderStyle,
+    borderEnd :: Maybe BorderStyle,
     -- | Horizontal inner borders
-    _borderHorizontal :: Maybe BorderStyle,
+    borderHorizontal :: Maybe BorderStyle,
     -- | Left border
     --
     -- NOTE: The spec does not formally list a 'left' border element, but the
     -- examples do mention 'left' and the scheme contains it too. See also 'borderStart'.
-    _borderLeft :: Maybe BorderStyle,
+    borderLeft :: Maybe BorderStyle,
     -- | Right border
     --
     -- NOTE: The spec does not formally list a 'right' border element, but the
     -- examples do mention 'right' and the scheme contains it too. See also 'borderEnd'.
-    _borderRight :: Maybe BorderStyle,
+    borderRight :: Maybe BorderStyle,
     -- | Leading edge border
     --
     -- See also 'borderLeft'
-    _borderStart :: Maybe BorderStyle,
+    borderStart :: Maybe BorderStyle,
     -- | Top border
-    _borderTop :: Maybe BorderStyle,
+    borderTop :: Maybe BorderStyle,
     -- | Vertical inner border
-    _borderVertical :: Maybe BorderStyle
+    borderVertical :: Maybe BorderStyle
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -424,8 +325,8 @@ instance NFData Border
 -- | Border style
 -- See @CT_BorderPr@ (p. 3934)
 data BorderStyle = BorderStyle
-  { _borderStyleColor :: Maybe Color,
-    _borderStyleLine :: Maybe LineStyle
+  { borderStyleColor :: Maybe Color,
+    borderStyleLine :: Maybe LineStyle
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -440,17 +341,17 @@ instance NFData BorderStyle
 data Color = Color
   { -- | A boolean value indicating the color is automatic and system color
     -- dependent.
-    _colorAutomatic :: Maybe Bool,
+    colorAutomatic :: Maybe Bool,
     -- | Standard Alpha Red Green Blue color value (ARGB).
     --
     -- This simple type's contents have a length of exactly 8 hexadecimal
     -- digit(s); see "18.18.86 ST_UnsignedIntHex (Hex Unsigned Integer)" (p.
     -- 2511).
-    _colorARGB :: Maybe Text,
+    colorARGB :: Maybe Text,
     -- | A zero-based index into the <clrScheme> collection (20.1.6.2),
     -- referencing a particular <sysClr> or <srgbClr> value expressed in the
     -- Theme part.
-    _colorTheme :: Maybe Int,
+    colorTheme :: Maybe Int,
     -- | Specifies the tint value applied to the color.
     --
     -- If tint is supplied, then it is applied to the RGB value of the color to
@@ -458,7 +359,7 @@ data Color = Color
     --
     -- The tint value is stored as a double from -1.0 .. 1.0, where -1.0 means
     -- 100% darken and 1.0 means 100% lighten. Also, 0.0 means no change.
-    _colorTint :: Maybe Double
+    colorTint :: Maybe Double
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -472,7 +373,7 @@ instance NFData Color
 --
 -- Section 18.8.20, "fill (Fill)" (p. 1768)
 data Fill = Fill
-  { _fillPattern :: Maybe FillPattern
+  { fillPattern :: Maybe FillPattern
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -485,9 +386,9 @@ instance NFData Fill
 --
 -- Section 18.8.32 "patternFill (Pattern)" (p. 1793)
 data FillPattern = FillPattern
-  { _fillPatternBgColor :: Maybe Color,
-    _fillPatternFgColor :: Maybe Color,
-    _fillPatternType :: Maybe PatternType
+  { fillPatternBgColor :: Maybe Color,
+    fillPatternFgColor :: Maybe Color,
+    fillPatternType :: Maybe PatternType
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -499,7 +400,7 @@ instance NFData FillPattern
 -- Section 18.2.22 "font (Font)" (p. 1769)
 data Font = Font
   { -- | Displays characters in bold face font style.
-    _fontBold :: Maybe Bool,
+    fontBold :: Maybe Bool,
     -- | This element defines the font character set of this font.
     --
     -- This field is used in font creation and selection if a font of the given
@@ -519,28 +420,28 @@ data Font = Font
     -- These are operating-system-dependent values.
     --
     -- Section 18.4.1 "charset (Character Set)" provides some example values.
-    _fontCharset :: Maybe Int,
+    fontCharset :: Maybe Int,
     -- | Color
-    _fontColor :: Maybe Color,
+    fontColor :: Maybe Color,
     -- | Macintosh compatibility setting. Represents special word/character
     -- rendering on Macintosh, when this flag is set. The effect is to condense
     -- the text (squeeze it together). SpreadsheetML applications are not
     -- required to render according to this flag.
-    _fontCondense :: Maybe Bool,
+    fontCondense :: Maybe Bool,
     -- | This element specifies a compatibility setting used for previous
     -- spreadsheet applications, resulting in special word/character rendering
     -- on those legacy applications, when this flag is set. The effect extends
     -- or stretches out the text. SpreadsheetML applications are not required to
     -- render according to this flag.
-    _fontExtend :: Maybe Bool,
+    fontExtend :: Maybe Bool,
     -- | The font family this font belongs to. A font family is a set of fonts
     -- having common stroke width and serif characteristics. This is system
     -- level font information. The font name overrides when there are
     -- conflicting values.
-    _fontFamily :: Maybe FontFamily,
+    fontFamily :: Maybe FontFamily,
     -- | Displays characters in italic font style. The italic style is defined
     -- by the font at a system level and is not specified by ECMA-376.
-    _fontItalic :: Maybe Bool,
+    fontItalic :: Maybe Bool,
     -- | This element specifies the face name of this font.
     --
     -- A string representing the name of the font. If the font doesn't exist
@@ -548,10 +449,10 @@ data Font = Font
     -- by that font, then another font should be substituted.
     --
     -- The string length for this attribute shall be 0 to 31 characters.
-    _fontName :: Maybe Text,
+    fontName :: Maybe Text,
     -- | This element displays only the inner and outer borders of each
     -- character. This is very similar to Bold in behavior.
-    _fontOutline :: Maybe Bool,
+    fontOutline :: Maybe Bool,
     -- | Defines the font scheme, if any, to which this font belongs. When a
     -- font definition is part of a theme definition, then the font is
     -- categorized as either a major or minor font scheme component. When a new
@@ -559,25 +460,25 @@ data Font = Font
     -- to use the new major or minor font definition for that theme. Usually
     -- major fonts are used for styles like headings, and minor fonts are used
     -- for body and paragraph text.
-    _fontScheme :: Maybe FontScheme,
+    fontScheme :: Maybe FontScheme,
     -- | Macintosh compatibility setting. Represents special word/character
     -- rendering on Macintosh, when this flag is set. The effect is to render a
     -- shadow behind, beneath and to the right of the text. SpreadsheetML
     -- applications are not required to render according to this flag.
-    _fontShadow :: Maybe Bool,
+    fontShadow :: Maybe Bool,
     -- | This element draws a strikethrough line through the horizontal middle
     -- of the text.
-    _fontStrikeThrough :: Maybe Bool,
+    fontStrikeThrough :: Maybe Bool,
     -- | This element represents the point size (1/72 of an inch) of the Latin
     -- and East Asian text.
-    _fontSize :: Maybe Double,
+    fontSize :: Maybe Double,
     -- | This element represents the underline formatting style.
-    _fontUnderline :: Maybe FontUnderline,
+    fontUnderline :: Maybe FontUnderline,
     -- | This element adjusts the vertical position of the text relative to the
     -- text's default appearance for this run. It is used to get 'superscript'
     -- or 'subscript' texts, and shall reduce the font size (if a smaller size
     -- is available) accordingly.
-    _fontVertAlign :: Maybe FontVerticalAlignment
+    fontVertAlign :: Maybe FontVerticalAlignment
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -587,15 +488,15 @@ instance NFData Font
 --
 -- Section 18.8.14, "dxf (Formatting)" (p. 1765)
 data Dxf = Dxf
-  { _dxfFont :: Maybe Font,
+  { dxfFont :: Maybe Font,
     -- | It seems to be required that this number format entry is duplicated
-    -- in '_styleSheetNumFmts' of the style sheet, though the spec says
+    -- in 'styleSheetNumFmts' of the style sheet, though the spec says
     -- nothing explicitly about it.
-    _dxfNumFmt :: Maybe NumFmt,
-    _dxfFill :: Maybe Fill,
-    _dxfAlignment :: Maybe Alignment,
-    _dxfBorder :: Maybe Border,
-    _dxfProtection :: Maybe Protection
+    dxfNumFmt :: Maybe NumFmt,
+    dxfFill :: Maybe Fill,
+    dxfAlignment :: Maybe Alignment,
+    dxfBorder :: Maybe Border,
+    dxfProtection :: Maybe Protection
     -- TODO: extList
   }
   deriving (Eq, Ord, Show, Generic)
@@ -941,23 +842,6 @@ data ReadingOrder
 instance NFData ReadingOrder
 
 {-------------------------------------------------------------------------------
-  Lenses
--------------------------------------------------------------------------------}
-
-makeLenses ''StyleSheet
-makeLenses ''CellXf
-makeLenses ''Dxf
-
-makeLenses ''Alignment
-makeLenses ''Border
-makeLenses ''BorderStyle
-makeLenses ''Color
-makeLenses ''Fill
-makeLenses ''FillPattern
-makeLenses ''Font
-makeLenses ''Protection
-
-{-------------------------------------------------------------------------------
   Minimal stylesheet
 -------------------------------------------------------------------------------}
 
@@ -972,13 +856,13 @@ makeLenses ''Protection
 minimalStyleSheet :: StyleSheet
 minimalStyleSheet =
   def
-    & styleSheetBorders
+    & #styleSheetBorders
     .~ [defaultBorder]
-    & styleSheetFonts
+    & #styleSheetFonts
     .~ [defaultFont]
-    & styleSheetFills
+    & #styleSheetFills
     .~ [fillNone, fillGray125]
-    & styleSheetCellXfs
+    & #styleSheetCellXfs
     .~ [defaultCellXf]
   where
     -- The 'Default' instance for 'Border' uses 'left' and 'right' rather than
@@ -987,41 +871,41 @@ minimalStyleSheet =
     defaultBorder :: Border
     defaultBorder =
       def
-        & borderBottom
+        & #borderBottom
         .~ Just def
-        & borderTop
+        & #borderTop
         .~ Just def
-        & borderLeft
+        & #borderLeft
         .~ Just def
-        & borderRight
+        & #borderRight
         .~ Just def
 
     defaultFont :: Font
     defaultFont =
       def
-        & fontFamily
+        & #fontFamily
         .~ Just FontFamilySwiss
-        & fontSize
+        & #fontSize
         .~ Just 11
 
     fillNone, fillGray125 :: Fill
     fillNone =
       def
-        & fillPattern
-        .~ Just (def & fillPatternType .~ Just PatternTypeNone)
+        & #fillPattern
+        .~ Just (def & #fillPatternType .~ Just PatternTypeNone)
     fillGray125 =
       def
-        & fillPattern
-        .~ Just (def & fillPatternType .~ Just PatternTypeGray125)
+        & #fillPattern
+        .~ Just (def & #fillPatternType .~ Just PatternTypeGray125)
 
     defaultCellXf :: CellXf
     defaultCellXf =
       def
-        & cellXfBorderId
+        & #cellXfBorderId
         .~ Just 0
-        & cellXfFillId
+        & #cellXfFillId
         .~ Just 0
-        & cellXfFontId
+        & #cellXfFontId
         .~ Just 0
 
 {-------------------------------------------------------------------------------
@@ -1031,43 +915,43 @@ minimalStyleSheet =
 instance Default StyleSheet where
   def =
     StyleSheet
-      { _styleSheetBorders = [],
-        _styleSheetFonts = [],
-        _styleSheetFills = [],
-        _styleSheetCellXfs = [],
-        _styleSheetDxfs = [],
-        _styleSheetNumFmts = M.empty
+      { styleSheetBorders = [],
+        styleSheetFonts = [],
+        styleSheetFills = [],
+        styleSheetCellXfs = [],
+        styleSheetDxfs = [],
+        styleSheetNumFmts = M.empty
       }
 
 instance Default CellXf where
   def =
     CellXf
-      { _cellXfApplyAlignment = Nothing,
-        _cellXfApplyBorder = Nothing,
-        _cellXfApplyFill = Nothing,
-        _cellXfApplyFont = Nothing,
-        _cellXfApplyNumberFormat = Nothing,
-        _cellXfApplyProtection = Nothing,
-        _cellXfBorderId = Nothing,
-        _cellXfFillId = Nothing,
-        _cellXfFontId = Nothing,
-        _cellXfNumFmtId = Nothing,
-        _cellXfPivotButton = Nothing,
-        _cellXfQuotePrefix = Nothing,
-        _cellXfId = Nothing,
-        _cellXfAlignment = Nothing,
-        _cellXfProtection = Nothing
+      { cellXfApplyAlignment = Nothing,
+        cellXfApplyBorder = Nothing,
+        cellXfApplyFill = Nothing,
+        cellXfApplyFont = Nothing,
+        cellXfApplyNumberFormat = Nothing,
+        cellXfApplyProtection = Nothing,
+        cellXfBorderId = Nothing,
+        cellXfFillId = Nothing,
+        cellXfFontId = Nothing,
+        cellXfNumFmtId = Nothing,
+        cellXfPivotButton = Nothing,
+        cellXfQuotePrefix = Nothing,
+        cellXfId = Nothing,
+        cellXfAlignment = Nothing,
+        cellXfProtection = Nothing
       }
 
 instance Default Dxf where
   def =
     Dxf
-      { _dxfFont = Nothing,
-        _dxfNumFmt = Nothing,
-        _dxfFill = Nothing,
-        _dxfAlignment = Nothing,
-        _dxfBorder = Nothing,
-        _dxfProtection = Nothing
+      { dxfFont = Nothing,
+        dxfNumFmt = Nothing,
+        dxfFill = Nothing,
+        dxfAlignment = Nothing,
+        dxfBorder = Nothing,
+        dxfProtection = Nothing
       }
 
 instance Default Alignment where
@@ -1087,68 +971,68 @@ instance Default Alignment where
 instance Default Border where
   def =
     Border
-      { _borderDiagonalDown = Nothing,
-        _borderDiagonalUp = Nothing,
-        _borderOutline = Nothing,
-        _borderBottom = Nothing,
-        _borderDiagonal = Nothing,
-        _borderEnd = Nothing,
-        _borderHorizontal = Nothing,
-        _borderStart = Nothing,
-        _borderTop = Nothing,
-        _borderVertical = Nothing,
-        _borderLeft = Nothing,
-        _borderRight = Nothing
+      { borderDiagonalDown = Nothing,
+        borderDiagonalUp = Nothing,
+        borderOutline = Nothing,
+        borderBottom = Nothing,
+        borderDiagonal = Nothing,
+        borderEnd = Nothing,
+        borderHorizontal = Nothing,
+        borderStart = Nothing,
+        borderTop = Nothing,
+        borderVertical = Nothing,
+        borderLeft = Nothing,
+        borderRight = Nothing
       }
 
 instance Default BorderStyle where
   def =
     BorderStyle
-      { _borderStyleColor = Nothing,
-        _borderStyleLine = Nothing
+      { borderStyleColor = Nothing,
+        borderStyleLine = Nothing
       }
 
 instance Default Color where
   def =
     Color
-      { _colorAutomatic = Nothing,
-        _colorARGB = Nothing,
-        _colorTheme = Nothing,
-        _colorTint = Nothing
+      { colorAutomatic = Nothing,
+        colorARGB = Nothing,
+        colorTheme = Nothing,
+        colorTint = Nothing
       }
 
 instance Default Fill where
   def =
     Fill
-      { _fillPattern = Nothing
+      { fillPattern = Nothing
       }
 
 instance Default FillPattern where
   def =
     FillPattern
-      { _fillPatternBgColor = Nothing,
-        _fillPatternFgColor = Nothing,
-        _fillPatternType = Nothing
+      { fillPatternBgColor = Nothing,
+        fillPatternFgColor = Nothing,
+        fillPatternType = Nothing
       }
 
 instance Default Font where
   def =
     Font
-      { _fontBold = Nothing,
-        _fontCharset = Nothing,
-        _fontColor = Nothing,
-        _fontCondense = Nothing,
-        _fontExtend = Nothing,
-        _fontFamily = Nothing,
-        _fontItalic = Nothing,
-        _fontName = Nothing,
-        _fontOutline = Nothing,
-        _fontScheme = Nothing,
-        _fontShadow = Nothing,
-        _fontStrikeThrough = Nothing,
-        _fontSize = Nothing,
-        _fontUnderline = Nothing,
-        _fontVertAlign = Nothing
+      { fontBold = Nothing,
+        fontCharset = Nothing,
+        fontColor = Nothing,
+        fontCondense = Nothing,
+        fontExtend = Nothing,
+        fontFamily = Nothing,
+        fontItalic = Nothing,
+        fontName = Nothing,
+        fontOutline = Nothing,
+        fontScheme = Nothing,
+        fontShadow = Nothing,
+        fontStrikeThrough = Nothing,
+        fontSize = Nothing,
+        fontUnderline = Nothing,
+        fontVertAlign = Nothing
       }
 
 instance Default Protection where
@@ -1180,19 +1064,19 @@ instance ToElement StyleSheet where
       countedElementList' nm' xs = maybeToList $ nonEmptyCountedElementList nm' xs
       elements =
         countedElementList' "numFmts" (map (toElement "numFmt") numFmts)
-          ++ countedElementList' "fonts" (map (toElement "font") _styleSheetFonts)
-          ++ countedElementList' "fills" (map (toElement "fill") _styleSheetFills)
-          ++ countedElementList' "borders" (map (toElement "border") _styleSheetBorders)
+          ++ countedElementList' "fonts" (map (toElement "font") styleSheetFonts)
+          ++ countedElementList' "fills" (map (toElement "fill") styleSheetFills)
+          ++ countedElementList' "borders" (map (toElement "border") styleSheetBorders)
           ++
           -- TODO: cellStyleXfs
-          countedElementList' "cellXfs" (map (toElement "xf") _styleSheetCellXfs)
+          countedElementList' "cellXfs" (map (toElement "xf") styleSheetCellXfs)
           ++
           -- TODO: cellStyles
-          countedElementList' "dxfs" (map (toElement "dxf") _styleSheetDxfs)
+          countedElementList' "dxfs" (map (toElement "dxf") styleSheetDxfs)
       -- TODO: tableStyles
       -- TODO: colors
       -- TODO: extLst
-      numFmts = map (uncurry NumFmt) $ M.toList _styleSheetNumFmts
+      numFmts = map (uncurry NumFmt) $ M.toList styleSheetNumFmts
 
 -- | See @CT_Xf@, p. 4486
 instance ToElement CellXf where
@@ -1201,25 +1085,25 @@ instance ToElement CellXf where
       { elementName = nm,
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "alignment" <$> _cellXfAlignment,
-              toElement "protection" <$> _cellXfProtection
+            [ toElement "alignment" <$> cellXfAlignment,
+              toElement "protection" <$> cellXfProtection
               -- TODO: extLst
             ],
         elementAttributes =
           M.fromList . catMaybes $
-            [ "numFmtId" .=? _cellXfNumFmtId,
-              "fontId" .=? _cellXfFontId,
-              "fillId" .=? _cellXfFillId,
-              "borderId" .=? _cellXfBorderId,
-              "xfId" .=? _cellXfId,
-              "quotePrefix" .=? _cellXfQuotePrefix,
-              "pivotButton" .=? _cellXfPivotButton,
-              "applyNumberFormat" .=? _cellXfApplyNumberFormat,
-              "applyFont" .=? _cellXfApplyFont,
-              "applyFill" .=? _cellXfApplyFill,
-              "applyBorder" .=? _cellXfApplyBorder,
-              "applyAlignment" .=? _cellXfApplyAlignment,
-              "applyProtection" .=? _cellXfApplyProtection
+            [ "numFmtId" .=? cellXfNumFmtId,
+              "fontId" .=? cellXfFontId,
+              "fillId" .=? cellXfFillId,
+              "borderId" .=? cellXfBorderId,
+              "xfId" .=? cellXfId,
+              "quotePrefix" .=? cellXfQuotePrefix,
+              "pivotButton" .=? cellXfPivotButton,
+              "applyNumberFormat" .=? cellXfApplyNumberFormat,
+              "applyFont" .=? cellXfApplyFont,
+              "applyFill" .=? cellXfApplyFill,
+              "applyBorder" .=? cellXfApplyBorder,
+              "applyAlignment" .=? cellXfApplyAlignment,
+              "applyProtection" .=? cellXfApplyProtection
             ]
       }
 
@@ -1231,12 +1115,12 @@ instance ToElement Dxf where
         elementNodes =
           map NodeElement $
             catMaybes
-              [ toElement "font" <$> _dxfFont,
-                toElement "numFmt" <$> _dxfNumFmt,
-                toElement "fill" <$> _dxfFill,
-                toElement "alignment" <$> _dxfAlignment,
-                toElement "border" <$> _dxfBorder,
-                toElement "protection" <$> _dxfProtection
+              [ toElement "font" <$> dxfFont,
+                toElement "numFmt" <$> dxfNumFmt,
+                toElement "fill" <$> dxfFill,
+                toElement "alignment" <$> dxfAlignment,
+                toElement "border" <$> dxfBorder,
+                toElement "protection" <$> dxfProtection
               ],
         elementAttributes = M.empty
       }
@@ -1268,21 +1152,21 @@ instance ToElement Border where
       { elementName = nm,
         elementAttributes =
           M.fromList . catMaybes $
-            [ "diagonalUp" .=? _borderDiagonalUp,
-              "diagonalDown" .=? _borderDiagonalDown,
-              "outline" .=? _borderOutline
+            [ "diagonalUp" .=? borderDiagonalUp,
+              "diagonalDown" .=? borderDiagonalDown,
+              "outline" .=? borderOutline
             ],
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "start" <$> _borderStart,
-              toElement "end" <$> _borderEnd,
-              toElement "left" <$> _borderLeft,
-              toElement "right" <$> _borderRight,
-              toElement "top" <$> _borderTop,
-              toElement "bottom" <$> _borderBottom,
-              toElement "diagonal" <$> _borderDiagonal,
-              toElement "vertical" <$> _borderVertical,
-              toElement "horizontal" <$> _borderHorizontal
+            [ toElement "start" <$> borderStart,
+              toElement "end" <$> borderEnd,
+              toElement "left" <$> borderLeft,
+              toElement "right" <$> borderRight,
+              toElement "top" <$> borderTop,
+              toElement "bottom" <$> borderBottom,
+              toElement "diagonal" <$> borderDiagonal,
+              toElement "vertical" <$> borderVertical,
+              toElement "horizontal" <$> borderHorizontal
             ]
       }
 
@@ -1293,11 +1177,11 @@ instance ToElement BorderStyle where
       { elementName = nm,
         elementAttributes =
           M.fromList . catMaybes $
-            [ "style" .=? _borderStyleLine
+            [ "style" .=? borderStyleLine
             ],
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "color" <$> _borderStyleColor
+            [ toElement "color" <$> borderStyleColor
             ]
       }
 
@@ -1309,10 +1193,10 @@ instance ToElement Color where
         elementNodes = [],
         elementAttributes =
           M.fromList . catMaybes $
-            [ "auto" .=? _colorAutomatic,
-              "rgb" .=? _colorARGB,
-              "theme" .=? _colorTheme,
-              "tint" .=? _colorTint
+            [ "auto" .=? colorAutomatic,
+              "rgb" .=? colorARGB,
+              "theme" .=? colorTheme,
+              "tint" .=? colorTint
             ]
       }
 
@@ -1324,7 +1208,7 @@ instance ToElement Fill where
         elementAttributes = M.empty,
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "patternFill" <$> _fillPattern
+            [ toElement "patternFill" <$> fillPattern
             ]
       }
 
@@ -1335,12 +1219,12 @@ instance ToElement FillPattern where
       { elementName = nm,
         elementAttributes =
           M.fromList . catMaybes $
-            [ "patternType" .=? _fillPatternType
+            [ "patternType" .=? fillPatternType
             ],
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "fgColor" <$> _fillPatternFgColor,
-              toElement "bgColor" <$> _fillPatternBgColor
+            [ toElement "fgColor" <$> fillPatternFgColor,
+              toElement "bgColor" <$> fillPatternBgColor
             ]
       }
 
@@ -1352,21 +1236,21 @@ instance ToElement Font where
         elementAttributes = M.empty, -- all properties specified as child nodes
         elementNodes =
           map NodeElement . catMaybes $
-            [ elementValue "name" <$> _fontName,
-              elementValue "charset" <$> _fontCharset,
-              elementValue "family" <$> _fontFamily,
-              elementValue "b" <$> _fontBold,
-              elementValue "i" <$> _fontItalic,
-              elementValue "strike" <$> _fontStrikeThrough,
-              elementValue "outline" <$> _fontOutline,
-              elementValue "shadow" <$> _fontShadow,
-              elementValue "condense" <$> _fontCondense,
-              elementValue "extend" <$> _fontExtend,
-              toElement "color" <$> _fontColor,
-              elementValue "sz" <$> _fontSize,
-              elementValue "u" <$> _fontUnderline,
-              elementValue "vertAlign" <$> _fontVertAlign,
-              elementValue "scheme" <$> _fontScheme
+            [ elementValue "name" <$> fontName,
+              elementValue "charset" <$> fontCharset,
+              elementValue "family" <$> fontFamily,
+              elementValue "b" <$> fontBold,
+              elementValue "i" <$> fontItalic,
+              elementValue "strike" <$> fontStrikeThrough,
+              elementValue "outline" <$> fontOutline,
+              elementValue "shadow" <$> fontShadow,
+              elementValue "condense" <$> fontCondense,
+              elementValue "extend" <$> fontExtend,
+              toElement "color" <$> fontColor,
+              elementValue "sz" <$> fontSize,
+              elementValue "u" <$> fontUnderline,
+              elementValue "vertAlign" <$> fontVertAlign,
+              elementValue "scheme" <$> fontScheme
             ]
       }
 
@@ -1488,14 +1372,14 @@ instance ToAttrVal ReadingOrder where
 -- | See @CT_Stylesheet@, p. 4482
 instance FromCursor StyleSheet where
   fromCursor cur = do
-    let _styleSheetFonts = cur $/ element (n_ "fonts") &/ element (n_ "font") >=> fromCursor
-        _styleSheetFills = cur $/ element (n_ "fills") &/ element (n_ "fill") >=> fromCursor
-        _styleSheetBorders = cur $/ element (n_ "borders") &/ element (n_ "border") >=> fromCursor
+    let styleSheetFonts = cur $/ element (n_ "fonts") &/ element (n_ "font") >=> fromCursor
+        styleSheetFills = cur $/ element (n_ "fills") &/ element (n_ "fill") >=> fromCursor
+        styleSheetBorders = cur $/ element (n_ "borders") &/ element (n_ "border") >=> fromCursor
         -- TODO: cellStyleXfs
-        _styleSheetCellXfs = cur $/ element (n_ "cellXfs") &/ element (n_ "xf") >=> fromCursor
+        styleSheetCellXfs = cur $/ element (n_ "cellXfs") &/ element (n_ "xf") >=> fromCursor
         -- TODO: cellStyles
-        _styleSheetDxfs = cur $/ element (n_ "dxfs") &/ element (n_ "dxf") >=> fromCursor
-        _styleSheetNumFmts =
+        styleSheetDxfs = cur $/ element (n_ "dxfs") &/ element (n_ "dxf") >=> fromCursor
+        styleSheetNumFmts =
           M.fromList . map mkNumFmtPair $
             cur $/ element (n_ "numFmts") &/ element (n_ "numFmt") >=> fromCursor
     -- TODO: tableStyles
@@ -1506,21 +1390,21 @@ instance FromCursor StyleSheet where
 -- | See @CT_Font@, p. 4489
 instance FromCursor Font where
   fromCursor cur = do
-    _fontName <- maybeElementValue (n_ "name") cur
-    _fontCharset <- maybeElementValue (n_ "charset") cur
-    _fontFamily <- maybeElementValue (n_ "family") cur
-    _fontBold <- maybeBoolElementValue (n_ "b") cur
-    _fontItalic <- maybeBoolElementValue (n_ "i") cur
-    _fontStrikeThrough <- maybeBoolElementValue (n_ "strike") cur
-    _fontOutline <- maybeBoolElementValue (n_ "outline") cur
-    _fontShadow <- maybeBoolElementValue (n_ "shadow") cur
-    _fontCondense <- maybeBoolElementValue (n_ "condense") cur
-    _fontExtend <- maybeBoolElementValue (n_ "extend") cur
-    _fontColor <- maybeFromElement (n_ "color") cur
-    _fontSize <- maybeElementValue (n_ "sz") cur
-    _fontUnderline <- maybeElementValueDef (n_ "u") FontUnderlineSingle cur
-    _fontVertAlign <- maybeElementValue (n_ "vertAlign") cur
-    _fontScheme <- maybeElementValue (n_ "scheme") cur
+    fontName <- maybeElementValue (n_ "name") cur
+    fontCharset <- maybeElementValue (n_ "charset") cur
+    fontFamily <- maybeElementValue (n_ "family") cur
+    fontBold <- maybeBoolElementValue (n_ "b") cur
+    fontItalic <- maybeBoolElementValue (n_ "i") cur
+    fontStrikeThrough <- maybeBoolElementValue (n_ "strike") cur
+    fontOutline <- maybeBoolElementValue (n_ "outline") cur
+    fontShadow <- maybeBoolElementValue (n_ "shadow") cur
+    fontCondense <- maybeBoolElementValue (n_ "condense") cur
+    fontExtend <- maybeBoolElementValue (n_ "extend") cur
+    fontColor <- maybeFromElement (n_ "color") cur
+    fontSize <- maybeElementValue (n_ "sz") cur
+    fontUnderline <- maybeElementValueDef (n_ "u") FontUnderlineSingle cur
+    fontVertAlign <- maybeElementValue (n_ "vertAlign") cur
+    fontScheme <- maybeElementValue (n_ "scheme") cur
     return Font {..}
 
 -- | See 18.18.94 "ST_FontFamily (Font Family)" (p. 2517)
@@ -1545,19 +1429,19 @@ instance FromAttrBs FontFamily where
 -- | See @CT_Color@, p. 4484
 instance FromCursor Color where
   fromCursor cur = do
-    _colorAutomatic <- maybeAttribute "auto" cur
-    _colorARGB <- maybeAttribute "rgb" cur
-    _colorTheme <- maybeAttribute "theme" cur
-    _colorTint <- maybeAttribute "tint" cur
+    colorAutomatic <- maybeAttribute "auto" cur
+    colorARGB <- maybeAttribute "rgb" cur
+    colorTheme <- maybeAttribute "theme" cur
+    colorTint <- maybeAttribute "tint" cur
     return Color {..}
 
 instance FromXenoNode Color where
   fromXenoNode root =
     parseAttributes root $ do
-      _colorAutomatic <- maybeAttr "auto"
-      _colorARGB <- maybeAttr "rgb"
-      _colorTheme <- maybeAttr "theme"
-      _colorTint <- maybeAttr "tint"
+      colorAutomatic <- maybeAttr "auto"
+      colorARGB <- maybeAttr "rgb"
+      colorTheme <- maybeAttr "theme"
+      colorTint <- maybeAttr "tint"
       return Color {..}
 
 -- See @ST_UnderlineValues@, p. 3940
@@ -1604,15 +1488,15 @@ instance FromAttrBs FontScheme where
 -- | See @CT_Fill@, p. 4484
 instance FromCursor Fill where
   fromCursor cur = do
-    _fillPattern <- maybeFromElement (n_ "patternFill") cur
+    fillPattern <- maybeFromElement (n_ "patternFill") cur
     return Fill {..}
 
 -- | See @CT_PatternFill@, p. 4484
 instance FromCursor FillPattern where
   fromCursor cur = do
-    _fillPatternType <- maybeAttribute "patternType" cur
-    _fillPatternFgColor <- maybeFromElement (n_ "fgColor") cur
-    _fillPatternBgColor <- maybeFromElement (n_ "bgColor") cur
+    fillPatternType <- maybeAttribute "patternType" cur
+    fillPatternFgColor <- maybeFromElement (n_ "fgColor") cur
+    fillPatternBgColor <- maybeFromElement (n_ "bgColor") cur
     return FillPattern {..}
 
 instance FromAttrVal PatternType where
@@ -1640,24 +1524,24 @@ instance FromAttrVal PatternType where
 -- | See @CT_Border@, p. 4483
 instance FromCursor Border where
   fromCursor cur = do
-    _borderDiagonalUp <- maybeAttribute "diagonalUp" cur
-    _borderDiagonalDown <- maybeAttribute "diagonalDown" cur
-    _borderOutline <- maybeAttribute "outline" cur
-    _borderStart <- maybeFromElement (n_ "start") cur
-    _borderEnd <- maybeFromElement (n_ "end") cur
-    _borderLeft <- maybeFromElement (n_ "left") cur
-    _borderRight <- maybeFromElement (n_ "right") cur
-    _borderTop <- maybeFromElement (n_ "top") cur
-    _borderBottom <- maybeFromElement (n_ "bottom") cur
-    _borderDiagonal <- maybeFromElement (n_ "diagonal") cur
-    _borderVertical <- maybeFromElement (n_ "vertical") cur
-    _borderHorizontal <- maybeFromElement (n_ "horizontal") cur
+    borderDiagonalUp <- maybeAttribute "diagonalUp" cur
+    borderDiagonalDown <- maybeAttribute "diagonalDown" cur
+    borderOutline <- maybeAttribute "outline" cur
+    borderStart <- maybeFromElement (n_ "start") cur
+    borderEnd <- maybeFromElement (n_ "end") cur
+    borderLeft <- maybeFromElement (n_ "left") cur
+    borderRight <- maybeFromElement (n_ "right") cur
+    borderTop <- maybeFromElement (n_ "top") cur
+    borderBottom <- maybeFromElement (n_ "bottom") cur
+    borderDiagonal <- maybeFromElement (n_ "diagonal") cur
+    borderVertical <- maybeFromElement (n_ "vertical") cur
+    borderHorizontal <- maybeFromElement (n_ "horizontal") cur
     return Border {..}
 
 instance FromCursor BorderStyle where
   fromCursor cur = do
-    _borderStyleLine <- maybeAttribute "style" cur
-    _borderStyleColor <- maybeFromElement (n_ "color") cur
+    borderStyleLine <- maybeAttribute "style" cur
+    borderStyleColor <- maybeFromElement (n_ "color") cur
     return BorderStyle {..}
 
 instance FromAttrVal LineStyle where
@@ -1680,32 +1564,32 @@ instance FromAttrVal LineStyle where
 -- | See @CT_Xf@, p. 4486
 instance FromCursor CellXf where
   fromCursor cur = do
-    _cellXfAlignment <- maybeFromElement (n_ "alignment") cur
-    _cellXfProtection <- maybeFromElement (n_ "protection") cur
-    _cellXfNumFmtId <- maybeAttribute "numFmtId" cur
-    _cellXfFontId <- maybeAttribute "fontId" cur
-    _cellXfFillId <- maybeAttribute "fillId" cur
-    _cellXfBorderId <- maybeAttribute "borderId" cur
-    _cellXfId <- maybeAttribute "xfId" cur
-    _cellXfQuotePrefix <- maybeAttribute "quotePrefix" cur
-    _cellXfPivotButton <- maybeAttribute "pivotButton" cur
-    _cellXfApplyNumberFormat <- maybeAttribute "applyNumberFormat" cur
-    _cellXfApplyFont <- maybeAttribute "applyFont" cur
-    _cellXfApplyFill <- maybeAttribute "applyFill" cur
-    _cellXfApplyBorder <- maybeAttribute "applyBorder" cur
-    _cellXfApplyAlignment <- maybeAttribute "applyAlignment" cur
-    _cellXfApplyProtection <- maybeAttribute "applyProtection" cur
+    cellXfAlignment <- maybeFromElement (n_ "alignment") cur
+    cellXfProtection <- maybeFromElement (n_ "protection") cur
+    cellXfNumFmtId <- maybeAttribute "numFmtId" cur
+    cellXfFontId <- maybeAttribute "fontId" cur
+    cellXfFillId <- maybeAttribute "fillId" cur
+    cellXfBorderId <- maybeAttribute "borderId" cur
+    cellXfId <- maybeAttribute "xfId" cur
+    cellXfQuotePrefix <- maybeAttribute "quotePrefix" cur
+    cellXfPivotButton <- maybeAttribute "pivotButton" cur
+    cellXfApplyNumberFormat <- maybeAttribute "applyNumberFormat" cur
+    cellXfApplyFont <- maybeAttribute "applyFont" cur
+    cellXfApplyFill <- maybeAttribute "applyFill" cur
+    cellXfApplyBorder <- maybeAttribute "applyBorder" cur
+    cellXfApplyAlignment <- maybeAttribute "applyAlignment" cur
+    cellXfApplyProtection <- maybeAttribute "applyProtection" cur
     return CellXf {..}
 
 -- | See @CT_Dxf@, p. 3937
 instance FromCursor Dxf where
   fromCursor cur = do
-    _dxfFont <- maybeFromElement (n_ "font") cur
-    _dxfNumFmt <- maybeFromElement (n_ "numFmt") cur
-    _dxfFill <- maybeFromElement (n_ "fill") cur
-    _dxfAlignment <- maybeFromElement (n_ "alignment") cur
-    _dxfBorder <- maybeFromElement (n_ "border") cur
-    _dxfProtection <- maybeFromElement (n_ "protection") cur
+    dxfFont <- maybeFromElement (n_ "font") cur
+    dxfNumFmt <- maybeFromElement (n_ "numFmt") cur
+    dxfFill <- maybeFromElement (n_ "fill") cur
+    dxfAlignment <- maybeFromElement (n_ "alignment") cur
+    dxfBorder <- maybeFromElement (n_ "border") cur
+    dxfProtection <- maybeFromElement (n_ "protection") cur
     return Dxf {..}
 
 -- | See @CT_NumFmt@, p. 3936

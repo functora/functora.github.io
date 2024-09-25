@@ -1,50 +1,50 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+
 module DrawingTests
-  ( tests
-  , testDrawing
-  , testLineChartSpace
-  ) where
+  ( tests,
+    testDrawing,
+    testLineChartSpace,
+  )
+where
 
 #ifdef USE_MICROLENS
 import Lens.Micro
 #else
 import Control.Lens
 #endif
-import Data.ByteString.Lazy (ByteString)
-import Test.Tasty (testGroup, TestTree)
-import Test.Tasty.HUnit (testCase)
-import Text.RawString.QQ
-import Text.XML
-
 import Codec.Xlsx
 import Codec.Xlsx.Types.Internal
 import Codec.Xlsx.Writer.Internal
-
 import Common
+import Data.ByteString.Lazy (ByteString)
 import Diff
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase)
+import Text.RawString.QQ
+import Text.XML
 
 tests :: TestTree
 tests =
   testGroup
     "Drawing tests"
     [ testCase "correct drawing parsing" $
-      [testDrawing] @==? parseBS testDrawingFile
-    , testCase "write . read == id for Drawings" $
-      [testDrawing] @==? parseBS testWrittenDrawing
-    , testCase "correct chart parsing" $
-      [testLineChartSpace] @==? parseBS testLineChartFile
-    , testCase "parse . render == id for line Charts" $
-      [testLineChartSpace] @==? parseBS (renderChartSpace testLineChartSpace)
-    , testCase "parse . render == id for area Charts" $
-      [testAreaChartSpace] @==? parseBS (renderChartSpace testAreaChartSpace)
-    , testCase "parse . render == id for bar Charts" $
-      [testBarChartSpace] @==? parseBS (renderChartSpace testBarChartSpace)
-    , testCase "parse . render == id for pie Charts" $
-      [testPieChartSpace] @==? parseBS (renderChartSpace testPieChartSpace)
-    , testCase "parse . render == id for scatter Charts" $
-      [testScatterChartSpace] @==? parseBS (renderChartSpace testScatterChartSpace)
+        [testDrawing] @==? parseBS testDrawingFile,
+      testCase "write . read == id for Drawings" $
+        [testDrawing] @==? parseBS testWrittenDrawing,
+      testCase "correct chart parsing" $
+        [testLineChartSpace] @==? parseBS testLineChartFile,
+      testCase "parse . render == id for line Charts" $
+        [testLineChartSpace] @==? parseBS (renderChartSpace testLineChartSpace),
+      testCase "parse . render == id for area Charts" $
+        [testAreaChartSpace] @==? parseBS (renderChartSpace testAreaChartSpace),
+      testCase "parse . render == id for bar Charts" $
+        [testBarChartSpace] @==? parseBS (renderChartSpace testBarChartSpace),
+      testCase "parse . render == id for pie Charts" $
+        [testPieChartSpace] @==? parseBS (renderChartSpace testPieChartSpace),
+      testCase "parse . render == id for scatter Charts" $
+        [testScatterChartSpace] @==? parseBS (renderChartSpace testScatterChartSpace)
     ]
 
 testDrawing :: UnresolvedDrawing
@@ -52,94 +52,102 @@ testDrawing = Drawing [anchor1, anchor2]
   where
     anchor1 =
       Anchor
-      {_anchAnchoring = anchoring1, _anchObject = pic, _anchClientData = def}
+        { _anchAnchoring = anchoring1,
+          _anchObject = pic,
+          _anchClientData = def
+        }
     anchoring1 =
       TwoCellAnchor
-      { tcaFrom = unqMarker (0, 0) (0, 0)
-      , tcaTo = unqMarker (12, 320760) (33, 38160)
-      , tcaEditAs = EditAsAbsolute
-      }
+        { tcaFrom = unqMarker (0, 0) (0, 0),
+          tcaTo = unqMarker (12, 320760) (33, 38160),
+          tcaEditAs = EditAsAbsolute
+        }
     pic =
       Picture
-      { _picMacro = Nothing
-      , _picPublished = False
-      , _picNonVisual = nonVis1
-      , _picBlipFill = bfProps
-      , _picShapeProperties = shProps
-      }
+        { _picMacro = Nothing,
+          _picPublished = False,
+          _picNonVisual = nonVis1,
+          _picBlipFill = bfProps,
+          _picShapeProperties = shProps
+        }
     nonVis1 =
       PicNonVisual $
-      NonVisualDrawingProperties
-      { _nvdpId = DrawingElementId 0
-      , _nvdpName = "Picture 1"
-      , _nvdpDescription = Just ""
-      , _nvdpHidden = False
-      , _nvdpTitle = Nothing
-      }
+        NonVisualDrawingProperties
+          { _nvdpId = DrawingElementId 0,
+            _nvdpName = "Picture 1",
+            _nvdpDescription = Just "",
+            _nvdpHidden = False,
+            _nvdpTitle = Nothing
+          }
     bfProps =
       BlipFillProperties
-      {_bfpImageInfo = Just (RefId "rId1"), _bfpFillMode = Just FillStretch}
+        { _bfpImageInfo = Just (RefId "rId1"),
+          _bfpFillMode = Just FillStretch
+        }
     shProps =
       ShapeProperties
-      { _spXfrm = Just trnsfrm
-      , _spGeometry = Just PresetGeometry
-      , _spFill = Nothing
-      , _spOutline = Just $ def {_lnFill = Just NoFill}
-      }
+        { _spXfrm = Just trnsfrm,
+          _spGeometry = Just PresetGeometry,
+          _spFill = Nothing,
+          _spOutline = Just $ def {_lnFill = Just NoFill}
+        }
     trnsfrm =
       Transform2D
-      { _trRot = Angle 0
-      , _trFlipH = False
-      , _trFlipV = False
-      , _trOffset = Just (unqPoint2D 0 0)
-      , _trExtents =
-          Just
-            (PositiveSize2D
-               (PositiveCoordinate 10074240)
-               (PositiveCoordinate 5402520))
-      }
+        { _trRot = Angle 0,
+          _trFlipH = False,
+          _trFlipV = False,
+          _trOffset = Just (unqPoint2D 0 0),
+          _trExtents =
+            Just
+              ( PositiveSize2D
+                  (PositiveCoordinate 10074240)
+                  (PositiveCoordinate 5402520)
+              )
+        }
     anchor2 =
       Anchor
-      { _anchAnchoring = anchoring2
-      , _anchObject = graphic
-      , _anchClientData = def
-      }
+        { _anchAnchoring = anchoring2,
+          _anchObject = graphic,
+          _anchClientData = def
+        }
     anchoring2 =
       TwoCellAnchor
-      { tcaFrom = unqMarker (0, 87840) (21, 131040)
-      , tcaTo = unqMarker (7, 580320) (38, 132480)
-      , tcaEditAs = EditAsOneCell
-      }
+        { tcaFrom = unqMarker (0, 87840) (21, 131040),
+          tcaTo = unqMarker (7, 580320) (38, 132480),
+          tcaEditAs = EditAsOneCell
+        }
     graphic =
       Graphic
-      { _grNonVisual = nonVis2
-      , _grChartSpace = RefId "rId2"
-      , _grTransform = transform
-      }
+        { _grNonVisual = nonVis2,
+          _grChartSpace = RefId "rId2",
+          _grTransform = transform
+        }
     nonVis2 =
       GraphNonVisual $
-      NonVisualDrawingProperties
-      { _nvdpId = DrawingElementId 1
-      , _nvdpName = ""
-      , _nvdpDescription = Nothing
-      , _nvdpHidden = False
-      , _nvdpTitle = Nothing
-      }
+        NonVisualDrawingProperties
+          { _nvdpId = DrawingElementId 1,
+            _nvdpName = "",
+            _nvdpDescription = Nothing,
+            _nvdpHidden = False,
+            _nvdpTitle = Nothing
+          }
     transform =
       Transform2D
-      { _trRot = Angle 0
-      , _trFlipH = False
-      , _trFlipV = False
-      , _trOffset = Just (unqPoint2D 0 0)
-      , _trExtents =
-          Just
-            (PositiveSize2D
-               (PositiveCoordinate 10074240)
-               (PositiveCoordinate 5402520))
-      }
+        { _trRot = Angle 0,
+          _trFlipH = False,
+          _trFlipV = False,
+          _trOffset = Just (unqPoint2D 0 0),
+          _trExtents =
+            Just
+              ( PositiveSize2D
+                  (PositiveCoordinate 10074240)
+                  (PositiveCoordinate 5402520)
+              )
+        }
 
 testDrawingFile :: ByteString
-testDrawingFile = [r|
+testDrawingFile =
+  [r|
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <xdr:twoCellAnchor editAs="absolute">
@@ -188,7 +196,8 @@ testWrittenDrawing :: ByteString
 testWrittenDrawing = renderLBS def $ toDocument testDrawing
 
 testLineChartFile :: ByteString
-testLineChartFile = [r|
+testLineChartFile =
+  [r|
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <c:chart>
@@ -233,32 +242,32 @@ testLineChartFile = [r|
 oneChartChartSpace :: Chart -> ChartSpace
 oneChartChartSpace chart =
   ChartSpace
-  { _chspTitle = Just $ ChartTitle (Just titleBody)
-  , _chspCharts = [chart]
-  , _chspLegend = Nothing
-  , _chspPlotVisOnly = Just True
-  , _chspDispBlanksAs = Just DispBlanksAsGap
-  }
+    { _chspTitle = Just $ ChartTitle (Just titleBody),
+      _chspCharts = [chart],
+      _chspLegend = Nothing,
+      _chspPlotVisOnly = Just True,
+      _chspDispBlanksAs = Just DispBlanksAsGap
+    }
   where
     titleBody =
       TextBody
-      { _txbdRotation = Angle 0
-      , _txbdSpcFirstLastPara = False
-      , _txbdVertOverflow = TextVertOverflow
-      , _txbdVertical = TextVerticalHorz
-      , _txbdWrap = TextWrapSquare
-      , _txbdAnchor = TextAnchoringBottom
-      , _txbdAnchorCenter = False
-      , _txbdParagraphs =
-          [TextParagraph Nothing [RegularRun Nothing "Line chart title"]]
-      }
+        { _txbdRotation = Angle 0,
+          _txbdSpcFirstLastPara = False,
+          _txbdVertOverflow = TextVertOverflow,
+          _txbdVertical = TextVerticalHorz,
+          _txbdWrap = TextWrapSquare,
+          _txbdAnchor = TextAnchoringBottom,
+          _txbdAnchorCenter = False,
+          _txbdParagraphs =
+            [TextParagraph Nothing [RegularRun Nothing "Line chart title"]]
+        }
 
 renderChartSpace :: ChartSpace -> ByteString
 renderChartSpace = renderLBS def {rsNamespaces = nss} . toDocument
   where
     nss =
-      [ ("c", "http://schemas.openxmlformats.org/drawingml/2006/chart")
-      , ("a", "http://schemas.openxmlformats.org/drawingml/2006/main")
+      [ ("c", "http://schemas.openxmlformats.org/drawingml/2006/chart"),
+        ("a", "http://schemas.openxmlformats.org/drawingml/2006/main")
       ]
 
 testLineChartSpace :: ChartSpace
@@ -266,42 +275,42 @@ testLineChartSpace = oneChartChartSpace lineChart
   where
     lineChart =
       LineChart
-      { _lnchGrouping = StandardGrouping
-      , _lnchSeries = series
-      , _lnchMarker = Just False
-      , _lnchSmooth = Just False
-      }
+        { _lnchGrouping = StandardGrouping,
+          _lnchSeries = series,
+          _lnchMarker = Just False,
+          _lnchSmooth = Just False
+        }
     series =
       [ LineSeries
-        { _lnserShared =
-            Series
-            { _serTx = Just $ Formula "Sheet1!$A$1"
-            , _serShapeProperties = Just $ rgbShape "0000FF"
-            }
-        , _lnserMarker = Just markerNone
-        , _lnserDataLblProps = Nothing
-        , _lnserVal = Just $ Formula "Sheet1!$B$1:$D$1"
-        , _lnserSmooth = Just False
-        }
-      , LineSeries
-        { _lnserShared =
-            Series
-            { _serTx = Just $ Formula "Sheet1!$A$2"
-            , _serShapeProperties = Just $ rgbShape "FF0000"
-            }
-        , _lnserMarker = Just markerNone
-        , _lnserDataLblProps = Nothing
-        , _lnserVal = Just $ Formula "Sheet1!$B$2:$D$2"
-        , _lnserSmooth = Just False
-        }
+          { _lnserShared =
+              Series
+                { _serTx = Just $ Formula "Sheet1!$A$1",
+                  _serShapeProperties = Just $ rgbShape "0000FF"
+                },
+            _lnserMarker = Just markerNone,
+            _lnserDataLblProps = Nothing,
+            _lnserVal = Just $ Formula "Sheet1!$B$1:$D$1",
+            _lnserSmooth = Just False
+          },
+        LineSeries
+          { _lnserShared =
+              Series
+                { _serTx = Just $ Formula "Sheet1!$A$2",
+                  _serShapeProperties = Just $ rgbShape "FF0000"
+                },
+            _lnserMarker = Just markerNone,
+            _lnserDataLblProps = Nothing,
+            _lnserVal = Just $ Formula "Sheet1!$B$2:$D$2",
+            _lnserSmooth = Just False
+          }
       ]
     rgbShape color =
       def
-      { _spFill = Just $ solidRgb color
-      , _spOutline =
-          Just $
-          LineProperties {_lnFill = Just $ solidRgb color, _lnWidth = 28800}
-      }
+        { _spFill = Just $ solidRgb color,
+          _spOutline =
+            Just $
+              LineProperties {_lnFill = Just $ solidRgb color, _lnWidth = 28800}
+        }
     markerNone =
       DataMarker {_dmrkSymbol = Just DataMarkerNone, _dmrkSize = Nothing}
 
@@ -312,66 +321,66 @@ testAreaChartSpace = oneChartChartSpace areaChart
       AreaChart {_archGrouping = Just StandardGrouping, _archSeries = series}
     series =
       [ AreaSeries
-        { _arserShared =
-            Series
-            { _serTx = Just $ Formula "Sheet1!$A$1"
-            , _serShapeProperties =
-                Just $
-                def
-                { _spFill = Just $ solidRgb "000088"
-                , _spOutline = Just $ def {_lnFill = Just NoFill}
-                }
-            }
-        , _arserDataLblProps = Nothing
-        , _arserVal = Just $ Formula "Sheet1!$B$1:$D$1"
-        }
+          { _arserShared =
+              Series
+                { _serTx = Just $ Formula "Sheet1!$A$1",
+                  _serShapeProperties =
+                    Just $
+                      def
+                        { _spFill = Just $ solidRgb "000088",
+                          _spOutline = Just $ def {_lnFill = Just NoFill}
+                        }
+                },
+            _arserDataLblProps = Nothing,
+            _arserVal = Just $ Formula "Sheet1!$B$1:$D$1"
+          }
       ]
 
 testBarChartSpace :: ChartSpace
 testBarChartSpace =
   oneChartChartSpace
     BarChart
-    { _brchDirection = DirectionColumn
-    , _brchGrouping = Just BarStandardGrouping
-    , _brchSeries =
-        [ BarSeries
-          { _brserShared =
-              Series
-              { _serTx = Just $ Formula "Sheet1!$A$1"
-              , _serShapeProperties =
-                  Just $
-                  def
-                  { _spFill = Just $ solidRgb "000088"
-                  , _spOutline = Just $ def {_lnFill = Just NoFill}
-                  }
+      { _brchDirection = DirectionColumn,
+        _brchGrouping = Just BarStandardGrouping,
+        _brchSeries =
+          [ BarSeries
+              { _brserShared =
+                  Series
+                    { _serTx = Just $ Formula "Sheet1!$A$1",
+                      _serShapeProperties =
+                        Just $
+                          def
+                            { _spFill = Just $ solidRgb "000088",
+                              _spOutline = Just $ def {_lnFill = Just NoFill}
+                            }
+                    },
+                _brserDataLblProps = Nothing,
+                _brserVal = Just $ Formula "Sheet1!$B$1:$D$1"
               }
-          , _brserDataLblProps = Nothing
-          , _brserVal = Just $ Formula "Sheet1!$B$1:$D$1"
-          }
-        ]
-    }
+          ]
+      }
 
 testPieChartSpace :: ChartSpace
 testPieChartSpace =
   oneChartChartSpace
     PieChart
-    { _pichSeries =
-        [ PieSeries
-          { _piserShared =
-              Series
-              { _serTx = Just $ Formula "Sheet1!$A$1"
-              , _serShapeProperties = Nothing
+      { _pichSeries =
+          [ PieSeries
+              { _piserShared =
+                  Series
+                    { _serTx = Just $ Formula "Sheet1!$A$1",
+                      _serShapeProperties = Nothing
+                    },
+                _piserDataPoints =
+                  [ def & dpShapeProperties ?~ solidFill "000088",
+                    def & dpShapeProperties ?~ solidFill "008800",
+                    def & dpShapeProperties ?~ solidFill "880000"
+                  ],
+                _piserDataLblProps = Nothing,
+                _piserVal = Just $ Formula "Sheet1!$B$1:$D$1"
               }
-          , _piserDataPoints =
-              [ def & dpShapeProperties ?~ solidFill "000088"
-              , def & dpShapeProperties ?~ solidFill "008800"
-              , def & dpShapeProperties ?~ solidFill "880000"
-              ]
-          , _piserDataLblProps = Nothing
-          , _piserVal = Just $ Formula "Sheet1!$B$1:$D$1"
-          }
-        ]
-    }
+          ]
+      }
   where
     solidFill color = def & spFill ?~ solidRgb color
 
@@ -379,20 +388,20 @@ testScatterChartSpace :: ChartSpace
 testScatterChartSpace =
   oneChartChartSpace
     ScatterChart
-    { _scchStyle = ScatterMarker
-    , _scchSeries =
-        [ ScatterSeries
-          { _scserShared =
-              Series
-              { _serTx = Just $ Formula "Sheet1!$A$2"
-              , _serShapeProperties =
-                  Just $ def {_spOutline = Just $ def {_lnFill = Just NoFill}}
+      { _scchStyle = ScatterMarker,
+        _scchSeries =
+          [ ScatterSeries
+              { _scserShared =
+                  Series
+                    { _serTx = Just $ Formula "Sheet1!$A$2",
+                      _serShapeProperties =
+                        Just $ def {_spOutline = Just $ def {_lnFill = Just NoFill}}
+                    },
+                _scserMarker = Just $ DataMarker (Just DataMarkerSquare) Nothing,
+                _scserDataLblProps = Nothing,
+                _scserXVal = Just $ Formula "Sheet1!$B$1:$D$1",
+                _scserYVal = Just $ Formula "Sheet1!$B$2:$D$2",
+                _scserSmooth = Nothing
               }
-          , _scserMarker = Just $ DataMarker (Just DataMarkerSquare) Nothing
-          , _scserDataLblProps = Nothing
-          , _scserXVal = Just $ Formula "Sheet1!$B$1:$D$1"
-          , _scserYVal = Just $ Formula "Sheet1!$B$2:$D$2"
-          , _scserSmooth = Nothing
-          }
-        ]
-    }
+          ]
+      }

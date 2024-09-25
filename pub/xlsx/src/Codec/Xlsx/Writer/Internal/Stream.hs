@@ -1,17 +1,17 @@
-{-# LANGUAGE CPP              #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Internal stream related functions.
 --   These are exported because they're tested like this.
 --   It's not expected a user would need this.
 module Codec.Xlsx.Writer.Internal.Stream
-  ( upsertSharedString
-  , initialSharedString
-  , string_map
-  , SharedStringState(..)
-  ) where
-
+  ( upsertSharedString,
+    initialSharedString,
+    string_map,
+    SharedStringState (..),
+  )
+where
 
 #ifdef USE_MICROLENS
 import Lens.Micro.Platform
@@ -26,6 +26,7 @@ import Data.Text (Text)
 newtype SharedStringState = MkSharedStringState
   { _string_map :: Map Text Int
   }
+
 makeLenses 'MkSharedStringState
 
 initialSharedString :: SharedStringState
@@ -33,9 +34,9 @@ initialSharedString = MkSharedStringState mempty
 
 -- properties:
 -- for a list of [text], every unique text gets a unique number.
-upsertSharedString :: MonadState SharedStringState m => Text -> m (Text,Int)
+upsertSharedString :: (MonadState SharedStringState m) => Text -> m (Text, Int)
 upsertSharedString current = do
-  strings  <- use string_map
+  strings <- use string_map
 
   let mIdx :: Maybe Int
       mIdx = strings ^? ix current
@@ -48,4 +49,3 @@ upsertSharedString current = do
 
   string_map .= newMap
   pure (current, idx)
-

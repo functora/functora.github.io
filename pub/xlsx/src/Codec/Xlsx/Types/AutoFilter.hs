@@ -1,10 +1,11 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric #-}
+
 module Codec.Xlsx.Types.AutoFilter where
 
 import Control.Arrow (first)
@@ -14,6 +15,10 @@ import Lens.Micro.TH (makeLenses)
 #else
 import Control.Lens (makeLenses)
 #endif
+import Codec.Xlsx.Parser.Internal
+import Codec.Xlsx.Types.Common
+import Codec.Xlsx.Types.ConditionalFormatting (IconSetType)
+import Codec.Xlsx.Writer.Internal
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
 import Data.Default
@@ -29,11 +34,6 @@ import Text.XML
 import Text.XML.Cursor hiding (bool)
 import qualified Xeno.DOM as Xeno
 
-import Codec.Xlsx.Parser.Internal
-import Codec.Xlsx.Types.Common
-import Codec.Xlsx.Types.ConditionalFormatting (IconSetType)
-import Codec.Xlsx.Writer.Internal
-
 -- | The filterColumn collection identifies a particular column in the
 -- AutoFilter range and specifies filter information that has been
 -- applied to this column. If a column in the AutoFilter range has no
@@ -48,27 +48,30 @@ data FilterColumn
   | CustomFiltersOr CustomFilter CustomFilter
   | CustomFiltersAnd CustomFilter CustomFilter
   | DynamicFilter DynFilterOptions
-  | IconFilter (Maybe Int) IconSetType
-  -- ^ Specifies the icon set and particular icon within that set to
-  -- filter by. Icon is specified using zero-based index of an icon in
-  -- an icon set. 'Nothing' means "no icon"
-  | BottomNFilter EdgeFilterOptions
-  -- ^ Specifies the bottom N (percent or number of items) to filter by
-  | TopNFilter EdgeFilterOptions
-  -- ^ Specifies the top N (percent or number of items) to filter by
+  | -- | Specifies the icon set and particular icon within that set to
+    -- filter by. Icon is specified using zero-based index of an icon in
+    -- an icon set. 'Nothing' means "no icon"
+    IconFilter (Maybe Int) IconSetType
+  | -- | Specifies the bottom N (percent or number of items) to filter by
+    BottomNFilter EdgeFilterOptions
+  | -- | Specifies the top N (percent or number of items) to filter by
+    TopNFilter EdgeFilterOptions
   deriving (Eq, Show, Generic)
+
 instance NFData FilterColumn
 
 data FilterByBlank
   = FilterByBlank
   | DontFilterByBlank
   deriving (Eq, Show, Generic)
+
 instance NFData FilterByBlank
 
 data FilterCriterion
   = FilterValue Text
   | FilterDateGroup DateGroup
   deriving (Eq, Show, Generic)
+
 instance NFData FilterCriterion
 
 -- | Used to express a group of dates or times which are used in an
@@ -83,41 +86,47 @@ data DateGroup
   | DateGroupByMinute Int Int Int Int Int
   | DateGroupBySecond Int Int Int Int Int Int
   deriving (Eq, Show, Generic)
+
 instance NFData DateGroup
 
 data CustomFilter = CustomFilter
-  { cfltOperator :: CustomFilterOperator
-  , cfltValue :: Text
-  } deriving (Eq, Show, Generic)
+  { cfltOperator :: CustomFilterOperator,
+    cfltValue :: Text
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData CustomFilter
 
 data CustomFilterOperator
-  = FltrEqual
-    -- ^ Show results which are equal to criteria.
-  | FltrGreaterThan
-    -- ^ Show results which are greater than criteria.
-  | FltrGreaterThanOrEqual
-    -- ^ Show results which are greater than or equal to criteria.
-  | FltrLessThan
-    -- ^ Show results which are less than criteria.
-  | FltrLessThanOrEqual
-    -- ^ Show results which are less than or equal to criteria.
-  | FltrNotEqual
-    -- ^ Show results which are not equal to criteria.
+  = -- | Show results which are equal to criteria.
+    FltrEqual
+  | -- | Show results which are greater than criteria.
+    FltrGreaterThan
+  | -- | Show results which are greater than or equal to criteria.
+    FltrGreaterThanOrEqual
+  | -- | Show results which are less than criteria.
+    FltrLessThan
+  | -- | Show results which are less than or equal to criteria.
+    FltrLessThanOrEqual
+  | -- | Show results which are not equal to criteria.
+    FltrNotEqual
   deriving (Eq, Show, Generic)
+
 instance NFData CustomFilterOperator
 
 data EdgeFilterOptions = EdgeFilterOptions
-  { _efoUsePercents :: Bool
-  -- ^ Flag indicating whether or not to filter by percent value of
-  -- the column. A false value filters by number of items.
-  , _efoVal :: Double
-  -- ^ Top or bottom value to use as the filter criteria.
-  -- Example: "Filter by Top 10 Percent" or "Filter by Top 5 Items"
-  , _efoFilterVal :: Maybe Double
-  -- ^ The actual cell value in the range which is used to perform the
-  -- comparison for this filter.
-  } deriving (Eq, Show, Generic)
+  { -- | Flag indicating whether or not to filter by percent value of
+    -- the column. A false value filters by number of items.
+    _efoUsePercents :: Bool,
+    -- | Top or bottom value to use as the filter criteria.
+    -- Example: "Filter by Top 10 Percent" or "Filter by Top 5 Items"
+    _efoVal :: Double,
+    -- | The actual cell value in the range which is used to perform the
+    -- comparison for this filter.
+    _efoFilterVal :: Maybe Double
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData EdgeFilterOptions
 
 -- | Specifies the color to filter by and whether to use the cell's
@@ -127,17 +136,19 @@ instance NFData EdgeFilterOptions
 --
 -- See 18.3.2.1 "colorFilter (Color Filter Criteria)" (p. 1712)
 data ColorFilterOptions = ColorFilterOptions
-  { _cfoCellColor :: Bool
-  -- ^ Flag indicating whether or not to filter by the cell's fill
-  -- color. 'True' indicates to filter by cell fill. 'False' indicates
-  -- to filter by the cell's font color.
-  --
-  -- For rich text in cells, if the color specified appears in the
-  -- cell at all, it shall be included in the filter.
-  , _cfoDxfId :: Maybe Int
-  -- ^ Id of differential format record (dxf) in the Styles Part (see
-  -- '_styleSheetDxfs') which expresses the color value to filter by.
-  } deriving (Eq, Show, Generic)
+  { -- | Flag indicating whether or not to filter by the cell's fill
+    -- color. 'True' indicates to filter by cell fill. 'False' indicates
+    -- to filter by the cell's font color.
+    --
+    -- For rich text in cells, if the color specified appears in the
+    -- cell at all, it shall be included in the filter.
+    _cfoCellColor :: Bool,
+    -- | Id of differential format record (dxf) in the Styles Part (see
+    -- '_styleSheetDxfs') which expresses the color value to filter by.
+    _cfoDxfId :: Maybe Int
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData ColorFilterOptions
 
 -- | Specifies dynamic filter criteria. These criteria are considered
@@ -180,93 +191,96 @@ instance NFData ColorFilterOptions
 --
 -- See 18.3.2.5 "dynamicFilter (Dynamic Filter)" (p. 1715)
 data DynFilterOptions = DynFilterOptions
-  { _dfoType :: DynFilterType
-  , _dfoVal :: Maybe Double
-  -- ^ A minimum numeric value for dynamic filter.
-  , _dfoMaxVal :: Maybe Double
-  -- ^ A maximum value for dynamic filter.
-  } deriving (Eq, Show, Generic)
+  { _dfoType :: DynFilterType,
+    -- | A minimum numeric value for dynamic filter.
+    _dfoVal :: Maybe Double,
+    -- | A maximum value for dynamic filter.
+    _dfoMaxVal :: Maybe Double
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData DynFilterOptions
 
 -- | Specifies concrete type of dynamic filter used
 --
 -- See 18.18.26 "ST_DynamicFilterType (Dynamic Filter)" (p. 2452)
 data DynFilterType
-  = DynFilterAboveAverage
-  -- ^ Shows values that are above average.
-  | DynFilterBelowAverage
-  -- ^ Shows values that are below average.
-  | DynFilterLastMonth
-  -- ^ Shows last month's dates.
-  | DynFilterLastQuarter
-  -- ^ Shows last calendar quarter's dates.
-  | DynFilterLastWeek
-  -- ^ Shows last week's dates, using Sunday as the first weekday.
-  | DynFilterLastYear
-  -- ^ Shows last year's dates.
-  | DynFilterM1
-  -- ^ Shows the dates that are in January, regardless of year.
-  | DynFilterM10
-  -- ^ Shows the dates that are in October, regardless of year.
-  | DynFilterM11
-  -- ^ Shows the dates that are in November, regardless of year.
-  | DynFilterM12
-  -- ^ Shows the dates that are in December, regardless of year.
-  | DynFilterM2
-  -- ^ Shows the dates that are in February, regardless of year.
-  | DynFilterM3
-  -- ^ Shows the dates that are in March, regardless of year.
-  | DynFilterM4
-  -- ^ Shows the dates that are in April, regardless of year.
-  | DynFilterM5
-  -- ^ Shows the dates that are in May, regardless of year.
-  | DynFilterM6
-  -- ^ Shows the dates that are in June, regardless of year.
-  | DynFilterM7
-  -- ^ Shows the dates that are in July, regardless of year.
-  | DynFilterM8
-  -- ^ Shows the dates that are in August, regardless of year.
-  | DynFilterM9
-  -- ^ Shows the dates that are in September, regardless of year.
-  | DynFilterNextMonth
-  -- ^ Shows next month's dates.
-  | DynFilterNextQuarter
-  -- ^ Shows next calendar quarter's dates.
-  | DynFilterNextWeek
-  -- ^ Shows next week's dates, using Sunday as the first weekday.
-  | DynFilterNextYear
-  -- ^ Shows next year's dates.
-  | DynFilterNull
-  -- ^ Common filter type not available.
-  | DynFilterQ1
-  -- ^ Shows the dates that are in the 1st calendar quarter,
-  -- regardless of year.
-  | DynFilterQ2
-  -- ^ Shows the dates that are in the 2nd calendar quarter,
-  -- regardless of year.
-  | DynFilterQ3
-  -- ^ Shows the dates that are in the 3rd calendar quarter,
-  -- regardless of year.
-  | DynFilterQ4
-  -- ^ Shows the dates that are in the 4th calendar quarter,
-  -- regardless of year.
-  | DynFilterThisMonth
-  -- ^ Shows this month's dates.
-  | DynFilterThisQuarter
-  -- ^ Shows this calendar quarter's dates.
-  | DynFilterThisWeek
-  -- ^ Shows this week's dates, using Sunday as the first weekday.
-  | DynFilterThisYear
-  -- ^ Shows this year's dates.
-  | DynFilterToday
-  -- ^ Shows today's dates.
-  | DynFilterTomorrow
-  -- ^ Shows tomorrow's dates.
-  | DynFilterYearToDate
-  -- ^ Shows the dates between the beginning of the year and today, inclusive.
-  | DynFilterYesterday
-  -- ^ Shows yesterday's dates.
+  = -- | Shows values that are above average.
+    DynFilterAboveAverage
+  | -- | Shows values that are below average.
+    DynFilterBelowAverage
+  | -- | Shows last month's dates.
+    DynFilterLastMonth
+  | -- | Shows last calendar quarter's dates.
+    DynFilterLastQuarter
+  | -- | Shows last week's dates, using Sunday as the first weekday.
+    DynFilterLastWeek
+  | -- | Shows last year's dates.
+    DynFilterLastYear
+  | -- | Shows the dates that are in January, regardless of year.
+    DynFilterM1
+  | -- | Shows the dates that are in October, regardless of year.
+    DynFilterM10
+  | -- | Shows the dates that are in November, regardless of year.
+    DynFilterM11
+  | -- | Shows the dates that are in December, regardless of year.
+    DynFilterM12
+  | -- | Shows the dates that are in February, regardless of year.
+    DynFilterM2
+  | -- | Shows the dates that are in March, regardless of year.
+    DynFilterM3
+  | -- | Shows the dates that are in April, regardless of year.
+    DynFilterM4
+  | -- | Shows the dates that are in May, regardless of year.
+    DynFilterM5
+  | -- | Shows the dates that are in June, regardless of year.
+    DynFilterM6
+  | -- | Shows the dates that are in July, regardless of year.
+    DynFilterM7
+  | -- | Shows the dates that are in August, regardless of year.
+    DynFilterM8
+  | -- | Shows the dates that are in September, regardless of year.
+    DynFilterM9
+  | -- | Shows next month's dates.
+    DynFilterNextMonth
+  | -- | Shows next calendar quarter's dates.
+    DynFilterNextQuarter
+  | -- | Shows next week's dates, using Sunday as the first weekday.
+    DynFilterNextWeek
+  | -- | Shows next year's dates.
+    DynFilterNextYear
+  | -- | Common filter type not available.
+    DynFilterNull
+  | -- | Shows the dates that are in the 1st calendar quarter,
+    -- regardless of year.
+    DynFilterQ1
+  | -- | Shows the dates that are in the 2nd calendar quarter,
+    -- regardless of year.
+    DynFilterQ2
+  | -- | Shows the dates that are in the 3rd calendar quarter,
+    -- regardless of year.
+    DynFilterQ3
+  | -- | Shows the dates that are in the 4th calendar quarter,
+    -- regardless of year.
+    DynFilterQ4
+  | -- | Shows this month's dates.
+    DynFilterThisMonth
+  | -- | Shows this calendar quarter's dates.
+    DynFilterThisQuarter
+  | -- | Shows this week's dates, using Sunday as the first weekday.
+    DynFilterThisWeek
+  | -- | Shows this year's dates.
+    DynFilterThisYear
+  | -- | Shows today's dates.
+    DynFilterToday
+  | -- | Shows tomorrow's dates.
+    DynFilterTomorrow
+  | -- | Shows the dates between the beginning of the year and today, inclusive.
+    DynFilterYearToDate
+  | -- | Shows yesterday's dates.
+    DynFilterYesterday
   deriving (Eq, Show, Generic)
+
 instance NFData DynFilterType
 
 -- | AutoFilter temporarily hides rows based on a filter criteria,
@@ -277,20 +291,21 @@ instance NFData DynFilterType
 --
 -- See 18.3.1.2 "autoFilter (AutoFilter Settings)" (p. 1596)
 data AutoFilter = AutoFilter
-  { _afRef :: Maybe CellRef
-  , _afFilterColumns :: Map Int FilterColumn
-  } deriving (Eq, Show, Generic)
+  { _afRef :: Maybe CellRef,
+    _afFilterColumns :: Map Int FilterColumn
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData AutoFilter
 
 makeLenses ''AutoFilter
-
 
 {-------------------------------------------------------------------------------
   Default instances
 -------------------------------------------------------------------------------}
 
 instance Default AutoFilter where
-    def = AutoFilter Nothing M.empty
+  def = AutoFilter Nothing M.empty
 
 {-------------------------------------------------------------------------------
   Parsing
@@ -299,10 +314,12 @@ instance Default AutoFilter where
 instance FromCursor AutoFilter where
   fromCursor cur = do
     _afRef <- maybeAttribute "ref" cur
-    let _afFilterColumns = M.fromList $ cur $/ element (n_ "filterColumn") >=> \c -> do
-          colId <- fromAttribute "colId" c
-          fcol <- c $/ anyElement >=> fltColFromNode . node
-          return (colId, fcol)
+    let _afFilterColumns =
+          M.fromList $
+            cur $/ element (n_ "filterColumn") >=> \c -> do
+              colId <- fromAttribute "colId" c
+              fcol <- c $/ anyElement >=> fltColFromNode . node
+              return (colId, fcol)
     return AutoFilter {..}
 
 instance FromXenoNode AutoFilter where
@@ -343,8 +360,8 @@ instance FromXenoNode (Int, FilterColumn) where
                 else return $ CustomFiltersOr f1 f2
             _ ->
               Left $
-              "expected 1 or 2 custom filters but found " <>
-              T.pack (show $ length cfilters)
+                "expected 1 or 2 custom filters but found "
+                  <> T.pack (show $ length cfilters)
       dynamic =
         requireAndParse "dynamicFilter" . flip parseAttributes $ do
           _dfoType <- fromAttr "type"
@@ -353,7 +370,7 @@ instance FromXenoNode (Int, FilterColumn) where
           return $ DynamicFilter DynFilterOptions {..}
       icon =
         requireAndParse "iconFilter" . flip parseAttributes $
-        IconFilter <$> maybeAttr "iconId" <*> fromAttr "iconSet"
+          IconFilter <$> maybeAttr "iconId" <*> fromAttr "iconSet"
       top10 =
         requireAndParse "top10" . flip parseAttributes $ do
           top <- fromAttrDef "top" True
@@ -368,52 +385,56 @@ instance FromXenoNode (Int, FilterColumn) where
 instance FromXenoNode CustomFilter where
   fromXenoNode root =
     parseAttributes root $
-    CustomFilter <$> fromAttrDef "operator" FltrEqual <*> fromAttr "val"
+      CustomFilter <$> fromAttrDef "operator" FltrEqual <*> fromAttr "val"
 
 fltColFromNode :: Node -> [FilterColumn]
-fltColFromNode n | n `nodeElNameIs` (n_ "filters") = do
-                     let filterCriteria = cur $/ anyElement >=> fromCursor
-                     filterBlank <- fromAttributeDef "blank" DontFilterByBlank cur
-                     return $ Filters filterBlank filterCriteria
-                 | n `nodeElNameIs` (n_ "colorFilter") = do
-                     _cfoCellColor <- fromAttributeDef "cellColor" True cur
-                     _cfoDxfId <- maybeAttribute "dxfId" cur
-                     return $ ColorFilter ColorFilterOptions {..}
-                 | n `nodeElNameIs` (n_ "customFilters") = do
-                     isAnd <- fromAttributeDef "and" False cur
-                     let cFilters = cur $/ element (n_ "customFilter") >=> \c -> do
-                           op <- fromAttributeDef "operator" FltrEqual c
-                           val <- fromAttribute "val" c
-                           return $ CustomFilter op val
-                     case cFilters of
-                       [f] ->
-                         return $ ACustomFilter f
-                       [f1, f2] ->
-                         if isAnd
-                           then return $ CustomFiltersAnd f1 f2
-                           else return $ CustomFiltersOr f1 f2
-                       _ ->
-                         fail "bad custom filter"
-                 | n `nodeElNameIs` (n_ "dynamicFilter") = do
-                     _dfoType <- fromAttribute "type" cur
-                     _dfoVal <- maybeAttribute "val" cur
-                     _dfoMaxVal <- maybeAttribute "maxVal" cur
-                     return $ DynamicFilter DynFilterOptions{..}
-                 | n `nodeElNameIs` (n_ "iconFilter") = do
-                     iconId <- maybeAttribute "iconId" cur
-                     iconSet <- fromAttribute "iconSet" cur
-                     return $ IconFilter iconId iconSet
-                 | n `nodeElNameIs` (n_ "top10") = do
-                     top <- fromAttributeDef "top" True cur
-                     let percent = fromAttributeDef "percent" False cur
-                         val = fromAttribute "val" cur
-                         filterVal = maybeAttribute "filterVal" cur
-                     if top
-                       then fmap TopNFilter $
-                            EdgeFilterOptions <$> percent <*> val <*> filterVal
-                       else fmap BottomNFilter $
-                            EdgeFilterOptions <$> percent <*> val <*> filterVal
-                 | otherwise = fail "no matching nodes"
+fltColFromNode n
+  | n `nodeElNameIs` (n_ "filters") = do
+      let filterCriteria = cur $/ anyElement >=> fromCursor
+      filterBlank <- fromAttributeDef "blank" DontFilterByBlank cur
+      return $ Filters filterBlank filterCriteria
+  | n `nodeElNameIs` (n_ "colorFilter") = do
+      _cfoCellColor <- fromAttributeDef "cellColor" True cur
+      _cfoDxfId <- maybeAttribute "dxfId" cur
+      return $ ColorFilter ColorFilterOptions {..}
+  | n `nodeElNameIs` (n_ "customFilters") = do
+      isAnd <- fromAttributeDef "and" False cur
+      let cFilters =
+            cur $/ element (n_ "customFilter") >=> \c -> do
+              op <- fromAttributeDef "operator" FltrEqual c
+              val <- fromAttribute "val" c
+              return $ CustomFilter op val
+      case cFilters of
+        [f] ->
+          return $ ACustomFilter f
+        [f1, f2] ->
+          if isAnd
+            then return $ CustomFiltersAnd f1 f2
+            else return $ CustomFiltersOr f1 f2
+        _ ->
+          fail "bad custom filter"
+  | n `nodeElNameIs` (n_ "dynamicFilter") = do
+      _dfoType <- fromAttribute "type" cur
+      _dfoVal <- maybeAttribute "val" cur
+      _dfoMaxVal <- maybeAttribute "maxVal" cur
+      return $ DynamicFilter DynFilterOptions {..}
+  | n `nodeElNameIs` (n_ "iconFilter") = do
+      iconId <- maybeAttribute "iconId" cur
+      iconSet <- fromAttribute "iconSet" cur
+      return $ IconFilter iconId iconSet
+  | n `nodeElNameIs` (n_ "top10") = do
+      top <- fromAttributeDef "top" True cur
+      let percent = fromAttributeDef "percent" False cur
+          val = fromAttribute "val" cur
+          filterVal = maybeAttribute "filterVal" cur
+      if top
+        then
+          fmap TopNFilter $
+            EdgeFilterOptions <$> percent <*> val <*> filterVal
+        else
+          fmap BottomNFilter $
+            EdgeFilterOptions <$> percent <*> val <*> filterVal
+  | otherwise = fail "no matching nodes"
   where
     cur = fromNode n
 
@@ -431,30 +452,35 @@ instance FromXenoNode FilterCriterion where
             ("year" :: ByteString) ->
               DateGroupByYear <$> fromAttr "year"
             "month" ->
-              DateGroupByMonth <$> fromAttr "year"
-                               <*> fromAttr "month"
+              DateGroupByMonth
+                <$> fromAttr "year"
+                <*> fromAttr "month"
             "day" ->
-              DateGroupByDay <$> fromAttr "year"
-                             <*> fromAttr "month"
-                             <*> fromAttr "day"
+              DateGroupByDay
+                <$> fromAttr "year"
+                <*> fromAttr "month"
+                <*> fromAttr "day"
             "hour" ->
-              DateGroupByHour <$> fromAttr "year"
-                              <*> fromAttr "month"
-                              <*> fromAttr "day"
-                              <*> fromAttr "hour"
+              DateGroupByHour
+                <$> fromAttr "year"
+                <*> fromAttr "month"
+                <*> fromAttr "day"
+                <*> fromAttr "hour"
             "minute" ->
-              DateGroupByMinute <$> fromAttr "year"
-                                <*> fromAttr "month"
-                                <*> fromAttr "day"
-                                <*> fromAttr "hour"
-                                <*> fromAttr "minute"
+              DateGroupByMinute
+                <$> fromAttr "year"
+                <*> fromAttr "month"
+                <*> fromAttr "day"
+                <*> fromAttr "hour"
+                <*> fromAttr "minute"
             "second" ->
-              DateGroupBySecond <$> fromAttr "year"
-                                <*> fromAttr "month"
-                                <*> fromAttr "day"
-                                <*> fromAttr "hour"
-                                <*> fromAttr "minute"
-                                <*> fromAttr "second"
+              DateGroupBySecond
+                <$> fromAttr "year"
+                <*> fromAttr "month"
+                <*> fromAttr "day"
+                <*> fromAttr "hour"
+                <*> fromAttr "minute"
+                <*> fromAttr "second"
             _ -> toAttrParser . Left $ "Unexpected date grouping"
           return $ FilterDateGroup group
       _ -> Left "Bad FilterCriterion"
@@ -463,28 +489,33 @@ instance FromXenoNode FilterCriterion where
 filterCriterionFromNode :: Node -> [FilterCriterion]
 filterCriterionFromNode n
   | n `nodeElNameIs` (n_ "filter") = do
-    v <- fromAttribute "val" cur
-    return $ FilterValue v
+      v <- fromAttribute "val" cur
+      return $ FilterValue v
   | n `nodeElNameIs` (n_ "dateGroupItem") = do
-    g <- fromAttribute "dateTimeGrouping" cur
-    let year = fromAttribute "year" cur
-        month = fromAttribute "month" cur
-        day = fromAttribute "day" cur
-        hour = fromAttribute "hour" cur
-        minute = fromAttribute "minute" cur
-        second = fromAttribute "second" cur
-    FilterDateGroup <$>
-      case g of
-        "year" -> DateGroupByYear <$> year
-        "month" -> DateGroupByMonth <$> year <*> month
-        "day" -> DateGroupByDay <$> year <*> month <*> day
-        "hour" -> DateGroupByHour <$> year <*> month <*> day <*> hour
-        "minute" ->
-          DateGroupByMinute <$> year <*> month <*> day <*> hour <*> minute
-        "second" ->
-          DateGroupBySecond <$> year <*> month <*> day <*> hour <*> minute <*>
-          second
-        _ -> fail $ "unexpected dateTimeGrouping " ++ show (g :: Text)
+      g <- fromAttribute "dateTimeGrouping" cur
+      let year = fromAttribute "year" cur
+          month = fromAttribute "month" cur
+          day = fromAttribute "day" cur
+          hour = fromAttribute "hour" cur
+          minute = fromAttribute "minute" cur
+          second = fromAttribute "second" cur
+      FilterDateGroup
+        <$> case g of
+          "year" -> DateGroupByYear <$> year
+          "month" -> DateGroupByMonth <$> year <*> month
+          "day" -> DateGroupByDay <$> year <*> month <*> day
+          "hour" -> DateGroupByHour <$> year <*> month <*> day <*> hour
+          "minute" ->
+            DateGroupByMinute <$> year <*> month <*> day <*> hour <*> minute
+          "second" ->
+            DateGroupBySecond
+              <$> year
+              <*> month
+              <*> day
+              <*> hour
+              <*> minute
+              <*> second
+          _ -> fail $ "unexpected dateTimeGrouping " ++ show (g :: Text)
   | otherwise = fail "no matching nodes"
   where
     cur = fromNode n
@@ -600,17 +631,19 @@ instance ToElement AutoFilter where
       nm
       (catMaybes ["ref" .=? _afRef])
       [ elementList
-        (n_ "filterColumn")
-        ["colId" .= colId]
-        [fltColToElement fCol]
-      | (colId, fCol) <- M.toList _afFilterColumns
+          (n_ "filterColumn")
+          ["colId" .= colId]
+          [fltColToElement fCol]
+        | (colId, fCol) <- M.toList _afFilterColumns
       ]
 
 fltColToElement :: FilterColumn -> Element
 fltColToElement (Filters filterBlank filterCriteria) =
   let attrs = catMaybes ["blank" .=? justNonDef DontFilterByBlank filterBlank]
-  in elementList
-     (n_ "filters") attrs $ map filterCriterionToElement filterCriteria
+   in elementList
+        (n_ "filters")
+        attrs
+        $ map filterCriterionToElement filterCriteria
 fltColToElement (ColorFilter opts) = toElement (n_ "colorFilter") opts
 fltColToElement (ACustomFilter f) =
   elementListSimple (n_ "customFilters") [toElement (n_ "customFilter") f]
@@ -626,15 +659,15 @@ fltColToElement (CustomFiltersAnd f1 f2) =
 fltColToElement (DynamicFilter opts) = toElement (n_ "dynamicFilter") opts
 fltColToElement (IconFilter iconId iconSet) =
   leafElement (n_ "iconFilter") $
-  ["iconSet" .= iconSet] ++ catMaybes ["iconId" .=? iconId]
+    ["iconSet" .= iconSet] ++ catMaybes ["iconId" .=? iconId]
 fltColToElement (BottomNFilter opts) = edgeFilter False opts
 fltColToElement (TopNFilter opts) = edgeFilter True opts
 
 edgeFilter :: Bool -> EdgeFilterOptions -> Element
 edgeFilter top EdgeFilterOptions {..} =
   leafElement (n_ "top10") $
-  ["top" .= top, "percent" .= _efoUsePercents, "val" .= _efoVal] ++
-  catMaybes ["filterVal" .=? _efoFilterVal]
+    ["top" .= top, "percent" .= _efoUsePercents, "val" .= _efoVal]
+      ++ catMaybes ["filterVal" .=? _efoFilterVal]
 
 filterCriterionToElement :: FilterCriterion -> Element
 filterCriterionToElement (FilterValue v) =
@@ -654,32 +687,32 @@ filterCriterionToElement (FilterDateGroup (DateGroupByDay y m d)) =
 filterCriterionToElement (FilterDateGroup (DateGroupByHour y m d h)) =
   leafElement
     (n_ "dateGroupItem")
-    [ "dateTimeGrouping" .= ("hour" :: Text)
-    , "year" .= y
-    , "month" .= m
-    , "day" .= d
-    , "hour" .= h
+    [ "dateTimeGrouping" .= ("hour" :: Text),
+      "year" .= y,
+      "month" .= m,
+      "day" .= d,
+      "hour" .= h
     ]
 filterCriterionToElement (FilterDateGroup (DateGroupByMinute y m d h mi)) =
   leafElement
     (n_ "dateGroupItem")
-    [ "dateTimeGrouping" .= ("minute" :: Text)
-    , "year" .= y
-    , "month" .= m
-    , "day" .= d
-    , "hour" .= h
-    , "minute" .= mi
+    [ "dateTimeGrouping" .= ("minute" :: Text),
+      "year" .= y,
+      "month" .= m,
+      "day" .= d,
+      "hour" .= h,
+      "minute" .= mi
     ]
 filterCriterionToElement (FilterDateGroup (DateGroupBySecond y m d h mi s)) =
   leafElement
     (n_ "dateGroupItem")
-    [ "dateTimeGrouping" .= ("second" :: Text)
-    , "year" .= y
-    , "month" .= m
-    , "day" .= d
-    , "hour" .= h
-    , "minute" .= mi
-    , "second" .= s
+    [ "dateTimeGrouping" .= ("second" :: Text),
+      "year" .= y,
+      "month" .= m,
+      "day" .= d,
+      "hour" .= h,
+      "minute" .= mi,
+      "second" .= s
     ]
 
 instance ToElement CustomFilter where
@@ -701,13 +734,13 @@ instance ToAttrVal FilterByBlank where
 instance ToElement ColorFilterOptions where
   toElement nm ColorFilterOptions {..} =
     leafElement nm $
-    catMaybes ["cellColor" .=? justFalse _cfoCellColor, "dxfId" .=? _cfoDxfId]
+      catMaybes ["cellColor" .=? justFalse _cfoCellColor, "dxfId" .=? _cfoDxfId]
 
 instance ToElement DynFilterOptions where
   toElement nm DynFilterOptions {..} =
     leafElement nm $
-    ["type" .= _dfoType] ++
-    catMaybes ["val" .=? _dfoVal, "maxVal" .=? _dfoMaxVal]
+      ["type" .= _dfoType]
+        ++ catMaybes ["val" .=? _dfoVal, "maxVal" .=? _dfoMaxVal]
 
 instance ToAttrVal DynFilterType where
   toAttrVal DynFilterAboveAverage = "aboveAverage"

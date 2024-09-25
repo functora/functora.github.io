@@ -1,33 +1,33 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+
 module PivotTableTests
-  ( tests
-  , testPivotTable
-  , testPivotSrcCells
-  ) where
+  ( tests,
+    testPivotTable,
+    testPivotSrcCells,
+  )
+where
 
 #ifdef USE_MICROLENS
 import Lens.Micro
 #else
 import Control.Lens
 #endif
-import Data.ByteString.Lazy (ByteString)
-import qualified Data.Map as M
-import Data.Maybe (mapMaybe)
-import qualified Data.Text as T
-import Test.Tasty (testGroup, TestTree)
-import Test.Tasty.HUnit (testCase)
-import Text.RawString.QQ
-import Text.XML
-
 import Codec.Xlsx
 import Codec.Xlsx.Parser.Internal.PivotTable
 import Codec.Xlsx.Types.Internal (unsafeRefId)
 import Codec.Xlsx.Types.PivotTable.Internal
 import Codec.Xlsx.Writer.Internal.PivotTable
-
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.Map as M
+import Data.Maybe (mapMaybe)
+import qualified Data.Text as T
 import Diff
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.HUnit (testCase)
+import Text.RawString.QQ
+import Text.XML
 
 tests :: TestTree
 tests =
@@ -35,11 +35,11 @@ tests =
     "Pivot table tests"
     [ testCase "proper pivot table rendering" $ do
         let ptFiles = renderPivotTableFiles testPivotSrcCells 3 testPivotTable
-        parseLBS_ def (pvtfTable ptFiles) @==?
-          stripContentSpaces (parseLBS_ def testPivotTableDefinition)
-        parseLBS_ def (pvtfCacheDefinition ptFiles) @==?
-          stripContentSpaces (parseLBS_ def testPivotCacheDefinition)
-    , testCase "proper pivot table parsing" $ do
+        parseLBS_ def (pvtfTable ptFiles)
+          @==? stripContentSpaces (parseLBS_ def testPivotTableDefinition)
+        parseLBS_ def (pvtfCacheDefinition ptFiles)
+          @==? stripContentSpaces (parseLBS_ def testPivotCacheDefinition),
+      testCase "proper pivot table parsing" $ do
         let sheetName = "Sheet1"
             ref = CellRef "A1:D5"
             forCacheId (CacheId 3) = Just (sheetName, ref, testPivotCacheFields)
@@ -47,49 +47,49 @@ tests =
             -- fields with numeric values go into cache records
             testPivotCacheFields' =
               [ if cfName cf == PivotFieldName "Color"
-                then cf
-                else cf {cfItems = []}
-              | cf <- testPivotCacheFields
+                  then cf
+                  else cf {cfItems = []}
+                | cf <- testPivotCacheFields
               ]
-        Just (sheetName, ref, testPivotCacheFields', Just (unsafeRefId 1)) @==?
-          parseCache testPivotCacheDefinition
-        Just testPivotTable @==?
-          parsePivotTable forCacheId testPivotTableDefinition
+        Just (sheetName, ref, testPivotCacheFields', Just (unsafeRefId 1))
+          @==? parseCache testPivotCacheDefinition
+        Just testPivotTable
+          @==? parsePivotTable forCacheId testPivotTableDefinition
     ]
 
 testPivotTable :: PivotTable
 testPivotTable =
   PivotTable
-  { _pvtName = "PivotTable1"
-  , _pvtDataCaption = "Values"
-  , _pvtLocation = CellRef "A3:D12"
-  , _pvtSrcRef = CellRef "A1:D5"
-  , _pvtSrcSheet = "Sheet1"
-  , _pvtRowFields = [FieldPosition colorField, DataPosition]
-  , _pvtColumnFields = [FieldPosition yearField]
-  , _pvtDataFields =
-      [ DataField
-        { _dfName = "Sum of field Price"
-        , _dfField = priceField
-        , _dfFunction = ConsolidateSum
-        }
-      , DataField
-        { _dfName = "Sum of field Count"
-        , _dfField = countField
-        , _dfFunction = ConsolidateSum
-        }
-      ]
-  , _pvtFields =
-      [ PivotFieldInfo (Just $ colorField) False FieldSortAscending [CellText "green"]
-      , PivotFieldInfo (Just $ yearField) True FieldSortManual []
-      , PivotFieldInfo (Just $ priceField) False FieldSortManual []
-      , PivotFieldInfo (Just $ countField) False FieldSortManual []
-      ]
-  , _pvtRowGrandTotals = True
-  , _pvtColumnGrandTotals = False
-  , _pvtOutline = False
-  , _pvtOutlineData = False
-  }
+    { _pvtName = "PivotTable1",
+      _pvtDataCaption = "Values",
+      _pvtLocation = CellRef "A3:D12",
+      _pvtSrcRef = CellRef "A1:D5",
+      _pvtSrcSheet = "Sheet1",
+      _pvtRowFields = [FieldPosition colorField, DataPosition],
+      _pvtColumnFields = [FieldPosition yearField],
+      _pvtDataFields =
+        [ DataField
+            { _dfName = "Sum of field Price",
+              _dfField = priceField,
+              _dfFunction = ConsolidateSum
+            },
+          DataField
+            { _dfName = "Sum of field Count",
+              _dfField = countField,
+              _dfFunction = ConsolidateSum
+            }
+        ],
+      _pvtFields =
+        [ PivotFieldInfo (Just $ colorField) False FieldSortAscending [CellText "green"],
+          PivotFieldInfo (Just $ yearField) True FieldSortManual [],
+          PivotFieldInfo (Just $ priceField) False FieldSortManual [],
+          PivotFieldInfo (Just $ countField) False FieldSortManual []
+        ],
+      _pvtRowGrandTotals = True,
+      _pvtColumnGrandTotals = False,
+      _pvtOutline = False,
+      _pvtOutlineData = False
+    }
   where
     colorField = PivotFieldName "Color"
     yearField = PivotFieldName "Year"
@@ -99,35 +99,36 @@ testPivotTable =
 testPivotSrcCells :: CellMap
 testPivotSrcCells =
   M.fromList $
-  concat
-    [ [((row, col), def & cellValue ?~ v) | (col, v) <- zip [1 ..] cells]
-    | (row, cells) <- zip [1 ..] cellMap
-    ]
+    concat
+      [ [((row, col), def & cellValue ?~ v) | (col, v) <- zip [1 ..] cells]
+        | (row, cells) <- zip [1 ..] cellMap
+      ]
   where
     cellMap =
-      [ [CellText "Color", CellText "Year", CellText "Price", CellText "Count"]
-      , [CellText "green", CellDouble 2012, CellDouble 12.23, CellDouble 17]
-      , [CellText "white", CellDouble 2011, CellDouble 73.99, CellDouble 21]
-      , [CellText "red", CellDouble 2012, CellDouble 10.19, CellDouble 172]
-      , [CellText "white", CellDouble 2012, CellDouble 34.99, CellDouble 49]
+      [ [CellText "Color", CellText "Year", CellText "Price", CellText "Count"],
+        [CellText "green", CellDouble 2012, CellDouble 12.23, CellDouble 17],
+        [CellText "white", CellDouble 2011, CellDouble 73.99, CellDouble 21],
+        [CellText "red", CellDouble 2012, CellDouble 10.19, CellDouble 172],
+        [CellText "white", CellDouble 2012, CellDouble 34.99, CellDouble 49]
       ]
 
 testPivotCacheFields :: [CacheField]
 testPivotCacheFields =
   [ CacheField
       (PivotFieldName "Color")
-      [CellText "green", CellText "white", CellText "red"]
-  , CacheField (PivotFieldName "Year") [CellDouble 2012, CellDouble 2011]
-  , CacheField
+      [CellText "green", CellText "white", CellText "red"],
+    CacheField (PivotFieldName "Year") [CellDouble 2012, CellDouble 2011],
+    CacheField
       (PivotFieldName "Price")
-      [CellDouble 12.23, CellDouble 73.99, CellDouble 10.19, CellDouble 34.99]
-  , CacheField
+      [CellDouble 12.23, CellDouble 73.99, CellDouble 10.19, CellDouble 34.99],
+    CacheField
       (PivotFieldName "Count")
       [CellDouble 17, CellDouble 21, CellDouble 172, CellDouble 49]
   ]
 
 testPivotTableDefinition :: ByteString
-testPivotTableDefinition = [r|
+testPivotTableDefinition =
+  [r|
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><!--Pivot table generated by xlsx-->
 <pivotTableDefinition xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" name="PivotTable1" cacheId="3" dataOnRows="1" colGrandTotals="0" dataCaption="Values">
   <location ref="A3:D12" firstHeaderRow="1" firstDataRow="2" firstDataCol="1"/>
@@ -155,7 +156,8 @@ testPivotTableDefinition = [r|
 |]
 
 testPivotCacheDefinition :: ByteString
-testPivotCacheDefinition = [r|
+testPivotCacheDefinition =
+  [r|
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><!--Pivot cache definition generated by xlsx-->
 <pivotCacheDefinition xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
     xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"

@@ -1,48 +1,53 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveGeneric #-}
-module Codec.Xlsx.Types.PivotTable
-  ( PivotTable(..)
-  , PivotFieldName(..)
-  , PivotFieldInfo(..)
-  , FieldSortType(..)
-  , PositionedField(..)
-  , DataField(..)
-  , ConsolidateFunction(..)
-  ) where
 
+module Codec.Xlsx.Types.PivotTable
+  ( PivotTable (..),
+    PivotFieldName (..),
+    PivotFieldInfo (..),
+    FieldSortType (..),
+    PositionedField (..),
+    DataField (..),
+    ConsolidateFunction (..),
+  )
+where
+
+import Codec.Xlsx.Parser.Internal
+import Codec.Xlsx.Types.Common
+import Codec.Xlsx.Writer.Internal
 import Control.Arrow (first)
 import Control.DeepSeq (NFData)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-import Codec.Xlsx.Types.Common
-import Codec.Xlsx.Parser.Internal
-import Codec.Xlsx.Writer.Internal
-
 data PivotTable = PivotTable
-  { _pvtName :: Text
-  , _pvtDataCaption :: Text
-  , _pvtRowFields :: [PositionedField]
-  , _pvtColumnFields :: [PositionedField]
-  , _pvtDataFields :: [DataField]
-  , _pvtFields :: [PivotFieldInfo]
-  , _pvtRowGrandTotals :: Bool
-  , _pvtColumnGrandTotals :: Bool
-  , _pvtOutline :: Bool
-  , _pvtOutlineData :: Bool
-  , _pvtLocation :: CellRef
-  , _pvtSrcSheet :: Text
-  , _pvtSrcRef :: Range
-  } deriving (Eq, Show, Generic)
+  { _pvtName :: Text,
+    _pvtDataCaption :: Text,
+    _pvtRowFields :: [PositionedField],
+    _pvtColumnFields :: [PositionedField],
+    _pvtDataFields :: [DataField],
+    _pvtFields :: [PivotFieldInfo],
+    _pvtRowGrandTotals :: Bool,
+    _pvtColumnGrandTotals :: Bool,
+    _pvtOutline :: Bool,
+    _pvtOutlineData :: Bool,
+    _pvtLocation :: CellRef,
+    _pvtSrcSheet :: Text,
+    _pvtSrcRef :: Range
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData PivotTable
 
 data PivotFieldInfo = PivotFieldInfo
-  { _pfiName :: Maybe PivotFieldName
-  , _pfiOutline :: Bool
-  , _pfiSortType :: FieldSortType
-  , _pfiHiddenItems :: [CellValue]
-  } deriving (Eq, Show, Generic)
+  { _pfiName :: Maybe PivotFieldName,
+    _pfiOutline :: Bool,
+    _pfiSortType :: FieldSortType,
+    _pfiHiddenItems :: [CellValue]
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData PivotFieldInfo
 
 -- | Sort orders that can be applied to fields in a PivotTable
@@ -53,24 +58,29 @@ data FieldSortType
   | FieldSortDescending
   | FieldSortManual
   deriving (Eq, Ord, Show, Generic)
+
 instance NFData FieldSortType
 
-newtype PivotFieldName =
-  PivotFieldName Text
+newtype PivotFieldName
+  = PivotFieldName Text
   deriving (Eq, Ord, Show, Generic)
+
 instance NFData PivotFieldName
 
 data PositionedField
   = DataPosition
   | FieldPosition PivotFieldName
   deriving (Eq, Ord, Show, Generic)
+
 instance NFData PositionedField
 
 data DataField = DataField
-  { _dfField :: PivotFieldName
-  , _dfName :: Text
-  , _dfFunction :: ConsolidateFunction
-  } deriving (Eq, Show, Generic)
+  { _dfField :: PivotFieldName,
+    _dfName :: Text,
+    _dfFunction :: ConsolidateFunction
+  }
+  deriving (Eq, Show, Generic)
+
 instance NFData DataField
 
 -- | Data consolidation functions specified by the user and used to
@@ -79,36 +89,37 @@ instance NFData DataField
 -- See 18.18.17 "ST_DataConsolidateFunction (Data Consolidation
 -- Functions)" (p.  2447)
 data ConsolidateFunction
-  = ConsolidateAverage
-    -- ^ The average of the values.
-  | ConsolidateCount
-    -- ^ The number of data values. The Count consolidation function
+  = -- | The average of the values.
+    ConsolidateAverage
+  | -- | The number of data values. The Count consolidation function
     -- works the same as the COUNTA worksheet function.
-  | ConsolidateCountNums
-    -- ^ The number of data values that are numbers. The Count Nums
+    ConsolidateCount
+  | -- | The number of data values that are numbers. The Count Nums
     -- consolidation function works the same as the COUNT worksheet
     -- function.
-  | ConsolidateMaximum
-    -- ^ The largest value.
-  | ConsolidateMinimum
-    -- ^ The smallest value.
-  | ConsolidateProduct
-    -- ^ The product of the values.
-  | ConsolidateStdDev
-    -- ^ An estimate of the standard deviation of a population, where
+    ConsolidateCountNums
+  | -- | The largest value.
+    ConsolidateMaximum
+  | -- | The smallest value.
+    ConsolidateMinimum
+  | -- | The product of the values.
+    ConsolidateProduct
+  | -- | An estimate of the standard deviation of a population, where
     -- the sample is a subset of the entire population.
-  | ConsolidateStdDevP
-    -- ^ The standard deviation of a population, where the population
+    ConsolidateStdDev
+  | -- | The standard deviation of a population, where the population
     -- is all of the data to be summarized.
-  | ConsolidateSum
-    -- ^ The sum of the values.
-  | ConsolidateVariance
-    -- ^ An estimate of the variance of a population, where the sample
+    ConsolidateStdDevP
+  | -- | The sum of the values.
+    ConsolidateSum
+  | -- | An estimate of the variance of a population, where the sample
     -- is a subset of the entire population.
-  | ConsolidateVarP
-    -- ^ The variance of a population, where the population is all of
+    ConsolidateVariance
+  | -- | The variance of a population, where the population is all of
     -- the data to be summarized.
+    ConsolidateVarP
   deriving (Eq, Show, Generic)
+
 instance NFData ConsolidateFunction
 
 {-------------------------------------------------------------------------------

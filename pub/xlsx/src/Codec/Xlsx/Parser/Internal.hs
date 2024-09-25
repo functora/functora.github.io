@@ -4,30 +4,34 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Codec.Xlsx.Parser.Internal
-  ( ParseException(..)
-  , n_
-  , nodeElNameIs
-  , FromCursor(..)
-  , FromAttrVal(..)
-  , fromAttribute
-  , fromAttributeDef
-  , maybeAttribute
-  , fromElementValue
-  , maybeElementValue
-  , maybeElementValueDef
-  , maybeBoolElementValue
-  , maybeFromElement
-  , attrValIs
-  , contentOrEmpty
-  , readSuccess
-  , readFailure
-  , invalidText
-  , defaultReadFailure
-  , module Codec.Xlsx.Parser.Internal.Util
-  , module Codec.Xlsx.Parser.Internal.Fast
-  ) where
 
+module Codec.Xlsx.Parser.Internal
+  ( ParseException (..),
+    n_,
+    nodeElNameIs,
+    FromCursor (..),
+    FromAttrVal (..),
+    fromAttribute,
+    fromAttributeDef,
+    maybeAttribute,
+    fromElementValue,
+    maybeElementValue,
+    maybeElementValueDef,
+    maybeBoolElementValue,
+    maybeFromElement,
+    attrValIs,
+    contentOrEmpty,
+    readSuccess,
+    readFailure,
+    invalidText,
+    defaultReadFailure,
+    module Codec.Xlsx.Parser.Internal.Util,
+    module Codec.Xlsx.Parser.Internal.Fast,
+  )
+where
+
+import Codec.Xlsx.Parser.Internal.Fast
+import Codec.Xlsx.Parser.Internal.Util
 import Control.Exception (Exception)
 import Data.Maybe
 import Data.Text (Text)
@@ -38,71 +42,69 @@ import GHC.Generics (Generic)
 import Text.XML
 import Text.XML.Cursor
 
-import Codec.Xlsx.Parser.Internal.Fast
-import Codec.Xlsx.Parser.Internal.Util
-
 data ParseException = ParseException String
-                    deriving (Show, Typeable, Generic)
+  deriving (Show, Typeable, Generic)
 
 instance Exception ParseException
 
 nodeElNameIs :: Node -> Name -> Bool
 nodeElNameIs (NodeElement el) name = elementName el == name
-nodeElNameIs _ _                   = False
+nodeElNameIs _ _ = False
 
 class FromCursor a where
-    fromCursor :: Cursor -> [a]
+  fromCursor :: Cursor -> [a]
 
 class FromAttrVal a where
-    fromAttrVal :: T.Reader a
+  fromAttrVal :: T.Reader a
 
 instance FromAttrVal Text where
-    fromAttrVal = readSuccess
+  fromAttrVal = readSuccess
 
 instance FromAttrVal Int where
-    fromAttrVal = T.signed T.decimal
+  fromAttrVal = T.signed T.decimal
 
 instance FromAttrVal Integer where
-    fromAttrVal = T.signed T.decimal
+  fromAttrVal = T.signed T.decimal
 
 instance FromAttrVal Double where
-    fromAttrVal = T.rational
+  fromAttrVal = T.rational
 
 instance FromAttrVal Bool where
-    fromAttrVal x | x == "1" || x == "true"  = readSuccess True
-                  | x == "0" || x == "false" = readSuccess False
-                  | otherwise                = defaultReadFailure
+  fromAttrVal x
+    | x == "1" || x == "true" = readSuccess True
+    | x == "0" || x == "false" = readSuccess False
+    | otherwise = defaultReadFailure
 
 -- | required attribute parsing
-fromAttribute :: FromAttrVal a => Name -> Cursor -> [a]
+fromAttribute :: (FromAttrVal a) => Name -> Cursor -> [a]
 fromAttribute name cursor =
-    attribute name cursor >>= runReader fromAttrVal
+  attribute name cursor >>= runReader fromAttrVal
 
 -- | parsing optional attributes with defaults
-fromAttributeDef :: FromAttrVal a => Name -> a -> Cursor -> [a]
+fromAttributeDef :: (FromAttrVal a) => Name -> a -> Cursor -> [a]
 fromAttributeDef name defVal cursor =
-    case attribute name cursor of
-      [attr] -> runReader fromAttrVal attr
-      _      -> [defVal]
+  case attribute name cursor of
+    [attr] -> runReader fromAttrVal attr
+    _ -> [defVal]
 
 -- | parsing optional attributes
-maybeAttribute :: FromAttrVal a => Name -> Cursor -> [Maybe a]
+maybeAttribute :: (FromAttrVal a) => Name -> Cursor -> [Maybe a]
 maybeAttribute name cursor =
-    case attribute name cursor of
-      [attr] -> Just <$> runReader fromAttrVal attr
-      _ -> [Nothing]
+  case attribute name cursor of
+    [attr] -> Just <$> runReader fromAttrVal attr
+    _ -> [Nothing]
 
-fromElementValue :: FromAttrVal a => Name -> Cursor -> [a]
+fromElementValue :: (FromAttrVal a) => Name -> Cursor -> [a]
 fromElementValue name cursor =
-    cursor $/ element name >=> fromAttribute "val"
+  cursor $/ element name >=> fromAttribute "val"
 
-maybeElementValue :: FromAttrVal a => Name -> Cursor -> [Maybe a]
+maybeElementValue :: (FromAttrVal a) => Name -> Cursor -> [Maybe a]
 maybeElementValue name cursor =
   case cursor $/ element name of
     [cursor'] -> maybeAttribute "val" cursor'
     _ -> [Nothing]
 
-maybeElementValueDef :: FromAttrVal a => Name -> a -> Cursor -> [Maybe a]
+maybeElementValueDef :: (FromAttrVal a) => Name -> a -> Cursor -> [Maybe a]
 maybeElementValueDef name defVal cursor =
   case cursor $/ element name of
     [cursor'] -> Just . fromMaybe defVal <$> maybeAttribute "val" cursor'
@@ -111,7 +113,7 @@ maybeElementValueDef name defVal cursor =
 maybeBoolElementValue :: Name -> Cursor -> [Maybe Bool]
 maybeBoolElementValue name cursor = maybeElementValueDef name True cursor
 
-maybeFromElement :: FromCursor a => Name -> Cursor -> [Maybe a]
+maybeFromElement :: (FromCursor a) => Name -> Cursor -> [Maybe a]
 maybeFromElement name cursor = case cursor $/ element name of
   [cursor'] -> Just <$> fromCursor cursor'
   _ -> [Nothing]
@@ -136,7 +138,7 @@ readFailure :: Text -> Either String (a, Text)
 readFailure = Left . T.unpack
 
 invalidText :: Text -> Text -> Either String (a, Text)
-invalidText what txt = readFailure $ T.concat ["Invalid ", what, ": '", txt , "'"]
+invalidText what txt = readFailure $ T.concat ["Invalid ", what, ": '", txt, "'"]
 
 defaultReadFailure :: Either String (a, Text)
 defaultReadFailure = Left "invalid text"
@@ -148,8 +150,9 @@ runReader reader t = case reader t of
 
 -- | Add sml namespace to name
 n_ :: Text -> Name
-n_ x = Name
-  { nameLocalName = x
-  , nameNamespace = Just "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-  , namePrefix = Just "n"
-  }
+n_ x =
+  Name
+    { nameLocalName = x,
+      nameNamespace = Just "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      namePrefix = Just "n"
+    }

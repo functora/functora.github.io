@@ -34,8 +34,8 @@ with pkgs; let
   ormoluFormat = pkgs.writeShellApplication {
     name = "ormolu-format";
     text = ''
-      ${ormolu}/bin/ormolu --mode inplace \
-        "$(find . -name '*.hs' -not -path './dist*')"
+      find . -name '*.hs' -not -path './dist*' -print0 | \
+        xargs -0 ${ormolu}/bin/ormolu --mode inplace
     '';
   };
   ormoluTest = pkgs.writeShellScriptBin "ormolu-test" ''

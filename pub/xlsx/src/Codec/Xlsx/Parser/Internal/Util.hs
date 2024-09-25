@@ -1,17 +1,18 @@
 module Codec.Xlsx.Parser.Internal.Util
-  ( boolean
-  , eitherBoolean
-  , decimal
-  , eitherDecimal
-  , rational
-  , eitherRational
-  ) where
+  ( boolean,
+    eitherBoolean,
+    decimal,
+    eitherDecimal,
+    rational,
+    eitherRational,
+  )
+where
 
-import Data.Text (Text)
 import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail as F
+import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
-import qualified Control.Monad.Fail as F
 
 decimal :: (MonadFail m, Integral a) => Text -> m a
 decimal = fromEither . eitherDecimal
@@ -34,9 +35,9 @@ boolean = fromEither . eitherBoolean
 
 eitherBoolean :: Text -> Either String Bool
 eitherBoolean t = case T.unpack $ T.strip t of
-    "true"  -> Right True
-    "false" -> Right False
-    _       -> Left $ "invalid boolean: " ++ show t
+  "true" -> Right True
+  "false" -> Right False
+  _ -> Left $ "invalid boolean: " ++ show t
 
 fromEither :: (MonadFail m) => Either String b -> m b
 fromEither (Left a) = F.fail a

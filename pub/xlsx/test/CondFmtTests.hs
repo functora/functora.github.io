@@ -2,18 +2,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module CondFmtTests
-  ( tests
-  ) where
-
-import Test.Tasty (testGroup, TestTree)
-import Test.Tasty.SmallCheck (testProperty)
+  ( tests,
+  )
+where
 
 import Codec.Xlsx
 import Codec.Xlsx.Parser.Internal
 import Codec.Xlsx.Writer.Internal
-
 import Common
 import Test.SmallCheck.Series.Instances ()
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.SmallCheck (testProperty)
 
 tests :: TestTree
 tests =

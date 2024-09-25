@@ -1,66 +1,69 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 
 module Codec.Xlsx.Types.Common
-  ( CellRef(..)
-  , RowCoord(..)
-  , ColumnCoord(..)
-  , CellCoord
-  , RangeCoord
-  , mapBoth
-  , col2coord
-  , coord2col
-  , row2coord
-  , coord2row
-  , singleCellRef
-  , singleCellRef'
-  , fromSingleCellRef
-  , fromSingleCellRef'
-  , fromSingleCellRefNoting
-  , escapeRefSheetName
-  , unEscapeRefSheetName
-  , mkForeignSingleCellRef
-  , fromForeignSingleCellRef
-  , Range
-  , mkRange
-  , mkRange'
-  , mkForeignRange
-  , fromRange
-  , fromRange'
-  , fromForeignRange
-  , SqRef(..)
-  , XlsxText(..)
-  , xlsxTextToCellValue
-  , Formula(..)
-  , CellValue(..)
-  , ErrorType(..)
-  , DateBase(..)
-  , dateFromNumber
-  , dateToNumber
-  , int2col
-  , col2int
-  , columnIndexToText
-  , textToColumnIndex
-  -- ** prisms
-  , _XlsxText
-  , _XlsxRichText
-  , _CellText
-  , _CellDouble
-  , _CellBool
-  , _CellRich
-  , _CellError
-  , RowIndex(..)
-  , ColumnIndex(..)
-  ) where
+  ( CellRef (..),
+    RowCoord (..),
+    ColumnCoord (..),
+    CellCoord,
+    RangeCoord,
+    mapBoth,
+    col2coord,
+    coord2col,
+    row2coord,
+    coord2row,
+    singleCellRef,
+    singleCellRef',
+    fromSingleCellRef,
+    fromSingleCellRef',
+    fromSingleCellRefNoting,
+    escapeRefSheetName,
+    unEscapeRefSheetName,
+    mkForeignSingleCellRef,
+    fromForeignSingleCellRef,
+    Range,
+    mkRange,
+    mkRange',
+    mkForeignRange,
+    fromRange,
+    fromRange',
+    fromForeignRange,
+    SqRef (..),
+    XlsxText (..),
+    xlsxTextToCellValue,
+    Formula (..),
+    CellValue (..),
+    ErrorType (..),
+    DateBase (..),
+    dateFromNumber,
+    dateToNumber,
+    int2col,
+    col2int,
+    columnIndexToText,
+    textToColumnIndex,
 
-import GHC.Generics (Generic)
+    -- ** prisms
+    _XlsxText,
+    _XlsxRichText,
+    _CellText,
+    _CellDouble,
+    _CellBool,
+    _CellRich,
+    _CellError,
+    RowIndex (..),
+    ColumnIndex (..),
+  )
+where
 
+import Codec.Xlsx.Parser.Internal
+import Codec.Xlsx.Types.RichText
+import Codec.Xlsx.Writer.Internal
 import Control.Applicative (liftA2)
 import Control.Arrow
 import Control.DeepSeq (NFData)
@@ -68,22 +71,19 @@ import Control.Monad (forM, guard)
 import Data.Bifunctor (bimap)
 import qualified Data.ByteString as BS
 import Data.Char
-import Data.Maybe (isJust, fromMaybe)
 import Data.Function ((&))
 import Data.Ix (inRange)
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Time.Calendar (Day, addDays, diffDays, fromGregorian)
-import Data.Time.Clock (UTCTime(UTCTime), picosecondsToDiffTime)
+import Data.Time.Clock (UTCTime (UTCTime), picosecondsToDiffTime)
+import GHC.Generics (Generic)
 import Safe
 import Text.XML
 import Text.XML.Cursor
-
-import Codec.Xlsx.Parser.Internal
-import Codec.Xlsx.Types.RichText
-import Codec.Xlsx.Writer.Internal
 #ifdef USE_MICROLENS
 import Lens.Micro
 import Lens.Micro.Internal
@@ -96,34 +96,42 @@ import Control.Lens(makePrisms)
 
 newtype RowIndex = RowIndex {unRowIndex :: Int}
   deriving (Eq, Ord, Show, Read, Generic, Num, Real, Enum, Integral)
+
 newtype ColumnIndex = ColumnIndex {unColumnIndex :: Int}
   deriving (Eq, Ord, Show, Read, Generic, Num, Real, Enum, Integral)
+
 instance NFData RowIndex
+
 instance NFData ColumnIndex
 
 instance ToAttrVal RowIndex where
   toAttrVal = toAttrVal . unRowIndex
 
-{-# DEPRECATED int2col
-    "this function will be removed in an upcoming release, use columnIndexToText instead." #-}
+{-# DEPRECATED
+  int2col
+  "this function will be removed in an upcoming release, use columnIndexToText instead."
+  #-}
 int2col :: ColumnIndex -> Text
 int2col = columnIndexToText
 
-{-# DEPRECATED col2int
-    "this function will be removed in an upcoming release, use textToColumnIndex instead." #-}
+{-# DEPRECATED
+  col2int
+  "this function will be removed in an upcoming release, use textToColumnIndex instead."
+  #-}
 col2int :: Text -> ColumnIndex
 col2int = textToColumnIndex
 
 -- | convert column number (starting from 1) to its textual form (e.g. 3 -> \"C\")
 columnIndexToText :: ColumnIndex -> Text
 columnIndexToText = T.pack . reverse . map int2let . base26 . unColumnIndex
-    where
-        int2let 0 = 'Z'
-        int2let x = chr $ (x - 1) + ord 'A'
-        base26  0 = []
-        base26  i = let i' = (i `mod` 26)
-                        i'' = if i' == 0 then 26 else i'
-                    in seq i' (i' : base26 ((i - i'') `div` 26))
+  where
+    int2let 0 = 'Z'
+    int2let x = chr $ (x - 1) + ord 'A'
+    base26 0 = []
+    base26 i =
+      let i' = (i `mod` 26)
+          i'' = if i' == 0 then 26 else i'
+       in seq i' (i' : base26 ((i - i'') `div` 26))
 
 rowIndexToText :: RowIndex -> Text
 rowIndexToText = T.pack . show . unRowIndex
@@ -131,8 +139,8 @@ rowIndexToText = T.pack . show . unRowIndex
 -- | reverse of 'columnIndexToText'
 textToColumnIndex :: Text -> ColumnIndex
 textToColumnIndex = ColumnIndex . T.foldl' (\i c -> i * 26 + let2int c) 0
-    where
-        let2int c = 1 + ord c - ord 'A'
+  where
+    let2int c = 1 + ord c - ord 'A'
 
 textToRowIndex :: Text -> RowIndex
 textToRowIndex = RowIndex . read . T.unpack
@@ -144,7 +152,9 @@ textToRowIndex = RowIndex . read . T.unpack
 -- or a sheet in another workbook (separate .xlsx file, not implemented).
 newtype CellRef = CellRef
   { unCellRef :: Text
-  } deriving (Eq, Ord, Show, Generic)
+  }
+  deriving (Eq, Ord, Show, Generic)
+
 instance NFData CellRef
 
 -- | A helper type for coordinates to carry the intent of them being relative or absolute (preceded by '$'):
@@ -154,12 +164,14 @@ data RowCoord
   = RowAbs !RowIndex
   | RowRel !RowIndex
   deriving (Eq, Ord, Show, Read, Generic)
+
 instance NFData RowCoord
 
 data ColumnCoord
   = ColumnAbs !ColumnIndex
   | ColumnRel !ColumnIndex
   deriving (Eq, Ord, Show, Read, Generic)
+
 instance NFData ColumnCoord
 
 type CellCoord = (RowCoord, ColumnCoord)
@@ -179,7 +191,7 @@ coord2col (ColumnRel c) = columnIndexToText c
 col2coord :: Text -> ColumnCoord
 col2coord t =
   let t' = T.stripPrefix "$" t
-    in mkColumnCoord (isJust t') (textToColumnIndex (fromMaybe t t'))
+   in mkColumnCoord (isJust t') (textToColumnIndex (fromMaybe t t'))
 
 coord2row :: RowCoord -> Text
 coord2row (RowAbs c) = "$" <> coord2row (RowRel c)
@@ -188,7 +200,7 @@ coord2row (RowRel c) = rowIndexToText c
 row2coord :: Text -> RowCoord
 row2coord t =
   let t' = T.stripPrefix "$" t
-    in mkRowCoord (isJust t') (textToRowIndex (fromMaybe t t'))
+   in mkRowCoord (isJust t') (textToRowIndex (fromMaybe t t'))
 
 -- | Unwrap a Coord into an abstract Int coordinate
 unRowCoord :: RowCoord -> RowIndex
@@ -223,7 +235,7 @@ singleCellRefRaw (row, col) = T.concat [columnIndexToText col, rowIndexToText ro
 
 singleCellRefRaw' :: CellCoord -> Text
 singleCellRefRaw' (row, col) =
-    coord2col col <> coord2row row
+  coord2col col <> coord2row row
 
 -- | Converse function to 'singleCellRef'
 -- Ignores a potential foreign sheet prefix.
@@ -240,21 +252,22 @@ fromSingleCellRefRaw =
   fmap (first unRowCoord . second unColumnCoord) . fromSingleCellRefRaw'
 
 fromSingleCellRefRaw' :: Text -> Maybe CellCoord
-fromSingleCellRefRaw' t' = ignoreRefSheetName t' >>= \t -> do
+fromSingleCellRefRaw' t' =
+  ignoreRefSheetName t' >>= \t -> do
     let (isColAbsolute, remT) =
           T.stripPrefix "$" t
-          & \remT' -> (isJust remT', fromMaybe t remT')
+            & \remT' -> (isJust remT', fromMaybe t remT')
     let (colT, rowExpr) = T.span (inRange ('A', 'Z')) remT
     let (isRowAbsolute, rowT) =
           T.stripPrefix "$" rowExpr
-          & \rowT' -> (isJust rowT', fromMaybe rowExpr rowT')
+            & \rowT' -> (isJust rowT', fromMaybe rowExpr rowT')
     guard $ not (T.null colT) && not (T.null rowT) && T.all isDigit rowT
     row <- decimal rowT
     return $
       bimap
-      (mkRowCoord isRowAbsolute)
-      (mkColumnCoord isColAbsolute)
-      (row, textToColumnIndex colT)
+        (mkRowCoord isRowAbsolute)
+        (mkColumnCoord isColAbsolute)
+        (row, textToColumnIndex colT)
 
 -- | Converse function to 'singleCellRef' expecting valid reference and failig with
 -- a standard error message like /"Bad cell reference 'XXX'"/
@@ -271,16 +284,16 @@ fromSingleCellRefNoting ref = fromJustNote errMsg $ fromSingleCellRefRaw txt
 -- "My ' Sheet" -> 'My '' Sheet'
 escapeRefSheetName :: Text -> Text
 escapeRefSheetName sheetName =
-   T.concat ["'", escape sheetName, "'"]
+  T.concat ["'", escape sheetName, "'"]
   where
     escape sn = T.splitOn "'" sn & T.intercalate "''"
 
 -- | Unframe and unescape the referenced sheet name.
 unEscapeRefSheetName :: Text -> Text
 unEscapeRefSheetName = unescape . unFrame
-      where
-        unescape  = T.intercalate "'" . T.splitOn "''"
-        unFrame sn = fromMaybe sn $ T.stripPrefix "'" sn >>= T.stripSuffix "'"
+  where
+    unescape = T.intercalate "'" . T.splitOn "''"
+    unFrame sn = fromMaybe sn $ T.stripPrefix "'" sn >>= T.stripSuffix "'"
 
 ignoreRefSheetName :: Text -> Maybe Text
 ignoreRefSheetName t =
@@ -296,16 +309,16 @@ ignoreRefSheetName t =
 -- > mkForeignRange "MyOtherSheet" (Rel 2, Rel 4) (Abs 6, Abs 8) == "'MyOtherSheet'!D2:$H$6"
 mkForeignSingleCellRef :: Text -> CellCoord -> CellRef
 mkForeignSingleCellRef sheetName coord =
-    let cr = singleCellRefRaw' coord
-      in CellRef $ T.concat [escapeRefSheetName sheetName, "!", cr]
+  let cr = singleCellRefRaw' coord
+   in CellRef $ T.concat [escapeRefSheetName sheetName, "!", cr]
 
 -- | Converse function to 'mkForeignSingleCellRef'.
 -- The provided CellRef must be a foreign range.
 fromForeignSingleCellRef :: CellRef -> Maybe (Text, CellCoord)
 fromForeignSingleCellRef r =
-    case T.split (== '!') (unCellRef r) of
-      [sheetName, ref] -> (unEscapeRefSheetName sheetName,) <$> fromSingleCellRefRaw' ref
-      _ -> Nothing
+  case T.split (== '!') (unCellRef r) of
+    [sheetName, ref] -> (unEscapeRefSheetName sheetName,) <$> fromSingleCellRefRaw' ref
+    _ -> Nothing
 
 -- | Excel range (e.g. @D13:H14@), actually store as as 'CellRef' in
 -- xlsx
@@ -320,7 +333,7 @@ mkRange fr to = CellRef $ T.concat [singleCellRefRaw fr, ":", singleCellRefRaw t
 -- | Render range with possibly absolute coordinates
 --
 -- > mkRange' (Abs 2, Abs 4) (6, 8) == CellRef "$D$2:H6"
-mkRange' :: (RowCoord,ColumnCoord) -> (RowCoord,ColumnCoord) -> Range
+mkRange' :: (RowCoord, ColumnCoord) -> (RowCoord, ColumnCoord) -> Range
 mkRange' fr to =
   CellRef $ T.concat [singleCellRefRaw' fr, ":", singleCellRefRaw' to]
 
@@ -331,8 +344,8 @@ mkRange' fr to =
 -- > mkForeignRange "MyOtherSheet" (Rel 2, Rel 4) (Abs 6, Abs 8) == "'MyOtherSheet'!D2:$H$6"
 mkForeignRange :: Text -> CellCoord -> CellCoord -> Range
 mkForeignRange sheetName fr to =
-    case mkRange' fr to of
-      CellRef cr -> CellRef $ T.concat [escapeRefSheetName sheetName, "!", cr]
+  case mkRange' fr to of
+    CellRef cr -> CellRef $ T.concat [escapeRefSheetName sheetName, "!", cr]
 
 -- | Converse function to 'mkRange' ignoring absolute coordinates.
 -- Ignores a potential foreign sheet prefix.
@@ -354,15 +367,15 @@ fromRange' t' = parseRange =<< ignoreRefSheetName (unCellRef t')
 -- The provided Range must be a foreign range.
 fromForeignRange :: Range -> Maybe (Text, RangeCoord)
 fromForeignRange r =
-    case T.split (== '!') (unCellRef r) of
-      [sheetName, ref] -> (unEscapeRefSheetName sheetName,) <$> fromRange' (CellRef ref)
-      _ -> Nothing
+  case T.split (== '!') (unCellRef r) of
+    [sheetName, ref] -> (unEscapeRefSheetName sheetName,) <$> fromRange' (CellRef ref)
+    _ -> Nothing
 
 -- | A sequence of cell references
 --
 -- See 18.18.76 "ST_Sqref (Reference Sequence)" (p.2488)
 newtype SqRef = SqRef [CellRef]
-    deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Generic)
 
 instance NFData SqRef
 
@@ -384,9 +397,10 @@ instance NFData SqRef
 -- Section 18.4.8, "si (String Item)" (p. 1725)
 --
 -- See @CT_Rst@, p. 3903
-data XlsxText = XlsxText Text
-              | XlsxRichText [RichTextRun]
-              deriving (Eq, Ord, Show, Generic)
+data XlsxText
+  = XlsxText Text
+  | XlsxRichText [RichTextRun]
+  deriving (Eq, Ord, Show, Generic)
 
 instance NFData XlsxText
 
@@ -398,7 +412,7 @@ xlsxTextToCellValue (XlsxRichText rich) = CellRich rich
 --
 -- See 18.18.35 "ST_Formula (Formula)" (p. 2457)
 newtype Formula = Formula {unFormula :: Text}
-    deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Show, Generic)
 
 instance NFData Formula
 
@@ -417,7 +431,6 @@ data CellValue
   | CellError ErrorType
   deriving (Eq, Ord, Show, Generic)
 
-
 instance NFData CellValue
 
 -- | The evaluation of an expression can result in an error having one
@@ -425,53 +438,53 @@ instance NFData CellValue
 --
 -- See Annex L, L.2.16.8 "Error values" (p. 4764)
 data ErrorType
-  = ErrorDiv0
-  -- ^ @#DIV/0!@ - Intended to indicate when any number, including
-  -- zero, is divided by zero.
-  | ErrorNA
-  -- ^ @#N/A@ - Intended to indicate when a designated value is not
-  -- available. For example, some functions, such as @SUMX2MY2@,
-  -- perform a series of operations on corresponding elements in two
-  -- arrays. If those arrays do not have the same number of elements,
-  -- then for some elements in the longer array, there are no
-  -- corresponding elements in the shorter one; that is, one or more
-  -- values in the shorter array are not available. This error value
-  -- can be produced by calling the function @NA@.
-  | ErrorName
-  -- ^ @#NAME?@ - Intended to indicate when what looks like a name is
-  -- used, but no such name has been defined. For example, @XYZ/3@,
-  -- where @XYZ@ is not a defined name. @Total is & A10@, where
-  -- neither @Total@ nor @is@ is a defined name. Presumably, @"Total
-  -- is " & A10@ was intended. @SUM(A1C10)@, where the range @A1:C10@
-  -- was intended.
-  | ErrorNull
-  -- ^ @#NULL!@ - Intended to indicate when two areas are required to
-  -- intersect, but do not. For example, In the case of @SUM(B1 C1)@,
-  -- the space between @B1@ and @C1@ is treated as the binary
-  -- intersection operator, when a comma was intended.
-  | ErrorNum
-  -- ^ @#NUM!@ - Intended to indicate when an argument to a function
-  -- has a compatible type, but has a value that is outside the domain
-  -- over which that function is defined. (This is known as a domain
-  -- error.) For example, Certain calls to @ASIN@, @ATANH@, @FACT@,
-  -- and @SQRT@ might result in domain errors. Intended to indicate
-  -- that the result of a function cannot be represented in a value of
-  -- the specified type, typically due to extreme magnitude. (This is
-  -- known as a range error.) For example, @FACT(1000)@ might result
-  -- in a range error.
-  | ErrorRef
-  -- ^ @#REF!@ - Intended to indicate when a cell reference is
-  -- invalid. For example, If a formula contains a reference to a
-  -- cell, and then the row or column containing that cell is deleted,
-  -- a @#REF!@ error results. If a worksheet does not support 20,001
-  -- columns, @OFFSET(A1,0,20000)@ results in a @#REF!@ error.
-  | ErrorValue
-  -- ^ @#VALUE!@ - Intended to indicate when an incompatible type
-  -- argument is passed to a function, or an incompatible type operand
-  -- is used with an operator. For example, In the case of a function
-  -- argument, a number was expected, but text was provided. In the
-  -- case of @1+"ABC"@, the binary addition operator is not defined for
-  -- text.
+  = -- | @#DIV/0!@ - Intended to indicate when any number, including
+    -- zero, is divided by zero.
+    ErrorDiv0
+  | -- | @#N/A@ - Intended to indicate when a designated value is not
+    -- available. For example, some functions, such as @SUMX2MY2@,
+    -- perform a series of operations on corresponding elements in two
+    -- arrays. If those arrays do not have the same number of elements,
+    -- then for some elements in the longer array, there are no
+    -- corresponding elements in the shorter one; that is, one or more
+    -- values in the shorter array are not available. This error value
+    -- can be produced by calling the function @NA@.
+    ErrorNA
+  | -- | @#NAME?@ - Intended to indicate when what looks like a name is
+    -- used, but no such name has been defined. For example, @XYZ/3@,
+    -- where @XYZ@ is not a defined name. @Total is & A10@, where
+    -- neither @Total@ nor @is@ is a defined name. Presumably, @"Total
+    -- is " & A10@ was intended. @SUM(A1C10)@, where the range @A1:C10@
+    -- was intended.
+    ErrorName
+  | -- | @#NULL!@ - Intended to indicate when two areas are required to
+    -- intersect, but do not. For example, In the case of @SUM(B1 C1)@,
+    -- the space between @B1@ and @C1@ is treated as the binary
+    -- intersection operator, when a comma was intended.
+    ErrorNull
+  | -- | @#NUM!@ - Intended to indicate when an argument to a function
+    -- has a compatible type, but has a value that is outside the domain
+    -- over which that function is defined. (This is known as a domain
+    -- error.) For example, Certain calls to @ASIN@, @ATANH@, @FACT@,
+    -- and @SQRT@ might result in domain errors. Intended to indicate
+    -- that the result of a function cannot be represented in a value of
+    -- the specified type, typically due to extreme magnitude. (This is
+    -- known as a range error.) For example, @FACT(1000)@ might result
+    -- in a range error.
+    ErrorNum
+  | -- | @#REF!@ - Intended to indicate when a cell reference is
+    -- invalid. For example, If a formula contains a reference to a
+    -- cell, and then the row or column containing that cell is deleted,
+    -- a @#REF!@ error results. If a worksheet does not support 20,001
+    -- columns, @OFFSET(A1,0,20000)@ results in a @#REF!@ error.
+    ErrorRef
+  | -- | @#VALUE!@ - Intended to indicate when an incompatible type
+    -- argument is passed to a function, or an incompatible type operand
+    -- is used with an operator. For example, In the case of a function
+    -- argument, a number was expected, but text was provided. In the
+    -- case of @1+"ABC"@, the binary addition operator is not defined for
+    -- text.
+    ErrorValue
   deriving (Eq, Ord, Show, Generic)
 
 instance NFData ErrorType
@@ -481,19 +494,20 @@ instance NFData ErrorType
 --
 -- See Annex L, L.2.16.9.1 "Date Conversion for Serial Values" (p. 4765)
 data DateBase
-  = DateBase1900
-  -- ^ 1900 date base system, the lower limit is January 1, -9999
-  -- 00:00:00, which has serial value -4346018. The upper-limit is
-  -- December 31, 9999, 23:59:59, which has serial value
-  -- 2,958,465.9999884. The base date for this date base system is
-  -- December 30, 1899, which has a serial value of 0.
-  | DateBase1904
-  -- ^ 1904 backward compatibility date-base system, the lower limit
-  -- is January 1, 1904, 00:00:00, which has serial value 0. The upper
-  -- limit is December 31, 9999, 23:59:59, which has serial value
-  -- 2,957,003.9999884. The base date for this date base system is
-  -- January 1, 1904, which has a serial value of 0.
+  = -- | 1900 date base system, the lower limit is January 1, -9999
+    -- 00:00:00, which has serial value -4346018. The upper-limit is
+    -- December 31, 9999, 23:59:59, which has serial value
+    -- 2,958,465.9999884. The base date for this date base system is
+    -- December 30, 1899, which has a serial value of 0.
+    DateBase1900
+  | -- | 1904 backward compatibility date-base system, the lower limit
+    -- is January 1, 1904, 00:00:00, which has serial value 0. The upper
+    -- limit is December 31, 9999, 23:59:59, which has serial value
+    -- 2,957,003.9999884. The base date for this date base system is
+    -- January 1, 1904, which has a serial value of 0.
+    DateBase1904
   deriving (Eq, Show, Generic)
+
 instance NFData DateBase
 
 baseDate :: DateBase -> Day
@@ -509,20 +523,18 @@ baseDate DateBase1904 = fromGregorian 1904 1 1
 -- > show (dateFromNumber DateBase1900 42929.75) == "2017-07-13 18:00:00 UTC"
 -- > show (dateFromNumber DateBase1900 60) == "1900-03-01 00:00:00 UTC"
 -- > show (dateFromNumber DateBase1900 61) == "1900-03-01 00:00:00 UTC"
-dateFromNumber :: forall t. RealFrac t => DateBase -> t -> UTCTime
+dateFromNumber :: forall t. (RealFrac t) => DateBase -> t -> UTCTime
 dateFromNumber b d
   -- 60 is Excel's 2020-02-29 00:00 and 61 is Excel's 2020-03-01
-  | b == DateBase1900 && d < 60            = getUTCTime (d + 1)
+  | b == DateBase1900 && d < 60 = getUTCTime (d + 1)
   | b == DateBase1900 && d >= 60 && d < 61 = getUTCTime (61 :: t)
-  | otherwise                              = getUTCTime d
+  | otherwise = getUTCTime d
   where
     getUTCTime n =
-      let
-        (numberOfDays, fractionOfOneDay) = properFraction n
-        day = addDays numberOfDays $ baseDate b
-        diffTime = picosecondsToDiffTime (round (fractionOfOneDay * 24*60*60*1E12))
-      in
-        UTCTime day diffTime
+      let (numberOfDays, fractionOfOneDay) = properFraction n
+          day = addDays numberOfDays $ baseDate b
+          diffTime = picosecondsToDiffTime (round (fractionOfOneDay * 24 * 60 * 60 * 1E12))
+       in UTCTime day diffTime
 
 -- | Converts datetime into serial value.
 -- Because Excel treats 1900 as a leap year even though it isn't,
@@ -530,15 +542,16 @@ dateFromNumber b d
 -- are never generated by this function for `DateBase1900`. This means that
 -- under those conditions this is not an inverse of `dateFromNumber`.
 -- See https://docs.microsoft.com/en-gb/office/troubleshoot/excel/wrongly-assumes-1900-is-leap-year for details.
-dateToNumber :: Fractional a => DateBase -> UTCTime -> a
+dateToNumber :: (Fractional a) => DateBase -> UTCTime -> a
 dateToNumber b (UTCTime day diffTime) = numberOfDays + fractionOfOneDay
   where
     numberOfDays = fromIntegral (diffDays excel1900CorrectedDay $ baseDate b)
     fractionOfOneDay = realToFrac diffTime / (24 * 60 * 60)
-    marchFirst1900              = fromGregorian 1900 3 1
-    excel1900CorrectedDay = if day < marchFirst1900
-      then addDays (-1) day
-      else day
+    marchFirst1900 = fromGregorian 1900 3 1
+    excel1900CorrectedDay =
+      if day < marchFirst1900
+        then addDays (-1) day
+        else day
 
 {-------------------------------------------------------------------------------
   Parsing
@@ -547,13 +560,12 @@ dateToNumber b (UTCTime day diffTime) = numberOfDays + fractionOfOneDay
 -- | See @CT_Rst@, p. 3903
 instance FromCursor XlsxText where
   fromCursor cur = do
-    let
-      ts = cur $/ element (n_ "t") >=> contentOrEmpty
-      rs = cur $/ element (n_ "r") >=> fromCursor
-    case (ts,rs) of
+    let ts = cur $/ element (n_ "t") >=> contentOrEmpty
+        rs = cur $/ element (n_ "r") >=> fromCursor
+    case (ts, rs) of
       ([t], []) ->
         return $ XlsxText t
-      ([], _:_) ->
+      ([], _ : _) ->
         return $ XlsxRichText rs
       _ ->
         fail "invalid item"
@@ -586,12 +598,12 @@ instance FromAttrVal SqRef where
 instance FromAttrBs SqRef where
   fromAttrBs bs = do
     -- split on space
-    rs <- forM  (BS.split 32 bs) fromAttrBs
+    rs <- forM (BS.split 32 bs) fromAttrBs
     return $ SqRef rs
 
 -- | See @ST_Formula@, p. 3873
 instance FromCursor Formula where
-    fromCursor cur = [Formula . T.concat $ cur $/ content]
+  fromCursor cur = [Formula . T.concat $ cur $/ content]
 
 instance FromXenoNode Formula where
   fromXenoNode = fmap Formula . contentX
@@ -628,14 +640,15 @@ instance FromAttrBs ErrorType where
 
 -- | See @CT_Rst@, p. 3903
 instance ToElement XlsxText where
-  toElement nm si = Element {
-      elementName       = nm
-    , elementAttributes = Map.empty
-    , elementNodes      = map NodeElement $
-        case si of
-          XlsxText text     -> [elementContent "t" text]
-          XlsxRichText rich -> map (toElement "r") rich
-    }
+  toElement nm si =
+    Element
+      { elementName = nm,
+        elementAttributes = Map.empty,
+        elementNodes = map NodeElement $
+          case si of
+            XlsxText text -> [elementContent "t" text]
+            XlsxRichText rich -> map (toElement "r") rich
+      }
 
 instance ToAttrVal CellRef where
   toAttrVal = toAttrVal . unCellRef
@@ -646,7 +659,7 @@ instance ToAttrVal SqRef where
 
 -- | See @ST_Formula@, p. 3873
 instance ToElement Formula where
-    toElement nm (Formula txt) = elementContent nm txt
+  toElement nm (Formula txt) = elementContent nm txt
 
 instance ToAttrVal ErrorType where
   toAttrVal ErrorDiv0 = "#DIV/0!"

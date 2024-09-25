@@ -1,22 +1,23 @@
-{-# LANGUAGE CPP   #-}
-{-# LANGUAGE RankNTypes   #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- | lenses to access sheets, cells and values of 'Xlsx'
 module Codec.Xlsx.Lens
-  ( ixSheet
-  , atSheet
-  , ixCell
-  , ixCellRC
-  , ixCellXY
-  , atCell
-  , atCellRC
-  , atCellXY
-  , cellValueAt
-  , cellValueAtRC
-  , cellValueAtXY
-  ) where
+  ( ixSheet,
+    atSheet,
+    ixCell,
+    ixCellRC,
+    ixCellXY,
+    atCell,
+    atCellRC,
+    atCellXY,
+    cellValueAt,
+    cellValueAtRC,
+    cellValueAtXY,
+  )
+where
 
 import Codec.Xlsx.Types
 #ifdef USE_MICROLENS
@@ -32,32 +33,34 @@ import Data.Text
 import Data.Tuple (swap)
 import GHC.Generics (Generic)
 
-newtype SheetList = SheetList{ unSheetList :: [(Text, Worksheet)] }
-    deriving (Eq, Show, Generic)
+newtype SheetList = SheetList {unSheetList :: [(Text, Worksheet)]}
+  deriving (Eq, Show, Generic)
 
 type instance IxValue (SheetList) = Worksheet
+
 type instance Index (SheetList) = Text
 
 instance Ixed SheetList where
-    ix k f sl@(SheetList l) = case lookup k l of
-        Just v  -> f v <&> \v' -> SheetList (upsert k v' l)
-        Nothing -> pure sl
-    {-# INLINE ix #-}
+  ix k f sl@(SheetList l) = case lookup k l of
+    Just v -> f v <&> \v' -> SheetList (upsert k v' l)
+    Nothing -> pure sl
+  {-# INLINE ix #-}
 
 instance At SheetList where
-  at k f (SheetList l) = f mv <&> \r -> case r of
-      Nothing -> SheetList $ maybe l (\v -> deleteBy ((==) `on` fst) (k,v) l) mv
+  at k f (SheetList l) =
+    f mv <&> \r -> case r of
+      Nothing -> SheetList $ maybe l (\v -> deleteBy ((==) `on` fst) (k, v) l) mv
       Just v' -> SheetList $ upsert k v' l
     where
       mv = lookup k l
   {-# INLINE at #-}
 
-upsert :: (Eq k) => k -> v -> [(k,v)] -> [(k,v)]
-upsert k v [] = [(k,v)]
-upsert k v ((k1,v1):r) =
-    if k == k1
-    then (k,v):r
-    else (k1,v1):upsert k v r
+upsert :: (Eq k) => k -> v -> [(k, v)] -> [(k, v)]
+upsert k v [] = [(k, v)]
+upsert k v ((k1, v1) : r) =
+  if k == k1
+    then (k, v) : r
+    else (k1, v1) : upsert k v r
 
 -- | lens giving access to a worksheet from 'Xlsx' object
 -- by its name

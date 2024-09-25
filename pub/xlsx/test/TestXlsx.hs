@@ -634,34 +634,34 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
               ?~ "Calibri"
       at (1, 1)
         ?= ( def
-              & formattedCell
+              & #formattedCell
               . cellValue
               ?~ CellText "text at A1"
-              & formattedFormat
-              . formatFont
+              & #formattedFormat
+              . #formatFont
               ?~ font1
            )
       at (1, 2)
         ?= ( def
-              & formattedCell
+              & #formattedCell
               . cellValue
               ?~ CellDouble 1.23
-              & formattedFormat
-              . formatFont
+              & #formattedFormat
+              . #formatFont
               . non def
               . fontItalic
               ?~ True
-              & formattedFormat
-              . formatNumberFormat
+              & #formattedFormat
+              . #formatNumberFormat
               ?~ fmtDecimalsZeroes 4
            )
       at (2, 5)
         ?= ( def
-              & formattedCell
+              & #formattedCell
               . cellValue
               ?~ CellDouble 1.23456
-              & formattedFormat
-              . formatNumberFormat
+              & #formattedFormat
+              . #formatNumberFormat
               ?~ StdNumberFormat Nf2Decimal
            )
 
@@ -725,17 +725,17 @@ testFormatWorkbook = formatWorkbook sheets minimalStyleSheet
     sheetNames = ["Sheet1", "Sheet2"]
     testFormattedCellMap1 =
       M.fromList
-        [((1, 1), (def & formattedCell . cellValue ?~ CellText "text at A1 Sheet1"))]
+        [((1, 1), (def & #formattedCell . cellValue ?~ CellText "text at A1 Sheet1"))]
 
     testFormattedCellMap2 =
       M.fromList
         [ ( (2, 3),
             ( def
-                & formattedCell
+                & #formattedCell
                 . cellValue
                 ?~ CellDouble 1.23456
-                & formattedFormat
-                . formatNumberFormat
+                & #formattedFormat
+                . #formatNumberFormat
                 ?~ (UserNumberFormat "DD.MM.YYYY")
             )
           )
@@ -784,26 +784,27 @@ testFormattedCells :: Map (RowIndex, ColumnIndex) FormattedCell
 testFormattedCells = flip execState def $ do
   at (1, 1)
     ?= ( def
-          & formattedRowSpan
+          & #formattedRowSpan
           .~ 5
-          & formattedColSpan
+          & #formattedColSpan
           .~ 5
-          & formattedFormat
-          . formatBorder
+          & #formattedFormat
+          . #formatBorder
           . non def
           . borderTop
           . non def
           . borderStyleLine
           ?~ LineStyleDashed
-          & formattedFormat
-          . formatBorder
+          & #formattedFormat
+          . #formatBorder
           . non def
           . borderBottom
           . non def
           . borderStyleLine
           ?~ LineStyleDashed
        )
-  at (10, 2) ?= (def & formattedFormat . formatFont . non def . fontBold ?~ True)
+  at (10, 2)
+    ?= (def & #formattedFormat . #formatFont . non def . fontBold ?~ True)
 
 testRunCondFormatted :: CondFormatted
 testRunCondFormatted = conditionallyFormatted condFmts minimalStyleSheet
@@ -811,27 +812,27 @@ testRunCondFormatted = conditionallyFormatted condFmts minimalStyleSheet
     condFmts = flip execState def $ do
       let cfRule1 =
             def
-              & condfmtCondition
+              & #condfmtCondition
               .~ ContainsBlanks
-              & condfmtDxf
+              & #condfmtDxf
               . dxfFont
               . non def
               . fontUnderline
               ?~ FontUnderlineSingle
           cfRule2 =
             def
-              & condfmtCondition
+              & #condfmtCondition
               .~ BeginsWith "foo"
-              & condfmtDxf
+              & #condfmtDxf
               . dxfFont
               . non def
               . fontStrikeThrough
               ?~ True
           cfRule3 =
             def
-              & condfmtCondition
+              & #condfmtCondition
               .~ CellIs (OpGreaterThan (Formula "A1"))
-              & condfmtDxf
+              & #condfmtDxf
               . dxfFont
               . non def
               . fontBold

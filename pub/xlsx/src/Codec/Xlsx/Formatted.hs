@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Higher level interface for creating styled worksheets
 module Codec.Xlsx.Formatted
@@ -14,30 +13,6 @@ module Codec.Xlsx.Formatted
     toFormattedCells,
     CondFormatted (..),
     conditionallyFormatted,
-
-    -- * Lenses
-
-    -- ** Format
-    formatAlignment,
-    formatBorder,
-    formatFill,
-    formatFont,
-    formatNumberFormat,
-    formatProtection,
-    formatPivotButton,
-    formatQuotePrefix,
-
-    -- ** FormattedCell
-    formattedCell,
-    formattedFormat,
-    formattedColSpan,
-    formattedRowSpan,
-
-    -- ** FormattedCondFmt
-    condfmtCondition,
-    condfmtDxf,
-    condfmtPriority,
-    condfmtStopIfTrue,
   )
 where
 
@@ -55,6 +30,7 @@ import Control.Monad.State hiding (forM_, mapM)
 import Data.Default
 import Data.Foldable (asum, forM_)
 import Data.Function (on)
+import Data.Generics.Labels
 import Data.List (foldl', groupBy, sortBy)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -71,26 +47,25 @@ import Prelude hiding (mapM)
 -------------------------------------------------------------------------------}
 
 data FormattingState = FormattingState
-  { _formattingBorders :: Map Border Int,
-    _formattingCellXfs :: Map CellXf Int,
-    _formattingFills :: Map Fill Int,
-    _formattingFonts :: Map Font Int,
-    _formattingNumFmts :: Map Text Int,
+  { formattingBorders :: Map Border Int,
+    formattingCellXfs :: Map CellXf Int,
+    formattingFills :: Map Fill Int,
+    formattingFonts :: Map Font Int,
+    formattingNumFmts :: Map Text Int,
     -- | In reverse order
-    _formattingMerges :: [Range]
+    formattingMerges :: [Range]
   }
-
-makeLenses ''FormattingState
+  deriving stock (Generic)
 
 stateFromStyleSheet :: StyleSheet -> FormattingState
 stateFromStyleSheet StyleSheet {..} =
   FormattingState
-    { _formattingBorders = fromValueList _styleSheetBorders,
-      _formattingCellXfs = fromValueList _styleSheetCellXfs,
-      _formattingFills = fromValueList _styleSheetFills,
-      _formattingFonts = fromValueList _styleSheetFonts,
-      _formattingNumFmts = M.fromList . map swap $ M.toList _styleSheetNumFmts,
-      _formattingMerges = []
+    { formattingBorders = fromValueList _styleSheetBorders,
+      formattingCellXfs = fromValueList _styleSheetCellXfs,
+      formattingFills = fromValueList _styleSheetFills,
+      formattingFonts = fromValueList _styleSheetFonts,
+      formattingNumFmts = M.fromList . map swap $ M.toList _styleSheetNumFmts,
+      formattingMerges = []
     }
 
 fromValueList :: (Ord a) => [a] -> Map a Int
@@ -102,11 +77,11 @@ toValueList = map snd . sortBy (comparing fst) . map swap . M.toList
 updateStyleSheetFromState :: StyleSheet -> FormattingState -> StyleSheet
 updateStyleSheetFromState sSheet FormattingState {..} =
   sSheet
-    { _styleSheetBorders = toValueList _formattingBorders,
-      _styleSheetCellXfs = toValueList _formattingCellXfs,
-      _styleSheetFills = toValueList _formattingFills,
-      _styleSheetFonts = toValueList _formattingFonts,
-      _styleSheetNumFmts = M.fromList . map swap $ M.toList _formattingNumFmts
+    { _styleSheetBorders = toValueList formattingBorders,
+      _styleSheetCellXfs = toValueList formattingCellXfs,
+      _styleSheetFills = toValueList formattingFills,
+      _styleSheetFonts = toValueList formattingFonts,
+      _styleSheetNumFmts = M.fromList . map swap $ M.toList formattingNumFmts
     }
 
 getId ::
@@ -133,14 +108,12 @@ getId' k f v = do
 -------------------------------------------------------------------------------}
 
 data FormattedCondFmt = FormattedCondFmt
-  { _condfmtCondition :: Condition,
-    _condfmtDxf :: Dxf,
-    _condfmtPriority :: Int,
-    _condfmtStopIfTrue :: Maybe Bool
+  { condfmtCondition :: Condition,
+    condfmtDxf :: Dxf,
+    condfmtPriority :: Int,
+    condfmtStopIfTrue :: Maybe Bool
   }
   deriving (Eq, Show, Generic)
-
-makeLenses ''FormattedCondFmt
 
 {-------------------------------------------------------------------------------
   Cell with formatting
@@ -153,31 +126,27 @@ makeLenses ''FormattedCondFmt
 -- * Add a number format ('_cellXfApplyNumberFormat', '_cellXfNumFmtId')
 -- * Add references to the named style sheets ('_cellXfId')
 data Format = Format
-  { _formatAlignment :: Maybe Alignment,
-    _formatBorder :: Maybe Border,
-    _formatFill :: Maybe Fill,
-    _formatFont :: Maybe Font,
-    _formatNumberFormat :: Maybe NumberFormat,
-    _formatProtection :: Maybe Protection,
-    _formatPivotButton :: Maybe Bool,
-    _formatQuotePrefix :: Maybe Bool
+  { formatAlignment :: Maybe Alignment,
+    formatBorder :: Maybe Border,
+    formatFill :: Maybe Fill,
+    formatFont :: Maybe Font,
+    formatNumberFormat :: Maybe NumberFormat,
+    formatProtection :: Maybe Protection,
+    formatPivotButton :: Maybe Bool,
+    formatQuotePrefix :: Maybe Bool
   }
   deriving (Eq, Show, Generic)
 
-makeLenses ''Format
-
--- | Cell with formatting. '_cellStyle' property of '_formattedCell' is ignored
+-- | Cell with formatting. '_cellStyle' property of 'formattedCell' is ignored
 --
 -- See 'formatted' for more details.
 data FormattedCell = FormattedCell
-  { _formattedCell :: Cell,
-    _formattedFormat :: Format,
-    _formattedColSpan :: Int,
-    _formattedRowSpan :: Int
+  { formattedCell :: Cell,
+    formattedFormat :: Format,
+    formattedColSpan :: Int,
+    formattedRowSpan :: Int
   }
   deriving (Eq, Show, Generic)
-
-makeLenses ''FormattedCell
 
 {-------------------------------------------------------------------------------
   Default instances
@@ -186,23 +155,23 @@ makeLenses ''FormattedCell
 instance Default FormattedCell where
   def =
     FormattedCell
-      { _formattedCell = def,
-        _formattedFormat = def,
-        _formattedColSpan = 1,
-        _formattedRowSpan = 1
+      { formattedCell = def,
+        formattedFormat = def,
+        formattedColSpan = 1,
+        formattedRowSpan = 1
       }
 
 instance Default Format where
   def =
     Format
-      { _formatAlignment = Nothing,
-        _formatBorder = Nothing,
-        _formatFill = Nothing,
-        _formatFont = Nothing,
-        _formatNumberFormat = Nothing,
-        _formatProtection = Nothing,
-        _formatPivotButton = Nothing,
-        _formatQuotePrefix = Nothing
+      { formatAlignment = Nothing,
+        formatBorder = Nothing,
+        formatFill = Nothing,
+        formatFont = Nothing,
+        formatNumberFormat = Nothing,
+        formatProtection = Nothing,
+        formatPivotButton = Nothing,
+        formatQuotePrefix = Nothing
       }
 
 instance Default FormattedCondFmt where
@@ -259,7 +228,7 @@ formatted cs styleSheet =
    in Formatted
         { formattedCellMap = M.fromList (concat cs'),
           formattedStyleSheet = styleSheet',
-          formattedMerges = reverse (finalSt ^. formattingMerges)
+          formattedMerges = reverse (finalSt ^. #formattingMerges)
         }
 
 -- | Build an 'Xlsx', render provided cells as per the 'StyleSheet'.
@@ -271,7 +240,7 @@ formatWorkbook nfcss initStyle = extract go
     go = flip runState initSt $
       forM nfcss $ \(name, fcs) -> do
         cs' <- forM (M.toList fcs) $ \(rc, fc) -> formatCell rc fc
-        merges <- reverse . _formattingMerges <$> get
+        merges <- reverse . formattingMerges <$> get
         return
           ( name,
             def
@@ -295,30 +264,30 @@ toFormattedCells m merges StyleSheet {..} = applyMerges $ M.map toFormattedCell 
   where
     toFormattedCell cell@Cell {..} =
       FormattedCell
-        { _formattedCell = cell {_cellStyle = Nothing}, -- just to remove confusion
-          _formattedFormat =
+        { formattedCell = cell {_cellStyle = Nothing}, -- just to remove confusion
+          formattedFormat =
             maybe def formatFromStyle $ flip M.lookup cellXfs =<< _cellStyle,
-          _formattedColSpan = 1,
-          _formattedRowSpan = 1
+          formattedColSpan = 1,
+          formattedRowSpan = 1
         }
     formatFromStyle cellXf =
       Format
-        { _formatAlignment = applied _cellXfApplyAlignment _cellXfAlignment cellXf,
-          _formatBorder =
+        { formatAlignment = applied _cellXfApplyAlignment _cellXfAlignment cellXf,
+          formatBorder =
             flip M.lookup borders
               =<< applied _cellXfApplyBorder _cellXfBorderId cellXf,
-          _formatFill =
+          formatFill =
             flip M.lookup fills
               =<< applied _cellXfApplyFill _cellXfFillId cellXf,
-          _formatFont =
+          formatFont =
             flip M.lookup fonts
               =<< applied _cellXfApplyFont _cellXfFontId cellXf,
-          _formatNumberFormat =
+          formatNumberFormat =
             lookupNumFmt
               =<< applied _cellXfApplyNumberFormat _cellXfNumFmtId cellXf,
-          _formatProtection = _cellXfProtection cellXf,
-          _formatPivotButton = _cellXfPivotButton cellXf,
-          _formatQuotePrefix = _cellXfQuotePrefix cellXf
+          formatProtection = _cellXfProtection cellXf,
+          formatPivotButton = _cellXfPivotButton cellXf,
+          formatQuotePrefix = _cellXfQuotePrefix cellXf
         }
     idMapped :: [a] -> Map Int a
     idMapped = M.fromList . zip [0 ..]
@@ -343,11 +312,11 @@ toFormattedCells m merges StyleSheet {..} = applyMerges $ M.map toFormattedCell 
       forM_ nonTopLeft (modify . M.delete)
       at (r1, c1)
         . non def
-        . formattedRowSpan
+        . #formattedRowSpan
         .= (unRowIndex r2 - unRowIndex r1 + 1)
       at (r1, c1)
         . non def
-        . formattedColSpan
+        . #formattedColSpan
         .= (unColumnIndex c2 - unColumnIndex c1 + 1)
 
 data CondFormatted = CondFormatted
@@ -391,7 +360,7 @@ formatCell ::
   State FormattingState [((RowIndex, ColumnIndex), Cell)]
 formatCell (row, col) cell = do
   let (block, mMerge) = cellBlock (row, col) cell
-  forM_ mMerge $ \merge -> formattingMerges %= (:) merge
+  forM_ mMerge $ \merge -> #formattingMerges %= (:) merge
   mapM go block
   where
     go ::
@@ -399,7 +368,7 @@ formatCell (row, col) cell = do
       State FormattingState ((RowIndex, ColumnIndex), Cell)
     go (pos, c@FormattedCell {..}) = do
       styleId <- cellStyleId c
-      return (pos, _formattedCell {_cellStyle = styleId})
+      return (pos, formattedCell {_cellStyle = styleId})
 
 -- | Cell block corresponding to a single 'FormattedCell'
 --
@@ -432,9 +401,9 @@ cellBlock (row, col) cell@FormattedCell {..} = (block, merge)
     cellAt (row', col') =
       if row' == row && col == col'
         then cell
-        else def & formattedFormat . formatBorder ?~ borderAt (row', col')
+        else def & #formattedFormat . #formatBorder ?~ borderAt (row', col')
 
-    border = _formatBorder _formattedFormat
+    border = formatBorder formattedFormat
 
     borderAt :: (RowIndex, ColumnIndex) -> Border
     borderAt (row', col') =
@@ -451,42 +420,42 @@ cellBlock (row, col) cell@FormattedCell {..} = (block, merge)
     topRow, bottomRow :: RowIndex
     leftCol, rightCol :: ColumnIndex
     topRow = row
-    bottomRow = RowIndex $ unRowIndex row + _formattedRowSpan - 1
+    bottomRow = RowIndex $ unRowIndex row + formattedRowSpan - 1
     leftCol = col
-    rightCol = ColumnIndex $ unColumnIndex col + _formattedColSpan - 1
+    rightCol = ColumnIndex $ unColumnIndex col + formattedColSpan - 1
 
 cellStyleId :: FormattedCell -> State FormattingState (Maybe Int)
-cellStyleId c = mapM (getId formattingCellXfs) =<< constructCellXf c
+cellStyleId c = mapM (getId #formattingCellXfs) =<< constructCellXf c
 
 constructCellXf :: FormattedCell -> State FormattingState (Maybe CellXf)
-constructCellXf FormattedCell {_formattedFormat = Format {..}} = do
-  mBorderId <- getId formattingBorders `mapM` _formatBorder
-  mFillId <- getId formattingFills `mapM` _formatFill
-  mFontId <- getId formattingFonts `mapM` _formatFont
+constructCellXf FormattedCell {formattedFormat = Format {..}} = do
+  mBorderId <- getId #formattingBorders `mapM` formatBorder
+  mFillId <- getId #formattingFills `mapM` formatFill
+  mFontId <- getId #formattingFonts `mapM` formatFont
   let getFmtId ::
         Lens' FormattingState (Map Text Int) ->
         NumberFormat ->
         State FormattingState Int
       getFmtId _ (StdNumberFormat fmt) = return (stdNumberFormatId fmt)
       getFmtId l (UserNumberFormat fmt) = getId' firstUserNumFmtId l fmt
-  mNumFmtId <- getFmtId formattingNumFmts `mapM` _formatNumberFormat
+  mNumFmtId <- getFmtId #formattingNumFmts `mapM` formatNumberFormat
   let xf =
         CellXf
-          { _cellXfApplyAlignment = apply _formatAlignment,
+          { _cellXfApplyAlignment = apply formatAlignment,
             _cellXfApplyBorder = apply mBorderId,
             _cellXfApplyFill = apply mFillId,
             _cellXfApplyFont = apply mFontId,
-            _cellXfApplyNumberFormat = apply _formatNumberFormat,
-            _cellXfApplyProtection = apply _formatProtection,
+            _cellXfApplyNumberFormat = apply formatNumberFormat,
+            _cellXfApplyProtection = apply formatProtection,
             _cellXfBorderId = mBorderId,
             _cellXfFillId = mFillId,
             _cellXfFontId = mFontId,
             _cellXfNumFmtId = mNumFmtId,
-            _cellXfPivotButton = _formatPivotButton,
-            _cellXfQuotePrefix = _formatQuotePrefix,
+            _cellXfPivotButton = formatPivotButton,
+            _cellXfQuotePrefix = formatQuotePrefix,
             _cellXfId = Nothing, -- TODO
-            _cellXfAlignment = _formatAlignment,
-            _cellXfProtection = _formatProtection
+            _cellXfAlignment = formatAlignment,
+            _cellXfProtection = formatProtection
           }
   return $ if xf == def then Nothing else Just xf
   where
@@ -499,17 +468,17 @@ constructCellXf FormattedCell {_formattedFormat = Format {..}} = do
 mapDxf :: FormattedCondFmt -> State (Map Dxf Int) CfRule
 mapDxf FormattedCondFmt {..} = do
   dxf2id <- get
-  dxfId <- case M.lookup _condfmtDxf dxf2id of
+  dxfId <- case M.lookup condfmtDxf dxf2id of
     Just i ->
       return i
     Nothing -> do
       let newId = M.size dxf2id
-      modify $ M.insert _condfmtDxf newId
+      modify $ M.insert condfmtDxf newId
       return newId
   return
     CfRule
-      { _cfrCondition = _condfmtCondition,
+      { _cfrCondition = condfmtCondition,
         _cfrDxfId = Just dxfId,
-        _cfrPriority = _condfmtPriority,
-        _cfrStopIfTrue = _condfmtStopIfTrue
+        _cfrPriority = condfmtPriority,
+        _cfrStopIfTrue = condfmtStopIfTrue
       }

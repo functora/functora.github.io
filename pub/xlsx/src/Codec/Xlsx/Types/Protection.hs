@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.Protection
   ( SheetProtection (..),
@@ -10,25 +9,6 @@ module Codec.Xlsx.Types.Protection
     noSheetProtection,
     LegacyPassword,
     legacyPassword,
-
-    -- * Lenses
-    sprLegacyPassword,
-    sprSheet,
-    sprObjects,
-    sprScenarios,
-    sprFormatCells,
-    sprFormatColumns,
-    sprFormatRows,
-    sprInsertColumns,
-    sprInsertRows,
-    sprInsertHyperlinks,
-    sprDeleteColumns,
-    sprDeleteRows,
-    sprSelectLockedCells,
-    sprSort,
-    sprAutoFilter,
-    sprPivotTables,
-    sprSelectUnlockedCells,
   )
 where
 
@@ -65,9 +45,9 @@ instance NFData LegacyPassword
 --
 -- See Part 4, 14.7.1 "Legacy Password Hash Algorithm" (p. 73) and
 -- Part 4, 15.2.3 "Additional attributes for workbookProtection
--- element (Part 1, §18.2.29)" (p. 220) and Par 4, 15.3.1.6
+-- element (Part 1, 18.2.29)" (p. 220) and Par 4, 15.3.1.6
 -- "Additional attribute for sheetProtection element (Part 1,
--- §18.3.1.85)" (p. 229)
+-- 18.3.1.85)" (p. 229)
 legacyPassword :: Text -> LegacyPassword
 legacyPassword = LegacyPassword . hex . legacyHash . map ord . T.unpack
   where
@@ -90,7 +70,7 @@ data SheetProtection = SheetProtection
     -- this worksheet.
     --
     -- See Part 4, 15.3.1.6 "Additional attribute for sheetProtection
-    -- element (Part 1, §18.3.1.85)" (p. 229)
+    -- element (Part 1, 18.3.1.85)" (p. 229)
     _sprLegacyPassword :: Maybe LegacyPassword,
     -- | the value of this attribute dictates whether the other
     -- attributes of 'SheetProtection' should be applied
@@ -142,8 +122,6 @@ data SheetProtection = SheetProtection
   deriving (Eq, Show, Generic)
 
 instance NFData SheetProtection
-
-makeLenses ''SheetProtection
 
 {-------------------------------------------------------------------------------
   Base instances

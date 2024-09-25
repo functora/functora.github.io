@@ -7,7 +7,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StrictData #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Writes Excel files from a stream, which allows creation of
 --   large Excel files while remaining in constant memory.
@@ -16,11 +15,6 @@ module Codec.Xlsx.Writer.Stream
     writeXlsxWithSharedStrings,
     SheetWriteSettings (..),
     defaultSettings,
-    wsSheetView,
-    wsZip,
-    wsColumnProperties,
-    wsRowProperties,
-    wsStyles,
 
     -- *** Shared strings
     sharedStrings,
@@ -55,6 +49,8 @@ import Codec.Xlsx.Writer.Internal
 import Codec.Xlsx.Writer.Internal.Stream
 import Conduit (PrimMonad, yield, (.|))
 import qualified Conduit as C
+import Data.Generics.Labels
+import GHC.Generics (Generic)
 #ifdef USE_MICROLENS
 import Data.Traversable.WithIndex
 import Lens.Micro.Platform
@@ -86,7 +82,8 @@ import qualified Text.XML as TXML
 import Text.XML.Stream.Render
 import Text.XML.Unresolved (elementToEvents)
 
-upsertSharedStrings :: (MonadState SharedStringState m) => Row -> m [(Text, Int)]
+upsertSharedStrings ::
+  (MonadState SharedStringState m) => Row -> m [(Text, Int)]
 upsertSharedStrings row =
   traverse upsertSharedString items
   where
@@ -115,33 +112,32 @@ sharedStringsStream =
 
 -- | Settings for writing a single sheet.
 data SheetWriteSettings = MkSheetWriteSettings
-  { _wsSheetView :: [SheetView],
+  { wsSheetView :: [SheetView],
     -- | Enable zipOpt64=True if you intend writing large xlsx files, zip needs 64bit for files over 4gb.
-    _wsZip :: ZipOptions,
-    _wsColumnProperties :: [ColumnsProperties],
-    _wsRowProperties :: Map Int RowProperties,
-    _wsStyles :: Styles
+    wsZip :: ZipOptions,
+    wsColumnProperties :: [ColumnsProperties],
+    wsRowProperties :: Map Int RowProperties,
+    wsStyles :: Styles
   }
+  deriving stock (Generic)
 
 instance Show SheetWriteSettings where
   -- ZipOptions lacks a show instance-}
   show (MkSheetWriteSettings s _ y r _) =
     printf
-      "MkSheetWriteSettings{ _wsSheetView=%s, _wsColumnProperties=%s, _wsZip=defaultZipOptions, _wsRowProperties=%s }"
+      "MkSheetWriteSettings{ wsSheetView=%s, wsColumnProperties=%s, wsZip=defaultZipOptions, wsRowProperties=%s }"
       (show s)
       (show y)
       (show r)
 
-makeLenses ''SheetWriteSettings
-
 defaultSettings :: SheetWriteSettings
 defaultSettings =
   MkSheetWriteSettings
-    { _wsSheetView = [],
-      _wsColumnProperties = [],
-      _wsRowProperties = mempty,
-      _wsStyles = emptyStyles,
-      _wsZip =
+    { wsSheetView = [],
+      wsColumnProperties = [],
+      wsRowProperties = mempty,
+      wsStyles = emptyStyles,
+      wsZip =
         defaultZipOptions
           { zipOpt64 = False
           -- There is a magick number in the zip archive package,
@@ -196,7 +192,7 @@ writeXlsxWithSharedStrings ::
   ConduitT () Row m () ->
   ConduitT () ByteString m Word64
 writeXlsxWithSharedStrings settings sharedStrings' items =
-  combinedFiles settings sharedStrings' items .| zipStream (settings ^. wsZip)
+  combinedFiles settings sharedStrings' items .| zipStream (settings ^. #wsZip)
 
 -- massive amount of boilerplate needed for excel to function
 boilerplate ::
@@ -213,7 +209,9 @@ boilerplate settings sharedStrings' =
       ZipDataSource $ writeContentTypes .| eventsToBS
     ),
     (zipEntry "xl/workbook.xml", ZipDataSource $ writeWorkbook .| eventsToBS),
-    (zipEntry "xl/styles.xml", ZipDataByteString $ coerce $ settings ^. wsStyles),
+    ( zipEntry "xl/styles.xml",
+      ZipDataByteString $ coerce $ settings ^. #wsStyles
+    ),
     ( zipEntry "xl/_rels/workbook.xml.rels",
       ZipDataSource $ writeWorkbookRels .| eventsToBS
     ),
@@ -231,7 +229,9 @@ combinedFiles settings sharedStrings' items =
     boilerplate settings sharedStrings'
       <> [ ( zipEntry "xl/worksheets/sheet1.xml",
              ZipDataSource $
-              items .| C.runReaderC settings (writeWorkSheet sharedStrings') .| eventsToBS
+              items
+                .| C.runReaderC settings (writeWorkSheet sharedStrings')
+                .| eventsToBS
            )
          ]
 
@@ -359,12 +359,14 @@ writeEvents = renderBuilder (def {rsPretty = False})
 sheetViews ::
   forall m. (MonadReader SheetWriteSettings m) => forall i. ConduitT i Event m ()
 sheetViews = do
-  sheetView <- view wsSheetView
+  sheetView <- view #wsSheetView
 
   unless (null sheetView) $ el (n_ "sheetViews") $ do
     let view' :: [Element]
         view' =
-          setNameSpaceRec spreadSheetNS . toXMLElement . toElement (n_ "sheetView")
+          setNameSpaceRec spreadSheetNS
+            . toXMLElement
+            . toElement (n_ "sheetView")
             <$> sheetView
 
     C.yieldMany $ elementToEvents =<< view'
@@ -389,7 +391,7 @@ setNameSpaceRec space xelm =
 
 columns :: (MonadReader SheetWriteSettings m) => ConduitT Row Event m ()
 columns = do
-  colProps <- view wsColumnProperties
+  colProps <- view #wsColumnProperties
   let cols :: Maybe TXML.Element
       cols = nonEmptyElListSimple (n_ "cols") $ map (toElement (n_ "col")) colProps
   traverse_ (C.yieldMany . elementToEvents . toXMLElement) cols
@@ -409,7 +411,7 @@ mapRow ::
 mapRow sharedStrings' sheetItem = do
   mRowProp <-
     preview $
-      wsRowProperties
+      #wsRowProperties
         . ix (unRowIndex rowIx)
         . rowHeightLens
         . _Just
@@ -446,7 +448,9 @@ renderCellType sharedStrings' cell =
   maybe
     mempty
     (attr "t" . renderType sharedStrings')
-    $ cell ^? cellValue . _Just
+    $ cell
+      ^? cellValue
+      . _Just
 
 renderCell :: Map Text Int -> Cell -> Text
 renderCell sharedStrings' cell = renderValue sharedStrings' val

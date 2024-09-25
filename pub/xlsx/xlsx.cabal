@@ -36,6 +36,16 @@ flag ghcid
   default:     False
   description: Run dev ghcid shell
 
+common ext
+  default-extensions:
+    AllowAmbiguousTypes
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    FlexibleContexts
+    OverloadedLabels
+    TypeApplications
+
 common pkg
   hs-source-dirs:   src
   build-depends:
@@ -53,6 +63,7 @@ common pkg
     , exceptions
     , extra
     , filepath
+    , generic-lens
     , hexpat
     , monad-control
     , mtl                >=2.1
@@ -98,6 +109,7 @@ common pkg
     TupleSections
 
 library
+  import:          ext
   import:          pkg
   ghc-options:     -Wall
   exposed-modules:
@@ -152,8 +164,13 @@ library
     Codec.Xlsx.Parser.Stream.HexpatInternal
 
 test-suite data-test
+  import:           ext
+
   if flag(ghcid)
     import: pkg
+
+  else
+    build-depends: xlsx
 
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
@@ -190,7 +207,6 @@ test-suite data-test
     , text
     , time
     , vector
-    , xlsx
     , xml-conduit       >=1.1.0
     , zip
 

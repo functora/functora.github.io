@@ -1,0 +1,6 @@
+--restart=.ghcid
+--restart=xlsx.cabal
+--restart=../../cabal.project
+--test="Main.main"
+--command="cabal new-repl xlsx:data-test --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid"
+

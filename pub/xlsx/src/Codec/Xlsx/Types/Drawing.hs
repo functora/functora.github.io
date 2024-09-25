@@ -5,7 +5,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -38,22 +37,22 @@ import Text.XML.Cursor
 -- | information about image file as a par of a drawing
 data FileInfo = FileInfo
   { -- | image filename, images are assumed to be stored under path "xl\/media\/"
-    _fiFilename :: FilePath,
+    fiFilename :: FilePath,
     -- | image content type, ECMA-376 advises to use "image\/png" or "image\/jpeg"
     -- if interoperability is wanted
-    _fiContentType :: Text,
+    fiContentType :: Text,
     -- | image file contents
-    _fiContents :: ByteString
+    fiContents :: ByteString
   }
   deriving (Eq, Show, Generic)
 
 instance NFData FileInfo
 
 data Marker = Marker
-  { _mrkCol :: Int,
-    _mrkColOff :: Coordinate,
-    _mrkRow :: Int,
-    _mrkRowOff :: Coordinate
+  { mrkCol :: Int,
+    mrkColOff :: Coordinate,
+    mrkRow :: Int,
+    mrkRowOff :: Coordinate
   }
   deriving (Eq, Show, Generic)
 
@@ -127,15 +126,15 @@ picture dId fi =
       PicNonVisual $
         NonVisualDrawingProperties
           { _nvdpId = dId,
-            _nvdpName = T.pack $ _fiFilename fi,
+            _nvdpName = T.pack $ fiFilename fi,
             _nvdpDescription = Nothing,
             _nvdpHidden = False,
             _nvdpTitle = Nothing
           }
     bfProps =
       BlipFillProperties
-        { _bfpImageInfo = Just fi,
-          _bfpFillMode = Just FillStretch
+        { bfpImageInfo = Just fi,
+          bfpFillMode = Just FillStretch
         }
     shProps =
       ShapeProperties
@@ -149,11 +148,11 @@ picture dId fi =
 -- particular drawing alongside with their anchorings (i.e. sizes and
 -- positions)
 extractPictures :: Drawing -> [(Anchoring, FileInfo)]
-extractPictures dr = mapMaybe maybePictureInfo $ _xdrAnchors dr
+extractPictures dr = mapMaybe maybePictureInfo $ xdrAnchors dr
   where
     maybePictureInfo Anchor {..} =
-      case _anchObject of
-        Picture {..} -> (_anchAnchoring,) <$> _bfpImageInfo _picBlipFill
+      case anchObject of
+        Picture {..} -> (anchAnchoring,) <$> bfpImageInfo _picBlipFill
         _ -> Nothing
 
 -- | This element is used to set certain properties related to a drawing
@@ -216,8 +215,8 @@ data NonVisualDrawingProperties = NonVisualDrawingProperties
 instance NFData NonVisualDrawingProperties
 
 data BlipFillProperties a = BlipFillProperties
-  { _bfpImageInfo :: Maybe a,
-    _bfpFillMode :: Maybe FillMode
+  { bfpImageInfo :: Maybe a,
+    bfpFillMode :: Maybe FillMode
     -- TODO: dpi, rotWithShape, srcRect
   }
   deriving (Eq, Show, Generic)
@@ -236,16 +235,16 @@ instance NFData FillMode
 
 -- See @EG_Anchor@ (p. 4052)
 data Anchor p g = Anchor
-  { _anchAnchoring :: Anchoring,
-    _anchObject :: DrawingObject p g,
-    _anchClientData :: ClientData
+  { anchAnchoring :: Anchoring,
+    anchObject :: DrawingObject p g,
+    anchClientData :: ClientData
   }
   deriving (Eq, Show, Generic)
 
 instance (NFData p, NFData g) => NFData (Anchor p g)
 
 data GenericDrawing p g = Drawing
-  { _xdrAnchors :: [Anchor p g]
+  { xdrAnchors :: [Anchor p g]
   }
   deriving (Eq, Show, Generic)
 
@@ -255,11 +254,6 @@ instance (NFData p, NFData g) => NFData (GenericDrawing p g)
 type Drawing = GenericDrawing FileInfo ChartSpace
 
 type UnresolvedDrawing = GenericDrawing RefId RefId
-
-makeLenses ''Anchor
-makeLenses ''DrawingObject
-makeLenses ''BlipFillProperties
-makeLenses ''GenericDrawing
 
 -- | simple drawing object anchoring using one cell as a top lelft
 -- corner and dimensions of that object
@@ -274,10 +268,10 @@ simpleAnchorXY ::
   Anchor p g
 simpleAnchorXY (x, y) sz obj =
   Anchor
-    { _anchAnchoring =
+    { anchAnchoring =
         OneCellAnchor {onecaFrom = unqMarker (x, 0) (y, 0), onecaExt = sz},
-      _anchObject = obj,
-      _anchClientData = def
+      anchObject = obj,
+      anchClientData = def
     }
 
 {-------------------------------------------------------------------------------
@@ -296,9 +290,9 @@ instance FromCursor UnresolvedDrawing where
 
 instance FromCursor (Anchor RefId RefId) where
   fromCursor cur = do
-    _anchAnchoring <- fromCursor cur
-    _anchObject <- cur $/ anyElement >=> fromCursor
-    _anchClientData <- cur $/ element (xdr "clientData") >=> fromCursor
+    anchAnchoring <- fromCursor cur
+    anchObject <- cur $/ anyElement >=> fromCursor
+    anchClientData <- cur $/ element (xdr "clientData") >=> fromCursor
     return Anchor {..}
 
 instance FromCursor Anchoring where
@@ -325,10 +319,10 @@ anchoringFromNode n
 
 instance FromCursor Marker where
   fromCursor cur = do
-    _mrkCol <- cur $/ element (xdr "col") &/ content >=> decimal
-    _mrkColOff <- cur $/ element (xdr "colOff") &/ content >=> coordinate
-    _mrkRow <- cur $/ element (xdr "row") &/ content >=> decimal
-    _mrkRowOff <- cur $/ element (xdr "rowOff") &/ content >=> coordinate
+    mrkCol <- cur $/ element (xdr "col") &/ content >=> decimal
+    mrkColOff <- cur $/ element (xdr "colOff") &/ content >=> coordinate
+    mrkRow <- cur $/ element (xdr "row") &/ content >=> decimal
+    mrkRowOff <- cur $/ element (xdr "rowOff") &/ content >=> coordinate
     return Marker {..}
 
 instance FromCursor (DrawingObject RefId RefId) where
@@ -382,12 +376,12 @@ instance FromAttrVal DrawingElementId where
 
 instance FromCursor (BlipFillProperties RefId) where
   fromCursor cur = do
-    let _bfpImageInfo =
+    let bfpImageInfo =
           listToMaybe $
             cur
               $/ element (a_ "blip")
               >=> fmap RefId . attribute (odr "embed")
-        _bfpFillMode = listToMaybe $ cur $/ anyElement >=> fromCursor
+        bfpFillMode = listToMaybe $ cur $/ anyElement >=> fromCursor
     return BlipFillProperties {..}
 
 instance FromCursor FillMode where
@@ -439,9 +433,9 @@ anchorToElement Anchor {..} =
           ++ map NodeElement [drawingObjEl, cdEl]
     }
   where
-    el = anchoringToElement _anchAnchoring
-    drawingObjEl = drawingObjToElement _anchObject
-    cdEl = toElement "clientData" _anchClientData
+    el = anchoringToElement anchAnchoring
+    drawingObjEl = drawingObjToElement anchObject
+    cdEl = toElement "clientData" anchClientData
 
 anchoringToElement :: Anchoring -> Element
 anchoringToElement anchoring = elementList nm attrs elements
@@ -467,10 +461,10 @@ instance ToElement Marker where
   toElement nm Marker {..} = elementListSimple nm elements
     where
       elements =
-        [ elementContent "col" (toAttrVal _mrkCol),
-          elementContent "colOff" (toAttrVal _mrkColOff),
-          elementContent "row" (toAttrVal _mrkRow),
-          elementContent "rowOff" (toAttrVal _mrkRowOff)
+        [ elementContent "col" (toAttrVal mrkCol),
+          elementContent "colOff" (toAttrVal mrkColOff),
+          elementContent "row" (toAttrVal mrkRow),
+          elementContent "rowOff" (toAttrVal mrkRowOff)
         ]
 
 drawingObjToElement :: DrawingObject RefId RefId -> Element
@@ -534,8 +528,8 @@ instance ToElement (BlipFillProperties RefId) where
     where
       elements =
         catMaybes
-          [ (\rId -> leafElement (a_ "blip") [odr "embed" .= rId]) <$> _bfpImageInfo,
-            fillModeToElement <$> _bfpFillMode
+          [ (\rId -> leafElement (a_ "blip") [odr "embed" .= rId]) <$> bfpImageInfo,
+            fillModeToElement <$> bfpFillMode
           ]
 
 fillModeToElement :: FillMode -> Element

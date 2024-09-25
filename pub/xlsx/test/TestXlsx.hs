@@ -123,13 +123,13 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
           )
         ]
     cols = [ColumnsProperties 1 10 (Just 15) (Just 1) False False False]
-    drawing = Just $ testDrawing {_xdrAnchors = map resolve $ _xdrAnchors testDrawing}
+    drawing = Just $ testDrawing {xdrAnchors = map resolve $ xdrAnchors testDrawing}
     resolve :: Anchor RefId RefId -> Anchor FileInfo ChartSpace
     resolve Anchor {..} =
       let obj =
-            case _anchObject of
+            case anchObject of
               Picture {..} ->
-                let blipFill = (_picBlipFill & bfpImageInfo ?~ fileInfo)
+                let blipFill = (_picBlipFill & #bfpImageInfo ?~ fileInfo)
                  in Picture
                       { _picMacro = _picMacro,
                         _picPublished = _picPublished,
@@ -140,9 +140,9 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
               Graphic nv _ tr ->
                 Graphic nv testLineChartSpace tr
        in Anchor
-            { _anchAnchoring = _anchAnchoring,
-              _anchObject = obj,
-              _anchClientData = _anchClientData
+            { anchAnchoring = anchAnchoring,
+              anchObject = obj,
+              anchClientData = anchClientData
             }
     fileInfo = FileInfo "dummy.png" "image/png" "fake contents"
     ranges = [mkRange (1, 1) (1, 2), mkRange (2, 2) (10, 5)]

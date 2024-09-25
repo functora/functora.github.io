@@ -677,29 +677,29 @@ getDrawing ar contentTypes fp = do
   cur <- xmlCursorRequired ar fp
   drawingRels <- getRels ar fp
   unresolved <- headErr (InvalidFile fp "Couldn't parse drawing") (fromCursor cur)
-  anchors <- forM (unresolved ^. xdrAnchors) $ resolveFileInfo drawingRels
+  anchors <- forM (xdrAnchors unresolved) $ resolveFileInfo drawingRels
   return $ Drawing anchors
   where
     resolveFileInfo ::
       Relationships -> Anchor RefId RefId -> Parser (Anchor FileInfo ChartSpace)
     resolveFileInfo rels uAnch =
-      case uAnch ^. anchObject of
+      case uAnch ^. #anchObject of
         Picture {..} -> do
-          let mRefId = _picBlipFill ^. bfpImageInfo
+          let mRefId = _picBlipFill ^. #bfpImageInfo
           mFI <- lookupFI rels mRefId
           let pic' =
                 Picture
                   { _picMacro = _picMacro,
                     _picPublished = _picPublished,
                     _picNonVisual = _picNonVisual,
-                    _picBlipFill = (_picBlipFill & bfpImageInfo .~ mFI),
+                    _picBlipFill = (_picBlipFill & #bfpImageInfo .~ mFI),
                     _picShapeProperties = _picShapeProperties
                   }
-          return uAnch {_anchObject = pic'}
+          return uAnch {anchObject = pic'}
         Graphic nv rId tr -> do
           chartPath <- lookupRelPath fp rels rId
           chart <- readChart ar chartPath
-          return uAnch {_anchObject = Graphic nv chart tr}
+          return uAnch {anchObject = Graphic nv chart tr}
     lookupFI _ Nothing = return Nothing
     lookupFI rels (Just rId) = do
       path <- lookupRelPath fp rels rId

@@ -53,9 +53,9 @@ testDrawing = Drawing [anchor1, anchor2]
   where
     anchor1 =
       Anchor
-        { _anchAnchoring = anchoring1,
-          _anchObject = pic,
-          _anchClientData = def
+        { anchAnchoring = anchoring1,
+          anchObject = pic,
+          anchClientData = def
         }
     anchoring1 =
       TwoCellAnchor
@@ -82,8 +82,8 @@ testDrawing = Drawing [anchor1, anchor2]
           }
     bfProps =
       BlipFillProperties
-        { _bfpImageInfo = Just (RefId "rId1"),
-          _bfpFillMode = Just FillStretch
+        { bfpImageInfo = Just (RefId "rId1"),
+          bfpFillMode = Just FillStretch
         }
     shProps =
       ShapeProperties
@@ -107,9 +107,9 @@ testDrawing = Drawing [anchor1, anchor2]
         }
     anchor2 =
       Anchor
-        { _anchAnchoring = anchoring2,
-          _anchObject = graphic,
-          _anchClientData = def
+        { anchAnchoring = anchoring2,
+          anchObject = graphic,
+          anchClientData = def
         }
     anchoring2 =
       TwoCellAnchor

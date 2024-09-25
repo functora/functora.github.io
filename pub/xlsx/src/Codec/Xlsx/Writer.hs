@@ -38,6 +38,7 @@ import Control.Monad.ST
 import Control.Monad.State (evalState, get, put)
 import qualified Data.ByteString.Lazy as L
 import Data.ByteString.Lazy.Char8 ()
+import Data.Generics.Labels
 import Data.List (foldl', mapAccumL)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -138,7 +139,8 @@ singleSheetFiles n cells pivFileDatas ws tblIdRef = do
           $ sheetXml
       nss =
         [("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships")]
-      sheetXml = renderLBS def {rsNamespaces = nss} $ Document (Prologue [] Nothing []) root []
+      sheetXml =
+        renderLBS def {rsNamespaces = nss} $ Document (Prologue [] Nothing []) root []
       root =
         addNS "http://schemas.openxmlformats.org/spreadsheetml/2006/main" Nothing $
           elementListSimple "worksheet" rootEls
@@ -307,34 +309,34 @@ genDrawing n ref dr = do
         ("a", "http://schemas.openxmlformats.org/drawingml/2006/main"),
         ("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships")
       ]
-    dr' = Drawing {_xdrAnchors = reverse anchors'}
-    (anchors', images, charts, _) = foldl' collectFile ([], [], [], 1) (dr ^. xdrAnchors)
+    dr' = Drawing {xdrAnchors = reverse anchors'}
+    (anchors', images, charts, _) = foldl' collectFile ([], [], [], 1) (dr ^. #xdrAnchors)
     collectFile ::
       ([Anchor RefId RefId], [Maybe (Int, FileInfo)], [(Int, ChartSpace)], Int) ->
       Anchor FileInfo ChartSpace ->
       ([Anchor RefId RefId], [Maybe (Int, FileInfo)], [(Int, ChartSpace)], Int)
     collectFile (as, fis, chs, i) anch0 =
-      case anch0 ^. anchObject of
+      case anch0 ^. #anchObject of
         Picture {..} ->
-          let fi = (i,) <$> _picBlipFill ^. bfpImageInfo
+          let fi = (i,) <$> _picBlipFill ^. #bfpImageInfo
               pic' =
                 Picture
                   { _picMacro = _picMacro,
                     _picPublished = _picPublished,
                     _picNonVisual = _picNonVisual,
                     _picBlipFill =
-                      (_picBlipFill & bfpImageInfo ?~ RefId ("rId" <> txti i)),
+                      (_picBlipFill & #bfpImageInfo ?~ RefId ("rId" <> txti i)),
                     _picShapeProperties = _picShapeProperties
                   }
-              anch = anch0 {_anchObject = pic'}
+              anch = anch0 {anchObject = pic'}
            in (anch : as, fi : fis, chs, i + 1)
         Graphic nv ch tr ->
           let gr' = Graphic nv (RefId ("rId" <> txti i)) tr
-              anch = anch0 {_anchObject = gr'}
+              anch = anch0 {anchObject = gr'}
            in (anch : as, fis, (i, ch) : chs, i + 1)
     imageFiles =
       [ ( unsafeRefId i,
-          FileData ("xl/media/" <> _fiFilename) _fiContentType "image" _fiContents
+          FileData ("xl/media/" <> fiFilename) fiContentType "image" fiContents
         )
         | (i, FileInfo {..}) <- reverse (catMaybes images)
       ]

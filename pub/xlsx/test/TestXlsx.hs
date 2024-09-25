@@ -70,9 +70,9 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
         ]
     autoFilter =
       def
-        & afRef
+        & #afRef
         ?~ CellRef "A1:E10"
-        & afFilterColumns
+        & #afFilterColumns
         .~ fCols
     fCols =
       M.fromList
@@ -93,7 +93,7 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
             tblDisplayName = "Table1",
             tblRef = CellRef "A3",
             tblColumns = [TableColumn "another text"],
-            tblAutoFilter = Just (def & afRef ?~ CellRef "A3")
+            tblAutoFilter = Just (def & #afRef ?~ CellRef "A3")
           }
       ]
     protection =

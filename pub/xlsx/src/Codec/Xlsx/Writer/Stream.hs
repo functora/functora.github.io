@@ -49,7 +49,6 @@ import Codec.Xlsx.Writer.Internal
 import Codec.Xlsx.Writer.Internal.Stream
 import Conduit (PrimMonad, yield, (.|))
 import qualified Conduit as C
-import Data.Generics.Labels
 import GHC.Generics (Generic)
 #ifdef USE_MICROLENS
 import Data.Traversable.WithIndex
@@ -88,7 +87,7 @@ upsertSharedStrings row =
   traverse upsertSharedString items
   where
     items :: [Text]
-    items = row ^.. ri_cell_row . traversed . cellValue . _Just . _CellText
+    items = row ^.. #ri_cell_row . traversed . cellValue . _Just . _CellText
 
 -- | Process sheetItems into shared strings structure to be put into
 --   'writeXlsxWithSharedStrings'
@@ -106,7 +105,7 @@ sharedStringsStream ::
   (Monad m) =>
   ConduitT Row (Text, Int) m (Map Text Int)
 sharedStringsStream =
-  fmap (view string_map) $
+  fmap (view #string_map) $
     C.execStateC initialSharedString $
       CL.mapFoldableM upsertSharedStrings
 
@@ -420,9 +419,9 @@ mapRow sharedStrings' sheetItem = do
       rowAttr = ixAttr <> fold (attr "ht" . txtd <$> mRowProp)
   tag (n_ "row") rowAttr $
     void $
-      itraverse (mapCell sharedStrings' rowIx) (sheetItem ^. ri_cell_row)
+      itraverse (mapCell sharedStrings' rowIx) (sheetItem ^. #ri_cell_row)
   where
-    rowIx = sheetItem ^. ri_row_index
+    rowIx = sheetItem ^. #ri_row_index
     ixAttr = attr "r" $ toAttrVal rowIx
 
 mapCell ::

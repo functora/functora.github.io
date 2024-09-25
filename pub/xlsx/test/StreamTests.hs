@@ -103,7 +103,7 @@ tests =
 readWrite :: Xlsx -> IO ()
 readWrite input = do
   BS.writeFile "testinput.xlsx" (toBs input)
-  items <- fmap (toListOf (traversed . si_row)) $ runXlsxM "testinput.xlsx" $ collectItems $ makeIndex 1
+  items <- fmap (toListOf (traversed . #si_row)) $ runXlsxM "testinput.xlsx" $ collectItems $ makeIndex 1
   bs <- runConduitRes $ void (SW.writeXlsx SW.defaultSettings $ C.yieldMany items) .| C.foldC
   case toXlsxEither $ LB.fromStrict bs of
     Right result  ->
@@ -125,7 +125,7 @@ sharedStringInputTextsIsSameAsMapLength someTexts =
     length result == length unqTexts
   where
    result  :: Map Text Int
-   result = view SW.string_map $ traverse SW.upsertSharedString someTexts `execState` SW.initialSharedString
+   result = view #string_map $ traverse SW.upsertSharedString someTexts `execState` SW.initialSharedString
    unqTexts :: Set Text
    unqTexts = Set.fromList someTexts
 
@@ -135,7 +135,7 @@ sharedStringInputTextsIsSameAsValueSetLength someTexts =
     length result == length unqTexts
   where
    result  :: Set Int
-   result = setOf (SW.string_map . traversed) $ traverse SW.upsertSharedString someTexts `execState` SW.initialSharedString
+   result = setOf (#string_map . traversed) $ traverse SW.upsertSharedString someTexts `execState` SW.initialSharedString
    unqTexts :: Set Text
    unqTexts = Set.fromList someTexts
 
@@ -227,7 +227,7 @@ inlineStringsAreParsed = do
               )
             ]
         ]
-  expected @==? (items ^.. traversed . si_row . ri_cell_row)
+  expected @==? (items ^.. traversed . #si_row . #ri_cell_row)
 
 untypedCellsAreParsedAsFloats :: IO ()
 untypedCellsAreParsedAsFloats = do
@@ -243,7 +243,7 @@ untypedCellsAreParsedAsFloats = do
         , IM.fromList [ (1, def & cellValue ?~ CellDouble 14.0 & cellStyle ?~ 1 ) ]
         , IM.fromList [ (1, def & cellValue ?~ CellDouble 15.0) ]
         ]
-  expected @==? (_ri_cell_row . _si_row <$> items)
+  expected @==? (ri_cell_row . si_row <$> items)
 
 
 richCellTextIsParsed :: IO ()

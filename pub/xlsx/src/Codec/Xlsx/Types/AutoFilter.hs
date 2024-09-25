@@ -4,7 +4,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.AutoFilter where
 
@@ -291,14 +290,12 @@ instance NFData DynFilterType
 --
 -- See 18.3.1.2 "autoFilter (AutoFilter Settings)" (p. 1596)
 data AutoFilter = AutoFilter
-  { _afRef :: Maybe CellRef,
-    _afFilterColumns :: Map Int FilterColumn
+  { afRef :: Maybe CellRef,
+    afFilterColumns :: Map Int FilterColumn
   }
   deriving (Eq, Show, Generic)
 
 instance NFData AutoFilter
-
-makeLenses ''AutoFilter
 
 {-------------------------------------------------------------------------------
   Default instances
@@ -313,8 +310,8 @@ instance Default AutoFilter where
 
 instance FromCursor AutoFilter where
   fromCursor cur = do
-    _afRef <- maybeAttribute "ref" cur
-    let _afFilterColumns =
+    afRef <- maybeAttribute "ref" cur
+    let afFilterColumns =
           M.fromList $
             cur $/ element (n_ "filterColumn") >=> \c -> do
               colId <- fromAttribute "colId" c
@@ -324,8 +321,8 @@ instance FromCursor AutoFilter where
 
 instance FromXenoNode AutoFilter where
   fromXenoNode root = do
-    _afRef <- parseAttributes root $ maybeAttr "ref"
-    _afFilterColumns <-
+    afRef <- parseAttributes root $ maybeAttr "ref"
+    afFilterColumns <-
       fmap M.fromList . collectChildren root $ fromChildList "filterColumn"
     return AutoFilter {..}
 
@@ -629,12 +626,12 @@ instance ToElement AutoFilter where
   toElement nm AutoFilter {..} =
     elementList
       nm
-      (catMaybes ["ref" .=? _afRef])
+      (catMaybes ["ref" .=? afRef])
       [ elementList
           (n_ "filterColumn")
           ["colId" .= colId]
           [fltColToElement fCol]
-        | (colId, fCol) <- M.toList _afFilterColumns
+        | (colId, fCol) <- M.toList afFilterColumns
       ]
 
 fltColToElement :: FilterColumn -> Element

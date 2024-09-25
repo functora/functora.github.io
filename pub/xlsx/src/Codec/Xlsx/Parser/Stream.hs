@@ -12,7 +12,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StrictData #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -39,7 +38,6 @@ module Codec.Xlsx.Parser.Stream
     runXlsxM,
     WorkbookInfo (..),
     SheetInfo (..),
-    wiSheets,
     getOrParseSharedStringss,
     getWorkbookInfo,
     CellRow,
@@ -54,13 +52,9 @@ module Codec.Xlsx.Parser.Stream
 
     -- ** SheetItem
     SheetItem (..),
-    si_sheet_index,
-    si_row,
 
     -- ** Row
     Row (..),
-    ri_row_index,
-    ri_cell_row,
 
     -- * Errors
     SheetErrors (..),
@@ -136,23 +130,20 @@ type CellRow = IntMap Cell
 -- The current sheet at a time, every sheet is constructed of these items.
 data SheetItem = MkSheetItem
   { -- | The sheet number
-    _si_sheet_index :: Int,
-    _si_row :: ~Row
+    si_sheet_index :: Int,
+    si_row :: ~Row
   }
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
 
 data Row = MkRow
   { -- | Row number
-    _ri_row_index :: RowIndex,
+    ri_row_index :: RowIndex,
     -- | Row itself
-    _ri_cell_row :: ~CellRow
+    ri_cell_row :: ~CellRow
   }
   deriving stock (Generic, Show)
   deriving anyclass (NFData)
-
-makeLenses 'MkSheetItem
-makeLenses 'MkRow
 
 type SharedStringsMap = V.Vector Text
 
@@ -179,42 +170,38 @@ data ExcelValueType
 -- | State for parsing sheets
 data SheetState = MkSheetState
   { -- | Current row
-    _ps_row :: ~CellRow,
+    ps_row :: ~CellRow,
     -- | Current sheet ID (AKA 'sheetInfoSheetId')
-    _ps_sheet_index :: Int,
+    ps_sheet_index :: Int,
     -- | Current row number
-    _ps_cell_row_index :: RowIndex,
+    ps_cell_row_index :: RowIndex,
     -- | Current column number
-    _ps_cell_col_index :: ColumnIndex,
-    _ps_cell_style :: Maybe Int,
+    ps_cell_col_index :: ColumnIndex,
+    ps_cell_style :: Maybe Int,
     -- | Flag for indexing wheter the parser is in value or not
-    _ps_is_in_val :: Bool,
+    ps_is_in_val :: Bool,
     -- | Shared string map
-    _ps_shared_strings :: SharedStringsMap,
+    ps_shared_strings :: SharedStringsMap,
     -- | The last detected value type
-    _ps_type :: ExcelValueType,
+    ps_type :: ExcelValueType,
     -- | for hexpat only, which can break up char data into multiple events
-    _ps_text_buf :: Text,
+    ps_text_buf :: Text,
     -- | For hexpat only, which can throw errors right at the end of the sheet
     -- rather than ending gracefully.
-    _ps_worksheet_ended :: Bool
+    ps_worksheet_ended :: Bool
   }
   deriving stock (Generic, Show)
-
-makeLenses 'MkSheetState
 
 -- | State for parsing shared strings
 data SharedStringsState = MkSharedStringsState
   { -- | String we are parsing
     -- TODO: At the moment SharedStrings can be used only to create CellText values.
     -- We should add support for CellRich values.
-    _ss_string :: TB.Builder,
+    ss_string :: TB.Builder,
     -- | list of shared strings
-    _ss_list :: DL.DList Text
+    ss_list :: DL.DList Text
   }
   deriving stock (Generic, Show)
-
-makeLenses 'MkSharedStringsState
 
 type HasSheetState = MonadState SheetState
 
@@ -234,17 +221,16 @@ data SheetInfo = SheetInfo
 -- | Information about the workbook contained in xl/workbook.xml
 -- (currently a subset)
 data WorkbookInfo = WorkbookInfo
-  { _wiSheets :: [SheetInfo]
+  { wiSheets :: [SheetInfo]
   }
-  deriving (Show)
-
-makeLenses 'WorkbookInfo
+  deriving (Show, Generic)
 
 data XlsxMState = MkXlsxMState
-  { _xs_shared_strings :: Memoized (V.Vector Text),
-    _xs_workbook_info :: Memoized WorkbookInfo,
-    _xs_relationships :: Memoized Relationships
+  { xs_shared_strings :: Memoized (V.Vector Text),
+    xs_workbook_info :: Memoized WorkbookInfo,
+    xs_relationships :: Memoized Relationships
   }
+  deriving (Show, Generic)
 
 newtype XlsxM a = XlsxM {_unXlsxM :: ReaderT XlsxMState Zip.ZipArchive a}
   deriving newtype
@@ -264,24 +250,24 @@ newtype XlsxM a = XlsxM {_unXlsxM :: ReaderT XlsxMState Zip.ZipArchive a}
 initialSheetState :: SheetState
 initialSheetState =
   MkSheetState
-    { _ps_row = mempty,
-      _ps_sheet_index = 0,
-      _ps_cell_row_index = 0,
-      _ps_cell_col_index = 0,
-      _ps_is_in_val = False,
-      _ps_shared_strings = mempty,
-      _ps_type = Untyped,
-      _ps_text_buf = mempty,
-      _ps_worksheet_ended = False,
-      _ps_cell_style = Nothing
+    { ps_row = mempty,
+      ps_sheet_index = 0,
+      ps_cell_row_index = 0,
+      ps_cell_col_index = 0,
+      ps_is_in_val = False,
+      ps_shared_strings = mempty,
+      ps_type = Untyped,
+      ps_text_buf = mempty,
+      ps_worksheet_ended = False,
+      ps_cell_style = Nothing
     }
 
 -- | Initial parsing state
 initialSharedStrings :: SharedStringsState
 initialSharedStrings =
   MkSharedStringsState
-    { _ss_string = mempty,
-      _ss_list = mempty
+    { ss_string = mempty,
+      ss_list = mempty
     }
 
 -- | Parse shared string entry from xml event and return it once
@@ -295,19 +281,19 @@ parseSharedStrings ::
   m (Maybe Text)
 parseSharedStrings = \case
   -- TODO: Add parsing of text styles to further create CellRich values.
-  StartElement "si" _ -> Nothing <$ (ss_string .= mempty)
-  EndElement "si" -> Just . LT.toStrict . TB.toLazyText <$> gets _ss_string
-  CharacterData txt -> Nothing <$ (ss_string <>= TB.fromText txt)
+  StartElement "si" _ -> Nothing <$ (#ss_string .= mempty)
+  EndElement "si" -> Just . LT.toStrict . TB.toLazyText <$> gets ss_string
+  CharacterData txt -> Nothing <$ (#ss_string <>= TB.fromText txt)
   _ -> pure Nothing
 
 -- | Run a series of actions on an Xlsx file
 runXlsxM :: (MonadIO m) => FilePath -> XlsxM a -> m a
 runXlsxM xlsxFile (XlsxM act) = liftIO $ do
   -- TODO: don't run the withArchive multiple times but use liftWith or runInIO instead
-  _xs_workbook_info <- memoizeRef (Zip.withArchive xlsxFile readWorkbookInfo)
-  _xs_relationships <-
+  xs_workbook_info <- memoizeRef (Zip.withArchive xlsxFile readWorkbookInfo)
+  xs_relationships <-
     memoizeRef (Zip.withArchive xlsxFile readWorkbookRelationships)
-  _xs_shared_strings <- memoizeRef (Zip.withArchive xlsxFile parseSharedStringss)
+  xs_shared_strings <- memoizeRef (Zip.withArchive xlsxFile parseSharedStringss)
   Zip.withArchive xlsxFile $ runReaderT act $ MkXlsxMState {..}
 
 liftZip :: Zip.ZipArchive a -> XlsxM a
@@ -325,12 +311,12 @@ parseSharedStringss = do
       st <- liftIO $ runExpat state0 byteSrc $ \evs -> forM_ evs $ \ev -> do
         mTxt <- parseSharedStrings ev
         for_ mTxt $ \txt ->
-          ss_list %= (`DL.snoc` txt)
-      pure $ V.fromList $ DL.toList $ _ss_list st
+          #ss_list %= (`DL.snoc` txt)
+      pure $ V.fromList $ DL.toList $ ss_list st
 
 {-# SCC getOrParseSharedStringss #-}
 getOrParseSharedStringss :: XlsxM (V.Vector Text)
-getOrParseSharedStringss = runMemoized =<< asks _xs_shared_strings
+getOrParseSharedStringss = runMemoized =<< asks xs_shared_strings
 
 readWorkbookInfo :: Zip.ZipArchive WorkbookInfo
 readWorkbookInfo = do
@@ -354,7 +340,7 @@ lookupBy fields attrs = maybe (throwM $ LookupError attrs fields) pure $ lookup 
 -- xl/workbook.xml. The result is cached so the XML will only be
 -- decompressed and parsed once inside a larger XlsxM action.
 getWorkbookInfo :: XlsxM WorkbookInfo
-getWorkbookInfo = runMemoized =<< asks _xs_workbook_info
+getWorkbookInfo = runMemoized =<< asks xs_workbook_info
 
 readWorkbookRelationships :: Zip.ZipArchive Relationships
 readWorkbookRelationships = do
@@ -380,7 +366,7 @@ readWorkbookRelationships = do
 -- The relationships xml file will only be parsed once when called
 -- multiple times within a larger XlsxM action.
 getWorkbookRelationships :: XlsxM Relationships
-getWorkbookRelationships = runMemoized =<< asks _xs_relationships
+getWorkbookRelationships = runMemoized =<< asks xs_relationships
 
 type HexpatEvent = SAXEvent ByteString Text
 
@@ -463,14 +449,14 @@ runExpatForSheet ::
 runExpatForSheet initState byteSource inner =
   void $ liftIO $ runExpat initState byteSource handler
   where
-    sheetName = _ps_sheet_index initState
+    sheetName = ps_sheet_index initState
     handler evs = forM_ evs $ \ev -> do
       parseRes <- runExceptT $ matchHexpatEvent ev
       case parseRes of
         Left err -> throwM err
         Right (Just cellRow)
           | not (IntMap.null cellRow) -> do
-              rowNum <- use ps_cell_row_index
+              rowNum <- use #ps_cell_row_index
               liftIO $ inner $ MkSheetItem sheetName $ MkRow rowNum cellRow
         _ -> pure ()
 
@@ -505,7 +491,7 @@ makeIndexFromName sheetName = do
   -- names differ only in alphabetic case (at least for ascii...)
   let sheetNameCI = T.toLower sheetName
       findRes :: Maybe SheetInfo
-      findRes = find ((== sheetNameCI) . T.toLower . sheetInfoName) $ _wiSheets wi
+      findRes = find ((== sheetNameCI) . T.toLower . sheetInfoName) $ wiSheets wi
   pure $ makeIndex . sheetInfoSheetId <$> findRes
 
 readSheet ::
@@ -524,9 +510,9 @@ readSheet (MkSheetIndex sheetId) inner = do
       sharedStrs <- getOrParseSharedStringss
       let sheetState0 =
             initialSheetState
-              & ps_shared_strings
+              & #ps_shared_strings
               .~ sharedStrs
-              & ps_sheet_index
+              & #ps_sheet_index
               .~ sheetId
       runExpatForSheet sheetState0 sourceSheetXml inner
       pure True
@@ -549,8 +535,8 @@ countRowsInSheet (MkSheetIndex sheetId) = do
 -- | Return row from the state and empty it
 popRow :: (HasSheetState m) => m CellRow
 popRow = do
-  row <- use ps_row
-  ps_row .= mempty
+  row <- use #ps_row
+  #ps_row .= mempty
   pure row
 
 data AddCellErrors
@@ -606,17 +592,17 @@ addCellToRow ::
   m ()
 addCellToRow txt = do
   st <- get
-  style <- use ps_cell_style
-  when (_ps_is_in_val st) $ do
+  style <- use #ps_cell_style
+  when (ps_is_in_val st) $ do
     val <-
       liftEither $
         first ParseCellError $
-          parseValue (_ps_shared_strings st) txt (_ps_type st)
+          parseValue (ps_shared_strings st) txt (ps_type st)
     put $
       st
-        { _ps_row =
+        { ps_row =
             IntMap.insert
-              (unColumnIndex $ _ps_cell_col_index st)
+              (unColumnIndex $ ps_cell_col_index st)
               ( Cell
                   { _cellStyle = style,
                     _cellValue = Just val,
@@ -624,7 +610,7 @@ addCellToRow txt = do
                     _cellFormula = Nothing
                   }
               )
-              $ _ps_row st
+              $ ps_row st
         }
 
 data SheetErrors
@@ -680,14 +666,14 @@ matchHexpatEvent ev = case ev of
   CharacterData txt ->
     {-# SCC "handle_CharData" #-}
     do
-      inVal <- use ps_is_in_val
+      inVal <- use #ps_is_in_val
       when inVal $
-        {-# SCC "append_text_buf" #-} (ps_text_buf <>= txt)
+        {-# SCC "append_text_buf" #-} (#ps_text_buf <>= txt)
       pure Nothing
   StartElement "c" attrs -> Nothing <$ (setCoord attrs *> setType attrs *> setStyle attrs)
-  StartElement "is" _ -> Nothing <$ (ps_is_in_val .= True)
+  StartElement "is" _ -> Nothing <$ (#ps_is_in_val .= True)
   EndElement "is" -> Nothing <$ finaliseCellValue
-  StartElement "v" _ -> Nothing <$ (ps_is_in_val .= True)
+  StartElement "v" _ -> Nothing <$ (#ps_is_in_val .= True)
   EndElement "v" -> Nothing <$ finaliseCellValue
   -- If beginning of row, empty the state and return nothing.
   -- We don't know if there is anything in the state, the user may have
@@ -697,15 +683,15 @@ matchHexpatEvent ev = case ev of
   -- If at the end of the row, we have collected the whole row into
   -- the current state. Empty the state and return the row.
   EndElement "row" -> Just <$> popRow
-  StartElement "worksheet" _ -> ps_worksheet_ended .= False >> pure Nothing
-  EndElement "worksheet" -> ps_worksheet_ended .= True >> pure Nothing
+  StartElement "worksheet" _ -> #ps_worksheet_ended .= False >> pure Nothing
+  EndElement "worksheet" -> #ps_worksheet_ended .= True >> pure Nothing
   -- Skip everything else, e.g. the formula elements <f>
   FailDocument err -> do
     -- this event is emitted at the end the xml stream (possibly
     -- because the xml files in xlsx archives don't end in a
     -- newline, but that's a guess), so we use state to determine if
     -- it's expected.
-    finished <- use ps_worksheet_ended
+    finished <- use #ps_worksheet_ended
     unless finished $
       throwError $
         HexpatParseError err
@@ -716,12 +702,12 @@ matchHexpatEvent ev = case ev of
 finaliseCellValue ::
   (MonadError SheetErrors m, HasSheetState m) => m ()
 finaliseCellValue = do
-  txt <- gets _ps_text_buf
+  txt <- gets ps_text_buf
   addCellToRow txt
   modify' $ \st ->
     st
-      { _ps_is_in_val = False,
-        _ps_text_buf = mempty
+      { ps_is_in_val = False,
+        ps_text_buf = mempty
       }
 
 -- | Update state coordinates accordingly to @parseCoordinates@
@@ -734,8 +720,8 @@ setCoord ::
   m ()
 setCoord list = do
   coordinates <- liftEither $ first ParseCoordinateError $ parseCoordinates list
-  ps_cell_col_index .= (coordinates ^. _2)
-  ps_cell_row_index .= (coordinates ^. _1)
+  #ps_cell_col_index .= (coordinates ^. _2)
+  #ps_cell_row_index .= (coordinates ^. _1)
 
 -- | Parse type from values and update state accordingly
 setType ::
@@ -746,7 +732,7 @@ setType ::
   m ()
 setType list = do
   type' <- liftEither $ first ParseTypeError $ parseType list
-  ps_type .= type'
+  #ps_type .= type'
 
 -- | Find sheet value by its name
 findName :: ByteString -> SheetValues -> Maybe SheetValue
@@ -756,7 +742,7 @@ findName name = find ((name ==) . fst)
 setStyle :: (MonadError SheetErrors m, HasSheetState m) => SheetValues -> m ()
 setStyle list = do
   style <- liftEither $ first ParseStyleErrors $ parseStyle list
-  ps_cell_style .= style
+  #ps_cell_style .= style
 
 data StyleError = InvalidStyleRef {seInput :: Text, seErrorMsg :: String}
   deriving (Show)

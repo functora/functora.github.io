@@ -179,13 +179,13 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
     pageSetup =
       Just $
         def
-          & pageSetupBlackAndWhite
+          & #pageSetupBlackAndWhite
           ?~ True
-          & pageSetupCopies
+          & #pageSetupCopies
           ?~ 2
-          & pageSetupErrors
+          & #pageSetupErrors
           ?~ PrintErrorsDash
-          & pageSetupPaperSize
+          & #pageSetupPaperSize
           ?~ PaperA4
     customProperties = M.fromList [("some_prop", VtInt 42)]
     cFormatting =
@@ -292,24 +292,24 @@ testCellMap2 =
     comment3 = Comment (XlsxText "comment for an empty cell") "bob" True
     rich1 =
       def
-        & richTextRunText
+        & #richTextRunText
         .~ "Look ma!"
-        & richTextRunProperties
+        & #richTextRunProperties
         ?~ ( def
-              & runPropertiesBold
+              & #runPropertiesBold
               ?~ True
-              & runPropertiesFont
+              & #runPropertiesFont
               ?~ "Tahoma"
            )
     rich2 =
       def
-        & richTextRunText
+        & #richTextRunText
         .~ "It's blue!"
-        & richTextRunProperties
+        & #richTextRunProperties
         ?~ ( def
-              & runPropertiesItalic
+              & #runPropertiesItalic
               ?~ True
-              & runPropertiesColor
+              & #runPropertiesColor
               ?~ (def & #colorARGB ?~ "FF000080")
            )
 
@@ -361,7 +361,7 @@ withDoubleUnderline = withUnderline FontUnderlineDouble
 
 withUnderline :: FontUnderline -> SharedStringTable -> SharedStringTable
 withUnderline u (SharedStringTable [text, XlsxRichText [rich1, RichTextRun (Just props) val]]) =
-  let newprops = props & runPropertiesUnderline .~ Just u
+  let newprops = props & #runPropertiesUnderline .~ Just u
    in SharedStringTable [text, XlsxRichText [rich1, RichTextRun (Just newprops) val]]
 
 testSharedStringTable :: SharedStringTable
@@ -376,15 +376,15 @@ testSharedStringTable = SharedStringTable $ V.fromList items
         ]
     props =
       def
-        & runPropertiesBold
+        & #runPropertiesBold
         .~ Just True
-        & runPropertiesItalic
+        & #runPropertiesItalic
         .~ Just True
-        & runPropertiesSize
+        & #runPropertiesSize
         .~ Just 10
-        & runPropertiesFont
+        & #runPropertiesFont
         .~ Just "Arial"
-        & runPropertiesFontFamily
+        & #runPropertiesFontFamily
         .~ Just FontFamilySwiss
 
 testSharedStringTableWithEmpty :: SharedStringTable
@@ -401,38 +401,38 @@ testCommentTable =
   where
     rich =
       [ RichTextRun
-          { _richTextRunProperties =
+          { richTextRunProperties =
               Just $
                 def
-                  & runPropertiesBold
+                  & #runPropertiesBold
                   ?~ True
-                  & runPropertiesCharset
+                  & #runPropertiesCharset
                   ?~ 1
-                  & runPropertiesColor
+                  & #runPropertiesColor
                   ?~ def -- TODO: why not Nothing here?
-                  & runPropertiesFont
+                  & #runPropertiesFont
                   ?~ "Calibri"
-                  & runPropertiesScheme
+                  & #runPropertiesScheme
                   ?~ FontSchemeMinor
-                  & runPropertiesSize
+                  & #runPropertiesSize
                   ?~ 8.0,
-            _richTextRunText = "Bob:"
+            richTextRunText = "Bob:"
           },
         RichTextRun
-          { _richTextRunProperties =
+          { richTextRunProperties =
               Just $
                 def
-                  & runPropertiesCharset
+                  & #runPropertiesCharset
                   ?~ 1
-                  & runPropertiesColor
+                  & #runPropertiesColor
                   ?~ def
-                  & runPropertiesFont
+                  & #runPropertiesFont
                   ?~ "Calibri"
-                  & runPropertiesScheme
+                  & #runPropertiesScheme
                   ?~ FontSchemeMinor
-                  & runPropertiesSize
+                  & #runPropertiesSize
                   ?~ 8.0,
-            _richTextRunText = "Why such high expense?"
+            richTextRunText = "Why such high expense?"
           }
       ]
 

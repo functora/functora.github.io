@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.PageSetup
   ( -- * Main types
@@ -14,29 +13,6 @@ module Codec.Xlsx.Types.PageSetup
     Orientation (..),
     PageOrder (..),
     PaperSize (..),
-
-    -- * Lenses
-
-    -- ** PageSetup
-    pageSetupBlackAndWhite,
-    pageSetupCellComments,
-    pageSetupCopies,
-    pageSetupDraft,
-    pageSetupErrors,
-    pageSetupFirstPageNumber,
-    pageSetupFitToHeight,
-    pageSetupFitToWidth,
-    pageSetupHorizontalDpi,
-    pageSetupId,
-    pageSetupOrientation,
-    pageSetupPageOrder,
-    pageSetupPaperHeight,
-    pageSetupPaperSize,
-    pageSetupPaperWidth,
-    pageSetupScale,
-    pageSetupUseFirstPageNumber,
-    pageSetupUsePrinterDefaults,
-    pageSetupVerticalDpi,
   )
 where
 
@@ -61,71 +37,71 @@ import Text.XML
 
 data PageSetup = PageSetup
   { -- | Print black and white.
-    _pageSetupBlackAndWhite :: Maybe Bool,
+    pageSetupBlackAndWhite :: Maybe Bool,
     -- | This attribute specifies how to print cell comments.
-    _pageSetupCellComments :: Maybe CellComments,
+    pageSetupCellComments :: Maybe CellComments,
     -- | Number of copies to print.
-    _pageSetupCopies :: Maybe Int,
+    pageSetupCopies :: Maybe Int,
     -- | Print without graphics.
-    _pageSetupDraft :: Maybe Bool,
+    pageSetupDraft :: Maybe Bool,
     -- | Specifies how to print cell values for cells with errors.
-    _pageSetupErrors :: Maybe PrintErrors,
+    pageSetupErrors :: Maybe PrintErrors,
     -- | Page number for first printed page. If no value is specified, then
     -- 'automatic' is assumed.
-    _pageSetupFirstPageNumber :: Maybe Int,
+    pageSetupFirstPageNumber :: Maybe Int,
     -- | Number of vertical pages to fit on.
-    _pageSetupFitToHeight :: Maybe Int,
+    pageSetupFitToHeight :: Maybe Int,
     -- | Number of horizontal pages to fit on.
-    _pageSetupFitToWidth :: Maybe Int,
+    pageSetupFitToWidth :: Maybe Int,
     -- | Horizontal print resolution of the device.
-    _pageSetupHorizontalDpi :: Maybe Int,
+    pageSetupHorizontalDpi :: Maybe Int,
     -- | Relationship Id of the devMode printer settings part.
     --
     -- (Explicit reference to a parent XML element.)
     --
     -- See 22.8.2.1 "ST_RelationshipId (Explicit Relationship ID)" (p. 3784)
-    _pageSetupId :: Maybe Text,
+    pageSetupId :: Maybe Text,
     -- | Orientation of the page.
-    _pageSetupOrientation :: Maybe Orientation,
+    pageSetupOrientation :: Maybe Orientation,
     -- | Order of printed pages
-    _pageSetupPageOrder :: Maybe PageOrder,
+    pageSetupPageOrder :: Maybe PageOrder,
     -- | Height of custom paper as a number followed by a unit identifier.
     --
     -- When paperHeight and paperWidth are specified, paperSize shall be ignored.
     -- Examples: @"297mm"@, @"11in"@.
     --
     -- See 22.9.2.12 "ST_PositiveUniversalMeasure (Positive Universal Measurement)" (p. 3792)
-    _pageSetupPaperHeight :: Maybe Text,
+    pageSetupPaperHeight :: Maybe Text,
     -- | Pager size
     --
     -- When paperHeight, paperWidth, and paperUnits are specified, paperSize
     -- should be ignored.
-    _pageSetupPaperSize :: Maybe PaperSize,
+    pageSetupPaperSize :: Maybe PaperSize,
     -- | Width of custom paper as a number followed by a unit identifier
     --
     -- Examples: @21cm@, @8.5in@
     --
     -- When paperHeight and paperWidth are specified, paperSize shall be
     -- ignored.
-    _pageSetupPaperWidth :: Maybe Text,
+    pageSetupPaperWidth :: Maybe Text,
     -- | Print scaling.
     --
     -- This attribute is restricted to values ranging from 10 to 400.
     -- This setting is overridden when fitToWidth and/or fitToHeight are in
     -- use.
-    _pageSetupScale :: Maybe Int,
-    -- | Use '_pageSetupFirstPageNumber' value for first page number, and do
+    pageSetupScale :: Maybe Int,
+    -- | Use 'pageSetupFirstPageNumber' value for first page number, and do
     -- not auto number the pages.
-    _pageSetupUseFirstPageNumber :: Maybe Bool,
-    -- | Use the printer’s defaults settings for page setup values and don't
+    pageSetupUseFirstPageNumber :: Maybe Bool,
+    -- | Use the printer's defaults settings for page setup values and don't
     -- use the default values specified in the schema.
     --
     -- Example: If dpi is not present or specified in the XML, the application
     -- must not assume 600dpi as specified in the schema as a default and
     -- instead must let the printer specify the default dpi.
-    _pageSetupUsePrinterDefaults :: Maybe Bool,
+    pageSetupUsePrinterDefaults :: Maybe Bool,
     -- | Vertical print resolution of the device.
-    _pageSetupVerticalDpi :: Maybe Int
+    pageSetupVerticalDpi :: Maybe Int
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -333,32 +309,26 @@ instance NFData PaperSize
 instance Default PageSetup where
   def =
     PageSetup
-      { _pageSetupBlackAndWhite = Nothing,
-        _pageSetupCellComments = Nothing,
-        _pageSetupCopies = Nothing,
-        _pageSetupDraft = Nothing,
-        _pageSetupErrors = Nothing,
-        _pageSetupFirstPageNumber = Nothing,
-        _pageSetupFitToHeight = Nothing,
-        _pageSetupFitToWidth = Nothing,
-        _pageSetupHorizontalDpi = Nothing,
-        _pageSetupId = Nothing,
-        _pageSetupOrientation = Nothing,
-        _pageSetupPageOrder = Nothing,
-        _pageSetupPaperHeight = Nothing,
-        _pageSetupPaperSize = Nothing,
-        _pageSetupPaperWidth = Nothing,
-        _pageSetupScale = Nothing,
-        _pageSetupUseFirstPageNumber = Nothing,
-        _pageSetupUsePrinterDefaults = Nothing,
-        _pageSetupVerticalDpi = Nothing
+      { pageSetupBlackAndWhite = Nothing,
+        pageSetupCellComments = Nothing,
+        pageSetupCopies = Nothing,
+        pageSetupDraft = Nothing,
+        pageSetupErrors = Nothing,
+        pageSetupFirstPageNumber = Nothing,
+        pageSetupFitToHeight = Nothing,
+        pageSetupFitToWidth = Nothing,
+        pageSetupHorizontalDpi = Nothing,
+        pageSetupId = Nothing,
+        pageSetupOrientation = Nothing,
+        pageSetupPageOrder = Nothing,
+        pageSetupPaperHeight = Nothing,
+        pageSetupPaperSize = Nothing,
+        pageSetupPaperWidth = Nothing,
+        pageSetupScale = Nothing,
+        pageSetupUseFirstPageNumber = Nothing,
+        pageSetupUsePrinterDefaults = Nothing,
+        pageSetupVerticalDpi = Nothing
       }
-
-{-------------------------------------------------------------------------------
-  Lenses
--------------------------------------------------------------------------------}
-
-makeLenses ''PageSetup
 
 {-------------------------------------------------------------------------------
   Rendering
@@ -372,25 +342,25 @@ instance ToElement PageSetup where
         elementNodes = [],
         elementAttributes =
           Map.fromList . catMaybes $
-            [ "paperSize" .=? _pageSetupPaperSize,
-              "paperHeight" .=? _pageSetupPaperHeight,
-              "paperWidth" .=? _pageSetupPaperWidth,
-              "scale" .=? _pageSetupScale,
-              "firstPageNumber" .=? _pageSetupFirstPageNumber,
-              "fitToWidth" .=? _pageSetupFitToWidth,
-              "fitToHeight" .=? _pageSetupFitToHeight,
-              "pageOrder" .=? _pageSetupPageOrder,
-              "orientation" .=? _pageSetupOrientation,
-              "usePrinterDefaults" .=? _pageSetupUsePrinterDefaults,
-              "blackAndWhite" .=? _pageSetupBlackAndWhite,
-              "draft" .=? _pageSetupDraft,
-              "cellComments" .=? _pageSetupCellComments,
-              "useFirstPageNumber" .=? _pageSetupUseFirstPageNumber,
-              "errors" .=? _pageSetupErrors,
-              "horizontalDpi" .=? _pageSetupHorizontalDpi,
-              "verticalDpi" .=? _pageSetupVerticalDpi,
-              "copies" .=? _pageSetupCopies,
-              "id" .=? _pageSetupId
+            [ "paperSize" .=? pageSetupPaperSize,
+              "paperHeight" .=? pageSetupPaperHeight,
+              "paperWidth" .=? pageSetupPaperWidth,
+              "scale" .=? pageSetupScale,
+              "firstPageNumber" .=? pageSetupFirstPageNumber,
+              "fitToWidth" .=? pageSetupFitToWidth,
+              "fitToHeight" .=? pageSetupFitToHeight,
+              "pageOrder" .=? pageSetupPageOrder,
+              "orientation" .=? pageSetupOrientation,
+              "usePrinterDefaults" .=? pageSetupUsePrinterDefaults,
+              "blackAndWhite" .=? pageSetupBlackAndWhite,
+              "draft" .=? pageSetupDraft,
+              "cellComments" .=? pageSetupCellComments,
+              "useFirstPageNumber" .=? pageSetupUseFirstPageNumber,
+              "errors" .=? pageSetupErrors,
+              "horizontalDpi" .=? pageSetupHorizontalDpi,
+              "verticalDpi" .=? pageSetupVerticalDpi,
+              "copies" .=? pageSetupCopies,
+              "id" .=? pageSetupId
             ]
       }
 
@@ -494,49 +464,49 @@ instance ToAttrVal PaperSize where
 -- | See @CT_PageSetup@, p. 3922
 instance FromCursor PageSetup where
   fromCursor cur = do
-    _pageSetupPaperSize <- maybeAttribute "paperSize" cur
-    _pageSetupPaperHeight <- maybeAttribute "paperHeight" cur
-    _pageSetupPaperWidth <- maybeAttribute "paperWidth" cur
-    _pageSetupScale <- maybeAttribute "scale" cur
-    _pageSetupFirstPageNumber <- maybeAttribute "firstPageNumber" cur
-    _pageSetupFitToWidth <- maybeAttribute "fitToWidth" cur
-    _pageSetupFitToHeight <- maybeAttribute "fitToHeight" cur
-    _pageSetupPageOrder <- maybeAttribute "pageOrder" cur
-    _pageSetupOrientation <- maybeAttribute "orientation" cur
-    _pageSetupUsePrinterDefaults <- maybeAttribute "usePrinterDefaults" cur
-    _pageSetupBlackAndWhite <- maybeAttribute "blackAndWhite" cur
-    _pageSetupDraft <- maybeAttribute "draft" cur
-    _pageSetupCellComments <- maybeAttribute "cellComments" cur
-    _pageSetupUseFirstPageNumber <- maybeAttribute "useFirstPageNumber" cur
-    _pageSetupErrors <- maybeAttribute "errors" cur
-    _pageSetupHorizontalDpi <- maybeAttribute "horizontalDpi" cur
-    _pageSetupVerticalDpi <- maybeAttribute "verticalDpi" cur
-    _pageSetupCopies <- maybeAttribute "copies" cur
-    _pageSetupId <- maybeAttribute "id" cur
+    pageSetupPaperSize <- maybeAttribute "paperSize" cur
+    pageSetupPaperHeight <- maybeAttribute "paperHeight" cur
+    pageSetupPaperWidth <- maybeAttribute "paperWidth" cur
+    pageSetupScale <- maybeAttribute "scale" cur
+    pageSetupFirstPageNumber <- maybeAttribute "firstPageNumber" cur
+    pageSetupFitToWidth <- maybeAttribute "fitToWidth" cur
+    pageSetupFitToHeight <- maybeAttribute "fitToHeight" cur
+    pageSetupPageOrder <- maybeAttribute "pageOrder" cur
+    pageSetupOrientation <- maybeAttribute "orientation" cur
+    pageSetupUsePrinterDefaults <- maybeAttribute "usePrinterDefaults" cur
+    pageSetupBlackAndWhite <- maybeAttribute "blackAndWhite" cur
+    pageSetupDraft <- maybeAttribute "draft" cur
+    pageSetupCellComments <- maybeAttribute "cellComments" cur
+    pageSetupUseFirstPageNumber <- maybeAttribute "useFirstPageNumber" cur
+    pageSetupErrors <- maybeAttribute "errors" cur
+    pageSetupHorizontalDpi <- maybeAttribute "horizontalDpi" cur
+    pageSetupVerticalDpi <- maybeAttribute "verticalDpi" cur
+    pageSetupCopies <- maybeAttribute "copies" cur
+    pageSetupId <- maybeAttribute "id" cur
     return PageSetup {..}
 
 instance FromXenoNode PageSetup where
   fromXenoNode root =
     parseAttributes root $ do
-      _pageSetupPaperSize <- maybeAttr "paperSize"
-      _pageSetupPaperHeight <- maybeAttr "paperHeight"
-      _pageSetupPaperWidth <- maybeAttr "paperWidth"
-      _pageSetupScale <- maybeAttr "scale"
-      _pageSetupFirstPageNumber <- maybeAttr "firstPageNumber"
-      _pageSetupFitToWidth <- maybeAttr "fitToWidth"
-      _pageSetupFitToHeight <- maybeAttr "fitToHeight"
-      _pageSetupPageOrder <- maybeAttr "pageOrder"
-      _pageSetupOrientation <- maybeAttr "orientation"
-      _pageSetupUsePrinterDefaults <- maybeAttr "usePrinterDefaults"
-      _pageSetupBlackAndWhite <- maybeAttr "blackAndWhite"
-      _pageSetupDraft <- maybeAttr "draft"
-      _pageSetupCellComments <- maybeAttr "cellComments"
-      _pageSetupUseFirstPageNumber <- maybeAttr "useFirstPageNumber"
-      _pageSetupErrors <- maybeAttr "errors"
-      _pageSetupHorizontalDpi <- maybeAttr "horizontalDpi"
-      _pageSetupVerticalDpi <- maybeAttr "verticalDpi"
-      _pageSetupCopies <- maybeAttr "copies"
-      _pageSetupId <- maybeAttr "id"
+      pageSetupPaperSize <- maybeAttr "paperSize"
+      pageSetupPaperHeight <- maybeAttr "paperHeight"
+      pageSetupPaperWidth <- maybeAttr "paperWidth"
+      pageSetupScale <- maybeAttr "scale"
+      pageSetupFirstPageNumber <- maybeAttr "firstPageNumber"
+      pageSetupFitToWidth <- maybeAttr "fitToWidth"
+      pageSetupFitToHeight <- maybeAttr "fitToHeight"
+      pageSetupPageOrder <- maybeAttr "pageOrder"
+      pageSetupOrientation <- maybeAttr "orientation"
+      pageSetupUsePrinterDefaults <- maybeAttr "usePrinterDefaults"
+      pageSetupBlackAndWhite <- maybeAttr "blackAndWhite"
+      pageSetupDraft <- maybeAttr "draft"
+      pageSetupCellComments <- maybeAttr "cellComments"
+      pageSetupUseFirstPageNumber <- maybeAttr "useFirstPageNumber"
+      pageSetupErrors <- maybeAttr "errors"
+      pageSetupHorizontalDpi <- maybeAttr "horizontalDpi"
+      pageSetupVerticalDpi <- maybeAttr "verticalDpi"
+      pageSetupCopies <- maybeAttr "copies"
+      pageSetupId <- maybeAttr "id"
       return PageSetup {..}
 
 -- | See @paperSize@ (attribute of @pageSetup@), p. 1659

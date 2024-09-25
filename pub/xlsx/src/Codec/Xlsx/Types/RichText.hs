@@ -2,36 +2,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.RichText
   ( -- * Main types
     RichTextRun (..),
     RunProperties (..),
     applyRunProperties,
-
-    -- * Lenses
-
-    -- ** RichTextRun
-    richTextRunProperties,
-    richTextRunText,
-
-    -- ** RunProperties
-    runPropertiesBold,
-    runPropertiesCharset,
-    runPropertiesColor,
-    runPropertiesCondense,
-    runPropertiesExtend,
-    runPropertiesFontFamily,
-    runPropertiesItalic,
-    runPropertiesOutline,
-    runPropertiesFont,
-    runPropertiesScheme,
-    runPropertiesShadow,
-    runPropertiesStrikeThrough,
-    runPropertiesSize,
-    runPropertiesUnderline,
-    runPropertiesVertAlign,
   )
 where
 
@@ -63,14 +39,14 @@ import Text.XML.Cursor
 data RichTextRun = RichTextRun
   { -- | This element represents a set of properties to apply to the contents of
     -- this rich text run.
-    _richTextRunProperties :: Maybe RunProperties,
+    richTextRunProperties :: Maybe RunProperties,
     -- | This element represents the text content shown as part of a string.
     --
     -- NOTE: 'RichTextRun' elements with an empty text field will result in
     -- an error when opening the file in Excel.
     --
     -- Section 18.4.12, "t (Text)" (p. 1727)
-    _richTextRunText :: Text
+    richTextRunText :: Text
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -83,50 +59,50 @@ data RunProperties = RunProperties
   { -- | Displays characters in bold face font style.
     --
     -- Section 18.8.2, "b (Bold)" (p. 1757)
-    _runPropertiesBold :: Maybe Bool,
+    runPropertiesBold :: Maybe Bool,
     -- | This element defines the font character set of this font.
     --
     -- Section 18.4.1, "charset (Character Set)" (p. 1721)
-    _runPropertiesCharset :: Maybe Int,
+    runPropertiesCharset :: Maybe Int,
     -- | One of the colors associated with the data bar or color scale.
     --
     -- Section 18.3.1.15, "color (Data Bar Color)" (p. 1608)
-    _runPropertiesColor :: Maybe Color,
+    runPropertiesColor :: Maybe Color,
     -- | Macintosh compatibility setting. Represents special word/character
     -- rendering on Macintosh, when this flag is set. The effect is to condense
     -- the text (squeeze it together).
     --
     -- Section 18.8.12, "condense (Condense)" (p. 1764)
-    _runPropertiesCondense :: Maybe Bool,
+    runPropertiesCondense :: Maybe Bool,
     -- | This element specifies a compatibility setting used for previous
     -- spreadsheet applications, resulting in special word/character rendering
     -- on those legacy applications, when this flag is set. The effect extends
     -- or stretches out the text.
     --
     -- Section 18.8.17, "extend (Extend)" (p. 1766)
-    _runPropertiesExtend :: Maybe Bool,
+    runPropertiesExtend :: Maybe Bool,
     -- | The font family this font belongs to. A font family is a set of fonts
     -- having common stroke width and serif characteristics. This is system
     -- level font information. The font name overrides when there are
     -- conflicting values.
     --
     -- Section 18.8.18, "family (Font Family)" (p. 1766)
-    _runPropertiesFontFamily :: Maybe FontFamily,
+    runPropertiesFontFamily :: Maybe FontFamily,
     -- | Displays characters in italic font style. The italic style is defined
     -- by the font at a system level and is not specified by ECMA-376.
     --
     -- Section 18.8.26, "i (Italic)" (p. 1773)
-    _runPropertiesItalic :: Maybe Bool,
+    runPropertiesItalic :: Maybe Bool,
     -- | This element displays only the inner and outer borders of each
     -- character. This is very similar to Bold in behavior.
     --
     -- Section 18.4.2, "outline (Outline)" (p. 1722)
-    _runPropertiesOutline :: Maybe Bool,
+    runPropertiesOutline :: Maybe Bool,
     -- | This element is a string representing the name of the font assigned to
     -- display this run.
     --
     -- Section 18.4.5, "rFont (Font)" (p. 1724)
-    _runPropertiesFont :: Maybe Text,
+    runPropertiesFont :: Maybe Text,
     -- | Defines the font scheme, if any, to which this font belongs. When a
     -- font definition is part of a theme definition, then the font is
     -- categorized as either a major or minor font scheme component. When a new
@@ -136,45 +112,38 @@ data RunProperties = RunProperties
     -- for body and paragraph text.
     --
     -- Section 18.8.35, "scheme (Scheme)" (p. 1794)
-    _runPropertiesScheme :: Maybe FontScheme,
+    runPropertiesScheme :: Maybe FontScheme,
     -- | Macintosh compatibility setting. Represents special word/character
     -- rendering on Macintosh, when this flag is set. The effect is to render a
     -- shadow behind, beneath and to the right of the text.
     --
     -- Section 18.8.36, "shadow (Shadow)" (p. 1795)
-    _runPropertiesShadow :: Maybe Bool,
+    runPropertiesShadow :: Maybe Bool,
     -- | This element draws a strikethrough line through the horizontal middle
     -- of the text.
     --
     -- Section 18.4.10, "strike (Strike Through)" (p. 1726)
-    _runPropertiesStrikeThrough :: Maybe Bool,
+    runPropertiesStrikeThrough :: Maybe Bool,
     -- | This element represents the point size (1/72 of an inch) of the Latin
     -- and East Asian text.
     --
     -- Section 18.4.11, "sz (Font Size)" (p. 1727)
-    _runPropertiesSize :: Maybe Double,
+    runPropertiesSize :: Maybe Double,
     -- | This element represents the underline formatting style.
     --
     -- Section 18.4.13, "u (Underline)" (p. 1728)
-    _runPropertiesUnderline :: Maybe FontUnderline,
+    runPropertiesUnderline :: Maybe FontUnderline,
     -- | This element adjusts the vertical position of the text relative to the
     -- text's default appearance for this run. It is used to get 'superscript'
     -- or 'subscript' texts, and shall reduce the font size (if a smaller size
     -- is available) accordingly.
     --
     -- Section 18.4.14, "vertAlign (Vertical Alignment)" (p. 1728)
-    _runPropertiesVertAlign :: Maybe FontVerticalAlignment
+    runPropertiesVertAlign :: Maybe FontVerticalAlignment
   }
   deriving (Eq, Ord, Show, Generic)
 
 instance NFData RunProperties
-
-{-------------------------------------------------------------------------------
-  Lenses
--------------------------------------------------------------------------------}
-
-makeLenses ''RichTextRun
-makeLenses ''RunProperties
 
 {-------------------------------------------------------------------------------
   Default instances
@@ -183,28 +152,28 @@ makeLenses ''RunProperties
 instance Default RichTextRun where
   def =
     RichTextRun
-      { _richTextRunProperties = Nothing,
-        _richTextRunText = ""
+      { richTextRunProperties = Nothing,
+        richTextRunText = ""
       }
 
 instance Default RunProperties where
   def =
     RunProperties
-      { _runPropertiesBold = Nothing,
-        _runPropertiesCharset = Nothing,
-        _runPropertiesColor = Nothing,
-        _runPropertiesCondense = Nothing,
-        _runPropertiesExtend = Nothing,
-        _runPropertiesFontFamily = Nothing,
-        _runPropertiesItalic = Nothing,
-        _runPropertiesOutline = Nothing,
-        _runPropertiesFont = Nothing,
-        _runPropertiesScheme = Nothing,
-        _runPropertiesShadow = Nothing,
-        _runPropertiesStrikeThrough = Nothing,
-        _runPropertiesSize = Nothing,
-        _runPropertiesUnderline = Nothing,
-        _runPropertiesVertAlign = Nothing
+      { runPropertiesBold = Nothing,
+        runPropertiesCharset = Nothing,
+        runPropertiesColor = Nothing,
+        runPropertiesCondense = Nothing,
+        runPropertiesExtend = Nothing,
+        runPropertiesFontFamily = Nothing,
+        runPropertiesItalic = Nothing,
+        runPropertiesOutline = Nothing,
+        runPropertiesFont = Nothing,
+        runPropertiesScheme = Nothing,
+        runPropertiesShadow = Nothing,
+        runPropertiesStrikeThrough = Nothing,
+        runPropertiesSize = Nothing,
+        runPropertiesUnderline = Nothing,
+        runPropertiesVertAlign = Nothing
       }
 
 {-------------------------------------------------------------------------------
@@ -219,8 +188,8 @@ instance ToElement RichTextRun where
         elementAttributes = Map.empty,
         elementNodes =
           map NodeElement . catMaybes $
-            [ toElement "rPr" <$> _richTextRunProperties,
-              Just $ elementContentPreserved "t" _richTextRunText
+            [ toElement "rPr" <$> richTextRunProperties,
+              Just $ elementContentPreserved "t" richTextRunText
             ]
       }
 
@@ -232,22 +201,22 @@ instance ToElement RunProperties where
         elementAttributes = Map.empty,
         elementNodes =
           map NodeElement . catMaybes $
-            [ elementValue "rFont" <$> _runPropertiesFont,
-              elementValue "charset" <$> _runPropertiesCharset,
-              elementValue "family" <$> _runPropertiesFontFamily,
-              elementValue "b" <$> _runPropertiesBold,
-              elementValue "i" <$> _runPropertiesItalic,
-              elementValue "strike" <$> _runPropertiesStrikeThrough,
-              elementValue "outline" <$> _runPropertiesOutline,
-              elementValue "shadow" <$> _runPropertiesShadow,
-              elementValue "condense" <$> _runPropertiesCondense,
-              elementValue "extend" <$> _runPropertiesExtend,
-              toElement "color" <$> _runPropertiesColor,
-              elementValue "sz" <$> _runPropertiesSize,
+            [ elementValue "rFont" <$> runPropertiesFont,
+              elementValue "charset" <$> runPropertiesCharset,
+              elementValue "family" <$> runPropertiesFontFamily,
+              elementValue "b" <$> runPropertiesBold,
+              elementValue "i" <$> runPropertiesItalic,
+              elementValue "strike" <$> runPropertiesStrikeThrough,
+              elementValue "outline" <$> runPropertiesOutline,
+              elementValue "shadow" <$> runPropertiesShadow,
+              elementValue "condense" <$> runPropertiesCondense,
+              elementValue "extend" <$> runPropertiesExtend,
+              toElement "color" <$> runPropertiesColor,
+              elementValue "sz" <$> runPropertiesSize,
               elementValueDef "u" FontUnderlineSingle
-                <$> _runPropertiesUnderline,
-              elementValue "vertAlign" <$> _runPropertiesVertAlign,
-              elementValue "scheme" <$> _runPropertiesScheme
+                <$> runPropertiesUnderline,
+              elementValue "vertAlign" <$> runPropertiesVertAlign,
+              elementValue "scheme" <$> runPropertiesScheme
             ]
       }
 
@@ -258,56 +227,56 @@ instance ToElement RunProperties where
 -- | See @CT_RElt@, p. 3903
 instance FromCursor RichTextRun where
   fromCursor cur = do
-    _richTextRunText <- cur $/ element (n_ "t") &/ content
-    _richTextRunProperties <- maybeFromElement (n_ "rPr") cur
+    richTextRunText <- cur $/ element (n_ "t") &/ content
+    richTextRunProperties <- maybeFromElement (n_ "rPr") cur
     return RichTextRun {..}
 
 instance FromXenoNode RichTextRun where
   fromXenoNode root = do
     (prNode, tNode) <-
       collectChildren root $ (,) <$> maybeChild "rPr" <*> requireChild "t"
-    _richTextRunProperties <- mapM fromXenoNode prNode
-    _richTextRunText <- contentX tNode
+    richTextRunProperties <- mapM fromXenoNode prNode
+    richTextRunText <- contentX tNode
     return RichTextRun {..}
 
 -- | See @CT_RPrElt@, p. 3903
 instance FromCursor RunProperties where
   fromCursor cur = do
-    _runPropertiesFont <- maybeElementValue (n_ "rFont") cur
-    _runPropertiesCharset <- maybeElementValue (n_ "charset") cur
-    _runPropertiesFontFamily <- maybeElementValue (n_ "family") cur
-    _runPropertiesBold <- maybeBoolElementValue (n_ "b") cur
-    _runPropertiesItalic <- maybeBoolElementValue (n_ "i") cur
-    _runPropertiesStrikeThrough <- maybeBoolElementValue (n_ "strike") cur
-    _runPropertiesOutline <- maybeBoolElementValue (n_ "outline") cur
-    _runPropertiesShadow <- maybeBoolElementValue (n_ "shadow") cur
-    _runPropertiesCondense <- maybeBoolElementValue (n_ "condense") cur
-    _runPropertiesExtend <- maybeBoolElementValue (n_ "extend") cur
-    _runPropertiesColor <- maybeFromElement (n_ "color") cur
-    _runPropertiesSize <- maybeElementValue (n_ "sz") cur
-    _runPropertiesUnderline <-
+    runPropertiesFont <- maybeElementValue (n_ "rFont") cur
+    runPropertiesCharset <- maybeElementValue (n_ "charset") cur
+    runPropertiesFontFamily <- maybeElementValue (n_ "family") cur
+    runPropertiesBold <- maybeBoolElementValue (n_ "b") cur
+    runPropertiesItalic <- maybeBoolElementValue (n_ "i") cur
+    runPropertiesStrikeThrough <- maybeBoolElementValue (n_ "strike") cur
+    runPropertiesOutline <- maybeBoolElementValue (n_ "outline") cur
+    runPropertiesShadow <- maybeBoolElementValue (n_ "shadow") cur
+    runPropertiesCondense <- maybeBoolElementValue (n_ "condense") cur
+    runPropertiesExtend <- maybeBoolElementValue (n_ "extend") cur
+    runPropertiesColor <- maybeFromElement (n_ "color") cur
+    runPropertiesSize <- maybeElementValue (n_ "sz") cur
+    runPropertiesUnderline <-
       maybeElementValueDef (n_ "u") FontUnderlineSingle cur
-    _runPropertiesVertAlign <- maybeElementValue (n_ "vertAlign") cur
-    _runPropertiesScheme <- maybeElementValue (n_ "scheme") cur
+    runPropertiesVertAlign <- maybeElementValue (n_ "vertAlign") cur
+    runPropertiesScheme <- maybeElementValue (n_ "scheme") cur
     return RunProperties {..}
 
 instance FromXenoNode RunProperties where
   fromXenoNode root = collectChildren root $ do
-    _runPropertiesFont <- maybeElementVal "rFont"
-    _runPropertiesCharset <- maybeElementVal "charset"
-    _runPropertiesFontFamily <- maybeElementVal "family"
-    _runPropertiesBold <- maybeElementVal "b"
-    _runPropertiesItalic <- maybeElementVal "i"
-    _runPropertiesStrikeThrough <- maybeElementVal "strike"
-    _runPropertiesOutline <- maybeElementVal "outline"
-    _runPropertiesShadow <- maybeElementVal "shadow"
-    _runPropertiesCondense <- maybeElementVal "condense"
-    _runPropertiesExtend <- maybeElementVal "extend"
-    _runPropertiesColor <- maybeFromChild "color"
-    _runPropertiesSize <- maybeElementVal "sz"
-    _runPropertiesUnderline <- maybeElementVal "u"
-    _runPropertiesVertAlign <- maybeElementVal "vertAlign"
-    _runPropertiesScheme <- maybeElementVal "scheme"
+    runPropertiesFont <- maybeElementVal "rFont"
+    runPropertiesCharset <- maybeElementVal "charset"
+    runPropertiesFontFamily <- maybeElementVal "family"
+    runPropertiesBold <- maybeElementVal "b"
+    runPropertiesItalic <- maybeElementVal "i"
+    runPropertiesStrikeThrough <- maybeElementVal "strike"
+    runPropertiesOutline <- maybeElementVal "outline"
+    runPropertiesShadow <- maybeElementVal "shadow"
+    runPropertiesCondense <- maybeElementVal "condense"
+    runPropertiesExtend <- maybeElementVal "extend"
+    runPropertiesColor <- maybeFromChild "color"
+    runPropertiesSize <- maybeElementVal "sz"
+    runPropertiesUnderline <- maybeElementVal "u"
+    runPropertiesVertAlign <- maybeElementVal "vertAlign"
+    runPropertiesScheme <- maybeElementVal "scheme"
     return RunProperties {..}
 
 {-------------------------------------------------------------------------------
@@ -317,21 +286,21 @@ instance FromXenoNode RunProperties where
 #if (MIN_VERSION_base(4,11,0))
 instance Semigroup RunProperties where
   a <> b = RunProperties {
-      _runPropertiesBold          = override _runPropertiesBold
-    , _runPropertiesCharset       = override _runPropertiesCharset
-    , _runPropertiesColor         = override _runPropertiesColor
-    , _runPropertiesCondense      = override _runPropertiesCondense
-    , _runPropertiesExtend        = override _runPropertiesExtend
-    , _runPropertiesFontFamily    = override _runPropertiesFontFamily
-    , _runPropertiesItalic        = override _runPropertiesItalic
-    , _runPropertiesOutline       = override _runPropertiesOutline
-    , _runPropertiesFont          = override _runPropertiesFont
-    , _runPropertiesScheme        = override _runPropertiesScheme
-    , _runPropertiesShadow        = override _runPropertiesShadow
-    , _runPropertiesStrikeThrough = override _runPropertiesStrikeThrough
-    , _runPropertiesSize          = override _runPropertiesSize
-    , _runPropertiesUnderline     = override _runPropertiesUnderline
-    , _runPropertiesVertAlign     = override _runPropertiesVertAlign
+      runPropertiesBold          = override runPropertiesBold
+    , runPropertiesCharset       = override runPropertiesCharset
+    , runPropertiesColor         = override runPropertiesColor
+    , runPropertiesCondense      = override runPropertiesCondense
+    , runPropertiesExtend        = override runPropertiesExtend
+    , runPropertiesFontFamily    = override runPropertiesFontFamily
+    , runPropertiesItalic        = override runPropertiesItalic
+    , runPropertiesOutline       = override runPropertiesOutline
+    , runPropertiesFont          = override runPropertiesFont
+    , runPropertiesScheme        = override runPropertiesScheme
+    , runPropertiesShadow        = override runPropertiesShadow
+    , runPropertiesStrikeThrough = override runPropertiesStrikeThrough
+    , runPropertiesSize          = override runPropertiesSize
+    , runPropertiesUnderline     = override runPropertiesUnderline
+    , runPropertiesVertAlign     = override runPropertiesVertAlign
     }
     where
       override :: (RunProperties -> Maybe x) -> Maybe x
@@ -345,21 +314,21 @@ instance Monoid RunProperties where
   mempty = def
   a `mappend` b =
     RunProperties
-      { _runPropertiesBold = override _runPropertiesBold,
-        _runPropertiesCharset = override _runPropertiesCharset,
-        _runPropertiesColor = override _runPropertiesColor,
-        _runPropertiesCondense = override _runPropertiesCondense,
-        _runPropertiesExtend = override _runPropertiesExtend,
-        _runPropertiesFontFamily = override _runPropertiesFontFamily,
-        _runPropertiesItalic = override _runPropertiesItalic,
-        _runPropertiesOutline = override _runPropertiesOutline,
-        _runPropertiesFont = override _runPropertiesFont,
-        _runPropertiesScheme = override _runPropertiesScheme,
-        _runPropertiesShadow = override _runPropertiesShadow,
-        _runPropertiesStrikeThrough = override _runPropertiesStrikeThrough,
-        _runPropertiesSize = override _runPropertiesSize,
-        _runPropertiesUnderline = override _runPropertiesUnderline,
-        _runPropertiesVertAlign = override _runPropertiesVertAlign
+      { runPropertiesBold = override runPropertiesBold,
+        runPropertiesCharset = override runPropertiesCharset,
+        runPropertiesColor = override runPropertiesColor,
+        runPropertiesCondense = override runPropertiesCondense,
+        runPropertiesExtend = override runPropertiesExtend,
+        runPropertiesFontFamily = override runPropertiesFontFamily,
+        runPropertiesItalic = override runPropertiesItalic,
+        runPropertiesOutline = override runPropertiesOutline,
+        runPropertiesFont = override runPropertiesFont,
+        runPropertiesScheme = override runPropertiesScheme,
+        runPropertiesShadow = override runPropertiesShadow,
+        runPropertiesStrikeThrough = override runPropertiesStrikeThrough,
+        runPropertiesSize = override runPropertiesSize,
+        runPropertiesUnderline = override runPropertiesUnderline,
+        runPropertiesVertAlign = override runPropertiesVertAlign
       }
     where
       override :: (RunProperties -> Maybe x) -> Maybe x

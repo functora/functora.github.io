@@ -278,54 +278,54 @@ richCellTextIsParsed = do
 cellRich :: Text -> Text -> CellValue
 cellRich firstClause secondClause = CellRich
   [ RichTextRun
-      { _richTextRunProperties = Just RunProperties
-          { _runPropertiesBold = Nothing
-          , _runPropertiesCharset = Just 1
-          , _runPropertiesColor = Just Color
+      { richTextRunProperties = Just RunProperties
+          { runPropertiesBold = Nothing
+          , runPropertiesCharset = Just 1
+          , runPropertiesColor = Just Color
               { colorAutomatic = Nothing
               , colorARGB = Nothing
               , colorTheme = Just 1
               , colorTint = Nothing
               }
-          , _runPropertiesCondense = Nothing
-          , _runPropertiesExtend = Nothing
-          , _runPropertiesFontFamily = Just FontFamilySwiss
-          , _runPropertiesItalic = Nothing
-          , _runPropertiesOutline = Nothing
-          , _runPropertiesFont = Just "Aptos Narrow"
-          , _runPropertiesScheme = Nothing
-          , _runPropertiesShadow = Nothing
-          , _runPropertiesStrikeThrough = Nothing
-          , _runPropertiesSize = Just 11.0
-          , _runPropertiesUnderline = Nothing
-          , _runPropertiesVertAlign = Nothing
+          , runPropertiesCondense = Nothing
+          , runPropertiesExtend = Nothing
+          , runPropertiesFontFamily = Just FontFamilySwiss
+          , runPropertiesItalic = Nothing
+          , runPropertiesOutline = Nothing
+          , runPropertiesFont = Just "Aptos Narrow"
+          , runPropertiesScheme = Nothing
+          , runPropertiesShadow = Nothing
+          , runPropertiesStrikeThrough = Nothing
+          , runPropertiesSize = Just 11.0
+          , runPropertiesUnderline = Nothing
+          , runPropertiesVertAlign = Nothing
           }
-      , _richTextRunText = firstClause
+      , richTextRunText = firstClause
       }
   , RichTextRun
-      { _richTextRunProperties = Just RunProperties
-          { _runPropertiesBold = Just True
-          , _runPropertiesCharset = Just 1
-          , _runPropertiesColor = Just Color
+      { richTextRunProperties = Just RunProperties
+          { runPropertiesBold = Just True
+          , runPropertiesCharset = Just 1
+          , runPropertiesColor = Just Color
               { colorAutomatic = Nothing
               , colorARGB = Just "FFFF0000"
               , colorTheme = Nothing
               , colorTint = Nothing
               }
-          , _runPropertiesCondense = Nothing
-          , _runPropertiesExtend = Nothing
-          , _runPropertiesFontFamily = Just FontFamilySwiss
-          , _runPropertiesItalic = Nothing
-          , _runPropertiesOutline = Nothing
-          , _runPropertiesFont = Just "Arial"
-          , _runPropertiesScheme = Nothing
-          , _runPropertiesShadow = Nothing
-          , _runPropertiesStrikeThrough = Nothing
-          , _runPropertiesSize = Just 8.0
-          , _runPropertiesUnderline = Nothing
-          , _runPropertiesVertAlign = Nothing
+          , runPropertiesCondense = Nothing
+          , runPropertiesExtend = Nothing
+          , runPropertiesFontFamily = Just FontFamilySwiss
+          , runPropertiesItalic = Nothing
+          , runPropertiesOutline = Nothing
+          , runPropertiesFont = Just "Arial"
+          , runPropertiesScheme = Nothing
+          , runPropertiesShadow = Nothing
+          , runPropertiesStrikeThrough = Nothing
+          , runPropertiesSize = Just 8.0
+          , runPropertiesUnderline = Nothing
+          , runPropertiesVertAlign = Nothing
           }
-      , _richTextRunText = secondClause
+      , richTextRunText = secondClause
       }
   ]
 

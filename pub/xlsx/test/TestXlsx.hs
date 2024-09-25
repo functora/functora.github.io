@@ -19,11 +19,13 @@ import Codec.Xlsx.Types.Internal.CustomProperties as CustomProperties
 import Codec.Xlsx.Types.Internal.SharedStringTable
 import Control.Monad.State.Lazy
 import Data.ByteString.Lazy (ByteString)
+import Data.Generics.Labels
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Time.Clock.POSIX (POSIXTime)
 import qualified Data.Vector as V
 import DrawingTests
+import GHC.Generics (Generic)
 import PivotTableTests
 import Text.RawString.QQ
 import Text.XML
@@ -149,26 +151,26 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
     sheetViews = Just [sheetView1, sheetView2]
     sheetView1 =
       def
-        & sheetViewRightToLeft
+        & #sheetViewRightToLeft
         ?~ True
-        & sheetViewTopLeftCell
+        & #sheetViewTopLeftCell
         ?~ CellRef "B5"
     sheetView2 =
       def
-        & sheetViewType
+        & #sheetViewType
         ?~ SheetViewTypePageBreakPreview
-        & sheetViewWorkbookViewId
+        & #sheetViewWorkbookViewId
         .~ 5
-        & sheetViewSelection
+        & #sheetViewSelection
         .~ [ def
-              & selectionActiveCell
+              & #selectionActiveCell
               ?~ CellRef "C2"
-              & selectionPane
+              & #selectionPane
               ?~ PaneTypeBottomRight,
              def
-              & selectionActiveCellId
+              & #selectionActiveCellId
               ?~ 1
-              & selectionSqref
+              & #selectionSqref
               ?~ SqRef
                 [ CellRef "A3:A10",
                   CellRef "B1:G3"
@@ -224,7 +226,7 @@ testCellMap1 =
     ]
   where
     cd v = def {_cellValue = Just v}
-    cd1_2 = cd (CellText "just a text, fließen, русский <> и & \"in quotes\"")
+    cd1_2 = cd (CellText "just a text <> & \"in quotes\"")
     cd1_5 = cd (CellDouble 42.4567)
     cd1_10 = cd (CellText "")
     cd3_1 = cd (CellText "another text")

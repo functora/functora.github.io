@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.SheetViews
   ( -- * Structured type to construct 'SheetViews'
@@ -12,44 +11,6 @@ module Codec.Xlsx.Types.SheetViews
     SheetViewType (..),
     PaneType (..),
     PaneState (..),
-
-    -- * Lenses
-
-    -- ** SheetView
-    sheetViewColorId,
-    sheetViewDefaultGridColor,
-    sheetViewRightToLeft,
-    sheetViewShowFormulas,
-    sheetViewShowGridLines,
-    sheetViewShowOutlineSymbols,
-    sheetViewShowRowColHeaders,
-    sheetViewShowRuler,
-    sheetViewShowWhiteSpace,
-    sheetViewShowZeros,
-    sheetViewTabSelected,
-    sheetViewTopLeftCell,
-    sheetViewType,
-    sheetViewWindowProtection,
-    sheetViewWorkbookViewId,
-    sheetViewZoomScale,
-    sheetViewZoomScaleNormal,
-    sheetViewZoomScalePageLayoutView,
-    sheetViewZoomScaleSheetLayoutView,
-    sheetViewPane,
-    sheetViewSelection,
-
-    -- ** Selection
-    selectionActiveCell,
-    selectionActiveCellId,
-    selectionPane,
-    selectionSqref,
-
-    -- ** Pane
-    paneActivePane,
-    paneState,
-    paneTopLeftCell,
-    paneXSplit,
-    paneYSplit,
   )
 where
 
@@ -90,36 +51,36 @@ import Text.XML.Cursor
 data SheetView = SheetView
   { -- | Index to the color value for row/column text headings and gridlines.
     -- This is an 'index color value' (ICV) rather than rgb value.
-    _sheetViewColorId :: Maybe Int,
+    sheetViewColorId :: Maybe Int,
     -- | Flag indicating that the consuming application should use the default
     -- grid lines color (system dependent). Overrides any color specified in
     -- colorId.
-    _sheetViewDefaultGridColor :: Maybe Bool,
+    sheetViewDefaultGridColor :: Maybe Bool,
     -- | Flag indicating whether the sheet is in 'right to left' display mode.
     -- When in this mode, Column A is on the far right, Column B ;is one column
     -- left of Column A, and so on. Also, information in cells is displayed in
     -- the Right to Left format.
-    _sheetViewRightToLeft :: Maybe Bool,
+    sheetViewRightToLeft :: Maybe Bool,
     -- | Flag indicating whether this sheet should display formulas.
-    _sheetViewShowFormulas :: Maybe Bool,
+    sheetViewShowFormulas :: Maybe Bool,
     -- | Flag indicating whether this sheet should display gridlines.
-    _sheetViewShowGridLines :: Maybe Bool,
+    sheetViewShowGridLines :: Maybe Bool,
     -- | Flag indicating whether the sheet has outline symbols visible. This
     -- flag shall always override SheetPr element's outlinePr child element
     -- whose attribute is named showOutlineSymbols when there is a conflict.
-    _sheetViewShowOutlineSymbols :: Maybe Bool,
+    sheetViewShowOutlineSymbols :: Maybe Bool,
     -- | Flag indicating whether the sheet should display row and column headings.
-    _sheetViewShowRowColHeaders :: Maybe Bool,
+    sheetViewShowRowColHeaders :: Maybe Bool,
     -- | Show the ruler in Page Layout View.
-    _sheetViewShowRuler :: Maybe Bool,
+    sheetViewShowRuler :: Maybe Bool,
     -- | Flag indicating whether page layout view shall display margins. False
     -- means do not display left, right, top (header), and bottom (footer)
     -- margins (even when there is data in the header or footer).
-    _sheetViewShowWhiteSpace :: Maybe Bool,
+    sheetViewShowWhiteSpace :: Maybe Bool,
     -- | Flag indicating whether the window should show 0 (zero) in cells
     -- containing zero value. When false, cells with zero value appear blank
     -- instead of showing the number zero.
-    _sheetViewShowZeros :: Maybe Bool,
+    sheetViewShowZeros :: Maybe Bool,
     -- | Flag indicating whether this sheet is selected. When only 1 sheet is
     -- selected and active, this value should be in synch with the activeTab
     -- value. In case of a conflict, the Start Part setting wins and sets the
@@ -127,43 +88,43 @@ data SheetView = SheetView
     --
     -- Multiple sheets can be selected, but only one sheet shall be active at
     -- one time.
-    _sheetViewTabSelected :: Maybe Bool,
+    sheetViewTabSelected :: Maybe Bool,
     -- | Location of the top left visible cell Location of the top left visible
     -- cell in the bottom right pane (when in Left-to-Right mode).
-    _sheetViewTopLeftCell :: Maybe CellRef,
+    sheetViewTopLeftCell :: Maybe CellRef,
     -- | Indicates the view type.
-    _sheetViewType :: Maybe SheetViewType,
+    sheetViewType :: Maybe SheetViewType,
     -- | Flag indicating whether the panes in the window are locked due to
     -- workbook protection. This is an option when the workbook structure is
     -- protected.
-    _sheetViewWindowProtection :: Maybe Bool,
+    sheetViewWindowProtection :: Maybe Bool,
     -- | Zero-based index of this workbook view, pointing to a workbookView
     -- element in the bookViews collection.
     --
     -- NOTE: This attribute is required.
-    _sheetViewWorkbookViewId :: Int,
+    sheetViewWorkbookViewId :: Int,
     -- | Window zoom magnification for current view representing percent values.
     -- This attribute is restricted to values ranging from 10 to 400. Horizontal &
     -- Vertical scale together.
-    _sheetViewZoomScale :: Maybe Int,
+    sheetViewZoomScale :: Maybe Int,
     -- | Zoom magnification to use when in normal view, representing percent
     -- values. This attribute is restricted to values ranging from 10 to 400.
     -- Horizontal & Vertical scale together.
-    _sheetViewZoomScaleNormal :: Maybe Int,
+    sheetViewZoomScaleNormal :: Maybe Int,
     -- | Zoom magnification to use when in page layout view, representing
     -- percent values. This attribute is restricted to values ranging from 10 to
     -- 400. Horizontal & Vertical scale together.
-    _sheetViewZoomScalePageLayoutView :: Maybe Int,
+    sheetViewZoomScalePageLayoutView :: Maybe Int,
     -- | Zoom magnification to use when in page break preview, representing
     -- percent values. This attribute is restricted to values ranging from 10 to
     -- 400. Horizontal & Vertical scale together.
-    _sheetViewZoomScaleSheetLayoutView :: Maybe Int,
+    sheetViewZoomScaleSheetLayoutView :: Maybe Int,
     -- | Worksheet view pane
-    _sheetViewPane :: Maybe Pane,
+    sheetViewPane :: Maybe Pane,
     -- | Worksheet view selection
     --
     -- Minimum of 0, maximum of 4 elements
-    _sheetViewSelection :: [Selection]
+    sheetViewSelection :: [Selection]
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -174,18 +135,18 @@ instance NFData SheetView
 -- Section 18.3.1.78 "selection (Selection)" (p. 1864)
 data Selection = Selection
   { -- | Location of the active cell
-    _selectionActiveCell :: Maybe CellRef,
+    selectionActiveCell :: Maybe CellRef,
     -- | 0-based index of the range reference (in the array of references listed
     -- in sqref) containing the active cell. Only used when the selection in
     -- sqref is not contiguous. Therefore, this value needs to be aware of the
     -- order in which the range references are written in sqref.
     --
     -- When this value is out of range then activeCell can be used.
-    _selectionActiveCellId :: Maybe Int,
+    selectionActiveCellId :: Maybe Int,
     -- | The pane to which this selection belongs.
-    _selectionPane :: Maybe PaneType,
+    selectionPane :: Maybe PaneType,
     -- | Range of the selection. Can be non-contiguous set of ranges.
-    _selectionSqref :: Maybe SqRef
+    selectionSqref :: Maybe SqRef
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -196,21 +157,21 @@ instance NFData Selection
 -- Section 18.3.1.66 "pane (View Pane)" (p. 1843)
 data Pane = Pane
   { -- | The pane that is active.
-    _paneActivePane :: Maybe PaneType,
+    paneActivePane :: Maybe PaneType,
     -- | Indicates whether the pane has horizontal / vertical splits, and
     -- whether those splits are frozen.
-    _paneState :: Maybe PaneState,
+    paneState :: Maybe PaneState,
     -- | Location of the top left visible cell in the bottom right pane (when in
     -- Left-To-Right mode).
-    _paneTopLeftCell :: Maybe CellRef,
+    paneTopLeftCell :: Maybe CellRef,
     -- | Horizontal position of the split, in 1/20th of a point; 0 (zero) if
     -- none. If the pane is frozen, this value indicates the number of columns
     -- visible in the top pane.
-    _paneXSplit :: Maybe Double,
+    paneXSplit :: Maybe Double,
     -- | Vertical position of the split, in 1/20th of a point; 0 (zero) if none.
     -- If the pane is frozen, this value indicates the number of rows visible in
     -- the left pane.
-    _paneYSplit :: Maybe Double
+    paneYSplit :: Maybe Double
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -285,62 +246,54 @@ data PaneState
 instance NFData PaneState
 
 {-------------------------------------------------------------------------------
-  Lenses
--------------------------------------------------------------------------------}
-
-makeLenses ''SheetView
-makeLenses ''Selection
-makeLenses ''Pane
-
-{-------------------------------------------------------------------------------
   Default instances
 -------------------------------------------------------------------------------}
 
 -- | NOTE: The 'Default' instance for 'SheetView' sets the required attribute
--- '_sheetViewWorkbookViewId' to @0@.
+-- 'sheetViewWorkbookViewId' to @0@.
 instance Default SheetView where
   def =
     SheetView
-      { _sheetViewColorId = Nothing,
-        _sheetViewDefaultGridColor = Nothing,
-        _sheetViewRightToLeft = Nothing,
-        _sheetViewShowFormulas = Nothing,
-        _sheetViewShowGridLines = Nothing,
-        _sheetViewShowOutlineSymbols = Nothing,
-        _sheetViewShowRowColHeaders = Nothing,
-        _sheetViewShowRuler = Nothing,
-        _sheetViewShowWhiteSpace = Nothing,
-        _sheetViewShowZeros = Nothing,
-        _sheetViewTabSelected = Nothing,
-        _sheetViewTopLeftCell = Nothing,
-        _sheetViewType = Nothing,
-        _sheetViewWindowProtection = Nothing,
-        _sheetViewWorkbookViewId = 0,
-        _sheetViewZoomScale = Nothing,
-        _sheetViewZoomScaleNormal = Nothing,
-        _sheetViewZoomScalePageLayoutView = Nothing,
-        _sheetViewZoomScaleSheetLayoutView = Nothing,
-        _sheetViewPane = Nothing,
-        _sheetViewSelection = []
+      { sheetViewColorId = Nothing,
+        sheetViewDefaultGridColor = Nothing,
+        sheetViewRightToLeft = Nothing,
+        sheetViewShowFormulas = Nothing,
+        sheetViewShowGridLines = Nothing,
+        sheetViewShowOutlineSymbols = Nothing,
+        sheetViewShowRowColHeaders = Nothing,
+        sheetViewShowRuler = Nothing,
+        sheetViewShowWhiteSpace = Nothing,
+        sheetViewShowZeros = Nothing,
+        sheetViewTabSelected = Nothing,
+        sheetViewTopLeftCell = Nothing,
+        sheetViewType = Nothing,
+        sheetViewWindowProtection = Nothing,
+        sheetViewWorkbookViewId = 0,
+        sheetViewZoomScale = Nothing,
+        sheetViewZoomScaleNormal = Nothing,
+        sheetViewZoomScalePageLayoutView = Nothing,
+        sheetViewZoomScaleSheetLayoutView = Nothing,
+        sheetViewPane = Nothing,
+        sheetViewSelection = []
       }
 
 instance Default Selection where
   def =
     Selection
-      { _selectionActiveCell = Nothing,
-        _selectionActiveCellId = Nothing,
-        _selectionPane = Nothing,
-        _selectionSqref = Nothing
+      { selectionActiveCell = Nothing,
+        selectionActiveCellId = Nothing,
+        selectionPane = Nothing,
+        selectionSqref = Nothing
       }
 
 instance Default Pane where
   def =
     Pane
-      { _paneActivePane = Nothing,
-        _paneState = Nothing,
-        _paneTopLeftCell = Nothing,
-        _paneXSplit = Nothing,
-        _paneYSplit = Nothing
+      { paneActivePane = Nothing,
+        paneState = Nothing,
+        paneTopLeftCell = Nothing,
+        paneXSplit = Nothing,
+        paneYSplit = Nothing
       }
 
 {-------------------------------------------------------------------------------
@@ -354,32 +307,32 @@ instance ToElement SheetView where
       { elementName = nm,
         elementNodes =
           map NodeElement . concat $
-            [ map (toElement "pane") (maybeToList _sheetViewPane),
-              map (toElement "selection") _sheetViewSelection
+            [ map (toElement "pane") (maybeToList sheetViewPane),
+              map (toElement "selection") sheetViewSelection
               -- TODO: pivotSelection
               -- TODO: extLst
             ],
         elementAttributes =
           Map.fromList . catMaybes $
-            [ "windowProtection" .=? _sheetViewWindowProtection,
-              "showFormulas" .=? _sheetViewShowFormulas,
-              "showGridLines" .=? _sheetViewShowGridLines,
-              "showRowColHeaders" .=? _sheetViewShowRowColHeaders,
-              "showZeros" .=? _sheetViewShowZeros,
-              "rightToLeft" .=? _sheetViewRightToLeft,
-              "tabSelected" .=? _sheetViewTabSelected,
-              "showRuler" .=? _sheetViewShowRuler,
-              "showOutlineSymbols" .=? _sheetViewShowOutlineSymbols,
-              "defaultGridColor" .=? _sheetViewDefaultGridColor,
-              "showWhiteSpace" .=? _sheetViewShowWhiteSpace,
-              "view" .=? _sheetViewType,
-              "topLeftCell" .=? _sheetViewTopLeftCell,
-              "colorId" .=? _sheetViewColorId,
-              "zoomScale" .=? _sheetViewZoomScale,
-              "zoomScaleNormal" .=? _sheetViewZoomScaleNormal,
-              "zoomScaleSheetLayoutView" .=? _sheetViewZoomScaleSheetLayoutView,
-              "zoomScalePageLayoutView" .=? _sheetViewZoomScalePageLayoutView,
-              Just $ "workbookViewId" .= _sheetViewWorkbookViewId
+            [ "windowProtection" .=? sheetViewWindowProtection,
+              "showFormulas" .=? sheetViewShowFormulas,
+              "showGridLines" .=? sheetViewShowGridLines,
+              "showRowColHeaders" .=? sheetViewShowRowColHeaders,
+              "showZeros" .=? sheetViewShowZeros,
+              "rightToLeft" .=? sheetViewRightToLeft,
+              "tabSelected" .=? sheetViewTabSelected,
+              "showRuler" .=? sheetViewShowRuler,
+              "showOutlineSymbols" .=? sheetViewShowOutlineSymbols,
+              "defaultGridColor" .=? sheetViewDefaultGridColor,
+              "showWhiteSpace" .=? sheetViewShowWhiteSpace,
+              "view" .=? sheetViewType,
+              "topLeftCell" .=? sheetViewTopLeftCell,
+              "colorId" .=? sheetViewColorId,
+              "zoomScale" .=? sheetViewZoomScale,
+              "zoomScaleNormal" .=? sheetViewZoomScaleNormal,
+              "zoomScaleSheetLayoutView" .=? sheetViewZoomScaleSheetLayoutView,
+              "zoomScalePageLayoutView" .=? sheetViewZoomScalePageLayoutView,
+              Just $ "workbookViewId" .= sheetViewWorkbookViewId
             ]
       }
 
@@ -391,10 +344,10 @@ instance ToElement Selection where
         elementNodes = [],
         elementAttributes =
           Map.fromList . catMaybes $
-            [ "pane" .=? _selectionPane,
-              "activeCell" .=? _selectionActiveCell,
-              "activeCellId" .=? _selectionActiveCellId,
-              "sqref" .=? _selectionSqref
+            [ "pane" .=? selectionPane,
+              "activeCell" .=? selectionActiveCell,
+              "activeCellId" .=? selectionActiveCellId,
+              "sqref" .=? selectionSqref
             ]
       }
 
@@ -406,11 +359,11 @@ instance ToElement Pane where
         elementNodes = [],
         elementAttributes =
           Map.fromList . catMaybes $
-            [ "xSplit" .=? _paneXSplit,
-              "ySplit" .=? _paneYSplit,
-              "topLeftCell" .=? _paneTopLeftCell,
-              "activePane" .=? _paneActivePane,
-              "state" .=? _paneState
+            [ "xSplit" .=? paneXSplit,
+              "ySplit" .=? paneYSplit,
+              "topLeftCell" .=? paneTopLeftCell,
+              "activePane" .=? paneActivePane,
+              "state" .=? paneState
             ]
       }
 
@@ -440,53 +393,53 @@ instance ToAttrVal PaneState where
 -- | See @CT_SheetView@, p. 3913
 instance FromCursor SheetView where
   fromCursor cur = do
-    _sheetViewWindowProtection <- maybeAttribute "windowProtection" cur
-    _sheetViewShowFormulas <- maybeAttribute "showFormulas" cur
-    _sheetViewShowGridLines <- maybeAttribute "showGridLines" cur
-    _sheetViewShowRowColHeaders <- maybeAttribute "showRowColHeaders" cur
-    _sheetViewShowZeros <- maybeAttribute "showZeros" cur
-    _sheetViewRightToLeft <- maybeAttribute "rightToLeft" cur
-    _sheetViewTabSelected <- maybeAttribute "tabSelected" cur
-    _sheetViewShowRuler <- maybeAttribute "showRuler" cur
-    _sheetViewShowOutlineSymbols <- maybeAttribute "showOutlineSymbols" cur
-    _sheetViewDefaultGridColor <- maybeAttribute "defaultGridColor" cur
-    _sheetViewShowWhiteSpace <- maybeAttribute "showWhiteSpace" cur
-    _sheetViewType <- maybeAttribute "view" cur
-    _sheetViewTopLeftCell <- maybeAttribute "topLeftCell" cur
-    _sheetViewColorId <- maybeAttribute "colorId" cur
-    _sheetViewZoomScale <- maybeAttribute "zoomScale" cur
-    _sheetViewZoomScaleNormal <- maybeAttribute "zoomScaleNormal" cur
-    _sheetViewZoomScaleSheetLayoutView <-
+    sheetViewWindowProtection <- maybeAttribute "windowProtection" cur
+    sheetViewShowFormulas <- maybeAttribute "showFormulas" cur
+    sheetViewShowGridLines <- maybeAttribute "showGridLines" cur
+    sheetViewShowRowColHeaders <- maybeAttribute "showRowColHeaders" cur
+    sheetViewShowZeros <- maybeAttribute "showZeros" cur
+    sheetViewRightToLeft <- maybeAttribute "rightToLeft" cur
+    sheetViewTabSelected <- maybeAttribute "tabSelected" cur
+    sheetViewShowRuler <- maybeAttribute "showRuler" cur
+    sheetViewShowOutlineSymbols <- maybeAttribute "showOutlineSymbols" cur
+    sheetViewDefaultGridColor <- maybeAttribute "defaultGridColor" cur
+    sheetViewShowWhiteSpace <- maybeAttribute "showWhiteSpace" cur
+    sheetViewType <- maybeAttribute "view" cur
+    sheetViewTopLeftCell <- maybeAttribute "topLeftCell" cur
+    sheetViewColorId <- maybeAttribute "colorId" cur
+    sheetViewZoomScale <- maybeAttribute "zoomScale" cur
+    sheetViewZoomScaleNormal <- maybeAttribute "zoomScaleNormal" cur
+    sheetViewZoomScaleSheetLayoutView <-
       maybeAttribute "zoomScaleSheetLayoutView" cur
-    _sheetViewZoomScalePageLayoutView <-
+    sheetViewZoomScalePageLayoutView <-
       maybeAttribute "zoomScalePageLayoutView" cur
-    _sheetViewWorkbookViewId <- fromAttribute "workbookViewId" cur
-    let _sheetViewPane = listToMaybe $ cur $/ element (n_ "pane") >=> fromCursor
-        _sheetViewSelection = cur $/ element (n_ "selection") >=> fromCursor
+    sheetViewWorkbookViewId <- fromAttribute "workbookViewId" cur
+    let sheetViewPane = listToMaybe $ cur $/ element (n_ "pane") >=> fromCursor
+        sheetViewSelection = cur $/ element (n_ "selection") >=> fromCursor
     return SheetView {..}
 
 instance FromXenoNode SheetView where
   fromXenoNode root = parseAttributes root $ do
-    _sheetViewWindowProtection <- maybeAttr "windowProtection"
-    _sheetViewShowFormulas <- maybeAttr "showFormulas"
-    _sheetViewShowGridLines <- maybeAttr "showGridLines"
-    _sheetViewShowRowColHeaders <- maybeAttr "showRowColHeaders"
-    _sheetViewShowZeros <- maybeAttr "showZeros"
-    _sheetViewRightToLeft <- maybeAttr "rightToLeft"
-    _sheetViewTabSelected <- maybeAttr "tabSelected"
-    _sheetViewShowRuler <- maybeAttr "showRuler"
-    _sheetViewShowOutlineSymbols <- maybeAttr "showOutlineSymbols"
-    _sheetViewDefaultGridColor <- maybeAttr "defaultGridColor"
-    _sheetViewShowWhiteSpace <- maybeAttr "showWhiteSpace"
-    _sheetViewType <- maybeAttr "view"
-    _sheetViewTopLeftCell <- maybeAttr "topLeftCell"
-    _sheetViewColorId <- maybeAttr "colorId"
-    _sheetViewZoomScale <- maybeAttr "zoomScale"
-    _sheetViewZoomScaleNormal <- maybeAttr "zoomScaleNormal"
-    _sheetViewZoomScaleSheetLayoutView <- maybeAttr "zoomScaleSheetLayoutView"
-    _sheetViewZoomScalePageLayoutView <- maybeAttr "zoomScalePageLayoutView"
-    _sheetViewWorkbookViewId <- fromAttr "workbookViewId"
-    (_sheetViewPane, _sheetViewSelection) <-
+    sheetViewWindowProtection <- maybeAttr "windowProtection"
+    sheetViewShowFormulas <- maybeAttr "showFormulas"
+    sheetViewShowGridLines <- maybeAttr "showGridLines"
+    sheetViewShowRowColHeaders <- maybeAttr "showRowColHeaders"
+    sheetViewShowZeros <- maybeAttr "showZeros"
+    sheetViewRightToLeft <- maybeAttr "rightToLeft"
+    sheetViewTabSelected <- maybeAttr "tabSelected"
+    sheetViewShowRuler <- maybeAttr "showRuler"
+    sheetViewShowOutlineSymbols <- maybeAttr "showOutlineSymbols"
+    sheetViewDefaultGridColor <- maybeAttr "defaultGridColor"
+    sheetViewShowWhiteSpace <- maybeAttr "showWhiteSpace"
+    sheetViewType <- maybeAttr "view"
+    sheetViewTopLeftCell <- maybeAttr "topLeftCell"
+    sheetViewColorId <- maybeAttr "colorId"
+    sheetViewZoomScale <- maybeAttr "zoomScale"
+    sheetViewZoomScaleNormal <- maybeAttr "zoomScaleNormal"
+    sheetViewZoomScaleSheetLayoutView <- maybeAttr "zoomScaleSheetLayoutView"
+    sheetViewZoomScalePageLayoutView <- maybeAttr "zoomScalePageLayoutView"
+    sheetViewWorkbookViewId <- fromAttr "workbookViewId"
+    (sheetViewPane, sheetViewSelection) <-
       toAttrParser . collectChildren root $
         (,) <$> maybeFromChild "pane" <*> fromChildList "selection"
     return SheetView {..}
@@ -494,39 +447,39 @@ instance FromXenoNode SheetView where
 -- | See @CT_Pane@, p. 3913
 instance FromCursor Pane where
   fromCursor cur = do
-    _paneXSplit <- maybeAttribute "xSplit" cur
-    _paneYSplit <- maybeAttribute "ySplit" cur
-    _paneTopLeftCell <- maybeAttribute "topLeftCell" cur
-    _paneActivePane <- maybeAttribute "activePane" cur
-    _paneState <- maybeAttribute "state" cur
+    paneXSplit <- maybeAttribute "xSplit" cur
+    paneYSplit <- maybeAttribute "ySplit" cur
+    paneTopLeftCell <- maybeAttribute "topLeftCell" cur
+    paneActivePane <- maybeAttribute "activePane" cur
+    paneState <- maybeAttribute "state" cur
     return Pane {..}
 
 instance FromXenoNode Pane where
   fromXenoNode root =
     parseAttributes root $ do
-      _paneXSplit <- maybeAttr "xSplit"
-      _paneYSplit <- maybeAttr "ySplit"
-      _paneTopLeftCell <- maybeAttr "topLeftCell"
-      _paneActivePane <- maybeAttr "activePane"
-      _paneState <- maybeAttr "state"
+      paneXSplit <- maybeAttr "xSplit"
+      paneYSplit <- maybeAttr "ySplit"
+      paneTopLeftCell <- maybeAttr "topLeftCell"
+      paneActivePane <- maybeAttr "activePane"
+      paneState <- maybeAttr "state"
       return Pane {..}
 
 -- | See @CT_Selection@, p. 3914
 instance FromCursor Selection where
   fromCursor cur = do
-    _selectionPane <- maybeAttribute "pane" cur
-    _selectionActiveCell <- maybeAttribute "activeCell" cur
-    _selectionActiveCellId <- maybeAttribute "activeCellId" cur
-    _selectionSqref <- maybeAttribute "sqref" cur
+    selectionPane <- maybeAttribute "pane" cur
+    selectionActiveCell <- maybeAttribute "activeCell" cur
+    selectionActiveCellId <- maybeAttribute "activeCellId" cur
+    selectionSqref <- maybeAttribute "sqref" cur
     return Selection {..}
 
 instance FromXenoNode Selection where
   fromXenoNode root =
     parseAttributes root $ do
-      _selectionPane <- maybeAttr "pane"
-      _selectionActiveCell <- maybeAttr "activeCell"
-      _selectionActiveCellId <- maybeAttr "activeCellId"
-      _selectionSqref <- maybeAttr "sqref"
+      selectionPane <- maybeAttr "pane"
+      selectionActiveCell <- maybeAttr "activeCell"
+      selectionActiveCellId <- maybeAttr "activeCellId"
+      selectionSqref <- maybeAttr "sqref"
       return Selection {..}
 
 -- | See @ST_SheetViewType@, p. 3913

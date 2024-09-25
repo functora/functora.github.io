@@ -40,10 +40,14 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
         ("cellrange DV source", foreignDvSourceSheet), -- "foreign" sheet holding validation data
         ("cellrange DV test", foreignDvTestSheet), -- applies validation using foreign cell ranges
         ( "hidden sheet",
-          def & wsState .~ Hidden & cellValueAt (1, 1) ?~ CellText "I'm hidden!"
+          def & #wsState .~ Hidden & cellValueAt (1, 1) ?~ CellText "I'm hidden!"
         ),
         ( "VERY hidden sheet",
-          def & wsState .~ VeryHidden & cellValueAt (1, 1) ?~ CellText "I'm VERY hidden!!"
+          def
+            & #wsState
+            .~ VeryHidden
+            & cellValueAt (1, 1)
+            ?~ CellText "I'm VERY hidden!!"
         )
       ]
     sheet1 =
@@ -101,17 +105,17 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
         { _sprScenarios = False,
           _sprLegacyPassword = Just $ legacyPassword "hard password"
         }
-    sheet2 = def & wsCells .~ testCellMap2
-    foreignDvSourceSheet = def & wsCells .~ cellRangeDvSourceMap
+    sheet2 = def & #wsCells .~ testCellMap2
+    foreignDvSourceSheet = def & #wsCells .~ cellRangeDvSourceMap
     foreignDvTestSheet =
       def
-        & wsDataValidations
+        & #wsDataValidations
         .~ foreignValidations
-        & wsCells
+        & #wsCells
         . at (1, 1)
         ?~ (def & #cellValue ?~ CellText ("Hi! try " <> unCellRef testForeignDvRange))
-    pvSheet = sheetWithPvCells & wsPivotTables .~ [testPivotTable]
-    sheetWithPvCells = def & wsCells .~ testPivotSrcCells
+    pvSheet = sheetWithPvCells & #wsPivotTables .~ [testPivotTable]
+    sheetWithPvCells = def & #wsCells .~ testPivotSrcCells
     rowProps =
       M.fromList
         [ ( 1,
@@ -668,9 +672,9 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
 testFormatWorkbookResult :: Xlsx
 testFormatWorkbookResult =
   def
-    & xlSheets
+    & #xlSheets
     .~ sheets
-    & xlStyles
+    & #xlStyles
     .~ renderStyleSheet style
   where
     cellMap1 =
@@ -696,8 +700,8 @@ testFormatWorkbookResult =
           )
         ]
     sheets =
-      [ ("Sheet1", def & wsCells .~ cellMap1),
-        ("Sheet2", def & wsCells .~ cellMap2)
+      [ ("Sheet1", def & #wsCells .~ cellMap1),
+        ("Sheet2", def & #wsCells .~ cellMap2)
       ]
     style =
       minimalStyleSheet

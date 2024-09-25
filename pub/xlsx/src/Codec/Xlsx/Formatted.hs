@@ -244,16 +244,16 @@ formatWorkbook nfcss initStyle = extract go
         return
           ( name,
             def
-              & wsCells
+              & #wsCells
               .~ M.fromList (concat cs')
-              & wsMerges
+              & #wsMerges
               .~ merges
           )
     extract (sheets, st) =
       def
-        & xlSheets
+        & #xlSheets
         .~ sheets
-        & xlStyles
+        & #xlStyles
         .~ renderStyleSheet (updateStyleSheetFromState initStyle st)
 
 -- | reverse to 'formatted' which allows to get a map of formatted cells

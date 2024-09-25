@@ -95,7 +95,7 @@ fromXlsx pt xlsx =
       [ relEntry (unsafeRefId i) typ trg
         | (i, (typ, trg)) <- zip [1 ..] rootFiles
       ]
-    customProps = xlsx ^. xlCustomProperties
+    customProps = xlsx ^. #xlCustomProperties
     (customPropFiles, customPropFileRels) = case M.null customProps of
       True -> ([], [])
       False ->
@@ -108,7 +108,7 @@ fromXlsx pt xlsx =
           [("custom-properties", "docProps/custom.xml")]
         )
     workbookFiles = bookFiles xlsx
-    sheetNames = xlsx ^. xlSheets & mapped %~ fst
+    sheetNames = xlsx ^. #xlSheets & mapped %~ fst
 
 singleSheetFiles ::
   Int ->
@@ -121,11 +121,11 @@ singleSheetFiles n cells pivFileDatas ws tblIdRef = do
   ref <- newSTRef 1
   mCmntData <- genComments n cells ref
   mDrawingData <-
-    maybe (return Nothing) (fmap Just . genDrawing n ref) (ws ^. wsDrawing)
+    maybe (return Nothing) (fmap Just . genDrawing n ref) (ws ^. #wsDrawing)
   pivRefs <- forM pivFileDatas $ \fd -> do
     refId <- nextRefId ref
     return (refId, fd)
-  refTables <- forM (_wsTables ws) $ \tbl -> do
+  refTables <- forM (wsTables ws) $ \tbl -> do
     refId <- nextRefId ref
     tblId <- readSTRef tblIdRef
     modifySTRef' tblIdRef (+ 1)
@@ -147,26 +147,26 @@ singleSheetFiles n cells pivFileDatas ws tblIdRef = do
       rootEls =
         catMaybes $
           [ elementListSimple "sheetViews" . map (toElement "sheetView")
-              <$> ws ^. wsSheetViews,
-            nonEmptyElListSimple "cols" . map (toElement "col") $ ws ^. wsColumnsProperties,
+              <$> ws ^. #wsSheetViews,
+            nonEmptyElListSimple "cols" . map (toElement "col") $ ws ^. #wsColumnsProperties,
             Just . elementListSimple "sheetData" $
-              sheetDataXml cells (ws ^. wsRowPropertiesMap) (ws ^. wsSharedFormulas),
-            toElement "sheetProtection" <$> (ws ^. wsProtection),
-            toElement "autoFilter" <$> (ws ^. wsAutoFilter),
-            nonEmptyElListSimple "mergeCells" . map mergeE1 $ ws ^. wsMerges
+              sheetDataXml cells (ws ^. #wsRowPropertiesMap) (ws ^. #wsSharedFormulas),
+            toElement "sheetProtection" <$> (ws ^. #wsProtection),
+            toElement "autoFilter" <$> (ws ^. #wsAutoFilter),
+            nonEmptyElListSimple "mergeCells" . map mergeE1 $ ws ^. #wsMerges
           ]
             ++ map (Just . toElement "conditionalFormatting") cfPairs
             ++ [ nonEmptyElListSimple "dataValidations" $
                   map (toElement "dataValidation") dvPairs,
-                 toElement "pageSetup" <$> ws ^. wsPageSetup,
+                 toElement "pageSetup" <$> ws ^. #wsPageSetup,
                  fst3 <$> mDrawingData,
                  fst <$> mCmntData,
                  nonEmptyElListSimple
                   "tableParts"
                   [leafElement "tablePart" [odr "id" .= rId] | (rId, _) <- refTables]
                ]
-      cfPairs = map CfPair . M.toList $ ws ^. wsConditionalFormattings
-      dvPairs = map DvPair . M.toList $ ws ^. wsDataValidations
+      cfPairs = map CfPair . M.toList $ ws ^. #wsConditionalFormattings
+      dvPairs = map DvPair . M.toList $ ws ^. #wsDataValidations
       mergeE1 r = leafElement "mergeCell" [("ref" .= r)]
 
       sheetRels =
@@ -564,7 +564,7 @@ value (XlsxBool False) = "0"
 value (XlsxError eType) = toAttrVal eType
 
 transformSheetData :: SharedStringTable -> Worksheet -> Cells
-transformSheetData shared ws = map transformRow $ toRows (ws ^. wsCells)
+transformSheetData shared ws = map transformRow $ toRows (ws ^. #wsCells)
   where
     transformRow = second (map transformCell)
     transformCell (c, Cell {..}) =
@@ -581,7 +581,7 @@ bookFiles :: Xlsx -> [FileData]
 bookFiles xlsx = runST $ do
   ref <- newSTRef 1
   ssRId <- nextRefId ref
-  let sheets = xlsx ^. xlSheets & mapped %~ snd
+  let sheets = xlsx ^. #xlSheets & mapped %~ snd
       shared = sstConstruct sheets
       sharedStrings =
         ( ssRId,
@@ -592,7 +592,7 @@ bookFiles xlsx = runST $ do
   let style =
         ( stRId,
           FileData "xl/styles.xml" (smlCT "styles") "styles" $
-            unStyles (xlsx ^. xlStyles)
+            unStyles (xlsx ^. #xlStyles)
         )
   let PvGenerated
         { pvgCacheFiles = cacheIdFiles,
@@ -600,8 +600,8 @@ bookFiles xlsx = runST $ do
           pvgSheetTableFiles = sheetPivotTables
         } =
           generatePivotFiles
-            [ (_wsCells, _wsPivotTables)
-              | (_, Worksheet {..}) <- xlsx ^. xlSheets
+            [ (wsCells, wsPivotTables)
+              | (_, Worksheet {..}) <- xlsx ^. #xlSheets
             ]
       sheetCells = map (transformSheetData shared) sheets
       sheetInputs = zip3 sheetCells sheetPivotTables sheets
@@ -613,9 +613,9 @@ bookFiles xlsx = runST $ do
   let sheetFiles = map fst allSheetFiles
       sheetAttrsByRId =
         zipWith
-          (\(rId, _) (name, sheet) -> (rId, name, sheet ^. wsState))
+          (\(rId, _) (name, sheet) -> (rId, name, sheet ^. #wsState))
           sheetFiles
-          (xlsx ^. xlSheets)
+          (xlsx ^. #xlSheets)
       sheetOthers = concatMap snd allSheetFiles
   cacheRefFDsById <- forM cacheIdFiles $ \(cacheId, fd) -> do
     refId <- nextRefId ref
@@ -626,9 +626,9 @@ bookFiles xlsx = runST $ do
         FileData "xl/workbook.xml" (smlCT "sheet.main") "officeDocument" $
           bookXml
             sheetAttrsByRId
-            (xlsx ^. xlDefinedNames)
+            (xlsx ^. #xlDefinedNames)
             cacheRefsById
-            (xlsx ^. xlDateBase)
+            (xlsx ^. #xlDateBase)
       rels =
         FileData
           "xl/_rels/workbook.xml.rels"

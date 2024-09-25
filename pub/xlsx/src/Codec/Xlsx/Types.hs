@@ -27,36 +27,6 @@ module Codec.Xlsx.Types
 
     -- * Lenses
 
-    -- ** Workbook
-    xlSheets,
-    xlStyles,
-    xlDefinedNames,
-    xlCustomProperties,
-    xlDateBase,
-
-    -- ** Worksheet
-    wsColumnsProperties,
-    wsRowPropertiesMap,
-    wsCells,
-    wsDrawing,
-    wsMerges,
-    wsSheetViews,
-    wsPageSetup,
-    wsConditionalFormattings,
-    wsDataValidations,
-    wsPivotTables,
-    wsAutoFilter,
-    wsTables,
-    wsProtection,
-    wsSharedFormulas,
-    wsState,
-
-    -- ** Cells
-    Cell.cellValue,
-    Cell.cellStyle,
-    Cell.cellComment,
-    Cell.cellFormula,
-
     -- ** Row properties
     rowHeightLens,
     _CustomHeight,
@@ -285,50 +255,48 @@ instance ToAttrVal SheetState where
 -- | Xlsx worksheet
 data Worksheet = Worksheet
   { -- | column widths
-    _wsColumnsProperties :: [ColumnsProperties],
+    wsColumnsProperties :: [ColumnsProperties],
     -- | custom row properties (height, style) map
-    _wsRowPropertiesMap :: Map RowIndex RowProperties,
+    wsRowPropertiesMap :: Map RowIndex RowProperties,
     -- | data mapped by (row, column) pairs
-    _wsCells :: CellMap,
+    wsCells :: CellMap,
     -- | SpreadsheetML Drawing
-    _wsDrawing :: Maybe Drawing,
+    wsDrawing :: Maybe Drawing,
     -- | list of cell merges
-    _wsMerges :: [Range],
-    _wsSheetViews :: Maybe [SheetView],
-    _wsPageSetup :: Maybe PageSetup,
-    _wsConditionalFormattings :: Map SqRef ConditionalFormatting,
-    _wsDataValidations :: Map SqRef DataValidation,
-    _wsPivotTables :: [PivotTable],
-    _wsAutoFilter :: Maybe AutoFilter,
-    _wsTables :: [Table],
-    _wsProtection :: Maybe SheetProtection,
-    _wsSharedFormulas :: Map SharedFormulaIndex SharedFormulaOptions,
-    _wsState :: SheetState
+    wsMerges :: [Range],
+    wsSheetViews :: Maybe [SheetView],
+    wsPageSetup :: Maybe PageSetup,
+    wsConditionalFormattings :: Map SqRef ConditionalFormatting,
+    wsDataValidations :: Map SqRef DataValidation,
+    wsPivotTables :: [PivotTable],
+    wsAutoFilter :: Maybe AutoFilter,
+    wsTables :: [Table],
+    wsProtection :: Maybe SheetProtection,
+    wsSharedFormulas :: Map SharedFormulaIndex SharedFormulaOptions,
+    wsState :: SheetState
   }
   deriving (Eq, Show, Generic)
 
 instance NFData Worksheet
 
-makeLenses ''Worksheet
-
 instance Default Worksheet where
   def =
     Worksheet
-      { _wsColumnsProperties = [],
-        _wsRowPropertiesMap = M.empty,
-        _wsCells = M.empty,
-        _wsDrawing = Nothing,
-        _wsMerges = [],
-        _wsSheetViews = Nothing,
-        _wsPageSetup = Nothing,
-        _wsConditionalFormattings = M.empty,
-        _wsDataValidations = M.empty,
-        _wsPivotTables = [],
-        _wsAutoFilter = Nothing,
-        _wsTables = [],
-        _wsProtection = Nothing,
-        _wsSharedFormulas = M.empty,
-        _wsState = def
+      { wsColumnsProperties = [],
+        wsRowPropertiesMap = M.empty,
+        wsCells = M.empty,
+        wsDrawing = Nothing,
+        wsMerges = [],
+        wsSheetViews = Nothing,
+        wsPageSetup = Nothing,
+        wsConditionalFormattings = M.empty,
+        wsDataValidations = M.empty,
+        wsPivotTables = [],
+        wsAutoFilter = Nothing,
+        wsTables = [],
+        wsProtection = Nothing,
+        wsSharedFormulas = M.empty,
+        wsState = def
       }
 
 -- | Raw worksheet styles, for structured implementation see 'StyleSheet'
@@ -340,15 +308,15 @@ instance NFData Styles
 
 -- | Structured representation of Xlsx file (currently a subset of its contents)
 data Xlsx = Xlsx
-  { _xlSheets :: [(Text, Worksheet)],
-    _xlStyles :: Styles,
-    _xlDefinedNames :: DefinedNames,
-    _xlCustomProperties :: Map Text Variant,
+  { xlSheets :: [(Text, Worksheet)],
+    xlStyles :: Styles,
+    xlDefinedNames :: DefinedNames,
+    xlCustomProperties :: Map Text Variant,
     -- | date base to use when converting serial value (i.e. 'CellDouble d')
     -- into date-time. Default value is 'DateBase1900'
     --
     -- See also 18.17.4.1 "Date Conversion for Serial Date-Times" (p. 2067)
-    _xlDateBase :: DateBase
+    xlDateBase :: DateBase
   }
   deriving (Eq, Show, Generic)
 
@@ -379,8 +347,6 @@ newtype DefinedNames = DefinedNames [(Text, Maybe Text, Text)]
   deriving (Eq, Show, Generic)
 
 instance NFData DefinedNames
-
-makeLenses ''Xlsx
 
 instance Default Xlsx where
   def = Xlsx [] emptyStyles def M.empty DateBase1900

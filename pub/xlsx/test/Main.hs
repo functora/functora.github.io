@@ -130,7 +130,7 @@ floatsParsingTests :: (ByteString -> Xlsx) -> IO ()
 floatsParsingTests parser = do
   bs <- LB.readFile "data/floats.xlsx"
   let xlsx = parser bs
-      parsedCells = maybe mempty (_wsCells . snd) $ listToMaybe $ xlsx ^. xlSheets
+      parsedCells = maybe mempty (wsCells . snd) $ listToMaybe $ xlsx ^. #xlSheets
       expectedCells =
         M.fromList
           [ ((1, 1), def & #cellValue ?~ CellDouble 12.0),
@@ -148,8 +148,8 @@ defXlsx = def & atSheet constSheetName ?~ def
 
 defXlsxWithState :: SheetState -> Xlsx
 defXlsxWithState state =
-  def & atSheet constSheetName ?~ (wsState .~ state $ def)
+  def & atSheet constSheetName ?~ (#wsState .~ state $ def)
 
 sheetStateOfDefXlsx :: Xlsx -> Maybe SheetState
 sheetStateOfDefXlsx xlsx =
-  xlsx ^. atSheet constSheetName & mapped %~ _wsState
+  xlsx ^. atSheet constSheetName & mapped %~ wsState

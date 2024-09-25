@@ -118,7 +118,7 @@ toXlsxEitherBase parseSheet bs = do
   (wfs, names, cacheSources, dateBase) <- readWorkbook ar
   sheets <- forM wfs $ \wf -> do
     sheet <- parseSheet ar sst contentTypes cacheSources wf
-    return . (wfName wf,) . (wsState .~ wfState wf) $ sheet
+    return . (wfName wf,) . (#wsState .~ wfState wf) $ sheet
   CustomProperties customPropMap <- getCustomProperties ar
   return $ Xlsx sheets (getStyles ar) names customPropMap dateBase
 
@@ -160,37 +160,37 @@ extractSheetFast ar sst contentTypes caches wf = do
         liftEither . collectChildren root $ do
           skip "sheetPr"
           skip "dimension"
-          _wsSheetViews <- fmap justNonEmpty . maybeParse "sheetViews" $ \n ->
+          wsSheetViews <- fmap justNonEmpty . maybeParse "sheetViews" $ \n ->
             collectChildren n $ fromChildList "sheetView"
           skip "sheetFormatPr"
-          _wsColumnsProperties <-
+          wsColumnsProperties <-
             fmap (fromMaybe []) . maybeParse "cols" $ \n ->
               collectChildren n (fromChildList "col")
-          (_wsRowPropertiesMap, _wsCells, _wsSharedFormulas) <-
+          (wsRowPropertiesMap, wsCells, wsSharedFormulas) <-
             requireAndParse "sheetData" $ \n -> do
               rows <- collectChildren n $ childList "row"
               collectRows <$> forM rows parseRow
           skip "sheetCalcPr"
-          _wsProtection <- maybeFromChild "sheetProtection"
+          wsProtection <- maybeFromChild "sheetProtection"
           skip "protectedRanges"
           skip "scenarios"
-          _wsAutoFilter <- maybeFromChild "autoFilter"
+          wsAutoFilter <- maybeFromChild "autoFilter"
           skip "sortState"
           skip "dataConsolidate"
           skip "customSheetViews"
-          _wsMerges <- fmap (fromMaybe []) . maybeParse "mergeCells" $ \n -> do
+          wsMerges <- fmap (fromMaybe []) . maybeParse "mergeCells" $ \n -> do
             mCells <- collectChildren n $ childList "mergeCell"
             forM mCells $ \mCell -> parseAttributes mCell $ fromAttr "ref"
-          _wsConditionalFormattings <-
+          wsConditionalFormattings <-
             M.fromList . map unCfPair <$> fromChildList "conditionalFormatting"
-          _wsDataValidations <-
+          wsDataValidations <-
             fmap (fromMaybe mempty) . maybeParse "dataValidations" $ \n -> do
               M.fromList . map unDvPair
                 <$> collectChildren n (fromChildList "dataValidation")
           skip "hyperlinks"
           skip "printOptions"
           skip "pageMargins"
-          _wsPageSetup <- maybeFromChild "pageSetup"
+          wsPageSetup <- maybeFromChild "pageSetup"
           skip "headerFooter"
           skip "rowBreaks"
           skip "colBreaks"
@@ -210,10 +210,10 @@ extractSheetFast ar sst contentTypes caches wf = do
           -- all explicitly assigned fields filled below
           return
             ( Worksheet
-                { _wsDrawing = Nothing,
-                  _wsPivotTables = [],
-                  _wsTables = [],
-                  _wsState = wfState wf,
+                { wsDrawing = Nothing,
+                  wsPivotTables = [],
+                  wsTables = [],
+                  wsState = wfState wf,
                   ..
                 },
               tableIds,
@@ -253,13 +253,13 @@ extractSheetFast ar sst contentTypes caches wf = do
 
       return $
         ws
-          & wsTables
+          & #wsTables
           .~ tables
-          & wsCells
+          & #wsCells
           %~ mergeComments
-          & wsDrawing
+          & #wsDrawing
           .~ drawing
-          & wsPivotTables
+          & #wsPivotTables
           .~ pivotTables
     liftEither :: Either Text a -> Parser a
     liftEither = left (\t -> InvalidFile filePath t)

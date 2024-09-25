@@ -158,7 +158,7 @@ simpleWorkbookRow = def & atSheet "Sheet1" ?~ sheet
                  , ((RowIndex 2, ColumnIndex 1), #cellValue ?~ CellText "text at A2 Sheet1" $ def) ]
 
 toWs :: [((RowIndex, ColumnIndex), Cell)] -> Worksheet
-toWs x = set wsCells (M.fromList x) def
+toWs x = set #wsCells (M.fromList x) def
 
 -- can we do xxx
 --           xxx

@@ -65,14 +65,14 @@ upsert k v ((k1, v1) : r) =
 -- | lens giving access to a worksheet from 'Xlsx' object
 -- by its name
 ixSheet :: Text -> Traversal' Xlsx Worksheet
-ixSheet s = xlSheets . \f -> fmap unSheetList . ix s f . SheetList
+ixSheet s = #xlSheets . \f -> fmap unSheetList . ix s f . SheetList
 
 -- | 'Control.Lens.At' variant of 'ixSheet' lens
 --
 -- /Note:/ if there is no such sheet in this workbook then new sheet will be
 -- added as the last one to the sheet list
 atSheet :: Text -> Lens' Xlsx (Maybe Worksheet)
-atSheet s = xlSheets . \f -> fmap unSheetList . at s f . SheetList
+atSheet s = #xlSheets . \f -> fmap unSheetList . at s f . SheetList
 
 -- | lens giving access to a cell in some worksheet
 -- by its position, by default row+column index is used
@@ -82,7 +82,7 @@ ixCell = ixCellRC
 
 -- | lens to access cell in a worksheet
 ixCellRC :: (RowIndex, ColumnIndex) -> Traversal' Worksheet Cell
-ixCellRC i = wsCells . ix i
+ixCellRC i = #wsCells . ix i
 
 -- | lens to access cell in a worksheet using more traditional
 -- x+y coordinates
@@ -96,7 +96,7 @@ atCell = atCellRC
 
 -- | lens to read, write or delete cell in a worksheet
 atCellRC :: (RowIndex, ColumnIndex) -> Lens' Worksheet (Maybe Cell)
-atCellRC i = wsCells . at i
+atCellRC i = #wsCells . at i
 
 -- | lens to read, write or delete cell in a worksheet
 -- using more traditional x+y or row+column index

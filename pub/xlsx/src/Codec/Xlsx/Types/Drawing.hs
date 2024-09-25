@@ -139,10 +139,10 @@ picture dId fi =
         }
     shProps =
       ShapeProperties
-        { _spXfrm = Nothing,
-          _spGeometry = Nothing,
-          _spFill = Just NoFill,
-          _spOutline = Just $ def {_lnFill = Just NoFill}
+        { spXfrm = Nothing,
+          spGeometry = Nothing,
+          spFill = Just NoFill,
+          spOutline = Just $ def {_lnFill = Just NoFill}
         }
 
 -- | helper to retrive information about all picture files in

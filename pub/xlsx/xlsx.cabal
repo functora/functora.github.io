@@ -197,6 +197,7 @@ test-suite data-test
     , Diff              >=0.3.0
     , directory
     , filepath
+    , generic-lens
     , groom
     , mtl
     , raw-strings-qq

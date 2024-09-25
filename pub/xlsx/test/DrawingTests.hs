@@ -19,6 +19,7 @@ import Codec.Xlsx.Types.Internal
 import Codec.Xlsx.Writer.Internal
 import Common
 import Data.ByteString.Lazy (ByteString)
+import Data.Generics.Labels
 import Diff
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase)
@@ -86,10 +87,10 @@ testDrawing = Drawing [anchor1, anchor2]
         }
     shProps =
       ShapeProperties
-        { _spXfrm = Just trnsfrm,
-          _spGeometry = Just PresetGeometry,
-          _spFill = Nothing,
-          _spOutline = Just $ def {_lnFill = Just NoFill}
+        { spXfrm = Just trnsfrm,
+          spGeometry = Just PresetGeometry,
+          spFill = Nothing,
+          spOutline = Just $ def {_lnFill = Just NoFill}
         }
     trnsfrm =
       Transform2D
@@ -306,8 +307,8 @@ testLineChartSpace = oneChartChartSpace lineChart
       ]
     rgbShape color =
       def
-        { _spFill = Just $ solidRgb color,
-          _spOutline =
+        { spFill = Just $ solidRgb color,
+          spOutline =
             Just $
               LineProperties {_lnFill = Just $ solidRgb color, _lnWidth = 28800}
         }
@@ -327,8 +328,8 @@ testAreaChartSpace = oneChartChartSpace areaChart
                   _serShapeProperties =
                     Just $
                       def
-                        { _spFill = Just $ solidRgb "000088",
-                          _spOutline = Just $ def {_lnFill = Just NoFill}
+                        { spFill = Just $ solidRgb "000088",
+                          spOutline = Just $ def {_lnFill = Just NoFill}
                         }
                 },
             _arserDataLblProps = Nothing,
@@ -350,8 +351,8 @@ testBarChartSpace =
                       _serShapeProperties =
                         Just $
                           def
-                            { _spFill = Just $ solidRgb "000088",
-                              _spOutline = Just $ def {_lnFill = Just NoFill}
+                            { spFill = Just $ solidRgb "000088",
+                              spOutline = Just $ def {_lnFill = Just NoFill}
                             }
                     },
                 _brserDataLblProps = Nothing,
@@ -372,9 +373,9 @@ testPieChartSpace =
                       _serShapeProperties = Nothing
                     },
                 _piserDataPoints =
-                  [ def & dpShapeProperties ?~ solidFill "000088",
-                    def & dpShapeProperties ?~ solidFill "008800",
-                    def & dpShapeProperties ?~ solidFill "880000"
+                  [ def & #dpShapeProperties ?~ solidFill "000088",
+                    def & #dpShapeProperties ?~ solidFill "008800",
+                    def & #dpShapeProperties ?~ solidFill "880000"
                   ],
                 _piserDataLblProps = Nothing,
                 _piserVal = Just $ Formula "Sheet1!$B$1:$D$1"
@@ -382,7 +383,7 @@ testPieChartSpace =
           ]
       }
   where
-    solidFill color = def & spFill ?~ solidRgb color
+    solidFill color = def & #spFill ?~ solidRgb color
 
 testScatterChartSpace :: ChartSpace
 testScatterChartSpace =
@@ -395,7 +396,7 @@ testScatterChartSpace =
                   Series
                     { _serTx = Just $ Formula "Sheet1!$A$2",
                       _serShapeProperties =
-                        Just $ def {_spOutline = Just $ def {_lnFill = Just NoFill}}
+                        Just $ def {spOutline = Just $ def {_lnFill = Just NoFill}}
                     },
                 _scserMarker = Just $ DataMarker (Just DataMarkerSquare) Nothing,
                 _scserDataLblProps = Nothing,

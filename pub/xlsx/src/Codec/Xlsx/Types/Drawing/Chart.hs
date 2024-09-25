@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.Drawing.Chart where
 
@@ -197,8 +196,8 @@ instance NFData ScatterStyle
 --
 -- See 21.2.2.52 "dPt (Data Point)" (p. 3384)
 data DataPoint = DataPoint
-  { _dpMarker :: Maybe DataMarker,
-    _dpShapeProperties :: Maybe ShapeProperties
+  { dpMarker :: Maybe DataMarker,
+    dpShapeProperties :: Maybe ShapeProperties
   }
   deriving (Eq, Show, Generic)
 
@@ -358,8 +357,6 @@ data TickMark
 
 instance NFData TickMark
 
-makeLenses ''DataPoint
-
 {-------------------------------------------------------------------------------
   Default instances
 -------------------------------------------------------------------------------}
@@ -495,8 +492,8 @@ instance FromCursor DataMarker where
 
 instance FromCursor DataPoint where
   fromCursor cur = do
-    _dpMarker <- maybeFromElement (c_ "marker") cur
-    _dpShapeProperties <- maybeFromElement (c_ "spPr") cur
+    dpMarker <- maybeFromElement (c_ "marker") cur
+    dpShapeProperties <- maybeFromElement (c_ "spPr") cur
     return DataPoint {..}
 
 instance FromAttrVal DataMarkerSymbol where
@@ -599,7 +596,7 @@ instance ToElement ChartSpace where
     where
       -- no such element gives a chart space with rounded corners
       nonRounded = elementValue "roundedCorners" False
-      chSpPr = toElement "spPr" $ def {_spFill = Just $ solidRgb "ffffff"}
+      chSpPr = toElement "spPr" $ def {spFill = Just $ solidRgb "ffffff"}
       chartEl = elementListSimple "chart" elements
       elements =
         catMaybes
@@ -712,7 +709,7 @@ chartToElements chart axId =
           toElement "spPr" grayLines,
           elementValue "crossAx" cr
         ]
-    grayLines = def {_spOutline = Just def {_lnFill = Just $ solidRgb "b3b3b3"}}
+    grayLines = def {spOutline = Just def {_lnFill = Just $ solidRgb "b3b3b3"}}
     gridLinesEl =
       elementListSimple "majorGridlines" [toElement "spPr" grayLines]
 
@@ -821,8 +818,8 @@ instance ToElement PieSeries where
           "dPt"
           ( elementValue "idx" i
               : catMaybes
-                [ toElement "marker" <$> _dpMarker,
-                  toElement "spPr" <$> _dpShapeProperties
+                [ toElement "marker" <$> dpMarker,
+                  toElement "spPr" <$> dpShapeProperties
                 ]
           )
 

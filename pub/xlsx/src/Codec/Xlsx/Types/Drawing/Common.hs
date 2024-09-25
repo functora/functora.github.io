@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.Drawing.Common where
 
@@ -290,10 +289,10 @@ instance NFData Geometry
 
 -- See 20.1.2.2.35 "spPr (Shape Properties)" (p. 2751)
 data ShapeProperties = ShapeProperties
-  { _spXfrm :: Maybe Transform2D,
-    _spGeometry :: Maybe Geometry,
-    _spFill :: Maybe FillProperties,
-    _spOutline :: Maybe LineProperties
+  { spXfrm :: Maybe Transform2D,
+    spGeometry :: Maybe Geometry,
+    spFill :: Maybe FillProperties,
+    spOutline :: Maybe LineProperties
     -- TODO: bwMode, a_EG_EffectProperties, scene3d, sp3d, extLst
   }
   deriving (Eq, Show, Generic)
@@ -348,8 +347,6 @@ instance NFData FillProperties
 -- | solid fill with color specified by hexadecimal RGB color
 solidRgb :: Text -> FillProperties
 solidRgb t = SolidFill . Just $ RgbColor t
-
-makeLenses ''ShapeProperties
 
 {-------------------------------------------------------------------------------
   Default instances
@@ -436,10 +433,10 @@ instance FromAttrVal TextAnchoring where
 
 instance FromCursor ShapeProperties where
   fromCursor cur = do
-    _spXfrm <- maybeFromElement (a_ "xfrm") cur
-    let _spGeometry = listToMaybe $ cur $/ anyElement >=> fromCursor
-        _spFill = listToMaybe $ cur $/ anyElement >=> fillPropsFromNode . node
-    _spOutline <- maybeFromElement (a_ "ln") cur
+    spXfrm <- maybeFromElement (a_ "xfrm") cur
+    let spGeometry = listToMaybe $ cur $/ anyElement >=> fromCursor
+        spFill = listToMaybe $ cur $/ anyElement >=> fillPropsFromNode . node
+    spOutline <- maybeFromElement (a_ "ln") cur
     return ShapeProperties {..}
 
 instance FromCursor Transform2D where
@@ -591,10 +588,10 @@ instance ToElement ShapeProperties where
     where
       elements =
         catMaybes
-          [ toElement (a_ "xfrm") <$> _spXfrm,
-            geometryToElement <$> _spGeometry,
-            fillPropsToElement <$> _spFill,
-            toElement (a_ "ln") <$> _spOutline
+          [ toElement (a_ "xfrm") <$> spXfrm,
+            geometryToElement <$> spGeometry,
+            fillPropsToElement <$> spFill,
+            toElement (a_ "ln") <$> spOutline
           ]
 
 instance ToElement Point2D where

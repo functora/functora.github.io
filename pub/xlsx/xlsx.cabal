@@ -1,3 +1,4 @@
+cabal-version:      3.0
 name:               xlsx
 version:            1.1.2.2
 synopsis:           Simple and incomplete Excel file parser/writer
@@ -26,15 +27,79 @@ maintainer:         qrilka@gmail.com
 category:           Codec
 build-type:         Simple
 tested-with:        GHC ==9.0.2 || ==9.2.8 || ==9.4.5 || ==9.6.2
-cabal-version:      >=1.10
 
 flag microlens
   default:     False
   description: Use microlens instead of lens
 
-library
+flag ghcid
+  default:     False
+  description: Run dev ghcid shell
+
+common pkg
   hs-source-dirs:   src
-  ghc-options:      -Wall
+  build-depends:
+    , attoparsec
+    , base               >=4.9.0.0  && <5.0
+    , base64-bytestring
+    , binary-search
+    , bytestring         >=0.10.8.0
+    , conduit            >=1.0.0
+    , containers         >=0.5.0.0
+    , data-default
+    , deepseq            >=1.4
+    , dlist
+    , errors
+    , exceptions
+    , extra
+    , filepath
+    , hexpat
+    , monad-control
+    , mtl                >=2.1
+    , network-uri
+    , old-locale         >=1.0.0.5
+    , safe               >=0.3
+    , text               >=0.11.3.1
+    , time               >=1.4.0.1
+    , transformers       >=0.3.0.0
+    , transformers-base
+    , vector             >=0.10
+    , xeno               >=0.3.2
+    , xml-conduit        >=1.1.0
+    , xml-types
+    , zip
+    , zip-archive        >=0.2
+    , zip-stream         >=0.2.0.1
+    , zlib               >=0.5.4.0
+
+  if flag(microlens)
+    build-depends:
+      , indexed-traversable
+      , microlens            >=0.4 && <0.5
+      , microlens-ghc
+      , microlens-mtl
+      , microlens-platform
+      , microlens-th
+      , profunctors
+
+    cpp-options:   -DUSE_MICROLENS
+
+  else
+    build-depends: lens >=3.8 && <5.4
+
+  default-language: Haskell2010
+  other-extensions:
+    DeriveDataTypeable
+    FlexibleInstances
+    NoMonomorphismRestriction
+    OverloadedStrings
+    RankNTypes
+    RecordWildCards
+    TupleSections
+
+library
+  import:          pkg
+  ghc-options:     -Wall
   exposed-modules:
     Codec.Xlsx
     Codec.Xlsx.Formatted
@@ -86,66 +151,10 @@ library
     Codec.Xlsx.Parser.Internal.Memoize
     Codec.Xlsx.Parser.Stream.HexpatInternal
 
-  build-depends:
-      attoparsec
-    , base               >=4.9.0.0  && <5.0
-    , base64-bytestring
-    , binary-search
-    , bytestring         >=0.10.8.0
-    , conduit            >=1.0.0
-    , containers         >=0.5.0.0
-    , data-default
-    , deepseq            >=1.4
-    , dlist
-    , errors
-    , exceptions
-    , extra
-    , filepath
-    , hexpat
-    , monad-control
-    , mtl                >=2.1
-    , network-uri
-    , old-locale         >=1.0.0.5
-    , safe               >=0.3
-    , text               >=0.11.3.1
-    , time               >=1.4.0.1
-    , transformers       >=0.3.0.0
-    , transformers-base
-    , vector             >=0.10
-    , xeno               >=0.3.2
-    , xml-conduit        >=1.1.0
-    , xml-types
-    , zip
-    , zip-archive        >=0.2
-    , zip-stream         >=0.2.0.1
-    , zlib               >=0.5.4.0
-
-  if flag(microlens)
-    build-depends:
-        indexed-traversable
-      , microlens            >=0.4 && <0.5
-      , microlens-ghc
-      , microlens-mtl
-      , microlens-platform
-      , microlens-th
-      , profunctors
-
-    cpp-options:   -DUSE_MICROLENS
-
-  else
-    build-depends: lens >=3.8 && <5.4
-
-  default-language: Haskell2010
-  other-extensions:
-    DeriveDataTypeable
-    FlexibleInstances
-    NoMonomorphismRestriction
-    OverloadedStrings
-    RankNTypes
-    RecordWildCards
-    TupleSections
-
 test-suite data-test
+  if flag(ghcid)
+    import: pkg
+
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
   hs-source-dirs:   test/
@@ -163,7 +172,7 @@ test-suite data-test
     TestXlsx
 
   build-depends:
-      base
+    , base
     , bytestring
     , conduit
     , containers
@@ -187,7 +196,7 @@ test-suite data-test
 
   if flag(microlens)
     build-depends:
-        microlens           >=0.4 && <0.5
+      , microlens           >=0.4 && <0.5
       , microlens-mtl
       , microlens-platform
       , microlens-th
@@ -208,7 +217,7 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Main.hs
   build-depends:
-      base
+    , base
     , bytestring
     , conduit
     , criterion

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
@@ -22,7 +23,7 @@ tests = testGroup
 #else
 
 import Control.Exception
-import Codec.Archive.Zip as Zip
+import "zip" Codec.Archive.Zip as Zip
 import Codec.Xlsx
 import Codec.Xlsx.Parser.Stream
 import Conduit ((.|))

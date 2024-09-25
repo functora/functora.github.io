@@ -165,7 +165,7 @@ _AutomaticHeight
 makePrisms ''RowHeight
 #endif
 
--- | Properties of a row. See §18.3.1.73 "row (Row)" for more details
+-- | Properties of a row. See 18.3.1.73 "row (Row)" for more details
 data RowProperties = RowProps
   { -- | Row height in points
     rowHeight :: Maybe RowHeight,

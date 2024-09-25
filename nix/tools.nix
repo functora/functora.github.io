@@ -31,6 +31,13 @@ with pkgs; let
         "$@"
     '';
   };
+  ormoluFormat = pkgs.writeShellApplication {
+    name = "ormolu-format";
+    text = ''
+      ${ormolu}/bin/ormolu --mode inplace \
+        "$(find . -name '*.hs' -not -path './dist*')"
+    '';
+  };
   ormoluTest = pkgs.writeShellScriptBin "ormolu-test" ''
     ${ormolu}/bin/ormolu --mode check \
       $( find ${repoDir}/* \( \
@@ -57,6 +64,7 @@ with pkgs; let
   '';
 in [
   ormolu
+  ormoluFormat
   styleTest
   prettier
   pkgs.alejandra

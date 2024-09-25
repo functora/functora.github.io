@@ -604,10 +604,10 @@ addCellToRow txt = do
             IntMap.insert
               (unColumnIndex $ ps_cell_col_index st)
               ( Cell
-                  { _cellStyle = style,
-                    _cellValue = Just val,
-                    _cellComment = Nothing,
-                    _cellFormula = Nothing
+                  { cellStyle = style,
+                    cellValue = Just val,
+                    cellComment = Nothing,
+                    cellFormula = Nothing
                   }
               )
               $ ps_row st

@@ -111,7 +111,7 @@ cellValueAt = cellValueAtRC
 -- | lens to read, write or delete cell value in a worksheet
 -- using row+column coordinates of that cell
 cellValueAtRC :: (RowIndex, ColumnIndex) -> Lens' Worksheet (Maybe CellValue)
-cellValueAtRC i = atCell i . non def . cellValue
+cellValueAtRC i = atCell i . non def . #cellValue
 
 -- | lens to read, write or delete cell value in a worksheet
 -- using traditional x+y coordinates

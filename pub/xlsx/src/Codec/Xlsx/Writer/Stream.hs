@@ -87,7 +87,7 @@ upsertSharedStrings row =
   traverse upsertSharedString items
   where
     items :: [Text]
-    items = row ^.. #ri_cell_row . traversed . cellValue . _Just . _CellText
+    items = row ^.. #ri_cell_row . traversed . #cellValue . _Just . _CellText
 
 -- | Process sheetItems into shared strings structure to be put into
 --   'writeXlsxWithSharedStrings'
@@ -427,9 +427,9 @@ mapRow sharedStrings' sheetItem = do
 mapCell ::
   (Monad m) => Map Text Int -> RowIndex -> Int -> Cell -> ConduitT Row Event m ()
 mapCell sharedStrings' rix cix' cell =
-  when (has (cellValue . _Just) cell || has (cellStyle . _Just) cell) $
+  when (has (#cellValue . _Just) cell || has (#cellStyle . _Just) cell) $
     tag (n_ "c") celAttr $
-      when (has (cellValue . _Just) cell) $
+      when (has (#cellValue . _Just) cell) $
         el (n_ "v") $
           content $
             renderCell sharedStrings' cell
@@ -438,7 +438,7 @@ mapCell sharedStrings' rix cix' cell =
     celAttr =
       attr "r" ref
         <> renderCellType sharedStrings' cell
-        <> foldMap (attr "s" . txti) (cell ^. cellStyle)
+        <> foldMap (attr "s" . txti) (cell ^. #cellStyle)
     ref :: Text
     ref = coerce $ singleCellRef (rix, cix)
 
@@ -448,14 +448,14 @@ renderCellType sharedStrings' cell =
     mempty
     (attr "t" . renderType sharedStrings')
     $ cell
-      ^? cellValue
+      ^? #cellValue
       . _Just
 
 renderCell :: Map Text Int -> Cell -> Text
 renderCell sharedStrings' cell = renderValue sharedStrings' val
   where
     val :: CellValue
-    val = fromMaybe (CellText mempty) $ cell ^? cellValue . _Just
+    val = fromMaybe (CellText mempty) $ cell ^? #cellValue . _Just
 
 renderValue :: Map Text Int -> CellValue -> Text
 renderValue sharedStrings' = \case

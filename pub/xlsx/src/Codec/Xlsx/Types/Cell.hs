@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.Cell
   ( CellFormula (..),
@@ -14,10 +13,6 @@ module Codec.Xlsx.Types.Cell
     formulaDataFromCursor,
     applySharedFormulaOpts,
     Cell (..),
-    cellStyle,
-    cellValue,
-    cellComment,
-    cellFormula,
     CellMap,
   )
 where
@@ -49,14 +44,14 @@ import Text.XML.Cursor
 --
 -- See 18.3.1.40 "f (Formula)" (p. 1636)
 data CellFormula = CellFormula
-  { _cellfExpression :: FormulaExpression,
+  { cellfExpression :: FormulaExpression,
     -- | Specifies that this formula assigns a value to a name.
-    _cellfAssignsToName :: Bool,
+    cellfAssignsToName :: Bool,
     -- | Indicates that this formula needs to be recalculated
     -- the next time calculation is performed.
     -- [/Example/: This is always set on volatile functions,
     -- like =RAND(), and circular references. /end example/]
-    _cellfCalculate :: Bool
+    cellfCalculate :: Bool
   }
   deriving (Eq, Show, Generic)
 
@@ -91,26 +86,26 @@ instance NFData SharedFormulaOptions
 simpleCellFormula :: Text -> CellFormula
 simpleCellFormula expr =
   CellFormula
-    { _cellfExpression = NormalFormula $ Formula expr,
-      _cellfAssignsToName = False,
-      _cellfCalculate = False
+    { cellfExpression = NormalFormula $ Formula expr,
+      cellfAssignsToName = False,
+      cellfCalculate = False
     }
 
 sharedFormulaByIndex :: SharedFormulaIndex -> CellFormula
 sharedFormulaByIndex si =
   CellFormula
-    { _cellfExpression = SharedFormula si,
-      _cellfAssignsToName = False,
-      _cellfCalculate = False
+    { cellfExpression = SharedFormula si,
+      cellfAssignsToName = False,
+      cellfCalculate = False
     }
 
 -- | Currently cell details include cell values, style ids and cell
 -- formulas (inline strings from @\<is\>@ subelements are ignored)
 data Cell = Cell
-  { _cellStyle :: Maybe Int,
-    _cellValue :: Maybe CellValue,
-    _cellComment :: Maybe Comment,
-    _cellFormula :: Maybe CellFormula
+  { cellStyle :: Maybe Int,
+    cellValue :: Maybe CellValue,
+    cellComment :: Maybe Comment,
+    cellFormula :: Maybe CellFormula
   }
   deriving (Eq, Show, Generic)
 
@@ -118,8 +113,6 @@ instance NFData Cell
 
 instance Default Cell where
   def = Cell Nothing Nothing Nothing Nothing
-
-makeLenses ''Cell
 
 -- | Map containing cell values which are indexed by row and column
 -- if you need to use more traditional (x,y) indexing please you could
@@ -133,10 +126,10 @@ type CellMap = Map (RowIndex, ColumnIndex) Cell
 formulaDataFromCursor ::
   Cursor -> [(CellFormula, Maybe (SharedFormulaIndex, SharedFormulaOptions))]
 formulaDataFromCursor cur = do
-  _cellfAssignsToName <- fromAttributeDef "bx" False cur
-  _cellfCalculate <- fromAttributeDef "ca" False cur
+  cellfAssignsToName <- fromAttributeDef "bx" False cur
+  cellfCalculate <- fromAttributeDef "ca" False cur
   t <- fromAttributeDef "t" defaultFormulaType cur
-  (_cellfExpression, shared) <-
+  (cellfExpression, shared) <-
     case t of
       d | d == defaultFormulaType -> do
         formula <- fromCursor cur
@@ -172,12 +165,12 @@ instance ToElement CellFormula where
       commonAttrs =
         M.fromList $
           catMaybes
-            [ "bx" .=? justTrue _cellfAssignsToName,
-              "ca" .=? justTrue _cellfCalculate,
+            [ "bx" .=? justTrue cellfAssignsToName,
+              "ca" .=? justTrue cellfCalculate,
               "t" .=? justNonDef defaultFormulaType fType
             ]
       (formulaEl, fType) =
-        case _cellfExpression of
+        case cellfExpression of
           NormalFormula f -> (toElement nm f, defaultFormulaType)
           SharedFormula si -> (leafElement nm ["si" .= si], "shared")
 

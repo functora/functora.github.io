@@ -50,8 +50,8 @@ instance FromXenoNode FormulaData where
         unexpected -> Left $ "Unexpected formula type" <> T.pack (show unexpected)
     let f =
           CellFormula
-            { _cellfAssignsToName = bx,
-              _cellfCalculate = ca,
-              _cellfExpression = expr
+            { cellfAssignsToName = bx,
+              cellfCalculate = ca,
+              cellfExpression = expr
             }
     return $ FormulaData f shared

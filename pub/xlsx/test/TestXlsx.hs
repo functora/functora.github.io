@@ -109,7 +109,7 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
         .~ foreignValidations
         & wsCells
         . at (1, 1)
-        ?~ (def & cellValue ?~ CellText ("Hi! try " <> unCellRef testForeignDvRange))
+        ?~ (def & #cellValue ?~ CellText ("Hi! try " <> unCellRef testForeignDvRange))
     pvSheet = sheetWithPvCells & wsPivotTables .~ [testPivotTable]
     sheetWithPvCells = def & wsCells .~ testPivotSrcCells
     rowProps =
@@ -225,7 +225,7 @@ testCellMap1 =
       ((6, 3), cd6_3)
     ]
   where
-    cd v = def {_cellValue = Just v}
+    cd v = def {cellValue = Just v}
     cd1_2 = cd (CellText "just a text <> & \"in quotes\"")
     cd1_5 = cd (CellDouble 42.4567)
     cd1_10 = cd (CellText "")
@@ -233,58 +233,58 @@ testCellMap1 =
     cd3_2 = def -- shouldn't it be skipped?
     cd3_3 =
       def
-        & cellValue
+        & #cellValue
         ?~ CellError ErrorDiv0
-        & cellFormula
+        & #cellFormula
         ?~ simpleCellFormula "1/0"
     cd3_7 = cd (CellBool True)
     cd4_1 = cd (CellDouble 1)
     cd4_2 = cd (CellDouble 123456789012345)
     cd4_3 =
       (cd (CellDouble (1 + 2)))
-        { _cellFormula =
+        { cellFormula =
             Just $ simpleCellFormula "A4+B4<>11"
         }
-    cd5_1 = def & cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
-    cd5_2 = def & cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
-    cd5_3 = def & cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
-    cd6_2 = def & cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 1)
-    cd6_3 = def & cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 1)
+    cd5_1 = def & #cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
+    cd5_2 = def & #cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
+    cd5_3 = def & #cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 0)
+    cd6_2 = def & #cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 1)
+    cd6_3 = def & #cellFormula ?~ sharedFormulaByIndex (SharedFormulaIndex 1)
 
 cellRangeDvSourceMap :: CellMap
 cellRangeDvSourceMap =
   M.fromList
-    [ ((1, 1), def & cellValue ?~ CellText "A-A-A"),
-      ((2, 1), def & cellValue ?~ CellText "B-B-B"),
-      ((1, 2), def & cellValue ?~ CellText "C-C-C"),
-      ((2, 2), def & cellValue ?~ CellText "D-D-D"),
-      ((1, 3), def & cellValue ?~ CellDouble 6),
-      ((2, 3), def & cellValue ?~ CellDouble 7),
-      ((3, 1), def & cellValue ?~ CellDouble 5),
-      ((3, 2), def & cellValue ?~ CellText "numbers!"),
-      ((3, 3), def & cellValue ?~ CellDouble 5)
+    [ ((1, 1), def & #cellValue ?~ CellText "A-A-A"),
+      ((2, 1), def & #cellValue ?~ CellText "B-B-B"),
+      ((1, 2), def & #cellValue ?~ CellText "C-C-C"),
+      ((2, 2), def & #cellValue ?~ CellText "D-D-D"),
+      ((1, 3), def & #cellValue ?~ CellDouble 6),
+      ((2, 3), def & #cellValue ?~ CellDouble 7),
+      ((3, 1), def & #cellValue ?~ CellDouble 5),
+      ((3, 2), def & #cellValue ?~ CellText "numbers!"),
+      ((3, 3), def & #cellValue ?~ CellDouble 5)
     ]
 
 testCellMap2 :: CellMap
 testCellMap2 =
   M.fromList
-    [ ((1, 2), def & cellValue ?~ CellText "something here"),
-      ((3, 5), def & cellValue ?~ CellDouble 123.456),
+    [ ((1, 2), def & #cellValue ?~ CellText "something here"),
+      ((3, 5), def & #cellValue ?~ CellDouble 123.456),
       ( (2, 4),
         def
-          & cellValue
+          & #cellValue
           ?~ CellText "value"
-          & cellComment
+          & #cellComment
           ?~ comment1
       ),
       ( (10, 7),
         def
-          & cellValue
+          & #cellValue
           ?~ CellText "value"
-          & cellComment
+          & #cellComment
           ?~ comment2
       ),
-      ((11, 4), def & cellComment ?~ comment3)
+      ((11, 4), def & #cellComment ?~ comment3)
     ]
   where
     comment1 = Comment (XlsxText "simple comment") "bob" True
@@ -565,24 +565,24 @@ testFormattedResult = Formatted cm styleSheet merges
         ]
     cell11 =
       Cell
-        { _cellStyle = Just 1,
-          _cellValue = Just (CellText "text at A1"),
-          _cellComment = Nothing,
-          _cellFormula = Nothing
+        { cellStyle = Just 1,
+          cellValue = Just (CellText "text at A1"),
+          cellComment = Nothing,
+          cellFormula = Nothing
         }
     cell12 =
       Cell
-        { _cellStyle = Just 2,
-          _cellValue = Just (CellDouble 1.23),
-          _cellComment = Nothing,
-          _cellFormula = Nothing
+        { cellStyle = Just 2,
+          cellValue = Just (CellDouble 1.23),
+          cellComment = Nothing,
+          cellFormula = Nothing
         }
     cell25 =
       Cell
-        { _cellStyle = Just 3,
-          _cellValue = Just (CellDouble 1.23456),
-          _cellComment = Nothing,
-          _cellFormula = Nothing
+        { cellStyle = Just 3,
+          cellValue = Just (CellDouble 1.23456),
+          cellComment = Nothing,
+          cellFormula = Nothing
         }
     merges = []
     styleSheet =
@@ -635,7 +635,7 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
       at (1, 1)
         ?= ( def
               & #formattedCell
-              . cellValue
+              . #cellValue
               ?~ CellText "text at A1"
               & #formattedFormat
               . #formatFont
@@ -644,7 +644,7 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
       at (1, 2)
         ?= ( def
               & #formattedCell
-              . cellValue
+              . #cellValue
               ?~ CellDouble 1.23
               & #formattedFormat
               . #formatFont
@@ -658,7 +658,7 @@ testRunFormatted = formatted formattedCellMap minimalStyleSheet
       at (2, 5)
         ?= ( def
               & #formattedCell
-              . cellValue
+              . #cellValue
               ?~ CellDouble 1.23456
               & #formattedFormat
               . #formatNumberFormat
@@ -677,10 +677,10 @@ testFormatWorkbookResult =
       M.fromList
         [ ( (1, 1),
             Cell
-              { _cellStyle = Nothing,
-                _cellValue = Just (CellText "text at A1 Sheet1"),
-                _cellComment = Nothing,
-                _cellFormula = Nothing
+              { cellStyle = Nothing,
+                cellValue = Just (CellText "text at A1 Sheet1"),
+                cellComment = Nothing,
+                cellFormula = Nothing
               }
           )
         ]
@@ -688,10 +688,10 @@ testFormatWorkbookResult =
       M.fromList
         [ ( (2, 3),
             Cell
-              { _cellStyle = Just 1,
-                _cellValue = Just (CellDouble 1.23456),
-                _cellComment = Nothing,
-                _cellFormula = Nothing
+              { cellStyle = Just 1,
+                cellValue = Just (CellDouble 1.23456),
+                cellComment = Nothing,
+                cellFormula = Nothing
               }
           )
         ]
@@ -725,14 +725,14 @@ testFormatWorkbook = formatWorkbook sheets minimalStyleSheet
     sheetNames = ["Sheet1", "Sheet2"]
     testFormattedCellMap1 =
       M.fromList
-        [((1, 1), (def & #formattedCell . cellValue ?~ CellText "text at A1 Sheet1"))]
+        [((1, 1), (def & #formattedCell . #cellValue ?~ CellText "text at A1 Sheet1"))]
 
     testFormattedCellMap2 =
       M.fromList
         [ ( (2, 3),
             ( def
                 & #formattedCell
-                . cellValue
+                . #cellValue
                 ?~ CellDouble 1.23456
                 & #formattedFormat
                 . #formatNumberFormat

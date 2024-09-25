@@ -230,11 +230,11 @@ extractSheetFast ar sst contentTypes caches wf = do
         fmap join . forM commentTarget $ getComments ar legacyDrPath
       let commentCells =
             M.fromList
-              [ (fromSingleCellRefNoting r, def {_cellComment = Just cmnt})
+              [ (fromSingleCellRefNoting r, def {cellComment = Just cmnt})
                 | (r, cmnt) <- maybe [] CommentTable.toList commentsMap
               ]
           assignComment withCmnt noCmnt =
-            noCmnt & cellComment .~ (withCmnt ^. cellComment)
+            noCmnt & #cellComment .~ (withCmnt ^. #cellComment)
           mergeComments = M.unionWith assignComment commentCells
       tables <- forM tableIds $ \rId -> do
         fp <- lookupRelPath filePath sheetRels rId
@@ -496,7 +496,7 @@ extractSheet ar sst contentTypes caches wf = do
 
       commentCells =
         M.fromList
-          [ (fromSingleCellRefNoting r, def {_cellComment = Just cmnt})
+          [ (fromSingleCellRefNoting r, def {cellComment = Just cmnt})
             | (r, cmnt) <- maybe [] CommentTable.toList commentsMap
           ]
       cells = cells0 `M.union` commentCells

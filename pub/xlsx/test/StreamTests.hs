@@ -144,10 +144,10 @@ simpleWorkbook :: Xlsx
 simpleWorkbook = def & atSheet "Sheet1" ?~ sheet
   where
     sheet = toWs [ ((RowIndex 1, ColumnIndex 1), a1)
-                 , ((RowIndex 1, ColumnIndex 2), cellValue ?~ CellText "text at B1 Sheet1" $ def) ]
+                 , ((RowIndex 1, ColumnIndex 2), #cellValue ?~ CellText "text at B1 Sheet1" $ def) ]
 
 a1 :: Cell
-a1 = cellValue ?~ CellText "text at A1 Sheet1" $ cellStyle ?~ 1 $ def
+a1 = #cellValue ?~ CellText "text at A1 Sheet1" $ #cellStyle ?~ 1 $ def
 
 -- can we do x
 --           x
@@ -155,7 +155,7 @@ simpleWorkbookRow :: Xlsx
 simpleWorkbookRow = def & atSheet "Sheet1" ?~ sheet
   where
     sheet = toWs [ ((RowIndex 1, ColumnIndex 1), a1)
-                 , ((RowIndex 2, ColumnIndex 1), cellValue ?~ CellText "text at A2 Sheet1" $ def) ]
+                 , ((RowIndex 2, ColumnIndex 1), #cellValue ?~ CellText "text at A2 Sheet1" $ def) ]
 
 toWs :: [((RowIndex, ColumnIndex), Cell)] -> Worksheet
 toWs x = set wsCells (M.fromList x) def
@@ -169,10 +169,10 @@ smallWorkbook = def & atSheet "Sheet1" ?~ sheet
   where
     sheet = toWs $ [1..2] >>= \row ->
                   [((row,1), a1)
-                  , ((row,2), def & cellValue ?~ CellText ("text at B"<> tshow row <> " Sheet1"))
-                  , ((row,3), def & cellValue ?~ CellText "text at C1 Sheet1")
-                  , ((row,4), def & cellValue ?~ CellDouble (0.2 + 0.1))
-                  , ((row,5), def & cellValue ?~ CellBool False)
+                  , ((row,2), def & #cellValue ?~ CellText ("text at B"<> tshow row <> " Sheet1"))
+                  , ((row,3), def & #cellValue ?~ CellText "text at C1 Sheet1")
+                  , ((row,4), def & #cellValue ?~ CellDouble (0.2 + 0.1))
+                  , ((row,5), def & #cellValue ?~ CellBool False)
                   ]
 --    sheets = [("Sheet1" , toWs $ [1..2] >>= \row ->
 --        [ ((RowIndex row, ColumnIndex 1), a1)
@@ -192,8 +192,8 @@ bigWorkbook = def & atSheet "Sheet1" ?~ sheet
   where
     sheet = toWs $ [1..512] >>= \row ->
                   [((row,1), a1)
-                  ,((row,2), def & cellValue ?~ CellText ("text at B"<> tshow row <> " Sheet1"))
-                  ,((row,3), def & cellValue ?~ CellText "text at C1 Sheet1")
+                  ,((row,2), def & #cellValue ?~ CellText ("text at B"<> tshow row <> " Sheet1"))
+                  ,((row,3), def & #cellValue ?~ CellText "text at C1 Sheet1")
                   ]
 --    sheets = [("Sheet1" , toWs $ [1..512] >>= \row ->
 --        [((RowIndex row, ColumnIndex 1), a1)
@@ -211,18 +211,18 @@ inlineStringsAreParsed = do
         [ IM.fromList
             [ ( 1,
                 Cell
-                  { _cellStyle = Nothing,
-                    _cellValue = Just (CellText "My Inline String"),
-                    _cellComment = Nothing,
-                    _cellFormula = Nothing
+                  { cellStyle = Nothing,
+                    cellValue = Just (CellText "My Inline String"),
+                    cellComment = Nothing,
+                    cellFormula = Nothing
                   }
               ),
               ( 2,
                 Cell
-                  { _cellStyle = Nothing,
-                    _cellValue = Just (CellText "two"),
-                    _cellComment = Nothing,
-                    _cellFormula = Nothing
+                  { cellStyle = Nothing,
+                    cellValue = Just (CellText "two"),
+                    cellComment = Nothing,
+                    cellFormula = Nothing
                   }
               )
             ]
@@ -235,13 +235,13 @@ untypedCellsAreParsedAsFloats = do
   -- as numbers explicitly in `t` attribute.
   items <- runXlsxM "data/floats.xlsx" $ collectItems $ makeIndex 1
   let expected =
-        [ IM.fromList [ (1, def & cellValue ?~ CellDouble 12.0) ]
-        , IM.fromList [ (1, def & cellValue ?~ CellDouble 13.0) ]
+        [ IM.fromList [ (1, def & #cellValue ?~ CellDouble 12.0) ]
+        , IM.fromList [ (1, def & #cellValue ?~ CellDouble 13.0) ]
         -- cell below has explicit `Numeric` type, while others are all `General`,
         -- but sometimes excel does not add a `t="n"` attr even to numeric cells
         -- but it should be default as number in any cases if `t` is missing
-        , IM.fromList [ (1, def & cellValue ?~ CellDouble 14.0 & cellStyle ?~ 1 ) ]
-        , IM.fromList [ (1, def & cellValue ?~ CellDouble 15.0) ]
+        , IM.fromList [ (1, def & #cellValue ?~ CellDouble 14.0 & #cellStyle ?~ 1 ) ]
+        , IM.fromList [ (1, def & #cellValue ?~ CellDouble 15.0) ]
         ]
   expected @==? (ri_cell_row . si_row <$> items)
 
@@ -270,9 +270,9 @@ richCellTextIsParsed = do
 
     richWorkbook :: Xlsx
     richWorkbook = def & atSheet "Sheet1" ?~ toWs
-      [ ((RowIndex 1, ColumnIndex 1), cellValue ?~ CellText textA1 $ def)
-      , ((RowIndex 2, ColumnIndex 1), cellValue ?~ cellRich firstClauseB1 secondClauseB1 $ def)
-      , ((RowIndex 2, ColumnIndex 2), cellValue ?~ cellRich firstClauseB2 secondClauseB2 $ def)
+      [ ((RowIndex 1, ColumnIndex 1), #cellValue ?~ CellText textA1 $ def)
+      , ((RowIndex 2, ColumnIndex 1), #cellValue ?~ cellRich firstClauseB1 secondClauseB1 $ def)
+      , ((RowIndex 2, ColumnIndex 2), #cellValue ?~ cellRich firstClauseB2 secondClauseB2 $ def)
       ]
 
 cellRich :: Text -> Text -> CellValue

@@ -164,7 +164,7 @@ generateCache cm PivotTable {..} =
         }
     ((r1, c1), (r2, c2)) =
       fromJustNote "Invalid src ref of pivot table " $ fromRange _pvtSrcRef
-    getCellValue ix = M.lookup ix cm >>= _cellValue
+    getCellValue ix = M.lookup ix cm >>= cellValue
     itemsByName =
       M.fromList $
         flip mapMaybe [c1 .. c2] $ \c -> do

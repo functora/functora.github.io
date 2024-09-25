@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.Table where
 
@@ -82,8 +81,6 @@ data TableColumn = TableColumn
   deriving (Eq, Show, Generic)
 
 instance NFData TableColumn
-
-makeLenses ''Table
 
 {-------------------------------------------------------------------------------
   Parsing

@@ -244,7 +244,7 @@ sheetDataXml rows rh sharedFormulas =
           formula = xlsxCellFormula cell
           fEl0 = toElement "f" <$> formula
       fEl <- case formula of
-        Just CellFormula {_cellfExpression = SharedFormula si} -> do
+        Just CellFormula {cellfExpression = SharedFormula si} -> do
           shared <- get
           case M.lookup si shared of
             Just fOpts -> do
@@ -569,7 +569,7 @@ transformSheetData shared ws = map transformRow $ toRows (ws ^. wsCells)
     transformRow = second (map transformCell)
     transformCell (c, Cell {..}) =
       ( c,
-        XlsxCell _cellStyle (fmap transformValue _cellValue) _cellComment _cellFormula
+        XlsxCell cellStyle (fmap transformValue cellValue) cellComment cellFormula
       )
     transformValue (CellText t) = XlsxSS (sstLookupText shared t)
     transformValue (CellDouble dbl) = XlsxDouble dbl

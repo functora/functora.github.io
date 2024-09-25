@@ -60,8 +60,8 @@ main =
           [withDoubleUnderline testSharedStringTable]
             @=? parseBS testStringsWithDoubleUnderline,
         testCase
-          "correct shared strings parsing even when one of the shared strings entry is just <t/>" $
-          [testSharedStringTableWithEmpty] @=? parseBS testStringsWithEmpty,
+          "correct shared strings parsing even when one of the shared strings entry is just <t/>"
+          $ [testSharedStringTableWithEmpty] @=? parseBS testStringsWithEmpty,
         testCase "correct comments parsing" $
           [testCommentTable] @=? parseBS testComments,
         testCase "correct custom properties parsing" $
@@ -85,18 +85,18 @@ main =
           Left (InvalidZipArchive "Did not find end of central directory signature")
             @==? toXlsxEither "this is not a valid XLSX file",
         testCase
-          "toXlsx: correct floats parsing (typed and untyped cells are floats by default)" $
-          floatsParsingTests toXlsx,
+          "toXlsx: correct floats parsing (typed and untyped cells are floats by default)"
+          $ floatsParsingTests toXlsx,
         testCase
-          "toXlsxFast: correct floats parsing (typed and untyped cells are floats by default)" $
-          floatsParsingTests toXlsxFast,
+          "toXlsxFast: correct floats parsing (typed and untyped cells are floats by default)"
+          $ floatsParsingTests toXlsxFast,
         testGroup
           "Codec: sheet state visibility"
           [ testGroup
               "toXlsxEitherFast"
               [ testProperty
-                  "pure state == toXlsxEitherFast (fromXlsx (defXlsxWithState state))" $
-                  \state ->
+                  "pure state == toXlsxEitherFast (fromXlsx (defXlsxWithState state))"
+                  $ \state ->
                     (Right (Just state) ==) $
                       fmap sheetStateOfDefXlsx $
                         toXlsxEitherFast . fromXlsx testTime $
@@ -133,10 +133,10 @@ floatsParsingTests parser = do
       parsedCells = maybe mempty (_wsCells . snd) $ listToMaybe $ xlsx ^. xlSheets
       expectedCells =
         M.fromList
-          [ ((1, 1), def & cellValue ?~ CellDouble 12.0),
-            ((2, 1), def & cellValue ?~ CellDouble 13.0),
-            ((3, 1), def & cellValue ?~ CellDouble 14.0 & cellStyle ?~ 1),
-            ((4, 1), def & cellValue ?~ CellDouble 15.0)
+          [ ((1, 1), def & #cellValue ?~ CellDouble 12.0),
+            ((2, 1), def & #cellValue ?~ CellDouble 13.0),
+            ((3, 1), def & #cellValue ?~ CellDouble 14.0 & #cellStyle ?~ 1),
+            ((4, 1), def & #cellValue ?~ CellDouble 15.0)
           ]
   expectedCells @==? parsedCells
 

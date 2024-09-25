@@ -100,7 +100,7 @@ testPivotSrcCells :: CellMap
 testPivotSrcCells =
   M.fromList $
     concat
-      [ [((row, col), def & cellValue ?~ v) | (col, v) <- zip [1 ..] cells]
+      [ [((row, col), def & #cellValue ?~ v) | (col, v) <- zip [1 ..] cells]
         | (row, cells) <- zip [1 ..] cellMap
       ]
   where

@@ -137,7 +137,7 @@ data Format = Format
   }
   deriving (Eq, Show, Generic)
 
--- | Cell with formatting. '_cellStyle' property of 'formattedCell' is ignored
+-- | Cell with formatting. 'cellStyle' property of 'formattedCell' is ignored
 --
 -- See 'formatted' for more details.
 data FormattedCell = FormattedCell
@@ -264,9 +264,9 @@ toFormattedCells m merges StyleSheet {..} = applyMerges $ M.map toFormattedCell 
   where
     toFormattedCell cell@Cell {..} =
       FormattedCell
-        { formattedCell = cell {_cellStyle = Nothing}, -- just to remove confusion
+        { formattedCell = cell {cellStyle = Nothing}, -- just to remove confusion
           formattedFormat =
-            maybe def formatFromStyle $ flip M.lookup cellXfs =<< _cellStyle,
+            maybe def formatFromStyle $ flip M.lookup cellXfs =<< cellStyle,
           formattedColSpan = 1,
           formattedRowSpan = 1
         }
@@ -368,7 +368,7 @@ formatCell (row, col) cell = do
       State FormattingState ((RowIndex, ColumnIndex), Cell)
     go (pos, c@FormattedCell {..}) = do
       styleId <- cellStyleId c
-      return (pos, formattedCell {_cellStyle = styleId})
+      return (pos, formattedCell {cellStyle = styleId})
 
 -- | Cell block corresponding to a single 'FormattedCell'
 --

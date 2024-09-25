@@ -193,10 +193,10 @@ testXlsx = Xlsx sheets minimalStyles definedNames customProperties DateBase1904
         [(SqRef [CellRef "A1:B3"], rules1), (SqRef [CellRef "C1:C10"], rules2)]
     cfRule c d =
       CfRule
-        { _cfrCondition = c,
-          _cfrDxfId = Just d,
-          _cfrPriority = topCfPriority,
-          _cfrStopIfTrue = Nothing
+        { cfrCondition = c,
+          cfrDxfId = Just d,
+          cfrPriority = topCfPriority,
+          cfrStopIfTrue = Nothing
         }
     rules1 =
       [ cfRule ContainsBlanks 1,
@@ -760,24 +760,24 @@ testCondFormattedResult = CondFormatted styleSheet formattings
         ]
     cfRule1 =
       CfRule
-        { _cfrCondition = ContainsBlanks,
-          _cfrDxfId = Just 0,
-          _cfrPriority = 1,
-          _cfrStopIfTrue = Nothing
+        { cfrCondition = ContainsBlanks,
+          cfrDxfId = Just 0,
+          cfrPriority = 1,
+          cfrStopIfTrue = Nothing
         }
     cfRule2 =
       CfRule
-        { _cfrCondition = BeginsWith "foo",
-          _cfrDxfId = Just 1,
-          _cfrPriority = 1,
-          _cfrStopIfTrue = Nothing
+        { cfrCondition = BeginsWith "foo",
+          cfrDxfId = Just 1,
+          cfrPriority = 1,
+          cfrStopIfTrue = Nothing
         }
     cfRule3 =
       CfRule
-        { _cfrCondition = CellIs (OpGreaterThan (Formula "A1")),
-          _cfrDxfId = Just 2,
-          _cfrPriority = 1,
-          _cfrStopIfTrue = Nothing
+        { cfrCondition = CellIs (OpGreaterThan (Formula "A1")),
+          cfrDxfId = Just 2,
+          cfrPriority = 1,
+          cfrStopIfTrue = Nothing
         }
 
 testFormattedCells :: Map (RowIndex, ColumnIndex) FormattedCell

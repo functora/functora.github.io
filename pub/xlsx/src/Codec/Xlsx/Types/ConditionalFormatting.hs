@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Codec.Xlsx.Types.ConditionalFormatting
   ( ConditionalFormatting,
@@ -20,28 +19,6 @@ module Codec.Xlsx.Types.ConditionalFormatting
     IconSetType (..),
     DataBarOptions (..),
     dataBarWithColor,
-
-    -- * Lenses
-
-    -- ** CfRule
-    cfrCondition,
-    cfrDxfId,
-    cfrPriority,
-    cfrStopIfTrue,
-
-    -- ** IconSetOptions
-    isoIconSet,
-    isoValues,
-    isoReverse,
-    isoShowValue,
-
-    -- ** DataBarOptions
-    dboMaxLength,
-    dboMinLength,
-    dboShowValue,
-    dboMinimum,
-    dboMaximum,
-    dboColor,
 
     -- * Misc
     topCfPriority,
@@ -310,14 +287,14 @@ instance NFData CfvType
 -- See 18.3.1.49 "iconSet (Icon Set)" (p. 1645)
 data IconSetOptions = IconSetOptions
   { -- | icon set used, default value is 'IconSet3Trafficlights1'
-    _isoIconSet :: IconSetType,
+    isoIconSet :: IconSetType,
     -- | values describing per icon ranges
-    _isoValues :: [CfValue],
+    isoValues :: [CfValue],
     -- | reverses the default order of the icons in the specified icon set
-    _isoReverse :: Bool,
+    isoReverse :: Bool,
     -- | indicates whether to show the values of the cells on which this
     -- icon set is applied.
-    _isoShowValue :: Bool
+    isoShowValue :: Bool
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -359,16 +336,16 @@ instance NFData IconSetType
 data DataBarOptions = DataBarOptions
   { -- | The maximum length of the data bar, as a percentage of the cell
     -- width.
-    _dboMaxLength :: Int,
+    dboMaxLength :: Int,
     -- | The minimum length of the data bar, as a percentage of the cell
     -- width.
-    _dboMinLength :: Int,
+    dboMinLength :: Int,
     -- | Indicates whether to show the values of the cells on which this
     -- data bar is applied.
-    _dboShowValue :: Bool,
-    _dboMinimum :: MinCfValue,
-    _dboMaximum :: MaxCfValue,
-    _dboColor :: Color
+    dboShowValue :: Bool,
+    dboMinimum :: MinCfValue,
+    dboMaximum :: MaxCfValue,
+    dboColor :: Color
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -384,32 +361,32 @@ dataBarWithColor :: Color -> Condition
 dataBarWithColor c =
   DataBar
     DataBarOptions
-      { _dboMaxLength = defaultDboMaxLength,
-        _dboMinLength = defaultDboMinLength,
-        _dboShowValue = True,
-        _dboMinimum = CfvMin,
-        _dboMaximum = CfvMax,
-        _dboColor = c
+      { dboMaxLength = defaultDboMaxLength,
+        dboMinLength = defaultDboMinLength,
+        dboShowValue = True,
+        dboMinimum = CfvMin,
+        dboMaximum = CfvMax,
+        dboColor = c
       }
 
 -- | This collection represents a description of a conditional formatting rule.
 --
 -- See 18.3.1.10 "cfRule (Conditional Formatting Rule)" (p. 1602)
 data CfRule = CfRule
-  { _cfrCondition :: Condition,
+  { cfrCondition :: Condition,
     -- | This is an index to a dxf element in the Styles Part
     -- indicating which cell formatting to
     -- apply when the conditional formatting rule criteria is met.
-    _cfrDxfId :: Maybe Int,
+    cfrDxfId :: Maybe Int,
     -- | The priority of this conditional formatting rule. This value
     -- is used to determine which format should be evaluated and
     -- rendered. Lower numeric values are higher priority than
     -- higher numeric values, where 1 is the highest priority.
-    _cfrPriority :: Int,
+    cfrPriority :: Int,
     -- | If this flag is set, no rules with lower priority shall
     -- be applied over this rule, when this rule
     -- evaluates to true.
-    _cfrStopIfTrue :: Maybe Bool
+    cfrStopIfTrue :: Maybe Bool
   }
   deriving (Eq, Ord, Show, Generic)
 
@@ -418,16 +395,12 @@ instance NFData CfRule
 instance Default IconSetOptions where
   def =
     IconSetOptions
-      { _isoIconSet = IconSet3TrafficLights1,
-        _isoValues = [CfPercent 0, CfPercent 33.33, CfPercent 66.67],
+      { isoIconSet = IconSet3TrafficLights1,
+        isoValues = [CfPercent 0, CfPercent 33.33, CfPercent 66.67],
         --        IconSet3TrafficLights1 (CfPercent 0) (CfPercent 33.33) (CfPercent 66.67)
-        _isoReverse = False,
-        _isoShowValue = True
+        isoReverse = False,
+        isoShowValue = True
       }
-
-makeLenses ''CfRule
-makeLenses ''IconSetOptions
-makeLenses ''DataBarOptions
 
 type ConditionalFormatting = [CfRule]
 
@@ -440,13 +413,13 @@ topCfPriority = 1
 
 instance FromCursor CfRule where
   fromCursor cur = do
-    _cfrDxfId <- maybeAttribute "dxfId" cur
-    _cfrPriority <- fromAttribute "priority" cur
-    _cfrStopIfTrue <- maybeAttribute "stopIfTrue" cur
+    cfrDxfId <- maybeAttribute "dxfId" cur
+    cfrPriority <- fromAttribute "priority" cur
+    cfrStopIfTrue <- maybeAttribute "stopIfTrue" cur
     -- spec shows this attribute as optional but it's not clear why could
     -- conditional formatting record be needed with no condition type set
     cfType <- fromAttribute "type" cur
-    _cfrCondition <- readCondition cfType cur
+    cfrCondition <- readCondition cfType cur
     return CfRule {..}
 
 readCondition :: Text -> Cursor -> [Condition]
@@ -537,13 +510,13 @@ readOpExpression _ _ = []
 
 instance FromXenoNode CfRule where
   fromXenoNode root = parseAttributes root $ do
-    _cfrDxfId <- maybeAttr "dxfId"
-    _cfrPriority <- fromAttr "priority"
-    _cfrStopIfTrue <- maybeAttr "stopIfTrue"
+    cfrDxfId <- maybeAttr "dxfId"
+    cfrPriority <- fromAttr "priority"
+    cfrStopIfTrue <- maybeAttr "stopIfTrue"
     -- spec shows this attribute as optional but it's not clear why could
     -- conditional formatting record be needed with no condition type set
     cfType <- fromAttr "type"
-    _cfrCondition <- readConditionX cfType
+    cfrCondition <- readConditionX cfType
     return CfRule {..}
     where
       readConditionX ("aboveAverage" :: ByteString) = do
@@ -749,21 +722,21 @@ defaultIconSet = IconSet3TrafficLights1
 
 instance FromCursor IconSetOptions where
   fromCursor cur = do
-    _isoIconSet <- fromAttributeDef "iconSet" defaultIconSet cur
-    let _isoValues = cur $/ element (n_ "cfvo") >=> fromCursor
-    _isoReverse <- fromAttributeDef "reverse" False cur
-    _isoShowValue <- fromAttributeDef "showValue" True cur
+    isoIconSet <- fromAttributeDef "iconSet" defaultIconSet cur
+    let isoValues = cur $/ element (n_ "cfvo") >=> fromCursor
+    isoReverse <- fromAttributeDef "reverse" False cur
+    isoShowValue <- fromAttributeDef "showValue" True cur
     return IconSetOptions {..}
 
 instance FromXenoNode IconSetOptions where
   fromXenoNode root = do
-    (_isoIconSet, _isoReverse, _isoShowValue) <-
+    (isoIconSet, isoReverse, isoShowValue) <-
       parseAttributes root $
         (,,)
           <$> fromAttrDef "iconSet" defaultIconSet
           <*> fromAttrDef "reverse" False
           <*> fromAttrDef "showValue" True
-    _isoValues <- collectChildren root $ fromChildList "cfvo"
+    isoValues <- collectChildren root $ fromChildList "cfvo"
     return IconSetOptions {..}
 
 instance FromAttrVal IconSetType where
@@ -808,15 +781,15 @@ instance FromAttrBs IconSetType where
 
 instance FromCursor DataBarOptions where
   fromCursor cur = do
-    _dboMaxLength <- fromAttributeDef "maxLength" defaultDboMaxLength cur
-    _dboMinLength <- fromAttributeDef "minLength" defaultDboMinLength cur
-    _dboShowValue <- fromAttributeDef "showValue" True cur
+    dboMaxLength <- fromAttributeDef "maxLength" defaultDboMaxLength cur
+    dboMinLength <- fromAttributeDef "minLength" defaultDboMinLength cur
+    dboShowValue <- fromAttributeDef "showValue" True cur
     let cfvos = cur $/ element (n_ "cfvo") &| node
     case cfvos of
       [nMin, nMax] -> do
-        _dboMinimum <- fromCursor (fromNode nMin)
-        _dboMaximum <- fromCursor (fromNode nMax)
-        _dboColor <- cur $/ element (n_ "color") >=> fromCursor
+        dboMinimum <- fromCursor (fromNode nMin)
+        dboMaximum <- fromCursor (fromNode nMax)
+        dboColor <- cur $/ element (n_ "color") >=> fromCursor
         return DataBarOptions {..}
       ns -> do
         fail $
@@ -826,13 +799,13 @@ instance FromCursor DataBarOptions where
 
 instance FromXenoNode DataBarOptions where
   fromXenoNode root = do
-    (_dboMaxLength, _dboMinLength, _dboShowValue) <-
+    (dboMaxLength, dboMinLength, dboShowValue) <-
       parseAttributes root $
         (,,)
           <$> fromAttrDef "maxLength" defaultDboMaxLength
           <*> fromAttrDef "minLength" defaultDboMinLength
           <*> fromAttrDef "showValue" True
-    (_dboMinimum, _dboMaximum, _dboColor) <-
+    (dboMinimum, dboMaximum, dboColor) <-
       collectChildren root $
         (,,)
           <$> fromChild "cfvo"
@@ -858,13 +831,13 @@ instance FromAttrBs NStdDev where
 
 instance ToElement CfRule where
   toElement nm CfRule {..} =
-    let (condType, condAttrs, condNodes) = conditionData _cfrCondition
+    let (condType, condAttrs, condNodes) = conditionData cfrCondition
         baseAttrs =
           M.fromList . catMaybes $
             [ Just $ "type" .= condType,
-              "dxfId" .=? _cfrDxfId,
-              Just $ "priority" .= _cfrPriority,
-              "stopIfTrue" .=? _cfrStopIfTrue
+              "dxfId" .=? cfrDxfId,
+              Just $ "priority" .= cfrPriority,
+              "stopIfTrue" .=? cfrStopIfTrue
             ]
      in Element
           { elementName = nm,
@@ -985,13 +958,13 @@ instance ToAttrVal CfvType where
 
 instance ToElement IconSetOptions where
   toElement nm IconSetOptions {..} =
-    elementList nm attrs $ map (toElement "cfvo") _isoValues
+    elementList nm attrs $ map (toElement "cfvo") isoValues
     where
       attrs =
         catMaybes
-          [ "iconSet" .=? justNonDef defaultIconSet _isoIconSet,
-            "reverse" .=? justTrue _isoReverse,
-            "showValue" .=? justFalse _isoShowValue
+          [ "iconSet" .=? justNonDef defaultIconSet isoIconSet,
+            "reverse" .=? justTrue isoReverse,
+            "showValue" .=? justFalse isoShowValue
           ]
 
 instance ToAttrVal IconSetType where
@@ -1018,14 +991,14 @@ instance ToElement DataBarOptions where
     where
       attrs =
         catMaybes
-          [ "maxLength" .=? justNonDef defaultDboMaxLength _dboMaxLength,
-            "minLength" .=? justNonDef defaultDboMinLength _dboMinLength,
-            "showValue" .=? justFalse _dboShowValue
+          [ "maxLength" .=? justNonDef defaultDboMaxLength dboMaxLength,
+            "minLength" .=? justNonDef defaultDboMinLength dboMinLength,
+            "showValue" .=? justFalse dboShowValue
           ]
       elements =
-        [ toElement "cfvo" _dboMinimum,
-          toElement "cfvo" _dboMaximum,
-          toElement "color" _dboColor
+        [ toElement "cfvo" dboMinimum,
+          toElement "cfvo" dboMaximum,
+          toElement "color" dboColor
         ]
 
 toNode :: (ToElement a) => Name -> a -> Node

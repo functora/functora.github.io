@@ -477,8 +477,8 @@ mapDxf FormattedCondFmt {..} = do
       return newId
   return
     CfRule
-      { _cfrCondition = condfmtCondition,
-        _cfrDxfId = Just dxfId,
-        _cfrPriority = condfmtPriority,
-        _cfrStopIfTrue = condfmtStopIfTrue
+      { cfrCondition = condfmtCondition,
+        cfrDxfId = Just dxfId,
+        cfrPriority = condfmtPriority,
+        cfrStopIfTrue = condfmtStopIfTrue
       }

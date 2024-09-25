@@ -81,7 +81,7 @@ _deps: &deps
   - text
   - transformers
   - generic-pretty-instances
-  - ghc-lib-parser >= 9.2.2
+  - ghc-lib-parser
   - process
   - casing
   - fourmolu

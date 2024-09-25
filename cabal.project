@@ -40,20 +40,25 @@ else
   allow-older: reanimate:*,
   allow-newer: reanimate:*,
                reanimate-svg:*,
-               tdlib:*
+               tdlib:*,
+               secp256k1-haskell,
   packages:
     pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
     pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
     pub/haskell-bitcoin-script/*.cabal
+    pub/bitfinex-client/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal
     pub/witch-mini/*.cabal
     pub/selective/*.cabal
     pub/universum/*.cabal
+    pub/functora/*.cabal
     ghcjs/*/*.cabal
   optional-packages:
     prv/*/*.cabal
+  package postgresql-libpq
+    flags: +use-pkg-config
   source-repository-package
     type: git
     location: https://github.com/reanimate/reanimate.git

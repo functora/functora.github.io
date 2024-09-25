@@ -54,6 +54,7 @@ else
     pub/selective/*.cabal
     pub/universum/*.cabal
     pub/functora/*.cabal
+    pub/xlsx/*.cabal
     ghcjs/*/*.cabal
   optional-packages:
     prv/*/*.cabal

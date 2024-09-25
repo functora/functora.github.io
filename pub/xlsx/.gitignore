@@ -21,4 +21,6 @@ result-doc
 *.ps
 .envrc
 .direnv
+data-test.xlsx
+testinput.xlsx
 cabal.project.local

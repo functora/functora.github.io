@@ -66,7 +66,7 @@ export async function selectBarcode() {
 }
 
 export async function saveFile(name, mime, bytes) {
-  return saveAs(new Blob([bytes], { type: mime }), name);
+  return saveAs(new Blob([Uint8Array.from(bytes)], { type: mime }), name);
 }
 
 export function newUint8Array(buf, off, len) {

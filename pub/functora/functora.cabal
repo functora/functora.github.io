@@ -32,7 +32,8 @@ common pkg
       -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
 
   if impl(ghc >8.10.7)
-    ghc-options: -Wno-missing-kind-signatures
+    ghc-options:        -Wno-missing-kind-signatures
+    default-extensions: StandaloneKindSignatures
 
   default-extensions:
     AllowAmbiguousTypes
@@ -68,7 +69,6 @@ common pkg
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
-    StandaloneKindSignatures
     StrictData
     TupleSections
     TypeApplications

@@ -45,19 +45,23 @@ default-extensions:
   - GADTs
   - InstanceSigs
   - KindSignatures
-  - NoCUSKs
   - NoNamedWildCards
   - NoStarIsType
   - PolyKinds
   - RankNTypes
   - ScopedTypeVariables
   - StandaloneDeriving
-  - StandaloneKindSignatures
   - TypeApplications
   - TypeFamilies
   - TypeOperators
   - UndecidableInstances
   - TupleSections
+
+when:
+- condition: impl(ghc >= 9)
+  default-extensions:
+  - NoCUSKs
+  - StandaloneKindSignatures
 
 ghc-options:
   # For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html

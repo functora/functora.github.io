@@ -51,7 +51,7 @@ library
   else
     other-modules: Bitcoin.Hash.GHC
     build-depends:
-      , crypton
+      , cryptonite
       , memory
 
 test-suite test

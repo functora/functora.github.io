@@ -35,6 +35,8 @@ common pkg
       -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
       -Wno-missing-kind-signatures
 
+    default-extensions: StandaloneKindSignatures
+
   default-extensions:
     AllowAmbiguousTypes
     ConstraintKinds
@@ -70,7 +72,6 @@ common pkg
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
-    StandaloneKindSignatures
     StrictData
     TupleSections
     TypeApplications
@@ -82,13 +83,15 @@ common pkg-lib
   hs-source-dirs: src
   build-depends:
     , aeson
-    , base                             >=4.7 && <5
+    , base               >=4.7 && <5
     , base16-bytestring
     , bytestring
     , containers
     , cryptonite
     , envparse
-    , functora:{functora, money, sql}
+    , functora
+    , functora:money
+    , functora:sql
     , http-client
     , http-client-tls
     , http-types
@@ -198,13 +201,15 @@ test-suite bfx-test
     ghc-options:    -Wno-unused-packages
     build-depends:
       , aeson
-      , base                             >=4.7 && <5
+      , base               >=4.7 && <5
       , base16-bytestring
       , bytestring
       , containers
       , cryptonite
       , envparse
-      , functora:{functora, money, sql}
+      , functora
+      , functora:money
+      , functora:sql
       , http-client
       , http-client-tls
       , http-types

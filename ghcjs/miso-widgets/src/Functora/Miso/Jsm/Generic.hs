@@ -18,7 +18,6 @@ where
 
 import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
-import qualified GHCJS.Buffer as Buffer
 import qualified GHCJS.Types as JS
 import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
@@ -181,16 +180,13 @@ printCurrentPage name = do
   pkg <- getPkg
   void $ pkg ^. JS.js1 ("printCurrentPage" :: Unicode) name
 
-saveFile :: Unicode -> Unicode -> ByteString -> JSM ()
+saveFile :: forall a. (From a [Word8]) => Unicode -> Unicode -> a -> JSM ()
 saveFile name mime bs = do
   pkg <- getPkg
-  bytes <-
-    if null bs
-      then pkg ^. JS.js0 ("emptyUint8Array" :: Unicode)
-      else do
-        (buf, off, len) <- ghcjsPure $ Buffer.fromByteString bs
-        arr <- ghcjsPure . JS.jsval <=< ghcjsPure . Buffer.getArrayBuffer $ buf
-        pkg ^. JS.js3 ("newUint8Array" :: Unicode) arr off len
   void
     $ pkg
-    ^. JS.js3 ("saveFile" :: Unicode) name mime bytes
+    ^. JS.js3
+      ("saveFile" :: Unicode)
+      name
+      mime
+      (from @a @[Word8] bs)

@@ -37,50 +37,57 @@ if impl(ghcjs) || arch(javascript) || os(wasi)
   package zstd
     flags: +standalone
 else
-  allow-older: reanimate:*,
-  allow-newer: reanimate:*,
-               reanimate-svg:*,
-               tdlib:*,
-               secp256k1-haskell,
-  packages:
-    pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
-    pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
-    pub/haskell-bitcoin-script/*.cabal
-    pub/bitfinex-client/*.cabal
-    pub/singlethongs/*.cabal
-    pub/functora/src/*.cabal
-    pub/vector-space/*.cabal
-    pub/witch-mini/*.cabal
-    pub/selective/*.cabal
-    pub/universum/*.cabal
-    pub/functora/*.cabal
-    pub/xlsx/*.cabal
-    ghcjs/*/*.cabal
-  optional-packages:
-    prv/*/*.cabal
-  package postgresql-libpq
-    flags: +use-pkg-config
-  source-repository-package
-    type: git
-    location: https://github.com/reanimate/reanimate.git
-    tag: 82638c078c2f62838d8b6cf77a6a138cf37d2f77
-    --sha256: OkzQZ/Z1h+X6pXuj8lDqqn/6IkEoXZrG6ZMewzXeWEg=
-  source-repository-package
-    type: git
-    location: https://github.com/santiweight/reanimate-svg.git
-    tag: d63925781efa9834ba35036da83167f55af3c134
-    --sha256: Xd6P82FepedcjjWRGjVNmdbDKRIH3Zl0haLiF3v1GDw=
-  source-repository-package
-    type: git
-    location: https://github.com/lagunoff/hs-gauge.git
-    tag: 2b803d12c8bae8d5971748d74234dd5cbb5025a1
-    --sha256: n4BBVxcsYNYQRTacSfYn7BNFvom8Haf7DXiHT45RAf0=
-  source-repository-package
-    type: git
-    location: https://github.com/hedgehogqa/haskell-hedgehog.git
-    tag: 328a07f509ce1ae4c2996bfd67dbd1a545bb3b88
-    --sha256: gaH13GXPYSu3sxBkN0Fp05m4dOuKok6KleJHIuUIyx8=
-    subdir: hedgehog
+  if impl(ghc < 9)
+    tests: true
+    packages:
+      pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
+      pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
+      pub/haskell-bitcoin-script/*.cabal
+      pub/functora/src/*.cabal
+      ghcjs/*/*.cabal
+  else
+    allow-older: reanimate:*,
+    allow-newer: reanimate:*,
+                 reanimate-svg:*,
+                 tdlib:*,
+                 secp256k1-haskell,
+    packages:
+      pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
+      pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
+      pub/haskell-bitcoin-script/*.cabal
+      pub/bitfinex-client/*.cabal
+      pub/singlethongs/*.cabal
+      pub/functora/src/*.cabal
+      pub/vector-space/*.cabal
+      pub/witch-mini/*.cabal
+      pub/selective/*.cabal
+      pub/universum/*.cabal
+      pub/functora/*.cabal
+      pub/xlsx/*.cabal
+      ghcjs/*/*.cabal
+    optional-packages:
+      prv/*/*.cabal
+    source-repository-package
+      type: git
+      location: https://github.com/reanimate/reanimate.git
+      tag: 82638c078c2f62838d8b6cf77a6a138cf37d2f77
+      --sha256: OkzQZ/Z1h+X6pXuj8lDqqn/6IkEoXZrG6ZMewzXeWEg=
+    source-repository-package
+      type: git
+      location: https://github.com/santiweight/reanimate-svg.git
+      tag: d63925781efa9834ba35036da83167f55af3c134
+      --sha256: Xd6P82FepedcjjWRGjVNmdbDKRIH3Zl0haLiF3v1GDw=
+    source-repository-package
+      type: git
+      location: https://github.com/lagunoff/hs-gauge.git
+      tag: 2b803d12c8bae8d5971748d74234dd5cbb5025a1
+      --sha256: n4BBVxcsYNYQRTacSfYn7BNFvom8Haf7DXiHT45RAf0=
+    source-repository-package
+      type: git
+      location: https://github.com/hedgehogqa/haskell-hedgehog.git
+      tag: 328a07f509ce1ae4c2996bfd67dbd1a545bb3b88
+      --sha256: gaH13GXPYSu3sxBkN0Fp05m4dOuKok6KleJHIuUIyx8=
+      subdir: hedgehog
 
 if os(wasi)
   packages:
@@ -93,6 +100,7 @@ if os(wasi)
     pub/witch-mini/*.cabal
     pub/selective/*.cabal
     pub/universum/*.cabal
+    pub/xlsx/*.cabal
     ghcjs/miso-widgets/*.cabal
     ghcjs/miso-components/*.cabal
     ghcjs/delivery-calculator/*.cabal
@@ -118,12 +126,6 @@ if os(wasi)
     --sha256: nz7UuNpux513axNFoeQ8KykBOhyny4FsqZUvw8mRk1k=
   source-repository-package
     type: git
-    location: https://github.com/m-ildefons/foundation.git
-    tag: 4316929e6cbca027e25349710a71548f8f26220a
-    --sha256:  anBAAO44Nny7oHiHwNUD6bPNnxJMTUPCmje7LjbCieo=
-    subdir: basement
-  source-repository-package
-    type: git
     location: https://github.com/m-ildefons/hs-memory.git
     tag: 22f20394bb7efacde1dcc68c300133b4002854b9
     --sha256: 8KzYeBf/PeWO05SEp1jk+9pKeaZY5gBxq1VpqmbmI9k=
@@ -132,6 +134,12 @@ if os(wasi)
     location: https://github.com/amesgen/entropy.git
     tag: f771c8010f001b87c5ccf9b61703b6912f7062d5
     --sha256: /Q+40JfnV6EmQoMGyNIhbjyxEAjJNsVZh4xQNRxB+io=
+  source-repository-package
+    type: git
+    location: https://github.com/igrep/foundation.git
+    tag: 4c719706584d16e865236722712274970a411b22
+    --sha256: E5hkCE2o0NVr2MP4bLotlt4Du1yRTB0kdZIm/6F4dMM=
+    subdir: basement foundation
   source-repository-package
     type: git
     location: https://github.com/igrep/xml.git
@@ -148,7 +156,8 @@ if os(wasi)
     location: https://github.com/igrep/conduit.git
     tag: 6fc823fe35acfff3d324c7ff6596ae4890d1d200
     --sha256: AVn8HtqihFcG8j30xbNyu8mwoM+oLpywwx5kckA3ha0=
-    subdir: conduit-extra
+    subdir: cereal-conduit conduit-extra conduit  network-conduit-tls resourcet
+
   package miso
     flags: +jsstring-only
   package aeson

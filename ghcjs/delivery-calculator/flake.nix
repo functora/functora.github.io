@@ -82,7 +82,7 @@
             --minify-js \
             --minify-css \
             -o $out/index.html \
-            ./static/index.html
+            ./static/wasm.html
 
           ${pkgs.clean-css-cli}/bin/cleancss \
             -O2 \
@@ -92,17 +92,8 @@
             ./static/material-icons.css \
             ./static/app.css
 
-          ${pkgs.closurecompiler}/bin/closure-compiler \
-            --jscomp_off=checkVars \
-            --compilation_level SIMPLE_OPTIMIZATIONS \
-            --output_wrapper "%output%//# sourceMappingURL=all.js.map" \
-            --create_source_map $out/all.js.map \
-            --js ${./static/wasm.js} \
-            --js ${./../miso-widgets/js/main.min.js} \
-            --js ${./../miso-components/material-components-web.min.js} \
-            --js ${./../miso-components/material-components-web-elm.min.js} \
-            --js ${./static/app.js} \
-            --js_output_file $out/all.js
+          ${pkgs.nodejs}/bin/npm i --prefer-offline
+          ${pkgs.nodejs}/bin/npm run build
         '';
       };
       app-release-apk = pkgs.writeShellApplication {

@@ -448,6 +448,7 @@ data FileData = FileData
     fdRelType :: Text,
     fdContents :: L.ByteString
   }
+  deriving (Eq, Ord, Show, Generic)
 
 type ReferencedFileData = (RefId, FileData)
 

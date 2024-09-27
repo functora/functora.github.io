@@ -1,4 +1,5 @@
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { WebviewPrint } from "capacitor-webview-print";
 import { Preferences } from "@capacitor/preferences";
 import { Clipboard } from "@capacitor/clipboard";
@@ -65,16 +66,34 @@ export async function selectBarcode() {
   return ScanResult;
 }
 
-export async function saveFile(name, mime, bytes) {
-  return saveAs(new Blob([Uint8Array.from(bytes)], { type: mime }), name);
+export async function saveFile(name, mime, bs) {
+  const u8a = Uint8Array.from(bs);
+  if (Capacitor.isNativePlatform()) {
+    const b64 = btoa(String.fromCharCode.apply(null, u8a));
+    const { uri } = await Filesystem.writeFile({
+      path: name,
+      data: b64,
+      directory: Directory.Documents,
+    });
+    return uri;
+  } else {
+    const blob = new Blob([u8a, { type: mime }]);
+    await saveAs(blob, name);
+    return null;
+  }
 }
 
-export function newUint8Array(buf, off, len) {
-  return new Uint8Array(buf, off, len);
+export async function shareFiles(files) {
+  if (Capacitor.isNativePlatform()) {
+    const { value } = await Share.share({ files: files });
+    return value;
+  } else {
+    return null;
+  }
 }
 
-export function emptyUint8Array() {
-  return new Uint8Array(0);
+export function isNativePlatform() {
+  return Capacitor.isNativePlatform();
 }
 
 defineCustomElements(window);

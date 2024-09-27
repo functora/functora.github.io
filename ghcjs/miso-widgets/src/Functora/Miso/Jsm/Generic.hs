@@ -119,7 +119,7 @@ insertStorage key raw = do
 
 selectStorage :: (FromJSON a) => Unicode -> (Maybe a -> JSM ()) -> JSM ()
 selectStorage key after =
-  genericPromise "selectStorage" (Just key) $ \case
+  genericPromise @[Unicode] @Unicode "selectStorage" [key] $ \case
     Nothing ->
       after Nothing
     Just str ->
@@ -134,18 +134,26 @@ selectStorage key after =
 
 selectBarcode :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectBarcode after =
-  genericPromise "selectBarcode" Nothing $ after . fmap strip
+  genericPromise @[Unicode] @Unicode "selectBarcode" mempty
+    $ after
+    . fmap strip
 
 selectClipboard :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectClipboard after =
-  genericPromise "selectClipboard" Nothing $ after . fmap strip
+  genericPromise @[Unicode] @Unicode "selectClipboard" mempty
+    $ after
+    . fmap strip
 
 genericPromise ::
+  forall args res.
+  ( JS.MakeArgs args,
+    JS.FromJSVal res
+  ) =>
   Unicode ->
-  Maybe Unicode ->
-  (Maybe Unicode -> JSM ()) ->
+  args ->
+  (Maybe res -> JSM ()) ->
   JSM ()
-genericPromise fun marg after = do
+genericPromise fun argv after = do
   success <- JS.function $ \_ _ ->
     handleAny (\e -> consoleLog e >> after Nothing) . \case
       [val] -> do
@@ -153,12 +161,9 @@ genericPromise fun marg after = do
         if not valExist
           then after Nothing
           else do
-            raw <-
-              JS.fromJSVal @Unicode val
-            res <-
-              maybe (throwString @String "Failure, bad type!") pure raw
-            after
-              $ Just res
+            mres <- JS.fromJSVal @res val
+            res <- maybe (throwString @String "Failure, bad result!") pure mres
+            after $ Just res
       _ ->
         throwString @String "Failure, bad argv!"
   failure <-
@@ -167,13 +172,8 @@ genericPromise fun marg after = do
       consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
       after Nothing
   pkg <- getPkg
-  prom <-
-    case marg of
-      Nothing -> pkg ^. JS.js0 fun
-      Just arg -> pkg ^. JS.js1 fun arg
-  void
-    $ prom
-    ^. JS.js2 @Unicode "then" success failure
+  prom <- pkg ^. JS.jsf fun argv
+  void $ prom ^. JS.js2 @Unicode "then" success failure
 
 printCurrentPage :: Unicode -> JSM ()
 printCurrentPage name = do
@@ -182,11 +182,12 @@ printCurrentPage name = do
 
 saveFile :: forall a. (From a [Word8]) => Unicode -> Unicode -> a -> JSM ()
 saveFile name mime bs = do
-  pkg <- getPkg
-  void
-    $ pkg
-    ^. JS.js3
-      ("saveFile" :: Unicode)
-      name
-      mime
-      (from @a @[Word8] bs)
+  argv <-
+    sequence
+      [ JS.toJSVal name,
+        JS.toJSVal mime,
+        JS.toJSVal $ from @a @[Word8] bs
+      ]
+  genericPromise @[JS.JSVal] @Unicode "saveFile" argv $ \case
+    Nothing -> pure ()
+    Just str -> popupText str

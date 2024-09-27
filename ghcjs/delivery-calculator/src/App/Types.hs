@@ -35,6 +35,7 @@ where
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
+import qualified Data.Generics as Syb
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
@@ -45,6 +46,7 @@ import Functora.Miso.Types as X hiding
     newFieldPairId,
   )
 import qualified Functora.Miso.Types as FM
+import qualified Functora.Miso.Widgets.Field as Field
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
@@ -214,7 +216,12 @@ unQrCode = \case
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
-  qxs <- stQuery . uniqueToIdentity $ st ^. #modelState
+  qxs <-
+    stQuery
+      . Syb.everywhere (Syb.mkT $ Field.truncateDynamicField Nothing)
+      . uniqueToIdentity
+      $ st
+      ^. #modelState
   pure
     $ uri
       { URI.uriQuery = qxs
@@ -271,8 +278,11 @@ unShareUri uri = do
     Just tSt -> do
       bSt <- either throwString pure . B64URL.decode $ encodeUtf8 tSt
       iSt <- either (throwString . thd3) pure $ decodeBinary bSt
-      uSt <- identityToUnique iSt
-      pure $ Just uSt
+      uSt <-
+        identityToUnique
+          $ Syb.everywhere (Syb.mkT Field.expandDynamicField) iSt
+      pure
+        $ Just uSt
 
 baseUri :: Unicode
 #ifdef GHCID

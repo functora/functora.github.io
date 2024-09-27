@@ -21,6 +21,7 @@ module Functora.Miso.Types
     newDynamicTitleField,
     DynamicField (..),
     parseDynamicField,
+    parseDynamicFieldId,
     inspectDynamicField,
     FieldType (..),
     htmlFieldType,
@@ -247,6 +248,15 @@ parseDynamicField value =
     _ -> Just $ DynamicFieldText str
   where
     str = value ^. #fieldInput . #uniqueValue
+
+parseDynamicFieldId :: Field DynamicField Identity -> Maybe DynamicField
+parseDynamicFieldId value =
+  case value ^. #fieldType of
+    FieldTypeNumber -> DynamicFieldNumber <$> parseRatio str
+    FieldTypePercent -> DynamicFieldNumber <$> parseRatio str
+    _ -> Just $ DynamicFieldText str
+  where
+    str = value ^. #fieldInput . #runIdentity
 
 inspectDynamicField :: DynamicField -> Unicode
 inspectDynamicField = \case

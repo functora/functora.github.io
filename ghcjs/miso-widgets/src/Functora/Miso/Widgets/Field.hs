@@ -6,6 +6,9 @@ module Functora.Miso.Widgets.Field
     OptsWidget (..),
     OptsWidgetPair (..),
     ModalWidget' (..),
+    truncateUnicode,
+    truncateDynamicField,
+    expandDynamicField,
     field,
     ratioField,
     textField,
@@ -198,7 +201,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
         . #uniqueUid
     getInput st' =
       st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
-    getOutput st' = do
+    getOutput st' =
       (st' ^? cloneTraversal optic >>= parser)
         <|> (st' ^? cloneTraversal optic . #fieldOutput)
     getInputReplacement st' = do
@@ -872,7 +875,7 @@ genericFieldViewer args widget =
                   [ Css.fullWidth
                   ]
                   $ [ widget
-                        $ truncateFieldInput
+                        $ truncateFieldViewer
                           allowTrunc
                           stateTrunc
                           (opts ^. #fieldOptsTruncateLimit)
@@ -966,19 +969,50 @@ fieldViewerIcon icon action =
     )
     icon
 
-truncateFieldInput ::
+truncateFieldViewer ::
   Bool ->
   OpenedOrClosed ->
   Maybe Int ->
   Unicode ->
   Unicode
-truncateFieldInput True Closed limit full =
-  let half = fromMaybe defTruncateLimit limit `div` 2
-   in take half full
-        <> "..."
-        <> MS.takeEnd half full
-truncateFieldInput _ _ _ full =
+truncateFieldViewer True Closed limit full =
+  truncateUnicode limit full
+truncateFieldViewer _ _ _ full =
   full
+
+truncateDynamicField ::
+  Maybe Int ->
+  Field DynamicField Identity ->
+  Field DynamicField Identity
+truncateDynamicField limit =
+  (#fieldInput . #runIdentity %~ truncateUnicode limit)
+    . ( #fieldOutput %~ \case
+          DynamicFieldNumber {} -> DynamicFieldNumber 0
+          DynamicFieldText {} -> DynamicFieldText mempty
+      )
+
+truncateUnicode :: Maybe Int -> Unicode -> Unicode
+truncateUnicode limit input =
+  if length input <= full
+    then input
+    else
+      take half input
+        <> "..."
+        <> MS.takeEnd half input
+  where
+    full = fromMaybe defTruncateLimit limit
+    half = full `div` 2
+
+expandDynamicField ::
+  Field DynamicField Identity ->
+  Field DynamicField Identity
+expandDynamicField x =
+  if null inp
+    then x & #fieldInput . #runIdentity .~ inspectDynamicField out
+    else x & #fieldOutput .~ fromMaybe out (parseDynamicFieldId x)
+  where
+    inp = x ^. #fieldInput . #runIdentity
+    out = x ^. #fieldOutput
 
 insertAction ::
   Full model action t Unique ->

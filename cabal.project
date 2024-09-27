@@ -103,6 +103,7 @@ if os(wasi)
     pub/selective/*.cabal
     pub/universum/*.cabal
     pub/xlsx/*.cabal
+    ghcjs/miso-capa/*.cabal
     ghcjs/miso-widgets/*.cabal
     ghcjs/miso-components/*.cabal
     ghcjs/delivery-calculator/*.cabal

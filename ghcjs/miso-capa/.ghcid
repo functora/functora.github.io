@@ -1,0 +1,6 @@
+--restart=.ghcid
+--restart=miso-widgets.cabal
+--restart=cabal.config
+--restart=cabal.project
+--restart=static
+--restart=README.md

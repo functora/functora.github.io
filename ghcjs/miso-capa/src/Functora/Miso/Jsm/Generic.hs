@@ -18,6 +18,7 @@ where
 
 import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import qualified GHCJS.Types as JS
 import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
@@ -36,31 +37,47 @@ popupText x = do
   pkg <- getPkg
   void $ pkg ^. JS.js1 ("popupText" :: Unicode) (inspect x :: Unicode)
 
-shareText :: (Show a, Data a) => a -> model -> JSM model
-shareText x st = do
-  let txt = inspect @Unicode x
-  unless (txt == mempty) $ do
-    pkg <- getPkg
-    prom <- pkg ^. JS.js1 ("shareText" :: Unicode) txt
-    success <- JS.function $ \_ _ _ -> popupText @Unicode "Copied!"
-    failure <- JS.function $ \_ _ _ -> popupText @Unicode "Failed to copy!"
-    void $ prom ^. JS.js2 ("then" :: Unicode) success failure
-  pure st
+shareText :: (Show a, Data a) => a -> Update model
+shareText x =
+  ImpureUpdate $ do
+    let txt = inspect @Unicode x
+    unless (txt == mempty) $ do
+      pkg <- getPkg
+      prom <- pkg ^. JS.js1 ("shareText" :: Unicode) txt
+      success <- JS.function $ \_ _ _ -> popupText @Unicode "Copied!"
+      failure <- JS.function $ \_ _ _ -> popupText @Unicode "Failed to copy!"
+      void $ prom ^. JS.js2 ("then" :: Unicode) success failure
+    pure id
 
-moveUp :: ATraversal' model [item] -> Int -> model -> JSM model
-moveUp optic idx st = do
-  popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " up!"
-  pure $ st & cloneTraversal optic %~ swapAt (idx - 1) idx
+moveUp :: ATraversal' model [item] -> Int -> Update model
+moveUp optic idx =
+  PureAndImpureUpdate
+    ( cloneTraversal optic %~ swapAt (idx - 1) idx
+    )
+    ( do
+        popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " up!"
+        pure id
+    )
 
-moveDown :: ATraversal' model [item] -> Int -> model -> JSM model
-moveDown optic idx st = do
-  popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " down!"
-  pure $ st & cloneTraversal optic %~ swapAt idx (idx + 1)
+moveDown :: ATraversal' model [item] -> Int -> Update model
+moveDown optic idx =
+  PureAndImpureUpdate
+    ( cloneTraversal optic %~ swapAt idx (idx + 1)
+    )
+    ( do
+        popupText @Unicode $ "Moved #" <> inspect (idx + 1) <> " down!"
+        pure id
+    )
 
-removeAt :: ATraversal' model [a] -> Int -> model -> JSM model
-removeAt optic idx st = do
-  popupText @Unicode $ "Removed #" <> inspect (idx + 1) <> "!"
-  pure $ st & cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..])
+removeAt :: ATraversal' model [a] -> Int -> Update model
+removeAt optic idx =
+  PureAndImpureUpdate
+    ( cloneTraversal optic %~ ((>>= uncurry updater) . zip [0 ..])
+    )
+    ( do
+        popupText @Unicode $ "Removed #" <> inspect (idx + 1) <> "!"
+        pure id
+    )
   where
     updater loc el =
       if loc == idx
@@ -84,26 +101,31 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-openBrowserPage :: URI -> model -> JSM model
-openBrowserPage uri st = do
-  pkg <- getPkg
-  void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
-  pure st
+openBrowserPage :: URI -> Update model
+openBrowserPage uri =
+  ImpureUpdate $ do
+    pkg <- getPkg
+    void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
+    pure id
 
-enterOrEscapeBlur :: Uid -> KeyCode -> model -> JSM model
-enterOrEscapeBlur uid (KeyCode code) st = do
-  let enterOrEscape = [13, 27] :: [Int]
-  when (code `elem` enterOrEscape) $ do
-    res <-
-      either throw pure
-        . decodeUtf8Strict @Unicode
-        . unTagged
-        $ "document.getElementById('"
-        <> htmlUid uid
-        <> "').getElementsByTagName('input')[0].blur();"
-    void
-      $ JS.eval res
-  pure st
+enterOrEscapeBlur :: Uid -> KeyCode -> Update model
+enterOrEscapeBlur uid (KeyCode code) =
+  ImpureUpdate $ do
+    let enterOrEscape = [13, 27] :: [Int]
+    when (code `elem` enterOrEscape) $ do
+      --
+      -- TODO : refactor this
+      --
+      res <-
+        either throw pure
+          . decodeUtf8Strict @Unicode
+          . unTagged
+          $ "document.getElementById('"
+          <> htmlUid uid
+          <> "').getElementsByTagName('input')[0].blur();"
+      void
+        $ JS.eval res
+    pure id
 
 insertStorage :: (ToJSON a) => Unicode -> a -> JSM ()
 insertStorage key raw = do

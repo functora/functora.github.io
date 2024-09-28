@@ -48,7 +48,7 @@ module Functora.Miso.Types
     StaticOrDynamic (..),
     LeadingOrTrailing (..),
     OpenedOrClosed (..),
-    Updater (..),
+    Update (..),
   )
 where
 
@@ -527,8 +527,8 @@ data OpenedOrClosed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OpenedOrClosed
 
-data Updater model
-  = PureUpdater (model -> model)
-  | ImpureUpdater (model -> JSM model)
-  | PureAndImpureUpdater (model -> model) (model -> JSM model)
+data Update model
+  = PureUpdate (model -> model)
+  | ImpureUpdate (JSM (model -> model))
+  | PureAndImpureUpdate (model -> model) (JSM (model -> model))
   deriving stock (Generic)

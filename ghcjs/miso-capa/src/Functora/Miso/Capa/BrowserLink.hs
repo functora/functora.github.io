@@ -6,11 +6,12 @@ where
 
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 
 data Args model action = Args
   { argsLink :: URI,
     argsLabel :: Unicode,
-    argsAction :: (model -> JSM model) -> action
+    argsAction :: Update model -> action
   }
   deriving stock (Generic)
 

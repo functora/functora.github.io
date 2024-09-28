@@ -14,7 +14,7 @@ import qualified Material.Dialog as Dialog
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model OpenedOrClosed,
-    argsAction :: (model -> JSM model) -> action,
+    argsAction :: Update model -> action,
     argsContent :: [View action]
   }
   deriving stock (Generic)
@@ -52,4 +52,4 @@ dialog args =
     optic :: ATraversal' model OpenedOrClosed
     optic = args ^. #argsOptic
     action :: (action -> f action -> f action) -> f action -> f action
-    action = ($ args ^. #argsAction $ pure . (& cloneTraversal optic .~ Closed))
+    action = ($ args ^. #argsAction $ PureUpdate $ cloneTraversal optic .~ Closed)

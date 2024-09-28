@@ -40,8 +40,8 @@ import qualified Miso.String as MS
 data Args model action t f = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Field t f),
-    argsAction :: (model -> JSM model) -> action,
-    argsEmitter :: (model -> JSM model) -> JSM ()
+    argsAction :: Update model -> action,
+    argsEmitter :: Update model -> JSM ()
   }
   deriving stock (Generic)
 
@@ -56,10 +56,10 @@ data Opts model action = Opts
   { optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
-    optsOnInputAction :: Maybe ((model -> JSM model) -> action),
+    optsOnInputAction :: Maybe (Update model -> action),
     optsLeadingWidget :: Maybe (OptsWidgetPair model action),
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
-    optsOnKeyDownAction :: Uid -> KeyCode -> model -> JSM model,
+    optsOnKeyDownAction :: Uid -> KeyCode -> Update model,
     optsExtraAttributes :: [Attribute action]
   }
   deriving stock (Generic)
@@ -209,9 +209,8 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
         then Nothing
         else Just out
     onBlurAction =
-      action $ \prev ->
-        pure
-          $ prev
+      action . PureUpdate $ \prev ->
+        prev
           & cloneTraversal optic
           . #fieldInput
           . #uniqueValue
@@ -220,15 +219,14 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           . #fieldOutput
           %~ maybe id (const . id) (getOutput prev)
     onInputAction txt =
-      fromMaybe action (optsOnInputAction opts) $ \prev ->
+      fromMaybe action (optsOnInputAction opts) . PureUpdate $ \prev ->
         let next =
               prev
                 & cloneTraversal optic
                 . #fieldInput
                 . #uniqueValue
                 .~ txt
-         in pure
-              $ next
+         in next
               & cloneTraversal optic
               . #fieldOutput
               %~ maybe id (const . id) (getOutput next)
@@ -294,33 +292,35 @@ fieldIcon lot full opts = \case
     fieldIconSimple lot "content_copy" mempty
       . action
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
-        Nothing -> pure . id
+        Nothing -> PureUpdate id
         Just txt -> Jsm.shareText txt
   ClearWidget ->
     fieldIconSimple lot "close" mempty
       . ( fromMaybe action
             $ optsOnInputAction opts
         )
-      $ \prev -> do
-        focus
-          . either impureThrow id
-          . decodeUtf8Strict @Unicode
-          . unTagged
-          $ htmlUid uid
-        void
-          . JS.eval
-          . either impureThrow id
-          . decodeUtf8Strict @Unicode
-          . unTagged
-          $ "var el = document.getElementById('"
-          <> htmlUid uid
-          <> "'); if (el) el.value = '';"
-        pure
-          $ prev
-          & cloneTraversal optic
-          . #fieldInput
-          . #uniqueValue
-          .~ mempty
+      $ PureAndImpureUpdate
+        ( cloneTraversal optic
+            . #fieldInput
+            . #uniqueValue
+            .~ mempty
+        )
+        ( do
+            focus
+              . either impureThrow id
+              . decodeUtf8Strict @Unicode
+              . unTagged
+              $ htmlUid uid
+            void
+              . JS.eval
+              . either impureThrow id
+              . decodeUtf8Strict @Unicode
+              . unTagged
+              $ "var el = document.getElementById('"
+              <> htmlUid uid
+              <> "'); if (el) el.value = '';"
+            pure id
+        )
   PasteWidget ->
     fieldIconSimple lot "content_paste_go" mempty
       $ insertAction full Jsm.selectClipboard
@@ -332,13 +332,17 @@ fieldIcon lot full opts = \case
       Just FieldTypePassword ->
         fieldIconSimple lot "visibility_off" mempty
           . action
-          $ pure
-          . (& cloneTraversal optic . #fieldType .~ FieldTypeText)
+          . PureUpdate
+          $ cloneTraversal optic
+          . #fieldType
+          .~ FieldTypeText
       _ ->
         fieldIconSimple lot "visibility" mempty
           . action
-          $ pure
-          . (& cloneTraversal optic . #fieldType .~ FieldTypePassword)
+          . PureUpdate
+          $ cloneTraversal optic
+          . #fieldType
+          .~ FieldTypePassword
   UpWidget opt idx attrs ->
     fieldIconSimple lot "keyboard_double_arrow_up" attrs
       . action
@@ -354,33 +358,27 @@ fieldIcon lot full opts = \case
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
     fieldIconSimple lot "settings" [Theme.primary]
       . action
-      $ pure
-      . ( &
-            cloneTraversal opt
-              . ix idx
-              . cloneTraversal ooc
-              .~ Opened
-        )
+      . PureUpdate
+      $ cloneTraversal opt
+      . ix idx
+      . cloneTraversal ooc
+      .~ Opened
   ModalWidget (ModalFieldWidget opt idx access _) ->
     fieldIconSimple lot "settings" mempty
       . action
-      $ pure
-      . ( &
-            cloneTraversal opt
-              . ix idx
-              . cloneTraversal access
-              . #fieldModalState
-              .~ Opened
-        )
+      . PureUpdate
+      $ cloneTraversal opt
+      . ix idx
+      . cloneTraversal access
+      . #fieldModalState
+      .~ Opened
   ModalWidget (ModalMiniWidget opt) ->
     fieldIconSimple lot "settings" mempty
       . action
-      $ pure
-      . ( &
-            cloneTraversal opt
-              . #fieldModalState
-              .~ Opened
-        )
+      . PureUpdate
+      $ cloneTraversal opt
+      . #fieldModalState
+      .~ Opened
   ActionWidget icon attrs act ->
     fieldIconSimple lot icon attrs act
   where
@@ -553,12 +551,10 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                                 & Select.setOnChange
                                   ( \x ->
                                       action
-                                        $ pure
-                                        . ( &
-                                              cloneTraversal optic
-                                                . #fieldType
-                                                .~ x
-                                          )
+                                        . PureUpdate
+                                        $ cloneTraversal optic
+                                        . #fieldType
+                                        .~ x
                                   )
                             )
                             ( SelectItem.selectItem
@@ -686,12 +682,10 @@ selectTypeWidget args@Args {argsAction = action} optic =
             & Select.setOnChange
               ( \x ->
                   action
-                    $ pure
-                    . ( &
-                          cloneTraversal optic
-                            . #fieldType
-                            .~ x
-                      )
+                    . PureUpdate
+                    $ cloneTraversal optic
+                    . #fieldType
+                    .~ x
               )
         )
         ( SelectItem.selectItem
@@ -709,7 +703,7 @@ selectTypeWidget args@Args {argsAction = action} optic =
 constTextField ::
   Unicode ->
   Opts model action ->
-  ((model -> JSM model) -> action) ->
+  (Update model -> action) ->
   View action
 constTextField txt opts action =
   cell
@@ -914,17 +908,15 @@ genericFieldViewer args widget =
             pure
               . fieldViewerIcon icon
               . action
-              $ pure
-              . ( &
-                    cloneTraversal optic
-                      . #fieldOpts
-                      . #fieldOptsTruncateState
-                      . _Just
-                      %~ ( \case
-                            Closed -> Opened
-                            Opened -> Closed
-                         )
-                )
+              . PureUpdate
+              $ cloneTraversal optic
+              . #fieldOpts
+              . #fieldOptsTruncateState
+              . _Just
+              %~ ( \case
+                    Closed -> Opened
+                    Opened -> Closed
+                 )
       )
         <> ( if isNothing $ opts ^. #fieldOptsQrState
               then mempty
@@ -935,17 +927,15 @@ genericFieldViewer args widget =
                 pure
                   . fieldViewerIcon icon
                   . action
-                  $ pure
-                  . ( &
-                        cloneTraversal optic
-                          . #fieldOpts
-                          . #fieldOptsQrState
-                          . _Just
-                          %~ ( \case
-                                Closed -> Opened
-                                Opened -> Closed
-                             )
-                    )
+                  . PureUpdate
+                  $ cloneTraversal optic
+                  . #fieldOpts
+                  . #fieldOptsQrState
+                  . _Just
+                  %~ ( \case
+                        Closed -> Opened
+                        Opened -> Closed
+                     )
            )
         <> ( if not allowCopy
               then mempty
@@ -1014,7 +1004,7 @@ insertAction ::
   ((Maybe Unicode -> JSM ()) -> JSM ()) ->
   action
 insertAction Full {fullArgs = args, fullParser = parser} selector =
-  action $ \prev -> do
+  action . ImpureUpdate $ do
     selector $ \case
       Nothing -> Jsm.popupText @Unicode "Failure!"
       Just inp -> do
@@ -1027,18 +1017,25 @@ insertAction Full {fullArgs = args, fullParser = parser} selector =
         case next ^? cloneTraversal optic >>= parser of
           Nothing -> Jsm.popupText @Unicode "Failure!"
           Just out ->
-            args ^. #argsEmitter $ \st -> do
-              Jsm.popupText @Unicode "Success!"
-              pure
-                $ st
-                & cloneTraversal optic
-                . #fieldInput
-                . #uniqueValue
-                .~ inp
-                & cloneTraversal optic
-                . #fieldOutput
-                .~ out
-    pure prev
+            emitter
+              $ PureAndImpureUpdate
+                ( \st ->
+                    st
+                      & cloneTraversal optic
+                      . #fieldInput
+                      . #uniqueValue
+                      .~ inp
+                      & cloneTraversal optic
+                      . #fieldOutput
+                      .~ out
+                )
+                ( do
+                    Jsm.popupText @Unicode "Success!"
+                    pure id
+                )
+    pure id
   where
+    prev = args ^. #argsModel
     optic = args ^. #argsOptic
     action = args ^. #argsAction
+    emitter = args ^. #argsEmitter

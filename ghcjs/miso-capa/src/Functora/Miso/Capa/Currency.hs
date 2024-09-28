@@ -23,8 +23,8 @@ import qualified Text.Fuzzy as Fuzzy
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Currency Unique),
-    argsAction :: (model -> JSM model) -> action,
-    argsEmitter :: (model -> JSM model) -> JSM (),
+    argsAction :: Update model -> action,
+    argsEmitter :: Update model -> JSM (),
     argsCurrencies :: Getter' model (NonEmpty CurrencyInfo)
   }
   deriving stock (Generic)
@@ -109,9 +109,8 @@ selectCurrency
           ]
     where
       opened =
-        action $ \prev ->
-          pure
-            $ prev
+        action . PureUpdate $ \prev ->
+          prev
             & cloneTraversal optic
             . #currencyModalState
             .~ Opened
@@ -122,9 +121,8 @@ selectCurrency
             .~ mempty
             & extraOnClick
       closed =
-        action $ \prev ->
-          pure
-            $ prev
+        action . PureUpdate $ \prev ->
+          prev
             & cloneTraversal optic
             . #currencyModalState
             .~ Closed
@@ -211,9 +209,8 @@ currencyListItemWidget
                 else Nothing
             )
           & ListItem.setOnClick
-            ( action $ \st ->
-                pure
-                  $ st
+            ( action . PureUpdate $ \st ->
+                st
                   & cloneTraversal optic
                   . #currencyModalState
                   .~ Closed

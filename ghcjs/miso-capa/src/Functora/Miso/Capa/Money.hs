@@ -17,7 +17,7 @@ import qualified Material.Typography as Typography
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model (Money Unique),
-    argsAction :: (model -> JSM model) -> action
+    argsAction :: Update model -> action
   }
   deriving stock (Generic)
 

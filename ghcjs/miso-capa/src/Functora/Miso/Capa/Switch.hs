@@ -13,7 +13,7 @@ import Miso hiding (at, view)
 data Args model action = Args
   { argsModel :: model,
     argsOptic :: ATraversal' model Bool,
-    argsAction :: Updater model -> action
+    argsAction :: Update model -> action
   }
   deriving stock (Generic)
 
@@ -58,7 +58,7 @@ switch Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
             onChange
               . const
               . action
-              . PureUpdater
+              . PureUpdate
               $ cloneTraversal optic
               %~ not
           ]

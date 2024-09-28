@@ -23,4 +23,4 @@ import Miso as X hiding
 import qualified Miso
 
 consoleLog :: (Show a, Data a) => a -> JSM ()
-consoleLog = Miso.consoleLog . inspect
+consoleLog = Miso.consoleLog . inspect @Unicode

@@ -107,7 +107,6 @@ library
     Functora.Miso.Capa.Frame
     Functora.Miso.Capa.Grid
     Functora.Miso.Capa.Header
-    Functora.Miso.Capa.IconToggles
     Functora.Miso.Capa.Money
     Functora.Miso.Capa.Qr
     Functora.Miso.Capa.Switch
@@ -142,7 +141,6 @@ test-suite miso-capa-test
       Functora.Miso.Capa.Frame
       Functora.Miso.Capa.Grid
       Functora.Miso.Capa.Header
-      Functora.Miso.Capa.IconToggles
       Functora.Miso.Capa.Money
       Functora.Miso.Capa.Qr
       Functora.Miso.Capa.Switch

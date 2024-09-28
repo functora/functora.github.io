@@ -25,12 +25,7 @@ headerEditor args opts =
                 ("justify-content", "center")
               ]
           ]
-          [ Field.dynamicField
-              args
-              ( opts
-                  & #optsFilledOrOutlined
-                  .~ Outlined
-              )
+          [ Field.dynamicField args opts
           ]
       ]
   ]

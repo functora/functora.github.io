@@ -34,10 +34,6 @@ module Functora.Miso.Types
     newCurrency,
     Money (..),
     newMoney,
-    Asset (..),
-    newAsset,
-    PaymentMethod (..),
-    newPaymentMethod,
     Fav (..),
     InstantOrDelayed (..),
     instantOrDelayedTime,
@@ -48,13 +44,10 @@ module Functora.Miso.Types
     identityToUnique,
     keyed,
     TopOrBottom (..),
-    HeaderOrFooter (..),
     OnlineOrOffline (..),
     StaticOrDynamic (..),
     LeadingOrTrailing (..),
-    FilledOrOutlined (..),
     OpenedOrClosed (..),
-    AssetsAndPaymentsLayout (..),
   )
 where
 
@@ -428,92 +421,6 @@ newMoney amt cur =
     <$> newRatioField amt
     <*> newCurrency cur
 
-data Asset f = Asset
-  { assetPrice :: Money f,
-    assetPriceLabel :: Field Unicode f,
-    assetFieldPairs :: [FieldPair DynamicField f],
-    assetModalState :: OpenedOrClosed
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (Asset f)
-
-deriving stock instance (Hkt f) => Ord (Asset f)
-
-deriving stock instance (Hkt f) => Show (Asset f)
-
-deriving stock instance (Hkt f) => Data (Asset f)
-
-instance FunctorB Asset
-
-instance TraversableB Asset
-
-deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
-
-newAsset ::
-  ( MonadIO m
-  ) =>
-  Unicode ->
-  Rational ->
-  CurrencyInfo ->
-  m (Asset Unique)
-newAsset label amt cur = do
-  lbl <- newTextField label
-  Asset
-    <$> newMoney amt cur
-    <*> pure lbl
-    <*> pure mempty
-    <*> pure Closed
-
-data PaymentMethod f = PaymentMethod
-  { paymentMethodMoney :: Money f,
-    paymentMethodMoneyLabel :: Field Unicode f,
-    paymentMethodFieldPairs :: [FieldPair DynamicField f],
-    paymentMethodModalState :: OpenedOrClosed
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Hkt f) => Eq (PaymentMethod f)
-
-deriving stock instance (Hkt f) => Ord (PaymentMethod f)
-
-deriving stock instance (Hkt f) => Show (PaymentMethod f)
-
-deriving stock instance (Hkt f) => Data (PaymentMethod f)
-
-instance FunctorB PaymentMethod
-
-instance TraversableB PaymentMethod
-
-deriving via
-  GenericType (PaymentMethod Identity)
-  instance
-    Binary (PaymentMethod Identity)
-
-newPaymentMethod ::
-  ( MonadIO m
-  ) =>
-  CurrencyInfo ->
-  Maybe Unicode ->
-  m (PaymentMethod Unique)
-newPaymentMethod cur addr0 = do
-  lbl <-
-    newTextField $ inspectCurrencyInfo cur <> " total"
-  addr1 <-
-    maybe
-      ( pure Nothing
-      )
-      ( fmap (Just . (& #fieldPairValue . #fieldType .~ FieldTypeQrCode))
-          . newFieldPair (inspectCurrencyInfo cur <> " address")
-          . DynamicFieldText
-      )
-      addr0
-  PaymentMethod
-    <$> newMoney 0 cur
-    <*> pure lbl
-    <*> pure (maybeToList addr1)
-    <*> pure Closed
-
 data Fav = Fav
   { favUri :: URI,
     favCreatedAt :: UTCTime
@@ -595,12 +502,6 @@ data TopOrBottom
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType TopOrBottom
 
-data HeaderOrFooter
-  = Header
-  | Footer
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType HeaderOrFooter
-
 data OnlineOrOffline
   = Online
   | Offline
@@ -619,20 +520,8 @@ data LeadingOrTrailing
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType LeadingOrTrailing
 
-data FilledOrOutlined
-  = Filled
-  | Outlined
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType FilledOrOutlined
-
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OpenedOrClosed
-
-data AssetsAndPaymentsLayout
-  = AssetsBeforePayments
-  | PaymentsBeforeAssets
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
-  deriving (Binary) via GenericType AssetsAndPaymentsLayout

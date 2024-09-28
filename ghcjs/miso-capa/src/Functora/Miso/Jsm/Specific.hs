@@ -1,7 +1,5 @@
 module Functora.Miso.Jsm.Specific
   ( addFieldPair,
-    addAsset,
-    addPaymentMethod,
     duplicateAt,
   )
 where
@@ -10,28 +8,12 @@ import qualified Data.Generics as Syb
 import qualified Functora.Miso.Jsm.Generic as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
-import Functora.Money (CurrencyCode (..), CurrencyInfo (..))
 
 addFieldPair ::
   ATraversal' model [FieldPair DynamicField Unique] -> model -> JSM model
 addFieldPair optic st = do
   item <- newFieldPair mempty $ DynamicFieldText mempty
   Jsm.popupText @Unicode "Added note!"
-  pure $ st & cloneTraversal optic %~ (<> [item])
-
-addAsset :: ATraversal' model [Asset Unique] -> model -> JSM model
-addAsset optic st = do
-  let cur = CurrencyInfo (CurrencyCode "usd") mempty
-  item <- newAsset "Price" 0 cur
-  Jsm.popupText @Unicode "Added asset!"
-  pure $ st & cloneTraversal optic %~ (<> [item])
-
-addPaymentMethod ::
-  ATraversal' model [PaymentMethod Unique] -> model -> JSM model
-addPaymentMethod optic st = do
-  let cur = CurrencyInfo (CurrencyCode "btc") mempty
-  item <- newPaymentMethod cur $ Just mempty
-  Jsm.popupText @Unicode "Added payment!"
   pure $ st & cloneTraversal optic %~ (<> [item])
 
 duplicateAt ::

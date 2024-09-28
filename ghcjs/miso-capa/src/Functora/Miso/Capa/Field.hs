@@ -60,8 +60,7 @@ data Opts model action = Opts
     optsLeadingWidget :: Maybe (OptsWidgetPair model action),
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
     optsOnKeyDownAction :: Uid -> KeyCode -> model -> JSM model,
-    optsExtraAttributes :: [Attribute action],
-    optsFilledOrOutlined :: FilledOrOutlined
+    optsExtraAttributes :: [Attribute action]
   }
   deriving stock (Generic)
 
@@ -81,8 +80,7 @@ defOpts =
       optsLeadingWidget = Just $ OptsWidgetPair PasteWidget PasteWidget,
       optsTrailingWidget = Just $ OptsWidgetPair ClearWidget ClearWidget,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
-      optsExtraAttributes = mempty,
-      optsFilledOrOutlined = Filled
+      optsExtraAttributes = mempty
     }
 
 data OptsWidget model action
@@ -148,10 +146,9 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
               _ -> mempty
           fieldModal args x1
       )
-    <> [ keyed uid
-          $ case opts ^. #optsFilledOrOutlined of
-            Filled -> TextField.filled
-            Outlined -> TextField.outlined
+    <> [ keyed
+          uid
+          $ TextField.outlined
           $ TextField.config
           & TextField.setType
             ( fmap htmlFieldType (st ^? cloneTraversal optic . #fieldType)
@@ -717,9 +714,7 @@ constTextField ::
 constTextField txt opts action =
   cell
     opts
-    [ case opts ^. #optsFilledOrOutlined of
-        Filled -> TextField.filled
-        Outlined -> TextField.outlined
+    [ TextField.outlined
         $ TextField.config
         & TextField.setDisabled True
         & TextField.setValue (Just txt)

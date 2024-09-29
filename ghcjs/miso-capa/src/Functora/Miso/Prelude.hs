@@ -16,6 +16,7 @@ import Miso as X hiding
     Text,
     URI,
     at,
+    close,
     consoleLog,
     for_,
     view,

@@ -1,15 +1,13 @@
 module Functora.Miso.Capa.Dialog
   ( Args (..),
+    Opts (..),
+    defOpts,
     dialog,
   )
 where
 
-import qualified Functora.Miso.Capa.Grid as Grid
-import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
 
 data Args model action = Args
   { argsModel :: model,
@@ -19,37 +17,53 @@ data Args model action = Args
   }
   deriving stock (Generic)
 
-dialog :: forall model action. Args model action -> [View action]
-dialog args =
+data Opts = Opts
+  { optsTitle :: Maybe Unicode
+  }
+  deriving stock (Generic)
+
+defOpts :: Opts
+defOpts =
+  Opts
+    { optsTitle = Nothing
+    }
+
+dialog :: forall model action. Opts -> Args model action -> [View action]
+dialog opts args =
   if args ^? #argsModel . cloneTraversal optic /= Just Opened
     then mempty
     else
-      [ Dialog.dialog
-          ( Dialog.config
-              & Dialog.setOpen True
-              & action Dialog.setOnClose
-          )
-          ( Dialog.dialogContent
-              Nothing
-              [ Grid.grid
-                  mempty
-                  $ (args ^. #argsContent)
-                  <> [ Grid.bigCell
-                        [ Button.raised
-                            ( Button.config
-                                & action Button.setOnClick
-                                & Button.setIcon (Just "arrow_back")
-                                & Button.setAttributes [Css.fullWidth]
-                            )
-                            "Back"
-                        ]
-                     ]
-              ]
-              mempty
-          )
-      ]
+      singleton
+        $ div_
+          [class_ "window"]
+          [ div_
+              [class_ "title-bar"]
+              $ catMaybes
+                [ fmap
+                    ( \title ->
+                        div_
+                          [class_ "title-bar-text"]
+                          [text title]
+                    )
+                    ( opts ^. #optsTitle
+                    ),
+                  Just
+                    $ div_
+                      [class_ "title-bar-controls"]
+                      [ button_
+                          [ onClick close,
+                            textProp "aria-label" "Close"
+                          ]
+                          mempty
+                      ]
+                ],
+            div_
+              [class_ "window-body"]
+              $ (args ^. #argsContent)
+              <> [button_ [onClick close] [text "Back"]]
+          ]
   where
     optic :: ATraversal' model OpenedOrClosed
     optic = args ^. #argsOptic
-    action :: (action -> f action -> f action) -> f action -> f action
-    action = ($ args ^. #argsAction $ PureUpdate $ cloneTraversal optic .~ Closed)
+    close :: action
+    close = args ^. #argsAction $ PureUpdate $ cloneTraversal optic .~ Closed

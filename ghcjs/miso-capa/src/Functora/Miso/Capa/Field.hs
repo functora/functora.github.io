@@ -415,6 +415,7 @@ fieldIconSimple lot txt attrs action =
 fieldModal :: Args model action t f -> ModalWidget' model -> [View action]
 fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc) =
   Dialog.dialog
+    Dialog.defOpts
     Dialog.Args
       { Dialog.argsModel = args ^. #argsModel,
         Dialog.argsOptic = cloneTraversal opt . ix idx . cloneTraversal ooc,
@@ -527,6 +528,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
   let action =
         args ^. #argsAction
   Dialog.dialog
+    Dialog.defOpts
     Dialog.Args
       { Dialog.argsModel = args ^. #argsModel,
         Dialog.argsOptic = cloneTraversal optic . #fieldModalState,
@@ -651,6 +653,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
       }
 fieldModal args (ModalMiniWidget opt) =
   Dialog.dialog
+    Dialog.defOpts
     Dialog.Args
       { Dialog.argsModel = args ^. #argsModel,
         Dialog.argsOptic = cloneTraversal opt . #fieldModalState,

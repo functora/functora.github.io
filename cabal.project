@@ -67,8 +67,8 @@ else
       ghcjs/*/*.cabal
     optional-packages:
       prv/*/*.cabal
-    package postgresql-libpq
-      flags: +use-pkg-config
+    -- package postgresql-libpq
+    --   flags: +use-pkg-config
     source-repository-package
       type: git
       location: https://github.com/reanimate/reanimate.git
@@ -103,8 +103,8 @@ if os(wasi)
     pub/selective/*.cabal
     pub/universum/*.cabal
     pub/xlsx/*.cabal
-    ghcjs/miso-capa/*.cabal
     ghcjs/miso-widgets/*.cabal
+    ghcjs/miso-functora/*.cabal
     ghcjs/miso-components/*.cabal
     ghcjs/delivery-calculator/*.cabal
   source-repository-package

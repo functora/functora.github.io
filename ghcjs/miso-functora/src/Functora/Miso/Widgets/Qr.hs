@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Qr
+module Functora.Miso.Widgets.Qr
   ( qr,
   )
 where
@@ -6,7 +6,7 @@ where
 import qualified Codec.QRCode as QRCode
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.MemoUgly as Memo
-import qualified Functora.Miso.Capa.Grid as Grid
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import qualified Functora.Qr as Qr

@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.FieldPairs
+module Functora.Miso.Widgets.FieldPairs
   ( Args (..),
     Opts (..),
     defOpts,
@@ -7,8 +7,8 @@ module Functora.Miso.Capa.FieldPairs
   )
 where
 
-import qualified Functora.Miso.Capa.Field as Field
-import qualified Functora.Miso.Capa.Grid as Grid
+import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types

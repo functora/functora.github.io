@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Currency
+module Functora.Miso.Widgets.Currency
   ( Args (..),
     Opts (..),
     defOpts,
@@ -6,8 +6,8 @@ module Functora.Miso.Capa.Currency
   )
 where
 
-import qualified Functora.Miso.Capa.Dialog as Dialog
-import qualified Functora.Miso.Capa.Field as Field
+import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Field as Field
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import Functora.Money hiding (Currency, Money, Text)

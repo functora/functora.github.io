@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.BrowserLink
+module Functora.Miso.Widgets.BrowserLink
   ( Args (..),
     browserLink,
   )

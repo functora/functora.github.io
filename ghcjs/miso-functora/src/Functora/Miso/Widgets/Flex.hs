@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Flex
+module Functora.Miso.Widgets.Flex
   ( flex,
   )
 where

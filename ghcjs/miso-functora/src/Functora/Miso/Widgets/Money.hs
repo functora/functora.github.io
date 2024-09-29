@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Money
+module Functora.Miso.Widgets.Money
   ( Args (..),
     Opts (..),
     defOpts,
@@ -6,8 +6,8 @@ module Functora.Miso.Capa.Money
   )
 where
 
-import qualified Functora.Miso.Capa.Field as Field
-import qualified Functora.Miso.Capa.Grid as Grid
+import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types

@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Field
+module Functora.Miso.Widgets.Field
   ( Args (..),
     Full (..),
     Opts (..),
@@ -19,9 +19,9 @@ module Functora.Miso.Capa.Field
   )
 where
 
-import qualified Functora.Miso.Capa.Dialog as Dialog
-import qualified Functora.Miso.Capa.Grid as Grid
-import qualified Functora.Miso.Capa.Qr as Qr
+import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude

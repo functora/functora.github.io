@@ -1,7 +1,7 @@
 cabal-version: 2.2
 name:          miso-functora
 version:       0.1.0.0
-synopsis:      Miso Capa
+synopsis:      Miso Widgets
 category:      Web
 build-type:    Simple
 
@@ -99,17 +99,16 @@ library
     ghc-options: -Wno-unused-packages
 
   exposed-modules:
-    Functora.Miso.Capa.BrowserLink
-    Functora.Miso.Capa.Currency
-    Functora.Miso.Capa.Dialog
-    Functora.Miso.Capa.Field
-    Functora.Miso.Capa.FieldPairs
-    Functora.Miso.Capa.Flex
-    Functora.Miso.Capa.Grid
-    Functora.Miso.Capa.Header
-    Functora.Miso.Capa.Money
-    Functora.Miso.Capa.Qr
-    Functora.Miso.Capa.Switch
+    Functora.Miso.Widgets.BrowserLink
+    Functora.Miso.Widgets.Currency
+    Functora.Miso.Widgets.Dialog
+    Functora.Miso.Widgets.Field
+    Functora.Miso.Widgets.FieldPairs
+    Functora.Miso.Widgets.Flex
+    Functora.Miso.Widgets.Grid
+    Functora.Miso.Widgets.Money
+    Functora.Miso.Widgets.Qr
+    Functora.Miso.Widgets.Switch
     Functora.Miso.Css
     Functora.Miso.Jsm
     Functora.Miso.Jsm.Generic
@@ -133,16 +132,16 @@ test-suite miso-functora-test
   if flag(ghcid)
     hs-source-dirs: src
     other-modules:
-      Functora.Miso.Capa.BrowserLink
-      Functora.Miso.Capa.Currency
-      Functora.Miso.Capa.Dialog
-      Functora.Miso.Capa.Field
-      Functora.Miso.Capa.FieldPairs
-      Functora.Miso.Capa.Flex
-      Functora.Miso.Capa.Grid
-      Functora.Miso.Capa.Money
-      Functora.Miso.Capa.Qr
-      Functora.Miso.Capa.Switch
+      Functora.Miso.Widgets.BrowserLink
+      Functora.Miso.Widgets.Currency
+      Functora.Miso.Widgets.Dialog
+      Functora.Miso.Widgets.Field
+      Functora.Miso.Widgets.FieldPairs
+      Functora.Miso.Widgets.Flex
+      Functora.Miso.Widgets.Grid
+      Functora.Miso.Widgets.Money
+      Functora.Miso.Widgets.Qr
+      Functora.Miso.Widgets.Switch
       Functora.Miso.Css
       Functora.Miso.Jsm
       Functora.Miso.Jsm.Generic

@@ -1,11 +1,11 @@
-module Functora.Miso.Capa.Switch
+module Functora.Miso.Widgets.Switch
   ( Opts (..),
     defOpts,
     switch,
   )
 where
 
-import qualified Functora.Miso.Capa.Flex as Flex
+import qualified Functora.Miso.Widgets.Flex as Flex
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import Miso hiding (at, view)

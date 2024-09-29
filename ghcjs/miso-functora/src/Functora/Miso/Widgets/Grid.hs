@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Grid
+module Functora.Miso.Widgets.Grid
   ( grid,
     bigCell,
     mediumCell,

@@ -1,4 +1,4 @@
-module Functora.Miso.Capa.Dialog
+module Functora.Miso.Widgets.Dialog
   ( Args (..),
     Opts (..),
     defOpts,

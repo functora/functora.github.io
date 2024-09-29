@@ -6,17 +6,11 @@ module Functora.Miso.Capa.Currency
   )
 where
 
-import qualified Data.List.NonEmpty as NonEmpty
+import qualified Functora.Miso.Capa.Dialog as Dialog
 import qualified Functora.Miso.Capa.Field as Field
-import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import Functora.Money hiding (Currency, Money, Text)
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.List as List
-import qualified Material.List.Item as ListItem
 import qualified Miso
 import qualified Text.Fuzzy as Fuzzy
 
@@ -42,73 +36,56 @@ defOpts =
       optsButtonViewer = inspectCurrencyInfo
     }
 
-selectCurrency :: Args model action -> Opts model -> View action
+selectCurrency :: Opts model -> Args model action -> View action
 selectCurrency
+  opts@Opts
+    { optsExtraOnClick = extraOnClick
+    }
   args@Args
     { argsModel = st,
       argsOptic = optic,
       argsAction = action,
       argsEmitter = emitter
-    }
-  opts@Opts {optsExtraOnClick = extraOnClick} =
-    LayoutGrid.cell
-      [ LayoutGrid.span6Desktop
-      ]
-      $ [ Button.raised
-            ( Button.setOnClick opened
-                . Button.setAttributes
-                  [ Css.fullWidth
-                  ]
-                $ Button.config
-            )
-            . ( optsButtonViewer opts
-              )
+    } =
+    div_ mempty
+      $ [ button_ [onClick open]
+            . singleton
+            . text
+            . (opts ^. #optsButtonViewer)
             $ fromMaybe
               (CurrencyInfo (CurrencyCode "XXX") mempty)
               (st ^? cloneTraversal optic . #currencyOutput)
         ]
-      <> if st ^? cloneTraversal optic . #currencyModalState /= Just Opened
-        then mempty
-        else
-          [ Dialog.dialog
-              ( Dialog.config
-                  & Dialog.setOnClose closed
-                  & Dialog.setOpen True
-              )
-              ( Dialog.dialogContent
-                  Nothing
-                  [ currencyListWidget args opts
-                  ]
-                  [ div_
-                      [ Css.fullWidth
-                      ]
-                      [ Field.textField
-                          Field.Args
-                            { Field.argsModel = st,
-                              Field.argsOptic =
-                                cloneTraversal optic
-                                  . #currencyInput,
-                              Field.argsAction = action,
-                              Field.argsEmitter = emitter
-                            }
-                          ( Field.defOpts
-                              & #optsPlaceholder
-                              .~ "Search"
-                          ),
-                        Button.raised
-                          ( Button.config
-                              & Button.setOnClick closed
-                              & Button.setAttributes
-                                [ Css.fullWidth
-                                ]
-                          )
-                          "Back"
-                      ]
-                  ]
-              )
-          ]
+      <> Dialog.dialog
+        Dialog.defOpts
+          { Dialog.optsExtraOnClose =
+              cloneTraversal optic
+                . #currencyInput
+                . #fieldInput
+                . #uniqueValue
+                .~ mempty
+          }
+        Dialog.Args
+          { Dialog.argsModel = st,
+            Dialog.argsOptic = cloneTraversal optic . #currencyModalState,
+            Dialog.argsAction = action,
+            Dialog.argsContent =
+              [ currencyListWidget opts args,
+                Field.textField
+                  Field.Args
+                    { Field.argsModel = st,
+                      Field.argsOptic = cloneTraversal optic . #currencyInput,
+                      Field.argsAction = action,
+                      Field.argsEmitter = emitter
+                    }
+                  ( Field.defOpts
+                      & #optsPlaceholder
+                      .~ "Search"
+                  )
+              ]
+          }
     where
-      opened =
+      open =
         action . PureUpdate $ \prev ->
           prev
             & cloneTraversal optic
@@ -120,33 +97,17 @@ selectCurrency
             . #uniqueValue
             .~ mempty
             & extraOnClick
-      closed =
-        action . PureUpdate $ \prev ->
-          prev
-            & cloneTraversal optic
-            . #currencyModalState
-            .~ Closed
-            & cloneTraversal optic
-            . #currencyInput
-            . #fieldInput
-            . #uniqueValue
-            .~ mempty
 
-currencyListWidget :: Args model action -> Opts model -> View action
+currencyListWidget :: Opts model -> Args model action -> View action
 currencyListWidget
+  opts
   args@Args
     { argsModel = st,
       argsOptic = optic,
       argsCurrencies = currencies
-    }
-  opts =
-    List.list
-      List.config
-      ( currencyListItemWidget args opts current
-          $ maybe (newFuzz current) NonEmpty.head matching
-      )
-      . fmap (currencyListItemWidget args opts current)
-      $ maybe mempty NonEmpty.tail matching
+    } =
+    ul_ [class_ "tree-view"]
+      $ fmap (currencyListItemWidget opts args current) matching
     where
       current =
         fromMaybe
@@ -167,65 +128,60 @@ currencyListWidget
           . #fieldInput
           . #uniqueValue
       matching =
+        --
+        -- TODO : filter not by exact word order,
+        -- but by all possible permutations as well,
+        -- with bigger priority for original query.
+        --
         if search == mempty
-          then Just . fmap newFuzz $ st ^. currencies
+          then fmap newFuzz . toList $ st ^. currencies
           else
-            nonEmpty
-              --
-              -- TODO : filter not by exact word order,
-              -- but by all possible permutations as well,
-              -- with bigger priority for original query.
-              --
-              $ Fuzzy.filter
-                search
-                ( toList $ st ^. currencies
-                )
-                "<b>"
-                "</b>"
-                inspectCurrencyInfo
-                False
+            Fuzzy.filter
+              search
+              (toList $ st ^. currencies)
+              "<b>"
+              "</b>"
+              inspectCurrencyInfo
+              False
 
 currencyListItemWidget ::
-  Args model action ->
   Opts model ->
+  Args model action ->
   CurrencyInfo ->
   Fuzzy.Fuzzy CurrencyInfo Unicode ->
-  ListItem.ListItem action
+  View action
 currencyListItemWidget
+  Opts
+    { optsExtraOnClick = extraOnClick
+    }
   Args
     { argsOptic = optic,
       argsAction = action
     }
-  Opts
-    { optsExtraOnClick = extraOnClick
-    }
   current
   fuzz =
-    ListItem.listItem
-      ( ListItem.config
-          & ListItem.setSelected
-            ( if current == item
-                then Just ListItem.activated
-                else Nothing
-            )
-          & ListItem.setOnClick
-            ( action . PureUpdate $ \st ->
-                st
-                  & cloneTraversal optic
-                  . #currencyModalState
-                  .~ Closed
-                  & cloneTraversal optic
-                  . #currencyInput
-                  . #fieldInput
-                  . #uniqueValue
-                  .~ mempty
-                  & cloneTraversal optic
-                  . #currencyOutput
-                  .~ item
-                  & extraOnClick
-            )
-      )
-      [ Miso.rawHtml
+    li_
+      [ onClick . action . PureUpdate $ \st ->
+          st
+            & cloneTraversal optic
+            . #currencyModalState
+            .~ Closed
+            & cloneTraversal optic
+            . #currencyInput
+            . #fieldInput
+            . #uniqueValue
+            .~ mempty
+            & cloneTraversal optic
+            . #currencyOutput
+            .~ item
+            & extraOnClick
+      ]
+      [ ( if current == item
+            then strong_ mempty
+            else span_ mempty
+        )
+          . singleton
+          . Miso.rawHtml
           $ Fuzzy.rendered fuzz
       ]
     where

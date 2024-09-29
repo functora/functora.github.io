@@ -17,18 +17,20 @@ data Args model action = Args
   }
   deriving stock (Generic)
 
-data Opts = Opts
-  { optsTitle :: Maybe Unicode
+data Opts model = Opts
+  { optsTitle :: Maybe Unicode,
+    optsExtraOnClose :: model -> model
   }
   deriving stock (Generic)
 
-defOpts :: Opts
+defOpts :: Opts model
 defOpts =
   Opts
-    { optsTitle = Nothing
+    { optsTitle = Nothing,
+      optsExtraOnClose = id
     }
 
-dialog :: forall model action. Opts -> Args model action -> [View action]
+dialog :: forall model action. Opts model -> Args model action -> [View action]
 dialog opts args =
   if args ^? #argsModel . cloneTraversal optic /= Just Opened
     then mempty

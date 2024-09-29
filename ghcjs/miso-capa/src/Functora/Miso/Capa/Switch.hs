@@ -34,10 +34,10 @@ defOpts =
 
 switch ::
   forall model action.
-  Args model action ->
   Opts model action ->
+  Args model action ->
   View action
-switch Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
+switch opts Args {argsModel = st, argsOptic = optic, argsAction = action} =
   Flex.flex mempty
     $ maybeToList
       ( fmap (\icon -> i_ [class_ icon] mempty)

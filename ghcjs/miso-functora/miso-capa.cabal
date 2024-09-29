@@ -1,5 +1,5 @@
 cabal-version: 2.2
-name:          miso-capa
+name:          miso-functora
 version:       0.1.0.0
 synopsis:      Miso Capa
 category:      Web
@@ -11,7 +11,7 @@ flag ghcid
 
 common pkg
   default-language:   Haskell2010
-  other-modules:      Paths_miso_capa
+  other-modules:      Paths_miso_functora
   ghc-options:
     -Werror -Weverything -Wno-all-missed-specialisations
     -Wno-missed-specialisations -Wno-missing-exported-signatures
@@ -118,7 +118,7 @@ library
     Functora.Miso.Prelude
     Functora.Miso.Types
 
-test-suite miso-capa-test
+test-suite miso-functora-test
   import:         pkg
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
@@ -152,4 +152,4 @@ test-suite miso-capa-test
       Functora.Miso.Types
 
   else
-    build-depends: miso-capa
+    build-depends: miso-functora

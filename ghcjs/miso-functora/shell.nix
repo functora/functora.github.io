@@ -2,14 +2,14 @@ with (import ./default.nix); let
   repo = toString ./.;
   functora-pkgs = import "${functora}/nix/nixpkgs.nix";
   functora-tools = import "${functora}/nix/tools.nix";
-  miso-capa-ghcid = functora-pkgs.writeScriptBin "miso-capa-ghcid" ''
-    (cd ${builtins.toString ./.} && ${functora-pkgs.ghcid}/bin/ghcid --test=":main --fail-fast --color -f failed-examples" --command="${functora-pkgs.cabal-install}/bin/cabal new-repl miso-capa-test --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
+  miso-functora-ghcid = functora-pkgs.writeScriptBin "miso-functora-ghcid" ''
+    (cd ${builtins.toString ./.} && ${functora-pkgs.ghcid}/bin/ghcid --test=":main --fail-fast --color -f failed-examples" --command="${functora-pkgs.cabal-install}/bin/cabal new-repl miso-functora-test --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
   '';
 in
   dev.env.overrideAttrs (prev: {
     buildInputs =
       [
-        miso-capa-ghcid
+        miso-functora-ghcid
         functora-pkgs.cabal-install
         functora-pkgs.closurecompiler
         functora-pkgs.clean-css-cli

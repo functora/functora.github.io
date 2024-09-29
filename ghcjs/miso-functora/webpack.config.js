@@ -7,7 +7,7 @@ module.exports = {
     filename: "main.min.js",
     // Export itself to a global variable
     libraryTarget: "var",
-    library: "h$miso_capa",
+    library: "h$miso_functora",
   },
   optimization: {
     minimize: true,

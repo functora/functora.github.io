@@ -12,9 +12,9 @@ let
 in rec {
   inherit pkgs functora;
   source = pkgs.nix-gitignore.gitignoreSourcePure ./.gitignore ./.;
-  dev = doCheck (pkgs.haskell.packages.ghc865.callCabal2nix "miso-capa" source {
+  dev = doCheck (pkgs.haskell.packages.ghc865.callCabal2nix "miso-functora" source {
     miso = functora-miso.miso-jsaddle;
   });
-  miso-capa = pkgs.haskell.packages.ghcjs86.callCabal2nix "miso-capa" source {};
-  vsn = miso-capa.passthru.version;
+  miso-functora = pkgs.haskell.packages.ghcjs86.callCabal2nix "miso-functora" source {};
+  vsn = miso-functora.passthru.version;
 }

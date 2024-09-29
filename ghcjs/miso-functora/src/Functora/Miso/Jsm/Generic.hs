@@ -30,7 +30,7 @@ import qualified Prelude ((!!))
 
 getPkg :: JSM JS.JSVal
 getPkg =
-  JS.global JS.! ("h$miso_capa" :: Unicode)
+  JS.global JS.! ("h$miso_functora" :: Unicode)
 
 popupText :: (Show a, Data a) => a -> JSM ()
 popupText x = do

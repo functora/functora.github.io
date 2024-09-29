@@ -140,7 +140,6 @@ test-suite miso-capa-test
       Functora.Miso.Capa.FieldPairs
       Functora.Miso.Capa.Flex
       Functora.Miso.Capa.Grid
-      Functora.Miso.Capa.Header
       Functora.Miso.Capa.Money
       Functora.Miso.Capa.Qr
       Functora.Miso.Capa.Switch

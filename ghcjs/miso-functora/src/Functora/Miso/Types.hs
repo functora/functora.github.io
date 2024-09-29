@@ -49,6 +49,7 @@ module Functora.Miso.Types
     LeadingOrTrailing (..),
     OpenedOrClosed (..),
     Update (..),
+    evalUpdate
   )
 where
 
@@ -532,3 +533,9 @@ data Update model
   | ImpureUpdate (JSM (model -> model))
   | PureAndImpureUpdate (model -> model) (JSM (model -> model))
   deriving stock (Generic)
+
+evalUpdate :: model -> Update model -> JSM model
+evalUpdate x = \case
+ PureUpdate f -> pure $ f x
+ ImpureUpdate g -> g >>= pure . ($ x)
+ PureAndImpureUpdate f g  -> g >>= pure . ($ f x)

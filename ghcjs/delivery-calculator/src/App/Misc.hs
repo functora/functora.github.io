@@ -10,7 +10,7 @@ pushActionQueue ::
   ( MonadIO m
   ) =>
   Model ->
-  InstantOrDelayed (Model -> JSM Model) ->
+  InstantOrDelayed (Update Model) ->
   m ()
 pushActionQueue st =
   liftIO

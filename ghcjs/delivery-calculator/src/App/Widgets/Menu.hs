@@ -47,9 +47,9 @@ menu st =
                 navItemLeft
                   $ a_
                     [ style_ [("cursor", "pointer")],
-                      onClick . PushUpdate . Instant $ \next -> do
+                      onClick . PushUpdate . Instant . ImpureUpdate $ do
                         doc <- liftIO newSt
-                        pure $ next & #modelState .~ doc
+                        pure $ #modelState .~ doc
                     ]
                     [ text "Delivery Calculator"
                     ]
@@ -61,11 +61,11 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( PushUpdate . Instant $ \next ->
-                              pure
-                                $ next
-                                & #modelFav
-                                .~ Opened
+                          ( PushUpdate
+                              . Instant
+                              . PureUpdate
+                              $ #modelFav
+                              .~ Opened
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -77,9 +77,9 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( PushUpdate . Instant $ \next -> do
+                          ( PushUpdate . Instant . ImpureUpdate $ do
                               Jsm.printCurrentPage "delivery-calculator"
-                              pure next
+                              pure id
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -91,12 +91,12 @@ menu st =
                   $ IconButton.iconButton
                     ( IconButton.config
                         & IconButton.setOnClick
-                          ( PushUpdate . Instant $ \next -> do
+                          ( PushUpdate . Instant . ImpureUpdate $ do
                               Jsm.saveFile
                                 "delivery-calculator.xlsx"
                                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 Xlsx.newXlsx
-                              pure next
+                              pure id
                           )
                         & IconButton.setAttributes
                           [ TopAppBar.actionItem,
@@ -138,6 +138,14 @@ menu st =
                 [ Grid.grid
                     mempty
                     $ [ Currency.selectCurrency
+                          Currency.defOpts
+                            { Currency.optsExtraOnClick =
+                                (& #modelLoading .~ True),
+                              Currency.optsButtonViewer =
+                                mappend "Marketplace - "
+                                  . Money.inspectCurrencyCode
+                                  . Money.currencyInfoCode
+                            }
                           Currency.Args
                             { Currency.argsModel = st,
                               Currency.argsOptic =
@@ -148,16 +156,16 @@ menu st =
                                 Misc.pushActionQueue st . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
-                            }
+                            },
+                        Currency.selectCurrency
                           Currency.defOpts
                             { Currency.optsExtraOnClick =
                                 (& #modelLoading .~ True),
                               Currency.optsButtonViewer =
-                                mappend "Marketplace - "
+                                mappend "Merchant - "
                                   . Money.inspectCurrencyCode
                                   . Money.currencyInfoCode
-                            },
-                        Currency.selectCurrency
+                            }
                           Currency.Args
                             { Currency.argsModel = st,
                               Currency.argsOptic =
@@ -168,14 +176,6 @@ menu st =
                                 Misc.pushActionQueue st . Instant,
                               Currency.argsCurrencies =
                                 #modelCurrencies
-                            }
-                          Currency.defOpts
-                            { Currency.optsExtraOnClick =
-                                (& #modelLoading .~ True),
-                              Currency.optsButtonViewer =
-                                mappend "Merchant - "
-                                  . Money.inspectCurrencyCode
-                                  . Money.currencyInfoCode
                             },
                         let item :| items = enumerateNE @OnlineOrOffline
                          in Grid.mediumCell
@@ -194,12 +194,10 @@ menu st =
                                         ( \x ->
                                             PushUpdate
                                               . Instant
-                                              $ pure
-                                              . ( &
-                                                    #modelState
-                                                      . #stOnlineOrOffline
-                                                      .~ x
-                                                )
+                                              . PureUpdate
+                                              $ #modelState
+                                              . #stOnlineOrOffline
+                                              .~ x
                                         )
                                   )
                                   ( SelectItem.selectItem
@@ -253,8 +251,6 @@ menu st =
                                                   . #currencyInfoCode
                                               )
                                          )
-                                      & #optsFilledOrOutlined
-                                      .~ Outlined
                                       & ( if disabled
                                             then #optsTrailingWidget .~ Nothing
                                             else id
@@ -275,8 +271,6 @@ menu st =
                               ( Field.defOpts
                                   & #optsPlaceholder
                                   .~ ("Merchant fee %" :: Unicode)
-                                  & #optsFilledOrOutlined
-                                  .~ Outlined
                               )
                           ],
                         Grid.mediumCell
@@ -291,8 +285,6 @@ menu st =
                               ( Field.defOpts
                                   & #optsPlaceholder
                                   .~ ("Merchant telegram" :: Unicode)
-                                  & #optsFilledOrOutlined
-                                  .~ Outlined
                               )
                           ],
                         Grid.mediumCell
@@ -307,8 +299,6 @@ menu st =
                               ( Field.defOpts @Model @Action
                                   & #optsPlaceholder
                                   .~ ("QR title" :: Unicode)
-                                  & #optsFilledOrOutlined
-                                  .~ Outlined
                               )
                           ],
                         Grid.mediumCell
@@ -352,13 +342,13 @@ menu st =
             )
         ]
   where
-    opened = PushUpdate . Instant $ pure . (& #modelMenu .~ Opened)
-    closed = PushUpdate . Instant $ pure . (& #modelMenu .~ Closed)
+    opened = PushUpdate . Instant . PureUpdate $ #modelMenu .~ Opened
+    closed = PushUpdate . Instant . PureUpdate $ #modelMenu .~ Closed
     screen next =
       PushUpdate
         . Instant
-        $ pure
-        . (& #modelMenu .~ Closed)
+        . PureUpdate
+        $ (& #modelMenu .~ Closed)
         . (& #modelLoading .~ isQrCode next)
         . (& #modelState . #stScreen .~ next)
     sc =
@@ -530,8 +520,8 @@ linksWidget st =
             ]
        )
   where
-    openWidget = PushUpdate . Instant $ pure . (& #modelLinks .~ Opened)
-    closeWidget = PushUpdate . Instant $ pure . (& #modelLinks .~ Closed)
+    openWidget = PushUpdate . Instant . PureUpdate $ #modelLinks .~ Opened
+    closeWidget = PushUpdate . Instant . PureUpdate $ #modelLinks .~ Closed
     openBrowser =
       PushUpdate
         . Instant

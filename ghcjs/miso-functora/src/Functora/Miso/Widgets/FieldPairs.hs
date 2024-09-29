@@ -12,7 +12,6 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
-import qualified Material.Typography as Typography
 
 data Args model action f = Args
   { argsModel :: model,
@@ -55,7 +54,7 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
       else
         [ cell
             [ strong_
-                [ Typography.typography,
+                [
                   Css.fullWidth,
                   class_ "mdc-text-field",
                   style_

@@ -42,7 +42,6 @@ fav st =
                               }
                             Field.defOpts
                               { Field.optsPlaceholder = "Name",
-                                Field.optsFilledOrOutlined = Outlined,
                                 Field.optsOnKeyDownAction = onKeyDownAction,
                                 Field.optsTrailingWidget =
                                   let w =
@@ -78,29 +77,34 @@ fav st =
           )
       ]
   where
-    closeAction = PushUpdate . Instant $ pure . (& #modelFav .~ Closed)
-    saveAction nextSt = do
-      ct <- getCurrentTime
-      uri <- stUri nextSt
+    closeAction =
+      PushUpdate
+        . Instant
+        . PureUpdate
+        $ #modelFav
+        .~ Closed
+    saveAction =
+      ImpureUpdate $ do
+        ct <- getCurrentTime
+        uri <- stUri st
+        let txt = makeFavName st
+        let nextFav = Fav {favUri = uri, favCreatedAt = ct}
+        let nextFavName = makeFavName st
+        Jsm.popupText
+          $ "Saved"
+          <> ( if txt == mempty
+                then mempty
+                else " "
+             )
+          <> txt
+          <> "!"
+        pure
+          $ #modelFavMap
+          . at nextFavName
+          %~ (Just . maybe nextFav (& #favUri .~ uri))
+    deleteAction = PushUpdate . Instant . ImpureUpdate $ do
       let txt = makeFavName st
-      let nextFav = Fav {favUri = uri, favCreatedAt = ct}
-      let nextFavName = makeFavName nextSt
-      Jsm.popupText
-        $ "Saved"
-        <> ( if txt == mempty
-              then mempty
-              else " "
-           )
-        <> txt
-        <> "!"
-      pure
-        $ nextSt
-        & #modelFavMap
-        . at nextFavName
-        %~ (Just . maybe nextFav (& #favUri .~ uri))
-    deleteAction = PushUpdate . Instant $ \nextSt -> do
-      let txt = makeFavName st
-      let nextFavName = makeFavName nextSt
+      let nextFavName = makeFavName st
       Jsm.popupText
         $ "Removed"
         <> ( if txt == mempty
@@ -110,8 +114,7 @@ fav st =
         <> txt
         <> "!"
       pure
-        $ nextSt
-        & #modelFavMap
+        $ #modelFavMap
         . at nextFavName
         .~ Nothing
     onKeyDownAction uid code =
@@ -148,16 +151,16 @@ favItem st label Fav {favUri = uri} =
         label
     ]
   where
-    openAction = PushUpdate . Instant $ \nextSt -> do
+    openAction = PushUpdate . Instant . ImpureUpdate $ do
       --
       -- TODO : Implement here pure, less costly equivalent of newModel.
       --
       next <- newModel (st ^. #modelWebOpts) (Just st) uri
-      pure
-        $ nextSt
-        & #modelFav
-        .~ Closed
-        & #modelLoading
-        .~ True
-        & #modelState
-        .~ modelState next
+      pure $ \nextSt ->
+        nextSt
+          & #modelFav
+          .~ Closed
+          & #modelLoading
+          .~ True
+          & #modelState
+          .~ modelState next

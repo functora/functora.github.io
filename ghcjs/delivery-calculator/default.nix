@@ -113,7 +113,7 @@ in rec {
         --externs ${
         pkgs.haskell.packages.ghc865.bitcoin-keys.src
       }/js/index.compiled.js \
-        --externs ${../miso-widgets/js/main.min.js} \
+        --externs ${../miso-functora/js/main.min.js} \
         --externs ${../miso-components/material-components-web.min.js} \
         --externs ${../miso-components/material-components-web-elm.min.js} \
         --output_wrapper "%output%//# sourceMappingURL=all.js.map" \

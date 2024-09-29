@@ -6,13 +6,12 @@ module Functora.Miso.Widgets.Money
   )
 where
 
-import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Grid as Grid
 import Functora.Money hiding (Currency, Money, Text)
-import qualified Material.Typography as Typography
 
 data Args model action = Args
   { argsModel :: model,
@@ -48,7 +47,7 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
             else
               Just
                 $ cell
-                  [ strong_ [Typography.typography] [text label]
+                  [ strong_ mempty [text label]
                   ],
           Just
             $ cell
@@ -56,21 +55,21 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
                   [ Css.fullWidth,
                     style_ [("text-align", "center")]
                   ]
-                  [ Field.constTextField
-                      ( inspectRatioDef
-                          $ money
-                          ^. #moneyAmount
-                          . #fieldOutput
-                      )
+                  [ Field.ratioField
+                      Field.Args
+                        { Field.argsModel = st,
+                          Field.argsOptic = cloneTraversal optic . #moneyAmount,
+                          Field.argsAction = action,
+                          Field.argsEmitter = error "TODO_MONEY_EMITTER"
+                        }
                       ( Field.defOpts
+                          & #optsDisabled
+                          .~ True
                           & #optsPlaceholder
                           .~ inspectCurrencyInfo
-                            ( money
-                                ^. #moneyCurrency
-                                . #currencyOutput
+                            ( money ^. #moneyCurrency . #currencyOutput
                             )
                       )
-                      action
                   ]
               ]
         ]

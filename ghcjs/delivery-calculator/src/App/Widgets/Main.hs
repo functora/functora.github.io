@@ -11,7 +11,6 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Functora.Miso.Widgets.Header as Header
 import qualified Functora.Money as Money
 import Lens.Micro ((^..))
 import qualified Material.Button as Button
@@ -60,15 +59,13 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
   ( if unQrCode sc == Donate
       then mempty
       else
-        Header.headerWrapper
-          ( Field.fieldViewer
-              Field.Args
-                { Field.argsModel = st,
-                  Field.argsOptic = #modelState . #stPreview,
-                  Field.argsAction = PushUpdate . Instant,
-                  Field.argsEmitter = Misc.pushActionQueue st . Instant
-                }
-          )
+        Field.fieldViewer
+          Field.Args
+            { Field.argsModel = st,
+              Field.argsOptic = #modelState . #stPreview,
+              Field.argsAction = PushUpdate . Instant,
+              Field.argsEmitter = Misc.pushActionQueue st . Instant
+            }
   )
     <> [ Grid.bigCell
           $ FieldPairs.fieldPairsViewer
@@ -126,9 +123,9 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                   & Button.setIcon (Just "add_box")
                   & Button.setAttributes [Css.fullWidth]
                   & Button.setOnClick
-                    ( PushUpdate . Instant $ \next -> do
+                    ( PushUpdate . Instant . ImpureUpdate $ do
                         asset <- newAsset
-                        pure $ next & #modelState . #stAssets %~ flip snoc asset
+                        pure $ #modelState . #stAssets %~ flip snoc asset
                     )
               )
               "Add item"
@@ -141,7 +138,8 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                   & Button.setOnClick
                     ( PushUpdate
                         . Instant
-                        $ \next -> flip Jsm.openBrowserPage next =<< stTeleUri next
+                        . either impureThrow Jsm.openBrowserPage
+                        $ stTeleUri st
                     )
               )
               "Order via Telegram"
@@ -153,7 +151,8 @@ totalViewer st =
   if base == 0
     then mempty
     else
-      Header.headerViewer "Total" mempty
+      [ h1_ mempty [text "Total"]
+      ]
         <> FieldPairs.fieldPairsViewer
           FieldPairs.Args
             { FieldPairs.argsModel = st,

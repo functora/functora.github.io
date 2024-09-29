@@ -72,7 +72,7 @@ getWebOpts = do
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
-  cap <- BL.readFile "../miso-widgets/js/main.min.js"
+  cap <- BL.readFile "../miso-functora/js/main.min.js"
   js0 <- BL.readFile "static/app.js"
   js1 <- BL.readFile "../miso-components/material-components-web.min.js"
   js2 <- BL.readFile "../miso-components/material-components-web-elm.min.js"
@@ -135,22 +135,22 @@ updateModel (InitUpdate ext) prevSt = do
               Misc.pushActionQueue
                 nextSt
                 . Instant
-                $ pure
-                . (& #modelFavMap %~ fav)
+                . PureUpdate
+                $ (& #modelFavMap %~ fav)
                 . (& #modelLoading .~ False)
             else Jsm.selectStorage ("current-" <> vsn) $ \case
               Nothing ->
                 Misc.pushActionQueue nextSt
                   . Instant
-                  $ pure
-                  . (& #modelFavMap %~ fav)
+                  . PureUpdate
+                  $ (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
                 finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
                 Misc.pushActionQueue nextSt
-                  $ Instant
-                    ( const
-                        . pure
+                  . Instant
+                  . PureUpdate
+                  $ ( const
                         $ finSt
                         & #modelFavMap
                         %~ fav
@@ -186,7 +186,7 @@ updateModel (ChanUpdate prevSt) _ = do
                 pure $ prevSt & #modelLoading .~ False
             )
             $ evalModel
-            =<< foldlM (&) prevSt actions
+            =<< foldlM evalUpdate prevSt actions
         uri <- stUri nextSt
         Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
         Jsm.insertStorage ("current-" <> vsn) uri
@@ -213,7 +213,12 @@ updateModel (ChanUpdate prevSt) _ = do
               . spawnLink
               . deepseq (viewModel finSt)
               . Misc.pushActionQueue prevSt
-              $ Instant (const . pure $ finSt & #modelLoading .~ False)
+              . Instant
+              . PureUpdate
+              . const
+              $ finSt
+              & #modelLoading
+              .~ False
             pure
               $ ChanUpdate (prevSt & #modelLoading .~ True)
           else

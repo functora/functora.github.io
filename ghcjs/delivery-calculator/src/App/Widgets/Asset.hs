@@ -10,7 +10,6 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Functora.Miso.Widgets.Header as Header
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
@@ -23,22 +22,25 @@ assetsViewer st = do
 
 assetViewer :: Model -> Int -> [View Action]
 assetViewer st idx =
-  Header.headerViewer
-    title
-    [ IconButton.iconButton
-        ( IconButton.config
-            & IconButton.setAttributes
-              [ Theme.primary
-              ]
-            & IconButton.setOnClick
-              ( PushUpdate
-                  . Instant
-                  $ pure
-                  . (cloneTraversal modalOptic .~ Opened)
-              )
-        )
-        "settings"
-    ]
+  [ h1_
+      mempty
+      [ text title,
+        IconButton.iconButton
+          ( IconButton.config
+              & IconButton.setAttributes
+                [ Theme.primary
+                ]
+              & IconButton.setOnClick
+                ( PushUpdate
+                    . Instant
+                    . PureUpdate
+                    $ cloneTraversal modalOptic
+                    .~ Opened
+                )
+          )
+          "settings"
+      ]
+  ]
     <> ( if st ^? cloneTraversal modalOptic /= Just Opened
           then mempty
           else
@@ -51,7 +53,9 @@ assetViewer st idx =
                     Nothing
                     [ Grid.grid
                         mempty
-                        $ Header.headerViewer title mempty
+                        $ [ h1_ mempty
+                              $ [text title]
+                          ]
                         <> ( FieldPairs.fieldPairsEditor
                               args
                               $ FieldPairs.defOpts
@@ -112,5 +116,6 @@ assetViewer st idx =
     closeAction =
       PushUpdate
         . Instant
-        $ pure
-        . (& cloneTraversal modalOptic .~ Closed)
+        . PureUpdate
+        $ cloneTraversal modalOptic
+        .~ Closed

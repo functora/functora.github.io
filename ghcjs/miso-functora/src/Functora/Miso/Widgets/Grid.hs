@@ -1,5 +1,6 @@
 module Functora.Miso.Widgets.Grid
   ( grid,
+    cell,
     bigCell,
     mediumCell,
     smallCell,

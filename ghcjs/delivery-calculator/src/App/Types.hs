@@ -40,9 +40,7 @@ import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
 import Functora.Miso.Types as X hiding
-  ( Asset (..),
-    newAsset,
-    newFieldPair,
+  ( newFieldPair,
     newFieldPairId,
   )
 import qualified Functora.Miso.Types as FM
@@ -63,8 +61,8 @@ data Model = Model
     modelFavMap :: Map Unicode Fav,
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelDonateViewer :: [FieldPair DynamicField Unique],
-    modelProducerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
-    modelConsumerQueue :: TChan (InstantOrDelayed (Model -> JSM Model)),
+    modelProducerQueue :: TChan (InstantOrDelayed (Update Model)),
+    modelConsumerQueue :: TChan (InstantOrDelayed (Update Model)),
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelWebOpts :: Web.Opts,
     modelMarket :: MVar Rates.Market
@@ -76,7 +74,7 @@ data Action
   | InitUpdate (Maybe (St Unique))
   | SyncInputs
   | ChanUpdate Model
-  | PushUpdate (InstantOrDelayed (Model -> JSM Model))
+  | PushUpdate (InstantOrDelayed (Update Model))
 
 data St f = St
   { stAssets :: [Asset f],
@@ -293,10 +291,10 @@ baseUri =
   "https://functora.github.io/apps/delivery-calculator/" <> vsn <> "/index.html"
 #endif
 
-setScreenPure :: Screen -> Model -> JSM Model
+setScreenPure :: Screen -> Update Model
 setScreenPure sc =
-  pure
-    . (& #modelFav .~ Closed)
+  PureUpdate
+    $ (& #modelFav .~ Closed)
     . (& #modelMenu .~ Closed)
     . (& #modelLinks .~ Closed)
     . (& #modelState . #stScreen .~ sc)

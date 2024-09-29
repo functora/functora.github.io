@@ -14,27 +14,23 @@ module Functora.Miso.Widgets.Field
     textField,
     dynamicField,
     passwordField,
-    constTextField,
     fieldViewer,
   )
 where
 
-import qualified Functora.Miso.Widgets.Dialog as Dialog
-import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.Button as Button
 import qualified Material.IconButton as IconButton
-import qualified Material.LayoutGrid as LayoutGrid
 import qualified Material.Select as Select
 import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
 import qualified Material.Theme as Theme
-import qualified Material.Typography as Typography
 import qualified Miso.String as MS
 
 data Args model action t f = Args
@@ -127,7 +123,7 @@ field ::
   Opts model action ->
   View action
 field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
-  cell opts
+  Grid.cell
     $ ( do
           x0 <-
             catMaybes
@@ -435,88 +431,35 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                   )
               ],
             Grid.mediumCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setOnClick
-                        ( action
-                            . Jsm.addFieldPair
-                            $ cloneTraversal opt
-                            . ix idx
-                            . cloneTraversal fps
-                        )
-                      & Button.setIcon
-                        ( Just "add"
-                        )
-                      & Button.setAttributes
-                        [ Css.fullWidth,
-                          Theme.secondaryBg
-                        ]
-                  )
-                  "Add note"
+              [ button_
+                  [ onClick
+                      . action
+                      . Jsm.addFieldPair
+                      $ cloneTraversal opt
+                      . ix idx
+                      . cloneTraversal fps
+                  ]
+                  [text "Add note"]
               ],
             Grid.smallCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setOnClick
-                        ( action $ Jsm.moveDown opt idx
-                        )
-                      & Button.setIcon
-                        ( Just "keyboard_double_arrow_down"
-                        )
-                      & Button.setAttributes
-                        [ Css.fullWidth,
-                          Theme.secondaryBg
-                        ]
-                  )
-                  "Down"
+              [ button_
+                  [onClick . action $ Jsm.moveDown opt idx]
+                  [text "Down"]
               ],
             Grid.smallCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setOnClick
-                        ( action $ Jsm.moveUp opt idx
-                        )
-                      & Button.setIcon
-                        ( Just "keyboard_double_arrow_up"
-                        )
-                      & Button.setAttributes
-                        [ Css.fullWidth,
-                          Theme.secondaryBg
-                        ]
-                  )
-                  "Up"
+              [ button_
+                  [onClick . action $ Jsm.moveUp opt idx]
+                  [text "Up"]
               ],
             Grid.smallCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setOnClick
-                        ( action $ Jsm.duplicateAt opt idx
-                        )
-                      & Button.setIcon
-                        ( Just "library_add"
-                        )
-                      & Button.setAttributes
-                        [ Css.fullWidth,
-                          Theme.secondaryBg
-                        ]
-                  )
-                  "Clone"
+              [ button_
+                  [onClick . action $ Jsm.duplicateAt opt idx]
+                  [text "Clone"]
               ],
             Grid.smallCell
-              [ Button.raised
-                  ( Button.config
-                      & Button.setOnClick
-                        ( action $ Jsm.removeAt opt idx
-                        )
-                      & Button.setIcon
-                        ( Just "delete_forever"
-                        )
-                      & Button.setAttributes
-                        [ Css.fullWidth,
-                          Theme.secondaryBg
-                        ]
-                  )
-                  "Delete"
+              [ button_
+                  [onClick . action $ Jsm.removeAt opt idx]
+                  [text "Delete"]
               ]
           ]
       }
@@ -586,68 +529,24 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                  --        . #fieldAllowCopy
                  --    ),
                  Grid.smallCell
-                  [ Button.raised
-                      ( Button.config
-                          & Button.setOnClick
-                            ( action $ Jsm.moveDown opt idx
-                            )
-                          & Button.setIcon
-                            ( Just "keyboard_double_arrow_down"
-                            )
-                          & Button.setAttributes
-                            [ Css.fullWidth,
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Down"
+                  [ button_
+                      [onClick . action $ Jsm.moveDown opt idx]
+                      [text "Down"]
                   ],
                  Grid.smallCell
-                  [ Button.raised
-                      ( Button.config
-                          & Button.setOnClick
-                            ( action $ Jsm.moveUp opt idx
-                            )
-                          & Button.setIcon
-                            ( Just "keyboard_double_arrow_up"
-                            )
-                          & Button.setAttributes
-                            [ Css.fullWidth,
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Up"
+                  [ button_
+                      [onClick . action $ Jsm.moveUp opt idx]
+                      [text "Up"]
                   ],
                  Grid.smallCell
-                  [ Button.raised
-                      ( Button.config
-                          & Button.setOnClick
-                            ( action $ Jsm.duplicateAt opt idx
-                            )
-                          & Button.setIcon
-                            ( Just "library_add"
-                            )
-                          & Button.setAttributes
-                            [ Css.fullWidth,
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Clone"
+                  [ button_
+                      [onClick . action $ Jsm.duplicateAt opt idx]
+                      [text "Clone"]
                   ],
                  Grid.smallCell
-                  [ Button.raised
-                      ( Button.config
-                          & Button.setOnClick
-                            ( action $ Jsm.removeAt opt idx
-                            )
-                          & Button.setIcon
-                            ( Just "delete_forever"
-                            )
-                          & Button.setAttributes
-                            [ Css.fullWidth,
-                              Theme.secondaryBg
-                            ]
-                      )
-                      "Delete"
+                  [ button_
+                      [onClick . action $ Jsm.removeAt opt idx]
+                      [text "Delete"]
                   ]
                ]
       }
@@ -703,77 +602,6 @@ selectTypeWidget args@Args {argsAction = action} optic =
           )
           typs
 
-constTextField ::
-  Unicode ->
-  Opts model action ->
-  (Update model -> action) ->
-  View action
-constTextField txt opts action =
-  cell
-    opts
-    [ TextField.outlined
-        $ TextField.config
-        & TextField.setDisabled True
-        & TextField.setValue (Just txt)
-        & TextField.setType
-          ( Just $ htmlFieldType FieldTypeText
-          )
-        & TextField.setLabel
-          ( Just $ opts ^. #optsPlaceholder
-          )
-        & TextField.setLeadingIcon
-          ( fmap
-              ( fieldIconSimple Leading "content_copy" mempty . \case
-                  CopyWidget -> action $ Jsm.shareText txt
-                  _ -> error "constTextField unsupported widget"
-              )
-              (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
-          )
-        & TextField.setTrailingIcon
-          ( fmap
-              ( \case
-                  ActionWidget icon attrs act ->
-                    fieldIconSimple Trailing icon attrs act
-                  _ ->
-                    error "constTextField unsupported widget"
-              )
-              (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
-          )
-        & TextField.setAttributes
-          ( [Css.fullWidth] <> (opts ^. #optsExtraAttributes)
-          )
-    ]
-  where
-    widgetOptic =
-      if null txt
-        then #optsWidgetPairEmpty
-        else #optsWidgetPairNonEmpty
-
-cell :: Opts model action -> [View action] -> View action
-cell Opts {optsFullWidth = full} =
-  LayoutGrid.cell
-    $ if full
-      then
-        [ LayoutGrid.span12Desktop,
-          LayoutGrid.span8Tablet,
-          LayoutGrid.span4Phone,
-          LayoutGrid.alignMiddle,
-          style_
-            [ ("display", "flex"),
-              ("align-items", "center")
-            ]
-        ]
-      else
-        [ LayoutGrid.span6Desktop,
-          LayoutGrid.span4Tablet,
-          LayoutGrid.span4Phone,
-          LayoutGrid.alignMiddle,
-          style_
-            [ ("display", "flex"),
-              ("align-items", "center")
-            ]
-        ]
-
 --
 -- TODO : support optional copying widgets
 --
@@ -823,8 +651,7 @@ header txt =
     then mempty
     else
       [ div_
-          [ Typography.headline5,
-            Css.fullWidth,
+          [ Css.fullWidth,
             style_ [("text-align", "center")]
           ]
           [ text txt
@@ -846,8 +673,7 @@ genericFieldViewer args widget =
           Closed -> mempty
       )
         <> [ span_
-              [ Typography.typography,
-                Css.fullWidth,
+              [ Css.fullWidth,
                 class_ "mdc-text-field",
                 class_ "mdc-text-field--filled",
                 style_

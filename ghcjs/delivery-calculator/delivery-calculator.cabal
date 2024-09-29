@@ -94,7 +94,7 @@ common pkg
     , microlens
     , miso
     , miso-components
-    , miso-widgets
+    , miso-functora
     , modern-uri
     , syb
     , xlsx

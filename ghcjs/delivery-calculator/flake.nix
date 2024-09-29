@@ -120,6 +120,7 @@
             pkgs.libwebp
             pkgs.secp256k1
             pkgs.pkg-config
+            pkgs.postgresql
             inputs.ghc-wasm-meta.packages.${system}.all_9_10
             app-ghcid
             app-serve-latest

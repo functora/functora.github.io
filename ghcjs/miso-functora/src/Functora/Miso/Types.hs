@@ -49,7 +49,7 @@ module Functora.Miso.Types
     LeadingOrTrailing (..),
     OpenedOrClosed (..),
     Update (..),
-    evalUpdate
+    evalUpdate,
   )
 where
 
@@ -268,7 +268,7 @@ data FieldType
   | FieldTypeQrCode
   | FieldTypeHtml
   | FieldTypePassword
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType FieldType
 
 htmlFieldType :: FieldType -> Unicode
@@ -501,31 +501,31 @@ keyed uid = \case
 data TopOrBottom
   = Top
   | Bottom
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType TopOrBottom
 
 data OnlineOrOffline
   = Online
   | Offline
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType LeadingOrTrailing
 
 data OpenedOrClosed
   = Opened
   | Closed
-  deriving stock (Eq, Ord, Show, Enum, Bounded, Data, Generic)
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OpenedOrClosed
 
 data Update model
@@ -536,6 +536,6 @@ data Update model
 
 evalUpdate :: model -> Update model -> JSM model
 evalUpdate x = \case
- PureUpdate f -> pure $ f x
- ImpureUpdate g -> g >>= pure . ($ x)
- PureAndImpureUpdate f g  -> g >>= pure . ($ f x)
+  PureUpdate f -> pure $ f x
+  ImpureUpdate g -> g >>= pure . ($ x)
+  PureAndImpureUpdate f g -> g >>= pure . ($ f x)

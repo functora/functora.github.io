@@ -254,6 +254,15 @@
                     ./miso-widgets
                   )
                   {};
+                miso-functora =
+                  self.callCabal2nix
+                  "miso-functora"
+                  (
+                    pkgs.nix-gitignore.gitignoreSourcePure
+                    ./miso-functora/.gitignore
+                    ./miso-functora
+                  )
+                  {};
                 functora-ghcjs =
                   self.callCabal2nix
                   "functora-ghcjs"

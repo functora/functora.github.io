@@ -25,12 +25,10 @@ import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
+import qualified Functora.Miso.Widgets.Select as Select
 import qualified Language.Javascript.JSaddle as JS
 import qualified Material.IconButton as IconButton
-import qualified Material.Select as Select
-import qualified Material.Select.Item as SelectItem
 import qualified Material.TextField as TextField
-import qualified Material.Theme as Theme
 import qualified Miso.String as MS
 
 data Args model action t f = Args
@@ -352,7 +350,7 @@ fieldIcon lot full opts = \case
       . action
       $ Jsm.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
-    fieldIconSimple lot "settings" [Theme.primary]
+    fieldIconSimple lot "settings" mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
@@ -464,6 +462,7 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
           ]
       }
 fieldModal args (ModalFieldWidget opt idx access sod) = do
+  let st = args ^. #argsModel
   let optic =
         cloneTraversal opt
           . ix idx
@@ -480,41 +479,15 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
           ( case sod of
               Static -> mempty
               Dynamic ->
-                [ let typ :| typs = enumerateNE @FieldType
-                   in Grid.bigCell
-                        [ Select.outlined
-                            ( Select.config
-                                & Select.setLabel
-                                  ( Just "Type"
-                                  )
-                                & Select.setSelected
-                                  ( args
-                                      ^? #argsModel
-                                      . cloneTraversal optic
-                                      . #fieldType
-                                  )
-                                & Select.setOnChange
-                                  ( \x ->
-                                      action
-                                        . PureUpdate
-                                        $ cloneTraversal optic
-                                        . #fieldType
-                                        .~ x
-                                  )
-                            )
-                            ( SelectItem.selectItem
-                                (SelectItem.config typ)
-                                [text $ userFieldType typ]
-                            )
-                            $ fmap
-                              ( \t ->
-                                  SelectItem.selectItem
-                                    (SelectItem.config t)
-                                    [text $ userFieldType t]
-                              )
-                              typs
-                        ]
-                ]
+                singleton
+                  $ Select.select
+                    Select.defOpts
+                    Select.Args
+                      { Select.argsModel = st,
+                        Select.argsOptic = cloneTraversal optic . #fieldType,
+                        Select.argsAction = action,
+                        Select.argsOptions = constTraversal $ enumerate @FieldType
+                      }
           )
             <> [ -- Grid.mediumCell
                  --  $ Switch.switch
@@ -569,38 +542,14 @@ selectTypeWidget ::
   ATraversal' model (Field a Unique) ->
   View action
 selectTypeWidget args@Args {argsAction = action} optic =
-  let typ :| typs = enumerateNE @FieldType
-   in Select.outlined
-        ( Select.config
-            & Select.setLabel
-              ( Just "Type"
-              )
-            & Select.setSelected
-              ( args
-                  ^? #argsModel
-                  . cloneTraversal optic
-                  . #fieldType
-              )
-            & Select.setOnChange
-              ( \x ->
-                  action
-                    . PureUpdate
-                    $ cloneTraversal optic
-                    . #fieldType
-                    .~ x
-              )
-        )
-        ( SelectItem.selectItem
-            (SelectItem.config typ)
-            [text $ userFieldType typ]
-        )
-        $ fmap
-          ( \t ->
-              SelectItem.selectItem
-                (SelectItem.config t)
-                [text $ userFieldType t]
-          )
-          typs
+  Select.select
+    Select.defOpts
+    Select.Args
+      { Select.argsModel = args ^. #argsModel,
+        Select.argsOptic = cloneTraversal optic . #fieldType,
+        Select.argsAction = action,
+        Select.argsOptions = constTraversal $ enumerate @FieldType
+      }
 
 --
 -- TODO : support optional copying widgets

@@ -14,12 +14,11 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Money as Money
 import qualified Material.Button as Button
 import qualified Material.Dialog as Dialog
 import qualified Material.IconButton as IconButton
-import qualified Material.Select as Select
-import qualified Material.Select.Item as SelectItem
 import qualified Material.Theme as Theme
 import qualified Material.TopAppBar as TopAppBar
 import qualified Text.URI as URI
@@ -177,41 +176,21 @@ menu st =
                               Currency.argsCurrencies =
                                 #modelCurrencies
                             },
-                        let item :| items = enumerateNE @OnlineOrOffline
-                         in Grid.mediumCell
-                              [ Select.outlined
-                                  ( Select.config
-                                      & Select.setLabel
-                                        ( Just "Exchange rate"
-                                        )
-                                      & Select.setSelected
-                                        ( Just
-                                            $ st
-                                            ^. #modelState
-                                            . #stOnlineOrOffline
-                                        )
-                                      & Select.setOnChange
-                                        ( \x ->
-                                            PushUpdate
-                                              . Instant
-                                              . PureUpdate
-                                              $ #modelState
-                                              . #stOnlineOrOffline
-                                              .~ x
-                                        )
-                                  )
-                                  ( SelectItem.selectItem
-                                      (SelectItem.config item)
-                                      [text $ inspect item]
-                                  )
-                                  $ fmap
-                                    ( \x ->
-                                        SelectItem.selectItem
-                                          (SelectItem.config x)
-                                          [text $ inspect x]
-                                    )
-                                    items
-                              ],
+                        Grid.mediumCell
+                          [ span_ mempty [text "Exchange rate"],
+                            Select.select
+                              Select.defOpts
+                              Select.Args
+                                { Select.argsModel =
+                                    st,
+                                  Select.argsOptic =
+                                    #modelState . #stOnlineOrOffline,
+                                  Select.argsAction =
+                                    PushUpdate . Instant,
+                                  Select.argsOptions =
+                                    constTraversal $ enumerate @OnlineOrOffline
+                                }
+                          ],
                         Grid.mediumCell
                           [ Field.ratioField
                               Field.Args

@@ -1,40 +1,36 @@
 html {
+  width: 100vw;
+  min-height: 100vh;
+}
+
+html, main {
+  margin: 0;
+  padding: 0;
+}
+
+footer {
+  padding-bottom: 18px;
+}
+
+.main-widget {
   margin: 0;
   padding: 0;
   width: 100vw;
   min-height: 100vh;
-  display: flex;
   overflow-x: hidden;
-  align-items: center;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-a {
-  color: inherit;
+.main-widget-middle {
+  max-width: 550px;
 }
 
 textarea {
   resize: vertical;
   pointer-events: auto;
   min-height: 72px;
-}
-
-.container {
-  max-width: 550px;
-}
-
-.app-success > span {
-  color: white;
-  background-color: #018786 !important;
-  display: flex;
-  justify-content: center;
-}
-
-.app-failure > span {
-  color: white;
-  background-color: #b00020 !important;
-  display: flex;
-  justify-content: center;
 }
 
 @media print {

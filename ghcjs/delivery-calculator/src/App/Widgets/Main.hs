@@ -17,22 +17,15 @@ import Miso hiding (at, view)
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  Grid.grid mempty
-    $ [ div_
-          [ class_ "container"
-          ]
-          ( Menu.menu st
-              <> screenWidget st
-              <> [ -- LayoutGrid.cell [LayoutGrid.span12]
-                   --  . (: mempty)
-                   --  $ div_
-                   --    mempty
-                   --    [ text . inspect $ st ^. #modelFavMap
-                   --    ],
-                   tosWidget
-                 ]
-          )
+  section_
+    [ class_ "main-widget"
+    ]
+    $ [ header_ mempty $ Menu.menu st
       ]
+    <> [ main_ [class_ "main-widget-middle"] $ screenWidget st
+       ]
+    <> [ footer_ mempty tosWidget
+       ]
     <> ( if st ^. #modelLoading
           then
             [ div_
@@ -217,20 +210,19 @@ foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
 foldFieldPair acc =
   foldField acc . fieldPairValue
 
-tosWidget :: View Action
+tosWidget :: [View Action]
 tosWidget =
-  Grid.cell
-    [ Miso.text "\169 2024 ",
-      BrowserLink.browserLink
-        BrowserLink.Args
-          { BrowserLink.argsLink = functoraLink,
-            BrowserLink.argsLabel = "Functora",
-            BrowserLink.argsAction = PushUpdate . Instant
-          },
-      Miso.text ". All rights reserved. ",
-      Miso.text "By continuing to use this software, you agree to the ",
-      a_ [href_ "license.html"] [Miso.text "Terms of Service"],
-      Miso.text " and ",
-      a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
-      Miso.text $ ". Version " <> vsn <> "."
-    ]
+  [ Miso.text "\169 2024 ",
+    BrowserLink.browserLink
+      BrowserLink.Args
+        { BrowserLink.argsLink = functoraLink,
+          BrowserLink.argsLabel = "Functora",
+          BrowserLink.argsAction = PushUpdate . Instant
+        },
+    Miso.text ". All rights reserved. ",
+    Miso.text "By continuing to use this software, you agree to the ",
+    a_ [href_ "license.html"] [Miso.text "Terms of Service"],
+    Miso.text " and ",
+    a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
+    Miso.text $ ". Version " <> vsn <> "."
+  ]

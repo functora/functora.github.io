@@ -21,22 +21,18 @@ import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
-  [ div_
-      [class_ "no-print"]
-      [ button_
-          [ onClick opened
-          ]
-          [ text "menu"
-          ],
-        a_
-          [ style_ [("cursor", "pointer")],
-            onClick . PushUpdate . Instant . ImpureUpdate $ do
+  [ menu_
+      [ class_ "no-print"
+      ]
+      [ li_ [onClick opened] [text "menu"],
+        li_
+          [ onClick . PushUpdate . Instant . ImpureUpdate $ do
               doc <- liftIO newSt
               pure $ #modelState .~ doc
           ]
           [ text "Delivery Calculator"
           ],
-        button_
+        li_
           [ onClick
               . PushUpdate
               . Instant
@@ -46,7 +42,7 @@ menu st =
           ]
           [ text "favorite"
           ],
-        button_
+        li_
           [ onClick
               . PushUpdate
               . Instant
@@ -57,7 +53,7 @@ menu st =
           ]
           [ text "print"
           ],
-        button_
+        li_
           [ onClick
               . PushUpdate
               . Instant
@@ -71,7 +67,7 @@ menu st =
           ]
           [ text "download"
           ],
-        button_
+        li_
           [ onClick
               . PushUpdate
               . Instant

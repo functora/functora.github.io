@@ -239,19 +239,17 @@ viewModel st =
   mainWidget st
 #else
 viewModel st =
-  div_
-    mempty
+  prependViews
     [ link_
         [ rel_ "stylesheet",
           href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
         ],
       link_
-        [ rel_
-            "stylesheet",
+        [ rel_ "stylesheet",
           href_ "static/app.css"
-        ],
-      mainWidget st
+        ]
     ]
+    $ mainWidget st
 #endif
 
 extendedEvents :: Map Unicode Bool

@@ -718,6 +718,11 @@ map <M-g> zg
 map <M-s> z=
 
 "
+" => Comments
+"
+map <leader>\ gc
+
+"
 " => LanguageTool
 "
 let g:languagetool_disable_rules="DASH_RULE,WHITESPACE_RULE,EN_QUOTES"

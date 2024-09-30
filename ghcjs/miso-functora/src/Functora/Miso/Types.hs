@@ -43,6 +43,7 @@ module Functora.Miso.Types
     uniqueToIdentity,
     identityToUnique,
     keyed,
+    prependViews,
     TopOrBottom (..),
     OnlineOrOffline (..),
     StaticOrDynamic (..),
@@ -497,6 +498,11 @@ keyed uid = \case
           x3
   x ->
     x
+
+prependViews :: [View action] -> View action -> View action
+prependViews xs = \case
+  Node a b c d e -> Node a b c d $ xs <> e
+  x -> x
 
 data TopOrBottom
   = Top

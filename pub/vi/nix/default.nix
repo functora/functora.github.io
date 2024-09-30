@@ -90,6 +90,7 @@ in
               gleam-vim
               neoformat
               vim-terraform
+              vim-commentary
               #
               # Productivity
               #

@@ -15,6 +15,7 @@ module Functora.Miso.Widgets.Field
     dynamicField,
     passwordField,
     fieldViewer,
+    fieldIcon,
   )
 where
 
@@ -27,8 +28,6 @@ import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Language.Javascript.JSaddle as JS
-import qualified Material.IconButton as IconButton
-import qualified Material.TextField as TextField
 import qualified Miso.String as MS
 
 data Args model action t f = Args
@@ -120,7 +119,7 @@ field ::
   Full model action t Unique ->
   Opts model action ->
   View action
-field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
+field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   Grid.cell
     $ ( do
           x0 <-
@@ -142,41 +141,42 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       )
     <> [ keyed
           uid
-          $ TextField.outlined
-          $ TextField.config
-          & TextField.setType
-            ( fmap htmlFieldType (st ^? cloneTraversal optic . #fieldType)
+          . input_
+          $ ( catMaybes
+                [ fmap
+                    (type_ . htmlFieldType)
+                    (st ^? cloneTraversal optic . #fieldType),
+                  Just $ onInput onInputAction,
+                  Just . disabled_ $ opts ^. #optsDisabled,
+                  Just . placeholder_ $ opts ^. #optsPlaceholder,
+                  Just
+                    . id_
+                    . either impureThrow id
+                    . decodeUtf8Strict
+                    . unTagged
+                    $ htmlUid uid,
+                  Just . onKeyDown $ action . optsOnKeyDownAction opts uid,
+                  Just $ onBlur onBlurAction,
+                  Just Css.fullWidth
+                ]
             )
-          & TextField.setOnInput onInputAction
-          & TextField.setDisabled (opts ^. #optsDisabled)
-          & TextField.setLabel
-            ( Just $ opts ^. #optsPlaceholder
-            )
-          & TextField.setLeadingIcon
-            ( fmap
-                (fieldIcon Leading full opts)
-                (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
-            )
-          & TextField.setTrailingIcon
-            ( fmap
-                (fieldIcon Trailing full opts)
-                (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
-            )
-          & TextField.setAttributes
-            ( [ id_
-                  . either impureThrow id
-                  . decodeUtf8Strict
-                  . unTagged
-                  $ htmlUid uid,
-                onKeyDown $ action . optsOnKeyDownAction opts uid,
-                onBlur onBlurAction,
-                Css.fullWidth
-              ]
-                <> ( opts ^. #optsExtraAttributes
-                   )
-            )
+          <> ( opts ^. #optsExtraAttributes
+             )
        ]
   where
+    --
+    -- TODO : implement
+    --
+    -- & TextField.setLeadingIcon
+    --   ( fmap
+    --       (fieldIcon Leading full opts)
+    --       (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
+    --   )
+    -- & TextField.setTrailingIcon
+    --   ( fmap
+    --       (fieldIcon Trailing full opts)
+    --       (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
+    --   )
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
@@ -276,20 +276,19 @@ passwordField args opts =
     )
 
 fieldIcon ::
-  LeadingOrTrailing ->
   Full model action t Unique ->
   Opts model action ->
   OptsWidget model action ->
-  TextField.Icon action
-fieldIcon lot full opts = \case
+  View action
+fieldIcon full opts = \case
   CopyWidget ->
-    fieldIconSimple lot "content_copy" mempty
+    fieldIconSimple "content_copy" mempty
       . action
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
         Nothing -> PureUpdate id
         Just txt -> Jsm.shareText txt
   ClearWidget ->
-    fieldIconSimple lot "close" mempty
+    fieldIconSimple "close" mempty
       . ( fromMaybe action
             $ optsOnInputAction opts
         )
@@ -316,41 +315,41 @@ fieldIcon lot full opts = \case
             pure id
         )
   PasteWidget ->
-    fieldIconSimple lot "content_paste_go" mempty
+    fieldIconSimple "content_paste_go" mempty
       $ insertAction full Jsm.selectClipboard
   ScanQrWidget ->
-    fieldIconSimple lot "qr_code_scanner" mempty
+    fieldIconSimple "qr_code_scanner" mempty
       $ insertAction full Jsm.selectBarcode
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
-        fieldIconSimple lot "visibility_off" mempty
+        fieldIconSimple "visibility_off" mempty
           . action
           . PureUpdate
           $ cloneTraversal optic
           . #fieldType
           .~ FieldTypeText
       _ ->
-        fieldIconSimple lot "visibility" mempty
+        fieldIconSimple "visibility" mempty
           . action
           . PureUpdate
           $ cloneTraversal optic
           . #fieldType
           .~ FieldTypePassword
   UpWidget opt idx attrs ->
-    fieldIconSimple lot "keyboard_double_arrow_up" attrs
+    fieldIconSimple "keyboard_double_arrow_up" attrs
       . action
       $ Jsm.moveUp opt idx
   DownWidget opt idx attrs ->
-    fieldIconSimple lot "keyboard_double_arrow_down" attrs
+    fieldIconSimple "keyboard_double_arrow_down" attrs
       . action
       $ Jsm.moveDown opt idx
   DeleteWidget opt idx attrs ->
-    fieldIconSimple lot "delete_forever" attrs
+    fieldIconSimple "delete_forever" attrs
       . action
       $ Jsm.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple "settings" mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
@@ -358,7 +357,7 @@ fieldIcon lot full opts = \case
       . cloneTraversal ooc
       .~ Opened
   ModalWidget (ModalFieldWidget opt idx access _) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple "settings" mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
@@ -367,14 +366,14 @@ fieldIcon lot full opts = \case
       . #fieldModalState
       .~ Opened
   ModalWidget (ModalMiniWidget opt) ->
-    fieldIconSimple lot "settings" mempty
+    fieldIconSimple "settings" mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
       . #fieldModalState
       .~ Opened
   ActionWidget icon attrs act ->
-    fieldIconSimple lot icon attrs act
+    fieldIconSimple icon attrs act
   where
     st = full ^. #fullArgs . #argsModel
     optic = full ^. #fullArgs . #argsOptic
@@ -387,24 +386,21 @@ fieldIcon lot full opts = \case
         . #uniqueUid
 
 fieldIconSimple ::
-  LeadingOrTrailing ->
   Unicode ->
   [Attribute action] ->
   action ->
-  TextField.Icon action
-fieldIconSimple lot txt attrs action =
-  TextField.icon
-    ( [ class_ $ case lot of
-          Leading -> "mdc-text-field__icon--leading"
-          Trailing -> "mdc-text-field__icon--trailing",
-        style_ [("pointer-events", "auto")],
+  View action
+fieldIconSimple txt attrs action =
+  button_
+    ( [ style_ [("pointer-events", "auto")],
         textProp "role" "button",
         intProp "tabindex" 0,
         onClick action
       ]
         <> attrs
     )
-    txt
+    [ text txt
+    ]
 
 fieldModal :: Args model action t f -> ModalWidget' model -> [View action]
 fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc) =
@@ -726,11 +722,9 @@ genericFieldViewer args widget =
 
 fieldViewerIcon :: Unicode -> action -> View action
 fieldViewerIcon icon action =
-  IconButton.iconButton
-    ( IconButton.config
-        & IconButton.setOnClick action
-    )
-    icon
+  button_
+    [onClick action]
+    [text icon]
 
 truncateFieldViewer ::
   Bool ->

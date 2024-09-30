@@ -77,7 +77,6 @@ common pkg
     , fuzzy
     , jsaddle
     , miso
-    , miso-components
     , modern-uri
     , monoid-subclasses
     , qrcode-core

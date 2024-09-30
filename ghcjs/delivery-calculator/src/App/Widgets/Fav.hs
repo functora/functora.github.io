@@ -10,79 +10,56 @@ import qualified Data.Map as Map
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
-import qualified Material.Theme as Theme
 
 fav :: Model -> [View Action]
 fav st =
-  if st ^. #modelFav == Closed
-    then mempty
-    else
-      [ Dialog.dialog
-          ( Dialog.config
-              & Dialog.setOnClose closeAction
-              & Dialog.setOpen (Opened == st ^. #modelFav)
-          )
-          ( Dialog.dialogContent
-              Nothing
-              [ Grid.grid
-                  mempty
-                  $ favItems st
-                  <> [ Grid.bigCell
-                        [ Field.textField
-                            Field.Args
-                              { Field.argsModel = st,
-                                Field.argsOptic = #modelState . #stFavName,
-                                Field.argsAction = PushUpdate . Instant,
-                                Field.argsEmitter =
-                                  Misc.pushActionQueue st . Instant
-                              }
-                            Field.defOpts
-                              { Field.optsPlaceholder = "Name",
-                                Field.optsOnKeyDownAction = onKeyDownAction,
-                                Field.optsTrailingWidget =
-                                  let w =
-                                        Field.ActionWidget
-                                          "favorite"
-                                          mempty
-                                          . PushUpdate
-                                          $ Instant saveAction
-                                   in Just
-                                        $ Field.OptsWidgetPair w w,
-                                Field.optsLeadingWidget =
-                                  let w =
-                                        Field.ActionWidget
-                                          "delete_forever"
-                                          mempty
-                                          deleteAction
-                                   in Just
-                                        $ Field.OptsWidgetPair w w
-                              }
-                        ],
-                       Grid.bigCell
-                        [ Button.raised
-                            ( Button.config
-                                & Button.setOnClick closeAction
-                                & Button.setIcon (Just "arrow_back")
-                                & Button.setAttributes [Css.fullWidth]
-                            )
-                            "Back"
-                        ]
-                     ]
-              ]
-              mempty
-          )
-      ]
+  Dialog.dialog
+    Dialog.defOpts
+    Dialog.Args
+      { Dialog.argsModel = st,
+        Dialog.argsOptic = #modelFav,
+        Dialog.argsAction = PushUpdate . Instant,
+        Dialog.argsContent =
+          [ Grid.grid mempty
+              $ favItems st
+              <> [ Grid.bigCell
+                    [ Field.textField
+                        Field.Args
+                          { Field.argsModel = st,
+                            Field.argsOptic = #modelState . #stFavName,
+                            Field.argsAction = PushUpdate . Instant,
+                            Field.argsEmitter =
+                              Misc.pushActionQueue st . Instant
+                          }
+                        Field.defOpts
+                          { Field.optsPlaceholder = "Name",
+                            Field.optsOnKeyDownAction = onKeyDownAction,
+                            Field.optsTrailingWidget =
+                              let w =
+                                    Field.ActionWidget
+                                      "favorite"
+                                      mempty
+                                      . PushUpdate
+                                      $ Instant saveAction
+                               in Just
+                                    $ Field.OptsWidgetPair w w,
+                            Field.optsLeadingWidget =
+                              let w =
+                                    Field.ActionWidget
+                                      "delete_forever"
+                                      mempty
+                                      deleteAction
+                               in Just
+                                    $ Field.OptsWidgetPair w w
+                          }
+                    ]
+                 ]
+          ]
+      }
   where
-    closeAction =
-      PushUpdate
-        . Instant
-        . PureUpdate
-        $ #modelFav
-        .~ Closed
     saveAction =
       ImpureUpdate $ do
         ct <- getCurrentTime
@@ -140,15 +117,12 @@ favItems st =
 favItem :: Model -> Unicode -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
   Grid.bigCell
-    [ Button.raised
-        ( Button.config
-            & Button.setOnClick openAction
-            & Button.setAttributes
-              [ Css.fullWidth,
-                Theme.secondaryBg
-              ]
-        )
-        label
+    [ button_
+        [ onClick openAction,
+          Css.fullWidth
+        ]
+        [ text label
+        ]
     ]
   where
     openAction = PushUpdate . Instant . ImpureUpdate $ do

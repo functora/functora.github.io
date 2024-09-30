@@ -8,12 +8,9 @@ import App.Types
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Material.Button as Button
-import qualified Material.Dialog as Dialog
-import qualified Material.IconButton as IconButton
-import qualified Material.Theme as Theme
 
 assetsViewer :: Model -> [View Action]
 assetsViewer st = do
@@ -25,74 +22,64 @@ assetViewer st idx =
   [ h1_
       mempty
       [ text title,
-        IconButton.iconButton
-          ( IconButton.config
-              & IconButton.setAttributes
-                [ Theme.primary
-                ]
-              & IconButton.setOnClick
-                ( PushUpdate
-                    . Instant
-                    . PureUpdate
-                    $ cloneTraversal modalOptic
-                    .~ Opened
-                )
-          )
-          "settings"
+        button_
+          [ onClick
+              . PushUpdate
+              . Instant
+              . PureUpdate
+              $ cloneTraversal modalOptic
+              .~ Opened
+          ]
+          [ text "settings"
+          ]
       ]
   ]
-    <> ( if st ^? cloneTraversal modalOptic /= Just Opened
-          then mempty
-          else
-            [ Dialog.dialog
-                ( Dialog.config
-                    & Dialog.setOpen True
-                    & Dialog.setOnClose closeAction
-                )
-                ( Dialog.dialogContent
-                    Nothing
-                    [ Grid.grid
-                        mempty
-                        $ [ h1_ mempty
-                              $ [text title]
-                          ]
-                        <> ( FieldPairs.fieldPairsEditor
-                              args
-                              $ FieldPairs.defOpts
-                              & #optsAdvanced
-                              .~ False
-                           )
-                        <> [ Grid.mediumCell
-                              [ Button.raised
-                                  ( Button.config
-                                      & Button.setIcon (Just "delete_forever")
-                                      & Button.setAttributes [Css.fullWidth]
-                                      & Button.setOnClick
-                                        ( PushUpdate
-                                            . Instant
-                                            $ Jsm.removeAt
-                                              ( #modelState
-                                                  . #stAssets
-                                              )
-                                              idx
-                                        )
-                                  )
-                                  "Remove"
-                              ],
-                             Grid.mediumCell
-                              [ Button.raised
-                                  ( Button.config
-                                      & Button.setOnClick closeAction
-                                      & Button.setIcon (Just "save")
-                                      & Button.setAttributes [Css.fullWidth]
-                                  )
-                                  "Save"
-                              ]
-                           ]
-                    ]
+    <> ( Dialog.dialog
+          ( Dialog.defOpts
+              & #optsTitle
+              .~ Just title
+          )
+          Dialog.Args
+            { Dialog.argsModel = st,
+              Dialog.argsOptic = modalOptic,
+              Dialog.argsAction = PushUpdate . Instant,
+              Dialog.argsContent =
+                [ Grid.grid
                     mempty
-                )
-            ]
+                    $ [ h1_ mempty
+                          $ [text title]
+                      ]
+                    <> ( FieldPairs.fieldPairsEditor
+                          args
+                          $ FieldPairs.defOpts
+                          & #optsAdvanced
+                          .~ False
+                       )
+                    <> [ Grid.mediumCell
+                          [ button_
+                              [ onClick
+                                  . PushUpdate
+                                  . Instant
+                                  $ Jsm.removeAt
+                                    ( #modelState . #stAssets
+                                    )
+                                    idx,
+                                Css.fullWidth
+                              ]
+                              [ text "Remove"
+                              ]
+                          ],
+                         Grid.mediumCell
+                          [ button_
+                              [ onClick closeAction,
+                                Css.fullWidth
+                              ]
+                              [ text "Save"
+                              ]
+                          ]
+                       ]
+                ]
+            }
        )
     <> FieldPairs.fieldPairsViewer args
   where

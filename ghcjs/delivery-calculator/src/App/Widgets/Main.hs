@@ -13,21 +13,13 @@ import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Money as Money
 import Lens.Micro ((^..))
-import qualified Material.Button as Button
-import qualified Material.LayoutGrid as LayoutGrid
-import qualified Material.Theme as Theme
-import qualified Material.TopAppBar as TopAppBar
-import qualified Material.Typography as Typography
 import Miso hiding (at, view)
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  LayoutGrid.layoutGrid
-    [ LayoutGrid.alignMiddle
-    ]
-    $ [ LayoutGrid.inner
-          [ class_ "container",
-            TopAppBar.shortFixedAdjust
+  Grid.grid mempty
+    $ [ div_
+          [ class_ "container"
           ]
           ( Menu.menu st
               <> screenWidget st
@@ -77,13 +69,12 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               }
        ]
     <> [ Grid.bigCell
-          [ Button.raised
-              ( Button.config
-                  & Button.setIcon (Just "login")
-                  & Button.setAttributes [Css.fullWidth]
-                  & Button.setOnClick (setScreenAction $ unQrCode sc)
-              )
-              "Open"
+          [ button_
+              [ onClick . setScreenAction $ unQrCode sc,
+                Css.fullWidth
+              ]
+              [ text "Open"
+              ]
           ]
        ]
 screenWidget st@Model {modelState = St {stScreen = Donate}} =
@@ -95,13 +86,12 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
         FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
       }
     <> [ Grid.bigCell
-          [ Button.raised
-              ( Button.config
-                  & Button.setIcon (Just "login")
-                  & Button.setAttributes [Css.fullWidth]
-                  & Button.setOnClick (setScreenAction Main)
-              )
-              "Open"
+          [ button_
+              [ onClick $ setScreenAction Main,
+                Css.fullWidth
+              ]
+              [ text "Open"
+              ]
           ]
        ]
 screenWidget st@Model {modelState = St {stScreen = Main}} =
@@ -118,31 +108,26 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons :: [View Action]
     buttons =
       [ Grid.mediumCell
-          [ Button.raised
-              ( Button.config
-                  & Button.setIcon (Just "add_box")
-                  & Button.setAttributes [Css.fullWidth]
-                  & Button.setOnClick
-                    ( PushUpdate . Instant . ImpureUpdate $ do
-                        asset <- newAsset
-                        pure $ #modelState . #stAssets %~ flip snoc asset
-                    )
-              )
-              "Add item"
+          [ button_
+              [ Css.fullWidth,
+                onClick . PushUpdate . Instant . ImpureUpdate $ do
+                  asset <- newAsset
+                  pure $ #modelState . #stAssets %~ flip snoc asset
+              ]
+              [ text "Add item"
+              ]
           ],
         Grid.mediumCell
-          [ Button.raised
-              ( Button.config
-                  & Button.setIcon (Just "send")
-                  & Button.setAttributes [Css.fullWidth]
-                  & Button.setOnClick
-                    ( PushUpdate
-                        . Instant
-                        . either impureThrow Jsm.openBrowserPage
-                        $ stTeleUri st
-                    )
-              )
-              "Order via Telegram"
+          [ button_
+              [ Css.fullWidth,
+                onClick
+                  . PushUpdate
+                  . Instant
+                  . either impureThrow Jsm.openBrowserPage
+                  $ stTeleUri st
+              ]
+              [ text "Order via Telegram"
+              ]
           ]
       ]
 
@@ -234,15 +219,7 @@ foldFieldPair acc =
 
 tosWidget :: View Action
 tosWidget =
-  LayoutGrid.cell
-    [ LayoutGrid.span12,
-      Typography.caption,
-      Theme.textDisabledOnBackground,
-      class_ "no-print",
-      style_
-        [ ("text-align", "center")
-        ]
-    ]
+  Grid.cell
     [ Miso.text "\169 2024 ",
       BrowserLink.browserLink
         BrowserLink.Args

@@ -93,7 +93,6 @@ common pkg
     , functora-ghcjs
     , microlens
     , miso
-    , miso-components
     , miso-functora
     , modern-uri
     , syb

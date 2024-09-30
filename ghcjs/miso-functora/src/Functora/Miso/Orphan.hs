@@ -11,6 +11,24 @@ import Data.Monoid.Null
 import Data.Monoid.Textual
 import Data.Semigroup.Cancellative
 import Functora.Prelude
+import qualified Miso
+import Prelude hiding (String)
+
+deriving stock instance Generic (Miso.View action)
+
+deriving stock instance Generic (Miso.Attribute action)
+
+deriving stock instance Generic Miso.NS
+
+deriving stock instance Generic Miso.Key
+
+instance NFData (Miso.View action)
+
+instance NFData (Miso.Attribute action)
+
+instance NFData Miso.NS
+
+instance NFData Miso.Key
 
 instance MonoidNull JSString where
   null = JS.null

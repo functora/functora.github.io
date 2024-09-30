@@ -72,10 +72,8 @@ getWebOpts = do
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
 runApp app = do
-  cap <- BL.readFile "../miso-functora/js/main.min.js"
-  js0 <- BL.readFile "static/app.js"
-  js1 <- BL.readFile "../miso-components/material-components-web.min.js"
-  js2 <- BL.readFile "../miso-components/material-components-web-elm.min.js"
+  js0 <- BL.readFile "../miso-functora/js/main.min.js"
+  js1 <- BL.readFile "static/app.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -84,11 +82,13 @@ runApp app = do
     =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router $ cap <> js0 <> js1 <> js2 )
+      (router $ js0 <> js1)
   where
     router js req =
       case Wai.pathInfo req of
         ("static" : _) ->
+          staticApp (defaultWebAppSettings ".") req
+        ("node_modules" : _) ->
           staticApp (defaultWebAppSettings ".") req
         ("favicon.ico" : _) ->
           staticApp (defaultWebAppSettings "static") req
@@ -234,20 +234,24 @@ updateModel (PushUpdate updater) st = do
     ]
 
 viewModel :: Model -> View Action
-#if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
-viewModel st =
-  div_
-    mempty
-    [ link_ [rel_ "stylesheet", href_ "static/material-components-web.min.css"],
-      link_ [rel_ "stylesheet", href_ "static/material-icons.css"],
-      link_ [rel_ "stylesheet", href_ "static/app.css"],
-      mainWidget st
-    ]
-#endif
-
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
   mainWidget st
+#else
+viewModel st =
+  div_
+    mempty
+    [ link_
+        [ rel_ "stylesheet",
+          href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
+        ],
+      link_
+        [ rel_
+            "stylesheet",
+          href_ "static/app.css"
+        ],
+      mainWidget st
+    ]
 #endif
 
 extendedEvents :: Map Unicode Bool

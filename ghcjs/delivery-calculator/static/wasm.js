@@ -1,5 +1,3 @@
-import "../../miso-components/material-components-web-elm.min.js";
-import "../../miso-components/material-components-web.min.js";
 import "./app.js";
 
 import {

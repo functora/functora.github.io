@@ -2,7 +2,7 @@ const webpack = require("webpack");
 
 module.exports = {
   entry : {
-    miso_widgets : "../miso-functora/js/main.js",
+    miso_functora : "../miso-functora/js/main.js",
     wasm : "./static/wasm.js",
   },
   output : {

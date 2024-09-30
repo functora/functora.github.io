@@ -1,5 +1,4 @@
-html,
-body {
+html {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -20,17 +19,8 @@ textarea {
   min-height: 72px;
 }
 
-.mdc-select__anchor {
-  width: 100%;
-  min-width: 100%;
-}
-
 .container {
   max-width: 550px;
-}
-
-.mdc-button {
-  height: 56px;
 }
 
 .app-success > span {
@@ -55,9 +45,6 @@ textarea {
   }
   .no-print {
     display: none !important;
-  }
-  .mdc-top-app-bar--short-fixed-adjust {
-    padding-top: 0 !important;
   }
   @page {
     size: A4;

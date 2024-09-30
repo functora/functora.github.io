@@ -88,8 +88,6 @@
             -O2 \
             --source-map \
             -o $out/static/all.css \
-            ./static/material-components-web.min.css \
-            ./static/material-icons.css \
             ./static/app.css
 
           ${pkgs.nodejs}/bin/npm i --prefer-offline

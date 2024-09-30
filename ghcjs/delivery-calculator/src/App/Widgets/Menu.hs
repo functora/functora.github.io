@@ -22,7 +22,11 @@ import qualified Text.URI as URI
 menu :: Model -> [View Action]
 menu st =
   [ menu_
-      [ class_ "no-print"
+      [ class_ "no-print",
+        style_
+          [ ("flex-direction", "row"),
+            ("flex-wrap", "wrap")
+          ]
       ]
       [ li_ [onClick opened] [text "menu"],
         li_

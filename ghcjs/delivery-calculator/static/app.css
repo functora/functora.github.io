@@ -15,12 +15,12 @@ footer {
 .main-widget {
   margin: 0;
   padding: 0;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* overflow-x: hidden; */
 }
 
 .main-widget-middle {

@@ -22,9 +22,13 @@ mainWidget st =
     ]
     $ [ header_ mempty $ Menu.menu st
       ]
-    <> [ main_ [class_ "main-widget-middle"] $ screenWidget st
+    <> [ main_
+          [class_ "main-widget-middle"]
+          $ screenWidget st
        ]
-    <> [ footer_ mempty tosWidget
+    <> [ footer_
+          [style_ [("text-align", "center")]]
+          [tosWidget]
        ]
     <> ( if st ^. #modelLoading
           then
@@ -210,19 +214,21 @@ foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
 foldFieldPair acc =
   foldField acc . fieldPairValue
 
-tosWidget :: [View Action]
+tosWidget :: View Action
 tosWidget =
-  [ Miso.text "\169 2024 ",
-    BrowserLink.browserLink
-      BrowserLink.Args
-        { BrowserLink.argsLink = functoraLink,
-          BrowserLink.argsLabel = "Functora",
-          BrowserLink.argsAction = PushUpdate . Instant
-        },
-    Miso.text ". All rights reserved. ",
-    Miso.text "By continuing to use this software, you agree to the ",
-    a_ [href_ "license.html"] [Miso.text "Terms of Service"],
-    Miso.text " and ",
-    a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
-    Miso.text $ ". Version " <> vsn <> "."
-  ]
+  small_
+    mempty
+    [ Miso.text "\169 2024 ",
+      BrowserLink.browserLink
+        BrowserLink.Args
+          { BrowserLink.argsLink = functoraLink,
+            BrowserLink.argsLabel = "Functora",
+            BrowserLink.argsAction = PushUpdate . Instant
+          },
+      Miso.text ". All rights reserved. ",
+      Miso.text "By continuing to use this software, you agree to the ",
+      a_ [href_ "license.html"] [Miso.text "Terms of Service"],
+      Miso.text " and ",
+      a_ [href_ "privacy.html"] [Miso.text "Privacy Policy"],
+      Miso.text $ ". Version " <> vsn <> "."
+    ]

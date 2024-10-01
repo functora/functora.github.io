@@ -36,8 +36,11 @@ dialog opts args =
     then mempty
     else
       singleton
-        $ div_
-          [class_ "window"]
+        $ nodeHtml
+          "dialog"
+          mempty
+          -- [ boolProp "open" True
+          -- ]
           [ div_
               [class_ "title-bar"]
               $ catMaybes

@@ -179,7 +179,7 @@
       _    brdn bru  _    _    _    _    prev pp   next mute vold volu _     _    _    _
       _    _    _    _    _    _    _    _    _    _    _    _    _    @til  _    _    _
       _    _    _    _    _    _    home pgdn pgup end  _    _    _
-      _    _    _    _    _    _    _    _    _    _    _    _                    _
+      _    _    _    _    _    _    _    sdn  sup  _    _    _                    _
       _    _    _              @ltab          _    _    _    _               _    _    _
     )
   '';
@@ -472,6 +472,7 @@ in {
     # Services
     #
     programs.adb.enable = true;
+    programs.ydotool.enable = true;
     services.tor.enable = true;
     hardware.sane.enable = true;
     hardware.sane.extraBackends = [pkgs.hplip];
@@ -504,6 +505,7 @@ in {
         "adbusers"
         "networkmanager"
         "scanner"
+        "ydotool"
         "lp"
       ];
       #
@@ -731,12 +733,43 @@ in {
         enable = true;
         wrapperFeatures.gtk = true;
         extraOptions = ["--unsupported-gpu"];
-        extraConfig = ''
+        extraConfig = let
+          ydotool = "YDOTOOL_SOCKET=/run/ydotoold/socket ${
+            pkgs.ydotool
+          }/bin/ydotool";
+        in ''
           for_window [class="Alacritty"] fullscreen enable
           for_window [class="qutebrowser"] fullscreen enable
           for_window [class="mpv"] fullscreen enable
           assign [class="qutebrowser"] workspace 10
           assign [class="mpv"] workspace 8
+
+
+          bindsym Mod4+Shift+i mode default, exec '${
+            pkgs.wl-kbptr
+          }/bin/wl-kbptr -o general.home_row_keys=qnhfjklmdas'
+          bindsym Mod4+Shift+u mode mouse
+          mode mouse {
+
+              bindsym h exec '${ydotool} mousemove -x -20 -y   0'
+              bindsym j exec '${ydotool} mousemove -x   0 -y  20'
+              bindsym k exec '${ydotool} mousemove -x   0 -y -20'
+              bindsym l exec '${ydotool} mousemove -x  20 -y   0'
+
+              bindsym n exec '${ydotool} mousemove -w -- -1  0'
+              bindsym m exec '${ydotool} mousemove -w --  0 -1'
+              bindcode 59 exec '${ydotool} mousemove -w -- 0 1'
+              bindcode 60 exec '${ydotool} mousemove -w -- 1 0'
+
+              bindsym d exec '${ydotool} click 0x40'
+              bindsym --release d exec '${ydotool} click 0x80'
+              bindsym a exec '${ydotool} click 0x41'
+              bindsym --release a exec '${ydotool} click 0x81'
+              bindsym s exec '${ydotool} click 0x42'
+              bindsym --release s exec '${ydotool} click 0x82'
+
+              bindsym Escape mode default
+          }
 
           bindsym Mod4+Shift+z mode "hotkeygrab"
           mode "hotkeygrab" {
@@ -794,9 +827,6 @@ in {
             "${mod}+Shift+l" = "move right";
             "${mod}+Shift+p" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy output";
             "${mod}+Shift+n" = wmEx "${sway-contrib.grimshot}/bin/grimshot copy area";
-            "${mod}+Shift+u" = "exec ${pkgs.warpd}/bin/warpd --hint";
-            "${mod}+Shift+i" = "exec ${pkgs.warpd}/bin/warpd --normal";
-            "${mod}+Shift+y" = "exec ${pkgs.warpd}/bin/warpd --grid";
             "${mod}+0" = "workspace number 10";
             "${mod}+Shift+0" = "move container to workspace number 10";
           };

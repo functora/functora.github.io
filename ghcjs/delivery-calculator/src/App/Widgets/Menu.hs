@@ -3,7 +3,6 @@ module App.Widgets.Menu
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Xlsx as Xlsx
@@ -30,7 +29,18 @@ menu st =
       ]
       [ li_
           [ role_ "button",
-            onClick opened
+            onClick
+              . PushUpdate
+              . Instant
+              $ PureAndImpureUpdate
+                ( #modelMenu
+                    . #uniqueValue
+                    .~ Opened
+                )
+                ( do
+                    Dialog.openDialog st #modelMenu
+                    pure id
+                )
           ]
           [ text "menu"
           ],
@@ -47,9 +57,15 @@ menu st =
             onClick
               . PushUpdate
               . Instant
-              . PureUpdate
-              $ #modelFav
-              .~ Opened
+              $ PureAndImpureUpdate
+                ( #modelFav
+                    . #uniqueValue
+                    .~ Opened
+                )
+                ( do
+                    Dialog.openDialog st #modelFav
+                    pure id
+                )
           ]
           [ text "favorite"
           ],
@@ -118,7 +134,7 @@ menu st =
                     Currency.argsAction =
                       PushUpdate . Instant,
                     Currency.argsEmitter =
-                      Misc.pushActionQueue st . Instant,
+                      pushActionQueue st . Instant,
                     Currency.argsCurrencies =
                       #modelCurrencies
                   },
@@ -138,7 +154,7 @@ menu st =
                     Currency.argsAction =
                       PushUpdate . Instant,
                     Currency.argsEmitter =
-                      Misc.pushActionQueue st . Instant,
+                      pushActionQueue st . Instant,
                     Currency.argsCurrencies =
                       #modelCurrencies
                   },
@@ -166,7 +182,7 @@ menu st =
                         Field.argsAction =
                           PushUpdate . Instant,
                         Field.argsEmitter =
-                          Misc.pushActionQueue st . Instant
+                          pushActionQueue st . Instant
                       }
                     ( let disabled =
                             st
@@ -211,7 +227,7 @@ menu st =
                         Field.argsAction =
                           PushUpdate . Instant,
                         Field.argsEmitter =
-                          Misc.pushActionQueue st . Instant
+                          pushActionQueue st . Instant
                       }
                     ( Field.defOpts
                         & #optsPlaceholder
@@ -224,8 +240,7 @@ menu st =
                       { Field.argsModel = st,
                         Field.argsOptic = #modelState . #stMerchantTele,
                         Field.argsAction = PushUpdate . Instant,
-                        Field.argsEmitter =
-                          Misc.pushActionQueue st . Instant
+                        Field.argsEmitter = pushActionQueue st . Instant
                       }
                     ( Field.defOpts
                         & #optsPlaceholder
@@ -238,8 +253,7 @@ menu st =
                       { Field.argsModel = st,
                         Field.argsOptic = #modelState . #stPreview,
                         Field.argsAction = PushUpdate . Instant,
-                        Field.argsEmitter =
-                          Misc.pushActionQueue st . Instant
+                        Field.argsEmitter = pushActionQueue st . Instant
                       }
                     ( Field.defOpts @Model @Action
                         & #optsPlaceholder
@@ -265,14 +279,18 @@ menu st =
               <> linksWidget st
         }
   where
-    opened = PushUpdate . Instant . PureUpdate $ #modelMenu .~ Opened
     screen next =
       PushUpdate
         . Instant
-        . PureUpdate
-        $ (& #modelMenu .~ Closed)
-        . (& #modelLoading .~ isQrCode next)
-        . (& #modelState . #stScreen .~ next)
+        $ PureAndImpureUpdate
+          ( (#modelMenu . #uniqueValue .~ Closed)
+              . (#modelLoading .~ isQrCode next)
+              . (#modelState . #stScreen .~ next)
+          )
+          ( do
+              Dialog.closeDialog st #modelMenu
+              pure id
+          )
     sc =
       st ^. #modelState . #stScreen
 
@@ -376,7 +394,18 @@ linksWidget st =
             ]
         }
   where
-    openWidget = PushUpdate . Instant . PureUpdate $ #modelLinks .~ Opened
+    openWidget =
+      PushUpdate
+        . Instant
+        $ PureAndImpureUpdate
+          ( #modelLinks
+              . #uniqueValue
+              .~ Opened
+          )
+          ( do
+              Dialog.openDialog st #modelLinks
+              pure id
+          )
     openBrowser =
       PushUpdate
         . Instant

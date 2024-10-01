@@ -3,7 +3,6 @@ module App.Widgets.Fav
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
@@ -31,8 +30,7 @@ fav st =
                           { Field.argsModel = st,
                             Field.argsOptic = #modelState . #stFavName,
                             Field.argsAction = PushUpdate . Instant,
-                            Field.argsEmitter =
-                              Misc.pushActionQueue st . Instant
+                            Field.argsEmitter = pushActionQueue st . Instant
                           }
                         Field.defOpts
                           { Field.optsPlaceholder = "Name",
@@ -125,16 +123,18 @@ favItem st label Fav {favUri = uri} =
         ]
     ]
   where
-    openAction = PushUpdate . Instant . ImpureUpdate $ do
-      --
-      -- TODO : Implement here pure, less costly equivalent of newModel.
-      --
-      next <- newModel (st ^. #modelWebOpts) (Just st) uri
-      pure $ \nextSt ->
-        nextSt
-          & #modelFav
-          .~ Closed
-          & #modelLoading
-          .~ True
-          & #modelState
-          .~ modelState next
+    openAction =
+      PushUpdate
+        . Instant
+        $ PureAndImpureUpdate
+          ( (#modelLoading .~ True)
+              . (#modelFav . #uniqueValue .~ Closed)
+          )
+          ( do
+              --
+              -- TODO : Implement here pure, less costly equivalent of newModel.
+              --
+              Dialog.closeDialog st #modelFav
+              next <- newModel (st ^. #modelWebOpts) (Just st) uri
+              pure $ #modelState .~ modelState next
+          )

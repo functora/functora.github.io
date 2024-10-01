@@ -15,7 +15,6 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 #endif
 
-import qualified App.Misc as Misc
 import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
@@ -132,7 +131,7 @@ updateModel (InitUpdate ext) prevSt = do
           let fav = mergeMap (const id) $ fromMaybe mempty mFav
           if isJust ext
             then
-              Misc.pushActionQueue
+              pushActionQueue
                 nextSt
                 . Instant
                 . PureUpdate
@@ -140,14 +139,14 @@ updateModel (InitUpdate ext) prevSt = do
                 . (& #modelLoading .~ False)
             else Jsm.selectStorage ("current-" <> vsn) $ \case
               Nothing ->
-                Misc.pushActionQueue nextSt
+                pushActionQueue nextSt
                   . Instant
                   . PureUpdate
                   $ (& #modelFavMap %~ fav)
                   . (& #modelLoading .~ False)
               Just uri -> do
                 finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
-                Misc.pushActionQueue nextSt
+                pushActionQueue nextSt
                   . Instant
                   . PureUpdate
                   $ ( const
@@ -212,7 +211,7 @@ updateModel (ChanUpdate prevSt) _ = do
             void
               . spawnLink
               . deepseq (viewModel finSt)
-              . Misc.pushActionQueue prevSt
+              . pushActionQueue prevSt
               . Instant
               . PureUpdate
               . const
@@ -229,7 +228,7 @@ updateModel (PushUpdate updater) st = do
   batchEff
     st
     [ do
-        Misc.pushActionQueue st updater
+        pushActionQueue st updater
         pure Noop
     ]
 

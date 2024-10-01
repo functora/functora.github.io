@@ -1,6 +1,5 @@
 module App.Widgets.Main (mainWidget) where
 
-import qualified App.Misc as Misc
 import App.Types
 import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.Menu as Menu
@@ -8,6 +7,7 @@ import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
+import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -53,7 +53,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
             { Field.argsModel = st,
               Field.argsOptic = #modelState . #stPreview,
               Field.argsAction = PushUpdate . Instant,
-              Field.argsEmitter = Misc.pushActionQueue st . Instant
+              Field.argsEmitter = pushActionQueue st . Instant
             }
   )
     <> [ Grid.bigCell
@@ -62,7 +62,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               { FieldPairs.argsModel = st,
                 FieldPairs.argsOptic = #modelUriViewer,
                 FieldPairs.argsAction = PushUpdate . Instant,
-                FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
+                FieldPairs.argsEmitter = pushActionQueue st . Instant
               }
        ]
     <> [ Grid.bigCell
@@ -80,7 +80,7 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
       { FieldPairs.argsModel = st,
         FieldPairs.argsOptic = #modelDonateViewer,
         FieldPairs.argsAction = PushUpdate . Instant,
-        FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
+        FieldPairs.argsEmitter = pushActionQueue st . Instant
       }
     <> [ Grid.bigCell
           [ button_
@@ -109,7 +109,18 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               [ Css.fullWidth,
                 onClick . PushUpdate . Instant . ImpureUpdate $ do
                   asset <- newAsset
-                  pure $ #modelState . #stAssets %~ flip snoc asset
+                  void . spawnLink $ do
+                    --
+                    -- NOTE : not reliable
+                    --
+                    sleepMilliSeconds 100
+                    Dialog.openDialog st
+                      . constTraversal
+                      $ assetModalState asset
+                  pure
+                    $ #modelState
+                    . #stAssets
+                    %~ flip snoc asset
               ]
               [ text "Add item"
               ]
@@ -158,7 +169,7 @@ totalViewer st =
                       $ fee
                   ],
               FieldPairs.argsAction = PushUpdate . Instant,
-              FieldPairs.argsEmitter = Misc.pushActionQueue st . Instant
+              FieldPairs.argsEmitter = pushActionQueue st . Instant
             }
   where
     fee = st ^. #modelState . #stMerchantFeePercent

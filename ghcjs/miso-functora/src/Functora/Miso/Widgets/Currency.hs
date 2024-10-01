@@ -6,10 +6,10 @@ module Functora.Miso.Widgets.Currency
   )
 where
 
-import qualified Functora.Miso.Widgets.Dialog as Dialog
-import qualified Functora.Miso.Widgets.Field as Field
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Field as Field
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Miso
 import qualified Text.Fuzzy as Fuzzy
@@ -90,6 +90,7 @@ selectCurrency
           prev
             & cloneTraversal optic
             . #currencyModalState
+            . #uniqueValue
             .~ Opened
             & cloneTraversal optic
             . #currencyInput
@@ -165,6 +166,7 @@ currencyListItemWidget
           st
             & cloneTraversal optic
             . #currencyModalState
+            . #uniqueValue
             .~ Closed
             & cloneTraversal optic
             . #currencyInput

@@ -18,6 +18,7 @@ module App.Types
     stTeleUri,
     setScreenPure,
     setScreenAction,
+    pushActionQueue,
     vsn,
     usd,
     btc,
@@ -53,9 +54,9 @@ import qualified Paths_delivery_calculator as Paths
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelFav :: OpenedOrClosed,
-    modelMenu :: OpenedOrClosed,
-    modelLinks :: OpenedOrClosed,
+  { modelFav :: Unique OpenedOrClosed,
+    modelMenu :: Unique OpenedOrClosed,
+    modelLinks :: Unique OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelFavMap :: Map Unicode Fav,
@@ -132,7 +133,7 @@ newSt = do
 
 data Asset f = Asset
   { assetFieldPairs :: [FieldPair DynamicField f],
-    assetModalState :: OpenedOrClosed
+    assetModalState :: f OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -162,10 +163,12 @@ newAsset = do
     newFieldPair "Price" $ DynamicFieldNumber 10
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
+  modal <-
+    newUnique Opened
   pure
     Asset
       { assetFieldPairs = [link, photo, price, qty],
-        assetModalState = Opened
+        assetModalState = modal
       }
 
 newFieldPair ::
@@ -294,9 +297,9 @@ baseUri =
 setScreenPure :: Screen -> Update Model
 setScreenPure sc =
   PureUpdate
-    $ (& #modelFav .~ Closed)
-    . (& #modelMenu .~ Closed)
-    . (& #modelLinks .~ Closed)
+    $ (& #modelFav . #uniqueValue .~ Closed)
+    . (& #modelMenu . #uniqueValue .~ Closed)
+    . (& #modelLinks . #uniqueValue .~ Closed)
     . (& #modelState . #stScreen .~ sc)
 
 setScreenAction :: Screen -> Action
@@ -304,6 +307,17 @@ setScreenAction =
   PushUpdate
     . Instant
     . setScreenPure
+
+pushActionQueue ::
+  ( MonadIO m
+  ) =>
+  Model ->
+  InstantOrDelayed (Update Model) ->
+  m ()
+pushActionQueue st =
+  liftIO
+    . atomically
+    . writeTChan (st ^. #modelProducerQueue)
 
 vsn :: Unicode
 vsn =

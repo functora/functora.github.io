@@ -73,7 +73,6 @@ common pkg
     , barbies
     , base
     , bytestring
-    , deepseq
     , functora-ghcjs
     , fuzzy
     , jsaddle

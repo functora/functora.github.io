@@ -3,7 +3,6 @@ module App.Widgets.Asset
   )
 where
 
-import qualified App.Misc as Misc
 import App.Types
 import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
@@ -26,9 +25,15 @@ assetViewer st idx =
           [ onClick
               . PushUpdate
               . Instant
-              . PureUpdate
-              $ cloneTraversal modalOptic
-              .~ Opened
+              $ PureAndImpureUpdate
+                ( cloneTraversal modalOptic
+                    . #uniqueValue
+                    .~ Opened
+                )
+                ( do
+                    Dialog.openDialog st modalOptic
+                    pure id
+                )
           ]
           [ text "settings"
           ]
@@ -91,7 +96,7 @@ assetViewer st idx =
           FieldPairs.argsAction =
             PushUpdate . Instant,
           FieldPairs.argsEmitter =
-            Misc.pushActionQueue st . Instant
+            pushActionQueue st . Instant
         }
     title =
       "Item #" <> inspect (idx + 1)
@@ -103,6 +108,12 @@ assetViewer st idx =
     closeAction =
       PushUpdate
         . Instant
-        . PureUpdate
-        $ cloneTraversal modalOptic
-        .~ Closed
+        $ PureAndImpureUpdate
+          ( cloneTraversal modalOptic
+              . #uniqueValue
+              .~ Closed
+          )
+          ( do
+              Dialog.closeDialog st modalOptic
+              pure id
+          )

@@ -97,7 +97,7 @@ data ModalWidget' model where
     Int ->
     ATraversal' a [FieldPair DynamicField Unique] ->
     ATraversal' a (Field Unicode Unique) ->
-    ATraversal' a OpenedOrClosed ->
+    ATraversal' a (Unique OpenedOrClosed) ->
     ModalWidget' model
   ModalFieldWidget ::
     forall model a b.
@@ -355,6 +355,7 @@ fieldIcon full opts = \case
       $ cloneTraversal opt
       . ix idx
       . cloneTraversal ooc
+      . #uniqueValue
       .~ Opened
   ModalWidget (ModalFieldWidget opt idx access _) ->
     fieldIconSimple "settings" mempty
@@ -364,6 +365,7 @@ fieldIcon full opts = \case
       . ix idx
       . cloneTraversal access
       . #fieldModalState
+      . #uniqueValue
       .~ Opened
   ModalWidget (ModalMiniWidget opt) ->
     fieldIconSimple "settings" mempty
@@ -371,6 +373,7 @@ fieldIcon full opts = \case
       . PureUpdate
       $ cloneTraversal opt
       . #fieldModalState
+      . #uniqueValue
       .~ Opened
   ActionWidget icon attrs act ->
     fieldIconSimple icon attrs act

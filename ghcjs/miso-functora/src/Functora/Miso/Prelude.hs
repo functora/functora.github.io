@@ -1,6 +1,7 @@
 module Functora.Miso.Prelude
   ( module X,
     consoleLog,
+    role_,
   )
 where
 
@@ -25,3 +26,6 @@ import qualified Miso
 
 consoleLog :: (Show a, Data a) => a -> JSM ()
 consoleLog = Miso.consoleLog . inspect @Unicode
+
+role_ :: Unicode -> Attribute action
+role_ = textProp "role"

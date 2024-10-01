@@ -751,10 +751,10 @@ in {
           bindsym Mod4+Shift+u mode mouse
           mode mouse {
 
-              bindsym h exec '${ydotool} mousemove -x -20 -y   0'
-              bindsym j exec '${ydotool} mousemove -x   0 -y  20'
-              bindsym k exec '${ydotool} mousemove -x   0 -y -20'
-              bindsym l exec '${ydotool} mousemove -x  20 -y   0'
+              bindsym h exec '${ydotool} mousemove -x -35 -y   0'
+              bindsym j exec '${ydotool} mousemove -x   0 -y  35'
+              bindsym k exec '${ydotool} mousemove -x   0 -y -35'
+              bindsym l exec '${ydotool} mousemove -x  35 -y   0'
 
               bindsym n exec '${ydotool} mousemove -w -- -1  0'
               bindsym m exec '${ydotool} mousemove -w --  0 -1'

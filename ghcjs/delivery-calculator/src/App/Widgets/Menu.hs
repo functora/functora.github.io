@@ -28,16 +28,23 @@ menu st =
             ("flex-wrap", "wrap")
           ]
       ]
-      [ li_ [onClick opened] [text "menu"],
+      [ li_
+          [ role_ "button",
+            onClick opened
+          ]
+          [ text "menu"
+          ],
         li_
-          [ onClick . PushUpdate . Instant . ImpureUpdate $ do
+          [ role_ "button",
+            onClick . PushUpdate . Instant . ImpureUpdate $ do
               doc <- liftIO newSt
               pure $ #modelState .~ doc
           ]
           [ text "Delivery Calculator"
           ],
         li_
-          [ onClick
+          [ role_ "button",
+            onClick
               . PushUpdate
               . Instant
               . PureUpdate
@@ -47,7 +54,8 @@ menu st =
           [ text "favorite"
           ],
         li_
-          [ onClick
+          [ role_ "button",
+            onClick
               . PushUpdate
               . Instant
               . ImpureUpdate
@@ -58,7 +66,8 @@ menu st =
           [ text "print"
           ],
         li_
-          [ onClick
+          [ role_ "button",
+            onClick
               . PushUpdate
               . Instant
               . ImpureUpdate
@@ -72,7 +81,8 @@ menu st =
           [ text "download"
           ],
         li_
-          [ onClick
+          [ role_ "button",
+            onClick
               . PushUpdate
               . Instant
               . Jsm.shareText

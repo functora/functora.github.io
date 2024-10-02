@@ -51,15 +51,12 @@ assetViewer st idx =
               Dialog.argsContent =
                 [ Grid.grid
                     mempty
-                    $ [ h1_ mempty
-                          $ [text title]
-                      ]
-                    <> ( FieldPairs.fieldPairsEditor
+                    $ ( FieldPairs.fieldPairsEditor
                           args
                           $ FieldPairs.defOpts
                           & #optsAdvanced
                           .~ False
-                       )
+                      )
                     <> [ Grid.mediumCell
                           [ button_
                               [ onClick

@@ -20,14 +20,13 @@ data Fa
   | FaHeart
   | FaPrint
   | FaDownload
-  | FaShare
+  | FaShareNodes
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance Icon Fa where
   icon x =
     i_
-      [ class_ "fa",
-        class_ "fa-solid",
+      [ class_ "fa-solid",
         class_ . from @String @Unicode . kebab $ inspect @String x
       ]
       mempty
@@ -35,4 +34,4 @@ instance Icon Fa where
   fav = FaHeart
   print = FaPrint
   download = FaDownload
-  share = FaShare
+  share = FaShareNodes

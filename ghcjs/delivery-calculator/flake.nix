@@ -48,7 +48,7 @@
           out="./dist/latest"
           rm -rf "$out"
           mkdir -p "$out/static/css"
-          cp -R ./static/webfonts $out/webfonts
+          cp -R ./static/webfonts $out/static/webfonts
           cp ./static/*.png $out/static/
           cp ./static/*.woff2 $out/static/
           cp ./static/*.webmanifest $out/

@@ -20,7 +20,7 @@ data Fa
   | FaHeart
   | FaPrint
   | FaDownload
-  | FaShareNodes
+  | FaShare
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance Icon Fa where
@@ -35,4 +35,4 @@ instance Icon Fa where
   fav = FaHeart
   print = FaPrint
   download = FaDownload
-  share = FaShareNodes
+  share = FaShare

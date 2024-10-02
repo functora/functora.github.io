@@ -321,7 +321,7 @@ pushActionQueue st =
     . atomically
     . writeTChan (st ^. #modelProducerQueue)
 
-icon :: Icon.Fa -> View Action
+icon :: Icon.Fa -> View action
 icon = Icon.icon
 
 vsn :: Unicode

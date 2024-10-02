@@ -19,6 +19,7 @@ module App.Types
     setScreenPure,
     setScreenAction,
     pushActionQueue,
+    icon,
     vsn,
     usd,
     btc,
@@ -46,6 +47,7 @@ import Functora.Miso.Types as X hiding
   )
 import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Icon as Icon
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
@@ -318,6 +320,9 @@ pushActionQueue st =
   liftIO
     . atomically
     . writeTChan (st ^. #modelProducerQueue)
+
+icon :: Icon.Fa -> View Action
+icon = Icon.icon
 
 vsn :: Unicode
 vsn =

@@ -19,7 +19,6 @@ import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
-import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Money as Money
@@ -53,7 +52,7 @@ main =
             update = updateModel,
             Miso.view = viewModel,
             subs = mempty,
-            events = extendedEvents,
+            events = mempty,
             initialAction = InitUpdate mSt,
             mountPoint = Nothing,
             logLevel = Off
@@ -245,24 +244,15 @@ viewModel st =
         ],
       link_
         [ rel_ "stylesheet",
-          href_ "static/app.css"
+          href_ "static/css/fontawesome.min.css"
+        ],
+      link_
+        [ rel_ "stylesheet",
+          href_ "static/css/app.css"
         ]
     ]
     $ mainWidget st
 #endif
-
-extendedEvents :: Map Unicode Bool
-extendedEvents =
-  defaultEvents
-    & Map.insert "MDCDialog:close" True
-    & Map.insert "MDCDrawer:close" True
-    & Map.insert "MDCList:action" True
-    & Map.insert "MDCSnackbar:closed" True
-    & Map.insert "MDCTab:interacted" True
-    & Map.insert "MDCSlider:input" True
-    & Map.insert "MDCMenuSurface:close" True
-    & Map.insert "MDCChip:interaction" True
-    & Map.insert "MDCIconButtonToggle:change" True
 
 --
 -- NOTE : The "correct" way is to use "controlled input" with

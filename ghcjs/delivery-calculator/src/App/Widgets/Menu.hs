@@ -14,6 +14,7 @@ import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Money as Money
 import qualified Text.URI as URI
@@ -23,8 +24,10 @@ menu st =
   [ menu_
       [ class_ "no-print",
         style_
-          [ ("flex-direction", "row"),
-            ("flex-wrap", "wrap")
+          [ ("display", "flex"),
+            ("flex-wrap", "wrap"),
+            ("flex-direction", "row"),
+            ("justify-content", "space-between")
           ]
       ]
       [ li_
@@ -42,7 +45,7 @@ menu st =
                     pure id
                 )
           ]
-          [ text "menu"
+          [ icon Icon.menu
           ],
         li_
           [ role_ "button",
@@ -52,6 +55,10 @@ menu st =
           ]
           [ text "Delivery Calculator"
           ],
+        div_
+          [ style_ [("flex-grow", "1")]
+          ]
+          mempty,
         li_
           [ role_ "button",
             onClick
@@ -67,7 +74,7 @@ menu st =
                     pure id
                 )
           ]
-          [ text "favorite"
+          [ icon Icon.fav
           ],
         li_
           [ role_ "button",
@@ -79,7 +86,7 @@ menu st =
                 Jsm.printCurrentPage "delivery-calculator"
                 pure id
           ]
-          [ text "print"
+          [ icon Icon.print
           ],
         li_
           [ role_ "button",
@@ -94,7 +101,7 @@ menu st =
                   Xlsx.newXlsx
                 pure id
           ]
-          [ text "download"
+          [ icon Icon.download
           ],
         li_
           [ role_ "button",
@@ -106,7 +113,7 @@ menu st =
               . either impureThrow URI.renderStr
               $ stUri st
           ]
-          [ text "share"
+          [ icon Icon.share
           ]
       ]
   ]

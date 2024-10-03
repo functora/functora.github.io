@@ -119,7 +119,10 @@ menu st =
   ]
     <> Fav.fav st
     <> Dialog.dialog
-      Dialog.defOpts
+      ( Dialog.defOpts
+          & #optsTitle
+          .~ Just "Settings"
+      )
       Dialog.Args
         { Dialog.argsModel = st,
           Dialog.argsOptic = #modelMenu,

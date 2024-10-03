@@ -76,7 +76,17 @@ dialog opts args =
   where
     defHeaderLeft =
       maybeToList
-        . fmap (h2_ [style_ [("margin", "0")]] . singleton . text)
+        . fmap
+          ( h2_
+              [ style_
+                  [ ("margin", "0"),
+                    ("display", "flex"),
+                    ("align-items", "center")
+                  ]
+              ]
+              . singleton
+              . text
+          )
         $ optsTitle opts
     defHeaderRight =
       [ button_

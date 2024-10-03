@@ -86,18 +86,29 @@ selectCurrency
           }
     where
       open =
-        action . PureUpdate $ \prev ->
-          prev
-            & cloneTraversal optic
-            . #currencyModalState
-            . #uniqueValue
-            .~ Opened
-            & cloneTraversal optic
-            . #currencyInput
-            . #fieldInput
-            . #uniqueValue
-            .~ mempty
-            & extraOnClick
+        action
+          $ PureAndImpureUpdate
+            ( \prev ->
+                prev
+                  & cloneTraversal optic
+                  . #currencyModalState
+                  . #uniqueValue
+                  .~ Opened
+                  & cloneTraversal optic
+                  . #currencyInput
+                  . #fieldInput
+                  . #uniqueValue
+                  .~ mempty
+                  & cloneTraversal optic
+                  . #currencyInput
+                  . #fieldOutput
+                  .~ mempty
+                  & extraOnClick
+            )
+            ( do
+                Dialog.openDialog st (cloneTraversal optic . #currencyModalState)
+                pure id
+            )
 
 currencyListWidget :: Opts model -> Args model action -> View action
 currencyListWidget
@@ -155,28 +166,38 @@ currencyListItemWidget
   Opts
     { optsExtraOnClick = extraOnClick
     }
-  Args
+  args@Args
     { argsOptic = optic,
       argsAction = action
     }
   current
   fuzz =
     li_
-      [ onClick . action . PureUpdate $ \st ->
-          st
-            & cloneTraversal optic
-            . #currencyModalState
-            . #uniqueValue
-            .~ Closed
-            & cloneTraversal optic
-            . #currencyInput
-            . #fieldInput
-            . #uniqueValue
-            .~ mempty
-            & cloneTraversal optic
-            . #currencyOutput
-            .~ item
-            & extraOnClick
+      [ onClick
+          . action
+          $ PureAndImpureUpdate
+            ( \st ->
+                st
+                  & cloneTraversal optic
+                  . #currencyModalState
+                  . #uniqueValue
+                  .~ Closed
+                  & cloneTraversal optic
+                  . #currencyInput
+                  . #fieldInput
+                  . #uniqueValue
+                  .~ mempty
+                  & cloneTraversal optic
+                  . #currencyOutput
+                  .~ item
+                  & extraOnClick
+            )
+            ( do
+                Dialog.closeDialog
+                  (argsModel args)
+                  (cloneTraversal optic . #currencyModalState)
+                pure id
+            )
       ]
       [ ( if current == item
             then strong_ mempty

@@ -542,11 +542,15 @@ data OpenedOrClosed
 data Update model
   = PureUpdate (model -> model)
   | ImpureUpdate (JSM (model -> model))
+  | EffectUpdate (JSM ())
   | PureAndImpureUpdate (model -> model) (JSM (model -> model))
+  | PureAndEffectUpdate (model -> model) (JSM ())
   deriving stock (Generic)
 
 evalUpdate :: model -> Update model -> JSM model
 evalUpdate x = \case
   PureUpdate f -> pure $ f x
   ImpureUpdate g -> g >>= pure . ($ x)
+  EffectUpdate e -> e >> pure x
   PureAndImpureUpdate f g -> g >>= pure . ($ f x)
+  PureAndEffectUpdate f e -> e >> pure (f x)

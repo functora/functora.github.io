@@ -1,5 +1,6 @@
 module Functora.Miso.Widgets.Icon
   ( Icon (..),
+    IsIcon (..),
     Fa,
   )
 where
@@ -7,13 +8,17 @@ where
 import Functora.Miso.Prelude
 import Text.Casing (kebab)
 
-class Icon a where
-  icon :: a -> View action
-  menu :: a
-  fav :: a
-  print :: a
-  download :: a
-  share :: a
+data Icon
+  = IconMenu
+  | IconFav
+  | IconPrint
+  | IconDownload
+  | IconShare
+  | IconClose
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
+
+class (From Icon a) => IsIcon a where
+  icon :: Icon -> View action
 
 data Fa
   = FaBars
@@ -21,17 +26,26 @@ data Fa
   | FaPrint
   | FaDownload
   | FaShareNodes
+  | FaXmark
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
-instance Icon Fa where
+instance From Icon Fa where
+  from = \case
+    IconMenu -> FaBars
+    IconFav -> FaHeart
+    IconPrint -> FaPrint
+    IconDownload -> FaDownload
+    IconShare -> FaShareNodes
+    IconClose -> FaXmark
+
+instance IsIcon Fa where
   icon x =
     i_
       [ class_ "fa-solid",
-        class_ . from @String @Unicode . kebab $ inspect @String x
+        class_
+          . from @String @Unicode
+          . kebab
+          . inspect @String
+          $ from @Icon @Fa x
       ]
       mempty
-  menu = FaBars
-  fav = FaHeart
-  print = FaPrint
-  download = FaDownload
-  share = FaShareNodes

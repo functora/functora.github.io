@@ -45,7 +45,7 @@ menu st =
                     pure id
                 )
           ]
-          [ icon Icon.menu
+          [ icon Icon.IconMenu
           ],
         li_
           [ role_ "button",
@@ -74,7 +74,7 @@ menu st =
                     pure id
                 )
           ]
-          [ icon Icon.fav
+          [ icon Icon.IconFav
           ],
         li_
           [ role_ "button",
@@ -86,7 +86,7 @@ menu st =
                 Jsm.printCurrentPage "delivery-calculator"
                 pure id
           ]
-          [ icon Icon.print
+          [ icon Icon.IconPrint
           ],
         li_
           [ role_ "button",
@@ -101,7 +101,7 @@ menu st =
                   Xlsx.newXlsx
                 pure id
           ]
-          [ icon Icon.download
+          [ icon Icon.IconDownload
           ],
         li_
           [ role_ "button",
@@ -113,7 +113,7 @@ menu st =
               . either impureThrow URI.renderStr
               $ stUri st
           ]
-          [ icon Icon.share
+          [ icon Icon.IconShare
           ]
       ]
   ]

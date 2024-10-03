@@ -10,6 +10,7 @@ where
 
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Language.Javascript.JSaddle as JS
 
 data Args model action = Args
@@ -20,22 +21,34 @@ data Args model action = Args
   }
   deriving stock (Generic)
 
-data Opts model = Opts
+data Opts model action = Opts
   { optsTitle :: Maybe Unicode,
-    optsExtraOnOpen :: model -> model,
-    optsExtraOnClose :: model -> model
+    optsHeaderLeft :: [View action] -> [View action],
+    optsHeaderRight :: [View action] -> [View action],
+    optsFooterLeft :: [View action] -> [View action],
+    optsFooterRight :: [View action] -> [View action],
+    optsExtraOnClose :: model -> model,
+    optsIcon :: Icon.Icon -> View action
   }
   deriving stock (Generic)
 
-defOpts :: Opts model
+defOpts :: Opts model action
 defOpts =
   Opts
     { optsTitle = Nothing,
-      optsExtraOnOpen = id,
-      optsExtraOnClose = id
+      optsHeaderLeft = id,
+      optsHeaderRight = id,
+      optsFooterLeft = id,
+      optsFooterRight = id,
+      optsExtraOnClose = id,
+      optsIcon = Icon.icon @Icon.Fa
     }
 
-dialog :: forall model action. Opts model -> Args model action -> [View action]
+dialog ::
+  forall model action.
+  Opts model action ->
+  Args model action ->
+  [View action]
 dialog opts args =
   singleton
     . nodeHtml
@@ -49,22 +62,65 @@ dialog opts args =
       /= Just Opened
       then mempty
       else
-        maybeToList
-          ( fmap
-              ( \x -> header_ mempty [h2_ mempty [text x]]
-              )
-              $ optsTitle opts
-          )
+        newFlex
+          header_
+          id
+          (optsHeaderLeft opts defHeaderLeft)
+          (optsHeaderRight opts defHeaderRight)
           <> argsContent args
-          <> [ footer_
-                mempty
-                [ button_
-                    [onClick $ closeDialogAction opts args]
-                    [text "Back"]
-                ]
-             ]
+          <> newFlex
+            footer_
+            id
+            (optsFooterLeft opts defFooterRight)
+            (optsFooterRight opts mempty)
+  where
+    defHeaderLeft =
+      maybeToList
+        . fmap (h2_ [style_ [("margin", "0")]] . singleton . text)
+        $ optsTitle opts
+    defHeaderRight =
+      [ button_
+          [onClick $ closeDialogAction opts args]
+          [optsIcon opts Icon.IconClose]
+      ]
+    defFooterRight =
+      [ button_
+          [onClick $ closeDialogAction opts args]
+          [text "Back"]
+      ]
 
-closeDialogAction :: Opts model -> Args model action -> action
+newFlex ::
+  ([Attribute action] -> [View action] -> View action) ->
+  ([Attribute action] -> [Attribute action]) ->
+  [View action] ->
+  [View action] ->
+  [View action]
+newFlex newTag newAttr lhs rhs =
+  if null lhs && null rhs
+    then mempty
+    else
+      singleton
+        . newTag
+          ( newAttr
+              [ style_
+                  [ ("display", "flex"),
+                    ("flex-wrap", "wrap"),
+                    ("flex-direction", "row"),
+                    ("justify-content", "space-between")
+                  ]
+              ]
+          )
+        $ lhs
+        <> [ span_
+              [ style_
+                  [ ("flex-grow", "1")
+                  ]
+              ]
+              mempty
+           ]
+        <> rhs
+
+closeDialogAction :: Opts model action -> Args model action -> action
 closeDialogAction opts args =
   argsAction args
     $ PureAndImpureUpdate

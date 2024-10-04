@@ -36,7 +36,7 @@ defOpts =
       optsButtonViewer = inspectCurrencyInfo
     }
 
-selectCurrency :: Opts model -> Args model action -> View action
+selectCurrency :: Opts model -> Args model action -> [View action]
 selectCurrency
   opts@Opts
     { optsExtraOnClick = extraOnClick
@@ -47,15 +47,14 @@ selectCurrency
       argsAction = action,
       argsEmitter = emitter
     } =
-    div_ mempty
-      $ [ button_ [onClick open]
-            . singleton
-            . text
-            . (opts ^. #optsButtonViewer)
-            $ fromMaybe
-              (CurrencyInfo (CurrencyCode "XXX") mempty)
-              (st ^? cloneTraversal optic . #currencyOutput)
-        ]
+    [ button_ [onClick open]
+        . singleton
+        . text
+        . (opts ^. #optsButtonViewer)
+        $ fromMaybe
+          (CurrencyInfo (CurrencyCode "XXX") mempty)
+          (st ^? cloneTraversal optic . #currencyOutput)
+    ]
       <> Dialog.dialog
         Dialog.defOpts
           { Dialog.optsExtraOnClose =

@@ -115,27 +115,27 @@ menu st =
           Dialog.argsOptic = #modelMenu,
           Dialog.argsAction = PushUpdate . Instant,
           Dialog.argsContent =
-            [ Currency.selectCurrency
-                Currency.defOpts
-                  { Currency.optsExtraOnClick =
-                      (& #modelLoading .~ True),
-                    Currency.optsButtonViewer =
-                      mappend "Marketplace - "
-                        . Money.inspectCurrencyCode
-                        . Money.currencyInfoCode
-                  }
-                Currency.Args
-                  { Currency.argsModel = st,
-                    Currency.argsOptic =
-                      #modelState . #stAssetCurrency,
-                    Currency.argsAction =
-                      PushUpdate . Instant,
-                    Currency.argsEmitter =
-                      pushActionQueue st . Instant,
-                    Currency.argsCurrencies =
-                      #modelCurrencies
-                  },
-              Currency.selectCurrency
+            Currency.selectCurrency
+              Currency.defOpts
+                { Currency.optsExtraOnClick =
+                    (& #modelLoading .~ True),
+                  Currency.optsButtonViewer =
+                    mappend "Marketplace - "
+                      . Money.inspectCurrencyCode
+                      . Money.currencyInfoCode
+                }
+              Currency.Args
+                { Currency.argsModel = st,
+                  Currency.argsOptic =
+                    #modelState . #stAssetCurrency,
+                  Currency.argsAction =
+                    PushUpdate . Instant,
+                  Currency.argsEmitter =
+                    pushActionQueue st . Instant,
+                  Currency.argsCurrencies =
+                    #modelCurrencies
+                }
+              <> Currency.selectCurrency
                 Currency.defOpts
                   { Currency.optsExtraOnClick =
                       (& #modelLoading .~ True),
@@ -154,115 +154,115 @@ menu st =
                       pushActionQueue st . Instant,
                     Currency.argsCurrencies =
                       #modelCurrencies
-                  },
-              Select.select
-                ( Select.defOpts
-                    & #optsLabel
-                    .~ Just "Exchange rate"
-                )
-                Select.Args
-                  { Select.argsModel =
-                      st,
-                    Select.argsOptic =
-                      #modelState . #stOnlineOrOffline,
-                    Select.argsAction =
-                      PushUpdate . Instant,
-                    Select.argsOptions =
-                      constTraversal $ enumerate @OnlineOrOffline
-                  },
-              Field.ratioField
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic =
-                      #modelState . #stExchangeRate,
-                    Field.argsAction =
-                      PushUpdate . Instant,
-                    Field.argsEmitter =
-                      pushActionQueue st . Instant
                   }
-                ( let disabled =
-                        st
-                          ^. #modelState
-                          . #stOnlineOrOffline
-                          == Online
-                   in Field.defOpts @Model @Action
-                        & #optsDisabled
-                        .~ disabled
+              <> [ Select.select
+                    ( Select.defOpts
+                        & #optsLabel
+                        .~ Just "Exchange rate"
+                    )
+                    Select.Args
+                      { Select.argsModel =
+                          st,
+                        Select.argsOptic =
+                          #modelState . #stOnlineOrOffline,
+                        Select.argsAction =
+                          PushUpdate . Instant,
+                        Select.argsOptions =
+                          constTraversal $ enumerate @OnlineOrOffline
+                      },
+                   Field.ratioField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic =
+                          #modelState . #stExchangeRate,
+                        Field.argsAction =
+                          PushUpdate . Instant,
+                        Field.argsEmitter =
+                          pushActionQueue st . Instant
+                      }
+                    ( let disabled =
+                            st
+                              ^. #modelState
+                              . #stOnlineOrOffline
+                              == Online
+                       in Field.defOpts @Model @Action
+                            & #optsDisabled
+                            .~ disabled
+                            & #optsPlaceholder
+                            .~ ( "1 "
+                                  <> toUpper
+                                    ( Money.inspectCurrencyCode
+                                        $ st
+                                        ^. #modelState
+                                        . #stAssetCurrency
+                                        . #currencyOutput
+                                        . #currencyInfoCode
+                                    )
+                                  <> " \8776 X "
+                                  <> toUpper
+                                    ( Money.inspectCurrencyCode
+                                        $ st
+                                        ^. #modelState
+                                        . #stMerchantCurrency
+                                        . #currencyOutput
+                                        . #currencyInfoCode
+                                    )
+                               )
+                            & ( if disabled
+                                  then #optsTrailingWidget .~ Nothing
+                                  else id
+                              )
+                    ),
+                   Field.dynamicField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic =
+                          #modelState . #stMerchantFeePercent,
+                        Field.argsAction =
+                          PushUpdate . Instant,
+                        Field.argsEmitter =
+                          pushActionQueue st . Instant
+                      }
+                    ( Field.defOpts
                         & #optsPlaceholder
-                        .~ ( "1 "
-                              <> toUpper
-                                ( Money.inspectCurrencyCode
-                                    $ st
-                                    ^. #modelState
-                                    . #stAssetCurrency
-                                    . #currencyOutput
-                                    . #currencyInfoCode
-                                )
-                              <> " \8776 X "
-                              <> toUpper
-                                ( Money.inspectCurrencyCode
-                                    $ st
-                                    ^. #modelState
-                                    . #stMerchantCurrency
-                                    . #currencyOutput
-                                    . #currencyInfoCode
-                                )
-                           )
-                        & ( if disabled
-                              then #optsTrailingWidget .~ Nothing
-                              else id
-                          )
-                ),
-              Field.dynamicField
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic =
-                      #modelState . #stMerchantFeePercent,
-                    Field.argsAction =
-                      PushUpdate . Instant,
-                    Field.argsEmitter =
-                      pushActionQueue st . Instant
-                  }
-                ( Field.defOpts
-                    & #optsPlaceholder
-                    .~ ("Merchant fee %" :: Unicode)
-                ),
-              Field.textField
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic = #modelState . #stMerchantTele,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
-                  }
-                ( Field.defOpts
-                    & #optsPlaceholder
-                    .~ ("Merchant telegram" :: Unicode)
-                ),
-              Field.textField
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic = #modelState . #stPreview,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
-                  }
-                ( Field.defOpts @Model @Action
-                    & #optsPlaceholder
-                    .~ ("QR title" :: Unicode)
-                ),
-              button_
-                [ Css.fullWidth,
-                  onClick
-                    . screen
-                    $ if isQrCode sc
-                      then Main
-                      else QrCode sc
-                ]
-                [ text
-                    $ if isQrCode sc
-                      then "Delivery Calculator"
-                      else "QR"
-                ]
-            ]
+                        .~ ("Merchant fee %" :: Unicode)
+                    ),
+                   Field.textField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic = #modelState . #stMerchantTele,
+                        Field.argsAction = PushUpdate . Instant,
+                        Field.argsEmitter = pushActionQueue st . Instant
+                      }
+                    ( Field.defOpts
+                        & #optsPlaceholder
+                        .~ ("Merchant telegram" :: Unicode)
+                    ),
+                   Field.textField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic = #modelState . #stPreview,
+                        Field.argsAction = PushUpdate . Instant,
+                        Field.argsEmitter = pushActionQueue st . Instant
+                      }
+                    ( Field.defOpts @Model @Action
+                        & #optsPlaceholder
+                        .~ ("QR title" :: Unicode)
+                    ),
+                   button_
+                    [ Css.fullWidth,
+                      onClick
+                        . screen
+                        $ if isQrCode sc
+                          then Main
+                          else QrCode sc
+                    ]
+                    [ text
+                        $ if isQrCode sc
+                          then "Delivery Calculator"
+                          else "QR"
+                    ]
+                 ]
               <> linksWidget st
         }
   where

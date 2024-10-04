@@ -13,7 +13,6 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Money as Money
@@ -156,122 +155,112 @@ menu st =
                     Currency.argsCurrencies =
                       #modelCurrencies
                   },
-              Grid.mediumCell
-                [ span_ mempty [text "Exchange rate"],
-                  Select.select
-                    Select.defOpts
-                    Select.Args
-                      { Select.argsModel =
-                          st,
-                        Select.argsOptic =
-                          #modelState . #stOnlineOrOffline,
-                        Select.argsAction =
-                          PushUpdate . Instant,
-                        Select.argsOptions =
-                          constTraversal $ enumerate @OnlineOrOffline
-                      }
-                ],
-              Grid.mediumCell
-                [ Field.ratioField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic =
-                          #modelState . #stExchangeRate,
-                        Field.argsAction =
-                          PushUpdate . Instant,
-                        Field.argsEmitter =
-                          pushActionQueue st . Instant
-                      }
-                    ( let disabled =
-                            st
-                              ^. #modelState
-                              . #stOnlineOrOffline
-                              == Online
-                       in Field.defOpts @Model @Action
-                            & #optsDisabled
-                            .~ disabled
-                            & #optsPlaceholder
-                            .~ ( "1 "
-                                  <> toUpper
-                                    ( Money.inspectCurrencyCode
-                                        $ st
-                                        ^. #modelState
-                                        . #stAssetCurrency
-                                        . #currencyOutput
-                                        . #currencyInfoCode
-                                    )
-                                  <> " \8776 X "
-                                  <> toUpper
-                                    ( Money.inspectCurrencyCode
-                                        $ st
-                                        ^. #modelState
-                                        . #stMerchantCurrency
-                                        . #currencyOutput
-                                        . #currencyInfoCode
-                                    )
-                               )
-                            & ( if disabled
-                                  then #optsTrailingWidget .~ Nothing
-                                  else id
-                              )
-                    )
-                ],
-              Grid.mediumCell
-                [ Field.dynamicField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic =
-                          #modelState . #stMerchantFeePercent,
-                        Field.argsAction =
-                          PushUpdate . Instant,
-                        Field.argsEmitter =
-                          pushActionQueue st . Instant
-                      }
-                    ( Field.defOpts
+              Select.select
+                ( Select.defOpts
+                    & #optsLabel
+                    .~ Just "Exchange rate"
+                )
+                Select.Args
+                  { Select.argsModel =
+                      st,
+                    Select.argsOptic =
+                      #modelState . #stOnlineOrOffline,
+                    Select.argsAction =
+                      PushUpdate . Instant,
+                    Select.argsOptions =
+                      constTraversal $ enumerate @OnlineOrOffline
+                  },
+              Field.ratioField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic =
+                      #modelState . #stExchangeRate,
+                    Field.argsAction =
+                      PushUpdate . Instant,
+                    Field.argsEmitter =
+                      pushActionQueue st . Instant
+                  }
+                ( let disabled =
+                        st
+                          ^. #modelState
+                          . #stOnlineOrOffline
+                          == Online
+                   in Field.defOpts @Model @Action
+                        & #optsDisabled
+                        .~ disabled
                         & #optsPlaceholder
-                        .~ ("Merchant fee %" :: Unicode)
-                    )
-                ],
-              Grid.mediumCell
-                [ Field.textField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic = #modelState . #stMerchantTele,
-                        Field.argsAction = PushUpdate . Instant,
-                        Field.argsEmitter = pushActionQueue st . Instant
-                      }
-                    ( Field.defOpts
-                        & #optsPlaceholder
-                        .~ ("Merchant telegram" :: Unicode)
-                    )
-                ],
-              Grid.mediumCell
-                [ Field.textField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic = #modelState . #stPreview,
-                        Field.argsAction = PushUpdate . Instant,
-                        Field.argsEmitter = pushActionQueue st . Instant
-                      }
-                    ( Field.defOpts @Model @Action
-                        & #optsPlaceholder
-                        .~ ("QR title" :: Unicode)
-                    )
-                ],
-              Grid.mediumCell
-                [ button_
-                    [ Css.fullWidth,
-                      onClick
-                        . screen
-                        $ if isQrCode sc
-                          then Main
-                          else QrCode sc
-                    ]
-                    [ text
-                        $ if isQrCode sc
-                          then "Delivery Calculator"
-                          else "QR"
-                    ]
+                        .~ ( "1 "
+                              <> toUpper
+                                ( Money.inspectCurrencyCode
+                                    $ st
+                                    ^. #modelState
+                                    . #stAssetCurrency
+                                    . #currencyOutput
+                                    . #currencyInfoCode
+                                )
+                              <> " \8776 X "
+                              <> toUpper
+                                ( Money.inspectCurrencyCode
+                                    $ st
+                                    ^. #modelState
+                                    . #stMerchantCurrency
+                                    . #currencyOutput
+                                    . #currencyInfoCode
+                                )
+                           )
+                        & ( if disabled
+                              then #optsTrailingWidget .~ Nothing
+                              else id
+                          )
+                ),
+              Field.dynamicField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic =
+                      #modelState . #stMerchantFeePercent,
+                    Field.argsAction =
+                      PushUpdate . Instant,
+                    Field.argsEmitter =
+                      pushActionQueue st . Instant
+                  }
+                ( Field.defOpts
+                    & #optsPlaceholder
+                    .~ ("Merchant fee %" :: Unicode)
+                ),
+              Field.textField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic = #modelState . #stMerchantTele,
+                    Field.argsAction = PushUpdate . Instant,
+                    Field.argsEmitter = pushActionQueue st . Instant
+                  }
+                ( Field.defOpts
+                    & #optsPlaceholder
+                    .~ ("Merchant telegram" :: Unicode)
+                ),
+              Field.textField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic = #modelState . #stPreview,
+                    Field.argsAction = PushUpdate . Instant,
+                    Field.argsEmitter = pushActionQueue st . Instant
+                  }
+                ( Field.defOpts @Model @Action
+                    & #optsPlaceholder
+                    .~ ("QR title" :: Unicode)
+                ),
+              button_
+                [ Css.fullWidth,
+                  onClick
+                    . screen
+                    $ if isQrCode sc
+                      then Main
+                      else QrCode sc
+                ]
+                [ text
+                    $ if isQrCode sc
+                      then "Delivery Calculator"
+                      else "QR"
                 ]
             ]
               <> linksWidget st
@@ -289,13 +278,11 @@ menu st =
 
 linksWidget :: Model -> [View Action]
 linksWidget st =
-  [ Grid.bigCell
-      [ button_
-          [ onClick openWidget,
-            Css.fullWidth
-          ]
-          [ text "App"
-          ]
+  [ button_
+      [ onClick openWidget,
+        Css.fullWidth
+      ]
+      [ text "App"
       ]
   ]
     <> Dialog.dialog
@@ -305,84 +292,70 @@ linksWidget st =
           Dialog.argsOptic = #modelLinks,
           Dialog.argsAction = PushUpdate . Instant,
           Dialog.argsContent =
-            [ Grid.bigCell
-                [ text
-                    "The Android app is in closed beta. To install it, join the ",
-                  BrowserLink.browserLink
-                    BrowserLink.Args
-                      { BrowserLink.argsLink = testGroupLink,
-                        BrowserLink.argsLabel = "closed beta",
-                        BrowserLink.argsAction =
-                          PushUpdate
-                            . Instant
-                      },
-                  text " group and then install the app from ",
-                  BrowserLink.browserLink
-                    BrowserLink.Args
-                      { BrowserLink.argsLink = googlePlayLink,
-                        BrowserLink.argsLabel = "Google Play",
-                        BrowserLink.argsAction =
-                          PushUpdate
-                            . Instant
-                      },
-                  text ", or download the ",
-                  BrowserLink.browserLink
-                    BrowserLink.Args
-                      { BrowserLink.argsLink = apkLink,
-                        BrowserLink.argsLabel = "APK file",
-                        BrowserLink.argsAction =
-                          PushUpdate
-                            . Instant
-                      },
-                  text " directly."
+            [ text
+                "The Android app is in closed beta. To install it, join the ",
+              BrowserLink.browserLink
+                BrowserLink.Args
+                  { BrowserLink.argsLink = testGroupLink,
+                    BrowserLink.argsLabel = "closed beta",
+                    BrowserLink.argsAction =
+                      PushUpdate
+                        . Instant
+                  },
+              text " group and then install the app from ",
+              BrowserLink.browserLink
+                BrowserLink.Args
+                  { BrowserLink.argsLink = googlePlayLink,
+                    BrowserLink.argsLabel = "Google Play",
+                    BrowserLink.argsAction =
+                      PushUpdate
+                        . Instant
+                  },
+              text ", or download the ",
+              BrowserLink.browserLink
+                BrowserLink.Args
+                  { BrowserLink.argsLink = apkLink,
+                    BrowserLink.argsLabel = "APK file",
+                    BrowserLink.argsAction =
+                      PushUpdate
+                        . Instant
+                  },
+              text " directly.",
+              button_
+                [ onClick $ openBrowser testGroupLink,
+                  Css.fullWidth
+                ]
+                [ text "Join testing (closed beta)"
                 ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ openBrowser testGroupLink,
-                      Css.fullWidth
-                    ]
-                    [ text "Join testing (closed beta)"
-                    ]
+              button_
+                [ onClick $ openBrowser googlePlayLink,
+                  Css.fullWidth
+                ]
+                [ text "Google Play (closed beta)"
                 ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ openBrowser googlePlayLink,
-                      Css.fullWidth
-                    ]
-                    [ text "Google Play (closed beta)"
-                    ]
+              button_
+                [ onClick $ openBrowser apkLink,
+                  Css.fullWidth
+                ]
+                [ text "Download APK"
                 ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ openBrowser apkLink,
-                      Css.fullWidth
-                    ]
-                    [ text "Download APK"
-                    ]
+              button_
+                [ onClick $ openBrowser sourceLink,
+                  Css.fullWidth
+                ]
+                [ text "Source"
                 ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ openBrowser sourceLink,
-                      Css.fullWidth
-                    ]
-                    [ text "Source"
-                    ]
+              button_
+                [ onClick $ openBrowser functoraLink,
+                  Css.fullWidth
+                ]
+                [ text "Author"
                 ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ openBrowser functoraLink,
-                      Css.fullWidth
-                    ]
-                    [ text "Author"
-                    ]
-                ],
-              Grid.mediumCell
-                [ button_
-                    [ onClick $ setScreenAction Donate,
-                      Css.fullWidth
-                    ]
-                    [ text "Donate"
-                    ]
+              button_
+                [ onClick $ setScreenAction Donate,
+                  Css.fullWidth
+                ]
+                [ text "Donate"
                 ]
             ]
         }

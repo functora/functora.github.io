@@ -19,7 +19,8 @@ data Args model action t = Args
   deriving stock (Generic)
 
 data Opts t = Opts
-  { optsEncode :: t -> Unicode,
+  { optsLabel :: Maybe Unicode,
+    optsEncode :: t -> Unicode,
     optsDecode :: Unicode -> t,
     optsDisplay :: t -> Unicode
   }
@@ -28,7 +29,8 @@ data Opts t = Opts
 defOpts :: (Show t, Read t, Data t) => Opts t
 defOpts =
   Opts
-    { optsEncode = from @String @Unicode . Prelude.show,
+    { optsLabel = Nothing,
+      optsEncode = from @String @Unicode . Prelude.show,
       optsDecode = Prelude.read . from @Unicode @String,
       optsDisplay = inspect
     }
@@ -41,13 +43,17 @@ select ::
   Args model action t ->
   View action
 select opts args =
-  select_
-    [ onChange $ \x ->
-        action
-          . PureUpdate
-          $ cloneTraversal optic
-          .~ optsDecode opts x
-    ]
+  maybe
+    id
+    (\x -> label_ mempty . (text x :) . singleton)
+    (optsLabel opts)
+    $ select_
+      [ onChange $ \x ->
+          action
+            . PureUpdate
+            $ cloneTraversal optic
+            .~ optsDecode opts x
+      ]
     . fmap
       ( \x ->
           option_

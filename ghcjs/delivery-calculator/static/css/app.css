@@ -12,25 +12,13 @@ footer {
   padding-bottom: 18px;
 }
 
-.main-widget {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  /* overflow-x: hidden; */
-}
-
-.main-widget-middle {
-  max-width: 550px;
-}
-
 textarea {
   resize: vertical;
   pointer-events: auto;
-  min-height: 72px;
+}
+
+dialog {
+  overflow: auto;
 }
 
 @media print {

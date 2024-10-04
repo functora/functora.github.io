@@ -10,6 +10,7 @@ where
 
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.FixedOverlay as FixedOverlay
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Language.Javascript.JSaddle as JS
 
@@ -50,30 +51,31 @@ dialog ::
   Args model action ->
   [View action]
 dialog opts args =
-  singleton
-    . nodeHtml
-      "dialog"
-      [ id_ $ getDialogUid (argsModel args) (argsOptic args)
-      ]
-    $ if args
-      ^? #argsModel
-      . cloneTraversal (argsOptic args)
-      . #uniqueValue
-      /= Just Opened
-      then mempty
-      else
-        newFlex
+  if not opened
+    then mempty
+    else
+      singleton
+        . FixedOverlay.fixedOverlay
+        . singleton
+        . nodeHtml "dialog" [boolProp "open" True]
+        $ newFlex
           header_
           id
           (optsHeaderLeft opts defHeaderLeft)
           (optsHeaderRight opts defHeaderRight)
-          <> argsContent args
-          <> newFlex
-            footer_
-            id
-            (optsFooterLeft opts defFooterRight)
-            (optsFooterRight opts mempty)
+        <> argsContent args
+        <> newFlex
+          footer_
+          id
+          (optsFooterLeft opts defFooterRight)
+          (optsFooterRight opts mempty)
   where
+    opened =
+      args
+        ^? #argsModel
+        . cloneTraversal (argsOptic args)
+        . #uniqueValue
+        == Just Opened
     defHeaderLeft =
       maybeToList
         . fmap

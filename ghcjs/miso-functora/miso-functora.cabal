@@ -111,12 +111,14 @@ library
     Functora.Miso.Widgets.Dialog
     Functora.Miso.Widgets.Field
     Functora.Miso.Widgets.FieldPairs
+    Functora.Miso.Widgets.FixedOverlay
     Functora.Miso.Widgets.Flex
     Functora.Miso.Widgets.Grid
     Functora.Miso.Widgets.Icon
     Functora.Miso.Widgets.Money
     Functora.Miso.Widgets.Qr
     Functora.Miso.Widgets.Select
+    Functora.Miso.Widgets.Spinner
     Functora.Miso.Widgets.Switch
 
 test-suite miso-functora-test
@@ -146,12 +148,14 @@ test-suite miso-functora-test
       Functora.Miso.Widgets.Dialog
       Functora.Miso.Widgets.Field
       Functora.Miso.Widgets.FieldPairs
+      Functora.Miso.Widgets.FixedOverlay
       Functora.Miso.Widgets.Flex
       Functora.Miso.Widgets.Grid
       Functora.Miso.Widgets.Icon
       Functora.Miso.Widgets.Money
       Functora.Miso.Widgets.Qr
       Functora.Miso.Widgets.Select
+      Functora.Miso.Widgets.Spinner
       Functora.Miso.Widgets.Switch
 
   else

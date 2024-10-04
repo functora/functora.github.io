@@ -11,6 +11,7 @@ import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
+import qualified Functora.Miso.Widgets.Spinner as Spinner
 import qualified Functora.Money as Money
 import Lens.Micro ((^..))
 import Miso hiding (at, view)
@@ -18,29 +19,29 @@ import Miso hiding (at, view)
 mainWidget :: Model -> View Action
 mainWidget st =
   section_
-    [ class_ "main-widget"
+    [ style_
+        [ ("margin", "0"),
+          ("padding", "0"),
+          ("width", "100%"),
+          ("min-height", "100vh"),
+          ("display", "flex"),
+          ("flex-direction", "column"),
+          ("justify-content", "space-between")
+        ]
     ]
     $ [ header_ mempty $ Menu.menu st
       ]
     <> [ main_
-          [class_ "main-widget-middle"]
+          [style_ [("max-width", "550px")]]
           $ screenWidget st
        ]
     <> [ footer_
           [style_ [("text-align", "center")]]
           [tosWidget]
        ]
-    <> ( if st ^. #modelLoading
-          then
-            [ div_
-                [ class_
-                    "mdc-dialog mdc-dialog--fullscreen fullscreen-dialog mdc-dialog--open mdc-dialog-scroll-divider-footer mdc-dialog--scrollable"
-                ]
-                [ div_ [class_ "mdc-dialog__scrim"] mempty,
-                  div_ [class_ "lds-dual-ring"] mempty
-                ]
-            ]
-          else mempty
+    <> ( if not $ st ^. #modelLoading
+          then mempty
+          else [Spinner.spinner]
        )
 
 screenWidget :: Model -> [View Action]

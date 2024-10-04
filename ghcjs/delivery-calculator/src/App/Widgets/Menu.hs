@@ -37,7 +37,6 @@ menu st =
               . Instant
               . PureUpdate
               $ #modelMenu
-              . #uniqueValue
               .~ Opened
           ]
           [ icon Icon.IconMenu
@@ -61,7 +60,6 @@ menu st =
               . Instant
               . PureUpdate
               $ #modelFav
-              . #uniqueValue
               .~ Opened
           ]
           [ icon Icon.IconFav
@@ -283,7 +281,7 @@ menu st =
       PushUpdate
         . Instant
         . PureUpdate
-        $ (#modelMenu . #uniqueValue .~ Closed)
+        $ (#modelMenu .~ Closed)
         . (#modelLoading .~ isQrCode next)
         . (#modelState . #stScreen .~ next)
     sc =
@@ -394,7 +392,6 @@ linksWidget st =
         . Instant
         . PureUpdate
         $ #modelLinks
-        . #uniqueValue
         .~ Opened
     openBrowser =
       PushUpdate

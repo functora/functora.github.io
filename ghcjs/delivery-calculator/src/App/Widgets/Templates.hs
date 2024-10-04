@@ -23,14 +23,11 @@ newModel webOpts mSt uri = do
   mApp <- unShareUri uri
   donate <- newDonateViewer
   market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
-  fav <- newUnique Closed
-  menu <- newUnique Closed
-  links <- newUnique Closed
   pure
     Model
-      { modelFav = fav,
-        modelMenu = menu,
-        modelLinks = links,
+      { modelFav = Closed,
+        modelMenu = Closed,
+        modelLinks = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
         modelFavMap = mempty,

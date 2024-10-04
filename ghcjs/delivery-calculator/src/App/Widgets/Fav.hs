@@ -128,7 +128,7 @@ favItem st label Fav {favUri = uri} =
         . Instant
         $ PureAndImpureUpdate
           ( (#modelLoading .~ True)
-              . (#modelFav . #uniqueValue .~ Closed)
+              . (#modelFav .~ Closed)
           )
           ( do
               --

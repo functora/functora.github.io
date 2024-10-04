@@ -27,7 +27,6 @@ assetViewer st idx =
               . Instant
               . PureUpdate
               $ cloneTraversal modalOptic
-              . #uniqueValue
               .~ Opened
           ]
           [ text "settings"
@@ -102,5 +101,4 @@ assetViewer st idx =
         . Instant
         . PureUpdate
         $ cloneTraversal modalOptic
-        . #uniqueValue
         .~ Closed

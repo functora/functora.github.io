@@ -77,11 +77,7 @@ type Hkt f =
     Eq (f Unicode),
     Ord (f Unicode),
     Show (f Unicode),
-    Data (f Unicode),
-    Eq (f OpenedOrClosed),
-    Ord (f OpenedOrClosed),
-    Show (f OpenedOrClosed),
-    Data (f OpenedOrClosed)
+    Data (f Unicode)
   )
 
 data Unique a = Unique
@@ -121,7 +117,7 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Unicode,
     fieldOutput :: a,
-    fieldModalState :: f OpenedOrClosed,
+    fieldModalState :: OpenedOrClosed,
     fieldOpts :: FieldOpts
   }
   deriving stock (Generic)
@@ -169,13 +165,12 @@ newField ::
   (MonadIO m) => FieldType -> a -> (a -> Unicode) -> m (Field a Unique)
 newField typ output newInput = do
   input <- newUnique $ newInput output
-  modal <- newUnique Closed
   pure
     Field
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldModalState = modal,
+        fieldModalState = Closed,
         fieldOpts = defFieldOpts
       }
 
@@ -185,7 +180,7 @@ newFieldId typ viewer output =
     { fieldType = typ,
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
-      fieldModalState = Identity Closed,
+      fieldModalState = Closed,
       fieldOpts = defFieldOpts
     }
 
@@ -375,7 +370,7 @@ mergeFieldPairs next prev =
 data Currency f = Currency
   { currencyInput :: Field Unicode f,
     currencyOutput :: CurrencyInfo,
-    currencyModalState :: f OpenedOrClosed
+    currencyModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -401,7 +396,7 @@ newCurrency cur =
   Currency
     <$> newTextField mempty
     <*> pure cur
-    <*> newUnique Closed
+    <*> pure Closed
 
 data Money f = Money
   { moneyAmount :: Field Rational f,

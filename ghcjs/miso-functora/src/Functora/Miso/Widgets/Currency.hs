@@ -92,7 +92,6 @@ selectCurrency
             prev
               & cloneTraversal optic
               . #currencyModalState
-              . #uniqueValue
               .~ Opened
               & cloneTraversal optic
               . #currencyInput
@@ -175,7 +174,6 @@ currencyListItemWidget
             st
               & cloneTraversal optic
               . #currencyModalState
-              . #uniqueValue
               .~ Closed
               & cloneTraversal optic
               . #currencyInput

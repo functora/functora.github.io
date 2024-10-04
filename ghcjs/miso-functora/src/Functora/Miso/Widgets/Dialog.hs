@@ -13,7 +13,7 @@ import qualified Functora.Miso.Widgets.Icon as Icon
 
 data Args model action = Args
   { argsModel :: model,
-    argsOptic :: ATraversal' model (Unique OpenedOrClosed),
+    argsOptic :: ATraversal' model OpenedOrClosed,
     argsAction :: Update model -> action,
     argsContent :: [View action]
   }
@@ -68,11 +68,7 @@ dialog opts args =
           (optsFooterRight opts mempty)
   where
     opened =
-      args
-        ^? #argsModel
-        . cloneTraversal (argsOptic args)
-        . #uniqueValue
-        == Just Opened
+      args ^? #argsModel . cloneTraversal (argsOptic args) == Just Opened
     defHeaderLeft =
       maybeToList
         . fmap
@@ -134,4 +130,4 @@ closeDialogAction opts args =
   argsAction args
     . PureUpdate
     $ optsExtraOnClose opts
-    . (cloneTraversal (argsOptic args) . #uniqueValue .~ Closed)
+    . (cloneTraversal (argsOptic args) .~ Closed)

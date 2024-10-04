@@ -56,9 +56,9 @@ import qualified Paths_delivery_calculator as Paths
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelFav :: Unique OpenedOrClosed,
-    modelMenu :: Unique OpenedOrClosed,
-    modelLinks :: Unique OpenedOrClosed,
+  { modelFav :: OpenedOrClosed,
+    modelMenu :: OpenedOrClosed,
+    modelLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelFavMap :: Map Unicode Fav,
@@ -135,7 +135,7 @@ newSt = do
 
 data Asset f = Asset
   { assetFieldPairs :: [FieldPair DynamicField f],
-    assetModalState :: f OpenedOrClosed
+    assetModalState :: OpenedOrClosed
   }
   deriving stock (Generic)
 
@@ -165,12 +165,10 @@ newAsset = do
     newFieldPair "Price" $ DynamicFieldNumber 10
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
-  modal <-
-    newUnique Opened
   pure
     Asset
       { assetFieldPairs = [link, photo, price, qty],
-        assetModalState = modal
+        assetModalState = Opened
       }
 
 newFieldPair ::
@@ -299,9 +297,9 @@ baseUri =
 setScreenPure :: Screen -> Update Model
 setScreenPure sc =
   PureUpdate
-    $ (& #modelFav . #uniqueValue .~ Closed)
-    . (& #modelMenu . #uniqueValue .~ Closed)
-    . (& #modelLinks . #uniqueValue .~ Closed)
+    $ (& #modelFav .~ Closed)
+    . (& #modelMenu .~ Closed)
+    . (& #modelLinks .~ Closed)
     . (& #modelState . #stScreen .~ sc)
 
 setScreenAction :: Screen -> Action

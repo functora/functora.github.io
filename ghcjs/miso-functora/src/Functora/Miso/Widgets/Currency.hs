@@ -57,7 +57,22 @@ selectCurrency
     ]
       <> Dialog.dialog
         Dialog.defOpts
-          { Dialog.optsExtraOnClose =
+          { Dialog.optsTitle = Just "Currency",
+            Dialog.optsHeaderRight =
+              ( <>
+                  Field.textField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic = cloneTraversal optic . #currencyInput,
+                        Field.argsAction = action,
+                        Field.argsEmitter = emitter
+                      }
+                    ( Field.defOpts
+                        & #optsPlaceholder
+                        .~ "Search"
+                    )
+              ),
+            Dialog.optsExtraOnClose =
               cloneTraversal optic
                 . #currencyInput
                 . #fieldInput
@@ -68,20 +83,7 @@ selectCurrency
           { Dialog.argsModel = st,
             Dialog.argsOptic = cloneTraversal optic . #currencyModalState,
             Dialog.argsAction = action,
-            Dialog.argsContent =
-              [ currencyListWidget opts args,
-                Field.textField
-                  Field.Args
-                    { Field.argsModel = st,
-                      Field.argsOptic = cloneTraversal optic . #currencyInput,
-                      Field.argsAction = action,
-                      Field.argsEmitter = emitter
-                    }
-                  ( Field.defOpts
-                      & #optsPlaceholder
-                      .~ "Search"
-                  )
-              ]
+            Dialog.argsContent = currencyListWidget opts args
           }
     where
       open =
@@ -103,7 +105,7 @@ selectCurrency
               .~ mempty
               & extraOnClick
 
-currencyListWidget :: Opts model -> Args model action -> View action
+currencyListWidget :: Opts model -> Args model action -> [View action]
 currencyListWidget
   opts
   args@Args
@@ -111,8 +113,7 @@ currencyListWidget
       argsOptic = optic,
       argsCurrencies = currencies
     } =
-    ul_ [class_ "tree-view"]
-      $ fmap (currencyListItemWidget opts args current) matching
+    fmap (currencyListItemWidget opts args current) matching
     where
       current =
         fromMaybe
@@ -165,31 +166,31 @@ currencyListItemWidget
     }
   current
   fuzz =
-    li_
-      [ onClick
-          . action
-          . PureUpdate
-          $ \st ->
-            st
-              & cloneTraversal optic
-              . #currencyModalState
-              .~ Closed
-              & cloneTraversal optic
-              . #currencyInput
-              . #fieldInput
-              . #uniqueValue
-              .~ mempty
-              & cloneTraversal optic
-              . #currencyOutput
-              .~ item
-              & extraOnClick
-      ]
-      [ ( if current == item
-            then strong_ mempty
-            else span_ mempty
-        )
-          . singleton
-          . Miso.rawHtml
+    button_
+      ( [ onClick
+            . action
+            . PureUpdate
+            $ \st ->
+              st
+                & cloneTraversal optic
+                . #currencyModalState
+                .~ Closed
+                & cloneTraversal optic
+                . #currencyInput
+                . #fieldInput
+                . #uniqueValue
+                .~ mempty
+                & cloneTraversal optic
+                . #currencyOutput
+                .~ item
+                & extraOnClick
+        ]
+          <> ( if current == item
+                then [type_ "submit"]
+                else mempty
+             )
+      )
+      [ Miso.rawHtml
           $ Fuzzy.rendered fuzz
       ]
     where

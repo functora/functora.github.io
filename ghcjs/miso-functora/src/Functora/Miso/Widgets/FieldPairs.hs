@@ -7,11 +7,10 @@ module Functora.Miso.Widgets.FieldPairs
   )
 where
 
-import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Grid as Grid
 
 data Args model action f = Args
   { argsModel :: model,
@@ -54,10 +53,7 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
       else
         [ cell
             [ strong_
-                [
-                  Css.fullWidth,
-                  class_ "mdc-text-field",
-                  style_
+                [ style_
                     [ ("align-items", "center"),
                       ("align-content", "center"),
                       ("word-break", "normal"),
@@ -121,24 +117,23 @@ fieldPairEditor
     { optsAdvanced = False
     }
   idx =
-    [ Field.dynamicField
-        Field.Args
-          { Field.argsModel = st,
-            Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
-            Field.argsAction = action,
-            Field.argsEmitter = emitter
-          }
-        ( Field.defOpts
-            & #optsPlaceholder
-            .~ ( fromMaybe ("#" <> inspect (idx + 1))
-                  $ st
-                  ^? cloneTraversal optic
-                  . ix idx
-                  . #fieldPairKey
-                  . #fieldOutput
-               )
-        )
-    ]
+    Field.dynamicField
+      Field.Args
+        { Field.argsModel = st,
+          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
+          Field.argsAction = action,
+          Field.argsEmitter = emitter
+        }
+      ( Field.defOpts
+          & #optsPlaceholder
+          .~ ( fromMaybe ("#" <> inspect (idx + 1))
+                $ st
+                ^? cloneTraversal optic
+                . ix idx
+                . #fieldPairKey
+                . #fieldOutput
+             )
+      )
 fieldPairEditor
   Args
     { argsModel = st,
@@ -150,32 +145,32 @@ fieldPairEditor
     { optsAdvanced = True
     }
   idx =
-    [ Field.textField
-        Field.Args
-          { Field.argsModel = st,
-            Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
-            Field.argsAction = action,
-            Field.argsEmitter = emitter
-          }
-        ( Field.defOpts @model @action
-            & #optsPlaceholder
-            .~ ("Label " <> idxTxt)
-            & ( #optsLeadingWidget ::
-                  Lens'
-                    (Field.Opts model action)
-                    (Maybe (Field.OptsWidgetPair model action))
-              )
-            .~ Just
-              ( let w = Field.DownWidget optic idx mempty
-                 in Field.OptsWidgetPair w w
-              )
-            & #optsTrailingWidget
-            .~ Just
-              ( let w = Field.UpWidget optic idx mempty
-                 in Field.OptsWidgetPair w w
-              )
-        ),
-      Field.dynamicField
+    Field.textField
+      Field.Args
+        { Field.argsModel = st,
+          Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,
+          Field.argsAction = action,
+          Field.argsEmitter = emitter
+        }
+      ( Field.defOpts @model @action
+          & #optsPlaceholder
+          .~ ("Label " <> idxTxt)
+          & ( #optsLeadingWidget ::
+                Lens'
+                  (Field.Opts model action)
+                  (Maybe (Field.OptsWidgetPair model action))
+            )
+          .~ Just
+            ( let w = Field.DownWidget optic idx mempty
+               in Field.OptsWidgetPair w w
+            )
+          & #optsTrailingWidget
+          .~ Just
+            ( let w = Field.UpWidget optic idx mempty
+               in Field.OptsWidgetPair w w
+            )
+      )
+      <> Field.dynamicField
         Field.Args
           { Field.argsModel = st,
             Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairValue,
@@ -216,7 +211,6 @@ fieldPairEditor
                  in Field.OptsWidgetPair w w
               )
         )
-    ]
     where
       idxTxt :: Unicode
       idxTxt = "#" <> inspect (idx + 1)

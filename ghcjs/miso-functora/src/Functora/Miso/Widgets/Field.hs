@@ -19,7 +19,6 @@ module Functora.Miso.Widgets.Field
   )
 where
 
-import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
@@ -118,30 +117,27 @@ data ModalWidget' model where
 field ::
   Full model action t Unique ->
   Opts model action ->
-  View action
+  [View action]
 field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
-  Grid.cell
-    $ ( do
-          x0 <-
-            catMaybes
-              [ opts
-                  ^? #optsLeadingWidget
-                  . _Just
-                  . cloneTraversal widgetOptic,
-                opts
-                  ^? #optsTrailingWidget
-                  . _Just
-                  . cloneTraversal widgetOptic
-              ]
-          x1 <-
-            case x0 of
-              ModalWidget w -> pure w
-              _ -> mempty
-          fieldModal args x1
-      )
-    <> [ keyed
-          uid
-          . input_
+  ( do
+      x0 <-
+        catMaybes
+          [ opts
+              ^? #optsLeadingWidget
+              . _Just
+              . cloneTraversal widgetOptic,
+            opts
+              ^? #optsTrailingWidget
+              . _Just
+              . cloneTraversal widgetOptic
+          ]
+      x1 <-
+        case x0 of
+          ModalWidget w -> pure w
+          _ -> mempty
+      fieldModal args x1
+  )
+    <> [ input_
           $ ( catMaybes
                 [ fmap
                     (type_ . htmlFieldType)
@@ -156,8 +152,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                     . unTagged
                     $ htmlUid uid,
                   Just . onKeyDown $ action . optsOnKeyDownAction opts uid,
-                  Just $ onBlur onBlurAction,
-                  Just Css.fullWidth
+                  Just $ onBlur onBlurAction
                 ]
             )
           <> ( opts ^. #optsExtraAttributes
@@ -228,7 +223,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
 ratioField ::
   Args model action Rational Unique ->
   Opts model action ->
-  View action
+  [View action]
 ratioField args =
   field
     Full
@@ -240,7 +235,7 @@ ratioField args =
 textField ::
   Args model action Unicode Unique ->
   Opts model action ->
-  View action
+  [View action]
 textField args =
   field
     Full
@@ -252,7 +247,7 @@ textField args =
 dynamicField ::
   Args model action DynamicField Unique ->
   Opts model action ->
-  View action
+  [View action]
 dynamicField args =
   field
     Full
@@ -264,7 +259,7 @@ dynamicField args =
 passwordField ::
   Args model action Unicode Unique ->
   Opts model action ->
-  View action
+  [View action]
 passwordField args opts =
   textField
     args
@@ -412,18 +407,17 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
         Dialog.argsAction = args ^. #argsAction,
         Dialog.argsContent =
           [ Grid.mediumCell
-              [ textField
-                  Args
-                    { argsModel = args ^. #argsModel,
-                      argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
-                      argsAction = args ^. #argsAction,
-                      argsEmitter = args ^. #argsEmitter
-                    }
-                  ( defOpts
-                      & #optsPlaceholder
-                      .~ "Label"
-                  )
-              ],
+              $ textField
+                Args
+                  { argsModel = args ^. #argsModel,
+                    argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
+                    argsAction = args ^. #argsAction,
+                    argsEmitter = args ^. #argsEmitter
+                  }
+                ( defOpts
+                    & #optsPlaceholder
+                    .~ "Label"
+                ),
             Grid.mediumCell
               [ button_
                   [ onClick
@@ -596,8 +590,7 @@ header txt =
     then mempty
     else
       [ div_
-          [ Css.fullWidth,
-            style_ [("text-align", "center")]
+          [ style_ [("text-align", "center")]
           ]
           [ text txt
           ]
@@ -617,45 +610,22 @@ genericFieldViewer args widget =
           Opened -> Qr.qr input
           Closed -> mempty
       )
-        <> [ span_
-              [ Css.fullWidth,
-                class_ "mdc-text-field",
-                class_ "mdc-text-field--filled",
-                style_
-                  [ ("align-items", "center"),
-                    ("align-content", "center"),
-                    ("word-break", "normal"),
-                    ("overflow-wrap", "anywhere"),
-                    ("min-height", "56px"),
-                    ("height", "auto"),
-                    ("padding-top", "8px"),
-                    ("padding-bottom", "8px"),
-                    ("border-radius", "4px"),
-                    ("line-height", "150%")
-                  ]
-              ]
-              [ div_
-                  [ Css.fullWidth
-                  ]
-                  $ [ widget
-                        $ truncateFieldViewer
-                          allowTrunc
-                          stateTrunc
-                          (opts ^. #fieldOptsTruncateLimit)
-                          input
-                    ]
-                  <> ( if null extraWidgets
-                        then mempty
-                        else
-                          [ div_
-                              [ Css.fullWidth,
-                                style_ [("text-align", "right")]
-                              ]
-                              extraWidgets
-                          ]
-                     )
-              ]
+        <> [ widget
+              $ truncateFieldViewer
+                allowTrunc
+                stateTrunc
+                (opts ^. #fieldOptsTruncateLimit)
+                input
            ]
+        <> ( if null extraWidgets
+              then mempty
+              else
+                [ div_
+                    [ style_ [("text-align", "right")]
+                    ]
+                    extraWidgets
+                ]
+           )
   where
     st = argsModel args
     optic = argsOptic args

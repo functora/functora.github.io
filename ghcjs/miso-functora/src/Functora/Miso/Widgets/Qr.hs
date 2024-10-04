@@ -6,9 +6,8 @@ where
 import qualified Codec.QRCode as QRCode
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.MemoUgly as Memo
-import qualified Functora.Miso.Widgets.Grid as Grid
-import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
 
 qr :: Unicode -> [View action]
@@ -20,8 +19,7 @@ qr txt
             ( \img ->
                 Grid.bigCell
                   [ img_
-                      [ Css.fullWidth,
-                        src_ img
+                      [ src_ img
                       ]
                   ]
             )

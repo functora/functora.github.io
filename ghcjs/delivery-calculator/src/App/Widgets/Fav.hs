@@ -25,35 +25,34 @@ fav st =
           [ Grid.grid mempty
               $ favItems st
               <> [ Grid.bigCell
-                    [ Field.textField
-                        Field.Args
-                          { Field.argsModel = st,
-                            Field.argsOptic = #modelState . #stFavName,
-                            Field.argsAction = PushUpdate . Instant,
-                            Field.argsEmitter = pushActionQueue st . Instant
-                          }
-                        Field.defOpts
-                          { Field.optsPlaceholder = "Name",
-                            Field.optsOnKeyDownAction = onKeyDownAction,
-                            Field.optsTrailingWidget =
-                              let w =
-                                    Field.ActionWidget
-                                      "favorite"
-                                      mempty
-                                      . PushUpdate
-                                      $ Instant saveAction
-                               in Just
-                                    $ Field.OptsWidgetPair w w,
-                            Field.optsLeadingWidget =
-                              let w =
-                                    Field.ActionWidget
-                                      "delete_forever"
-                                      mempty
-                                      deleteAction
-                               in Just
-                                    $ Field.OptsWidgetPair w w
-                          }
-                    ]
+                    $ Field.textField
+                      Field.Args
+                        { Field.argsModel = st,
+                          Field.argsOptic = #modelState . #stFavName,
+                          Field.argsAction = PushUpdate . Instant,
+                          Field.argsEmitter = pushActionQueue st . Instant
+                        }
+                      Field.defOpts
+                        { Field.optsPlaceholder = "Name",
+                          Field.optsOnKeyDownAction = onKeyDownAction,
+                          Field.optsTrailingWidget =
+                            let w =
+                                  Field.ActionWidget
+                                    "favorite"
+                                    mempty
+                                    . PushUpdate
+                                    $ Instant saveAction
+                             in Just
+                                  $ Field.OptsWidgetPair w w,
+                          Field.optsLeadingWidget =
+                            let w =
+                                  Field.ActionWidget
+                                    "delete_forever"
+                                    mempty
+                                    deleteAction
+                             in Just
+                                  $ Field.OptsWidgetPair w w
+                        }
                  ]
           ]
       }

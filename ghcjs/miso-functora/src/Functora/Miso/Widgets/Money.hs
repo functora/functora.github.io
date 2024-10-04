@@ -6,7 +6,6 @@ module Functora.Miso.Widgets.Money
   )
 where
 
-import qualified Functora.Miso.Css as Css
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
@@ -52,25 +51,23 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
           Just
             $ cell
               [ div_
-                  [ Css.fullWidth,
-                    style_ [("text-align", "center")]
+                  [ style_ [("text-align", "center")]
                   ]
-                  [ Field.ratioField
-                      Field.Args
-                        { Field.argsModel = st,
-                          Field.argsOptic = cloneTraversal optic . #moneyAmount,
-                          Field.argsAction = action,
-                          Field.argsEmitter = error "TODO_MONEY_EMITTER"
-                        }
-                      ( Field.defOpts
-                          & #optsDisabled
-                          .~ True
-                          & #optsPlaceholder
-                          .~ inspectCurrencyInfo
-                            ( money ^. #moneyCurrency . #currencyOutput
-                            )
-                      )
-                  ]
+                  $ Field.ratioField
+                    Field.Args
+                      { Field.argsModel = st,
+                        Field.argsOptic = cloneTraversal optic . #moneyAmount,
+                        Field.argsAction = action,
+                        Field.argsEmitter = error "TODO_MONEY_EMITTER"
+                      }
+                    ( Field.defOpts
+                        & #optsDisabled
+                        .~ True
+                        & #optsPlaceholder
+                        .~ inspectCurrencyInfo
+                          ( money ^. #moneyCurrency . #currencyOutput
+                          )
+                    )
               ]
         ]
   where

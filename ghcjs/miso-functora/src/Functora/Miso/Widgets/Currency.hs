@@ -24,19 +24,25 @@ data Args model action = Args
   deriving stock (Generic)
 
 data Opts model = Opts
-  { optsExtraOnClick :: model -> model,
-    optsButtonViewer :: CurrencyInfo -> Unicode
+  { optsButtonLabel :: Maybe Unicode,
+    optsButtonViewer :: CurrencyInfo -> Unicode,
+    optsExtraOnClick :: model -> model
   }
   deriving stock (Generic)
 
 defOpts :: Opts model
 defOpts =
   Opts
-    { optsExtraOnClick = id,
-      optsButtonViewer = inspectCurrencyInfo
+    { optsButtonLabel = Nothing,
+      optsButtonViewer = inspectCurrencyInfo,
+      optsExtraOnClick = id
     }
 
-selectCurrency :: Opts model -> Args model action -> [View action]
+selectCurrency ::
+  forall model action.
+  Opts model ->
+  Args model action ->
+  [View action]
 selectCurrency
   opts@Opts
     { optsExtraOnClick = extraOnClick
@@ -47,13 +53,19 @@ selectCurrency
       argsAction = action,
       argsEmitter = emitter
     } =
-    [ button_ [onClick open]
-        . singleton
-        . text
-        . (opts ^. #optsButtonViewer)
-        $ fromMaybe
-          (CurrencyInfo (CurrencyCode "XXX") mempty)
-          (st ^? cloneTraversal optic . #currencyOutput)
+    [ maybe
+        id
+        (\x -> label_ mempty . (text x :) . singleton)
+        (optsButtonLabel opts)
+        $ input_
+          [ type_ "button",
+            onClick open,
+            value_
+              . optsButtonViewer opts
+              $ fromMaybe
+                (CurrencyInfo (CurrencyCode "XXX") mempty)
+                (st ^? cloneTraversal optic . #currencyOutput)
+          ]
     ]
       <> Dialog.dialog
         Dialog.defOpts
@@ -67,9 +79,11 @@ selectCurrency
                         Field.argsAction = action,
                         Field.argsEmitter = emitter
                       }
-                    ( Field.defOpts
+                    ( Field.defOpts @model @action
                         & #optsPlaceholder
-                        .~ "Search"
+                        .~ ("Search" :: Unicode)
+                        & #optsExtraAttributes
+                        .~ [autofocus_ True]
                     )
               ),
             Dialog.optsExtraOnClose =

@@ -117,12 +117,8 @@ menu st =
           Dialog.argsContent =
             Currency.selectCurrency
               Currency.defOpts
-                { Currency.optsExtraOnClick =
-                    (& #modelLoading .~ True),
-                  Currency.optsButtonViewer =
-                    mappend "Marketplace - "
-                      . Money.inspectCurrencyCode
-                      . Money.currencyInfoCode
+                { Currency.optsButtonLabel = Just "Marketplace currency",
+                  Currency.optsExtraOnClick = #modelLoading .~ True
                 }
               Currency.Args
                 { Currency.argsModel = st,
@@ -137,12 +133,8 @@ menu st =
                 }
               <> Currency.selectCurrency
                 Currency.defOpts
-                  { Currency.optsExtraOnClick =
-                      (& #modelLoading .~ True),
-                    Currency.optsButtonViewer =
-                      mappend "Merchant - "
-                        . Money.inspectCurrencyCode
-                        . Money.currencyInfoCode
+                  { Currency.optsButtonLabel = Just "Merchant currency",
+                    Currency.optsExtraOnClick = #modelLoading .~ True
                   }
                 Currency.Args
                   { Currency.argsModel = st,

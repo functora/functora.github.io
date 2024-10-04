@@ -134,7 +134,6 @@ favItem st label Fav {favUri = uri} =
               --
               -- TODO : Implement here pure, less costly equivalent of newModel.
               --
-              Dialog.closeDialog st #modelFav
               next <- newModel (st ^. #modelWebOpts) (Just st) uri
               pure $ #modelState .~ modelState next
           )

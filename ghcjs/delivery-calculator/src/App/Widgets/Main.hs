@@ -7,7 +7,6 @@ import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
-import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Grid as Grid
@@ -110,14 +109,6 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               [ Css.fullWidth,
                 onClick . PushUpdate . Instant . ImpureUpdate $ do
                   asset <- newAsset
-                  void . spawnLink $ do
-                    --
-                    -- NOTE : not reliable
-                    --
-                    sleepMilliSeconds 100
-                    Dialog.openDialog st
-                      . constTraversal
-                      $ assetModalState asset
                   pure
                     $ #modelState
                     . #stAssets

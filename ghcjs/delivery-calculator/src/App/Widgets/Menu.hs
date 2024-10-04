@@ -35,15 +35,10 @@ menu st =
             onClick
               . PushUpdate
               . Instant
-              $ PureAndImpureUpdate
-                ( #modelMenu
-                    . #uniqueValue
-                    .~ Opened
-                )
-                ( do
-                    Dialog.openDialog st #modelMenu
-                    pure id
-                )
+              . PureUpdate
+              $ #modelMenu
+              . #uniqueValue
+              .~ Opened
           ]
           [ icon Icon.IconMenu
           ],
@@ -64,15 +59,10 @@ menu st =
             onClick
               . PushUpdate
               . Instant
-              $ PureAndImpureUpdate
-                ( #modelFav
-                    . #uniqueValue
-                    .~ Opened
-                )
-                ( do
-                    Dialog.openDialog st #modelFav
-                    pure id
-                )
+              . PureUpdate
+              $ #modelFav
+              . #uniqueValue
+              .~ Opened
           ]
           [ icon Icon.IconFav
           ],
@@ -292,15 +282,10 @@ menu st =
     screen next =
       PushUpdate
         . Instant
-        $ PureAndImpureUpdate
-          ( (#modelMenu . #uniqueValue .~ Closed)
-              . (#modelLoading .~ isQrCode next)
-              . (#modelState . #stScreen .~ next)
-          )
-          ( do
-              Dialog.closeDialog st #modelMenu
-              pure id
-          )
+        . PureUpdate
+        $ (#modelMenu . #uniqueValue .~ Closed)
+        . (#modelLoading .~ isQrCode next)
+        . (#modelState . #stScreen .~ next)
     sc =
       st ^. #modelState . #stScreen
 
@@ -407,15 +392,10 @@ linksWidget st =
     openWidget =
       PushUpdate
         . Instant
-        $ PureAndImpureUpdate
-          ( #modelLinks
-              . #uniqueValue
-              .~ Opened
-          )
-          ( do
-              Dialog.openDialog st #modelLinks
-              pure id
-          )
+        . PureUpdate
+        $ #modelLinks
+        . #uniqueValue
+        .~ Opened
     openBrowser =
       PushUpdate
         . Instant

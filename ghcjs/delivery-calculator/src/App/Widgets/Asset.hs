@@ -25,15 +25,10 @@ assetViewer st idx =
           [ onClick
               . PushUpdate
               . Instant
-              $ PureAndImpureUpdate
-                ( cloneTraversal modalOptic
-                    . #uniqueValue
-                    .~ Opened
-                )
-                ( do
-                    Dialog.openDialog st modalOptic
-                    pure id
-                )
+              . PureUpdate
+              $ cloneTraversal modalOptic
+              . #uniqueValue
+              .~ Opened
           ]
           [ text "settings"
           ]
@@ -105,12 +100,7 @@ assetViewer st idx =
     closeAction =
       PushUpdate
         . Instant
-        $ PureAndImpureUpdate
-          ( cloneTraversal modalOptic
-              . #uniqueValue
-              .~ Closed
-          )
-          ( do
-              Dialog.closeDialog st modalOptic
-              pure id
-          )
+        . PureUpdate
+        $ cloneTraversal modalOptic
+        . #uniqueValue
+        .~ Closed

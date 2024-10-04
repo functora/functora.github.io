@@ -53,6 +53,9 @@ dialog opts args =
     else
       singleton
         . FixedOverlay.fixedOverlay
+          [ role_ "button",
+            onClick $ closeDialogAction opts args
+          ]
         . singleton
         . nodeHtml "dialog" [boolProp "open" True]
         $ newFlex

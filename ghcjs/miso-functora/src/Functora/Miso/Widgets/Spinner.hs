@@ -9,5 +9,6 @@ import Functora.Miso.Widgets.FixedOverlay as FixedOverlay
 spinner :: View action
 spinner =
   FixedOverlay.fixedOverlay
+    mempty
     [ div_ [class_ "lds-dual-ring"] mempty
     ]

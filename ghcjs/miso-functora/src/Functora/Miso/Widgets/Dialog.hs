@@ -21,6 +21,7 @@ data Args model action = Args
 
 data Opts model action = Opts
   { optsTitle :: Maybe Unicode,
+    optsTitleIcon :: Maybe Icon.Icon,
     optsHeaderLeft :: [View action] -> [View action],
     optsHeaderRight :: [View action] -> [View action],
     optsFooterLeft :: [View action] -> [View action],
@@ -34,6 +35,7 @@ defOpts :: Opts model action
 defOpts =
   Opts
     { optsTitle = Nothing,
+      optsTitleIcon = Nothing,
       optsHeaderLeft = id,
       optsHeaderRight = id,
       optsFooterLeft = id,
@@ -72,20 +74,30 @@ dialog opts args =
   where
     opened =
       args ^? #argsModel . cloneTraversal (argsOptic args) == Just Opened
+    defHeaderStyle =
+      style_
+        [ ("margin", "0"),
+          ("display", "flex"),
+          ("align-items", "center")
+        ]
     defHeaderLeft =
       maybeToList
-        . fmap
-          ( h1_
-              [ style_
-                  [ ("margin", "0"),
-                    ("display", "flex"),
-                    ("align-items", "center")
-                  ]
-              ]
-              . singleton
-              . text
+        ( fmap
+            ( h1_
+                [ defHeaderStyle,
+                  style_ [("margin-right", "0.5em")]
+                ]
+                . singleton
+                . optsIcon opts
+            )
+            $ optsTitleIcon opts
+        )
+        <> maybeToList
+          ( fmap
+              ( h1_ [defHeaderStyle] . singleton . text
+              )
+              $ optsTitle opts
           )
-        $ optsTitle opts
     defHeaderRight =
       [ button_
           [onClick $ closeDialogAction opts args]

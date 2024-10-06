@@ -108,6 +108,8 @@ menu st =
     <> Fav.fav st
     <> Dialog.dialog
       ( Dialog.defOpts
+          & #optsTitleIcon
+          .~ Just Icon.IconSettings
           & #optsTitle
           .~ Just "Settings"
       )

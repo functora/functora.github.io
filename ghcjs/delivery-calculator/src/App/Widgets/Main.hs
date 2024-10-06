@@ -57,6 +57,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
       then mempty
       else
         Field.fieldViewer
+          Field.defOpts
           Field.Args
             { Field.argsModel = st,
               Field.argsOptic = #modelState . #stPreview,
@@ -65,6 +66,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
             }
   )
     <> FieldPairs.fieldPairsViewer
+      FieldPairs.defOpts
       FieldPairs.Args
         { FieldPairs.argsModel = st,
           FieldPairs.argsOptic = #modelUriViewer,
@@ -79,6 +81,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
        ]
 screenWidget st@Model {modelState = St {stScreen = Donate}} =
   FieldPairs.fieldPairsViewer
+    FieldPairs.defOpts
     FieldPairs.Args
       { FieldPairs.argsModel = st,
         FieldPairs.argsOptic = #modelDonateViewer,
@@ -135,6 +138,7 @@ totalViewer st =
       [ h1_ mempty [text "Total"]
       ]
         <> FieldPairs.fieldPairsViewer
+          FieldPairs.defOpts
           FieldPairs.Args
             { FieldPairs.argsModel = st,
               FieldPairs.argsOptic =

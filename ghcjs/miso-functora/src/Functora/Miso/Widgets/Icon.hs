@@ -16,7 +16,7 @@ data Icon
   | IconShare
   | IconClose
   | IconGooglePlay
-  | IconQr
+  | IconQrCode
   | IconDelivery
   | IconBack
   | IconSettings
@@ -30,6 +30,14 @@ data Icon
   | IconDelete
   | IconSave
   | IconEdit
+  | IconPaste
+  | IconVisible
+  | IconHidden
+  | IconUp
+  | IconDown
+  | IconExpand
+  | IconCollapse
+  | IconFile
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -57,6 +65,14 @@ data Fa
   | FaTrash
   | FaFloppyDisk
   | FaPenToSquare
+  | FaPaste
+  | FaEye
+  | FaEyeSlash
+  | FaAnglesUp
+  | FaAnglesDown
+  | FaUpRightAndDownLeftFromCenter
+  | FaDownLeftAndUpRightToCenter
+  | FaFileLines
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -68,7 +84,7 @@ instance From Icon Fa where
     IconShare -> FaShareNodes
     IconClose -> FaXmark
     IconGooglePlay -> FaGooglePlay
-    IconQr -> FaQrcode
+    IconQrCode -> FaQrcode
     IconDelivery -> FaTruck
     IconBack -> FaArrowLeft
     IconSettings -> FaGear
@@ -82,6 +98,14 @@ instance From Icon Fa where
     IconDelete -> FaTrash
     IconSave -> FaFloppyDisk
     IconEdit -> FaPenToSquare
+    IconPaste -> FaPaste
+    IconVisible -> FaEye
+    IconHidden -> FaEyeSlash
+    IconUp -> FaAnglesUp
+    IconDown -> FaAnglesDown
+    IconExpand -> FaUpRightAndDownLeftFromCenter
+    IconCollapse -> FaDownLeftAndUpRightToCenter
+    IconFile -> FaFileLines
 
 instance IsIcon Fa where
   icon x =

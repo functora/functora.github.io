@@ -5,9 +5,9 @@ module Functora.Miso.Widgets.Switch
   )
 where
 
-import qualified Functora.Miso.Widgets.Flex as Flex
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified Functora.Miso.Widgets.Flex as Flex
 import Miso hiding (at, view)
 
 data Args model action = Args
@@ -38,7 +38,7 @@ switch ::
   Args model action ->
   View action
 switch opts Args {argsModel = st, argsOptic = optic, argsAction = action} =
-  Flex.flex mempty
+  Flex.flex div_ id
     $ maybeToList
       ( fmap (\icon -> i_ [class_ icon] mempty)
           $ optsIcon opts

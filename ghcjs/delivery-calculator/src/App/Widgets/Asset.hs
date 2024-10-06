@@ -35,7 +35,7 @@ assetViewer st idx =
                 ]
             ]
         ]
-      <> FieldPairs.fieldPairsViewer args
+      <> FieldPairs.fieldPairsViewer FieldPairs.defOpts args
   ]
     <> ( Dialog.dialog
           ( Dialog.defOpts @Model @Action

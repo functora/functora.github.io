@@ -14,6 +14,7 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Money as Money
@@ -21,15 +22,9 @@ import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
-  [ menu_
-      [ class_ "no-print",
-        style_
-          [ ("display", "flex"),
-            ("flex-wrap", "wrap"),
-            ("flex-direction", "row"),
-            ("justify-content", "space-between")
-          ]
-      ]
+  ( Flex.flexLeftRight
+      menu_
+      id
       [ li_
           [ role_ "button",
             onClick
@@ -48,12 +43,9 @@ menu st =
               pure $ #modelState .~ doc
           ]
           [ text "Delivery Calculator"
-          ],
-        div_
-          [ style_ [("flex-grow", "1")]
           ]
-          mempty,
-        li_
+      ]
+      [ li_
           [ role_ "button",
             onClick
               . PushUpdate
@@ -104,7 +96,7 @@ menu st =
           [ icon Icon.IconShare
           ]
       ]
-  ]
+  )
     <> Fav.fav st
     <> Dialog.dialog
       ( Dialog.defOpts
@@ -267,7 +259,7 @@ qrButton st =
     [ icon
         $ if isQrCode sc
           then Icon.IconDelivery
-          else Icon.IconQr,
+          else Icon.IconQrCode,
       text
         $ if isQrCode sc
           then " Calculator"

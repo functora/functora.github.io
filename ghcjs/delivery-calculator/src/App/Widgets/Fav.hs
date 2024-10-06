@@ -10,6 +10,7 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Icon as Icon
 
 fav :: Model -> [View Action]
 fav st =
@@ -34,7 +35,7 @@ fav st =
                   Field.optsTrailingWidget =
                     let w =
                           Field.ActionWidget
-                            "favorite"
+                            Icon.IconFav
                             mempty
                             . PushUpdate
                             $ Instant saveAction
@@ -43,7 +44,7 @@ fav st =
                   Field.optsLeadingWidget =
                     let w =
                           Field.ActionWidget
-                            "delete_forever"
+                            Icon.IconDelete
                             mempty
                             deleteAction
                      in Just

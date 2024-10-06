@@ -10,6 +10,8 @@ where
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Flex as Flex
+import qualified Functora.Miso.Widgets.Icon as Icon
 
 data Args model action f = Args
   { argsModel :: model,
@@ -19,19 +21,26 @@ data Args model action f = Args
   }
   deriving stock (Generic)
 
-newtype Opts = Opts
-  { optsAdvanced :: Bool
+data Opts action = Opts
+  { optsIcon :: Icon.Icon -> View action,
+    optsAdvanced :: Bool
   }
-  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving stock (Generic)
 
-defOpts :: Opts
+defOpts :: Opts action
 defOpts =
   Opts
-    { optsAdvanced = True
+    { optsIcon = Icon.icon @Icon.Fa,
+      optsAdvanced = True
     }
 
-fieldPairsViewer :: (Foldable1 f) => Args model action f -> [View action]
-fieldPairsViewer args@Args {argsOptic = optic} =
+fieldPairsViewer ::
+  ( Foldable1 f
+  ) =>
+  Opts action ->
+  Args model action f ->
+  [View action]
+fieldPairsViewer opts args@Args {argsOptic = optic} =
   if null content
     then mempty
     else [dl_ mempty content]
@@ -40,18 +49,20 @@ fieldPairsViewer args@Args {argsOptic = optic} =
       item <-
         zip [0 ..] . fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
       uncurry
-        ( fieldPairViewer args
+        ( fieldPairViewer opts args
         )
         item
 
 fieldPairViewer ::
+  forall model action f.
   ( Foldable1 f
   ) =>
+  Opts action ->
   Args model action f ->
   Int ->
   FieldPair DynamicField f ->
   [View action]
-fieldPairViewer args@Args {argsOptic = optic} idx pair =
+fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
   ( if k == mempty
       then mempty
       else
@@ -64,25 +75,29 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
     <> ( if v == mempty
           then mempty
           else
-            singleton
-              . dd_ mempty
-              $ Field.fieldViewer
-                Field.Args
-                  { Field.argsModel =
-                      args ^. #argsModel,
-                    Field.argsOptic =
-                      cloneTraversal optic . ix idx . #fieldPairValue,
-                    Field.argsAction =
-                      args ^. #argsAction,
-                    Field.argsEmitter =
-                      args ^. #argsEmitter
-                  }
+            Field.fieldViewer
+              ( Field.defOpts @model @action
+                  & #optsIcon
+                  .~ optsIcon opts
+                  & #optsLeftRightViewer
+                  .~ Flex.flexLeftRight dd_ id
+              )
+              Field.Args
+                { Field.argsModel =
+                    args ^. #argsModel,
+                  Field.argsOptic =
+                    cloneTraversal optic . ix idx . #fieldPairValue,
+                  Field.argsAction =
+                    args ^. #argsAction,
+                  Field.argsEmitter =
+                    args ^. #argsEmitter
+                }
        )
   where
     k = pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
 
-fieldPairsEditor :: Args model action Unique -> Opts -> [View action]
+fieldPairsEditor :: Args model action Unique -> Opts action -> [View action]
 fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
   fieldPairEditor args opts idx
@@ -90,7 +105,7 @@ fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
 fieldPairEditor ::
   forall model action.
   Args model action Unique ->
-  Opts ->
+  Opts action ->
   Int ->
   [View action]
 fieldPairEditor

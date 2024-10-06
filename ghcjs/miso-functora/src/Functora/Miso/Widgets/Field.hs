@@ -23,6 +23,7 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Language.Javascript.JSaddle as JS
@@ -44,7 +45,8 @@ data Full model action t f = Full
   deriving stock (Generic)
 
 data Opts model action = Opts
-  { optsLabel :: Maybe Unicode,
+  { optsIcon :: Icon.Icon -> View action,
+    optsLabel :: Maybe Unicode,
     optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
@@ -52,7 +54,8 @@ data Opts model action = Opts
     optsLeadingWidget :: Maybe (OptsWidgetPair model action),
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
     optsOnKeyDownAction :: Uid -> KeyCode -> Update model,
-    optsExtraAttributes :: [Attribute action]
+    optsExtraAttributes :: [Attribute action],
+    optsLeftRightViewer :: [View action] -> [View action] -> [View action]
   }
   deriving stock (Generic)
 
@@ -65,7 +68,8 @@ data OptsWidgetPair model action = OptsWidgetPair
 defOpts :: Opts model action
 defOpts =
   Opts
-    { optsLabel = Nothing,
+    { optsIcon = Icon.icon @Icon.Fa,
+      optsLabel = Nothing,
       optsDisabled = False,
       optsFullWidth = False,
       optsPlaceholder = mempty,
@@ -73,7 +77,8 @@ defOpts =
       optsLeadingWidget = Just $ OptsWidgetPair PasteWidget PasteWidget,
       optsTrailingWidget = Just $ OptsWidgetPair ClearWidget ClearWidget,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
-      optsExtraAttributes = mempty
+      optsExtraAttributes = mempty,
+      optsLeftRightViewer = (<>)
     }
 
 data OptsWidget model action
@@ -83,7 +88,7 @@ data OptsWidget model action
   | ScanQrWidget
   | ShowOrHideWidget
   | ModalWidget (ModalWidget' model)
-  | ActionWidget Unicode [Attribute action] action
+  | ActionWidget Icon.Icon [Attribute action] action
   | forall item. UpWidget (ATraversal' model [item]) Int [Attribute action]
   | forall item. DownWidget (ATraversal' model [item]) Int [Attribute action]
   | forall item. DeleteWidget (ATraversal' model [item]) Int [Attribute action]
@@ -286,13 +291,13 @@ fieldIcon ::
   View action
 fieldIcon full opts = \case
   CopyWidget ->
-    fieldIconSimple "content_copy" mempty
+    fieldIconSimple opts Icon.IconCopy mempty
       . action
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
         Nothing -> PureUpdate id
         Just txt -> Jsm.shareText txt
   ClearWidget ->
-    fieldIconSimple "close" mempty
+    fieldIconSimple opts Icon.IconClose mempty
       . ( fromMaybe action
             $ optsOnInputAction opts
         )
@@ -319,41 +324,41 @@ fieldIcon full opts = \case
             pure id
         )
   PasteWidget ->
-    fieldIconSimple "content_paste_go" mempty
+    fieldIconSimple opts Icon.IconPaste mempty
       $ insertAction full Jsm.selectClipboard
   ScanQrWidget ->
-    fieldIconSimple "qr_code_scanner" mempty
+    fieldIconSimple opts Icon.IconQrCode mempty
       $ insertAction full Jsm.selectBarcode
   ShowOrHideWidget ->
     case st ^? cloneTraversal optic . #fieldType of
       Just FieldTypePassword ->
-        fieldIconSimple "visibility_off" mempty
+        fieldIconSimple opts Icon.IconHidden mempty
           . action
           . PureUpdate
           $ cloneTraversal optic
           . #fieldType
           .~ FieldTypeText
       _ ->
-        fieldIconSimple "visibility" mempty
+        fieldIconSimple opts Icon.IconVisible mempty
           . action
           . PureUpdate
           $ cloneTraversal optic
           . #fieldType
           .~ FieldTypePassword
   UpWidget opt idx attrs ->
-    fieldIconSimple "keyboard_double_arrow_up" attrs
+    fieldIconSimple opts Icon.IconUp attrs
       . action
       $ Jsm.moveUp opt idx
   DownWidget opt idx attrs ->
-    fieldIconSimple "keyboard_double_arrow_down" attrs
+    fieldIconSimple opts Icon.IconDown attrs
       . action
       $ Jsm.moveDown opt idx
   DeleteWidget opt idx attrs ->
-    fieldIconSimple "delete_forever" attrs
+    fieldIconSimple opts Icon.IconDelete attrs
       . action
       $ Jsm.removeAt opt idx
   ModalWidget (ModalItemWidget opt idx _ _ ooc) ->
-    fieldIconSimple "settings" mempty
+    fieldIconSimple opts Icon.IconSettings mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
@@ -361,7 +366,7 @@ fieldIcon full opts = \case
       . cloneTraversal ooc
       .~ Opened
   ModalWidget (ModalFieldWidget opt idx access _) ->
-    fieldIconSimple "settings" mempty
+    fieldIconSimple opts Icon.IconSettings mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
@@ -370,14 +375,14 @@ fieldIcon full opts = \case
       . #fieldModalState
       .~ Opened
   ModalWidget (ModalMiniWidget opt) ->
-    fieldIconSimple "settings" mempty
+    fieldIconSimple opts Icon.IconSettings mempty
       . action
       . PureUpdate
       $ cloneTraversal opt
       . #fieldModalState
       .~ Opened
   ActionWidget icon attrs act ->
-    fieldIconSimple icon attrs act
+    fieldIconSimple opts icon attrs act
   where
     st = full ^. #fullArgs . #argsModel
     optic = full ^. #fullArgs . #argsOptic
@@ -390,20 +395,17 @@ fieldIcon full opts = \case
         . #uniqueUid
 
 fieldIconSimple ::
-  Unicode ->
+  Opts model action ->
+  Icon.Icon ->
   [Attribute action] ->
   action ->
   View action
-fieldIconSimple txt attrs action =
+fieldIconSimple opts i attrs action =
   button_
-    ( [ style_ [("pointer-events", "auto")],
-        textProp "role" "button",
-        intProp "tabindex" 0,
-        onClick action
-      ]
+    ( [onClick action]
         <> attrs
     )
-    [ text txt
+    [ optsIcon opts i
     ]
 
 fieldModal :: Args model action t f -> ModalWidget' model -> [View action]
@@ -534,16 +536,18 @@ selectTypeWidget args@Args {argsAction = action} optic =
 fieldViewer ::
   ( Foldable1 f
   ) =>
+  Opts model action ->
   Args model action t f ->
   [View action]
-fieldViewer args =
+fieldViewer opts args =
   case typ of
-    FieldTypeNumber -> genericFieldViewer args text
-    FieldTypePercent -> genericFieldViewer args $ text . (<> "%")
-    FieldTypeText -> genericFieldViewer args text
+    FieldTypeNumber -> genericFieldViewer opts args text
+    FieldTypePercent -> genericFieldViewer opts args $ text . (<> "%")
+    FieldTypeText -> genericFieldViewer opts args text
     FieldTypeTitle -> header val
     FieldTypeHtml ->
       genericFieldViewer
+        opts
         ( args
             & cloneTraversal optic
             . #fieldOpts
@@ -552,10 +556,11 @@ fieldViewer args =
         )
         rawHtml
     FieldTypePassword ->
-      genericFieldViewer args
+      genericFieldViewer opts args
         $ const "*****"
     FieldTypeQrCode ->
       genericFieldViewer
+        opts
         ( args
             & cloneTraversal optic
             . #fieldOpts
@@ -586,10 +591,11 @@ header txt =
 genericFieldViewer ::
   ( Foldable1 f
   ) =>
+  Opts model action ->
   Args model action t f ->
   (Unicode -> View action) ->
   [View action]
-genericFieldViewer args widget =
+genericFieldViewer opts0 args widget =
   if input == mempty
     then mempty
     else
@@ -597,21 +603,19 @@ genericFieldViewer args widget =
           Opened -> Qr.qr input
           Closed -> mempty
       )
-        <> [ widget
-              $ truncateFieldViewer
-                allowTrunc
-                stateTrunc
-                (opts ^. #fieldOptsTruncateLimit)
-                input
-           ]
-        <> ( if null extraWidgets
-              then mempty
-              else
-                [ div_
-                    [ style_ [("text-align", "right")]
-                    ]
-                    extraWidgets
-                ]
+        <> ( optsLeftRightViewer
+              opts0
+              [ widget
+                  $ truncateFieldViewer
+                    allowTrunc
+                    stateTrunc
+                    (opts ^. #fieldOptsTruncateLimit)
+                    input
+              ]
+              ( if null extraWidgets
+                  then mempty
+                  else extraWidgets
+              )
            )
   where
     st = argsModel args
@@ -634,10 +638,10 @@ genericFieldViewer args widget =
           then mempty
           else do
             let icon = case stateTrunc of
-                  Closed -> "open_in_full"
-                  Opened -> "close_fullscreen"
+                  Closed -> Icon.IconExpand
+                  Opened -> Icon.IconCollapse
             pure
-              . fieldViewerIcon icon
+              . fieldViewerIcon opts0 icon
               . action
               . PureUpdate
               $ cloneTraversal optic
@@ -653,10 +657,10 @@ genericFieldViewer args widget =
               then mempty
               else do
                 let icon = case stateQr of
-                      Closed -> "qr_code_2"
-                      Opened -> "grid_off"
+                      Closed -> Icon.IconQrCode
+                      Opened -> Icon.IconFile
                 pure
-                  . fieldViewerIcon icon
+                  . fieldViewerIcon opts0 icon
                   . action
                   . PureUpdate
                   $ cloneTraversal optic
@@ -671,17 +675,17 @@ genericFieldViewer args widget =
         <> ( if not allowCopy
               then mempty
               else
-                [ fieldViewerIcon "content_copy"
+                [ fieldViewerIcon opts0 Icon.IconCopy
                     . action
                     $ Jsm.shareText input
                 ]
            )
 
-fieldViewerIcon :: Unicode -> action -> View action
-fieldViewerIcon icon action =
+fieldViewerIcon :: Opts model action -> Icon.Icon -> action -> View action
+fieldViewerIcon opts icon action =
   button_
     [onClick action]
-    [text icon]
+    [optsIcon opts icon]
 
 truncateFieldViewer ::
   Bool ->

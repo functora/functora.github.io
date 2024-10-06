@@ -9,6 +9,7 @@ where
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.FixedOverlay as FixedOverlay
+import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
 
 data Args model action = Args
@@ -60,13 +61,13 @@ dialog opts args =
           ]
         . singleton
         . nodeHtml "dialog" [boolProp "open" True]
-        $ newFlex
+        $ Flex.flexLeftRight
           header_
           id
           (optsHeaderLeft opts defHeaderLeft)
           (optsHeaderRight opts defHeaderRight)
         <> argsContent args
-        <> newFlex
+        <> Flex.flexLeftRight
           footer_
           id
           (optsFooterLeft opts mempty)
@@ -110,37 +111,6 @@ dialog opts args =
             text " Back"
           ]
       ]
-
-newFlex ::
-  ([Attribute action] -> [View action] -> View action) ->
-  ([Attribute action] -> [Attribute action]) ->
-  [View action] ->
-  [View action] ->
-  [View action]
-newFlex newTag newAttr lhs rhs =
-  if null lhs && null rhs
-    then mempty
-    else
-      singleton
-        . newTag
-          ( newAttr
-              [ style_
-                  [ ("display", "flex"),
-                    ("flex-wrap", "wrap"),
-                    ("flex-direction", "row"),
-                    ("justify-content", "space-between")
-                  ]
-              ]
-          )
-        $ lhs
-        <> [ div_
-              [ style_
-                  [ ("flex-grow", "1")
-                  ]
-              ]
-              mempty
-           ]
-        <> rhs
 
 closeDialogAction :: Opts model action -> Args model action -> action
 closeDialogAction opts args =

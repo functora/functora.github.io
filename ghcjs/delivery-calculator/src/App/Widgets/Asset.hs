@@ -17,20 +17,25 @@ assetsViewer st = do
 
 assetViewer :: Model -> Int -> [View Action]
 assetViewer st idx =
-  [ h1_
-      mempty
-      [ text title,
-        button_
-          [ onClick
-              . PushUpdate
-              . Instant
-              . PureUpdate
-              $ cloneTraversal modalOptic
-              .~ Opened
-          ]
-          [ text "settings"
-          ]
-      ]
+  [ fieldset_ mempty
+      $ [ legend_
+            mempty
+            [ text title,
+              text " ",
+              button_
+                [ onClick
+                    . PushUpdate
+                    . Instant
+                    . PureUpdate
+                    $ cloneTraversal modalOptic
+                    .~ Opened
+                ]
+                [ icon Icon.IconEdit,
+                  text " Edit"
+                ]
+            ]
+        ]
+      <> FieldPairs.fieldPairsViewer args
   ]
     <> ( Dialog.dialog
           ( Dialog.defOpts @Model @Action
@@ -39,7 +44,8 @@ assetViewer st idx =
               & #optsFooterRight
               .~ const
                 [ button_
-                    [ onClick
+                    [ type_ "reset",
+                      onClick
                         . PushUpdate
                         . Instant
                         $ Jsm.removeAt
@@ -51,7 +57,8 @@ assetViewer st idx =
                       text " Remove"
                     ],
                   button_
-                    [ onClick closeAction
+                    [ type_ "submit",
+                      onClick closeAction
                     ]
                     [ icon Icon.IconSave,
                       text " Save"
@@ -70,7 +77,6 @@ assetViewer st idx =
                   .~ False
             }
        )
-    <> FieldPairs.fieldPairsViewer args
   where
     args =
       FieldPairs.Args

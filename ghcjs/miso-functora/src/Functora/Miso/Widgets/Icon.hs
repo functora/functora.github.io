@@ -29,6 +29,7 @@ data Icon
   | IconTelegram
   | IconDelete
   | IconSave
+  | IconEdit
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -55,6 +56,7 @@ data Fa
   | FaTelegram
   | FaTrash
   | FaFloppyDisk
+  | FaPenToSquare
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -79,6 +81,7 @@ instance From Icon Fa where
     IconTelegram -> FaTelegram
     IconDelete -> FaTrash
     IconSave -> FaFloppyDisk
+    IconEdit -> FaPenToSquare
 
 instance IsIcon Fa where
   icon x =

@@ -9,7 +9,6 @@ where
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
 import Functora.Money hiding (Currency, Money, Text)
 
 data Args model action = Args
@@ -40,40 +39,25 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
   case st ^? cloneTraversal optic of
     Nothing -> mempty
     Just money ->
-      catMaybes
-        [ if label == mempty
-            then Nothing
-            else
-              Just
-                $ cell
-                  [ strong_ mempty [text label]
-                  ],
-          Just
-            $ cell
-              [ div_
-                  [ style_ [("text-align", "center")]
-                  ]
-                  $ Field.ratioField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic = cloneTraversal optic . #moneyAmount,
-                        Field.argsAction = action,
-                        Field.argsEmitter = error "TODO_MONEY_EMITTER"
-                      }
-                    ( Field.defOpts
-                        & #optsDisabled
-                        .~ True
-                        & #optsPlaceholder
-                        .~ inspectCurrencyInfo
-                          ( money ^. #moneyCurrency . #currencyOutput
-                          )
-                    )
-              ]
-        ]
+      ( if label == mempty
+          then mempty
+          else [strong_ mempty [text label]]
+      )
+        <> Field.ratioField
+          Field.Args
+            { Field.argsModel = st,
+              Field.argsOptic = cloneTraversal optic . #moneyAmount,
+              Field.argsAction = action,
+              Field.argsEmitter = error "TODO_MONEY_EMITTER"
+            }
+          ( Field.defOpts
+              & #optsDisabled
+              .~ True
+              & #optsPlaceholder
+              .~ inspectCurrencyInfo
+                ( money ^. #moneyCurrency . #currencyOutput
+                )
+          )
   where
-    cell =
-      if label == mempty
-        then Grid.bigCell
-        else Grid.mediumCell
     label =
       opts ^. #optsLabel

@@ -113,7 +113,6 @@ library
     Functora.Miso.Widgets.FieldPairs
     Functora.Miso.Widgets.FixedOverlay
     Functora.Miso.Widgets.Flex
-    Functora.Miso.Widgets.Grid
     Functora.Miso.Widgets.Icon
     Functora.Miso.Widgets.Money
     Functora.Miso.Widgets.Qr
@@ -150,7 +149,6 @@ test-suite miso-functora-test
       Functora.Miso.Widgets.FieldPairs
       Functora.Miso.Widgets.FixedOverlay
       Functora.Miso.Widgets.Flex
-      Functora.Miso.Widgets.Grid
       Functora.Miso.Widgets.Icon
       Functora.Miso.Widgets.Money
       Functora.Miso.Widgets.Qr

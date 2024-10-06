@@ -23,7 +23,6 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
-import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Language.Javascript.JSaddle as JS
@@ -416,20 +415,18 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
         Dialog.argsOptic = cloneTraversal opt . ix idx . cloneTraversal ooc,
         Dialog.argsAction = args ^. #argsAction,
         Dialog.argsContent =
-          [ Grid.mediumCell
-              $ textField
-                Args
-                  { argsModel = args ^. #argsModel,
-                    argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
-                    argsAction = args ^. #argsAction,
-                    argsEmitter = args ^. #argsEmitter
-                  }
-                ( defOpts
-                    & #optsPlaceholder
-                    .~ "Label"
-                ),
-            Grid.mediumCell
-              [ button_
+          textField
+            Args
+              { argsModel = args ^. #argsModel,
+                argsOptic = cloneTraversal opt . ix idx . cloneTraversal lbl,
+                argsAction = args ^. #argsAction,
+                argsEmitter = args ^. #argsEmitter
+              }
+            ( defOpts
+                & #optsPlaceholder
+                .~ "Label"
+            )
+            <> [ button_
                   [ onClick
                       . action
                       . Jsm.addFieldPair
@@ -437,29 +434,20 @@ fieldModal args@Args {argsAction = action} (ModalItemWidget opt idx fps lbl ooc)
                       . ix idx
                       . cloneTraversal fps
                   ]
-                  [text "Add note"]
-              ],
-            Grid.smallCell
-              [ button_
+                  [text "Add note"],
+                 button_
                   [onClick . action $ Jsm.moveDown opt idx]
-                  [text "Down"]
-              ],
-            Grid.smallCell
-              [ button_
+                  [text "Down"],
+                 button_
                   [onClick . action $ Jsm.moveUp opt idx]
-                  [text "Up"]
-              ],
-            Grid.smallCell
-              [ button_
+                  [text "Up"],
+                 button_
                   [onClick . action $ Jsm.duplicateAt opt idx]
-                  [text "Clone"]
-              ],
-            Grid.smallCell
-              [ button_
+                  [text "Clone"],
+                 button_
                   [onClick . action $ Jsm.removeAt opt idx]
                   [text "Delete"]
-              ]
-          ]
+               ]
       }
 fieldModal args (ModalFieldWidget opt idx access sod) = do
   let st = args ^. #argsModel
@@ -489,8 +477,7 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                         Select.argsOptions = constTraversal $ enumerate @FieldType
                       }
           )
-            <> [ -- Grid.mediumCell
-                 --  $ Switch.switch
+            <> [ -- Switch.switch
                  --    st
                  --    ( Switch.defOpts
                  --        & #optsIcon
@@ -501,26 +488,18 @@ fieldModal args (ModalFieldWidget opt idx access sod) = do
                  --    ( cloneTraversal optic
                  --        . #fieldAllowCopy
                  --    ),
-                 Grid.smallCell
-                  [ button_
-                      [onClick . action $ Jsm.moveDown opt idx]
-                      [text "Down"]
-                  ],
-                 Grid.smallCell
-                  [ button_
-                      [onClick . action $ Jsm.moveUp opt idx]
-                      [text "Up"]
-                  ],
-                 Grid.smallCell
-                  [ button_
-                      [onClick . action $ Jsm.duplicateAt opt idx]
-                      [text "Clone"]
-                  ],
-                 Grid.smallCell
-                  [ button_
-                      [onClick . action $ Jsm.removeAt opt idx]
-                      [text "Delete"]
-                  ]
+                 button_
+                  [onClick . action $ Jsm.moveDown opt idx]
+                  [text "Down"],
+                 button_
+                  [onClick . action $ Jsm.moveUp opt idx]
+                  [text "Up"],
+                 button_
+                  [onClick . action $ Jsm.duplicateAt opt idx]
+                  [text "Clone"],
+                 button_
+                  [onClick . action $ Jsm.removeAt opt idx]
+                  [text "Delete"]
                ]
       }
 fieldModal args (ModalMiniWidget opt) =
@@ -531,9 +510,7 @@ fieldModal args (ModalMiniWidget opt) =
         Dialog.argsOptic = cloneTraversal opt . #fieldModalState,
         Dialog.argsAction = args ^. #argsAction,
         Dialog.argsContent =
-          [ Grid.bigCell
-              [ selectTypeWidget args opt
-              ]
+          [ selectTypeWidget args opt
           ]
       }
 

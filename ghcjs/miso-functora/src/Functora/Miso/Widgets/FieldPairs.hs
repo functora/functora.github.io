@@ -10,7 +10,6 @@ where
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
 
 data Args model action f = Args
   { argsModel :: model,
@@ -32,13 +31,18 @@ defOpts =
     }
 
 fieldPairsViewer :: (Foldable1 f) => Args model action f -> [View action]
-fieldPairsViewer args@Args {argsOptic = optic} = do
-  item <-
-    zip [0 ..] . fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
-  uncurry
-    ( fieldPairViewer args
-    )
-    item
+fieldPairsViewer args@Args {argsOptic = optic} =
+  if null content
+    then mempty
+    else [dl_ mempty content]
+  where
+    content = do
+      item <-
+        zip [0 ..] . fromMaybe mempty $ args ^? #argsModel . cloneTraversal optic
+      uncurry
+        ( fieldPairViewer args
+        )
+        item
 
 fieldPairViewer ::
   ( Foldable1 f
@@ -51,49 +55,32 @@ fieldPairViewer args@Args {argsOptic = optic} idx pair =
   ( if k == mempty
       then mempty
       else
-        [ cell
-            [ strong_
-                [ style_
-                    [ ("align-items", "center"),
-                      ("align-content", "center"),
-                      ("word-break", "normal"),
-                      ("overflow-wrap", "anywhere"),
-                      ("min-height", "56px"),
-                      ("height", "auto"),
-                      ("padding-top", "8px"),
-                      ("padding-bottom", "8px"),
-                      ("line-height", "150%")
-                    ]
-                ]
-                [ text $ pair ^. #fieldPairKey . #fieldOutput
-                ]
+        [ dt_
+            mempty
+            [ text $ pair ^. #fieldPairKey . #fieldOutput
             ]
         ]
   )
     <> ( if v == mempty
           then mempty
           else
-            [ cell
-                $ Field.fieldViewer
-                  Field.Args
-                    { Field.argsModel =
-                        args ^. #argsModel,
-                      Field.argsOptic =
-                        cloneTraversal optic . ix idx . #fieldPairValue,
-                      Field.argsAction =
-                        args ^. #argsAction,
-                      Field.argsEmitter =
-                        args ^. #argsEmitter
-                    }
-            ]
+            singleton
+              . dd_ mempty
+              $ Field.fieldViewer
+                Field.Args
+                  { Field.argsModel =
+                      args ^. #argsModel,
+                    Field.argsOptic =
+                      cloneTraversal optic . ix idx . #fieldPairValue,
+                    Field.argsAction =
+                      args ^. #argsAction,
+                    Field.argsEmitter =
+                      args ^. #argsEmitter
+                  }
        )
   where
     k = pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
-    cell =
-      if k == mempty || v == mempty
-        then Grid.bigCell
-        else Grid.mediumCell
 
 fieldPairsEditor :: Args model action Unique -> Opts -> [View action]
 fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do

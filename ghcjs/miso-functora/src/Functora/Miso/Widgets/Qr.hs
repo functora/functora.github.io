@@ -7,7 +7,6 @@ import qualified Codec.QRCode as QRCode
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.MemoUgly as Memo
 import Functora.Miso.Prelude
-import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Qr as Qr
 
 qr :: Unicode -> [View action]
@@ -15,14 +14,7 @@ qr txt
   | txt == mempty = mempty
   | otherwise =
       catMaybes
-        [ fmap
-            ( \img ->
-                Grid.bigCell
-                  [ img_
-                      [ src_ img
-                      ]
-                  ]
-            )
+        [ fmap (img_ . singleton . src_)
             --
             -- TODO : Research how this works!
             -- It might be leaking memory or something..

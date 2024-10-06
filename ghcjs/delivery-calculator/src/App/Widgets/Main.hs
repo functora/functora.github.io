@@ -31,8 +31,7 @@ mainWidget st =
       ]
     <> [ main_
           [ style_
-              [ ("max-width", "550px"),
-                ("align-self", "center"),
+              [ ("align-self", "center"),
                 ("display", "flex"),
                 ("align-items", "center"),
                 ("flex-direction", "column")

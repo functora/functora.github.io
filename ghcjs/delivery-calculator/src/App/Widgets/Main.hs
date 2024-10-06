@@ -8,7 +8,6 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
-import qualified Functora.Miso.Widgets.Grid as Grid
 import qualified Functora.Miso.Widgets.Spinner as Spinner
 import qualified Functora.Money as Money
 import Lens.Micro ((^..))
@@ -57,21 +56,17 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
               Field.argsEmitter = pushActionQueue st . Instant
             }
   )
-    <> [ Grid.bigCell
-          $ FieldPairs.fieldPairsViewer
-            FieldPairs.Args
-              { FieldPairs.argsModel = st,
-                FieldPairs.argsOptic = #modelUriViewer,
-                FieldPairs.argsAction = PushUpdate . Instant,
-                FieldPairs.argsEmitter = pushActionQueue st . Instant
-              }
-       ]
-    <> [ Grid.bigCell
-          [ button_
-              [ onClick . setScreenAction $ unQrCode sc
-              ]
-              [ text "Open"
-              ]
+    <> FieldPairs.fieldPairsViewer
+      FieldPairs.Args
+        { FieldPairs.argsModel = st,
+          FieldPairs.argsOptic = #modelUriViewer,
+          FieldPairs.argsAction = PushUpdate . Instant,
+          FieldPairs.argsEmitter = pushActionQueue st . Instant
+        }
+    <> [ button_
+          [ onClick . setScreenAction $ unQrCode sc
+          ]
+          [ text "Open"
           ]
        ]
 screenWidget st@Model {modelState = St {stScreen = Donate}} =
@@ -82,12 +77,10 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
         FieldPairs.argsAction = PushUpdate . Instant,
         FieldPairs.argsEmitter = pushActionQueue st . Instant
       }
-    <> [ Grid.bigCell
-          [ button_
-              [ onClick $ setScreenAction Main
-              ]
-              [ text "Open"
-              ]
+    <> [ button_
+          [ onClick $ setScreenAction Main
+          ]
+          [ text "Open"
           ]
        ]
 screenWidget st@Model {modelState = St {stScreen = Main}} =
@@ -103,28 +96,24 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     assets = Asset.assetsViewer st
     buttons :: [View Action]
     buttons =
-      [ Grid.mediumCell
-          [ button_
-              [ onClick . PushUpdate . Instant . ImpureUpdate $ do
-                  asset <- newAsset
-                  pure
-                    $ #modelState
-                    . #stAssets
-                    %~ flip snoc asset
-              ]
-              [ text "Add item"
-              ]
+      [ button_
+          [ onClick . PushUpdate . Instant . ImpureUpdate $ do
+              asset <- newAsset
+              pure
+                $ #modelState
+                . #stAssets
+                %~ flip snoc asset
+          ]
+          [ text "Add item"
           ],
-        Grid.mediumCell
-          [ button_
-              [ onClick
-                  . PushUpdate
-                  . Instant
-                  . either impureThrow Jsm.openBrowserPage
-                  $ stTeleUri st
-              ]
-              [ text "Order via Telegram"
-              ]
+        button_
+          [ onClick
+              . PushUpdate
+              . Instant
+              . either impureThrow Jsm.openBrowserPage
+              $ stTeleUri st
+          ]
+          [ text "Order via Telegram"
           ]
       ]
 

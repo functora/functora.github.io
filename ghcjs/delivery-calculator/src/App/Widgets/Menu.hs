@@ -294,7 +294,12 @@ linksWidget st =
       ]
   ]
     <> Dialog.dialog
-      Dialog.defOpts
+      ( Dialog.defOpts
+          & #optsTitle
+          .~ Just ("App" :: Unicode)
+          & #optsTitleIcon
+          .~ Just Icon.IconGooglePlay
+      )
       Dialog.Args
         { Dialog.argsModel = st,
           Dialog.argsOptic = #modelLinks,
@@ -306,58 +311,58 @@ linksWidget st =
                 BrowserLink.Args
                   { BrowserLink.argsLink = testGroupLink,
                     BrowserLink.argsLabel = "closed beta",
-                    BrowserLink.argsAction =
-                      PushUpdate
-                        . Instant
+                    BrowserLink.argsAction = PushUpdate . Instant
                   },
               text " group and then install the app from ",
               BrowserLink.browserLink
                 BrowserLink.Args
                   { BrowserLink.argsLink = googlePlayLink,
                     BrowserLink.argsLabel = "Google Play",
-                    BrowserLink.argsAction =
-                      PushUpdate
-                        . Instant
+                    BrowserLink.argsAction = PushUpdate . Instant
                   },
               text ", or download the ",
               BrowserLink.browserLink
                 BrowserLink.Args
                   { BrowserLink.argsLink = apkLink,
                     BrowserLink.argsLabel = "APK file",
-                    BrowserLink.argsAction =
-                      PushUpdate
-                        . Instant
+                    BrowserLink.argsAction = PushUpdate . Instant
                   },
               text " directly.",
               button_
                 [ onClick $ openBrowser testGroupLink
                 ]
-                [ text "Join testing (closed beta)"
+                [ icon Icon.IconGooglePlay,
+                  text " Join testing (closed beta)"
                 ],
               button_
                 [ onClick $ openBrowser googlePlayLink
                 ]
-                [ text "Google Play (closed beta)"
+                [ icon Icon.IconGooglePlay,
+                  text " Google Play (closed beta)"
                 ],
               button_
                 [ onClick $ openBrowser apkLink
                 ]
-                [ text "Download APK"
+                [ icon Icon.IconAndroid,
+                  text " Download APK"
                 ],
               button_
                 [ onClick $ openBrowser sourceLink
                 ]
-                [ text "Source"
+                [ icon Icon.IconGit,
+                  text " Source"
                 ],
               button_
                 [ onClick $ openBrowser functoraLink
                 ]
-                [ text "Author"
+                [ icon Icon.IconUser,
+                  text " Author"
                 ],
               button_
                 [ onClick $ setScreenAction Donate
                 ]
-                [ text "Donate"
+                [ icon Icon.IconBitcoin,
+                  text " Donate"
                 ]
             ]
         }

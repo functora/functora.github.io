@@ -8,7 +8,6 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
-import qualified Functora.Miso.Widgets.Grid as Grid
 
 assetsViewer :: Model -> [View Action]
 assetsViewer st = do
@@ -42,36 +41,27 @@ assetViewer st idx =
               Dialog.argsOptic = modalOptic,
               Dialog.argsAction = PushUpdate . Instant,
               Dialog.argsContent =
-                [ Grid.grid
-                    mempty
-                    $ ( FieldPairs.fieldPairsEditor
-                          args
-                          $ FieldPairs.defOpts
-                          & #optsAdvanced
-                          .~ False
-                      )
-                    <> [ Grid.mediumCell
-                          [ button_
-                              [ onClick
-                                  . PushUpdate
-                                  . Instant
-                                  $ Jsm.removeAt
-                                    ( #modelState . #stAssets
-                                    )
-                                    idx
-                              ]
-                              [ text "Remove"
-                              ]
-                          ],
-                         Grid.mediumCell
-                          [ button_
-                              [ onClick closeAction
-                              ]
-                              [ text "Save"
-                              ]
-                          ]
-                       ]
-                ]
+                FieldPairs.fieldPairsEditor
+                  args
+                  ( FieldPairs.defOpts & #optsAdvanced .~ False
+                  )
+                  <> [ button_
+                        [ onClick
+                            . PushUpdate
+                            . Instant
+                            $ Jsm.removeAt
+                              ( #modelState . #stAssets
+                              )
+                              idx
+                        ]
+                        [ text "Remove"
+                        ],
+                       button_
+                        [ onClick closeAction
+                        ]
+                        [ text "Save"
+                        ]
+                     ]
             }
        )
     <> FieldPairs.fieldPairsViewer args

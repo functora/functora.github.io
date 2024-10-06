@@ -20,6 +20,10 @@ data Icon
   | IconDelivery
   | IconBack
   | IconSettings
+  | IconAndroid
+  | IconGit
+  | IconBitcoin
+  | IconUser
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -37,6 +41,10 @@ data Fa
   | FaTruck
   | FaArrowLeft
   | FaGear
+  | FaAndroid
+  | FaGitAlt
+  | FaBitcoin
+  | FaUser
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -52,14 +60,21 @@ instance From Icon Fa where
     IconDelivery -> FaTruck
     IconBack -> FaArrowLeft
     IconSettings -> FaGear
+    IconAndroid -> FaAndroid
+    IconGit -> FaGitAlt
+    IconBitcoin -> FaBitcoin
+    IconUser -> FaUser
 
 instance IsIcon Fa where
   icon x =
     i_
       [ class_
           $ case fa of
-            FaGooglePlay -> "fa-brands"
-            _ -> "fa-solid",
+            FaGooglePlay -> brand
+            FaAndroid -> brand
+            FaGitAlt -> brand
+            FaBitcoin -> brand
+            _ -> solid,
         class_
           . from @String @Unicode
           . kebab
@@ -68,3 +83,5 @@ instance IsIcon Fa where
       mempty
     where
       fa = from @Icon @Fa x
+      solid = "fa-solid" :: Unicode
+      brand = "fa-brands" :: Unicode

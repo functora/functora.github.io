@@ -10,7 +10,6 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Grid as Grid
 
 fav :: Model -> [View Action]
 fav st =
@@ -21,39 +20,35 @@ fav st =
         Dialog.argsOptic = #modelFav,
         Dialog.argsAction = PushUpdate . Instant,
         Dialog.argsContent =
-          [ Grid.grid mempty
-              $ favItems st
-              <> [ Grid.bigCell
-                    $ Field.textField
-                      Field.Args
-                        { Field.argsModel = st,
-                          Field.argsOptic = #modelState . #stFavName,
-                          Field.argsAction = PushUpdate . Instant,
-                          Field.argsEmitter = pushActionQueue st . Instant
-                        }
-                      Field.defOpts
-                        { Field.optsPlaceholder = "Name",
-                          Field.optsOnKeyDownAction = onKeyDownAction,
-                          Field.optsTrailingWidget =
-                            let w =
-                                  Field.ActionWidget
-                                    "favorite"
-                                    mempty
-                                    . PushUpdate
-                                    $ Instant saveAction
-                             in Just
-                                  $ Field.OptsWidgetPair w w,
-                          Field.optsLeadingWidget =
-                            let w =
-                                  Field.ActionWidget
-                                    "delete_forever"
-                                    mempty
-                                    deleteAction
-                             in Just
-                                  $ Field.OptsWidgetPair w w
-                        }
-                 ]
-          ]
+          favItems st
+            <> Field.textField
+              Field.Args
+                { Field.argsModel = st,
+                  Field.argsOptic = #modelState . #stFavName,
+                  Field.argsAction = PushUpdate . Instant,
+                  Field.argsEmitter = pushActionQueue st . Instant
+                }
+              Field.defOpts
+                { Field.optsPlaceholder = "Name",
+                  Field.optsOnKeyDownAction = onKeyDownAction,
+                  Field.optsTrailingWidget =
+                    let w =
+                          Field.ActionWidget
+                            "favorite"
+                            mempty
+                            . PushUpdate
+                            $ Instant saveAction
+                     in Just
+                          $ Field.OptsWidgetPair w w,
+                  Field.optsLeadingWidget =
+                    let w =
+                          Field.ActionWidget
+                            "delete_forever"
+                            mempty
+                            deleteAction
+                     in Just
+                          $ Field.OptsWidgetPair w w
+                }
       }
   where
     saveAction =
@@ -112,12 +107,10 @@ favItems st =
 
 favItem :: Model -> Unicode -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
-  Grid.bigCell
-    [ button_
-        [ onClick openAction
-        ]
-        [ text label
-        ]
+  button_
+    [ onClick openAction
+    ]
+    [ text label
     ]
   where
     openAction =

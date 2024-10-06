@@ -8,6 +8,7 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Spinner as Spinner
 import qualified Functora.Money as Money
 import Lens.Micro ((^..))
@@ -29,12 +30,20 @@ mainWidget st =
     $ [ header_ mempty $ Menu.menu st
       ]
     <> [ main_
-          [style_ [("max-width", "550px")]]
+          [ style_
+              [ ("max-width", "550px"),
+                ("align-self", "center"),
+                ("display", "flex"),
+                ("align-items", "center"),
+                ("flex-direction", "column")
+              ]
+          ]
           $ screenWidget st
        ]
     <> [ footer_
           [style_ [("text-align", "center")]]
           $ tosWidget
+          : br_ mempty
           : Menu.qrButton st
           : Menu.linksWidget st
        ]
@@ -104,7 +113,8 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                 . #stAssets
                 %~ flip snoc asset
           ]
-          [ text "Add item"
+          [ icon Icon.IconAdd,
+            text " Add item"
           ],
         button_
           [ onClick
@@ -113,7 +123,8 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               . either impureThrow Jsm.openBrowserPage
               $ stTeleUri st
           ]
-          [ text "Order via Telegram"
+          [ icon Icon.IconTelegram,
+            text " Order via Telegram"
           ]
       ]
 

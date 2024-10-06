@@ -8,6 +8,7 @@ import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Icon as Icon
 
 assetsViewer :: Model -> [View Action]
 assetsViewer st = do
@@ -32,9 +33,30 @@ assetViewer st idx =
       ]
   ]
     <> ( Dialog.dialog
-          ( Dialog.defOpts
+          ( Dialog.defOpts @Model @Action
               & #optsTitle
               .~ Just title
+              & #optsFooterRight
+              .~ const
+                [ button_
+                    [ onClick
+                        . PushUpdate
+                        . Instant
+                        $ Jsm.removeAt
+                          ( #modelState . #stAssets
+                          )
+                          idx
+                    ]
+                    [ icon Icon.IconDelete,
+                      text " Remove"
+                    ],
+                  button_
+                    [ onClick closeAction
+                    ]
+                    [ icon Icon.IconSave,
+                      text " Save"
+                    ]
+                ]
           )
           Dialog.Args
             { Dialog.argsModel = st,
@@ -43,25 +65,9 @@ assetViewer st idx =
               Dialog.argsContent =
                 FieldPairs.fieldPairsEditor
                   args
-                  ( FieldPairs.defOpts & #optsAdvanced .~ False
-                  )
-                  <> [ button_
-                        [ onClick
-                            . PushUpdate
-                            . Instant
-                            $ Jsm.removeAt
-                              ( #modelState . #stAssets
-                              )
-                              idx
-                        ]
-                        [ text "Remove"
-                        ],
-                       button_
-                        [ onClick closeAction
-                        ]
-                        [ text "Save"
-                        ]
-                     ]
+                  $ FieldPairs.defOpts
+                  & #optsAdvanced
+                  .~ False
             }
        )
     <> FieldPairs.fieldPairsViewer args

@@ -125,14 +125,15 @@ fieldPairEditor
           Field.argsEmitter = emitter
         }
       ( Field.defOpts
-          & #optsPlaceholder
-          .~ ( fromMaybe ("#" <> inspect (idx + 1))
+          & #optsLabel
+          .~ Just
+            ( fromMaybe ("#" <> inspect (idx + 1))
                 $ st
                 ^? cloneTraversal optic
                 . ix idx
                 . #fieldPairKey
                 . #fieldOutput
-             )
+            )
       )
 fieldPairEditor
   Args

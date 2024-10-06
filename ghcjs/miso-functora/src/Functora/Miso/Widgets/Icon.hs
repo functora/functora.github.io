@@ -24,6 +24,11 @@ data Icon
   | IconGit
   | IconBitcoin
   | IconUser
+  | IconCopy
+  | IconAdd
+  | IconTelegram
+  | IconDelete
+  | IconSave
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -45,6 +50,11 @@ data Fa
   | FaGitAlt
   | FaBitcoin
   | FaUser
+  | FaCopy
+  | FaSquarePlus
+  | FaTelegram
+  | FaTrash
+  | FaFloppyDisk
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -64,6 +74,11 @@ instance From Icon Fa where
     IconGit -> FaGitAlt
     IconBitcoin -> FaBitcoin
     IconUser -> FaUser
+    IconCopy -> FaCopy
+    IconAdd -> FaSquarePlus
+    IconTelegram -> FaTelegram
+    IconDelete -> FaTrash
+    IconSave -> FaFloppyDisk
 
 instance IsIcon Fa where
   icon x =
@@ -74,6 +89,7 @@ instance IsIcon Fa where
             FaAndroid -> brand
             FaGitAlt -> brand
             FaBitcoin -> brand
+            FaTelegram -> brand
             _ -> solid,
         class_
           . from @String @Unicode

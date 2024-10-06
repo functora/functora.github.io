@@ -45,7 +45,8 @@ data Full model action t f = Full
   deriving stock (Generic)
 
 data Opts model action = Opts
-  { optsDisabled :: Bool,
+  { optsLabel :: Maybe Unicode,
+    optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe (Update model -> action),
@@ -65,7 +66,8 @@ data OptsWidgetPair model action = OptsWidgetPair
 defOpts :: Opts model action
 defOpts =
   Opts
-    { optsDisabled = False,
+    { optsLabel = Nothing,
+      optsDisabled = False,
       optsFullWidth = False,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
@@ -137,14 +139,21 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
           _ -> mempty
       fieldModal args x1
   )
-    <> [ input_
+    <> [ maybe
+          id
+          (\x -> label_ mempty . (text x :) . singleton)
+          (optsLabel opts)
+          . input_
           $ ( catMaybes
                 [ fmap
                     (type_ . htmlFieldType)
                     (st ^? cloneTraversal optic . #fieldType),
                   Just $ onInput onInputAction,
                   Just . disabled_ $ opts ^. #optsDisabled,
-                  Just . placeholder_ $ opts ^. #optsPlaceholder,
+                  fmap placeholder_
+                    $ if null placeholder
+                      then optsLabel opts
+                      else Just placeholder,
                   Just
                     . id_
                     . either impureThrow id
@@ -175,6 +184,7 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
+    placeholder = optsPlaceholder opts
     widgetOptic =
       if null . fromMaybe mempty $ getInput st
         then #optsWidgetPairEmpty

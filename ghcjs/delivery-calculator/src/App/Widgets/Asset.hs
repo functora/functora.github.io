@@ -4,7 +4,6 @@ module App.Widgets.Asset
 where
 
 import App.Types
-import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
@@ -59,16 +58,14 @@ assetViewer st idx =
                                   $ Jsm.removeAt
                                     ( #modelState . #stAssets
                                     )
-                                    idx,
-                                Css.fullWidth
+                                    idx
                               ]
                               [ text "Remove"
                               ]
                           ],
                          Grid.mediumCell
                           [ button_
-                              [ onClick closeAction,
-                                Css.fullWidth
+                              [ onClick closeAction
                               ]
                               [ text "Save"
                               ]

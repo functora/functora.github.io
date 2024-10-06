@@ -15,6 +15,10 @@ data Icon
   | IconDownload
   | IconShare
   | IconClose
+  | IconGooglePlay
+  | IconQr
+  | IconDelivery
+  | IconBack
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -27,6 +31,10 @@ data Fa
   | FaDownload
   | FaShareNodes
   | FaXmark
+  | FaGooglePlay
+  | FaQrcode
+  | FaTruck
+  | FaArrowLeft
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -37,15 +45,23 @@ instance From Icon Fa where
     IconDownload -> FaDownload
     IconShare -> FaShareNodes
     IconClose -> FaXmark
+    IconGooglePlay -> FaGooglePlay
+    IconQr -> FaQrcode
+    IconDelivery -> FaTruck
+    IconBack -> FaArrowLeft
 
 instance IsIcon Fa where
   icon x =
     i_
-      [ class_ "fa-solid",
+      [ class_
+          $ case fa of
+            FaGooglePlay -> "fa-brands"
+            _ -> "fa-solid",
         class_
           . from @String @Unicode
           . kebab
-          . inspect @String
-          $ from @Icon @Fa x
+          $ inspect @String fa
       ]
       mempty
+    where
+      fa = from @Icon @Fa x

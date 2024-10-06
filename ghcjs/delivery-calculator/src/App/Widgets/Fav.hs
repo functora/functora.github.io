@@ -6,7 +6,6 @@ where
 import App.Types
 import App.Widgets.Templates
 import qualified Data.Map as Map
-import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
@@ -115,8 +114,7 @@ favItem :: Model -> Unicode -> Fav -> View Action
 favItem st label Fav {favUri = uri} =
   Grid.bigCell
     [ button_
-        [ onClick openAction,
-          Css.fullWidth
+        [ onClick openAction
         ]
         [ text label
         ]

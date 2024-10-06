@@ -67,8 +67,8 @@ dialog opts args =
         <> newFlex
           footer_
           id
-          (optsFooterLeft opts defFooterRight)
-          (optsFooterRight opts mempty)
+          (optsFooterLeft opts mempty)
+          (optsFooterRight opts defFooterRight)
   where
     opened =
       args ^? #argsModel . cloneTraversal (argsOptic args) == Just Opened
@@ -94,7 +94,9 @@ dialog opts args =
     defFooterRight =
       [ button_
           [onClick $ closeDialogAction opts args]
-          [text "Back"]
+          [ optsIcon opts Icon.IconBack,
+            text " Back"
+          ]
       ]
 
 newFlex ::

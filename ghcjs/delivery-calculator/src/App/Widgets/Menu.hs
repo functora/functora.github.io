@@ -1,12 +1,13 @@
 module App.Widgets.Menu
   ( menu,
+    qrButton,
+    linksWidget,
   )
 where
 
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Xlsx as Xlsx
-import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -181,8 +182,9 @@ menu st =
                    in Field.defOpts @Model @Action
                         & #optsDisabled
                         .~ disabled
-                        & #optsPlaceholder
-                        .~ ( "1 "
+                        & #optsLabel
+                        .~ Just
+                          ( "1 "
                               <> toUpper
                                 ( Money.inspectCurrencyCode
                                     $ st
@@ -191,7 +193,14 @@ menu st =
                                     . #currencyOutput
                                     . #currencyInfoCode
                                 )
-                              <> " \8776 X "
+                              <> " \8776 "
+                              <> inspectRatioDef
+                                ( st
+                                    ^. #modelState
+                                    . #stExchangeRate
+                                    . #fieldOutput
+                                )
+                              <> " "
                               <> toUpper
                                 ( Money.inspectCurrencyCode
                                     $ st
@@ -200,7 +209,7 @@ menu st =
                                     . #currencyOutput
                                     . #currencyInfoCode
                                 )
-                           )
+                          )
                         & ( if disabled
                               then #optsTrailingWidget .~ Nothing
                               else id
@@ -217,8 +226,8 @@ menu st =
                       pushActionQueue st . Instant
                   }
                 ( Field.defOpts
-                    & #optsPlaceholder
-                    .~ ("Merchant fee %" :: Unicode)
+                    & #optsLabel
+                    .~ Just ("Merchant fee %" :: Unicode)
                 )
               <> Field.textField
                 Field.Args
@@ -228,8 +237,8 @@ menu st =
                     Field.argsEmitter = pushActionQueue st . Instant
                   }
                 ( Field.defOpts
-                    & #optsPlaceholder
-                    .~ ("Merchant telegram" :: Unicode)
+                    & #optsLabel
+                    .~ Just ("Merchant telegram" :: Unicode)
                 )
               <> Field.textField
                 Field.Args
@@ -239,25 +248,29 @@ menu st =
                     Field.argsEmitter = pushActionQueue st . Instant
                   }
                 ( Field.defOpts @Model @Action
-                    & #optsPlaceholder
-                    .~ ("QR title" :: Unicode)
+                    & #optsLabel
+                    .~ Just ("QR title" :: Unicode)
                 )
-              <> [ button_
-                    [ Css.fullWidth,
-                      onClick
-                        . screen
-                        $ if isQrCode sc
-                          then Main
-                          else QrCode sc
-                    ]
-                    [ text
-                        $ if isQrCode sc
-                          then "Delivery Calculator"
-                          else "QR"
-                    ]
-                 ]
-              <> linksWidget st
         }
+
+qrButton :: Model -> View Action
+qrButton st =
+  button_
+    [ onClick
+        . screen
+        $ if isQrCode sc
+          then Main
+          else QrCode sc
+    ]
+    [ icon
+        $ if isQrCode sc
+          then Icon.IconDelivery
+          else Icon.IconQr,
+      text
+        $ if isQrCode sc
+          then " Calculator"
+          else " QR"
+    ]
   where
     screen next =
       PushUpdate
@@ -272,10 +285,10 @@ menu st =
 linksWidget :: Model -> [View Action]
 linksWidget st =
   [ button_
-      [ onClick openWidget,
-        Css.fullWidth
+      [ onClick openWidget
       ]
-      [ text "App"
+      [ icon Icon.IconGooglePlay,
+        text " Google Play"
       ]
   ]
     <> Dialog.dialog
@@ -315,38 +328,32 @@ linksWidget st =
                   },
               text " directly.",
               button_
-                [ onClick $ openBrowser testGroupLink,
-                  Css.fullWidth
+                [ onClick $ openBrowser testGroupLink
                 ]
                 [ text "Join testing (closed beta)"
                 ],
               button_
-                [ onClick $ openBrowser googlePlayLink,
-                  Css.fullWidth
+                [ onClick $ openBrowser googlePlayLink
                 ]
                 [ text "Google Play (closed beta)"
                 ],
               button_
-                [ onClick $ openBrowser apkLink,
-                  Css.fullWidth
+                [ onClick $ openBrowser apkLink
                 ]
                 [ text "Download APK"
                 ],
               button_
-                [ onClick $ openBrowser sourceLink,
-                  Css.fullWidth
+                [ onClick $ openBrowser sourceLink
                 ]
                 [ text "Source"
                 ],
               button_
-                [ onClick $ openBrowser functoraLink,
-                  Css.fullWidth
+                [ onClick $ openBrowser functoraLink
                 ]
                 [ text "Author"
                 ],
               button_
-                [ onClick $ setScreenAction Donate,
-                  Css.fullWidth
+                [ onClick $ setScreenAction Donate
                 ]
                 [ text "Donate"
                 ]

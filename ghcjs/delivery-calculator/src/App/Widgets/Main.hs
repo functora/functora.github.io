@@ -3,7 +3,6 @@ module App.Widgets.Main (mainWidget) where
 import App.Types
 import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.Menu as Menu
-import qualified Functora.Miso.Css as Css
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -36,7 +35,9 @@ mainWidget st =
        ]
     <> [ footer_
           [style_ [("text-align", "center")]]
-          [tosWidget]
+          $ tosWidget
+          : Menu.qrButton st
+          : Menu.linksWidget st
        ]
     <> ( if not $ st ^. #modelLoading
           then mempty
@@ -67,8 +68,7 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
        ]
     <> [ Grid.bigCell
           [ button_
-              [ onClick . setScreenAction $ unQrCode sc,
-                Css.fullWidth
+              [ onClick . setScreenAction $ unQrCode sc
               ]
               [ text "Open"
               ]
@@ -84,8 +84,7 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
       }
     <> [ Grid.bigCell
           [ button_
-              [ onClick $ setScreenAction Main,
-                Css.fullWidth
+              [ onClick $ setScreenAction Main
               ]
               [ text "Open"
               ]
@@ -106,8 +105,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons =
       [ Grid.mediumCell
           [ button_
-              [ Css.fullWidth,
-                onClick . PushUpdate . Instant . ImpureUpdate $ do
+              [ onClick . PushUpdate . Instant . ImpureUpdate $ do
                   asset <- newAsset
                   pure
                     $ #modelState
@@ -119,8 +117,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
           ],
         Grid.mediumCell
           [ button_
-              [ Css.fullWidth,
-                onClick
+              [ onClick
                   . PushUpdate
                   . Instant
                   . either impureThrow Jsm.openBrowserPage

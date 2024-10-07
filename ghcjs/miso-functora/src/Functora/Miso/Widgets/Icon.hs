@@ -38,6 +38,8 @@ data Icon
   | IconExpand
   | IconCollapse
   | IconFile
+  | IconDollar
+  | IconCoins
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -73,6 +75,8 @@ data Fa
   | FaUpRightAndDownLeftFromCenter
   | FaDownLeftAndUpRightToCenter
   | FaFileLines
+  | FaDollarSign
+  | FaCoins
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -106,6 +110,8 @@ instance From Icon Fa where
     IconExpand -> FaUpRightAndDownLeftFromCenter
     IconCollapse -> FaDownLeftAndUpRightToCenter
     IconFile -> FaFileLines
+    IconDollar -> FaDollarSign
+    IconCoins -> FaCoins
 
 instance IsIcon Fa where
   icon x =

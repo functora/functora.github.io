@@ -84,7 +84,7 @@ dialog opts args =
     defHeaderLeft =
       maybeToList
         ( fmap
-            ( h1_
+            ( h2_
                 [ defHeaderStyle,
                   style_ [("margin-right", "0.5em")]
                 ]
@@ -95,7 +95,7 @@ dialog opts args =
         )
         <> maybeToList
           ( fmap
-              ( h1_ [defHeaderStyle] . singleton . text
+              ( h2_ [defHeaderStyle] . singleton . text
               )
               $ optsTitle opts
           )

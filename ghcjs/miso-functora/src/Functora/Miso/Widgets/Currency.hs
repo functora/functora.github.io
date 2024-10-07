@@ -10,6 +10,7 @@ import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
+import qualified Functora.Miso.Widgets.Icon as Icon
 import Functora.Money hiding (Currency, Money, Text)
 import qualified Miso
 import qualified Text.Fuzzy as Fuzzy
@@ -70,6 +71,7 @@ selectCurrency
       <> Dialog.dialog
         Dialog.defOpts
           { Dialog.optsTitle = Just "Currency",
+            Dialog.optsTitleIcon = Just Icon.IconCoins,
             Dialog.optsHeaderRight =
               ( <>
                   Field.textField

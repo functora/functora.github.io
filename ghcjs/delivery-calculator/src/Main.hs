@@ -245,10 +245,15 @@ viewModel st =
       link_
         [ rel_ "stylesheet",
           -- href_ "https://unpkg.com/nes.css@2.3.0/css/nes.min.css"
-          href_ "static/css/mvp.css"
+          -- href_ "static/css/mvp.css"
           -- href_ "static/css/simple.min.css"
           -- href_ "static/css/tacit-css-1.8.1.min.css"
           -- href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
+          -- href_ "https://unpkg.com/@sakun/system.css"
+          -- href_ "https://unpkg.com/papercss/dist/paper.min.css"
+          -- href_ "https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css"
+          -- href_ "https://vinibiavatti1.github.io/TuiCss/dist/tuicss.min.css"
+          href_ "https://fieber.hack.re/fieber.css"
         ],
       link_
         [ rel_ "stylesheet",

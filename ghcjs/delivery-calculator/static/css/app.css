@@ -3,19 +3,20 @@
 }
 
 html {
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-}
-
-body {
-  padding: 0;
-  margin: 0 auto;
 }
 
 html,
 main {
   margin: 0;
   padding: 0;
+}
+
+body {
+  width: 100%;
+  padding: 0;
+  margin: 0 auto;
 }
 
 header,
@@ -26,13 +27,25 @@ footer {
   padding-right: 0;
 }
 
+nav {
+  margin-bottom: 1rem;
+}
+
 textarea {
   resize: vertical;
   pointer-events: auto;
 }
 
 dialog {
+  width: 100%;
+  height: fit-content;
+  max-height: calc(100% - 4rem);
+  max-width: min(calc(100% - 4rem), 640px);
   overflow: auto;
+  padding: 1rem;
+  z-index: 9999;
+  position: initial;
+  transform: initial;
 }
 
 button {

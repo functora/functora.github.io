@@ -21,6 +21,7 @@ mainWidget st =
     [ style_
         [ ("padding", "0"),
           ("margin", "0 auto"),
+          ("max-width", "100%"),
           ("min-height", "100vh"),
           ("display", "flex"),
           ("flex-direction", "column"),
@@ -32,7 +33,10 @@ mainWidget st =
     <> [ Flex.flexCol main_ id $ screenWidget st
        ]
     <> [ footer_
-          [ style_ [("text-align", "center")]
+          [ style_
+              [ ("text-align", "center"),
+                ("margin-bottom", "1rem")
+              ]
           ]
           $ tosWidget
           : br_ mempty

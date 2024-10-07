@@ -18,7 +18,7 @@ assetsViewer st = do
 assetViewer :: Model -> Int -> [View Action]
 assetViewer st idx =
   [ fieldset_ mempty
-      $ [ legend_
+      $ ( legend_
             mempty
             [ text title,
               text " ",
@@ -34,8 +34,8 @@ assetViewer st idx =
                   text " Edit"
                 ]
             ]
-        ]
-      <> FieldPairs.fieldPairsViewer FieldPairs.defOpts args
+        )
+      : FieldPairs.fieldPairsViewer FieldPairs.defOpts args
   ]
     <> ( Dialog.dialog
           ( Dialog.defOpts @Model @Action

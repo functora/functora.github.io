@@ -8,6 +8,7 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
+import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Spinner as Spinner
 import qualified Functora.Money as Money
@@ -20,27 +21,23 @@ mainWidget st =
     [ style_
         [ ("margin", "0"),
           ("padding", "0"),
-          ("width", "100%"),
           ("min-height", "100vh"),
           ("display", "flex"),
           ("flex-direction", "column"),
-          ("justify-content", "space-between")
+          ("justify-content", "space-between"),
+          ("align-items", "center")
         ]
     ]
-    $ [ header_ mempty $ Menu.menu st
-      ]
-    <> [ main_
-          [ style_
-              [ ("align-self", "center"),
-                ("display", "flex"),
-                ("align-items", "center"),
-                ("flex-direction", "column")
-              ]
+    $ [ header_
+          [ style_ [("width", "100%")]
           ]
-          $ screenWidget st
+          $ Menu.menu st
+      ]
+    <> [ Flex.flexCol main_ id $ screenWidget st
        ]
     <> [ footer_
-          [style_ [("text-align", "center")]]
+          [ style_ [("text-align", "center")]
+          ]
           $ tosWidget
           : br_ mempty
           : Menu.qrButton st
@@ -99,45 +96,52 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
       then mempty
       else buttons
   )
-    <> Asset.assetsViewer st
-    <> totalViewer st
+    <> [ Flex.flexCol section_ id $ Asset.assetsViewer st <> totalViewer st
+       ]
     <> buttons
   where
     assets :: [View Action]
     assets = Asset.assetsViewer st
     buttons :: [View Action]
     buttons =
-      [ button_
-          [ onClick . PushUpdate . Instant . ImpureUpdate $ do
-              asset <- newAsset
-              pure
-                $ #modelState
-                . #stAssets
-                %~ flip snoc asset
+      singleton
+        $ Flex.flexRow
+          section_
+          id
+          [ button_
+              [ type_ "submit",
+                onClick . PushUpdate . Instant . ImpureUpdate $ do
+                  asset <- newAsset
+                  pure
+                    $ #modelState
+                    . #stAssets
+                    %~ flip snoc asset
+              ]
+              [ icon Icon.IconAdd,
+                text " Add item"
+              ],
+            button_
+              [ type_ "submit",
+                onClick
+                  . PushUpdate
+                  . Instant
+                  . either impureThrow Jsm.openBrowserPage
+                  $ stTeleUri st
+              ]
+              [ icon Icon.IconTelegram,
+                text " Order via Telegram"
+              ]
           ]
-          [ icon Icon.IconAdd,
-            text " Add item"
-          ],
-        button_
-          [ onClick
-              . PushUpdate
-              . Instant
-              . either impureThrow Jsm.openBrowserPage
-              $ stTeleUri st
-          ]
-          [ icon Icon.IconTelegram,
-            text " Order via Telegram"
-          ]
-      ]
 
 totalViewer :: Model -> [View Action]
 totalViewer st =
   if base == 0
     then mempty
     else
-      [ h1_ mempty [text "Total"]
-      ]
-        <> FieldPairs.fieldPairsViewer
+      singleton
+        $ fieldset_ mempty
+        $ (legend_ mempty [text "Total"])
+        : FieldPairs.fieldPairsViewer
           FieldPairs.defOpts
           FieldPairs.Args
             { FieldPairs.argsModel = st,

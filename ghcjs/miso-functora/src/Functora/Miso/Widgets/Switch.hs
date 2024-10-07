@@ -38,7 +38,7 @@ switch ::
   Args model action ->
   View action
 switch opts Args {argsModel = st, argsOptic = optic, argsAction = action} =
-  Flex.flex div_ id
+  Flex.flexRow div_ id
     $ maybeToList
       ( fmap (\icon -> i_ [class_ icon] mempty)
           $ optsIcon opts

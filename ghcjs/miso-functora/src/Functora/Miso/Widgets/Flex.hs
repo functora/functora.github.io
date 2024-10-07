@@ -1,20 +1,42 @@
 module Functora.Miso.Widgets.Flex
-  ( flex,
+  ( flexRow,
+    flexCol,
     flexLeftRight,
   )
 where
 
 import Functora.Miso.Prelude
 
-flex ::
+flexRow ::
   ([Attribute action] -> [View action] -> View action) ->
   ([Attribute action] -> [Attribute action]) ->
   [View action] ->
   View action
-flex newTag newAttr =
+flexRow newTag newAttr =
   newTag
     $ newAttr
-      [ style_ [("display", "flex")]
+      [ style_
+          [ ("display", "flex"),
+            ("flex-wrap", "wrap"),
+            ("flex-direction", "row"),
+            ("align-items", "center"),
+            ("justify-content", "center")
+          ]
+      ]
+
+flexCol ::
+  ([Attribute action] -> [View action] -> View action) ->
+  ([Attribute action] -> [Attribute action]) ->
+  [View action] ->
+  View action
+flexCol newTag newAttr =
+  newTag
+    $ newAttr
+      [ style_
+          [ ("display", "flex"),
+            ("flex-wrap", "wrap"),
+            ("flex-direction", "column")
+          ]
       ]
 
 flexLeftRight ::
@@ -25,7 +47,6 @@ flexLeftRight ::
   [View action]
 flexLeftRight newTag newAttr lhs rhs
   | null lhs && null rhs = mempty
-  | null lhs || null rhs = singleton . flex newTag newAttr $ lhs <> rhs
   | otherwise =
       singleton
         . newTag

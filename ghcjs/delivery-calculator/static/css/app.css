@@ -1,3 +1,7 @@
+* {
+  overflow-wrap: anywhere;
+}
+
 html {
   width: 100vw;
   min-height: 100vh;
@@ -8,8 +12,11 @@ html, main {
   padding: 0;
 }
 
-footer {
-  padding-bottom: 18px;
+header, footer {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 textarea {
@@ -19,6 +26,10 @@ textarea {
 
 dialog {
   overflow: auto;
+}
+
+button {
+  margin: 0.25rem 0.125rem;
 }
 
 @media print {

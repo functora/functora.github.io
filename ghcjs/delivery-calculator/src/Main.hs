@@ -240,11 +240,12 @@ viewModel st =
   prependViews
     [ link_
         [ rel_ "stylesheet",
-          href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
+          href_ "static/css/fontawesome.min.css"
         ],
       link_
         [ rel_ "stylesheet",
-          href_ "static/css/fontawesome.min.css"
+          -- href_ "static/css/mvp.css"
+          href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
         ],
       link_
         [ rel_ "stylesheet",

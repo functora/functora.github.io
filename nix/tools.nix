@@ -54,7 +54,7 @@ with pkgs; let
         pkgs.nodePackages.prettier
       }/bin/prettier --plugin ${
         pkgs.nodePackages.prettier-plugin-toml
-      }/lib/node_modules/prettier-plugin-toml/lib/api.js "$@"
+      }/lib/node_modules/prettier-plugin-toml/lib/index.js "$@"
     '';
   };
   styleTest = pkgs.writeShellScriptBin "style-test" ''

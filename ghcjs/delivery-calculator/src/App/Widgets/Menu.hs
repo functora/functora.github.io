@@ -14,7 +14,6 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Currency as Currency
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
-import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Money as Money
@@ -22,11 +21,20 @@ import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
-  ( Flex.flexLeftRight
-      menu_
-      id
-      [ li_
+  [ nav_
+      [ style_
+          [ ("width", "100%"),
+            ("display", "grid"),
+            ("align-items", "center"),
+            ("grid-template-columns", "auto 1fr auto auto auto auto")
+          ]
+      ]
+      [ button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "start")
+              ],
             onClick
               . PushUpdate
               . Instant
@@ -36,17 +44,26 @@ menu st =
           ]
           [ icon Icon.IconMenu
           ],
-        li_
+        button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "start"),
+                ("word-break", "keep-all"),
+                ("overflow-wrap", "normal")
+              ],
             onClick . PushUpdate . Instant . ImpureUpdate $ do
               doc <- liftIO newSt
               pure $ #modelState .~ doc
           ]
           [ text "Delivery Calculator"
-          ]
-      ]
-      [ li_
+          ],
+        button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "end")
+              ],
             onClick
               . PushUpdate
               . Instant
@@ -56,8 +73,12 @@ menu st =
           ]
           [ icon Icon.IconFav
           ],
-        li_
+        button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "end")
+              ],
             onClick
               . PushUpdate
               . Instant
@@ -68,8 +89,12 @@ menu st =
           ]
           [ icon Icon.IconPrint
           ],
-        li_
+        button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "end")
+              ],
             onClick
               . PushUpdate
               . Instant
@@ -83,8 +108,12 @@ menu st =
           ]
           [ icon Icon.IconDownload
           ],
-        li_
+        button_
           [ role_ "button",
+            style_
+              [ ("min-width", "0"),
+                ("justify-self", "end")
+              ],
             onClick
               . PushUpdate
               . Instant
@@ -96,7 +125,7 @@ menu st =
           [ icon Icon.IconShare
           ]
       ]
-  )
+  ]
     <> Fav.fav st
     <> Dialog.dialog
       ( Dialog.defOpts

@@ -7,12 +7,19 @@ html {
   min-height: 100vh;
 }
 
-html, main {
+body {
+  padding: 0;
+  margin: 0 auto;
+}
+
+html,
+main {
   margin: 0;
   padding: 0;
 }
 
-header, footer {
+header,
+footer {
   margin-left: 0;
   margin-right: 0;
   padding-left: 0;
@@ -30,6 +37,10 @@ dialog {
 
 button {
   margin: 0.25rem 0.125rem;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 @media print {

@@ -17,10 +17,10 @@ import Miso hiding (at, view)
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  section_
+  div_
     [ style_
-        [ ("margin", "0"),
-          ("padding", "0"),
+        [ ("padding", "0"),
+          ("margin", "0 auto"),
           ("min-height", "100vh"),
           ("display", "flex"),
           ("flex-direction", "column"),
@@ -28,11 +28,7 @@ mainWidget st =
           ("align-items", "center")
         ]
     ]
-    $ [ header_
-          [ style_ [("width", "100%")]
-          ]
-          $ Menu.menu st
-      ]
+    $ Menu.menu st
     <> [ Flex.flexCol main_ id $ screenWidget st
        ]
     <> [ footer_
@@ -96,7 +92,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
       then mempty
       else buttons
   )
-    <> [ Flex.flexCol section_ id $ Asset.assetsViewer st <> totalViewer st
+    <> [ Flex.flexCol div_ id $ Asset.assetsViewer st <> totalViewer st
        ]
     <> buttons
   where
@@ -106,7 +102,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons =
       singleton
         $ Flex.flexRow
-          section_
+          p_
           id
           [ button_
               [ type_ "submit",

@@ -195,6 +195,11 @@
                   ver = "0.12.7.3";
                   sha256 = "zQY5xQclPNZk7b14ut6Wzcgaolkx+brOxDO5FrZAzk8=";
                 } {});
+                ghc-source-gen = self.callHackageDirect {
+                  pkg = "ghc-source-gen";
+                  ver = "0.4.2.0";
+                  sha256 = "VWWv8jnXiFxClu5PvQjTY/e29GSZ9NYVYd5BK+XaVa8=";
+                } {};
                 secp256k1-haskell = self.callHackageDirect {
                   pkg = "secp256k1-haskell";
                   ver = "0.6.1";

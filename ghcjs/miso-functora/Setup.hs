@@ -22,14 +22,13 @@ import qualified Data.Text as T
 import Distribution.Simple hiding (Module (..))
 import Distribution.Simple.LocalBuildInfo (LocalBuildInfo (..))
 import Distribution.Simple.Utils (writeUTF8File)
+import Functora.Prelude hiding (empty)
 import GHC (runGhc)
 import GHC.Paths (libdir)
 import GHC.SourceGen
 import qualified System.Directory as Directory
 import System.Environment (getProgName)
-import qualified System.FilePath as FilePath
 import qualified Text.Casing as Casing
-import Universum hiding (empty)
 
 #if MIN_VERSION_ghc(9,0,0)
 import "ghc" GHC.Driver.Session (getDynFlags)
@@ -72,16 +71,16 @@ codeGenHook :: LocalBuildInfo -> IO ()
 codeGenHook _ = do
   prog <- getProgName
   runGhc (Just libdir) $ do
-    dflags <-
-      getDynFlags
-    cssKebab <-
-      liftIO $ FilePath.takeBaseName <<$>> Directory.listDirectory "css/"
+    dflags <- getDynFlags
+    cssRaw <- liftIO $ Directory.listDirectory "dist/css/"
+    let cssKebab =
+          sort . fmap (dropEnd 8) $ filter (isSuffixOf ".min.css") cssRaw
     let cssPascal =
           fmap Casing.pascal cssKebab
     when (cssKebab /= fmap Casing.kebab cssPascal)
       . error
       $ "Bad kebab <-> pascal isomorphism in "
-      <> show cssKebab
+      <> inspect @Text cssKebab
     liftIO
       . writeFileIfChanged
       . showPpr dflags
@@ -95,11 +94,12 @@ generateCode prog css =
         module'
           (Just "Functora.Miso.Theme")
           (Just [thingAll "Theme"])
-          ( fmap (qualified' . import')
-              $ [ "Prelude",
-                  "Data.Data",
-                  "GHC.Generics"
-                ]
+          ( fmap
+              import'
+              [ "Prelude",
+                "Data.Data",
+                "GHC.Generics"
+              ]
           )
           [ data'
               "Theme"

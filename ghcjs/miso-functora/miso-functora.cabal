@@ -3,11 +3,24 @@ name:          miso-functora
 version:       0.1.0.0
 synopsis:      Miso Widgets
 category:      Web
-build-type:    Simple
+build-type:    Custom
 
 flag ghcid
   manual:  True
   default: False
+
+custom-setup
+  setup-depends:
+    , base
+    , Cabal
+    , casing
+    , directory
+    , filepath
+    , ghc
+    , ghc-paths
+    , ghc-source-gen  ==0.4.2.0
+    , text
+    , universum
 
 common pkg
   default-language:   Haskell2010
@@ -88,6 +101,11 @@ common pkg
     build-depends: ghcjs-base
     js-sources:    js/main.min.js
 
+  data-files:
+    css/*.css
+    dist/**/*.css
+    dist/**/*.ttf
+
 library
   import:          pkg
   hs-source-dirs:  src
@@ -141,6 +159,7 @@ test-suite miso-functora-test
       Functora.Miso.Jsm.Specific
       Functora.Miso.Orphan
       Functora.Miso.Prelude
+      Functora.Miso.Theme
       Functora.Miso.Types
       Functora.Miso.Widgets.BrowserLink
       Functora.Miso.Widgets.Currency

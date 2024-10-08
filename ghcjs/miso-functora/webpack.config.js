@@ -33,17 +33,46 @@ const js = {
   ],
 };
 
+const cssInp = __dirname + "/css";
+const cssOut = __dirname + "/dist/css";
+const cssEntry = fs
+  .readdirSync(cssInp)
+  .filter((file) => file.endsWith(".css"))
+  .filter((file) =>
+    [
+      "ads-gazette.css",
+      "ads-notebook.css",
+      "ads-medium.css",
+      "scooter.css",
+      "propeller.css",
+      "motherplate.css",
+      "boot-paper.css",
+      "boot-readable.css",
+      "flat-ui.css",
+      "pandoc-scholar.css",
+      "tui.css",
+      "latex.css",
+      "ok.css",
+      "hello.css",
+      "minimal.css",
+      "siimple.css",
+      "missing-style.css",
+      "semantic-ui.css",
+      "w3c-traditional.css",
+      "primer.css",
+      "yamb.css",
+    ].every((bad) => file != bad),
+  )
+  .map((file) => [path.basename(file, ".css"), path.join(cssInp, file)])
+  .reduce(
+    (entries, [name, filePath]) => ({ ...entries, [name]: filePath }),
+    {},
+  );
+
 const css = {
-  entry: fs
-    .readdirSync("./css")
-    .filter((file) => file.endsWith(".css"))
-    .map((file) => [path.basename(file, ".css"), path.join("./css", file)])
-    .reduce(
-      (entries, [name, filePath]) => ({ ...entries, [name]: filePath }),
-      {},
-    ),
+  entry: cssEntry,
   output: {
-    path: __dirname + "/dist/css",
+    path: cssOut,
     clean: true,
   },
   mode: "production",

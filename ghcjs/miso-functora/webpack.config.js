@@ -1,6 +1,9 @@
 const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
-module.exports = {
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
+const js = {
   entry: "./js/main.js",
   output: {
     path: __dirname + "/js",
@@ -26,3 +29,49 @@ module.exports = {
     }),
   ],
 };
+const css = {
+  entry: {
+    paper: "./css/paper.css",
+  },
+  output: {
+    path: __dirname + "/dist/css",
+    clean: true,
+  },
+  mode: "production",
+  optimization: {
+    minimize: false,
+    minimizer: [new CssMinimizerPlugin()],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "[name].min.css",
+    }),
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1,
+    }),
+    new RemoveEmptyScriptsPlugin(),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          { loader: "css-loader", options: { importLoaders: 1 } },
+          {
+            loader: "postcss-loader",
+            options: { postcssOptions: { plugins: ["postcss-import-url"] } },
+          },
+        ],
+      },
+    ],
+  },
+  experiments: {
+    buildHttp: {
+      allowedUris: [/^(http|https):\/\//],
+      frozen: false,
+    },
+  },
+};
+
+module.exports = [js, css];

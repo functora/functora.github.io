@@ -3,6 +3,9 @@ const TerserPlugin = require("terser-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
+const path = require("path");
+const fs = require("fs");
+
 const js = {
   entry: "./js/main.js",
   output: {
@@ -29,10 +32,16 @@ const js = {
     }),
   ],
 };
+
 const css = {
-  entry: {
-    paper: "./css/paper.css",
-  },
+  entry: fs
+    .readdirSync("./css")
+    .filter((file) => file.endsWith(".css"))
+    .map((file) => [path.basename(file, ".css"), path.join("./css", file)])
+    .reduce(
+      (entries, [name, filePath]) => ({ ...entries, [name]: filePath }),
+      {},
+    ),
   output: {
     path: __dirname + "/dist/css",
     clean: true,

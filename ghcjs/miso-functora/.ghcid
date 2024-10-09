@@ -1,5 +1,5 @@
 --restart=.ghcid
---restart=miso-widgets.cabal
+--restart=miso-functora.cabal
 --restart=cabal.config
 --restart=cabal.project
 --restart=static

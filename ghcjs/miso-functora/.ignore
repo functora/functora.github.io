@@ -2,6 +2,7 @@
 dist-newstyle
 capacitor-geckoview
 package-lock.json
+webpack.lock
 *\.min\.*
 dist/*
 css/*

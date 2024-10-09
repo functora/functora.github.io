@@ -104,7 +104,12 @@ common pkg
   data-files:
     css/*.css
     dist/**/*.css
+    dist/**/*.eot
+    dist/**/*.png
+    dist/**/*.svg
     dist/**/*.ttf
+    dist/**/*.woff
+    dist/**/*.woff2
 
 library
   import:          pkg

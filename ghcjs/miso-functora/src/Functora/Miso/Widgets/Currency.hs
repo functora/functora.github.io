@@ -56,7 +56,12 @@ selectCurrency
     } =
     [ maybe
         id
-        (\x -> label_ mempty . (text x :) . singleton)
+        ( \x ->
+            label_ mempty
+              . (text x :)
+              . (br_ mempty :)
+              . singleton
+        )
         (optsButtonLabel opts)
         $ input_
           [ type_ "button",
@@ -72,22 +77,7 @@ selectCurrency
         Dialog.defOpts
           { Dialog.optsTitle = Just "Currency",
             Dialog.optsTitleIcon = Just Icon.IconCoins,
-            Dialog.optsHeaderRight =
-              ( <>
-                  Field.textField
-                    Field.Args
-                      { Field.argsModel = st,
-                        Field.argsOptic = cloneTraversal optic . #currencyInput,
-                        Field.argsAction = action,
-                        Field.argsEmitter = emitter
-                      }
-                    ( Field.defOpts @model @action
-                        & #optsPlaceholder
-                        .~ ("Search" :: Unicode)
-                        & #optsExtraAttributes
-                        .~ [autofocus_ True]
-                    )
-              ),
+            Dialog.optsFlexContent = False,
             Dialog.optsExtraOnClose =
               cloneTraversal optic
                 . #currencyInput
@@ -99,7 +89,21 @@ selectCurrency
           { Dialog.argsModel = st,
             Dialog.argsOptic = cloneTraversal optic . #currencyModalState,
             Dialog.argsAction = action,
-            Dialog.argsContent = currencyListWidget opts args
+            Dialog.argsContent =
+              Field.textField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic = cloneTraversal optic . #currencyInput,
+                    Field.argsAction = action,
+                    Field.argsEmitter = emitter
+                  }
+                ( Field.defOpts @model @action
+                    & #optsPlaceholder
+                    .~ ("Search" :: Unicode)
+                    & #optsExtraAttributes
+                    .~ [autofocus_ True]
+                )
+                <> currencyListWidget opts args
           }
     where
       open =

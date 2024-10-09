@@ -1,5 +1,6 @@
 module Functora.Miso.Widgets.Switch
-  ( Opts (..),
+  ( Args (..),
+    Opts (..),
     defOpts,
     switch,
   )
@@ -7,8 +8,6 @@ where
 
 import Functora.Miso.Prelude
 import Functora.Miso.Types
-import qualified Functora.Miso.Widgets.Flex as Flex
-import Miso hiding (at, view)
 
 data Args model action = Args
   { argsModel :: model,
@@ -19,8 +18,7 @@ data Args model action = Args
 
 data Opts model action = Opts
   { optsDisabled :: Bool,
-    optsPlaceholder :: Unicode,
-    optsIcon :: Maybe Unicode
+    optsLabel :: Maybe Unicode
   }
   deriving stock (Generic)
 
@@ -28,8 +26,7 @@ defOpts :: Opts model action
 defOpts =
   Opts
     { optsDisabled = False,
-      optsPlaceholder = mempty,
-      optsIcon = Nothing
+      optsLabel = Nothing
     }
 
 switch ::
@@ -38,28 +35,28 @@ switch ::
   Args model action ->
   View action
 switch opts Args {argsModel = st, argsOptic = optic, argsAction = action} =
-  Flex.flexRow div_ id
-    $ maybeToList
-      ( fmap (\icon -> i_ [class_ icon] mempty)
-          $ optsIcon opts
-      )
-    <> [ Miso.rawHtml "&nbsp;",
-         Miso.text $ opts ^. #optsPlaceholder,
-         Miso.rawHtml "&nbsp;&nbsp;",
-         input_
-          [ type_ "checkbox",
-            disabled_
-              $ opts
-              ^. #optsDisabled,
-            checked_
-              . fromMaybe False
-              $ st
-              ^? cloneTraversal optic,
-            onChange
-              . const
-              . action
-              . PureUpdate
-              $ cloneTraversal optic
-              %~ not
-          ]
-       ]
+  maybe
+    id
+    ( \x ->
+        label_ mempty
+          . (text x :)
+          . (br_ mempty :)
+          . singleton
+    )
+    (optsLabel opts)
+    $ input_
+      [ type_ "checkbox",
+        disabled_
+          $ opts
+          ^. #optsDisabled,
+        checked_
+          . fromMaybe False
+          $ st
+          ^? cloneTraversal optic,
+        onChange
+          . const
+          . action
+          . PureUpdate
+          $ cloneTraversal optic
+          %~ not
+      ]

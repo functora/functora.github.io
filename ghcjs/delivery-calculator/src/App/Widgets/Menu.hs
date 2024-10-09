@@ -16,6 +16,7 @@ import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
+import qualified Functora.Miso.Widgets.Switch as Switch
 import qualified Functora.Money as Money
 import qualified Text.URI as URI
 
@@ -274,18 +275,34 @@ menu st =
                     & #optsLabel
                     .~ Just ("QR title" :: Unicode)
                 )
-              <> [ Select.select
-                    ( Select.defOpts
+              <> [ Switch.switch
+                    ( Switch.defOpts
                         & #optsLabel
-                        .~ Just "Theme"
+                        .~ Just "Enable theme"
                     )
-                    Select.Args
-                      { Select.argsModel = st,
-                        Select.argsOptic = #modelState . #stTheme,
-                        Select.argsAction = PushUpdate . Instant,
-                        Select.argsOptions = constTraversal $ enumerate @Theme
+                    Switch.Args
+                      { Switch.argsModel = st,
+                        Switch.argsOptic = #modelState . #stEnableTheme,
+                        Switch.argsAction = PushUpdate . Instant
                       }
                  ]
+              <> ( if not (st ^. #modelState . #stEnableTheme)
+                    then mempty
+                    else
+                      [ Select.select
+                          ( Select.defOpts
+                              & #optsLabel
+                              .~ Just "Theme"
+                          )
+                          Select.Args
+                            { Select.argsModel = st,
+                              Select.argsOptic = #modelState . #stTheme,
+                              Select.argsAction = PushUpdate . Instant,
+                              Select.argsOptions =
+                                constTraversal $ enumerate @Theme
+                            }
+                      ]
+                 )
         }
 
 qrButton :: Model -> View Action

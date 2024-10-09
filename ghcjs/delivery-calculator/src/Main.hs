@@ -84,11 +84,13 @@ runApp app = do
   where
     router js req =
       case Wai.pathInfo req of
-        ("static" : "css" : path) ->
-          staticApp
-            (defaultWebAppSettings "../miso-functora/dist/css")
-            req {Wai.pathInfo = path}
-        ("node_modules" : _) ->
+        ("themes" : _) ->
+          staticApp (defaultWebAppSettings "../miso-functora/dist") req
+        ("fa" : _) ->
+          staticApp (defaultWebAppSettings "../miso-functora/lib") req
+        ("miso-functora" : _) ->
+          staticApp (defaultWebAppSettings "../miso-functora/lib") req
+        ("static" : _) ->
           staticApp (defaultWebAppSettings ".") req
         ("favicon.ico" : _) ->
           staticApp (defaultWebAppSettings "static") req
@@ -233,33 +235,58 @@ updateModel (PushUpdate updater) st = do
         pure Noop
     ]
 
+--
+-- TODO : !!!
+--
+-- href_ "https://unpkg.com/nes.css@2.3.0/css/nes.min.css"
+-- href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
+-- href_ "https://unpkg.com/@sakun/system.css"
+-- href_ "https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css"
+-- href_ "https://vinibiavatti1.github.io/TuiCss/dist/tuicss.min.css"
+-- href_ "https://fieber.hack.re/fieber.css"
 viewModel :: Model -> View Action
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
-  mainWidget st
+  prependViews
+    (
+      ( if not (st ^. #modelState . #stEnableTheme)
+          then mempty
+          else
+            [ link_
+                [ rel_ "stylesheet",
+                  href_ $ "themes/" <> themeCssFile (st ^. #modelState . #stTheme)
+                ]
+            ]
+      ) <>
+      [ link_
+          [ rel_ "stylesheet",
+            href_ $ "miso-functora/miso-functora.min.css"
+          ]
+      ]
+    )
+    $ mainWidget st
 #else
 viewModel st =
+  --
+  -- NOTE : using non-optimized css for dev purposes only
+  --
   prependViews
-    [ link_
-        [ rel_ "stylesheet",
-          href_ "static/css/fontawesome.min.css"
-        ],
-      -- href_ "https://unpkg.com/nes.css@2.3.0/css/nes.min.css"
-      -- href_ "node_modules/@lowlighter/matcha/dist/matcha.css"
-      -- href_ "https://unpkg.com/@sakun/system.css"
-      -- href_ "https://unpkg.com/papercss/dist/paper.min.css"
-      -- href_ "https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css"
-      -- href_ "https://vinibiavatti1.github.io/TuiCss/dist/tuicss.min.css"
-      -- href_ "https://fieber.hack.re/fieber.css"
-      link_
-        [ rel_ "stylesheet",
-          href_ $ "static/css/" <> themeCssFile (st ^. #modelState . #stTheme)
-        ],
-      link_
-        [ rel_ "stylesheet",
-          href_ "static/css/app.css"
-        ]
-    ]
+    (
+      ( if not (st ^. #modelState . #stEnableTheme)
+          then mempty
+          else
+            [ link_
+                [ rel_ "stylesheet",
+                  href_ $ "themes/" <> themeCssFile (st ^. #modelState . #stTheme)
+                ]
+            ]
+      ) <>
+      [ link_
+          [ rel_ "stylesheet",
+            href_ $ "miso-functora/miso-functora.css"
+          ]
+      ]
+    )
     $ mainWidget st
 #endif
 

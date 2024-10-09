@@ -28,6 +28,7 @@ data Opts model action = Opts
     optsFooterLeft :: [View action] -> [View action],
     optsFooterRight :: [View action] -> [View action],
     optsExtraOnClose :: model -> model,
+    optsFlexContent :: Bool,
     optsIcon :: Icon.Icon -> View action
   }
   deriving stock (Generic)
@@ -42,6 +43,7 @@ defOpts =
       optsFooterLeft = id,
       optsFooterRight = id,
       optsExtraOnClose = id,
+      optsFlexContent = True,
       optsIcon = Icon.icon @Icon.Fa
     }
 
@@ -66,7 +68,10 @@ dialog opts args =
           id
           (optsHeaderLeft opts defHeaderLeft)
           (optsHeaderRight opts defHeaderRight)
-        <> argsContent args
+        <> ( if optsFlexContent opts
+              then [Flex.flexCol main_ id (argsContent args)]
+              else argsContent args
+           )
         <> Flex.flexLeftRight
           footer_
           id

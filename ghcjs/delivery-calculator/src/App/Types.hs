@@ -92,6 +92,7 @@ data St f = St
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
     stScreen :: Screen,
+    stEnableTheme :: Bool,
     stTheme :: Theme
   }
   deriving stock (Generic)
@@ -133,6 +134,7 @@ newSt = do
         stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main,
+        stEnableTheme = True,
         stTheme = Theme.Paper
       }
 

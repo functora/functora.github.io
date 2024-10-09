@@ -45,7 +45,12 @@ select ::
 select opts args =
   maybe
     id
-    (\x -> label_ mempty . (text x :) . singleton)
+    ( \x ->
+        label_ mempty
+          . (text x :)
+          . (br_ mempty :)
+          . singleton
+    )
     (optsLabel opts)
     $ select_
       [ onChange $ \x ->

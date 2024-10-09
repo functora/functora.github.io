@@ -102,16 +102,6 @@ common pkg
     build-depends: ghcjs-base
     js-sources:    js/main.min.js
 
-  data-files:
-    css/*.css
-    dist/**/*.css
-    dist/**/*.eot
-    dist/**/*.png
-    dist/**/*.svg
-    dist/**/*.ttf
-    dist/**/*.woff
-    dist/**/*.woff2
-
 library
   import:          pkg
   hs-source-dirs:  src

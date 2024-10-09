@@ -77,7 +77,7 @@ codeGenHook _ = do
   prog <- getProgName
   runGhc (Just libdir) $ do
     dflags <- getDynFlags
-    cssRaw <- liftIO $ Directory.listDirectory "dist/css/"
+    cssRaw <- liftIO $ Directory.listDirectory "dist/themes/"
     let cssKebab =
           sort . fmap (dropEnd 8) $ filter (isSuffixOf ".min.css") cssRaw
     let cssPascal =

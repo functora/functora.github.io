@@ -145,7 +145,12 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   )
     <> [ maybe
           id
-          (\x -> label_ mempty . (text x :) . singleton)
+          ( \x ->
+              label_ mempty
+                . (text x :)
+                . (br_ mempty :)
+                . singleton
+          )
           (optsLabel opts)
           . input_
           $ ( catMaybes

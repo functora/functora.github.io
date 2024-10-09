@@ -23,14 +23,24 @@ body {
 
 header,
 footer {
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 0;
-  padding-right: 0;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+footer:before,
+footer:after {
+  width: 100%;
 }
 
 nav {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   margin-bottom: 1rem;
+  z-index: initial !important;
+  position: initial !important;
 }
 
 textarea {
@@ -40,18 +50,20 @@ textarea {
 
 dialog {
   width: 100%;
-  height: fit-content;
-  max-height: calc(100% - 4rem);
-  max-width: min(calc(100% - 4rem), 640px);
+  height: fit-content !important;
+  max-height: calc(100% - 4rem) !important;
+  max-width: min(calc(100% - 4rem), 640px) !important;
   overflow: auto;
+  margin: auto !important;
   padding: 1rem;
-  z-index: 9999;
+  z-index: 9999 !important;
+  display: initial;
   position: initial;
   transform: initial;
 }
 
 button {
-  margin: 0.25rem 0.125rem;
+  margin: 0.25rem 0.125rem !important;
   padding-top: 4px;
   padding-bottom: 4px;
   padding-left: 12px;

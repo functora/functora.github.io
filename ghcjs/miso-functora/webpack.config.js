@@ -6,7 +6,7 @@ const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const path = require("path");
 const fs = require("fs");
 
-const js = {
+const jsConfig = {
   entry: "./js/main.js",
   output: {
     path: __dirname + "/js",
@@ -33,83 +33,86 @@ const js = {
   ],
 };
 
-const cssInp = __dirname + "/css";
-const cssOut = __dirname + "/dist/css";
-const cssEntry = fs
-  .readdirSync(cssInp)
-  .filter((file) => file.endsWith(".css"))
-  .filter((file) =>
-    [
-      "ads-gazette.css",
-      "ads-notebook.css",
-      "ads-medium.css",
-      "scooter.css",
-      "propeller.css",
-      "motherplate.css",
-      "boot-paper.css",
-      "boot-readable.css",
-      "flat-ui.css",
-      "pandoc-scholar.css",
-      "tui.css",
-      "latex.css",
-      "ok.css",
-      "hello.css",
-      "minimal.css",
-      "siimple.css",
-      "missing-style.css",
-      "semantic-ui.css",
-      "w3c-traditional.css",
-      "primer.css",
-      "yamb.css",
-    ].every((bad) => file != bad),
-  )
-  .map((file) => [path.basename(file, ".css"), path.join(cssInp, file)])
-  .reduce(
-    (entries, [name, filePath]) => ({ ...entries, [name]: filePath }),
-    {},
-  );
+function cssEntry(cssDir) {
+  const input = __dirname + "/lib/" + cssDir;
+  return fs
+    .readdirSync(input)
+    .filter((file) => file.endsWith(".css"))
+    .filter((file) =>
+      [
+        "ads-gazette.css",
+        "ads-notebook.css",
+        "ads-medium.css",
+        "scooter.css",
+        "propeller.css",
+        "motherplate.css",
+        "boot-paper.css",
+        "boot-readable.css",
+        "flat-ui.css",
+        "pandoc-scholar.css",
+        "tui.css",
+        "latex.css",
+        "ok.css",
+        "hello.css",
+        "minimal.css",
+        "siimple.css",
+        "missing-style.css",
+        "semantic-ui.css",
+        "w3c-traditional.css",
+        "primer.css",
+        "yamb.css",
+      ].every((bad) => file != bad),
+    )
+    .map((file) => [path.basename(file, ".css"), path.join(input, file)])
+    .reduce(
+      (entries, [name, filePath]) => ({ ...entries, [name]: filePath }),
+      {},
+    );
+}
 
-const css = {
-  entry: cssEntry,
-  output: {
-    path: cssOut,
-    clean: true,
-  },
-  mode: "production",
-  optimization: {
-    minimize: true,
-    minimizer: [new CssMinimizerPlugin()],
-  },
-  plugins: [
-    new MiniCssExtractPlugin({
-      filename: "[name].min.css",
-    }),
-    new webpack.optimize.LimitChunkCountPlugin({
-      maxChunks: 1,
-    }),
-    new RemoveEmptyScriptsPlugin(),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.css$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          { loader: "css-loader", options: { importLoaders: 1 } },
-          {
-            loader: "postcss-loader",
-            options: { postcssOptions: { plugins: ["postcss-import-url"] } },
-          },
-        ],
-      },
-    ],
-  },
-  experiments: {
-    buildHttp: {
-      allowedUris: [/^(http|https):\/\//],
-      frozen: false,
+function cssConfig(cssDir) {
+  return {
+    entry: cssEntry(cssDir),
+    output: {
+      path: __dirname + "/dist/" + cssDir,
+      clean: true,
     },
-  },
-};
+    mode: "production",
+    optimization: {
+      minimize: true,
+      minimizer: [new CssMinimizerPlugin()],
+    },
+    plugins: [
+      new MiniCssExtractPlugin({
+        filename: "[name].min.css",
+      }),
+      new webpack.optimize.LimitChunkCountPlugin({
+        maxChunks: 1,
+      }),
+      new RemoveEmptyScriptsPlugin(),
+    ],
+    module: {
+      rules: [
+        {
+          test: /\.css$/,
+          use: [
+            MiniCssExtractPlugin.loader,
+            { loader: "css-loader", options: { importLoaders: 1 } },
+            {
+              loader: "postcss-loader",
+              options: { postcssOptions: { plugins: ["postcss-import-url"] } },
+            },
+          ],
+        },
+      ],
+    },
+    experiments: {
+      buildHttp: {
+        allowedUris: [/^(http|https):\/\//],
+        frozen: false,
+      },
+    },
+  };
+}
 
-module.exports = [js, css];
+module.exports = [jsConfig, cssConfig("themes"), cssConfig("miso-functora")];

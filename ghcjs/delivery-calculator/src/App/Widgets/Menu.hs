@@ -274,6 +274,18 @@ menu st =
                     & #optsLabel
                     .~ Just ("QR title" :: Unicode)
                 )
+              <> [ Select.select
+                    ( Select.defOpts
+                        & #optsLabel
+                        .~ Just "Theme"
+                    )
+                    Select.Args
+                      { Select.argsModel = st,
+                        Select.argsOptic = #modelState . #stTheme,
+                        Select.argsAction = PushUpdate . Instant,
+                        Select.argsOptions = constTraversal $ enumerate @Theme
+                      }
+                 ]
         }
 
 qrButton :: Model -> View Action

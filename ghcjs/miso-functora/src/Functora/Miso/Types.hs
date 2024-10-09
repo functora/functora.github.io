@@ -50,7 +50,9 @@ module Functora.Miso.Types
     LeadingOrTrailing (..),
     OpenedOrClosed (..),
     Update (..),
+    themeCssFile,
     evalUpdate,
+    module X,
   )
 where
 
@@ -59,8 +61,10 @@ import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import Functora.Cfg
 import Functora.Miso.Prelude
+import Functora.Miso.Theme as X (Theme)
 import Functora.Money hiding (Currency, Money)
 import qualified Miso.Html.Types as Miso
+import qualified Text.Casing as Casing
 import qualified Text.URI as URI
 
 type Typ a =
@@ -541,6 +545,13 @@ data Update model
   | PureAndImpureUpdate (model -> model) (JSM (model -> model))
   | PureAndEffectUpdate (model -> model) (JSM ())
   deriving stock (Generic)
+
+themeCssFile :: Theme -> Unicode
+themeCssFile =
+  (<> ".min.css")
+    . from @String @Unicode
+    . Casing.kebab
+    . inspect @String
 
 evalUpdate :: model -> Update model -> JSM model
 evalUpdate x = \case

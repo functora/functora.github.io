@@ -51,6 +51,7 @@ else
                  reanimate-svg:*,
                  tdlib:*,
                  secp256k1-haskell,
+                 ghc,
     packages:
       pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
       pub/hs-bitcoin-keys/bitcoin-keys/*.cabal

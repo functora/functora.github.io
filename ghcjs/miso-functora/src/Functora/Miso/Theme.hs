@@ -4,6 +4,7 @@ module Functora.Miso.Theme (
     ) where
 import Prelude
 import Data.Data
+import Data.Binary
 import GHC.Generics
 data Theme
   = A11yana |
@@ -140,3 +141,4 @@ data Theme
     Writ |
     Yorha
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
+instance Binary Theme

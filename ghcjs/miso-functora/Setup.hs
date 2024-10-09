@@ -17,6 +17,11 @@
 {-# OPTIONS_GHC -Wno-safe #-}
 {-# OPTIONS_GHC -Wno-unsafe #-}
 {-# OPTIONS_GHC -fprint-potential-instances #-}
+#if MIN_VERSION_ghc(9,0,0)
+{-# OPTIONS_GHC -Wno-missing-kind-signatures #-}
+{-# OPTIONS_GHC -Wno-prepositive-qualified-module #-}
+{-# OPTIONS_GHC -Wno-missing-safe-haskell-mode #-}
+#endif
 
 import qualified Data.Text as T
 import Distribution.Simple hiding (Module (..))
@@ -77,10 +82,12 @@ codeGenHook _ = do
           sort . fmap (dropEnd 8) $ filter (isSuffixOf ".min.css") cssRaw
     let cssPascal =
           fmap Casing.pascal cssKebab
-    when (cssKebab /= fmap Casing.kebab cssPascal)
-      . error
-      $ "Bad kebab <-> pascal isomorphism in "
-      <> inspect @Text cssKebab
+    if cssKebab == fmap Casing.kebab cssPascal
+      then putStrLn $ inspect @Text cssPascal
+      else
+        error
+          $ "Bad kebab <-> pascal isomorphism in "
+          <> inspect @Text cssKebab
     liftIO
       . writeFileIfChanged
       . showPpr dflags
@@ -98,6 +105,7 @@ generateCode prog css =
               import'
               [ "Prelude",
                 "Data.Data",
+                "Data.Binary",
                 "GHC.Generics"
               ]
           )
@@ -118,7 +126,8 @@ generateCode prog css =
                       "Enum",
                       "Bounded"
                     ]
-              ]
+              ],
+            instance' (var "Binary" @@ var "Theme") mempty
           ]
     }
   where

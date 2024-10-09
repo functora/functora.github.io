@@ -19,7 +19,7 @@ custom-setup
     , functora-ghcjs
     , ghc
     , ghc-paths
-    , ghc-source-gen  ==0.4.2.0
+    , ghc-source-gen
     , text
 
 common pkg
@@ -85,6 +85,7 @@ common pkg
   build-depends:
     , barbies
     , base
+    , binary
     , bytestring
     , casing
     , functora-ghcjs
@@ -127,6 +128,7 @@ library
     Functora.Miso.Jsm.Specific
     Functora.Miso.Orphan
     Functora.Miso.Prelude
+    Functora.Miso.Theme
     Functora.Miso.Types
     Functora.Miso.Widgets.BrowserLink
     Functora.Miso.Widgets.Currency

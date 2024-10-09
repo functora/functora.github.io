@@ -41,6 +41,7 @@ import qualified Data.Generics as Syb
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
+import qualified Functora.Miso.Theme as Theme
 import Functora.Miso.Types as X hiding
   ( newFieldPair,
     newFieldPairId,
@@ -90,7 +91,8 @@ data St f = St
     stOnlineOrOffline :: OnlineOrOffline,
     stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
-    stScreen :: Screen
+    stScreen :: Screen,
+    stTheme :: Theme
   }
   deriving stock (Generic)
 
@@ -130,7 +132,8 @@ newSt = do
         stOnlineOrOffline = Online,
         stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
-        stScreen = Main
+        stScreen = Main,
+        stTheme = Theme.Paper
       }
 
 data Asset f = Asset

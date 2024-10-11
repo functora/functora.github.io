@@ -16,7 +16,6 @@ module App.Types
     unShareUri,
     stUri,
     stTeleUri,
-    setScreenPure,
     setScreenAction,
     pushActionQueue,
     icon,
@@ -77,7 +76,7 @@ data Action
   = Noop
   | InitUpdate (Maybe (St Unique))
   | SyncInputs
-  | ChanUpdate Model
+  | ChanUpdate (Model -> Model)
   | PushUpdate (InstantOrDelayed (Update Model))
 
 data St f = St

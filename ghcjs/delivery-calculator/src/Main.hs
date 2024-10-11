@@ -19,6 +19,7 @@ import App.Types
 import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
+import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Money as Money
@@ -160,7 +161,7 @@ updateModel (InitUpdate ext) prevSt = do
                         .~ False
                     )
         pure
-          $ ChanUpdate nextSt
+          $ ChanUpdate (const nextSt)
     ]
 updateModel SyncInputs st = do
   batchEff
@@ -169,7 +170,8 @@ updateModel SyncInputs st = do
         syncInputs st
         pure Noop
     ]
-updateModel (ChanUpdate prevSt) _ = do
+updateModel (ChanUpdate f) st = do
+  let prevSt = f st
   batchEff
     prevSt
     [ do
@@ -177,63 +179,104 @@ updateModel (ChanUpdate prevSt) _ = do
         -- NOTE : Workaround to fix slow rendering after screen switch.
         --
         sleepMilliSeconds 300
-        pure SyncInputs,
-      do
-        actions <-
-          drainTChan $ prevSt ^. #modelConsumerQueue
-        nextSt <-
-          handleAny
-            ( \e -> do
-                consoleLog e
-                pure $ prevSt & #modelLoading .~ False
-            )
-            $ evalModel
-            =<< foldlM evalUpdate prevSt actions
-        uri <- stUri nextSt
-        Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
-        Jsm.insertStorage ("current-" <> vsn) uri
-        syncUri uri
-        nextUri <- stUri $ nextSt & #modelState . #stScreen %~ unQrCode
-        uriViewer <-
-          newFieldPair mempty
-            . DynamicFieldText
-            . from @Prelude.String @Unicode
-            $ URI.renderStr nextUri
-        let finSt =
-              nextSt
-                & #modelUriViewer
-                %~ mergeFieldPairs
-                  [ uriViewer
-                      & #fieldPairValue
-                      . #fieldOpts
-                      . #fieldOptsQrState
-                      .~ Just Opened
-                  ]
-        if finSt ^. #modelLoading
-          then do
-            void
-              . spawnLink
-              . deepseq (viewModel finSt)
-              . pushActionQueue prevSt
-              . Instant
-              . PureUpdate
-              . const
-              $ finSt
-              & #modelLoading
-              .~ False
-            pure
-              $ ChanUpdate (prevSt & #modelLoading .~ True)
-          else
-            pure
-              $ ChanUpdate finSt
+        pure SyncInputs
+        -- do
+        --   actions <-
+        --     drainTChan $ prevSt ^. #modelConsumerQueue
+        --   nextSt <-
+        --     handleAny
+        --       ( \e -> do
+        --           consoleLog e
+        --           pure $ prevSt & #modelLoading .~ False
+        --       )
+        --       $ evalModel
+        --       =<< foldlM evalUpdate prevSt actions
+        --   uri <- stUri nextSt
+        --   Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
+        --   Jsm.insertStorage ("current-" <> vsn) uri
+        --   syncUri uri
+        --   nextUri <- stUri $ nextSt & #modelState . #stScreen %~ unQrCode
+        --   uriViewer <-
+        --     newFieldPair mempty
+        --       . DynamicFieldText
+        --       . from @Prelude.String @Unicode
+        --       $ URI.renderStr nextUri
+        --   let finSt =
+        --         nextSt
+        --           & #modelUriViewer
+        --           %~ mergeFieldPairs
+        --             [ uriViewer
+        --                 & #fieldPairValue
+        --                 . #fieldOpts
+        --                 . #fieldOptsQrState
+        --                 .~ Just Opened
+        --             ]
+        --   if finSt ^. #modelLoading
+        --     then do
+        --       void
+        --         . spawnLink
+        --         . deepseq (viewModel finSt)
+        --         . pushActionQueue prevSt
+        --         . Instant
+        --         . PureUpdate
+        --         . const
+        --         $ finSt
+        --         & #modelLoading
+        --         .~ False
+        --       pure
+        --         . ChanUpdate
+        --         $ #modelLoading
+        --         .~ True
+        --     else
+        --       pure
+        --         . ChanUpdate
+        --         $ #modelLoading
+        --         .~ False
     ]
-updateModel (PushUpdate updater) st = do
-  batchEff
-    st
-    [ do
-        pushActionQueue st updater
-        pure Noop
-    ]
+updateModel (PushUpdate value) st = do
+  case instantOrDelayedValue value of
+    PureUpdate f ->
+      batchEff
+        ( f st
+        )
+        [ do
+            pushActionQueue st . Instant $ PureUpdate id
+            pure Noop
+        ]
+    ImpureUpdate g ->
+      batchEff
+        st
+        [ do
+            updater <- g
+            pushActionQueue st . Instant $ PureUpdate updater
+            pure Noop
+        ]
+    EffectUpdate e ->
+      batchEff
+        st
+        [ do
+            e
+            pushActionQueue st . Instant $ PureUpdate id
+            pure Noop
+        ]
+    PureAndImpureUpdate f g ->
+      batchEff
+        ( f st
+        )
+        [ do
+            updater <- g
+            pushActionQueue st . Instant $ PureUpdate updater
+            pure Noop
+        ]
+    PureAndEffectUpdate f e ->
+      batchEff
+        ( f st
+        )
+        [ do
+            e
+            pushActionQueue st . Instant $ PureUpdate id
+            pure Noop
+        ]
 
 --
 -- TODO : !!!
@@ -336,77 +379,163 @@ syncInputs st = do
         unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
-evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m Model
+evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel prev = do
   let oof = prev ^. #modelState . #stOnlineOrOffline
-  new <-
-    case oof of
-      Online ->
-        Syb.everywhereM
-          ( Syb.mkM $ \cur ->
-              Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
-                . fmap (fromRight cur)
-                . Rates.tryMarket
-                . Rates.getCurrencyInfo (prev ^. #modelWebOpts)
-                $ Money.currencyInfoCode cur
-          )
-          ( prev ^. #modelState
-          )
-      Offline ->
-        pure $ prev ^. #modelState
-  curs <-
-    case oof of
-      Online ->
-        Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
-          . fmap (fromRight $ prev ^. #modelCurrencies)
-          . Rates.tryMarket
-          . fmap (^. #currenciesList)
-          $ Rates.getCurrencies (prev ^. #modelWebOpts)
-      Offline ->
-        pure $ prev ^. #modelCurrencies
-  let next =
-        prev
-          & #modelState
-          .~ new
-          & #modelCurrencies
-          .~ curs
+  let web = prev ^. #modelWebOpts
   case oof of
-    Offline -> pure next
+    Offline -> pure id
     Online ->
-      Rates.withMarket (next ^. #modelWebOpts) (next ^. #modelMarket) $ do
+      Rates.withMarket web (prev ^. #modelMarket) $ do
+        let prevCurs :: [Money.CurrencyInfo] =
+              Syb.listify (const True) $ prev ^. #modelState
+        --
+        -- TODO : don't need this, create map from nextCursList
+        --
+        nextCursMap :: Map Money.CurrencyCode Money.CurrencyInfo <-
+          foldlM
+            ( \acc prevCur -> do
+                let code =
+                      Money.currencyInfoCode prevCur
+                nextCur <-
+                  fmap (fromRight prevCur)
+                    . Rates.tryMarket
+                    $ Rates.getCurrencyInfo web code
+                pure
+                  $ Map.insert code nextCur acc
+            )
+            mempty
+            prevCurs
+        nextCursList :: NonEmpty Money.CurrencyInfo <-
+          fmap (fromRight $ prev ^. #modelCurrencies)
+            . Rates.tryMarket
+            . fmap (^. #currenciesList)
+            $ Rates.getCurrencies web
         let base =
               Money.Funds
                 1
-                $ next
+                $ prev
                 ^. #modelState
                 . #stAssetCurrency
                 . #currencyOutput
                 . #currencyInfoCode
-        quote <-
-          Rates.getQuote (next ^. #modelWebOpts) base
-            $ next
+        let prevQuote =
+              Rates.QuoteAt
+                { Rates.quoteMoneyAmount =
+                    Tagged $ prev ^. #modelState . #stExchangeRate . #fieldOutput,
+                  Rates.quoteCreatedAt =
+                    prev ^. #modelState . #stExchangeRateAt,
+                  Rates.quoteUpdatedAt =
+                    prev ^. #modelState . #stExchangeRateAt
+                }
+        nextQuote <-
+          fmap (fromRight prevQuote)
+            . Rates.tryMarket
+            . Rates.getQuote web base
+            $ prev
             ^. #modelState
             . #stMerchantCurrency
             . #currencyOutput
             . #currencyInfoCode
-        let rate =
-              unTagged
-                $ quote
-                ^. #quoteMoneyAmount
+        let rateValue =
+              unTagged $ nextQuote ^. #quoteMoneyAmount
+        let rateUpdated =
+              nextQuote ^. #quoteCreatedAt
         pure
-          $ next
-          & #modelState
-          . #stExchangeRate
-          . #fieldInput
-          . #uniqueValue
-          .~ inspectRatioDef rate
-          & #modelState
-          . #stExchangeRate
-          . #fieldOutput
-          .~ rate
-          & #modelState
-          . #stExchangeRateAt
-          .~ (quote ^. #quoteCreatedAt)
+          $ ( #modelState
+                %~ Syb.everywhere
+                  ( Syb.mkT $ \cur ->
+                      fromMaybe cur
+                        $ Map.lookup (cur ^. #currencyInfoCode) nextCursMap
+                  )
+            )
+          . ( #modelCurrencies
+                .~ nextCursList
+            )
+          . ( #modelState
+                . #stExchangeRate
+                . #fieldInput
+                . #uniqueValue
+                .~ inspectRatioDef rateValue
+            )
+          . ( #modelState
+                . #stExchangeRate
+                . #fieldOutput
+                .~ rateValue
+            )
+          . ( #modelState
+                . #stExchangeRateAt
+                .~ rateUpdated
+            )
+
+-- new <-
+--   case oof of
+--     Online ->
+--       Syb.everywhereM
+--         ( Syb.mkM $ \cur ->
+--             Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
+--               . fmap (fromRight cur)
+--               . Rates.tryMarket
+--               . Rates.getCurrencyInfo (prev ^. #modelWebOpts)
+--               $ Money.currencyInfoCode cur
+--         )
+--         ( prev ^. #modelState
+--         )
+--     Offline ->
+--       pure $ prev ^. #modelState
+-- curs <-
+--   case oof of
+--     Online ->
+--       Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
+--         . fmap (fromRight $ prev ^. #modelCurrencies)
+--         . Rates.tryMarket
+--         . fmap (^. #currenciesList)
+--         $ Rates.getCurrencies (prev ^. #modelWebOpts)
+--     Offline ->
+--       pure $ prev ^. #modelCurrencies
+-- let next =
+--       prev
+--         & #modelState
+--         .~ new
+--         & #modelCurrencies
+--         .~ curs
+-- case oof of
+--   Offline -> pure next
+--   Online ->
+--     Rates.withMarket (next ^. #modelWebOpts) (next ^. #modelMarket) $ do
+--       let base =
+--             Money.Funds
+--               1
+--               $ next
+--               ^. #modelState
+--               . #stAssetCurrency
+--               . #currencyOutput
+--               . #currencyInfoCode
+--       quote <-
+--         Rates.getQuote (next ^. #modelWebOpts) base
+--           $ next
+--           ^. #modelState
+--           . #stMerchantCurrency
+--           . #currencyOutput
+--           . #currencyInfoCode
+--       let rate =
+--             unTagged
+--               $ quote
+--               ^. #quoteMoneyAmount
+--       pure
+--         $ next
+--         & #modelState
+--         . #stExchangeRate
+--         . #fieldInput
+--         . #uniqueValue
+--         .~ inspectRatioDef rate
+--         & #modelState
+--         . #stExchangeRate
+--         . #fieldOutput
+--         .~ rate
+--         & #modelState
+--         . #stExchangeRateAt
+--         .~ (quote ^. #quoteCreatedAt)
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

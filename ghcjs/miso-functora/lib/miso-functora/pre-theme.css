@@ -1,0 +1,14 @@
+html,
+body {
+  color: black;
+  background-color: white;
+}
+
+main,
+form,
+select,
+option,
+dialog {
+  color: inherit;
+  background-color: inherit;
+}

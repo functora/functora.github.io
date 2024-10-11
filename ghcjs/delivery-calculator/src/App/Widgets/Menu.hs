@@ -24,17 +24,13 @@ menu :: Model -> [View Action]
 menu st =
   [ nav_
       [ style_
-          [ ("width", "100%"),
-            ("display", "grid"),
-            ("align-items", "center"),
-            ("grid-template-columns", "auto 1fr auto auto auto auto")
+          [ ("grid-template-columns", "auto 1fr auto auto auto auto")
           ]
       ]
       [ button_
           [ role_ "button",
             style_
-              [ ("min-width", "0"),
-                ("justify-self", "start")
+              [ ("min-width", "0")
               ],
             onClick
               . PushUpdate
@@ -62,8 +58,7 @@ menu st =
         button_
           [ role_ "button",
             style_
-              [ ("min-width", "0"),
-                ("justify-self", "end")
+              [ ("min-width", "0")
               ],
             onClick
               . PushUpdate
@@ -77,8 +72,7 @@ menu st =
         button_
           [ role_ "button",
             style_
-              [ ("min-width", "0"),
-                ("justify-self", "end")
+              [ ("min-width", "0")
               ],
             onClick
               . PushUpdate
@@ -93,8 +87,7 @@ menu st =
         button_
           [ role_ "button",
             style_
-              [ ("min-width", "0"),
-                ("justify-self", "end")
+              [ ("min-width", "0")
               ],
             onClick
               . PushUpdate
@@ -112,8 +105,7 @@ menu st =
         button_
           [ role_ "button",
             style_
-              [ ("min-width", "0"),
-                ("justify-self", "end")
+              [ ("min-width", "0")
               ],
             onClick
               . PushUpdate

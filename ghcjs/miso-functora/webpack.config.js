@@ -40,6 +40,7 @@ function cssEntry(cssDir) {
     .filter((file) => file.endsWith(".css"))
     .filter((file) =>
       [
+        // broken
         "ads-gazette.css",
         "ads-notebook.css",
         "ads-medium.css",
@@ -61,6 +62,8 @@ function cssEntry(cssDir) {
         "w3c-traditional.css",
         "primer.css",
         "yamb.css",
+        // works but looks bad
+        "thao.css",
       ].every((bad) => file != bad),
     )
     .map((file) => [path.basename(file, ".css"), path.join(input, file)])

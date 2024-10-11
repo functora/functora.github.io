@@ -248,8 +248,7 @@ viewModel :: Model -> View Action
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
   prependViews
-    (
-      ( if not (st ^. #modelState . #stEnableTheme)
+    ( ( if not (st ^. #modelState . #stEnableTheme)
           then mempty
           else
             [ link_
@@ -272,6 +271,11 @@ viewModel st =
   --
   prependViews
     (
+      [ link_
+          [ rel_ "stylesheet",
+            href_ $ "miso-functora/pre-theme.css"
+          ]
+      ] <>
       ( if not (st ^. #modelState . #stEnableTheme)
           then mempty
           else
@@ -283,7 +287,7 @@ viewModel st =
       ) <>
       [ link_
           [ rel_ "stylesheet",
-            href_ $ "miso-functora/miso-functora.css"
+            href_ $ "miso-functora/post-theme.css"
           ]
       ]
     )

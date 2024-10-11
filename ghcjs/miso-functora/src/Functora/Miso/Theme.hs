@@ -126,7 +126,6 @@ data Theme
     Tacit |
     Tent |
     Terminal |
-    Thao |
     Vanilla |
     Vital |
     W3cChocolate |

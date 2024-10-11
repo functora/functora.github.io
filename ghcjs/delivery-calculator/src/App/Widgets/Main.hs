@@ -19,14 +19,17 @@ mainWidget :: Model -> View Action
 mainWidget st =
   div_
     [ style_
-        [ ("padding", "0"),
-          ("margin", "0 auto"),
+        [ ("margin", "0"),
+          ("padding", "0"),
+          ("min-width", "100%"),
           ("max-width", "100%"),
           ("min-height", "100vh"),
           ("display", "flex"),
           ("flex-direction", "column"),
           ("justify-content", "space-between"),
-          ("align-items", "center")
+          ("align-items", "center"),
+          ("color", "inherit"),
+          ("background-color", "inherit")
         ]
     ]
     $ Menu.menu st
@@ -45,7 +48,7 @@ mainWidget st =
        ]
     <> ( if not $ st ^. #modelLoading
           then mempty
-          else [Spinner.spinner]
+          else Spinner.spinner
        )
 
 screenWidget :: Model -> [View Action]
@@ -96,7 +99,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
       then mempty
       else buttons
   )
-    <> [ Flex.flexCol div_ id $ Asset.assetsViewer st <> totalViewer st
+    <> [ Flex.flexCol main_ id $ Asset.assetsViewer st <> totalViewer st
        ]
     <> buttons
   where
@@ -107,7 +110,15 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
       singleton
         $ Flex.flexRow
           p_
-          id
+          ( mappend
+              [ style_
+                  [ ("margin-left", "0"),
+                    ("margin-right", "0"),
+                    ("min-width", "100%"),
+                    ("max-width", "100%")
+                  ]
+              ]
+          )
           [ button_
               [ type_ "submit",
                 onClick . PushUpdate . Instant . ImpureUpdate $ do

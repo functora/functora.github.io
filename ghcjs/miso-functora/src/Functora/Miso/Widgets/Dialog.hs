@@ -56,11 +56,10 @@ dialog opts args =
   if not opened
     then mempty
     else
-      singleton
-        . FixedOverlay.fixedOverlay
-          [ role_ "button",
-            onClick $ closeDialogAction opts args
-          ]
+      FixedOverlay.fixedOverlay
+        [ role_ "button",
+          onClick $ closeDialogAction opts args
+        ]
         . singleton
         . nodeHtml "dialog" [boolProp "open" True]
         $ Flex.flexLeftRight
@@ -69,8 +68,8 @@ dialog opts args =
           (optsHeaderLeft opts defHeaderLeft)
           (optsHeaderRight opts defHeaderRight)
         <> ( if optsFlexContent opts
-              then [Flex.flexCol main_ id (argsContent args)]
-              else argsContent args
+              then [Flex.flexCol form_ id $ argsContent args]
+              else [form_ mempty $ argsContent args]
            )
         <> Flex.flexLeftRight
           footer_
@@ -82,28 +81,17 @@ dialog opts args =
       args ^? #argsModel . cloneTraversal (argsOptic args) == Just Opened
     defHeaderStyle =
       style_
-        [ ("margin", "0"),
-          ("display", "flex"),
+        [ ("display", "flex"),
           ("align-items", "center")
         ]
     defHeaderLeft =
-      maybeToList
-        ( fmap
-            ( h2_
-                [ defHeaderStyle,
-                  style_ [("margin-right", "0.5em")]
-                ]
-                . singleton
-                . optsIcon opts
-            )
-            $ optsTitleIcon opts
-        )
-        <> maybeToList
-          ( fmap
-              ( h2_ [defHeaderStyle] . singleton . text
-              )
-              $ optsTitle opts
-          )
+      singleton
+        . h3_ [defHeaderStyle]
+        . intersperse (rawHtml "&nbsp;")
+        $ catMaybes
+          [ optsIcon opts <$> optsTitleIcon opts,
+            text <$> optsTitle opts
+          ]
     defHeaderRight =
       [ button_
           [onClick $ closeDialogAction opts args]

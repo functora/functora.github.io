@@ -103,6 +103,7 @@ selectCurrency
                     & #optsExtraAttributes
                     .~ [autofocus_ True]
                 )
+                <> [br_ mempty]
                 <> currencyListWidget opts args
           }
     where

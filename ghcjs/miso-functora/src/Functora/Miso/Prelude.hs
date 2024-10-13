@@ -2,6 +2,7 @@ module Functora.Miso.Prelude
   ( module X,
     consoleLog,
     role_,
+    form_,
   )
 where
 
@@ -20,6 +21,7 @@ import Miso as X hiding
     close,
     consoleLog,
     for_,
+    form_,
     view,
   )
 import qualified Miso
@@ -29,3 +31,6 @@ consoleLog = Miso.consoleLog . inspect @Unicode
 
 role_ :: Unicode -> Attribute action
 role_ = textProp "role"
+
+form_ :: [Attribute action] -> [View action] -> View action
+form_ attrs = Miso.form_ (action_ "javascript:void(0)" : attrs)

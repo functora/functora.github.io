@@ -139,14 +139,10 @@ menu st =
                 }
               Currency.Args
                 { Currency.argsModel = st,
-                  Currency.argsOptic =
-                    #modelState . #stAssetCurrency,
-                  Currency.argsAction =
-                    PushUpdate . Instant,
-                  Currency.argsEmitter =
-                    pushActionQueue st . Instant,
-                  Currency.argsCurrencies =
-                    #modelCurrencies
+                  Currency.argsOptic = #modelState . #stAssetCurrency,
+                  Currency.argsAction = PushUpdate . Instant,
+                  Currency.argsEmitter = pushActionQueue st . Instant,
+                  Currency.argsCurrencies = #modelCurrencies
                 }
               <> Currency.selectCurrency
                 Currency.defOpts
@@ -155,27 +151,18 @@ menu st =
                   }
                 Currency.Args
                   { Currency.argsModel = st,
-                    Currency.argsOptic =
-                      #modelState . #stMerchantCurrency,
-                    Currency.argsAction =
-                      PushUpdate . Instant,
-                    Currency.argsEmitter =
-                      pushActionQueue st . Instant,
-                    Currency.argsCurrencies =
-                      #modelCurrencies
+                    Currency.argsOptic = #modelState . #stMerchantCurrency,
+                    Currency.argsAction = PushUpdate . Instant,
+                    Currency.argsEmitter = pushActionQueue st . Instant,
+                    Currency.argsCurrencies = #modelCurrencies
                   }
               <> [ Select.select
-                    ( Select.defOpts
-                        & #optsLabel
-                        .~ Just "Exchange rate"
+                    ( Select.defOpts & #optsLabel .~ Just "Exchange rate"
                     )
                     Select.Args
-                      { Select.argsModel =
-                          st,
-                        Select.argsOptic =
-                          #modelState . #stOnlineOrOffline,
-                        Select.argsAction =
-                          PushUpdate . Instant,
+                      { Select.argsModel = st,
+                        Select.argsOptic = #modelState . #stOnlineOrOffline,
+                        Select.argsAction = PushUpdate . Instant,
                         Select.argsOptions =
                           constTraversal $ enumerate @OnlineOrOffline
                       }
@@ -183,12 +170,9 @@ menu st =
               <> Field.ratioField
                 Field.Args
                   { Field.argsModel = st,
-                    Field.argsOptic =
-                      #modelState . #stExchangeRate,
-                    Field.argsAction =
-                      PushUpdate . Instant,
-                    Field.argsEmitter =
-                      pushActionQueue st . Instant
+                    Field.argsOptic = #modelState . #stExchangeRate,
+                    Field.argsAction = PushUpdate . Instant,
+                    Field.argsEmitter = pushActionQueue st . Instant
                   }
                 ( let disabled =
                         st

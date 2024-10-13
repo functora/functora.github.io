@@ -356,10 +356,7 @@ viewModel st =
 -- https://github.com/dmjio/miso/issues/272
 --
 syncInputs :: Model -> JSM ()
-syncInputs st = do
-  void
-    . JS.eval @Unicode
-    $ "Array.from(document.getElementsByTagName('mdc-text-field')).forEach( function (x) { if ( (x.getElementsByTagName('input')[0] && x.textField_.input_.tagName != 'INPUT') || (x.getElementsByTagName('textarea')[0] && x.textField_.input_.tagName != 'TEXTAREA')) { x.textField_.destroy(); x.textField_.initialize(); } });"
+syncInputs st =
   void
     . Syb.everywhereM (Syb.mkM fun)
     $ modelState st
@@ -478,75 +475,6 @@ evalModel prev = do
                 . #stExchangeRateAt
                 .~ rateUpdated
             )
-
--- new <-
---   case oof of
---     Online ->
---       Syb.everywhereM
---         ( Syb.mkM $ \cur ->
---             Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
---               . fmap (fromRight cur)
---               . Rates.tryMarket
---               . Rates.getCurrencyInfo (prev ^. #modelWebOpts)
---               $ Money.currencyInfoCode cur
---         )
---         ( prev ^. #modelState
---         )
---     Offline ->
---       pure $ prev ^. #modelState
--- curs <-
---   case oof of
---     Online ->
---       Rates.withMarket (prev ^. #modelWebOpts) (prev ^. #modelMarket)
---         . fmap (fromRight $ prev ^. #modelCurrencies)
---         . Rates.tryMarket
---         . fmap (^. #currenciesList)
---         $ Rates.getCurrencies (prev ^. #modelWebOpts)
---     Offline ->
---       pure $ prev ^. #modelCurrencies
--- let next =
---       prev
---         & #modelState
---         .~ new
---         & #modelCurrencies
---         .~ curs
--- case oof of
---   Offline -> pure next
---   Online ->
---     Rates.withMarket (next ^. #modelWebOpts) (next ^. #modelMarket) $ do
---       let base =
---             Money.Funds
---               1
---               $ next
---               ^. #modelState
---               . #stAssetCurrency
---               . #currencyOutput
---               . #currencyInfoCode
---       quote <-
---         Rates.getQuote (next ^. #modelWebOpts) base
---           $ next
---           ^. #modelState
---           . #stMerchantCurrency
---           . #currencyOutput
---           . #currencyInfoCode
---       let rate =
---             unTagged
---               $ quote
---               ^. #quoteMoneyAmount
---       pure
---         $ next
---         & #modelState
---         . #stExchangeRate
---         . #fieldInput
---         . #uniqueValue
---         .~ inspectRatioDef rate
---         & #modelState
---         . #stExchangeRate
---         . #fieldOutput
---         .~ rate
---         & #modelState
---         . #stExchangeRateAt
---         .~ (quote ^. #quoteCreatedAt)
 
 syncUri :: URI -> JSM ()
 syncUri uri = do

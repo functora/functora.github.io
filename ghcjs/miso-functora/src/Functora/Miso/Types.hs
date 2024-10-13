@@ -435,6 +435,10 @@ data Fav = Fav
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (ToJSON, FromJSON) via GenericType Fav
 
+--
+-- TODO : probably don't need debounce in most cases,
+-- maybe just eliminate this wrapper type for reduncancy.
+--
 data InstantOrDelayed a
   = Instant a
   | Delayed Natural a

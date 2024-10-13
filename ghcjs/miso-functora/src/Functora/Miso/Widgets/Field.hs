@@ -157,6 +157,9 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
                 [ fmap
                     (type_ . htmlFieldType)
                     (st ^? cloneTraversal optic . #fieldType),
+                  fmap
+                    (textProp "defaultValue")
+                    (st ^? cloneTraversal optic . #fieldInput . #uniqueValue),
                   Just $ onInput onInputAction,
                   Just . disabled_ $ opts ^. #optsDisabled,
                   fmap placeholder_

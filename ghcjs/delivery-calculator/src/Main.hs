@@ -26,7 +26,7 @@ import qualified Functora.Money as Money
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
-import Language.Javascript.JSaddle ((!), (!!))
+import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
 import qualified Network.URI as URI (parseURI)
@@ -356,13 +356,12 @@ viewModel st =
 -- https://github.com/dmjio/miso/issues/272
 --
 syncInputs :: Model -> JSM ()
-syncInputs st =
-  void
-    . Syb.everywhereM (Syb.mkM fun)
-    $ modelState st
+syncInputs st = do
+  act <- JS.global ! ("document" :: Unicode) ! ("activeElement" :: Unicode)
+  void . Syb.everywhereM (Syb.mkM $ fun act) $ modelState st
   where
-    fun :: Unique Unicode -> JSM (Unique Unicode)
-    fun txt = do
+    fun :: JS.JSVal -> Unique Unicode -> JSM (Unique Unicode)
+    fun act txt = do
       el <-
         getElementById
           . either impureThrow id
@@ -373,17 +372,7 @@ syncInputs st =
           ^. #uniqueUid
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
-        inps <-
-          el
-            ^. JS.js1
-              ("getElementsByTagName" :: Unicode)
-              ("input" :: Unicode)
-        inp <- inps !! 0
-        act <-
-          JS.global
-            ! ("document" :: Unicode)
-            ! ("activeElement" :: Unicode)
-        elActive <- JS.strictEqual inp act
+        elActive <- JS.strictEqual el act
         unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 

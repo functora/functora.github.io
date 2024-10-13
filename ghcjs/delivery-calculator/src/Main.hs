@@ -170,68 +170,79 @@ updateModel SyncInputs st = do
         syncInputs st
         pure Noop
     ]
-updateModel (ChanUpdate f) st = do
-  let prevSt = f st
+updateModel (ChanUpdate update0) st0 = do
+  let st1 = update0 st0
   batchEff
-    prevSt
+    st1
     [ do
         --
         -- NOTE : Workaround to fix slow rendering after screen switch.
         --
         sleepMilliSeconds 300
-        pure SyncInputs
-        -- do
-        --   actions <-
-        --     drainTChan $ prevSt ^. #modelConsumerQueue
-        --   nextSt <-
-        --     handleAny
-        --       ( \e -> do
-        --           consoleLog e
-        --           pure $ prevSt & #modelLoading .~ False
-        --       )
-        --       $ evalModel
-        --       =<< foldlM evalUpdate prevSt actions
-        --   uri <- stUri nextSt
-        --   Jsm.insertStorage ("favorite-" <> vsn) (nextSt ^. #modelFavMap)
-        --   Jsm.insertStorage ("current-" <> vsn) uri
-        --   syncUri uri
-        --   nextUri <- stUri $ nextSt & #modelState . #stScreen %~ unQrCode
-        --   uriViewer <-
-        --     newFieldPair mempty
-        --       . DynamicFieldText
-        --       . from @Prelude.String @Unicode
-        --       $ URI.renderStr nextUri
-        --   let finSt =
-        --         nextSt
-        --           & #modelUriViewer
-        --           %~ mergeFieldPairs
-        --             [ uriViewer
-        --                 & #fieldPairValue
-        --                 . #fieldOpts
-        --                 . #fieldOptsQrState
-        --                 .~ Just Opened
-        --             ]
-        --   if finSt ^. #modelLoading
-        --     then do
-        --       void
-        --         . spawnLink
-        --         . deepseq (viewModel finSt)
-        --         . pushActionQueue prevSt
-        --         . Instant
-        --         . PureUpdate
-        --         . const
-        --         $ finSt
-        --         & #modelLoading
-        --         .~ False
-        --       pure
-        --         . ChanUpdate
-        --         $ #modelLoading
-        --         .~ True
-        --     else
-        --       pure
-        --         . ChanUpdate
-        --         $ #modelLoading
-        --         .~ False
+        pure SyncInputs,
+      do
+        actions <-
+          drainTChan $ st1 ^. #modelConsumerQueue
+        update1 <-
+          foldlM
+            ( \acc upd -> do
+                fun <- unUpdate upd
+                pure $ fun . acc
+            )
+            id
+            actions
+        let st2 = update1 st1
+        update2 <-
+          handleAny
+            ( \e -> do
+                consoleLog e
+                pure $ #modelLoading .~ False
+            )
+            $ evalModel st2
+        let st3 = update2 st2
+        uri <- stUri st3
+        Jsm.insertStorage ("favorite-" <> vsn) $ st3 ^. #modelFavMap
+        Jsm.insertStorage ("current-" <> vsn) uri
+        syncUri uri
+        nextUri <- stUri $ st3 & #modelState . #stScreen %~ unQrCode
+        uriViewer <-
+          newFieldPair mempty
+            . DynamicFieldText
+            . from @Prelude.String @Unicode
+            $ URI.renderStr nextUri
+        let update3 =
+              #modelUriViewer
+                %~ mergeFieldPairs
+                  [ uriViewer
+                      & #fieldPairValue
+                      . #fieldOpts
+                      . #fieldOptsQrState
+                      .~ Just Opened
+                  ]
+        let st4 = update3 st3
+        if st4 ^. #modelLoading
+          then do
+            void
+              . spawnLink
+              . deepseq (viewModel st4)
+              . pushActionQueue st4
+              . Instant
+              . PureUpdate
+              $ #modelLoading
+              .~ False
+            pure
+              . ChanUpdate
+              $ (#modelLoading .~ True)
+              . update3
+              . update2
+              . update1
+          else
+            pure
+              . ChanUpdate
+              $ (#modelLoading .~ False)
+              . update3
+              . update2
+              . update1
     ]
 updateModel (PushUpdate value) st = do
   case instantOrDelayedValue value of

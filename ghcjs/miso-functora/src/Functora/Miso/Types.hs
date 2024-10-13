@@ -50,8 +50,8 @@ module Functora.Miso.Types
     LeadingOrTrailing (..),
     OpenedOrClosed (..),
     Update (..),
+    unUpdate,
     themeCssFile,
-    evalUpdate,
     module X,
   )
 where
@@ -546,17 +546,17 @@ data Update model
   | PureAndEffectUpdate (model -> model) (JSM ())
   deriving stock (Generic)
 
+unUpdate :: Update model -> JSM (model -> model)
+unUpdate = \case
+  PureUpdate f -> pure f
+  ImpureUpdate g -> g >>= pure
+  EffectUpdate e -> e >> pure id
+  PureAndImpureUpdate f g -> g >>= pure . (f .)
+  PureAndEffectUpdate f e -> e >> pure f
+
 themeCssFile :: Theme -> Unicode
 themeCssFile =
   (<> ".min.css")
     . from @String @Unicode
     . Casing.kebab
     . inspect @String
-
-evalUpdate :: model -> Update model -> JSM model
-evalUpdate x = \case
-  PureUpdate f -> pure $ f x
-  ImpureUpdate g -> g >>= pure . ($ x)
-  EffectUpdate e -> e >> pure x
-  PureAndImpureUpdate f g -> g >>= pure . ($ f x)
-  PureAndEffectUpdate f e -> e >> pure (f x)

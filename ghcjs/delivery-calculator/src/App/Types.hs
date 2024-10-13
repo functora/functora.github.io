@@ -134,7 +134,7 @@ newSt = do
         stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main,
         stEnableTheme = True,
-        stTheme = Theme.Paper
+        stTheme = Theme.Matcha
       }
 
 data Asset f = Asset

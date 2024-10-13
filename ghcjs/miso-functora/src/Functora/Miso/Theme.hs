@@ -82,6 +82,7 @@ data Theme
     Magick |
     Markdown |
     Marx |
+    Matcha |
     Material |
     Materialize |
     MdAir |

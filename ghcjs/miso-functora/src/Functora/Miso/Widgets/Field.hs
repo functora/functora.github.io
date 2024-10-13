@@ -124,7 +124,7 @@ field ::
   Full model action t Unique ->
   Opts model action ->
   [View action]
-field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
+field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   ( do
       x0 <-
         catMaybes
@@ -143,42 +143,56 @@ field Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
           _ -> mempty
       fieldModal args x1
   )
-    <> [ maybe
-          id
-          ( \x ->
-              label_ mempty
-                . (text x :)
-                . (br_ mempty :)
-                . singleton
-          )
-          (optsLabel opts)
-          . input_
-          $ ( catMaybes
-                [ fmap
-                    (type_ . htmlFieldType)
-                    (st ^? cloneTraversal optic . #fieldType),
-                  fmap
-                    (textProp "defaultValue")
-                    (st ^? cloneTraversal optic . #fieldInput . #uniqueValue),
-                  Just $ onInput onInputAction,
-                  Just . disabled_ $ opts ^. #optsDisabled,
-                  fmap placeholder_
-                    $ if null placeholder
-                      then optsLabel opts
-                      else Just placeholder,
-                  Just
-                    . id_
-                    . either impureThrow id
-                    . decodeUtf8Strict
-                    . unTagged
-                    $ htmlUid uid,
-                  Just . onKeyDown $ action . optsOnKeyDownAction opts uid,
-                  Just $ onBlur onBlurAction
-                ]
-            )
-          <> ( opts ^. #optsExtraAttributes
-             )
-       ]
+    <> maybe
+      id
+      ( \x ->
+          singleton
+            . label_ mempty
+            . (text x :)
+            . (br_ mempty :)
+      )
+      (optsLabel opts)
+      ( [ input_
+            $ ( catMaybes
+                  [ fmap
+                      (type_ . htmlFieldType)
+                      (st ^? cloneTraversal optic . #fieldType),
+                    fmap
+                      (textProp "defaultValue")
+                      (st ^? cloneTraversal optic . #fieldInput . #uniqueValue),
+                    Just $ onInput onInputAction,
+                    Just . disabled_ $ opts ^. #optsDisabled,
+                    fmap placeholder_
+                      $ if null placeholder
+                        then optsLabel opts
+                        else Just placeholder,
+                    Just
+                      . id_
+                      . either impureThrow id
+                      . decodeUtf8Strict
+                      . unTagged
+                      $ htmlUid uid,
+                    Just . onKeyDown $ action . optsOnKeyDownAction opts uid,
+                    Just $ onBlur onBlurAction
+                  ]
+              )
+            <> ( opts ^. #optsExtraAttributes
+               )
+        ]
+          --
+          -- TODO : with new semantic layout separate leading/trailing
+          -- widgets do not make a lot of sense, should be a single option
+          -- which is just a list widgets.
+          --
+          <> catMaybes
+            [ fmap
+                (fieldIcon full opts)
+                (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic),
+              fmap
+                (fieldIcon full opts)
+                (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
+            ]
+      )
   where
     --
     -- TODO : implement

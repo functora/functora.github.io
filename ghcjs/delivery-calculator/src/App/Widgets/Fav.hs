@@ -17,7 +17,7 @@ fav st =
   Dialog.dialog
     ( Dialog.defOpts
         & #optsKeyed
-        .~ "fav"
+        .~ Just "fav"
     )
     Dialog.Args
       { Dialog.argsModel = st,

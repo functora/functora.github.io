@@ -29,7 +29,7 @@ data Opts model action = Opts
     optsFooterRight :: [View action] -> [View action],
     optsExtraOnClose :: model -> model,
     optsFlexContent :: Bool,
-    optsKeyed :: Unicode,
+    optsKeyed :: Maybe Unicode,
     optsIcon :: Icon.Icon -> View action
   }
   deriving stock (Generic)
@@ -45,7 +45,7 @@ defOpts =
       optsFooterRight = id,
       optsExtraOnClose = id,
       optsFlexContent = True,
-      optsKeyed = mempty,
+      optsKeyed = Nothing,
       optsIcon = Icon.icon @Icon.Fa
     }
 
@@ -58,12 +58,18 @@ dialog opts args =
   if not opened
     then mempty
     else
-      [ keyed (optsKeyed opts <> "-overlay")
+      [ maybe
+          id
+          (keyed . (<> "-overlay"))
+          (optsKeyed opts)
           $ FixedOverlay.fixedOverlay
             [ role_ "button",
               onClick $ closeDialogAction opts args
             ],
-        keyed (optsKeyed opts <> "-content")
+        maybe
+          id
+          (keyed . (<> "-content"))
+          (optsKeyed opts)
           . nodeHtml "dialog" [boolProp "open" True]
           $ Flex.flexLeftRight
             header_

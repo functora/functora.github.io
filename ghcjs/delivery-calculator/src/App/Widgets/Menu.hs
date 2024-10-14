@@ -126,7 +126,7 @@ menu st =
           & #optsTitleIcon
           .~ Just Icon.IconSettings
           & #optsKeyed
-          .~ ("menu" :: Unicode)
+          .~ Just ("menu" :: Unicode)
           & #optsTitle
           .~ Just "Settings"
       )

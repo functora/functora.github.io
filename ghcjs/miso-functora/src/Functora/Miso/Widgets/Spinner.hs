@@ -10,7 +10,11 @@ import Functora.Miso.Widgets.FixedOverlay as FixedOverlay
 spinner :: [View action]
 spinner =
   [ keyed "spinner-overlay"
-      $ FixedOverlay.fixedOverlay mempty,
+      $ FixedOverlay.fixedOverlay
+        [ style_
+            [ ("z-index", "9999")
+            ]
+        ],
     keyed "spinner-content"
       $ div_
         [ class_ "lds-dual-ring",
@@ -19,7 +23,7 @@ spinner =
               ("top", "50%"),
               ("left", "50%"),
               ("transform", "translate(-50%, -50%)"),
-              ("z-index", "9999")
+              ("z-index", "10000")
             ]
         ]
         mempty

@@ -3,7 +3,7 @@ name:          miso-functora
 version:       0.1.0.0
 synopsis:      Miso Widgets
 category:      Web
-build-type:    Custom
+build-type:    Simple
 
 flag ghcid
   manual:  True

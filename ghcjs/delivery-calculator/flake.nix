@@ -47,7 +47,8 @@
           ${app-release-wasm}/bin/app-release-wasm
           out="./dist/latest"
           rm -rf "$out"
-          cp -R ${../miso-functora/dist}/* $out/
+          mkdir -p "$out/static"
+          cp -RLf --no-preserve=mode,ownership ${../miso-functora/dist}/* $out/
           cp ./static/*.png $out/static/
           cp ./static/*.woff2 $out/static/
           cp ./static/*.webmanifest $out/

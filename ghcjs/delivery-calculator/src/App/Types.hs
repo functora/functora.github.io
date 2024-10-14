@@ -163,7 +163,11 @@ newAsset = do
     newFieldPair "Link"
       $ DynamicFieldText "https://bitcoin.org/en/"
   photo <-
-    newFieldPair "Photo"
+    fmap
+      ( (#fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing)
+          . (#fieldPairValue . #fieldType .~ FieldTypeImage)
+      )
+      . newFieldPair "Photo"
       $ DynamicFieldText "https://bitcoin.org/img/home/bitcoin-img.svg?1725887272"
   price <-
     newFieldPair "Price" $ DynamicFieldNumber 10
@@ -223,7 +227,17 @@ stUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
   qxs <-
     stQuery
-      . Syb.everywhere (Syb.mkT $ Field.truncateDynamicField Nothing)
+      . Syb.everywhere
+        ( Syb.mkT $ \x ->
+            if x ^. #fieldType /= FieldTypeImage
+              then x :: Field DynamicField Identity
+              else
+                x
+                  & #fieldInput
+                  .~ mempty
+                  & #fieldOutput
+                  .~ DynamicFieldText mempty
+        )
       . uniqueToIdentity
       $ st
       ^. #modelState

@@ -273,6 +273,8 @@ data FieldType
   | FieldTypeQrCode
   | FieldTypeHtml
   | FieldTypePassword
+  | -- Binary
+    FieldTypeImage
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType FieldType
 
@@ -285,6 +287,7 @@ htmlFieldType = \case
   FieldTypeQrCode -> "text"
   FieldTypeHtml -> "text"
   FieldTypePassword -> "password"
+  FieldTypeImage -> "image"
 
 userFieldType :: FieldType -> Unicode
 userFieldType = \case
@@ -295,6 +298,7 @@ userFieldType = \case
   FieldTypeQrCode -> "QR code"
   FieldTypeHtml -> "HTML"
   FieldTypePassword -> "Password"
+  FieldTypeImage -> "Image"
 
 data FieldPair a f = FieldPair
   { fieldPairKey :: Field Unicode f,

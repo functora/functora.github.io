@@ -7,7 +7,6 @@ module Functora.Miso.Widgets.Field
     OptsWidgetPair (..),
     ModalWidget' (..),
     truncateUnicode,
-    truncateDynamicField,
     expandDynamicField,
     field,
     ratioField,
@@ -152,33 +151,64 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
             . (br_ mempty :)
       )
       (optsLabel opts)
-      ( [ input_
-            $ ( catMaybes
-                  [ fmap
-                      (type_ . htmlFieldType)
-                      (st ^? cloneTraversal optic . #fieldType),
-                    fmap
-                      (textProp "defaultValue")
-                      (st ^? cloneTraversal optic . #fieldInput . #uniqueValue),
-                    Just $ onInput onInputAction,
-                    Just . disabled_ $ opts ^. #optsDisabled,
-                    fmap placeholder_
-                      $ if null placeholder
-                        then optsLabel opts
-                        else Just placeholder,
-                    Just
-                      . id_
-                      . either impureThrow id
-                      . decodeUtf8Strict
-                      . unTagged
-                      $ htmlUid uid,
-                    Just . onKeyDown $ action . optsOnKeyDownAction opts uid,
-                    Just $ onBlur onBlurAction
-                  ]
-              )
-            <> ( opts ^. #optsExtraAttributes
-               )
-        ]
+      ( ( if typ == FieldTypeImage
+            then
+              join
+                . maybeToList
+                $ fmap
+                  ( \src ->
+                      if null src
+                        then mempty
+                        else
+                          [ img_ (src_ src : optsExtraAttributes opts),
+                            br_ mempty
+                          ]
+                  )
+                $ st
+                ^? cloneTraversal
+                  optic
+                . #fieldInput
+                . #uniqueValue
+            else
+              singleton
+                . input_
+                $ ( catMaybes
+                      [ Just . type_ $ htmlFieldType typ,
+                        fmap
+                          (textProp "defaultValue")
+                          ( st
+                              ^? cloneTraversal
+                                optic
+                              . #fieldInput
+                              . #uniqueValue
+                          ),
+                        Just
+                          $ onInput onInputAction,
+                        Just
+                          . disabled_
+                          $ opts
+                          ^. #optsDisabled,
+                        fmap placeholder_
+                          $ if null placeholder
+                            then optsLabel opts
+                            else Just placeholder,
+                        Just
+                          . id_
+                          . either impureThrow id
+                          . decodeUtf8Strict
+                          . unTagged
+                          $ htmlUid uid,
+                        Just
+                          . onKeyDown
+                          $ action
+                          . optsOnKeyDownAction opts uid,
+                        Just
+                          $ onBlur onBlurAction
+                      ]
+                  )
+                <> ( opts ^. #optsExtraAttributes
+                   )
+        )
           --
           -- TODO : with new semantic layout separate leading/trailing
           -- widgets do not make a lot of sense, should be a single option
@@ -187,26 +217,21 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           <> catMaybes
             [ fmap
                 (fieldIcon full opts)
-                (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic),
+                ( opts
+                    ^? #optsLeadingWidget
+                    . _Just
+                    . cloneTraversal widgetOptic
+                ),
               fmap
                 (fieldIcon full opts)
-                (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
+                ( opts
+                    ^? #optsTrailingWidget
+                    . _Just
+                    . cloneTraversal widgetOptic
+                )
             ]
       )
   where
-    --
-    -- TODO : implement
-    --
-    -- & TextField.setLeadingIcon
-    --   ( fmap
-    --       (fieldIcon Leading full opts)
-    --       (opts ^? #optsLeadingWidget . _Just . cloneTraversal widgetOptic)
-    --   )
-    -- & TextField.setTrailingIcon
-    --   ( fmap
-    --       (fieldIcon Trailing full opts)
-    --       (opts ^? #optsTrailingWidget . _Just . cloneTraversal widgetOptic)
-    --   )
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
@@ -215,6 +240,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       if null . fromMaybe mempty $ getInput st
         then #optsWidgetPairEmpty
         else #optsWidgetPairNonEmpty
+    typ =
+      fromMaybe FieldTypeText
+        $ st
+        ^? cloneTraversal optic
+        . #fieldType
     uid =
       fromMaybe nilUid
         $ st
@@ -567,6 +597,7 @@ fieldViewer opts args =
     FieldTypePercent -> genericFieldViewer opts args $ text . (<> "%")
     FieldTypeText -> genericFieldViewer opts args text
     FieldTypeTitle -> header val
+    FieldTypeImage -> genericFieldViewer opts args text
     FieldTypeHtml ->
       genericFieldViewer
         opts
@@ -627,13 +658,19 @@ genericFieldViewer opts0 args widget =
       )
         <> ( optsLeftRightViewer
               opts0
-              [ widget
-                  $ truncateFieldViewer
-                    allowTrunc
-                    stateTrunc
-                    (opts ^. #fieldOptsTruncateLimit)
-                    input
-              ]
+              ( if typ == FieldTypeImage
+                  then
+                    [ img_ [src_ input]
+                    ]
+                  else
+                    [ widget
+                        $ truncateFieldViewer
+                          allowTrunc
+                          stateTrunc
+                          (opts ^. #fieldOptsTruncateLimit)
+                          input
+                    ]
+              )
               ( if null extraWidgets
                   then mempty
                   else extraWidgets
@@ -643,6 +680,11 @@ genericFieldViewer opts0 args widget =
     st = argsModel args
     optic = argsOptic args
     action = argsAction args
+    typ =
+      fromMaybe FieldTypeText
+        $ st
+        ^? cloneTraversal (argsOptic args)
+        . #fieldType
     input =
       maybe mempty fold1 $ st ^? cloneTraversal optic . #fieldInput
     opts =
@@ -719,17 +761,6 @@ truncateFieldViewer True Closed limit full =
   truncateUnicode limit full
 truncateFieldViewer _ _ _ full =
   full
-
-truncateDynamicField ::
-  Maybe Int ->
-  Field DynamicField Identity ->
-  Field DynamicField Identity
-truncateDynamicField limit =
-  (#fieldInput . #runIdentity %~ truncateUnicode limit)
-    . ( #fieldOutput %~ \case
-          DynamicFieldNumber {} -> DynamicFieldNumber 0
-          DynamicFieldText {} -> DynamicFieldText mempty
-      )
 
 truncateUnicode :: Maybe Int -> Unicode -> Unicode
 truncateUnicode limit input =

@@ -68,6 +68,7 @@ dialog {
   margin: 0 auto !important;
   padding: 1rem !important;
   z-index: 9999 !important;
+  border-radius: 0 !important;
   display: initial;
   position: initial;
   transform: initial;

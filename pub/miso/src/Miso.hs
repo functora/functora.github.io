@@ -126,18 +126,27 @@ common App {..} m getView = do
     loop !oldModel = liftIO wait >> do
         -- Apply actions to model
         actions <- liftIO $ atomicModifyIORef' actionsRef $ \actions -> (S.empty, actions)
+#ifdef LOGVIEW
+        tsU0 <- liftIO getCurrentTime
         let (Acc newModel effects) = foldl' (foldEffects writeEvent update)
                                             (Acc oldModel (pure ())) actions
         effects
+        tsU1 <- liftIO getCurrentTime
+        consoleLog . ms . ("update " <>) . show $ diffUTCTime tsU1 tsU0
+#else
+        let (Acc newModel effects) = foldl' (foldEffects writeEvent update)
+                                            (Acc oldModel (pure ())) actions
+        effects
+#endif
         oldName <- liftIO $ oldModel `seq` makeStableName oldModel
         newName <- liftIO $ newModel `seq` makeStableName newModel
         when (oldName /= newName && oldModel /= newModel) $ do
           swapCallbacks
 #ifdef LOGVIEW
-          ts0 <- liftIO getCurrentTime
+          tsV0 <- liftIO getCurrentTime
           newVTree <- runView (view newModel) writeEvent
-          ts1 <- liftIO getCurrentTime
-          consoleLog . ms . show $ diffUTCTime ts1 ts0
+          tsV1 <- liftIO getCurrentTime
+          consoleLog . ms . ("view " <>) . show $ diffUTCTime tsV1 tsV0
 #else
           newVTree <- runView (view newModel) writeEvent
 #endif

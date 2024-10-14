@@ -67,7 +67,7 @@ data Fa
   | FaTrash
   | FaFloppyDisk
   | FaPenToSquare
-  | FaPaste
+  | FaClipboard
   | FaEye
   | FaEyeSlash
   | FaAnglesUp
@@ -102,7 +102,7 @@ instance From Icon Fa where
     IconDelete -> FaTrash
     IconSave -> FaFloppyDisk
     IconEdit -> FaPenToSquare
-    IconPaste -> FaPaste
+    IconPaste -> FaClipboard
     IconVisible -> FaEye
     IconHidden -> FaEyeSlash
     IconUp -> FaAnglesUp

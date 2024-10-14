@@ -6,6 +6,12 @@ package unix
 package directory
   flags: +os-string
 
+package miso
+  flags: +logview
+
+packages:
+  pub/miso/*.cabal
+
 source-repository-package
   type: git
   location: https://github.com/dorchard/type-level-sets.git

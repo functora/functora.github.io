@@ -160,7 +160,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                       if null src
                         then mempty
                         else
-                          [ img_ (src_ src : optsExtraAttributes opts),
+                          [ img_
+                              ( loading_ "lazy"
+                                  : src_ src
+                                  : optsExtraAttributes opts
+                              ),
                             br_ mempty
                           ]
                   )
@@ -660,7 +664,7 @@ genericFieldViewer opts0 args widget =
               opts0
               ( if typ == FieldTypeImage
                   then
-                    [ img_ [src_ input]
+                    [ img_ [loading_ "lazy", src_ input]
                     ]
                   else
                     [ widget

@@ -15,11 +15,7 @@ custom-setup
     , Cabal
     , casing
     , directory
-    , filepath
     , functora-ghcjs
-    , ghc
-    , ghc-paths
-    , ghc-source-gen
     , text
 
 common pkg

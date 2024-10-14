@@ -492,24 +492,10 @@ identityToUnique :: (TraversableB f, MonadIO m) => f Identity -> m (f Unique)
 identityToUnique =
   btraverse $ newUnique . runIdentity
 
-keyed :: Uid -> View action -> View action
-keyed uid = \case
-  Node x0 x1 Nothing x2 x3
-    | not (nullUid uid) ->
-        Node
-          x0
-          x1
-          ( Just
-              . Miso.Key
-              . either impureThrow id
-              . decodeUtf8Strict
-              . unTagged
-              $ htmlUid uid
-          )
-          x2
-          x3
-  x ->
-    x
+keyed :: Unicode -> View action -> View action
+keyed key = \case
+  Node x0 x1 Nothing x2 x3 -> Node x0 x1 (Just $ Miso.Key key) x2 x3
+  x -> x
 
 prependViews :: [View action] -> View action -> View action
 prependViews xs = \case

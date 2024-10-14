@@ -17,30 +17,34 @@ import Miso hiding (at, view)
 
 mainWidget :: Model -> View Action
 mainWidget st =
-  div_
-    [ style_
-        [ ("margin", "0"),
-          ("padding", "0"),
-          ("min-width", "100%"),
-          ("max-width", "100%"),
-          ("min-height", "100vh"),
-          ("display", "flex"),
-          ("flex-direction", "column"),
-          ("justify-content", "space-between"),
-          ("align-items", "center"),
-          ("color", "inherit"),
-          ("background-color", "inherit")
-        ]
-    ]
-    $ Menu.menu st
-    <> [ Flex.flexCol main_ id $ screenWidget st
-       ]
-    <> [ footer_
-          [ style_
-              [ ("text-align", "center"),
-                ("margin-bottom", "1rem")
-              ]
+  keyed "main-root"
+    . div_
+      [ style_
+          [ ("margin", "0"),
+            ("padding", "0"),
+            ("min-width", "100%"),
+            ("max-width", "100%"),
+            ("min-height", "100vh"),
+            ("display", "flex"),
+            ("flex-direction", "column"),
+            ("justify-content", "space-between"),
+            ("align-items", "center"),
+            ("color", "inherit"),
+            ("background-color", "inherit")
           ]
+      ]
+    $ Menu.menu st
+    <> [ keyed "main-content"
+          . Flex.flexCol main_ id
+          $ screenWidget st
+       ]
+    <> [ keyed "main-footer"
+          . footer_
+            [ style_
+                [ ("text-align", "center"),
+                  ("margin-bottom", "1rem")
+                ]
+            ]
           $ tosWidget
           : br_ mempty
           : Menu.qrButton st

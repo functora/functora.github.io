@@ -15,7 +15,10 @@ import qualified Functora.Miso.Widgets.Icon as Icon
 fav :: Model -> [View Action]
 fav st =
   Dialog.dialog
-    Dialog.defOpts
+    ( Dialog.defOpts
+        & #optsKeyed
+        .~ "fav"
+    )
     Dialog.Args
       { Dialog.argsModel = st,
         Dialog.argsOptic = #modelFav,

@@ -22,108 +22,111 @@ import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
 menu st =
-  [ nav_
-      [ style_
-          [ ("grid-template-columns", "auto 1fr auto auto auto auto")
-          ]
-      ]
-      [ button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0")
-              ],
-            onClick
-              . PushUpdate
-              . Instant
-              . PureUpdate
-              $ #modelMenu
-              .~ Opened
-          ]
-          [ icon Icon.IconMenu
-          ],
-        button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0"),
-                ("justify-self", "start"),
-                ("word-break", "keep-all"),
-                ("overflow-wrap", "normal")
-              ],
-            onClick . PushUpdate . Instant . ImpureUpdate $ do
-              doc <- liftIO newSt
-              pure $ #modelState .~ doc
-          ]
-          [ text "Delivery Calculator"
-          ],
-        button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0")
-              ],
-            onClick
-              . PushUpdate
-              . Instant
-              . PureUpdate
-              $ #modelFav
-              .~ Opened
-          ]
-          [ icon Icon.IconFav
-          ],
-        button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0")
-              ],
-            onClick
-              . PushUpdate
-              . Instant
-              . ImpureUpdate
-              $ do
-                Jsm.printCurrentPage "delivery-calculator"
-                pure id
-          ]
-          [ icon Icon.IconPrint
-          ],
-        button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0")
-              ],
-            onClick
-              . PushUpdate
-              . Instant
-              . ImpureUpdate
-              $ do
-                Jsm.saveFile
-                  "delivery-calculator.xlsx"
-                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  Xlsx.newXlsx
-                pure id
-          ]
-          [ icon Icon.IconDownload
-          ],
-        button_
-          [ role_ "button",
-            style_
-              [ ("min-width", "0")
-              ],
-            onClick
-              . PushUpdate
-              . Instant
-              . Jsm.shareText
-              . from @String @Unicode
-              . either impureThrow URI.renderStr
-              $ stUri st
-          ]
-          [ icon Icon.IconShare
-          ]
-      ]
+  [ keyed "menu"
+      $ nav_
+        [ style_
+            [ ("grid-template-columns", "auto 1fr auto auto auto auto")
+            ]
+        ]
+        [ button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0")
+                ],
+              onClick
+                . PushUpdate
+                . Instant
+                . PureUpdate
+                $ #modelMenu
+                .~ Opened
+            ]
+            [ icon Icon.IconMenu
+            ],
+          button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0"),
+                  ("justify-self", "start"),
+                  ("word-break", "keep-all"),
+                  ("overflow-wrap", "normal")
+                ],
+              onClick . PushUpdate . Instant . ImpureUpdate $ do
+                doc <- liftIO newSt
+                pure $ #modelState .~ doc
+            ]
+            [ text "Delivery Calculator"
+            ],
+          button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0")
+                ],
+              onClick
+                . PushUpdate
+                . Instant
+                . PureUpdate
+                $ #modelFav
+                .~ Opened
+            ]
+            [ icon Icon.IconFav
+            ],
+          button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0")
+                ],
+              onClick
+                . PushUpdate
+                . Instant
+                . ImpureUpdate
+                $ do
+                  Jsm.printCurrentPage "delivery-calculator"
+                  pure id
+            ]
+            [ icon Icon.IconPrint
+            ],
+          button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0")
+                ],
+              onClick
+                . PushUpdate
+                . Instant
+                . ImpureUpdate
+                $ do
+                  Jsm.saveFile
+                    "delivery-calculator.xlsx"
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    Xlsx.newXlsx
+                  pure id
+            ]
+            [ icon Icon.IconDownload
+            ],
+          button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0")
+                ],
+              onClick
+                . PushUpdate
+                . Instant
+                . Jsm.shareText
+                . from @String @Unicode
+                . either impureThrow URI.renderStr
+                $ stUri st
+            ]
+            [ icon Icon.IconShare
+            ]
+        ]
   ]
     <> Fav.fav st
     <> Dialog.dialog
       ( Dialog.defOpts
           & #optsTitleIcon
           .~ Just Icon.IconSettings
+          & #optsKeyed
+          .~ ("menu" :: Unicode)
           & #optsTitle
           .~ Just "Settings"
       )

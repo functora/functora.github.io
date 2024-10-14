@@ -29,6 +29,7 @@ data Opts model action = Opts
     optsFooterRight :: [View action] -> [View action],
     optsExtraOnClose :: model -> model,
     optsFlexContent :: Bool,
+    optsKeyed :: Unicode,
     optsIcon :: Icon.Icon -> View action
   }
   deriving stock (Generic)
@@ -44,6 +45,7 @@ defOpts =
       optsFooterRight = id,
       optsExtraOnClose = id,
       optsFlexContent = True,
+      optsKeyed = mempty,
       optsIcon = Icon.icon @Icon.Fa
     }
 
@@ -56,26 +58,28 @@ dialog opts args =
   if not opened
     then mempty
     else
-      FixedOverlay.fixedOverlay
-        [ role_ "button",
-          onClick $ closeDialogAction opts args
-        ]
-        . singleton
-        . nodeHtml "dialog" [boolProp "open" True]
-        $ Flex.flexLeftRight
-          header_
-          id
-          (optsHeaderLeft opts defHeaderLeft)
-          (optsHeaderRight opts defHeaderRight)
-        <> ( if optsFlexContent opts
-              then [Flex.flexCol form_ id $ argsContent args]
-              else [form_ mempty $ argsContent args]
-           )
-        <> Flex.flexLeftRight
-          footer_
-          id
-          (optsFooterLeft opts mempty)
-          (optsFooterRight opts defFooterRight)
+      [ keyed (optsKeyed opts <> "-overlay")
+          $ FixedOverlay.fixedOverlay
+            [ role_ "button",
+              onClick $ closeDialogAction opts args
+            ],
+        keyed (optsKeyed opts <> "-content")
+          . nodeHtml "dialog" [boolProp "open" True]
+          $ Flex.flexLeftRight
+            header_
+            id
+            (optsHeaderLeft opts defHeaderLeft)
+            (optsHeaderRight opts defHeaderRight)
+          <> ( if optsFlexContent opts
+                then [Flex.flexCol form_ id $ argsContent args]
+                else [form_ mempty $ argsContent args]
+             )
+          <> Flex.flexLeftRight
+            footer_
+            id
+            (optsFooterLeft opts mempty)
+            (optsFooterRight opts defFooterRight)
+      ]
   where
     opened =
       args ^? #argsModel . cloneTraversal (argsOptic args) == Just Opened

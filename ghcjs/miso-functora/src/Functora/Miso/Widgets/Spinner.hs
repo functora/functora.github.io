@@ -4,13 +4,15 @@ module Functora.Miso.Widgets.Spinner
 where
 
 import Functora.Miso.Prelude
+import Functora.Miso.Types
 import Functora.Miso.Widgets.FixedOverlay as FixedOverlay
 
 spinner :: [View action]
 spinner =
-  FixedOverlay.fixedOverlay
-    mempty
-    [ div_
+  [ keyed "spinner-overlay"
+      $ FixedOverlay.fixedOverlay mempty,
+    keyed "spinner-content"
+      $ div_
         [ class_ "lds-dual-ring",
           style_
             [ ("position", "fixed"),
@@ -21,4 +23,4 @@ spinner =
             ]
         ]
         mempty
-    ]
+  ]

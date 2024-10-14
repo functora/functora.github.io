@@ -47,8 +47,7 @@
           ${app-release-wasm}/bin/app-release-wasm
           out="./dist/latest"
           rm -rf "$out"
-          mkdir -p "$out/static/css"
-          cp -R ./static/webfonts $out/static/webfonts
+          cp -R ${../miso-functora/dist}/* $out/
           cp ./static/*.png $out/static/
           cp ./static/*.woff2 $out/static/
           cp ./static/*.webmanifest $out/
@@ -83,13 +82,6 @@
             --minify-css \
             -o $out/index.html \
             ./static/wasm.html
-
-          ${pkgs.clean-css-cli}/bin/cleancss \
-            -O2 \
-            --source-map \
-            -o $out/static/css/all.css \
-            ./static/css/fontawesome.min.css \
-            ./static/css/app.css
 
           ${pkgs.nodejs}/bin/npm i --prefer-offline
           ${pkgs.nodejs}/bin/npm run build

@@ -302,18 +302,24 @@ viewModel :: Model -> View Action
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 viewModel st =
   prependViews
-    ( ( if not (st ^. #modelState . #stEnableTheme)
+    (
+      [ keyed "css-pre-theme" $ link_
+          [ rel_ "stylesheet",
+            href_ $ "miso-functora/pre-theme.min.css"
+          ]
+      ] <>
+      ( if not (st ^. #modelState . #stEnableTheme)
           then mempty
           else
-            [ link_
+            [ keyed "css-theme" $ link_
                 [ rel_ "stylesheet",
                   href_ $ "themes/" <> themeCssFile (st ^. #modelState . #stTheme)
                 ]
             ]
       ) <>
-      [ link_
+      [ keyed "css-post-theme" $ link_
           [ rel_ "stylesheet",
-            href_ $ "miso-functora/miso-functora.min.css"
+            href_ $ "miso-functora/post-theme.min.css"
           ]
       ]
     )
@@ -325,7 +331,7 @@ viewModel st =
   --
   prependViews
     (
-      [ link_
+      [ keyed "css-pre-theme" $ link_
           [ rel_ "stylesheet",
             href_ $ "miso-functora/pre-theme.css"
           ]
@@ -333,13 +339,13 @@ viewModel st =
       ( if not (st ^. #modelState . #stEnableTheme)
           then mempty
           else
-            [ link_
+            [ keyed "css-theme" $ link_
                 [ rel_ "stylesheet",
                   href_ $ "themes/" <> themeCssFile (st ^. #modelState . #stTheme)
                 ]
             ]
       ) <>
-      [ link_
+      [ keyed "css-post-theme" $ link_
           [ rel_ "stylesheet",
             href_ $ "miso-functora/post-theme.css"
           ]

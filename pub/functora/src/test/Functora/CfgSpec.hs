@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Functora.CfgSpec (spec) where
 
 import Functora.Cfg

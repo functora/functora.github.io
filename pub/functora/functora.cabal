@@ -176,9 +176,11 @@ common pkg-web
   hs-source-dirs: src/web
   build-depends:
     , base
+    , base64-bytestring
     , http-types
     , modern-uri
     , network-uri
+    , uri-encode
 
   if impl(ghcjs)
     build-depends: ghcjs-base
@@ -311,6 +313,7 @@ library web
   exposed:         True
   visibility:      public
   exposed-modules:
+    Functora.Rfc2397
     Functora.Web
     Functora.WebOrphan
 
@@ -407,6 +410,7 @@ test-suite functora-test
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec
+    Functora.WebSpec
 
   if flag(ghcid)
     import:
@@ -430,6 +434,7 @@ test-suite functora-test
       Functora.Qr
       Functora.QrOrphan
       Functora.Rates
+      Functora.Rfc2397
       Functora.Soplate
       Functora.Sql
       Functora.SqlOrphan

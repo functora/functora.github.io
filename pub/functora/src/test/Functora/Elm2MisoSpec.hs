@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Functora.Elm2MisoSpec (spec) where
 
 import Data.String.QQ

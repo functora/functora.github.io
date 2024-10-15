@@ -11,6 +11,7 @@ package miso
 
 packages:
   pub/miso/*.cabal
+  pub/miso/examples/*.cabal
 
 source-repository-package
   type: git

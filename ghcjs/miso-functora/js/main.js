@@ -1,6 +1,7 @@
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { WebviewPrint } from "capacitor-webview-print";
+import { dataUriToBuffer } from "data-uri-to-buffer";
 import { Preferences } from "@capacitor/preferences";
 import { Clipboard } from "@capacitor/clipboard";
 import { Browser } from "@capacitor/browser";
@@ -28,8 +29,14 @@ export async function insertStorage(key, value) {
 }
 
 export async function selectClipboard() {
-  const { value } = await Clipboard.read();
-  return value;
+  const { type, value } = await Clipboard.read();
+  if (type.startsWith("text")) {
+    return value;
+  } else {
+    const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
+    const blob = new Blob([u8a, { type: mime }]);
+    return URL.createObjectURL(blob);
+  }
 }
 
 export async function openBrowserPage(url) {

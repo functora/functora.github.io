@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -11,7 +12,7 @@ module Main where
 
 import Control.Monad.IO.Class
 import Miso
-import Miso.String (MisoString)
+import Miso.String (MisoString, ms)
 
 #ifdef IOS
 import Language.Javascript.JSaddle.WKWebView as JSaddle
@@ -76,6 +77,12 @@ viewModel inputs =
         )
         ( zip [0 ..] inputs
         )
+      <> fmap
+        ( img_
+            . (: mempty)
+            . src_
+        )
+        inputs
 
 updateAt :: Int -> (a -> a) -> [a] -> [a]
 updateAt idx f xs

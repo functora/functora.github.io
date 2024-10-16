@@ -5,7 +5,7 @@ import qualified Functora.Rfc2397 as Rfc2397
 import Test.Hspec
 import Test.QuickCheck.Instances ()
 
-smaples :: [String]
+smaples :: [Unicode]
 smaples =
   [ "data:text/vnd-example+xyz;foo=bar;base64,R0lGODdh",
     "data:text/plain;charset=UTF-8;page=21,the%20data:1234,5678",

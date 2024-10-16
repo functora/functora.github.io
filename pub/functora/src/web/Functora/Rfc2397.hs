@@ -1,6 +1,6 @@
 module Functora.Rfc2397
-  ( Media (..),
-    Encoding (..),
+  ( Rfc2397 (..),
+    Rfc2397Encoding (..),
     encodeRfc2397,
     decodeRfc2397,
   )
@@ -12,92 +12,96 @@ import qualified Network.URI as URI
 import qualified Network.URI.Encode as UE
 import qualified Prelude
 
-data Media = Media
-  { mediaMime :: String,
-    mediaBytes :: ByteString,
-    mediaEncoding :: Encoding
+data Rfc2397 = Rfc2397
+  { rfc2397Mime :: Unicode,
+    rfc2397Bytes :: ByteString,
+    rfc2397Encoding :: Rfc2397Encoding
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
-instance Binary Media
+instance Binary Rfc2397
 
-data Encoding = B64Encoding | UrlEncoding
+data Rfc2397Encoding
+  = Rfc2397EncodingB64
+  | Rfc2397EncodingUrl
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Bounded, Enum)
 
-instance Binary Encoding
+instance Binary Rfc2397Encoding
 
-encodeRfc2397 :: Media -> String
-encodeRfc2397 Media {mediaMime = mime, mediaBytes = bs, mediaEncoding = enc} =
-  "data:"
-    <> mime
-    <> ( case enc of
-          B64Encoding -> ";base64"
-          UrlEncoding -> mempty
-       )
-    <> ","
-    <> ( case enc of
-          B64Encoding ->
-            either impureThrow id
-              . decodeUtf8Strict
-              $ B64.encode bs
-          UrlEncoding ->
-            either impureThrow (UE.encodeWith URI.isAllowedInURI)
-              $ decodeUtf8Strict bs
-       )
+encodeRfc2397 :: Rfc2397 -> Unicode
+encodeRfc2397
+  Rfc2397
+    { rfc2397Mime = mime,
+      rfc2397Bytes = bs,
+      rfc2397Encoding = enc
+    } =
+    "data:"
+      <> mime
+      <> ( case enc of
+            Rfc2397EncodingB64 -> ";base64"
+            Rfc2397EncodingUrl -> mempty
+         )
+      <> ","
+      <> ( case enc of
+            Rfc2397EncodingB64 ->
+              either impureThrow id
+                . decodeUtf8Strict
+                $ B64.encode bs
+            Rfc2397EncodingUrl ->
+              either
+                impureThrow
+                ( from @String @Unicode
+                    . UE.encodeWith URI.isAllowedInURI
+                )
+                $ decodeUtf8Strict bs
+         )
 
-decodeRfc2397 :: String -> Maybe Media
-decodeRfc2397 url =
-  let (scheme, rest) = break (== ':') url
-   in case rest of
-        ':' : contents | scheme == "data" -> decodeContents contents
-        _ -> Nothing
+decodeRfc2397 :: Unicode -> Maybe Rfc2397
+decodeRfc2397 xs =
+  case break (== ':') xs of
+    ("data", rhs) | not (null rhs) -> decodeContents $ drop 1 rhs
+    _ -> Nothing
 
-decodeContents :: String -> Maybe Media
+decodeContents :: Unicode -> Maybe Rfc2397
 decodeContents xs =
-  let (prefix, restdata) = break (== ',') xs
-   in case restdata of
-        ',' : thedata -> decodePrefix prefix thedata
-        _ -> Nothing
+  case break (== ',') xs of
+    (lhs, rhs) | not (null rhs) -> decodePrefix lhs $ drop 1 rhs
+    _ -> Nothing
 
-decodePrefix :: String -> String -> Maybe Media
+decodePrefix :: Unicode -> Unicode -> Maybe Rfc2397
 decodePrefix prefix thedata =
-  let fragments = breakList (== ';') prefix
-      enc = case reverse fragments of
-        ("base64" : _) -> B64Encoding
-        _ -> UrlEncoding
-      mediapart
-        | enc == B64Encoding = Prelude.init fragments
-        | otherwise = fragments
-   in case mediapart of
-        (xs : _) ->
-          case break (== '/') xs of
-            (_, []) -> decodeData ("text/plain" : mediapart) enc thedata
-            _ -> decodeData mediapart enc thedata
-        _ -> decodeData ["text/plain", "charset=US-ASCII"] enc thedata
+  case mediapart of
+    [] -> decodeData ["text/plain", "charset=US-ASCII"] enc thedata
+    (xs : _) ->
+      case break (== '/') xs of
+        (_, []) -> decodeData ("text/plain" : mediapart) enc thedata
+        _ -> decodeData mediapart enc thedata
+  where
+    fragments = breakList (== ';') prefix
+    enc = case reverse fragments of
+      ("base64" : _) -> Rfc2397EncodingB64
+      _ -> Rfc2397EncodingUrl
+    mediapart
+      | enc == Rfc2397EncodingB64 = Prelude.init fragments
+      | otherwise = fragments
 
-decodeData :: [String] -> Encoding -> String -> Maybe Media
+decodeData :: [Unicode] -> Rfc2397Encoding -> Unicode -> Maybe Rfc2397
 decodeData mediatype enc thedata = do
   bs <-
     case enc of
-      UrlEncoding ->
-        pure . encodeUtf8 $ UE.decode thedata
-      B64Encoding ->
+      Rfc2397EncodingUrl ->
+        pure . encodeUtf8 . UE.decode $ from @Unicode @String thedata
+      Rfc2397EncodingB64 ->
         either (const Nothing) Just . B64.decode $ encodeUtf8 thedata
   pure
-    Media
-      { mediaMime = unparse mediatype,
-        mediaBytes = bs,
-        mediaEncoding = enc
+    Rfc2397
+      { rfc2397Mime = intercalate ";" mediatype,
+        rfc2397Bytes = bs,
+        rfc2397Encoding = enc
       }
 
-breakList :: (x -> Bool) -> [x] -> [[x]]
-breakList p xs =
-  let (pre, post) = break p xs
-   in case post of
-        [] -> [pre]
-        _ : ys -> pre : breakList p ys
-
-unparse :: [String] -> String
-unparse [] = ""
-unparse [xs] = xs
-unparse (xs : xss) = xs ++ ';' : unparse xss
+breakList :: (Char -> Bool) -> Unicode -> [Unicode]
+breakList f xs =
+  case break f xs of
+    (lhs, rhs) | null rhs -> [lhs]
+    (lhs, rhs) -> lhs : breakList f (drop 1 rhs)

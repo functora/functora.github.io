@@ -27,6 +27,7 @@ import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso.String as MS
+import Type.Reflection
 
 data Args model action t f = Args
   { argsModel :: model,
@@ -120,6 +121,9 @@ data ModalWidget' model where
     ModalWidget' model
 
 field ::
+  forall model action t.
+  ( Typeable t
+  ) =>
   Full model action t Unique ->
   Opts model action ->
   [View action]
@@ -152,27 +156,31 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       )
       (optsLabel opts)
       ( ( if typ == FieldTypeImage
-            then
-              join
-                . maybeToList
-                $ fmap
-                  ( \src ->
-                      if null src
-                        then mempty
-                        else
-                          [ img_
-                              ( loading_ "lazy"
-                                  : src_ src
-                                  : optsExtraAttributes opts
-                              ),
-                            br_ mempty
-                          ]
-                  )
-                $ st
-                ^? cloneTraversal
-                  optic
-                . #fieldInput
-                . #uniqueValue
+            then do
+              out <- maybeToList $ st ^? cloneTraversal optic . #fieldOutput
+              src <-
+                case typeRep @t `eqTypeRep` typeRep @DynamicField of
+                  Nothing ->
+                    maybeToList
+                      $ st
+                      ^? cloneTraversal optic
+                      . #fieldInput
+                      . #uniqueValue
+                  Just HRefl ->
+                    case out of
+                      DynamicFieldRfc2397 (Just ref) _ -> [ref]
+                      DynamicFieldRfc2397 {} -> mempty
+                      _ -> [inspectDynamicField out]
+              if null src
+                then mempty
+                else
+                  [ img_
+                      ( loading_ "lazy"
+                          : src_ src
+                          : optsExtraAttributes opts
+                      ),
+                    br_ mempty
+                  ]
             else
               singleton
                 . input_
@@ -341,6 +349,8 @@ passwordField args opts =
     )
 
 fieldIcon ::
+  ( Typeable t
+  ) =>
   Full model action t Unique ->
   Opts model action ->
   OptsWidget model action ->
@@ -590,7 +600,8 @@ selectTypeWidget args@Args {argsAction = action} optic =
 -- TODO : support optional copying widgets
 --
 fieldViewer ::
-  ( Foldable1 f
+  ( Typeable t,
+    Foldable1 f
   ) =>
   Opts model action ->
   Args model action t f ->
@@ -646,7 +657,9 @@ header txt =
       ]
 
 genericFieldViewer ::
-  ( Foldable1 f
+  forall model action t f.
+  ( Typeable t,
+    Foldable1 f
   ) =>
   Opts model action ->
   Args model action t f ->
@@ -663,9 +676,21 @@ genericFieldViewer opts0 args widget =
         <> ( optsLeftRightViewer
               opts0
               ( if typ == FieldTypeImage
-                  then
-                    [ img_ [loading_ "lazy", src_ input]
-                    ]
+                  then do
+                    out <- maybeToList $ st ^? cloneTraversal optic . #fieldOutput
+                    src <-
+                      case typeRep @t `eqTypeRep` typeRep @DynamicField of
+                        Nothing -> [input]
+                        Just HRefl ->
+                          case out of
+                            DynamicFieldRfc2397 (Just ref) _ -> [ref]
+                            DynamicFieldRfc2397 {} -> mempty
+                            _ -> [inspectDynamicField out]
+                    if null src
+                      then mempty
+                      else
+                        [ img_ [loading_ "lazy", src_ src]
+                        ]
                   else
                     [ widget
                         $ truncateFieldViewer
@@ -790,6 +815,9 @@ expandDynamicField x =
     out = x ^. #fieldOutput
 
 insertAction ::
+  forall model action t.
+  ( Typeable t
+  ) =>
   Full model action t Unique ->
   ((Maybe Unicode -> JSM ()) -> JSM ()) ->
   action
@@ -798,31 +826,33 @@ insertAction Full {fullArgs = args, fullParser = parser} selector =
     selector $ \case
       Nothing -> Jsm.popupText @Unicode "Failure!"
       Just inp -> do
-        let next =
-              prev
-                & cloneTraversal optic
+        let updateInput =
+              cloneTraversal optic
                 . #fieldInput
                 . #uniqueValue
                 .~ inp
-        case next ^? cloneTraversal optic >>= parser of
+        case updateInput prev ^? cloneTraversal optic >>= parser of
           Nothing -> Jsm.popupText @Unicode "Failure!"
           Just out ->
-            emitter
-              $ PureAndImpureUpdate
-                ( \st ->
-                    st
-                      & cloneTraversal optic
-                      . #fieldInput
-                      . #uniqueValue
-                      .~ inp
-                      & cloneTraversal optic
-                      . #fieldOutput
-                      .~ out
-                )
-                ( do
-                    Jsm.popupText @Unicode "Success!"
-                    pure id
-                )
+            emitter . ImpureUpdate $ do
+              Jsm.popupText @Unicode "Success!"
+              let updateOutput = cloneTraversal optic . #fieldOutput .~ out
+              case typeRep @t `eqTypeRep` typeRep @DynamicField of
+                Nothing -> pure $ updateInput . updateOutput
+                Just HRefl ->
+                  case out of
+                    DynamicFieldRfc2397 Just {} _ ->
+                      pure $ updateInput . updateOutput
+                    DynamicFieldRfc2397 Nothing val -> do
+                      ref <- Jsm.newBlobUrl inp
+                      pure
+                        $ updateInput
+                        . ( cloneTraversal optic
+                              . #fieldOutput
+                              .~ DynamicFieldRfc2397 (Just ref) val
+                          )
+                    _ ->
+                      pure $ updateInput . updateOutput
     pure id
   where
     prev = args ^. #argsModel

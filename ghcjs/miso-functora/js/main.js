@@ -29,14 +29,8 @@ export async function insertStorage(key, value) {
 }
 
 export async function selectClipboard() {
-  const { type, value } = await Clipboard.read();
-  if (type.startsWith("text")) {
-    return value;
-  } else {
-    const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
-    const blob = new Blob([u8a, { type: mime }]);
-    return URL.createObjectURL(blob);
-  }
+  const { value } = await Clipboard.read();
+  return value;
 }
 
 export async function openBrowserPage(url) {
@@ -101,6 +95,12 @@ export async function shareFiles(files) {
 
 export function isNativePlatform() {
   return Capacitor.isNativePlatform();
+}
+
+export function newBlobUrl(value) {
+  const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
+  const blob = new Blob([u8a, { type: mime }]);
+  return URL.createObjectURL(blob);
 }
 
 defineCustomElements(window);

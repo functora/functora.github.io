@@ -123,6 +123,7 @@ common pkg
     , uniplate
     , universum
     , unliftio
+    , uri-encode
     , vector
     , witch-mini
     , with-utf8
@@ -184,6 +185,7 @@ library
     Functora.Qr
     Functora.QrOrphan
     Functora.Rates
+    Functora.Rfc2397
     Functora.Tags
     Functora.Unicode
     Functora.Web
@@ -232,6 +234,7 @@ test-suite functora-ghcjs-test
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec
+    Functora.WebSpec
 
   other-modules:
     Functora.Aes
@@ -246,6 +249,7 @@ test-suite functora-ghcjs-test
     Functora.Qr
     Functora.QrOrphan
     Functora.Rates
+    Functora.Rfc2397
     Functora.Tags
     Functora.TagsFamily
     Functora.TagsOrphan

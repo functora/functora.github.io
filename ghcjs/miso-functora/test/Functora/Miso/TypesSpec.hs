@@ -8,7 +8,6 @@ import qualified Optics.Setter as Ops
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Instances ()
-import qualified Text.URI as URI
 
 data Expr
   = Lit Int

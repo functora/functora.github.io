@@ -1,8 +1,8 @@
 module Functora.Rfc2397
   ( Media (..),
     Encoding (..),
-    encode,
-    decode,
+    encodeRfc2397,
+    decodeRfc2397,
   )
 where
 
@@ -19,11 +19,15 @@ data Media = Media
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
 
+instance Binary Media
+
 data Encoding = B64Encoding | UrlEncoding
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Bounded, Enum)
 
-encode :: Media -> String
-encode Media {mediaMime = mime, mediaBytes = bs, mediaEncoding = enc} =
+instance Binary Encoding
+
+encodeRfc2397 :: Media -> String
+encodeRfc2397 Media {mediaMime = mime, mediaBytes = bs, mediaEncoding = enc} =
   "data:"
     <> mime
     <> ( case enc of
@@ -41,8 +45,8 @@ encode Media {mediaMime = mime, mediaBytes = bs, mediaEncoding = enc} =
               $ decodeUtf8Strict bs
        )
 
-decode :: String -> Maybe Media
-decode url =
+decodeRfc2397 :: String -> Maybe Media
+decodeRfc2397 url =
   let (scheme, rest) = break (== ':') url
    in case rest of
         ':' : contents | scheme == "data" -> decodeContents contents

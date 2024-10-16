@@ -16,4 +16,5 @@ smaples =
 spec :: Spec
 spec = do
   it "encode/decode" . forM_ smaples $ \sample ->
-    fmap Rfc2397.encode (Rfc2397.decode sample) `shouldBe` Just sample
+    fmap Rfc2397.encodeRfc2397 (Rfc2397.decodeRfc2397 sample)
+      `shouldBe` Just sample

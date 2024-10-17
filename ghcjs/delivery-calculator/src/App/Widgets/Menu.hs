@@ -5,6 +5,7 @@ module App.Widgets.Menu
   )
 where
 
+import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Xlsx as Xlsx
@@ -90,16 +91,13 @@ menu st =
               style_
                 [ ("min-width", "0")
                 ],
-              onClick
-                . PushUpdate
-                . Instant
-                . ImpureUpdate
-                $ do
-                  Jsm.saveFile
-                    "delivery-calculator.xlsx"
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    Xlsx.newXlsx
-                  pure id
+              onClick . PushUpdate . Instant . EffectUpdate $ do
+                res <- Jsm.fetchBlobUris $ st ^. #modelState . #stAssets
+                consoleLog res
+                Jsm.saveFile
+                  "delivery-calculator.xlsx"
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  Xlsx.newXlsx
             ]
             [ icon Icon.IconDownload
             ],

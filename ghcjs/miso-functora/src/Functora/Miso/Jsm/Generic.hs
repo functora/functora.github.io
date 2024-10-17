@@ -40,7 +40,7 @@ popupText x = do
 
 shareText :: (Show a, Data a) => a -> Update model
 shareText x =
-  ImpureUpdate $ do
+  EffectUpdate $ do
     let txt = inspect @Unicode x
     unless (txt == mempty) $ do
       pkg <- getPkg
@@ -48,7 +48,6 @@ shareText x =
       success <- JS.function $ \_ _ _ -> popupText @Unicode "Copied!"
       failure <- JS.function $ \_ _ _ -> popupText @Unicode "Failed to copy!"
       void $ prom ^. JS.js2 ("then" :: Unicode) success failure
-    pure id
 
 moveUp :: ATraversal' model [item] -> Int -> Update model
 moveUp optic idx =
@@ -104,14 +103,13 @@ swapAt i j xs
 
 openBrowserPage :: URI -> Update model
 openBrowserPage uri =
-  ImpureUpdate $ do
+  EffectUpdate $ do
     pkg <- getPkg
     void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
-    pure id
 
 enterOrEscapeBlur :: Uid -> KeyCode -> Update model
 enterOrEscapeBlur uid (KeyCode code) =
-  ImpureUpdate $ do
+  EffectUpdate $ do
     let enterOrEscape = [13, 27] :: [Int]
     when (code `elem` enterOrEscape) $ do
       --
@@ -123,10 +121,9 @@ enterOrEscapeBlur uid (KeyCode code) =
           . unTagged
           $ "document.getElementById('"
           <> htmlUid uid
-          <> "').getElementsByTagName('input')[0].blur();"
+          <> "').blur();"
       void
         $ JS.eval res
-    pure id
 
 insertStorage :: (ToJSON a) => Unicode -> a -> JSM ()
 insertStorage key raw = do

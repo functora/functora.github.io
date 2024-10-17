@@ -32,7 +32,7 @@ export async function selectClipboard() {
   const { value } = await Clipboard.read();
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
-    const blob = new Blob([u8a, { type: mime }]);
+    const blob = new Blob([u8a], { type: mime });
     return URL.createObjectURL(blob);
   } catch (e) {
     return value;
@@ -84,7 +84,7 @@ export async function saveFile(name, mime, bs) {
     });
     return uri;
   } else {
-    const blob = new Blob([u8a, { type: mime }]);
+    const blob = new Blob([u8a], { type: mime });
     await saveAs(blob, name);
     return null;
   }

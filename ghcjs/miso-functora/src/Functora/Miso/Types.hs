@@ -213,7 +213,6 @@ newDynamicField output =
     ( case output of
         DynamicFieldText {} -> FieldTypeText
         DynamicFieldNumber {} -> FieldTypeNumber
-        DynamicFieldRfc2397 {} -> FieldTypeImage
     )
     output
     inspectDynamicField
@@ -224,7 +223,6 @@ newDynamicFieldId output =
     ( case output of
         DynamicFieldText {} -> FieldTypeText
         DynamicFieldNumber {} -> FieldTypeNumber
-        DynamicFieldRfc2397 {} -> FieldTypeImage
     )
     inspectDynamicField
     output
@@ -239,7 +237,6 @@ newDynamicTitleField =
 data DynamicField
   = DynamicFieldText Unicode
   | DynamicFieldNumber Rational
-  | DynamicFieldRfc2397 (Maybe Unicode) Rfc2397
   deriving stock (Eq, Ord, Show, Data, Generic)
   deriving (Binary) via GenericType DynamicField
 
@@ -256,20 +253,12 @@ parseDynamic value str =
   case value ^. #fieldType of
     FieldTypeNumber -> DynamicFieldNumber <$> parseRatio str
     FieldTypePercent -> DynamicFieldNumber <$> parseRatio str
-    FieldTypeImage -> do
-      let mVal = decodeRfc2397 str
-      let mRef = case value ^. #fieldOutput of
-            DynamicFieldRfc2397 ref val | mVal == Just val -> ref
-            _ -> Nothing
-      fmap (DynamicFieldRfc2397 mRef) mVal <|> Just (DynamicFieldText str)
-    _ ->
-      Just $ DynamicFieldText str
+    _ -> Just $ DynamicFieldText str
 
 inspectDynamicField :: DynamicField -> Unicode
 inspectDynamicField = \case
   DynamicFieldText x -> x
   DynamicFieldNumber x -> inspectRatioDef x
-  DynamicFieldRfc2397 _ x -> encodeRfc2397 x
 
 data FieldType
   = -- Rational

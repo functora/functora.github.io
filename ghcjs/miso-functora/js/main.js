@@ -30,7 +30,11 @@ export async function insertStorage(key, value) {
 
 export async function selectClipboard() {
   const { value } = await Clipboard.read();
-  return value;
+  try {
+    return newBlobUrl(value);
+  } catch (e) {
+    return value;
+  }
 }
 
 export async function openBrowserPage(url) {
@@ -101,6 +105,19 @@ export function newBlobUrl(value) {
   const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
   const blob = new Blob([u8a, { type: mime }]);
   return URL.createObjectURL(blob);
+}
+
+export async function fetchUrlAsRfc2397(url) {
+  const resp = await fetch(url);
+  const blob = await resp.blob();
+  return new Promise((resolve, reject) => {
+    var fr = new FileReader();
+    fr.onload = () => {
+      resolve(fr.result);
+    };
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
 }
 
 defineCustomElements(window);

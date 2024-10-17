@@ -31,7 +31,9 @@ export async function insertStorage(key, value) {
 export async function selectClipboard() {
   const { value } = await Clipboard.read();
   try {
-    return newBlobUrl(value);
+    const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
+    const blob = new Blob([u8a, { type: mime }]);
+    return URL.createObjectURL(blob);
   } catch (e) {
     return value;
   }
@@ -99,12 +101,6 @@ export async function shareFiles(files) {
 
 export function isNativePlatform() {
   return Capacitor.isNativePlatform();
-}
-
-export function newBlobUrl(value) {
-  const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
-  const blob = new Blob([u8a, { type: mime }]);
-  return URL.createObjectURL(blob);
 }
 
 export async function fetchUrlAsRfc2397(url) {

@@ -13,7 +13,7 @@ module Functora.Miso.Jsm.Generic
     genericPromise,
     printCurrentPage,
     saveFile,
-    newBlobUrl,
+    fetchUrlAsRfc2397,
   )
 where
 
@@ -215,8 +215,8 @@ saveFile name mime bs = do
     Nothing -> pure ()
     Just str -> popupText str
 
-newBlobUrl :: Unicode -> JSM Unicode
-newBlobUrl blob = do
-  pkg <- getPkg
-  res <- pkg ^. JS.js1 ("newBlobUrl" :: Unicode) blob
-  JS.fromJSVal res >>= maybe (throwString @String "Failure, bad result!") pure
+fetchUrlAsRfc2397 :: Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
+fetchUrlAsRfc2397 url after =
+  genericPromise @[Unicode] @Unicode "fetchUrlAsRfc2397" [url]
+    $ after
+    . fmap strip

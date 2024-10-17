@@ -92,12 +92,8 @@ menu st =
                 [ ("min-width", "0")
                 ],
               onClick . PushUpdate . Instant . EffectUpdate $ do
-                res <- Jsm.fetchBlobUris $ st ^. #modelState . #stAssets
-                consoleLog res
-                Jsm.saveFile
-                  "delivery-calculator.xlsx"
-                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  Xlsx.newXlsx
+                res <- Jsm.fetchBlobUris $ st ^. #modelState
+                Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime $ Xlsx.newXlsx res
             ]
             [ icon Icon.IconDownload
             ],

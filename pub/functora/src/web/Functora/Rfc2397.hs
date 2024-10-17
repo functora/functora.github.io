@@ -6,14 +6,15 @@ module Functora.Rfc2397
   )
 where
 
-import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Base64.Lazy as B64L
+import qualified Data.ByteString.Lazy as BL
 import Functora.Prelude
 import qualified Network.URI as URI
 import qualified Network.URI.Encode as UE
 
 data Rfc2397 = Rfc2397
   { rfc2397Mime :: Unicode,
-    rfc2397Bytes :: ByteString,
+    rfc2397Bytes :: BL.ByteString,
     rfc2397Encoding :: Rfc2397Encoding
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
@@ -45,7 +46,7 @@ encodeRfc2397
             Rfc2397EncodingB64 ->
               either impureThrow id
                 . decodeUtf8Strict
-                $ B64.encode bs
+                $ B64L.encode bs
             Rfc2397EncodingUrl ->
               either
                 impureThrow
@@ -90,7 +91,7 @@ decodeBytes mime enc encBs = do
       Rfc2397EncodingUrl ->
         pure . encodeUtf8 . UE.decode $ from @Unicode @String encBs
       Rfc2397EncodingB64 ->
-        either (const Nothing) Just . B64.decode $ encodeUtf8 encBs
+        either (const Nothing) Just . B64L.decode $ encodeUtf8 encBs
   pure
     Rfc2397
       { rfc2397Mime = intercalate ";" mime,

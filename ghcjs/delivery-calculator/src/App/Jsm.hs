@@ -5,7 +5,6 @@ import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
-import qualified Text.URI as URI
 
 fetchBlobUris :: (Data a) => a -> JSM a
 fetchBlobUris st = do
@@ -37,7 +36,7 @@ fetchBlobUris st = do
   where
     blobUris =
       nubOrd
-        . filter (\x -> URI.mkScheme "blob" == (URI.mkURI x >>= URI.uriScheme))
+        . filter (isPrefixOf "blob:")
         . fmap (^. #fieldInput . #uniqueValue)
         $ Syb.listify
           (\(x :: Field DynamicField Unique) -> fieldType x == FieldTypeImage)

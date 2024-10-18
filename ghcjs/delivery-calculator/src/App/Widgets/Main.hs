@@ -163,7 +163,7 @@ totalViewer st =
               FieldPairs.argsEmitter = pushActionQueue st . Instant
             }
   where
-    total = newTotal st
+    total = newTotal $ modelState st
 
 tosWidget :: View Action
 tosWidget =

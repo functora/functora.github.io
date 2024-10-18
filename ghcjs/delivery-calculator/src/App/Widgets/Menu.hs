@@ -7,7 +7,6 @@ where
 
 import qualified App.Jsm as Jsm
 import App.Types
-import qualified App.Widgets.Fav as Fav
 import qualified App.Xlsx as Xlsx
 import qualified Data.ByteString.Lazy as BL
 import qualified Functora.Miso.Jsm as Jsm
@@ -19,7 +18,6 @@ import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Select as Select
 import qualified Functora.Miso.Widgets.Switch as Switch
-import qualified Functora.Money as Money
 import qualified Text.URI as URI
 
 menu :: Model -> [View Action]
@@ -66,26 +64,12 @@ menu st =
               onClick
                 . PushUpdate
                 . Instant
-                . PureUpdate
-                $ #modelFav
-                .~ Opened
+                . Jsm.shareText
+                . from @String @Unicode
+                . either impureThrow URI.renderStr
+                $ stUri st
             ]
-            [ icon Icon.IconFav
-            ],
-          button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0")
-                ],
-              onClick
-                . PushUpdate
-                . Instant
-                . ImpureUpdate
-                $ do
-                  Jsm.printCurrentPage "delivery-calculator"
-                  pure id
-            ]
-            [ icon Icon.IconPrint
+            [ icon Icon.IconShare
             ],
           button_
             [ role_ "button",
@@ -100,25 +84,9 @@ menu st =
                   $ Xlsx.newXlsx doc imgs
             ]
             [ icon Icon.IconDownload
-            ],
-          button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0")
-                ],
-              onClick
-                . PushUpdate
-                . Instant
-                . Jsm.shareText
-                . from @String @Unicode
-                . either impureThrow URI.renderStr
-                $ stUri st
-            ]
-            [ icon Icon.IconShare
             ]
         ]
   ]
-    <> Fav.fav st
     <> Dialog.dialog
       ( Dialog.defOpts
           & #optsTitleIcon
@@ -185,31 +153,7 @@ menu st =
                         .~ disabled
                         & #optsLabel
                         .~ Just
-                          ( "1 "
-                              <> toUpper
-                                ( Money.inspectCurrencyCode
-                                    $ st
-                                    ^. #modelState
-                                    . #stAssetCurrency
-                                    . #currencyOutput
-                                    . #currencyInfoCode
-                                )
-                              <> " \8776 "
-                              <> inspectRatioDef
-                                ( st
-                                    ^. #modelState
-                                    . #stExchangeRate
-                                    . #fieldOutput
-                                )
-                              <> " "
-                              <> toUpper
-                                ( Money.inspectCurrencyCode
-                                    $ st
-                                    ^. #modelState
-                                    . #stMerchantCurrency
-                                    . #currencyOutput
-                                    . #currencyInfoCode
-                                )
+                          ( inspectExchangeRate $ modelState st
                           )
                         & ( if disabled
                               then #optsTrailingWidget .~ Nothing

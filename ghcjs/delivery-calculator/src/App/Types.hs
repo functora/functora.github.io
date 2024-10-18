@@ -11,6 +11,7 @@ module App.Types
     newFieldPair,
     newFieldPairId,
     newTotal,
+    inspectExchangeRate,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -208,7 +209,7 @@ newFieldPairId key val = do
     . #fieldOptsQrState
     .~ Nothing
 
-newTotal :: Model -> [FieldPair DynamicField Identity]
+newTotal :: St Unique -> [FieldPair DynamicField Identity]
 newTotal st =
   if base == 0
     then mempty
@@ -219,6 +220,9 @@ newTotal st =
         newFieldPairId ("Subtotal " <> quoteCur)
           . DynamicFieldText
           $ inspectRatioDef quote,
+        newFieldPairId ("Exchange rate")
+          . DynamicFieldText
+          $ inspectExchangeRate st,
         FieldPair (newTextFieldId "Fee %")
           $ uniqueToIdentity fee
           & #fieldOpts
@@ -231,8 +235,8 @@ newTotal st =
           $ fee
       ]
   where
-    fee = st ^. #modelState . #stMerchantFeePercent
-    rate = st ^. #modelState . #stExchangeRate . #fieldOutput
+    fee = st ^. #stMerchantFeePercent
+    rate = st ^. #stExchangeRate . #fieldOutput
     base =
       foldl
         ( \acc fps ->
@@ -243,30 +247,47 @@ newTotal st =
               else acc
         )
         0
-        ( st
-            ^.. #modelState
-              . #stAssets
-              . each
-              . #assetFieldPairs
+        ( st ^.. #stAssets . each . #assetFieldPairs
         )
     quote =
       rate * base
     baseCur =
       st
-        ^. #modelState
-        . #stAssetCurrency
+        ^. #stAssetCurrency
         . #currencyOutput
         . #currencyInfoCode
         . to Money.inspectCurrencyCode
         . to toUpper
     quoteCur =
       st
-        ^. #modelState
-        . #stMerchantCurrency
+        ^. #stMerchantCurrency
         . #currencyOutput
         . #currencyInfoCode
         . to Money.inspectCurrencyCode
         . to toUpper
+
+inspectExchangeRate :: St f -> Unicode
+inspectExchangeRate st =
+  "1 "
+    <> toUpper
+      ( Money.inspectCurrencyCode
+          $ st
+          ^. #stAssetCurrency
+          . #currencyOutput
+          . #currencyInfoCode
+      )
+    <> " \8776 "
+    <> inspectRatioDef
+      ( st ^. #stExchangeRate . #fieldOutput
+      )
+    <> " "
+    <> toUpper
+      ( Money.inspectCurrencyCode
+          $ st
+          ^. #stMerchantCurrency
+          . #currencyOutput
+          . #currencyInfoCode
+      )
 
 foldField :: Rational -> Field DynamicField f -> Rational
 foldField acc Field {fieldType = typ, fieldOutput = out} =

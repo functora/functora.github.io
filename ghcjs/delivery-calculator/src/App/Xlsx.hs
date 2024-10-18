@@ -32,6 +32,7 @@ newXlsx st imgs = xlsx
         .~ newColProps (fmap snd rows)
         & addHeader st
         & flip (foldl $ addRow imgs) rows
+        & addFooter st (RowIndex (length rows) + 2)
     rows =
       zip [2 ..]
         $ fmap
@@ -90,7 +91,7 @@ addHeader st sheet =
         ( \acc (colIdx, colVal) ->
             acc
               & cellValueAt (1, colIdx)
-              ?~ CellText colVal
+              ?~ CellText (from @Unicode @Text colVal)
         )
         sheet
         $ zip [1 ..] rowVal
@@ -105,6 +106,32 @@ addHeader st sheet =
               . #fieldOutput
         )
         $ stAssets st
+
+addFooter :: St Unique -> RowIndex -> Worksheet -> Worksheet
+addFooter st rowOffset sheet =
+  foldl
+    ( \acc (rowIdx, rowVal) ->
+        acc
+          & cellValueAt (rowOffset + rowIdx, 1)
+          ?~ CellText
+            ( from @Unicode @Text
+                $ rowVal
+                ^. #fieldPairKey
+                . #fieldInput
+                . #runIdentity
+            )
+            & cellValueAt (rowOffset + rowIdx, 2)
+          ?~ CellText
+            ( from @Unicode @Text
+                $ rowVal
+                ^. #fieldPairValue
+                . #fieldInput
+                . #runIdentity
+            )
+    )
+    sheet
+    . zip [1 ..]
+    $ newTotal st
 
 addRow ::
   Map Unicode Rfc2397 ->
@@ -131,7 +158,7 @@ addCol imgs sheet rowIdx colIdx field =
     then
       sheet
         & cellValueAt (rowIdx, colIdx)
-        ?~ CellText txt
+        ?~ CellText (from @Unicode @Text txt)
     else case Map.lookup txt imgs of
       --
       -- TODO : handle img link
@@ -139,7 +166,7 @@ addCol imgs sheet rowIdx colIdx field =
       Nothing ->
         sheet
           & cellValueAt (rowIdx, colIdx)
-          ?~ CellText txt
+          ?~ CellText (from @Unicode @Text txt)
       Just img ->
         sheet
           & #wsDrawing

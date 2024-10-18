@@ -18,7 +18,7 @@ newXlsx st imgs = xlsx
     xlsx =
       fromXlsx 0
         $ def
-        & atSheet "Delivery Calculator"
+        & atSheet "Delivery_Calculator"
         ?~ sheet
     sheet =
       def
@@ -26,6 +26,8 @@ newXlsx st imgs = xlsx
         .~ Just (Drawing mempty)
         & #wsRowPropertiesMap
         .~ newRowProps rows
+        & #wsColumnsProperties
+        .~ newColProps (fmap snd rows)
         & addHeader st
         & flip (foldl $ addRow imgs) rows
     rows =
@@ -43,9 +45,27 @@ newRowProps =
     . fmap
       ( \(rowIdx, rowVal) ->
           if any (\x -> x ^. #fieldType == FieldTypeImage) rowVal
-            then Just (rowIdx, def & #rowHeight ?~ CustomHeight 200)
+            then Just (rowIdx, def & #rowHeight ?~ CustomHeight 180)
             else Nothing
       )
+
+newColProps :: [[Field DynamicField Unique]] -> [ColumnsProperties]
+newColProps rows = nubOrd $ do
+  row <- rows
+  (colIdx, colVal) <- zip [1 ..] row
+  if colVal ^. #fieldType /= FieldTypeImage
+    then mempty
+    else
+      pure
+        ColumnsProperties
+          { cpMin = colIdx,
+            cpMax = colIdx,
+            cpWidth = Just 45,
+            cpStyle = Nothing,
+            cpHidden = False,
+            cpCollapsed = False,
+            cpBestFit = False
+          }
 
 addHeader :: St Unique -> Worksheet -> Worksheet
 addHeader st sheet =

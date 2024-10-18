@@ -179,7 +179,7 @@ data ColumnsProperties = ColumnsProperties
     -- fit'.
     cpBestFit :: Bool
   }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Ord, Show, Generic)
 
 instance NFData ColumnsProperties
 

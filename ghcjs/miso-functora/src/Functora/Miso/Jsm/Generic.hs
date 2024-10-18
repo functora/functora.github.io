@@ -20,7 +20,9 @@ where
 import qualified Data.ByteString.Lazy as BL
 import Functora.Miso.Prelude
 import Functora.Miso.Types
+import qualified GHCJS.Buffer as Buf
 import qualified GHCJS.Types as JS
+import qualified JavaScript.TypedArray.ArrayBuffer as AB
 import qualified Language.Javascript.JSaddle as JS
 import qualified Text.URI as URI
 import qualified Prelude ((!!))
@@ -200,20 +202,41 @@ printCurrentPage name = do
   pkg <- getPkg
   void $ pkg ^. JS.js1 ("printCurrentPage" :: Unicode) name
 
-saveFile :: forall a. (From a [Word8]) => Unicode -> Unicode -> a -> JSM ()
+saveFile :: Unicode -> Unicode -> ByteString -> JSM ()
 saveFile name mime bs = do
+  (buf, off, len) <- ghcjsPure $ Buf.fromByteString bs
+  ab0 <- ghcjsPure . JS.jsval_ =<< ghcjsPure (Buf.getArrayBuffer buf)
+  ab1 <- ab0 ^. JS.jsf ("slice" :: Unicode) ([off, off + len] :: [Int])
   argv <-
     sequence
       [ JS.toJSVal name,
         JS.toJSVal mime,
-        JS.toJSVal $ from @a @[Word8] bs
+        JS.toJSVal ab1
       ]
   genericPromise @[JS.JSVal] @Unicode "saveFile" argv $ \case
     Nothing -> pure ()
     Just str -> popupText str
 
-fetchUrlAsRfc2397 :: Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
-fetchUrlAsRfc2397 url after =
-  genericPromise @[Unicode] @Unicode "fetchUrlAsRfc2397" [url]
-    $ after
-    . fmap strip
+fetchUrlAsRfc2397 :: Unicode -> (Maybe ByteString -> JSM ()) -> JSM ()
+fetchUrlAsRfc2397 url after = do
+  success <- JS.function $ \_ _ ->
+    handleAny (\e -> consoleLog e >> after Nothing) . \case
+      [val] -> do
+        valExist <- ghcjsPure $ JS.isTruthy val
+        if not valExist
+          then after Nothing
+          else do
+            ab <- AB.freeze $ JS.pFromJSVal val
+            buf <- ghcjsPure $ Buf.createFromArrayBuffer ab
+            res <- ghcjsPure $ Buf.toByteString 0 Nothing buf
+            after $ Just res
+      _ ->
+        throwString @String "Failure, bad argv!"
+  failure <-
+    JS.function $ \_ _ e -> do
+      msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
+      consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
+      after Nothing
+  pkg <- getPkg
+  prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) ([url] :: [Unicode])
+  void $ prom ^. JS.js2 @Unicode "then" success failure

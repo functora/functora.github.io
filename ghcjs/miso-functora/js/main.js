@@ -1,3 +1,4 @@
+import "./jsaddle-compat";
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { WebviewPrint } from "capacitor-webview-print";
@@ -73,8 +74,8 @@ export async function selectBarcode() {
   return ScanResult;
 }
 
-export async function saveFile(name, mime, bs) {
-  const u8a = Uint8Array.from(bs);
+export async function saveFile(name, mime, ab) {
+  const u8a = new Uint8Array(ab);
   if (Capacitor.isNativePlatform()) {
     const b64 = btoa(String.fromCharCode.apply(null, u8a));
     const { uri } = await Filesystem.writeFile({
@@ -104,16 +105,19 @@ export function isNativePlatform() {
 }
 
 export async function fetchUrlAsRfc2397(url) {
-  const resp = await fetch(url);
-  const blob = await resp.blob();
-  return new Promise((resolve, reject) => {
+  const imgResp = await fetch(url);
+  const imgBlob = await imgResp.blob();
+  const rfc2397 = await new Promise((resolve, reject) => {
     var fr = new FileReader();
     fr.onload = () => {
       resolve(fr.result);
     };
     fr.onerror = reject;
-    fr.readAsDataURL(blob);
+    fr.readAsDataURL(imgBlob);
   });
+  const utf8Encode = new TextEncoder();
+  const ab = utf8Encode.encode(rfc2397).buffer;
+  return ab;
 }
 
 defineCustomElements(window);

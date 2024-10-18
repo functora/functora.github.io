@@ -9,6 +9,7 @@ import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Fav as Fav
 import qualified App.Xlsx as Xlsx
+import qualified Data.ByteString.Lazy as BL
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -92,8 +93,10 @@ menu st =
                 [ ("min-width", "0")
                 ],
               onClick . PushUpdate . Instant . EffectUpdate $ do
-                res <- Jsm.fetchBlobUris $ st ^. #modelState
-                Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime $ Xlsx.newXlsx res
+                imgs <- Jsm.fetchBlobUris $ st ^. #modelState
+                Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime
+                  . from @BL.ByteString @ByteString
+                  $ Xlsx.newXlsx imgs
             ]
             [ icon Icon.IconDownload
             ],

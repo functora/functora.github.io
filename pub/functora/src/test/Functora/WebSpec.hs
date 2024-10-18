@@ -1,11 +1,12 @@
 module Functora.WebSpec (spec) where
 
+import qualified Data.ByteString.Lazy as BL
 import Functora.Prelude
 import qualified Functora.Rfc2397 as Rfc2397
 import Test.Hspec
 import Test.QuickCheck.Instances ()
 
-smaples :: [Unicode]
+smaples :: [BL.ByteString]
 smaples =
   [ "data:text/vnd-example+xyz;foo=bar;base64,R0lGODdh",
     "data:text/plain;charset=UTF-8;page=21,the%20data:1234,5678",

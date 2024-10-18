@@ -1,38 +1,28 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
 module App.Jsm (fetchBlobUris) where
 
 import App.Types
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Generics as Syb
-import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 
-fetchBlobUris :: (Data a) => a -> JSM a
+fetchBlobUris :: (Data a) => a -> JSM (Map Unicode Rfc2397)
 fetchBlobUris st = do
   vars <-
     forM blobUris $ \uri -> do
       var <- newEmptyMVar
-      Jsm.fetchUrlAsRfc2397 uri $ liftIO . putMVar var . fmap (uri,)
+      Jsm.fetchUrlAsRfc2397 uri
+        $ liftIO
+        . putMVar var
+        . fmap (uri,)
+        . (>>= decodeRfc2397 . BL.fromStrict)
       pure var
-  vals <-
-    fmap (fromList . catMaybes)
-      . forM vars
-      $ liftIO
-      . takeMVar
-  pure
-    $ Syb.everywhere
-      ( Syb.mkT $ \(x :: Field DynamicField Unique) ->
-          case Map.lookup (x ^. #fieldInput . #uniqueValue) vals of
-            Just val
-              | fieldType x == FieldTypeImage ->
-                  x
-                    & #fieldInput
-                    . #uniqueValue
-                    .~ val
-                    & #fieldOutput
-                    .~ DynamicFieldText val
-            _ -> x
-      )
-      st
+  fmap (fromList . catMaybes)
+    . forM vars
+    $ liftIO
+    . takeMVar
   where
     blobUris =
       nubOrd

@@ -9,8 +9,8 @@ import App.Types
 import Codec.Xlsx
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as Map
-import Functora.Miso.Prelude hiding ((^.), _Just)
-import Lens.Micro hiding (each, to)
+import Functora.Miso.Prelude
+import Lens.Micro ((?~), (^..))
 
 newXlsx :: St Unique -> Map Unicode Rfc2397 -> BL.ByteString
 newXlsx st imgs = xlsx
@@ -18,18 +18,34 @@ newXlsx st imgs = xlsx
     xlsx =
       fromXlsx 0
         $ def
-        & atSheet "Delivery Calculator" ?~ sheet
+        & atSheet "Delivery Calculator"
+        ?~ sheet
     sheet =
       def
-        & #wsDrawing ?~ Drawing mempty
+        & #wsDrawing
+        .~ Just (Drawing mempty)
+        & #wsRowPropertiesMap
+        .~ newRowProps rows
         & addHeader st
-        & flip
-          (foldl $ addRow imgs)
-          ( zip [2 ..]
-              $ fmap
-                (^.. #assetFieldPairs . each . #fieldPairValue)
-                (st ^. #stAssets)
-          )
+        & flip (foldl $ addRow imgs) rows
+    rows =
+      zip [2 ..]
+        $ fmap
+          (^.. #assetFieldPairs . each . #fieldPairValue)
+          (st ^. #stAssets)
+
+newRowProps ::
+  [(RowIndex, [Field DynamicField Unique])] ->
+  Map RowIndex RowProperties
+newRowProps =
+  Map.fromList
+    . catMaybes
+    . fmap
+      ( \(rowIdx, rowVal) ->
+          if any (\x -> x ^. #fieldType == FieldTypeImage) rowVal
+            then Just (rowIdx, def & #rowHeight ?~ CustomHeight 200)
+            else Nothing
+      )
 
 addHeader :: St Unique -> Worksheet -> Worksheet
 addHeader st sheet =
@@ -39,7 +55,8 @@ addHeader st sheet =
       foldl
         ( \acc (colIdx, colVal) ->
             acc
-              & cellValueAt (1, colIdx) ?~ CellText colVal
+              & cellValueAt (1, colIdx)
+              ?~ CellText colVal
         )
         sheet
         $ zip [1 ..] rowVal
@@ -80,7 +97,7 @@ addCol imgs sheet rowIdx colIdx field =
     then
       sheet
         & cellValueAt (rowIdx, colIdx)
-          ?~ CellText txt
+        ?~ CellText txt
     else case Map.lookup txt imgs of
       --
       -- TODO : handle img link
@@ -88,10 +105,12 @@ addCol imgs sheet rowIdx colIdx field =
       Nothing ->
         sheet
           & cellValueAt (rowIdx, colIdx)
-            ?~ CellText txt
+          ?~ CellText txt
       Just img ->
         sheet
-          & #wsDrawing . _Just %~ \case
+          & #wsDrawing
+          . _Just
+          %~ \case
             Drawing xs ->
               Drawing $ newImg rowIdx colIdx (length xs) img : xs
   where

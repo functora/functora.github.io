@@ -10,6 +10,7 @@ module App.Types
     newAsset,
     newFieldPair,
     newFieldPairId,
+    newTotal,
     Screen (..),
     isQrCode,
     unQrCode,
@@ -49,9 +50,11 @@ import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import Functora.Money hiding (Currency, Money, Text)
+import qualified Functora.Money as Money
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
+import Lens.Micro ((^..))
 import qualified Paths_delivery_calculator as Paths
 import qualified Text.URI as URI
 
@@ -204,6 +207,82 @@ newFieldPairId key val = do
     . #fieldOpts
     . #fieldOptsQrState
     .~ Nothing
+
+newTotal :: Model -> [FieldPair DynamicField Identity]
+newTotal st =
+  if base == 0
+    then mempty
+    else
+      [ newFieldPairId ("Subtotal " <> baseCur)
+          . DynamicFieldText
+          $ inspectRatioDef base,
+        newFieldPairId ("Subtotal " <> quoteCur)
+          . DynamicFieldText
+          $ inspectRatioDef quote,
+        FieldPair (newTextFieldId "Fee %")
+          $ uniqueToIdentity fee
+          & #fieldOpts
+          . #fieldOptsQrState
+          .~ Nothing,
+        newFieldPairId ("Total " <> quoteCur)
+          . DynamicFieldText
+          . inspectRatioDef
+          . foldField quote
+          $ fee
+      ]
+  where
+    fee = st ^. #modelState . #stMerchantFeePercent
+    rate = st ^. #modelState . #stExchangeRate . #fieldOutput
+    base =
+      foldl
+        ( \acc fps ->
+            if any
+              ((== FieldTypeNumber) . (^. #fieldPairValue . #fieldType))
+              fps
+              then acc + foldl foldFieldPair 1 fps
+              else acc
+        )
+        0
+        ( st
+            ^.. #modelState
+              . #stAssets
+              . each
+              . #assetFieldPairs
+        )
+    quote =
+      rate * base
+    baseCur =
+      st
+        ^. #modelState
+        . #stAssetCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . to Money.inspectCurrencyCode
+        . to toUpper
+    quoteCur =
+      st
+        ^. #modelState
+        . #stMerchantCurrency
+        . #currencyOutput
+        . #currencyInfoCode
+        . to Money.inspectCurrencyCode
+        . to toUpper
+
+foldField :: Rational -> Field DynamicField f -> Rational
+foldField acc Field {fieldType = typ, fieldOutput = out} =
+  case out of
+    DynamicFieldNumber x
+      | typ == FieldTypeNumber ->
+          acc * x
+    DynamicFieldNumber x
+      | typ == FieldTypePercent ->
+          acc * (1 + (x / 100))
+    _ ->
+      acc
+
+foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
+foldFieldPair acc =
+  foldField acc . fieldPairValue
 
 data Screen
   = Main

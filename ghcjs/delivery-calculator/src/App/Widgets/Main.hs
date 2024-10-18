@@ -11,8 +11,6 @@ import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Spinner as Spinner
-import qualified Functora.Money as Money
-import Lens.Micro ((^..))
 import Miso hiding (at, view)
 
 mainWidget :: Model -> View Action
@@ -150,7 +148,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
 
 totalViewer :: Model -> [View Action]
 totalViewer st =
-  if base == 0
+  if null total
     then mempty
     else
       singleton
@@ -160,81 +158,12 @@ totalViewer st =
           FieldPairs.defOpts
           FieldPairs.Args
             { FieldPairs.argsModel = st,
-              FieldPairs.argsOptic =
-                constTraversal
-                  [ newFieldPairId ("Subtotal " <> baseCur)
-                      . DynamicFieldText
-                      $ inspectRatioDef base,
-                    newFieldPairId ("Subtotal " <> quoteCur)
-                      . DynamicFieldText
-                      $ inspectRatioDef quote,
-                    FieldPair (newTextFieldId "Fee %")
-                      $ uniqueToIdentity fee
-                      & #fieldOpts
-                      . #fieldOptsQrState
-                      .~ Nothing,
-                    newFieldPairId ("Total " <> quoteCur)
-                      . DynamicFieldText
-                      . inspectRatioDef
-                      . foldField quote
-                      $ fee
-                  ],
+              FieldPairs.argsOptic = constTraversal total,
               FieldPairs.argsAction = PushUpdate . Instant,
               FieldPairs.argsEmitter = pushActionQueue st . Instant
             }
   where
-    fee = st ^. #modelState . #stMerchantFeePercent
-    rate = st ^. #modelState . #stExchangeRate . #fieldOutput
-    base =
-      foldl
-        ( \acc fps ->
-            if any
-              ((== FieldTypeNumber) . (^. #fieldPairValue . #fieldType))
-              fps
-              then acc + foldl foldFieldPair 1 fps
-              else acc
-        )
-        0
-        ( st
-            ^.. #modelState
-              . #stAssets
-              . each
-              . #assetFieldPairs
-        )
-    quote =
-      rate * base
-    baseCur =
-      st
-        ^. #modelState
-        . #stAssetCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . to Money.inspectCurrencyCode
-        . to toUpper
-    quoteCur =
-      st
-        ^. #modelState
-        . #stMerchantCurrency
-        . #currencyOutput
-        . #currencyInfoCode
-        . to Money.inspectCurrencyCode
-        . to toUpper
-
-foldField :: Rational -> Field DynamicField f -> Rational
-foldField acc Field {fieldType = typ, fieldOutput = out} =
-  case out of
-    DynamicFieldNumber x
-      | typ == FieldTypeNumber ->
-          acc * x
-    DynamicFieldNumber x
-      | typ == FieldTypePercent ->
-          acc * (1 + (x / 100))
-    _ ->
-      acc
-
-foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
-foldFieldPair acc =
-  foldField acc . fieldPairValue
+    total = newTotal st
 
 tosWidget :: View Action
 tosWidget =

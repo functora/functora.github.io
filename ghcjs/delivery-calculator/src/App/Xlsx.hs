@@ -18,6 +18,8 @@ newXlsx st imgs = xlsx
     xlsx =
       fromXlsx 0
         $ def
+        & #xlStyles
+        .~ renderStyleSheet style
         & atSheet "Delivery_Calculator"
         ?~ sheet
     sheet =
@@ -66,6 +68,18 @@ newColProps rows = nubOrd $ do
             cpCollapsed = False,
             cpBestFit = False
           }
+
+style :: StyleSheet
+style =
+  def
+    & #styleSheetCellXfs
+    .~ [ def
+          & #cellXfAlignment
+          ?~ ( def
+                & #_alignmentVertical
+                ?~ CellVerticalAlignmentCenter
+             )
+       ]
 
 addHeader :: St Unique -> Worksheet -> Worksheet
 addHeader st sheet =

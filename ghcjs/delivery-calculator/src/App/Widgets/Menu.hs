@@ -93,10 +93,11 @@ menu st =
                 [ ("min-width", "0")
                 ],
               onClick . PushUpdate . Instant . EffectUpdate $ do
-                imgs <- Jsm.fetchBlobUris $ st ^. #modelState
+                let doc = st ^. #modelState
+                imgs <- Jsm.fetchBlobUris doc
                 Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime
                   . from @BL.ByteString @ByteString
-                  $ Xlsx.newXlsx imgs
+                  $ Xlsx.newXlsx doc imgs
             ]
             [ icon Icon.IconDownload
             ],

@@ -45,6 +45,7 @@ with (import ./default.nix); let
         ${pkgs.nodejs}/bin/npm i --prefer-offline
         ${pkgs.nodejs}/bin/npx cap add android || true
         ${pkgs.nodejs}/bin/npx cap sync
+        cp ./lib/Clipboard.java ./node_modules/@capacitor/clipboard/android/src/main/java/com/capacitorjs/plugins/clipboard/Clipboard.java
         cp ${repo}/static/android-chrome-512x512.png ${repo}/static/logo.png
         ${pkgs.nodejs}/bin/npx @capacitor/assets generate \
           --android --assetPath static

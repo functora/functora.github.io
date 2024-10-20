@@ -18,9 +18,7 @@ newXlsx st imgs = xlsx
     xlsx =
       fromXlsx 0
         $ def
-        & #xlStyles
-        .~ renderStyleSheet style
-        & atSheet "Delivery_Calculator"
+        & atSheet "Delivery Calculator"
         ?~ sheet
     sheet =
       def
@@ -69,18 +67,6 @@ newColProps rows = nubOrd $ do
             cpCollapsed = False,
             cpBestFit = False
           }
-
-style :: StyleSheet
-style =
-  def
-    & #styleSheetCellXfs
-    .~ [ def
-          & #cellXfAlignment
-          ?~ ( def
-                & #_alignmentVertical
-                ?~ CellVerticalAlignmentCenter
-             )
-       ]
 
 addHeader :: St Unique -> Worksheet -> Worksheet
 addHeader st sheet =
@@ -173,7 +159,7 @@ addCol imgs sheet rowIdx colIdx field =
           . _Just
           %~ \case
             Drawing xs ->
-              Drawing $ newImg rowIdx colIdx (length xs) img : xs
+              Drawing $ newImg rowIdx colIdx (length xs + 1) img : xs
   where
     txt = field ^. #fieldInput . #uniqueValue
 
@@ -190,12 +176,19 @@ newImg (RowIndex rowIdx) (ColumnIndex colIdx) imgIdx rfc2397 =
       anchClientData = def
     }
   where
+    mime = decodeUtf8 $ rfc2397Mime rfc2397
+    ext =
+      from @Text @String
+        . maybe mempty ("." <>)
+        . safeHead
+        . reverse
+        $ splitWhen (== '/') mime
     obj =
       picture
         (DrawingElementId imgIdx)
         FileInfo
-          { fiFilename = "img",
-            fiContentType = decodeUtf8 $ rfc2397Mime rfc2397,
+          { fiFilename = "image" <> inspect imgIdx <> ext,
+            fiContentType = mime,
             fiContents = rfc2397Bytes rfc2397
           }
 

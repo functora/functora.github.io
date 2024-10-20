@@ -563,6 +563,7 @@ in {
         xorg.xev
         yewtube
         niv
+        zip
         unzip
         pciutils
         docker-compose

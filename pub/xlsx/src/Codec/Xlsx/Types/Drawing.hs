@@ -139,7 +139,7 @@ picture dId fi =
     shProps =
       ShapeProperties
         { spXfrm = Nothing,
-          spGeometry = Nothing,
+          spGeometry = Just PresetGeometry,
           spFill = Just NoFill,
           spOutline = Just $ def {_lnFill = Just NoFill}
         }

@@ -1,4 +1,5 @@
 import "./jsaddle-compat";
+import * as Compressor from "compressorjs";
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { WebviewPrint } from "capacitor-webview-print";
@@ -33,7 +34,17 @@ export async function selectClipboard() {
   const { value } = await Clipboard.read();
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
-    const blob = new Blob([u8a], { type: mime });
+    let blob = new Blob([u8a], { type: mime });
+    if (mime.startsWith("image")) {
+      blob = await new Promise((resolve, reject) => {
+        new Compressor(blob, {
+          quality: 0.1,
+          mimeType: "image/jpeg",
+          success: resolve,
+          error: reject,
+        });
+      });
+    }
     return URL.createObjectURL(blob);
   } catch (e) {
     return value;

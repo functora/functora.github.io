@@ -1,8 +1,11 @@
 module App.Widgets.Main (mainWidget) where
 
+import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.Menu as Menu
+import qualified App.Xlsx as Xlsx
+import qualified Data.ByteString.Lazy as BL
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -143,6 +146,18 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               ]
               [ icon Icon.IconTelegram,
                 text " Order via Telegram"
+              ],
+            button_
+              [ type_ "submit",
+                onClick . PushUpdate . Instant . EffectUpdate $ do
+                  let doc = st ^. #modelState
+                  imgs <- Jsm.fetchBlobUris doc
+                  Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime
+                    . from @BL.ByteString @ByteString
+                    $ Xlsx.newXlsx doc imgs
+              ]
+              [ icon Icon.IconDownload,
+                text " Download excel file"
               ]
           ]
 

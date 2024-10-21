@@ -38,32 +38,41 @@ assetViewer st idx =
       : FieldPairs.fieldPairsViewer FieldPairs.defOpts args
   ]
     <> ( Dialog.dialog
-          ( Dialog.defOpts @Model @Action
-              & #optsTitle
-              .~ Just title
-              & #optsFooterRight
-              .~ const
-                [ button_
-                    [ type_ "reset",
-                      onClick
-                        . PushUpdate
-                        . Instant
-                        $ Jsm.removeAt
-                          ( #modelState . #stAssets
-                          )
-                          idx
-                    ]
-                    [ icon Icon.IconDelete,
-                      text " Remove"
+          ( Dialog.defOpts
+              { Dialog.optsTitle = Just title,
+                Dialog.optsHeaderRight =
+                  const
+                    [ button_
+                        [ type_ "reset",
+                          onClick removeAction
+                        ]
+                        [ icon Icon.IconDelete
+                        ],
+                      button_
+                        [ type_ "submit",
+                          onClick saveAction
+                        ]
+                        [ icon Icon.IconSave
+                        ]
                     ],
-                  button_
-                    [ type_ "submit",
-                      onClick closeAction
+                Dialog.optsFooterRight =
+                  const
+                    [ button_
+                        [ type_ "reset",
+                          onClick removeAction
+                        ]
+                        [ icon Icon.IconDelete,
+                          text " Remove"
+                        ],
+                      button_
+                        [ type_ "submit",
+                          onClick saveAction
+                        ]
+                        [ icon Icon.IconSave,
+                          text " Save"
+                        ]
                     ]
-                    [ icon Icon.IconSave,
-                      text " Save"
-                    ]
-                ]
+              }
           )
           Dialog.Args
             { Dialog.argsModel = st,
@@ -95,7 +104,11 @@ assetViewer st idx =
         . #stAssets
         . ix idx
         . #assetModalState
-    closeAction =
+    removeAction =
+      PushUpdate
+        . Instant
+        $ Jsm.removeAt (#modelState . #stAssets) idx
+    saveAction =
       PushUpdate
         . Instant
         . PureUpdate

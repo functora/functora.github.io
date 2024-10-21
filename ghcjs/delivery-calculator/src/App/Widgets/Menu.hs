@@ -5,10 +5,7 @@ module App.Widgets.Menu
   )
 where
 
-import qualified App.Jsm as Jsm
 import App.Types
-import qualified App.Xlsx as Xlsx
-import qualified Data.ByteString.Lazy as BL
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -25,10 +22,25 @@ menu st =
   [ keyed "menu"
       $ nav_
         [ style_
-            [ ("grid-template-columns", "auto 1fr auto auto auto auto")
+            [ ("grid-template-columns", "1fr auto")
             ]
         ]
         [ button_
+            [ role_ "button",
+              style_
+                [ ("min-width", "0"),
+                  ("justify-self", "start"),
+                  ("word-break", "keep-all"),
+                  ("overflow-wrap", "normal")
+                ],
+              onClick . PushUpdate . Instant . ImpureUpdate $ do
+                doc <- liftIO newSt
+                pure $ #modelState .~ doc
+            ]
+            [ icon Icon.IconDelivery,
+              text " Delivery Calculator"
+            ],
+          button_
             [ role_ "button",
               style_
                 [ ("min-width", "0")
@@ -41,60 +53,22 @@ menu st =
                 .~ Opened
             ]
             [ icon Icon.IconMenu
-            ],
-          button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0"),
-                  ("justify-self", "start"),
-                  ("word-break", "keep-all"),
-                  ("overflow-wrap", "normal")
-                ],
-              onClick . PushUpdate . Instant . ImpureUpdate $ do
-                doc <- liftIO newSt
-                pure $ #modelState .~ doc
-            ]
-            [ text "Delivery Calculator"
-            ],
-          button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0")
-                ],
-              onClick
-                . PushUpdate
-                . Instant
-                . Jsm.shareText
-                . from @String @Unicode
-                . either impureThrow URI.renderStr
-                $ stUri st
-            ]
-            [ icon Icon.IconShare
-            ],
-          button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0")
-                ],
-              onClick . PushUpdate . Instant . EffectUpdate $ do
-                let doc = st ^. #modelState
-                imgs <- Jsm.fetchBlobUris doc
-                Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime
-                  . from @BL.ByteString @ByteString
-                  $ Xlsx.newXlsx doc imgs
-            ]
-            [ icon Icon.IconDownload
             ]
         ]
   ]
     <> Dialog.dialog
       ( Dialog.defOpts
-          & #optsTitleIcon
-          .~ Just Icon.IconSettings
-          & #optsKeyed
-          .~ Just ("menu" :: Unicode)
-          & #optsTitle
-          .~ Just "Settings"
+          { Dialog.optsTitleIcon = Just Icon.IconSettings,
+            Dialog.optsKeyed = Just "menu",
+            Dialog.optsTitle = Just "Settings",
+            Dialog.optsHeaderRight =
+              ( ( button_
+                    [shareOnClick]
+                    [Dialog.optsIcon Dialog.defOpts Icon.IconShare]
+                )
+                  :
+              )
+          }
       )
       Dialog.Args
         { Dialog.argsModel = st,
@@ -225,6 +199,16 @@ menu st =
                       ]
                  )
         }
+  where
+    shareOnClick :: Attribute Action
+    shareOnClick =
+      onClick
+        . PushUpdate
+        . Instant
+        . Jsm.shareText
+        . from @String @Unicode
+        . either impureThrow URI.renderStr
+        $ stUri st
 
 qrButton :: Model -> View Action
 qrButton st =

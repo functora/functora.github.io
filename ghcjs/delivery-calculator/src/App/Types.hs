@@ -177,11 +177,22 @@ newAsset = do
     newFieldPair "Price" $ DynamicFieldNumber 10
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
+  comment <-
+    newFieldPair "Comment" $ DynamicFieldText mempty
   pure
     Asset
-      { assetFieldPairs = [link, photo, price, qty],
+      { assetFieldPairs =
+          [ required link,
+            required photo,
+            required price,
+            required qty,
+            comment
+          ],
         assetModalState = Opened
       }
+  where
+    required :: FieldPair DynamicField Unique -> FieldPair DynamicField Unique
+    required = #fieldPairValue . #fieldRequired .~ True
 
 newFieldPair ::
   ( MonadIO m

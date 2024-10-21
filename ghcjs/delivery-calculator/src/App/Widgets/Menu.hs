@@ -67,6 +67,15 @@ menu st =
                     [Dialog.optsIcon Dialog.defOpts Icon.IconShare]
                 )
                   :
+              ),
+            Dialog.optsFooterRight =
+              ( ( button_
+                    [shareOnClick]
+                    [ Dialog.optsIcon Dialog.defOpts Icon.IconShare,
+                      text " Share"
+                    ]
+                )
+                  :
               )
           }
       )

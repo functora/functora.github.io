@@ -122,6 +122,7 @@ data Field a f = Field
     fieldInput :: f Unicode,
     fieldOutput :: a,
     fieldModalState :: OpenedOrClosed,
+    fieldRequired :: Bool,
     fieldOpts :: FieldOpts
   }
   deriving stock (Generic)
@@ -175,6 +176,7 @@ newField typ output newInput = do
         fieldInput = input,
         fieldOutput = output,
         fieldModalState = Closed,
+        fieldRequired = False,
         fieldOpts = defFieldOpts
       }
 
@@ -185,6 +187,7 @@ newFieldId typ viewer output =
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
       fieldModalState = Closed,
+      fieldRequired = False,
       fieldOpts = defFieldOpts
     }
 

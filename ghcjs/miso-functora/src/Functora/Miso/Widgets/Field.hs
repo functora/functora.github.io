@@ -162,7 +162,17 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
               if null src
                 then mempty
                 else
-                  [ img_
+                  [ input_
+                      $ catMaybes
+                        [ Just $ type_ "file",
+                          Just $ accept_ "image/*",
+                          Just $ onInput onInputAction,
+                          fmap required_
+                            $ st
+                            ^? cloneTraversal optic
+                            . #fieldRequired
+                        ],
+                    img_
                       ( loading_ "lazy"
                           : src_ src
                           : optsExtraAttributes opts
@@ -174,6 +184,10 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                 . input_
                 $ ( catMaybes
                       [ Just . type_ $ htmlFieldType typ,
+                        fmap required_
+                          $ st
+                          ^? cloneTraversal optic
+                          . #fieldRequired,
                         fmap
                           (textProp "defaultValue")
                           ( st

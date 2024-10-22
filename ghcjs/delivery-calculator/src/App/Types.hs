@@ -208,6 +208,10 @@ newFieldPair key val = do
     . #fieldOpts
     . #fieldOptsQrState
     .~ Nothing
+    & #fieldPairValue
+    . #fieldOpts
+    . #fieldOptsAllowCopy
+    .~ False
 
 newFieldPairId ::
   Unicode ->
@@ -219,6 +223,10 @@ newFieldPairId key val = do
     . #fieldOpts
     . #fieldOptsQrState
     .~ Nothing
+    & #fieldPairValue
+    . #fieldOpts
+    . #fieldOptsAllowCopy
+    .~ False
 
 newTotal :: St Unique -> [FieldPair DynamicField Identity]
 newTotal st =
@@ -238,7 +246,10 @@ newTotal st =
           $ uniqueToIdentity fee
           & #fieldOpts
           . #fieldOptsQrState
-          .~ Nothing,
+          .~ Nothing
+          & #fieldOpts
+          . #fieldOptsAllowCopy
+          .~ False,
         newFieldPairId ("Total " <> quoteCur)
           . DynamicFieldText
           . inspectRatioDef

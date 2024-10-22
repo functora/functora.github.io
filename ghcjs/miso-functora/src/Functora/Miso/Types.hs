@@ -287,7 +287,7 @@ htmlFieldType = \case
   FieldTypeQrCode -> "text"
   FieldTypeHtml -> "text"
   FieldTypePassword -> "password"
-  FieldTypeImage -> "image"
+  FieldTypeImage -> "text"
 
 userFieldType :: FieldType -> Unicode
 userFieldType = \case

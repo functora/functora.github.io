@@ -152,17 +152,57 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
             . (br_ mempty :)
       )
       (optsLabel opts)
-      ( ( if typ == FieldTypeImage
-            then do
-              src <-
-                maybeToList
-                  $ st
-                  ^? cloneTraversal optic
-                  . #fieldInput
-                  . #uniqueValue
-              if null src
+      ( [ input_
+            $ ( catMaybes
+                  [ Just . type_ $ htmlFieldType typ,
+                    fmap required_
+                      $ st
+                      ^? cloneTraversal optic
+                      . #fieldRequired,
+                    fmap
+                      (textProp "defaultValue")
+                      ( st
+                          ^? cloneTraversal
+                            optic
+                          . #fieldInput
+                          . #uniqueValue
+                      ),
+                    Just
+                      $ onInput onInputAction,
+                    Just
+                      . disabled_
+                      $ opts
+                      ^. #optsDisabled,
+                    fmap placeholder_
+                      $ if null placeholder
+                        then optsLabel opts
+                        else Just placeholder,
+                    Just
+                      . id_
+                      . either impureThrow id
+                      . decodeUtf8Strict
+                      . unTagged
+                      $ htmlUid uid,
+                    Just
+                      . onKeyDown
+                      $ action
+                      . optsOnKeyDownAction opts uid,
+                    Just
+                      $ onBlur onBlurAction
+                  ]
+              )
+            <> ( opts ^. #optsExtraAttributes
+               )
+        ]
+          <> ( if typ /= FieldTypeImage
                 then mempty
-                else
+                else do
+                  src <-
+                    maybeToList
+                      $ st
+                      ^? cloneTraversal optic
+                      . #fieldInput
+                      . #uniqueValue
                   [ input_
                       $ catMaybes
                         [ Just $ type_ "file",
@@ -170,66 +210,24 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                           Just $ onInput onInputFileAction,
                           Just
                             . id_
-                            . either impureThrow id
+                            . either impureThrow ("file-" <>)
                             . decodeUtf8Strict
                             . unTagged
-                            $ htmlUid uid,
-                          fmap required_
-                            $ st
-                            ^? cloneTraversal optic
-                            . #fieldRequired
-                        ],
-                    img_
-                      ( loading_ "lazy"
-                          : src_ src
-                          : optsExtraAttributes opts
-                      ),
-                    br_ mempty
-                  ]
-            else
-              singleton
-                . input_
-                $ ( catMaybes
-                      [ Just . type_ $ htmlFieldType typ,
-                        fmap required_
-                          $ st
-                          ^? cloneTraversal optic
-                          . #fieldRequired,
-                        fmap
-                          (textProp "defaultValue")
-                          ( st
-                              ^? cloneTraversal
-                                optic
-                              . #fieldInput
-                              . #uniqueValue
-                          ),
-                        Just
-                          $ onInput onInputAction,
-                        Just
-                          . disabled_
-                          $ opts
-                          ^. #optsDisabled,
-                        fmap placeholder_
-                          $ if null placeholder
-                            then optsLabel opts
-                            else Just placeholder,
-                        Just
-                          . id_
-                          . either impureThrow id
-                          . decodeUtf8Strict
-                          . unTagged
-                          $ htmlUid uid,
-                        Just
-                          . onKeyDown
-                          $ action
-                          . optsOnKeyDownAction opts uid,
-                        Just
-                          $ onBlur onBlurAction
-                      ]
-                  )
-                <> ( opts ^. #optsExtraAttributes
-                   )
-        )
+                            $ htmlUid uid
+                        ]
+                    ]
+                    <> ( if null src
+                          then mempty
+                          else
+                            [ img_
+                                ( loading_ "lazy"
+                                    : src_ src
+                                    : optsExtraAttributes opts
+                                ),
+                              br_ mempty
+                            ]
+                       )
+             )
           --
           -- TODO : with new semantic layout separate leading/trailing
           -- widgets do not make a lot of sense, should be a single option
@@ -310,7 +308,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       const . fromMaybe action (optsOnInputAction opts) . ImpureUpdate $ do
         el <-
           getElementById
-            . either impureThrow id
+            . either impureThrow ("file-" <>)
             . decodeUtf8Strict
             . unTagged
             $ htmlUid uid

@@ -30,20 +30,25 @@ export async function insertStorage(key, value) {
   return await Preferences.set({ key: key, value: value });
 }
 
+export async function compressImage(quality, prevImage) {
+  const nextImage = await new Promise((resolve, reject) => {
+    new Compressor(prevImage, {
+      quality: quality,
+      mimeType: "image/jpeg",
+      success: resolve,
+      error: reject,
+    });
+  });
+  return nextImage;
+}
+
 export async function selectClipboard() {
   const { value } = await Clipboard.read();
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
     let blob = new Blob([u8a], { type: mime });
     if (mime.startsWith("image")) {
-      blob = await new Promise((resolve, reject) => {
-        new Compressor(blob, {
-          quality: 0.1,
-          mimeType: "image/jpeg",
-          success: resolve,
-          error: reject,
-        });
-      });
+      blob = await compressImage(1, blob);
     }
     return URL.createObjectURL(blob);
   } catch (e) {
@@ -118,13 +123,14 @@ export function isNativePlatform() {
 export async function fetchUrlAsRfc2397(url) {
   const imgResp = await fetch(url);
   const imgBlob = await imgResp.blob();
+  const imgComp = await compressImage(0.2, imgBlob);
   const rfc2397 = await new Promise((resolve, reject) => {
     var fr = new FileReader();
     fr.onload = () => {
       resolve(fr.result);
     };
     fr.onerror = reject;
-    fr.readAsDataURL(imgBlob);
+    fr.readAsDataURL(imgComp);
   });
   const utf8Encode = new TextEncoder();
   const ab = utf8Encode.encode(rfc2397).buffer;

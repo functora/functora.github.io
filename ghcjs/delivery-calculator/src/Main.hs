@@ -379,7 +379,10 @@ syncInputs st = do
       elExist <- ghcjsPure $ JS.isTruthy el
       when elExist $ do
         elActive <- JS.strictEqual el act
-        unless elActive $ el ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
+        typ <- (el ! ("type" :: Unicode)) >>= JS.fromJSVal
+        unless (elActive || typ == Just ("file" :: Unicode))
+          $ el
+          ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)

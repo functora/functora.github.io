@@ -25,6 +25,7 @@ import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
+import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso.String as MS
 
@@ -166,7 +167,13 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                       $ catMaybes
                         [ Just $ type_ "file",
                           Just $ accept_ "image/*",
-                          Just $ onInput onInputAction,
+                          Just $ onInput onInputFileAction,
+                          Just
+                            . id_
+                            . either impureThrow id
+                            . decodeUtf8Strict
+                            . unTagged
+                            $ htmlUid uid,
                           fmap required_
                             $ st
                             ^? cloneTraversal optic
@@ -299,6 +306,45 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
               & cloneTraversal optic
               . #fieldOutput
               %~ maybe id (const . id) (getOutput next)
+    onInputFileAction =
+      const . fromMaybe action (optsOnInputAction opts) . ImpureUpdate $ do
+        el <-
+          getElementById
+            . either impureThrow id
+            . decodeUtf8Strict
+            . unTagged
+            $ htmlUid uid
+        elExist <- ghcjsPure $ JS.isTruthy el
+        if not elExist
+          then pure id
+          else do
+            file <-
+              el JS.! ("files" :: Unicode) JS.!! 0
+            link <-
+              JS.global
+                ! ("URL" :: Unicode)
+                ^. JS.js1 ("createObjectURL" :: Unicode) file
+            murl <-
+              JS.fromJSVal link
+            case murl of
+              Nothing -> pure id
+              Just (url :: Unicode) -> do
+                let next =
+                      st
+                        & cloneTraversal optic
+                        . #fieldInput
+                        . #uniqueValue
+                        .~ url
+                pure
+                  $ ( cloneTraversal optic
+                        . #fieldInput
+                        . #uniqueValue
+                        .~ url
+                    )
+                  . ( cloneTraversal optic
+                        . #fieldOutput
+                        %~ maybe id (const . id) (getOutput next)
+                    )
 
 ratioField ::
   Args model action Rational Unique ->

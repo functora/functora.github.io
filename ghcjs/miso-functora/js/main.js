@@ -44,6 +44,22 @@ export async function compressImage(quality, prevImage) {
 
 export async function selectClipboard() {
   const { value } = await Clipboard.read();
+  return await selectDataUrl(value);
+}
+
+export async function selectFile(file) {
+  const value = await new Promise((resolve, reject) => {
+    var fr = new FileReader();
+    fr.onload = () => {
+      resolve(fr.result);
+    };
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+  return await selectDataUrl(value);
+}
+
+export async function selectDataUrl(value) {
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
     let blob = new Blob([u8a], { type: mime });

@@ -25,7 +25,6 @@ import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Qr as Qr
 import qualified Functora.Miso.Widgets.Select as Select
-import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso.String as MS
 
@@ -305,7 +304,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
               . #fieldOutput
               %~ maybe id (const . id) (getOutput next)
     onInputFileAction =
-      const . fromMaybe action (optsOnInputAction opts) . ImpureUpdate $ do
+      const . fromMaybe action (optsOnInputAction opts) . EffectUpdate $ do
         el <-
           getElementById
             . either impureThrow ("file-" <>)
@@ -314,35 +313,27 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
             $ htmlUid uid
         elExist <- ghcjsPure $ JS.isTruthy el
         if not elExist
-          then pure id
+          then Jsm.popupText @Unicode "File does not exist!"
           else do
-            file <-
-              el JS.! ("files" :: Unicode) JS.!! 0
-            link <-
-              JS.global
-                ! ("URL" :: Unicode)
-                ^. JS.js1 ("createObjectURL" :: Unicode) file
-            murl <-
-              JS.fromJSVal link
-            case murl of
-              Nothing -> pure id
-              Just (url :: Unicode) -> do
+            file <- el JS.! ("files" :: Unicode) JS.!! 0
+            Jsm.selectFile file $ \case
+              Nothing -> Jsm.popupText @Unicode "File is not selected!"
+              Just url -> argsEmitter args . PureUpdate $ do
                 let next =
                       st
                         & cloneTraversal optic
                         . #fieldInput
                         . #uniqueValue
                         .~ url
-                pure
-                  $ ( cloneTraversal optic
+                 in ( cloneTraversal optic
                         . #fieldInput
                         . #uniqueValue
                         .~ url
                     )
-                  . ( cloneTraversal optic
-                        . #fieldOutput
-                        %~ maybe id (const . id) (getOutput next)
-                    )
+                      . ( cloneTraversal optic
+                            . #fieldOutput
+                            %~ maybe id (const . id) (getOutput next)
+                        )
 
 ratioField ::
   Args model action Rational Unique ->

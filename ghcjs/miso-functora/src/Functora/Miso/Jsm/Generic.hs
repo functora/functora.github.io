@@ -10,6 +10,7 @@ module Functora.Miso.Jsm.Generic
     selectStorage,
     selectBarcode,
     selectClipboard,
+    selectFile,
     genericPromise,
     printCurrentPage,
     saveFile,
@@ -163,6 +164,12 @@ selectBarcode after =
 selectClipboard :: (Maybe Unicode -> JSM ()) -> JSM ()
 selectClipboard after =
   genericPromise @[Unicode] @Unicode "selectClipboard" mempty
+    $ after
+    . fmap strip
+
+selectFile :: JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectFile file after =
+  genericPromise @[JS.JSVal] @Unicode "selectFile" [file]
     $ after
     . fmap strip
 

@@ -6,6 +6,7 @@ module Functora.Miso.Jsm.Generic
     removeAt,
     openBrowserPage,
     enterOrEscapeBlur,
+    blur,
     insertStorage,
     selectStorage,
     selectBarcode,
@@ -114,19 +115,18 @@ enterOrEscapeBlur :: Uid -> KeyCode -> Update model
 enterOrEscapeBlur uid (KeyCode code) =
   EffectUpdate $ do
     let enterOrEscape = [13, 27] :: [Int]
-    when (code `elem` enterOrEscape) $ do
-      --
-      -- TODO : refactor this
-      --
-      res <-
-        either throw pure
-          . decodeUtf8Strict @Unicode
-          . unTagged
-          $ "document.getElementById('"
-          <> htmlUid uid
-          <> "').blur();"
-      void
-        $ JS.eval res
+    when (code `elem` enterOrEscape) $ blur uid
+
+blur :: Uid -> JSM ()
+blur uid = do
+  el <-
+    getElementById
+      . either impureThrow id
+      . decodeUtf8Strict
+      . unTagged
+      $ htmlUid uid
+  is <- ghcjsPure $ JS.isTruthy el
+  when is . void $ el ^. JS.js0 @Unicode "blur"
 
 insertStorage :: (ToJSON a) => Unicode -> a -> JSM ()
 insertStorage key raw = do

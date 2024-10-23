@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name:          delivery-calculator
-version:       0.1.0.4
+version:       0.1.0.5
 synopsis:      Delivery Calculator
 category:      Web
 build-type:    Simple
@@ -95,13 +95,13 @@ common pkg
     , miso
     , miso-functora
     , modern-uri
+    , network-uri
+    , regex-compat
     , syb
     , xlsx
 
   if flag(ghcid)
-    build-depends:
-      , jsaddle
-      , network-uri
+    build-depends: jsaddle
 
   if os(wasi)
     build-depends: jsaddle-wasm
@@ -115,9 +115,7 @@ executable delivery-calculator
   build-depends: containers
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
-    build-depends:
-      , jsaddle
-      , network-uri
+    build-depends: jsaddle
 
   else
     build-depends:

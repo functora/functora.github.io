@@ -200,6 +200,7 @@ import qualified Data.HMAC as HMAC
 import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
 import qualified Data.Map.Merge.Strict as Map
 import Data.Maybe as X (listToMaybe)
+import Data.MonoTraversable as X (omap)
 import qualified Data.MonoTraversable as Mono
 import Data.MonoTraversable.Unprefixed as X (intercalate)
 import Data.Ratio as X ((%))
@@ -211,7 +212,6 @@ import Data.Sequences as X hiding
     Utf8 (..),
     catMaybes,
     dropWhile,
-    filter,
     filterM,
     find,
     fromList,
@@ -287,6 +287,7 @@ import Universum as X hiding
     catchAny,
     decodeUtf8',
     drop,
+    filter,
     finally,
     fromInteger,
     fromIntegral,

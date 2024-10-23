@@ -865,7 +865,12 @@ insertAction Full {fullArgs = args, fullParser = parser} selector =
               ( updateInput
                   . (cloneTraversal optic . #fieldOutput .~ out)
               )
-            $ Jsm.popupText @Unicode "Success!"
+            $ do
+              whenJust
+                (prev ^? cloneTraversal optic . #fieldInput . #uniqueUid)
+                Jsm.blur
+              Jsm.popupText @Unicode
+                "Success!"
   where
     prev = args ^. #argsModel
     optic = args ^. #argsOptic

@@ -39,38 +39,39 @@ assetViewer st idx =
       : FieldPairs.fieldPairsViewer fieldPairsOpts args
   ]
     <> ( Dialog.dialog
-          ( Dialog.defOpts
-              { Dialog.optsTitle = Just title,
-                Dialog.optsHeaderRight =
-                  const
-                    [ button_
-                        [type_ "reset", onClick removeAction]
-                        [icon Icon.IconDelete],
-                      button_
-                        [type_ "submit", onClick saveAction]
-                        [icon Icon.IconSave]
-                    ],
-                Dialog.optsFooterRight =
-                  const
-                    [ button_
-                        [type_ "reset", onClick removeAction]
-                        [icon Icon.IconDelete, text " Remove"],
-                      button_
-                        [type_ "submit", onClick saveAction]
-                        [icon Icon.IconSave, text " Save"]
-                    ]
-              }
-          )
+          Dialog.defOpts
+            { Dialog.optsTitle = Just title,
+              Dialog.optsExtraOnClose = saveUpdate,
+              Dialog.optsHeaderRight =
+                const
+                  [ button_
+                      [type_ "reset", onClick removeAction]
+                      [icon Icon.IconDelete],
+                    button_
+                      [type_ "submit", onClick saveAction]
+                      [icon Icon.IconSave]
+                  ],
+              Dialog.optsFooterRight =
+                const
+                  [ button_
+                      [type_ "reset", onClick removeAction]
+                      [icon Icon.IconDelete, text " Remove"],
+                    button_
+                      [type_ "submit", onClick saveAction]
+                      [icon Icon.IconSave, text " Save"]
+                  ]
+            }
           Dialog.Args
             { Dialog.argsModel = st,
               Dialog.argsOptic = modalOptic,
               Dialog.argsAction = PushUpdate . Instant,
               Dialog.argsContent =
-                FieldPairs.fieldPairsEditor
-                  args
-                  fieldPairsOpts
-                    { FieldPairs.optsAdvanced = False
-                    }
+                failures False
+                  <> FieldPairs.fieldPairsEditor
+                    args
+                    fieldPairsOpts
+                      { FieldPairs.optsAdvanced = False
+                      }
             }
        )
   where
@@ -98,9 +99,30 @@ assetViewer st idx =
     saveAction =
       PushUpdate
         . Instant
-        . PureUpdate
-        $ cloneTraversal modalOptic
-        .~ Closed
+        $ PureUpdate saveUpdate
+    saveUpdate =
+      ( #modelState
+          . #stAssets
+          . ix idx
+          . #assetMustVerify
+          .~ True
+      )
+        . if null $ failures True
+          then cloneTraversal modalOptic .~ Closed
+          else cloneTraversal modalOptic .~ Opened
+    failures forceVerify =
+      maybe
+        mempty
+        ( verifyAsset
+            . ( if forceVerify
+                  then #assetMustVerify .~ True
+                  else id
+              )
+        )
+        $ st
+        ^? #modelState
+        . #stAssets
+        . ix idx
 
 fieldPairsOpts :: FieldPairs.Opts model action
 fieldPairsOpts =

@@ -8,6 +8,7 @@ module App.Types
     newSt,
     Asset (..),
     newAsset,
+    verifyAsset,
     newFieldPair,
     newFieldPairId,
     newTotal,
@@ -56,7 +57,9 @@ import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import Lens.Micro ((^..))
+import qualified Network.URI as NetUri
 import qualified Paths_delivery_calculator as Paths
+import qualified Text.Regex as Re
 import qualified Text.URI as URI
 
 data Model = Model
@@ -143,7 +146,8 @@ newSt = do
 
 data Asset f = Asset
   { assetFieldPairs :: [FieldPair DynamicField f],
-    assetModalState :: OpenedOrClosed
+    assetModalState :: OpenedOrClosed,
+    assetMustVerify :: Bool
   }
   deriving stock (Generic)
 
@@ -188,11 +192,69 @@ newAsset = do
             required qty,
             comment
           ],
-        assetModalState = Opened
+        assetModalState = Opened,
+        assetMustVerify = False
       }
   where
     required :: FieldPair DynamicField Unique -> FieldPair DynamicField Unique
     required = #fieldPairValue . #fieldRequired .~ True
+
+verifyAsset :: Asset Unique -> [View Action]
+verifyAsset asset =
+  case assetFieldPairs asset of
+    (link : photo : price : qty : _)
+      | assetMustVerify asset -> do
+          let failures =
+                intersperse (text " ")
+                  $ verifyLink
+                    (link ^. #fieldPairValue . #fieldInput . #uniqueValue)
+                  <> verifyPhoto
+                    (photo ^. #fieldPairValue . #fieldInput . #uniqueValue)
+                  <> verifyPrice
+                    (price ^. #fieldPairValue . #fieldOutput)
+                  <> verifyQty
+                    (qty ^. #fieldPairValue . #fieldOutput)
+          if null failures
+            then mempty
+            else [blockquote_ mempty failures]
+    _ ->
+      mempty
+
+verifyLink :: Unicode -> [View Action]
+verifyLink "" = [text "Link is missing!"]
+verifyLink txt =
+  case Re.matchRegex uriRe . from @Unicode @String $ uriOnlyChars txt of
+    Just [uri, _] ->
+      if isJust $ Re.matchRegex marketRe uri
+        then mempty
+        else [text "Link has unsupported marketplace!"]
+    _ -> [text "Link should have exactly one URL!"]
+
+verifyPhoto :: Unicode -> [View Action]
+verifyPhoto "" = [text "Photo is missing!"]
+verifyPhoto txt =
+  case Re.matchRegex uriRe str of
+    Just [_, _] -> mempty
+    _ -> [text "Photo is incorrect!"]
+  where
+    str = from @Unicode @String $ uriOnlyChars txt
+
+verifyPrice :: DynamicField -> [View Action]
+verifyPrice = \case
+  DynamicFieldNumber x | x > 0 -> mempty
+  _ -> [text "Price must be a positive number!"]
+
+verifyQty :: DynamicField -> [View Action]
+verifyQty = \case
+  DynamicFieldNumber x | x > 0 -> mempty
+  _ -> [text "Quantity must be a positive number!"]
+
+uriOnlyChars :: Unicode -> Unicode
+uriOnlyChars =
+  omap $ \x ->
+    if NetUri.isAllowedInURI x
+      then x
+      else ' '
 
 newFieldPair ::
   ( MonadIO m
@@ -511,3 +573,11 @@ apkLink =
     <> "/delivery-calculator-v"
     <> vsn
     <> ".apk"
+
+uriRe :: Re.Regex
+uriRe =
+  Re.mkRegex "((https?|ftp)://[^\\s/$.?#].[^\\s]*)"
+
+marketRe :: Re.Regex
+marketRe =
+  Re.mkRegex "(tb\\.cn|1688\\.com|dewu\\.com|taobao\\.com|tmall\\.com)"

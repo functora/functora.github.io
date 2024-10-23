@@ -165,16 +165,16 @@ newAsset :: (MonadIO m) => m (Asset Unique)
 newAsset = do
   link <-
     newFieldPair "Link"
-      $ DynamicFieldText "https://bitcoin.org/en/"
+      $ DynamicFieldText mempty
   photo <-
     fmap
       ( (#fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing)
           . (#fieldPairValue . #fieldType .~ FieldTypeImage)
       )
       . newFieldPair "Photo"
-      $ DynamicFieldText "https://bitcoin.org/img/home/bitcoin-img.svg?1725887272"
+      $ DynamicFieldText mempty
   price <-
-    newFieldPair "Price" $ DynamicFieldNumber 10
+    newFieldPair "Price" $ DynamicFieldNumber 0
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
   comment <-

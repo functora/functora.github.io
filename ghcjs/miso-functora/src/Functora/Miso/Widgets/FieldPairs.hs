@@ -21,23 +21,25 @@ data Args model action f = Args
   }
   deriving stock (Generic)
 
-data Opts action = Opts
+data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
+    optsField :: Field.Opts model action,
     optsAdvanced :: Bool
   }
   deriving stock (Generic)
 
-defOpts :: Opts action
+defOpts :: Opts model action
 defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
+      optsField = Field.defOpts,
       optsAdvanced = True
     }
 
 fieldPairsViewer ::
   ( Foldable1 f
   ) =>
-  Opts action ->
+  Opts model action ->
   Args model action f ->
   [View action]
 fieldPairsViewer opts args@Args {argsOptic = optic} =
@@ -57,7 +59,7 @@ fieldPairViewer ::
   forall model action f.
   ( Foldable1 f
   ) =>
-  Opts action ->
+  Opts model action ->
   Args model action f ->
   Int ->
   FieldPair DynamicField f ->
@@ -76,7 +78,7 @@ fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
           then mempty
           else
             Field.fieldViewer
-              ( Field.defOpts @model @action
+              ( optsField opts
                   & #optsIcon
                   .~ optsIcon opts
                   & #optsLeftRightViewer
@@ -97,7 +99,10 @@ fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
     k = pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
 
-fieldPairsEditor :: Args model action Unique -> Opts action -> [View action]
+fieldPairsEditor ::
+  Args model action Unique ->
+  Opts model action ->
+  [View action]
 fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
   fieldPairEditor args opts idx
@@ -105,7 +110,7 @@ fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
 fieldPairEditor ::
   forall model action.
   Args model action Unique ->
-  Opts action ->
+  Opts model action ->
   Int ->
   [View action]
 fieldPairEditor
@@ -115,7 +120,7 @@ fieldPairEditor
       argsAction = action,
       argsEmitter = emitter
     }
-  Opts
+  opts@Opts
     { optsAdvanced = False
     }
   idx =
@@ -126,7 +131,7 @@ fieldPairEditor
           Field.argsAction = action,
           Field.argsEmitter = emitter
         }
-      ( Field.defOpts
+      ( optsField opts
           & #optsLabel
           .~ Just
             ( fromMaybe ("#" <> inspect (idx + 1))
@@ -144,7 +149,7 @@ fieldPairEditor
       argsAction = action,
       argsEmitter = emitter
     }
-  Opts
+  opts@Opts
     { optsAdvanced = True
     }
   idx =
@@ -155,7 +160,7 @@ fieldPairEditor
           Field.argsAction = action,
           Field.argsEmitter = emitter
         }
-      ( Field.defOpts @model @action
+      ( optsField opts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
           & ( #optsLeadingWidget ::
@@ -180,7 +185,7 @@ fieldPairEditor
             Field.argsAction = action,
             Field.argsEmitter = emitter
           }
-        ( Field.defOpts
+        ( optsField opts
             & #optsPlaceholder
             .~ ( "Value "
                   <> idxTxt

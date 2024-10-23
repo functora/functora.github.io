@@ -79,6 +79,11 @@ dialog:after {
   all: initial;
 }
 
+dialog > * {
+  max-height: initial !important;
+  overflow: initial !important;
+}
+
 @media print {
   body {
     color-adjust: exact !important;

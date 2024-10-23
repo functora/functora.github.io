@@ -54,7 +54,8 @@ data Opts model action = Opts
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
     optsOnKeyDownAction :: Uid -> KeyCode -> Update model,
     optsExtraAttributes :: [Attribute action],
-    optsLeftRightViewer :: [View action] -> [View action] -> [View action]
+    optsLeftRightViewer :: [View action] -> [View action] -> [View action],
+    optsExtraAttributesImage :: [Attribute action]
   }
   deriving stock (Generic)
 
@@ -77,7 +78,8 @@ defOpts =
       optsTrailingWidget = Just $ OptsWidgetPair ClearWidget ClearWidget,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
       optsExtraAttributes = mempty,
-      optsLeftRightViewer = (<>)
+      optsLeftRightViewer = (<>),
+      optsExtraAttributesImage = mempty
     }
 
 data OptsWidget model action
@@ -221,9 +223,10 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                             [ img_
                                 ( loading_ "lazy"
                                     : src_ src
-                                    : optsExtraAttributes opts
+                                    : optsExtraAttributesImage opts
                                 ),
-                              br_ mempty
+                              br_
+                                mempty
                             ]
                        )
              )
@@ -712,7 +715,11 @@ genericFieldViewer opts0 args widget =
                     if null input
                       then mempty
                       else
-                        [ img_ [loading_ "lazy", src_ input]
+                        [ img_
+                            ( loading_ "lazy"
+                                : src_ input
+                                : optsExtraAttributesImage opts0
+                            )
                         ]
                   else
                     [ widget

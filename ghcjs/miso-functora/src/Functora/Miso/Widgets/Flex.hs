@@ -34,7 +34,6 @@ flexCol newTag newAttr =
     $ newAttr
       [ style_
           [ ("display", "flex"),
-            ("flex-wrap", "wrap"),
             ("flex-direction", "column")
           ]
       ]

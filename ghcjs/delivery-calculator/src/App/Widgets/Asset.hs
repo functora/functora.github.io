@@ -7,6 +7,7 @@ import App.Types
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.Dialog as Dialog
+import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Icon as Icon
 
@@ -35,7 +36,7 @@ assetViewer st idx =
                 ]
             ]
         )
-      : FieldPairs.fieldPairsViewer FieldPairs.defOpts args
+      : FieldPairs.fieldPairsViewer fieldPairsOpts args
   ]
     <> ( Dialog.dialog
           ( Dialog.defOpts
@@ -43,34 +44,20 @@ assetViewer st idx =
                 Dialog.optsHeaderRight =
                   const
                     [ button_
-                        [ type_ "reset",
-                          onClick removeAction
-                        ]
-                        [ icon Icon.IconDelete
-                        ],
+                        [type_ "reset", onClick removeAction]
+                        [icon Icon.IconDelete],
                       button_
-                        [ type_ "submit",
-                          onClick saveAction
-                        ]
-                        [ icon Icon.IconSave
-                        ]
+                        [type_ "submit", onClick saveAction]
+                        [icon Icon.IconSave]
                     ],
                 Dialog.optsFooterRight =
                   const
                     [ button_
-                        [ type_ "reset",
-                          onClick removeAction
-                        ]
-                        [ icon Icon.IconDelete,
-                          text " Remove"
-                        ],
+                        [type_ "reset", onClick removeAction]
+                        [icon Icon.IconDelete, text " Remove"],
                       button_
-                        [ type_ "submit",
-                          onClick saveAction
-                        ]
-                        [ icon Icon.IconSave,
-                          text " Save"
-                        ]
+                        [type_ "submit", onClick saveAction]
+                        [icon Icon.IconSave, text " Save"]
                     ]
               }
           )
@@ -81,9 +68,9 @@ assetViewer st idx =
               Dialog.argsContent =
                 FieldPairs.fieldPairsEditor
                   args
-                  $ FieldPairs.defOpts
-                  & #optsAdvanced
-                  .~ False
+                  fieldPairsOpts
+                    { FieldPairs.optsAdvanced = False
+                    }
             }
        )
   where
@@ -114,3 +101,14 @@ assetViewer st idx =
         . PureUpdate
         $ cloneTraversal modalOptic
         .~ Closed
+
+fieldPairsOpts :: FieldPairs.Opts model action
+fieldPairsOpts =
+  FieldPairs.defOpts
+    { FieldPairs.optsField =
+        Field.defOpts
+          { Field.optsExtraAttributesImage =
+              [ style_ [("max-height", "10vh")]
+              ]
+          }
+    }

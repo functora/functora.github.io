@@ -25,12 +25,10 @@ newModel webOpts mSt uri = do
   market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
   pure
     Model
-      { modelFav = Closed,
-        modelMenu = Closed,
+      { modelMenu = Closed,
         modelLinks = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
-        modelFavMap = mempty,
         modelUriViewer = mempty,
         modelDonateViewer = donate,
         modelProducerQueue = prod,

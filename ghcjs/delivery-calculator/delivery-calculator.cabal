@@ -19,7 +19,6 @@ common pkg
     App.Jsm
     App.Types
     App.Widgets.Asset
-    App.Widgets.Fav
     App.Widgets.Main
     App.Widgets.Menu
     App.Widgets.Templates

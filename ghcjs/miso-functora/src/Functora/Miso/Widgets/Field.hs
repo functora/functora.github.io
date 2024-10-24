@@ -148,6 +148,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       id
       ( \x ->
           singleton
+            . keyed (decodeUtf8 . unTagged $ htmlUid uid)
             . label_ mempty
             . (text x :)
             . (br_ mempty :)

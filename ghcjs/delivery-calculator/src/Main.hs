@@ -131,35 +131,31 @@ updateModel (InitUpdate ext) prevSt = do
                 { modelProducerQueue = prod,
                   modelConsumerQueue = cons
                 }
-        Jsm.selectStorage ("favorite-" <> vsn) $ \mFav -> do
-          let fav = mergeMap (const id) $ fromMaybe mempty mFav
-          if isJust ext
-            then
-              pushActionQueue
-                nextSt
+        if isJust ext
+          then
+            pushActionQueue
+              nextSt
+              . Instant
+              . PureUpdate
+              $ #modelLoading
+              .~ False
+          else Jsm.selectStorage ("current-" <> vsn) $ \case
+            Nothing ->
+              pushActionQueue nextSt
                 . Instant
                 . PureUpdate
-                $ (& #modelFavMap %~ fav)
-                . (& #modelLoading .~ False)
-            else Jsm.selectStorage ("current-" <> vsn) $ \case
-              Nothing ->
-                pushActionQueue nextSt
-                  . Instant
-                  . PureUpdate
-                  $ (& #modelFavMap %~ fav)
-                  . (& #modelLoading .~ False)
-              Just uri -> do
-                finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
-                pushActionQueue nextSt
-                  . Instant
-                  . PureUpdate
-                  $ ( const
-                        $ finSt
-                        & #modelFavMap
-                        %~ fav
-                        & #modelLoading
-                        .~ False
-                    )
+                $ #modelLoading
+                .~ False
+            Just uri -> do
+              finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
+              pushActionQueue nextSt
+                . Instant
+                . PureUpdate
+                $ ( const
+                      $ finSt
+                      & #modelLoading
+                      .~ False
+                  )
         pure
           $ ChanUpdate (const nextSt)
     ]
@@ -201,7 +197,6 @@ updateModel (ChanUpdate update0) st0 = do
             $ evalModel st2
         let st3 = update2 st2
         uri <- stUri st3
-        Jsm.insertStorage ("favorite-" <> vsn) $ st3 ^. #modelFavMap
         Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
         nextUri <- stUri $ st3 & #modelState . #stScreen %~ unQrCode

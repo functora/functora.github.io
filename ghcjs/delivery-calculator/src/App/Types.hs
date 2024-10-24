@@ -63,12 +63,10 @@ import qualified Text.Regex as Re
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelFav :: OpenedOrClosed,
-    modelMenu :: OpenedOrClosed,
+  { modelMenu :: OpenedOrClosed,
     modelLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    modelFavMap :: Map Unicode Fav,
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelDonateViewer :: [FieldPair DynamicField Unique],
     modelProducerQueue :: TChan (InstantOrDelayed (Update Model)),
@@ -95,7 +93,6 @@ data St f = St
     stMerchantTele :: Field Unicode f,
     stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
-    stFavName :: Field Unicode f,
     stPreview :: Field Unicode f,
     stScreen :: Screen,
     stEnableTheme :: Bool,
@@ -125,7 +122,6 @@ newSt = do
   merchantCur <- newCurrency rub
   tele <- newTextField "Functora"
   fee <- newDynamicField $ DynamicFieldNumber 2
-  fav <- newTextField mempty
   pre <- newTextField "Delivery Calculator"
   pure
     St
@@ -137,7 +133,6 @@ newSt = do
         stMerchantTele = tele,
         stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
-        stFavName = fav,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main,
         stEnableTheme = True,
@@ -216,7 +211,7 @@ verifyAsset asset =
                     (qty ^. #fieldPairValue . #fieldOutput)
           if null failures
             then mempty
-            else [blockquote_ mempty failures]
+            else [keyed "asset-failure" $ blockquote_ mempty failures]
     _ ->
       mempty
 
@@ -499,8 +494,7 @@ baseUri =
 setScreenPure :: Screen -> Update Model
 setScreenPure sc =
   PureUpdate
-    $ (& #modelFav .~ Closed)
-    . (& #modelMenu .~ Closed)
+    $ (& #modelMenu .~ Closed)
     . (& #modelLinks .~ Closed)
     . (& #modelState . #stScreen .~ sc)
 

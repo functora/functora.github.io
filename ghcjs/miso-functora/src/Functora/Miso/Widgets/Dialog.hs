@@ -28,7 +28,7 @@ data Opts model action = Opts
     optsFooterLeft :: [View action] -> [View action],
     optsFooterRight :: [View action] -> [View action],
     optsExtraOnClose :: model -> model,
-    optsFlexContent :: Bool,
+    optsFlexCol :: Bool,
     optsKeyed :: Maybe Unicode,
     optsIcon :: Icon.Icon -> View action
   }
@@ -44,7 +44,7 @@ defOpts =
       optsFooterLeft = id,
       optsFooterRight = id,
       optsExtraOnClose = id,
-      optsFlexContent = True,
+      optsFlexCol = True,
       optsKeyed = Nothing,
       optsIcon = Icon.icon @Icon.Fa
     }
@@ -76,9 +76,9 @@ dialog opts args =
             id
             (optsHeaderLeft opts defHeaderLeft)
             (optsHeaderRight opts defHeaderRight)
-          <> ( if optsFlexContent opts
+          <> ( if optsFlexCol opts
                 then [Flex.flexCol form_ id $ argsContent args]
-                else [form_ mempty $ argsContent args]
+                else [Flex.flexRow form_ id $ argsContent args]
              )
           <> Flex.flexLeftRight
             footer_

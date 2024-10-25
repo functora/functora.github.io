@@ -77,7 +77,7 @@ selectCurrency
         Dialog.defOpts
           { Dialog.optsTitle = Just "Currency",
             Dialog.optsTitleIcon = Just Icon.IconCoins,
-            Dialog.optsFlexContent = False,
+            Dialog.optsFlexCol = False,
             Dialog.optsExtraOnClose =
               cloneTraversal optic
                 . #currencyInput
@@ -101,9 +101,11 @@ selectCurrency
                     & #optsPlaceholder
                     .~ ("Search" :: Unicode)
                     & #optsExtraAttributes
-                    .~ [autofocus_ True]
+                    .~ [ autofocus_ True,
+                         style_ [("flex-grow", "reset")]
+                       ]
                 )
-                <> [br_ mempty]
+                <> [div_ [style_ [("width", "100%")]] mempty]
                 <> currencyListWidget opts args
           }
     where

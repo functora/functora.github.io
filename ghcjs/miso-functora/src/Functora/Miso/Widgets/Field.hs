@@ -149,53 +149,70 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       ( \x ->
           singleton
             . keyed (decodeUtf8 . unTagged $ htmlUid uid)
-            . label_ mempty
-            . (text x :)
-            . (br_ mempty :)
+            . label_
+              [ style_
+                  [ ("display", "flex"),
+                    ("flex-wrap", "wrap"),
+                    ("flex-direction", "row"),
+                    ("align-items", "center")
+                  ]
+              ]
+            . ( span_
+                  [style_ [("width", "100%")]]
+                  [text x]
+                  :
+              )
       )
       (optsLabel opts)
-      ( [ input_
-            $ ( catMaybes
-                  [ Just . type_ $ htmlFieldType typ,
-                    fmap required_
-                      $ st
-                      ^? cloneTraversal optic
-                      . #fieldRequired,
-                    fmap
-                      (textProp "defaultValue")
-                      ( st
-                          ^? cloneTraversal
-                            optic
-                          . #fieldInput
-                          . #uniqueValue
-                      ),
-                    Just
-                      $ onInput onInputAction,
-                    Just
-                      . disabled_
-                      $ opts
-                      ^. #optsDisabled,
-                    fmap placeholder_
-                      $ if null placeholder
-                        then optsLabel opts
-                        else Just placeholder,
-                    Just
-                      . id_
-                      . either impureThrow id
-                      . decodeUtf8Strict
-                      . unTagged
-                      $ htmlUid uid,
-                    Just
-                      . onKeyDown
-                      $ action
-                      . optsOnKeyDownAction opts uid,
-                    Just
-                      $ onBlur onBlurAction
-                  ]
-              )
-            <> ( opts ^. #optsExtraAttributes
-               )
-        ]
+      ( leadingWidgets
+          <> [ input_
+                $ ( catMaybes
+                      [ Just
+                          $ style_
+                            [ ("width", "0"),
+                              ("flex-grow", "1")
+                            ],
+                        Just . type_ $ htmlFieldType typ,
+                        fmap required_
+                          $ st
+                          ^? cloneTraversal optic
+                          . #fieldRequired,
+                        fmap
+                          (textProp "defaultValue")
+                          ( st
+                              ^? cloneTraversal
+                                optic
+                              . #fieldInput
+                              . #uniqueValue
+                          ),
+                        Just
+                          $ onInput onInputAction,
+                        Just
+                          . disabled_
+                          $ opts
+                          ^. #optsDisabled,
+                        fmap placeholder_
+                          $ if null placeholder
+                            then optsLabel opts
+                            else Just placeholder,
+                        Just
+                          . id_
+                          . either impureThrow id
+                          . decodeUtf8Strict
+                          . unTagged
+                          $ htmlUid uid,
+                        Just
+                          . onKeyDown
+                          $ action
+                          . optsOnKeyDownAction opts uid,
+                        Just
+                          $ onBlur onBlurAction
+                      ]
+                  )
+                <> ( opts ^. #optsExtraAttributes
+                   )
+             ]
+          <> trailingWidgets
           <> ( if typ /= FieldTypeImage
                 then mempty
                 else do
@@ -206,12 +223,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                       . #fieldInput
                       . #uniqueValue
                   [ input_
-                      $ catMaybes
-                        [ Just $ type_ "file",
-                          Just $ accept_ "image/*",
-                          Just $ onInput onInputFileAction,
-                          Just
-                            . id_
+                      $ [ type_ "file",
+                          accept_ "image/*",
+                          onInput onInputFileAction,
+                          style_ [("width", "100%")],
+                          id_
                             . either impureThrow ("file-" <>)
                             . decodeUtf8Strict
                             . unTagged
@@ -231,27 +247,6 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                             ]
                        )
              )
-          --
-          -- TODO : with new semantic layout separate leading/trailing
-          -- widgets do not make a lot of sense, should be a single option
-          -- which is just a list widgets.
-          --
-          <> catMaybes
-            [ fmap
-                (fieldIcon full opts)
-                ( opts
-                    ^? #optsLeadingWidget
-                    . _Just
-                    . cloneTraversal widgetOptic
-                ),
-              fmap
-                (fieldIcon full opts)
-                ( opts
-                    ^? #optsTrailingWidget
-                    . _Just
-                    . cloneTraversal widgetOptic
-                )
-            ]
       )
   where
     st = argsModel args
@@ -285,6 +280,24 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       if isJust next || (inp == viewer out)
         then Nothing
         else Just out
+    leadingWidgets =
+      maybeToList
+        $ fmap
+          (fieldIcon full opts)
+          ( opts
+              ^? #optsLeadingWidget
+              . _Just
+              . cloneTraversal widgetOptic
+          )
+    trailingWidgets =
+      maybeToList
+        $ fmap
+          (fieldIcon full opts)
+          ( opts
+              ^? #optsTrailingWidget
+              . _Just
+              . cloneTraversal widgetOptic
+          )
     onBlurAction =
       action . PureUpdate $ \prev ->
         prev
@@ -828,7 +841,7 @@ truncateUnicode limit input =
     then input
     else
       take half input
-        <> "..."
+        <> " ... "
         <> MS.takeEnd half input
   where
     full = fromMaybe defTruncateLimit limit

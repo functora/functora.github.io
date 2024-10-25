@@ -139,7 +139,12 @@ menu st =
                           ( inspectExchangeRate $ modelState st
                           )
                         & ( if disabled
-                              then #optsTrailingWidget .~ Nothing
+                              then
+                                (#optsTrailingWidget .~ Nothing)
+                                  . ( #optsLeadingWidget .~ Nothing ::
+                                        Field.Opts Model Action ->
+                                        Field.Opts Model Action
+                                    )
                               else id
                           )
                 )

@@ -40,12 +40,15 @@ mainWidget st =
           $ screenWidget st
        ]
     <> [ keyed "main-footer"
-          . footer_
-            [ style_
-                [ ("text-align", "center"),
-                  ("margin-bottom", "1rem")
+          . Flex.flexRowCenter
+            footer_
+            ( <>
+                [ style_
+                    [ ("text-align", "center"),
+                      ("margin-bottom", "1rem")
+                    ]
                 ]
-            ]
+            )
           $ tosWidget
           : br_ mempty
           : Menu.qrButton st
@@ -113,8 +116,8 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons :: [View Action]
     buttons =
       singleton
-        $ Flex.flexRow
-          p_
+        $ Flex.flexRowCenter
+          section_
           ( mappend
               [ style_
                   [ ("margin-left", "0"),
@@ -183,7 +186,8 @@ totalViewer st =
 tosWidget :: View Action
 tosWidget =
   small_
-    mempty
+    [ style_ [("width", "100%")]
+    ]
     [ Miso.text "\169 2024 ",
       BrowserLink.browserLink
         BrowserLink.Args

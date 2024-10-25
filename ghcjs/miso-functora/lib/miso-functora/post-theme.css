@@ -24,15 +24,26 @@ nav {
   position: initial !important;
 }
 
+nav:before,
+nav:after {
+  content: initial !important;
+}
+
+img,
 input,
+label,
 select,
-button {
-  margin: 0.25rem 0.125rem;
+button,
+textarea {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0.25rem 0.125rem !important;
 }
 
 button {
   padding-left: 1rem;
   padding-right: 1rem;
+  width: unset !important;
 }
 
 header,
@@ -49,6 +60,10 @@ footer:before,
 footer:after {
   min-width: 100%;
   max-width: 100%;
+}
+
+label:before {
+  align-self: start;
 }
 
 textarea {

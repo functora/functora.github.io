@@ -1,5 +1,6 @@
 module Functora.Miso.Widgets.Flex
   ( flexRow,
+    flexRowCenter,
     flexCol,
     flexLeftRight,
   )
@@ -19,10 +20,20 @@ flexRow newTag newAttr =
           [ ("display", "flex"),
             ("flex-wrap", "wrap"),
             ("flex-direction", "row"),
-            ("align-items", "center"),
-            ("justify-content", "center")
+            ("align-items", "center")
           ]
       ]
+
+flexRowCenter ::
+  ([Attribute action] -> [View action] -> View action) ->
+  ([Attribute action] -> [Attribute action]) ->
+  [View action] ->
+  View action
+flexRowCenter newTag newAttr =
+  flexRow newTag
+    $ ( style_ [("justify-content", "center")] :
+      )
+    . newAttr
 
 flexCol ::
   ([Attribute action] -> [View action] -> View action) ->

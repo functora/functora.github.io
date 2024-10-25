@@ -101,9 +101,7 @@ selectCurrency
                     & #optsPlaceholder
                     .~ ("Search" :: Unicode)
                     & #optsExtraAttributes
-                    .~ [ autofocus_ True,
-                         style_ [("flex-grow", "reset")]
-                       ]
+                    .~ [autofocus_ True]
                 )
                 <> [div_ [style_ [("width", "100%")]] mempty]
                 <> currencyListWidget opts args

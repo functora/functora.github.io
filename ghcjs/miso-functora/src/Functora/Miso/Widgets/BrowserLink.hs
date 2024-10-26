@@ -19,7 +19,7 @@ browserLink :: Args model action -> View action
 browserLink Args {argsLink = link, argsLabel = label, argsAction = action} =
   a_
     [ href_ "#!",
-      onClick . action $ Jsm.openBrowserPage link
+      onClick . action . EffectUpdate $ Jsm.openBrowserPage link
     ]
     [ text label
     ]

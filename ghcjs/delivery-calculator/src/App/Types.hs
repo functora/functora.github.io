@@ -468,7 +468,7 @@ stTeleUri st = do
     URI.mkQueryKey "text"
   val <-
     URI.mkQueryValue
-      $ "Hello, I have a question about delivery. I will send the Excel file in the next message."
+      $ "Hello, I have a question about delivery. I will share the Excel file in the next message."
   pure
     $ base
       { URI.uriPath = Just (False, [user]),

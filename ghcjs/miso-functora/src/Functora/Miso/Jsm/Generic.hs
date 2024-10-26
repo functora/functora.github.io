@@ -13,7 +13,9 @@ module Functora.Miso.Jsm.Generic
     selectFile,
     genericPromise,
     printCurrentPage,
-    saveFile,
+    saveFileShow,
+    saveFileShare,
+    saveFileThen,
     fetchUrlAsRfc2397,
   )
 where
@@ -104,11 +106,10 @@ swapAt i j xs
     ival = xs Prelude.!! i
     jval = xs Prelude.!! j
 
-openBrowserPage :: URI -> Update model
-openBrowserPage uri =
-  EffectUpdate $ do
-    pkg <- getPkg
-    void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
+openBrowserPage :: URI -> JSM ()
+openBrowserPage uri = do
+  pkg <- getPkg
+  void $ pkg ^. JS.js1 @Unicode "openBrowserPage" (URI.render uri)
 
 enterOrEscapeBlur :: Unicode -> KeyCode -> Update model
 enterOrEscapeBlur uid (KeyCode code) =
@@ -197,8 +198,26 @@ printCurrentPage name = do
   pkg <- getPkg
   void $ pkg ^. JS.js1 ("printCurrentPage" :: Unicode) name
 
-saveFile :: Unicode -> Unicode -> ByteString -> JSM ()
-saveFile name mime bs = do
+saveFileShow :: Unicode -> Unicode -> ByteString -> JSM ()
+saveFileShow =
+  saveFileThen popupText
+
+saveFileShare :: Unicode -> Unicode -> ByteString -> JSM ()
+saveFileShare =
+  saveFileThen $ \file -> do
+    files <- JS.toJSVal ([file] :: [Unicode])
+    genericPromise @[JS.JSVal] @Unicode "shareFiles" [files] $ \case
+      Nothing -> popupText @Unicode "Failure!"
+      Just {} -> popupText @Unicode "Success!"
+
+saveFileThen ::
+  ( Unicode -> JSM ()
+  ) ->
+  Unicode ->
+  Unicode ->
+  ByteString ->
+  JSM ()
+saveFileThen onSuccess name mime bs = do
   (buf, off, len) <- ghcjsPure $ Buf.fromByteString bs
   ab0 <- ghcjsPure . JS.jsval_ =<< ghcjsPure (Buf.getArrayBuffer buf)
   ab1 <- ab0 ^. JS.jsf ("slice" :: Unicode) ([off, off + len] :: [Int])
@@ -210,7 +229,7 @@ saveFile name mime bs = do
       ]
   genericPromise @[JS.JSVal] @Unicode "saveFile" argv $ \case
     Nothing -> pure ()
-    Just str -> popupText str
+    Just str -> onSuccess str
 
 fetchUrlAsRfc2397 :: Unicode -> (Maybe ByteString -> JSM ()) -> JSM ()
 fetchUrlAsRfc2397 url after = do

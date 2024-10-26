@@ -356,4 +356,5 @@ linksWidget st =
     openBrowser =
       PushUpdate
         . Instant
+        . EffectUpdate
         . Jsm.openBrowserPage

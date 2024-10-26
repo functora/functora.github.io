@@ -144,6 +144,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                 onClick
                   . PushUpdate
                   . Instant
+                  . EffectUpdate
                   . either impureThrow Jsm.openBrowserPage
                   $ stTeleUri st
               ]
@@ -155,12 +156,12 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                 onClick . PushUpdate . Instant . EffectUpdate $ do
                   let doc = st ^. #modelState
                   imgs <- Jsm.fetchBlobUris doc
-                  Jsm.saveFile (Xlsx.xlsxFile doc) Xlsx.xlsxMime
+                  Jsm.saveFileShare (Xlsx.xlsxFile doc) Xlsx.xlsxMime
                     . from @BL.ByteString @ByteString
                     $ Xlsx.newXlsx doc imgs
               ]
               [ icon Icon.IconDownload,
-                text " Download excel file"
+                text " Share excel file"
               ]
           ]
 

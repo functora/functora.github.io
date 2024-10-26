@@ -84,6 +84,7 @@ common pkg
     , binary
     , bytestring
     , casing
+    , containers
     , functora-ghcjs
     , fuzzy
     , jsaddle

@@ -43,15 +43,19 @@ module Functora.Miso.Types
     uniqueToIdentity,
     identityToUnique,
     keyed,
+    appendAttrs,
     prependViews,
     TopOrBottom (..),
     OnlineOrOffline (..),
     StaticOrDynamic (..),
     LeadingOrTrailing (..),
+    FocusedOrBlurred (..),
     OpenedOrClosed (..),
     Update (..),
     unUpdate,
     themeCssFile,
+    noopAll,
+    noop,
     module X,
   )
 where
@@ -59,6 +63,7 @@ where
 import Data.Foldable (foldMap)
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
+import qualified Data.Map as Map
 import Functora.Cfg
 import Functora.Miso.Prelude
 import Functora.Miso.Theme as X (Theme)
@@ -122,6 +127,7 @@ data Field a f = Field
     fieldInput :: f Unicode,
     fieldOutput :: a,
     fieldModalState :: OpenedOrClosed,
+    fieldFocusState :: FocusedOrBlurred,
     fieldRequired :: Bool,
     fieldOpts :: FieldOpts
   }
@@ -176,6 +182,7 @@ newField typ output newInput = do
         fieldInput = input,
         fieldOutput = output,
         fieldModalState = Closed,
+        fieldFocusState = Blurred,
         fieldRequired = False,
         fieldOpts = defFieldOpts
       }
@@ -187,6 +194,7 @@ newFieldId typ viewer output =
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
       fieldModalState = Closed,
+      fieldFocusState = Blurred,
       fieldRequired = False,
       fieldOpts = defFieldOpts
     }
@@ -497,6 +505,11 @@ keyed key = \case
   Node x0 x1 Nothing x2 x3 -> Node x0 x1 (Just $ Miso.Key key) x2 x3
   x -> x
 
+appendAttrs :: [Attribute action] -> View action -> View action
+appendAttrs attrs = \case
+  Node x0 x1 x2 x3 x4 -> Node x0 x1 x2 (x3 <> attrs) x4
+  x -> x
+
 prependViews :: [View action] -> View action -> View action
 prependViews xs = \case
   Node a b c d e -> Node a b c d $ xs <> e
@@ -526,6 +539,12 @@ data LeadingOrTrailing
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType LeadingOrTrailing
 
+data FocusedOrBlurred
+  = Focused
+  | Blurred
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving (Binary) via GenericType FocusedOrBlurred
+
 data OpenedOrClosed
   = Opened
   | Closed
@@ -554,3 +573,22 @@ themeCssFile =
     . from @String @Unicode
     . Casing.kebab
     . inspect @String
+
+noopAll :: (Update model -> action) -> [Attribute action]
+noopAll action =
+  fmap (noop action)
+    $ Map.keys defaultEvents
+
+noop :: (Update model -> action) -> Unicode -> Attribute action
+noop action event =
+  onWithOptions
+    defaultOptions
+      { preventDefault = True,
+        stopPropagation = True
+      }
+    event
+    emptyDecoder
+    . const
+    . action
+    . EffectUpdate
+    $ pure ()

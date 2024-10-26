@@ -407,6 +407,10 @@ stUri st = do
   qxs <-
     stQuery
       . Syb.everywhere
+        ( Syb.mkT
+            $ const Blurred
+        )
+      . Syb.everywhere
         ( Syb.mkT $ \x ->
             if x ^. #fieldType /= FieldTypeImage
               then x :: Field DynamicField Identity

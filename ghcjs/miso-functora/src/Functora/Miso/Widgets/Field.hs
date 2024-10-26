@@ -52,7 +52,7 @@ data Opts model action = Opts
     optsOnInputAction :: Maybe (Update model -> action),
     optsLeadingWidget :: Maybe (OptsWidgetPair model action),
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
-    optsOnKeyDownAction :: Uid -> KeyCode -> Update model,
+    optsOnKeyDownAction :: Unicode -> KeyCode -> Update model,
     optsExtraAttributes :: [Attribute action],
     optsLeftRightViewer :: [View action] -> [View action] -> [View action],
     optsExtraAttributesImage :: [Attribute action]
@@ -144,74 +144,66 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           _ -> mempty
       fieldModal args x1
   )
-    <> maybe
-      id
-      ( \x ->
-          singleton
-            . keyed (decodeUtf8 . unTagged $ htmlUid uid)
-            . label_
-              [ style_
-                  [ ("display", "flex"),
-                    ("flex-wrap", "wrap"),
-                    ("flex-direction", "row"),
-                    ("align-items", "center")
-                  ]
-              ]
-            . ( span_
-                  [style_ [("width", "100%")]]
-                  [text x]
-                  :
-              )
-      )
-      (optsLabel opts)
-      ( leadingWidgets
-          <> [ input_
-                $ ( catMaybes
-                      [ Just
-                          $ style_
-                            [ ("width", "0"),
-                              ("flex-grow", "1")
-                            ],
-                        Just . type_ $ htmlFieldType typ,
-                        fmap required_
-                          $ st
-                          ^? cloneTraversal optic
-                          . #fieldRequired,
-                        fmap
-                          (textProp "defaultValue")
-                          ( st
-                              ^? cloneTraversal
-                                optic
-                              . #fieldInput
-                              . #uniqueValue
-                          ),
-                        Just
-                          $ onInput onInputAction,
-                        Just
-                          . disabled_
-                          $ opts
-                          ^. #optsDisabled,
-                        fmap placeholder_
-                          $ if null placeholder
-                            then optsLabel opts
-                            else Just placeholder,
-                        Just
-                          . id_
-                          . either impureThrow id
-                          . decodeUtf8Strict
-                          . unTagged
-                          $ htmlUid uid,
-                        Just
-                          . onKeyDown
-                          $ action
-                          . optsOnKeyDownAction opts uid,
-                        Just
-                          $ onBlur onBlurAction
-                      ]
+    <> ( case optsLabel opts of
+          Nothing -> id
+          Just x ->
+            singleton
+              . label_
+                [ style_
+                    [ ("display", "flex"),
+                      ("flex-wrap", "wrap"),
+                      ("flex-direction", "row"),
+                      ("align-items", "center")
+                    ]
+                ]
+              . ( ( span_
+                      [style_ [("width", "100%")]]
+                      [text x]
                   )
-                <> ( opts ^. #optsExtraAttributes
-                   )
-             ]
+                    :
+                )
+       )
+      ( [ input_
+            $ ( catMaybes
+                  [ Just
+                      $ style_
+                        [ ("width", "0"),
+                          ("flex-grow", "1")
+                        ],
+                    Just . type_ $ htmlFieldType typ,
+                    fmap required_
+                      $ st
+                      ^? cloneTraversal optic
+                      . #fieldRequired,
+                    fmap
+                      (textProp "defaultValue")
+                      ( st
+                          ^? cloneTraversal
+                            optic
+                          . #fieldInput
+                          . #uniqueValue
+                      ),
+                    Just
+                      $ onInput onInputAction,
+                    Just
+                      . disabled_
+                      $ opts
+                      ^. #optsDisabled,
+                    fmap placeholder_
+                      $ if null placeholder
+                        then optsLabel opts
+                        else Just placeholder,
+                    Just $ id_ uidTxt,
+                    Just . onKeyDown $ action . optsOnKeyDownAction opts uidTxt,
+                    Just $ onBlur onBlurAction,
+                    Just $ onFocus onFocusAction
+                  ]
+              )
+            <> ( opts ^. #optsExtraAttributes
+               )
+        ]
+          <> dummyWidgets
+          <> leadingWidgets
           <> trailingWidgets
           <> ( if typ /= FieldTypeImage
                 then mempty
@@ -227,23 +219,16 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                           accept_ "image/*",
                           onInput onInputFileAction,
                           style_ [("width", "100%")],
-                          id_
-                            . either impureThrow ("file-" <>)
-                            . decodeUtf8Strict
-                            . unTagged
-                            $ htmlUid uid
+                          id_ $ "file-" <> uidTxt
                         ]
                     ]
                     <> ( if null src
                           then mempty
                           else
                             [ img_
-                                ( loading_ "lazy"
-                                    : src_ src
-                                    : optsExtraAttributesImage opts
-                                ),
-                              br_
-                                mempty
+                                $ loading_ "lazy"
+                                : src_ src
+                                : optsExtraAttributesImage opts
                             ]
                        )
              )
@@ -268,6 +253,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
         ^? cloneTraversal optic
         . #fieldInput
         . #uniqueUid
+    uidTxt =
+      either impureThrow id
+        . decodeUtf8Strict
+        . unTagged
+        $ htmlUid uid
     getInput st' =
       st' ^? cloneTraversal optic . #fieldInput . #uniqueValue
     getOutput st' =
@@ -280,19 +270,42 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
       if isJust next || (inp == viewer out)
         then Nothing
         else Just out
-    leadingWidgets =
+    dummyWidgets =
+      [ button_
+          ( style_
+              [ ("display", "none")
+              ]
+              : noopAll action
+          )
+          mempty
+      ]
+    leadingWidgets = do
+      let focused =
+            st ^? cloneTraversal optic . #fieldFocusState == Just Focused
       maybeToList
         $ fmap
-          (fieldIcon full opts)
+          ( ( if focused
+                then id
+                else appendAttrs [style_ [("display", "none")]]
+            )
+              . fieldIcon full opts
+          )
           ( opts
               ^? #optsLeadingWidget
               . _Just
               . cloneTraversal widgetOptic
           )
-    trailingWidgets =
+    trailingWidgets = do
+      let focused =
+            st ^? cloneTraversal optic . #fieldFocusState == Just Focused
       maybeToList
         $ fmap
-          (fieldIcon full opts)
+          ( ( if focused
+                then id
+                else appendAttrs [style_ [("display", "none")]]
+            )
+              . fieldIcon full opts
+          )
           ( opts
               ^? #optsTrailingWidget
               . _Just
@@ -308,6 +321,15 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           & cloneTraversal optic
           . #fieldOutput
           %~ maybe id (const . id) (getOutput prev)
+          & cloneTraversal optic
+          . #fieldFocusState
+          .~ Blurred
+    onFocusAction =
+      action
+        . PureUpdate
+        $ cloneTraversal optic
+        . #fieldFocusState
+        .~ Focused
     onInputAction txt =
       fromMaybe action (optsOnInputAction opts) . PureUpdate $ \prev ->
         let next =
@@ -322,12 +344,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
               %~ maybe id (const . id) (getOutput next)
     onInputFileAction =
       const . fromMaybe action (optsOnInputAction opts) . EffectUpdate $ do
-        el <-
-          getElementById
-            . either impureThrow ("file-" <>)
-            . decodeUtf8Strict
-            . unTagged
-            $ htmlUid uid
+        el <- getElementById $ "file-" <> uidTxt
         elExist <- ghcjsPure $ JS.isTruthy el
         if not elExist
           then Jsm.popupText @Unicode "File does not exist!"
@@ -416,30 +433,26 @@ fieldIcon full opts = \case
         Just txt -> Jsm.shareText txt
   ClearWidget ->
     fieldIconSimple opts Icon.IconClose mempty
-      . ( fromMaybe action
-            $ optsOnInputAction opts
+      . ( fromMaybe action $ optsOnInputAction opts
         )
-      $ PureAndImpureUpdate
+      $ PureAndEffectUpdate
         ( cloneTraversal optic
             . #fieldInput
             . #uniqueValue
             .~ mempty
         )
         ( do
-            focus
-              . either impureThrow id
-              . decodeUtf8Strict @Unicode
-              . unTagged
-              $ htmlUid uid
+            uidTxt <-
+              either throw pure
+                . decodeUtf8Strict
+                . unTagged
+                $ htmlUid uid
+            focus uidTxt
             void
               . JS.eval
-              . either impureThrow id
-              . decodeUtf8Strict @Unicode
-              . unTagged
               $ "var el = document.getElementById('"
-              <> htmlUid uid
+              <> uidTxt
               <> "'); if (el) el.value = '';"
-            pure id
         )
   PasteWidget ->
     fieldIconSimple opts Icon.IconPaste mempty
@@ -520,7 +533,7 @@ fieldIconSimple ::
   View action
 fieldIconSimple opts i attrs action =
   button_
-    ( [onClick action]
+    ( [onMouseDown action]
         <> attrs
     )
     [ optsIcon opts i
@@ -785,10 +798,7 @@ genericFieldViewer opts0 args widget =
               . #fieldOpts
               . #fieldOptsTruncateState
               . _Just
-              %~ ( \case
-                    Closed -> Opened
-                    Opened -> Closed
-                 )
+              %~ nextEnum
       )
         <> ( if isNothing $ opts ^. #fieldOptsQrState
               then mempty
@@ -804,10 +814,7 @@ genericFieldViewer opts0 args widget =
                   . #fieldOpts
                   . #fieldOptsQrState
                   . _Just
-                  %~ ( \case
-                        Closed -> Opened
-                        Opened -> Closed
-                     )
+                  %~ nextEnum
            )
         <> ( if not allowCopy
               then mempty
@@ -881,8 +888,16 @@ insertAction Full {fullArgs = args, fullParser = parser} selector =
               )
             $ do
               whenJust
-                (prev ^? cloneTraversal optic . #fieldInput . #uniqueUid)
-                Jsm.blur
+                ( prev
+                    ^? cloneTraversal optic
+                    . #fieldInput
+                    . #uniqueUid
+                )
+                $ blur
+                . either impureThrow id
+                . decodeUtf8Strict
+                . unTagged
+                . htmlUid
               Jsm.popupText @Unicode
                 "Success!"
   where

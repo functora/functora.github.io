@@ -5,6 +5,7 @@ module App.Xlsx
   )
 where
 
+import qualified App.I18n as I18n
 import App.Types
 import Codec.Xlsx
 import qualified Data.ByteString.Lazy as BL
@@ -28,7 +29,7 @@ newXlsx st imgs = xlsx
         .~ newRowProps rows
         & #wsColumnsProperties
         .~ newColProps (fmap snd rows)
-        & addHeader st
+        & addHeader
         & flip (foldl $ addRow imgs) rows
         & addFooter st (RowIndex (length rows) + 2)
     rows =
@@ -59,8 +60,8 @@ newColProps rows = nubOrd $ do
     else
       pure
         ColumnsProperties
-          { cpMin = colIdx,
-            cpMax = colIdx,
+          { cpMin = mapCol colIdx,
+            cpMax = mapCol colIdx,
             cpWidth = Just 45,
             cpStyle = Nothing,
             cpHidden = False,
@@ -68,30 +69,16 @@ newColProps rows = nubOrd $ do
             cpBestFit = False
           }
 
-addHeader :: St Unique -> Worksheet -> Worksheet
-addHeader st sheet =
-  case sortOn length headers of
-    [] -> sheet
-    (rowVal : _) ->
-      foldl
-        ( \acc (colIdx, colVal) ->
-            acc
-              & cellValueAt (1, colIdx)
-              ?~ CellText (from @Unicode @Text colVal)
-        )
-        sheet
-        $ zip [1 ..] rowVal
-  where
-    headers :: [[Unicode]]
-    headers =
-      fmap
-        ( ^..
-            #assetFieldPairs
-              . each
-              . #fieldPairKey
-              . #fieldOutput
-        )
-        $ stAssets st
+addHeader :: Worksheet -> Worksheet
+addHeader sheet =
+  foldl
+    ( \acc (colIdx, colVal) ->
+        acc
+          & cellValueAt (1, colIdx)
+          ?~ CellText (from @Unicode @Text colVal)
+    )
+    sheet
+    $ zip [1 ..] I18n.xlsxHeaderRu
 
 addFooter :: St Unique -> RowIndex -> Worksheet -> Worksheet
 addFooter st rowOffset sheet =
@@ -127,7 +114,7 @@ addRow ::
 addRow imgs sheet (rowIdx, rowVal) =
   foldl
     ( \acc (colIdx, colVal) ->
-        addCol imgs acc rowIdx colIdx colVal
+        addCol imgs acc rowIdx (mapCol colIdx) colVal
     )
     sheet
     $ zip [1 ..] rowVal
@@ -200,3 +187,12 @@ xlsxFile st =
 
 xlsxMime :: Unicode
 xlsxMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+mapCol :: (Integral n) => n -> n
+mapCol = \case
+  1 -> 2
+  2 -> 3
+  3 -> 6
+  4 -> 5
+  5 -> 10
+  n -> n + 10

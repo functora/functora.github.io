@@ -464,14 +464,11 @@ stTeleUri st = do
       ^. #modelState
       . #stMerchantTele
       . #fieldOutput
-  link <-
-    stUri st
   key <-
     URI.mkQueryKey "text"
   val <-
     URI.mkQueryValue
-      $ "Hello, I have a question about the delivery of the following items: "
-      <> URI.render link
+      $ "Hello, I have a question about delivery. I will send the Excel file in the next message."
   pure
     $ base
       { URI.uriPath = Just (False, [user]),

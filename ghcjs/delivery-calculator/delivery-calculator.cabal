@@ -16,6 +16,7 @@ common pkg
   hs-source-dirs:     src
   js-sources:         static/app.js
   other-modules:
+    App.I18n
     App.Jsm
     App.Types
     App.Widgets.Asset

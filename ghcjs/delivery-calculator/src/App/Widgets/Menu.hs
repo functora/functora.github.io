@@ -84,18 +84,29 @@ menu st =
           Dialog.argsOptic = #modelMenu,
           Dialog.argsAction = PushUpdate . Instant,
           Dialog.argsContent =
-            Currency.selectCurrency
-              Currency.defOpts
-                { Currency.optsButtonLabel = Just "Marketplace currency",
-                  Currency.optsExtraOnClick = #modelLoading .~ True
+            Field.textField
+              Field.Args
+                { Field.argsModel = st,
+                  Field.argsOptic = #modelState . #stOrderId,
+                  Field.argsAction = PushUpdate . Instant,
+                  Field.argsEmitter = pushActionQueue st . Instant
                 }
-              Currency.Args
-                { Currency.argsModel = st,
-                  Currency.argsOptic = #modelState . #stAssetCurrency,
-                  Currency.argsAction = PushUpdate . Instant,
-                  Currency.argsEmitter = pushActionQueue st . Instant,
-                  Currency.argsCurrencies = #modelCurrencies
-                }
+              ( Field.defOpts
+                  & #optsLabel
+                  .~ Just ("Order id" :: Unicode)
+              )
+              <> Currency.selectCurrency
+                Currency.defOpts
+                  { Currency.optsButtonLabel = Just "Marketplace currency",
+                    Currency.optsExtraOnClick = #modelLoading .~ True
+                  }
+                Currency.Args
+                  { Currency.argsModel = st,
+                    Currency.argsOptic = #modelState . #stAssetCurrency,
+                    Currency.argsAction = PushUpdate . Instant,
+                    Currency.argsEmitter = pushActionQueue st . Instant,
+                    Currency.argsCurrencies = #modelCurrencies
+                  }
               <> Currency.selectCurrency
                 Currency.defOpts
                   { Currency.optsButtonLabel = Just "Merchant currency",

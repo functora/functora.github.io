@@ -192,8 +192,11 @@ newImg (RowIndex rowIdx) (ColumnIndex colIdx) imgIdx rfc2397 =
             fiContents = rfc2397Bytes rfc2397
           }
 
-xlsxFile :: Unicode
-xlsxFile = "delivery-calculator.xlsx"
+xlsxFile :: St Unique -> Unicode
+xlsxFile st =
+  "delivery-calculator-"
+    <> (st ^. #stOrderId . #fieldOutput)
+    <> ".xlsx"
 
 xlsxMime :: Unicode
 xlsxMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

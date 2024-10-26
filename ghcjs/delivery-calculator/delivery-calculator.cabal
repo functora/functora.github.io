@@ -97,6 +97,7 @@ common pkg
     , network-uri
     , regex-compat
     , syb
+    , time
     , xlsx
 
   if flag(ghcid)

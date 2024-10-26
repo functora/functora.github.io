@@ -7,6 +7,7 @@ module App.Types
     St (..),
     newSt,
     Asset (..),
+    newOrderId,
     newAsset,
     verifyAsset,
     newFieldPair,
@@ -40,6 +41,7 @@ import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
+import qualified Data.Time.Format as TF
 import qualified Data.Version as Version
 import Functora.Cfg
 import Functora.Miso.Prelude
@@ -94,6 +96,7 @@ data St f = St
     stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
     stPreview :: Field Unicode f,
+    stOrderId :: Field Unicode f,
     stScreen :: Screen,
     stEnableTheme :: Bool,
     stTheme :: Theme
@@ -123,6 +126,7 @@ newSt = do
   tele <- newTextField "Functora"
   fee <- newDynamicField $ DynamicFieldNumber 2
   pre <- newTextField "Delivery Calculator"
+  oid <- newOrderId ct
   pure
     St
       { stAssets = mempty,
@@ -134,6 +138,7 @@ newSt = do
         stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
+        stOrderId = oid,
         stScreen = Main,
         stEnableTheme = True,
         stTheme = Theme.Matcha
@@ -159,6 +164,12 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
+
+newOrderId :: (MonadIO m) => UTCTime -> m (Field Unicode Unique)
+newOrderId ct =
+  newTextField
+    . from @String @Unicode
+    $ TF.formatTime TF.defaultTimeLocale "%Y%m%d%H%M%S" ct
 
 newAsset :: (MonadIO m) => m (Asset Unique)
 newAsset = do

@@ -382,10 +382,15 @@ syncInputs st = do
 
 evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
 evalModel prev = do
+  let oid = prev ^. #modelState . #stOrderId
   let oof = prev ^. #modelState . #stOnlineOrOffline
   let web = prev ^. #modelWebOpts
+  updateOid <-
+    if null $ oid ^. #fieldOutput
+      then getCurrentTime >>= newOrderId >>= pure . (#modelState . #stOrderId .~)
+      else pure id
   case oof of
-    Offline -> pure id
+    Offline -> pure updateOid
     Online ->
       Rates.withMarket web (prev ^. #modelMarket) $ do
         let prevCurs :: [Money.CurrencyInfo] =
@@ -443,7 +448,8 @@ evalModel prev = do
         let rateUpdated =
               nextQuote ^. #quoteCreatedAt
         pure
-          $ ( #modelState
+          $ updateOid
+          . ( #modelState
                 %~ Syb.everywhere
                   ( Syb.mkT $ \cur ->
                       fromMaybe cur

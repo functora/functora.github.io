@@ -155,7 +155,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                 onClick . PushUpdate . Instant . EffectUpdate $ do
                   let doc = st ^. #modelState
                   imgs <- Jsm.fetchBlobUris doc
-                  Jsm.saveFile Xlsx.xlsxFile Xlsx.xlsxMime
+                  Jsm.saveFile (Xlsx.xlsxFile doc) Xlsx.xlsxMime
                     . from @BL.ByteString @ByteString
                     $ Xlsx.newXlsx doc imgs
               ]

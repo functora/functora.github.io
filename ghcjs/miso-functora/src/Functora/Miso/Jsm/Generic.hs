@@ -150,15 +150,17 @@ selectBarcode after =
     $ after
     . fmap strip
 
-selectClipboard :: (Maybe Unicode -> JSM ()) -> JSM ()
-selectClipboard after =
-  genericPromise @[Unicode] @Unicode "selectClipboard" mempty
+selectClipboard :: Maybe Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectClipboard opfsName after = do
+  jopfsName <- JS.toJSVal opfsName
+  genericPromise @[JS.JSVal] @Unicode "selectClipboard" [jopfsName]
     $ after
     . fmap strip
 
-selectFile :: JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
-selectFile file after =
-  genericPromise @[JS.JSVal] @Unicode "selectFile" [file]
+selectFile :: Maybe Unicode -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectFile opfsName file after = do
+  jopfsName <- JS.toJSVal opfsName
+  genericPromise @[JS.JSVal] @Unicode "selectFile" [file, jopfsName]
     $ after
     . fmap strip
 

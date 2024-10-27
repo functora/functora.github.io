@@ -42,12 +42,12 @@ export async function compressImage(quality, prevImage) {
   return nextImage;
 }
 
-export async function selectClipboard() {
+export async function selectClipboard(opfsName = null) {
   const { value } = await Clipboard.read();
-  return await selectDataUrl(value);
+  return await selectDataUrl(value, opfsName);
 }
 
-export async function selectFile(file) {
+export async function selectFile(file, opfsName = null) {
   const value = await new Promise((resolve, reject) => {
     var fr = new FileReader();
     fr.onload = () => {
@@ -56,20 +56,37 @@ export async function selectFile(file) {
     fr.onerror = reject;
     fr.readAsDataURL(file);
   });
-  return await selectDataUrl(value);
+  return await selectDataUrl(value, opfsName);
 }
 
-export async function selectDataUrl(value) {
+export async function selectDataUrl(value, opfsName = null) {
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
     let blob = new Blob([u8a], { type: mime });
     if (mime.startsWith("image")) {
       blob = await compressImage(1, blob);
     }
+    if (opfsName) {
+      await opfsWrite(value, opfsName);
+    }
     return URL.createObjectURL(blob);
   } catch (e) {
     return value;
   }
+}
+
+export async function opfsWrite(value, opfsName) {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const handle = await root.getFileHandle(opfsName, { create: true });
+    const stream = await handle.createWritable();
+    await stream.write(value);
+    await stream.close();
+    console.log("OPFS success", opfsName, handle);
+  } catch (e) {
+    console.log("OPFS failure", opfsName, e);
+  }
+  return null;
 }
 
 export async function openBrowserPage(url) {

@@ -13,11 +13,12 @@ import qualified Functora.Miso.Widgets.Icon as Icon
 
 assetsViewer :: Model -> [View Action]
 assetsViewer st = do
-  idx <- fmap fst . zip [0 ..] $ st ^. #modelState . #stAssets
-  assetViewer st idx
+  let assets = st ^. #modelState . #stAssets
+  idx <- fmap fst $ zip [0 ..] assets
+  assetViewer st idx $ "asset-" <> inspect (length assets - idx - 1)
 
-assetViewer :: Model -> Int -> [View Action]
-assetViewer st idx =
+assetViewer :: Model -> Int -> Unicode -> [View Action]
+assetViewer st idx opfsPrefix =
   [ fieldset_ mempty
       $ ( legend_
             mempty
@@ -36,7 +37,7 @@ assetViewer st idx =
                 ]
             ]
         )
-      : FieldPairs.fieldPairsViewer fieldPairsOpts args
+      : FieldPairs.fieldPairsViewer (fieldPairsOpts opfsPrefix) args
   ]
     <> ( Dialog.dialog
           Dialog.defOpts
@@ -69,7 +70,7 @@ assetViewer st idx =
                 failures False
                   <> FieldPairs.fieldPairsEditor
                     args
-                    fieldPairsOpts
+                    (fieldPairsOpts opfsPrefix)
                       { FieldPairs.optsAdvanced = False
                       }
             }
@@ -124,13 +125,18 @@ assetViewer st idx =
         . #stAssets
         . ix idx
 
-fieldPairsOpts :: FieldPairs.Opts model action
-fieldPairsOpts =
+fieldPairsOpts :: Unicode -> FieldPairs.Opts model action
+fieldPairsOpts opfsPrefix =
   FieldPairs.defOpts
     { FieldPairs.optsField =
         Field.defOpts
           { Field.optsExtraAttributesImage =
               [ style_ [("max-height", "10vh")]
               ]
-          }
+          },
+      FieldPairs.optsOpfsName =
+        Just
+          $ (opfsPrefix <>)
+          . ("-field-" <>)
+          . inspect
     }

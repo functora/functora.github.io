@@ -46,10 +46,14 @@ data Full model action t f = Full
 data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
     optsLabel :: Maybe Unicode,
+    optsOpfsName :: Maybe Unicode,
     optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe (Update model -> action),
+    --
+    -- TODO : optsTrailingWidgets :: [Unicode -> FocusedOrBlurred -> OptsWidget]
+    --
     optsLeadingWidget :: Maybe (OptsWidgetPair model action),
     optsTrailingWidget :: Maybe (OptsWidgetPair model action),
     optsOnKeyDownAction :: Unicode -> KeyCode -> Update model,
@@ -70,6 +74,7 @@ defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
       optsLabel = Nothing,
+      optsOpfsName = Nothing,
       optsDisabled = False,
       optsFullWidth = False,
       optsPlaceholder = mempty,
@@ -350,7 +355,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           then Jsm.popupText @Unicode "File does not exist!"
           else do
             file <- el JS.! ("files" :: Unicode) JS.!! 0
-            Jsm.selectFile file $ \case
+            Jsm.selectFile (optsOpfsName opts) file $ \case
               Nothing -> Jsm.popupText @Unicode "File is not selected!"
               Just url -> argsEmitter args . PureUpdate $ do
                 let next =
@@ -456,7 +461,9 @@ fieldIcon full opts = \case
         )
   PasteWidget ->
     fieldIconSimple opts Icon.IconPaste mempty
-      $ insertAction full Jsm.selectClipboard
+      . insertAction full
+      . Jsm.selectClipboard
+      $ optsOpfsName opts
   ScanQrWidget ->
     fieldIconSimple opts Icon.IconQrCode mempty
       $ insertAction full Jsm.selectBarcode

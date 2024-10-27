@@ -11,6 +11,7 @@ module Functora.Miso.Jsm.Generic
     selectBarcode,
     selectClipboard,
     selectFile,
+    opfsRead,
     genericPromise,
     printCurrentPage,
     saveFileShow,
@@ -161,6 +162,12 @@ selectFile :: Maybe Unicode -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
 selectFile opfsName file after = do
   jopfsName <- JS.toJSVal opfsName
   genericPromise @[JS.JSVal] @Unicode "selectFile" [file, jopfsName]
+    $ after
+    . fmap strip
+
+opfsRead :: Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
+opfsRead opfsName after = do
+  genericPromise @[Unicode] @Unicode "opfsRead" [opfsName]
     $ after
     . fmap strip
 

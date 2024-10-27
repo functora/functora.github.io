@@ -82,11 +82,26 @@ export async function opfsWrite(value, opfsName) {
     const stream = await handle.createWritable();
     await stream.write(value);
     await stream.close();
-    console.log("OPFS success", opfsName, handle);
+    console.log("OPFS write success", opfsName, handle);
   } catch (e) {
-    console.log("OPFS failure", opfsName, e);
+    console.log("OPFS write failure", opfsName, e);
   }
   return null;
+}
+
+export async function opfsRead(opfsName) {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const handle = await root.getFileHandle(opfsName);
+    const file = await handle.getFile();
+    const uri = await file.text();
+    const res = await selectDataUrl(uri);
+    console.log("OPFS read success", opfsName, res);
+    return res;
+  } catch (e) {
+    console.log("OPFS read failure", opfsName, e);
+    return null;
+  }
 }
 
 export async function openBrowserPage(url) {

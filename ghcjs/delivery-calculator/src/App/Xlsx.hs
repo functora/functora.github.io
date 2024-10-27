@@ -10,6 +10,7 @@ import App.Types
 import Codec.Xlsx
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as Map
+import qualified Data.Time.Format as TF
 import Functora.Miso.Prelude
 import Lens.Micro ((?~), (^..))
 
@@ -31,7 +32,6 @@ newXlsx st imgs = xlsx
         .~ newColProps (fmap snd rows)
         & addHeader
         & flip (foldl $ addRow imgs) rows
-        & addFooter st (RowIndex (length rows) + 2)
     rows =
       zip [2 ..]
         $ fmap
@@ -79,32 +79,6 @@ addHeader sheet =
     )
     sheet
     $ zip [1 ..] I18n.xlsxHeaderRu
-
-addFooter :: St Unique -> RowIndex -> Worksheet -> Worksheet
-addFooter st rowOffset sheet =
-  foldl
-    ( \acc (rowIdx, rowVal) ->
-        acc
-          & cellValueAt (rowOffset + rowIdx, 1)
-          ?~ CellText
-            ( from @Unicode @Text
-                $ rowVal
-                ^. #fieldPairKey
-                . #fieldInput
-                . #runIdentity
-            )
-            & cellValueAt (rowOffset + rowIdx, 2)
-          ?~ CellText
-            ( from @Unicode @Text
-                $ rowVal
-                ^. #fieldPairValue
-                . #fieldInput
-                . #runIdentity
-            )
-    )
-    sheet
-    . zip [1 ..]
-    $ newTotal st
 
 addRow ::
   Map Unicode Rfc2397 ->
@@ -179,10 +153,13 @@ newImg (RowIndex rowIdx) (ColumnIndex colIdx) imgIdx rfc2397 =
             fiContents = rfc2397Bytes rfc2397
           }
 
-xlsxFile :: St Unique -> Unicode
-xlsxFile st =
-  "delivery-calculator-"
-    <> (st ^. #stOrderId . #fieldOutput)
+xlsxFile :: (MonadIO m) => m Unicode
+xlsxFile = do
+  ct <- getCurrentTime
+  pure
+    . from @String @Unicode
+    $ "delivery-calculator-"
+    <> TF.formatTime TF.defaultTimeLocale "%Y%m%d%H%M%S" ct
     <> ".xlsx"
 
 xlsxMime :: Unicode

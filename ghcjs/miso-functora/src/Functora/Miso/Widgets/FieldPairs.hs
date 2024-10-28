@@ -23,7 +23,7 @@ data Args model action f = Args
 
 data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
-    optsField :: Field.Opts model action,
+    optsField :: Int -> Field.Opts model action,
     optsAdvanced :: Bool
   }
   deriving stock (Generic)
@@ -32,7 +32,7 @@ defOpts :: Opts model action
 defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
-      optsField = Field.defOpts,
+      optsField = const Field.defOpts,
       optsAdvanced = True
     }
 
@@ -78,7 +78,7 @@ fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
           then mempty
           else
             Field.fieldViewer
-              ( optsField opts
+              ( optsField opts idx
                   & #optsIcon
                   .~ optsIcon opts
                   & #optsLeftRightViewer
@@ -131,7 +131,7 @@ fieldPairEditor
           Field.argsAction = action,
           Field.argsEmitter = emitter
         }
-      ( optsField opts
+      ( optsField opts idx
           & #optsLabel
           .~ Just
             ( fromMaybe ("#" <> inspect (idx + 1))
@@ -160,7 +160,7 @@ fieldPairEditor
           Field.argsAction = action,
           Field.argsEmitter = emitter
         }
-      ( optsField opts
+      ( optsField opts idx
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
           & #optsTrailingWidgets
@@ -177,7 +177,7 @@ fieldPairEditor
             Field.argsAction = action,
             Field.argsEmitter = emitter
           }
-        ( optsField opts
+        ( optsField opts idx
             & #optsPlaceholder
             .~ ( "Value "
                   <> idxTxt

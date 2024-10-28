@@ -27,6 +27,7 @@ newModel webOpts mSt uri = do
     Model
       { modelMenu = Closed,
         modelLinks = Closed,
+        modelMarketLinks = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
         modelUriViewer = mempty,

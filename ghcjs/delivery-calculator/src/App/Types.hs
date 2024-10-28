@@ -65,6 +65,7 @@ import qualified Text.URI as URI
 data Model = Model
   { modelMenu :: OpenedOrClosed,
     modelLinks :: OpenedOrClosed,
+    modelMarketLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelUriViewer :: [FieldPair DynamicField Unique],

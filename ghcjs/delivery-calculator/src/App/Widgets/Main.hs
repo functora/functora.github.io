@@ -3,6 +3,7 @@ module App.Widgets.Main (mainWidget) where
 import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Asset as Asset
+import qualified App.Widgets.MarketLinks as MarketLinks
 import qualified App.Widgets.Menu as Menu
 import qualified App.Xlsx as Xlsx
 import qualified Data.ByteString.Lazy as BL
@@ -53,6 +54,7 @@ mainWidget st =
           : br_ mempty
           : Menu.qrButton st
           : Menu.linksWidget st
+            <> MarketLinks.marketLinks st
        ]
     <> ( if not $ st ^. #modelLoading
           then mempty

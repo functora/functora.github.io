@@ -41,6 +41,7 @@ data Icon
   | IconDollar
   | IconCoins
   | IconExcel
+  | IconShopping
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -79,6 +80,7 @@ data Fa
   | FaDollarSign
   | FaCoins
   | FaFileExcel
+  | FaCartShopping
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -115,6 +117,7 @@ instance From Icon Fa where
     IconDollar -> FaDollarSign
     IconCoins -> FaCoins
     IconExcel -> FaFileExcel
+    IconShopping -> FaCartShopping
 
 instance IsIcon Fa where
   icon x =

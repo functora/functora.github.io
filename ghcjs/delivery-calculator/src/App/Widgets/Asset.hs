@@ -68,11 +68,7 @@ assetViewer st idx =
               Dialog.argsAction = PushUpdate . Instant,
               Dialog.argsContent =
                 failures False
-                  <> FieldPairs.fieldPairsEditor
-                    args
-                    fieldPairsOpts
-                      { FieldPairs.optsAdvanced = False
-                      }
+                  <> FieldPairs.fieldPairsEditor args fieldPairsOpts
             }
        )
   where
@@ -125,13 +121,35 @@ assetViewer st idx =
         . #stAssets
         . ix idx
 
-fieldPairsOpts :: FieldPairs.Opts model action
+fieldPairsOpts :: FieldPairs.Opts Model Action
 fieldPairsOpts =
   FieldPairs.defOpts
-    { FieldPairs.optsField =
-        Field.defOpts
-          { Field.optsExtraAttributesImage =
-              [ style_ [("max-height", "10vh")]
-              ]
-          }
+    { FieldPairs.optsField = \case
+        0 -> opts {Field.optsTrailingWidgets = trws}
+        _ -> opts,
+      FieldPairs.optsAdvanced = False
     }
+  where
+    opts =
+      Field.defOpts
+        { Field.optsExtraAttributesImage =
+            [ style_ [("max-height", "10vh")]
+            ]
+        }
+    trws input fob eod =
+      if eod == Disabled
+        then Field.defTrailingWidgets input fob eod
+        else case fob of
+          Focused | null input -> [Field.PasteWidget mempty, modal]
+          Focused -> Field.defTrailingWidgets input fob eod
+          Blurred -> [Field.PasteWidget hide, modal]
+    modal =
+      Field.ActionWidget Icon.IconShopping mempty
+        . PushUpdate
+        . Instant
+        . PureUpdate
+        $ #modelMarketLinks
+        .~ Opened
+
+hide :: [Attribute action]
+hide = [style_ [("display", "none")]]

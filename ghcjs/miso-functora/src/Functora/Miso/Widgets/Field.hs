@@ -3,6 +3,7 @@ module Functora.Miso.Widgets.Field
     Full (..),
     Opts (..),
     defOpts,
+    defTrailingWidgets,
     OptsWidget (..),
     ModalWidget' (..),
     truncateUnicode,

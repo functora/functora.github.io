@@ -21,6 +21,7 @@ common pkg
     App.Types
     App.Widgets.Asset
     App.Widgets.Main
+    App.Widgets.MarketLinks
     App.Widgets.Menu
     App.Widgets.Templates
     App.Xlsx

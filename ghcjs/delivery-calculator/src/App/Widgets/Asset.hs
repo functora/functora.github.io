@@ -15,10 +15,10 @@ assetsViewer :: Model -> [View Action]
 assetsViewer st = do
   let assets = st ^. #modelState . #stAssets
   idx <- fmap fst $ zip [0 ..] assets
-  assetViewer st idx $ "asset-" <> inspect (length assets - idx - 1)
+  assetViewer st idx
 
-assetViewer :: Model -> Int -> Unicode -> [View Action]
-assetViewer st idx opfsPrefix =
+assetViewer :: Model -> Int -> [View Action]
+assetViewer st idx =
   [ fieldset_ mempty
       $ ( legend_
             mempty
@@ -37,7 +37,7 @@ assetViewer st idx opfsPrefix =
                 ]
             ]
         )
-      : FieldPairs.fieldPairsViewer (fieldPairsOpts opfsPrefix) args
+      : FieldPairs.fieldPairsViewer fieldPairsOpts args
   ]
     <> ( Dialog.dialog
           Dialog.defOpts
@@ -70,7 +70,7 @@ assetViewer st idx opfsPrefix =
                 failures False
                   <> FieldPairs.fieldPairsEditor
                     args
-                    (fieldPairsOpts opfsPrefix)
+                    fieldPairsOpts
                       { FieldPairs.optsAdvanced = False
                       }
             }
@@ -125,18 +125,13 @@ assetViewer st idx opfsPrefix =
         . #stAssets
         . ix idx
 
-fieldPairsOpts :: Unicode -> FieldPairs.Opts model action
-fieldPairsOpts opfsPrefix =
+fieldPairsOpts :: FieldPairs.Opts model action
+fieldPairsOpts =
   FieldPairs.defOpts
     { FieldPairs.optsField =
         Field.defOpts
           { Field.optsExtraAttributesImage =
               [ style_ [("max-height", "10vh")]
               ]
-          },
-      FieldPairs.optsOpfsName =
-        Just
-          $ (opfsPrefix <>)
-          . ("-field-" <>)
-          . inspect
+          }
     }

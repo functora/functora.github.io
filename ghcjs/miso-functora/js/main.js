@@ -104,6 +104,21 @@ export async function opfsRead(opfsName) {
   }
 }
 
+export async function opfsList() {
+  try {
+    const res = [];
+    const root = await navigator.storage.getDirectory();
+    for await (let opfsName of root.keys()) {
+      res.push(opfsName);
+    }
+    console.log("OPFS list success", opfsName, res);
+    return res;
+  } catch (e) {
+    console.log("OPFS list failure", opfsName, e);
+    return [];
+  }
+}
+
 export async function openBrowserPage(url) {
   try {
     return await Browser.open({ url: url, windowName: "_blank" });

@@ -915,6 +915,8 @@ newtype Uid = Uid
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
+instance Binary Uid
+
 newUid :: (MonadIO m) => m Uid
 newUid = Uid <$> randomByteString 32
 

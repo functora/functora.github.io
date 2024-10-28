@@ -24,7 +24,6 @@ data Args model action f = Args
 data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
     optsField :: Field.Opts model action,
-    optsOpfsName :: Maybe (Int -> Unicode),
     optsAdvanced :: Bool
   }
   deriving stock (Generic)
@@ -34,7 +33,6 @@ defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
       optsField = Field.defOpts,
-      optsOpfsName = Nothing,
       optsAdvanced = True
     }
 
@@ -81,8 +79,6 @@ fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
           else
             Field.fieldViewer
               ( optsField opts
-                  & #optsOpfsName
-                  .~ fmap ($ idx) (optsOpfsName opts)
                   & #optsIcon
                   .~ optsIcon opts
                   & #optsLeftRightViewer
@@ -136,8 +132,6 @@ fieldPairEditor
           Field.argsEmitter = emitter
         }
       ( optsField opts
-          & #optsOpfsName
-          .~ fmap ($ idx) (optsOpfsName opts)
           & #optsLabel
           .~ Just
             ( fromMaybe ("#" <> inspect (idx + 1))
@@ -167,8 +161,6 @@ fieldPairEditor
           Field.argsEmitter = emitter
         }
       ( optsField opts
-          & #optsOpfsName
-          .~ fmap ($ idx) (optsOpfsName opts)
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
           & ( #optsLeadingWidget ::
@@ -194,8 +186,6 @@ fieldPairEditor
             Field.argsEmitter = emitter
           }
         ( optsField opts
-            & #optsOpfsName
-            .~ fmap ($ idx) (optsOpfsName opts)
             & #optsPlaceholder
             .~ ( "Value "
                   <> idxTxt

@@ -486,40 +486,30 @@ syncUri uri = do
 
 opfsRead :: Model -> JSM ()
 opfsRead st =
-  when (opfsMax >= 0)
-    . forM_ (zip [0 :: Int ..] $ zip (reverse [0 .. opfsMax]) assets)
-    . uncurry
-    $ \assetIdx (opfsIdx, asset) -> do
-      let fields = fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
-      forM_ (zip [0 :: Int ..] fields) . uncurry $ \fieldIdx field -> do
-        let optic =
-              #modelState
-                . #stAssets
-                . ix assetIdx
-                . #assetFieldPairs
-                . ix fieldIdx
-                . #fieldPairValue
-        when (field ^. #fieldType == FieldTypeImage)
-          . Jsm.opfsRead
-            ( "asset-"
-                <> inspect @Unicode opfsIdx
-                <> "-field-"
-                <> inspect fieldIdx
-            )
-          . flip whenJust
-          $ \uri ->
-            pushActionQueue st
-              . Instant
-              . PureUpdate
-              $ ( cloneTraversal optic
-                    . #fieldInput
-                    . #uniqueValue
-                    .~ uri
-                )
-              . ( cloneTraversal optic
-                    . #fieldOutput
-                    .~ DynamicFieldText uri
-                )
+  forM_ (zip [0 ..] assets) . uncurry $ \assetIdx asset -> do
+    let fields = fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
+    forM_ (zip [0 ..] fields) . uncurry $ \fieldIdx field -> do
+      let optic =
+            #modelState
+              . #stAssets
+              . ix assetIdx
+              . #assetFieldPairs
+              . ix fieldIdx
+              . #fieldPairValue
+      when (field ^. #fieldType == FieldTypeImage)
+        $ whenJust (field ^. #fieldOpfsName)
+        $ \opfsName -> Jsm.opfsRead opfsName . flip whenJust $ \uri ->
+          pushActionQueue st
+            . Instant
+            . PureUpdate
+            $ ( cloneTraversal optic
+                  . #fieldInput
+                  . #uniqueValue
+                  .~ uri
+              )
+            . ( cloneTraversal optic
+                  . #fieldOutput
+                  .~ DynamicFieldText uri
+              )
   where
     assets = st ^. #modelState . #stAssets
-    opfsMax = length assets - 1

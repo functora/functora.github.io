@@ -52,6 +52,7 @@ module Functora.Miso.Types
     FocusedOrBlurred (..),
     OpenedOrClosed (..),
     Update (..),
+    addEffect,
     unUpdate,
     themeCssFile,
     noopAll,
@@ -126,6 +127,7 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Unicode,
     fieldOutput :: a,
+    fieldOpfsName :: Maybe Unicode,
     fieldModalState :: OpenedOrClosed,
     fieldFocusState :: FocusedOrBlurred,
     fieldRequired :: Bool,
@@ -181,6 +183,7 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
+        fieldOpfsName = Nothing,
         fieldModalState = Closed,
         fieldFocusState = Blurred,
         fieldRequired = False,
@@ -193,6 +196,7 @@ newFieldId typ viewer output =
     { fieldType = typ,
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
+      fieldOpfsName = Nothing,
       fieldModalState = Closed,
       fieldFocusState = Blurred,
       fieldRequired = False,
@@ -558,6 +562,20 @@ data Update model
   | PureAndImpureUpdate (model -> model) (JSM (model -> model))
   | PureAndEffectUpdate (model -> model) (JSM ())
   deriving stock (Generic)
+
+addEffect :: JSM () -> Update model -> Update model
+addEffect eff = \case
+  PureUpdate f -> PureAndEffectUpdate f eff
+  ImpureUpdate g -> ImpureUpdate $ do
+    res <- g
+    eff
+    pure res
+  EffectUpdate e -> EffectUpdate $ e >> eff
+  PureAndImpureUpdate f g -> PureAndImpureUpdate f $ do
+    res <- g
+    eff
+    pure res
+  PureAndEffectUpdate f e -> PureAndEffectUpdate f $ e >> eff
 
 unUpdate :: Update model -> JSM (model -> model)
 unUpdate = \case

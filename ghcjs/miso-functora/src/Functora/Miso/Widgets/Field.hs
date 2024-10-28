@@ -46,7 +46,6 @@ data Full model action t f = Full
 data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
     optsLabel :: Maybe Unicode,
-    optsOpfsName :: Maybe Unicode,
     optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
@@ -74,7 +73,6 @@ defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
       optsLabel = Nothing,
-      optsOpfsName = Nothing,
       optsDisabled = False,
       optsFullWidth = False,
       optsPlaceholder = mempty,
@@ -355,24 +353,27 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           then Jsm.popupText @Unicode "File does not exist!"
           else do
             file <- el JS.! ("files" :: Unicode) JS.!! 0
-            Jsm.selectFile (optsOpfsName opts) file $ \case
-              Nothing -> Jsm.popupText @Unicode "File is not selected!"
-              Just url -> argsEmitter args . PureUpdate $ do
-                let next =
-                      st
-                        & cloneTraversal optic
-                        . #fieldInput
-                        . #uniqueValue
-                        .~ url
-                 in ( cloneTraversal optic
-                        . #fieldInput
-                        . #uniqueValue
-                        .~ url
-                    )
-                      . ( cloneTraversal optic
-                            . #fieldOutput
-                            %~ maybe id (const . id) (getOutput next)
-                        )
+            Jsm.selectFile
+              (st ^? cloneTraversal optic . #fieldOpfsName . _Just)
+              file
+              $ \case
+                Nothing -> Jsm.popupText @Unicode "File is not selected!"
+                Just url -> argsEmitter args . PureUpdate $ do
+                  let next =
+                        st
+                          & cloneTraversal optic
+                          . #fieldInput
+                          . #uniqueValue
+                          .~ url
+                   in ( cloneTraversal optic
+                          . #fieldInput
+                          . #uniqueValue
+                          .~ url
+                      )
+                        . ( cloneTraversal optic
+                              . #fieldOutput
+                              %~ maybe id (const . id) (getOutput next)
+                          )
 
 ratioField ::
   Args model action Rational Unique ->
@@ -462,8 +463,8 @@ fieldIcon full opts = \case
   PasteWidget ->
     fieldIconSimple opts Icon.IconPaste mempty
       . insertAction full
-      . Jsm.selectClipboard
-      $ optsOpfsName opts
+      $ Jsm.selectClipboard
+        (st ^? cloneTraversal optic . #fieldOpfsName . _Just)
   ScanQrWidget ->
     fieldIconSimple opts Icon.IconQrCode mempty
       $ insertAction full Jsm.selectBarcode

@@ -160,15 +160,18 @@ instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
-newAsset :: (MonadIO m) => m (Asset Unique)
+newAsset :: (MonadIO m, MonadThrow m) => m (Asset Unique)
 newAsset = do
   link <-
     newFieldPair "Link"
       $ DynamicFieldText mempty
+  opfs <-
+    either throw pure . decodeUtf8Strict . unTagged . htmlUid =<< newUid
   photo <-
     fmap
-      ( (#fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing)
+      ( (#fieldPairValue . #fieldOpfsName .~ Just opfs)
           . (#fieldPairValue . #fieldType .~ FieldTypeImage)
+          . (#fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing)
       )
       . newFieldPair "Photo"
       $ DynamicFieldText mempty

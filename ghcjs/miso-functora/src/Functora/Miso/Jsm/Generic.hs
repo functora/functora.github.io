@@ -12,6 +12,7 @@ module Functora.Miso.Jsm.Generic
     selectClipboard,
     selectFile,
     opfsRead,
+    opfsList,
     genericPromise,
     printCurrentPage,
     saveFileShow,
@@ -170,6 +171,10 @@ opfsRead opfsName after = do
   genericPromise @[Unicode] @Unicode "opfsRead" [opfsName]
     $ after
     . fmap strip
+
+opfsList :: (Maybe [Unicode] -> JSM ()) -> JSM ()
+opfsList after =
+  genericPromise @[Unicode] @[Unicode] "opfsList" mempty after
 
 genericPromise ::
   forall args res.

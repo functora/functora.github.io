@@ -82,9 +82,9 @@ export async function opfsWrite(value, opfsName) {
     const stream = await handle.createWritable();
     await stream.write(value);
     await stream.close();
-    console.log("OPFS write success", opfsName, handle);
+    console.log("OPFS write success:", handle, opfsName);
   } catch (e) {
-    console.log("OPFS write failure", opfsName, e);
+    alert("OPFS write failure: " + e.toString() + " file: " + opfsName);
   }
   return null;
 }
@@ -96,10 +96,10 @@ export async function opfsRead(opfsName) {
     const file = await handle.getFile();
     const uri = await file.text();
     const res = await selectDataUrl(uri);
-    console.log("OPFS read success", opfsName, res);
+    console.log("OPFS read success:", res, opfsName);
     return res;
   } catch (e) {
-    console.log("OPFS read failure", opfsName, e);
+    alert("OPFS read failure: " + e.toString() + " file: " + opfsName);
     return null;
   }
 }
@@ -111,10 +111,10 @@ export async function opfsList() {
     for await (let opfsName of root.keys()) {
       res.push(opfsName);
     }
-    console.log("OPFS list success", opfsName, res);
+    console.log("OPFS list success:", res, opfsName);
     return res;
   } catch (e) {
-    console.log("OPFS list failure", opfsName, e);
+    alert("OPFS list failure: " + e.toString() + " file: " + opfsName);
     return [];
   }
 }

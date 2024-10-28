@@ -41,7 +41,11 @@ main =
   withUtf8
     . runApp
     . forever
-    . handleAny (\e -> consoleLog e >> sleepSeconds 5)
+    . handleAny
+      ( \e -> do
+          alert . from @String @Unicode $ displayException e
+          sleepSeconds 5
+      )
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
       mSt <- unShareUri uri
@@ -194,7 +198,7 @@ updateModel (ChanUpdate update0) st0 = do
         update2 <-
           handleAny
             ( \e -> do
-                consoleLog e
+                alert . from @String @Unicode $ displayException e
                 pure $ #modelLoading .~ False
             )
             $ evalModel st2

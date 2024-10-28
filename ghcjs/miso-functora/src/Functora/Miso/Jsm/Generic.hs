@@ -141,7 +141,7 @@ selectStorage key after =
         . Tagged @"UTF-8"
         $ encodeUtf8 @Unicode @BL.ByteString str of
         Left e -> do
-          consoleLog e
+          alert $ from @String @Unicode e
           after Nothing
         Right res ->
           after $ Just res
@@ -187,21 +187,26 @@ genericPromise ::
   JSM ()
 genericPromise fun argv after = do
   success <- JS.function $ \_ _ ->
-    handleAny (\e -> consoleLog e >> after Nothing) . \case
-      [val] -> do
-        valExist <- ghcjsPure $ JS.isTruthy val
-        if not valExist
-          then after Nothing
-          else do
-            mres <- JS.fromJSVal @res val
-            res <- maybe (throwString @String "Failure, bad result!") pure mres
-            after $ Just res
-      _ ->
-        throwString @String "Failure, bad argv!"
+    handleAny
+      ( \e -> do
+          alert . from @String @Unicode $ displayException e
+          after Nothing
+      )
+      . \case
+        [val] -> do
+          valExist <- ghcjsPure $ JS.isTruthy val
+          if not valExist
+            then after Nothing
+            else do
+              mres <- JS.fromJSVal @res val
+              res <- maybe (throwString @String "Failure, bad result!") pure mres
+              after $ Just res
+        _ ->
+          throwString @String "Failure, bad argv!"
   failure <-
     JS.function $ \_ _ e -> do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
-      consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
+      alert $ "Failure, " <> inspect msg <> "!"
       after Nothing
   pkg <- getPkg
   prom <- pkg ^. JS.jsf fun argv
@@ -248,22 +253,27 @@ saveFileThen onSuccess name mime bs = do
 fetchUrlAsRfc2397 :: Unicode -> (Maybe ByteString -> JSM ()) -> JSM ()
 fetchUrlAsRfc2397 url after = do
   success <- JS.function $ \_ _ ->
-    handleAny (\e -> consoleLog e >> after Nothing) . \case
-      [val] -> do
-        valExist <- ghcjsPure $ JS.isTruthy val
-        if not valExist
-          then after Nothing
-          else do
-            ab <- AB.freeze $ JS.pFromJSVal val
-            buf <- ghcjsPure $ Buf.createFromArrayBuffer ab
-            res <- ghcjsPure $ Buf.toByteString 0 Nothing buf
-            after $ Just res
-      _ ->
-        throwString @String "Failure, bad argv!"
+    handleAny
+      ( \e -> do
+          alert . from @String @Unicode $ displayException e
+          after Nothing
+      )
+      . \case
+        [val] -> do
+          valExist <- ghcjsPure $ JS.isTruthy val
+          if not valExist
+            then after Nothing
+            else do
+              ab <- AB.freeze $ JS.pFromJSVal val
+              buf <- ghcjsPure $ Buf.createFromArrayBuffer ab
+              res <- ghcjsPure $ Buf.toByteString 0 Nothing buf
+              after $ Just res
+        _ ->
+          throwString @String "Failure, bad argv!"
   failure <-
     JS.function $ \_ _ e -> do
       msg <- handleAny (\_ -> pure "Unknown") $ JS.valToText e
-      consoleLog @Unicode $ "Failure, " <> inspect msg <> "!"
+      alert $ "Failure, " <> inspect msg <> "!"
       after Nothing
   pkg <- getPkg
   prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) ([url] :: [Unicode])

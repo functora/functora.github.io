@@ -163,20 +163,12 @@ fieldPairEditor
       ( optsField opts
           & #optsPlaceholder
           .~ ("Label " <> idxTxt)
-          & ( #optsLeadingWidget ::
-                Lens'
-                  (Field.Opts model action)
-                  (Maybe (Field.OptsWidgetPair model action))
-            )
-          .~ Just
-            ( let w = Field.DownWidget optic idx mempty
-               in Field.OptsWidgetPair w w
-            )
-          & #optsTrailingWidget
-          .~ Just
-            ( let w = Field.UpWidget optic idx mempty
-               in Field.OptsWidgetPair w w
-            )
+          & #optsTrailingWidgets
+          .~ ( \_ _ _ ->
+                [ Field.DownWidget optic idx mempty,
+                  Field.UpWidget optic idx mempty
+                ]
+             )
       )
       <> Field.dynamicField
         Field.Args
@@ -198,26 +190,17 @@ fieldPairEditor
                         . to userFieldType
                      )
                )
-            & ( #optsLeadingWidget ::
-                  Lens'
-                    (Field.Opts model action)
-                    (Maybe (Field.OptsWidgetPair model action))
-              )
-            .~ Just
-              ( let w =
-                      Field.ModalWidget
-                        $ Field.ModalFieldWidget
-                          optic
-                          idx
-                          #fieldPairValue
-                          Dynamic
-                 in Field.OptsWidgetPair w w
-              )
-            & #optsTrailingWidget
-            .~ Just
-              ( let w = Field.DeleteWidget optic idx mempty
-                 in Field.OptsWidgetPair w w
-              )
+            & #optsTrailingWidgets
+            .~ ( \_ _ _ ->
+                  [ Field.ModalWidget
+                      $ Field.ModalFieldWidget
+                        optic
+                        idx
+                        #fieldPairValue
+                        Dynamic,
+                    Field.DeleteWidget optic idx mempty
+                  ]
+               )
         )
     where
       idxTxt :: Unicode

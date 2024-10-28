@@ -126,27 +126,15 @@ menu st =
                     Field.argsAction = PushUpdate . Instant,
                     Field.argsEmitter = pushActionQueue st . Instant
                   }
-                ( let disabled =
-                        st
-                          ^. #modelState
-                          . #stOnlineOrOffline
-                          == Online
+                ( let eod =
+                        if st ^. #modelState . #stOnlineOrOffline == Offline
+                          then Enabled
+                          else Disabled
                    in Field.defOpts @Model @Action
-                        & #optsDisabled
-                        .~ disabled
+                        & #optsEnabledOrDisabled
+                        .~ eod
                         & #optsLabel
-                        .~ Just
-                          ( inspectExchangeRate $ modelState st
-                          )
-                        & ( if disabled
-                              then
-                                (#optsTrailingWidget .~ Nothing)
-                                  . ( #optsLeadingWidget .~ Nothing ::
-                                        Field.Opts Model Action ->
-                                        Field.Opts Model Action
-                                    )
-                              else id
-                          )
+                        .~ Just (inspectExchangeRate $ modelState st)
                 )
               <> Field.dynamicField
                 Field.Args

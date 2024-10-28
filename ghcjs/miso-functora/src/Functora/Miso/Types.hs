@@ -49,6 +49,7 @@ module Functora.Miso.Types
     OnlineOrOffline (..),
     StaticOrDynamic (..),
     LeadingOrTrailing (..),
+    EnabledOrDisabled (..),
     FocusedOrBlurred (..),
     OpenedOrClosed (..),
     Update (..),
@@ -542,6 +543,12 @@ data LeadingOrTrailing
   | Trailing
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType LeadingOrTrailing
+
+data EnabledOrDisabled
+  = Enabled
+  | Disabled
+  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
+  deriving (Binary) via GenericType EnabledOrDisabled
 
 data FocusedOrBlurred
   = Focused

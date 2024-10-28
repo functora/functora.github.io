@@ -51,8 +51,8 @@ moneyViewer Args {argsModel = st, argsOptic = optic, argsAction = action} opts =
               Field.argsEmitter = error "TODO_MONEY_EMITTER"
             }
           ( Field.defOpts
-              & #optsDisabled
-              .~ True
+              & #optsEnabledOrDisabled
+              .~ Disabled
               & #optsPlaceholder
               .~ inspectCurrencyInfo
                 ( money ^. #moneyCurrency . #currencyOutput

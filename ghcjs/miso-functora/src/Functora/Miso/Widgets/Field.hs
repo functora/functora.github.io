@@ -4,7 +4,6 @@ module Functora.Miso.Widgets.Field
     Opts (..),
     defOpts,
     OptsWidget (..),
-    OptsWidgetPair (..),
     ModalWidget' (..),
     truncateUnicode,
     expandDynamicField,
@@ -46,25 +45,19 @@ data Full model action t f = Full
 data Opts model action = Opts
   { optsIcon :: Icon.Icon -> View action,
     optsLabel :: Maybe Unicode,
-    optsDisabled :: Bool,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe (Update model -> action),
-    --
-    -- TODO : optsTrailingWidgets :: [Unicode -> FocusedOrBlurred -> OptsWidget]
-    --
-    optsLeadingWidget :: Maybe (OptsWidgetPair model action),
-    optsTrailingWidget :: Maybe (OptsWidgetPair model action),
+    optsTrailingWidgets ::
+      Unicode ->
+      FocusedOrBlurred ->
+      EnabledOrDisabled ->
+      [OptsWidget model action],
     optsOnKeyDownAction :: Unicode -> KeyCode -> Update model,
     optsExtraAttributes :: [Attribute action],
     optsLeftRightViewer :: [View action] -> [View action] -> [View action],
+    optsEnabledOrDisabled :: EnabledOrDisabled,
     optsExtraAttributesImage :: [Attribute action]
-  }
-  deriving stock (Generic)
-
-data OptsWidgetPair model action = OptsWidgetPair
-  { optsWidgetPairEmpty :: OptsWidget model action,
-    optsWidgetPairNonEmpty :: OptsWidget model action
   }
   deriving stock (Generic)
 
@@ -73,22 +66,38 @@ defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
       optsLabel = Nothing,
-      optsDisabled = False,
       optsFullWidth = False,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
-      optsLeadingWidget = Just $ OptsWidgetPair PasteWidget PasteWidget,
-      optsTrailingWidget = Just $ OptsWidgetPair ClearWidget ClearWidget,
+      optsTrailingWidgets = defTrailingWidgets,
       optsOnKeyDownAction = Jsm.enterOrEscapeBlur,
       optsExtraAttributes = mempty,
       optsLeftRightViewer = (<>),
+      optsEnabledOrDisabled = Enabled,
       optsExtraAttributesImage = mempty
     }
 
+defTrailingWidgets ::
+  Unicode ->
+  FocusedOrBlurred ->
+  EnabledOrDisabled ->
+  [OptsWidget model action]
+defTrailingWidgets input fob = \case
+  Enabled ->
+    case fob of
+      Focused | null input -> [PasteWidget mempty, ClearWidget hide]
+      Focused -> [PasteWidget mempty, ClearWidget mempty]
+      Blurred -> [PasteWidget hide, ClearWidget hide]
+  Disabled ->
+    [PasteWidget hide, ClearWidget hide]
+  where
+    hide :: [Attribute action]
+    hide = [style_ [("display", "none")]]
+
 data OptsWidget model action
   = CopyWidget
-  | ClearWidget
-  | PasteWidget
+  | ClearWidget [Attribute action]
+  | PasteWidget [Attribute action]
   | ScanQrWidget
   | ShowOrHideWidget
   | ModalWidget (ModalWidget' model)
@@ -130,21 +139,10 @@ field ::
   [View action]
 field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   ( do
-      x0 <-
-        catMaybes
-          [ opts
-              ^? #optsLeadingWidget
-              . _Just
-              . cloneTraversal widgetOptic,
-            opts
-              ^? #optsTrailingWidget
-              . _Just
-              . cloneTraversal widgetOptic
-          ]
-      x1 <-
-        case x0 of
-          ModalWidget w -> pure w
-          _ -> mempty
+      x0 <- optsTrailingWidgets opts input focused eod
+      x1 <- case x0 of
+        ModalWidget w -> pure w
+        _ -> mempty
       fieldModal args x1
   )
     <> ( case optsLabel opts of
@@ -190,8 +188,8 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                       $ onInput onInputAction,
                     Just
                       . disabled_
-                      $ opts
-                      ^. #optsDisabled,
+                      $ optsEnabledOrDisabled opts
+                      == Disabled,
                     fmap placeholder_
                       $ if null placeholder
                         then optsLabel opts
@@ -206,7 +204,6 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                )
         ]
           <> dummyWidgets
-          <> leadingWidgets
           <> trailingWidgets
           <> ( if typ /= FieldTypeImage
                 then mempty
@@ -241,10 +238,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
     optic = argsOptic args
     action = argsAction args
     placeholder = optsPlaceholder opts
-    widgetOptic =
-      if null . fromMaybe mempty $ getInput st
-        then #optsWidgetPairEmpty
-        else #optsWidgetPairNonEmpty
+    eod = optsEnabledOrDisabled opts
+    input =
+      fromMaybe mempty $ st ^? cloneTraversal optic . #fieldInput . #uniqueValue
+    focused =
+      fromMaybe Blurred $ st ^? cloneTraversal optic . #fieldFocusState
     typ =
       fromMaybe FieldTypeText
         $ st
@@ -282,38 +280,12 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           )
           mempty
       ]
-    leadingWidgets = do
-      let focused =
-            st ^? cloneTraversal optic . #fieldFocusState == Just Focused
-      maybeToList
-        $ fmap
-          ( ( if focused
-                then id
-                else appendAttrs [style_ [("display", "none")]]
-            )
-              . fieldIcon full opts
-          )
-          ( opts
-              ^? #optsLeadingWidget
-              . _Just
-              . cloneTraversal widgetOptic
-          )
-    trailingWidgets = do
-      let focused =
-            st ^? cloneTraversal optic . #fieldFocusState == Just Focused
-      maybeToList
-        $ fmap
-          ( ( if focused
-                then id
-                else appendAttrs [style_ [("display", "none")]]
-            )
-              . fieldIcon full opts
-          )
-          ( opts
-              ^? #optsTrailingWidget
-              . _Just
-              . cloneTraversal widgetOptic
-          )
+    trailingWidgets =
+      fmap
+        ( fieldIcon full opts
+        )
+        ( optsTrailingWidgets opts input focused eod
+        )
     onBlurAction =
       action . PureUpdate $ \prev ->
         prev
@@ -421,8 +393,11 @@ passwordField args opts =
     ( opts
         & #optsPlaceholder
         .~ ("Password" :: Unicode)
-        & #optsLeadingWidget
-        .~ Just (OptsWidgetPair ShowOrHideWidget ShowOrHideWidget)
+        & #optsTrailingWidgets
+        --
+        -- TODO : add other widgets
+        --
+        .~ (\_ _ _ -> [ShowOrHideWidget])
     )
 
 fieldIcon ::
@@ -437,8 +412,8 @@ fieldIcon full opts = \case
       $ case st ^? cloneTraversal optic . #fieldInput . #uniqueValue of
         Nothing -> PureUpdate id
         Just txt -> Jsm.shareText txt
-  ClearWidget ->
-    fieldIconSimple opts Icon.IconClose mempty
+  ClearWidget attrs ->
+    fieldIconSimple opts Icon.IconClose attrs
       . ( fromMaybe action $ optsOnInputAction opts
         )
       $ PureAndEffectUpdate
@@ -460,8 +435,8 @@ fieldIcon full opts = \case
               <> uidTxt
               <> "'); if (el) el.value = '';"
         )
-  PasteWidget ->
-    fieldIconSimple opts Icon.IconPaste mempty
+  PasteWidget attrs ->
+    fieldIconSimple opts Icon.IconPaste attrs
       . insertAction full
       $ Jsm.selectClipboard
         (st ^? cloneTraversal optic . #fieldOpfsName . _Just)

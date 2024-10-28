@@ -150,6 +150,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           Nothing -> id
           Just x ->
             singleton
+              . keyed ("field-" <> uidTxt)
               . label_
                 [ style_
                     [ ("display", "flex"),

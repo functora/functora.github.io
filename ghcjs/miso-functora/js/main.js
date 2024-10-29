@@ -156,7 +156,7 @@ export async function selectBarcode() {
 export async function saveFile(name, mime, ab) {
   const u8a = new Uint8Array(ab);
   if (Capacitor.isNativePlatform()) {
-    const b64 = btoa(String.fromCharCode.apply(null, u8a));
+    const b64 = await u8aToB64(u8a);
     const { uri } = await Filesystem.writeFile({
       path: name,
       data: b64,
@@ -168,6 +168,18 @@ export async function saveFile(name, mime, ab) {
     await saveAs(blob, name);
     return null;
   }
+}
+
+async function u8aToB64(u8a) {
+  const b64 = await new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      resolve(fr.result);
+    };
+    fr.onerror = reject;
+    fr.readAsDataURL(new Blob([u8a]));
+  });
+  return b64.slice(b64.indexOf(",") + 1);
 }
 
 export async function shareFiles(files) {

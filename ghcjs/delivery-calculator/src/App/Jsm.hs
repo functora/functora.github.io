@@ -13,7 +13,7 @@ fetchBlobUris st = do
   vars <-
     forM blobUris $ \uri -> do
       var <- newEmptyMVar
-      Jsm.fetchUrlAsRfc2397 (Just 50000) uri
+      Jsm.fetchUrlAsRfc2397 (Just 400000) uri
         $ liftIO
         . putMVar var
         . fmap (uri,)

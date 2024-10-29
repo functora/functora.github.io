@@ -250,8 +250,12 @@ saveFileThen onSuccess name mime bs = do
     Nothing -> pure ()
     Just str -> onSuccess str
 
-fetchUrlAsRfc2397 :: Unicode -> (Maybe ByteString -> JSM ()) -> JSM ()
-fetchUrlAsRfc2397 url after = do
+fetchUrlAsRfc2397 ::
+  Maybe Int ->
+  Unicode ->
+  (Maybe ByteString -> JSM ()) ->
+  JSM ()
+fetchUrlAsRfc2397 maxSizeKb url after = do
   success <- JS.function $ \_ _ ->
     handleAny
       ( \e -> do
@@ -276,5 +280,10 @@ fetchUrlAsRfc2397 url after = do
       alert $ "Failure, " <> inspect msg <> "!"
       after Nothing
   pkg <- getPkg
-  prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) ([url] :: [Unicode])
+  argv <-
+    sequence
+      [ JS.toJSVal maxSizeKb,
+        JS.toJSVal url
+      ]
+  prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) (argv :: [JS.JSVal])
   void $ prom ^. JS.js2 @Unicode "then" success failure

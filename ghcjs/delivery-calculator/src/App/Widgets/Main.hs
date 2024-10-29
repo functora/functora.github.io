@@ -1,13 +1,11 @@
 module App.Widgets.Main (mainWidget) where
 
-import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.MarketLinks as MarketLinks
 import qualified App.Widgets.Menu as Menu
-import qualified App.Xlsx as Xlsx
-import qualified Data.ByteString.Lazy as BL
-import qualified Functora.Miso.Jsm as Jsm
+import qualified App.Widgets.PlaceOrder as PlaceOrder
+import qualified App.Widgets.RemoveOrder as RemoveOrder
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Field as Field
@@ -118,7 +116,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons :: [View Action]
     buttons =
       singleton
-        $ Flex.flexRowCenter
+        . Flex.flexRowCenter
           section_
           ( mappend
               [ style_
@@ -129,9 +127,8 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                   ]
               ]
           )
-          [ button_
-              [ type_ "submit",
-                onClick . PushUpdate . Instant . ImpureUpdate $ do
+        $ ( button_
+              [ onClick . PushUpdate . Instant . ImpureUpdate $ do
                   asset <- newAsset
                   pure
                     $ #modelState
@@ -140,33 +137,9 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               ]
               [ icon Icon.IconAdd,
                 text " Add item"
-              ],
-            button_
-              [ type_ "submit",
-                onClick
-                  . PushUpdate
-                  . Instant
-                  . EffectUpdate
-                  . either impureThrow Jsm.openBrowserPage
-                  $ stTeleUri st
               ]
-              [ icon Icon.IconTelegram,
-                text " Order via Telegram"
-              ],
-            button_
-              [ type_ "submit",
-                onClick . PushUpdate . Instant . EffectUpdate $ do
-                  let doc = st ^. #modelState
-                  imgs <- Jsm.fetchBlobUris doc
-                  file <- Xlsx.xlsxFile
-                  Jsm.saveFileShare file Xlsx.xlsxMime
-                    . from @BL.ByteString @ByteString
-                    $ Xlsx.newXlsx doc imgs
-              ]
-              [ icon Icon.IconDownload,
-                text " Share excel file"
-              ]
-          ]
+          )
+        : RemoveOrder.removeOrder st <> PlaceOrder.placeOrder st
 
 totalViewer :: Model -> [View Action]
 totalViewer st =

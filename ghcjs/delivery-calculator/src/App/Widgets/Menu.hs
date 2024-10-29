@@ -25,21 +25,7 @@ menu st =
             [ ("grid-template-columns", "1fr auto")
             ]
         ]
-        [ button_
-            [ role_ "button",
-              style_
-                [ ("min-width", "0"),
-                  ("justify-self", "start"),
-                  ("word-break", "keep-all"),
-                  ("overflow-wrap", "normal")
-                ],
-              onClick . PushUpdate . Instant . ImpureUpdate $ do
-                doc <- liftIO newSt
-                pure $ #modelState .~ doc
-            ]
-            [ icon Icon.IconDelivery,
-              text " Delivery Calculator"
-            ],
+        [ div_ mempty mempty,
           button_
             [ role_ "button",
               style_
@@ -159,7 +145,29 @@ menu st =
                   }
                 ( Field.defOpts
                     & #optsLabel
-                    .~ Just ("Merchant telegram" :: Unicode)
+                    .~ Just ("Merchant Telegram" :: Unicode)
+                )
+              <> Field.textField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic = #modelState . #stMerchantWhats,
+                    Field.argsAction = PushUpdate . Instant,
+                    Field.argsEmitter = pushActionQueue st . Instant
+                  }
+                ( Field.defOpts
+                    & #optsLabel
+                    .~ Just ("Merchant WhatsApp" :: Unicode)
+                )
+              <> Field.textField
+                Field.Args
+                  { Field.argsModel = st,
+                    Field.argsOptic = #modelState . #stMerchantEmail,
+                    Field.argsAction = PushUpdate . Instant,
+                    Field.argsEmitter = pushActionQueue st . Instant
+                  }
+                ( Field.defOpts
+                    & #optsLabel
+                    .~ Just ("Merchant email" :: Unicode)
                 )
               <> Field.textField
                 Field.Args

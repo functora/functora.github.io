@@ -18,7 +18,6 @@ module App.Types
     unQrCode,
     unShareUri,
     stUri,
-    stTeleUri,
     setScreenAction,
     pushActionQueue,
     icon,
@@ -65,6 +64,8 @@ import qualified Text.URI as URI
 data Model = Model
   { modelMenu :: OpenedOrClosed,
     modelLinks :: OpenedOrClosed,
+    modelPlaceOrder :: OpenedOrClosed,
+    modelRemoveOrder :: OpenedOrClosed,
     modelMarketLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
@@ -92,6 +93,8 @@ data St f = St
     stExchangeRateAt :: UTCTime,
     stMerchantCurrency :: Currency f,
     stMerchantTele :: Field Unicode f,
+    stMerchantWhats :: Field Unicode f,
+    stMerchantEmail :: Field Unicode f,
     stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
     stPreview :: Field Unicode f,
@@ -122,6 +125,8 @@ newSt = do
   ct <- getCurrentTime
   merchantCur <- newCurrency rub
   tele <- newTextField "Functora"
+  whats <- newTextField "TODO"
+  email <- newTextField "TODO"
   fee <- newDynamicField $ DynamicFieldNumber 2
   pre <- newTextField "Delivery Calculator"
   pure
@@ -132,6 +137,8 @@ newSt = do
         stExchangeRateAt = ct,
         stMerchantCurrency = merchantCur,
         stMerchantTele = tele,
+        stMerchantWhats = whats,
+        stMerchantEmail = email,
         stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
         stPreview = pre & #fieldType .~ FieldTypeTitle,
@@ -445,28 +452,6 @@ stQuery st = do
         . decodeUtf8Strict
         . B64URL.encode
         . from @BL.ByteString @ByteString
-
-stTeleUri :: (MonadThrow m) => Model -> m URI
-stTeleUri st = do
-  base <-
-    URI.mkURI "https://t.me"
-  user <-
-    URI.mkPathPiece
-      . from @Unicode @Text
-      $ st
-      ^. #modelState
-      . #stMerchantTele
-      . #fieldOutput
-  key <-
-    URI.mkQueryKey "text"
-  val <-
-    URI.mkQueryValue
-      $ "Hello, I have a question about delivery. I will share the Excel file in the next message."
-  pure
-    $ base
-      { URI.uriPath = Just (False, [user]),
-        URI.uriQuery = [URI.QueryParam key val]
-      }
 
 unShareUri ::
   ( MonadIO m,

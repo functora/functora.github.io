@@ -19,11 +19,11 @@ marketLinks st =
         Dialog.argsOptic = #modelMarketLinks,
         Dialog.argsAction = PushUpdate . Instant,
         Dialog.argsContent =
-          [ button_ [onClick $ openBrowser taobaoLink] [text "Taobao"],
-            button_ [onClick $ openBrowser poizonLink] [text "Poizon"],
-            button_ [onClick $ openBrowser poizonLink] [text "Dewu"],
+          [ button_ [onClick $ openBrowser alibabaLink] [text "1688"],
             button_ [onClick $ openBrowser alibabaLink] [text "Alibaba"],
-            button_ [onClick $ openBrowser alibabaLink] [text "1688"],
+            button_ [onClick $ openBrowser poizonLink] [text "Dewu"],
+            button_ [onClick $ openBrowser poizonLink] [text "Poizon"],
+            button_ [onClick $ openBrowser taobaoLink] [text "Taobao"],
             button_ [onClick $ openBrowser tmallLink] [text "Tmall"]
           ]
       }

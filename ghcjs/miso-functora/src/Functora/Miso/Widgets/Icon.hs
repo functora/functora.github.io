@@ -42,6 +42,8 @@ data Icon
   | IconCoins
   | IconExcel
   | IconShopping
+  | IconWhatsApp
+  | IconEmail
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -81,6 +83,8 @@ data Fa
   | FaCoins
   | FaFileExcel
   | FaCartShopping
+  | FaWhatsapp
+  | FaEnvelope
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -118,6 +122,8 @@ instance From Icon Fa where
     IconCoins -> FaCoins
     IconExcel -> FaFileExcel
     IconShopping -> FaCartShopping
+    IconWhatsApp -> FaWhatsapp
+    IconEmail -> FaEnvelope
 
 instance IsIcon Fa where
   icon x =
@@ -129,6 +135,7 @@ instance IsIcon Fa where
             FaGitAlt -> brand
             FaBitcoin -> brand
             FaTelegram -> brand
+            FaWhatsapp -> brand
             _ -> solid,
         class_
           . from @String @Unicode

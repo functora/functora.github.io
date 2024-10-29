@@ -23,6 +23,8 @@ common pkg
     App.Widgets.Main
     App.Widgets.MarketLinks
     App.Widgets.Menu
+    App.Widgets.PlaceOrder
+    App.Widgets.RemoveOrder
     App.Widgets.Templates
     App.Xlsx
 

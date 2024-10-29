@@ -157,7 +157,9 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                       ("flex-wrap", "wrap"),
                       ("flex-direction", "row"),
                       ("align-items", "center")
-                    ]
+                    ],
+                  onBlur onBlurAction,
+                  onFocus onFocusAction
                 ]
               . ( ( span_
                       [style_ [("width", "100%")]]
@@ -197,11 +199,16 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
                         then optsLabel opts
                         else Just placeholder,
                     Just $ id_ uidTxt,
-                    Just . onKeyDown $ action . optsOnKeyDownAction opts uidTxt,
-                    Just $ onBlur onBlurAction,
-                    Just $ onFocus onFocusAction
+                    Just . onKeyDown $ action . optsOnKeyDownAction opts uidTxt
                   ]
               )
+            <> ( if isJust $ optsLabel opts
+                  then mempty
+                  else
+                    [ onBlur onBlurAction,
+                      onFocus onFocusAction
+                    ]
+               )
             <> ( opts ^. #optsExtraAttributes
                )
         ]

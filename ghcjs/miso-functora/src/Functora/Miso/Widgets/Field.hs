@@ -8,6 +8,7 @@ module Functora.Miso.Widgets.Field
     ModalWidget' (..),
     truncateUnicode,
     expandDynamicField,
+    labeled,
     field,
     ratioField,
     textField,
@@ -134,6 +135,24 @@ data ModalWidget' model where
     ATraversal' model (Field a Unique) ->
     ModalWidget' model
 
+labeled :: Unicode -> [Attribute action] -> [View action] -> View action
+labeled label attrs =
+  label_
+    ( style_
+        [ ("display", "flex"),
+          ("flex-wrap", "wrap"),
+          ("flex-direction", "row"),
+          ("align-items", "center")
+        ]
+        : attrs
+    )
+    . ( ( span_
+            [style_ [("width", "100%")]]
+            [text label]
+        )
+          :
+      )
+
 field ::
   Full model action t Unique ->
   Opts model action ->
@@ -151,22 +170,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           Just x ->
             singleton
               . keyed ("field-" <> uidTxt)
-              . label_
-                [ style_
-                    [ ("display", "flex"),
-                      ("flex-wrap", "wrap"),
-                      ("flex-direction", "row"),
-                      ("align-items", "center")
-                    ],
-                  onBlur onBlurAction,
+              . labeled
+                x
+                [ onBlur onBlurAction,
                   onFocus onFocusAction
                 ]
-              . ( ( span_
-                      [style_ [("width", "100%")]]
-                      [text x]
-                  )
-                    :
-                )
        )
       ( [ input_
             $ ( catMaybes

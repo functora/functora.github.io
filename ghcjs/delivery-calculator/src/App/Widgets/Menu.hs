@@ -208,6 +208,14 @@ menu st =
                             }
                       ]
                  )
+              <> [ Field.labeled
+                    "Full reset"
+                    mempty
+                    [ button_
+                        [type_ "reset", fullResetOnClick]
+                        [icon Icon.IconDelete, text " Full reset"]
+                    ]
+                 ]
         }
   where
     shareOnClick :: Attribute Action
@@ -219,6 +227,12 @@ menu st =
         . from @String @Unicode
         . either impureThrow URI.renderStr
         $ stUri st
+    fullResetOnClick :: Attribute Action
+    fullResetOnClick =
+      onClick . PushUpdate . Instant . ImpureUpdate $ do
+        doc <- liftIO newSt
+        Jsm.popupText @Unicode "Full reset success!"
+        pure $ (#modelMenu .~ Closed) . (#modelState .~ doc)
 
 qrButton :: Model -> View Action
 qrButton st =

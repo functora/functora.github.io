@@ -18,7 +18,6 @@ placeOrder st =
       button_
         [ onClick
             . PushUpdate
-            . Instant
             . PureUpdate
             $ #modelPlaceOrder
             .~ Opened
@@ -35,7 +34,7 @@ placeOrder st =
           Dialog.Args
             { Dialog.argsModel = st,
               Dialog.argsOptic = #modelPlaceOrder,
-              Dialog.argsAction = PushUpdate . Instant,
+              Dialog.argsAction = PushUpdate,
               Dialog.argsContent =
                 [ button_
                     [ onClick
@@ -62,7 +61,7 @@ placeOrder st =
                       text " Email"
                     ],
                   button_
-                    [ onClick . PushUpdate . Instant . EffectUpdate $ do
+                    [ onClick . PushUpdate . EffectUpdate $ do
                         let doc = st ^. #modelState
                         imgs <- Jsm.fetchBlobUris doc
                         file <- Xlsx.xlsxFile
@@ -79,7 +78,6 @@ placeOrder st =
 openBrowser :: URI -> Action
 openBrowser =
   PushUpdate
-    . Instant
     . EffectUpdate
     . Jsm.openBrowserPage
 

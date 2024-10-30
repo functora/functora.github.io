@@ -27,7 +27,6 @@ assetViewer st idx =
               button_
                 [ onClick
                     . PushUpdate
-                    . Instant
                     . PureUpdate
                     $ cloneTraversal modalOptic
                     .~ Opened
@@ -65,7 +64,7 @@ assetViewer st idx =
           Dialog.Args
             { Dialog.argsModel = st,
               Dialog.argsOptic = modalOptic,
-              Dialog.argsAction = PushUpdate . Instant,
+              Dialog.argsAction = PushUpdate,
               Dialog.argsContent =
                 failures False
                   <> FieldPairs.fieldPairsEditor args fieldPairsOpts
@@ -78,9 +77,10 @@ assetViewer st idx =
           FieldPairs.argsOptic =
             #modelState . #stAssets . ix idx . #assetFieldPairs,
           FieldPairs.argsAction =
-            PushUpdate . Instant,
-          FieldPairs.argsEmitter =
-            pushActionQueue st . Instant
+            PushUpdate,
+          FieldPairs.argsEmitter = \updater -> do
+            sink <- readMVar $ modelSink st
+            liftIO . sink $ PushUpdate updater
         }
     title =
       "Item #" <> inspect (idx + 1)
@@ -91,11 +91,9 @@ assetViewer st idx =
         . #assetModalState
     removeAction =
       PushUpdate
-        . Instant
         $ Jsm.removeAt (#modelState . #stAssets) idx
     saveAction =
       PushUpdate
-        . Instant
         $ PureUpdate saveUpdate
     saveUpdate =
       ( #modelState
@@ -146,7 +144,6 @@ fieldPairsOpts =
     modal =
       Field.ActionWidget Icon.IconShopping mempty
         . PushUpdate
-        . Instant
         . PureUpdate
         $ #modelMarketLinks
         .~ Opened

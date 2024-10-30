@@ -69,8 +69,8 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
           Field.Args
             { Field.argsModel = st,
               Field.argsOptic = #modelState . #stPreview,
-              Field.argsAction = PushUpdate . Instant,
-              Field.argsEmitter = pushActionQueue st . Instant
+              Field.argsAction = PushUpdate,
+              Field.argsEmitter = emitter st
             }
   )
     <> FieldPairs.fieldPairsViewer
@@ -78,8 +78,8 @@ screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
       FieldPairs.Args
         { FieldPairs.argsModel = st,
           FieldPairs.argsOptic = #modelUriViewer,
-          FieldPairs.argsAction = PushUpdate . Instant,
-          FieldPairs.argsEmitter = pushActionQueue st . Instant
+          FieldPairs.argsAction = PushUpdate,
+          FieldPairs.argsEmitter = emitter st
         }
     <> [ button_
           [ onClick . setScreenAction $ unQrCode sc
@@ -93,8 +93,8 @@ screenWidget st@Model {modelState = St {stScreen = Donate}} =
     FieldPairs.Args
       { FieldPairs.argsModel = st,
         FieldPairs.argsOptic = #modelDonateViewer,
-        FieldPairs.argsAction = PushUpdate . Instant,
-        FieldPairs.argsEmitter = pushActionQueue st . Instant
+        FieldPairs.argsAction = PushUpdate,
+        FieldPairs.argsEmitter = emitter st
       }
     <> [ button_
           [ onClick $ setScreenAction Main
@@ -128,7 +128,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               ]
           )
         $ ( button_
-              [ onClick . PushUpdate . Instant . ImpureUpdate $ do
+              [ onClick . PushUpdate . ImpureUpdate $ do
                   asset <- newAsset
                   pure
                     $ #modelState
@@ -154,8 +154,8 @@ totalViewer st =
           FieldPairs.Args
             { FieldPairs.argsModel = st,
               FieldPairs.argsOptic = constTraversal total,
-              FieldPairs.argsAction = PushUpdate . Instant,
-              FieldPairs.argsEmitter = pushActionQueue st . Instant
+              FieldPairs.argsAction = PushUpdate,
+              FieldPairs.argsEmitter = emitter st
             }
   where
     total = newTotal $ modelState st
@@ -170,7 +170,7 @@ tosWidget =
         BrowserLink.Args
           { BrowserLink.argsLink = functoraLink,
             BrowserLink.argsLabel = "Functora",
-            BrowserLink.argsAction = PushUpdate . Instant
+            BrowserLink.argsAction = PushUpdate
           },
       Miso.text ". All rights reserved. ",
       Miso.text "By continuing to use this software, you agree to the ",

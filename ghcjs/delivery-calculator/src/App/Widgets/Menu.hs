@@ -33,7 +33,6 @@ menu st =
                 ],
               onClick
                 . PushUpdate
-                . Instant
                 . PureUpdate
                 $ #modelMenu
                 .~ Opened
@@ -68,7 +67,7 @@ menu st =
       Dialog.Args
         { Dialog.argsModel = st,
           Dialog.argsOptic = #modelMenu,
-          Dialog.argsAction = PushUpdate . Instant,
+          Dialog.argsAction = PushUpdate,
           Dialog.argsContent =
             Currency.selectCurrency
               Currency.defOpts
@@ -78,8 +77,8 @@ menu st =
               Currency.Args
                 { Currency.argsModel = st,
                   Currency.argsOptic = #modelState . #stAssetCurrency,
-                  Currency.argsAction = PushUpdate . Instant,
-                  Currency.argsEmitter = pushActionQueue st . Instant,
+                  Currency.argsAction = PushUpdate,
+                  Currency.argsEmitter = emitter st,
                   Currency.argsCurrencies = #modelCurrencies
                 }
               <> Currency.selectCurrency
@@ -90,8 +89,8 @@ menu st =
                 Currency.Args
                   { Currency.argsModel = st,
                     Currency.argsOptic = #modelState . #stMerchantCurrency,
-                    Currency.argsAction = PushUpdate . Instant,
-                    Currency.argsEmitter = pushActionQueue st . Instant,
+                    Currency.argsAction = PushUpdate,
+                    Currency.argsEmitter = emitter st,
                     Currency.argsCurrencies = #modelCurrencies
                   }
               <> [ Select.select
@@ -100,7 +99,7 @@ menu st =
                     Select.Args
                       { Select.argsModel = st,
                         Select.argsOptic = #modelState . #stOnlineOrOffline,
-                        Select.argsAction = PushUpdate . Instant,
+                        Select.argsAction = PushUpdate,
                         Select.argsOptions =
                           constTraversal $ enumerate @OnlineOrOffline
                       }
@@ -109,8 +108,8 @@ menu st =
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stExchangeRate,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( let eod =
                         if st ^. #modelState . #stOnlineOrOffline == Offline
@@ -125,12 +124,9 @@ menu st =
               <> Field.dynamicField
                 Field.Args
                   { Field.argsModel = st,
-                    Field.argsOptic =
-                      #modelState . #stMerchantFeePercent,
-                    Field.argsAction =
-                      PushUpdate . Instant,
-                    Field.argsEmitter =
-                      pushActionQueue st . Instant
+                    Field.argsOptic = #modelState . #stMerchantFeePercent,
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( Field.defOpts
                     & #optsLabel
@@ -140,8 +136,8 @@ menu st =
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stMerchantTele,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( Field.defOpts
                     & #optsLabel
@@ -151,8 +147,8 @@ menu st =
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stMerchantWhats,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( Field.defOpts
                     & #optsLabel
@@ -162,8 +158,8 @@ menu st =
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stMerchantEmail,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( Field.defOpts
                     & #optsLabel
@@ -173,8 +169,8 @@ menu st =
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stPreview,
-                    Field.argsAction = PushUpdate . Instant,
-                    Field.argsEmitter = pushActionQueue st . Instant
+                    Field.argsAction = PushUpdate,
+                    Field.argsEmitter = emitter st
                   }
                 ( Field.defOpts @Model @Action
                     & #optsLabel
@@ -188,7 +184,7 @@ menu st =
                     Switch.Args
                       { Switch.argsModel = st,
                         Switch.argsOptic = #modelState . #stEnableTheme,
-                        Switch.argsAction = PushUpdate . Instant
+                        Switch.argsAction = PushUpdate
                       }
                  ]
               <> ( if not (st ^. #modelState . #stEnableTheme)
@@ -202,7 +198,7 @@ menu st =
                           Select.Args
                             { Select.argsModel = st,
                               Select.argsOptic = #modelState . #stTheme,
-                              Select.argsAction = PushUpdate . Instant,
+                              Select.argsAction = PushUpdate,
                               Select.argsOptions =
                                 constTraversal $ enumerate @Theme
                             }
@@ -222,14 +218,13 @@ menu st =
     shareOnClick =
       onClick
         . PushUpdate
-        . Instant
         . Jsm.shareText
         . from @String @Unicode
         . either impureThrow URI.renderStr
         $ stUri st
     fullResetOnClick :: Attribute Action
     fullResetOnClick =
-      onClick . PushUpdate . Instant . ImpureUpdate $ do
+      onClick . PushUpdate . ImpureUpdate $ do
         doc <- liftIO newSt
         Jsm.popupText @Unicode "Full reset success!"
         pure $ (#modelMenu .~ Closed) . (#modelState .~ doc)
@@ -255,7 +250,6 @@ qrButton st =
   where
     screen next =
       PushUpdate
-        . Instant
         . PureUpdate
         $ (#modelMenu .~ Closed)
         . (#modelLoading .~ isQrCode next)
@@ -282,7 +276,7 @@ linksWidget st =
       Dialog.Args
         { Dialog.argsModel = st,
           Dialog.argsOptic = #modelLinks,
-          Dialog.argsAction = PushUpdate . Instant,
+          Dialog.argsAction = PushUpdate,
           Dialog.argsContent =
             [ text
                 "The Android app is in closed beta. To install it, join the ",
@@ -290,21 +284,21 @@ linksWidget st =
                 BrowserLink.Args
                   { BrowserLink.argsLink = testGroupLink,
                     BrowserLink.argsLabel = "closed beta",
-                    BrowserLink.argsAction = PushUpdate . Instant
+                    BrowserLink.argsAction = PushUpdate
                   },
               text " group and then install the app from ",
               BrowserLink.browserLink
                 BrowserLink.Args
                   { BrowserLink.argsLink = googlePlayLink,
                     BrowserLink.argsLabel = "Google Play",
-                    BrowserLink.argsAction = PushUpdate . Instant
+                    BrowserLink.argsAction = PushUpdate
                   },
               text ", or download the ",
               BrowserLink.browserLink
                 BrowserLink.Args
                   { BrowserLink.argsLink = apkLink,
                     BrowserLink.argsLabel = "APK file",
-                    BrowserLink.argsAction = PushUpdate . Instant
+                    BrowserLink.argsAction = PushUpdate
                   },
               text " directly.",
               button_
@@ -348,12 +342,10 @@ linksWidget st =
   where
     openWidget =
       PushUpdate
-        . Instant
         . PureUpdate
         $ #modelLinks
         .~ Opened
     openBrowser =
       PushUpdate
-        . Instant
         . EffectUpdate
         . Jsm.openBrowserPage

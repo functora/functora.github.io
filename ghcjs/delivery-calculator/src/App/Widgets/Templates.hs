@@ -13,19 +13,19 @@ newModel ::
     MonadUnliftIO m
   ) =>
   Web.Opts ->
+  MVar (Action -> IO ()) ->
   Maybe Model ->
   URI ->
   m Model
-newModel webOpts mSt uri = do
-  prod <- liftIO newBroadcastTChanIO
-  cons <- liftIO . atomically $ dupTChan prod
+newModel webOpts sink mSt uri = do
   defSt <- maybe (liftIO newSt) pure $ mSt ^? _Just . #modelState
   mApp <- unShareUri uri
   donate <- newDonateViewer
   market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
   pure
     Model
-      { modelMenu = Closed,
+      { modelSink = sink,
+        modelMenu = Closed,
         modelLinks = Closed,
         modelPlaceOrder = Closed,
         modelRemoveOrder = Closed,
@@ -34,8 +34,6 @@ newModel webOpts mSt uri = do
         modelState = fromMaybe defSt mApp,
         modelUriViewer = mempty,
         modelDonateViewer = donate,
-        modelProducerQueue = prod,
-        modelConsumerQueue = cons,
         modelCurrencies =
           fromMaybe [btc, usd, rub, cny] (mSt ^? _Just . #modelCurrencies),
         modelWebOpts = webOpts,

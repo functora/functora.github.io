@@ -17,7 +17,7 @@ marketLinks st =
     Dialog.Args
       { Dialog.argsModel = st,
         Dialog.argsOptic = #modelMarketLinks,
-        Dialog.argsAction = PushUpdate . Instant,
+        Dialog.argsAction = PushUpdate,
         Dialog.argsContent =
           [ button_ [onClick $ openBrowser alibabaLink] [text "1688"],
             button_ [onClick $ openBrowser alibabaLink] [text "Alibaba"],
@@ -30,7 +30,6 @@ marketLinks st =
   where
     openBrowser link =
       PushUpdate
-        . Instant
         $ PureAndEffectUpdate
           (#modelMarketLinks .~ Closed)
           (Jsm.openBrowserPage link)

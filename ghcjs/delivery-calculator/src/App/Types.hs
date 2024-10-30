@@ -19,7 +19,7 @@ module App.Types
     unShareUri,
     stUri,
     setScreenAction,
-    pushActionQueue,
+    emitter,
     icon,
     vsn,
     usd,
@@ -62,7 +62,8 @@ import qualified Text.Regex as Re
 import qualified Text.URI as URI
 
 data Model = Model
-  { modelMenu :: OpenedOrClosed,
+  { modelSink :: MVar (Action -> IO ()),
+    modelMenu :: OpenedOrClosed,
     modelLinks :: OpenedOrClosed,
     modelPlaceOrder :: OpenedOrClosed,
     modelRemoveOrder :: OpenedOrClosed,
@@ -71,8 +72,6 @@ data Model = Model
     modelState :: St Unique,
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelDonateViewer :: [FieldPair DynamicField Unique],
-    modelProducerQueue :: TChan (InstantOrDelayed (Update Model)),
-    modelConsumerQueue :: TChan (InstantOrDelayed (Update Model)),
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelWebOpts :: Web.Opts,
     modelMarket :: MVar Rates.Market
@@ -83,8 +82,8 @@ data Action
   = Noop
   | InitUpdate (Maybe (St Unique))
   | SyncInputs
-  | ChanUpdate (Model -> Model)
-  | PushUpdate (InstantOrDelayed (Update Model))
+  | EvalUpdate (Model -> Model)
+  | PushUpdate (Update Model)
 
 data St f = St
   { stAssets :: [Asset f],
@@ -491,19 +490,12 @@ setScreenPure sc =
 setScreenAction :: Screen -> Action
 setScreenAction =
   PushUpdate
-    . Instant
     . setScreenPure
 
-pushActionQueue ::
-  ( MonadIO m
-  ) =>
-  Model ->
-  InstantOrDelayed (Update Model) ->
-  m ()
-pushActionQueue st =
-  liftIO
-    . atomically
-    . writeTChan (st ^. #modelProducerQueue)
+emitter :: (MonadIO m) => Model -> Update Model -> m ()
+emitter st updater = do
+  sink <- readMVar $ modelSink st
+  liftIO . sink $ PushUpdate updater
 
 icon :: Icon.Icon -> View action
 icon = Icon.icon @Icon.Fa

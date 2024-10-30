@@ -13,7 +13,6 @@ removeOrder st =
       button_
         [ onClick
             . PushUpdate
-            . Instant
             . PureUpdate
             $ #modelRemoveOrder
             .~ Opened
@@ -48,7 +47,7 @@ removeOrder st =
           Dialog.Args
             { Dialog.argsModel = st,
               Dialog.argsOptic = #modelRemoveOrder,
-              Dialog.argsAction = PushUpdate . Instant,
+              Dialog.argsAction = PushUpdate,
               Dialog.argsContent =
                 [ text "Do you really want to remove the order?"
                 ]
@@ -56,11 +55,9 @@ removeOrder st =
   where
     removeAction =
       PushUpdate
-        . Instant
         . PureUpdate
         $ (#modelRemoveOrder .~ Closed)
         . (#modelState . #stAssets .~ mempty)
     saveAction =
       PushUpdate
-        . Instant
         $ PureUpdate (#modelRemoveOrder .~ Closed)

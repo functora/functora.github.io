@@ -23,7 +23,6 @@ import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Money as Money
-import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!))
@@ -50,7 +49,8 @@ main =
       uri <- URI.mkURI . inspect =<< getCurrentURI
       mSt <- unShareUri uri
       web <- getWebOpts
-      st <- newModel web Nothing uri
+      sink <- newEmptyMVar
+      st <- newModel web sink Nothing uri
       startApp
         App
           { model = st,
@@ -120,52 +120,43 @@ runApp = JSaddle.Wasm.run
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
 updateModel (InitUpdate ext) prevSt = do
-  batchEff
-    prevSt
-    [ do
-        --
-        -- NOTE : making a new pair of TChans to avoid deadlocks
-        -- when running in ghcid mode and reloading page without
-        -- restarting executable. It's ok, the overhead is low.
-        --
-        prod <- liftIO newBroadcastTChanIO
-        cons <- liftIO . atomically $ dupTChan prod
-        let nextSt =
-              prevSt
-                { modelProducerQueue = prod,
-                  modelConsumerQueue = cons
-                }
-        if isJust ext
-          then do
-            pushActionQueue
-              nextSt
-              . Instant
-              . PureUpdate
-              $ #modelLoading
-              .~ False
-            opfsRead nextSt
-          else Jsm.selectStorage ("current-" <> vsn) $ \case
-            Nothing -> do
-              pushActionQueue nextSt
-                . Instant
-                . PureUpdate
-                $ #modelLoading
-                .~ False
-              opfsRead nextSt
-            Just uri -> do
-              finSt <- newModel (nextSt ^. #modelWebOpts) (Just nextSt) uri
-              pushActionQueue nextSt
-                . Instant
-                . PureUpdate
-                $ ( const
-                      $ finSt
-                      & #modelLoading
-                      .~ False
-                  )
-              opfsRead finSt
-        pure
-          $ ChanUpdate (const nextSt)
-    ]
+  effectSub prevSt $ \sink -> do
+    mvSink <- newMVar sink
+    let nextSt = prevSt {modelSink = mvSink}
+    if isJust ext
+      then do
+        liftIO
+          . sink
+          . PushUpdate
+          . PureUpdate
+          $ #modelLoading
+          .~ False
+        opfsRead sink nextSt
+      else Jsm.selectStorage ("current-" <> vsn) $ \case
+        Nothing -> do
+          liftIO
+            . sink
+            . PushUpdate
+            . PureUpdate
+            $ #modelLoading
+            .~ False
+          opfsRead sink nextSt
+        Just uri -> do
+          finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) uri
+          liftIO
+            . sink
+            . PushUpdate
+            . PureUpdate
+            $ ( const
+                  $ finSt
+                  & #modelLoading
+                  .~ False
+              )
+          opfsRead sink finSt
+    liftIO
+      . sink
+      . PushUpdate
+      $ PureUpdate (const nextSt)
 updateModel SyncInputs st = do
   batchEff
     st
@@ -173,123 +164,65 @@ updateModel SyncInputs st = do
         syncInputs st
         pure Noop
     ]
-updateModel (ChanUpdate update0) st0 = do
-  let st1 = update0 st0
+updateModel (EvalUpdate f) st = do
+  let prev = f st
+  let unload = #modelLoading .~ False :: Model -> Model
   batchEff
-    st1
+    prev
     [ do
+        when (modelLoading prev) $ do
+          sink <- readMVar $ modelSink prev
+          liftIO
+            . void
+            . spawnLink
+            . deepseq (viewModel $ unload prev)
+            . sink
+            . PushUpdate
+            . PureUpdate
+            $ unload
+        uri <- stUri prev
+        Jsm.insertStorage ("current-" <> vsn) uri
+        syncUri uri
+        pure Noop,
+      do
         --
         -- NOTE : Workaround to fix slow rendering after screen switch.
         --
         sleepMilliSeconds 300
-        pure SyncInputs,
-      do
-        actions <-
-          drainTChan $ st1 ^. #modelConsumerQueue
-        update1 <-
-          foldlM
-            ( \acc upd -> do
-                fun <- unUpdate upd
-                pure $ fun . acc
-            )
-            id
-            actions
-        let st2 = update1 st1
-        update2 <-
+        pure SyncInputs
+    ]
+updateModel (PushUpdate value) st = do
+  case value of
+    PureUpdate f -> do
+      let prev = f st
+      prev <# do
+        next <-
           handleAny
             ( \e -> do
                 alert . from @String @Unicode $ displayException e
                 pure $ #modelLoading .~ False
             )
-            $ evalModel st2
-        let st3 = update2 st2
-        uri <- stUri st3
-        Jsm.insertStorage ("current-" <> vsn) uri
-        syncUri uri
-        nextUri <- stUri $ st3 & #modelState . #stScreen %~ unQrCode
-        uriViewer <-
-          newFieldPair mempty
-            . DynamicFieldText
-            . from @Prelude.String @Unicode
-            $ URI.renderStr nextUri
-        let update3 =
-              #modelUriViewer
-                %~ mergeFieldPairs
-                  [ uriViewer
-                      & #fieldPairValue
-                      . #fieldOpts
-                      . #fieldOptsQrState
-                      .~ Just Opened
-                  ]
-        let st4 = update3 st3
-        if st4 ^. #modelLoading
-          then do
-            void
-              . spawnLink
-              . deepseq (viewModel st4)
-              . pushActionQueue st4
-              . Instant
-              . PureUpdate
-              $ #modelLoading
-              .~ False
-            pure
-              . ChanUpdate
-              $ (#modelLoading .~ True)
-              . update3
-              . update2
-              . update1
-          else
-            pure
-              . ChanUpdate
-              $ (#modelLoading .~ False)
-              . update3
-              . update2
-              . update1
-    ]
-updateModel (PushUpdate value) st = do
-  case instantOrDelayedValue value of
-    PureUpdate f ->
-      batchEff
-        ( f st
-        )
-        [ do
-            pushActionQueue st . Instant $ PureUpdate id
-            pure Noop
-        ]
+            $ evalModel prev
+        pure
+          $ EvalUpdate next
     ImpureUpdate g ->
-      batchEff
-        st
-        [ do
-            updater <- g
-            pushActionQueue st . Instant $ PureUpdate updater
-            pure Noop
-        ]
+      st <# do
+        f <- g
+        pure . PushUpdate $ PureUpdate f
     EffectUpdate e ->
-      batchEff
-        st
-        [ do
-            e
-            pushActionQueue st . Instant $ PureUpdate id
-            pure Noop
-        ]
-    PureAndImpureUpdate f g ->
-      batchEff
-        ( f st
-        )
-        [ do
-            updater <- g
-            pushActionQueue st . Instant $ PureUpdate updater
-            pure Noop
-        ]
-    PureAndEffectUpdate f e ->
-      batchEff
-        ( f st
-        )
-        [ do
-            e
-            pushActionQueue st . Instant $ PureUpdate id
-            pure Noop
-        ]
+      st <# do
+        e
+        pure . PushUpdate $ PureUpdate id
+    PureAndImpureUpdate f g -> do
+      let prev = f st
+      prev <# do
+        next <- g
+        pure . PushUpdate $ PureUpdate next
+    PureAndEffectUpdate f e -> do
+      let prev = f st
+      prev <# do
+        e
+        pure . PushUpdate $ PureUpdate id
 
 --
 -- TODO : !!!
@@ -488,8 +421,8 @@ syncUri uri = do
             $ URI.renderStr nextUri
         )
 
-opfsRead :: Model -> JSM ()
-opfsRead st =
+opfsRead :: (Action -> IO ()) -> Model -> JSM ()
+opfsRead sink st =
   forM_ (zip [0 ..] assets) . uncurry $ \assetIdx asset -> do
     let fields = fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
     forM_ (zip [0 ..] fields) . uncurry $ \fieldIdx field -> do
@@ -503,8 +436,9 @@ opfsRead st =
       when (field ^. #fieldType == FieldTypeImage)
         $ whenJust (field ^. #fieldOpfsName)
         $ \opfsName -> Jsm.opfsRead opfsName . flip whenJust $ \uri ->
-          pushActionQueue st
-            . Instant
+          liftIO
+            . sink
+            . PushUpdate
             . PureUpdate
             $ ( cloneTraversal optic
                   . #fieldInput

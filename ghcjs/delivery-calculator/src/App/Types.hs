@@ -176,9 +176,25 @@ newAsset = do
     either throw pure . decodeUtf8Strict . unTagged . htmlUid =<< newUid
   photo <-
     fmap
-      ( (#fieldPairValue . #fieldOpfsName .~ Just opfs)
-          . (#fieldPairValue . #fieldType .~ FieldTypeImage)
-          . (#fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing)
+      ( ( #fieldPairValue
+            . #fieldSelectOpts
+            . #selectOptsOpfsName
+            .~ Just opfs
+        )
+          . ( #fieldPairValue
+                . #fieldSelectOpts
+                . #selectOptsMaxSizeKb
+                .~ Just 400000
+            )
+          . ( #fieldPairValue
+                . #fieldType
+                .~ FieldTypeImage
+            )
+          . ( #fieldPairValue
+                . #fieldOpts
+                . #fieldOptsTruncateLimit
+                .~ Nothing
+            )
       )
       . newFieldPair "Photo"
       $ DynamicFieldText mempty

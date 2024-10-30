@@ -30,7 +30,7 @@ export async function insertStorage(key, value) {
   return await Preferences.set({ key: key, value: value });
 }
 
-export async function compressImage(maxSizeKb, prevImage) {
+export async function compressImage(prevImage, maxSizeKb) {
   let opts = { quality: 1 };
   if (maxSizeKb) {
     opts = {
@@ -50,12 +50,12 @@ export async function compressImage(maxSizeKb, prevImage) {
   return nextImage;
 }
 
-export async function selectClipboard(opfsName = null) {
+export async function selectClipboard(opts = {}) {
   const { value } = await Clipboard.read();
-  return await selectDataUrl(value, opfsName);
+  return await resolveDataUrl(value, opts);
 }
 
-export async function selectFile(file, opfsName = null) {
+export async function selectFile(file, opts = {}) {
   const value = await new Promise((resolve, reject) => {
     var fr = new FileReader();
     fr.onload = () => {
@@ -64,18 +64,22 @@ export async function selectFile(file, opfsName = null) {
     fr.onerror = reject;
     fr.readAsDataURL(file);
   });
-  return await selectDataUrl(value, opfsName);
+  return await resolveDataUrl(value, opts);
 }
 
-export async function selectDataUrl(value, opfsName = null) {
+export async function resolveDataUrl(value, opts = {}) {
   try {
     const { buffer: u8a, typeFull: mime } = dataUriToBuffer(value);
     let blob = new Blob([u8a], { type: mime });
     if (mime.startsWith("image")) {
-      blob = await compressImage(null, blob);
+      let maxSizeKb = null;
+      if (opts.maxSizeKb) {
+        maxSizeKb = opts.maxSizeKb;
+      }
+      blob = await compressImage(blob, maxSizeKb);
     }
-    if (opfsName) {
-      await opfsWrite(value, opfsName);
+    if (opts.opfsName) {
+      await opfsWrite(value, opts.opfsName);
     }
     return URL.createObjectURL(blob);
   } catch (e) {
@@ -102,7 +106,7 @@ export async function opfsRead(opfsName) {
     const handle = await root.getFileHandle(opfsName);
     const file = await handle.getFile();
     const uri = await file.text();
-    const res = await selectDataUrl(uri);
+    const res = await resolveDataUrl(uri);
     return res;
   } catch (e) {
     alert("OPFS read failure: " + e.toString() + " file: " + opfsName);
@@ -200,17 +204,16 @@ export function isNativePlatform() {
   return Capacitor.isNativePlatform();
 }
 
-export async function fetchUrlAsRfc2397(maxSizeKb, url) {
+export async function fetchUrlAsRfc2397(url) {
   const imgResp = await fetch(url);
   const imgBlob = await imgResp.blob();
-  const imgComp = await compressImage(maxSizeKb, imgBlob);
   const rfc2397 = await new Promise((resolve, reject) => {
     var fr = new FileReader();
     fr.onload = () => {
       resolve(fr.result);
     };
     fr.onerror = reject;
-    fr.readAsDataURL(imgComp);
+    fr.readAsDataURL(imgBlob);
   });
   const utf8Encode = new TextEncoder();
   const ab = utf8Encode.encode(rfc2397).buffer;

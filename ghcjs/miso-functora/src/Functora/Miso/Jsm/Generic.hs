@@ -7,6 +7,8 @@ module Functora.Miso.Jsm.Generic
     openBrowserPage,
     enterOrEscapeBlur,
     insertStorage,
+    SelectOpts (..),
+    defSelectOpts,
     selectStorage,
     selectBarcode,
     selectClipboard,
@@ -152,17 +154,17 @@ selectBarcode after =
     $ after
     . fmap strip
 
-selectClipboard :: Maybe Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
-selectClipboard opfsName after = do
-  jopfsName <- JS.toJSVal opfsName
-  genericPromise @[JS.JSVal] @Unicode "selectClipboard" [jopfsName]
+selectClipboard :: SelectOpts -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectClipboard opts after = do
+  jopts <- JS.toJSVal $ toJSON opts
+  genericPromise @[JS.JSVal] @Unicode "selectClipboard" [jopts]
     $ after
     . fmap strip
 
-selectFile :: Maybe Unicode -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
-selectFile opfsName file after = do
-  jopfsName <- JS.toJSVal opfsName
-  genericPromise @[JS.JSVal] @Unicode "selectFile" [file, jopfsName]
+selectFile :: SelectOpts -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectFile opts file after = do
+  jopts <- JS.toJSVal $ toJSON opts
+  genericPromise @[JS.JSVal] @Unicode "selectFile" [file, jopts]
     $ after
     . fmap strip
 
@@ -251,11 +253,10 @@ saveFileThen onSuccess name mime bs = do
     Just str -> onSuccess str
 
 fetchUrlAsRfc2397 ::
-  Maybe Int ->
   Unicode ->
   (Maybe ByteString -> JSM ()) ->
   JSM ()
-fetchUrlAsRfc2397 maxSizeKb url after = do
+fetchUrlAsRfc2397 url after = do
   success <- JS.function $ \_ _ ->
     handleAny
       ( \e -> do
@@ -280,10 +281,6 @@ fetchUrlAsRfc2397 maxSizeKb url after = do
       alert $ "Failure, " <> inspect msg <> "!"
       after Nothing
   pkg <- getPkg
-  argv <-
-    sequence
-      [ JS.toJSVal maxSizeKb,
-        JS.toJSVal url
-      ]
+  argv <- sequence [JS.toJSVal url]
   prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) (argv :: [JS.JSVal])
   void $ prom ^. JS.js2 @Unicode "then" success failure

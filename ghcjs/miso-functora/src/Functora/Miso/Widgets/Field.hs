@@ -343,7 +343,11 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           else do
             file <- el JS.! ("files" :: Unicode) JS.!! 0
             Jsm.selectFile
-              (st ^? cloneTraversal optic . #fieldOpfsName . _Just)
+              ( fromMaybe defSelectOpts
+                  $ st
+                  ^? cloneTraversal optic
+                  . #fieldSelectOpts
+              )
               file
               $ \case
                 Nothing -> Jsm.popupText @Unicode "File is not selected!"
@@ -455,8 +459,10 @@ fieldIcon full opts = \case
   PasteWidget attrs ->
     fieldIconSimple opts Icon.IconPaste attrs
       . insertAction full
-      $ Jsm.selectClipboard
-        (st ^? cloneTraversal optic . #fieldOpfsName . _Just)
+      . Jsm.selectClipboard
+      $ fromMaybe
+        defSelectOpts
+        (st ^? cloneTraversal optic . #fieldSelectOpts)
   ScanQrWidget ->
     fieldIconSimple opts Icon.IconQrCode mempty
       $ insertAction full Jsm.selectBarcode

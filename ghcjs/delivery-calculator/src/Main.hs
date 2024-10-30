@@ -434,7 +434,7 @@ opfsRead sink st =
               . ix fieldIdx
               . #fieldPairValue
       when (field ^. #fieldType == FieldTypeImage)
-        $ whenJust (field ^. #fieldOpfsName)
+        $ whenJust (field ^. #fieldSelectOpts . #selectOptsOpfsName)
         $ \opfsName -> Jsm.opfsRead opfsName . flip whenJust $ \uri ->
           liftIO
             . sink

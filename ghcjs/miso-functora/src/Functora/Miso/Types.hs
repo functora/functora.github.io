@@ -58,6 +58,8 @@ module Functora.Miso.Types
     themeCssFile,
     noopAll,
     noop,
+    SelectOpts (..),
+    defSelectOpts,
     module X,
   )
 where
@@ -128,7 +130,7 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Unicode,
     fieldOutput :: a,
-    fieldOpfsName :: Maybe Unicode,
+    fieldSelectOpts :: SelectOpts,
     fieldModalState :: OpenedOrClosed,
     fieldFocusState :: FocusedOrBlurred,
     fieldRequired :: Bool,
@@ -184,7 +186,7 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldOpfsName = Nothing,
+        fieldSelectOpts = defSelectOpts,
         fieldModalState = Closed,
         fieldFocusState = Blurred,
         fieldRequired = False,
@@ -197,7 +199,7 @@ newFieldId typ viewer output =
     { fieldType = typ,
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
-      fieldOpfsName = Nothing,
+      fieldSelectOpts = defSelectOpts,
       fieldModalState = Closed,
       fieldFocusState = Blurred,
       fieldRequired = False,
@@ -617,3 +619,17 @@ noop action event =
     . action
     . EffectUpdate
     $ pure ()
+
+data SelectOpts = SelectOpts
+  { selectOptsOpfsName :: Maybe Unicode,
+    selectOptsMaxSizeKb :: Maybe Int
+  }
+  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving (Binary, ToJSON, FromJSON) via GenericType SelectOpts
+
+defSelectOpts :: SelectOpts
+defSelectOpts =
+  SelectOpts
+    { selectOptsOpfsName = Nothing,
+      selectOptsMaxSizeKb = Nothing
+    }

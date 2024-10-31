@@ -8,7 +8,6 @@ import qualified App.Widgets.PlaceOrder as PlaceOrder
 import qualified App.Widgets.RemoveOrder as RemoveOrder
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
-import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Flex as Flex
 import qualified Functora.Miso.Widgets.Icon as Icon
@@ -61,32 +60,38 @@ mainWidget st =
 
 screenWidget :: Model -> [View Action]
 screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  ( if unQrCode sc == Donate
-      then mempty
-      else
-        Field.fieldViewer
-          Field.defOpts
-          Field.Args
-            { Field.argsModel = st,
-              Field.argsOptic = #modelState . #stPreview,
-              Field.argsAction = PushUpdate,
-              Field.argsEmitter = emitter st
-            }
-  )
-    <> FieldPairs.fieldPairsViewer
-      FieldPairs.defOpts
-      FieldPairs.Args
-        { FieldPairs.argsModel = st,
-          FieldPairs.argsOptic = #modelUriViewer,
-          FieldPairs.argsAction = PushUpdate,
-          FieldPairs.argsEmitter = emitter st
-        }
-    <> [ button_
-          [ onClick . setScreenAction $ unQrCode sc
+  [ Flex.flexCol
+      main_
+      ( <>
+          [ style_ [("align-items", "center")]
           ]
-          [ text "Open"
-          ]
-       ]
+      )
+      $ fmap
+        ( appendAttrs
+            [ style_
+                [ ("display", "flex"),
+                  ("align-items", "center"),
+                  ("flex-direction", "column")
+                ]
+            ]
+        )
+        ( FieldPairs.fieldPairsViewer
+            FieldPairs.defOpts
+            FieldPairs.Args
+              { FieldPairs.argsModel = st,
+                FieldPairs.argsOptic = #modelUriViewer,
+                FieldPairs.argsAction = PushUpdate,
+                FieldPairs.argsEmitter = emitter st
+              }
+        )
+      <> [ button_
+            [ onClick . setScreenAction $ unQrCode sc
+            ]
+            [ icon Icon.IconOpen,
+              text " Delivery Calculator"
+            ]
+         ]
+  ]
 screenWidget st@Model {modelState = St {stScreen = Donate}} =
   FieldPairs.fieldPairsViewer
     FieldPairs.defOpts

@@ -164,9 +164,12 @@ updateModel SyncInputs st = do
         syncInputs st
         pure Noop
     ]
+updateModel (LinkUpdate f) st =
+  noEff $ f st
 updateModel (EvalUpdate f) st = do
   let prev = f st
   let unload = #modelLoading .~ False :: Model -> Model
+  let next = unload prev
   batchEff
     prev
     [ do
@@ -175,15 +178,34 @@ updateModel (EvalUpdate f) st = do
           liftIO
             . void
             . spawnLink
-            . deepseq (viewModel $ unload prev)
+            . deepseq (viewModel next)
             . sink
             . PushUpdate
             . PureUpdate
             $ unload
-        uri <- stUri prev
+        uri <- stUri next
         Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
-        pure Noop,
+        nextUri <- stUri $ next & #modelState . #stScreen %~ unQrCode
+        uriViewer <-
+          newFieldPair mempty
+            . DynamicFieldText
+            . from @String @Unicode
+            $ URI.renderStr nextUri
+        pure
+          . LinkUpdate
+          $ #modelUriViewer
+          %~ mergeFieldPairs
+            [ uriViewer
+                & #fieldPairValue
+                . #fieldOpts
+                . #fieldOptsQrState
+                .~ Just Opened
+                & #fieldPairValue
+                . #fieldOpts
+                . #fieldOptsAllowCopy
+                .~ True
+            ],
       do
         --
         -- NOTE : Workaround to fix slow rendering after screen switch.

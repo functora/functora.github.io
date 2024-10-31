@@ -82,6 +82,7 @@ data Action
   = Noop
   | InitUpdate (Maybe (St Unique))
   | SyncInputs
+  | LinkUpdate (Model -> Model)
   | EvalUpdate (Model -> Model)
   | PushUpdate (Update Model)
 
@@ -96,7 +97,6 @@ data St f = St
     stMerchantEmail :: Field Unicode f,
     stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
-    stPreview :: Field Unicode f,
     stScreen :: Screen,
     stEnableTheme :: Bool,
     stTheme :: Theme
@@ -127,7 +127,6 @@ newSt = do
   whats <- newTextField "TODO"
   email <- newTextField "TODO"
   fee <- newDynamicField $ DynamicFieldNumber 2
-  pre <- newTextField "Delivery Calculator"
   pure
     St
       { stAssets = mempty,
@@ -140,7 +139,6 @@ newSt = do
         stMerchantEmail = email,
         stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
-        stPreview = pre & #fieldType .~ FieldTypeTitle,
         stScreen = Main,
         stEnableTheme = True,
         stTheme = Theme.Matcha

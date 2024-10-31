@@ -165,17 +165,6 @@ menu st =
                     & #optsLabel
                     .~ Just ("Merchant email" :: Unicode)
                 )
-              <> Field.textField
-                Field.Args
-                  { Field.argsModel = st,
-                    Field.argsOptic = #modelState . #stPreview,
-                    Field.argsAction = PushUpdate,
-                    Field.argsEmitter = emitter st
-                  }
-                ( Field.defOpts @Model @Action
-                    & #optsLabel
-                    .~ Just ("QR title" :: Unicode)
-                )
               <> [ Switch.switch
                     ( Switch.defOpts
                         & #optsLabel

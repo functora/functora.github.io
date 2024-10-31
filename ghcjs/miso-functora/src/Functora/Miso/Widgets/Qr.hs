@@ -14,7 +14,13 @@ qr txt
   | txt == mempty = mempty
   | otherwise =
       catMaybes
-        [ fmap (img_ . singleton . src_)
+        [ fmap
+            ( \src ->
+                img_
+                  [ loading_ "lazy",
+                    src_ src
+                  ]
+            )
             --
             -- TODO : Research how this works!
             -- It might be leaking memory or something..

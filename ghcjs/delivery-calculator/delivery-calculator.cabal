@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name:          delivery-calculator
-version:       0.1.0.13
+version:       0.1.0.14
 synopsis:      Delivery Calculator
 category:      Web
 build-type:    Simple

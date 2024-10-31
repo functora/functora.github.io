@@ -44,6 +44,7 @@ data Icon
   | IconShopping
   | IconWhatsApp
   | IconEmail
+  | IconOpen
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 class (From Icon a) => IsIcon a where
@@ -85,6 +86,7 @@ data Fa
   | FaCartShopping
   | FaWhatsapp
   | FaEnvelope
+  | FaRightToBracket
   deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance From Icon Fa where
@@ -124,6 +126,7 @@ instance From Icon Fa where
     IconShopping -> FaCartShopping
     IconWhatsApp -> FaWhatsapp
     IconEmail -> FaEnvelope
+    IconOpen -> FaRightToBracket
 
 instance IsIcon Fa where
   icon x =

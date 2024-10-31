@@ -808,12 +808,9 @@ genericFieldViewer opts0 args widget =
       )
         <> ( if isNothing $ opts ^. #fieldOptsQrState
               then mempty
-              else do
-                let icon = case stateQr of
-                      Closed -> Icon.IconQrCode
-                      Opened -> Icon.IconFile
+              else
                 pure
-                  . fieldViewerIcon opts0 icon
+                  . fieldViewerIcon opts0 Icon.IconQrCode
                   . action
                   . PureUpdate
                   $ cloneTraversal optic

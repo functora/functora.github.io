@@ -20,6 +20,7 @@ import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Money as Money
@@ -131,7 +132,7 @@ updateModel (InitUpdate ext) prevSt = do
           . PureUpdate
           $ #modelLoading
           .~ False
-        opfsRead sink nextSt
+        opfsSync sink nextSt
       else Jsm.selectStorage ("current-" <> vsn) $ \case
         Nothing -> do
           liftIO
@@ -140,7 +141,7 @@ updateModel (InitUpdate ext) prevSt = do
             . PureUpdate
             $ #modelLoading
             .~ False
-          opfsRead sink nextSt
+          opfsSync sink nextSt
         Just uri -> do
           finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) uri
           liftIO
@@ -152,7 +153,7 @@ updateModel (InitUpdate ext) prevSt = do
                   & #modelLoading
                   .~ False
               )
-          opfsRead sink finSt
+          opfsSync sink finSt
     liftIO
       . sink
       . PushUpdate
@@ -443,6 +444,11 @@ syncUri uri = do
             $ URI.renderStr nextUri
         )
 
+opfsSync :: (Action -> IO ()) -> Model -> JSM ()
+opfsSync sink st = do
+  opfsRead sink st
+  opfsFree st
+
 opfsRead :: (Action -> IO ()) -> Model -> JSM ()
 opfsRead sink st =
   forM_ (zip [0 ..] assets) . uncurry $ \assetIdx asset -> do
@@ -478,3 +484,39 @@ opfsRead sink st =
               )
   where
     assets = st ^. #modelState . #stAssets
+
+--
+-- NOTE : test with
+--
+-- const root = await navigator.storage.getDirectory(); for await (let name of root.keys()) {console.log(name);} const dir = await root.getDirectoryHandle("delivery-calculator-images"); for await (let name of dir.keys()) {console.log(name);}
+--
+opfsFree :: Model -> JSM ()
+opfsFree st =
+  forM_ groups $ \case
+    items@((dir, _) : _) ->
+      Jsm.opfsList dir $ \case
+        Nothing -> pure ()
+        Just opfsFiles -> do
+          let modelFiles = fromList $ fmap snd items
+          forM_ opfsFiles $ \file ->
+            when (Set.notMember file modelFiles)
+              $ Jsm.opfsRemove
+                defBlobOpts
+                  { blobOptsOpfsDir = Just dir,
+                    blobOptsOpfsFile = Just file
+                  }
+    _ ->
+      pure ()
+  where
+    groups :: [[(Unicode, Unicode)]]
+    groups =
+      groupAllOn fst
+        . catMaybes
+        . map
+          ( \x ->
+              (,)
+                <$> (x ^. #fieldBlobOpts . #blobOptsOpfsDir)
+                <*> (x ^. #fieldBlobOpts . #blobOptsOpfsFile)
+          )
+        . Syb.listify (\(_ :: Field DynamicField Unique) -> True)
+        $ modelState st

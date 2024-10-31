@@ -31,10 +31,13 @@ export async function insertStorage(key, value) {
 }
 
 export async function compressImage(prevImage, maxSizeKb) {
-  let opts = { quality: 1 };
+  //
+  // TODO : default quality option
+  //
+  let opts = { quality: 0.2 };
   if (maxSizeKb) {
     opts = {
-      quality: Math.min(1, maxSizeKb / prevImage.size),
+      quality: Math.min(0.2, maxSizeKb / prevImage.size),
       maxWidth: 768,
       maxHeight: 768,
     };
@@ -79,7 +82,15 @@ export async function resolveDataUrl(value, opts = {}) {
       blob = await compressImage(blob, maxSizeKb);
     }
     if (opts.opfsDir && opts.opfsFile) {
-      await opfsWrite(value, opts);
+      const rfc2397 = await new Promise((resolve, reject) => {
+        var fr = new FileReader();
+        fr.onload = () => {
+          resolve(fr.result);
+        };
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+      await opfsWrite(rfc2397, opts);
     }
     return URL.createObjectURL(blob);
   } catch (e) {

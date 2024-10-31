@@ -174,7 +174,7 @@ newAsset = do
     either throw pure . decodeUtf8Strict . unTagged . htmlUid =<< newUid
   let opts =
         BlobOpts
-          { blobOptsOpfsDir = Just $ "delivery-calculator-" <> vsn,
+          { blobOptsOpfsDir = Just $ "delivery-calculator-images",
             blobOptsOpfsFile = Just opfs,
             blobOptsMaxSizeKb = Just 400000
           }

@@ -172,18 +172,18 @@ newAsset = do
       $ DynamicFieldText mempty
   opfs <-
     either throw pure . decodeUtf8Strict . unTagged . htmlUid =<< newUid
+  let opts =
+        BlobOpts
+          { blobOptsOpfsDir = Just $ "delivery-calculator-" <> vsn,
+            blobOptsOpfsFile = Just opfs,
+            blobOptsMaxSizeKb = Just 400000
+          }
   photo <-
     fmap
       ( ( #fieldPairValue
-            . #fieldSelectOpts
-            . #selectOptsOpfsName
-            .~ Just opfs
+            . #fieldBlobOpts
+            .~ opts
         )
-          . ( #fieldPairValue
-                . #fieldSelectOpts
-                . #selectOptsMaxSizeKb
-                .~ Just 400000
-            )
           . ( #fieldPairValue
                 . #fieldType
                 .~ FieldTypeImage

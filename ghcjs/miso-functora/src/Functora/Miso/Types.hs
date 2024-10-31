@@ -58,8 +58,8 @@ module Functora.Miso.Types
     themeCssFile,
     noopAll,
     noop,
-    SelectOpts (..),
-    defSelectOpts,
+    BlobOpts (..),
+    defBlobOpts,
     module X,
   )
 where
@@ -130,7 +130,7 @@ data Field a f = Field
   { fieldType :: FieldType,
     fieldInput :: f Unicode,
     fieldOutput :: a,
-    fieldSelectOpts :: SelectOpts,
+    fieldBlobOpts :: BlobOpts,
     fieldModalState :: OpenedOrClosed,
     fieldFocusState :: FocusedOrBlurred,
     fieldRequired :: Bool,
@@ -186,7 +186,7 @@ newField typ output newInput = do
       { fieldType = typ,
         fieldInput = input,
         fieldOutput = output,
-        fieldSelectOpts = defSelectOpts,
+        fieldBlobOpts = defBlobOpts,
         fieldModalState = Closed,
         fieldFocusState = Blurred,
         fieldRequired = False,
@@ -199,7 +199,7 @@ newFieldId typ viewer output =
     { fieldType = typ,
       fieldInput = Identity $ viewer output,
       fieldOutput = output,
-      fieldSelectOpts = defSelectOpts,
+      fieldBlobOpts = defBlobOpts,
       fieldModalState = Closed,
       fieldFocusState = Blurred,
       fieldRequired = False,
@@ -620,16 +620,18 @@ noop action event =
     . EffectUpdate
     $ pure ()
 
-data SelectOpts = SelectOpts
-  { selectOptsOpfsName :: Maybe Unicode,
-    selectOptsMaxSizeKb :: Maybe Int
+data BlobOpts = BlobOpts
+  { blobOptsOpfsDir :: Maybe Unicode,
+    blobOptsOpfsFile :: Maybe Unicode,
+    blobOptsMaxSizeKb :: Maybe Int
   }
   deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary, ToJSON, FromJSON) via GenericType SelectOpts
+  deriving (Binary, ToJSON, FromJSON) via GenericType BlobOpts
 
-defSelectOpts :: SelectOpts
-defSelectOpts =
-  SelectOpts
-    { selectOptsOpfsName = Nothing,
-      selectOptsMaxSizeKb = Nothing
+defBlobOpts :: BlobOpts
+defBlobOpts =
+  BlobOpts
+    { blobOptsOpfsDir = Nothing,
+      blobOptsOpfsFile = Nothing,
+      blobOptsMaxSizeKb = Nothing
     }

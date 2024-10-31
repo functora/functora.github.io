@@ -78,8 +78,8 @@ export async function resolveDataUrl(value, opts = {}) {
       }
       blob = await compressImage(blob, maxSizeKb);
     }
-    if (opts.opfsName) {
-      await opfsWrite(value, opts.opfsName);
+    if (opts.opfsDir && opts.opfsFile) {
+      await opfsWrite(value, opts);
     }
     return URL.createObjectURL(blob);
   } catch (e) {
@@ -87,45 +87,81 @@ export async function resolveDataUrl(value, opts = {}) {
   }
 }
 
-export async function opfsWrite(value, opfsName) {
+export async function opfsWrite(value, { opfsDir, opfsFile }) {
   try {
     const root = await navigator.storage.getDirectory();
-    const handle = await root.getFileHandle(opfsName, { create: true });
-    const stream = await handle.createWritable();
+    const dir = await root.getDirectoryHandle(opfsDir, { create: true });
+    const file = await dir.getFileHandle(opfsFile, { create: true });
+    const stream = await file.createWritable();
     await stream.write(value);
     await stream.close();
   } catch (e) {
-    alert("OPFS write failure: " + e.toString() + " file: " + opfsName);
+    alert(
+      "OPFS write failure: " +
+        e.toString() +
+        " dir: " +
+        opfsDir +
+        " file: " +
+        opfsFile,
+    );
   }
   return null;
 }
 
-export async function opfsRead(opfsName) {
+export async function opfsRead({ opfsDir, opfsFile }) {
   try {
     const root = await navigator.storage.getDirectory();
-    const handle = await root.getFileHandle(opfsName);
-    const file = await handle.getFile();
-    const uri = await file.text();
+    const dir = await root.getDirectoryHandle(opfsDir);
+    const file = await dir.getFileHandle(opfsFile);
+    const blob = await file.getFile();
+    const uri = await blob.text();
     const res = await resolveDataUrl(uri);
     return res;
   } catch (e) {
-    alert("OPFS read failure: " + e.toString() + " file: " + opfsName);
+    alert(
+      "OPFS read failure: " +
+        e.toString() +
+        " dir: " +
+        opfsDir +
+        " file: " +
+        opfsFile,
+    );
     return null;
   }
 }
 
-export async function opfsList() {
+export async function opfsList(opfsDir) {
   try {
     const res = [];
     const root = await navigator.storage.getDirectory();
-    for await (let opfsName of root.keys()) {
-      res.push(opfsName);
+    const dir = await root.getDirectoryHandle(opfsDir);
+    for await (let opfsFile of dir.keys()) {
+      res.push(opfsFile);
     }
     return res;
   } catch (e) {
-    alert("OPFS list failure: " + e.toString() + " file: " + opfsName);
+    alert("OPFS list failure: " + e.toString() + " dir: " + opfsDir);
     return [];
   }
+}
+
+export async function opfsRemove({ opfsDir, opfsFile }) {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const dir = await root.getDirectoryHandle(opfsDir);
+    const file = await dir.getFileHandle(opfsFile);
+    await file.remove();
+  } catch (e) {
+    alert(
+      "OPFS remove failure: " +
+        e.toString() +
+        " dir: " +
+        opfsDir +
+        " file: " +
+        opfsFile,
+    );
+  }
+  return null;
 }
 
 export async function openBrowserPage(url) {

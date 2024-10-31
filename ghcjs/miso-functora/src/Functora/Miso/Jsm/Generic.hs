@@ -7,14 +7,13 @@ module Functora.Miso.Jsm.Generic
     openBrowserPage,
     enterOrEscapeBlur,
     insertStorage,
-    SelectOpts (..),
-    defSelectOpts,
     selectStorage,
     selectBarcode,
     selectClipboard,
     selectFile,
     opfsRead,
     opfsList,
+    opfsRemove,
     genericPromise,
     printCurrentPage,
     saveFileShow,
@@ -154,29 +153,36 @@ selectBarcode after =
     $ after
     . fmap strip
 
-selectClipboard :: SelectOpts -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectClipboard :: BlobOpts -> (Maybe Unicode -> JSM ()) -> JSM ()
 selectClipboard opts after = do
   jopts <- JS.toJSVal $ toJSON opts
   genericPromise @[JS.JSVal] @Unicode "selectClipboard" [jopts]
     $ after
     . fmap strip
 
-selectFile :: SelectOpts -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
+selectFile :: BlobOpts -> JS.JSVal -> (Maybe Unicode -> JSM ()) -> JSM ()
 selectFile opts file after = do
   jopts <- JS.toJSVal $ toJSON opts
   genericPromise @[JS.JSVal] @Unicode "selectFile" [file, jopts]
     $ after
     . fmap strip
 
-opfsRead :: Unicode -> (Maybe Unicode -> JSM ()) -> JSM ()
-opfsRead opfsName after = do
-  genericPromise @[Unicode] @Unicode "opfsRead" [opfsName]
+opfsRead :: BlobOpts -> (Maybe Unicode -> JSM ()) -> JSM ()
+opfsRead opts after = do
+  jopts <- JS.toJSVal $ toJSON opts
+  genericPromise @[JS.JSVal] @Unicode "opfsRead" [jopts]
     $ after
     . fmap strip
 
-opfsList :: (Maybe [Unicode] -> JSM ()) -> JSM ()
-opfsList after =
-  genericPromise @[Unicode] @[Unicode] "opfsList" mempty after
+opfsList :: Unicode -> (Maybe [Unicode] -> JSM ()) -> JSM ()
+opfsList dir after =
+  genericPromise @[Unicode] @[Unicode] "opfsList" [dir] after
+
+opfsRemove :: BlobOpts -> JSM ()
+opfsRemove opts = do
+  pkg <- getPkg
+  jopts <- JS.toJSVal $ toJSON opts
+  void $ pkg ^. JS.js1 @Unicode "opfsRemove" jopts
 
 genericPromise ::
   forall args res.

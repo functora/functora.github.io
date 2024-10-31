@@ -455,9 +455,14 @@ opfsRead sink st =
               . #assetFieldPairs
               . ix fieldIdx
               . #fieldPairValue
-      when (field ^. #fieldType == FieldTypeImage)
-        $ whenJust (field ^. #fieldSelectOpts . #selectOptsOpfsName)
-        $ \opfsName -> Jsm.opfsRead opfsName . flip whenJust $ \uri ->
+      when
+        ( (field ^. #fieldType == FieldTypeImage)
+            && isJust (field ^. #fieldBlobOpts . #blobOptsOpfsDir)
+            && isJust (field ^. #fieldBlobOpts . #blobOptsOpfsFile)
+        )
+        $ Jsm.opfsRead (fieldBlobOpts field)
+        . flip whenJust
+        $ \uri ->
           liftIO
             . sink
             . PushUpdate

@@ -343,10 +343,10 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           else do
             file <- el JS.! ("files" :: Unicode) JS.!! 0
             Jsm.selectFile
-              ( fromMaybe defSelectOpts
+              ( fromMaybe defBlobOpts
                   $ st
                   ^? cloneTraversal optic
-                  . #fieldSelectOpts
+                  . #fieldBlobOpts
               )
               file
               $ \case
@@ -461,8 +461,8 @@ fieldIcon full opts = \case
       . insertAction full
       . Jsm.selectClipboard
       $ fromMaybe
-        defSelectOpts
-        (st ^? cloneTraversal optic . #fieldSelectOpts)
+        defBlobOpts
+        (st ^? cloneTraversal optic . #fieldBlobOpts)
   ScanQrWidget ->
     fieldIconSimple opts Icon.IconQrCode mempty
       $ insertAction full Jsm.selectBarcode

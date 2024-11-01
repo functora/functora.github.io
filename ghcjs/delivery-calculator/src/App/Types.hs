@@ -196,10 +196,10 @@ newAsset = do
       )
       . newFieldPair "Photo"
       $ DynamicFieldText mempty
-  price <-
-    newFieldPair "Price" $ DynamicFieldNumber 0
   qty <-
     newFieldPair "Quantity" $ DynamicFieldNumber 1
+  price <-
+    newFieldPair "Price" $ DynamicFieldNumber 0
   comment <-
     newFieldPair "Comment" $ DynamicFieldText mempty
   pure
@@ -207,8 +207,8 @@ newAsset = do
       { assetFieldPairs =
           [ required link,
             required photo,
-            required price,
             required qty,
+            price,
             comment
           ],
         assetModalState = Opened,
@@ -221,7 +221,7 @@ newAsset = do
 verifyAsset :: Asset Unique -> [View Action]
 verifyAsset asset =
   case assetFieldPairs asset of
-    (link : photo : price : qty : _)
+    (link : photo : qty : price : _)
       | assetMustVerify asset -> do
           let failures =
                 intersperse (text " ")
@@ -229,10 +229,10 @@ verifyAsset asset =
                     (link ^. #fieldPairValue . #fieldInput . #uniqueValue)
                   <> verifyPhoto
                     (photo ^. #fieldPairValue . #fieldInput . #uniqueValue)
-                  <> verifyPrice
-                    (price ^. #fieldPairValue . #fieldOutput)
                   <> verifyQty
                     (qty ^. #fieldPairValue . #fieldOutput)
+                  <> verifyPrice
+                    (price ^. #fieldPairValue . #fieldOutput)
           if null failures
             then mempty
             else [keyed "asset-failure" $ blockquote_ mempty failures]
@@ -258,15 +258,15 @@ verifyPhoto txt =
   where
     str = from @Unicode @String $ uriOnlyChars txt
 
-verifyPrice :: DynamicField -> [View Action]
-verifyPrice = \case
-  DynamicFieldNumber x | x > 0 -> mempty
-  _ -> [text "Price must be a positive number!"]
-
 verifyQty :: DynamicField -> [View Action]
 verifyQty = \case
   DynamicFieldNumber x | x > 0 -> mempty
   _ -> [text "Quantity must be a positive number!"]
+
+verifyPrice :: DynamicField -> [View Action]
+verifyPrice = \case
+  DynamicFieldNumber x | x >= 0 -> mempty
+  _ -> [text "Price must be non-negative number!"]
 
 uriOnlyChars :: Unicode -> Unicode
 uriOnlyChars =
@@ -323,7 +323,7 @@ newTotal st =
         newFieldPairId ("Exchange rate")
           . DynamicFieldText
           $ inspectExchangeRate st,
-        FieldPair (newTextFieldId "Fee %")
+        FieldPair (newDynamicFieldId $ DynamicFieldText "Fee %")
           $ uniqueToIdentity fee
           & #fieldOpts
           . #fieldOptsQrState

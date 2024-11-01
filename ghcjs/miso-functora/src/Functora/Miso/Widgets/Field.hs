@@ -44,9 +44,10 @@ data Full model action t f = Full
   }
   deriving stock (Generic)
 
-data Opts model action = Opts
+data Opts model action t f = Opts
   { optsIcon :: Icon.Icon -> View action,
     optsLabel :: Maybe Unicode,
+    optsOnFocus :: Field t f -> Update model -> Update model,
     optsFullWidth :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe (Update model -> action),
@@ -63,11 +64,12 @@ data Opts model action = Opts
   }
   deriving stock (Generic)
 
-defOpts :: Opts model action
+defOpts :: Opts model action t f
 defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
       optsLabel = Nothing,
+      optsOnFocus = const id,
       optsFullWidth = False,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
@@ -155,7 +157,7 @@ labeled label attrs =
 
 field ::
   Full model action t Unique ->
-  Opts model action ->
+  Opts model action t Unique ->
   [View action]
 field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts =
   ( do
@@ -318,6 +320,8 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           .~ Blurred
     onFocusAction =
       action
+        . ( maybe id (optsOnFocus opts) $ st ^? cloneTraversal optic
+          )
         . PureUpdate
         $ cloneTraversal optic
         . #fieldFocusState
@@ -370,7 +374,7 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
 
 ratioField ::
   Args model action Rational Unique ->
-  Opts model action ->
+  Opts model action Rational Unique ->
   [View action]
 ratioField args =
   field
@@ -382,7 +386,7 @@ ratioField args =
 
 textField ::
   Args model action Unicode Unique ->
-  Opts model action ->
+  Opts model action Unicode Unique ->
   [View action]
 textField args =
   field
@@ -394,7 +398,7 @@ textField args =
 
 dynamicField ::
   Args model action DynamicField Unique ->
-  Opts model action ->
+  Opts model action DynamicField Unique ->
   [View action]
 dynamicField args =
   field
@@ -406,7 +410,7 @@ dynamicField args =
 
 passwordField ::
   Args model action Unicode Unique ->
-  Opts model action ->
+  Opts model action Unicode Unique ->
   [View action]
 passwordField args opts =
   textField
@@ -423,7 +427,7 @@ passwordField args opts =
 
 fieldIcon ::
   Full model action t Unique ->
-  Opts model action ->
+  Opts model action t Unique ->
   OptsWidget model action ->
   View action
 fieldIcon full opts = \case
@@ -532,7 +536,7 @@ fieldIcon full opts = \case
         . #uniqueUid
 
 fieldIconSimple ::
-  Opts model action ->
+  Opts model action t f ->
   Icon.Icon ->
   [Attribute action] ->
   action ->
@@ -673,7 +677,7 @@ selectTypeWidget args@Args {argsAction = action} optic =
 fieldViewer ::
   ( Foldable1 f
   ) =>
-  Opts model action ->
+  Opts model action t f ->
   Args model action t f ->
   [View action]
 fieldViewer opts args =
@@ -729,7 +733,7 @@ header txt =
 genericFieldViewer ::
   ( Foldable1 f
   ) =>
-  Opts model action ->
+  Opts model action t f ->
   Args model action t f ->
   (Unicode -> View action) ->
   [View action]
@@ -828,7 +832,7 @@ genericFieldViewer opts0 args widget =
                 ]
            )
 
-fieldViewerIcon :: Opts model action -> Icon.Icon -> action -> View action
+fieldViewerIcon :: Opts model action t f -> Icon.Icon -> action -> View action
 fieldViewerIcon opts icon action =
   button_
     [onClick action]

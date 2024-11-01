@@ -138,7 +138,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                   pure
                     $ #modelState
                     . #stAssets
-                    %~ (asset :)
+                    %~ (<> [asset])
               ]
               [ icon Icon.IconAdd,
                 text " Add item"

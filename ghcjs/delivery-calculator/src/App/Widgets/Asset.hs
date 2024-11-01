@@ -119,7 +119,7 @@ assetViewer st idx =
         . #stAssets
         . ix idx
 
-fieldPairsOpts :: FieldPairs.Opts Model Action
+fieldPairsOpts :: FieldPairs.Opts Model Action Unique
 fieldPairsOpts =
   FieldPairs.defOpts
     { FieldPairs.optsField = \case
@@ -128,9 +128,17 @@ fieldPairsOpts =
       FieldPairs.optsAdvanced = False
     }
   where
+    opts :: Field.Opts Model Action DynamicField Unique
     opts =
       Field.defOpts
-        { Field.optsExtraAttributesImage =
+        { Field.optsOnFocus = \field ->
+            case fieldOutput field of
+              DynamicFieldNumber 0 ->
+                addEffect
+                  $ Jsm.setValue (field ^. #fieldInput . #uniqueUid) mempty
+              _ ->
+                id,
+          Field.optsExtraAttributesImage =
             [ style_ [("max-height", "10vh")]
             ]
         }

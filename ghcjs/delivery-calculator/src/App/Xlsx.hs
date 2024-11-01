@@ -169,7 +169,7 @@ mapCol :: (Integral n) => n -> n
 mapCol = \case
   1 -> 2
   2 -> 3
-  3 -> 6
-  4 -> 5
+  3 -> 5
+  4 -> 6
   5 -> 10
   n -> n + 10

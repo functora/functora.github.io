@@ -316,7 +316,7 @@ userFieldType = \case
   FieldTypeImage -> "Image"
 
 data FieldPair a f = FieldPair
-  { fieldPairKey :: Field Unicode f,
+  { fieldPairKey :: Field a f,
     fieldPairValue :: Field a f
   }
   deriving stock (Generic)
@@ -342,13 +342,13 @@ newFieldPair ::
   (MonadIO m) => Unicode -> DynamicField -> m (FieldPair DynamicField Unique)
 newFieldPair key val =
   FieldPair
-    <$> newTextField key
+    <$> newDynamicField (DynamicFieldText key)
     <*> newDynamicField val
 
 newFieldPairId :: Unicode -> DynamicField -> FieldPair DynamicField Identity
 newFieldPairId key val =
   FieldPair
-    (newFieldId FieldTypeText id key)
+    (newDynamicFieldId $ DynamicFieldText key)
     (newDynamicFieldId val)
 
 mergeFieldPairs ::

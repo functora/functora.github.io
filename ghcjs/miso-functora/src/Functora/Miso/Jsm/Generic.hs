@@ -20,6 +20,7 @@ module Functora.Miso.Jsm.Generic
     saveFileShare,
     saveFileThen,
     fetchUrlAsRfc2397,
+    setValue,
   )
 where
 
@@ -290,3 +291,14 @@ fetchUrlAsRfc2397 url after = do
   argv <- sequence [JS.toJSVal url]
   prom <- pkg ^. JS.jsf ("fetchUrlAsRfc2397" :: Unicode) (argv :: [JS.JSVal])
   void $ prom ^. JS.js2 @Unicode "then" success failure
+
+setValue :: Uid -> Unicode -> JSM ()
+setValue uid value = do
+  el <-
+    getElementById
+      . either impureThrow id
+      . decodeUtf8Strict
+      . unTagged
+      $ htmlUid uid
+  is <- ghcjsPure $ JS.isTruthy el
+  when is $ el ^. JS.jss ("value" :: Unicode) value

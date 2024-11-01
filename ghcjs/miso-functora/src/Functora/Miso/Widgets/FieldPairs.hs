@@ -21,14 +21,14 @@ data Args model action f = Args
   }
   deriving stock (Generic)
 
-data Opts model action = Opts
+data Opts model action f = Opts
   { optsIcon :: Icon.Icon -> View action,
-    optsField :: Int -> Field.Opts model action,
+    optsField :: Int -> Field.Opts model action DynamicField f,
     optsAdvanced :: Bool
   }
   deriving stock (Generic)
 
-defOpts :: Opts model action
+defOpts :: Opts model action f
 defOpts =
   Opts
     { optsIcon = Icon.icon @Icon.Fa,
@@ -39,7 +39,7 @@ defOpts =
 fieldPairsViewer ::
   ( Foldable1 f
   ) =>
-  Opts model action ->
+  Opts model action f ->
   Args model action f ->
   [View action]
 fieldPairsViewer opts args@Args {argsOptic = optic} =
@@ -59,7 +59,7 @@ fieldPairViewer ::
   forall model action f.
   ( Foldable1 f
   ) =>
-  Opts model action ->
+  Opts model action f ->
   Args model action f ->
   Int ->
   FieldPair DynamicField f ->
@@ -67,12 +67,7 @@ fieldPairViewer ::
 fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
   ( if k == mempty
       then mempty
-      else
-        [ dt_
-            mempty
-            [ text $ pair ^. #fieldPairKey . #fieldOutput
-            ]
-        ]
+      else [dt_ mempty [text k]]
   )
     <> ( if v == mempty
           then mempty
@@ -96,12 +91,12 @@ fieldPairViewer opts args@Args {argsOptic = optic} idx pair =
                 }
        )
   where
-    k = pair ^. #fieldPairKey . #fieldOutput
+    k = inspectDynamicField $ pair ^. #fieldPairKey . #fieldOutput
     v = inspectDynamicField $ pair ^. #fieldPairValue . #fieldOutput
 
 fieldPairsEditor ::
   Args model action Unique ->
-  Opts model action ->
+  Opts model action Unique ->
   [View action]
 fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
   idx <- fst <$> zip [0 ..] (fromMaybe mempty $ st ^? cloneTraversal optic)
@@ -110,7 +105,7 @@ fieldPairsEditor args@Args {argsModel = st, argsOptic = optic} opts = do
 fieldPairEditor ::
   forall model action.
   Args model action Unique ->
-  Opts model action ->
+  Opts model action Unique ->
   Int ->
   [View action]
 fieldPairEditor
@@ -134,7 +129,7 @@ fieldPairEditor
       ( optsField opts idx
           & #optsLabel
           .~ Just
-            ( fromMaybe ("#" <> inspect (idx + 1))
+            ( maybe ("#" <> inspect (idx + 1)) inspectDynamicField
                 $ st
                 ^? cloneTraversal optic
                 . ix idx
@@ -153,7 +148,7 @@ fieldPairEditor
     { optsAdvanced = True
     }
   idx =
-    Field.textField
+    Field.dynamicField
       Field.Args
         { Field.argsModel = st,
           Field.argsOptic = cloneTraversal optic . ix idx . #fieldPairKey,

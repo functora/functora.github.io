@@ -6,6 +6,8 @@ module App.Widgets.Menu
 where
 
 import App.Types
+import qualified Data.Time.Format as TF
+import qualified Data.Time.LocalTime as LT
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
@@ -22,11 +24,10 @@ menu st =
   [ keyed "menu"
       $ nav_
         [ style_
-            [ ("grid-template-columns", "1fr auto")
+            [ ("grid-template-columns", "auto 1fr")
             ]
         ]
-        [ div_ mempty mempty,
-          button_
+        [ button_
             [ role_ "button",
               style_
                 [ ("min-width", "0")
@@ -38,6 +39,13 @@ menu st =
                 .~ Opened
             ]
             [ icon Icon.IconMenu
+            ],
+          label_
+            mempty
+            [ text
+                . from @String @Unicode
+                $ TF.formatTime TF.defaultTimeLocale "%H:%M" chinaTime
+                <> " in China"
             ]
         ]
   ]
@@ -203,6 +211,10 @@ menu st =
                  ]
         }
   where
+    chinaTime =
+      LT.utcToLocalTime chinaTimeZone $ modelTime st
+    chinaTimeZone =
+      LT.hoursToTimeZone 8
     shareOnClick :: Attribute Action
     shareOnClick =
       onClick

@@ -22,6 +22,7 @@ newModel webOpts sink mSt uri = do
   mApp <- unShareUri uri
   donate <- newDonateViewer
   market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
+  ct <- getCurrentTime
   pure
     Model
       { modelSink = sink,
@@ -37,7 +38,8 @@ newModel webOpts sink mSt uri = do
         modelCurrencies =
           fromMaybe [btc, usd, rub, cny] (mSt ^? _Just . #modelCurrencies),
         modelWebOpts = webOpts,
-        modelMarket = market
+        modelMarket = market,
+        modelTime = ct
       }
 
 newDonateViewer :: (MonadIO m) => m [FieldPair DynamicField Unique]

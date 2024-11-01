@@ -74,12 +74,14 @@ data Model = Model
     modelDonateViewer :: [FieldPair DynamicField Unique],
     modelCurrencies :: NonEmpty CurrencyInfo,
     modelWebOpts :: Web.Opts,
-    modelMarket :: MVar Rates.Market
+    modelMarket :: MVar Rates.Market,
+    modelTime :: UTCTime
   }
   deriving stock (Eq, Generic)
 
 data Action
   = Noop
+  | Tick (Model -> Model)
   | InitUpdate (Maybe (St Unique))
   | SyncInputs
   | LinkUpdate (Model -> Model)
@@ -90,7 +92,6 @@ data St f = St
   { stAssets :: [Asset f],
     stAssetCurrency :: Currency f,
     stExchangeRate :: Field Rational f,
-    stExchangeRateAt :: UTCTime,
     stMerchantCurrency :: Currency f,
     stMerchantTele :: Field Unicode f,
     stMerchantWhats :: Field Unicode f,
@@ -121,7 +122,6 @@ newSt :: (MonadIO m) => m (St Unique)
 newSt = do
   assetCur <- newCurrency cny
   rate <- newRatioField 1
-  ct <- getCurrentTime
   merchantCur <- newCurrency rub
   tele <- newTextField "Functora"
   whats <- newTextField "TODO"
@@ -132,7 +132,6 @@ newSt = do
       { stAssets = mempty,
         stAssetCurrency = assetCur,
         stExchangeRate = rate,
-        stExchangeRateAt = ct,
         stMerchantCurrency = merchantCur,
         stMerchantTele = tele,
         stMerchantWhats = whats,

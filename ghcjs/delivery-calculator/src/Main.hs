@@ -120,8 +120,14 @@ runApp = JSaddle.Wasm.run
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
+updateModel (Tick f) st =
+  f st <# do
+    sleepSeconds 1
+    ct <- getCurrentTime
+    pure . Tick $ #modelTime .~ ct
 updateModel (InitUpdate ext) prevSt = do
   effectSub prevSt $ \sink -> do
+    liftIO . sink $ Tick id
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
     if isJust ext
@@ -383,17 +389,20 @@ evalModel prev = do
                 . #stAssetCurrency
                 . #currencyOutput
                 . #currencyInfoCode
-        let prevQuote =
-              Rates.QuoteAt
-                { Rates.quoteMoneyAmount =
-                    Tagged $ prev ^. #modelState . #stExchangeRate . #fieldOutput,
-                  Rates.quoteCreatedAt =
-                    prev ^. #modelState . #stExchangeRateAt,
-                  Rates.quoteUpdatedAt =
-                    prev ^. #modelState . #stExchangeRateAt
-                }
-        nextQuote <-
-          fmap (fromRight prevQuote)
+        rateValue <-
+          fmap
+            ( either
+                ( const
+                    $ prev
+                    ^. #modelState
+                    . #stExchangeRate
+                    . #fieldOutput
+                )
+                ( ^.
+                    #quoteMoneyAmount
+                      . to unTagged
+                )
+            )
             . Rates.tryMarket
             . Rates.getQuote web base
             $ prev
@@ -401,10 +410,6 @@ evalModel prev = do
             . #stMerchantCurrency
             . #currencyOutput
             . #currencyInfoCode
-        let rateValue =
-              unTagged $ nextQuote ^. #quoteMoneyAmount
-        let rateUpdated =
-              nextQuote ^. #quoteCreatedAt
         pure
           $ ( #modelState
                 %~ Syb.everywhere
@@ -426,10 +431,6 @@ evalModel prev = do
                 . #stExchangeRate
                 . #fieldOutput
                 .~ rateValue
-            )
-          . ( #modelState
-                . #stExchangeRateAt
-                .~ rateUpdated
             )
 
 syncUri :: URI -> JSM ()

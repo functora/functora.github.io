@@ -112,7 +112,16 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
       then mempty
       else buttons
   )
-    <> [ Flex.flexCol main_ id $ Asset.assetsViewer st <> totalViewer st
+    <> [ Flex.flexCol
+          main_
+          ( <>
+              [ style_
+                  [ ("flex-direction", "column-reverse")
+                  ]
+              ]
+          )
+          $ totalViewer st
+          <> Asset.assetsViewer st
        ]
     <> buttons
   where

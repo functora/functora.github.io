@@ -129,14 +129,14 @@ export async function opfsRead({ opfsDir, opfsFile }) {
     const res = await resolveDataUrl(uri);
     return res;
   } catch (e) {
-    alert(
-      "OPFS read failure: " +
-        e.toString() +
-        " dir: " +
-        opfsDir +
-        " file: " +
-        opfsFile,
-    );
+    // alert(
+    //   "OPFS read failure: " +
+    //     e.toString() +
+    //     " dir: " +
+    //     opfsDir +
+    //     " file: " +
+    //     opfsFile,
+    // );
     return null;
   }
 }

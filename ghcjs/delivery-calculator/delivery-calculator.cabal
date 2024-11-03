@@ -19,12 +19,14 @@ common pkg
     App.I18n
     App.Jsm
     App.Types
+    App.Widgets.AppLinks
     App.Widgets.Asset
     App.Widgets.Main
     App.Widgets.MarketLinks
     App.Widgets.Menu
     App.Widgets.PlaceOrder
     App.Widgets.RemoveOrder
+    App.Widgets.ShareApp
     App.Widgets.Templates
     App.Xlsx
 

@@ -1,11 +1,13 @@
 module App.Widgets.Main (mainWidget) where
 
 import App.Types
+import qualified App.Widgets.AppLinks as AppLinks
 import qualified App.Widgets.Asset as Asset
 import qualified App.Widgets.MarketLinks as MarketLinks
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PlaceOrder as PlaceOrder
 import qualified App.Widgets.RemoveOrder as RemoveOrder
+import qualified App.Widgets.ShareApp as ShareApp
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
@@ -49,9 +51,7 @@ mainWidget st =
             )
           $ tosWidget
           : br_ mempty
-          : Menu.qrButton st
-          : Menu.linksWidget st
-            <> MarketLinks.marketLinks st
+          : MarketLinks.marketLinks st
        ]
     <> ( if not $ st ^. #modelLoading
           then mempty
@@ -131,7 +131,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
     buttons =
       singleton
         . Flex.flexRowCenter
-          section_
+          main_
           ( mappend
               [ style_
                   [ ("margin-left", "0"),
@@ -153,7 +153,10 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
                 text " Add item"
               ]
           )
-        : RemoveOrder.removeOrder st <> PlaceOrder.placeOrder st
+        : ShareApp.shareApp st
+          <> AppLinks.appLinks st
+          <> RemoveOrder.removeOrder st
+          <> PlaceOrder.placeOrder st
 
 totalViewer :: Model -> [View Action]
 totalViewer st =

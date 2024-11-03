@@ -27,7 +27,8 @@ newModel webOpts sink mSt uri = do
     Model
       { modelSink = sink,
         modelMenu = Closed,
-        modelLinks = Closed,
+        modelAppLinks = Closed,
+        modelShareApp = Closed,
         modelPlaceOrder = Closed,
         modelRemoveOrder = Closed,
         modelMarketLinks = Closed,

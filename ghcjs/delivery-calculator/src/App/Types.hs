@@ -64,7 +64,8 @@ import qualified Text.URI as URI
 data Model = Model
   { modelSink :: MVar (Action -> IO ()),
     modelMenu :: OpenedOrClosed,
-    modelLinks :: OpenedOrClosed,
+    modelAppLinks :: OpenedOrClosed,
+    modelShareApp :: OpenedOrClosed,
     modelPlaceOrder :: OpenedOrClosed,
     modelRemoveOrder :: OpenedOrClosed,
     modelMarketLinks :: OpenedOrClosed,
@@ -497,7 +498,7 @@ setScreenPure :: Screen -> Update Model
 setScreenPure sc =
   PureUpdate
     $ (& #modelMenu .~ Closed)
-    . (& #modelLinks .~ Closed)
+    . (& #modelAppLinks .~ Closed)
     . (& #modelState . #stScreen .~ sc)
 
 setScreenAction :: Screen -> Action

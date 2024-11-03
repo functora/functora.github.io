@@ -164,7 +164,8 @@ totalViewer st =
     then mempty
     else
       singleton
-        $ fieldset_ mempty
+        . keyed "total"
+        . fieldset_ mempty
         $ (legend_ mempty [text "Total"])
         : FieldPairs.fieldPairsViewer
           FieldPairs.defOpts

@@ -145,7 +145,8 @@ newSt = do
       }
 
 data Asset f = Asset
-  { assetFieldPairs :: [FieldPair DynamicField f],
+  { assetUid :: Uid,
+    assetFieldPairs :: [FieldPair DynamicField f],
     assetModalState :: OpenedOrClosed,
     assetMustVerify :: Bool
   }
@@ -167,6 +168,7 @@ deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
 
 newAsset :: (MonadIO m, MonadThrow m) => m (Asset Unique)
 newAsset = do
+  uid <- newUid
   link <-
     newFieldPair "Link"
       $ DynamicFieldText mempty
@@ -204,7 +206,8 @@ newAsset = do
     newFieldPair "Comment" $ DynamicFieldText mempty
   pure
     Asset
-      { assetFieldPairs =
+      { assetUid = uid,
+        assetFieldPairs =
           [ required link,
             required photo,
             required qty,

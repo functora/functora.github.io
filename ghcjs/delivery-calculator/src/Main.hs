@@ -206,12 +206,11 @@ updateModel (EvalUpdate f) st = do
             [ uriViewer
                 & #fieldPairValue
                 . #fieldOpts
-                . #fieldOptsQrState
-                .~ Just Opened
-                & #fieldPairValue
-                . #fieldOpts
                 . #fieldOptsAllowCopy
                 .~ True
+                & #fieldPairValue
+                . #fieldType
+                .~ FieldTypeQrCode
             ],
       do
         --

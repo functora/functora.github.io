@@ -810,7 +810,7 @@ genericFieldViewer opts0 args widget =
               . _Just
               %~ nextEnum
       )
-        <> ( if isNothing $ opts ^. #fieldOptsQrState
+        <> ( if typ == FieldTypeQrCode || isNothing (opts ^. #fieldOptsQrState)
               then mempty
               else
                 pure

@@ -64,6 +64,7 @@ import qualified Text.URI as URI
 data Model = Model
   { modelSink :: MVar (Action -> IO ()),
     modelMenu :: OpenedOrClosed,
+    modelDonate :: OpenedOrClosed,
     modelAppLinks :: OpenedOrClosed,
     modelShareApp :: OpenedOrClosed,
     modelPlaceOrder :: OpenedOrClosed,

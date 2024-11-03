@@ -1,8 +1,8 @@
 module App.Widgets.Main (mainWidget) where
 
 import App.Types
-import qualified App.Widgets.AppLinks as AppLinks
 import qualified App.Widgets.Asset as Asset
+import qualified App.Widgets.GooglePlay as GooglePlay
 import qualified App.Widgets.MarketLinks as MarketLinks
 import qualified App.Widgets.Menu as Menu
 import qualified App.Widgets.PlaceOrder as PlaceOrder
@@ -154,7 +154,7 @@ screenWidget st@Model {modelState = St {stScreen = Main}} =
               ]
           )
         : ShareApp.shareApp st
-          <> AppLinks.appLinks st
+          <> GooglePlay.googlePlay st
           <> RemoveOrder.removeOrder st
           <> PlaceOrder.placeOrder st
 

@@ -1,14 +1,15 @@
-module App.Widgets.AppLinks (appLinks) where
+module App.Widgets.GooglePlay (googlePlay) where
 
 import App.Types
+import qualified App.Widgets.Donate as Donate
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Icon as Icon
 
-appLinks :: Model -> [View Action]
-appLinks st =
+googlePlay :: Model -> [View Action]
+googlePlay st =
   if not . null $ st ^. #modelState . #stAssets
     then mempty
     else
@@ -91,14 +92,9 @@ appLinks st =
                     ]
                     [ icon Icon.IconUser,
                       text " Author"
-                    ],
-                  button_
-                    [ onClick $ setScreenAction Donate
-                    ]
-                    [ icon Icon.IconBitcoin,
-                      text " Donate"
                     ]
                 ]
+                  <> Donate.donate st
             }
   where
     openWidget =

@@ -19,8 +19,9 @@ common pkg
     App.I18n
     App.Jsm
     App.Types
-    App.Widgets.AppLinks
     App.Widgets.Asset
+    App.Widgets.Donate
+    App.Widgets.GooglePlay
     App.Widgets.Main
     App.Widgets.MarketLinks
     App.Widgets.Menu

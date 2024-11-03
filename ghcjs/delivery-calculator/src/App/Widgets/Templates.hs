@@ -27,6 +27,7 @@ newModel webOpts sink mSt uri = do
     Model
       { modelSink = sink,
         modelMenu = Closed,
+        modelDonate = Closed,
         modelAppLinks = Closed,
         modelShareApp = Closed,
         modelPlaceOrder = Closed,
@@ -45,19 +46,19 @@ newModel webOpts sink mSt uri = do
 
 newDonateViewer :: (MonadIO m) => m [FieldPair DynamicField Unique]
 newDonateViewer = do
-  title <- newFieldPair mempty $ DynamicFieldText "Hello, User!"
-  message <- newFieldPair mempty $ DynamicFieldText exampleDonationText
+  message <- newFieldPair "Hello, User!" $ DynamicFieldText exampleDonationText
   btcMtd <- newFieldPair "BTC - Bitcoin" $ DynamicFieldText exampleBtcAddress
   xmrMtd <- newFieldPair "XMR - Monero" $ DynamicFieldText exampleXmrAddress
   pure
-    [ title & #fieldPairValue . #fieldType .~ FieldTypeTitle,
-      message,
+    [ noTrunc message,
       qr btcMtd,
       qr xmrMtd
     ]
   where
     qr :: FieldPair a b -> FieldPair a b
-    qr = (& #fieldPairValue . #fieldType .~ FieldTypeQrCode)
+    qr = noTrunc . (#fieldPairValue . #fieldType .~ FieldTypeQrCode)
+    noTrunc :: FieldPair a b -> FieldPair a b
+    noTrunc = #fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing
 
 exampleBtcAddress :: Unicode
 exampleBtcAddress = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"

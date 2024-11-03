@@ -723,7 +723,7 @@ header txt =
   if txt == mempty
     then mempty
     else
-      [ div_
+      [ dt_
           [ style_ [("text-align", "center")]
           ]
           [ text txt

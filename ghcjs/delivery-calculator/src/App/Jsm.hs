@@ -1,4 +1,7 @@
-module App.Jsm (fetchBlobUris) where
+module App.Jsm
+  ( fetchBlobUris,
+  )
+where
 
 import App.Types
 import qualified Data.ByteString.Lazy as BL

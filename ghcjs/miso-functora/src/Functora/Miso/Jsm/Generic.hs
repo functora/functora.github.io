@@ -21,6 +21,7 @@ module Functora.Miso.Jsm.Generic
     saveFileThen,
     fetchUrlAsRfc2397,
     setValue,
+    scrollTo,
   )
 where
 
@@ -302,3 +303,18 @@ setValue uid value = do
       $ htmlUid uid
   is <- ghcjsPure $ JS.isTruthy el
   when is $ el ^. JS.jss ("value" :: Unicode) value
+
+scrollTo :: Uid -> JSM ()
+scrollTo uid = do
+  el <-
+    getElementById
+      . either impureThrow id
+      . decodeUtf8Strict
+      . unTagged
+      $ htmlUid uid
+  is <- ghcjsPure $ JS.isTruthy el
+  jarg <- JS.toJSVal $ toJSON arg
+  when is . void $ el ^. JS.js1 ("scrollIntoView" :: Unicode) jarg
+  where
+    arg :: Map Unicode Unicode
+    arg = [("behavior", "smooth"), ("block", "center")]

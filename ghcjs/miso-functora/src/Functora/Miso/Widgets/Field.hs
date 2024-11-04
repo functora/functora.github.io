@@ -49,6 +49,7 @@ data Opts model action t f = Opts
     optsLabel :: Maybe Unicode,
     optsOnFocus :: Field t f -> Update model -> Update model,
     optsFullWidth :: Bool,
+    optsAutoScroll :: Bool,
     optsPlaceholder :: Unicode,
     optsOnInputAction :: Maybe (Update model -> action),
     optsTrailingWidgets ::
@@ -71,6 +72,7 @@ defOpts =
       optsLabel = Nothing,
       optsOnFocus = const id,
       optsFullWidth = False,
+      optsAutoScroll = True,
       optsPlaceholder = mempty,
       optsOnInputAction = Nothing,
       optsTrailingWidgets = defTrailingWidgets,
@@ -320,7 +322,13 @@ field full@Full {fullArgs = args, fullParser = parser, fullViewer = viewer} opts
           .~ Blurred
     onFocusAction =
       action
-        . ( maybe id (optsOnFocus opts) $ st ^? cloneTraversal optic
+        . ( maybe id (optsOnFocus opts)
+              $ st
+              ^? cloneTraversal optic
+          )
+        . ( if optsAutoScroll opts
+              then addEffect $ Jsm.scrollTo uid
+              else id
           )
         . PureUpdate
         $ cloneTraversal optic

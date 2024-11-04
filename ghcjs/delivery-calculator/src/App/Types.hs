@@ -95,7 +95,7 @@ data St f = St
     stMerchantTele :: Field Unicode f,
     stMerchantWhats :: Field Unicode f,
     stMerchantEmail :: Field Unicode f,
-    stMerchantFeePercent :: Field DynamicField f,
+    stMerchantFeePercent :: Field Rational f,
     stOnlineOrOffline :: OnlineOrOffline,
     stEnableTheme :: Bool,
     stTheme :: Theme
@@ -124,7 +124,7 @@ newSt = do
   tele <- newTextField "Functora"
   whats <- newTextField mempty
   email <- newTextField mempty
-  fee <- newDynamicField $ DynamicFieldNumber 2
+  fee <- newRatioField 2
   pure
     St
       { stAssets = mempty,
@@ -286,10 +286,6 @@ newFieldPair key val = do
     $ res
     & #fieldPairValue
     . #fieldOpts
-    . #fieldOptsQrState
-    .~ Nothing
-    & #fieldPairValue
-    . #fieldOpts
     . #fieldOptsAllowCopy
     .~ False
 
@@ -299,10 +295,6 @@ newFieldPairId ::
   FieldPair DynamicField Identity
 newFieldPairId key val = do
   FM.newFieldPairId key val
-    & #fieldPairValue
-    . #fieldOpts
-    . #fieldOptsQrState
-    .~ Nothing
     & #fieldPairValue
     . #fieldOpts
     . #fieldOptsAllowCopy
@@ -323,10 +315,7 @@ newTotal st =
           . DynamicFieldText
           $ inspectExchangeRate st,
         FieldPair (newDynamicFieldId $ DynamicFieldText "Fee %")
-          $ uniqueToIdentity fee
-          & #fieldOpts
-          . #fieldOptsQrState
-          .~ Nothing
+          $ fee
           & #fieldOpts
           . #fieldOptsAllowCopy
           .~ False,
@@ -337,8 +326,17 @@ newTotal st =
           $ fee
       ]
   where
-    fee = st ^. #stMerchantFeePercent
-    rate = st ^. #stExchangeRate . #fieldOutput
+    fee =
+      ( newDynamicFieldId
+          . DynamicFieldNumber
+          $ st
+          ^. #stMerchantFeePercent
+          . #fieldOutput
+      )
+        & #fieldType
+        .~ FieldTypePercent
+    rate =
+      st ^. #stExchangeRate . #fieldOutput
     base =
       foldl
         ( \acc fps ->

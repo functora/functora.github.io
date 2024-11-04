@@ -171,7 +171,7 @@ defFieldOpts =
     { fieldOptsAllowCopy = True,
       fieldOptsTruncateLimit = Just defTruncateLimit,
       fieldOptsTruncateState = Just Closed,
-      fieldOptsQrState = Just Closed
+      fieldOptsQrState = Nothing
     }
 
 defTruncateLimit :: Int

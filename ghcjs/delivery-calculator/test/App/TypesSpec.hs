@@ -56,8 +56,9 @@ spec = do
   --   $ over soplate fun expr
   --   `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "serialization" $ do
-    st0 <- newModel Web.defOpts Nothing =<< URI.mkURI "http://localhost"
-    uri <- stUri st0
-    st1 <- newModel Web.defOpts Nothing uri
+    var <- newEmptyMVar
+    st0 <- newModel Web.defOpts var Nothing =<< URI.mkURI "http://localhost"
+    uri <- stLongUri st0
+    st1 <- newModel Web.defOpts var Nothing uri
     (st0 ^. #modelState . to uniqueToIdentity)
       `shouldBe` (st1 ^. #modelState . to uniqueToIdentity)

@@ -113,7 +113,7 @@ menu st =
                         & #optsLabel
                         .~ Just (inspectExchangeRate $ modelState st)
                 )
-              <> Field.dynamicField
+              <> Field.ratioField
                 Field.Args
                   { Field.argsModel = st,
                     Field.argsOptic = #modelState . #stMerchantFeePercent,

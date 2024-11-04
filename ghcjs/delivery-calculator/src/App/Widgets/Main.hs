@@ -40,7 +40,7 @@ mainWidget st =
           $ screenWidget st
        ]
     <> [ keyed "main-footer"
-          . Flex.flexRowCenter
+          $ Flex.flexRowCenter
             footer_
             ( <>
                 [ style_
@@ -49,10 +49,10 @@ mainWidget st =
                     ]
                 ]
             )
-          $ tosWidget
-          : br_ mempty
-          : MarketLinks.marketLinks st
+            [ tosWidget
+            ]
        ]
+    <> MarketLinks.marketLinks st
     <> ( if not $ st ^. #modelLoading
           then mempty
           else Spinner.spinner

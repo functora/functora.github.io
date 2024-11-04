@@ -29,7 +29,6 @@ import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
-import qualified Network.URI as URI (parseURI)
 import qualified Text.URI as URI
 
 #ifdef wasi_HOST_OS
@@ -190,14 +189,14 @@ updateModel (EvalUpdate f) st = do
             . PushUpdate
             . PureUpdate
             $ unload
-        uri <- stUri next
-        Jsm.insertStorage ("current-" <> vsn) uri
-        syncUri uri
+        longUri <- stLongUri next
+        Jsm.insertStorage ("current-" <> vsn) longUri
+        shortUri <- stShortUri next
         uriViewer <-
           newFieldPair mempty
             . DynamicFieldText
             . from @String @Unicode
-            $ URI.renderStr uri
+            $ URI.renderStr shortUri
         pure
           . LinkUpdate
           $ #modelUriViewer
@@ -430,18 +429,6 @@ evalModel prev = do
                 . #fieldOutput
                 .~ rateValue
             )
-
-syncUri :: URI -> JSM ()
-syncUri uri = do
-  textUri <- fmap inspect getCurrentURI
-  prevUri <- URI.mkURI textUri
-  let nextUri = prevUri {URI.uriQuery = URI.uriQuery uri}
-  when (nextUri /= prevUri)
-    $ pushURI
-    =<< ( maybe (throwString $ "Bad URI " <> textUri) pure
-            . URI.parseURI
-            $ URI.renderStr nextUri
-        )
 
 opfsSync :: (Action -> IO ()) -> Model -> JSM ()
 opfsSync sink st = do

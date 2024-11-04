@@ -36,43 +36,22 @@ placeOrder st =
               Dialog.argsOptic = #modelPlaceOrder,
               Dialog.argsAction = PushUpdate,
               Dialog.argsContent =
-                [ button_
-                    [ onClick
-                        . either impureThrow openBrowser
-                        $ teleUri st
-                    ]
-                    [ icon Icon.IconTelegram,
-                      text " Telegram"
-                    ],
-                  button_
-                    [ onClick
-                        . either impureThrow openBrowser
-                        $ whatsUri st
-                    ]
-                    [ icon Icon.IconWhatsApp,
-                      text " WhatsApp"
-                    ],
-                  button_
-                    [ onClick
-                        . either impureThrow openBrowser
-                        $ emailUri st
-                    ]
-                    [ icon Icon.IconEmail,
-                      text " Email"
-                    ],
-                  button_
-                    [ onClick . PushUpdate . EffectUpdate $ do
-                        let doc = st ^. #modelState
-                        imgs <- Jsm.fetchBlobUris doc
-                        file <- Xlsx.xlsxFile
-                        Jsm.saveFileShare file Xlsx.xlsxMime
-                          . from @BL.ByteString @ByteString
-                          $ Xlsx.newXlsx doc imgs
-                    ]
-                    [ icon Icon.IconDownload,
-                      text " Share Excel file"
-                    ]
-                ]
+                teleBtn st
+                  <> whatsBtn st
+                  <> emailBtn st
+                  <> [ button_
+                        [ onClick . PushUpdate . EffectUpdate $ do
+                            let doc = st ^. #modelState
+                            imgs <- Jsm.fetchBlobUris doc
+                            file <- Xlsx.xlsxFile
+                            Jsm.saveFileShare file Xlsx.xlsxMime
+                              . from @BL.ByteString @ByteString
+                              $ Xlsx.newXlsx doc imgs
+                        ]
+                        [ icon Icon.IconDownload,
+                          text " Share Excel file"
+                        ]
+                     ]
             }
 
 openBrowser :: URI -> Action
@@ -81,16 +60,25 @@ openBrowser =
     . EffectUpdate
     . Jsm.openBrowserPage
 
-teleUri :: (MonadThrow m) => Model -> m URI
-teleUri st = do
+teleBtn :: Model -> [View Action]
+teleBtn st =
+  case st ^. #modelState . #stMerchantTele . #fieldOutput of
+    user | null user -> mempty
+    user ->
+      [ button_
+          [ onClick
+              . either impureThrow openBrowser
+              $ teleUri user
+          ]
+          [ icon Icon.IconTelegram,
+            text " Telegram"
+          ]
+      ]
+
+teleUri :: (MonadThrow m) => Unicode -> m URI
+teleUri raw = do
   base <- URI.mkURI "https://t.me"
-  user <-
-    URI.mkPathPiece
-      . from @Unicode @Text
-      $ st
-      ^. #modelState
-      . #stMerchantTele
-      . #fieldOutput
+  user <- URI.mkPathPiece $ from @Unicode @Text raw
   key <- URI.mkQueryKey "text"
   val <- URI.mkQueryValue placeOrderMessage
   pure
@@ -99,16 +87,25 @@ teleUri st = do
         URI.uriQuery = [URI.QueryParam key val]
       }
 
-whatsUri :: (MonadThrow m) => Model -> m URI
-whatsUri st = do
+whatsBtn :: Model -> [View Action]
+whatsBtn st =
+  case st ^. #modelState . #stMerchantWhats . #fieldOutput of
+    user | null user -> mempty
+    user ->
+      [ button_
+          [ onClick
+              . either impureThrow openBrowser
+              $ whatsUri user
+          ]
+          [ icon Icon.IconWhatsApp,
+            text " WhatsApp"
+          ]
+      ]
+
+whatsUri :: (MonadThrow m) => Unicode -> m URI
+whatsUri raw = do
   base <- URI.mkURI "https://wa.me"
-  user <-
-    URI.mkPathPiece
-      . from @Unicode @Text
-      $ st
-      ^. #modelState
-      . #stMerchantWhats
-      . #fieldOutput
+  user <- URI.mkPathPiece $ from @Unicode @Text raw
   key <- URI.mkQueryKey "text"
   val <- URI.mkQueryValue placeOrderMessage
   pure
@@ -117,15 +114,24 @@ whatsUri st = do
         URI.uriQuery = [URI.QueryParam key val]
       }
 
-emailUri :: (MonadThrow m) => Model -> m URI
-emailUri st = do
-  user <-
-    URI.mkPathPiece
-      . from @Unicode @Text
-      $ st
-      ^. #modelState
-      . #stMerchantEmail
-      . #fieldOutput
+emailBtn :: Model -> [View Action]
+emailBtn st =
+  case st ^. #modelState . #stMerchantEmail . #fieldOutput of
+    user | null user -> mempty
+    user ->
+      [ button_
+          [ onClick
+              . either impureThrow openBrowser
+              $ emailUri user
+          ]
+          [ icon Icon.IconEmail,
+            text " Email"
+          ]
+      ]
+
+emailUri :: (MonadThrow m) => Unicode -> m URI
+emailUri raw = do
+  user <- URI.mkPathPiece $ from @Unicode @Text raw
   base <- URI.mkURI $ "mailto:" <> URI.unRText user
   subjKey <- URI.mkQueryKey "subject"
   subjVal <- URI.mkQueryValue "Delivery Calculator"

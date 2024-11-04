@@ -14,7 +14,8 @@ module App.Types
     newTotal,
     inspectExchangeRate,
     unShareUri,
-    stUri,
+    stShortUri,
+    stLongUri,
     emitter,
     icon,
     vsn,
@@ -121,8 +122,8 @@ newSt = do
   rate <- newRatioField 1
   merchantCur <- newCurrency rub
   tele <- newTextField "Functora"
-  whats <- newTextField "TODO"
-  email <- newTextField "TODO"
+  whats <- newTextField mempty
+  email <- newTextField mempty
   fee <- newDynamicField $ DynamicFieldNumber 2
   pure
     St
@@ -405,6 +406,12 @@ foldField acc Field {fieldType = typ, fieldOutput = out} =
 foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
 foldFieldPair acc =
   foldField acc . fieldPairValue
+
+stShortUri :: (MonadThrow m) => Model -> m URI
+stShortUri = stUri . (#modelState . #stAssets .~ mempty)
+
+stLongUri :: (MonadThrow m) => Model -> m URI
+stLongUri = stUri
 
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do

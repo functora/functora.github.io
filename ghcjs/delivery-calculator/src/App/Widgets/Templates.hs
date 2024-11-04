@@ -55,10 +55,13 @@ newDonateViewer = do
       qr xmrMtd
     ]
   where
-    qr :: FieldPair a b -> FieldPair a b
-    qr = noTrunc . (#fieldPairValue . #fieldType .~ FieldTypeQrCode)
     noTrunc :: FieldPair a b -> FieldPair a b
     noTrunc = #fieldPairValue . #fieldOpts . #fieldOptsTruncateLimit .~ Nothing
+    qr :: FieldPair a b -> FieldPair a b
+    qr =
+      noTrunc
+        . (#fieldPairValue . #fieldType .~ FieldTypeQrCode)
+        . (#fieldPairValue . #fieldOpts . #fieldOptsAllowCopy .~ True)
 
 exampleBtcAddress :: Unicode
 exampleBtcAddress = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"

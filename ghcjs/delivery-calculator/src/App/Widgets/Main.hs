@@ -59,55 +59,7 @@ mainWidget st =
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st@Model {modelState = St {stScreen = QrCode sc}} =
-  [ Flex.flexCol
-      main_
-      ( <>
-          [ style_ [("align-items", "center")]
-          ]
-      )
-      $ fmap
-        ( appendAttrs
-            [ style_
-                [ ("display", "flex"),
-                  ("align-items", "center"),
-                  ("flex-direction", "column")
-                ]
-            ]
-        )
-        ( FieldPairs.fieldPairsViewer
-            FieldPairs.defOpts
-            FieldPairs.Args
-              { FieldPairs.argsModel = st,
-                FieldPairs.argsOptic = #modelUriViewer,
-                FieldPairs.argsAction = PushUpdate,
-                FieldPairs.argsEmitter = emitter st
-              }
-        )
-      <> [ button_
-            [ onClick . setScreenAction $ unQrCode sc
-            ]
-            [ icon Icon.IconOpen,
-              text " Delivery Calculator"
-            ]
-         ]
-  ]
-screenWidget st@Model {modelState = St {stScreen = Donate}} =
-  FieldPairs.fieldPairsViewer
-    FieldPairs.defOpts
-    FieldPairs.Args
-      { FieldPairs.argsModel = st,
-        FieldPairs.argsOptic = #modelDonateViewer,
-        FieldPairs.argsAction = PushUpdate,
-        FieldPairs.argsEmitter = emitter st
-      }
-    <> [ button_
-          [ onClick $ setScreenAction Main
-          ]
-          [ text "Open"
-          ]
-       ]
-screenWidget st@Model {modelState = St {stScreen = Main}} =
+screenWidget st =
   ( if null assets
       then mempty
       else buttons

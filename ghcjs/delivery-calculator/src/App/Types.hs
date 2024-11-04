@@ -13,12 +13,8 @@ module App.Types
     newFieldPairId,
     newTotal,
     inspectExchangeRate,
-    Screen (..),
-    isQrCode,
-    unQrCode,
     unShareUri,
     stUri,
-    setScreenAction,
     emitter,
     icon,
     vsn,
@@ -100,7 +96,6 @@ data St f = St
     stMerchantEmail :: Field Unicode f,
     stMerchantFeePercent :: Field DynamicField f,
     stOnlineOrOffline :: OnlineOrOffline,
-    stScreen :: Screen,
     stEnableTheme :: Bool,
     stTheme :: Theme
   }
@@ -140,7 +135,6 @@ newSt = do
         stMerchantEmail = email,
         stMerchantFeePercent = fee & #fieldType .~ FieldTypePercent,
         stOnlineOrOffline = Online,
-        stScreen = Main,
         stEnableTheme = True,
         stTheme = Theme.Matcha
       }
@@ -412,23 +406,6 @@ foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
 foldFieldPair acc =
   foldField acc . fieldPairValue
 
-data Screen
-  = Main
-  | Donate
-  | QrCode Screen
-  deriving stock (Eq, Ord, Show, Data, Generic)
-  deriving (Binary) via GenericType Screen
-
-isQrCode :: Screen -> Bool
-isQrCode = \case
-  QrCode {} -> True
-  _ -> False
-
-unQrCode :: Screen -> Screen
-unQrCode = \case
-  QrCode sc -> unQrCode sc
-  sc -> sc
-
 stUri :: (MonadThrow m) => Model -> m URI
 stUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
@@ -497,18 +474,6 @@ baseUri =
 baseUri =
   "https://functora.github.io/apps/delivery-calculator/" <> vsn <> "/index.html"
 #endif
-
-setScreenPure :: Screen -> Update Model
-setScreenPure sc =
-  PureUpdate
-    $ (& #modelMenu .~ Closed)
-    . (& #modelAppLinks .~ Closed)
-    . (& #modelState . #stScreen .~ sc)
-
-setScreenAction :: Screen -> Action
-setScreenAction =
-  PushUpdate
-    . setScreenPure
 
 emitter :: (MonadIO m) => Model -> Update Model -> m ()
 emitter st updater = do

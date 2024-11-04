@@ -193,12 +193,11 @@ updateModel (EvalUpdate f) st = do
         uri <- stUri next
         Jsm.insertStorage ("current-" <> vsn) uri
         syncUri uri
-        nextUri <- stUri $ next & #modelState . #stScreen %~ unQrCode
         uriViewer <-
           newFieldPair mempty
             . DynamicFieldText
             . from @String @Unicode
-            $ URI.renderStr nextUri
+            $ URI.renderStr uri
         pure
           . LinkUpdate
           $ #modelUriViewer

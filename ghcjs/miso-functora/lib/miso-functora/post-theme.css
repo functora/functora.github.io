@@ -81,7 +81,7 @@ dialog {
   max-height: 100% !important;
   overflow: auto !important;
   margin: 0 auto !important;
-  padding: 1rem !important;
+  padding: 1rem 1rem 3rem !important;
   z-index: 9999 !important;
   border-radius: 0 !important;
   display: initial;

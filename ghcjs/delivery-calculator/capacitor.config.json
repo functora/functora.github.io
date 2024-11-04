@@ -4,5 +4,10 @@
   "webDir": "dist/latest",
   "server": {
     "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resizeOnFullScreen": true
+    }
   }
 }

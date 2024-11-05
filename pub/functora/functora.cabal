@@ -158,6 +158,17 @@ common pkg-aes
     , Crypto
     , pkcs7
 
+common pkg-uri
+  import:         pkg
+  hs-source-dirs: src/uri
+  build-depends:
+    , base
+    , modern-uri
+    , tomland
+
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends: jsaddle
+
 common pkg-cfg
   import:         pkg
   hs-source-dirs: src/cfg
@@ -298,6 +309,15 @@ library aes
     Functora.Aes
     Functora.AesOrphan
 
+library uri
+  import:          pkg-uri
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules:
+    Functora.Uri
+    Functora.Uri.ToQuery
+
 library cfg
   import:          pkg-cfg
   build-depends:   functora
@@ -410,6 +430,7 @@ test-suite functora-test
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec
+    Functora.UriSpec
     Functora.WebSpec
 
   if flag(ghcid)
@@ -417,7 +438,8 @@ test-suite functora-test
       pkg-prelude, pkg-qr, pkg-aes,
       pkg-cfg, pkg-web, pkg-sql,
       pkg-money, pkg-rates, pkg-tags,
-      pkg-soplate, pkg-elm2miso, pkg-bolt11
+      pkg-soplate, pkg-elm2miso, pkg-bolt11,
+      pkg-uri
 
     ghc-options:   -Wno-unused-packages
     other-modules:
@@ -442,6 +464,8 @@ test-suite functora-test
       Functora.TagsFamily
       Functora.TagsOrphan
       Functora.Unicode
+      Functora.Uri
+      Functora.Uri.ToQuery
       Functora.Web
       Functora.WebOrphan
 
@@ -457,4 +481,5 @@ test-suite functora-test
       , rates
       , soplate
       , tags
+      , uri
       , web

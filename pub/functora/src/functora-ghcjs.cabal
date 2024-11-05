@@ -167,7 +167,7 @@ common pkg
 
 library
   import:          pkg
-  hs-source-dirs:  prelude qr aes money web rates tags cfg
+  hs-source-dirs:  prelude qr aes money web rates tags cfg uri
 
   if !os(wasi)
     hs-source-dirs:  bolt11
@@ -188,6 +188,8 @@ library
     Functora.Rfc2397
     Functora.Tags
     Functora.Unicode
+    Functora.Uri
+    Functora.Uri.ToQuery
     Functora.Web
     Functora.WebOrphan
 
@@ -200,7 +202,7 @@ test-suite functora-ghcjs-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   cpp-options:    -DNOSOP
-  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso test
+  hs-source-dirs: prelude qr aes money web rates tags cfg elm2miso test uri
 
   if !os(wasi)
     hs-source-dirs: bolt11
@@ -234,6 +236,7 @@ test-suite functora-ghcjs-test
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
     Functora.TagsSpec
+    Functora.UriSpec
     Functora.WebSpec
 
   other-modules:
@@ -254,5 +257,7 @@ test-suite functora-ghcjs-test
     Functora.TagsFamily
     Functora.TagsOrphan
     Functora.Unicode
+    Functora.Uri
+    Functora.Uri.ToQuery
     Functora.Web
     Functora.WebOrphan

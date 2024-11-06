@@ -45,6 +45,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.List.NonEmpty as NE
 import Functora.CfgOrphan as X ()
 import Functora.Prelude
+import Functora.Uri
 import qualified GHC.Generics as Generics
 import qualified Options.Applicative as Cli
 import Toml as X
@@ -215,6 +216,15 @@ newtype GenericType a = GenericType
   { unGenericType :: a
   }
   deriving stock (Generic)
+
+instance
+  ( Generic a,
+    Typeable a,
+    GToQuery (Rep a)
+  ) =>
+  ToQuery (GenericType a)
+  where
+  toQuery = genericToQuery . unGenericType
 
 instance
   ( Generic a,

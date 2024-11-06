@@ -101,6 +101,7 @@ data St f = St
     stTheme :: Theme
   }
   deriving stock (Generic)
+  deriving (ToQuery) via GenericType (St f)
 
 deriving stock instance (Hkt f) => Eq (St f)
 

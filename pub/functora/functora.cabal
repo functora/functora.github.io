@@ -163,6 +163,7 @@ common pkg-uri
   hs-source-dirs: src/uri
   build-depends:
     , base
+    , containers
     , modern-uri
     , tomland
 
@@ -181,6 +182,7 @@ common pkg-cfg
     , modern-uri
     , optparse-applicative
     , tomland
+    , uri
 
 common pkg-web
   import:         pkg
@@ -316,6 +318,7 @@ library uri
   visibility:      public
   exposed-modules:
     Functora.Uri
+    Functora.Uri.FromQuery
     Functora.Uri.ToQuery
 
 library cfg
@@ -465,6 +468,7 @@ test-suite functora-test
       Functora.TagsOrphan
       Functora.Unicode
       Functora.Uri
+      Functora.Uri.FromQuery
       Functora.Uri.ToQuery
       Functora.Web
       Functora.WebOrphan

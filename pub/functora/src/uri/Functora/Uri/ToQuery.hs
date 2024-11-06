@@ -1,7 +1,11 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE UndecidableInstances #-}
 
-module Functora.Uri.ToQuery (ToQuery (..)) where
+module Functora.Uri.ToQuery
+  ( ToQuery (..),
+    GToQuery (..),
+    genericToQuery,
+  )
+where
 
 import Functora.Prelude
 import GHC.Generics hiding (from)
@@ -15,16 +19,25 @@ import Data.JSString (JSString)
 class (Typeable a) => ToQuery a where
   toQuery :: a -> [QueryParam]
   default toQuery :: (Generic a, GToQuery (Rep a)) => a -> [QueryParam]
-  toQuery = gToQuery (Toml.stripTypeNamePrefix $ Proxy @a) . G.from
+  toQuery = genericToQuery
 
 class GToQuery f where
   gToQuery :: (String -> String) -> f p -> [QueryParam]
 
--- Handle datatype metadata
+genericToQuery ::
+  forall a.
+  ( Generic a,
+    Typeable a,
+    GToQuery (Rep a)
+  ) =>
+  a ->
+  [QueryParam]
+genericToQuery =
+  gToQuery (Toml.stripTypeNamePrefix $ Proxy @a) . G.from
+
 instance (GToQuery a) => GToQuery (M1 D c a) where
   gToQuery fmt (M1 x) = gToQuery fmt x
 
--- Handle constructor metadata
 instance (GToQuery a) => GToQuery (M1 C c a) where
   gToQuery fmt (M1 x) = gToQuery fmt x
 
@@ -32,13 +45,12 @@ instance (Selector s, ToQueryField a) => GToQuery (M1 S s (K1 i a)) where
   gToQuery fmt m1@(M1 (K1 a)) = do
     let name = selName m1
     if null name
-      then mempty -- Skip if there is no field name (like unnamed tuples)
+      then mempty
       else do
         k <- mkQueryKey . pack $ fmt name
         v <- mkQueryValue $ toQueryField a
         pure $ QueryParam k v
 
--- Handle product type
 instance (GToQuery a, GToQuery b) => GToQuery (a :*: b) where
   gToQuery fmt (a :*: b) = gToQuery fmt a ++ gToQuery fmt b
 

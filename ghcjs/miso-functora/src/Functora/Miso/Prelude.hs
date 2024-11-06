@@ -14,6 +14,7 @@ import Functora.Prelude as X hiding
     field,
   )
 import Functora.Rfc2397 as X
+import Functora.Uri as X
 import Miso as X hiding
   ( Key,
     Text,

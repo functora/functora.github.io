@@ -14,6 +14,8 @@ data Foo = Foo
 
 instance ToQuery Foo
 
+instance FromQuery Foo
+
 mkSample :: (MonadThrow m) => m (Foo, [QueryParam])
 mkSample = do
   let bar = 123 :: Int
@@ -35,6 +37,7 @@ mkSample = do
 
 spec :: Spec
 spec = do
-  focus . it "ToQuery" $ do
+  it "ToQuery/FromQuery" $ do
     sample <- mkSample
     toQuery (fst sample) `shouldBe` snd sample
+    fromQuery (snd sample) `shouldBe` Just (fst sample)

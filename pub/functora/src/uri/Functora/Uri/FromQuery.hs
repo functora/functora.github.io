@@ -1,11 +1,12 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Functora.Uri.FromQuery
   ( FromQuery (..),
     GFromQuery (..),
     genericFromQuery,
     FromQueryField (..),
-    textFromQueryField,
+    castFromQueryField,
     readFromQueryField,
     FromQueryException (..),
   )
@@ -22,25 +23,35 @@ import Data.JSString (JSString)
 #endif
 
 class FromQuery a where
-  fromQuery ::
-    (MonadThrow m) => [QueryParam] -> m a
+  fromQuery :: [QueryParam] -> Either FromQueryException a
   default fromQuery ::
-    (Generic a, GFromQuery (Rep a), MonadThrow m) => [QueryParam] -> m a
+    ( Generic a,
+      GFromQuery (Rep a)
+    ) =>
+    [QueryParam] ->
+    Either FromQueryException a
   fromQuery =
     genericFromQuery
 
+instance
+  ( Generic a,
+    GFromQuery (Rep a)
+  ) =>
+  FromQuery (GenericType a)
+  where
+  fromQuery = fmap GenericType . genericFromQuery
+
 class GFromQuery f where
-  gFromQuery :: (MonadThrow m) => QueryMap -> m (f p)
+  gFromQuery :: QueryMap -> Either FromQueryException (f p)
 
 genericFromQuery ::
   ( Generic a,
-    GFromQuery (Rep a),
-    MonadThrow m
+    GFromQuery (Rep a)
   ) =>
   [QueryParam] ->
-  m a
+  Either FromQueryException a
 genericFromQuery =
-  fmap G.to . gFromQuery . toQueryMap
+  fmap G.to . gFromQuery . newQueryMap
 
 instance (GFromQuery a) => GFromQuery (M1 D c a) where
   gFromQuery params = M1 <$> gFromQuery params
@@ -56,15 +67,17 @@ instance
   GFromQuery (M1 S s (K1 i a))
   where
   gFromQuery params = do
+    let rawKey =
+          pack
+            . Toml.stripTypeNamePrefix (Proxy @a)
+            $ selName (error "selName" :: M1 S s (K1 i a) ())
     k <-
-      mkQueryKey
-        . pack
-        . Toml.stripTypeNamePrefix (Proxy @a)
-        $ selName (error "selName" :: M1 S s (K1 i a) ())
+      either (const . Left $ FromQueryInvalidKey rawKey) pure
+        $ mkQueryKey rawKey
     v <-
-      maybe (throw $ FromQueryMissingField k) pure
+      maybe (Left $ FromQueryMissingField k) pure
         $ Map.lookup k params
-    fmap (M1 . K1)
+    second (M1 . K1)
       $ fromQueryField k v
 
 instance (GFromQuery a, GFromQuery b) => GFromQuery (a :*: b) where
@@ -72,39 +85,40 @@ instance (GFromQuery a, GFromQuery b) => GFromQuery (a :*: b) where
 
 class FromQueryField a where
   fromQueryField ::
-    ( MonadThrow m
-    ) =>
     RText 'QueryKey ->
     RText 'QueryValue ->
-    m a
+    Either FromQueryException a
 
-textFromQueryField ::
-  forall a m.
-  ( From Text a,
-    Applicative m
+castFromQueryField ::
+  forall a.
+  ( From Text a
   ) =>
   RText 'QueryKey ->
   RText 'QueryValue ->
-  m a
-textFromQueryField _ = pure . from @Text @a . unRText
+  Either FromQueryException a
+castFromQueryField _ = pure . from @Text @a . unRText
 
 readFromQueryField ::
-  ( Read a,
-    MonadThrow m
+  ( Read a
   ) =>
   RText 'QueryKey ->
   RText 'QueryValue ->
-  m a
+  Either FromQueryException a
 readFromQueryField k v =
-  maybe (throw $ FromQueryInvalidField k v) pure
+  maybe (Left $ FromQueryInvalidField k v) pure
     . readMaybe
     $ unRText v
 
+instance (Read a) => FromQueryField (GenericEnum a) where
+  fromQueryField k = fmap GenericEnum . readFromQueryField k
+
+deriving via (GenericEnum Bool) instance FromQueryField Bool
+
 instance FromQueryField Text where
-  fromQueryField = textFromQueryField
+  fromQueryField = castFromQueryField
 
 instance FromQueryField String where
-  fromQueryField = textFromQueryField
+  fromQueryField = castFromQueryField
 
 instance FromQueryField Int where
   fromQueryField = readFromQueryField
@@ -113,8 +127,8 @@ instance FromQueryField Integer where
   fromQueryField = readFromQueryField
 
 #if defined(__GHCJS__) && defined(ghcjs_HOST_OS) && defined(wasi_HOST_OS)
-instance ToQueryField JSString where
-  fromQueryField = textFromQueryField
+instance FromQueryField JSString where
+  fromQueryField = castFromQueryField
 #endif
 
 --
@@ -122,7 +136,8 @@ instance ToQueryField JSString where
 --
 
 data FromQueryException
-  = FromQueryMissingField (RText 'QueryKey)
+  = FromQueryInvalidKey Text
+  | FromQueryMissingField (RText 'QueryKey)
   | FromQueryInvalidField (RText 'QueryKey) (RText 'QueryValue)
   deriving stock (Eq, Ord, Show, Data, Generic)
 
@@ -130,8 +145,8 @@ instance Exception FromQueryException
 
 type QueryMap = Map (RText 'QueryKey) (RText 'QueryValue)
 
-toQueryMap :: [QueryParam] -> QueryMap
-toQueryMap =
+newQueryMap :: [QueryParam] -> QueryMap
+newQueryMap =
   foldl
     ( \acc -> \case
         QueryFlag k ->

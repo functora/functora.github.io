@@ -87,6 +87,7 @@ type Typ a =
 
 type Hkt f =
   ( Typeable f,
+    Foldable1 f,
     Eq (f Unicode),
     Ord (f Unicode),
     Show (f Unicode),
@@ -154,6 +155,26 @@ deriving via
   GenericType (Field a Identity)
   instance
     (Typ a) => Binary (Field a Identity)
+
+instance (Foldable1 f) => ToQueryField (Field a f) where
+  toQueryField = toQueryField . fold1 . fieldInput
+
+instance FromQueryField (Field Rational Identity) where
+  fromQueryField k v = do
+    out <-
+      first (const $ FromQueryInvalidField k v)
+        . parseRatio
+        $ URI.unRText v
+    pure
+      $ newFieldId
+        FieldTypeNumber
+        inspectRatioDef
+        out
+
+instance FromQueryField (Field Unicode Identity) where
+  fromQueryField k v = do
+    out <- castFromQueryField k v
+    pure $ newFieldId FieldTypeText id out
 
 data FieldOpts = FieldOpts
   { fieldOptsAllowCopy :: Bool,
@@ -409,10 +430,25 @@ instance FunctorB Currency
 
 instance TraversableB Currency
 
-deriving via
-  GenericType (Currency Identity)
-  instance
-    Binary (Currency Identity)
+deriving via GenericType (Currency Identity) instance Binary (Currency Identity)
+
+instance ToQueryField (Currency f) where
+  toQueryField =
+    toQueryField
+      . (^. #currencyOutput . #currencyInfoCode . #unCurrencyCode)
+
+instance FromQueryField (Currency Identity) where
+  fromQueryField _ v =
+    pure
+      Currency
+        { currencyInput = newTextFieldId mempty,
+          currencyOutput =
+            CurrencyInfo
+              { currencyInfoText = mempty,
+                currencyInfoCode = CurrencyCode $ URI.unRText v
+              },
+          currencyModalState = Closed
+        }
 
 newCurrency :: (MonadIO m) => CurrencyInfo -> m (Currency Unique)
 newCurrency cur =
@@ -527,42 +563,49 @@ data TopOrBottom
   | Bottom
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType TopOrBottom
+  deriving (ToQueryField, FromQueryField) via GenericEnum TopOrBottom
 
 data OnlineOrOffline
   = Online
   | Offline
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OnlineOrOffline
+  deriving (ToQueryField, FromQueryField) via GenericEnum OnlineOrOffline
 
 data StaticOrDynamic
   = Static
   | Dynamic
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType StaticOrDynamic
+  deriving (ToQueryField, FromQueryField) via GenericEnum StaticOrDynamic
 
 data LeadingOrTrailing
   = Leading
   | Trailing
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType LeadingOrTrailing
+  deriving (ToQueryField, FromQueryField) via GenericEnum LeadingOrTrailing
 
 data EnabledOrDisabled
   = Enabled
   | Disabled
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType EnabledOrDisabled
+  deriving (ToQueryField, FromQueryField) via GenericEnum EnabledOrDisabled
 
 data FocusedOrBlurred
   = Focused
   | Blurred
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType FocusedOrBlurred
+  deriving (ToQueryField, FromQueryField) via GenericEnum FocusedOrBlurred
 
 data OpenedOrClosed
   = Opened
   | Closed
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic)
   deriving (Binary) via GenericType OpenedOrClosed
+  deriving (ToQueryField, FromQueryField) via GenericEnum OpenedOrClosed
 
 data Update model
   = PureUpdate (model -> model)

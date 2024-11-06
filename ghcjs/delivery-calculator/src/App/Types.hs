@@ -101,7 +101,6 @@ data St f = St
     stTheme :: Theme
   }
   deriving stock (Generic)
-  deriving (ToQuery) via GenericType (St f)
 
 deriving stock instance (Hkt f) => Eq (St f)
 
@@ -110,6 +109,10 @@ deriving stock instance (Hkt f) => Ord (St f)
 deriving stock instance (Hkt f) => Show (St f)
 
 deriving stock instance (Hkt f) => Data (St f)
+
+deriving via (GenericType (St f)) instance (Hkt f) => ToQuery (St f)
+
+deriving via (GenericType (St Identity)) instance FromQuery (St Identity)
 
 instance FunctorB St
 
@@ -162,6 +165,12 @@ instance FunctorB Asset
 instance TraversableB Asset
 
 deriving via GenericType (Asset Identity) instance Binary (Asset Identity)
+
+instance ToQueryField [Asset f] where
+  toQueryField _ = pure mempty
+
+instance FromQueryField [Asset f] where
+  fromQueryField _ _ = pure mempty
 
 newAsset :: (MonadIO m, MonadThrow m) => m (Asset Unique)
 newAsset = do
@@ -407,7 +416,10 @@ foldFieldPair acc =
   foldField acc . fieldPairValue
 
 stShortUri :: (MonadThrow m) => Model -> m URI
-stShortUri = stUri . (#modelState . #stAssets .~ mempty)
+stShortUri st = do
+  uri <- mkURI $ from @Unicode @Prelude.Text baseUri
+  let qxs = toQuery . uniqueToIdentity $ modelState st
+  pure $ uri {URI.uriQuery = qxs}
 
 stLongUri :: (MonadThrow m) => Model -> m URI
 stLongUri = stUri

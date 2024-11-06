@@ -10,9 +10,15 @@ import Data.Monoid.GCD
 import Data.Monoid.Null
 import Data.Monoid.Textual
 import Data.Semigroup.Cancellative
+import Functora.Miso.Theme (Theme)
 import Functora.Prelude
+import Functora.Uri
 import qualified Miso
 import Prelude hiding (String)
+
+deriving via (GenericEnum Theme) instance ToQueryField Theme
+
+deriving via (GenericEnum Theme) instance FromQueryField Theme
 
 deriving stock instance Generic (Miso.View action)
 

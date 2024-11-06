@@ -166,6 +166,7 @@ common pkg-uri
     , containers
     , modern-uri
     , tomland
+    , universum
 
   if ((impl(ghcjs) || arch(javascript)) || os(wasi))
     build-depends: jsaddle
@@ -182,7 +183,6 @@ common pkg-cfg
     , modern-uri
     , optparse-applicative
     , tomland
-    , uri
 
 common pkg-web
   import:         pkg

@@ -40,4 +40,4 @@ spec = do
   it "ToQuery/FromQuery" $ do
     sample <- mkSample
     toQuery (fst sample) `shouldBe` snd sample
-    fromQuery (snd sample) `shouldBe` Just (fst sample)
+    fromQuery (snd sample) `shouldBe` Right (fst sample)

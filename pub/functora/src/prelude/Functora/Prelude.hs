@@ -116,6 +116,11 @@ module Functora.Prelude
     Mono,
     dropAround,
     dropWhileEnd,
+
+    -- * DerivingVia
+    -- $derivingVia
+    GenericEnum (..),
+    GenericType (..),
   )
 where
 
@@ -1081,3 +1086,18 @@ dropWhileEnd f =
           else Seq.cons x xs
     )
     mempty
+
+-- $derivingVia
+-- Newtypes to simplify deriving via.
+-- We have to expose default constructors/accessors
+-- to help GHC with figuring out that runtime representation does match.
+
+newtype GenericType a = GenericType
+  { unGenericType :: a
+  }
+  deriving stock (Generic)
+
+newtype GenericEnum a = GenericEnum
+  { unGenericEnum :: a
+  }
+  deriving newtype (Show, Enum, Bounded)

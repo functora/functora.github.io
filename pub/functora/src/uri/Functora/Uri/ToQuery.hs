@@ -22,37 +22,35 @@ class (Typeable a) => ToQuery a where
   toQuery = genericToQuery
 
 class GToQuery f where
-  gToQuery :: (String -> String) -> f p -> [QueryParam]
+  gToQuery :: f p -> [QueryParam]
 
-genericToQuery ::
-  forall a.
-  ( Generic a,
-    Typeable a,
-    GToQuery (Rep a)
-  ) =>
-  a ->
-  [QueryParam]
-genericToQuery =
-  gToQuery (Toml.stripTypeNamePrefix $ Proxy @a) . G.from
+genericToQuery :: (Generic a, GToQuery (Rep a)) => a -> [QueryParam]
+genericToQuery = gToQuery . G.from
 
 instance (GToQuery a) => GToQuery (M1 D c a) where
-  gToQuery fmt (M1 x) = gToQuery fmt x
+  gToQuery (M1 x) = gToQuery x
 
 instance (GToQuery a) => GToQuery (M1 C c a) where
-  gToQuery fmt (M1 x) = gToQuery fmt x
+  gToQuery (M1 x) = gToQuery x
 
-instance (Selector s, ToQueryField a) => GToQuery (M1 S s (K1 i a)) where
-  gToQuery fmt m1@(M1 (K1 a)) = do
-    let name = selName m1
+instance
+  ( Typeable a,
+    Selector s,
+    ToQueryField a
+  ) =>
+  GToQuery (M1 S s (K1 i a))
+  where
+  gToQuery m1@(M1 (K1 a)) = do
+    let name = Toml.stripTypeNamePrefix (Proxy @a) $ selName m1
     if null name
       then mempty
       else do
-        k <- mkQueryKey . pack $ fmt name
+        k <- mkQueryKey $ pack name
         v <- mkQueryValue $ toQueryField a
         pure $ QueryParam k v
 
 instance (GToQuery a, GToQuery b) => GToQuery (a :*: b) where
-  gToQuery fmt (a :*: b) = gToQuery fmt a ++ gToQuery fmt b
+  gToQuery (a :*: b) = gToQuery a <> gToQuery b
 
 class ToQueryField a where
   toQueryField :: a -> Text

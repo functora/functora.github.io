@@ -228,6 +228,14 @@ instance
 
 instance
   ( Generic a,
+    GFromQuery (Rep a)
+  ) =>
+  FromQuery (GenericType a)
+  where
+  fromQuery = fmap GenericType . genericFromQuery
+
+instance
+  ( Generic a,
     Typeable a,
     Toml.GenericCodec (Rep a)
   ) =>

@@ -189,6 +189,7 @@ library
     Functora.Tags
     Functora.Unicode
     Functora.Uri
+    Functora.Uri.FromQuery
     Functora.Uri.ToQuery
     Functora.Web
     Functora.WebOrphan
@@ -258,6 +259,7 @@ test-suite functora-ghcjs-test
     Functora.TagsOrphan
     Functora.Unicode
     Functora.Uri
+    Functora.Uri.FromQuery
     Functora.Uri.ToQuery
     Functora.Web
     Functora.WebOrphan

@@ -7,6 +7,7 @@ module Functora.Uri.FromQuery
     FromQueryField (..),
     textFromQueryField,
     readFromQueryField,
+    FromQueryException (..),
   )
 where
 
@@ -20,26 +21,6 @@ import qualified Toml
 import Data.JSString (JSString)
 #endif
 
-data FromQueryException
-  = FromQueryMissingField (RText 'QueryKey)
-  | FromQueryInvalidField (RText 'QueryKey) (RText 'QueryValue)
-  deriving stock (Eq, Ord, Show, Data, Generic)
-
-instance Exception FromQueryException
-
-type QueryMap = Map (RText 'QueryKey) (RText 'QueryValue)
-
-toQueryMap :: [QueryParam] -> QueryMap
-toQueryMap =
-  foldl
-    ( \acc -> \case
-        QueryFlag k ->
-          Map.insert k (either impureThrow id $ mkQueryValue "True") acc
-        QueryParam k v ->
-          Map.insert k v acc
-    )
-    mempty
-
 class FromQuery a where
   fromQuery ::
     (MonadThrow m) => [QueryParam] -> m a
@@ -52,7 +33,6 @@ class GFromQuery f where
   gFromQuery :: (MonadThrow m) => QueryMap -> m (f p)
 
 genericFromQuery ::
-  forall a m.
   ( Generic a,
     GFromQuery (Rep a),
     MonadThrow m
@@ -82,10 +62,10 @@ instance
         . Toml.stripTypeNamePrefix (Proxy @a)
         $ selName (error "selName" :: M1 S s (K1 i a) ())
     v <-
-      maybe (throw $ FromQueryMissingField k) pure $
-        Map.lookup k params
-    fmap (M1 . K1) $
-      fromQueryField k v
+      maybe (throw $ FromQueryMissingField k) pure
+        $ Map.lookup k params
+    fmap (M1 . K1)
+      $ fromQueryField k v
 
 instance (GFromQuery a, GFromQuery b) => GFromQuery (a :*: b) where
   gFromQuery params = (:*:) <$> gFromQuery params <*> gFromQuery params
@@ -136,3 +116,27 @@ instance FromQueryField Integer where
 instance ToQueryField JSString where
   fromQueryField = textFromQueryField
 #endif
+
+--
+-- Extra stuff
+--
+
+data FromQueryException
+  = FromQueryMissingField (RText 'QueryKey)
+  | FromQueryInvalidField (RText 'QueryKey) (RText 'QueryValue)
+  deriving stock (Eq, Ord, Show, Data, Generic)
+
+instance Exception FromQueryException
+
+type QueryMap = Map (RText 'QueryKey) (RText 'QueryValue)
+
+toQueryMap :: [QueryParam] -> QueryMap
+toQueryMap =
+  foldl
+    ( \acc -> \case
+        QueryFlag k ->
+          Map.insert k (either impureThrow id $ mkQueryValue "True") acc
+        QueryParam k v ->
+          Map.insert k v acc
+    )
+    mempty

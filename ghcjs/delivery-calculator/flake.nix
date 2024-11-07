@@ -53,7 +53,7 @@
           cp ./static/*.woff2 $out/static/
           cp ./static/*.webmanifest $out/
           cp ./static/*.ico $out/
-          cp ./dist/wasm/* $out/
+          cp ./dist/wasm/bin.wasm $out/bin.wasm
 
           echo "# [Back](index.html)" > "$out/index-link.md"
           ${pkgs.pandoc}/bin/pandoc \

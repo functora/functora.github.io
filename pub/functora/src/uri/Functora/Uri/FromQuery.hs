@@ -18,7 +18,7 @@ import GHC.Generics hiding (from)
 import qualified GHC.Generics as G
 import Text.URI
 import qualified Toml
-#if defined(__GHCJS__) && defined(ghcjs_HOST_OS) && defined(wasi_HOST_OS)
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import Data.JSString (JSString)
 #endif
 
@@ -126,7 +126,7 @@ instance FromQueryField Int where
 instance FromQueryField Integer where
   fromQueryField = readFromQueryField
 
-#if defined(__GHCJS__) && defined(ghcjs_HOST_OS) && defined(wasi_HOST_OS)
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 instance FromQueryField JSString where
   fromQueryField = castFromQueryField
 #endif

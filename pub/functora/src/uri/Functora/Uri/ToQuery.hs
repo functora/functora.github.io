@@ -18,7 +18,7 @@ import qualified GHC.Generics as G
 import Text.URI
 import qualified Toml
 import qualified Universum
-#if defined(__GHCJS__) && defined(ghcjs_HOST_OS) && defined(wasi_HOST_OS)
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import Data.JSString (JSString)
 #endif
 
@@ -93,7 +93,7 @@ instance ToQueryField Int where
 instance ToQueryField Integer where
   toQueryField = showToQueryField
 
-#if defined(__GHCJS__) && defined(ghcjs_HOST_OS) && defined(wasi_HOST_OS)
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 instance ToQueryField JSString where
   toQueryField = castToQueryField
 #endif

@@ -445,7 +445,10 @@ instance FromQueryField (Currency Identity) where
           currencyOutput =
             CurrencyInfo
               { currencyInfoText = mempty,
-                currencyInfoCode = CurrencyCode $ URI.unRText v
+                currencyInfoCode =
+                  CurrencyCode
+                    . from @Text @Unicode
+                    $ URI.unRText v
               },
           currencyModalState = Closed
         }

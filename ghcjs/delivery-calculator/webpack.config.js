@@ -1,4 +1,5 @@
 const webpack = require("webpack");
+const { EsbuildPlugin } = require("esbuild-loader");
 
 module.exports = {
   entry: {
@@ -8,13 +9,21 @@ module.exports = {
   output: {
     path: __dirname + "/dist/latest",
     filename: "[name].js",
-    // Export itself to a global variable
     libraryTarget: "var",
     library: "h$[name]",
   },
   mode: "production",
   optimization: {
-    minimize: false,
+    minimize: true,
+    minimizer: [
+      new EsbuildPlugin({
+        target: "esnext",
+        minify: false,
+        minifySyntax: true,
+        minifyWhitespace: true,
+        minifyIdentifiers: false,
+      }),
+    ],
   },
   plugins: [
     new webpack.IgnorePlugin({ resourceRegExp: /^node:timers$/ }),

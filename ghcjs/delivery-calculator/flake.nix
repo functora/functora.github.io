@@ -50,7 +50,6 @@
           mkdir -p "$out/static"
           cp -RLf --no-preserve=mode,ownership ${../miso-functora/dist}/* $out/
           cp ./static/*.png $out/static/
-          cp ./static/*.woff2 $out/static/
           cp ./static/*.webmanifest $out/
           cp ./static/*.ico $out/
           cp ./dist/wasm/bin.wasm $out/bin.wasm

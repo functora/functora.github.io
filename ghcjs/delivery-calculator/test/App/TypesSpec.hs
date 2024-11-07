@@ -11,7 +11,6 @@ import qualified Optics.Setter as Ops
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Instances ()
-import qualified Text.URI as URI
 
 data Expr
   = Lit Int
@@ -57,8 +56,9 @@ spec = do
   --   `shouldBe` Mul (Sub (Lit 2) (Lit 3)) (Lit 4)
   it "serialization" $ do
     var <- newEmptyMVar
-    st0 <- newModel Web.defOpts var Nothing =<< URI.mkURI "http://localhost"
-    uri <- stLongUri st0
-    st1 <- newModel Web.defOpts var Nothing uri
+    st0 <- newModel Web.defOpts var Nothing Nothing
+    uri <- mkLongUri st0
+    mSt <- unLongUri uri
+    st1 <- newModel Web.defOpts var Nothing mSt
     (st0 ^. #modelState . to uniqueToIdentity)
       `shouldBe` (st1 ^. #modelState . to uniqueToIdentity)

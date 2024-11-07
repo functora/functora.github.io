@@ -13,9 +13,10 @@ module App.Types
     newFieldPairId,
     newTotal,
     inspectExchangeRate,
-    unShareUri,
-    stShortUri,
-    stLongUri,
+    mkShortUri,
+    unShortUri,
+    mkLongUri,
+    unLongUri,
     emitter,
     icon,
     vsn,
@@ -415,17 +416,19 @@ foldFieldPair :: Rational -> FieldPair DynamicField f -> Rational
 foldFieldPair acc =
   foldField acc . fieldPairValue
 
-stShortUri :: (MonadThrow m) => Model -> m URI
-stShortUri st = do
+mkShortUri :: (MonadThrow m) => Model -> m URI
+mkShortUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
   let qxs = toQuery . uniqueToIdentity $ modelState st
   pure $ uri {URI.uriQuery = qxs}
 
-stLongUri :: (MonadThrow m) => Model -> m URI
-stLongUri = stUri
+unShortUri :: (MonadIO m, MonadThrow m) => URI -> m (St Unique)
+unShortUri uri = do
+  st <- either throw pure . fromQuery $ URI.uriQuery uri
+  identityToUnique st
 
-stUri :: (MonadThrow m) => Model -> m URI
-stUri st = do
+mkLongUri :: (MonadThrow m) => Model -> m URI
+mkLongUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
   qxs <-
     stQuery
@@ -452,6 +455,25 @@ stUri st = do
       { URI.uriQuery = qxs
       }
 
+unLongUri ::
+  ( MonadIO m,
+    MonadThrow m
+  ) =>
+  URI ->
+  m (Maybe (St Unique))
+unLongUri uri = do
+  kSt <- URI.mkQueryKey "d"
+  case qsGet kSt $ URI.uriQuery uri of
+    Nothing -> pure Nothing
+    Just tSt -> do
+      bSt <- either throwString pure . B64URL.decode $ encodeUtf8 tSt
+      iSt <- either (throwString . thd3) pure $ decodeBinary bSt
+      uSt <-
+        identityToUnique
+          $ Syb.everywhere (Syb.mkT Field.expandDynamicField) iSt
+      pure
+        $ Just uSt
+
 stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
 stQuery st = do
   kSt <- URI.mkQueryKey "d"
@@ -464,25 +486,6 @@ stQuery st = do
         . decodeUtf8Strict
         . B64URL.encode
         . from @BL.ByteString @ByteString
-
-unShareUri ::
-  ( MonadIO m,
-    MonadThrow m
-  ) =>
-  URI ->
-  m (Maybe (St Unique))
-unShareUri uri = do
-  kSt <- URI.mkQueryKey "d"
-  case qsGet kSt $ URI.uriQuery uri of
-    Nothing -> pure Nothing
-    Just tSt -> do
-      bSt <- either throwString pure . B64URL.decode $ encodeUtf8 tSt
-      iSt <- either (throwString . thd3) pure $ decodeBinary bSt
-      uSt <-
-        identityToUnique
-          $ Syb.everywhere (Syb.mkT Field.expandDynamicField) iSt
-      pure
-        $ Just uSt
 
 baseUri :: Unicode
 #ifdef GHCID

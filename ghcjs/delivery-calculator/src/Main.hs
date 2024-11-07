@@ -47,10 +47,10 @@ main =
       )
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
-      mSt <- unShareUri uri
+      mSt <- handleAny (const $ pure Nothing) . fmap Just $ unShortUri uri
       web <- getWebOpts
       sink <- newEmptyMVar
-      st <- newModel web sink Nothing uri
+      st <- newModel web sink Nothing mSt
       startApp
         App
           { model = st,
@@ -148,7 +148,8 @@ updateModel (InitUpdate ext) prevSt = do
             .~ False
           opfsSync sink nextSt
         Just uri -> do
-          finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) uri
+          mSt <- unLongUri uri
+          finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) mSt
           liftIO
             . sink
             . PushUpdate
@@ -189,9 +190,9 @@ updateModel (EvalUpdate f) st = do
             . PushUpdate
             . PureUpdate
             $ unload
-        longUri <- stLongUri next
+        longUri <- mkLongUri next
         Jsm.insertStorage ("current-" <> vsn) longUri
-        shortUri <- stShortUri next
+        shortUri <- mkShortUri next
         uriViewer <-
           newFieldPair mempty
             . DynamicFieldText

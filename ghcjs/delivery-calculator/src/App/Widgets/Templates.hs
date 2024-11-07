@@ -15,13 +15,12 @@ newModel ::
   Web.Opts ->
   MVar (Action -> IO ()) ->
   Maybe Model ->
-  URI ->
+  Maybe (St Unique) ->
   m Model
-newModel webOpts sink mSt uri = do
-  defSt <- maybe (liftIO newSt) pure $ mSt ^? _Just . #modelState
-  mApp <- unShareUri uri
+newModel webOpts sink mMod mApp = do
+  defSt <- maybe (liftIO newSt) pure $ mMod ^? _Just . #modelState
   donate <- newDonateViewer
-  market <- maybe Rates.newMarket pure $ mSt ^? _Just . #modelMarket
+  market <- maybe Rates.newMarket pure $ mMod ^? _Just . #modelMarket
   ct <- getCurrentTime
   pure
     Model
@@ -38,7 +37,7 @@ newModel webOpts sink mSt uri = do
         modelUriViewer = mempty,
         modelDonateViewer = donate,
         modelCurrencies =
-          fromMaybe [btc, usd, rub, cny] (mSt ^? _Just . #modelCurrencies),
+          fromMaybe [btc, usd, rub, cny] (mMod ^? _Just . #modelCurrencies),
         modelWebOpts = webOpts,
         modelMarket = market,
         modelTime = ct

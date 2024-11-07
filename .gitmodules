@@ -1,3 +1,6 @@
 [submodule "prv"]
 	path = prv
 	url = git@github.com-functora:functora/prv.git
+[submodule "apps"]
+	path = apps
+	url = git@github.com-functora:functora/apps.git

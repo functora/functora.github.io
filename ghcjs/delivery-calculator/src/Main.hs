@@ -124,13 +124,13 @@ updateModel (Tick f) st =
     sleepSeconds 1
     ct <- getCurrentTime
     pure . Tick $ #modelTime .~ ct
-updateModel (InitUpdate ext) prevSt = do
+updateModel (InitUpdate mShortSt) prevSt = do
   effectSub prevSt $ \sink -> do
     liftIO . sink $ Tick id
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
-    if isJust ext
-      then do
+    Jsm.selectStorage ("current-" <> vsn) $ \case
+      Nothing -> do
         liftIO
           . sink
           . PushUpdate
@@ -138,28 +138,26 @@ updateModel (InitUpdate ext) prevSt = do
           $ #modelLoading
           .~ False
         opfsSync sink nextSt
-      else Jsm.selectStorage ("current-" <> vsn) $ \case
-        Nothing -> do
-          liftIO
-            . sink
-            . PushUpdate
-            . PureUpdate
-            $ #modelLoading
-            .~ False
-          opfsSync sink nextSt
-        Just uri -> do
-          mSt <- unLongUri uri
-          finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) mSt
-          liftIO
-            . sink
-            . PushUpdate
-            . PureUpdate
-            $ ( const
-                  $ finSt
-                  & #modelLoading
-                  .~ False
+      Just uri -> do
+        mLongSt <- unLongUri uri
+        let st =
+              ( mShortSt <|> mLongSt
               )
-          opfsSync sink finSt
+                & _Just
+                . #stAssets
+                .~ ( fromMaybe mempty $ mLongSt ^? _Just . #stAssets
+                   )
+        finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
+        liftIO
+          . sink
+          . PushUpdate
+          . PureUpdate
+          $ ( const
+                $ finSt
+                & #modelLoading
+                .~ False
+            )
+        opfsSync sink finSt
     liftIO
       . sink
       . PushUpdate
@@ -210,6 +208,10 @@ updateModel (EvalUpdate f) st = do
                 & #fieldPairValue
                 . #fieldType
                 .~ FieldTypeQrCode
+                & #fieldPairValue
+                . #fieldOpts
+                . #fieldOptsTruncateLimit
+                .~ Nothing
             ],
       do
         --

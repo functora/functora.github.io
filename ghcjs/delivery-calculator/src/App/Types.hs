@@ -126,7 +126,7 @@ newSt = do
   assetCur <- newCurrency cny
   rate <- newRatioField 1
   merchantCur <- newCurrency rub
-  tele <- newTextField "Functora"
+  tele <- newTextField mempty
   whats <- newTextField mempty
   email <- newTextField mempty
   fee <- newRatioField 2

@@ -9,6 +9,8 @@
       label = def.label;
       pkgs = inputs.ghc-wasm-meta.inputs.nixpkgs.legacyPackages.${system};
       shell = import ./../../nix/shell.nix;
+      safeCopy = "cp -RL --no-preserve=mode,ownership";
+      forceCopy = "cp -RLf --no-preserve=mode,ownership";
       app-ghcid = pkgs.writeScriptBin "app-ghcid" ''
         ${pkgs.ghcid}/bin/ghcid --test="Main.main" --command="${pkgs.cabal-install}/bin/cabal new-repl ${label} --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid"
       '';
@@ -48,7 +50,7 @@
           out="./dist/latest"
           rm -rf "$out"
           mkdir -p "$out/static"
-          cp -RLf --no-preserve=mode,ownership ${../miso-functora/dist}/* $out/
+          ${forceCopy} ${../miso-functora/dist}/* $out/
           cp ./static/*.png $out/static/
           cp ./static/*.webmanifest $out/
           cp ./static/*.ico $out/
@@ -101,6 +103,23 @@
           nix-shell ./android.nix --command "app-release-aab"
         '';
       };
+      app-release-web = pkgs.writeShellApplication rec {
+        name = "app-release-web";
+        text = ''
+          (
+            ${app-release-latest}/bin/app-release-latest
+            if [ -d "./../../apps/${label}/${vsn}" ]
+            then
+              echo "Version ${vsn} does already exist!"
+              exit 1
+            else
+              mkdir -p ./../../apps/${label}/${vsn}
+            fi
+            ${safeCopy} ./dist/latest/* ./../../apps/${label}/${vsn}
+            echo '<!doctype html><html><head><meta http-equiv="Refresh" content="0; url=${vsn}/index.html"></head><body></body></html>' > ./../../apps/${label}/index.html
+          )
+        '';
+      };
     in {
       devShells.default = pkgs.mkShell {
         packages =
@@ -119,6 +138,7 @@
             app-release-latest
             app-release-apk
             app-release-aab
+            app-release-web
           ]
           ++ (import ../../nix/tools.nix);
       };

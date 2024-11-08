@@ -18,6 +18,7 @@
     "@capacitor/share": "^6.0.1",
     "@capacitor/toast": "^6.0.2",
     "@ionic/pwa-elements": "^3.3.0",
+    "capacitor-play-install-referrer-library": "^0.0.2",
     "capacitor-webview-print": "^6.0.1",
     "compressorjs": "^1.2.1",
     "data-uri-to-buffer": "^6.0.2",

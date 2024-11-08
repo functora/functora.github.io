@@ -22,6 +22,7 @@ module Functora.Miso.Jsm.Generic
     fetchUrlAsRfc2397,
     setValue,
     scrollTo,
+    fetchInstallReferrerUri,
   )
 where
 
@@ -318,3 +319,7 @@ scrollTo uid = do
   where
     arg :: Map Unicode Unicode
     arg = [("behavior", "smooth"), ("block", "center")]
+
+fetchInstallReferrerUri :: (Maybe Unicode -> JSM ()) -> JSM ()
+fetchInstallReferrerUri =
+  genericPromise @[Unicode] @Unicode "fetchInstallReferrerUri" mempty

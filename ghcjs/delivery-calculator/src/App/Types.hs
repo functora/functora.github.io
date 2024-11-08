@@ -24,7 +24,7 @@ module App.Types
     btc,
     cny,
     rub,
-    googlePlayLink,
+    mkGooglePlayLink,
     testGroupLink,
     functoraLink,
     sourceLink,
@@ -522,10 +522,27 @@ cny = CurrencyInfo (CurrencyCode "cny") mempty
 rub :: CurrencyInfo
 rub = CurrencyInfo (CurrencyCode "rub") mempty
 
-googlePlayLink :: URI
-googlePlayLink =
-  either impureThrow id
-    $ mkURI "https://play.google.com/apps/testing/com.functora.delivery_calculator"
+mkGooglePlayLink :: Model -> URI
+mkGooglePlayLink st =
+  either impureThrow id $ do
+    ref <- mkURI mempty
+    k <- URI.mkQueryKey "referrer"
+    v <-
+      URI.mkQueryValue
+        $ URI.render
+          ref
+            { URI.uriQuery =
+                toQuery
+                  . uniqueToIdentity
+                  $ modelState st
+            }
+    uri <-
+      mkURI
+        "https://play.google.com/apps/testing/com.functora.delivery_calculator"
+    pure
+      $ uri
+        { URI.uriQuery = [URI.QueryParam k v]
+        }
 
 testGroupLink :: URI
 testGroupLink =

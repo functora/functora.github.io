@@ -2,6 +2,7 @@ import "./jsaddle-compat";
 import * as Compressor from "compressorjs";
 import { defineCustomElements } from "@ionic/pwa-elements/loader";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { OttRemitPlayInstallReferrer } from "capacitor-play-install-referrer-library";
 import { WebviewPrint } from "capacitor-webview-print";
 import { dataUriToBuffer } from "data-uri-to-buffer";
 import { Preferences } from "@capacitor/preferences";
@@ -265,6 +266,12 @@ export async function fetchUrlAsRfc2397(url) {
   const utf8Encode = new TextEncoder();
   const ab = utf8Encode.encode(rfc2397).buffer;
   return ab;
+}
+
+export async function fetchInstallReferrerUri() {
+  const { referrerUrl } =
+    await OttRemitPlayInstallReferrer.getReferrerDetails();
+  return referrerUrl;
 }
 
 defineCustomElements(window);

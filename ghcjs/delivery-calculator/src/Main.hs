@@ -130,14 +130,25 @@ updateModel (InitUpdate mShortSt) prevSt = do
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
     Jsm.selectStorage ("current-" <> vsn) $ \case
-      Nothing -> do
-        liftIO
-          . sink
-          . PushUpdate
-          . PureUpdate
-          $ #modelLoading
-          .~ False
-        opfsSync sink nextSt
+      Nothing ->
+        Jsm.fetchInstallReferrerUri $ \case
+          Nothing -> do
+            liftIO
+              . sink
+              . PushUpdate
+              . PureUpdate
+              $ #modelLoading
+              .~ False
+            opfsSync sink nextSt
+          Just ref -> do
+            alert ref
+            liftIO
+              . sink
+              . PushUpdate
+              . PureUpdate
+              $ #modelLoading
+              .~ False
+            opfsSync sink nextSt
       Just uri -> do
         mLongSt <- unLongUri uri
         let st =

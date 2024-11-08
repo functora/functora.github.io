@@ -50,7 +50,7 @@ googlePlay st =
                       text " group and then install the app from ",
                       BrowserLink.browserLink
                         BrowserLink.Args
-                          { BrowserLink.argsLink = googlePlayLink,
+                          { BrowserLink.argsLink = mkGooglePlayLink st,
                             BrowserLink.argsLabel = "Google Play",
                             BrowserLink.argsAction = PushUpdate
                           },
@@ -70,7 +70,7 @@ googlePlay st =
                       text " Join testing (closed beta)"
                     ],
                   button_
-                    [ onClick $ openBrowser googlePlayLink
+                    [ onClick . openBrowser $ mkGooglePlayLink st
                     ]
                     [ icon Icon.IconGooglePlay,
                       text " Google Play (closed beta)"

@@ -45,6 +45,9 @@
   "https://fonts.gstatic.com/s/notosans/v36/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyCjA-9a6Vc.ttf": { "integrity": "sha512-vfnJIzxvWOe0xC7UCKbA1t8KQAxbj9XjSGF4KLO4xZV/3yU9Di8xtPR326dXp5QNGJMjuj5RGF5ZGavnYJGzTw==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/notosans/v36/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6Vc.ttf": { "integrity": "sha512-dFJWITlE7LAMobB/O/aXLX2zYNkeWiJwx+Bl06yUZPnHp4KFX7Y0D7Rkej0UoVE+M8W7hpo2bQnAWuG/J1yyDA==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/notosans/v36/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyDPA-9a6Vc.ttf": { "integrity": "sha512-pBYWtvzMkdDLigu9bbycO8dt3SAOiBtG+UuOlXkTDQYWqvokP2kU9n5ZhR1ETfhgv2RYxZRv+ICj0tv+weN+1A==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/notosans/v37/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyCjA-9a6Vc.ttf": { "integrity": "sha512-7KyB+E9oEfJw99k+hLscyR/Bs5ji9CSOkLXoqREIRGK1iEc5WC6oZeUWmsfSwLRTVdOeyk9DdHsULzvUHd1giQ==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/notosans/v37/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6Vc.ttf": { "integrity": "sha512-a4s6RCogMdJN/cWAs8jlo7uW8mIZVXewRHlGrYxBS7qcG0CJghwTryJRaV/gQU9tzCToxR12gJIPczQPVbNQ6A==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/notosans/v37/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyDPA-9a6Vc.ttf": { "integrity": "sha512-GqaPinyju8KK/U3NHpKSZwlYrf3uHuz883d5cT0oknLSzdbpkbIWGwJWwbtwneca8hWjnbgLk1XzpWux0FFCXA==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/notosanssymbols2/v24/I_uyMoGduATTei9eI8daxVHDyfisHr71ypM.ttf": { "integrity": "sha512-7525Bkq6pDJxXhBtQK2YEVbZuBNpfx159qlSrD8JD6YX3ucUKp2C8+i1ThKvUbSgY6jApi87ttVfGGaIhZqKbA==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/notoserif/v23/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZqFCTx8cP.ttf": { "integrity": "sha512-SrccPmC8BuB8lkYDYuDWHTqprhZaCp9H8B8FKYN8MFW1e75B7ABits7R+83xcp7VgaO3OYAqtZZd0ClrSejtbg==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDLshdTQ3ig.ttf": { "integrity": "sha512-Ahp+PNZnaEHWN5G1VHRMQmjAYnEaCve8RVt/zNCBbrWuCaJBbJP44BzMbRGnNKP+DlAy6NeTYln0xDEVcIjsTQ==", "contentType": "font/ttf" },
@@ -86,5 +89,9 @@
   "https://fonts.gstatic.com/s/spectral/v13/rnCs-xNNww_2s0amA9vmtl3G.ttf": { "integrity": "sha512-hphFc+nCdgyRPOReuVPmsWzQLa97f+20ce7m7ab3fsVVdH72rjg6P4zDztv9LvmMBMVso5D5kVWsGuERxpvrNw==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/spectral/v13/rnCu-xNNww_2s0amA9M8qqXCafM.ttf": { "integrity": "sha512-qJr1x5uCyzS35o3RJW141mMuDI1UpVhiaHCNd4Bx86UOwKwZke45xjCVJl10FM4VdeX2vgppEBco61Zh951l1w==", "contentType": "font/ttf" },
   "https://fonts.gstatic.com/s/spectral/v13/rnCu-xNNww_2s0amA9M8qtHEafM.ttf": { "integrity": "sha512-zc9YCJh1ogVXlnsIalnwl1XfN6k9eIU1MmygL0K+9aJxQcsfZTINByMkhLC2aV9J27VKl4vllxyVL2LrNjF7rA==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/spectral/v14/rnCs-xNNww_2s0amA9uSsF3G.ttf": { "integrity": "sha512-fVVFOlCoaCExlFXhTdar8aF9gLE+YUqYNBg8MciIlIltRtPAvvXQMt941buBGWvWAxBuRTGnnx03jgW1FYzn5A==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/spectral/v14/rnCs-xNNww_2s0amA9vmtl3G.ttf": { "integrity": "sha512-fWXexEs4pRresvFdhm33yfMkcMZUTNfm5lM25yAihPN3b2yNliFe+xFpto60p8AiJY/a67ZkilZ9uyRrZNjrbw==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/spectral/v14/rnCu-xNNww_2s0amA9M8qqXCafM.ttf": { "integrity": "sha512-XiLy3oYGP1HXnZuCHhm8cxCiy1SqK2bNfr1KcZz9dI+ElhTSHYP6dr37x2ABzeDVhrVJXpJ69JdzkPb+/9ZuMA==", "contentType": "font/ttf" },
+  "https://fonts.gstatic.com/s/spectral/v14/rnCu-xNNww_2s0amA9M8qtHEafM.ttf": { "integrity": "sha512-KkdY8Q5zYNugqfdvL6LSuAnP9EfOdNTMXE+ivW1DqmYuEXYoujFyXFIfjSeVizPj9Oau0BGBfKwJLM3Nf8Kz4A==", "contentType": "font/ttf" },
   "version": 1
 }

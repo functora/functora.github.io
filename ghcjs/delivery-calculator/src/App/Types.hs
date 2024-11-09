@@ -25,6 +25,7 @@ module App.Types
     cny,
     rub,
     mkGooglePlayLink,
+    unGooglePlayLink,
     testGroupLink,
     functoraLink,
     sourceLink,
@@ -529,6 +530,9 @@ mkGooglePlayLink st =
     k <- URI.mkQueryKey "referrer"
     v <-
       URI.mkQueryValue
+        . decodeUtf8
+        . B64URL.encodeUnpadded
+        . encodeUtf8
         $ URI.render
           ref
             { URI.uriQuery =
@@ -543,6 +547,13 @@ mkGooglePlayLink st =
       $ uri
         { URI.uriQuery = [URI.QueryParam k v]
         }
+
+unGooglePlayLink :: (MonadIO m, MonadThrow m) => Unicode -> m (St Unique)
+unGooglePlayLink raw = do
+  bs <- either throwString pure . B64URL.decodeUnpadded $ encodeUtf8 raw
+  txt <- either throw pure $ decodeUtf8Strict bs
+  uri <- URI.mkURI txt
+  either throw identityToUnique . fromQuery $ URI.uriQuery uri
 
 testGroupLink :: URI
 testGroupLink =

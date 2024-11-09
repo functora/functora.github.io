@@ -141,14 +141,26 @@ updateModel (InitUpdate mShortSt) prevSt = do
               .~ False
             opfsSync sink nextSt
           Just ref -> do
-            alert ref
+            longSt <- unGooglePlayLink ref
+            let mLongSt = Just longSt
+            let st =
+                  ( mShortSt <|> mLongSt
+                  )
+                    & _Just
+                    . #stAssets
+                    .~ ( fromMaybe mempty $ mLongSt ^? _Just . #stAssets
+                       )
+            finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
             liftIO
               . sink
               . PushUpdate
               . PureUpdate
-              $ #modelLoading
-              .~ False
-            opfsSync sink nextSt
+              $ ( const
+                    $ finSt
+                    & #modelLoading
+                    .~ False
+                )
+            opfsSync sink finSt
       Just uri -> do
         mLongSt <- unLongUri uri
         let st =

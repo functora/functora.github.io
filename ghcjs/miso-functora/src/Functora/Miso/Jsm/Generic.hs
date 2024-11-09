@@ -23,6 +23,7 @@ module Functora.Miso.Jsm.Generic
     setValue,
     scrollTo,
     fetchInstallReferrerUri,
+    isNativePlatform,
   )
 where
 
@@ -321,5 +322,14 @@ scrollTo uid = do
     arg = [("behavior", "smooth"), ("block", "center")]
 
 fetchInstallReferrerUri :: (Maybe Unicode -> JSM ()) -> JSM ()
-fetchInstallReferrerUri =
-  genericPromise @[Unicode] @Unicode "fetchInstallReferrerUri" mempty
+fetchInstallReferrerUri f = do
+  isNative <- isNativePlatform
+  if isNative
+    then genericPromise @[Unicode] @Unicode "fetchInstallReferrerUri" mempty f
+    else f Nothing
+
+isNativePlatform :: JSM Bool
+isNativePlatform = do
+  pkg <- getPkg
+  res <- pkg ^. JS.js0 ("isNativePlatform" :: Unicode)
+  ghcjsPure $ JS.isTruthy res

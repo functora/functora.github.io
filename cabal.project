@@ -7,7 +7,7 @@ package directory
   flags: +os-string
 
 package miso
-  flags: +logview
+  flags: -logview
 
 packages:
   pub/miso/*.cabal

@@ -108,7 +108,7 @@ export async function opfsWrite(value, { opfsDir, opfsFile }) {
     await stream.write(value);
     await stream.close();
   } catch (e) {
-    alert(
+    console.log(
       "OPFS write failure: " +
         e.toString() +
         " dir: " +
@@ -130,14 +130,14 @@ export async function opfsRead({ opfsDir, opfsFile }) {
     const res = await resolveDataUrl(uri);
     return res;
   } catch (e) {
-    // alert(
-    //   "OPFS read failure: " +
-    //     e.toString() +
-    //     " dir: " +
-    //     opfsDir +
-    //     " file: " +
-    //     opfsFile,
-    // );
+    console.log(
+      "OPFS read failure: " +
+        e.toString() +
+        " dir: " +
+        opfsDir +
+        " file: " +
+        opfsFile,
+    );
     return null;
   }
 }
@@ -152,7 +152,7 @@ export async function opfsList(opfsDir) {
     }
     return res;
   } catch (e) {
-    alert("OPFS list failure: " + e.toString() + " dir: " + opfsDir);
+    console.log("OPFS list failure: " + e.toString() + " dir: " + opfsDir);
     return [];
   }
 }
@@ -164,7 +164,7 @@ export async function opfsRemove({ opfsDir, opfsFile }) {
     const file = await dir.getFileHandle(opfsFile);
     await file.remove();
   } catch (e) {
-    alert(
+    console.log(
       "OPFS remove failure: " +
         e.toString() +
         " dir: " +

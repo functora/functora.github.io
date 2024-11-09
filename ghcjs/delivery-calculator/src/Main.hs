@@ -129,7 +129,7 @@ updateModel (InitUpdate mShortSt) prevSt = do
     liftIO . sink $ Tick id
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
-    Jsm.selectStorage ("current-" <> vsn) $ \case
+    Jsm.selectStorage ("delivery-calculator-" <> vsn) $ \case
       Nothing ->
         Jsm.fetchInstallReferrerUri $ \case
           Nothing -> do
@@ -141,8 +141,14 @@ updateModel (InitUpdate mShortSt) prevSt = do
               .~ False
             opfsSync sink nextSt
           Just ref -> do
-            longSt <- unGooglePlayLink ref
-            let mLongSt = Just longSt
+            mLongSt <-
+              handleAny
+                ( \e -> do
+                    Jsm.popupText $ displayException e
+                    pure Nothing
+                )
+                . fmap Just
+                $ unGooglePlayLink ref
             let st =
                   ( mShortSt <|> mLongSt
                   )
@@ -212,7 +218,7 @@ updateModel (EvalUpdate f) st = do
             . PureUpdate
             $ unload
         longUri <- mkLongUri next
-        Jsm.insertStorage ("current-" <> vsn) longUri
+        Jsm.insertStorage ("delivery-calculator-" <> vsn) longUri
         shortUri <- mkShortUri next
         uriViewer <-
           newFieldPair mempty

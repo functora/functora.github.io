@@ -6,13 +6,19 @@ import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Icon as Icon
 
-shareApp :: Model -> [View Action]
-shareApp st =
-  if not . null $ st ^. #modelState . #stAssets
-    then mempty
-    else
+shareApp :: Model -> TopOrBottom -> [View Action]
+shareApp st = \case
+  Top -> if noitem then widget else mempty
+  Bottom -> if noitem then mempty else widget
+  where
+    noitem = null $ st ^. #modelState . #stAssets
+    widget =
       [ button_
-          [ onClick openWidget
+          [ onClick
+              . PushUpdate
+              . PureUpdate
+              $ #modelShareApp
+              .~ Opened
           ]
           [ icon Icon.IconShare,
             text " Share app"
@@ -35,6 +41,7 @@ shareApp st =
                       [ style_
                           [ ("gap", "1rem"),
                             ("display", "flex"),
+                            ("text-align", "center"),
                             ("align-items", "center"),
                             ("flex-direction", "column")
                           ]
@@ -49,9 +56,3 @@ shareApp st =
                         FieldPairs.argsEmitter = emitter st
                       }
             }
-  where
-    openWidget =
-      PushUpdate
-        . PureUpdate
-        $ #modelShareApp
-        .~ Opened

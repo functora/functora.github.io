@@ -8,39 +8,45 @@ import qualified Functora.Miso.Widgets.Icon as Icon
 
 donate :: Model -> [View Action]
 donate st =
-  if not . null $ st ^. #modelState . #stAssets
-    then mempty
-    else
-      ( button_
-          [ onClick openWidget
-          ]
-          [ icon Icon.IconBitcoin,
-            text " Donate"
-          ]
+  ( button_
+      [ onClick openWidget
+      ]
+      [ icon Icon.IconBitcoin,
+        text " Donate"
+      ]
+  )
+    : Dialog.dialog
+      ( Dialog.defOpts
+          & #optsTitle
+          .~ Just ("Donate" :: Unicode)
+          & #optsTitleIcon
+          .~ Just Icon.IconBitcoin
       )
-        : Dialog.dialog
-          ( Dialog.defOpts
-              & #optsTitle
-              .~ Just ("Donate" :: Unicode)
-              & #optsFlexCol
-              .~ False
-              & #optsTitleIcon
-              .~ Just Icon.IconBitcoin
-          )
-          Dialog.Args
-            { Dialog.argsModel = st,
-              Dialog.argsOptic = #modelDonate,
-              Dialog.argsAction = PushUpdate,
-              Dialog.argsContent =
-                FieldPairs.fieldPairsViewer
-                  FieldPairs.defOpts
-                  FieldPairs.Args
-                    { FieldPairs.argsModel = st,
-                      FieldPairs.argsOptic = #modelDonateViewer,
-                      FieldPairs.argsAction = PushUpdate,
-                      FieldPairs.argsEmitter = emitter st
-                    }
-            }
+      Dialog.Args
+        { Dialog.argsModel = st,
+          Dialog.argsOptic = #modelDonate,
+          Dialog.argsAction = PushUpdate,
+          Dialog.argsContent =
+            fmap
+              ( appendAttrs
+                  [ style_
+                      [ ("gap", "1rem"),
+                        ("display", "flex"),
+                        ("text-align", "center"),
+                        ("align-items", "center"),
+                        ("flex-direction", "column")
+                      ]
+                  ]
+              )
+              $ FieldPairs.fieldPairsViewer
+                FieldPairs.defOpts
+                FieldPairs.Args
+                  { FieldPairs.argsModel = st,
+                    FieldPairs.argsOptic = #modelDonateViewer,
+                    FieldPairs.argsAction = PushUpdate,
+                    FieldPairs.argsEmitter = emitter st
+                  }
+        }
   where
     openWidget =
       PushUpdate

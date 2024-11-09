@@ -37,7 +37,7 @@ button,
 textarea {
   min-width: 0 !important;
   max-width: 100% !important;
-  margin: 0.25rem 0.125rem !important;
+  margin: 0.125rem 0.125rem !important;
 }
 
 button {

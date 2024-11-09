@@ -8,11 +8,13 @@ import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Dialog as Dialog
 import qualified Functora.Miso.Widgets.Icon as Icon
 
-googlePlay :: Model -> [View Action]
-googlePlay st =
-  if not . null $ st ^. #modelState . #stAssets
-    then mempty
-    else
+googlePlay :: Model -> TopOrBottom -> [View Action]
+googlePlay st = \case
+  Top -> if noitem then widget else mempty
+  Bottom -> if noitem then mempty else widget
+  where
+    noitem = null $ st ^. #modelState . #stAssets
+    widget =
       [ button_
           [ onClick openWidget
           ]
@@ -96,7 +98,6 @@ googlePlay st =
                 ]
                   <> Donate.donate st
             }
-  where
     openWidget =
       PushUpdate
         . PureUpdate

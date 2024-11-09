@@ -49,8 +49,10 @@ mainWidget st =
                     ]
                 ]
             )
-            [ tosWidget
-            ]
+            ( tosWidget
+                : ShareApp.shareApp st Bottom
+                  <> GooglePlay.googlePlay st Bottom
+            )
        ]
     <> MarketLinks.marketLinks st
     <> ( if not $ st ^. #modelLoading
@@ -105,8 +107,8 @@ screenWidget st =
                 text " Add item"
               ]
           )
-        : ShareApp.shareApp st
-          <> GooglePlay.googlePlay st
+        : ShareApp.shareApp st Top
+          <> GooglePlay.googlePlay st Top
           <> RemoveOrder.removeOrder st
           <> PlaceOrder.placeOrder st
 

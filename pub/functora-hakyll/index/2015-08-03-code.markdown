@@ -9,7 +9,9 @@ fontawesome: "fab fa-git-alt"
 
 - [currency-converter](https://functora.github.io/apps/currency-converter) - An app for converting currencies, generating financial documents, and sharing them via links or QR codes. It includes optional client-side encryption. Built using Miso and GHCJS, the source code is available on [github](https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter).
 - [lightning-verifier](https://functora.github.io/apps/lightning-verifier) - An app for offline verification of [Lightning Network](https://lightning.network/) invoices and preimages, and sharing them via links or QR codes. It includes optional client-side encryption. Built using Miso and GHCJS, the source code is available on [github](https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier).
+- [delivery-calculator](https://functora.github.io/apps/delivery-calculator) - A simple app to estimate delivery costs, generate orders in Excel spreadsheet format, and share them with merchants. Built using Miso and GHC WASM backend, the source code is available on [github](https://github.com/functora/functora.github.io/tree/master/ghcjs/delivery-calculator).
 - [functora](https://github.com/functora/functora.github.io/tree/master/pub/functora) - My own collection of various general-purpose libraries, most of which work with both GHC and GHCJS.
+- [miso-functora](https://github.com/functora/functora.github.io/tree/master/ghcjs/miso-functora) - Reusable Miso widgets, composable through optics.
 - [bfx](https://github.com/functora/functora.github.io/tree/master/pub/bfx) - Bitfinex cryptocurrency exchange client library for Haskell.
 - [rentier](https://github.com/21it/rentier) - My first Haskell project which I have used to learn Haskell. The booking system is based on the Yesod web framework. The code is very obsolete.
 

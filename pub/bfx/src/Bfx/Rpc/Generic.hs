@@ -50,7 +50,10 @@ pub qs req = do
         Web.setQueryString
           (unQueryParam <$> qs)
           $ webReq0
-            { Web.method = inspect $ toRequestMethod @method
+            { Web.method =
+                encodeUtf8
+                  . inspect @Text
+                  $ toRequestMethod @method
             }
   webRes <-
     liftIO $ Web.httpLbs webReq1 manager
@@ -94,7 +97,7 @@ prv env req = do
     let nonce = encodeUtf8 (inspect nonce' :: Text)
     let webReq1 =
           webReq0
-            { Web.method = inspect $ toRequestMethod @method,
+            { Web.method = encodeUtf8 . inspect @Text $ toRequestMethod @method,
               Web.requestBody = Web.RequestBodyLBS reqBody,
               Web.requestHeaders =
                 [ ( "Content-Type",

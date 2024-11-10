@@ -110,7 +110,7 @@ instance From RawResponse ByteString
 
 instance Show RawResponse where
   show x =
-    case decodeUtf8' bs of
+    case decodeUtf8Strict bs of
       Left {} -> "ByteString RawResponse" <> inspect (BS.unpack bs)
       Right res -> "Text RawResponse " <> T.unpack res
     where

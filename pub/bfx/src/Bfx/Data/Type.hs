@@ -45,7 +45,6 @@ import Bfx.Orphan ()
 import Data.Aeson (withText)
 import qualified Data.Aeson as A
 import qualified Data.Text as T
-import Language.Haskell.TH.Syntax as TH (Lift)
 import qualified Network.HTTP.Client as Web
 import qualified Prelude
 
@@ -394,8 +393,7 @@ data CurrencyPair = CurrencyPair
     ( Eq,
       Ord,
       Show,
-      Generic,
-      TH.Lift
+      Generic
     )
 
 instance FromJSON CurrencyPair where

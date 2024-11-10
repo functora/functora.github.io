@@ -73,6 +73,7 @@ else
       pub/universum/*.cabal
       pub/functora/*.cabal
       pub/xlsx/*.cabal
+      pub/bfx/*.cabal
       ghcjs/*/*.cabal
     optional-packages:
       prv/*/*.cabal

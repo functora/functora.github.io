@@ -133,3 +133,93 @@ instance TestEquality (Sing :: GainOrLose -> Type) where
   testEquality SGain SGain = Just Refl
   testEquality SLose SLose = Just Refl
   testEquality _ _ = Nothing
+
+--
+-- BaseOrQuote
+--
+
+data instance Sing (x :: BaseOrQuote) where
+  SBase :: Sing 'Base
+  SQuote :: Sing 'Quote
+
+instance SingKind BaseOrQuote where
+  type Demote BaseOrQuote = BaseOrQuote
+  fromSing SBase = Base
+  fromSing SQuote = Quote
+  toSing Base = SomeSing SBase
+  toSing Quote = SomeSing SQuote
+
+instance SingI 'Base where sing = SBase
+
+instance SingI 'Quote where sing = SQuote
+
+instance TestEquality (Sing :: BaseOrQuote -> Type) where
+  testEquality SBase SBase = Just Refl
+  testEquality SQuote SQuote = Just Refl
+  testEquality _ _ = Nothing
+
+--
+-- MoneyKind
+--
+
+data instance Sing (x :: MoneyKind) where
+  SMoneyAmount :: Sing 'MoneyAmount
+  SCurrency :: Sing 'Currency
+  SQuotePerBase :: Sing 'QuotePerBase
+  SFeeRate :: Sing 'FeeRate
+  SProfitRate :: Sing 'ProfitRate
+
+instance SingKind MoneyKind where
+  type Demote MoneyKind = MoneyKind
+  fromSing SMoneyAmount = MoneyAmount
+  fromSing SCurrency = Currency
+  fromSing SQuotePerBase = QuotePerBase
+  fromSing SFeeRate = FeeRate
+  fromSing SProfitRate = ProfitRate
+  toSing MoneyAmount = SomeSing SMoneyAmount
+  toSing Currency = SomeSing SCurrency
+  toSing QuotePerBase = SomeSing SQuotePerBase
+  toSing FeeRate = SomeSing SFeeRate
+  toSing ProfitRate = SomeSing SProfitRate
+
+instance SingI 'MoneyAmount where sing = SMoneyAmount
+
+instance SingI 'Currency where sing = SCurrency
+
+instance SingI 'QuotePerBase where sing = SQuotePerBase
+
+instance SingI 'FeeRate where sing = SFeeRate
+
+instance SingI 'ProfitRate where sing = SProfitRate
+
+instance TestEquality (Sing :: MoneyKind -> Type) where
+  testEquality SMoneyAmount SMoneyAmount = Just Refl
+  testEquality SCurrency SCurrency = Just Refl
+  testEquality SQuotePerBase SQuotePerBase = Just Refl
+  testEquality SFeeRate SFeeRate = Just Refl
+  testEquality SProfitRate SProfitRate = Just Refl
+  testEquality _ _ = Nothing
+
+--
+-- MakerOrTaker
+--
+
+data instance Sing (x :: MakerOrTaker) where
+  SMaker :: Sing 'Maker
+  STaker :: Sing 'Taker
+
+instance SingKind MakerOrTaker where
+  type Demote MakerOrTaker = MakerOrTaker
+  fromSing SMaker = Maker
+  fromSing STaker = Taker
+  toSing Maker = SomeSing SMaker
+  toSing Taker = SomeSing STaker
+
+instance SingI 'Maker where sing = SMaker
+
+instance SingI 'Taker where sing = STaker
+
+instance TestEquality (Sing :: MakerOrTaker -> Type) where
+  testEquality SMaker SMaker = Just Refl
+  testEquality STaker STaker = Just Refl
+  testEquality _ _ = Nothing

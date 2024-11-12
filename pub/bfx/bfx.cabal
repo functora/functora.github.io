@@ -99,7 +99,6 @@ common pkg-lib
     , lens-aeson
     , memory
     , siggy-chardust
-    , template-haskell
     , temporary
     , text
     , transformers
@@ -217,7 +216,6 @@ test-suite bfx-test
       , lens-aeson
       , memory
       , siggy-chardust
-      , template-haskell
       , temporary
       , text
       , transformers

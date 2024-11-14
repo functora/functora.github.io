@@ -59,6 +59,7 @@ import qualified Network.URI as NetUri
 import qualified Paths_delivery_calculator as Paths
 import qualified Text.Regex as Re
 import qualified Text.URI as URI
+import qualified Text.URI.Lens as URILens
 
 data Model = Model
   { modelSink :: MVar (Action -> IO ()),
@@ -542,11 +543,11 @@ mkGooglePlayLink st =
             }
     uri <-
       mkURI
-        "https://play.google.com/apps/testing/com.functora.delivery_calculator"
+        "https://play.google.com/store/apps/details?id=com.functora.delivery_calculator"
     pure
       $ uri
-        { URI.uriQuery = [URI.QueryParam k v]
-        }
+      & URILens.uriQuery
+      %~ (<> [URI.QueryParam k v])
 
 unGooglePlayLink :: (MonadIO m, MonadThrow m) => Unicode -> m (St Unique)
 unGooglePlayLink raw = do

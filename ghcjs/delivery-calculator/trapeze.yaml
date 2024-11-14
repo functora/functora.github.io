@@ -1,8 +1,8 @@
 platforms:
   android:
     appName: Delivery Calculator
-    versionCode: 21
-    versionName: 0.1.0.21
+    versionCode: 22
+    versionName: 0.1.0.22
     packageName: com.functora.delivery_calculator
     manifest:
       - file: AndroidManifest.xml

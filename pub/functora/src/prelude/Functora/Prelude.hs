@@ -202,7 +202,15 @@ import Data.Generics.Product as X
 import Data.Generics.Sum as X
 import Data.Generics.Uniplate.Data as X ()
 import qualified Data.HMAC as HMAC
-import Data.List.Extra as X (enumerate, notNull, nubOrd, nubOrdBy, nubOrdOn)
+import Data.List.Extra as X
+  ( enumerate,
+    escapeHTML,
+    notNull,
+    nubOrd,
+    nubOrdBy,
+    nubOrdOn,
+    unescapeHTML,
+  )
 import qualified Data.Map.Merge.Strict as Map
 import Data.Maybe as X (listToMaybe)
 import Data.MonoTraversable as X (omap)

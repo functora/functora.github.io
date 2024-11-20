@@ -8,9 +8,13 @@ module Functora.Sql
 where
 
 import Control.Monad.Logger as X
-  ( defaultOutput,
+  ( LoggingT (..),
+    MonadLoggerIO,
+    NoLoggingT (..),
+    defaultOutput,
     runLoggingT,
     runNoLoggingT,
+    runStdoutLoggingT,
   )
 import Data.Pool as X (Pool, destroyAllResources)
 import qualified Database.Esqueleto.Internal.Internal as Internal
@@ -37,6 +41,7 @@ import Database.Esqueleto.Legacy as X
     Unique,
     Value,
     asc,
+    delete,
     deleteKey,
     desc,
     distinct,
@@ -44,6 +49,7 @@ import Database.Esqueleto.Legacy as X
     don,
     from,
     getBy,
+    groupBy,
     in_,
     insertBy,
     insertUniqueEntity,

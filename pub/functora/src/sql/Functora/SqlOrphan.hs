@@ -19,14 +19,12 @@ deriving stock instance (Data a, Data (Key a)) => Data (Entity a)
 
 instance PersistField (Ratio Natural) where
   toPersistValue = PersistRational . from @(Ratio Natural) @Rational
-  fromPersistValue = \case
-    PersistRational x ->
-      first (const $ failure x) $ tryFrom @Rational @(Ratio Natural) x
-    x ->
-      Left $ failure x
+  fromPersistValue raw = do
+    rat <- fromPersistValue raw
+    first (const failure) $ tryFrom @Rational @(Ratio Natural) rat
     where
-      failure x =
-        "Ratio Natural PersistValue is invalid " <> inspect @Text x
+      failure =
+        "Ratio Natural PersistValue is invalid " <> inspect @Text raw
 
 deriving via Rational instance PersistFieldSql (Ratio Natural)
 
@@ -78,3 +76,13 @@ instance (PersistField rep) => PersistField (Tagged tags rep) where
 
 instance (PersistFieldSql rep) => PersistFieldSql (Tagged tags rep) where
   sqlType = const . sqlType $ Proxy @rep
+
+instance (PersistField rep) => PersistField (NonEmpty rep) where
+  toPersistValue =
+    toPersistValue . toList
+  fromPersistValue raw = do
+    lst <- fromPersistValue raw
+    maybe (Left "Unexpected empty persist value") Right $ nonEmpty lst
+
+instance (PersistFieldSql rep) => PersistFieldSql (NonEmpty rep) where
+  sqlType = const . sqlType $ Proxy @[rep]

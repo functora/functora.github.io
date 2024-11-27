@@ -210,6 +210,7 @@ import Data.List.Extra as X
     nubOrdBy,
     nubOrdOn,
     unescapeHTML,
+    (!?),
   )
 import qualified Data.Map.Merge.Strict as Map
 import Data.Maybe as X (listToMaybe)
@@ -274,7 +275,7 @@ import Instances.TH.Lift as X ()
 import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
 import qualified Language.Haskell.TH.Syntax as TH
-import Lens.Micro as X (Getting, Traversal, Traversal', (%~))
+import Lens.Micro as X (Getting, Traversal, Traversal', (%~), (^..))
 import Lens.Micro.Contra as X (Fold, Getter, fromSimpleFold, fromSimpleGetter)
 import Lens.Micro.GHC as X ()
 import Lens.Micro.TH as X (makeLenses)

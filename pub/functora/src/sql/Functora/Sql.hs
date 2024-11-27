@@ -61,6 +61,7 @@ import Database.Esqueleto.Legacy as X
     min_,
     notIn,
     nothing,
+    offset,
     on,
     orderBy,
     rawExecute,

@@ -28,7 +28,7 @@ in {
     };
     openSsh = mkOption {
       type = types.bool;
-      default = false;
+      default = true;
     };
   };
 
@@ -53,7 +53,20 @@ in {
     '';
 
     services.fail2ban.enable = true;
-    services.openssh.enable = config.services.rigtora.openSsh;
+    services.openssh = {
+      enable = config.services.rigtora.openSsh;
+      settings.PasswordAuthentication = false;
+      settings.KbdInteractiveAuthentication = false;
+      settings.PermitRootLogin = "no";
+    };
+    #
+    # Automount
+    #
+    services.gvfs.enable = true;
+    services.udisks2.enable = true;
+    #
+    # XMR
+    #
     services.xmrig.enable = true;
     services.xmrig.settings = {
       cpu.enabled = true;

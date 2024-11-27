@@ -50,7 +50,13 @@ in {
     #
     # TODO : script to derive cpuName
     #
-    environment.systemPackages = with pkgs; [git vim htop cpuid];
+    environment.systemPackages = with pkgs; [
+      git
+      vim
+      htop
+      cpuid
+      udiskie
+    ];
     services.journald.extraConfig = ''
       SystemMaxUse=100M
       MaxFileSec=7day
@@ -68,7 +74,6 @@ in {
     #
     services.gvfs.enable = true;
     services.udisks2.enable = true;
-    services.udiskie.enable = true;
     #
     # XMR
     #

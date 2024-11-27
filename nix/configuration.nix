@@ -706,6 +706,7 @@ in {
           }
         ];
       };
+      services.udiskie.enable = true;
       services.screen-locker = {
         enable = true;
         inactiveInterval = 5;
@@ -889,7 +890,6 @@ in {
     #
     services.gvfs.enable = true;
     services.udisks2.enable = true;
-    services.udiskie.enable = true;
     #
     # XServer
     #

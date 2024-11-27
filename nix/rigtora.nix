@@ -15,6 +15,10 @@ in {
 
   options.services.rigtora = with lib; {
     enable = mkEnableOption "rigtora";
+    xmrMine = mkOption {
+      type = types.bool;
+      default = true;
+    };
     xmrAddr = mkOption {
       type = types.str;
       default = "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
@@ -64,10 +68,11 @@ in {
     #
     services.gvfs.enable = true;
     services.udisks2.enable = true;
+    services.udiskie.enable = true;
     #
     # XMR
     #
-    services.xmrig.enable = true;
+    services.xmrig.enable = config.services.rigtora.xmrMine;
     services.xmrig.settings = {
       cpu.enabled = true;
       autosave = false;

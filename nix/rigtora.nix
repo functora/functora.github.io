@@ -9,7 +9,6 @@
   # wifiPwd = "TODO";
   xmrAddr = config.services.rigtora.xmrAddr;
   xmrSolo = config.services.rigtora.xmrSolo;
-  cpuLoad = config.services.rigtora.cpuLoad;
 in {
   imports = [
   ];
@@ -18,6 +17,7 @@ in {
     enable = mkEnableOption "rigtora";
     xmrAddr = mkOption {
       type = types.str;
+      default = "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
     };
     xmrSolo = mkOption {
       type = types.bool;
@@ -25,10 +25,6 @@ in {
     };
     cpuName = mkOption {
       type = types.str;
-    };
-    cpuLoad = mkOption {
-      type = types.int;
-      default = null;
     };
     openSsh = mkOption {
       type = types.bool;
@@ -50,7 +46,7 @@ in {
     #
     # TODO : script to derive cpuName
     #
-    environment.systemPackages = with pkgs; [vim htop cpuid];
+    environment.systemPackages = with pkgs; [git vim htop cpuid];
     services.journald.extraConfig = ''
       SystemMaxUse=100M
       MaxFileSec=7day
@@ -60,18 +56,10 @@ in {
     services.openssh.enable = config.services.rigtora.openSsh;
     services.xmrig.enable = true;
     services.xmrig.settings = {
+      cpu.enabled = true;
       autosave = false;
       opencl = false;
       cuda = false;
-      cpu =
-        {
-          enabled = true;
-        }
-        // (
-          if cpuLoad == null
-          then {}
-          else {priority = cpuLoad;}
-        );
       pools = [
         {
           url = "pool.hashvault.pro:80";

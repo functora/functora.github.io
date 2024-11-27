@@ -835,6 +835,12 @@ in {
           modifier = mod;
           menu = "bemenu-run";
           defaultWorkspace = "workspace number 1";
+          output = {
+            DVI-D-1 = {
+              mode = "1280x720@60.000Hz";
+              # mode = "1920x1080@60.000Hz";
+            };
+          };
           #
           # TODO : remove when kanshi service bug is fixed:
           # https://github.com/nix-community/home-manager/issues/2797

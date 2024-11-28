@@ -480,6 +480,7 @@ in {
     services.ipp-usb.enable = true;
     services.printing.enable = true;
     services.printing.drivers = [pkgs.hplip];
+    services.fail2ban.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
     networking.nameservers = ["8.8.8.8" "8.8.4.4"];

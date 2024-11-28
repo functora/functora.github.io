@@ -45,6 +45,7 @@ in {
     #     interfaces = [ "wlan0" ];
     #   };
     # };
+    networking.firewall.enable = true;
     boot.tmp.cleanOnBoot = true;
     nix.settings.auto-optimise-store = true;
     #

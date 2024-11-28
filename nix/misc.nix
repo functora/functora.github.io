@@ -4,6 +4,11 @@ in
   with (import ./project.nix); rec {
     pkgBin = pkg: "${pkgs.${pkg}}/bin/${pkg}";
     nix-bundle = pkgs.nix-bundle.overrideAttrs (attrs: {
+      buildInputs =
+        attrs.buildInputs
+        ++ [
+          pkgs.stdenv.cc.cc.libgcc or null
+        ];
       postInstall =
         attrs.postInstall
         + ''

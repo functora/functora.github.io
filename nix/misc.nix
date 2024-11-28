@@ -33,7 +33,7 @@ in
           } --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
         '';
       };
-    mkService = srv: exe: {
+    mkService = srv: usr: exe: {
       lib,
       pkgs,
       config,
@@ -57,7 +57,10 @@ in
             wants = ["network.target"];
             wantedBy = ["default.target"];
             script = "PATH=$PATH:${pkgs.busybox}/bin ${exe}";
-            serviceConfig.Restart = "on-failure";
+            serviceConfig = {
+              User = usr;
+              Restart = "on-failure";
+            };
           };
         };
       };

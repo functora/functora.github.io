@@ -53,7 +53,7 @@ in
         };
 
         config = mkIf config.services."${srv}".enable {
-          systemd.user.services."${srv}" = {
+          systemd.services."${srv}" = {
             wants = ["network.target"];
             wantedBy = ["default.target"];
             script = "PATH=$PATH:${pkgs.busybox}/bin ${exe}";

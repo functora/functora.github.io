@@ -56,6 +56,7 @@ in {
       htop
       cpuid
       udiskie
+      litecli
     ];
     services.journald.extraConfig = ''
       SystemMaxUse=100M

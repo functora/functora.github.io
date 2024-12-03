@@ -1,8 +1,7 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.Env
-  ( RawEnv (..),
-    Env (..),
+  ( Env (..),
     newEnv,
     sysEnv,
   )
@@ -10,7 +9,6 @@ where
 
 import Bfx.Data.Web
 import Bfx.Import.External
-import qualified Data.Aeson as A
 import Env
   ( Mod,
     Var,
@@ -22,26 +20,6 @@ import Env
     var,
   )
 
-data RawEnv = RawEnv
-  { rawEnvApiKey :: ApiKey,
-    rawEnvPrvKey :: PrvKey
-  }
-  deriving stock
-    ( Eq,
-      -- | It's safe to derive 'Show' instance,
-      -- because 'ApiKey' and 'PrvKey'
-      -- instances are safe.
-      Show,
-      Generic
-    )
-
-instance FromJSON RawEnv where
-  parseJSON =
-    A.genericParseJSON
-      A.defaultOptions
-        { A.fieldLabelModifier = A.camelTo2 '_' . drop 6
-        }
-
 data Env = Env
   { envNonceGen :: NonceGen,
     envApiKey :: ApiKey,
@@ -52,14 +30,14 @@ data Env = Env
       Show
     )
 
-newEnv :: (MonadIO m) => RawEnv -> m Env
-newEnv raw = do
+newEnv :: (MonadIO m) => ApiKey -> PrvKey -> m Env
+newEnv apiKey prvKey = do
   nonceGen <- newNonceGen
-  pure $
-    Env
+  pure
+    $ Env
       { envNonceGen = nonceGen,
-        envApiKey = rawEnvApiKey raw,
-        envPrvKey = rawEnvPrvKey raw
+        envApiKey = apiKey,
+        envPrvKey = prvKey
       }
 
 sysEnv ::
@@ -71,8 +49,8 @@ sysEnv = do
   liftIO
     . parse (header "Bfx")
     $ Env nonceGen
-      <$> var (str <=< nonempty) "BITFINEX_API_KEY" op
-      <*> var (str <=< nonempty) "BITFINEX_PRV_KEY" op
+    <$> var (str <=< nonempty) "BITFINEX_API_KEY" op
+    <*> var (str <=< nonempty) "BITFINEX_PRV_KEY" op
   where
     op :: Mod Var a
     op = help mempty

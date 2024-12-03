@@ -138,6 +138,39 @@ instance
   put = Binary.gput . Generics.from . unGenericType
   get = GenericType . Generics.to <$> Binary.gget
 
+instance (Toml.HasCodec a) => Toml.HasCodec (Tagged t a) where
+  hasCodec =
+    Toml.diwrap . Toml.hasCodec @a
+
+--
+-- TODO : how to make an instance for a Rational nicely?
+--
+instance
+  ( Integral a,
+    From a Integer,
+    TryFrom Integer a
+  ) =>
+  Toml.HasCodec (Ratio a)
+  where
+  hasCodec =
+    Toml.match
+      $ Toml.mkAnyValueBiMap
+        ( \src -> do
+            let failure =
+                  Toml.MatchError Toml.TDouble
+                    $ Toml.AnyValue src
+            dbl <-
+              Toml.matchDouble src
+            rat <-
+              first (const failure)
+                $ tryFrom @Double @Rational dbl
+            first (const failure)
+              $ tryFrom @Rational @(Ratio a) rat
+        )
+        ( Toml.Double
+            . via @Rational @(Ratio a) @Double
+        )
+
 {-# INLINE defaultPutList #-}
 defaultPutList :: (Binary a) => [a] -> Binary.Put
 defaultPutList xs = Binary.put (length xs) <> mapM_ Binary.put xs

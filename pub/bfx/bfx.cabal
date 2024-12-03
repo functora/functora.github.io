@@ -90,6 +90,7 @@ common pkg-lib
     , cryptonite
     , envparse
     , functora
+    , functora:cfg
     , functora:money
     , functora:sql
     , http-client
@@ -207,6 +208,7 @@ test-suite bfx-test
       , cryptonite
       , envparse
       , functora
+      , functora:cfg
       , functora:money
       , functora:sql
       , http-client

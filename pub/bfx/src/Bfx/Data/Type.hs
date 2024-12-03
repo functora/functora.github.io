@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.Type
@@ -59,12 +58,17 @@ newtype OrderId = OrderId
     ( Eq,
       Ord,
       Show,
-      Num,
+      Read,
       ToJSON,
-      FromJSON
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey,
+      HasCodec,
+      HasItemCodec
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
 
 newtype OrderClientId = OrderClientId
@@ -74,12 +78,17 @@ newtype OrderClientId = OrderClientId
     ( Eq,
       Ord,
       Show,
-      Num,
+      Read,
       ToJSON,
-      FromJSON
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey,
+      HasCodec,
+      HasItemCodec
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
 
 newtype OrderGroupId = OrderGroupId
@@ -89,12 +98,17 @@ newtype OrderGroupId = OrderGroupId
     ( Eq,
       Ord,
       Show,
-      Num,
+      Read,
       ToJSON,
-      FromJSON
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey,
+      HasCodec,
+      HasItemCodec
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
 
 data Order (act :: BuyOrSell) (loc :: LocalOrRemote) = Order
@@ -110,7 +124,10 @@ data Order (act :: BuyOrSell) (loc :: LocalOrRemote) = Order
   }
   deriving stock
     ( Eq,
+      Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 
@@ -143,6 +160,7 @@ data OrderFlag
     ( Eq,
       Ord,
       Show,
+      Data,
       Generic,
       Enum,
       Bounded
@@ -156,10 +174,13 @@ newtype OrderFlagAcc
       Show,
       Num,
       ToJSON,
-      FromJSON
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey
     )
   deriving stock
-    ( Generic
+    ( Data,
+      Generic
     )
 
 unOrderFlag :: OrderFlag -> OrderFlagAcc
@@ -189,11 +210,24 @@ data OrderStatus
     ( Eq,
       Ord,
       Show,
+      Read,
       Data,
       Generic,
       Enum,
       Bounded
     )
+  deriving
+    ( ToJSON,
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey
+    )
+    via GenericType OrderStatus
+  deriving
+    ( HasCodec,
+      HasItemCodec
+    )
+    via GenericEnum OrderStatus
 
 newOrderStatus ::
   Text ->
@@ -393,8 +427,15 @@ data CurrencyPair = CurrencyPair
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
+  deriving
+    ( HasCodec,
+      HasItemCodec
+    )
+    via GenericType CurrencyPair
 
 instance FromJSON CurrencyPair where
   parseJSON =

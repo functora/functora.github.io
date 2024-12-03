@@ -107,7 +107,7 @@ prv env req = do
                     nonce
                   ),
                   ( "bfx-apikey",
-                    coerce $ envApiKey env
+                    encodeUtf8 . unApiKey $ envApiKey env
                   ),
                   ( "bfx-signature",
                     B16.encode
@@ -137,7 +137,7 @@ sign ::
   Crypto.Digest Crypto.SHA384
 sign prvKey apiPath nonce reqBody =
   Crypto.hmacGetDigest
-    . Crypto.hmac (coerce prvKey :: BS.ByteString)
+    . Crypto.hmac (encodeUtf8 $ unPrvKey prvKey :: BS.ByteString)
     $ "/api/"
     <> encodeUtf8 apiPath
     <> nonce

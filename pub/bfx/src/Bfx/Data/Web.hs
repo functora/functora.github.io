@@ -20,58 +20,35 @@ import Bfx.Import.External
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text as T
 import qualified Prelude
 
 newtype PrvKey = PrvKey
-  { unPrvKey :: BS.ByteString
+  { unPrvKey :: Text
   }
   deriving newtype
     ( Eq,
       Ord,
-      IsString
+      Read,
+      IsString,
+      HasCodec,
+      HasItemCodec
     )
+  deriving stock (Data, Generic)
+  deriving (Show) via Redacted PrvKey
 
-instance From BS.ByteString PrvKey
-
-instance From PrvKey BS.ByteString
-
-instance From (UTF_8 BS.ByteString) PrvKey where
-  from =
-    via @BS.ByteString
-
-instance Prelude.Show PrvKey where
-  show =
-    const "SECRET"
-
-instance FromJSON PrvKey where
-  parseJSON =
-    parseJsonBs
-
-newtype ApiKey
-  = ApiKey BS.ByteString
+newtype ApiKey = ApiKey
+  { unApiKey :: Text
+  }
   deriving newtype
     ( Eq,
       Ord,
-      IsString
+      Read,
+      IsString,
+      HasCodec,
+      HasItemCodec
     )
-
-instance From BS.ByteString ApiKey
-
-instance From ApiKey BS.ByteString
-
-instance From (UTF_8 BS.ByteString) ApiKey where
-  from =
-    via @BS.ByteString
-
-instance Prelude.Show ApiKey where
-  show =
-    const "SECRET"
-
-instance FromJSON ApiKey where
-  parseJSON =
-    parseJsonBs
+  deriving stock (Data, Generic)
+  deriving (Show) via Redacted ApiKey
 
 data RequestMethod
   = GET
@@ -80,41 +57,34 @@ data RequestMethod
     ( Eq,
       Ord,
       Show,
+      Read,
       Data,
       Generic
     )
 
-newtype BaseUrl
-  = BaseUrl Text
+newtype BaseUrl = BaseUrl
+  { unBaseUrl :: Text
+  }
   deriving newtype
     ( Eq,
       Ord,
       Show,
+      Read,
       IsString
     )
 
-newtype RawResponse
-  = RawResponse ByteString
+newtype RawResponse = RawResponse
+  { unRawResponse :: ByteString
+  }
   deriving newtype
     ( Eq,
-      Ord
+      Ord,
+      Show
     )
   deriving stock
     ( Data,
       Generic
     )
-
-instance From ByteString RawResponse
-
-instance From RawResponse ByteString
-
-instance Show RawResponse where
-  show x =
-    case decodeUtf8Strict bs of
-      Left {} -> "ByteString RawResponse" <> inspect (BS.unpack bs)
-      Right res -> "Text RawResponse " <> T.unpack res
-    where
-      bs = BL.toStrict $ from x
 
 newtype Nonce = Nonce
   { unNonce :: Natural

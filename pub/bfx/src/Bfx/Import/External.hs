@@ -7,7 +7,6 @@ where
 
 import Control.Concurrent as X (threadDelay)
 import Control.Monad.Trans.Except as X (catchE, except, throwE)
-import Data.Aeson as X (FromJSON (..), FromJSONKey (..), ToJSON (..))
 import Data.ByteString.Lazy as X (ByteString)
 import Data.Coerce as X (coerce)
 import Data.Fixed as X (Fixed, HasResolution (..), showFixed)
@@ -24,6 +23,7 @@ import Data.Metrology.Poly as X
     (|/|),
   )
 import Data.Ratio.Rounding as X (dpRound, sdRound)
+import Functora.Cfg as X
 import Functora.Money as X
 import Functora.Prelude as X hiding (ByteString, Exchange (..), at)
 import Functora.Sql as X

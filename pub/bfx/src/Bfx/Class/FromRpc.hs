@@ -36,7 +36,7 @@ instance FromRpc 'PlatformStatus PltStatus where
       0 -> Right PltMaintenance
       _ -> Left "Incorrect PltStatus"
 
-instance FromRpc 'CancelOrderMulti (Map OrderId (SomeOrder 'Remote)) where
+instance FromRpc 'CancelOrderMulti (Map OrderId Order) where
   fromRpc (RawResponse raw) = do
     xs <-
       maybeToRight
@@ -45,34 +45,18 @@ instance FromRpc 'CancelOrderMulti (Map OrderId (SomeOrder 'Remote)) where
         ^? nth 4
     parseOrderMap xs
 
-instance
-  FromRpc
-    'RetrieveOrders
-    (Map OrderId (SomeOrder 'Remote))
-  where
+instance FromRpc 'RetrieveOrders (Map OrderId Order) where
   fromRpc (RawResponse raw) =
     parseOrderMap raw
 
-instance
-  FromRpc
-    'OrdersHistory
-    (Map OrderId (SomeOrder 'Remote))
-  where
+instance FromRpc 'OrdersHistory (Map OrderId Order) where
   fromRpc (RawResponse raw) =
     parseOrderMap raw
 
-instance (SingI act) => FromRpc 'SubmitOrder (Order act 'Remote) where
+instance FromRpc 'SubmitOrder Order where
   fromRpc (RawResponse raw) = do
-    rawOrder <-
-      maybeToRight
-        "Order is missing"
-        $ raw
-        ^? nth 4
-        . nth 0
-    SomeOrder orderSing order <- parseOrder rawOrder
-    case testEquality (sing :: Sing act) orderSing of
-      Nothing -> Left "Incorrect ExchangeAction"
-      Just Refl -> pure order
+    rawOrder <- maybeToRight "Order is missing" $ raw ^? nth 4 . nth 0
+    parseOrder rawOrder
 
 instance FromRpc 'MarketAveragePrice QuotePerBase where
   fromRpc (RawResponse raw) = do

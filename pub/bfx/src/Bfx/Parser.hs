@@ -16,12 +16,7 @@ import qualified Data.Map as Map
 import qualified Prelude
 
 parseOrder ::
-  ( AsValue a,
-    Show a,
-    Data a
-  ) =>
-  a ->
-  Either Text (SomeOrder 'Remote)
+  (Show a, Data a, AsValue a) => a -> Either Text Order
 parseOrder x = do
   id0 <-
     maybeToRight (failure "OrderId is missing")
@@ -83,44 +78,30 @@ parseOrder x = do
       (const . failure $ "ExchangeRate is invalid " <> inspect price)
       QuotePerBase
       $ tryFrom @Rational @(Ratio Natural) (toRational price)
+  let mkOrder bos =
+        Order
+          { orderId = id0,
+            orderGroupId = gid,
+            orderClientId = cid,
+            orderBaseAmount = amt,
+            orderSymbol = sym,
+            orderRate = rate,
+            orderStatus = ss1,
+            orderBuyOrSell = bos,
+            orderLocalOrRemote = Remote
+          }
   if
-    | amt0 > 0 ->
-        pure
-          $ SomeOrder
-            SBuy
-            Order
-              { orderId = id0,
-                orderGroupId = gid,
-                orderClientId = cid,
-                orderBaseAmount = amt,
-                orderSymbol = sym,
-                orderRate = rate,
-                orderStatus = ss1
-              }
-    | amt0 < 0 ->
-        pure
-          $ SomeOrder
-            SSell
-            Order
-              { orderId = id0,
-                orderGroupId = gid,
-                orderClientId = cid,
-                orderBaseAmount = amt,
-                orderSymbol = sym,
-                orderRate = rate,
-                orderStatus = ss1
-              }
-    | otherwise ->
-        Left "Got zero money amount"
+    | amt0 > 0 -> pure $ mkOrder Buy
+    | amt0 < 0 -> pure $ mkOrder Sell
+    | otherwise -> Left "Got zero money amount"
   where
-    failure =
-      (<> " in " <> inspect x)
+    failure = (<> " in " <> inspect x)
 
 parseOrderMap ::
   ( AsValue a
   ) =>
   a ->
-  Either Text (Map OrderId (SomeOrder 'Remote))
+  Either Text (Map OrderId Order)
 parseOrderMap raw = do
   xs <-
     maybeToRight
@@ -130,8 +111,8 @@ parseOrderMap raw = do
   foldrM parser mempty xs
   where
     parser x acc = do
-      someOrder@(SomeOrder _ order) <- parseOrder x
-      pure $ Map.insert (orderId order) someOrder acc
+      order <- parseOrder x
+      pure $ Map.insert (orderId order) order acc
 
 parseCandle ::
   ( AsValue a

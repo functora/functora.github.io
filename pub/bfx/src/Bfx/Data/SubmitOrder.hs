@@ -13,15 +13,16 @@ where
 import Bfx.Import
 import qualified Data.Aeson as A
 
-data Request (bos :: BuyOrSell) = Request
+data Request = Request
   { baseAmount :: MoneyAmount,
     symbol :: CurrencyPair,
     rate :: QuotePerBase,
-    options :: Options bos
+    options :: Options,
+    buyOrSell :: BuyOrSell
   }
   deriving stock (Eq, Ord, Show)
 
-data Options (bos :: BuyOrSell) = Options
+data Options = Options
   { stopLoss :: Maybe QuotePerBase,
     clientId :: Maybe OrderClientId,
     groupId :: Maybe OrderGroupId,
@@ -29,7 +30,7 @@ data Options (bos :: BuyOrSell) = Options
   }
   deriving stock (Eq, Ord, Show)
 
-optsDef :: Options bos
+optsDef :: Options
 optsDef =
   Options
     { stopLoss = Nothing,
@@ -38,7 +39,7 @@ optsDef =
       flags = mempty
     }
 
-optsPostOnly :: Options bos
+optsPostOnly :: Options
 optsPostOnly =
   Options
     { stopLoss = Nothing,
@@ -47,7 +48,7 @@ optsPostOnly =
       flags = [PostOnly]
     }
 
-optsPostOnlyStopLoss :: QuotePerBase -> Options bos
+optsPostOnlyStopLoss :: QuotePerBase -> Options
 optsPostOnlyStopLoss sl =
   Options
     { stopLoss = Just sl,
@@ -56,13 +57,7 @@ optsPostOnlyStopLoss sl =
       flags = [PostOnly, Oco]
     }
 
-instance
-  forall (bos :: BuyOrSell).
-  ( Typeable bos,
-    SingI bos
-  ) =>
-  ToJSON (Request bos)
-  where
+instance ToJSON Request where
   toJSON req =
     eradicateNull
       . A.object
@@ -74,7 +69,7 @@ instance
             A..= ("EXCHANGE LIMIT" :: Text),
           "amount"
             A..= toTextParam
-              ( demote @bos,
+              ( buyOrSell req,
                 Base,
                 baseAmount req
               ),

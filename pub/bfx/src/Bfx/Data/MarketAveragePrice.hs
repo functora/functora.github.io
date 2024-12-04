@@ -7,13 +7,15 @@ where
 
 import Bfx.Import
 
-data Request (bos :: BuyOrSell) = Request
-  { baseAmount :: MoneyAmount,
+data Request = Request
+  { buyOrSell :: BuyOrSell,
+    baseAmount :: MoneyAmount,
     symbol :: CurrencyPair
   }
   deriving stock
     ( Eq,
       Ord,
       Show,
+      Data,
       Generic
     )

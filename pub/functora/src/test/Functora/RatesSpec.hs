@@ -63,9 +63,9 @@ spec = do
       tryMarket
         $ getQuote
           defOpts
-          ( Funds
-              (Tagged 1)
-              (CurrencyCode "btc")
-          )
+          Money
+            { moneyAmount = MoneyAmount 1,
+              moneyCurrencyCode = CurrencyCode "btc"
+            }
           quoteCurrency
     lift $ res `shouldSatisfy` isRight

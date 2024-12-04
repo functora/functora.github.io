@@ -1,64 +1,37 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.Metro
-  ( CashTags,
-    roundMoney,
-    RateTags,
+  ( roundMoneyAmount,
     roundQuotePerBase,
   )
 where
 
 import Bfx.Import.External
 
-type CashTags tags =
-  ( MoneyTags tags,
-    HasTag 'Unsigned tags
-  )
-
-roundMoney ::
-  forall tags m.
-  ( CashTags tags,
-    MonadThrow m
-  ) =>
-  Money tags ->
-  m (Money tags)
-roundMoney money =
+roundMoneyAmount :: (MonadThrow m) => MoneyAmount -> m MoneyAmount
+roundMoneyAmount arg@(MoneyAmount raw) =
   if raw >= 0 && rounded >= 0
-    then pure $ Tagged rounded
-    else throw $ TryFromException @(Ratio Natural) @(Money tags) raw Nothing
+    then pure $ MoneyAmount rounded
+    else throwString $ "Rounding error for " <> inspect @String arg
   where
-    raw = unTagged money
     rounded =
       unsafeFrom @Rational @(Ratio Natural)
-        . roundMoneyRat
+        . roundMoneyAmountRat
         $ from @(Ratio Natural) @Rational raw
 
-type RateTags tags =
-  ( MoneyTags tags,
-    HasTag 'Unsigned tags,
-    HasTag 'QuotePerBase tags
-  )
-
-roundQuotePerBase ::
-  forall tags m.
-  ( RateTags tags,
-    MonadThrow m
-  ) =>
-  Money tags ->
-  m (Money tags)
-roundQuotePerBase money =
+roundQuotePerBase :: (MonadThrow m) => QuotePerBase -> m QuotePerBase
+roundQuotePerBase arg@(QuotePerBase raw) =
   if raw > 0 && rounded > 0
-    then pure $ Tagged rounded
-    else throw $ TryFromException @(Ratio Natural) @(Money tags) raw Nothing
+    then pure $ QuotePerBase rounded
+    else throwString $ "Rounding error for " <> inspect @String arg
   where
-    raw = unTagged money
     rounded =
       unsafeFrom @Rational @(Ratio Natural)
         . roundQuotePerBaseRat
         $ from @(Ratio Natural) @Rational raw
 
-roundMoneyRat :: Rational -> Rational
-roundMoneyRat = dpRound 8
+roundMoneyAmountRat :: Rational -> Rational
+roundMoneyAmountRat = dpRound 8
 
 roundQuotePerBaseRat :: Rational -> Rational
 roundQuotePerBaseRat = sdRound 5 . dpRound 8

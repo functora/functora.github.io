@@ -14,15 +14,15 @@ import Bfx.Import
 import qualified Data.Aeson as A
 
 data Request (bos :: BuyOrSell) = Request
-  { amount :: Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
+  { baseAmount :: MoneyAmount,
     symbol :: CurrencyPair,
-    rate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
+    rate :: QuotePerBase,
     options :: Options bos
   }
   deriving stock (Eq, Ord, Show)
 
 data Options (bos :: BuyOrSell) = Options
-  { stopLoss :: Maybe (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
+  { stopLoss :: Maybe QuotePerBase,
     clientId :: Maybe OrderClientId,
     groupId :: Maybe OrderGroupId,
     flags :: Set OrderFlag
@@ -47,9 +47,7 @@ optsPostOnly =
       flags = [PostOnly]
     }
 
-optsPostOnlyStopLoss ::
-  Money (Tags 'Unsigned |+| 'QuotePerBase |+| (bos :: BuyOrSell)) ->
-  Options bos
+optsPostOnlyStopLoss :: QuotePerBase -> Options bos
 optsPostOnlyStopLoss sl =
   Options
     { stopLoss = Just sl,
@@ -60,9 +58,7 @@ optsPostOnlyStopLoss sl =
 
 instance
   forall (bos :: BuyOrSell).
-  ( ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
-    ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
-    Typeable bos,
+  ( Typeable bos,
     SingI bos
   ) =>
   ToJSON (Request bos)
@@ -77,7 +73,11 @@ instance
           "type"
             A..= ("EXCHANGE LIMIT" :: Text),
           "amount"
-            A..= toTextParam (amount req),
+            A..= toTextParam
+              ( demote @bos,
+                Base,
+                baseAmount req
+              ),
           "symbol"
             A..= toTextParam (symbol req),
           "price"

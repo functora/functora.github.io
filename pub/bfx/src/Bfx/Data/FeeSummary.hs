@@ -2,11 +2,10 @@
 
 module Bfx.Data.FeeSummary
   ( Response (..),
-    getFee,
+    getCryptoFee,
   )
 where
 
-import Bfx.Data.Kind
 import Bfx.Data.Type
 import Bfx.Import.External
 
@@ -14,14 +13,14 @@ import Bfx.Import.External
 -- TODO : this is not 100% correct
 --
 data Response = Response
-  { makerCrypto2CryptoFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
-    makerCrypto2StableFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
-    makerCrypto2FiatFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Maker),
+  { makerCrypto2CryptoFee :: FeeRate,
+    makerCrypto2StableFee :: FeeRate,
+    makerCrypto2FiatFee :: FeeRate,
     makerDerivativeRebate :: RebateRate 'Maker,
-    takerCrypto2CryptoFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
-    takerCrypto2StableFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
-    takerCrypto2FiatFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker),
-    takerDerivativeFee :: Money (Tags 'Unsigned |+| 'FeeRate |+| 'Taker)
+    takerCrypto2CryptoFee :: FeeRate,
+    takerCrypto2StableFee :: FeeRate,
+    takerCrypto2FiatFee :: FeeRate,
+    takerDerivativeFee :: FeeRate
   }
   deriving stock
     ( Eq,
@@ -30,21 +29,16 @@ data Response = Response
       Generic
     )
 
---
--- TODO : accept 2 types
---
-getFee ::
-  forall (mot :: MakerOrTaker).
-  ( SingI mot
-  ) =>
+getCryptoFee ::
+  MakerOrTaker ->
   CurrencyKind ->
   Response ->
-  Money (Tags 'Unsigned |+| 'FeeRate |+| mot)
-getFee ck =
-  case (sing :: Sing mot, ck) of
-    (SMaker, Crypto) -> makerCrypto2CryptoFee
-    (SMaker, Stable) -> makerCrypto2StableFee
-    (SMaker, Fiat) -> makerCrypto2FiatFee
-    (STaker, Crypto) -> takerCrypto2CryptoFee
-    (STaker, Stable) -> takerCrypto2StableFee
-    (STaker, Fiat) -> takerCrypto2FiatFee
+  FeeRate
+getCryptoFee mot cck =
+  case (mot, cck) of
+    (Maker, Crypto) -> makerCrypto2CryptoFee
+    (Maker, Stable) -> makerCrypto2StableFee
+    (Maker, Fiat) -> makerCrypto2FiatFee
+    (Taker, Crypto) -> takerCrypto2CryptoFee
+    (Taker, Stable) -> takerCrypto2StableFee
+    (Taker, Fiat) -> takerCrypto2FiatFee

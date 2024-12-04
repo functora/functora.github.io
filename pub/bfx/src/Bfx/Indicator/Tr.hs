@@ -10,7 +10,7 @@ import Bfx.Import
 import qualified Data.Vector as V
 
 newtype Tr = Tr
-  { unTr :: Money (Tags 'Unsigned |+| 'QuotePerBase)
+  { unTr :: QuotePerBase
   }
   deriving stock
     ( Eq,
@@ -37,13 +37,10 @@ tr cs =
       )
     <$> zip (toList cs) (tail cs)
 
-absRange ::
-  Money (Tags 'Unsigned |+| 'QuotePerBase) ->
-  Money (Tags 'Unsigned |+| 'QuotePerBase) ->
-  Money (Tags 'Unsigned |+| 'QuotePerBase)
+absRange :: QuotePerBase -> QuotePerBase -> QuotePerBase
 absRange x y =
-  Tagged
+  QuotePerBase
     . unsafeFrom @Rational @(Ratio Natural)
     . abs
-    $ abs (from @(Ratio Natural) @Rational $ unTagged x)
-    - abs (from @(Ratio Natural) @Rational $ unTagged y)
+    $ abs (from @(Ratio Natural) @Rational $ unQuotePerBase x)
+    - abs (from @(Ratio Natural) @Rational $ unQuotePerBase y)

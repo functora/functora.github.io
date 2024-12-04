@@ -14,7 +14,7 @@ import qualified Data.Vector as V
 import qualified Prelude
 
 newtype Atr = Atr
-  { unAtr :: Money (Tags 'Unsigned |+| 'QuotePerBase)
+  { unAtr :: QuotePerBase
   }
   deriving newtype
     ( Eq,
@@ -83,8 +83,7 @@ unsafeAtr intPeriod xs stopAtIdx currentIdx acc =
     at = fst $ V.last chunk
     val =
       Atr
-        . Tagged
+        . QuotePerBase
         . (/ Prelude.fromIntegral intPeriod)
-        . unTagged
-        . V.foldl1 addMoney
-        $ V.map (Tr.unTr . snd) chunk
+        . V.foldl1 (+)
+        $ V.map (unQuotePerBase . Tr.unTr . snd) chunk

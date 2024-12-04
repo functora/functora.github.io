@@ -60,12 +60,10 @@ parseOrder x = do
       <$> x
       ^? nth 7
       . _Number
-  --
-  -- TODO : handle zero amt???
-  --
-  -- SomeMoney bos amt <-
-  --   first (failure . ("OrderAmount is invalid " <>) . inspect)
-  --     $ tryFrom amt0
+  let amt =
+        MoneyAmount
+          . unsafeFrom @Rational @(Ratio Natural)
+          $ abs amt0
   ss0 <-
     maybeToRight (failure "OrderStatus is missing")
       $ x
@@ -81,39 +79,40 @@ parseOrder x = do
       ^? nth 16
       . _Number
   rate <-
-    first (const . failure $ "ExchangeRate is invalid " <> inspect price)
+    bimap
+      (const . failure $ "ExchangeRate is invalid " <> inspect price)
+      QuotePerBase
       $ tryFrom @Rational @(Ratio Natural) (toRational price)
-  case newUnsignedMoneyBOS @(Tags 'Base |+| 'MoneyAmount) amt0 of
-    SomeMoney bos amt ->
-      pure
-        . SomeOrder bos
-        $ Order
-          { orderId = id0,
-            orderGroupId = gid,
-            orderClientId = cid,
-            orderAmount = amt,
-            orderSymbol = sym,
-            orderRate = Tagged rate,
-            orderStatus = ss1
-          }
+  if
+    | amt0 > 0 ->
+        pure
+          $ SomeOrder
+            SBuy
+            Order
+              { orderId = id0,
+                orderGroupId = gid,
+                orderClientId = cid,
+                orderBaseAmount = amt,
+                orderSymbol = sym,
+                orderRate = rate,
+                orderStatus = ss1
+              }
+    | amt0 < 0 ->
+        pure
+          $ SomeOrder
+            SSell
+            Order
+              { orderId = id0,
+                orderGroupId = gid,
+                orderClientId = cid,
+                orderBaseAmount = amt,
+                orderSymbol = sym,
+                orderRate = rate,
+                orderStatus = ss1
+              }
+    | otherwise ->
+        Left "Got zero money amount"
   where
-    -- let SomeMoney bos amt =
-    --       newUnsignedMoneyBOS @(Tags 'Base) amt0 ::
-    --         SomeMoney BuyOrSell (Tags 'Unsigned |+| 'Base)
-    -- case bos of
-    --   SBuy ->
-    --     pure
-    --       . SomeOrder SBuy
-    --       $ Order
-    --         { orderId = id0,
-    --           orderGroupId = gid,
-    --           orderClientId = cid,
-    --           orderAmount = amt,
-    --           orderSymbol = sym,
-    --           orderRate = Tagged rate,
-    --           orderStatus = ss1
-    --         }
-
     failure =
       (<> " in " <> inspect x)
 
@@ -151,7 +150,7 @@ parseCandle x = do
   open <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -162,7 +161,7 @@ parseCandle x = do
   close <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -173,7 +172,7 @@ parseCandle x = do
   high <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -184,7 +183,7 @@ parseCandle x = do
   low <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -194,8 +193,8 @@ parseCandle x = do
         (toRational <$> x ^? nth 4 . _Number)
   vol <-
     first inspect
-      . roundMoney
-      . Tagged
+      . roundMoneyAmount
+      . MoneyAmount
       --
       -- TODO : tryFrom???
       --
@@ -210,5 +209,5 @@ parseCandle x = do
         candleClose = close,
         candleHigh = high,
         candleLow = low,
-        candleVolume = vol
+        candleBaseVolume = vol
       }

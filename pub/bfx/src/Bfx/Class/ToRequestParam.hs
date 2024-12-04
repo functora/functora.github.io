@@ -8,7 +8,6 @@ module Bfx.Class.ToRequestParam
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Data.Web
 import Bfx.Import.External
 import qualified Data.ByteString as BS
@@ -54,20 +53,17 @@ instance ToRequestParam Text where
   toTextParam =
     id
 
---
--- TODO : need a special case only for the 'Base!!!
---
-instance
-  ( CashTags tags,
-    Ratio (IntRep tags) ~ a,
-    HasTag (bos :: BuyOrSell) tags
-  ) =>
-  ToRequestParam (Tagged tags a)
-  where
-  toTextParam amt =
-    case sing :: Sing bos of
-      SBuy -> toTextParam $ success amt
-      SSell -> toTextParam $ (-1) * success amt
+instance ToRequestParam (BuyOrSell, BaseOrQuote, MoneyAmount) where
+  toTextParam (bos, boq, MoneyAmount amt) =
+    if bos == Sell && boq == Base
+      then toTextParam $ (-1) * rat amt
+      else toTextParam $ rat amt
     where
-      success :: Money tags -> Rational
-      success = abs . from @(Ratio Natural) @Rational . unTagged
+      rat = abs . from @(Ratio Natural) @Rational
+
+instance ToRequestParam QuotePerBase where
+  toTextParam =
+    toTextParam
+      . abs
+      . from @(Ratio Natural) @Rational
+      . unQuotePerBase

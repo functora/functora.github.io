@@ -53,9 +53,9 @@ instance ToRequestParam Text where
   toTextParam =
     id
 
-instance ToRequestParam (BuyOrSell, BaseOrQuote, MoneyAmount) where
-  toTextParam (bos, boq, MoneyAmount amt) =
-    if bos == Sell && boq == Base
+instance ToRequestParam (BuyOrSell, MoneyAmount) where
+  toTextParam (bos, MoneyAmount amt) =
+    if bos == Sell
       then toTextParam $ (-1) * rat amt
       else toTextParam $ rat amt
     where

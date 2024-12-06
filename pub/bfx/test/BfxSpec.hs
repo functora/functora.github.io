@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module BfxSpec
@@ -7,9 +6,6 @@ module BfxSpec
 where
 
 import qualified Bfx as Bitfinex
--- import qualified Bfx.Chart as Chart
--- import qualified Bfx.Data.CancelOrderMulti as CancelOrderMulti
-
 import qualified Bfx.Data.Candles as Candles
 import qualified Bfx.Data.GetOrders as GetOrders
 import qualified Bfx.Data.SubmitOrder as SubmitOrder
@@ -92,10 +88,6 @@ spec = before sysEnv $ do
   it "candlesHist succeeds" . const $ do
     res <- tryAny $ Bitfinex.candlesHist Ctf1h adabtc Candles.optsDef
     res `shouldSatisfy` isRight
-
---  it "chart" . const $ do
---    Chart.newExample
---    True `shouldBe` True
 
 --  describe "End2End" $ do
 --    itRight "submitOrderMaker" $ \env -> do

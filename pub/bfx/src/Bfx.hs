@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx
@@ -54,7 +53,7 @@ platformStatus ::
   ) =>
   m PltStatus
 platformStatus =
-  Generic.pub @'PlatformStatus [] ()
+  Generic.pub @'PlatformStatus mempty emptyReq
 
 symbolsDetails ::
   ( MonadThrow m,
@@ -62,7 +61,7 @@ symbolsDetails ::
   ) =>
   m (Map CurrencyPair CurrencyPairConf)
 symbolsDetails =
-  Generic.pub @'SymbolsDetails [] ()
+  Generic.pub @'SymbolsDetails mempty emptyReq
 
 marketAveragePrice ::
   ( MonadThrow m,
@@ -80,7 +79,6 @@ marketAveragePrice args =
   where
     amt =
       ( MarketAveragePrice.buyOrSell args,
-        Base,
         MarketAveragePrice.baseAmount args
       )
     sym =
@@ -93,10 +91,7 @@ feeSummary ::
   Env ->
   m FeeSummary.Response
 feeSummary env =
-  Generic.prv
-    @'FeeSummary
-    env
-    (mempty :: Map Int Int)
+  Generic.prv @'FeeSummary env emptyReq
 
 wallets ::
   ( MonadThrow m,
@@ -109,10 +104,7 @@ wallets ::
         (Map Wallets.WalletType Wallets.Response)
     )
 wallets env =
-  Generic.prv
-    @'Wallets
-    env
-    (mempty :: Map Int Int)
+  Generic.prv @'Wallets env emptyReq
 
 spendableExchangeBalance ::
   ( MonadThrow m,

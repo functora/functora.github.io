@@ -6,7 +6,6 @@ module Bfx.Math
     newCounterOrder,
     CounterArgs (..),
     CounterExit (..),
-    -- newCounterOrderSimple,
   )
 where
 

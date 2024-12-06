@@ -70,7 +70,6 @@ instance ToJSON Request where
           "amount"
             A..= toTextParam
               ( buyOrSell req,
-                Base,
                 baseAmount req
               ),
           "symbol"

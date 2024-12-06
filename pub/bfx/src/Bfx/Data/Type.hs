@@ -33,6 +33,7 @@ module Bfx.Data.Type
     -- $misc
     PltStatus (..),
     Error (..),
+    emptyReq,
   )
 where
 
@@ -235,165 +236,17 @@ newOrderStatus = \case
 -- $trading
 -- Data related to trading and money.
 
--- newtype
---   FeeRate
---     (mrel :: MakerOrTaker)
---     (crel :: CurrencyRelation) = FeeRate
---   { unFeeRate :: Rational
---   }
---   deriving newtype
---     ( Eq,
---       Ord,
---       Show
---     )
---   deriving stock
---     ( Generic,
---       TH.Lift
---     )
---
--- instance From (FeeRate mrel crel) Rational
---
--- instance TryFrom Rational (FeeRate mrel crel) where
---   tryFrom x
---     | x >= 0 && x < 1 = Right $ FeeRate x
---     | otherwise = Left $ TryFromException x Nothing
---
--- deriving via
---   Rational
---   instance
---     ( Typeable mrel,
---       Typeable crel
---     ) =>
---     PersistFieldSql (FeeRate mrel crel)
---
--- instance
---   ( Typeable mrel,
---     Typeable crel
---   ) =>
---   PersistField (FeeRate mrel crel)
---   where
---   toPersistValue =
---     PersistRational . from
---   fromPersistValue raw =
---     case raw of
---       PersistRational x ->
---         first (const failure) $ tryFrom x
---       _ ->
---         Left failure
---     where
---       failure =
---         showType @(FeeRate mrel crel)
---           <> " PersistValue is invalid "
---           <> show raw
-
-newtype RebateRate (mrel :: MakerOrTaker)
-  = RebateRate Rational
-  deriving newtype
+newtype RebateRate = RebateRate
+  { unRebateRate :: Rational
+  }
+  deriving stock
     ( Eq,
       Ord,
       Show,
-      Num
+      Read,
+      Data,
+      Generic
     )
-  deriving stock
-    ( Generic
-    )
-
-instance From (RebateRate mrel) Rational
-
-instance From Rational (RebateRate mrel)
-
--- newtype ProfitRate = ProfitRate
---   { unProfitRate :: Rational
---   }
---   deriving newtype
---     ( Eq,
---       Ord,
---       Show,
---       NFData
---     )
---   deriving stock
---     ( Generic,
---       TH.Lift
---     )
---
--- instance TryFrom Rational ProfitRate where
---   tryFrom x
---     | x > 0 = Right $ ProfitRate x
---     | otherwise = Left $ TryFromException x Nothing
---
--- instance From ProfitRate Rational
---
--- instance FromJSON ProfitRate where
---   parseJSON =
---     withText (inspectType @ProfitRate)
---       $ either (fail . inspect) (pure . ProfitRate)
---       . parseRatio
---
--- newtype ProfitRateB (b :: MinOrMax) = ProfitRateB
---   { unProfitRateB :: ProfitRate
---   }
---   deriving newtype
---     ( Eq,
---       Ord,
---       Show,
---       NFData,
---       FromJSON
---     )
---   deriving stock
---     ( Generic,
---       TH.Lift
---     )
-
--- newtype CurrencyCode (crel :: CurrencyRelation) = CurrencyCode
---   { unCurrencyCode :: Text
---   }
---   deriving newtype
---     ( Eq,
---       Ord,
---       Show,
---       ToJSON,
---       NFData
---     )
---   deriving stock
---     ( Generic,
---       TH.Lift
---     )
---
--- instance From (CurrencyCode crel0) (CurrencyCode crel1)
---
--- instance (Typeable crel) => FromJSON (CurrencyCode crel) where
---   parseJSON = withText
---     (showType @(CurrencyCode crel))
---     $ \raw -> do
---       case newCurrencyCode raw of
---         Left x -> fail $ show x
---         Right x -> pure x
---
--- deriving via
---   Text
---   instance
---     ( Typeable crel
---     ) =>
---     PersistFieldSql (CurrencyCode crel)
---
--- instance
---   ( Typeable crel
---   ) =>
---   PersistField (CurrencyCode crel)
---   where
---   toPersistValue =
---     PersistText . coerce
---   fromPersistValue raw =
---     case raw of
---       PersistText x ->
---         first (const failure) $ newCurrencyCode x
---       _ ->
---         Left failure
---     where
---       failure =
---         showType @(CurrencyCode crel)
---           <> " PersistValue is invalid "
---           <> show raw
 
 newCurrencyCode :: (MonadThrow m) => Text -> m CurrencyCode
 newCurrencyCode raw =
@@ -576,3 +429,6 @@ data Error
     )
 
 instance Exception Error
+
+emptyReq :: Map Int Int
+emptyReq = mempty

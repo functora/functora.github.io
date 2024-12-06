@@ -16,7 +16,7 @@ data Response = Response
   { makerCrypto2CryptoFee :: FeeRate,
     makerCrypto2StableFee :: FeeRate,
     makerCrypto2FiatFee :: FeeRate,
-    makerDerivativeRebate :: RebateRate 'Maker,
+    makerDerivativeRebate :: RebateRate,
     takerCrypto2CryptoFee :: FeeRate,
     takerCrypto2StableFee :: FeeRate,
     takerCrypto2FiatFee :: FeeRate,

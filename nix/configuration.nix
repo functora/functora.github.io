@@ -6,7 +6,7 @@
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
   # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
-  yewtube = import ./yewtube.nix;
+  # yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {

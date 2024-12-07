@@ -5,11 +5,13 @@ module Bfx.Math
     tweakMakerRate,
     newCounterOrder,
     CounterArgs (..),
+    CounterRates (..),
     CounterExit (..),
+    roundMoneyAmount,
+    roundQuotePerBase,
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Import.External
 
 tweakMoneyPip ::
@@ -71,9 +73,21 @@ pip = 0.00000001
 data CounterArgs = CounterArgs
   { counterArgsEnterGrossBaseGain :: MoneyAmount,
     counterArgsEnterQuotePerBase :: QuotePerBase,
-    counterArgsEnterBaseFeeRate :: FeeRate,
-    counterArgsExitQuoteFeeRate :: FeeRate,
-    counterArgsExitQuoteProfitRate :: ProfitRate
+    counterArgsRates :: CounterRates
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic
+    )
+
+data CounterRates = CounterRates
+  { counterRatesEnterBaseFee :: FeeRate,
+    counterRatesExitQuoteFee :: FeeRate,
+    counterRatesExitQuoteProfit :: ProfitRate
   }
   deriving stock
     ( Eq,
@@ -115,13 +129,13 @@ newCounterOrder args = do
       counterArgsEnterQuotePerBase args
     enterFee :: FeeRate
     enterFee =
-      counterArgsEnterBaseFeeRate args
+      counterRatesEnterBaseFee $ counterArgsRates args
     exitFee :: FeeRate
     exitFee =
-      counterArgsExitQuoteFeeRate args
+      counterRatesExitQuoteFee $ counterArgsRates args
     profRate :: ProfitRate
     profRate =
-      counterArgsExitQuoteProfitRate args
+      counterRatesExitQuoteProfit $ counterArgsRates args
     exitBaseLoss :: MoneyAmount
     exitBaseLoss =
       MoneyAmount $ unMoneyAmount enterBaseGain * (1 - unFeeRate enterFee)
@@ -138,3 +152,31 @@ newCounterOrder args = do
       QuotePerBase
         $ unMoneyAmount exitQuoteGain
         / unMoneyAmount exitBaseLoss
+
+roundMoneyAmount :: (MonadThrow m) => MoneyAmount -> m MoneyAmount
+roundMoneyAmount arg@(MoneyAmount raw) =
+  if raw >= 0 && rounded >= 0
+    then pure $ MoneyAmount rounded
+    else throwString $ "Rounding error for " <> inspect @String arg
+  where
+    rounded =
+      unsafeFrom @Rational @(Ratio Natural)
+        . roundMoneyAmountRat
+        $ from @(Ratio Natural) @Rational raw
+
+roundQuotePerBase :: (MonadThrow m) => QuotePerBase -> m QuotePerBase
+roundQuotePerBase arg@(QuotePerBase raw) =
+  if raw > 0 && rounded > 0
+    then pure $ QuotePerBase rounded
+    else throwString $ "Rounding error for " <> inspect @String arg
+  where
+    rounded =
+      unsafeFrom @Rational @(Ratio Natural)
+        . roundQuotePerBaseRat
+        $ from @(Ratio Natural) @Rational raw
+
+roundMoneyAmountRat :: Rational -> Rational
+roundMoneyAmountRat = dpRound 8
+
+roundQuotePerBaseRat :: Rational -> Rational
+roundQuotePerBaseRat = sdRound 5 . dpRound 8

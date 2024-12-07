@@ -230,21 +230,9 @@ submitOrder ::
     MonadUnliftIO m
   ) =>
   Env ->
-  BuyOrSell ->
-  MoneyAmount ->
-  CurrencyPair ->
-  QuotePerBase ->
-  SubmitOrder.Options ->
+  SubmitOrder.Request ->
   m Order
-submitOrder env bos baseAmt sym rate opts = do
-  let req =
-        SubmitOrder.Request
-          { SubmitOrder.baseAmount = baseAmt,
-            SubmitOrder.symbol = sym,
-            SubmitOrder.rate = rate,
-            SubmitOrder.options = opts,
-            SubmitOrder.buyOrSell = bos
-          }
+submitOrder env req = do
   order <- Generic.prv @'SubmitOrder env req
   verifyOrder env (orderId order) req
 
@@ -253,41 +241,28 @@ submitOrderMaker ::
     MonadUnliftIO m
   ) =>
   Env ->
-  BuyOrSell ->
-  MoneyAmount ->
-  CurrencyPair ->
-  QuotePerBase ->
-  SubmitOrder.Options ->
+  SubmitOrder.Request ->
   m Order
-submitOrderMaker env bos baseAmt sym rate0 opts0 =
-  submitOrderMakerRec env bos baseAmt sym 0 rate0 opts
-  where
-    opts =
-      opts0
-        { SubmitOrder.flags =
-            Set.insert PostOnly $ SubmitOrder.flags opts0
-        }
+submitOrderMaker env =
+  submitOrderMakerRec 0 env
+    . (#options . #flags %~ Set.insert PostOnly)
 
 submitOrderMakerRec ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Env ->
-  BuyOrSell ->
-  MoneyAmount ->
-  CurrencyPair ->
   Int ->
-  QuotePerBase ->
-  SubmitOrder.Options ->
+  Env ->
+  SubmitOrder.Request ->
   m Order
-submitOrderMakerRec env bos baseAmt sym attempt rate opts = do
-  order <- submitOrder env bos baseAmt sym rate opts
+submitOrderMakerRec attempt env req = do
+  order <- submitOrder env req
   if orderStatus order /= PostOnlyCancelled
     then pure order
     else do
       when (attempt >= 10) . throw $ ErrorRemoteOrderState order
-      newRate <- Math.tweakMakerRate bos rate
-      submitOrderMakerRec env bos baseAmt sym (attempt + 1) newRate opts
+      next <- Math.tweakMakerRate (req ^. #buyOrSell) (req ^. #rate)
+      submitOrderMakerRec (attempt + 1) env $ req & #rate .~ next
 
 cancelOrderMulti ::
   ( MonadThrow m,
@@ -316,8 +291,8 @@ cancelOrderById env id0 = do
   maybe (throw $ ErrorMissingOrder id0) pure mOrder
 
 cancelOrderByClientId ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   OrderClientId ->
@@ -333,8 +308,8 @@ cancelOrderByClientId env cid utc =
       )
 
 cancelOrderByGroupId ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   OrderGroupId ->
@@ -345,58 +320,55 @@ cancelOrderByGroupId env gid = do
     $ Set.singleton gid
 
 submitCounterOrder ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   OrderId ->
-  (MoneyAmount -> QuotePerBase -> Math.CounterArgs) ->
-  -- Money (Tags 'Unsigned |+| 'FeeRate |+| 'Base) ->
-  -- Money (Tags 'Unsigned |+| 'FeeRate |+| 'Quote) ->
-  -- Money (Tags 'Unsigned |+| 'ProfitRate) ->
+  CounterRates ->
   SubmitOrder.Options ->
   m Order
 submitCounterOrder =
-  submitCounterOrder' submitOrder
+  mkSubmitCounterOrder submitOrder
 
 submitCounterOrderMaker ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   OrderId ->
-  (MoneyAmount -> QuotePerBase -> Math.CounterArgs) ->
+  CounterRates ->
   SubmitOrder.Options ->
   m Order
 submitCounterOrderMaker =
-  submitCounterOrder' submitOrderMaker
+  mkSubmitCounterOrder submitOrderMaker
 
-submitCounterOrder' ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+mkSubmitCounterOrder ::
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
-  ( Env ->
-    BuyOrSell ->
-    MoneyAmount ->
-    CurrencyPair ->
-    QuotePerBase ->
-    SubmitOrder.Options ->
-    m Order
+  ( Env -> SubmitOrder.Request -> m Order
   ) ->
   Env ->
   OrderId ->
-  (MoneyAmount -> QuotePerBase -> Math.CounterArgs) ->
+  CounterRates ->
   SubmitOrder.Options ->
   m Order
-submitCounterOrder' submit env id0 mkCounter opts = do
+mkSubmitCounterOrder submit env id0 rates opts = do
   remOrder <- getOrder env id0
   let sym = orderSymbol remOrder
   case orderBuyOrSell remOrder of
     Buy | orderStatus remOrder == Executed -> do
       counter <-
-        Math.newCounterOrder
-          . mkCounter (orderBaseAmount remOrder)
-          $ orderRate remOrder
+        newCounterOrder
+          CounterArgs
+            { counterArgsEnterGrossBaseGain =
+                orderBaseAmount remOrder,
+              counterArgsEnterQuotePerBase =
+                orderRate remOrder,
+              counterArgsRates =
+                rates
+            }
       let exitAmt = Math.counterExitNetBaseLoss counter
       let exitRate = Math.counterExitQuotePerBase counter
       currentRate <-
@@ -408,32 +380,28 @@ submitCounterOrder' submit env id0 mkCounter opts = do
             }
       submit
         env
-        Sell
-        exitAmt
-        sym
-        (max exitRate currentRate)
-        opts
+        SubmitOrder.Request
+          { SubmitOrder.buyOrSell = Sell,
+            SubmitOrder.baseAmount = exitAmt,
+            SubmitOrder.symbol = sym,
+            SubmitOrder.rate = max exitRate currentRate,
+            SubmitOrder.options = opts
+          }
     _ ->
       throw
         $ ErrorRemoteOrderState remOrder
 
-dumpIntoQuote' ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+mkDumpIntoQuote ::
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
-  ( Env ->
-    BuyOrSell ->
-    MoneyAmount ->
-    CurrencyPair ->
-    QuotePerBase ->
-    SubmitOrder.Options ->
-    m Order
+  ( Env -> SubmitOrder.Request -> m Order
   ) ->
   Env ->
   CurrencyPair ->
   SubmitOrder.Options ->
   m Order
-dumpIntoQuote' submit env sym opts = do
+mkDumpIntoQuote submit env sym opts = do
   amt <- spendableExchangeBalance env (currencyPairBase sym)
   rate <-
     marketAveragePrice
@@ -442,38 +410,46 @@ dumpIntoQuote' submit env sym opts = do
           MarketAveragePrice.baseAmount = amt,
           MarketAveragePrice.symbol = sym
         }
-  catchAny
-    (submit env Sell amt sym rate opts)
+  let mkSubmit baseAmount =
+        submit
+          env
+          SubmitOrder.Request
+            { SubmitOrder.buyOrSell = Sell,
+              SubmitOrder.baseAmount = baseAmount,
+              SubmitOrder.symbol = sym,
+              SubmitOrder.rate = rate,
+              SubmitOrder.options = opts
+            }
+  catchAny (mkSubmit amt)
     . const
-    $ do
-      newAmt <- Math.tweakMoneyPip Sell amt
-      submit env Sell newAmt sym rate opts
+    $ Math.tweakMoneyPip Sell amt
+    >>= mkSubmit
 
 dumpIntoQuote ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   CurrencyPair ->
   SubmitOrder.Options ->
   m Order
 dumpIntoQuote =
-  dumpIntoQuote' submitOrder
+  mkDumpIntoQuote submitOrder
 
 dumpIntoQuoteMaker ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   CurrencyPair ->
   SubmitOrder.Options ->
   m Order
 dumpIntoQuoteMaker =
-  dumpIntoQuote' submitOrderMaker
+  mkDumpIntoQuote submitOrderMaker
 
 netWorth ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   Env ->
   CurrencyCode ->
@@ -532,8 +508,8 @@ netWorth env ccq = do
   roundMoneyAmount $ MoneyAmount res
 
 candlesLast ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   CandleTimeFrame ->
   CurrencyPair ->
@@ -556,8 +532,8 @@ candlesLast tf sym opts =
       }
 
 candlesHist ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   CandleTimeFrame ->
   CurrencyPair ->
@@ -580,12 +556,12 @@ candlesHist tf sym opts =
       }
 
 tickers ::
-  ( MonadUnliftIO m,
-    MonadThrow m
+  ( MonadThrow m,
+    MonadUnliftIO m
   ) =>
   m (Map CurrencyPair Ticker)
 tickers =
   Generic.pub @'Tickers
     [ SomeQueryParam "symbols" ("ALL" :: Text)
     ]
-    ()
+    emptyReq

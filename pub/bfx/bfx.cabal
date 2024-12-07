@@ -128,7 +128,6 @@ library
     Bfx.Data.GetOrders
     Bfx.Data.Kind
     Bfx.Data.MarketAveragePrice
-    Bfx.Data.Metro
     Bfx.Data.SubmitOrder
     Bfx.Data.Type
     Bfx.Data.Wallets
@@ -180,7 +179,6 @@ test-suite bfx-test
       Bfx.Data.GetOrders
       Bfx.Data.Kind
       Bfx.Data.MarketAveragePrice
-      Bfx.Data.Metro
       Bfx.Data.SubmitOrder
       Bfx.Data.Type
       Bfx.Data.Wallets

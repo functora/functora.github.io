@@ -1,4 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.SubmitOrder
@@ -14,13 +13,13 @@ import Bfx.Import
 import qualified Data.Aeson as A
 
 data Request = Request
-  { baseAmount :: MoneyAmount,
+  { buyOrSell :: BuyOrSell,
+    baseAmount :: MoneyAmount,
     symbol :: CurrencyPair,
     rate :: QuotePerBase,
-    options :: Options,
-    buyOrSell :: BuyOrSell
+    options :: Options
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data Options = Options
   { stopLoss :: Maybe QuotePerBase,
@@ -28,7 +27,7 @@ data Options = Options
     groupId :: Maybe OrderGroupId,
     flags :: Set OrderFlag
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 optsDef :: Options
 optsDef =

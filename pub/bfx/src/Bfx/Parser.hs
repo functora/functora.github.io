@@ -7,9 +7,9 @@ module Bfx.Parser
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Data.Type
 import Bfx.Import.External
+import Bfx.Math
 import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Prelude

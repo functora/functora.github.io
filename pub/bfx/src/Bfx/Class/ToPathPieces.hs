@@ -101,7 +101,7 @@ candlesPathPieces x =
         <> ":"
         <> toTextParam (Candles.symbol x)
 
-instance ToPathPieces 'Tickers () where
+instance ToPathPieces 'Tickers req where
   toPathPieces =
     const
       [ "v2",

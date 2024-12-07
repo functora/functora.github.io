@@ -42,7 +42,6 @@ import Bfx.Import.Internal as X
 import Bfx.Indicator.Atr as X
 import Bfx.Indicator.Ma as X
 import Bfx.Indicator.Tr as X
-import qualified Bfx.Math as Math
 import qualified Bfx.Rpc.Generic as Generic
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -261,7 +260,7 @@ submitOrderMakerRec attempt env req = do
     then pure order
     else do
       when (attempt >= 10) . throw $ ErrorRemoteOrderState order
-      next <- Math.tweakMakerRate (req ^. #buyOrSell) (req ^. #rate)
+      next <- tweakQuotePerBase (req ^. #buyOrSell) (req ^. #rate)
       submitOrderMakerRec (attempt + 1) env $ req & #rate .~ next
 
 cancelOrderMulti ::
@@ -369,8 +368,8 @@ mkSubmitCounterOrder submit env id0 rates opts = do
               counterArgsRates =
                 rates
             }
-      let exitAmt = Math.counterExitNetBaseLoss counter
-      let exitRate = Math.counterExitQuotePerBase counter
+      let exitAmt = counterExitNetBaseLoss counter
+      let exitRate = counterExitQuotePerBase counter
       currentRate <-
         marketAveragePrice
           MarketAveragePrice.Request
@@ -422,7 +421,7 @@ mkDumpIntoQuote submit env sym opts = do
             }
   catchAny (mkSubmit amt)
     . const
-    $ Math.tweakMoneyPip Sell amt
+    $ tweakMoneyAmount Sell amt
     >>= mkSubmit
 
 dumpIntoQuote ::

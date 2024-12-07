@@ -1,8 +1,8 @@
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Math
-  ( tweakMoneyPip,
-    tweakMakerRate,
+  ( tweakMoneyAmount,
+    tweakQuotePerBase,
     newCounterOrder,
     CounterArgs (..),
     CounterRates (..),
@@ -14,23 +14,23 @@ where
 
 import Bfx.Import.External
 
-tweakMoneyPip ::
+tweakMoneyAmount ::
   ( MonadThrow m
   ) =>
   BuyOrSell ->
   MoneyAmount ->
   m MoneyAmount
-tweakMoneyPip =
-  tweakMoneyPipRec pip
+tweakMoneyAmount =
+  tweakMoneyAmountRec pip
 
-tweakMoneyPipRec ::
+tweakMoneyAmountRec ::
   ( MonadThrow m
   ) =>
   Ratio Natural ->
   BuyOrSell ->
   MoneyAmount ->
   m MoneyAmount
-tweakMoneyPipRec tweak bos prev = do
+tweakMoneyAmountRec tweak bos prev = do
   next <-
     roundMoneyAmount
       . MoneyAmount
@@ -39,25 +39,25 @@ tweakMoneyPipRec tweak bos prev = do
         Sell -> unMoneyAmount prev - tweak
   if next /= prev
     then pure next
-    else tweakMoneyPipRec (tweak + pip) bos prev
+    else tweakMoneyAmountRec (tweak + pip) bos prev
 
-tweakMakerRate ::
+tweakQuotePerBase ::
   ( MonadThrow m
   ) =>
   BuyOrSell ->
   QuotePerBase ->
   m QuotePerBase
-tweakMakerRate =
-  tweakMakerRateRec pip
+tweakQuotePerBase =
+  tweakQuotePerBaseRec pip
 
-tweakMakerRateRec ::
+tweakQuotePerBaseRec ::
   ( MonadThrow m
   ) =>
   Ratio Natural ->
   BuyOrSell ->
   QuotePerBase ->
   m QuotePerBase
-tweakMakerRateRec tweak bos prev = do
+tweakQuotePerBaseRec tweak bos prev = do
   next <- roundQuotePerBase
     . QuotePerBase
     $ case bos of
@@ -65,7 +65,7 @@ tweakMakerRateRec tweak bos prev = do
       Sell -> unQuotePerBase prev + tweak
   if next /= prev
     then pure next
-    else tweakMakerRateRec (tweak + pip) bos prev
+    else tweakQuotePerBaseRec (tweak + pip) bos prev
 
 pip :: Ratio Natural
 pip = 0.00000001
@@ -113,7 +113,7 @@ data CounterExit = CounterExit
 
 newCounterOrder :: (MonadThrow m) => CounterArgs -> m CounterExit
 newCounterOrder args = do
-  exitBase <- tweakMoneyPip Sell =<< roundMoneyAmount exitBaseLoss
+  exitBase <- tweakMoneyAmount Sell =<< roundMoneyAmount exitBaseLoss
   exitPrice <- roundQuotePerBase exitRate
   pure
     CounterExit

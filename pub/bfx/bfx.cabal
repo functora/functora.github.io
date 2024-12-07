@@ -153,6 +153,7 @@ test-suite bfx-test
     Bfx.Data.CancelOrderMultiSpec
     Bfx.Data.SubmitOrderSpec
     Bfx.Data.TypeSpec
+    Bfx.MathSpec
     Bfx.TestEnv
     BfxSpec
     Paths_bfx

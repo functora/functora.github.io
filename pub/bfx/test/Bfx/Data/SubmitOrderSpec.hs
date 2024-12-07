@@ -18,9 +18,10 @@ spec =
       adabtc <- newCurrencyPair "ADABTC"
       let req =
             SubmitOrder.Request
-              (testAmt @'Buy)
+              Buy
+              testAdaAmt
               adabtc
-              (Tagged 0.00081037)
+              (QuotePerBase 0.00081037)
               SubmitOrder.optsPostOnly
       A.encode req
         `shouldBe` "{\"amount\":\"4.004004\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"

@@ -2,7 +2,7 @@
 
 module Bfx.TestEnv
   ( eraseFirst,
-    testAmt,
+    testAdaAmt,
     itRight,
     itLeft,
   )
@@ -15,13 +15,8 @@ eraseFirst :: (Bifunctor f) => f a b -> f () b
 eraseFirst =
   first $ const ()
 
-testAmt ::
-  forall act.
-  ( CashTags (Tags 'MoneyAmount |+| 'Unsigned |+| 'Base |+| act)
-  ) =>
-  Money (Tags 'MoneyAmount |+| 'Unsigned |+| 'Base |+| act)
-testAmt =
-  Tagged 4.004004
+testAdaAmt :: MoneyAmount
+testAdaAmt = MoneyAmount 4.004004
 
 itRight ::
   ( Show a

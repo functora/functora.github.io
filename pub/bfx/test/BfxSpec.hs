@@ -17,13 +17,12 @@ import Test.Hspec
 
 spec :: Spec
 spec = before sysEnv $ do
-  let adabtc = either impureThrow id $ newCurrencyPair "ADABTC"
   it "platformStatus succeeds" . const $ do
     ss <- Bfx.platformStatus
     ss `shouldBe` PltOperative
   it "symbolsDetails succeeds" . const $ do
     ss <- Bfx.symbolsDetails
-    Map.lookup adabtc ss
+    Map.lookup adaBtc ss
       `shouldBe` Just
         CurrencyPairConf
           { currencyPairPrecision = 5,
@@ -38,25 +37,24 @@ spec = before sysEnv $ do
         MarketAveragePrice.Request
           { MarketAveragePrice.buyOrSell = Buy,
             MarketAveragePrice.baseAmount = testAdaAmt,
-            MarketAveragePrice.symbol = adabtc
+            MarketAveragePrice.symbol = adaBtc
           }
     sellRate <-
       Bfx.marketAveragePrice
         MarketAveragePrice.Request
           { MarketAveragePrice.buyOrSell = Sell,
             MarketAveragePrice.baseAmount = testAdaAmt,
-            MarketAveragePrice.symbol = adabtc
+            MarketAveragePrice.symbol = adaBtc
           }
     buyRate `shouldSatisfy` (> sellRate)
   it "marketAveragePrice fails" . const $ do
-    sym <- newCurrencyPair "BTCADA"
     res <-
       tryAny
         $ Bfx.marketAveragePrice
           MarketAveragePrice.Request
             { MarketAveragePrice.buyOrSell = Sell,
               MarketAveragePrice.baseAmount = testAdaAmt,
-              MarketAveragePrice.symbol = sym
+              MarketAveragePrice.symbol = btcAda
             }
     res `shouldSatisfy` isLeft
   it "feeSummary succeeds" $ \env -> do
@@ -68,7 +66,7 @@ spec = before sysEnv $ do
         MarketAveragePrice.Request
           { MarketAveragePrice.buyOrSell = Buy,
             MarketAveragePrice.baseAmount = testAdaAmt,
-            MarketAveragePrice.symbol = adabtc
+            MarketAveragePrice.symbol = adaBtc
           }
     rate <-
       roundQuotePerBase
@@ -81,7 +79,7 @@ spec = before sysEnv $ do
         SubmitOrder.Request
           { SubmitOrder.buyOrSell = Buy,
             SubmitOrder.baseAmount = testAdaAmt,
-            SubmitOrder.symbol = adabtc,
+            SubmitOrder.symbol = adaBtc,
             SubmitOrder.rate = rate,
             SubmitOrder.options = SubmitOrder.optsPostOnly
           }
@@ -91,13 +89,13 @@ spec = before sysEnv $ do
         $ orderId order
     res `shouldSatisfy` isRight
   it "retrieveOrders succeeds" $ \env -> do
-    res <- tryAny . Bfx.retrieveOrders env $ GetOrders.optsSym adabtc
+    res <- tryAny . Bfx.retrieveOrders env $ GetOrders.optsSym adaBtc
     res `shouldSatisfy` isRight
   it "ordersHistory succeeds" $ \env -> do
-    res <- tryAny . Bfx.ordersHistory env $ GetOrders.optsSym adabtc
+    res <- tryAny . Bfx.ordersHistory env $ GetOrders.optsSym adaBtc
     res `shouldSatisfy` isRight
   it "getOrders succeeds" $ \env -> do
-    res <- tryAny . Bfx.getOrders env $ GetOrders.optsSym adabtc
+    res <- tryAny . Bfx.getOrders env $ GetOrders.optsSym adaBtc
     res `shouldSatisfy` isRight
   it "getOrder fails" $ \env -> do
     res <- tryAny . Bfx.getOrder env $ OrderId 0
@@ -122,10 +120,10 @@ spec = before sysEnv $ do
     res <- tryAny . Bfx.netWorth env $ CurrencyCode "BTC"
     res `shouldSatisfy` isRight
   it "candlesLast succeeds" . const $ do
-    res <- tryAny $ Bfx.candlesLast Ctf1h adabtc Candles.optsDef
+    res <- tryAny $ Bfx.candlesLast Ctf1h adaBtc Candles.optsDef
     res `shouldSatisfy` isRight
   it "candlesHist succeeds" . const $ do
-    res <- tryAny $ Bfx.candlesHist Ctf1h adabtc Candles.optsDef
+    res <- tryAny $ Bfx.candlesHist Ctf1h adaBtc Candles.optsDef
     res `shouldSatisfy` isRight
 
 --  describe "End2End" $ do

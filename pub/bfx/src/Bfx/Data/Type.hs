@@ -39,7 +39,6 @@ where
 
 import Bfx.Class.ToRequestParam
 import Bfx.Import.External
-import Bfx.Orphan ()
 import Data.Aeson (withText)
 import qualified Data.Aeson as A
 import qualified Data.Text as T

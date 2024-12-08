@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Class.ToPathPieces

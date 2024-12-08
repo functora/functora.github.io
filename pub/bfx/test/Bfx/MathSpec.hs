@@ -10,7 +10,7 @@ import Test.Hspec
 
 spec :: Spec
 spec =
-  focus . it "newCounterOrder" $ do
+  it "newCounterOrder" $ do
     let rates =
           CounterRates
             { counterRatesEnterBaseFee = FeeRate 0.001,
@@ -24,11 +24,12 @@ spec =
               counterArgsRates = rates
             }
     exit <- newCounterOrder args
-    --
-    -- TODO : !!!
-    --
     exit
       `shouldBe` CounterExit
-        { counterExitNetBaseLoss = MoneyAmount 1,
-          counterExitQuotePerBase = QuotePerBase 1
+        { -- Deduct fee and pip:
+          -- 0.2 * 0.999 - 0.00000001
+          counterExitNetBaseLoss = MoneyAmount 0.19979999,
+          -- Add profit and fee:
+          -- ((0.2 * 5) * (1 + 0.01) / (1 - 0.001)) / 0.19979999
+          counterExitQuotePerBase = QuotePerBase 5.0601
         }

@@ -139,7 +139,6 @@ library
     Bfx.Indicator.Ma
     Bfx.Indicator.Tr
     Bfx.Math
-    Bfx.Orphan
     Bfx.Parser
     Bfx.Rpc.Generic
     Bfx.Util
@@ -191,7 +190,6 @@ test-suite bfx-test
       Bfx.Indicator.Ma
       Bfx.Indicator.Tr
       Bfx.Math
-      Bfx.Orphan
       Bfx.Parser
       Bfx.Rpc.Generic
       Bfx.Util

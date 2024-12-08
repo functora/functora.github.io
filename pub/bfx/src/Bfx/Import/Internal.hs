@@ -14,6 +14,5 @@ import Bfx.Data.Kind as X
 import Bfx.Data.Type as X
 import Bfx.Data.Web as X
 import Bfx.Math as X
-import Bfx.Orphan as X ()
 import Bfx.Parser as X
 import Bfx.Util as X

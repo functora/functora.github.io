@@ -113,7 +113,7 @@ data CounterExit = CounterExit
 
 newCounterOrder :: (MonadThrow m) => CounterArgs -> m CounterExit
 newCounterOrder args = do
-  exitBase <- tweakMoneyAmount Sell =<< roundMoneyAmount exitBaseLoss
+  exitBase <- tweakMoneyAmount Sell exitBaseLoss
   exitPrice <- roundQuotePerBase exitRate
   pure
     CounterExit

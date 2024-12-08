@@ -15,12 +15,11 @@ spec :: Spec
 spec =
   before sysEnv $ describe "ToJSON" $ do
     it "Request" . const $ do
-      adabtc <- newCurrencyPair "ADABTC"
       let req =
             SubmitOrder.Request
               Buy
               testAdaAmt
-              adabtc
+              adaBtc
               (QuotePerBase 0.00081037)
               SubmitOrder.optsPostOnly
       A.encode req

@@ -13,7 +13,7 @@ import qualified Data.Vector as V
 import qualified Prelude
 
 newtype Ma = Ma
-  { unMa :: Money (Tags 'Unsigned |+| 'QuotePerBase)
+  { unMa :: QuotePerBase
   }
   deriving stock
     ( Eq,
@@ -72,8 +72,7 @@ unsafeMa maPeriod candles stopAtIdx currentIdx acc =
     maUtc = candleAt $ V.last chunk
     maVal =
       Ma
-        . Tagged
+        . QuotePerBase
         . (/ Prelude.fromIntegral maPeriod)
-        . unTagged
-        . V.foldl1 addMoney
-        $ V.map candleClose chunk
+        . V.foldl1 (+)
+        $ V.map (unQuotePerBase . candleClose) chunk

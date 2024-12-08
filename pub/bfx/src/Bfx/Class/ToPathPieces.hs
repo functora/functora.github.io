@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Class.ToPathPieces
@@ -101,7 +100,7 @@ candlesPathPieces x =
         <> ":"
         <> toTextParam (Candles.symbol x)
 
-instance ToPathPieces 'Tickers () where
+instance ToPathPieces 'Tickers req where
   toPathPieces =
     const
       [ "v2",

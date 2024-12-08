@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.SubmitOrderSpec
@@ -16,12 +15,12 @@ spec :: Spec
 spec =
   before sysEnv $ describe "ToJSON" $ do
     it "Request" . const $ do
-      adabtc <- newCurrencyPair "ADABTC"
       let req =
             SubmitOrder.Request
-              (testAmt @'Buy)
-              adabtc
-              (Tagged 0.00081037)
+              Buy
+              testAdaAmt
+              adaBtc
+              (QuotePerBase 0.00081037)
               SubmitOrder.optsPostOnly
       A.encode req
         `shouldBe` "{\"amount\":\"4.004004\",\"flags\":4096,\"price\":\"0.00081037\",\"symbol\":\"tADABTC\",\"type\":\"EXCHANGE LIMIT\"}"

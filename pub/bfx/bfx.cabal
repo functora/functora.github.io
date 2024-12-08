@@ -128,7 +128,6 @@ library
     Bfx.Data.GetOrders
     Bfx.Data.Kind
     Bfx.Data.MarketAveragePrice
-    Bfx.Data.Metro
     Bfx.Data.SubmitOrder
     Bfx.Data.Type
     Bfx.Data.Wallets
@@ -140,7 +139,6 @@ library
     Bfx.Indicator.Ma
     Bfx.Indicator.Tr
     Bfx.Math
-    Bfx.Orphan
     Bfx.Parser
     Bfx.Rpc.Generic
     Bfx.Util
@@ -154,6 +152,7 @@ test-suite bfx-test
     Bfx.Data.CancelOrderMultiSpec
     Bfx.Data.SubmitOrderSpec
     Bfx.Data.TypeSpec
+    Bfx.MathSpec
     Bfx.TestEnv
     BfxSpec
     Paths_bfx
@@ -180,7 +179,6 @@ test-suite bfx-test
       Bfx.Data.GetOrders
       Bfx.Data.Kind
       Bfx.Data.MarketAveragePrice
-      Bfx.Data.Metro
       Bfx.Data.SubmitOrder
       Bfx.Data.Type
       Bfx.Data.Wallets
@@ -192,7 +190,6 @@ test-suite bfx-test
       Bfx.Indicator.Ma
       Bfx.Indicator.Tr
       Bfx.Math
-      Bfx.Orphan
       Bfx.Parser
       Bfx.Rpc.Generic
       Bfx.Util

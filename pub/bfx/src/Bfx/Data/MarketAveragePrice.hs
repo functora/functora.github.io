@@ -7,13 +7,15 @@ where
 
 import Bfx.Import
 
-data Request (bos :: BuyOrSell) = Request
-  { amount :: Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
+data Request = Request
+  { buyOrSell :: BuyOrSell,
+    baseAmount :: MoneyAmount,
     symbol :: CurrencyPair
   }
   deriving stock
     ( Eq,
       Ord,
       Show,
+      Data,
       Generic
     )

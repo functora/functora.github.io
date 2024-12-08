@@ -88,7 +88,7 @@ withNewMarket opts expr = do
 -- Stateful
 
 data QuoteAt = QuoteAt
-  { quoteMoneyAmount :: Money (Tags 'Signed |+| 'Quote |+| 'MoneyAmount),
+  { quoteMoneyAmount :: MoneyAmount,
     quoteCreatedAt :: UTCTime,
     quoteUpdatedAt :: UTCTime
   }
@@ -100,11 +100,11 @@ getQuote ::
     MonadUnliftIO m
   ) =>
   Opts ->
-  Funds (Tags 'Signed |+| 'Base |+| 'MoneyAmount) ->
+  Money ->
   CurrencyCode ->
   ReaderT (MVar Market) m QuoteAt
-getQuote opts baseFunds quoteCurrency = do
-  let baseCurrency = fundsCurrencyCode baseFunds
+getQuote opts baseMoney quoteCurrency = do
+  let baseCurrency = moneyCurrencyCode baseMoney
   quotes <- getQuotesPerBase opts baseCurrency
   case Map.lookup quoteCurrency $ quotesPerBaseQuotesMap quotes of
     Nothing ->
@@ -114,8 +114,9 @@ getQuote opts baseFunds quoteCurrency = do
       pure
         QuoteAt
           { quoteMoneyAmount =
-              exchangeMoney @(Tags 'Signed) quotesPerBase
-                $ fundsMoneyAmount baseFunds,
+              MoneyAmount
+                $ (quotesPerBase ^. #unQuotePerBase)
+                * (baseMoney ^. #moneyAmount . #unMoneyAmount),
             quoteCreatedAt = quotesPerBaseCreatedAt quotes,
             quoteUpdatedAt = quotesPerBaseUpdatedAt quotes
           }
@@ -230,8 +231,7 @@ tryFetchCurrencies opts uri = tryMarket $ do
   pure Currencies {currenciesList = xs2, currenciesUpdatedAt = ct}
 
 data QuotesPerBaseAt = QuotesPerBaseAt
-  { quotesPerBaseQuotesMap ::
-      Map CurrencyCode (Money (Tags 'Signed |+| 'QuotePerBase)),
+  { quotesPerBaseQuotesMap :: Map CurrencyCode QuotePerBase,
     quotesPerBaseCreatedAt :: UTCTime,
     quotesPerBaseUpdatedAt :: UTCTime
   }
@@ -269,7 +269,8 @@ tryFetchQuotesPerBase opts cur uri = tryMarket $ do
             . from @Unicode @Text
             $ unCurrencyCode cur
         ]
-        $ A.mapStrict unJsonMoney
+        . A.mapStrict
+        $ fmap QuotePerBase unJsonRatio
     pure
       QuotesPerBaseAt
         { quotesPerBaseQuotesMap =

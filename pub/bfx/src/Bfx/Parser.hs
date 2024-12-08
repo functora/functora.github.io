@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Parser
@@ -8,20 +7,15 @@ module Bfx.Parser
   )
 where
 
-import Bfx.Data.Metro
 import Bfx.Data.Type
 import Bfx.Import.External
+import Bfx.Math
 import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Prelude
 
 parseOrder ::
-  ( AsValue a,
-    Show a,
-    Data a
-  ) =>
-  a ->
-  Either Text (SomeOrder 'Remote)
+  (Show a, Data a, AsValue a) => a -> Either Text Order
 parseOrder x = do
   id0 <-
     maybeToRight (failure "OrderId is missing")
@@ -60,12 +54,10 @@ parseOrder x = do
       <$> x
       ^? nth 7
       . _Number
-  --
-  -- TODO : handle zero amt???
-  --
-  -- SomeMoney bos amt <-
-  --   first (failure . ("OrderAmount is invalid " <>) . inspect)
-  --     $ tryFrom amt0
+  let amt =
+        MoneyAmount
+          . unsafeFrom @Rational @(Ratio Natural)
+          $ abs amt0
   ss0 <-
     maybeToRight (failure "OrderStatus is missing")
       $ x
@@ -81,47 +73,34 @@ parseOrder x = do
       ^? nth 16
       . _Number
   rate <-
-    first (const . failure $ "ExchangeRate is invalid " <> inspect price)
+    bimap
+      (const . failure $ "ExchangeRate is invalid " <> inspect price)
+      QuotePerBase
       $ tryFrom @Rational @(Ratio Natural) (toRational price)
-  case newUnsignedMoneyBOS @(Tags 'Base |+| 'MoneyAmount) amt0 of
-    SomeMoney bos amt ->
-      pure
-        . SomeOrder bos
-        $ Order
+  let mkOrder bos =
+        Order
           { orderId = id0,
             orderGroupId = gid,
             orderClientId = cid,
-            orderAmount = amt,
+            orderBaseAmount = amt,
             orderSymbol = sym,
-            orderRate = Tagged rate,
-            orderStatus = ss1
+            orderRate = rate,
+            orderStatus = ss1,
+            orderBuyOrSell = bos,
+            orderLocalOrRemote = Remote
           }
+  if
+    | amt0 > 0 -> pure $ mkOrder Buy
+    | amt0 < 0 -> pure $ mkOrder Sell
+    | otherwise -> Left "Got zero money amount"
   where
-    -- let SomeMoney bos amt =
-    --       newUnsignedMoneyBOS @(Tags 'Base) amt0 ::
-    --         SomeMoney BuyOrSell (Tags 'Unsigned |+| 'Base)
-    -- case bos of
-    --   SBuy ->
-    --     pure
-    --       . SomeOrder SBuy
-    --       $ Order
-    --         { orderId = id0,
-    --           orderGroupId = gid,
-    --           orderClientId = cid,
-    --           orderAmount = amt,
-    --           orderSymbol = sym,
-    --           orderRate = Tagged rate,
-    --           orderStatus = ss1
-    --         }
-
-    failure =
-      (<> " in " <> inspect x)
+    failure = (<> " in " <> inspect x)
 
 parseOrderMap ::
   ( AsValue a
   ) =>
   a ->
-  Either Text (Map OrderId (SomeOrder 'Remote))
+  Either Text (Map OrderId Order)
 parseOrderMap raw = do
   xs <-
     maybeToRight
@@ -131,8 +110,8 @@ parseOrderMap raw = do
   foldrM parser mempty xs
   where
     parser x acc = do
-      someOrder@(SomeOrder _ order) <- parseOrder x
-      pure $ Map.insert (orderId order) someOrder acc
+      order <- parseOrder x
+      pure $ Map.insert (orderId order) order acc
 
 parseCandle ::
   ( AsValue a
@@ -151,7 +130,7 @@ parseCandle x = do
   open <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -162,7 +141,7 @@ parseCandle x = do
   close <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -173,7 +152,7 @@ parseCandle x = do
   high <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -184,7 +163,7 @@ parseCandle x = do
   low <-
     first inspect
       . roundQuotePerBase
-      . Tagged
+      . QuotePerBase
       --
       -- TODO : tryFrom???
       --
@@ -194,8 +173,8 @@ parseCandle x = do
         (toRational <$> x ^? nth 4 . _Number)
   vol <-
     first inspect
-      . roundMoney
-      . Tagged
+      . roundMoneyAmount
+      . MoneyAmount
       --
       -- TODO : tryFrom???
       --
@@ -210,5 +189,5 @@ parseCandle x = do
         candleClose = close,
         candleHigh = high,
         candleLow = low,
-        candleVolume = vol
+        candleBaseVolume = vol
       }

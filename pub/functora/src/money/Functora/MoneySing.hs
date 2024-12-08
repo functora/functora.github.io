@@ -7,9 +7,6 @@ import Functora.Tags
 import qualified Language.Haskell.TH.Syntax as TH
 import Prelude
 
-data MoneyKind = MoneyAmount | Currency | QuotePerBase | FeeRate | ProfitRate
-  deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
-
 data CurrencyKind = Crypto | Stable | Fiat
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
 
@@ -39,8 +36,6 @@ data Revenue = Revenue
 
 data SignedOrUnsigned = Signed | Unsigned
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
-
-type instance Fgpt MoneyKind = "Functora.MoneySing.MoneyKind"
 
 type instance Fgpt CurrencyKind = "Functora.MoneySing.CurrencyKind"
 
@@ -156,48 +151,6 @@ instance SingI 'Quote where sing = SQuote
 instance TestEquality (Sing :: BaseOrQuote -> Type) where
   testEquality SBase SBase = Just Refl
   testEquality SQuote SQuote = Just Refl
-  testEquality _ _ = Nothing
-
---
--- MoneyKind
---
-
-data instance Sing (x :: MoneyKind) where
-  SMoneyAmount :: Sing 'MoneyAmount
-  SCurrency :: Sing 'Currency
-  SQuotePerBase :: Sing 'QuotePerBase
-  SFeeRate :: Sing 'FeeRate
-  SProfitRate :: Sing 'ProfitRate
-
-instance SingKind MoneyKind where
-  type Demote MoneyKind = MoneyKind
-  fromSing SMoneyAmount = MoneyAmount
-  fromSing SCurrency = Currency
-  fromSing SQuotePerBase = QuotePerBase
-  fromSing SFeeRate = FeeRate
-  fromSing SProfitRate = ProfitRate
-  toSing MoneyAmount = SomeSing SMoneyAmount
-  toSing Currency = SomeSing SCurrency
-  toSing QuotePerBase = SomeSing SQuotePerBase
-  toSing FeeRate = SomeSing SFeeRate
-  toSing ProfitRate = SomeSing SProfitRate
-
-instance SingI 'MoneyAmount where sing = SMoneyAmount
-
-instance SingI 'Currency where sing = SCurrency
-
-instance SingI 'QuotePerBase where sing = SQuotePerBase
-
-instance SingI 'FeeRate where sing = SFeeRate
-
-instance SingI 'ProfitRate where sing = SProfitRate
-
-instance TestEquality (Sing :: MoneyKind -> Type) where
-  testEquality SMoneyAmount SMoneyAmount = Just Refl
-  testEquality SCurrency SCurrency = Just Refl
-  testEquality SQuotePerBase SQuotePerBase = Just Refl
-  testEquality SFeeRate SFeeRate = Just Refl
-  testEquality SProfitRate SProfitRate = Just Refl
   testEquality _ _ = Nothing
 
 --

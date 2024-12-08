@@ -142,6 +142,35 @@ instance (Toml.HasCodec a) => Toml.HasCodec (Tagged t a) where
   hasCodec =
     Toml.diwrap . Toml.hasCodec @a
 
+instance (Toml.HasItemCodec a) => Toml.HasItemCodec (Tagged t a) where
+  hasItemCodec =
+    bimap Toml._Coerce Toml.diwrap $ Toml.hasItemCodec @a
+
+_Ratio ::
+  forall a.
+  ( Integral a,
+    From a Integer,
+    TryFrom Integer a
+  ) =>
+  Toml.TomlBiMap (Ratio a) Toml.AnyValue
+_Ratio =
+  Toml.mkAnyValueBiMap
+    ( \src -> do
+        let failure =
+              Toml.MatchError Toml.TDouble
+                $ Toml.AnyValue src
+        dbl <-
+          Toml.matchDouble src
+        rat <-
+          first (const failure)
+            $ tryFrom @Double @Rational dbl
+        first (const failure)
+          $ tryFrom @Rational @(Ratio a) rat
+    )
+    ( Toml.Double
+        . via @Rational @(Ratio a) @Double
+    )
+
 --
 -- TODO : how to make an instance for a Rational nicely?
 --
@@ -152,24 +181,16 @@ instance
   ) =>
   Toml.HasCodec (Ratio a)
   where
-  hasCodec =
-    Toml.match
-      $ Toml.mkAnyValueBiMap
-        ( \src -> do
-            let failure =
-                  Toml.MatchError Toml.TDouble
-                    $ Toml.AnyValue src
-            dbl <-
-              Toml.matchDouble src
-            rat <-
-              first (const failure)
-                $ tryFrom @Double @Rational dbl
-            first (const failure)
-              $ tryFrom @Rational @(Ratio a) rat
-        )
-        ( Toml.Double
-            . via @Rational @(Ratio a) @Double
-        )
+  hasCodec = Toml.match $ _Ratio @a
+
+instance
+  ( Integral a,
+    From a Integer,
+    TryFrom Integer a
+  ) =>
+  Toml.HasItemCodec (Ratio a)
+  where
+  hasItemCodec = Left $ _Ratio @a
 
 {-# INLINE defaultPutList #-}
 defaultPutList :: (Binary a) => [a] -> Binary.Put

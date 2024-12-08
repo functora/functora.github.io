@@ -1,4 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Data.SubmitOrder
@@ -13,23 +12,24 @@ where
 import Bfx.Import
 import qualified Data.Aeson as A
 
-data Request (bos :: BuyOrSell) = Request
-  { amount :: Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos),
+data Request = Request
+  { buyOrSell :: BuyOrSell,
+    baseAmount :: MoneyAmount,
     symbol :: CurrencyPair,
-    rate :: Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos),
-    options :: Options bos
+    rate :: QuotePerBase,
+    options :: Options
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-data Options (bos :: BuyOrSell) = Options
-  { stopLoss :: Maybe (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
+data Options = Options
+  { stopLoss :: Maybe QuotePerBase,
     clientId :: Maybe OrderClientId,
     groupId :: Maybe OrderGroupId,
     flags :: Set OrderFlag
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-optsDef :: Options bos
+optsDef :: Options
 optsDef =
   Options
     { stopLoss = Nothing,
@@ -38,7 +38,7 @@ optsDef =
       flags = mempty
     }
 
-optsPostOnly :: Options bos
+optsPostOnly :: Options
 optsPostOnly =
   Options
     { stopLoss = Nothing,
@@ -47,9 +47,7 @@ optsPostOnly =
       flags = [PostOnly]
     }
 
-optsPostOnlyStopLoss ::
-  Money (Tags 'Unsigned |+| 'QuotePerBase |+| (bos :: BuyOrSell)) ->
-  Options bos
+optsPostOnlyStopLoss :: QuotePerBase -> Options
 optsPostOnlyStopLoss sl =
   Options
     { stopLoss = Just sl,
@@ -58,15 +56,7 @@ optsPostOnlyStopLoss sl =
       flags = [PostOnly, Oco]
     }
 
-instance
-  forall (bos :: BuyOrSell).
-  ( ToRequestParam (Money (Tags 'Unsigned |+| 'Base |+| 'MoneyAmount |+| bos)),
-    ToRequestParam (Money (Tags 'Unsigned |+| 'QuotePerBase |+| bos)),
-    Typeable bos,
-    SingI bos
-  ) =>
-  ToJSON (Request bos)
-  where
+instance ToJSON Request where
   toJSON req =
     eradicateNull
       . A.object
@@ -77,7 +67,10 @@ instance
           "type"
             A..= ("EXCHANGE LIMIT" :: Text),
           "amount"
-            A..= toTextParam (amount req),
+            A..= toTextParam
+              ( buyOrSell req,
+                baseAmount req
+              ),
           "symbol"
             A..= toTextParam (symbol req),
           "price"

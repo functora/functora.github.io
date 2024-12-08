@@ -411,8 +411,8 @@ evalModel prev = do
             . fmap (^. #currenciesList)
             $ Rates.getCurrencies web
         let base =
-              Money.Funds
-                1
+              Money.Money
+                (Money.MoneyAmount 1)
                 $ prev
                 ^. #modelState
                 . #stAssetCurrency
@@ -429,7 +429,10 @@ evalModel prev = do
                 )
                 ( ^.
                     #quoteMoneyAmount
-                      . to unTagged
+                      . to
+                        ( from @(Ratio Natural) @Rational
+                            . Money.unMoneyAmount
+                        )
                 )
             )
             . Rates.tryMarket

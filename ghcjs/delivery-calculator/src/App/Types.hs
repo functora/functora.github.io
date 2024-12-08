@@ -49,12 +49,11 @@ import Functora.Miso.Types as X hiding
 import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
-import Functora.Money hiding (Currency, Money, Text)
+import Functora.Money hiding (Money, Text)
 import qualified Functora.Money as Money
 import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
-import Lens.Micro ((^..))
 import qualified Network.URI as NetUri
 import qualified Paths_delivery_calculator as Paths
 import qualified Text.Regex as Re

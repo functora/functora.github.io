@@ -9,7 +9,7 @@ where
 import Functora.Miso.Prelude
 import Functora.Miso.Types
 import qualified Functora.Miso.Widgets.Field as Field
-import Functora.Money hiding (Currency, Money, Text)
+import Functora.Money hiding (Money, Text)
 
 data Args model action = Args
   { argsModel :: model,

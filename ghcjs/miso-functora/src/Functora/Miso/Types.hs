@@ -71,7 +71,7 @@ import qualified Data.Map as Map
 import Functora.Cfg
 import Functora.Miso.Prelude
 import Functora.Miso.Theme as X (Theme)
-import Functora.Money hiding (Currency, Money)
+import Functora.Money hiding (Money)
 import qualified Miso.Html.Types as Miso
 import qualified Text.Casing as Casing
 import qualified Text.URI as URI

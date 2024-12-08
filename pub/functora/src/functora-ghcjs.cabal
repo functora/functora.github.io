@@ -92,6 +92,7 @@ common pkg
     , containers
     , Crypto
     , extra
+    , functora-witch
     , generic-lens
     , lens
     , lift-type
@@ -125,7 +126,6 @@ common pkg
     , unliftio
     , uri-encode
     , vector
-    , witch-mini
     , with-utf8
 
   if impl(ghc <9.6.1)

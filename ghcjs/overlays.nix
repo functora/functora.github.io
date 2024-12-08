@@ -209,13 +209,13 @@
                 #
                 # Local
                 #
-                witch-mini = doJailbreak (
+                functora-witch = doJailbreak (
                   self.callCabal2nix
-                  "witch-mini"
+                  "functora-witch"
                   (
                     pkgs.nix-gitignore.gitignoreSourcePure
                     ./../.gitignore
-                    ./../pub/witch-mini
+                    ./../pub/functora-witch
                   )
                   {}
                 );

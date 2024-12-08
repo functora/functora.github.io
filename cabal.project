@@ -65,10 +65,10 @@ else
       pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
       pub/haskell-bitcoin-script/*.cabal
       pub/bitfinex-client/*.cabal
+      pub/functora-witch/*.cabal
       pub/singlethongs/*.cabal
       pub/functora/src/*.cabal
       pub/vector-space/*.cabal
-      pub/witch-mini/*.cabal
       pub/selective/*.cabal
       pub/universum/*.cabal
       pub/functora/*.cabal
@@ -106,10 +106,10 @@ if os(wasi)
     pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
     pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
     pub/haskell-bitcoin-script/*.cabal
+    pub/functora-witch/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal
-    pub/witch-mini/*.cabal
     pub/selective/*.cabal
     pub/universum/*.cabal
     pub/xlsx/*.cabal
@@ -185,10 +185,10 @@ if arch(javascript)
     pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
     pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
     pub/haskell-bitcoin-script/*.cabal
+    pub/functora-witch/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal
-    pub/witch-mini/*.cabal
     pub/selective/*.cabal
     pub/universum/*.cabal
     pub/miso/*.cabal

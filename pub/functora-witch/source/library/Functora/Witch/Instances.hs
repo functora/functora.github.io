@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Witch.Mini.Instances where
+module Functora.Witch.Instances where
 
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
@@ -37,15 +37,15 @@ import qualified Data.Text.Encoding.Error as Text
 import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.Word as Word
+import qualified Functora.Witch.Encoding as Encoding
+import qualified Functora.Witch.From as From
+import qualified Functora.Witch.TryFrom as TryFrom
+import qualified Functora.Witch.TryFromException as TryFromException
+import qualified Functora.Witch.Utility as Utility
 import qualified GHC.Float as Float
 import qualified Numeric
 import qualified Numeric.Natural as Natural
 import qualified System.IO.Unsafe as Unsafe
-import qualified Witch.Mini.Encoding as Encoding
-import qualified Witch.Mini.From as From
-import qualified Witch.Mini.TryFrom as TryFrom
-import qualified Witch.Mini.TryFromException as TryFromException
-import qualified Witch.Mini.Utility as Utility
 
 -- | Uses 'id'.
 instance {-# OVERLAPS #-} (a ~ b) => From.From a b where

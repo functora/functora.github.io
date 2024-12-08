@@ -94,6 +94,7 @@ common pkg-prelude
     , containers
     , Crypto
     , extra
+    , functora-witch
     , generic-lens
     , lens
     , microlens
@@ -117,7 +118,6 @@ common pkg-prelude
     , uniplate
     , universum
     , unliftio
-    , witch-mini
     , with-utf8
 
   if impl(ghc <9.6.1)

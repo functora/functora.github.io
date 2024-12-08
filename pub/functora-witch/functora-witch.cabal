@@ -1,8 +1,10 @@
 cabal-version: 2.2
-name:          witch-mini
+name:          functora-witch
 version:       1.2.0.2
 synopsis:      Convert values from one type into another.
-description:   Witch converts values from one type into another.
+description:
+  A minimal fork of the 'witch' library, without dependencies on 'time' and 'template-haskell'. Compatible with a broader range of GHC, GHCJS, and GHC WASM compilers.
+
 build-type:    Simple
 category:      Data
 license:       MIT
@@ -10,7 +12,7 @@ maintainer:    Functora
 
 source-repository head
   location:
-    https://github.com/functora/functora.github.io/tree/master/pub/witch-mini
+    https://github.com/functora/functora.github.io/tree/master/pub/functora-witch
 
   type:     git
 
@@ -44,23 +46,23 @@ common library
 
 common executable
   import:        library
-  build-depends: witch-mini
+  build-depends: functora-witch
   ghc-options:   -rtsopts -threaded
 
 library
   import:          library
   exposed-modules:
-    Witch.Mini
-    Witch.Mini.Encoding
-    Witch.Mini.From
-    Witch.Mini.Instances
-    Witch.Mini.TryFrom
-    Witch.Mini.TryFromException
-    Witch.Mini.Utility
+    Functora.Witch
+    Functora.Witch.Encoding
+    Functora.Witch.From
+    Functora.Witch.Instances
+    Functora.Witch.TryFrom
+    Functora.Witch.TryFromException
+    Functora.Witch.Utility
 
   hs-source-dirs:  source/library
 
-test-suite witch-mini-test-suite
+test-suite functora-witch-test-suite
   import:         executable
   build-depends:
     , HUnit         >=1.6.1 && <1.7

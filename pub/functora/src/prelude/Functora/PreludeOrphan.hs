@@ -11,10 +11,10 @@ import Data.Ratio
 import Data.Scientific (Scientific)
 import Data.Tagged
 import qualified Data.Typeable as Typeable
+import Functora.Witch
 import Text.URI
 import qualified Type.Reflection as Reflection
 import Universum
-import Witch.Mini
 import qualified Prelude
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import Data.JSString (JSString)

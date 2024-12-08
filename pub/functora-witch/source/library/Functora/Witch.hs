@@ -11,33 +11,33 @@
 --
 -- Please consider reading the blog post that announces this library:
 -- <https://taylor.fausak.me/2021/07/13/witch/>
-module Witch.Mini
+module Functora.Witch
   ( -- * Type classes
 
     -- ** From
-    Witch.Mini.From.From (from),
-    Witch.Mini.Utility.into,
+    Functora.Witch.From.From (from),
+    Functora.Witch.Utility.into,
 
     -- ** TryFrom
-    Witch.Mini.TryFrom.TryFrom (tryFrom),
-    Witch.Mini.Utility.tryInto,
+    Functora.Witch.TryFrom.TryFrom (tryFrom),
+    Functora.Witch.Utility.tryInto,
 
     -- * Data types
-    Witch.Mini.TryFromException.TryFromException (..),
+    Functora.Witch.TryFromException.TryFromException (..),
 
     -- ** Encodings
-    Witch.Mini.Encoding.ISO_8859_1,
-    Witch.Mini.Encoding.UTF_8,
-    Witch.Mini.Encoding.UTF_16LE,
-    Witch.Mini.Encoding.UTF_16BE,
-    Witch.Mini.Encoding.UTF_32LE,
-    Witch.Mini.Encoding.UTF_32BE,
+    Functora.Witch.Encoding.ISO_8859_1,
+    Functora.Witch.Encoding.UTF_8,
+    Functora.Witch.Encoding.UTF_16LE,
+    Functora.Witch.Encoding.UTF_16BE,
+    Functora.Witch.Encoding.UTF_32LE,
+    Functora.Witch.Encoding.UTF_32BE,
 
     -- * Utilities
-    Witch.Mini.Utility.via,
-    Witch.Mini.Utility.tryVia,
-    Witch.Mini.Utility.maybeTryFrom,
-    Witch.Mini.Utility.eitherTryFrom,
+    Functora.Witch.Utility.via,
+    Functora.Witch.Utility.tryVia,
+    Functora.Witch.Utility.maybeTryFrom,
+    Functora.Witch.Utility.eitherTryFrom,
 
     -- ** Unsafe
 
@@ -48,8 +48,8 @@ module Witch.Mini
     -- 'Witch.TryFrom.tryFrom'. And if you're converting a literal value,
     -- consider using the Template Haskell conversion functions like
     -- 'Witch.Lift.liftedFrom'.
-    Witch.Mini.Utility.unsafeFrom,
-    Witch.Mini.Utility.unsafeInto,
+    Functora.Witch.Utility.unsafeFrom,
+    Functora.Witch.Utility.unsafeInto,
 
     -- * Notes
 
@@ -258,9 +258,9 @@ module Witch.Mini
   )
 where
 
-import qualified Witch.Mini.Encoding
-import qualified Witch.Mini.From
-import Witch.Mini.Instances ()
-import qualified Witch.Mini.TryFrom
-import qualified Witch.Mini.TryFromException
-import qualified Witch.Mini.Utility
+import qualified Functora.Witch.Encoding
+import qualified Functora.Witch.From
+import Functora.Witch.Instances ()
+import qualified Functora.Witch.TryFrom
+import qualified Functora.Witch.TryFromException
+import qualified Functora.Witch.Utility

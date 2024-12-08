@@ -25,13 +25,13 @@ import qualified Data.Tagged as Tagged
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
 import qualified Data.Word as Word
+import qualified Functora.Witch as Witch
+import qualified Functora.Witch.Encoding as Encoding
+import qualified Functora.Witch.Utility as Utility
 import qualified GHC.Stack as Stack
 import qualified Numeric.Natural as Natural
 import qualified System.Exit as Exit
 import qualified Test.HUnit as HUnit
-import qualified Witch.Mini as Witch
-import qualified Witch.Mini.Encoding as Encoding
-import qualified Witch.Mini.Utility as Utility
 
 main :: IO ()
 main = runTestTTAndExit $ specToTest spec

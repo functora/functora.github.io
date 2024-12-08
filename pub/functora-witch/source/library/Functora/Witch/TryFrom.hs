@@ -1,8 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Witch.Mini.TryFrom where
+module Functora.Witch.TryFrom where
 
-import qualified Witch.Mini.TryFromException as TryFromException
+import qualified Functora.Witch.TryFromException as TryFromException
 
 -- | This type class is for converting values from some @source@ type into
 -- some other @target@ type. The constraint @'TryFrom' source target@ means

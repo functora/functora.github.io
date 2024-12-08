@@ -268,6 +268,7 @@ import Data.Tuple.Extra as X (thd3, uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import Functora.Unicode as X (Unicode)
+import Functora.Witch as X
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
@@ -368,7 +369,6 @@ import UnliftIO as X
     withUnliftIO,
   )
 import UnliftIO.MVar as X (modifyMVar)
-import Witch.Mini as X
 import qualified Prelude
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import qualified Data.JSString as JS

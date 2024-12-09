@@ -8,7 +8,7 @@ description:
 build-type:    Simple
 category:      Data
 license:       MIT
-maintainer:    Functora
+maintainer:    functora@proton.me
 
 source-repository head
   location:

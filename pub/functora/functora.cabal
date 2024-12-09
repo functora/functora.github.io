@@ -3,13 +3,15 @@ author:          functora
 build-type:      Simple
 category:        Data
 copyright:       functora
-description:     Custom prelude
 extra-doc-files: CHANGELOG.md
 license-file:    LICENSE
 license:         BSD-3-Clause
 maintainer:      functora@proton.me
 name:            functora
-synopsis:        Custom prelude
+synopsis:        A custom prelude and various libraries.
+description:
+  A custom prelude and various libraries compatible with a wide range of GHC backends, including GHCJS and WASM.
+
 version:         0.1.0.0
 homepage:
   https://github.com/functora/functora.github.io/tree/master/pub/functora
@@ -183,6 +185,9 @@ common pkg-cfg
     , modern-uri
     , optparse-applicative
     , tomland
+
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends: jsaddle
 
 common pkg-web
   import:         pkg

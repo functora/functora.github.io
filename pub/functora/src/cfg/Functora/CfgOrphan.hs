@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -16,6 +17,9 @@ import Functora.Prelude
 import qualified GHC.Generics as Generics
 import qualified Text.URI as URI
 import qualified Toml
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
+import Data.JSString (JSString)
+#endif
 
 genericTomlCodec ::
   ( Generic a,
@@ -215,3 +219,21 @@ optsAeson =
     }
   where
     fmt = Toml.stripTypeNamePrefix $ Proxy @a
+
+#if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
+instance Toml.HasCodec JSString where
+  hasCodec =
+    Toml.textBy (from @JSString @Text)
+      $ pure . from @Text @JSString
+
+instance Toml.HasItemCodec JSString where
+  hasItemCodec =
+    Left
+      . Toml.mkAnyValueBiMap
+        ( \src -> do
+            txt <- Toml.matchText src
+            pure $ from @Text @JSString txt
+        )
+      $ Toml.Text
+      . from @JSString @Text
+#endif

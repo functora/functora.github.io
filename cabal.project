@@ -70,7 +70,6 @@ else
       pub/functora/src/*.cabal
       pub/vector-space/*.cabal
       pub/selective/*.cabal
-      pub/universum/*.cabal
       pub/functora/*.cabal
       pub/xlsx/*.cabal
       pub/bfx/*.cabal
@@ -111,7 +110,6 @@ if os(wasi)
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal
     pub/selective/*.cabal
-    pub/universum/*.cabal
     pub/xlsx/*.cabal
     ghcjs/miso-widgets/*.cabal
     ghcjs/miso-functora/*.cabal
@@ -190,7 +188,6 @@ if arch(javascript)
     pub/functora/src/*.cabal
     pub/vector-space/*.cabal
     pub/selective/*.cabal
-    pub/universum/*.cabal
     pub/miso/*.cabal
     ghcjs/*/*.cabal
   constraints:

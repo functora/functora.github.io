@@ -1,18 +1,18 @@
-name:                dazzle
-version:             0.1.0.0
-github:              "functora/functora.github.io"
-license:             BSD3
-author:              "21it <21it@tuta.io>"
-maintainer:          "21it <21it@tuta.io>"
-copyright:           "2023 Functora <functora@proton.me>"
-synopsis:            Haskell to Gleam transpiler
-description:         You can find documentation at
-homepage:            https://github.com/functora/functora.github.io/tree/master/pub/dazzle
-category:            Gleam, Erlang, Beam, Transpiler
+name: dazzle
+version: 0.1.0.0
+github: "functora/functora.github.io"
+license: BSD3
+author: "21it <21it@tuta.io>"
+maintainer: "21it <21it@tuta.io>"
+copyright: "2023 Functora <functora@proton.me>"
+synopsis: Haskell to Gleam transpiler
+description: You can find documentation at
+homepage: https://github.com/functora/functora.github.io/tree/master/pub/dazzle
+category: Gleam, Erlang, Beam, Transpiler
 
 extra-source-files:
-- ChangeLog.md
-- README.md
+  - ChangeLog.md
+  - README.md
 
 flags:
   ghcid:
@@ -20,115 +20,114 @@ flags:
     default: false
 
 default-extensions:
-- NoImplicitPrelude
-- BangPatterns
-- MultiParamTypeClasses
-- LambdaCase
-- OverloadedStrings
-- ScopedTypeVariables
-- DeriveGeneric
-- GADTs
-- GeneralizedNewtypeDeriving
-- TupleSections
-- DataKinds
-- DerivingStrategies
-- KindSignatures
-- FlexibleContexts
-- FlexibleInstances
-- StrictData
-- TypeFamilies
-- TypeOperators
-- StandaloneDeriving
-- DeriveLift
-- DerivingVia
-- ExistentialQuantification
-- InstanceSigs
-- TypeApplications
-- AllowAmbiguousTypes
-- ConstraintKinds
-- DeriveFunctor
-- RankNTypes
-- FunctionalDependencies
-- DeriveDataTypeable
+  - NoImplicitPrelude
+  - BangPatterns
+  - MultiParamTypeClasses
+  - LambdaCase
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - DeriveGeneric
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - TupleSections
+  - DataKinds
+  - DerivingStrategies
+  - KindSignatures
+  - FlexibleContexts
+  - FlexibleInstances
+  - StrictData
+  - TypeFamilies
+  - TypeOperators
+  - StandaloneDeriving
+  - DeriveLift
+  - DerivingVia
+  - ExistentialQuantification
+  - InstanceSigs
+  - TypeApplications
+  - AllowAmbiguousTypes
+  - ConstraintKinds
+  - DeriveFunctor
+  - RankNTypes
+  - FunctionalDependencies
+  - DeriveDataTypeable
 
 ghc-options:
-# For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html
-# Enable all warnings with -Weverything, then disable the ones we don’t care about
-- -Weverything
-- -Werror
-- -Wno-missing-exported-signatures # missing-exported-signatures turns off the more strict -Wmissing-signatures. See https://ghc.haskell.org/trac/ghc/ticket/14794#ticket
-- -Wno-missing-import-lists # Requires explicit imports of _every_ function (e.g. ‘$’); too strict
-- -Wno-missed-specialisations # When GHC can’t specialize a polymorphic function. No big deal and requires fixing underlying libraries to solve.
-- -Wno-all-missed-specialisations # See missed-specialisations
-- -Wno-unsafe # Don’t use Safe Haskell warnings
-- -Wno-safe # Don’t use Safe Haskell warnings
-- -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
-- -Wno-missing-safe-haskell-mode
-- -Wno-prepositive-qualified-module
-- -Wno-missing-kind-signatures
-- -fenable-th-splice-warnings
-- -fprint-potential-instances
+  # For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html
+  # Enable all warnings with -Weverything, then disable the ones we don’t care about
+  - -Weverything
+  - -Werror
+  - -Wno-missing-exported-signatures # missing-exported-signatures turns off the more strict -Wmissing-signatures. See https://ghc.haskell.org/trac/ghc/ticket/14794#ticket
+  - -Wno-missing-import-lists # Requires explicit imports of _every_ function (e.g. ‘$’); too strict
+  - -Wno-missed-specialisations # When GHC can’t specialize a polymorphic function. No big deal and requires fixing underlying libraries to solve.
+  - -Wno-all-missed-specialisations # See missed-specialisations
+  - -Wno-unsafe # Don’t use Safe Haskell warnings
+  - -Wno-safe # Don’t use Safe Haskell warnings
+  - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
+  - -Wno-missing-safe-haskell-mode
+  - -Wno-prepositive-qualified-module
+  - -Wno-missing-kind-signatures
+  - -fenable-th-splice-warnings
+  - -fprint-potential-instances
 
 _deps: &deps
   dependencies:
-  - base
-  - containers
-  - universum
-  - witch
-  - unliftio
-  - microlens
-  - extra
-  - text
-  - transformers
-  - generic-pretty-instances
-  - ghc-lib-parser
-  - process
-  - casing
-  - fourmolu
-  - unicode-show
-  - with-utf8
-  - syb
+    - base
+    - containers
+    - universum
+    - witch
+    - unliftio
+    - microlens
+    - extra
+    - text
+    - transformers
+    - ghc-lib-parser
+    - process
+    - casing
+    - fourmolu
+    - unicode-show
+    - with-utf8
+    - syb
 
 _ghcid: &ghcid
   when:
-  - condition: flag(ghcid)
-    then:
-      <<: *deps
-      source-dirs:
-      - src
-      ghc-options:
-      - -Wno-unused-packages
-    else:
-      dependencies:
-      - dazzle
+    - condition: flag(ghcid)
+      then:
+        <<: *deps
+        source-dirs:
+          - src
+        ghc-options:
+          - -Wno-unused-packages
+      else:
+        dependencies:
+          - dazzle
 
 _optimized: &optimized
   ghc-options:
-  - -O2
-  - -optc-O3
-  - -funfolding-use-threshold=16
-  - -threaded
-  - -rtsopts
-  - -with-rtsopts=-N
-  - -with-rtsopts=-T
-  - -optl-fuse-ld=gold
+    - -O2
+    - -optc-O3
+    - -funfolding-use-threshold=16
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -with-rtsopts=-T
+    - -optl-fuse-ld=gold
   ld-options:
-  - -fuse-ld=gold
+    - -fuse-ld=gold
 
 library:
   <<: *deps
   source-dirs:
-  - src
+    - src
   ghc-options:
-  - -fwarn-tabs
+    - -fwarn-tabs
 
 executables:
   dazzle-exe:
     main: Main.hs
     dependencies:
-    - base
+      - base
     source-dirs:
-    - app
+      - app
     <<: *optimized
     <<: *ghcid
 
@@ -136,10 +135,10 @@ tests:
   dazzle-test:
     main: Spec.hs
     source-dirs:
-    - test
+      - test
     dependencies:
-    - base
-    - hspec
-    - ghc-lib-parser
+      - base
+      - hspec
+      - ghc-lib-parser
     <<: *optimized
     <<: *ghcid

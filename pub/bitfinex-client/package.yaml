@@ -58,10 +58,10 @@ default-extensions:
   - TupleSections
 
 when:
-- condition: impl(ghc >= 9)
-  default-extensions:
-  - NoCUSKs
-  - StandaloneKindSignatures
+  - condition: impl(ghc >= 9)
+    default-extensions:
+      - NoCUSKs
+      - StandaloneKindSignatures
 
 ghc-options:
   # For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html
@@ -125,7 +125,6 @@ _deps: &deps
     - katip
     - pretty
     - GenericPretty
-    - generic-pretty-instances
 
 _ghcid: &ghcid
   when:

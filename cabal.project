@@ -68,8 +68,6 @@ else
       pub/functora-witch/*.cabal
       pub/singlethongs/*.cabal
       pub/functora/src/*.cabal
-      pub/vector-space/*.cabal
-      pub/selective/*.cabal
       pub/functora/*.cabal
       pub/xlsx/*.cabal
       pub/bfx/*.cabal
@@ -108,8 +106,6 @@ if os(wasi)
     pub/functora-witch/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
-    pub/vector-space/*.cabal
-    pub/selective/*.cabal
     pub/xlsx/*.cabal
     ghcjs/miso-widgets/*.cabal
     ghcjs/miso-functora/*.cabal
@@ -186,8 +182,6 @@ if arch(javascript)
     pub/functora-witch/*.cabal
     pub/singlethongs/*.cabal
     pub/functora/src/*.cabal
-    pub/vector-space/*.cabal
-    pub/selective/*.cabal
     pub/miso/*.cabal
     ghcjs/*/*.cabal
   constraints:

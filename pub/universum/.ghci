@@ -1,3 +1,0 @@
-:set -XNoImplicitPrelude
-:set -XOverloadedStrings
-import Universum

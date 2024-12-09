@@ -1,8 +1,0 @@
-.stack-work/
-dist
-.cabal-sandbox
-cabal.sandbox.config
-cabal.project.local
-*.hi
-*.o
-/dist-newstyle/

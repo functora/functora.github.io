@@ -28,7 +28,6 @@ in
       ++ (import ./tools.nix)
       ++ (import ./../pub/dazzle/nix/tools.nix)
       ++ (import ./../pub/functora-hakyll/nix/tools.nix)
-      ++ (import ./../pub/bitfinex-client/nix/tools.nix)
       ++ (import ./../pub/functora/nix/tools.nix)
       ++ (import ./../pub/bfx/nix/tools.nix)
       ++ (pkgs.lib.optional

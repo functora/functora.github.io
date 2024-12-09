@@ -46,7 +46,7 @@ library
 
   else
     other-modules: Bitcoin.Keys.GHC
-    build-depends: secp256k1-haskell
+    build-depends: secp256k1-haskell >=1.4.0
 
 test-suite test
   import:         basic

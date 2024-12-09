@@ -103,7 +103,6 @@ common pkg-lib
     , temporary
     , text
     , transformers
-    , units
     , unliftio
     , vector
 
@@ -218,7 +217,6 @@ test-suite bfx-test
       , temporary
       , text
       , transformers
-      , units
       , unliftio
       , vector
 

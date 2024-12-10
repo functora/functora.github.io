@@ -8,10 +8,11 @@ module Bfx.Parser
 where
 
 import Bfx.Data.Type
-import Bfx.Import.External
 import Bfx.Math
 import Data.Aeson.Lens
 import qualified Data.Map as Map
+import Functora.Money
+import Functora.Prelude
 import qualified Prelude
 
 parseOrder ::
@@ -119,7 +120,7 @@ parseCandle ::
   a ->
   Either Text Candle
 parseCandle x = do
-  at <-
+  utc <-
     posixSecondsToUTCTime
       . (/ 1000)
       . Prelude.fromInteger
@@ -184,7 +185,7 @@ parseCandle x = do
         (toRational <$> x ^? nth 5 . _Number)
   pure
     Candle
-      { candleAt = at,
+      { candleAt = utc,
         candleOpen = open,
         candleClose = close,
         candleHigh = high,

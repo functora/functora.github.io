@@ -4,7 +4,8 @@
 
 module Bfx.Data.Kind where
 
-import Bfx.Import.External
+import Functora.Cfg
+import Functora.Money
 
 data Method
   = PlatformStatus

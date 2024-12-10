@@ -92,18 +92,14 @@ common pkg-lib
     , functora
     , functora:cfg
     , functora:money
-    , functora:sql
     , http-client
     , http-client-tls
     , http-types
-    , katip
     , lens-aeson
     , memory
     , siggy-chardust
-    , temporary
+    , singlethongs
     , text
-    , transformers
-    , unliftio
     , vector
 
 library
@@ -131,16 +127,12 @@ library
     Bfx.Data.Type
     Bfx.Data.Wallets
     Bfx.Data.Web
-    Bfx.Import
-    Bfx.Import.External
-    Bfx.Import.Internal
     Bfx.Indicator.Atr
     Bfx.Indicator.Ma
     Bfx.Indicator.Tr
     Bfx.Math
     Bfx.Parser
     Bfx.Rpc.Generic
-    Bfx.Util
 
 test-suite bfx-test
   import:         pkg
@@ -161,6 +153,8 @@ test-suite bfx-test
     , base
     , bfx
     , containers
+    , functora
+    , functora:money
     , hspec
 
   if flag(ghcid)
@@ -182,16 +176,12 @@ test-suite bfx-test
       Bfx.Data.Type
       Bfx.Data.Wallets
       Bfx.Data.Web
-      Bfx.Import
-      Bfx.Import.External
-      Bfx.Import.Internal
       Bfx.Indicator.Atr
       Bfx.Indicator.Ma
       Bfx.Indicator.Tr
       Bfx.Math
       Bfx.Parser
       Bfx.Rpc.Generic
-      Bfx.Util
 
     hs-source-dirs: src
     ghc-options:    -Wno-unused-packages
@@ -203,21 +193,15 @@ test-suite bfx-test
       , containers
       , cryptonite
       , envparse
-      , functora
       , functora:cfg
-      , functora:money
-      , functora:sql
       , http-client
       , http-client-tls
       , http-types
-      , katip
       , lens-aeson
       , memory
       , siggy-chardust
-      , temporary
+      , singlethongs
       , text
-      , transformers
-      , unliftio
       , vector
 
   else

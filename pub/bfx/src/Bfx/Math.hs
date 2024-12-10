@@ -12,7 +12,9 @@ module Bfx.Math
   )
 where
 
-import Bfx.Import.External
+import Data.Ratio.Rounding (dpRound, sdRound)
+import Functora.Money
+import Functora.Prelude
 
 tweakMoneyAmount ::
   ( MonadThrow m

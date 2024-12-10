@@ -34,14 +34,21 @@ module Bfx.Data.Type
     PltStatus (..),
     Error (..),
     emptyReq,
+    eradicateNull,
   )
 where
 
 import Bfx.Class.ToRequestParam
-import Bfx.Import.External
 import Data.Aeson (withText)
 import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as A
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
+import qualified Data.Vector as V
+import Functora.Cfg
+import Functora.Money
+import Functora.Prelude
+import Network.HTTP.Client (HttpException (..))
 import qualified Network.HTTP.Client as Web
 import qualified Prelude
 
@@ -299,8 +306,8 @@ currencyPairCon (Tagged base) (Tagged quote) =
 instance ToRequestParam CurrencyPair where
   toTextParam x =
     "t"
-      <> (coerce $ currencyPairBase x :: Text)
-      <> (coerce $ currencyPairQuote x :: Text)
+      <> (unCurrencyCode $ currencyPairBase x :: Text)
+      <> (unCurrencyCode $ currencyPairQuote x :: Text)
 
 --
 -- TODO : better parsing with advanced regex
@@ -415,9 +422,9 @@ data PltStatus
 
 data Error
   = ErrorWebException HttpException
-  | ErrorWebPub Web.Request (Web.Response ByteString)
-  | ErrorWebPrv ByteString Web.Request (Web.Response ByteString)
-  | ErrorParser Web.Request (Web.Response ByteString) Text
+  | ErrorWebPub Web.Request (Web.Response BL.ByteString)
+  | ErrorWebPrv BL.ByteString Web.Request (Web.Response BL.ByteString)
+  | ErrorParser Web.Request (Web.Response BL.ByteString) Text
   | ErrorMath Text
   | ErrorTryFrom SomeException
   | ErrorMissingOrder OrderId
@@ -433,3 +440,14 @@ instance Exception Error
 
 emptyReq :: Map Int Int
 emptyReq = mempty
+
+eradicateNull :: A.Value -> A.Value
+eradicateNull = \case
+  A.Object xs -> A.Object $ A.mapMaybe devastateNull xs
+  A.Array xs -> A.Array $ V.mapMaybe devastateNull xs
+  x -> x
+  where
+    devastateNull =
+      \case
+        A.Null -> Nothing
+        x -> Just $ eradicateNull x

@@ -7,9 +7,11 @@ module Bfx.Indicator.Ma
   )
 where
 
-import Bfx.Import
+import Bfx.Data.Type
 import qualified Data.Map as Map
 import qualified Data.Vector as V
+import Functora.Money
+import Functora.Prelude
 import qualified Prelude
 
 newtype Ma = Ma

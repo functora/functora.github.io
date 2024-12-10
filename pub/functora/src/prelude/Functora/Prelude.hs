@@ -18,7 +18,9 @@ module Functora.Prelude
     DecimalPlacesOverflowFormat (..),
     defaultRatioFormat,
     inspectRatio,
+    inspectPercent,
     inspectRatioDef,
+    inspectPercentDef,
 
     -- * Integral
     -- $integral
@@ -185,7 +187,12 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Char as Char
 import qualified Data.Digest.SHA256 as SHA256
 import Data.Either.Extra as X (fromEither)
-import Data.Fixed as X (Pico)
+import Data.Fixed as X
+  ( Fixed,
+    HasResolution (..),
+    Pico,
+    showFixed,
+  )
 import Data.Foldable1 as X (Foldable1, fold1, foldMap1)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)
@@ -501,6 +508,20 @@ inspectRatio fmt signedRational =
                 else 0
             )
 
+inspectPercent ::
+  forall a b.
+  ( Textual a,
+    From b Integer,
+    Integral b
+  ) =>
+  RatioFormat ->
+  Ratio b ->
+  a
+inspectPercent fmt =
+  (<> "%")
+    . inspectRatio fmt
+    . (* 100)
+
 inspectRatioDef ::
   forall a b.
   ( Textual a,
@@ -511,6 +532,17 @@ inspectRatioDef ::
   a
 inspectRatioDef =
   inspectRatio defaultRatioFormat
+
+inspectPercentDef ::
+  forall a b.
+  ( Textual a,
+    From b Integer,
+    Integral b
+  ) =>
+  Ratio b ->
+  a
+inspectPercentDef =
+  inspectPercent defaultRatioFormat
 
 roundRational :: Int -> Rational -> Rational
 roundRational decimalPlaces input =

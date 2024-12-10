@@ -8,9 +8,10 @@ module Bfx.Class.ToRequestParam
 where
 
 import Bfx.Data.Web
-import Bfx.Import.External
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
+import Functora.Money
+import Functora.Prelude
 import qualified Prelude
 
 class ToRequestParam a where

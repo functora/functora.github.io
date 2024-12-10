@@ -8,7 +8,6 @@ module Bfx.Data.Env
 where
 
 import Bfx.Data.Web
-import Bfx.Import.External
 import Env
   ( Mod,
     Var,
@@ -19,6 +18,7 @@ import Env
     str,
     var,
   )
+import Functora.Prelude
 
 data Env = Env
   { envNonceGen :: NonceGen,

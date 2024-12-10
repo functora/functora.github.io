@@ -7,7 +7,8 @@ module Bfx.Data.Wallets
   )
 where
 
-import Bfx.Import.External
+import Functora.Money
+import Functora.Prelude hiding (Exchange (..))
 
 data WalletType
   = Exchange

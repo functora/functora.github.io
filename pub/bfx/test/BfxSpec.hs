@@ -5,14 +5,15 @@ module BfxSpec
   )
 where
 
-import qualified Bfx
+import Bfx
 import qualified Bfx.Data.Candles as Candles
 import qualified Bfx.Data.GetOrders as GetOrders
 import qualified Bfx.Data.MarketAveragePrice as MarketAveragePrice
 import qualified Bfx.Data.SubmitOrder as SubmitOrder
-import Bfx.Import
 import Bfx.TestEnv
 import qualified Data.Map as Map
+import Functora.Money
+import Functora.Prelude
 import Test.Hspec
 
 spec :: Spec

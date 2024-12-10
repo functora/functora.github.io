@@ -5,10 +5,12 @@ module Bfx.Data.SubmitOrderSpec
   )
 where
 
+import Bfx
 import qualified Bfx.Data.SubmitOrder as SubmitOrder
-import Bfx.Import
 import Bfx.TestEnv
 import qualified Data.Aeson as A
+import Functora.Money
+import Functora.Prelude
 import Test.Hspec
 
 spec :: Spec

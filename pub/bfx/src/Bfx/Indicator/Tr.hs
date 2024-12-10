@@ -6,8 +6,10 @@ module Bfx.Indicator.Tr
   )
 where
 
-import Bfx.Import
+import Bfx.Data.Type
 import qualified Data.Vector as V
+import Functora.Money
+import Functora.Prelude
 
 newtype Tr = Tr
   { unTr :: QuotePerBase

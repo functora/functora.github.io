@@ -10,13 +10,14 @@ import Bfx.Data.Kind
 import Bfx.Data.Type
 import qualified Bfx.Data.Wallets as Wallets
 import Bfx.Data.Web
-import Bfx.Import.External
 import Bfx.Math
 import Bfx.Parser
 import Data.Aeson.Lens
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Vector as V
+import Functora.Money
+import Functora.Prelude
 
 class FromRpc (method :: Method) res where
   fromRpc :: RawResponse -> Either Text res

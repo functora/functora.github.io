@@ -8,8 +8,10 @@ module Bfx.Data.Candles
   )
 where
 
-import Bfx.Import
+import Bfx.Class.ToRequestParam
+import Bfx.Data.Type
 import qualified Data.Text as T
+import Functora.Prelude
 import qualified Prelude
 
 data Section

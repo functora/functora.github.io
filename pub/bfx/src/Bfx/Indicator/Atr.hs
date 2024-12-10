@@ -6,11 +6,13 @@ module Bfx.Indicator.Atr
   )
 where
 
-import Bfx.Import
+import Bfx.Data.Type
 import Bfx.Indicator.Tr (Tr)
 import qualified Bfx.Indicator.Tr as Tr
 import qualified Data.Map as Map
 import qualified Data.Vector as V
+import Functora.Money
+import Functora.Prelude
 import qualified Prelude
 
 newtype Atr = Atr
@@ -77,10 +79,10 @@ unsafeAtr intPeriod xs stopAtIdx currentIdx acc =
     then acc
     else
       unsafeAtr intPeriod xs stopAtIdx (currentIdx + 1)
-        $ Map.insert at val acc
+        $ Map.insert time val acc
   where
     chunk = V.slice currentIdx intPeriod xs
-    at = fst $ V.last chunk
+    time = fst $ V.last chunk
     val =
       Atr
         . QuotePerBase

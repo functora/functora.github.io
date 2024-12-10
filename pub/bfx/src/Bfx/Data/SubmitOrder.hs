@@ -9,8 +9,12 @@ module Bfx.Data.SubmitOrder
   )
 where
 
-import Bfx.Import
+import Bfx.Class.ToRequestParam
+import Bfx.Data.Type
 import qualified Data.Aeson as A
+import Functora.Cfg
+import Functora.Money
+import Functora.Prelude
 
 data Request = Request
   { buyOrSell :: BuyOrSell,

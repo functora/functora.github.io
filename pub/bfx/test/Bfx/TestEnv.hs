@@ -7,7 +7,9 @@ module Bfx.TestEnv
   )
 where
 
-import Bfx.Import
+import Bfx
+import Functora.Money
+import Functora.Prelude
 
 adaBtc :: CurrencyPair
 adaBtc =

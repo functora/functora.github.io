@@ -6,9 +6,15 @@ module Bfx.Rpc.Generic
   )
 where
 
+import Bfx.Class.FromRpc
+import Bfx.Class.ToBaseUrl
 import Bfx.Class.ToPathPieces
-import qualified Bfx.Data.Web as Web
-import Bfx.Import
+import Bfx.Class.ToRequestMethod
+import Bfx.Class.ToRequestParam
+import Bfx.Data.Env
+import Bfx.Data.Kind
+import Bfx.Data.Type
+import Bfx.Data.Web
 import qualified Crypto.Hash as Crypto (Digest)
 import qualified Crypto.Hash.Algorithms as Crypto (SHA384)
 import qualified Crypto.MAC.HMAC as Crypto (hmac, hmacGetDigest)
@@ -18,9 +24,12 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
+import Functora.Cfg
+import Functora.Prelude
 import qualified Network.HTTP.Client as Web
 import qualified Network.HTTP.Client.TLS as Tls
 import qualified Network.HTTP.Types as Web
+import Singlethongs
 
 pub ::
   forall method req res m.
@@ -42,7 +51,7 @@ pub qs req = do
     Web.parseRequest
       . T.unpack
       . T.intercalate "/"
-      $ coerce (toBaseUrl @method)
+      $ unBaseUrl (toBaseUrl @method)
       : toPathPieces @method req
   let webReq1 =
         Web.setQueryString
@@ -88,7 +97,7 @@ prv env req = do
   webReq0 <-
     Web.parseRequest
       . T.unpack
-      $ coerce (toBaseUrl @method)
+      $ unBaseUrl (toBaseUrl @method)
       <> "/"
       <> apiPath
   withNonce (envNonceGen env) $ \nonce' -> do
@@ -111,7 +120,8 @@ prv env req = do
                     B16.encode
                       . BS.pack
                       . BA.unpack
-                      $ sign (envPrvKey env) apiPath nonce reqBody
+                      . sign (envPrvKey env) apiPath nonce
+                      $ BL.toStrict reqBody
                   )
                 ]
             }
@@ -139,7 +149,7 @@ sign prvKey apiPath nonce reqBody =
     $ "/api/"
     <> encodeUtf8 apiPath
     <> nonce
-    <> BL.toStrict reqBody
+    <> reqBody
 
 --
 -- TODO : add ParserFailure type instead of Text?
@@ -149,8 +159,8 @@ parserFailure ::
   ( SingI method
   ) =>
   Web.Request ->
-  Web.Response ByteString ->
-  Web.RawResponse ->
+  Web.Response BL.ByteString ->
+  RawResponse ->
   Text ->
   Error
 parserFailure webReq webRes res err =

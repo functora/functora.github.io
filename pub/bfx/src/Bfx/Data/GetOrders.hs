@@ -9,7 +9,8 @@ module Bfx.Data.GetOrders
 where
 
 import Bfx.Data.Type
-import Bfx.Import
+import Functora.Cfg
+import Functora.Prelude
 
 data Options = Options
   { currencyPair :: Maybe CurrencyPair,

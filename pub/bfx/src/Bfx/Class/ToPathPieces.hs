@@ -9,7 +9,7 @@ import Bfx.Class.ToRequestParam
 import qualified Bfx.Data.Candles as Candles
 import qualified Bfx.Data.GetOrders as GetOrders
 import Bfx.Data.Kind
-import Bfx.Import.External
+import Functora.Prelude
 
 class ToPathPieces (method :: Method) req where
   toPathPieces :: req -> [Text]

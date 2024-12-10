@@ -16,10 +16,12 @@ module Bfx.Data.Web
   )
 where
 
-import Bfx.Import.External
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
+import Functora.Cfg
+import Functora.Prelude
 import qualified Prelude
 
 newtype PrvKey = PrvKey
@@ -74,7 +76,7 @@ newtype BaseUrl = BaseUrl
     )
 
 newtype RawResponse = RawResponse
-  { unRawResponse :: ByteString
+  { unRawResponse :: BL.ByteString
   }
   deriving newtype
     ( Eq,

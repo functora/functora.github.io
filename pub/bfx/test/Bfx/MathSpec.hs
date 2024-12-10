@@ -5,7 +5,9 @@ module Bfx.MathSpec
   )
 where
 
-import Bfx.Import
+import Bfx
+import Functora.Money
+import Functora.Prelude
 import Test.Hspec
 
 spec :: Spec

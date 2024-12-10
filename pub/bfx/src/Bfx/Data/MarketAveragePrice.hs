@@ -5,7 +5,9 @@ module Bfx.Data.MarketAveragePrice
   )
 where
 
-import Bfx.Import
+import Bfx.Data.Type
+import Functora.Money
+import Functora.Prelude
 
 data Request = Request
   { buyOrSell :: BuyOrSell,

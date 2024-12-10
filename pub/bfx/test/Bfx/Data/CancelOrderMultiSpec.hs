@@ -5,9 +5,10 @@ module Bfx.Data.CancelOrderMultiSpec
   )
 where
 
+import Bfx
 import Bfx.Data.CancelOrderMulti
-import Bfx.Import
 import qualified Data.Aeson as A
+import Functora.Prelude
 import Test.Hspec
 
 spec :: Spec

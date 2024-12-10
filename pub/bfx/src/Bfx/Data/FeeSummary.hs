@@ -7,7 +7,8 @@ module Bfx.Data.FeeSummary
 where
 
 import Bfx.Data.Type
-import Bfx.Import.External
+import Functora.Money
+import Functora.Prelude
 
 --
 -- TODO : this is not 100% correct

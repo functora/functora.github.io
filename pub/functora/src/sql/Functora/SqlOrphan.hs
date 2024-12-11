@@ -91,6 +91,8 @@ instance (PersistFieldSql rep) => PersistFieldSql (NonEmpty rep) where
 
 derivePersistField "BuyOrSell"
 
+derivePersistField "BaseOrQuote"
+
 deriving newtype instance PersistField MoneyAmount
 
 deriving newtype instance PersistFieldSql MoneyAmount

@@ -3,39 +3,50 @@
 module Functora.MoneySing where
 
 import Data.Type.Equality
+import Functora.Cfg
+import Functora.Prelude
 import Functora.Tags
 import qualified Language.Haskell.TH.Syntax as TH
-import Prelude
 
 data CurrencyKind = Crypto | Stable | Fiat
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum CurrencyKind
 
 data BuyOrSell = Buy | Sell
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum BuyOrSell
 
 data NetOrGross = Net | Gross
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum NetOrGross
 
 data GainOrLose = Gain | Lose
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum GainOrLose
 
 data BaseOrQuote = Base | Quote
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum BaseOrQuote
 
 data MakerOrTaker = Maker | Taker
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum MakerOrTaker
 
 data LocalOrRemote = Local | Remote
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum LocalOrRemote
 
 data MinOrMax = Min | Max
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum MinOrMax
 
 data Revenue = Revenue
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum Revenue
 
 data SignedOrUnsigned = Signed | Unsigned
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
+  deriving (HasCodec, HasItemCodec) via GenericEnum SignedOrUnsigned
 
 type instance Fgpt CurrencyKind = "Functora.MoneySing.CurrencyKind"
 

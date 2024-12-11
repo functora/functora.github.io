@@ -13,6 +13,7 @@ module Functora.Cfg
 
     -- * TOML
     -- $toml
+    unToml,
     decodeToml,
     encodeToml,
 
@@ -130,6 +131,22 @@ encodeJson =
 
 -- $toml
 -- TOML
+
+unToml ::
+  ( Generic a,
+    Typeable a,
+    Toml.GenericCodec (Rep a),
+    MonadThrow m
+  ) =>
+  Text ->
+  m a
+unToml =
+  either
+    ( throwString
+        . prettyTomlDecodeErrors
+    )
+    pure
+    . decodeToml
 
 decodeToml ::
   ( Generic a,

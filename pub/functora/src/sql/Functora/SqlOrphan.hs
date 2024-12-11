@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -7,6 +8,7 @@ import qualified Data.Data as Data
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Esqueleto.Legacy hiding (from)
+import Database.Persist.TH
 import Functora.Money
 import Functora.Prelude hiding (Key)
 import qualified Text.URI as URI
@@ -86,3 +88,17 @@ instance (PersistField rep) => PersistField (NonEmpty rep) where
 
 instance (PersistFieldSql rep) => PersistFieldSql (NonEmpty rep) where
   sqlType = const . sqlType $ Proxy @[rep]
+
+derivePersistField "BuyOrSell"
+
+deriving newtype instance PersistField MoneyAmount
+
+deriving newtype instance PersistFieldSql MoneyAmount
+
+deriving newtype instance PersistField QuotePerBase
+
+deriving newtype instance PersistFieldSql QuotePerBase
+
+deriving newtype instance PersistField CurrencyCode
+
+deriving newtype instance PersistFieldSql CurrencyCode

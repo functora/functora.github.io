@@ -3,6 +3,7 @@ module Functora.Sql
     upsertBy,
     selectOneRequired,
     runMigrationPool,
+    PersistNat (..),
     (^:),
   )
 where
@@ -117,17 +118,29 @@ import Database.Persist.TH as X
     sqlSettings,
   )
 import Functora.Prelude
-  ( HasCallStack,
+  ( Data,
+    Eq,
+    Generic,
+    HasCallStack,
+    Int64,
     Maybe (..),
     MonadIO,
     MonadThrow,
     MonadUnliftIO,
+    Natural,
     NonEmpty,
+    Ord,
+    Read,
     ReaderT,
+    Show,
     Text,
     Type,
     Typeable,
+    bimap,
+    either,
     flip,
+    impureThrow,
+    inspect,
     inspectType,
     liftIO,
     maybeM,
@@ -135,6 +148,7 @@ import Functora.Prelude
     runReaderT,
     throwString,
     toList,
+    tryFrom,
     ($),
     (.),
     (<>),
@@ -212,6 +226,29 @@ runMigrationPool r pconn =
       | Sql.connRDBMS conn == "sqlite" =
           runReaderT `flip` conn $ act
     whenSqlite _ _ = pure ()
+
+newtype PersistNat = PersistNat
+  { unPersistNat :: Natural
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic
+    )
+
+instance PersistField PersistNat where
+  toPersistValue =
+    either impureThrow toPersistValue
+      . tryFrom @Natural @Int64
+      . unPersistNat
+  fromPersistValue raw = do
+    int <- fromPersistValue raw
+    bimap inspect PersistNat $ tryFrom @Int64 @Natural int
+
+deriving via Int64 instance PersistFieldSql PersistNat
 
 -- | Project a field of an entity.
 -- Alias exists to remove interference with Lens.

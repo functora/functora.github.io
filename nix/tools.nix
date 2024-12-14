@@ -1,4 +1,4 @@
-with (import ./project.nix);
+with (import ./project.nix {});
 with pkgs; let
   newpkgs = import ./newpkgs.nix;
   repoDir = builtins.toString ./..;

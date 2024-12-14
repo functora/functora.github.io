@@ -1,4 +1,4 @@
-with (import ./project.nix); let
+with (import ./project.nix {}); let
   misc = import ./misc.nix;
   newpkgs = import ./newpkgs.nix;
 in

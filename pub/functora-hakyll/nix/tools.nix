@@ -1,4 +1,4 @@
-with (import ./../../../nix/project.nix);
+with (import ./../../../nix/project.nix {});
 with pkgs; let
   cabal = "${pkgs.cabal-install}/bin/cabal";
   pkgDir = builtins.toString ./..;

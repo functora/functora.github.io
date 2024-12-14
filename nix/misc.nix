@@ -1,7 +1,7 @@
 let
   repo = builtins.toString ./..;
 in
-  with (import ./project.nix); rec {
+  with (import ./project.nix {}); rec {
     pkgBin = pkg: "${pkgs.${pkg}}/bin/${pkg}";
     nix-bundle = pkgs.nix-bundle.overrideAttrs (attrs: {
       buildInputs =

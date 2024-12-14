@@ -1,4 +1,4 @@
-let
+{crossSystem ? null}: let
   # Read in the Niv sources
   sources = import ./sources.nix {};
   # If ./nix/sources.nix file is not found run:
@@ -21,18 +21,33 @@ let
     # the haskell.nix functionality itself as an overlay.
     haskellNix.nixpkgsArgs;
 
+  # Apply crossSystem if needed
+  next =
+    if crossSystem == null
+    then pkgs
+    else
+      import haskellNix.sources.nixpkgs-unstable (
+        haskellNix.nixpkgsArgs
+        // {
+          crossSystem = pkgs.lib.systems.examples."${crossSystem}";
+        }
+      );
+
   # Nixpkgs overlay to fix haskell tdlib bindings.
   pkgs = prev.extend (
-    next: prev: {tdjson = prev.tdlib;}
+    _: x: {tdjson = x.tdlib;}
   );
 in
-  pkgs.haskell-nix.project {
+  next.haskell-nix.project {
     # 'cleanGit' cleans a source directory based on the files known by git
     src = pkgs.haskell-nix.haskellLib.cleanGit {
       name = "functora";
       src = ./..;
     };
     # Specify the GHC version to use.
-    compiler-nix-name = "ghc948"; # Not required for `stack.yaml` based projects.
+    #
+    # NOTE : Fallback from 948 to 928 for aarch64 cross support.
+    #
+    compiler-nix-name = "ghc928"; # Not required for `stack.yaml` based projects.
     projectFileName = "cabal.project";
   }

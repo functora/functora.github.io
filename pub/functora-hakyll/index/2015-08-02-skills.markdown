@@ -7,12 +7,11 @@ fontawesome: "fab fa-bitcoin"
 
 <p class="padding-left">Haskell is my primary and the most favorte tool. I do have advanced level of Haskell including:</p>
 
-- [Lens](https://hackage.haskell.org/package/microlens) for efficient data manipulation and parsing.
-- [Singletons](https://hackage.haskell.org/package/singletons) for pseudo-dependent type programming.
+- [GHC.Generics](https://wiki.haskell.org/GHC.Generics), [generic-lens](https://hackage.haskell.org/package/generic-lens) and [SYB](https://hackage.haskell.org/package/syb) for efficient data manipulation.
+- [GHCJS](https://github.com/ghcjs/ghcjs) compiler, GHC [WASM](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html) backend and [JSaddle](https://hackage.haskell.org/package/jsaddle) EDSL.
 - [Presistent](https://hackage.haskell.org/package/persistent) and [Esqueleto](https://hackage.haskell.org/package/esqueleto) typed SQL drivers.
 - [Yesod](https://www.yesodweb.com/) enterprise web framework.
 - [Miso](https://haskell-miso.org/) frontend web framework.
-- [GHCJS](https://github.com/ghcjs/ghcjs) compiler and [JSaddle](https://hackage.haskell.org/package/jsaddle) EDSL.
 
 <p class="padding-left">I am also qualified in other useful areas:</p>
 

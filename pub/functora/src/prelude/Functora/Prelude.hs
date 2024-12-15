@@ -185,6 +185,7 @@ import Data.ByteString.Base58 as X
   )
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Char as Char
+import Data.Coerce as X (coerce)
 import qualified Data.Digest.SHA256 as SHA256
 import Data.Either.Extra as X (fromEither)
 import Data.Fixed as X

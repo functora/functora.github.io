@@ -108,9 +108,8 @@ spec = before sysEnv $ do
           env
           (OrderId 0)
           CounterRates
-            { counterRatesEnterBaseFee = FeeRate 0,
-              counterRatesExitQuoteFee = FeeRate 0,
-              counterRatesExitQuoteProfit = ProfitRate 0
+            { counterRatesFee = FeeRate 0,
+              counterRatesProfit = ProfitRate 0
             }
           SubmitOrder.optsPostOnly
     res `shouldSatisfy` isLeft

@@ -3,7 +3,7 @@
 module Bfx.Math
   ( tweakMoneyAmount,
     tweakQuotePerBase,
-    newCounterOrder,
+    mkCounterOrder,
     CounterArgs (..),
     CounterRates (..),
     CounterExit (..),
@@ -43,37 +43,43 @@ tweakMoneyAmountRec tweak bos prev = do
     then pure next
     else tweakMoneyAmountRec (tweak + pip) bos prev
 
+pip :: Ratio Natural
+pip = 0.00000001
+
 tweakQuotePerBase ::
   ( MonadThrow m
   ) =>
   BuyOrSell ->
   QuotePerBase ->
   m QuotePerBase
-tweakQuotePerBase =
-  tweakQuotePerBaseRec pip
+tweakQuotePerBase bos rate =
+  tweakQuotePerBaseRec rate (* tweak)
+  where
+    tweak :: Ratio Natural
+    tweak =
+      case bos of
+        Buy -> 999 % 1000
+        Sell -> 1001 % 1000
 
 tweakQuotePerBaseRec ::
   ( MonadThrow m
   ) =>
-  Ratio Natural ->
-  BuyOrSell ->
   QuotePerBase ->
+  (Ratio Natural -> Ratio Natural) ->
   m QuotePerBase
-tweakQuotePerBaseRec tweak bos prev = do
-  next <- roundQuotePerBase
-    . QuotePerBase
-    $ case bos of
-      Buy -> unQuotePerBase prev - tweak
-      Sell -> unQuotePerBase prev + tweak
+tweakQuotePerBaseRec prev tweak = do
+  next <-
+    roundQuotePerBase
+      . QuotePerBase
+      . tweak
+      $ unQuotePerBase prev
   if next /= prev
     then pure next
-    else tweakQuotePerBaseRec (tweak + pip) bos prev
-
-pip :: Ratio Natural
-pip = 0.00000001
+    else tweakQuotePerBaseRec prev $ tweak . tweak
 
 data CounterArgs = CounterArgs
-  { counterArgsEnterGrossBaseGain :: MoneyAmount,
+  { counterArgsEnterBuyOrSell :: BuyOrSell,
+    counterArgsEnterGrossBase :: MoneyAmount,
     counterArgsEnterQuotePerBase :: QuotePerBase,
     counterArgsRates :: CounterRates
   }
@@ -87,9 +93,8 @@ data CounterArgs = CounterArgs
     )
 
 data CounterRates = CounterRates
-  { counterRatesEnterBaseFee :: FeeRate,
-    counterRatesExitQuoteFee :: FeeRate,
-    counterRatesExitQuoteProfit :: ProfitRate
+  { counterRatesFee :: FeeRate,
+    counterRatesProfit :: ProfitRate
   }
   deriving stock
     ( Eq,
@@ -101,7 +106,8 @@ data CounterRates = CounterRates
     )
 
 data CounterExit = CounterExit
-  { counterExitNetBaseLoss :: MoneyAmount,
+  { counterExitBuyOrSell :: BuyOrSell,
+    counterExitGrossBase :: MoneyAmount,
     counterExitQuotePerBase :: QuotePerBase
   }
   deriving stock
@@ -113,47 +119,75 @@ data CounterExit = CounterExit
       Generic
     )
 
-newCounterOrder :: (MonadThrow m) => CounterArgs -> m CounterExit
-newCounterOrder args = do
-  exitBase <- tweakMoneyAmount Sell exitBaseLoss
-  exitPrice <- roundQuotePerBase exitRate
+mkCounterOrder :: (MonadThrow m) => CounterArgs -> m CounterExit
+mkCounterOrder args = do
+  let exitBos = nextEnum enterBos
+  exitBase <-
+    tweakMoneyAmount exitBos exitGrossBase
+  exitRate <-
+    roundQuotePerBase
+      . QuotePerBase
+      $ unMoneyAmount exitGrossQuote
+      / unMoneyAmount exitBase
   pure
     CounterExit
-      { counterExitNetBaseLoss = exitBase,
-        counterExitQuotePerBase = exitPrice
+      { counterExitBuyOrSell = exitBos,
+        counterExitGrossBase = exitBase,
+        counterExitQuotePerBase = exitRate
       }
   where
-    enterBaseGain :: MoneyAmount
-    enterBaseGain =
-      counterArgsEnterGrossBaseGain args
+    enterBos :: BuyOrSell
+    enterBos = counterArgsEnterBuyOrSell args
     enterRate :: QuotePerBase
-    enterRate =
-      counterArgsEnterQuotePerBase args
-    enterFee :: FeeRate
-    enterFee =
-      counterRatesEnterBaseFee $ counterArgsRates args
-    exitFee :: FeeRate
-    exitFee =
-      counterRatesExitQuoteFee $ counterArgsRates args
-    profRate :: ProfitRate
-    profRate =
-      counterRatesExitQuoteProfit $ counterArgsRates args
-    exitBaseLoss :: MoneyAmount
-    exitBaseLoss =
-      MoneyAmount $ unMoneyAmount enterBaseGain * (1 - unFeeRate enterFee)
-    enterQuoteLoss :: MoneyAmount
-    enterQuoteLoss =
-      MoneyAmount $ unMoneyAmount enterBaseGain * unQuotePerBase enterRate
-    exitQuoteGain :: MoneyAmount
-    exitQuoteGain =
+    enterRate = counterArgsEnterQuotePerBase args
+    enterBase :: MoneyAmount
+    enterBase = counterArgsEnterGrossBase args
+    enterNetLoss :: MoneyAmount
+    enterNetLoss =
+      MoneyAmount $ case enterBos of
+        Buy ->
+          -- Quote
+          unMoneyAmount enterBase
+            * unQuotePerBase enterRate
+        Sell ->
+          -- Base
+          unMoneyAmount enterBase
+    enterNetGain :: MoneyAmount
+    enterNetGain =
+      MoneyAmount $ case enterBos of
+        Buy ->
+          -- Base
+          unMoneyAmount enterBase
+            * (1 - unFeeRate feeRate)
+        Sell ->
+          -- Quote
+          unMoneyAmount enterBase
+            * unQuotePerBase enterRate
+            * (1 - unFeeRate feeRate)
+    exitGrossGain :: MoneyAmount
+    exitGrossGain =
+      --
+      -- Buy = Quote
+      -- Sell = Base
+      --
       MoneyAmount
-        $ (unMoneyAmount enterQuoteLoss * (1 + unProfitRate profRate))
-        / (1 - unFeeRate exitFee)
-    exitRate :: QuotePerBase
-    exitRate =
-      QuotePerBase
-        $ unMoneyAmount exitQuoteGain
-        / unMoneyAmount exitBaseLoss
+        $ unMoneyAmount enterNetLoss
+        * (1 + unProfitRate profitRate)
+        / (1 - unFeeRate feeRate)
+    exitGrossBase :: MoneyAmount
+    exitGrossBase =
+      case enterBos of
+        Buy -> enterNetGain
+        Sell -> exitGrossGain
+    exitGrossQuote :: MoneyAmount
+    exitGrossQuote =
+      case enterBos of
+        Buy -> exitGrossGain
+        Sell -> enterNetGain
+    feeRate :: FeeRate
+    feeRate = counterRatesFee $ counterArgsRates args
+    profitRate :: ProfitRate
+    profitRate = counterRatesProfit $ counterArgsRates args
 
 roundMoneyAmount :: (MonadThrow m) => MoneyAmount -> m MoneyAmount
 roundMoneyAmount arg@(MoneyAmount raw) =

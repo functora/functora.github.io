@@ -371,16 +371,17 @@ mkSubmitCounterOrder submit env id0 rates opts = do
   case orderBuyOrSell remOrder of
     Buy | orderStatus remOrder == Executed -> do
       counter <-
-        newCounterOrder
+        mkCounterOrder
           CounterArgs
-            { counterArgsEnterGrossBaseGain =
+            { counterArgsEnterBuyOrSell = Buy,
+              counterArgsEnterGrossBase =
                 orderBaseAmount remOrder,
               counterArgsEnterQuotePerBase =
                 orderRate remOrder,
               counterArgsRates =
                 rates
             }
-      let exitAmt = counterExitNetBaseLoss counter
+      let exitAmt = counterExitGrossBase counter
       let exitRate = counterExitQuotePerBase counter
       currentRate <-
         marketAveragePrice

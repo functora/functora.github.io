@@ -62,6 +62,7 @@ import Database.Esqueleto.Legacy as X
     max_,
     min_,
     notIn,
+    not_,
     nothing,
     offset,
     on,

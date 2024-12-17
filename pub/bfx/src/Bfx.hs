@@ -26,8 +26,8 @@ module Bfx
     candlesLast,
     candlesHist,
     tickers,
-    MinOrderArgs (..),
-    mkMinOrder,
+    MkOrder (..),
+    mkOrder,
     module X,
   )
 where
@@ -580,10 +580,11 @@ tickers =
     ]
     emptyReq
 
-data MinOrderArgs = MinOrderArgs
-  { minOrderArgsFee :: FeeRate,
-    minOrderArgsBuyOrSell :: BuyOrSell,
-    minOrderArgsCurrencyPair :: CurrencyPair
+data MkOrder = MkOrder
+  { mkOrderFee :: FeeRate,
+    mkOrderBuyOrSell :: BuyOrSell,
+    mkOrderNetBaseAmt :: Maybe MoneyAmount,
+    mkOrderCurrencyPair :: CurrencyPair
   }
   deriving stock
     ( Eq,
@@ -594,43 +595,48 @@ data MinOrderArgs = MinOrderArgs
       Generic
     )
 
-mkMinOrder ::
+mkOrder ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  MinOrderArgs ->
+  MkOrder ->
   m SubmitOrder.Request
-mkMinOrder args = do
-  syms <- symbolsDetails
-  minBaseAmt <-
+mkOrder args = do
+  netBaseAmt <-
     maybe
-      (throwString $ inspect @Text sym <> " is missing!")
-      (pure . currencyPairMinOrderBaseAmt)
-      $ Map.lookup sym syms
-  baseAmt <-
+      ( do
+          syms <- symbolsDetails
+          maybe
+            (throwString $ inspect @Text sym <> " is missing!")
+            (pure . currencyPairMinOrderBaseAmt)
+            $ Map.lookup sym syms
+      )
+      pure
+      $ mkOrderNetBaseAmt args
+  grossBaseAmt <-
     case bos of
       Buy ->
         tweakMoneyAmount Buy
           . MoneyAmount
-          $ unMoneyAmount minBaseAmt
-          / (1 - unFeeRate (minOrderArgsFee args))
+          $ unMoneyAmount netBaseAmt
+          / (1 - unFeeRate (mkOrderFee args))
       Sell ->
-        pure minBaseAmt
+        pure netBaseAmt
   price <-
     Bfx.marketAveragePrice
       MarketAveragePrice.Request
         { MarketAveragePrice.buyOrSell = bos,
-          MarketAveragePrice.baseAmount = baseAmt,
+          MarketAveragePrice.baseAmount = grossBaseAmt,
           MarketAveragePrice.symbol = sym
         }
   pure
     SubmitOrder.Request
       { SubmitOrder.buyOrSell = bos,
-        SubmitOrder.baseAmount = baseAmt,
+        SubmitOrder.baseAmount = grossBaseAmt,
         SubmitOrder.symbol = sym,
         SubmitOrder.rate = price,
         SubmitOrder.options = SubmitOrder.optsDef
       }
   where
-    bos = minOrderArgsBuyOrSell args
-    sym = minOrderArgsCurrencyPair args
+    bos = mkOrderBuyOrSell args
+    sym = mkOrderCurrencyPair args

@@ -125,17 +125,18 @@ spec = before sysEnv $ do
   it "candlesHist succeeds" . const $ do
     res <- tryAny $ Bfx.candlesHist Ctf1h adaBtc Candles.optsDef
     res `shouldSatisfy` isRight
-  it "mkMinOrder" . const $ do
+  it "mkOrder" . const $ do
     let req =
-          Bfx.MinOrderArgs
-            { Bfx.minOrderArgsFee = FeeRate 0.001,
-              Bfx.minOrderArgsBuyOrSell = Buy,
-              Bfx.minOrderArgsCurrencyPair = adaBtc
+          Bfx.MkOrder
+            { Bfx.mkOrderFee = FeeRate 0.001,
+              Bfx.mkOrderBuyOrSell = Buy,
+              Bfx.mkOrderNetBaseAmt = Nothing,
+              Bfx.mkOrderCurrencyPair = adaBtc
             }
-    buyRes <- Bfx.mkMinOrder req
-    SubmitOrder.baseAmount buyRes `shouldBe` MoneyAmount 4.00400401
-    sellRes <- Bfx.mkMinOrder req {Bfx.minOrderArgsBuyOrSell = Sell}
-    SubmitOrder.baseAmount sellRes `shouldBe` MoneyAmount 4
+    buy <- Bfx.mkOrder req
+    SubmitOrder.baseAmount buy `shouldBe` MoneyAmount 4.00400401
+    sell <- Bfx.mkOrder req {Bfx.mkOrderBuyOrSell = Sell}
+    SubmitOrder.baseAmount sell `shouldBe` MoneyAmount 4
 
 --  describe "End2End" $ do
 --    itRight "submitOrderMaker" $ \env -> do

@@ -348,6 +348,8 @@ data CurrencyPairConf = CurrencyPairConf
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 

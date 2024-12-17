@@ -104,3 +104,11 @@ deriving newtype instance PersistFieldSql QuotePerBase
 deriving newtype instance PersistField CurrencyCode
 
 deriving newtype instance PersistFieldSql CurrencyCode
+
+deriving newtype instance PersistField FeeRate
+
+deriving newtype instance PersistFieldSql FeeRate
+
+deriving newtype instance PersistField ProfitRate
+
+deriving newtype instance PersistFieldSql ProfitRate

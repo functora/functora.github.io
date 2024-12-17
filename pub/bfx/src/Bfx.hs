@@ -26,6 +26,8 @@ module Bfx
     candlesLast,
     candlesHist,
     tickers,
+    MinOrderArgs (..),
+    mkMinOrder,
     module X,
   )
 where
@@ -577,3 +579,58 @@ tickers =
     [ SomeQueryParam "symbols" ("ALL" :: Text)
     ]
     emptyReq
+
+data MinOrderArgs = MinOrderArgs
+  { minOrderArgsFee :: FeeRate,
+    minOrderArgsBuyOrSell :: BuyOrSell,
+    minOrderArgsCurrencyPair :: CurrencyPair
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic
+    )
+
+mkMinOrder ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  MinOrderArgs ->
+  m SubmitOrder.Request
+mkMinOrder args = do
+  syms <- symbolsDetails
+  minBaseAmt <-
+    maybe
+      (throwString $ inspect @Text sym <> " is missing!")
+      (pure . currencyPairMinOrderBaseAmt)
+      $ Map.lookup sym syms
+  baseAmt <-
+    case bos of
+      Buy ->
+        tweakMoneyAmount Buy
+          . MoneyAmount
+          $ unMoneyAmount minBaseAmt
+          / (1 - unFeeRate (minOrderArgsFee args))
+      Sell ->
+        pure minBaseAmt
+  price <-
+    Bfx.marketAveragePrice
+      MarketAveragePrice.Request
+        { MarketAveragePrice.buyOrSell = bos,
+          MarketAveragePrice.baseAmount = baseAmt,
+          MarketAveragePrice.symbol = sym
+        }
+  pure
+    SubmitOrder.Request
+      { SubmitOrder.buyOrSell = bos,
+        SubmitOrder.baseAmount = baseAmt,
+        SubmitOrder.symbol = sym,
+        SubmitOrder.rate = price,
+        SubmitOrder.options = SubmitOrder.optsDef
+      }
+  where
+    bos = minOrderArgsBuyOrSell args
+    sym = minOrderArgsCurrencyPair args

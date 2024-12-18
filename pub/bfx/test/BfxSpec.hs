@@ -101,18 +101,6 @@ spec = before sysEnv $ do
   it "getOrder fails" $ \env -> do
     res <- tryAny . Bfx.getOrder env $ OrderId 0
     res `shouldSatisfy` isLeft
-  it "submitCounterOrderMaker fails" $ \env -> do
-    res <-
-      tryAny
-        $ Bfx.submitCounterOrderMaker
-          env
-          (OrderId 0)
-          CounterRates
-            { counterRatesFee = FeeRate 0,
-              counterRatesProfit = ProfitRate 0
-            }
-          SubmitOrder.optsPostOnly
-    res `shouldSatisfy` isLeft
   it "wallets succeeds" $ \env -> do
     res <- tryAny $ Bfx.wallets env
     res `shouldSatisfy` isRight

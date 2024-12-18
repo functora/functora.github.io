@@ -3,6 +3,7 @@
 module Bfx.TestEnv
   ( adaBtc,
     btcAda,
+    btcUsd,
     testAdaAmt,
   )
 where
@@ -18,6 +19,10 @@ adaBtc =
 btcAda :: CurrencyPair
 btcAda =
   either impureThrow id $ newCurrencyPair "BTCADA"
+
+btcUsd :: CurrencyPair
+btcUsd =
+  either impureThrow id $ newCurrencyPair "BTCUSD"
 
 testAdaAmt :: MoneyAmount
 testAdaAmt =

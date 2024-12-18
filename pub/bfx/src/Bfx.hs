@@ -18,8 +18,6 @@ module Bfx
     cancelOrderById,
     cancelOrderByClientId,
     cancelOrderByGroupId,
-    submitCounterOrder,
-    submitCounterOrderMaker,
     dumpIntoQuote,
     dumpIntoQuoteMaker,
     netWorth,
@@ -28,6 +26,8 @@ module Bfx
     tickers,
     MkOrder (..),
     mkOrder,
+    MkCounterOrder (..),
+    mkCounterOrder,
     module X,
   )
 where
@@ -332,79 +332,6 @@ cancelOrderByGroupId env gid = do
     . CancelOrderMulti.ByOrderGroupId
     $ Set.singleton gid
 
-submitCounterOrder ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Env ->
-  OrderId ->
-  CounterRates ->
-  SubmitOrder.Options ->
-  m Order
-submitCounterOrder =
-  mkSubmitCounterOrder submitOrder
-
-submitCounterOrderMaker ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  Env ->
-  OrderId ->
-  CounterRates ->
-  SubmitOrder.Options ->
-  m Order
-submitCounterOrderMaker =
-  mkSubmitCounterOrder submitOrderMaker
-
-mkSubmitCounterOrder ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  ( Env -> SubmitOrder.Request -> m Order
-  ) ->
-  Env ->
-  OrderId ->
-  CounterRates ->
-  SubmitOrder.Options ->
-  m Order
-mkSubmitCounterOrder submit env id0 rates opts = do
-  remOrder <- getOrder env id0
-  let sym = orderSymbol remOrder
-  case orderBuyOrSell remOrder of
-    Buy | orderStatus remOrder == Executed -> do
-      counter <-
-        mkCounterOrder
-          CounterArgs
-            { counterArgsEnterBuyOrSell = Buy,
-              counterArgsEnterGrossBase =
-                orderBaseAmount remOrder,
-              counterArgsEnterQuotePerBase =
-                orderRate remOrder,
-              counterArgsRates =
-                rates
-            }
-      let exitAmt = counterExitGrossBase counter
-      let exitRate = counterExitQuotePerBase counter
-      currentRate <-
-        marketAveragePrice
-          MarketAveragePrice.Request
-            { MarketAveragePrice.buyOrSell = Sell,
-              MarketAveragePrice.baseAmount = exitAmt,
-              MarketAveragePrice.symbol = sym
-            }
-      submit
-        env
-        SubmitOrder.Request
-          { SubmitOrder.buyOrSell = Sell,
-            SubmitOrder.baseAmount = exitAmt,
-            SubmitOrder.symbol = sym,
-            SubmitOrder.rate = max exitRate currentRate,
-            SubmitOrder.options = opts
-          }
-    _ ->
-      throw
-        $ ErrorRemoteOrderState remOrder
-
 mkDumpIntoQuote ::
   ( MonadThrow m,
     MonadUnliftIO m
@@ -640,3 +567,114 @@ mkOrder args = do
   where
     bos = mkOrderBuyOrSell args
     sym = mkOrderCurrencyPair args
+
+data MkCounterOrder = MkCounterOrder
+  { mkCounterOrderEnterBuyOrSell :: BuyOrSell,
+    mkCounterOrderEnterGrossBase :: MoneyAmount,
+    mkCounterOrderEnterQuotePerBase :: QuotePerBase,
+    mkCounterOrderCurrencyPair :: CurrencyPair,
+    mkCounterOrderEnterFee :: FeeRate,
+    mkCounterOrderExitFee :: FeeRate,
+    mkCounterOrderProfit :: ProfitRate
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic
+    )
+
+mkCounterOrder ::
+  ( MonadThrow m,
+    MonadUnliftIO m
+  ) =>
+  MkCounterOrder ->
+  m SubmitOrder.Request
+mkCounterOrder args = do
+  exitBase <-
+    tweakMoneyAmount exitBos exitGrossBase
+  exitRate <-
+    roundQuotePerBase
+      . QuotePerBase
+      $ unMoneyAmount exitGrossQuote
+      / unMoneyAmount exitBase
+  currentRate <-
+    marketAveragePrice
+      MarketAveragePrice.Request
+        { MarketAveragePrice.buyOrSell = exitBos,
+          MarketAveragePrice.baseAmount = exitBase,
+          MarketAveragePrice.symbol = sym
+        }
+  let bestRate =
+        case exitBos of
+          Buy -> min exitRate currentRate
+          Sell -> max exitRate currentRate
+  pure
+    SubmitOrder.Request
+      { SubmitOrder.buyOrSell = exitBos,
+        SubmitOrder.baseAmount = exitBase,
+        SubmitOrder.symbol = sym,
+        SubmitOrder.rate = bestRate,
+        SubmitOrder.options = SubmitOrder.optsDef
+      }
+  where
+    sym :: CurrencyPair
+    sym = mkCounterOrderCurrencyPair args
+    enterBos :: BuyOrSell
+    enterBos = mkCounterOrderEnterBuyOrSell args
+    exitBos :: BuyOrSell
+    exitBos = nextEnum enterBos
+    enterRate :: QuotePerBase
+    enterRate = mkCounterOrderEnterQuotePerBase args
+    enterBase :: MoneyAmount
+    enterBase = mkCounterOrderEnterGrossBase args
+    enterNetLoss :: MoneyAmount
+    enterNetLoss =
+      MoneyAmount $ case enterBos of
+        Buy ->
+          -- Quote
+          unMoneyAmount enterBase
+            * unQuotePerBase enterRate
+        Sell ->
+          -- Base
+          unMoneyAmount enterBase
+    enterNetGain :: MoneyAmount
+    enterNetGain =
+      MoneyAmount $ case enterBos of
+        Buy ->
+          -- Base
+          unMoneyAmount enterBase
+            * (1 - unFeeRate enterFeeRate)
+        Sell ->
+          -- Quote
+          unMoneyAmount enterBase
+            * unQuotePerBase enterRate
+            * (1 - unFeeRate enterFeeRate)
+    exitGrossGain :: MoneyAmount
+    exitGrossGain =
+      --
+      -- Buy = Quote
+      -- Sell = Base
+      --
+      MoneyAmount
+        $ unMoneyAmount enterNetLoss
+        * (1 + unProfitRate profitRate)
+        / (1 - unFeeRate exitFeeRate)
+    exitGrossBase :: MoneyAmount
+    exitGrossBase =
+      case enterBos of
+        Buy -> enterNetGain
+        Sell -> exitGrossGain
+    exitGrossQuote :: MoneyAmount
+    exitGrossQuote =
+      case enterBos of
+        Buy -> exitGrossGain
+        Sell -> enterNetGain
+    enterFeeRate :: FeeRate
+    enterFeeRate = mkCounterOrderEnterFee args
+    exitFeeRate :: FeeRate
+    exitFeeRate = mkCounterOrderExitFee args
+    profitRate :: ProfitRate
+    profitRate = mkCounterOrderProfit args

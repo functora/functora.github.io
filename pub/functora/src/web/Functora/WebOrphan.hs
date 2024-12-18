@@ -8,7 +8,7 @@ import Functora.Prelude
 import qualified Data.Data as Data
 import qualified Data.Streaming.Zlib as Zlib
 import qualified Network.HTTP.Client as Web
-#if __GLASGOW_HASKELL__ < 904
+#if __GLASGOW_HASKELL__ < 900
 import qualified Network.HTTP.Types as Web
 #endif
 #endif
@@ -35,7 +35,7 @@ deriving stock instance Data Web.HttpExceptionContent
 
 deriving stock instance Data Zlib.ZlibException
 
-#if __GLASGOW_HASKELL__ < 904
+#if __GLASGOW_HASKELL__ < 900
 deriving stock instance Data Web.Status
 #endif
 

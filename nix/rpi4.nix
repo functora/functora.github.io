@@ -66,7 +66,6 @@ in {
     git
     vim
     htop
-    cpuid
     udiskie
     litecli
     libraspberrypi

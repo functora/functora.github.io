@@ -4,7 +4,7 @@ in
   {
     mini ? true,
     vimBackground ? "light",
-    vimColorScheme ? "everforest",
+    vimColorScheme ? "PaperColor",
   }:
     with pkgs; let
       pkg = import ./. {

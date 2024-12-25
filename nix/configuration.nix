@@ -567,6 +567,7 @@ in {
         zip
         unzip
         pciutils
+        docker-client
         docker-compose
         htop
         lsof

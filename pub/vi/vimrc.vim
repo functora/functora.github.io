@@ -387,7 +387,8 @@ endif
 
 syntax on
 set t_Co=256
-exe 'colorscheme ' . get(g:, "vimColorScheme", "everforest")
+set notermguicolors
+exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[
 nnoremap <space> <Nop>

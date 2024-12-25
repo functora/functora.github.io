@@ -3,7 +3,9 @@
 #
 # curl -L https://raw.githubusercontent.com/functora/functora.github.io/refs/heads/master/nix/rpi4.nix > /etc/nixos/configuration.nix
 #
-# NOTE : There is HDMI/wifi interference issue on rpi4. If wifi is not working, set lower resolution:
+# NOTE : Use USB-2.0 instead of USB-3.0 to reduce power consumption to avoid problems with wifi!
+#
+# NOTE : There might be HDMI/wifi interference issue on rpi4. If wifi is not working, set lower resolution:
 #
 # - Mount boot partition.
 # - Add hdmi_safe=1 line to config.txt.
@@ -66,7 +68,6 @@ in {
     git
     vim
     htop
-    cpuid
     udiskie
     litecli
     libraspberrypi

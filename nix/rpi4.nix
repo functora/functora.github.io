@@ -54,7 +54,10 @@ in {
     users."${user}" = {
       isNormalUser = true;
       password = password;
-      extraGroups = ["wheel"];
+      extraGroups = [
+        "wheel"
+        "docker"
+      ];
     };
   };
 
@@ -70,6 +73,7 @@ in {
     htop
     udiskie
     litecli
+    docker-client
     libraspberrypi
   ];
   #
@@ -97,4 +101,8 @@ in {
     settings.KbdInteractiveAuthentication = false;
     settings.PermitRootLogin = "no";
   };
+  #
+  # Docker
+  #
+  virtualisation.docker.enable = true;
 }

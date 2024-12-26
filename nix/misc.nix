@@ -91,6 +91,10 @@ in
         config = mkIf config.services."${srv}".enable {
           virtualisation.oci-containers.containers.${srv} = {
             image = img;
+            #
+            # TODO : remove after bugfix https://github.com/NixOS/nixpkgs/issues/272480
+            #
+            extraOptions = ["--network=host"];
             volumes =
               (map (x: x + ":" + x + ":ro") cfg)
               ++ (map (x: x + ":" + x) mnt);

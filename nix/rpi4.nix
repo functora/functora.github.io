@@ -56,7 +56,7 @@ in {
       password = password;
       extraGroups = [
         "wheel"
-        "docker"
+        "podman"
       ];
     };
   };
@@ -102,7 +102,10 @@ in {
     settings.PermitRootLogin = "no";
   };
   #
-  # Docker
+  # Containers
   #
-  virtualisation.docker.enable = true;
+  virtualisation.containers.enable = true;
+  virtualisation.podman.enable = true;
+  virtualisation.podman.dockerCompat = true;
+  virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
 }

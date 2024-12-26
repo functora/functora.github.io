@@ -485,9 +485,9 @@ in {
     networking.firewall.enable = true;
     networking.nameservers = ["8.8.8.8" "8.8.4.4"];
     virtualisation.virtualbox.host.enable = true;
-    virtualisation.docker.enable = false;
+    virtualisation.containers.enable = true;
     virtualisation.podman.enable = true;
-    virtualisation.podman.dockerSocket.enable = true;
+    virtualisation.podman.dockerCompat = true;
     virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
     users.extraGroups.vboxusers.members = [config.services.functora.userName];
     networking.extraHosts = blocked-hosts;
@@ -500,7 +500,6 @@ in {
         "wheel"
         "input"
         "uinput"
-        "docker"
         "podman"
         "plugdev"
         "adbusers"

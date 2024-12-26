@@ -67,8 +67,8 @@ in
     mkOci = {
       srv,
       img,
-      cfgs ? [],
-      dirs ? [],
+      cfg ? [],
+      mnt ? [],
     }: {
       lib,
       pkgs,
@@ -92,10 +92,10 @@ in
           virtualisation.oci-containers.containers.${srv} = {
             image = img;
             volumes =
-              (map (x: x + ":" + x + ":ro") cfgs)
-              ++ (map (x: x + ":" + x) dirs);
+              (map (x: x + ":" + x + ":ro") cfg)
+              ++ (map (x: x + ":" + x) mnt);
             cmd =
-              concatMap (x: ["-f" x]) cfgs;
+              concatMap (x: ["-f" x]) cfg;
           };
         };
       };

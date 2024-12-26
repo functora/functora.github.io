@@ -64,4 +64,39 @@ in
           };
         };
       };
+    mkOci = {
+      srv,
+      img,
+      cfgs ? [],
+      dirs ? [],
+    }: {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+      with lib; {
+        imports = [
+        ];
+
+        options = {
+          services."${srv}" = {
+            enable = mkOption {
+              default = false;
+              type = types.bool;
+            };
+          };
+        };
+
+        config = mkIf config.services."${srv}".enable {
+          virtualisation.oci-containers.containers.${srv} = {
+            image = img;
+            volumes =
+              (map (x: x + ":" + x + ":ro") cfgs)
+              ++ (map (x: x + ":" + x) dirs);
+            cmd =
+              concatMap (x: ["-f" x]) cfgs;
+          };
+        };
+      };
   }

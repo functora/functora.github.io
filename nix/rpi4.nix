@@ -70,7 +70,7 @@ in {
   environment.systemPackages = with pkgs; [
     git
     vim
-    htop
+    btop
     udiskie
     litecli
     docker-client

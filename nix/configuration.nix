@@ -568,7 +568,7 @@ in {
         pciutils
         docker-client
         docker-compose
-        htop
+        btop
         lsof
         wget
         #

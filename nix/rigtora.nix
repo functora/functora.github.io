@@ -54,7 +54,7 @@ in {
     environment.systemPackages = with pkgs; [
       git
       vim
-      htop
+      btop
       cpuid
       udiskie
       litecli

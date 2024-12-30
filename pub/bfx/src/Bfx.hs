@@ -256,9 +256,15 @@ submitOrderMaker ::
   Env ->
   SubmitOrder.Request ->
   m Order
-submitOrderMaker env =
+submitOrderMaker env req = do
+  next <- tweakQuotePerBase (req ^. #buyOrSell) (req ^. #rate)
   submitOrderMakerRec 0 env
-    . (#options . #flags %~ Set.insert PostOnly)
+    $ req
+    & #rate
+    .~ next
+    & #options
+    . #flags
+    %~ Set.insert PostOnly
 
 submitOrderMakerRec ::
   ( MonadThrow m,

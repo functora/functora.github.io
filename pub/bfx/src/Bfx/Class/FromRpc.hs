@@ -9,7 +9,6 @@ import qualified Bfx.Data.FeeSummary as FeeSummary
 import Bfx.Data.Kind
 import Bfx.Data.Type
 import qualified Bfx.Data.Wallets as Wallets
-import Bfx.Data.Web
 import Bfx.Math
 import Bfx.Parser
 import Data.Aeson.Lens

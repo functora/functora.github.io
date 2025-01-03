@@ -31,6 +31,7 @@ module Bfx.Data.Type
 
     -- * Misc
     -- $misc
+    RawResponse (..),
     PltStatus (..),
     Error (..),
     emptyReq,
@@ -412,6 +413,18 @@ data Ticker = Ticker
 -- $misc
 -- General utility data used elsewhere.
 
+newtype RawResponse = RawResponse
+  { unRawResponse :: BL.ByteString
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic
+    )
+
 data PltStatus
   = PltOperative
   | PltMaintenance
@@ -424,8 +437,8 @@ data PltStatus
 
 data Error
   = ErrorWebException HttpException
-  | ErrorWebPub Web.Request (Web.Response BL.ByteString)
-  | ErrorWebPrv BL.ByteString Web.Request (Web.Response BL.ByteString)
+  | ErrorWebPub Web.Request RawResponse (Web.Response BL.ByteString)
+  | ErrorWebPrv BL.ByteString Web.Request RawResponse (Web.Response BL.ByteString)
   | ErrorParser Web.Request (Web.Response BL.ByteString) Text
   | ErrorMath Text
   | ErrorTryFrom SomeException

@@ -5,7 +5,6 @@ module Bfx.Data.Web
     ApiKey (..),
     RequestMethod (..),
     BaseUrl (..),
-    RawResponse (..),
     Nonce,
     unNonce,
     NonceGen,
@@ -19,7 +18,6 @@ where
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
 import Functora.Cfg
 import Functora.Prelude
 import qualified Prelude
@@ -73,19 +71,6 @@ newtype BaseUrl = BaseUrl
       Show,
       Read,
       IsString
-    )
-
-newtype RawResponse = RawResponse
-  { unRawResponse :: BL.ByteString
-  }
-  deriving newtype
-    ( Eq,
-      Ord,
-      Show
-    )
-  deriving stock
-    ( Data,
-      Generic
     )
 
 newtype Nonce = Nonce

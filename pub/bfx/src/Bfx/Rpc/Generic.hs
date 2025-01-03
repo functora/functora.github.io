@@ -72,7 +72,7 @@ pub qs req = do
         $ fromRpc @method rawRes
     else
       throw
-        $ ErrorWebPub webReq1 webRes
+        $ ErrorWebPub webReq1 rawRes webRes
 
 prv ::
   forall method req res m.
@@ -135,7 +135,7 @@ prv env req = do
           $ fromRpc @method rawRes
       else
         throw
-          $ ErrorWebPrv reqBody webReq1 webRes
+          $ ErrorWebPrv reqBody webReq1 rawRes webRes
 
 sign ::
   PrvKey ->

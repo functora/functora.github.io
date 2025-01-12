@@ -119,12 +119,23 @@ spec = before sysEnv $ do
             { Bfx.mkOrderFee = FeeRate 0.001,
               Bfx.mkOrderBuyOrSell = Buy,
               Bfx.mkOrderNetBaseAmt = Nothing,
+              Bfx.mkOrderNetQuoteAmt = Nothing,
               Bfx.mkOrderCurrencyPair = adaBtc
             }
-    buy <- Bfx.mkOrder req
-    SubmitOrder.baseAmount buy `shouldBe` MoneyAmount 4.00400401
-    sell <- Bfx.mkOrder req {Bfx.mkOrderBuyOrSell = Sell}
-    SubmitOrder.baseAmount sell `shouldBe` MoneyAmount 4
+    -- let reqQuote = req {Bfx.mkOrderNetQuoteAmt = Just $ MoneyAmount 1}
+    -- buyQuote <- Bfx.mkOrder reqQuote
+    -- SubmitOrder.baseAmount buyQuote `shouldBe` MoneyAmount 10.01001002
+    -- sellQuote <- Bfx.mkOrder reqQuote {Bfx.mkOrderBuyOrSell = Sell}
+    -- SubmitOrder.baseAmount sellQuote `shouldBe` MoneyAmount 10
+    buyDef <- Bfx.mkOrder req
+    SubmitOrder.baseAmount buyDef `shouldBe` MoneyAmount 4.00400401
+    sellDef <- Bfx.mkOrder req {Bfx.mkOrderBuyOrSell = Sell}
+    SubmitOrder.baseAmount sellDef `shouldBe` MoneyAmount 4
+    let reqBase = req {Bfx.mkOrderNetBaseAmt = Just $ MoneyAmount 10}
+    buyBase <- Bfx.mkOrder reqBase
+    SubmitOrder.baseAmount buyBase `shouldBe` MoneyAmount 10.01001002
+    sellBase <- Bfx.mkOrder reqBase {Bfx.mkOrderBuyOrSell = Sell}
+    SubmitOrder.baseAmount sellBase `shouldBe` MoneyAmount 10
 
 --  describe "End2End" $ do
 --    itRight "submitOrderMaker" $ \env -> do

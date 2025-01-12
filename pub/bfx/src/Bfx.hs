@@ -516,7 +516,11 @@ tickers =
 data MkOrder = MkOrder
   { mkOrderFee :: FeeRate,
     mkOrderBuyOrSell :: BuyOrSell,
+    --
+    -- NOTE : base amt has higher priority!
+    --
     mkOrderNetBaseAmt :: Maybe MoneyAmount,
+    mkOrderNetQuoteAmt :: Maybe MoneyAmount,
     mkOrderCurrencyPair :: CurrencyPair
   }
   deriving stock
@@ -539,10 +543,28 @@ mkOrder args = do
     maybe
       ( do
           syms <- symbolsDetails
+          minBase <-
+            maybe
+              (throwString $ inspect @Text sym <> " is missing!")
+              (pure . currencyPairMinOrderBaseAmt)
+              $ Map.lookup sym syms
           maybe
-            (throwString $ inspect @Text sym <> " is missing!")
-            (pure . currencyPairMinOrderBaseAmt)
-            $ Map.lookup sym syms
+            (pure minBase)
+            ( \netQuoteAmt -> do
+                price <-
+                  Bfx.marketAveragePrice
+                    MarketAveragePrice.Request
+                      { MarketAveragePrice.buyOrSell = bos,
+                        MarketAveragePrice.baseAmount = minBase,
+                        MarketAveragePrice.symbol = sym
+                      }
+                pure
+                  . max minBase
+                  . MoneyAmount
+                  $ unMoneyAmount netQuoteAmt
+                  / unQuotePerBase price
+            )
+            $ mkOrderNetQuoteAmt args
       )
       pure
       $ mkOrderNetBaseAmt args

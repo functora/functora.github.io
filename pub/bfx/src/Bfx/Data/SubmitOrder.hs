@@ -29,6 +29,7 @@ data Options = Options
   { stopLoss :: Maybe QuotePerBase,
     clientId :: Maybe OrderClientId,
     groupId :: Maybe OrderGroupId,
+    affCode :: Maybe AffCode,
     flags :: Set OrderFlag
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
@@ -39,6 +40,7 @@ optsDef =
     { stopLoss = Nothing,
       clientId = Nothing,
       groupId = Nothing,
+      affCode = Nothing,
       flags = mempty
     }
 
@@ -48,6 +50,7 @@ optsPostOnly =
     { stopLoss = Nothing,
       clientId = Nothing,
       groupId = Nothing,
+      affCode = Nothing,
       flags = [PostOnly]
     }
 
@@ -57,6 +60,7 @@ optsPostOnlyStopLoss sl =
     { stopLoss = Just sl,
       clientId = Nothing,
       groupId = Nothing,
+      affCode = Nothing,
       flags = [PostOnly, Oco]
     }
 
@@ -89,5 +93,9 @@ instance ToJSON Request where
         mempty
         (\x -> ["price_oco_stop" A..= toTextParam x])
         (stopLoss opts)
+      <> maybe
+        mempty
+        (\x -> ["meta" A..= A.object ["aff_code" A..= unAffCode x]])
+        (affCode opts)
     where
       opts = options req

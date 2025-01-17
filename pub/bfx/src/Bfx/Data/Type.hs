@@ -13,6 +13,7 @@ module Bfx.Data.Type
     unOrderFlagSet,
     OrderStatus (..),
     newOrderStatus,
+    AffCode (..),
 
     -- * Trading
     -- $trading
@@ -241,6 +242,26 @@ newOrderStatus = \case
   "RSN_DUST" -> Right RsnDust
   "RSN_PAUSE" -> Right RsnPause
   x -> Left $ TryFromException x Nothing
+
+newtype AffCode = AffCode
+  { unAffCode :: Text
+  }
+  deriving newtype
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      ToJSON,
+      ToJSONKey,
+      FromJSON,
+      FromJSONKey,
+      HasCodec,
+      HasItemCodec
+    )
+  deriving stock
+    ( Data,
+      Generic
+    )
 
 -- $trading
 -- Data related to trading and money.

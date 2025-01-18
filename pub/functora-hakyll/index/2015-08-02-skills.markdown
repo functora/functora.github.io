@@ -15,7 +15,7 @@ fontawesome: "fab fa-bitcoin"
 
 <p class="padding-left">I am also qualified in other useful areas:</p>
 
-- [Nix](https://nixos.org/) and [NixOS](https://nixos.org/) - Strong medium level. Nix is the best tool for deterministic builds, tests and development environments. I'm using NixOS daily.
+- [Nix](https://nixos.org/) and [NixOS](https://nixos.org/) - Strong medium level. Nix is the best tool for deterministic builds, tests and development environments. I am using NixOS daily.
 - [Bitcoin](https://bitcoin.org/en/) and [Lightning Network](https://lightning.network/) - Advanced level as application developer (not as protocol developer). Bitcoin is the greatest achievement of the new millennium, which brings financial freedom and sovereignty back to the people.
 - [PostgreSQL](https://www.postgresql.org/) and [SQLite](https://sqlite.org/) - Strong medium level. I am not database expert, but I am using everything what software developer should use to manipulate data storage. Queries, transactions, joins, locks.
 - [Docker](https://www.docker.com/) and [Swarm](https://docs.docker.com/engine/swarm/) - Advanced close to expert level. I am using Docker and Swarm for development, builds and production. Docker is a very handy tool for MacOS and Linux compatibility.

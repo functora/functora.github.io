@@ -56,8 +56,8 @@
           "bitchute.com"
           "youtube.com"
           "facebook.com"
-          "telegram.org"
-          "t.me"
+          # "telegram.org"
+          # "t.me"
         ]
         else []
       ));

@@ -257,6 +257,26 @@
       _         _         @ltab     _         @ltab     _         _              _    _    _
     )
   '';
+  baseBorg = {
+    repo = "/mnt/backup/borg";
+    user = config.services.functora.userName;
+    doInit = true;
+    startAt = "daily";
+    compression = "auto,lzma";
+    encryption.mode = "none";
+    prune.keep = {
+      daily = 7;
+      weekly = 4;
+      monthly = 3;
+    };
+  };
+  mkLocalBorg = cfg: {
+    "local-${cfg.name}" =
+      baseBorg
+      // {
+        paths = cfg.paths;
+      };
+  };
 in {
   imports =
     [
@@ -280,6 +300,17 @@ in {
     blockHosts = mkOption {
       type = types.bool;
       default = true;
+    };
+    localBorg = mkOption {
+      type = types.listOf (types.submodule {
+        options.name = mkOption {
+          type = types.str;
+        };
+        options.paths = mkOption {
+          type = types.listOf types.str;
+        };
+      });
+      default = [];
     };
   };
 
@@ -915,5 +946,11 @@ in {
       displayManager.defaultSession = "sway";
       displayManager.sessionPackages = [pkgs.sway];
     };
+    #
+    # Borg
+    #
+    services.borgbackup.jobs =
+      lib.mkMerge
+      (map mkLocalBorg config.services.functora.localBorg);
   };
 }

@@ -649,7 +649,6 @@ in {
         via
         vial
         usbutils
-        signal-desktop
         gnome.simple-scan
         system-config-printer
         pulsemixer
@@ -729,12 +728,12 @@ in {
             show_volume_when_muted = true;
             icons_format = "";
           }
-          {
-            block = "time";
-            format = " $timestamp.datetime(f:'%a %Y-%m-%d %R') ";
-            interval = 60;
-            icons_format = "";
-          }
+          # {
+          #   block = "time";
+          #   format = " $timestamp.datetime(f:'%a %Y-%m-%d %R') ";
+          #   interval = 60;
+          #   icons_format = "";
+          # }
         ];
       };
       services.udiskie.enable = true;

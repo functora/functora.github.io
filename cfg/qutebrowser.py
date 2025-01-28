@@ -1981,7 +1981,8 @@ c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.searchengines = {
         'DEFAULT': 'https://google.com/search?q={}',
-        'ggl': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
+        'noai': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
+        'ggl': 'https://google.com/search?q={}',
         'ddg': 'https://duckduckgo.com/?q={}',
         'gpt': 'https://chatgpt.com/?model=gpt-4o&q={}',
         'bing': 'https://www.bing.com/search?showconv=1&sendquery=1&q={}',
@@ -1997,7 +1998,9 @@ c.url.searchengines = {
         'github': 'https://github.com/search?type=code&q={}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
-        'nixpkgs': 'https://search.nixos.org/packages?query={}'
+        'nixpkgs': 'https://search.nixos.org/packages?query={}',
+        'nixos': 'https://search.nixos.org/options?query={}',
+        'home': 'https://home-manager-options.extranix.com/?query={}'
 }
 
 # config.set('content.images', True, '*://*.openai.com/*')

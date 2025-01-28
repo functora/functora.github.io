@@ -8,7 +8,7 @@ extra-source-files:
   README.md
 
 author:             Renzo Carbonara
-maintainer:         renλren.zone
+maintainer:         ren.zone
 copyright:          Copyright (c) Renzo Carbonara 2020
 category:           Cryptography
 build-type:         Simple

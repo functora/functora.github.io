@@ -37,6 +37,12 @@ common pkg
     ghc-options:        -Wno-missing-kind-signatures
     default-extensions: StandaloneKindSignatures
 
+  if impl(ghc >=9.2.8)
+    ghc-options:        -Wno-operator-whitespace
+
+  if impl(ghc >=9.8.2)
+    ghc-options:        -Wno-missing-poly-kind-signatures -Wno-missing-role-annotations
+
   default-extensions:
     AllowAmbiguousTypes
     ConstraintKinds

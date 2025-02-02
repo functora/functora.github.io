@@ -68,6 +68,4 @@ in [
   styleTest
   prettier
   pkgs.alejandra
-  newpkgs.haskellPackages.cabal-fmt
-  pkgs.haskell-language-server
 ]

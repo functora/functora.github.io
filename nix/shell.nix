@@ -3,26 +3,21 @@ with (import ./project.nix {}); let
   newpkgs = import ./newpkgs.nix;
 in
   shellFor {
-    exactDeps = false;
-    withHoogle = false;
     tools = {
+      cabal-install = "latest";
       hspec-discover = "latest";
+      haskell-language-server = "latest";
+      cabal-fmt = "latest";
+      ghcid = "latest";
+      hpack = "latest";
     };
     buildInputs =
       [
-        pkgs.cabal-install
-        pkgs.hpack
         pkgs.hlint
-        pkgs.ghcid
         pkgs.gleam
         pkgs.erlang
         pkgs.elixir
-        pkgs.ollama
-        newpkgs.haskellPackages.cabal2nix
-        newpkgs.nix-prefetch-git
         newpkgs.litecli
-        newpkgs.sqlite
-        newpkgs.sqlite-web
         misc.nix-bundle
       ]
       ++ (import ./tools.nix)

@@ -7,6 +7,7 @@ in
       cabal-install = "latest";
       hspec-discover = "latest";
       haskell-language-server = "latest";
+      implicit-hie = "latest";
       cabal-fmt = "latest";
       ghcid = "latest";
       hpack = "latest";

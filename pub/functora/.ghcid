@@ -1,3 +1,4 @@
+--restart=cfg
 --restart=.ghcid
 --restart=README.md
 --restart=functora.cabal

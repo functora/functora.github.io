@@ -1,0 +1,58 @@
+cradle:
+  cabal:
+    - path: "./"
+      component: "lib:functora"
+
+    - path: "./src/qr"
+      component: "functora:lib:qr"
+
+    - path: "./src/aes"
+      component: "functora:lib:aes"
+
+    - path: "./src/uri"
+      component: "functora:lib:uri"
+
+    - path: "./src/cfg"
+      component: "functora:lib:cfg"
+
+    - path: "./src/web"
+      component: "functora:lib:web"
+
+    - path: "./src/sql"
+      component: "functora:lib:sql"
+
+    - path: "./src/money"
+      component: "functora:lib:money"
+
+    - path: "./src/rates"
+      component: "functora:lib:rates"
+
+    - path: "./src/tags"
+      component: "functora:lib:tags"
+
+    - path: "./src/soplate"
+      component: "functora:lib:soplate"
+
+    - path: "./src/bolt11"
+      component: "functora:lib:bolt11"
+
+    - path: "./src/elm2miso"
+      component: "functora:lib:elm2miso-lib"
+
+    - path: "./src/elm2miso/Main.hs"
+      component: "functora:exe:elm2miso"
+
+    - path: "./src/elm2miso/Functora/Elm2Miso.hs"
+      component: "functora:exe:elm2miso"
+
+    - path: "./src/card"
+      component: "functora:lib:card-lib"
+
+    - path: "./src/card/Main.hs"
+      component: "functora:exe:card"
+
+    - path: "./src/card/Functora/Card.hs"
+      component: "functora:exe:card"
+
+    - path: "src/test"
+      component: "functora:test:functora-test"

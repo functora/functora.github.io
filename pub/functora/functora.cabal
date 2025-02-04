@@ -38,10 +38,14 @@ common pkg
     default-extensions: StandaloneKindSignatures
 
   if impl(ghc >=9.2.8)
-    ghc-options:        -Wno-operator-whitespace
+    ghc-options: -Wno-operator-whitespace
 
   if impl(ghc >=9.8.2)
-    ghc-options:        -Wno-missing-poly-kind-signatures -Wno-missing-role-annotations
+    ghc-options:
+      -Wno-missing-poly-kind-signatures -Wno-missing-role-annotations
+
+  if flag(ghcid)
+    ghc-options: -Wno-unused-packages
 
   default-extensions:
     AllowAmbiguousTypes
@@ -284,6 +288,20 @@ common pkg-elm2miso
     , base
     , regex-compat
 
+common pkg-card
+  import:         pkg
+  hs-source-dirs: src/card
+  build-depends:
+    , base
+    , bytestring
+    , FontyFruity
+    , functora
+    , functora:cfg
+    , JuicyPixels
+    , qrcode-core
+    , qrcode-juicypixels
+    , Rasterific
+
 common pkg-bolt11
   import:         pkg
   hs-source-dirs: src/bolt11
@@ -398,6 +416,12 @@ library elm2miso-lib
   visibility:      public
   exposed-modules: Functora.Elm2Miso
 
+library card-lib
+  import:          pkg-card
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Card
+
 library bolt11
   import:          pkg-bolt11
   build-depends:   functora
@@ -409,6 +433,11 @@ executable elm2miso
   import:        pkg-elm2miso, exe
   main-is:       Main.hs
   other-modules: Functora.Elm2Miso
+
+executable card
+  import:        pkg-card, exe
+  main-is:       Main.hs
+  other-modules: Functora.Card
 
 test-suite functora-test
   import:         pkg
@@ -452,14 +481,14 @@ test-suite functora-test
       pkg-prelude, pkg-qr, pkg-aes,
       pkg-cfg, pkg-web, pkg-sql,
       pkg-money, pkg-rates, pkg-tags,
-      pkg-soplate, pkg-elm2miso, pkg-bolt11,
-      pkg-uri
+      pkg-soplate, pkg-elm2miso, pkg-card,
+      pkg-bolt11, pkg-uri
 
-    ghc-options:   -Wno-unused-packages
     other-modules:
       Functora.Aes
       Functora.AesOrphan
       Functora.Bolt11
+      Functora.Card
       Functora.Cfg
       Functora.CfgOrphan
       Functora.Elm2Miso
@@ -488,6 +517,7 @@ test-suite functora-test
     build-depends:
       , aes
       , bolt11
+      , card-lib
       , cfg
       , elm2miso-lib
       , functora

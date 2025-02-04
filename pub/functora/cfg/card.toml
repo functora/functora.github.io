@@ -1,0 +1,51 @@
+dpi = 96
+width = 2100.0
+height = 1200.0
+padding = 10.0
+headFont = "./fonts/larabiefont.ttf"
+iconFont = "./fonts/devicons.ttf"
+noteFont = "./fonts/rondo.ttf"
+
+[[group]]
+[[group.item]]
+kind = "Head"
+data = "Functora"
+size = 50.0
+[[group.item]]
+kind = "Note"
+data = "Hi-end quality software development."
+size = 20.0
+[[group.item]]
+kind = "Note"
+data = "Reliable. Functional. Pure."
+size = 20.0
+[[group.item]]
+data = "0xe677"
+kind = "Icon"
+size = 300.0
+[[group.item]]
+data = "https://functora.github.io"
+kind = "Qr"
+size = 500.0
+[[group.item]]
+data = "https://functora.github.io"
+kind = "Note"
+size = 50.0
+
+[[group]]
+[[group.item]]
+kind = "Head"
+data = "Converter Web"
+size = 50.0
+[[group.item]]
+data = "0xe636"
+kind = "Icon"
+size = 50.0
+[[group.item]]
+data = "https://functora.github.io/apps/currency-converter"
+kind = "Qr"
+size = 50.0
+[[group.item]]
+data = "https://functora.github.io/apps/currency-converter"
+kind = "Note"
+size = 50.0

@@ -26,19 +26,19 @@ main = withUtf8 $ do
       CliTextConf txt _ -> forM txt unToml
       CliFileConf loc _ -> forM loc $ readFile >=> unToml
   putStrLn $ inspect @Text @Cfg cfg
-  headFont <- mkFont $ cfgHeadFont cfg
-  iconFont <- mkFont $ cfgIconFont cfg
-  noteFont <- mkFont $ cfgNoteFont cfg
+  headFont <- mkFont $ cfg ^. #cfgFont . #cfgFontHead
+  iconFont <- mkFont $ cfg ^. #cfgFont . #cfgFontIcon
+  noteFont <- mkFont $ cfg ^. #cfgFont . #cfgFontNote
   CP.writePng "./img/functora.png"
     $ mkCard
       Env
-        { envDpi = cfgDpi cfg,
-          envWidth = cfgWidth cfg,
-          envHeight = cfgHeight cfg,
-          envPadding = cfgPadding cfg,
-          envHeadFont = headFont,
-          envIconFont = iconFont,
-          envNoteFont = noteFont,
+        { envImg = cfgImg cfg,
+          envFont =
+            Font
+              { fontHead = headFont,
+                fontIcon = iconFont,
+                fontNote = noteFont
+              },
           envGroup = cfgGroup cfg
         }
 
@@ -52,9 +52,9 @@ mkFont =
 mkCard :: Env -> CP.Image CP.PixelRGBA8
 mkCard env =
   R.renderDrawingAtDpi
-    (round $ envWidth env)
-    (round $ envHeight env)
-    (envDpi env)
+    (round $ env ^. #envImg . #imgWidth)
+    (round $ env ^. #envImg . #imgHeight)
+    (env ^. #envImg . #imgDpi)
     white
     . forM_ (zip [0 ..] $ envGroup env)
     . uncurry
@@ -64,11 +64,11 @@ mkGroup :: Env -> Int -> Int -> Group -> R.Drawing CPT.PixelRGBA8 ()
 mkGroup env amt idx (Group items) =
   foldM_ (mkItem env offX) 0 items
   where
-    pad = envPadding env
+    pad = env ^. #envImg . #imgPadding
     offX =
       pad
         + unsafeFrom @Int @Float idx
-        * (envWidth env / unsafeFrom @Int @Float amt)
+        * (env ^. #envImg . #imgWidth / unsafeFrom @Int @Float amt)
 
 mkItem ::
   Env ->
@@ -78,9 +78,9 @@ mkItem ::
   R.Drawing CPT.PixelRGBA8 Float
 mkItem env offX offY item =
   case itemKind item of
-    Head -> mkText env offX offY item $ envHeadFont env
-    Icon -> mkText env offX offY next $ envIconFont env
-    Note -> mkText env offX offY item $ envNoteFont env
+    Head -> mkText env offX offY item $ env ^. #envFont . #fontHead
+    Icon -> mkText env offX offY next $ env ^. #envFont . #fontIcon
+    Note -> mkText env offX offY item $ env ^. #envFont . #fontNote
     Qr -> mkQr env offX offY item
   where
     next = item & #itemData %~ mkHex . from @Text @String
@@ -96,17 +96,14 @@ mkText env offX offY item font = do
   R.withTexture black
     . R.printTextAt
       font
-      (TT.pixelSizeInPointAtDpi size $ envDpi env)
+      (TT.pixelSizeInPointAtDpi size $ env ^. #envImg . #imgDpi)
       (R.V2 offX offN)
     $ from @Text @String text
   pure offN
   where
     text = itemData item
     size = itemSize item
-    offN =
-      offY
-        + envPadding env
-        + size
+    offN = offY + env ^. #envImg . #imgPadding + size
 
 mkQr ::
   Env ->
@@ -116,9 +113,9 @@ mkQr ::
   R.Drawing CPT.PixelRGBA8 Float
 mkQr env offX offY item = do
   R.drawImage img 0 $ R.V2 offX offY
-  pure $ offY + envPadding env + px
+  pure $ offY + env ^. #envImg . #imgPadding + size
   where
-    px = itemSize item
+    size = itemSize item
     qr =
       fromMaybe (error "Can not generate qr!")
         . QR.encodeAutomatic
@@ -127,16 +124,11 @@ mkQr env offX offY item = do
         $ itemData item
     img =
       CPT.promoteImage
-        $ QRJP.toImage 0 (round px `div` QR.qrImageSize qr) qr
+        $ QRJP.toImage 0 (round size `div` QR.qrImageSize qr) qr
 
 data Cfg = Cfg
-  { cfgDpi :: Int,
-    cfgWidth :: Float,
-    cfgHeight :: Float,
-    cfgPadding :: Float,
-    cfgHeadFont :: Text,
-    cfgIconFont :: Text,
-    cfgNoteFont :: Text,
+  { cfgImg :: Img,
+    cfgFont :: CfgFont,
     cfgGroup :: [Group]
   }
   deriving stock
@@ -152,23 +144,42 @@ data Cfg = Cfg
     )
     via GenericType Cfg
 
-data RowOrCol
-  = Row
-  | Col
+data Img = Img
+  { imgDpi :: Int,
+    imgWidth :: Float,
+    imgHeight :: Float,
+    imgPadding :: Float
+  }
   deriving stock
     ( Eq,
       Ord,
       Show,
       Data,
-      Generic,
-      Enum,
-      Bounded
+      Generic
     )
   deriving
     ( HasCodec,
       HasItemCodec
     )
-    via GenericEnum RowOrCol
+    via GenericType Img
+
+data CfgFont = CfgFont
+  { cfgFontHead :: Text,
+    cfgFontIcon :: Text,
+    cfgFontNote :: Text
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Data,
+      Generic
+    )
+  deriving
+    ( HasCodec,
+      HasItemCodec
+    )
+    via GenericType CfgFont
 
 newtype Group = Group
   { groupItem :: [Item]
@@ -225,14 +236,16 @@ data ItemKind
     via GenericEnum ItemKind
 
 data Env = Env
-  { envDpi :: Int,
-    envWidth :: Float,
-    envHeight :: Float,
-    envPadding :: Float,
-    envHeadFont :: TT.Font,
-    envIconFont :: TT.Font,
-    envNoteFont :: TT.Font,
+  { envImg :: Img,
+    envFont :: Font,
     envGroup :: [Group]
+  }
+  deriving stock (Show, Generic)
+
+data Font = Font
+  { fontHead :: TT.Font,
+    fontIcon :: TT.Font,
+    fontNote :: TT.Font
   }
   deriving stock (Show, Generic)
 

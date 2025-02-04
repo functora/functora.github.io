@@ -1,10 +1,13 @@
+[img]
 dpi = 96
 width = 2100.0
 height = 1200.0
 padding = 10.0
-headFont = "./fonts/larabiefont.ttf"
-iconFont = "./fonts/devicons.ttf"
-noteFont = "./fonts/rondo.ttf"
+
+[font]
+head = "./fonts/larabiefont.ttf"
+icon = "./fonts/devicons.ttf"
+note = "./fonts/rondo.ttf"
 
 [[group]]
 [[group.item]]

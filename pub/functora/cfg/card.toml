@@ -2,7 +2,8 @@
 dpi = 96
 width = 2100
 height = 1200
-padding = 10
+padX = 85
+padY = 20
 
 [font]
 head = "./fonts/larabiefont.ttf"
@@ -13,42 +14,76 @@ note = "./fonts/rondo.ttf"
 [[group.item]]
 kind = "Head"
 data = "Functora"
-size = 50
+size = 90
+padX = 734
 [[group.item]]
-kind = "Note"
+kind = "Head"
 data = "Hi-end quality software development."
-size = 20
+size = 30
+padX = 635
 [[group.item]]
-kind = "Note"
+kind = "Head"
 data = "Reliable. Functional. Pure."
-size = 20
+size = 30
+padX = 714
 [[group.item]]
 data = "0xe677"
 kind = "Icon"
 size = 300
+padX = 100
+padY = -30
 [[group.item]]
 data = "https://functora.github.io"
 kind = "Qr"
-size = 500
+size = 590
 [[group.item]]
 data = "https://functora.github.io"
 kind = "Note"
-size = 50
+size = 30
+padY = 5
 
 [[group]]
 [[group.item]]
-kind = "Head"
-data = "Converter Web"
-size = 50
-[[group.item]]
 data = "0xe636"
 kind = "Icon"
-size = 50
+size = 210
+padX = 168
+padY = 236
 [[group.item]]
 data = "https://functora.github.io/apps/currency-converter"
 kind = "Qr"
-size = 50
+size = 590
+padY = 52
 [[group.item]]
-data = "https://functora.github.io/apps/currency-converter"
+data = "https://functora.github.io/apps/"
 kind = "Note"
-size = 50
+size = 30
+padY = 5
+[[group.item]]
+data = "currency-converter"
+kind = "Note"
+size = 30
+padY = 0
+
+[[group]]
+[[group.item]]
+data = "0xe60e"
+kind = "Icon"
+size = 180
+padX = 198
+padY = 240
+[[group.item]]
+data = "https://play.google.com/store/apps/details?id=com.functora.currency_converter"
+kind = "Qr"
+size = 594
+padY = 70
+[[group.item]]
+data = "https://play.google.com/store/apps/"
+kind = "Note"
+size = 30
+padY = 5
+[[group.item]]
+data = "details?id=com.functora.currency_converter"
+kind = "Note"
+size = 30
+padY = 0

@@ -298,6 +298,7 @@ common pkg-card
     , functora
     , functora:cfg
     , JuicyPixels
+    , JuicyPixels-extra
     , qrcode-core
     , qrcode-juicypixels
     , Rasterific

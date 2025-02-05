@@ -3,6 +3,7 @@
 module Functora.Card (main) where
 
 import qualified Codec.Picture as CP
+import qualified Codec.Picture.Extra as JP
 import qualified Codec.Picture.Types as CPT
 import qualified Codec.QRCode as QR
 import qualified Codec.QRCode.JuicyPixels as QRJP
@@ -29,18 +30,36 @@ main = withUtf8 $ do
   headFont <- mkFont $ cfg ^. #cfgFont . #cfgFontHead
   iconFont <- mkFont $ cfg ^. #cfgFont . #cfgFontIcon
   noteFont <- mkFont $ cfg ^. #cfgFont . #cfgFontNote
-  CP.writePng "./img/functora.png"
-    $ mkCard
-      Env
-        { envImg = cfgImg cfg,
-          envFont =
-            Font
-              { fontHead = headFont,
-                fontIcon = iconFont,
-                fontNote = noteFont
-              },
-          envGroup = cfgGroup cfg
-        }
+  let img =
+        mkCard
+          Env
+            { envImg = cfgImg cfg,
+              envFont =
+                Font
+                  { fontHead = headFont,
+                    fontIcon = iconFont,
+                    fontNote = noteFont
+                  },
+              envGroup = cfgGroup cfg
+            }
+  let width = cfg ^. #cfgImg . #imgWidth . #unPx
+  let height = cfg ^. #cfgImg . #imgHeight . #unPx
+  CP.writePng
+    ( "./img/card-"
+        <> inspect width
+        <> "x"
+        <> inspect height
+        <> ".png"
+    )
+    img
+  CP.writePng
+    ( "./img/card-"
+        <> inspect height
+        <> "x"
+        <> inspect width
+        <> ".png"
+    )
+    $ JP.rotateRight90 img
 
 mkFont :: Text -> IO TT.Font
 mkFont =
@@ -64,13 +83,15 @@ mkGroup :: Env -> Int -> Int -> Group -> R.Drawing CPT.PixelRGBA8 ()
 mkGroup env amt idx (Group items) =
   foldM_ (mkItem env offX) (Px 0) items
   where
-    pad = via @Integer @Int @Rational $ env ^. #envImg . #imgPadding . #unPx
     offX =
       Px
         . round
-        $ pad
+        $ via @Integer @Int @Rational (env ^. #envImg . #imgPadX . #unPx)
         + via @Integer @Int @Rational idx
-        * ( via @Integer @Int @Rational (env ^. #envImg . #imgWidth . #unPx)
+        * ( via @Integer @Int @Rational
+              ( (env ^. #envImg . #imgWidth . #unPx)
+                  - (env ^. #envImg . #imgPadX . #unPx)
+              )
               / via @Integer @Int @Rational amt
           )
 
@@ -105,15 +126,25 @@ mkText env offX offY item font = do
           (env ^. #envImg . #imgDpi . #unPx)
       )
       ( R.V2
-          (unsafeFrom @Int @Float $ unPx offX)
-          (unsafeFrom @Int @Float $ unPx offN)
+          ( unsafeFrom @Int @Float
+              . unPx
+              . maybe offX (Px . (unPx offX +) . unPx)
+              $ itemPadX item
+          )
+          ( unsafeFrom @Int @Float
+              $ unPx offN
+          )
       )
     $ from @Text @String text
   pure offN
   where
     text = itemData item
     size = itemSize item
-    offN = Px $ unPx offY + env ^. #envImg . #imgPadding . #unPx + unPx size
+    offN =
+      Px
+        $ unPx offY
+        + unPx (fromMaybe (env ^. #envImg . #imgPadY) $ itemPadY item)
+        + unPx size
 
 mkQr ::
   Env ->
@@ -124,11 +155,24 @@ mkQr ::
 mkQr env offX offY item = do
   R.drawImage img 0
     $ R.V2
-      (unsafeFrom @Int @Float $ unPx offX)
-      (unsafeFrom @Int @Float $ unPx offY)
-  pure . Px $ unPx offY + env ^. #envImg . #imgPadding . #unPx + unPx size
+      ( unsafeFrom @Int @Float
+          . unPx
+          . maybe offX (Px . (unPx offX +) . unPx)
+          $ itemPadX item
+      )
+      ( unsafeFrom @Int @Float
+          $ unPx offN
+      )
+  pure
+    . Px
+    $ unPx offN
+    + unPx size
   where
     size = itemSize item
+    offN =
+      Px
+        $ unPx offY
+        + unPx (fromMaybe (env ^. #envImg . #imgPadY) $ itemPadY item)
     qr =
       fromMaybe (error "Can not generate qr!")
         . QR.encodeAutomatic
@@ -176,7 +220,8 @@ data Img = Img
   { imgDpi :: Px,
     imgWidth :: Px,
     imgHeight :: Px,
-    imgPadding :: Px
+    imgPadX :: Px,
+    imgPadY :: Px
   }
   deriving stock
     ( Eq,
@@ -228,7 +273,9 @@ newtype Group = Group
 data Item = Item
   { itemKind :: ItemKind,
     itemData :: Text,
-    itemSize :: Px
+    itemSize :: Px,
+    itemPadX :: Maybe Px,
+    itemPadY :: Maybe Px
   }
   deriving stock
     ( Eq,

@@ -52,9 +52,9 @@ mkFont =
 mkCard :: Env -> CP.Image CP.PixelRGBA8
 mkCard env =
   R.renderDrawingAtDpi
-    (round $ env ^. #envImg . #imgWidth)
-    (round $ env ^. #envImg . #imgHeight)
-    (env ^. #envImg . #imgDpi)
+    (env ^. #envImg . #imgWidth . #unPx)
+    (env ^. #envImg . #imgHeight . #unPx)
+    (env ^. #envImg . #imgDpi . #unPx)
     white
     . forM_ (zip [0 ..] $ envGroup env)
     . uncurry
@@ -62,20 +62,24 @@ mkCard env =
 
 mkGroup :: Env -> Int -> Int -> Group -> R.Drawing CPT.PixelRGBA8 ()
 mkGroup env amt idx (Group items) =
-  foldM_ (mkItem env offX) 0 items
+  foldM_ (mkItem env offX) (Px 0) items
   where
-    pad = env ^. #envImg . #imgPadding
+    pad = via @Integer @Int @Rational $ env ^. #envImg . #imgPadding . #unPx
     offX =
-      pad
-        + unsafeFrom @Int @Float idx
-        * (env ^. #envImg . #imgWidth / unsafeFrom @Int @Float amt)
+      Px
+        . round
+        $ pad
+        + via @Integer @Int @Rational idx
+        * ( via @Integer @Int @Rational (env ^. #envImg . #imgWidth . #unPx)
+              / via @Integer @Int @Rational amt
+          )
 
 mkItem ::
   Env ->
-  Float ->
-  Float ->
+  Px ->
+  Px ->
   Item ->
-  R.Drawing CPT.PixelRGBA8 Float
+  R.Drawing CPT.PixelRGBA8 Px
 mkItem env offX offY item =
   case itemKind item of
     Head -> mkText env offX offY item $ env ^. #envFont . #fontHead
@@ -87,33 +91,42 @@ mkItem env offX offY item =
 
 mkText ::
   Env ->
-  Float ->
-  Float ->
+  Px ->
+  Px ->
   Item ->
   TT.Font ->
-  R.Drawing CPT.PixelRGBA8 Float
+  R.Drawing CPT.PixelRGBA8 Px
 mkText env offX offY item font = do
   R.withTexture black
     . R.printTextAt
       font
-      (TT.pixelSizeInPointAtDpi size $ env ^. #envImg . #imgDpi)
-      (R.V2 offX offN)
+      ( TT.pixelSizeInPointAtDpi
+          (unsafeFrom @Int @Float $ unPx size)
+          (env ^. #envImg . #imgDpi . #unPx)
+      )
+      ( R.V2
+          (unsafeFrom @Int @Float $ unPx offX)
+          (unsafeFrom @Int @Float $ unPx offN)
+      )
     $ from @Text @String text
   pure offN
   where
     text = itemData item
     size = itemSize item
-    offN = offY + env ^. #envImg . #imgPadding + size
+    offN = Px $ unPx offY + env ^. #envImg . #imgPadding . #unPx + unPx size
 
 mkQr ::
   Env ->
-  Float ->
-  Float ->
+  Px ->
+  Px ->
   Item ->
-  R.Drawing CPT.PixelRGBA8 Float
+  R.Drawing CPT.PixelRGBA8 Px
 mkQr env offX offY item = do
-  R.drawImage img 0 $ R.V2 offX offY
-  pure $ offY + env ^. #envImg . #imgPadding + size
+  R.drawImage img 0
+    $ R.V2
+      (unsafeFrom @Int @Float $ unPx offX)
+      (unsafeFrom @Int @Float $ unPx offY)
+  pure . Px $ unPx offY + env ^. #envImg . #imgPadding . #unPx + unPx size
   where
     size = itemSize item
     qr =
@@ -124,7 +137,22 @@ mkQr env offX offY item = do
         $ itemData item
     img =
       CPT.promoteImage
-        $ QRJP.toImage 0 (round size `div` QR.qrImageSize qr) qr
+        $ QRJP.toImage 0 (unPx size `div` QR.qrImageSize qr) qr
+
+newtype Px = Px
+  { unPx :: Int
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Data,
+      Generic
+    )
+  deriving newtype
+    ( HasCodec,
+      HasItemCodec
+    )
 
 data Cfg = Cfg
   { cfgImg :: Img,
@@ -145,10 +173,10 @@ data Cfg = Cfg
     via GenericType Cfg
 
 data Img = Img
-  { imgDpi :: Int,
-    imgWidth :: Float,
-    imgHeight :: Float,
-    imgPadding :: Float
+  { imgDpi :: Px,
+    imgWidth :: Px,
+    imgHeight :: Px,
+    imgPadding :: Px
   }
   deriving stock
     ( Eq,
@@ -200,7 +228,7 @@ newtype Group = Group
 data Item = Item
   { itemKind :: ItemKind,
     itemData :: Text,
-    itemSize :: Float
+    itemSize :: Px
   }
   deriving stock
     ( Eq,

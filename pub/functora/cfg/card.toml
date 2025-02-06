@@ -10,6 +10,11 @@ head = "./fonts/larabiefont.ttf"
 icon = "./fonts/devicons.ttf"
 note = "./fonts/rondo.ttf"
 
+[[extra]]
+width = 2400
+height = 1200
+vertical = true
+
 [[group]]
 [[group.item]]
 kind = "Head"

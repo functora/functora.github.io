@@ -44,22 +44,38 @@ main = withUtf8 $ do
             }
   let width = cfg ^. #cfgImg . #imgWidth . #unPx
   let height = cfg ^. #cfgImg . #imgHeight . #unPx
-  CP.writePng
-    ( "./img/card-"
-        <> inspect width
-        <> "x"
-        <> inspect height
-        <> ".png"
-    )
-    img
-  CP.writePng
-    ( "./img/card-"
-        <> inspect height
-        <> "x"
-        <> inspect width
-        <> ".png"
-    )
-    $ JP.rotateRight90 img
+  forM_ (Extra (Px width) (Px height) False : cfgExtra cfg) $ \ext -> do
+    let extWidth = ext ^. #extraWidth . #unPx
+    let extHeight = ext ^. #extraHeight . #unPx
+    let fin =
+          R.renderDrawingAtDpi
+            extWidth
+            extHeight
+            (cfg ^. #cfgImg . #imgDpi . #unPx)
+            white
+            . R.drawImage img 0
+            $ R.V2
+              (unsafeFrom @Int @Float (extWidth - width) / 2)
+              (unsafeFrom @Int @Float (extHeight - height) / 2)
+    if extraVertical ext
+      then
+        CP.writePng
+          ( "./img/card-"
+              <> inspect extHeight
+              <> "x"
+              <> inspect extWidth
+              <> ".png"
+          )
+          $ JP.rotateRight90 fin
+      else
+        CP.writePng
+          ( "./img/card-"
+              <> inspect extWidth
+              <> "x"
+              <> inspect extHeight
+              <> ".png"
+          )
+          fin
 
 mkFont :: Text -> IO TT.Font
 mkFont =
@@ -201,6 +217,7 @@ newtype Px = Px
 data Cfg = Cfg
   { cfgImg :: Img,
     cfgFont :: CfgFont,
+    cfgExtra :: [Extra],
     cfgGroup :: [Group]
   }
   deriving stock
@@ -253,6 +270,24 @@ data CfgFont = CfgFont
       HasItemCodec
     )
     via GenericType CfgFont
+
+data Extra = Extra
+  { extraWidth :: Px,
+    extraHeight :: Px,
+    extraVertical :: Bool
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Data,
+      Generic
+    )
+  deriving
+    ( HasCodec,
+      HasItemCodec
+    )
+    via GenericType Extra
 
 newtype Group = Group
   { groupItem :: [Item]

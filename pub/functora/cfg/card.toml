@@ -21,7 +21,7 @@ vertical = true
 kind = "Head"
 data = "Functora"
 size = 150
-padX = 585
+padX = 595
 [[group.item]]
 data = "0xe677"
 kind = "Icon"

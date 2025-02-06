@@ -26,7 +26,6 @@ main = withUtf8 $ do
     fmap (foldl1 const) $ case cli of
       CliTextConf txt _ -> forM txt unToml
       CliFileConf loc _ -> forM loc $ readFile >=> unToml
-  putStrLn $ inspect @Text @Cfg cfg
   headFont <- mkFont $ cfg ^. #cfgFont . #cfgFontHead
   iconFont <- mkFont $ cfg ^. #cfgFont . #cfgFontIcon
   noteFont <- mkFont $ cfg ^. #cfgFont . #cfgFontNote
@@ -47,6 +46,7 @@ main = withUtf8 $ do
   forM_ (Extra (Px width) (Px height) False : cfgExtra cfg) $ \ext -> do
     let extWidth = ext ^. #extraWidth . #unPx
     let extHeight = ext ^. #extraHeight . #unPx
+    let out = from @Text @String $ cfg ^. #cfgImg . #imgOut
     let fin =
           R.renderDrawingAtDpi
             extWidth
@@ -59,23 +59,27 @@ main = withUtf8 $ do
               (unsafeFrom @Int @Float (extHeight - height) / 2)
     if extraVertical ext
       then
-        CP.writePng
-          ( "./img/card-"
-              <> inspect extHeight
-              <> "x"
-              <> inspect extWidth
-              <> ".png"
-          )
-          $ JP.rotateRight90 fin
+        ( do
+            let file =
+                  out
+                    <> inspect extHeight
+                    <> "x"
+                    <> inspect extWidth
+                    <> ".png"
+            CP.writePng file $ JP.rotateRight90 fin
+            putStrLn $ "Created ==> " <> file
+        )
       else
-        CP.writePng
-          ( "./img/card-"
-              <> inspect extWidth
-              <> "x"
-              <> inspect extHeight
-              <> ".png"
-          )
-          fin
+        ( do
+            let file =
+                  out
+                    <> inspect extWidth
+                    <> "x"
+                    <> inspect extHeight
+                    <> ".png"
+            CP.writePng file fin
+            putStrLn $ "Created ==> " <> file
+        )
 
 mkFont :: Text -> IO TT.Font
 mkFont =
@@ -234,7 +238,8 @@ data Cfg = Cfg
     via GenericType Cfg
 
 data Img = Img
-  { imgDpi :: Px,
+  { imgOut :: Text,
+    imgDpi :: Px,
     imgWidth :: Px,
     imgHeight :: Px,
     imgPadX :: Px,

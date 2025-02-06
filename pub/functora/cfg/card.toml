@@ -1,4 +1,5 @@
 [img]
+out = "./img/functora-card-"
 dpi = 96
 width = 2100
 height = 1200
@@ -19,18 +20,8 @@ vertical = true
 [[group.item]]
 kind = "Head"
 data = "Functora"
-size = 90
-padX = 734
-[[group.item]]
-kind = "Head"
-data = "Hi-end quality software development."
-size = 30
-padX = 635
-[[group.item]]
-kind = "Head"
-data = "Reliable. Functional. Pure."
-size = 30
-padX = 714
+size = 150
+padX = 585
 [[group.item]]
 data = "0xe677"
 kind = "Icon"
@@ -45,25 +36,28 @@ size = 590
 data = "https://functora.github.io"
 kind = "Note"
 size = 30
-padY = 5
+padY = 0
 
 [[group]]
 [[group.item]]
+kind = "Head"
+data = ""
+size = 150
+[[group.item]]
 data = "0xe636"
 kind = "Icon"
-size = 210
-padX = 168
-padY = 236
+size = 217
+padX = 164
 [[group.item]]
 data = "https://functora.github.io/apps/currency-converter"
 kind = "Qr"
 size = 590
-padY = 52
+padY = 53
 [[group.item]]
 data = "https://functora.github.io/apps/"
 kind = "Note"
 size = 30
-padY = 5
+padY = 8
 [[group.item]]
 data = "currency-converter"
 kind = "Note"
@@ -72,21 +66,24 @@ padY = 0
 
 [[group]]
 [[group.item]]
+kind = "Head"
+data = ""
+size = 150
+[[group.item]]
 data = "0xe60e"
 kind = "Icon"
 size = 180
 padX = 198
-padY = 240
 [[group.item]]
 data = "https://play.google.com/store/apps/details?id=com.functora.currency_converter"
 kind = "Qr"
 size = 594
-padY = 70
+padY = 90
 [[group.item]]
 data = "https://play.google.com/store/apps/"
 kind = "Note"
 size = 30
-padY = 5
+padY = 16
 [[group.item]]
 data = "details?id=com.functora.currency_converter"
 kind = "Note"

@@ -74,11 +74,12 @@ data = "0xe60e"
 kind = "Icon"
 size = 180
 padX = 198
+padY = 30
 [[group.item]]
 data = "https://play.google.com/store/apps/details?id=com.functora.currency_converter"
 kind = "Qr"
 size = 594
-padY = 90
+padY = 60
 [[group.item]]
 data = "https://play.google.com/store/apps/"
 kind = "Note"

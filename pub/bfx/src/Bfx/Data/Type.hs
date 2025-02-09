@@ -387,6 +387,8 @@ data Candle = Candle
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 
@@ -407,8 +409,17 @@ data CandleTimeFrame
     ( Eq,
       Ord,
       Show,
-      Generic
+      Read,
+      Data,
+      Generic,
+      Enum,
+      Bounded
     )
+  deriving
+    ( HasCodec,
+      HasItemCodec
+    )
+    via GenericEnum CandleTimeFrame
 
 instance NFData CandleTimeFrame
 

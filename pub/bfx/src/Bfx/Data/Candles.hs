@@ -21,6 +21,8 @@ data Section
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 
@@ -40,6 +42,8 @@ data Request = Request
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 
@@ -52,6 +56,8 @@ data Options = Options
     ( Eq,
       Ord,
       Show,
+      Read,
+      Data,
       Generic
     )
 

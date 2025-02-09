@@ -118,6 +118,7 @@ module Functora.Prelude
     Mono,
     dropAround,
     dropWhileEnd,
+    AscOrDesc (..),
 
     -- * DerivingVia
     -- $derivingVia
@@ -1128,6 +1129,20 @@ dropWhileEnd f =
           else Seq.cons x xs
     )
     mempty
+
+data AscOrDesc
+  = Asc
+  | Desc
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
+      Generic,
+      Enum,
+      Bounded
+    )
 
 -- $derivingVia
 -- Newtypes to simplify deriving via.

@@ -108,10 +108,22 @@ spec = before sysEnv $ do
     res <- tryAny . Bfx.netWorth env $ CurrencyCode "BTC"
     res `shouldSatisfy` isRight
   it "candlesLast succeeds" . const $ do
-    res <- tryAny $ Bfx.candlesLast Ctf1h adaBtc Candles.optsDef
+    res <-
+      tryAny
+        . Bfx.candlesLast Ctf1h adaBtc
+        $ Candles.optsDef
+        & #ascOrDesc
+        .~ Just Desc
     res `shouldSatisfy` isRight
   it "candlesHist succeeds" . const $ do
-    res <- tryAny $ Bfx.candlesHist Ctf1h adaBtc Candles.optsDef
+    res <-
+      tryAny
+        . Bfx.candlesHist Ctf1h btcUsd
+        $ Candles.optsDef
+        & #ascOrDesc
+        .~ Just Asc
+        & #limit
+        .~ Just 5
     res `shouldSatisfy` isRight
   it "mkOrder" . const $ do
     let req =

@@ -518,7 +518,6 @@ test-suite functora-test
     build-depends:
       , aes
       , bolt11
-      , card-lib
       , cfg
       , elm2miso-lib
       , functora

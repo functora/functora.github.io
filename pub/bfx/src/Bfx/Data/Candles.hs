@@ -48,7 +48,8 @@ data Request = Request
     )
 
 data Options = Options
-  { limit :: Maybe Natural,
+  { ascOrDesc :: Maybe AscOrDesc,
+    limit :: Maybe Natural,
     start :: Maybe UTCTime,
     end :: Maybe UTCTime
   }
@@ -64,7 +65,8 @@ data Options = Options
 optsDef :: Options
 optsDef =
   Options
-    { limit = Just 10000,
+    { ascOrDesc = Nothing,
+      limit = Just 10000,
       start = Nothing,
       end = Nothing
     }

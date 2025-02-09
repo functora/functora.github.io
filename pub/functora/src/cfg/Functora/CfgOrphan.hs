@@ -16,6 +16,7 @@ import Data.Binary.Instances ()
 import Functora.Prelude
 import qualified GHC.Generics as Generics
 import qualified Text.URI as URI
+import Toml (HasCodec, HasItemCodec)
 import qualified Toml
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import Data.JSString (JSString)
@@ -237,3 +238,7 @@ instance Toml.HasItemCodec JSString where
       $ Toml.Text
       . from @JSString @Text
 #endif
+
+deriving via GenericEnum AscOrDesc instance HasCodec AscOrDesc
+
+deriving via GenericEnum AscOrDesc instance HasItemCodec AscOrDesc

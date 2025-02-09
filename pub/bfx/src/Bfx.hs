@@ -466,7 +466,8 @@ candlesLast tf sym opts =
   Generic.pub
     @'CandlesLast
     ( catMaybes
-        [ SomeQueryParam "limit" <$> Candles.limit opts,
+        [ SomeQueryParam "sort" <$> Candles.ascOrDesc opts,
+          SomeQueryParam "limit" <$> Candles.limit opts,
           SomeQueryParam "start" <$> Candles.start opts,
           SomeQueryParam "end" <$> Candles.end opts
         ]
@@ -490,7 +491,8 @@ candlesHist tf sym opts =
   Generic.pub
     @'CandlesHist
     ( catMaybes
-        [ SomeQueryParam "limit" <$> Candles.limit opts,
+        [ SomeQueryParam "sort" <$> Candles.ascOrDesc opts,
+          SomeQueryParam "limit" <$> Candles.limit opts,
           SomeQueryParam "start" <$> Candles.start opts,
           SomeQueryParam "end" <$> Candles.end opts
         ]

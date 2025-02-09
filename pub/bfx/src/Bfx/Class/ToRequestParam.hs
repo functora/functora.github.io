@@ -67,3 +67,8 @@ instance ToRequestParam QuotePerBase where
       . abs
       . from @(Ratio Natural) @Rational
       . unQuotePerBase
+
+instance ToRequestParam AscOrDesc where
+  toTextParam = \case
+    Asc -> "1"
+    Desc -> "-1"

@@ -212,7 +212,8 @@ import Data.Generics.Sum as X
 import Data.Generics.Uniplate.Data as X ()
 import qualified Data.HMAC as HMAC
 import Data.List.Extra as X
-  ( enumerate,
+  ( chunksOf,
+    enumerate,
     escapeHTML,
     notNull,
     nubOrd,
@@ -285,7 +286,7 @@ import Instances.TH.Lift as X ()
 import qualified Language.Haskell.TH.Lib as TH
 import Language.Haskell.TH.Quote as X (QuasiQuoter (..))
 import qualified Language.Haskell.TH.Syntax as TH
-import Lens.Micro as X (Getting, Traversal, Traversal', (%~), (^..))
+import Lens.Micro as X (Getting, Traversal, Traversal', (%~), (?~), (^..))
 import Lens.Micro.Contra as X (Fold, Getter, fromSimpleFold, fromSimpleGetter)
 import Lens.Micro.GHC as X ()
 import Lens.Micro.TH as X (makeLenses)

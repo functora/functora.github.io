@@ -47,7 +47,7 @@ instance ToRequestParam Natural where
 
 instance ToRequestParam UTCTime where
   toTextParam =
-    toTextParam . utcTimeToMicros
+    toTextParam . (`div` 1000) . utcTimeToMicros
 
 instance ToRequestParam Text where
   toTextParam =

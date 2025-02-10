@@ -18,6 +18,7 @@ import Control.Monad.Logger as X
     runStdoutLoggingT,
   )
 import Data.Pool as X (Pool, destroyAllResources)
+import Database.Esqueleto.Experimental as X (putMany)
 import qualified Database.Esqueleto.Internal.Internal as Internal
 import Database.Esqueleto.Legacy as X
   ( BaseBackend,

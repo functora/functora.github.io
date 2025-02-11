@@ -515,6 +515,8 @@ tickers =
     ]
     emptyReq
 
+type role MkOrder representational
+
 data MkOrder m = MkOrder
   { mkOrderFee :: FeeRate,
     mkOrderBuyOrSell :: BuyOrSell,
@@ -589,6 +591,8 @@ mkOrder args = do
   where
     bos = mkOrderBuyOrSell args
     sym = mkOrderCurrencyPair args
+
+type role MkCounterOrder representational
 
 data MkCounterOrder m = MkCounterOrder
   { mkCounterOrderEnterBuyOrSell :: BuyOrSell,

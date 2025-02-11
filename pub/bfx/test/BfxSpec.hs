@@ -5,7 +5,8 @@ module BfxSpec
   )
 where
 
-import Bfx
+import Bfx hiding (mkOrder)
+import qualified Bfx
 import qualified Bfx.Data.Candles as Candles
 import qualified Bfx.Data.GetOrders as GetOrders
 import qualified Bfx.Data.MarketAveragePrice as MarketAveragePrice
@@ -132,7 +133,9 @@ spec = before sysEnv $ do
               Bfx.mkOrderBuyOrSell = Buy,
               Bfx.mkOrderNetBaseAmt = Nothing,
               Bfx.mkOrderNetQuoteAmt = Nothing,
-              Bfx.mkOrderCurrencyPair = adaBtc
+              Bfx.mkOrderCurrencyPair = adaBtc,
+              Bfx.mkOrderSymbolsDetails = Bfx.symbolsDetails @IO,
+              Bfx.mkOrderMarketAveragePrice = Bfx.marketAveragePrice
             }
     -- let reqQuote = req {Bfx.mkOrderNetQuoteAmt = Just $ MoneyAmount 1}
     -- buyQuote <- Bfx.mkOrder reqQuote

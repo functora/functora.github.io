@@ -24,7 +24,8 @@ spec = do
               mkCounterOrderCurrencyPair = adaBtc,
               mkCounterOrderEnterFee = FeeRate 0.001,
               mkCounterOrderExitFee = FeeRate 0.001,
-              mkCounterOrderProfit = ProfitRate 0.01
+              mkCounterOrderProfit = ProfitRate 0.01,
+              mkCounterOrderMarketAveragePrice = Bfx.marketAveragePrice @IO
             }
     exit <- mkCounterOrder args
     exit
@@ -49,7 +50,8 @@ spec = do
               mkCounterOrderCurrencyPair = btcUsd,
               mkCounterOrderEnterFee = FeeRate 0.001,
               mkCounterOrderExitFee = FeeRate 0.001,
-              mkCounterOrderProfit = ProfitRate 0.01
+              mkCounterOrderProfit = ProfitRate 0.01,
+              mkCounterOrderMarketAveragePrice = Bfx.marketAveragePrice @IO
             }
     exit <- mkCounterOrder args
     exit

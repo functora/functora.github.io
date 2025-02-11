@@ -515,7 +515,7 @@ tickers =
     ]
     emptyReq
 
-data MkOrder = MkOrder
+data MkOrder m = MkOrder
   { mkOrderFee :: FeeRate,
     mkOrderBuyOrSell :: BuyOrSell,
     --
@@ -523,28 +523,18 @@ data MkOrder = MkOrder
     --
     mkOrderNetBaseAmt :: Maybe MoneyAmount,
     mkOrderNetQuoteAmt :: Maybe MoneyAmount,
-    mkOrderCurrencyPair :: CurrencyPair
+    mkOrderCurrencyPair :: CurrencyPair,
+    mkOrderSymbolsDetails :: m (Map CurrencyPair CurrencyPairConf),
+    mkOrderMarketAveragePrice :: MarketAveragePrice.Request -> m QuotePerBase
   }
-  deriving stock
-    ( Eq,
-      Ord,
-      Show,
-      Read,
-      Data,
-      Generic
-    )
+  deriving stock (Generic)
 
-mkOrder ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  MkOrder ->
-  m SubmitOrder.Request
+mkOrder :: (MonadThrow m) => MkOrder m -> m SubmitOrder.Request
 mkOrder args = do
   netBaseAmt <-
     maybe
       ( do
-          syms <- symbolsDetails
+          syms <- mkOrderSymbolsDetails args
           minBase <-
             maybe
               (throwString $ inspect @Text sym <> " is missing!")
@@ -554,7 +544,8 @@ mkOrder args = do
             (pure minBase)
             ( \netQuoteAmt -> do
                 price <-
-                  Bfx.marketAveragePrice
+                  mkOrderMarketAveragePrice
+                    args
                     MarketAveragePrice.Request
                       { MarketAveragePrice.buyOrSell = bos,
                         MarketAveragePrice.baseAmount = minBase,
@@ -580,7 +571,8 @@ mkOrder args = do
       Sell ->
         pure netBaseAmt
   price <-
-    Bfx.marketAveragePrice
+    mkOrderMarketAveragePrice
+      args
       MarketAveragePrice.Request
         { MarketAveragePrice.buyOrSell = bos,
           MarketAveragePrice.baseAmount = grossBaseAmt,
@@ -598,30 +590,21 @@ mkOrder args = do
     bos = mkOrderBuyOrSell args
     sym = mkOrderCurrencyPair args
 
-data MkCounterOrder = MkCounterOrder
+data MkCounterOrder m = MkCounterOrder
   { mkCounterOrderEnterBuyOrSell :: BuyOrSell,
     mkCounterOrderEnterGrossBase :: MoneyAmount,
     mkCounterOrderEnterQuotePerBase :: QuotePerBase,
     mkCounterOrderCurrencyPair :: CurrencyPair,
     mkCounterOrderEnterFee :: FeeRate,
     mkCounterOrderExitFee :: FeeRate,
-    mkCounterOrderProfit :: ProfitRate
+    mkCounterOrderProfit :: ProfitRate,
+    mkCounterOrderMarketAveragePrice ::
+      MarketAveragePrice.Request ->
+      m QuotePerBase
   }
-  deriving stock
-    ( Eq,
-      Ord,
-      Show,
-      Read,
-      Data,
-      Generic
-    )
+  deriving stock (Generic)
 
-mkCounterOrder ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
-  MkCounterOrder ->
-  m SubmitOrder.Request
+mkCounterOrder :: (MonadThrow m) => MkCounterOrder m -> m SubmitOrder.Request
 mkCounterOrder args = do
   exitBase <-
     tweakMoneyAmount exitBos exitGrossBase
@@ -631,7 +614,8 @@ mkCounterOrder args = do
       $ unMoneyAmount exitGrossQuote
       / unMoneyAmount exitBase
   currentRate <-
-    marketAveragePrice
+    mkCounterOrderMarketAveragePrice
+      args
       MarketAveragePrice.Request
         { MarketAveragePrice.buyOrSell = exitBos,
           MarketAveragePrice.baseAmount = exitBase,

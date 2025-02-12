@@ -124,7 +124,7 @@ common pkg-prelude
     , template-haskell
     , text
     , th-lift-instances
-    , time
+    , time               >=1.11.1.1
     , transformers
     , unbounded-delays
     , uniplate

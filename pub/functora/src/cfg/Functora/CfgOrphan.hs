@@ -66,6 +66,29 @@ instance Toml.HasItemCodec URI where
       $ Toml.Text
       . URI.render
 
+instance Toml.HasCodec UTCTime where
+  hasCodec =
+    Toml.textBy (from @String @Text . iso8601Show)
+      $ maybe (Left "Not a UTCTime") pure
+      . iso8601ParseM
+      . from @Text @String
+
+instance Toml.HasItemCodec UTCTime where
+  hasItemCodec =
+    Left
+      . Toml.mkAnyValueBiMap
+        ( \src -> do
+            txt <- Toml.matchText src
+            maybe
+              (Left . Toml.MatchError Toml.TText $ Toml.AnyValue src)
+              pure
+              . iso8601ParseM
+              $ from @Text @String txt
+        )
+      $ Toml.Text
+      . from @String @Text
+      . iso8601Show
+
 instance (Show a, Enum a, Bounded a) => Toml.HasCodec (GenericEnum a) where
   hasCodec = Toml.enumBounded
 

@@ -274,6 +274,7 @@ import Data.Time.Clock as X
   )
 import qualified Data.Time.Clock as Clock
 import Data.Time.Clock.POSIX as X (posixSecondsToUTCTime)
+import Data.Time.Format.ISO8601 as X (iso8601ParseM, iso8601Show)
 import Data.Tuple.Extra as X (thd3, uncurry3)
 import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()

@@ -5,6 +5,7 @@
   ...
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
+  unst = import ./nixpkgs-unstable.nix;
   # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   # yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
@@ -591,7 +592,7 @@ in {
         s-tui
         qutebrowser
         xorg.xev
-        yewtube
+        unst.yewtube
         niv
         zip
         unzip
@@ -841,7 +842,7 @@ in {
           };
           cfgProgrKeys = {
             "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
-            "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${yewtube}/bin/yt";
+            "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${unst.yewtube}/bin/yt";
             "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
           };
           cfgBasicKeys = {

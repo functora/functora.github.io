@@ -653,6 +653,7 @@ in {
         gnome.simple-scan
         system-config-printer
         pulsemixer
+        xonotic
       ];
       programs.git = {
         enable = true;

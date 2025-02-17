@@ -91,6 +91,7 @@ import Database.Esqueleto.Legacy as X
     (+=.),
     (/=.),
     (<.),
+    (<=.),
     (=.),
     (==.),
     (>.),

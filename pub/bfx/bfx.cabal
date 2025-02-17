@@ -87,6 +87,7 @@ common pkg-lib
     , base               >=4.7 && <5
     , base16-bytestring
     , bytestring
+    , conduit
     , containers
     , cryptonite
     , envparse

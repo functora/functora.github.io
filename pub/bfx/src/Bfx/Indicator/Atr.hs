@@ -2,13 +2,18 @@
 
 module Bfx.Indicator.Atr
   ( Atr (..),
-    atr,
+    AtrPeriod (..),
+    defAtrPeriod,
+    mkAtrConduit,
+    mkAtr,
   )
 where
 
 import Bfx.Data.Type
 import Bfx.Indicator.Tr (Tr)
 import qualified Bfx.Indicator.Tr as Tr
+import Conduit ((.|))
+import qualified Conduit as C
 import qualified Data.Map as Map
 import qualified Data.Vector as V
 import Functora.Money
@@ -18,41 +23,63 @@ import qualified Prelude
 newtype Atr = Atr
   { unAtr :: QuotePerBase
   }
-  deriving newtype
-    ( Eq,
-      Ord
-    )
   deriving stock
-    ( Data,
+    ( Eq,
+      Ord,
+      Show,
+      Read,
+      Data,
       Generic
     )
 
 newtype AtrPeriod = AtrPeriod
   { unAtrPeriod :: Natural
   }
-  deriving newtype
+  deriving stock
     ( Eq,
       Ord,
       Show,
-      Num,
-      Real,
-      Enum,
-      Integral
-    )
-  deriving stock
-    ( Generic
+      Read,
+      Data,
+      Generic
     )
 
-stdAtrPeriod :: AtrPeriod
-stdAtrPeriod =
-  AtrPeriod 14
+defAtrPeriod :: AtrPeriod
+defAtrPeriod = AtrPeriod 14
 
-atr :: NonEmpty Candle -> Map UTCTime Atr
-atr =
-  atr0 stdAtrPeriod
+mkAtrConduit ::
+  ( Monad m
+  ) =>
+  (a -> Candle) ->
+  AtrPeriod ->
+  C.ConduitT a (a, Atr) m ()
+mkAtrConduit mkCandle per = do
+  Tr.mkTrConduit mkCandle
+    .| C.slidingWindowC period
+    .| ( whileM $ do
+          mtrs <- fmap (>>= nonEmpty) C.await
+          case mtrs of
+            Just trs | length trs == period -> do
+              C.yield
+                ( fst $ last trs,
+                  Atr
+                    . QuotePerBase
+                    $ (sum $ unQuotePerBase . Tr.unTr . snd <$> trs)
+                    / from @Natural @(Ratio Natural)
+                      (unsafeFrom @Int @Natural period)
+                )
+              pure True
+            _ ->
+              pure False
+       )
+  where
+    period =
+      case unsafeFrom @Natural @Int $ unAtrPeriod per of
+        x | x < 1 -> error $ "Bad ATR period " <> inspect period
+        x -> x
 
-atr0 :: AtrPeriod -> NonEmpty Candle -> Map UTCTime Atr
-atr0 period cs =
+mkAtr :: AtrPeriod -> NonEmpty Candle -> Map UTCTime Atr
+mkAtr period cs =
   if stopAtIdx < 0 || intPeriod < 1
     then mempty
     else
@@ -63,8 +90,8 @@ atr0 period cs =
         0
         mempty
   where
-    trs = Tr.tr cs
-    intPeriod = Prelude.fromIntegral period
+    trs = Tr.mkTrs cs
+    intPeriod = unsafeFrom @Natural @Int $ unAtrPeriod period
     stopAtIdx = length trs - intPeriod
 
 unsafeAtr ::

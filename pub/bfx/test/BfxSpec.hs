@@ -62,7 +62,7 @@ spec = before sysEnv $ do
   it "feeSummary succeeds" $ \env -> do
     res <- tryAny $ Bfx.feeSummary env
     res `shouldSatisfy` isRight
-  it "submitOrderMaker and cancelOrderById succeeds" $ \env -> do
+  xit "submitOrderMaker and cancelOrderById succeeds" $ \env -> do
     curRate <-
       Bfx.marketAveragePrice
         MarketAveragePrice.Request

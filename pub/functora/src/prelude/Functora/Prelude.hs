@@ -170,7 +170,10 @@ import Control.Lens.Combinators as X
 import Control.Monad.Extra as X
   ( eitherM,
     fromMaybeM,
+    loopM,
     maybeM,
+    whileJustM,
+    whileM,
   )
 import Control.Monad.Trans.Reader as X (mapReaderT)
 import Data.Binary as X (Binary)

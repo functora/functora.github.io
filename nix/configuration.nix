@@ -5,6 +5,7 @@
   ...
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
+  dns = ["8.8.8.8" "8.8.4.4"];
   unst = import ./nixpkgs-unstable.nix;
   # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   # yewtube = import ./yewtube.nix;
@@ -49,16 +50,9 @@
           "delfi.ee"
           "postimees.ee"
           "rumble.com"
-          "twitter.com"
-          "twitch.tv"
-          "discord.com"
           "odysee.com"
           "bastyon.com"
           "bitchute.com"
-          "youtube.com"
-          "facebook.com"
-          # "telegram.org"
-          # "t.me"
         ]
         else []
       ));
@@ -380,6 +374,155 @@ in {
       jack.enable = true;
     };
 
+    #
+    # Productivity
+    #
+    services.unbound.enable = config.services.functora.blockHosts;
+    services.unbound.settings.server.interface = ["127.0.0.1"];
+    services.unbound.settings.server.port = 5335;
+    services.adguardhome.enable = config.services.functora.blockHosts;
+    services.adguardhome.mutableSettings = false;
+    services.adguardhome.settings.dns.upstream_dns = ["127.0.0.1:5335"];
+    services.adguardhome.settings.dns.bootstrap_dns = dns;
+    services.adguardhome.settings.filtering = {
+      filtering_enabled = true;
+      blocked_services.ids = [
+        "4chan"
+        "500px"
+        "9gag"
+        "activision_blizzard"
+        "aliexpress"
+        "amazon_streaming"
+        "amazon"
+        "amino"
+        "apple_streaming"
+        "battle_net"
+        "betano"
+        "betfair"
+        "betway"
+        "bigo_live"
+        "bilibili"
+        "blaze"
+        "blizzard_entertainment"
+        "bluesky"
+        "box"
+        "claro"
+        "cloudflare"
+        "clubhouse"
+        "coolapk"
+        "crunchyroll"
+        "dailymotion"
+        "deezer"
+        "directvgo"
+        "discord"
+        "discoveryplus"
+        "disneyplus"
+        "douban"
+        "dropbox"
+        "ebay"
+        "electronic_arts"
+        "epic_games"
+        "espn"
+        "facebook"
+        "fifa"
+        "flickr"
+        "globoplay"
+        "gog"
+        "hbomax"
+        "hulu"
+        "icloud_private_relay"
+        "iheartradio"
+        "imgur"
+        "instagram"
+        "iqiyi"
+        "kakaotalk"
+        "kik"
+        "kook"
+        "lazada"
+        "leagueoflegends"
+        "line"
+        "linkedin"
+        "lionsgateplus"
+        "looke"
+        "mail_ru"
+        "mastodon"
+        "mercado_libre"
+        "minecraft"
+        "nebula"
+        "netflix"
+        "nintendo"
+        "nvidia"
+        "ok"
+        "olvid"
+        "onlyfans"
+        "origin"
+        "paramountplus"
+        "pinterest"
+        "playstation"
+        "plenty_of_fish"
+        "plex"
+        "pluto_tv"
+        "privacy"
+        "qq"
+        "rakuten_viki"
+        "reddit"
+        "riot_games"
+        "roblox"
+        "rockstar_games"
+        "samsung_tv_plus"
+        "shein"
+        "shopee"
+        "signal"
+        "skype"
+        "snapchat"
+        # "soundcloud"
+        "spotify"
+        "steam"
+        "telegram"
+        "temu"
+        "tidal"
+        "tiktok"
+        "tinder"
+        "tumblr"
+        "twitch"
+        "twitter"
+        "ubisoft"
+        "valorant"
+        "viber"
+        "vimeo"
+        "vk"
+        "voot"
+        "wargaming"
+        "wechat"
+        "weibo"
+        "whatsapp"
+        "wizz"
+        "xboxlive"
+        "xiaohongshu"
+        "youtube"
+        "yy"
+        "zhihu"
+      ];
+      blocked_services.schedule = let
+        unBlock = {
+          start = "20h";
+          end = "23h";
+        };
+      in {
+        mon = unBlock;
+        tue = unBlock;
+        wed = unBlock;
+        thu = unBlock;
+        fri = unBlock;
+        sat = unBlock;
+        sun = unBlock;
+        time_zone = "Local";
+      };
+    };
+
+    #
+    # Keyboards
+    #
     hardware.keyboard.qmk.enable = true;
 
     #
@@ -513,7 +656,7 @@ in {
     services.fail2ban.enable = true;
     services.tor.client.enable = true;
     networking.firewall.enable = true;
-    networking.nameservers = ["8.8.8.8" "8.8.4.4"];
+    networking.nameservers = dns;
     virtualisation.virtualbox.host.enable = true;
     virtualisation.containers.enable = true;
     virtualisation.podman.enable = true;

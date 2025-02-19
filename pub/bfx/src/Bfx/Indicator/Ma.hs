@@ -3,11 +3,15 @@
 module Bfx.Indicator.Ma
   ( Ma (..),
     MaPeriod (..),
-    ma,
+    defMaPeriod,
+    mkMaConduit,
+    mkMa,
   )
 where
 
 import Bfx.Data.Type
+import Conduit ((.|))
+import qualified Conduit as C
 import qualified Data.Map as Map
 import qualified Data.Vector as V
 import Functora.Money
@@ -20,6 +24,8 @@ newtype Ma = Ma
   deriving stock
     ( Eq,
       Ord,
+      Show,
+      Read,
       Data,
       Generic
     )
@@ -27,22 +33,61 @@ newtype Ma = Ma
 newtype MaPeriod = MaPeriod
   { unMaPeriod :: Natural
   }
-  deriving newtype
+  deriving stock
     ( Eq,
       Ord,
       Show,
-      Num,
-      Real,
-      Enum,
-      Integral
-    )
-  deriving stock
-    ( Data,
+      Read,
+      Data,
       Generic
     )
 
-ma :: MaPeriod -> NonEmpty Candle -> Map UTCTime Ma
-ma period candles =
+defMaPeriod :: MaPeriod
+defMaPeriod = MaPeriod 14
+
+mkMaConduit ::
+  ( Monad m
+  ) =>
+  (a -> Candle) ->
+  MaPeriod ->
+  C.ConduitT a (a, Ma) m ()
+mkMaConduit mkCandle per =
+  C.slidingWindowC period
+    .| ( whileM $ do
+          mcandles <- fmap (>>= nonEmpty) C.await
+          case mcandles of
+            Just candles | length candles == period -> do
+              C.yield
+                ( last candles,
+                  Ma
+                    . QuotePerBase
+                    $ ( sum
+                          $ fmap
+                            ( unQuotePerBase
+                                . candleClose
+                                . mkCandle
+                            )
+                            candles
+                      )
+                    / from @Natural @(Ratio Natural)
+                      ( unsafeFrom
+                          @Int
+                          @Natural
+                          period
+                      )
+                )
+              pure True
+            _ ->
+              pure False
+       )
+  where
+    period =
+      case unsafeFrom @Natural @Int $ unMaPeriod per of
+        x | x < 1 -> error $ "Bad MA period " <> inspect period
+        x -> x
+
+mkMa :: MaPeriod -> NonEmpty Candle -> Map UTCTime Ma
+mkMa period candles =
   if stopAtIdx < 0 || maPeriod < 1
     then mempty
     else
@@ -53,7 +98,7 @@ ma period candles =
         0
         mempty
   where
-    maPeriod = Prelude.fromIntegral period
+    maPeriod = unsafeFrom @Natural @Int $ unMaPeriod period
     stopAtIdx = length candles - maPeriod
 
 unsafeMa ::

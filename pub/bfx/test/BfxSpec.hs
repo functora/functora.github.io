@@ -126,6 +126,9 @@ spec = before sysEnv $ do
         & #limit
         .~ Just 5
     res `shouldSatisfy` isRight
+  it "roundMoneyAmount" . const $ do
+    amt <- roundMoneyAmount . MoneyAmount $ 3391591 % 10000000000
+    amt `shouldBe` MoneyAmount (8479 % 25000000)
   it "mkOrder" . const $ do
     let req =
           Bfx.MkOrder

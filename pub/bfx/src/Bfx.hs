@@ -564,14 +564,14 @@ mkOrder args = do
       pure
       $ mkOrderNetBaseAmt args
   grossBaseAmt <-
-    case bos of
-      Buy ->
-        tweakMoneyAmount Buy
-          . MoneyAmount
-          $ unMoneyAmount netBaseAmt
-          / (1 - unFeeRate (mkOrderFee args))
-      Sell ->
-        pure netBaseAmt
+    tweakMoneyAmount bos
+      $ case bos of
+        Buy ->
+          MoneyAmount
+            $ unMoneyAmount netBaseAmt
+            / (1 - unFeeRate (mkOrderFee args))
+        Sell ->
+          netBaseAmt
   price <-
     mkOrderMarketAveragePrice
       args

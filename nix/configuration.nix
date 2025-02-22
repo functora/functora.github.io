@@ -506,7 +506,7 @@ in {
       blocked_services.schedule = let
         unBlock = {
           start = "20h";
-          end = "23h";
+          end = "24h";
         };
       in {
         mon = unBlock;

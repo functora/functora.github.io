@@ -131,6 +131,7 @@ library
     Bfx.Data.Web
     Bfx.Indicator.Atr
     Bfx.Indicator.Ma
+    Bfx.Indicator.Rsi
     Bfx.Indicator.Tr
     Bfx.Math
     Bfx.Parser
@@ -180,6 +181,7 @@ test-suite bfx-test
       Bfx.Data.Web
       Bfx.Indicator.Atr
       Bfx.Indicator.Ma
+      Bfx.Indicator.Rsi
       Bfx.Indicator.Tr
       Bfx.Math
       Bfx.Parser

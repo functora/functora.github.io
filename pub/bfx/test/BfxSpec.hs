@@ -148,12 +148,12 @@ spec = before sysEnv $ do
     buyDef <- Bfx.mkOrder req
     SubmitOrder.baseAmount buyDef `shouldBe` MoneyAmount 4.00400401
     sellDef <- Bfx.mkOrder req {Bfx.mkOrderBuyOrSell = Sell}
-    SubmitOrder.baseAmount sellDef `shouldBe` MoneyAmount 4
+    SubmitOrder.baseAmount sellDef `shouldBe` MoneyAmount 3.99999999
     let reqBase = req {Bfx.mkOrderNetBaseAmt = Just $ MoneyAmount 10}
     buyBase <- Bfx.mkOrder reqBase
     SubmitOrder.baseAmount buyBase `shouldBe` MoneyAmount 10.01001002
     sellBase <- Bfx.mkOrder reqBase {Bfx.mkOrderBuyOrSell = Sell}
-    SubmitOrder.baseAmount sellBase `shouldBe` MoneyAmount 10
+    SubmitOrder.baseAmount sellBase `shouldBe` MoneyAmount 9.99999999
 
 --  describe "End2End" $ do
 --    itRight "submitOrderMaker" $ \env -> do

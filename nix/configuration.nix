@@ -49,10 +49,10 @@
           "err.ee"
           "delfi.ee"
           "postimees.ee"
-          "rumble.com"
-          "odysee.com"
-          "bastyon.com"
-          "bitchute.com"
+          # "rumble.com"
+          # "odysee.com"
+          # "bastyon.com"
+          # "bitchute.com"
         ]
         else []
       ));
@@ -86,6 +86,75 @@
       gnome_schema=org.gnome.desktop.interface
       ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
     '';
+  };
+  mkFirejailSimple = pkg: {
+    "${pkg}" = {
+      executable = "${pkgs."${pkg}"}/bin/${pkg}";
+      profile = "${pkgs.firejail}/etc/firejail/${pkg}.profile";
+    };
+  };
+  mkFirejailCustom = {
+    pkg,
+    exe,
+    cfg ? "",
+  }: {
+    "${pkg}" = {
+      executable = exe;
+      profile = pkgs.writeText "${pkg}.local" (
+        ''
+          include default.profile
+
+          include disable-X11.inc
+          include disable-common.inc
+          include disable-devel.inc
+          include disable-exec.inc
+          include disable-interpreters.inc
+          include disable-proc.inc
+          include disable-programs.inc
+          include disable-shell.inc
+          include disable-write-mnt.inc
+          include disable-xdg.inc
+
+          # no3d
+          # nosound
+          apparmor
+          caps.drop all
+          machine-id
+          net none
+          netfilter
+          nodvd
+          nogroups
+          noinput
+          nonewprivs
+          noprinters
+          noroot
+          notv
+          nou2f
+          novideo
+          shell none
+
+          disable-mnt
+          private ''${HOME}/.firejail/${pkg}
+          private-bin none
+          private-cache
+          private-cwd
+          private-dev
+          private-etc none
+          private-lib none
+          private-opt none
+          private-srv none
+          private-tmp
+          seccomp
+          x11 none
+
+          dbus-system none
+          dbus-user none
+
+          restrict-namespaces
+        ''
+        + cfg
+      );
+    };
   };
   mkKbd = cfg: dev: {
     config = cfg;
@@ -725,6 +794,21 @@ in {
     ];
 
     #
+    # Firejail
+    #
+    programs.firejail.enable = true;
+    programs.firejail.wrappedBinaries =
+      mkFirejailSimple "xonotic"
+      // mkFirejailCustom {
+        pkg = "doom";
+        exe = ''
+          ${pkgs.gzdoom}/bin/gzdoom \
+            -iwad ./mods/freedoom-0.13.0/freedoom2.wad \
+            -file ./mods/brutalv22test4.pk3
+        '';
+      };
+
+    #
     # Home
     #
     home-manager.users.${config.services.functora.userName} = {
@@ -796,7 +880,6 @@ in {
         gnome.simple-scan
         system-config-printer
         pulsemixer
-        xonotic
       ];
       programs.git = {
         enable = true;

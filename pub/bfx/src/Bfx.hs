@@ -50,6 +50,7 @@ import qualified Bfx.Data.Wallets as Wallets
 import Bfx.Data.Web as X
 import Bfx.Indicator.Atr as X
 import Bfx.Indicator.Ma as X
+import Bfx.Indicator.Rsi as X
 import Bfx.Indicator.Tr as X
 import Bfx.Math as X
 import Bfx.Parser as X

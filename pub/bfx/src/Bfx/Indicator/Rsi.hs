@@ -82,8 +82,8 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
                 case mcandle of
                   Nothing -> pure $ Right ()
                   Just (c, loss, gain) -> do
-                    let nextAvgLoss = prevAvgLoss * (ratPer - 1) + loss / ratPer
-                    let nextAvgGain = prevAvgGain * (ratPer - 1) + gain / ratPer
+                    let nextAvgLoss = (prevAvgLoss * (ratPer - 1) + loss) / ratPer
+                    let nextAvgGain = (prevAvgGain * (ratPer - 1) + gain) / ratPer
                     let rs = nextAvgGain / nextAvgLoss
                     let rsi = Rsi $ 100 - (100 / (1 + rs))
                     C.yield (c, rsi)

@@ -151,10 +151,12 @@ import Control.Lens as X ((^?))
 import Control.Lens.Combinators as X
   ( ALens',
     ATraversal',
+    ATraversal1',
     LensLike',
     at,
     cloneLens,
     cloneTraversal,
+    cloneTraversal1,
     each,
     first1Of,
     ix,

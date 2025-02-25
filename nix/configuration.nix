@@ -96,6 +96,7 @@
   mkFirejailCustom = {
     pkg,
     exe,
+    dir,
     cfg ? "",
   }: {
     "${pkg}" = {
@@ -134,7 +135,7 @@
           shell none
 
           disable-mnt
-          private ''${HOME}/.firejail/${pkg}
+          private ''${HOME}/.firejail/${dir}
           private-bin none
           private-cache
           private-cwd
@@ -800,11 +801,26 @@ in {
     programs.firejail.wrappedBinaries =
       mkFirejailSimple "xonotic"
       // mkFirejailCustom {
-        pkg = "doom";
+        pkg = "doom2";
+        dir = "doom";
         exe = ''
           ${pkgs.gzdoom}/bin/gzdoom \
-            -iwad ./mods/freedoom-0.13.0/freedoom2.wad \
-            -file ./mods/brutalv22test4.pk3
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./brutalv22test4.pk3 \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // mkFirejailCustom {
+        pkg = "ashes1";
+        dir = "doom";
+        exe = ''
+          ${pkgs.gzdoom}/bin/gzdoom \
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./ashes/AshesSAMenu.pk3 \
+            -file ./ashes/lightmodepatch.pk3 \
+            -file ./ashes/Ashes2063Enriched2_23.pk3 \
+            -file ./ashes/Ashes2063EnrichedFDPatch.pk3 \
+            -file ./SimpleSlots.1.1.pk7
         '';
       };
 

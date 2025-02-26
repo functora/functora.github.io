@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
 {-# OPTIONS_HADDOCK show-extensions #-}
 
 module Bfx.Indicator.Rsi
@@ -14,9 +15,10 @@ import qualified Conduit as C
 import qualified Data.Conduit.List as C
 import Functora.Money
 import Functora.Prelude
+import qualified Prelude
 
 newtype Rsi = Rsi
-  { unRsi :: Double
+  { unRsi :: Fixed E30
   }
   deriving stock
     ( Eq,
@@ -59,12 +61,14 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
               C.yield
                 ( c2,
                   -- Loss
-                  via @Rational @(Ratio Natural) @Double
+                  fromRational @(Fixed E30)
+                    . from @(Ratio Natural) @Rational
                     $ if p1 >= p2
                       then p1 - p2
                       else 0,
                   -- Gain
-                  via @Rational @(Ratio Natural) @Double
+                  fromRational @(Fixed E30)
+                    . from @(Ratio Natural) @Rational
                     $ if p1 <= p2
                       then p2 - p1
                       else 0
@@ -76,23 +80,26 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
     .| ( do
           seed <- C.take intPer
           when (length seed == intPer) $ do
-            let initAvgLoss = sum (fmap snd3 seed) / dblPer
-            let initAvgGain = sum (fmap thd3 seed) / dblPer
+            let initAvgLoss = sum (fmap snd3 seed) / fixPer
+            let initAvgGain = sum (fmap thd3 seed) / fixPer
             flip loopM (initAvgLoss, initAvgGain)
               $ \(prevAvgLoss, prevAvgGain) -> do
                 mcandle <- C.await
                 case mcandle of
                   Nothing -> pure $ Right ()
                   Just (c, loss, gain) -> do
-                    let nextAvgLoss = (prevAvgLoss * (dblPer - 1) + loss) / dblPer
-                    let nextAvgGain = (prevAvgGain * (dblPer - 1) + gain) / dblPer
+                    let nextAvgLoss = (prevAvgLoss * (fixPer - 1) + loss) / fixPer
+                    let nextAvgGain = (prevAvgGain * (fixPer - 1) + gain) / fixPer
                     let rs = nextAvgGain / nextAvgLoss
                     let rsi = Rsi $ 100 - (100 / (1 + rs))
                     C.yield (c, rsi)
                     pure $ Left (nextAvgLoss, nextAvgGain)
        )
   where
-    dblPer = unsafeFrom @Natural @Double natPer
+    fixPer :: Fixed E30
+    fixPer =
+      Prelude.fromInteger $ from @Natural @Integer natPer
+    intPer :: Int
     intPer =
       case unsafeFrom @Natural @Int natPer of
         x | x < 2 -> error $ "Bad RSI period " <> inspect natPer

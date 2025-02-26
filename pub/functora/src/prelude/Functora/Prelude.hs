@@ -119,6 +119,7 @@ module Functora.Prelude
     dropAround,
     dropWhileEnd,
     AscOrDesc (..),
+    E30,
 
     -- * DerivingVia
     -- $derivingVia
@@ -1150,6 +1151,11 @@ data AscOrDesc
       Enum,
       Bounded
     )
+
+data E30
+
+instance HasResolution E30 where
+  resolution = const 1_0000000000_0000000000_0000000000
 
 -- $derivingVia
 -- Newtypes to simplify deriving via.

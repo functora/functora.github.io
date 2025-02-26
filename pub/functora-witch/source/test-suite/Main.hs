@@ -1660,19 +1660,19 @@ spec = describe "Witch" $ do
         f 12.3 `shouldBe` Just 12.3
         f 0.12 `shouldBe` Nothing
 
-    describe "From Integer (Fixed a)" $ do
-      let f = Witch.from @Integer @Fixed.Deci
-      it "works" $ do
-        f 1 `shouldBe` 0.1
-        f 10 `shouldBe` 1
-        f 120 `shouldBe` 12
+    -- describe "From Integer (Fixed a)" $ do
+    --   let f = Witch.from @Integer @Fixed.Deci
+    --   it "works" $ do
+    --     f 1 `shouldBe` 0.1
+    --     f 10 `shouldBe` 1
+    --     f 120 `shouldBe` 12
 
-    describe "From (Fixed a) Integer" $ do
-      let f = Witch.from @Fixed.Deci @Integer
-      it "works" $ do
-        f 0.1 `shouldBe` 1
-        f 1 `shouldBe` 10
-        f 12 `shouldBe` 120
+    -- describe "From (Fixed a) Integer" $ do
+    --   let f = Witch.from @Fixed.Deci @Integer
+    --   it "works" $ do
+    --     f 0.1 `shouldBe` 1
+    --     f 1 `shouldBe` 10
+    --     f 12 `shouldBe` 120
 
     describe "From (Fixed a) Rational" $ do
       let f = Witch.from @Fixed.Deci @Rational

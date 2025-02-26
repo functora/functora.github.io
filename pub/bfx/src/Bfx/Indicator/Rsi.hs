@@ -16,7 +16,7 @@ import Functora.Money
 import Functora.Prelude
 
 newtype Rsi = Rsi
-  { unRsi :: Ratio Natural
+  { unRsi :: Double
   }
   deriving stock
     ( Eq,
@@ -59,13 +59,15 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
               C.yield
                 ( c2,
                   -- Loss
-                  if p1 >= p2
-                    then p1 - p2
-                    else 0,
+                  via @Rational @(Ratio Natural) @Double
+                    $ if p1 >= p2
+                      then p1 - p2
+                      else 0,
                   -- Gain
-                  if p1 <= p2
-                    then p2 - p1
-                    else 0
+                  via @Rational @(Ratio Natural) @Double
+                    $ if p1 <= p2
+                      then p2 - p1
+                      else 0
                 )
               pure True
             _ ->
@@ -74,23 +76,23 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
     .| ( do
           seed <- C.take intPer
           when (length seed == intPer) $ do
-            let initAvgLoss = sum (fmap snd3 seed) / ratPer
-            let initAvgGain = sum (fmap thd3 seed) / ratPer
+            let initAvgLoss = sum (fmap snd3 seed) / dblPer
+            let initAvgGain = sum (fmap thd3 seed) / dblPer
             flip loopM (initAvgLoss, initAvgGain)
               $ \(prevAvgLoss, prevAvgGain) -> do
                 mcandle <- C.await
                 case mcandle of
                   Nothing -> pure $ Right ()
                   Just (c, loss, gain) -> do
-                    let nextAvgLoss = (prevAvgLoss * (ratPer - 1) + loss) / ratPer
-                    let nextAvgGain = (prevAvgGain * (ratPer - 1) + gain) / ratPer
+                    let nextAvgLoss = (prevAvgLoss * (dblPer - 1) + loss) / dblPer
+                    let nextAvgGain = (prevAvgGain * (dblPer - 1) + gain) / dblPer
                     let rs = nextAvgGain / nextAvgLoss
                     let rsi = Rsi $ 100 - (100 / (1 + rs))
                     C.yield (c, rsi)
                     pure $ Left (nextAvgLoss, nextAvgGain)
        )
   where
-    ratPer = from @Natural @(Ratio Natural) natPer
+    dblPer = unsafeFrom @Natural @Double natPer
     intPer =
       case unsafeFrom @Natural @Int natPer of
         x | x < 2 -> error $ "Bad RSI period " <> inspect natPer

@@ -801,6 +801,15 @@ in {
     programs.firejail.wrappedBinaries =
       mkFirejailSimple "xonotic"
       // mkFirejailCustom {
+        pkg = "openarena";
+        dir = "q3";
+        exe = ''
+          ${pkgs.openarena}/bin/openarena \
+            +set fs_homepath ~/.firejail/q3/.openarena \
+            +set fs_game excessiveplus +set vm_cgame 2 +set vm_ui 2
+        '';
+      }
+      // mkFirejailCustom {
         pkg = "doom2";
         dir = "doom";
         exe = ''

@@ -7,6 +7,7 @@
   vi = import ./../pub/vi/nix/default.nix {};
   dns = ["8.8.8.8" "8.8.4.4"];
   unst = import ./nixpkgs-unstable.nix;
+  vkdoom = import ./vkdoom.nix {inherit pkgs;};
   # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
   # yewtube = import ./yewtube.nix;
   qmk-setup = import ./qmk-setup.nix;
@@ -18,10 +19,6 @@
   nixos-hardware = builtins.fetchTarball {
     url = "https://github.com/NixOS/nixos-hardware/archive/fa194fc484fd7270ab324bb985593f71102e84d1.tar.gz";
     sha256 = "06yn179lbhql3vkk4cjca4mdwr6lfdh6n1vqma3a4266dap6hcf4";
-  };
-  kmonad-srv = builtins.fetchTarball {
-    url = "https://github.com/kmonad/kmonad/archive/3413f1be996142c8ef4f36e246776a6df7175979.tar.gz";
-    sha256 = "0mm439r5qkkpld51spbkmn0qy27sff6iw8c7mb87x73xk4z5cjxq";
   };
   kmonad-src = builtins.fetchTarball {
     url = "https://github.com/kmonad/kmonad/archive/820af08d1ef1bff417829415d5f673041b67ef4d.tar.gz";
@@ -36,10 +33,6 @@
     ) {src = "${kmonad-src}/nix";})
     .defaultNix
     .default;
-  obelisk = import (fetchTarball {
-    url = "https://github.com/obsidiansystems/obelisk/archive/41f97410cfa2e22a4ed9e9344abcd58bbe0f3287.tar.gz";
-    sha256 = "04bpzji7y3nz573ib3g6icb56s5zbj4zxpakhqaql33v2v77hi9g";
-  }) {};
   blocked-hosts =
     builtins.concatStringsSep "\n"
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
@@ -345,11 +338,10 @@
 in {
   imports =
     [
-      (import "${nixos-hardware}/common/cpu/intel")
-      (import "${nixos-hardware}/common/pc/laptop")
-      (import "${nixos-hardware}/common/pc/laptop/ssd")
+      # (import "${nixos-hardware}/common/cpu/intel")
+      # (import "${nixos-hardware}/common/pc/laptop")
+      # (import "${nixos-hardware}/common/pc/laptop/ssd")
       (import "${home-manager}/nixos")
-      (import "${kmonad-srv}/nix/nixos-module.nix")
       (import ./rigtora.nix)
     ]
     ++ (
@@ -418,18 +410,21 @@ in {
     security.polkit.enable = true;
     security.pam.services.swaylock = {};
     #
-    # Nvidia
+    # GPU
     #
     hardware.opengl = {
       enable = true;
-      driSupport = true;
       driSupport32Bit = true;
       extraPackages = with pkgs; [
-        vulkan-validation-layers
-        intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        vaapiIntel # LIBVA_DRIVER_NAME=i965
-        vaapiVdpau
-        libvdpau-va-gl
+        amdvlk
+        # vulkan-validation-layers
+        # intel-media-driver # LIBVA_DRIVER_NAME=iHD
+        # vaapiIntel # LIBVA_DRIVER_NAME=i965
+        # vaapiVdpau
+        # libvdpau-va-gl
+      ];
+      extraPackages32 = with pkgs; [
+        driversi686Linux.amdvlk
       ];
     };
     #
@@ -810,17 +805,29 @@ in {
         '';
       }
       // mkFirejailCustom {
-        pkg = "doom2";
+        pkg = "doom-free2";
         dir = "doom";
         exe = ''
-          ${pkgs.gzdoom}/bin/gzdoom \
+          ${unst.gzdoom}/bin/gzdoom \
             -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./brutalv22test4.pk3 \
+            -file ./Project_Brutality-PB_Staging.zip \
             -file ./SimpleSlots.1.1.pk7
         '';
       }
       // mkFirejailCustom {
-        pkg = "ashes1";
+        pkg = "doom-dsc";
+        dir = "doom";
+        exe = ''
+          ${vkdoom}/bin/vkdoom \
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./dsc/DSC-1.0.2.pk3 \
+            -file ./dsc/DSCmaterialPack.pk3 \
+            -file ./Project_Brutality-PB_Staging.zip \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // mkFirejailCustom {
+        pkg = "doom-ashes1";
         dir = "doom";
         exe = ''
           ${pkgs.gzdoom}/bin/gzdoom \
@@ -870,7 +877,7 @@ in {
         xdg-utils
         glib
         dracula-theme
-        gnome3.adwaita-icon-theme
+        adwaita-icon-theme
         #
         # apps
         #
@@ -879,18 +886,15 @@ in {
         shellcheck
         chromium
         xournalpp
-        gnome.nautilus
+        nautilus
         ccrypt
-        awscli2
         libreoffice
         tor-browser-bundle-bin
         kooha
         mpv
         qmk
         qmk-setup
-        prusa-slicer
-        cura
-        freecad
+        # cura
         lesspass-cli
         # mkdir -p ~/macos/Public
         # cd ~/macos
@@ -902,7 +906,7 @@ in {
         via
         vial
         usbutils
-        gnome.simple-scan
+        simple-scan
         system-config-printer
         pulsemixer
       ];
@@ -1193,6 +1197,7 @@ in {
       # GUI
       #
       enable = true;
+      videoDrivers = ["amdgpu"];
       displayManager.gdm.enable = true;
       displayManager.gdm.wayland = true;
       displayManager.defaultSession = "sway";

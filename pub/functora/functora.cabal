@@ -316,6 +316,11 @@ common pkg-bolt11
     , bitcoin-address
     , bytestring
 
+common pkg-round
+  import:         pkg
+  hs-source-dirs: src/round
+  build-depends:  base
+
 library
   import:          pkg-prelude
   exposed-modules:
@@ -430,6 +435,13 @@ library bolt11
   visibility:      public
   exposed-modules: Functora.Bolt11
 
+library round
+  import:          pkg-round
+  build-depends:   functora
+  exposed:         True
+  visibility:      public
+  exposed-modules: Functora.Round
+
 executable elm2miso
   import:        pkg-elm2miso, exe
   main-is:       Main.hs
@@ -453,12 +465,18 @@ test-suite functora-test
     , containers
     , Crypto
     , cryptohash-sha256
+    , doctest
     , hspec
     , modern-uri
     , qrcode-core
     , QuickCheck
     , quickcheck-instances
+    , smallcheck
     , string-qq
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , tasty-smallcheck
     , text
     , universum
 
@@ -470,6 +488,7 @@ test-suite functora-test
     Functora.PreludeSpec
     Functora.QrSpec
     Functora.RatesSpec
+    Functora.RoundSpec
     Functora.SoplateSpec
     Functora.Tags.TestFgpt
     Functora.Tags.TestSing
@@ -483,7 +502,7 @@ test-suite functora-test
       pkg-cfg, pkg-web, pkg-sql,
       pkg-money, pkg-rates, pkg-tags,
       pkg-soplate, pkg-elm2miso, pkg-card,
-      pkg-bolt11, pkg-uri
+      pkg-bolt11, pkg-round, pkg-uri
 
     other-modules:
       Functora.Aes
@@ -501,6 +520,7 @@ test-suite functora-test
       Functora.QrOrphan
       Functora.Rates
       Functora.Rfc2397
+      Functora.Round
       Functora.Soplate
       Functora.Sql
       Functora.SqlOrphan
@@ -524,6 +544,7 @@ test-suite functora-test
       , money
       , qr
       , rates
+      , round
       , soplate
       , tags
       , uri

@@ -5,6 +5,7 @@
   ...
 }: let
   vi = import ./../pub/vi/nix/default.nix {};
+  fj = import ./firejail.nix;
   dns = ["8.8.8.8" "8.8.4.4"];
   unst = import ./nixpkgs-unstable.nix;
   vkdoom = import ./vkdoom.nix {inherit pkgs;};
@@ -80,134 +81,6 @@
       ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
     '';
   };
-  mkFirejailSimple = pkg: {
-    "${pkg}" = {
-      executable = "${pkgs."${pkg}"}/bin/${pkg}";
-      profile = "${pkgs.firejail}/etc/firejail/${pkg}.profile";
-    };
-  };
-  mkFirejailCustom = {
-    pkg,
-    exe,
-    dir,
-    net ? false,
-    cfg ? "",
-  }: {
-    "${pkg}" = {
-      executable = exe;
-      profile = mkFirejailProfile {inherit pkg dir net cfg;};
-    };
-  };
-  mkFirejailProfile = {
-    pkg,
-    dir,
-    net,
-    cfg,
-  }:
-    pkgs.writeText "${pkg}.local" (
-      ''
-        include default.profile
-
-        include disable-X11.inc
-        include disable-common.inc
-        include disable-devel.inc
-        include disable-exec.inc
-        include disable-interpreters.inc
-        include disable-proc.inc
-        include disable-programs.inc
-        include disable-shell.inc
-        include disable-write-mnt.inc
-        include disable-xdg.inc
-
-        # no3d
-        # nosound
-        apparmor
-        caps.drop all
-        machine-id
-        ${
-          if net
-          then ""
-          else "net none"
-        }
-        netfilter
-        nodvd
-        nogroups
-        noinput
-        nonewprivs
-        noprinters
-        noroot
-        notv
-        nou2f
-        novideo
-        shell none
-
-        disable-mnt
-        private ''${HOME}/.firejail/${dir}
-        private-bin none
-        private-cache
-        private-cwd
-        private-dev
-        ${
-          if net
-          then ""
-          else "private-etc none"
-        }
-        private-lib none
-        private-opt none
-        private-srv none
-        private-tmp
-        seccomp
-        ${
-          if net
-          then ""
-          else "x11 none"
-        }
-
-        dbus-system none
-        dbus-user none
-
-        restrict-namespaces
-      ''
-      + cfg
-    );
-  mkFirejailWrapper = {
-    pkgs,
-    pkg,
-    exe,
-    desktop ? null,
-    profile ? null,
-    extraArgs ? [],
-  }:
-    pkgs.runCommand "firejail-wrap"
-    {
-      preferLocalBuild = true;
-      allowSubstitutes = false;
-      meta.priority = -1; # take precedence over non-firejailed versions
-    }
-    (
-      let
-        firejailArgs = pkgs.lib.concatStringsSep " " (
-          extraArgs
-          ++ (
-            pkgs.lib.optional (profile != null) "--profile=${toString profile}"
-          )
-        );
-      in
-        ''
-          command_path="$out/bin/${pkg}"
-          mkdir -p $out/bin
-          mkdir -p $out/share/applications
-          cat <<'_EOF' >"$command_path"
-          #! ${pkgs.runtimeShell} -e
-          exec /run/wrappers/bin/firejail ${firejailArgs} -- ${toString exe} "$@"
-          _EOF
-          chmod 0755 "$command_path"
-        ''
-        + pkgs.lib.optionalString (desktop != null) ''
-          substitute ${desktop} $out/share/applications/$(basename ${desktop}) \
-            --replace ${exe} "$command_path"
-        ''
-    );
   mkKbd = cfg: dev: {
     config = cfg;
     device = dev;
@@ -862,8 +735,8 @@ in {
     #
     programs.firejail.enable = true;
     programs.firejail.wrappedBinaries =
-      mkFirejailSimple "xonotic"
-      // mkFirejailCustom {
+      fj.mkFirejailSimple "xonotic"
+      // fj.mkFirejailCustom {
         pkg = "openarena";
         dir = "q3";
         exe = ''
@@ -872,7 +745,7 @@ in {
             +set fs_game excessiveplus +set vm_cgame 2 +set vm_ui 2
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "doom-free2";
         dir = "doom";
         exe = ''
@@ -882,7 +755,7 @@ in {
             -file ./SimpleSlots.1.1.pk7
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "doom-dsc";
         dir = "doom";
         exe = ''
@@ -894,7 +767,7 @@ in {
             -file ./SimpleSlots.1.1.pk7
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "doom-ashes1";
         dir = "doom";
         exe = ''
@@ -907,7 +780,7 @@ in {
             -file ./SimpleSlots.1.1.pk7
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "tabby-download-embed";
         dir = "tabby";
         net = true;
@@ -916,7 +789,7 @@ in {
             download --model Nomic-Embed-Text
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "tabby-download-qwen";
         dir = "tabby";
         net = true;
@@ -925,7 +798,7 @@ in {
             download --model Qwen2.5-Coder-0.5B
         '';
       }
-      // mkFirejailCustom {
+      // fj.mkFirejailCustom {
         pkg = "tabby-serve-qwen";
         dir = "tabby";
         cfg = ''

@@ -60,7 +60,11 @@ in
           }${sub} --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid")
         '';
       };
-    mkService = srv: usr: exe: {
+    mkService = {
+      srv,
+      usr ? null,
+      exe,
+    }: {
       lib,
       pkgs,
       config,
@@ -85,7 +89,10 @@ in
             wantedBy = ["default.target"];
             script = "PATH=$PATH:${pkgs.busybox}/bin ${exe}";
             serviceConfig = {
-              User = usr;
+              User =
+                if usr == null
+                then config.services.functora.userName
+                else usr;
               Restart = "on-failure";
             };
           };

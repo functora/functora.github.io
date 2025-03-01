@@ -168,7 +168,7 @@
   mkFirejailWrapper = {
     pkgs,
     pkg,
-    executable,
+    exe,
     desktop ? null,
     profile ? null,
     extraArgs ? [],
@@ -194,15 +194,13 @@
           mkdir -p $out/share/applications
           cat <<'_EOF' >"$command_path"
           #! ${pkgs.runtimeShell} -e
-          exec /run/wrappers/bin/firejail ${firejailArgs} -- ${
-            toString executable
-          } "$@"
+          exec /run/wrappers/bin/firejail ${firejailArgs} -- ${toString exe} "$@"
           _EOF
           chmod 0755 "$command_path"
         ''
         + pkgs.lib.optionalString (desktop != null) ''
           substitute ${desktop} $out/share/applications/$(basename ${desktop}) \
-            --replace ${executable} "$command_path"
+            --replace ${exe} "$command_path"
         ''
     );
   mkKbd = cfg: dev: {
@@ -437,6 +435,7 @@ in {
       TERMINAL = "alacritty";
       WLR_NO_HARDWARE_CURSORS = "1";
       NIXOS_OZONE_WL = "1";
+      ROC_ENABLE_PRE_VEGA = "1";
     };
     environment.sessionVariables = environment.variables;
     #
@@ -467,11 +466,18 @@ in {
     #
     # GPU
     #
+    systemd.tmpfiles.rules = [
+      "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.rocmPackages_5.clr}"
+    ];
     hardware.opengl = {
       enable = true;
       driSupport32Bit = true;
       extraPackages = with pkgs; [
         amdvlk
+        rocmPackages_5.clr.icd
+        rocmPackages_5.clr
+        rocmPackages_5.rocminfo
+        rocmPackages_5.rocm-runtime
         # vulkan-validation-layers
         # intel-media-driver # LIBVA_DRIVER_NAME=iHD
         # vaapiIntel # LIBVA_DRIVER_NAME=i965
@@ -964,16 +970,6 @@ in {
         simple-scan
         system-config-printer
         pulsemixer
-        (mkFirejailWrapper {
-          inherit pkgs;
-          pkg = "firefox-firejail";
-          executable = "${firefox-esr}/bin/firefox-esr";
-          profile = mkFirejailProfile {
-            pkg = "tabby";
-            dir = "tabby";
-            net = true;
-          };
-        })
       ];
       programs.git = {
         enable = true;

@@ -91,80 +91,85 @@
     exe,
     dir,
     net ? false,
+    cfg ? "",
   }: {
     "${pkg}" = {
       executable = exe;
-      profile = mkFirejailProfile {inherit pkg dir net;};
+      profile = mkFirejailProfile {inherit pkg dir net cfg;};
     };
   };
   mkFirejailProfile = {
     pkg,
     dir,
-    net ? false,
+    net,
+    cfg,
   }:
-    pkgs.writeText "${pkg}.local" ''
-      include default.profile
+    pkgs.writeText "${pkg}.local" (
+      ''
+        include default.profile
 
-      include disable-X11.inc
-      include disable-common.inc
-      include disable-devel.inc
-      include disable-exec.inc
-      include disable-interpreters.inc
-      include disable-proc.inc
-      include disable-programs.inc
-      include disable-shell.inc
-      include disable-write-mnt.inc
-      include disable-xdg.inc
+        include disable-X11.inc
+        include disable-common.inc
+        include disable-devel.inc
+        include disable-exec.inc
+        include disable-interpreters.inc
+        include disable-proc.inc
+        include disable-programs.inc
+        include disable-shell.inc
+        include disable-write-mnt.inc
+        include disable-xdg.inc
 
-      # no3d
-      # nosound
-      apparmor
-      caps.drop all
-      machine-id
-      ${
-        if net
-        then ""
-        else "net none"
-      }
-      netfilter
-      nodvd
-      nogroups
-      noinput
-      nonewprivs
-      noprinters
-      noroot
-      notv
-      nou2f
-      novideo
-      shell none
+        # no3d
+        # nosound
+        apparmor
+        caps.drop all
+        machine-id
+        ${
+          if net
+          then ""
+          else "net none"
+        }
+        netfilter
+        nodvd
+        nogroups
+        noinput
+        nonewprivs
+        noprinters
+        noroot
+        notv
+        nou2f
+        novideo
+        shell none
 
-      disable-mnt
-      private ''${HOME}/.firejail/${dir}
-      private-bin none
-      private-cache
-      private-cwd
-      private-dev
-      ${
-        if net
-        then ""
-        else "private-etc none"
-      }
-      private-lib none
-      private-opt none
-      private-srv none
-      private-tmp
-      seccomp
-      ${
-        if net
-        then ""
-        else "x11 none"
-      }
+        disable-mnt
+        private ''${HOME}/.firejail/${dir}
+        private-bin none
+        private-cache
+        private-cwd
+        private-dev
+        ${
+          if net
+          then ""
+          else "private-etc none"
+        }
+        private-lib none
+        private-opt none
+        private-srv none
+        private-tmp
+        seccomp
+        ${
+          if net
+          then ""
+          else "x11 none"
+        }
 
-      dbus-system none
-      dbus-user none
+        dbus-system none
+        dbus-user none
 
-      restrict-namespaces
-    '';
+        restrict-namespaces
+      ''
+      + cfg
+    );
   mkFirejailWrapper = {
     pkgs,
     pkg,
@@ -806,6 +811,8 @@ in {
         "networkmanager"
         "scanner"
         "ydotool"
+        "render"
+        "video"
         "lp"
       ];
       #
@@ -898,6 +905,37 @@ in {
             -file ./ashes/Ashes2063Enriched2_23.pk3 \
             -file ./ashes/Ashes2063EnrichedFDPatch.pk3 \
             -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // mkFirejailCustom {
+        pkg = "tabby-download-embed";
+        dir = "tabby";
+        net = true;
+        exe = ''
+          ${import ./tabby.nix}/bin/tabby \
+            download --model Nomic-Embed-Text
+        '';
+      }
+      // mkFirejailCustom {
+        pkg = "tabby-download-qwen";
+        dir = "tabby";
+        net = true;
+        exe = ''
+          ${import ./tabby.nix}/bin/tabby \
+            download --model Qwen2.5-Coder-0.5B
+        '';
+      }
+      // mkFirejailCustom {
+        pkg = "tabby-serve-qwen";
+        dir = "tabby";
+        cfg = ''
+          env SWC_DEBUG=1
+          env RUST_LOG=trace
+          env TABBY_DISABLE_USAGE_COLLECTION=1
+        '';
+        exe = ''
+          ${import ./tabby-socat.nix}/bin/tabby-socat \
+            serve --model Qwen2.5-Coder-0.5B
         '';
       };
 

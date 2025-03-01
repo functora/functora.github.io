@@ -275,6 +275,7 @@ in {
       (import "${home-manager}/nixos")
       (import ./rigtora.nix)
     ]
+    ++ (import ./tabby-services.nix)
     ++ (
       if builtins.pathExists ./../prv/nix/configuration.nix
       then [(import ./../prv/nix/configuration.nix)]
@@ -797,19 +798,6 @@ in {
           ${import ./tabby.nix}/bin/tabby \
             download --model Qwen2.5-Coder-0.5B
         '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-serve-qwen";
-        dir = "tabby";
-        cfg = ''
-          env SWC_DEBUG=1
-          env RUST_LOG=trace
-          env TABBY_DISABLE_USAGE_COLLECTION=1
-        '';
-        exe = ''
-          ${import ./tabby-socat.nix}/bin/tabby-socat \
-            serve --model Qwen2.5-Coder-0.5B
-        '';
       };
 
     #
@@ -1181,5 +1169,10 @@ in {
     services.borgbackup.jobs =
       lib.mkMerge
       (map mkLocalBorg config.services.functora.localBorg);
+    #
+    # Tabby
+    #
+    services.tabby-socat.enable = true;
+    services.socat-tabby.enable = true;
   };
 }

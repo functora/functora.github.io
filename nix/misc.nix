@@ -63,7 +63,7 @@ in
     mkService = {
       srv,
       usr ? null,
-      exe,
+      mkExe,
     }: {
       lib,
       pkgs,
@@ -87,7 +87,7 @@ in
           systemd.services."${srv}" = {
             wants = ["network.target"];
             wantedBy = ["default.target"];
-            script = "PATH=$PATH:${pkgs.busybox}/bin ${exe}";
+            script = "PATH=$PATH:${pkgs.busybox}/bin ${mkExe config}";
             serviceConfig = {
               User =
                 if usr == null

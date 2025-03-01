@@ -141,20 +141,23 @@ in rec {
     desktop ? null,
     profile ? mkFirejailProfile {inherit pkg dir net cfg;},
     extraArgs ? [],
-  }:
+    srv ? pkg,
+  }: let
+    drv = mkFirejailWrapper {
+      inherit
+        pkg
+        exe
+        dir
+        net
+        cfg
+        desktop
+        profile
+        extraArgs
+        ;
+    };
+  in
     misc.mkService {
-      srv = pkg;
-      exe = mkFirejailWrapper {
-        inherit
-          pkg
-          exe
-          dir
-          net
-          cfg
-          desktop
-          profile
-          extraArgs
-          ;
-      };
+      inherit srv;
+      mkExe = _: "${drv}/bin/${pkg}";
     };
 }

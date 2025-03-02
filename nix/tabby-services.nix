@@ -5,7 +5,7 @@ let
 in [
   (
     fj.mkFirejailService {
-      pkg = "tabby-socat";
+      pkg = "tabby-server";
       dir = "tabby";
       cfg = ''
         env SWC_DEBUG=1
@@ -20,7 +20,7 @@ in [
   )
   (
     misc.mkService {
-      srv = "socat-tabby";
+      srv = "tabby-socket";
       mkExe = config: ''
         ${pkgs.socat}/bin/socat \
         TCP-LISTEN:8080,fork,reuseaddr,keepalive \

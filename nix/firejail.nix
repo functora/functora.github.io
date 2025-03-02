@@ -10,20 +10,22 @@ in rec {
   };
   mkFirejailCustom = {
     pkg,
-    exe,
-    dir,
+    dir ? null,
     net ? false,
+    grp ? null,
     cfg ? "",
+    exe,
   }: {
     "${pkg}" = {
       executable = exe;
-      profile = mkFirejailProfile {inherit pkg dir net cfg;};
+      profile = mkFirejailProfile {inherit pkg dir net grp cfg;};
     };
   };
   mkFirejailProfile = {
     pkg,
     dir,
     net,
+    grp,
     cfg,
   }:
     pkgs.writeText "${pkg}.local" (
@@ -64,7 +66,11 @@ in rec {
         shell none
 
         disable-mnt
-        private ''${HOME}/.firejail/${dir}
+        private ${
+          if dir == null
+          then ""
+          else ''''${HOME}/.firejail/${dir}''
+        }
         private-bin none
         private-cache
         private-cwd
@@ -94,13 +100,14 @@ in rec {
     );
   mkFirejailWrapper = {
     pkg,
-    exe,
-    dir,
+    dir ? null,
     net ? false,
+    grp ? null,
     cfg ? "",
     desktop ? null,
-    profile ? mkFirejailProfile {inherit pkg dir net cfg;},
+    profile ? mkFirejailProfile {inherit pkg dir net grp cfg;},
     extraArgs ? [],
+    exe,
   }:
     pkgs.runCommand "firejail-wrap"
     {
@@ -112,6 +119,11 @@ in rec {
       let
         firejailArgs = pkgs.lib.concatStringsSep " " (
           extraArgs
+          ++ (
+            if grp == null
+            then []
+            else ["--join-or-start=${grp}"]
+          )
           ++ (
             pkgs.lib.optional (profile != null) "--profile=${toString profile}"
           )
@@ -134,14 +146,15 @@ in rec {
     );
   mkFirejailService = {
     pkg,
-    exe,
-    dir,
+    dir ? null,
     net ? false,
+    grp ? null,
     cfg ? "",
     desktop ? null,
-    profile ? mkFirejailProfile {inherit pkg dir net cfg;},
+    profile ? mkFirejailProfile {inherit pkg dir net grp cfg;},
     extraArgs ? [],
     srv ? pkg,
+    exe,
   }: let
     drv = mkFirejailWrapper {
       inherit

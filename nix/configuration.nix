@@ -945,12 +945,12 @@ in {
             show_volume_when_muted = true;
             icons_format = "";
           }
-          # {
-          #   block = "time";
-          #   format = " $timestamp.datetime(f:'%a %Y-%m-%d %R') ";
-          #   interval = 60;
-          #   icons_format = "";
-          # }
+          {
+            block = "time";
+            format = " $timestamp.datetime(f:'%a %Y-%m-%d %R') ";
+            interval = 60;
+            icons_format = "";
+          }
         ];
       };
       services.udiskie.enable = true;
@@ -1172,7 +1172,7 @@ in {
     #
     # Tabby
     #
-    services.tabby-socat.enable = true;
-    services.socat-tabby.enable = true;
+    services.tabby-server.enable = true;
+    services.tabby-socket.enable = true;
   };
 }

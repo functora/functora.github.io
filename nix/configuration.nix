@@ -798,15 +798,45 @@ in {
           ${import ./tabby.nix}/bin/tabby \
             download --model Qwen2.5-Coder-0.5B
         '';
-      };
+      }
+      // fj.mkFirejailCustom {
+        pkg = "vi";
+        exe = "${vi}/bin/vi";
+        profile = pkgs.writeText "fjvi.local" ''
+          no3d
+          nosound
+          apparmor
+          caps.drop all
+          machine-id
+          net none
+          netfilter
+          nodvd
+          nogroups
+          noinput
+          nonewprivs
+          noprinters
+          noroot
+          notv
+          nou2f
+          novideo
+          shell none
 
+          disable-mnt
+          seccomp
+          x11 none
+
+          dbus-system none
+          dbus-user none
+
+          restrict-namespaces
+        '';
+      };
     #
     # Home
     #
     home-manager.users.${config.services.functora.userName} = {
       home.stateVersion = "22.11";
       home.packages = with pkgs; [
-        vi
         tree
         s-tui
         qutebrowser

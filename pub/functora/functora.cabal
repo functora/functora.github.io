@@ -437,7 +437,6 @@ library bolt11
 
 library round
   import:          pkg-round
-  build-depends:   functora
   exposed:         True
   visibility:      public
   exposed-modules: Functora.Round
@@ -471,12 +470,10 @@ test-suite functora-test
     , qrcode-core
     , QuickCheck
     , quickcheck-instances
-    , smallcheck
     , string-qq
     , tasty
     , tasty-hunit
     , tasty-quickcheck
-    , tasty-smallcheck
     , text
     , universum
 

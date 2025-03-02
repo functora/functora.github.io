@@ -14,11 +14,12 @@ in rec {
     net ? false,
     grp ? null,
     cfg ? "",
+    profile ? mkFirejailProfile {inherit pkg dir net grp cfg;},
     exe,
   }: {
     "${pkg}" = {
       executable = exe;
-      profile = mkFirejailProfile {inherit pkg dir net grp cfg;};
+      inherit profile;
     };
   };
   mkFirejailProfile = {

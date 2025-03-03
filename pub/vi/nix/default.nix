@@ -1,5 +1,6 @@
 let
   pkgs = import ./../../../nix/nixpkgs.nix;
+  unst = import ./../../../nix/nixpkgs-unstable.nix;
 in
   {
     mini ? true,
@@ -97,6 +98,11 @@ in
               coc-nvim
               sideways-vim
               vim-LanguageTool
+              #
+              # AI
+              #
+              nvim-lspconfig
+              unst.vimPlugins.vim-tabby
             ];
             opt = [
             ];

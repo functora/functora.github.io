@@ -775,3 +775,11 @@ let g:neoformat_toml_prettier = {
       \ 'stdin': 1,
       \ 'try_node_exe': 1,
       \ }
+
+"
+" => Tabby
+"
+
+let g:tabby_agent_start_command	= ["tabby-agent", "--stdio"]
+let g:tabby_inline_completion_trigger	= "auto"
+let g:tabby_inline_completion_keybinding_accept = '<C-CR>'

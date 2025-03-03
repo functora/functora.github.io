@@ -12,15 +12,6 @@
         "hie.yaml"
       ],
       "filetypes": ["haskell", "lhaskell"]
-    },
-    "gleam": {
-      "command": "gleam",
-      "args": ["lsp"],
-      "filetypes": ["gleam"]
-    },
-    "elixirLS": {
-      "command": "elixir-ls",
-      "filetypes": ["elixir", "eelixir"]
     }
   }
 }

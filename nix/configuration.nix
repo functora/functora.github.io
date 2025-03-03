@@ -743,7 +743,7 @@ in {
         exe = ''
           ${pkgs.openarena}/bin/openarena \
             +set fs_homepath ~/.firejail/q3/.openarena \
-            +set fs_game excessiveplus +set vm_cgame 2 +set vm_ui 2
+            +set fs_game omega
         '';
       }
       // fj.mkFirejailCustom {
@@ -800,9 +800,20 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
+        pkg = "tabby-agent";
+        dir = "tabby";
+        exe = "${
+          import ./tabby-agent.nix {
+            sock = "/home/${
+              config.services.functora.userName
+            }/.firejail/tabby/tabby.sock";
+          }
+        }/bin/tabby-agent";
+      }
+      // fj.mkFirejailCustom {
         pkg = "vi";
         exe = "${vi}/bin/vi";
-        profile = pkgs.writeText "fjvi.local" ''
+        profile = pkgs.writeText "vi.local" ''
           no3d
           nosound
           apparmor

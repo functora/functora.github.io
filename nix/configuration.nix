@@ -743,7 +743,8 @@ in {
         exe = ''
           ${pkgs.openarena}/bin/openarena \
             +set fs_homepath ~/.firejail/q3/.openarena \
-            +set fs_game omega
+            +set fs_basegame omega \
+            +set fs_game excessiveplus
         '';
       }
       // fj.mkFirejailCustom {
@@ -783,7 +784,7 @@ in {
       }
       // fj.mkFirejailCustom {
         pkg = "tabby-download-embed";
-        dir = "tabby";
+        dir = "tabby-download";
         net = true;
         exe = ''
           ${import ./tabby.nix}/bin/tabby \
@@ -792,11 +793,20 @@ in {
       }
       // fj.mkFirejailCustom {
         pkg = "tabby-download-qwen";
-        dir = "tabby";
+        dir = "tabby-download";
         net = true;
         exe = ''
           ${import ./tabby.nix}/bin/tabby \
             download --model Qwen2.5-Coder-0.5B
+        '';
+      }
+      // fj.mkFirejailCustom {
+        pkg = "tabby-download-deepseek";
+        dir = "tabby-download";
+        net = true;
+        exe = ''
+          ${import ./tabby.nix}/bin/tabby \
+            download --model DeepSeekCoder-1.3B
         '';
       }
       // fj.mkFirejailCustom {
@@ -859,7 +869,7 @@ in {
         pciutils
         docker-client
         docker-compose
-        btop
+        btop-rocm
         lsof
         wget
         #
@@ -910,6 +920,8 @@ in {
         simple-scan
         system-config-printer
         pulsemixer
+        (import ./vidmaker.nix)
+        (import ./clipmaker.nix)
       ];
       programs.git = {
         enable = true;

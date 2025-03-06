@@ -16,7 +16,7 @@ in [
         ${import ./tabby-socat.nix}/bin/tabby-socat \
           serve \
           --device vulkan \
-          --model Qwen2.5-Coder-0.5B
+          --model DeepSeekCoder-1.3B
       '';
     }
   )

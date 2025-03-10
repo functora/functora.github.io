@@ -866,7 +866,7 @@ in {
         s-tui
         qutebrowser
         xorg.xev
-        unst.yewtube
+        pkgs.yewtube
         niv
         zip
         unzip
@@ -936,7 +936,18 @@ in {
         settings = {
           font.size = 14;
           window.startup_mode = "Fullscreen";
+          terminal.shell.program = "${pkgs.bash}/bin/bash";
+          terminal.shell.args = [
+            "-c"
+            "${pkgs.tmux}/bin/tmux attach || ${pkgs.tmux}/bin/tmux"
+          ];
         };
+      };
+      programs.tmux = {
+        enable = true;
+        keyMode = "vi";
+        baseIndex = 1;
+        clock24 = true;
       };
       #
       # NOTE : direnv is used to cache nix development shells
@@ -1114,7 +1125,7 @@ in {
           };
           cfgProgrKeys = {
             "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
-            "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${unst.yewtube}/bin/yt";
+            "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${pkgs.yewtube}/bin/yt";
             "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
           };
           cfgBasicKeys = {

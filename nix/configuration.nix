@@ -81,6 +81,16 @@
       ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
     '';
   };
+  mkOpenArena = mod:
+    fj.mkFirejailCustom {
+      pkg = "openarena-${mod}";
+      dir = "q3";
+      exe = ''
+        ${pkgs.openarena}/bin/openarena \
+          +set fs_homepath ~/.firejail/q3/.openarena \
+          +set fs_game ${mod}
+      '';
+    };
   mkKbd = cfg: dev: {
     config = cfg;
     device = dev;
@@ -737,16 +747,10 @@ in {
     programs.firejail.enable = true;
     programs.firejail.wrappedBinaries =
       fj.mkFirejailSimple "xonotic"
-      // fj.mkFirejailCustom {
-        pkg = "openarena";
-        dir = "q3";
-        exe = ''
-          ${pkgs.openarena}/bin/openarena \
-            +set fs_homepath ~/.firejail/q3/.openarena \
-            +set fs_basegame omega \
-            +set fs_game excessiveplus
-        '';
-      }
+      // fj.mkFirejailSimple "chromium"
+      // mkOpenArena "rat"
+      // mkOpenArena "omega"
+      // mkOpenArena "excessiveplus"
       // fj.mkFirejailCustom {
         pkg = "doom-free2";
         dir = "doom";
@@ -895,7 +899,6 @@ in {
         exfat
         jmtpfs
         shellcheck
-        chromium
         xournalpp
         nautilus
         ccrypt

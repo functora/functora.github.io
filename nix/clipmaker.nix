@@ -40,6 +40,9 @@ in
 
       ${pkgs.ffmpeg}/bin/ffmpeg "''${INPUT_ARGS[@]}" \
         -filter_complex "$FILTER_COMPLEX" \
-        -map 0:v -map "[vout]" -c:v copy -y output.mp4
+        -map 0:v -map "[vout]" \
+        -vf scale=iw*2:ih*2:flags=neighbor \
+        -c:v libx264 -preset slow -crf 18 \
+        -y output.mp4
     '';
   }

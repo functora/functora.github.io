@@ -948,6 +948,9 @@ in {
         keyMode = "vi";
         baseIndex = 1;
         clock24 = true;
+        extraConfig = ''
+          set -s escape-time 0
+        '';
       };
       #
       # NOTE : direnv is used to cache nix development shells

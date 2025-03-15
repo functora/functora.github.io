@@ -796,18 +796,13 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
-        pkg = "tabby-download-qwen";
-        dir = "tabby-download";
-        net = true;
-        exe = ''
-          ${import ./tabby.nix}/bin/tabby \
-            download --model Qwen2.5-Coder-0.5B
-        '';
-      }
-      // fj.mkFirejailCustom {
         pkg = "tabby-download-deepseek";
         dir = "tabby-download";
         net = true;
+        #
+        # NOTE : DeepSeekCoder-6.7B is out of memory on 4GB GPU.
+        # Seems like only models up to 3B size are supported.
+        #
         exe = ''
           ${import ./tabby.nix}/bin/tabby \
             download --model DeepSeekCoder-1.3B

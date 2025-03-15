@@ -782,4 +782,4 @@ let g:neoformat_toml_prettier = {
 
 let g:tabby_agent_start_command = ["tabby-agent", "--stdio"]
 let g:tabby_inline_completion_trigger = "manual"
-let g:tabby_inline_completion_keybinding_accept = '<C-CR>'
+let g:tabby_inline_completion_keybinding_accept = '<M-\>'

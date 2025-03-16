@@ -586,7 +586,11 @@ mkOrder args = do
       { SubmitOrder.buyOrSell = bos,
         SubmitOrder.baseAmount = grossBaseAmt,
         SubmitOrder.symbol = sym,
-        SubmitOrder.rate = price,
+        SubmitOrder.rate =
+          QuotePerBase
+            $ unQuotePerBase price
+            * unMoneyAmount netBaseAmt
+            / unMoneyAmount grossBaseAmt,
         SubmitOrder.options = SubmitOrder.optsDef
       }
   where

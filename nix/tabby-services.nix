@@ -20,16 +20,4 @@ in [
       '';
     }
   )
-  (
-    misc.mkService {
-      srv = "tabby-socket";
-      mkExe = config: ''
-        ${pkgs.socat}/bin/socat \
-          TCP-LISTEN:8080,fork,reuseaddr,keepalive \
-          UNIX:/home/${
-          config.services.functora.userName
-        }/.firejail/tabby/tabby.sock,keepalive
-      '';
-    }
-  )
 ]

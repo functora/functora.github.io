@@ -774,6 +774,16 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
+        pkg = "doom-siren";
+        dir = "doom";
+        exe = ''
+          ${pkgs.gzdoom}/bin/gzdoom \
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./siren.pk3 \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // fj.mkFirejailCustom {
         pkg = "doom-ashes1";
         dir = "doom";
         exe = ''
@@ -818,6 +828,13 @@ in {
             }/.firejail/tabby/tabby.sock";
           }
         }/bin/tabby-agent";
+      }
+      // fj.mkFirejailCustom {
+        pkg = "tabby-admin";
+        dir = "tabby";
+        exe = "${
+          import ./tabby-admin.nix {sock = "./tabby.sock";}
+        }/bin/tabby-admin";
       }
       // fj.mkFirejailCustom {
         pkg = "vi";
@@ -865,6 +882,7 @@ in {
         niv
         zip
         unzip
+        unrar-free
         pciutils
         docker-client
         docker-compose
@@ -1238,6 +1256,5 @@ in {
     # Tabby
     #
     services.tabby-server.enable = true;
-    services.tabby-socket.enable = true;
   };
 }

@@ -119,6 +119,12 @@ module Functora.Prelude
     dropAround,
     dropWhileEnd,
     AscOrDesc (..),
+
+    -- * FixedPoint
+    -- $fixedPoint
+    Fix (..),
+    FixNonNeg,
+    mkFixNonNeg,
     E30,
 
     -- * DerivingVia
@@ -1152,10 +1158,69 @@ data AscOrDesc
       Bounded
     )
 
+-- $fixedPoint
+-- Fixed point numbers.
+
 data E30
 
 instance HasResolution E30 where
   resolution = const 1_0000000000_0000000000_0000000000
+
+newtype Fix = Fix
+  { unFix :: Fixed E30
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Data,
+      Generic
+    )
+  deriving newtype
+    ( Num,
+      Real,
+      Fractional,
+      RealFrac
+    )
+
+newtype FixNonNeg = FixNonNeg
+  { unFixNonNeg :: Fixed E30
+  }
+  deriving stock
+    ( Eq,
+      Ord,
+      Show,
+      Data,
+      Generic
+    )
+
+mkFixNonNeg :: Fixed E30 -> FixNonNeg
+mkFixNonNeg x =
+  if x >= 0
+    then FixNonNeg x
+    else error $ "Underflow " <> inspect x
+
+instance Num FixNonNeg where
+  lhs + rhs = mkFixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs
+  lhs - rhs = mkFixNonNeg $ unFixNonNeg lhs - unFixNonNeg rhs
+  lhs * rhs = mkFixNonNeg $ unFixNonNeg lhs * unFixNonNeg rhs
+  negate = mkFixNonNeg . negate . unFixNonNeg
+  abs = mkFixNonNeg . abs . unFixNonNeg
+  signum = mkFixNonNeg . signum . unFixNonNeg
+  fromInteger = mkFixNonNeg . Prelude.fromInteger @(Fixed E30)
+
+instance Real FixNonNeg where
+  toRational = toRational . unFixNonNeg
+
+instance Fractional FixNonNeg where
+  fromRational = mkFixNonNeg . fromRational
+  lhs / rhs = mkFixNonNeg $ unFixNonNeg lhs / unFixNonNeg rhs
+
+instance RealFrac FixNonNeg where
+  properFraction x =
+    (lhs, mkFixNonNeg rhs)
+    where
+      (lhs, rhs) = properFraction $ unFixNonNeg x
 
 -- $derivingVia
 -- Newtypes to simplify deriving via.

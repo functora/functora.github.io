@@ -1,7 +1,10 @@
 module Functora.RoundSpec (spec) where
 
 import Data.Fixed (E12, Fixed)
-import Functora.Prelude (throw, throwString, try)
+--
+-- NOTE : Round functions will fail for FixNonNeg because of impl details.
+--
+import Functora.Prelude (Fix, throw, throwString, try)
 import Functora.Round (dpRound, sdRound)
 import Numeric.Natural (Natural)
 import System.Exit (ExitCode (..))
@@ -29,10 +32,12 @@ spec = do
   mkRoundSpec @(Fixed E12) "dpRound/Fixed" dpRound dpRoundTestData
   mkRoundSpec @Rational "dpRound/Rational" dpRound dpRoundTestData
   mkRoundSpec @Double "dpRound/Double" dpRound dpRoundTestData
+  mkRoundSpec @Fix "dpRound/Fix" dpRound dpRoundTestData
 
   mkRoundSpec @(Fixed E12) "sdRound/Fixed" sdRound sdRoundTestData
   mkRoundSpec @Rational "sdRound/Rational" sdRound sdRoundTestData
   mkRoundSpec @Double "sdRound/Double" sdRound sdRoundTestData
+  mkRoundSpec @Fix "sdRound/Fix" sdRound sdRoundTestData
 
 --
 -- Tasty

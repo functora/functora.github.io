@@ -774,16 +774,6 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
-        pkg = "doom-siren";
-        dir = "doom";
-        exe = ''
-          ${pkgs.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./siren.pk3 \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
         pkg = "doom-ashes1";
         dir = "doom";
         exe = ''

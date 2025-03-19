@@ -122,10 +122,11 @@ module Functora.Prelude
 
     -- * FixedPoint
     -- $fixedPoint
-    Fix (..),
-    FixNonNeg,
-    mkFixNonNeg,
     E30,
+    Fix (..),
+    FixNonNeg (..),
+    mkFixNonNeg,
+    inspectFixed,
 
     -- * DerivingVia
     -- $derivingVia
@@ -1199,6 +1200,9 @@ mkFixNonNeg x =
   if x >= 0
     then FixNonNeg x
     else error $ "Underflow " <> inspect x
+
+inspectFixed :: forall a e. (From String a, HasResolution e) => Fixed e -> a
+inspectFixed = from @String @a . showFixed True
 
 instance Num FixNonNeg where
   lhs + rhs = mkFixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs

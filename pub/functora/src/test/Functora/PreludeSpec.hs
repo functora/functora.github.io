@@ -48,6 +48,9 @@ spec = do
       `shouldBe` "uid-11111111111111111111111111111111"
     unsafeFrom @(UTF_8 ByteString) @Text (htmlUid $ addUid nilUid nilUid)
       `shouldBe` "uid-HXugtXVfQbdnt1bHDJcE9HU6kDMaPEJSQhN3moaHr6Hp"
+  it "inspectFixed" $ do
+    inspectFixed @Text (unFix 2.5) `shouldBe` "2.5"
+    inspectFixed @Text (unFixNonNeg 2.500) `shouldBe` "2.5"
   it "parseRatio/overflow"
     $ inspect @Text (parseRatio @Text @Word8 @(Either SomeException) "0.333")
     `shouldBe` "Left (ParseException {parseExceptionSource = \"0.333\", parseExceptionSourceType = Text, parseExceptionTargetType = Ratio Word8, parseExceptionFailure = \"Word8 numerator or denominator seems to be out of bounds, expected 333 % 1000 but got 77 % 232\"})"

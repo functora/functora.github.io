@@ -9,8 +9,8 @@ import Functora.Tags.TestFgpt ()
 import Functora.Tags.TestSing
 import Test.Hspec
 
-newMoney :: forall tags. Tagged (tags |+| 'Money) Rational
-newMoney = Tagged $ 4 % 5
+newMoney :: forall tags. Tagged (tags |+| 'Money) Natural
+newMoney = Tagged 4
 
 getSymbolTag ::
   forall (tag :: Symbol) tags rep.
@@ -56,17 +56,17 @@ spec = do
       `shouldBe` Gain
   it "inspect" $ do
     inspect @Text (newMoney @NoTags)
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
     inspect @Text (newMoney @(NoTags |+| "BTC" |+| 'Net))
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
     inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Lose |+| 'Merchant))
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
     inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Lose))
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
     inspect @Text (newMoney @(Tags "BTC"))
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
     inspect @Text (newMoney @(Tags "BTC" |+| 'Net |+| 'Gain))
-      `shouldBe` "Tagged (4 % 5)"
+      `shouldBe` "Tagged 4"
   it "inspectType" $ do
     inspectType @NoTags @Text
       `shouldBe` "'[] (Mapping * *)"

@@ -112,3 +112,11 @@ deriving newtype instance PersistFieldSql FeeRate
 deriving newtype instance PersistField ProfitRate
 
 deriving newtype instance PersistFieldSql ProfitRate
+
+deriving newtype instance PersistField Fix
+
+deriving newtype instance PersistFieldSql Fix
+
+deriving newtype instance PersistField FixNonNeg
+
+deriving newtype instance PersistFieldSql FixNonNeg

@@ -125,7 +125,6 @@ module Functora.Prelude
     E30,
     Fix (..),
     FixNonNeg (..),
-    mkFixNonNeg,
     inspectFixed,
 
     -- * DerivingVia
@@ -153,6 +152,7 @@ import Control.Concurrent.STM.TChan as X
     writeTChan,
   )
 import qualified Control.Concurrent.Thread.Delay as Delay
+import qualified Control.Exception as Exception
 import Control.Exception.Safe as X (impureThrow, throw)
 import qualified Control.Exception.Safe as Safe
 import Control.Lens as X ((^?))
@@ -293,6 +293,7 @@ import qualified Data.Typeable as Typeable
 import Functora.PreludeOrphan as X ()
 import Functora.Unicode as X (Unicode)
 import Functora.Witch as X
+import Functora.Witch.Utility (withSource, withTarget)
 import GHC.Generics as X (Rep)
 import GHC.TypeLits as X (KnownSymbol, Symbol)
 import qualified GHC.TypeLits as TypeLits
@@ -1174,6 +1175,7 @@ newtype Fix = Fix
     ( Eq,
       Ord,
       Show,
+      Read,
       Data,
       Generic
     )
@@ -1184,6 +1186,32 @@ newtype Fix = Fix
       RealFrac
     )
 
+instance From (Fixed E30) Fix where
+  from = Fix
+
+instance From Integer Fix where
+  from = Fix . from @Integer @(Fixed E30)
+
+instance From Natural Fix where
+  from = via @Integer @Natural @Fix
+
+instance TryFrom Rational Fix where
+  tryFrom =
+    bimap withTarget Fix
+      . tryFrom @Rational @(Fixed E30)
+
+instance TryFrom Scientific Fix where
+  tryFrom src =
+    first (withSource src)
+      . tryFrom @Rational @Fix
+      $ toRational @Scientific src
+
+instance From Fix (Fixed E30) where
+  from = unFix
+
+instance From Fix Rational where
+  from = via @(Fixed E30) @Fix @Rational
+
 newtype FixNonNeg = FixNonNeg
   { unFixNonNeg :: Fixed E30
   }
@@ -1191,38 +1219,73 @@ newtype FixNonNeg = FixNonNeg
     ( Eq,
       Ord,
       Show,
+      Read,
       Data,
       Generic
     )
 
-mkFixNonNeg :: Fixed E30 -> FixNonNeg
-mkFixNonNeg x =
-  if x >= 0
-    then FixNonNeg x
-    else error $ "Underflow " <> inspect x
+instance TryFrom (Fixed E30) FixNonNeg where
+  tryFrom src =
+    if src >= 0
+      then pure $ FixNonNeg src
+      else Left . TryFromException src . Just $ SomeException Exception.Underflow
 
-inspectFixed :: forall a e. (From String a, HasResolution e) => Fixed e -> a
-inspectFixed = from @String @a . showFixed True
+instance TryFrom Integer FixNonNeg where
+  tryFrom src =
+    first (withSource src)
+      . tryFrom @(Fixed E30) @FixNonNeg
+      $ from @Integer @(Fixed E30) src
+
+instance TryFrom Natural FixNonNeg where
+  tryFrom src =
+    first (withSource src)
+      . tryFrom @(Fixed E30) @FixNonNeg
+      $ via @Integer @Natural @(Fixed E30) src
+
+instance TryFrom Rational FixNonNeg where
+  tryFrom = tryVia @(Fixed E30) @Rational @FixNonNeg
+
+instance TryFrom Scientific FixNonNeg where
+  tryFrom src =
+    first (withSource src)
+      . tryFrom @Rational @FixNonNeg
+      $ toRational @Scientific src
+
+instance From FixNonNeg (Fixed E30) where
+  from = unFixNonNeg
+
+instance From FixNonNeg Rational where
+  from = via @(Fixed E30) @FixNonNeg @Rational
+
+inspectFixed ::
+  forall a e.
+  ( From String a,
+    HasResolution e
+  ) =>
+  Fixed e ->
+  a
+inspectFixed =
+  from @String @a . showFixed True
 
 instance Num FixNonNeg where
-  lhs + rhs = mkFixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs
-  lhs - rhs = mkFixNonNeg $ unFixNonNeg lhs - unFixNonNeg rhs
-  lhs * rhs = mkFixNonNeg $ unFixNonNeg lhs * unFixNonNeg rhs
-  negate = mkFixNonNeg . negate . unFixNonNeg
-  abs = mkFixNonNeg . abs . unFixNonNeg
-  signum = mkFixNonNeg . signum . unFixNonNeg
-  fromInteger = mkFixNonNeg . Prelude.fromInteger @(Fixed E30)
+  lhs + rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs
+  lhs - rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs - unFixNonNeg rhs
+  lhs * rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs * unFixNonNeg rhs
+  negate = unsafeFrom @(Fixed E30) @FixNonNeg . negate . unFixNonNeg
+  abs = unsafeFrom @(Fixed E30) @FixNonNeg . abs . unFixNonNeg
+  signum = unsafeFrom @(Fixed E30) @FixNonNeg . signum . unFixNonNeg
+  fromInteger = unsafeFrom @Integer @FixNonNeg
 
 instance Real FixNonNeg where
   toRational = toRational . unFixNonNeg
 
 instance Fractional FixNonNeg where
-  fromRational = mkFixNonNeg . fromRational
-  lhs / rhs = mkFixNonNeg $ unFixNonNeg lhs / unFixNonNeg rhs
+  fromRational = unsafeFrom @Rational @FixNonNeg
+  lhs / rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs / unFixNonNeg rhs
 
 instance RealFrac FixNonNeg where
   properFraction x =
-    (lhs, mkFixNonNeg rhs)
+    (lhs, unsafeFrom @(Fixed E30) @FixNonNeg rhs)
     where
       (lhs, rhs) = properFraction $ unFixNonNeg x
 

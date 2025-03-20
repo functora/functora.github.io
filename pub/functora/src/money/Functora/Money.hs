@@ -13,6 +13,7 @@ module Functora.Money
     ProfitRate (..),
     unJsonRational,
     unJsonRatio,
+    unJsonFrac,
   )
 where
 
@@ -37,11 +38,21 @@ data Money = Money
     via GenericType Money
 
 newtype MoneyAmount = MoneyAmount
-  { unMoneyAmount :: Ratio Natural
+  { unMoneyAmount :: FixNonNeg
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving newtype
-    ( Binary,
+    ( --
+      -- Numeric
+      --
+      Num,
+      Real,
+      Fractional,
+      RealFrac,
+      --
+      -- Encoding
+      --
+      Binary,
       ToJSON,
       FromJSON,
       HasCodec,
@@ -49,11 +60,21 @@ newtype MoneyAmount = MoneyAmount
     )
 
 newtype QuotePerBase = QuotePerBase
-  { unQuotePerBase :: Ratio Natural
+  { unQuotePerBase :: FixNonNeg
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving newtype
-    ( Binary,
+    ( --
+      -- Numeric
+      --
+      Num,
+      Real,
+      Fractional,
+      RealFrac,
+      --
+      -- Encoding
+      --
+      Binary,
       ToJSON,
       FromJSON,
       HasCodec,
@@ -101,11 +122,21 @@ inspectCurrencyInfo input =
     code = inspectCurrencyCode $ currencyInfoCode input
 
 newtype FeeRate = FeeRate
-  { unFeeRate :: Ratio Natural
+  { unFeeRate :: FixNonNeg
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving newtype
-    ( Binary,
+    ( --
+      -- Numeric
+      --
+      Num,
+      Real,
+      Fractional,
+      RealFrac,
+      --
+      -- Encoding
+      --
+      Binary,
       ToJSON,
       FromJSON,
       HasCodec,
@@ -113,11 +144,21 @@ newtype FeeRate = FeeRate
     )
 
 newtype ProfitRate = ProfitRate
-  { unProfitRate :: Ratio Natural
+  { unProfitRate :: FixNonNeg
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving newtype
-    ( Binary,
+    ( --
+      -- Numeric
+      --
+      Num,
+      Real,
+      Fractional,
+      RealFrac,
+      --
+      -- Encoding
+      --
+      Binary,
       ToJSON,
       FromJSON,
       HasCodec,
@@ -138,3 +179,9 @@ unJsonRatio = do
   rat <- unJsonRational
   either (fail . inspect) pure
     $ tryFrom @Rational @(Ratio a) rat
+
+unJsonFrac :: forall a. (Data a, TryFrom Rational a) => A.Decoder a
+unJsonFrac = do
+  rat <- unJsonRational
+  either (fail . inspect) pure
+    $ tryFrom @Rational @a rat

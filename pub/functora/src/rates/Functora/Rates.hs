@@ -270,7 +270,7 @@ tryFetchQuotesPerBase opts cur uri = tryMarket $ do
             $ unCurrencyCode cur
         ]
         . A.mapStrict
-        $ fmap QuotePerBase unJsonRatio
+        $ fmap QuotePerBase unJsonFrac
     pure
       QuotesPerBaseAt
         { quotesPerBaseQuotesMap =

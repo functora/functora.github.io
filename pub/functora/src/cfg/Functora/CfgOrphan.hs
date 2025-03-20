@@ -199,6 +199,30 @@ _Ratio =
         . via @Rational @(Ratio a) @Double
     )
 
+_Frac ::
+  forall a.
+  ( TryFrom Rational a,
+    From a Rational
+  ) =>
+  Toml.TomlBiMap a Toml.AnyValue
+_Frac =
+  Toml.mkAnyValueBiMap
+    ( \src -> do
+        let failure =
+              Toml.MatchError Toml.TDouble
+                $ Toml.AnyValue src
+        dbl <-
+          Toml.matchDouble src
+        rat <-
+          first (const failure)
+            $ tryFrom @Double @Rational dbl
+        first (const failure)
+          $ tryFrom @Rational @a rat
+    )
+    ( Toml.Double
+        . via @Rational @a @Double
+    )
+
 --
 -- TODO : how to make an instance for a Rational nicely?
 --
@@ -219,6 +243,24 @@ instance
   Toml.HasItemCodec (Ratio a)
   where
   hasItemCodec = Left $ _Ratio @a
+
+instance (HasResolution e) => Toml.HasCodec (Fixed e) where
+  hasCodec = Toml.match $ _Frac @(Fixed e)
+
+instance (HasResolution e) => Toml.HasItemCodec (Fixed e) where
+  hasItemCodec = Left $ _Frac @(Fixed e)
+
+instance Toml.HasCodec Fix where
+  hasCodec = Toml.match $ _Frac @Fix
+
+instance Toml.HasItemCodec Fix where
+  hasItemCodec = Left $ _Frac @Fix
+
+instance Toml.HasCodec FixNonNeg where
+  hasCodec = Toml.match $ _Frac @FixNonNeg
+
+instance Toml.HasItemCodec FixNonNeg where
+  hasItemCodec = Left $ _Frac @FixNonNeg
 
 {-# INLINE defaultPutList #-}
 defaultPutList :: (Binary a) => [a] -> Binary.Put
@@ -265,3 +307,19 @@ instance Toml.HasItemCodec JSString where
 deriving via GenericEnum AscOrDesc instance HasCodec AscOrDesc
 
 deriving via GenericEnum AscOrDesc instance HasItemCodec AscOrDesc
+
+deriving newtype instance Binary Fix
+
+deriving newtype instance ToJSON Fix
+
+deriving newtype instance FromJSON Fix
+
+--
+-- TODO : verify FixNonNeg value is acceptable
+--
+
+deriving newtype instance Binary FixNonNeg
+
+deriving newtype instance ToJSON FixNonNeg
+
+deriving newtype instance FromJSON FixNonNeg

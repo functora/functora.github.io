@@ -762,6 +762,16 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
+        pkg = "doom-free1";
+        dir = "doom";
+        exe = ''
+          ${unst.gzdoom}/bin/gzdoom \
+            -iwad ./freedoom-0.13.0/freedoom1.wad \
+            -file ./Project_Brutality-PB_Staging.zip \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // fj.mkFirejailCustom {
         pkg = "doom-dsc";
         dir = "doom";
         exe = ''

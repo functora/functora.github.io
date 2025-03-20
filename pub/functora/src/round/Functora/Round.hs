@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 -- |
 -- Module: Functora.Round
 --
@@ -132,12 +134,15 @@ dpRound n f
 -- 0 % 1
 sdRound :: (RealFrac a) => Natural -> a -> a
 sdRound sd' f =
-  if m < 0
-    then dpRound sd gZ / 10 ^^ pZ
-    else case compare n 0 of
-      EQ -> dpRound n f
-      GT -> dpRound n f
-      LT -> 10 ^^ p * fromInteger (round g)
+  if
+    | f == 0 -> f
+    | f < 0 -> negate . sdRound sd' $ abs f
+    | m < 0 -> dpRound sd gZ / 10 ^^ pZ
+    | otherwise ->
+        case compare n 0 of
+          EQ -> dpRound n f
+          GT -> dpRound n f
+          LT -> 10 ^^ p * fromInteger (round g)
   where
     sd = toInteger sd'
 

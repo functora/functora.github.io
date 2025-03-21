@@ -1213,6 +1213,12 @@ instance From Fix (Fixed E30) where
 instance From Fix Rational where
   from = via @(Fixed E30) @Fix @Rational
 
+instance From Fix Double where
+  from = via @Rational @Fix @Double
+
+instance From Fix Float where
+  from = via @Rational @Fix @Float
+
 newtype FixNonNeg = FixNonNeg
   { unFixNonNeg :: Fix
   }
@@ -1265,6 +1271,12 @@ instance From FixNonNeg (Fixed E30) where
 
 instance From FixNonNeg Rational where
   from = via @Fix @FixNonNeg @Rational
+
+instance From FixNonNeg Double where
+  from = via @Fix @FixNonNeg @Double
+
+instance From FixNonNeg Float where
+  from = via @Fix @FixNonNeg @Float
 
 inspectFixed ::
   forall str e.

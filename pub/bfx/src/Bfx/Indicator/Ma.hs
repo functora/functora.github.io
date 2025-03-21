@@ -69,7 +69,7 @@ mkMaConduit mkCandle per =
                             )
                             candles
                       )
-                    / from @Natural @(Ratio Natural)
+                    / unsafeFrom @Natural @FixNonNeg
                       ( unsafeFrom
                           @Int
                           @Natural

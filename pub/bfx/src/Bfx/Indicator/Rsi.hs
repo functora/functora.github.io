@@ -17,7 +17,7 @@ import Functora.Prelude
 import qualified Prelude
 
 newtype Rsi = Rsi
-  { unRsi :: Fixed E30
+  { unRsi :: FixNonNeg
   }
   deriving stock
     ( Eq,
@@ -60,17 +60,13 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
               C.yield
                 ( c2,
                   -- Loss
-                  fromRational @(Fixed E30)
-                    . from @(Ratio Natural) @Rational
-                    $ if p1 >= p2
-                      then p1 - p2
-                      else 0,
+                  if p1 >= p2
+                    then p1 - p2
+                    else 0,
                   -- Gain
-                  fromRational @(Fixed E30)
-                    . from @(Ratio Natural) @Rational
-                    $ if p1 <= p2
-                      then p2 - p1
-                      else 0
+                  if p1 <= p2
+                    then p2 - p1
+                    else 0
                 )
               pure True
             _ ->
@@ -95,7 +91,7 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
                     pure $ Left (nextAvgLoss, nextAvgGain)
        )
   where
-    fixPer :: Fixed E30
+    fixPer :: FixNonNeg
     fixPer =
       Prelude.fromInteger $ from @Natural @Integer natPer
     intPer :: Int

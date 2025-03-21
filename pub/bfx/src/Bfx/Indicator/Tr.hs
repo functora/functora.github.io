@@ -63,7 +63,7 @@ mkTr c0 c1 =
 absRange :: QuotePerBase -> QuotePerBase -> QuotePerBase
 absRange x y =
   QuotePerBase
-    . unsafeFrom @Rational @(Ratio Natural)
+    . unsafeFrom @Fix @FixNonNeg
     . abs
-    $ abs (from @(Ratio Natural) @Rational $ unQuotePerBase x)
-    - abs (from @(Ratio Natural) @Rational $ unQuotePerBase y)
+    $ abs (unFixNonNeg $ unQuotePerBase x)
+    - abs (unFixNonNeg $ unQuotePerBase y)

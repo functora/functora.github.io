@@ -65,7 +65,7 @@ instance FromRpc 'MarketAveragePrice QuotePerBase where
     first (const $ "QuotePerBase is invalid " <> inspect x)
       . roundQuotePerBase
       . QuotePerBase
-      $ unsafeFrom @Rational @(Ratio Natural) x
+      $ unsafeFrom @Rational @FixNonNeg x
 
 instance FromRpc 'FeeSummary FeeSummary.Response where
   fromRpc (RawResponse raw) = do
@@ -82,7 +82,7 @@ instance FromRpc 'FeeSummary FeeSummary.Response where
       rate :: Rational -> Either Text FeeRate
       rate =
         bimap inspect FeeRate
-          . tryFrom @Rational @(Ratio Natural)
+          . tryFrom @Rational @FixNonNeg
       parse ::
         Int ->
         Int ->
@@ -175,7 +175,9 @@ instance
                 $ "Max Order Size is invalid "
                 <> inspect maxOrderAmt0
             )
-            MoneyAmount
+            ( MoneyAmount
+                . unsafeFrom @Rational @FixNonNeg
+            )
             $ parseRatio maxOrderAmt0
         minOrderAmt0 <-
           maybeToRight "Min Order Size is missing"
@@ -188,7 +190,9 @@ instance
                 $ "Min Order Size is invalid "
                 <> inspect minOrderAmt0
             )
-            MoneyAmount
+            ( MoneyAmount
+                . unsafeFrom @Rational @FixNonNeg
+            )
             $ parseRatio minOrderAmt0
         pure
           ( sym,
@@ -247,7 +251,7 @@ instance
           first inspect
             . roundMoneyAmount
             . MoneyAmount
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "Balance is missing"
               (toRational <$> x ^? nth 2 . _Number)
@@ -255,7 +259,7 @@ instance
           first inspect
             . roundMoneyAmount
             . MoneyAmount
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "UnsettledBalance is missing"
               (toRational <$> x ^? nth 3 . _Number)
@@ -263,7 +267,7 @@ instance
           first inspect
             . roundMoneyAmount
             . MoneyAmount
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "AvailableBalance is missing"
               (toRational <$> x ^? nth 4 . _Number)
@@ -335,7 +339,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
           first inspect
             . roundQuotePerBase
             . QuotePerBase
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "Bid is missing"
               (toRational <$> x ^? nth 1 . _Number)
@@ -343,7 +347,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
           first inspect
             . roundQuotePerBase
             . QuotePerBase
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "Ask is missing"
               (toRational <$> x ^? nth 3 . _Number)
@@ -351,7 +355,7 @@ instance FromRpc 'Tickers (Map CurrencyPair Ticker) where
           first inspect
             . roundMoneyAmount
             . MoneyAmount
-            . unsafeFrom @Rational @(Ratio Natural)
+            . unsafeFrom @Rational @FixNonNeg
             =<< maybeToRight
               "Volume is missing"
               (toRational <$> x ^? nth 8 . _Number)

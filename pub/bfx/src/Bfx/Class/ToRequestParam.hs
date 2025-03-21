@@ -41,6 +41,12 @@ instance ToRequestParam Rational where
     T.pack
       $ showFixed True (fromRational x :: Fixed E8)
 
+instance ToRequestParam Fix where
+  toTextParam = inspectFix
+
+instance ToRequestParam FixNonNeg where
+  toTextParam = inspectFix
+
 instance ToRequestParam Natural where
   toTextParam =
     T.pack . Prelude.show
@@ -54,18 +60,18 @@ instance ToRequestParam Text where
     id
 
 instance ToRequestParam (BuyOrSell, MoneyAmount) where
-  toTextParam (bos, MoneyAmount amt) =
+  toTextParam (bos, amt) =
     if bos == Sell
-      then toTextParam $ (-1) * rat amt
-      else toTextParam $ rat amt
+      then toTextParam $ (-1) * unAmt amt
+      else toTextParam $ unAmt amt
     where
-      rat = abs . from @(Ratio Natural) @Rational
+      unAmt = abs . unFixNonNeg . unMoneyAmount
 
 instance ToRequestParam QuotePerBase where
   toTextParam =
     toTextParam
       . abs
-      . from @(Ratio Natural) @Rational
+      . unFixNonNeg
       . unQuotePerBase
 
 instance ToRequestParam AscOrDesc where

@@ -8,37 +8,34 @@ module Bfx.Math
   )
 where
 
-import Data.Ratio.Rounding (dpRound, sdRound)
 import Functora.Money
 import Functora.Prelude
+import Functora.Round (dpRound, sdRound)
 
 roundMoneyAmount :: (MonadThrow m) => MoneyAmount -> m MoneyAmount
-roundMoneyAmount arg@(MoneyAmount raw) =
-  if raw >= 0 && rounded >= 0
-    then pure $ MoneyAmount rounded
-    else throwString $ "Rounding error for " <> inspect @String arg
-  where
-    rounded =
-      unsafeFrom @Rational @(Ratio Natural)
-        . roundMoneyAmountRat
-        $ from @(Ratio Natural) @Rational raw
+roundMoneyAmount prev = do
+  next <-
+    either throw (pure . MoneyAmount)
+      . tryFrom @Fix @FixNonNeg
+      . dpRound 8
+      . unFixNonNeg
+      $ unMoneyAmount prev
+  if prev >= 0 && next >= 0
+    then pure next
+    else throwString $ "Rounding error for " <> inspect @Text prev
 
 roundQuotePerBase :: (MonadThrow m) => QuotePerBase -> m QuotePerBase
-roundQuotePerBase arg@(QuotePerBase raw) =
-  if raw > 0 && rounded > 0
-    then pure $ QuotePerBase rounded
-    else throwString $ "Rounding error for " <> inspect @String arg
-  where
-    rounded =
-      unsafeFrom @Rational @(Ratio Natural)
-        . roundQuotePerBaseRat
-        $ from @(Ratio Natural) @Rational raw
-
-roundMoneyAmountRat :: Rational -> Rational
-roundMoneyAmountRat = dpRound 8
-
-roundQuotePerBaseRat :: Rational -> Rational
-roundQuotePerBaseRat = sdRound 5 . dpRound 8
+roundQuotePerBase prev = do
+  next <-
+    either throw (pure . QuotePerBase)
+      . tryFrom @Fix @FixNonNeg
+      . sdRound 5
+      . dpRound 8
+      . unFixNonNeg
+      $ unQuotePerBase prev
+  if prev > 0 && next > 0
+    then pure next
+    else throwString $ "Rounding error for " <> inspect @Text prev
 
 tweakMoneyAmount ::
   ( MonadThrow m
@@ -52,22 +49,20 @@ tweakMoneyAmount =
 tweakMoneyAmountRec ::
   ( MonadThrow m
   ) =>
-  Ratio Natural ->
+  MoneyAmount ->
   BuyOrSell ->
   MoneyAmount ->
   m MoneyAmount
 tweakMoneyAmountRec tweak bos prev = do
   next <-
-    roundMoneyAmount
-      . MoneyAmount
-      $ case bos of
-        Buy -> unMoneyAmount prev + tweak
-        Sell -> unMoneyAmount prev - tweak
+    roundMoneyAmount $ case bos of
+      Buy -> prev + tweak
+      Sell -> prev - tweak
   if next /= prev
     then pure next
     else tweakMoneyAmountRec (tweak + pip) bos prev
 
-pip :: Ratio Natural
+pip :: MoneyAmount
 pip = 0.00000001
 
 tweakQuotePerBase ::
@@ -79,24 +74,20 @@ tweakQuotePerBase ::
 tweakQuotePerBase bos rate =
   tweakQuotePerBaseRec rate (* tweak)
   where
-    tweak :: Ratio Natural
+    tweak :: QuotePerBase
     tweak =
       case bos of
-        Buy -> 999 % 1000
-        Sell -> 1001 % 1000
+        Buy -> 0.999
+        Sell -> 1.001
 
 tweakQuotePerBaseRec ::
   ( MonadThrow m
   ) =>
   QuotePerBase ->
-  (Ratio Natural -> Ratio Natural) ->
+  (QuotePerBase -> QuotePerBase) ->
   m QuotePerBase
 tweakQuotePerBaseRec prev tweak = do
-  next <-
-    roundQuotePerBase
-      . QuotePerBase
-      . tweak
-      $ unQuotePerBase prev
+  next <- roundQuotePerBase $ tweak prev
   if next /= prev
     then pure next
     else tweakQuotePerBaseRec prev $ tweak . tweak

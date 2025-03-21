@@ -65,7 +65,7 @@ mkAtrConduit mkCandle per = do
                   Atr
                     . QuotePerBase
                     $ (sum $ unQuotePerBase . Tr.unTr . snd <$> trs)
-                    / from @Natural @(Ratio Natural)
+                    / unsafeFrom @Natural @FixNonNeg
                       (unsafeFrom @Int @Natural period)
                 )
               pure True

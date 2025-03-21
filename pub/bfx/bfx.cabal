@@ -94,12 +94,12 @@ common pkg-lib
     , functora
     , functora:cfg
     , functora:money
+    , functora:round
     , http-client
     , http-client-tls
     , http-types
     , lens-aeson
     , memory
-    , siggy-chardust
     , singlethongs
     , text
     , vector
@@ -199,12 +199,12 @@ test-suite bfx-test
       , cryptonite
       , envparse
       , functora:cfg
+      , functora:round
       , http-client
       , http-client-tls
       , http-types
       , lens-aeson
       , memory
-      , siggy-chardust
       , singlethongs
       , text
       , vector

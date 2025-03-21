@@ -55,10 +55,10 @@ parseOrder x = do
       <$> x
       ^? nth 7
       . _Number
-  let amt =
-        MoneyAmount
-          . unsafeFrom @Rational @(Ratio Natural)
-          $ abs amt0
+  amt <-
+    bimap inspect MoneyAmount
+      . tryFrom @Rational @FixNonNeg
+      $ abs amt0
   ss0 <-
     maybeToRight (failure "OrderStatus is missing")
       $ x
@@ -77,7 +77,7 @@ parseOrder x = do
     bimap
       (const . failure $ "ExchangeRate is invalid " <> inspect price)
       QuotePerBase
-      $ tryFrom @Rational @(Ratio Natural) (toRational price)
+      $ tryFrom @Rational @FixNonNeg (toRational price)
   let mkOrder bos =
         Order
           { orderId = id0,
@@ -135,7 +135,7 @@ parseCandle x = do
       --
       -- TODO : tryFrom???
       --
-      . unsafeFrom @Rational @(Ratio Natural)
+      . unsafeFrom @Rational @FixNonNeg
       =<< maybeToRight
         "Open is missing"
         (toRational <$> x ^? nth 1 . _Number)
@@ -146,7 +146,7 @@ parseCandle x = do
       --
       -- TODO : tryFrom???
       --
-      . unsafeFrom @Rational @(Ratio Natural)
+      . unsafeFrom @Rational @FixNonNeg
       =<< maybeToRight
         "Close is missing"
         (toRational <$> x ^? nth 2 . _Number)
@@ -157,7 +157,7 @@ parseCandle x = do
       --
       -- TODO : tryFrom???
       --
-      . unsafeFrom @Rational @(Ratio Natural)
+      . unsafeFrom @Rational @FixNonNeg
       =<< maybeToRight
         "High is missing"
         (toRational <$> x ^? nth 3 . _Number)
@@ -168,7 +168,7 @@ parseCandle x = do
       --
       -- TODO : tryFrom???
       --
-      . unsafeFrom @Rational @(Ratio Natural)
+      . unsafeFrom @Rational @FixNonNeg
       =<< maybeToRight
         "Low is missing"
         (toRational <$> x ^? nth 4 . _Number)
@@ -179,7 +179,7 @@ parseCandle x = do
       --
       -- TODO : tryFrom???
       --
-      . unsafeFrom @Rational @(Ratio Natural)
+      . unsafeFrom @Rational @FixNonNeg
       =<< maybeToRight
         "Volume is missing"
         (toRational <$> x ^? nth 5 . _Number)

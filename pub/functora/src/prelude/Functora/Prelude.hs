@@ -126,6 +126,7 @@ module Functora.Prelude
     Fix (..),
     FixNonNeg (..),
     inspectFixed,
+    inspectFix,
 
     -- * DerivingVia
     -- $derivingVia
@@ -1213,7 +1214,7 @@ instance From Fix Rational where
   from = via @(Fixed E30) @Fix @Rational
 
 newtype FixNonNeg = FixNonNeg
-  { unFixNonNeg :: Fixed E30
+  { unFixNonNeg :: Fix
   }
   deriving stock
     ( Eq,
@@ -1224,56 +1225,76 @@ newtype FixNonNeg = FixNonNeg
       Generic
     )
 
-instance TryFrom (Fixed E30) FixNonNeg where
-  tryFrom src =
+mkViaFix ::
+  forall a.
+  ( From a Fix
+  ) =>
+  a ->
+  Either (TryFromException a FixNonNeg) FixNonNeg
+mkViaFix src =
+  first (withSource src)
+    . tryFrom @Fix @FixNonNeg
+    $ from @a @Fix src
+
+instance TryFrom Fix FixNonNeg where
+  tryFrom src = do
     if src >= 0
       then pure $ FixNonNeg src
       else Left . TryFromException src . Just $ SomeException Exception.Underflow
 
+instance TryFrom (Fixed E30) FixNonNeg where
+  tryFrom = mkViaFix @(Fixed E30)
+
 instance TryFrom Integer FixNonNeg where
-  tryFrom src =
-    first (withSource src)
-      . tryFrom @(Fixed E30) @FixNonNeg
-      $ from @Integer @(Fixed E30) src
+  tryFrom = mkViaFix @Integer
 
 instance TryFrom Natural FixNonNeg where
-  tryFrom src =
-    first (withSource src)
-      . tryFrom @(Fixed E30) @FixNonNeg
-      $ via @Integer @Natural @(Fixed E30) src
+  tryFrom = mkViaFix @Natural
 
 instance TryFrom Rational FixNonNeg where
-  tryFrom = tryVia @(Fixed E30) @Rational @FixNonNeg
+  tryFrom = tryVia @Fix @Rational @FixNonNeg
 
 instance TryFrom Scientific FixNonNeg where
-  tryFrom src =
-    first (withSource src)
-      . tryFrom @Rational @FixNonNeg
-      $ toRational @Scientific src
+  tryFrom = tryVia @Fix @Scientific @FixNonNeg
 
-instance From FixNonNeg (Fixed E30) where
+instance From FixNonNeg Fix where
   from = unFixNonNeg
 
+instance From FixNonNeg (Fixed E30) where
+  from = unFix . unFixNonNeg
+
 instance From FixNonNeg Rational where
-  from = via @(Fixed E30) @FixNonNeg @Rational
+  from = via @Fix @FixNonNeg @Rational
 
 inspectFixed ::
-  forall a e.
-  ( From String a,
-    HasResolution e
+  forall str e.
+  ( HasResolution e,
+    From String str
   ) =>
   Fixed e ->
-  a
+  str
 inspectFixed =
-  from @String @a . showFixed True
+  from @String @str
+    . showFixed True
+
+inspectFix ::
+  forall str fix.
+  ( From fix (Fixed E30),
+    From String str
+  ) =>
+  fix ->
+  str
+inspectFix =
+  inspectFixed
+    . from @fix @(Fixed E30)
 
 instance Num FixNonNeg where
-  lhs + rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs
-  lhs - rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs - unFixNonNeg rhs
-  lhs * rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs * unFixNonNeg rhs
-  negate = unsafeFrom @(Fixed E30) @FixNonNeg . negate . unFixNonNeg
-  abs = unsafeFrom @(Fixed E30) @FixNonNeg . abs . unFixNonNeg
-  signum = unsafeFrom @(Fixed E30) @FixNonNeg . signum . unFixNonNeg
+  lhs + rhs = unsafeFrom @Fix @FixNonNeg $ unFixNonNeg lhs + unFixNonNeg rhs
+  lhs - rhs = unsafeFrom @Fix @FixNonNeg $ unFixNonNeg lhs - unFixNonNeg rhs
+  lhs * rhs = unsafeFrom @Fix @FixNonNeg $ unFixNonNeg lhs * unFixNonNeg rhs
+  negate = unsafeFrom @Fix @FixNonNeg . negate . unFixNonNeg
+  abs = unsafeFrom @Fix @FixNonNeg . abs . unFixNonNeg
+  signum = unsafeFrom @Fix @FixNonNeg . signum . unFixNonNeg
   fromInteger = unsafeFrom @Integer @FixNonNeg
 
 instance Real FixNonNeg where
@@ -1281,11 +1302,11 @@ instance Real FixNonNeg where
 
 instance Fractional FixNonNeg where
   fromRational = unsafeFrom @Rational @FixNonNeg
-  lhs / rhs = unsafeFrom @(Fixed E30) @FixNonNeg $ unFixNonNeg lhs / unFixNonNeg rhs
+  lhs / rhs = unsafeFrom @Fix @FixNonNeg $ unFixNonNeg lhs / unFixNonNeg rhs
 
 instance RealFrac FixNonNeg where
   properFraction x =
-    (lhs, unsafeFrom @(Fixed E30) @FixNonNeg rhs)
+    (lhs, unsafeFrom @Fix @FixNonNeg rhs)
     where
       (lhs, rhs) = properFraction $ unFixNonNeg x
 

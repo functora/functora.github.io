@@ -209,7 +209,6 @@ import Data.Fixed as X
     Pico,
     showFixed,
   )
-import qualified Data.Fixed
 import Data.Foldable1 as X (Foldable1, fold1, foldMap1)
 import Data.Functor.Contravariant as X (contramap)
 import Data.Generics as X (Data)

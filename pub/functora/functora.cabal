@@ -546,3 +546,14 @@ test-suite functora-test
       , tags
       , uri
       , web
+
+benchmark functora-bench
+  import:         pkg, exe
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  hs-source-dirs: src/bench
+  build-depends:
+    , base
+    , criterion
+    , functora
+    , QuickCheck

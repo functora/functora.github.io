@@ -836,37 +836,13 @@ in {
           import ./tabby-admin.nix {sock = "./tabby.sock";}
         }/bin/tabby-admin";
       }
-      // fj.mkFirejailCustom {
+      // fj.mkFirejailOffline {
         pkg = "vi";
         exe = "${vi}/bin/vi";
-        profile = pkgs.writeText "vi.local" ''
-          no3d
-          nosound
-          apparmor
-          caps.drop all
-          machine-id
-          net none
-          netfilter
-          nodvd
-          nogroups
-          noinput
-          nonewprivs
-          noprinters
-          noroot
-          notv
-          nou2f
-          novideo
-          shell none
-
-          disable-mnt
-          seccomp
-          x11 none
-
-          dbus-system none
-          dbus-user none
-
-          restrict-namespaces
-        '';
+      }
+      // fj.mkFirejailOffline {
+        pkg = "hoogle-w3m";
+        exe = "${import ./hoogle-w3m.nix}/bin/hoogle-w3m";
       };
     #
     # Home

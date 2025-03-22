@@ -22,6 +22,41 @@ in rec {
       inherit profile;
     };
   };
+  mkFirejailOffline = {
+    pkg,
+    exe,
+  }:
+    mkFirejailCustom {
+      inherit pkg exe;
+      profile = pkgs.writeText "${pkg}.local" ''
+        no3d
+        nosound
+        apparmor
+        caps.drop all
+        machine-id
+        net none
+        netfilter
+        nodvd
+        nogroups
+        noinput
+        nonewprivs
+        noprinters
+        noroot
+        notv
+        nou2f
+        novideo
+        shell none
+
+        disable-mnt
+        seccomp
+        x11 none
+
+        dbus-system none
+        dbus-user none
+
+        restrict-namespaces
+      '';
+    };
   mkFirejailProfile = {
     pkg,
     dir,

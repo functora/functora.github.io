@@ -45,6 +45,7 @@ import Database.Esqueleto.Legacy as X
     ToBackendKey,
     Unique,
     Value,
+    addMigration,
     asc,
     delete,
     deleteKey,

@@ -819,6 +819,15 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
+        pkg = "tabby-download-instruct";
+        dir = "tabby-download";
+        net = true;
+        exe = ''
+          ${import ./tabby.nix}/bin/tabby \
+            download --model Qwen2.5-Coder-1.5B-Instruct
+        '';
+      }
+      // fj.mkFirejailCustom {
         pkg = "tabby-agent";
         dir = "tabby";
         exe = "${
@@ -838,7 +847,13 @@ in {
       }
       // fj.mkFirejailOffline {
         pkg = "vi";
-        exe = "${vi}/bin/vi";
+        exe = "${
+          import ./vi-socat.nix {
+            sock = "/home/${
+              config.services.functora.userName
+            }/.firejail/tabby/tabby.sock";
+          }
+        }/bin/vi";
       }
       // fj.mkFirejailOffline {
         pkg = "hoogle-w3m";
@@ -914,6 +929,7 @@ in {
         pulsemixer
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
+        neovim
       ];
       programs.git = {
         enable = true;

@@ -1,9 +1,9 @@
 {sock}: let
   pkgs = import ./nixpkgs.nix;
-  unst = import ./nixpkgs-unstable.nix;
+  vi = import ./../pub/vi/nix/default.nix {};
 in
   pkgs.writeShellApplication {
-    name = "tabby-agent";
+    name = "vi";
     text = ''
       ${pkgs.socat}/bin/socat \
         TCP-LISTEN:8080,fork,reuseaddr,keepalive \
@@ -18,7 +18,7 @@ in
 
       trap cleanup SIGINT SIGTERM EXIT
 
-      ${unst.tabby-agent}/bin/tabby-agent "$@"
+      ${vi}/bin/vi "$@"
 
       cleanup
     '';

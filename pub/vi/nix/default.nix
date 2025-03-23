@@ -56,6 +56,7 @@ in
               let g:vimColorScheme = '${vimColorScheme}'
               let g:languagetool_jar='${languagetool}/share/languagetool-commandline.jar'
               source ${vi-src}/vimrc.vim
+              luafile ${vi-src}/vimrc.lua
               try
                 source ~/.vi/vimrc.vim
               catch

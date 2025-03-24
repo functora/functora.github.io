@@ -1248,5 +1248,6 @@ in {
     # Tabby
     #
     services.tabby-server.enable = true;
+    services.tabby-socket.enable = true;
   };
 }

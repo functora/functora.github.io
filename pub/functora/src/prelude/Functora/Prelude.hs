@@ -186,6 +186,7 @@ import Control.Monad.Extra as X
     whileJustM,
     whileM,
   )
+import Control.Monad.Trans.Except as X (catchE, throwE)
 import Control.Monad.Trans.Reader as X (mapReaderT)
 import Data.Binary as X (Binary)
 import qualified Data.ByteString as BS

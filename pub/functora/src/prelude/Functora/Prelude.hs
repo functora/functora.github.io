@@ -119,6 +119,11 @@ module Functora.Prelude
     dropAround,
     dropWhileEnd,
     AscOrDesc (..),
+    Nonce,
+    unNonce,
+    NonceGen,
+    newNonceGen,
+    withNonce,
 
     -- * FixedPoint
     -- $fixedPoint
@@ -1161,6 +1166,68 @@ data AscOrDesc
       Enum,
       Bounded
     )
+
+newtype Nonce = Nonce
+  { unNonce :: Natural
+  }
+  deriving newtype
+    ( Eq,
+      Ord,
+      Show
+    )
+  deriving stock
+    ( Data,
+      Generic
+    )
+
+mkNonce :: (MonadIO m) => m Nonce
+mkNonce =
+  liftIO
+    $ Nonce
+    . utcTimeToMicros
+    <$> getCurrentTime
+
+newtype NonceGen
+  = NonceGen (MVar Nonce)
+  deriving stock
+    ( Eq
+    )
+
+instance Prelude.Show NonceGen where
+  show =
+    const "NonceGen"
+
+newNonceGen ::
+  ( MonadIO m
+  ) =>
+  m NonceGen
+newNonceGen = do
+  nonce <- mkNonce
+  var <- liftIO $ newMVar nonce
+  pure $ NonceGen var
+
+withNonce ::
+  ( MonadUnliftIO m
+  ) =>
+  NonceGen ->
+  (Nonce -> m a) ->
+  m a
+withNonce (NonceGen var) this = do
+  nextNonce <- mkNonce
+  bracket
+    (takeMVar var)
+    (putMVar var . max nextNonce)
+    (const $ this nextNonce)
+
+utcTimeToMicros :: UTCTime -> Natural
+utcTimeToMicros x =
+  Prelude.fromInteger
+    $ diffTimeToPicoseconds
+      ( fromRational
+          . toRational
+          $ diffUTCTime x epoch
+      )
+    `div` 1000000
 
 -- $fixedPoint
 -- Fixed point numbers.

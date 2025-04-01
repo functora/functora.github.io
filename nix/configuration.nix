@@ -493,7 +493,7 @@ in {
         # "soundcloud"
         "spotify"
         "steam"
-        "telegram"
+        # "telegram"
         "temu"
         "tidal"
         "tiktok"
@@ -746,40 +746,45 @@ in {
     #
     programs.firejail.enable = true;
     programs.firejail.wrappedBinaries =
-      fj.mkFirejailSimple "xonotic"
-      // fj.mkFirejailSimple "chromium"
+      fj.mkFirejailSimple "chromium"
       // mkOpenArena "rat"
-      // mkOpenArena "omega"
-      // mkOpenArena "excessiveplus"
       // fj.mkFirejailCustom {
-        pkg = "doom-free2";
+        pkg = "doom-infinite";
+        dir = "doom";
+        exe = ''
+          ${pkgs.gzdoom}/bin/gzdoom \
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./DOOM_Infinite_DEMO_0978_6.pk3 \
+            -file ./flashlight_plus_plus_v9_1.pk3 \
+            -file ./DoomBSMS.wad \
+            -file ./mod.pk3 \
+            -file ./nashgore.pk3 \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // fj.mkFirejailCustom {
+        pkg = "doom-64";
+        dir = "doom";
+        exe = ''
+          ${unst.gzdoom}/bin/gzdoom \
+            -iwad ./freedoom-0.13.0/freedoom2.wad \
+            -file ./BD64-VoH_game.pk3 \
+            -file ./BD64-VoH_maps.pk3 \
+            -file ./relite_0.7.3b.pk3 \
+            -file ./SimpleSlots.1.1.pk7
+        '';
+      }
+      // fj.mkFirejailCustom {
+        pkg = "doom-dragon";
         dir = "doom";
         exe = ''
           ${unst.gzdoom}/bin/gzdoom \
             -iwad ./freedoom-0.13.0/freedoom2.wad \
             -file ./Project_Brutality-PB_Staging.zip \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "doom-free1";
-        dir = "doom";
-        exe = ''
-          ${unst.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom1.wad \
-            -file ./Project_Brutality-PB_Staging.zip \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "doom-dsc";
-        dir = "doom";
-        exe = ''
-          ${vkdoom}/bin/vkdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./dsc/DSC-1.0.2.pk3 \
-            -file ./dsc/DSCmaterialPack.pk3 \
-            -file ./Project_Brutality-PB_Staging.zip \
+            -file ./dragon/KAI-main.pk3 \
+            -file ./dragon/dragon-sector-remake-v1.0.pk3 \
+            -file ./flashlight_plus_plus_v9_1.pk3 \
+            -file ./relite_0.7.3b.pk3 \
             -file ./SimpleSlots.1.1.pk7
         '';
       }

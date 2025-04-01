@@ -119,8 +119,7 @@ module Functora.Prelude
     dropAround,
     dropWhileEnd,
     AscOrDesc (..),
-    Nonce,
-    unNonce,
+    Nonce (..),
     NonceGen,
     newNonceGen,
     withNonce,
@@ -1168,12 +1167,14 @@ data AscOrDesc
     )
 
 newtype Nonce = Nonce
-  { unNonce :: Natural
+  { unNonce :: Integer
   }
   deriving newtype
     ( Eq,
       Ord,
-      Show
+      Show,
+      Read,
+      Binary
     )
   deriving stock
     ( Data,
@@ -1184,6 +1185,7 @@ mkNonce :: (MonadIO m) => m Nonce
 mkNonce =
   liftIO
     $ Nonce
+    . from @Natural @Integer
     . utcTimeToMicros
     <$> getCurrentTime
 

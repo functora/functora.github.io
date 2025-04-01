@@ -120,3 +120,7 @@ deriving newtype instance PersistFieldSql Fix
 deriving newtype instance PersistField FixNonNeg
 
 deriving newtype instance PersistFieldSql FixNonNeg
+
+deriving newtype instance PersistField Nonce
+
+deriving newtype instance PersistFieldSql Nonce

@@ -755,10 +755,17 @@ in {
           ${pkgs.gzdoom}/bin/gzdoom \
             -iwad ./freedoom-0.13.0/freedoom2.wad \
             -file ./DOOM_Infinite_DEMO_0978_6.pk3 \
-            -file ./flashlight_plus_plus_v9_1.pk3 \
+            -file "./duhd/1 lights2.wad" "./duhd/8 DHTP Textures.pk3" "./duhd/9 JFO.wad" "./duhd/10 HD_SFX.wad" "./duhd/12 Flashlight++.pk3" "./duhd/13 Tilt++.pk3" "./duhd/14 brightmaps2.wad" "./duhd/16 d3snds.wad" "./duhd/17 brutaldoom_stuff.wad" "./duhd/19 SpriteShadow.wad" "./duhd/20 WorldGamma.wad" "./duhd/21 BloomBoost.wad" "./duhd/22 MotionBlur.pk3" "./duhd/23 hires_decals.wad" "./duhd/24 Terrains.wad" "./duhd/25 HD HUD.pk3" "./duhd/26 Liquids.pk3" "./duhd/27 marcelus_hd_sprites.pk3" "./duhd/29 Universal Rain and Snow v3.pk3" "./duhd/30 OST Remake.pk3" "./duhd/31 texture_lights.wad" "./duhd/0 Parallax PBR.pk3" \
             -file ./DoomBSMS.wad \
             -file ./mod.pk3 \
             -file ./nashgore.pk3 \
+            -file ./CodeFX.pk3 \
+            -file ./CodeFXFire.pk3 \
+            -file ./CodeFXBlood.pk3 \
+            -file "./liquid/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
+            -file "./liquid/Liquid Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
+            -file "./liquid/LTP V4.0 Shader pack.pk3" \
+            -file "./liquid/LTP V4.0 Sky shader addon.pk3" \
             -file ./SimpleSlots.1.1.pk7
         '';
       }
@@ -775,29 +782,13 @@ in {
         '';
       }
       // fj.mkFirejailCustom {
-        pkg = "doom-dragon";
+        pkg = "doom-mall";
         dir = "doom";
         exe = ''
           ${unst.gzdoom}/bin/gzdoom \
             -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./Project_Brutality-PB_Staging.zip \
-            -file ./dragon/KAI-main.pk3 \
-            -file ./dragon/dragon-sector-remake-v1.0.pk3 \
-            -file ./flashlight_plus_plus_v9_1.pk3 \
-            -file ./relite_0.7.3b.pk3 \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "doom-ashes1";
-        dir = "doom";
-        exe = ''
-          ${pkgs.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./ashes/AshesSAMenu.pk3 \
-            -file ./ashes/lightmodepatch.pk3 \
-            -file ./ashes/Ashes2063Enriched2_23.pk3 \
-            -file ./ashes/Ashes2063EnrichedFDPatch.pk3 \
+            -file ./brutalv22test4.pk3 \
+            -file ./mall.pk3 \
             -file ./SimpleSlots.1.1.pk7
         '';
       }
@@ -821,6 +812,15 @@ in {
         exe = ''
           ${import ./tabby.nix}/bin/tabby \
             download --model DeepSeekCoder-1.3B
+        '';
+      }
+      // fj.mkFirejailCustom {
+        pkg = "tabby-download-gemma";
+        dir = "tabby-download";
+        net = true;
+        exe = ''
+          ${import ./tabby.nix}/bin/tabby \
+            download --model CodeGemma-2B
         '';
       }
       // fj.mkFirejailCustom {

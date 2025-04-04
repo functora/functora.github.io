@@ -120,6 +120,7 @@ module Functora.Prelude
     dropWhileEnd,
     AscOrDesc (..),
     Nonce (..),
+    mkNonce,
     NonceGen,
     newNonceGen,
     withNonce,

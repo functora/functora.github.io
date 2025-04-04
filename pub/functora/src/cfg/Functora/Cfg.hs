@@ -21,6 +21,8 @@ module Functora.Cfg
     -- $binary
     decodeBinary,
     encodeBinary,
+    decodeBinaryB64Url,
+    encodeBinaryB64Url,
   )
 where
 
@@ -35,6 +37,7 @@ import Data.Binary as X (Binary)
 import qualified Data.Binary as Binary
 import qualified Data.Binary.Get as Binary
 import Data.Binary.Instances as X ()
+import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.List.NonEmpty as NE
 import Functora.CfgOrphan (genericTomlCodec)
@@ -188,3 +191,35 @@ decodeBinary raw = do
 
 encodeBinary :: (Binary a) => a -> BL.ByteString
 encodeBinary = Binary.encode
+
+decodeBinaryB64Url ::
+  forall typ str.
+  ( From str Text,
+    Show typ,
+    Data typ,
+    Binary typ
+  ) =>
+  str ->
+  Either (BL.ByteString, Binary.ByteOffset, String) typ
+decodeBinaryB64Url b64 = do
+  bin <-
+    first (mempty,0,)
+      . B64URL.decode
+      . unTagged
+      $ via @Text @str @(UTF_8 ByteString) b64
+  decodeBinary bin
+
+encodeBinaryB64Url ::
+  forall str typ.
+  ( Binary typ,
+    From Text str
+  ) =>
+  typ ->
+  str
+encodeBinaryB64Url =
+  from @Text @str
+    . unsafeFrom @(UTF_8 ByteString) @Text
+    . from @ByteString @(UTF_8 ByteString)
+    . B64URL.encode
+    . from @BL.ByteString @ByteString
+    . Binary.encode

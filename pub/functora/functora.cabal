@@ -189,6 +189,7 @@ common pkg-cfg
   build-depends:
     , aeson
     , base
+    , base64-bytestring
     , binary
     , binary-instances
     , bytestring

@@ -3,7 +3,7 @@
   "languageserver": {
     "haskell": {
       "command": "haskell-language-server",
-      "args": ["--lsp"],
+      "args": ["+RTS", "-A8m", "-RTS", "--lsp"],
       "rootPatterns": [
         "*.cabal",
         "stack.yaml",

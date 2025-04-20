@@ -758,7 +758,7 @@ in {
             -file "./duhd/1 lights2.wad" "./duhd/8 DHTP Textures.pk3" "./duhd/9 JFO.wad" "./duhd/10 HD_SFX.wad" "./duhd/12 Flashlight++.pk3" "./duhd/13 Tilt++.pk3" "./duhd/14 brightmaps2.wad" "./duhd/16 d3snds.wad" "./duhd/17 brutaldoom_stuff.wad" "./duhd/19 SpriteShadow.wad" "./duhd/20 WorldGamma.wad" "./duhd/21 BloomBoost.wad" "./duhd/22 MotionBlur.pk3" "./duhd/23 hires_decals.wad" "./duhd/24 Terrains.wad" "./duhd/25 HD HUD.pk3" "./duhd/26 Liquids.pk3" "./duhd/27 marcelus_hd_sprites.pk3" "./duhd/29 Universal Rain and Snow v3.pk3" "./duhd/30 OST Remake.pk3" "./duhd/31 texture_lights.wad" "./duhd/0 Parallax PBR.pk3" \
             -file ./DoomBSMS.wad \
             -file ./mod.pk3 \
-            -file ./nashgore.pk3 \
+            -file ./UniversalGibs-master.zip \
             -file ./CodeFX.pk3 \
             -file ./CodeFXFire.pk3 \
             -file ./CodeFXBlood.pk3 \

@@ -47,6 +47,7 @@ import Database.Esqueleto.Legacy as X
     Value,
     addMigration,
     asc,
+    count,
     delete,
     deleteKey,
     desc,

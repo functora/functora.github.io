@@ -58,6 +58,7 @@ import Database.Esqueleto.Legacy as X
     from,
     getBy,
     groupBy,
+    having,
     in_,
     insertBy,
     insertEntity,

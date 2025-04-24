@@ -23,6 +23,8 @@ module Functora.Cfg
     encodeBinary,
     decodeBinaryB64Url,
     encodeBinaryB64Url,
+    decodeB64Url,
+    encodeB64Url,
   )
 where
 
@@ -202,11 +204,7 @@ decodeBinaryB64Url ::
   str ->
   Either (BL.ByteString, Binary.ByteOffset, String) typ
 decodeBinaryB64Url b64 = do
-  bin <-
-    first (mempty,0,)
-      . B64URL.decode
-      . unTagged
-      $ via @Text @str @(UTF_8 ByteString) b64
+  bin <- first (mempty,0,) $ decodeB64Url @ByteString b64
   decodeBinary bin
 
 encodeBinaryB64Url ::
@@ -217,9 +215,31 @@ encodeBinaryB64Url ::
   typ ->
   str
 encodeBinaryB64Url =
+  encodeB64Url . Binary.encode
+
+decodeB64Url ::
+  forall bin str.
+  ( From str Text,
+    From ByteString bin
+  ) =>
+  str ->
+  Either String bin
+decodeB64Url =
+  fmap (from @ByteString @bin)
+    . B64URL.decode
+    . unTagged
+    . via @Text @str @(UTF_8 ByteString)
+
+encodeB64Url ::
+  forall str bin.
+  ( From Text str,
+    From bin ByteString
+  ) =>
+  bin ->
+  str
+encodeB64Url =
   from @Text @str
     . unsafeFrom @(UTF_8 ByteString) @Text
     . from @ByteString @(UTF_8 ByteString)
     . B64URL.encode
-    . from @BL.ByteString @ByteString
-    . Binary.encode
+    . from @bin @ByteString

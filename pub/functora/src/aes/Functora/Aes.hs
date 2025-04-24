@@ -1,7 +1,9 @@
 module Functora.Aes
   ( Crypto,
     encryptHmac,
+    unsafeEncrypt,
     unHmacDecrypt,
+    unsafeDecrypt,
     SomeAesKey,
     drvSomeAesKey,
     Word128,
@@ -39,20 +41,29 @@ encryptHmac ::
   SomeAesKey ->
   a ->
   Crypto
-encryptHmac (SomeAesKey cipher hmacer) plain =
+encryptHmac aes@(SomeAesKey _ hmacer) plain =
   Crypto
     { cryptoValue = value,
       cryptoValueHmac = sha256Hmac (unOkm hmacer) value
     }
   where
-    value =
-      from @[Word8] @ByteString
-        . Utils.listToOctets
-        . Modes.cbc AES.encrypt 0 cipher
-        . Utils.listFromOctets
-        . from @ByteString @[Word8]
-        . PKCS7.padBytesN bytesPerBlock
-        $ from @a @ByteString plain
+    value = unsafeEncrypt @a aes plain
+
+unsafeEncrypt ::
+  forall a.
+  ( From a ByteString
+  ) =>
+  SomeAesKey ->
+  a ->
+  ByteString
+unsafeEncrypt (SomeAesKey cipher _) =
+  from @[Word8] @ByteString
+    . Utils.listToOctets
+    . Modes.cbc AES.encrypt 0 cipher
+    . Utils.listFromOctets
+    . from @ByteString @[Word8]
+    . PKCS7.padBytesN bytesPerBlock
+    . from @a @ByteString
 
 unHmacDecrypt ::
   forall a.
@@ -61,17 +72,27 @@ unHmacDecrypt ::
   SomeAesKey ->
   Crypto ->
   Maybe a
-unHmacDecrypt (SomeAesKey cipher hmacer) (Crypto value valueHmac) = do
+unHmacDecrypt aes@(SomeAesKey _ hmacer) (Crypto value valueHmac) = do
   if sha256Hmac (unOkm hmacer) value == valueHmac
     then Just ()
     else Nothing
+  unsafeDecrypt aes value
+
+unsafeDecrypt ::
+  forall a.
+  ( From ByteString a
+  ) =>
+  SomeAesKey ->
+  ByteString ->
+  Maybe a
+unsafeDecrypt (SomeAesKey cipher _) =
   fmap (from @ByteString @a)
     . PKCS7.unpadBytesN bytesPerBlock
     . from @[Word8] @ByteString
     . Utils.listToOctets
     . Modes.unCbc AES.decrypt 0 cipher
     . Utils.listFromOctets
-    $ from @ByteString @[Word8] value
+    . from @ByteString @[Word8]
 
 bytesPerBlock :: Int
 bytesPerBlock = 16

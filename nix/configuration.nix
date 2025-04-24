@@ -422,7 +422,7 @@ in {
         "bluesky"
         "box"
         "claro"
-        "cloudflare"
+        # "cloudflare"
         "clubhouse"
         "coolapk"
         "crunchyroll"

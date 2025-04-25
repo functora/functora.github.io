@@ -1,5 +1,9 @@
 module Functora.Aes
-  ( Crypto,
+  ( Hmac,
+    mkHmac,
+    HalfHmac,
+    mkHalfHmac,
+    Crypto,
     encryptHmac,
     unsafeEncrypt,
     unHmacDecrypt,
@@ -26,6 +30,26 @@ import Functora.AesOrphan ()
 import Functora.Cfg
 import Functora.Prelude
 import Type.Reflection
+
+newtype Hmac = Hmac
+  { unHmac :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (Binary)
+
+mkHmac :: (From a [Word8]) => SomeAesKey -> a -> Hmac
+mkHmac aes =
+  Hmac . sha256Hmac (unOkm $ someAesKeyHmacer aes)
+
+newtype HalfHmac = HalfHmac
+  { unHalfHmac :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (Binary)
+
+mkHalfHmac :: (From a [Word8]) => SomeAesKey -> a -> HalfHmac
+mkHalfHmac aes =
+  HalfHmac . take 16 . sha256Hmac (unOkm $ someAesKeyHmacer aes)
 
 data Crypto = Crypto
   { cryptoValue :: ByteString,

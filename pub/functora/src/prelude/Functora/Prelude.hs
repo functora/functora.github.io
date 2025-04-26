@@ -104,6 +104,8 @@ module Functora.Prelude
     randomListPure,
     randomByteString,
     randomByteStringPure,
+    shuffle,
+    shufflePure,
     expBackOff,
     expBackOffSecondsAfter,
     secondsToNominalDiffTime,
@@ -1083,6 +1085,21 @@ randomByteStringPure :: (Random.RandomGen g) => Natural -> g -> (ByteString, g)
 randomByteStringPure qty =
   first BS.pack
     . randomListPure qty
+
+shuffle :: [a] -> IO [a]
+shuffle xs = do
+  gen <- Random.newStdGen
+  pure $ shufflePure gen xs
+
+shufflePure :: (Random.RandomGen g) => g -> [a] -> [a]
+shufflePure _ [] = []
+shufflePure _ [x] = [x]
+shufflePure prevGen xs =
+  case splitAt idx xs of
+    (xs0, x : xs1) -> x : shufflePure nextGen (xs0 <> xs1)
+    _ -> error "IMPOSSIBLE_SHUFFLE_PURE"
+  where
+    (idx, nextGen) = Random.randomR (0, length xs - 1) prevGen
 
 expBackOff :: forall a. (From a Natural) => a -> Natural
 expBackOff = (2 ^) . from @a @Natural

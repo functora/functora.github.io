@@ -408,7 +408,7 @@ in {
         "activision_blizzard"
         "aliexpress"
         "amazon_streaming"
-        "amazon"
+        # "amazon"
         "amino"
         "apple_streaming"
         "battle_net"
@@ -850,6 +850,11 @@ in {
           import ./tabby-admin.nix {sock = "./tabby.sock";}
         }/bin/tabby-admin";
       }
+      // fj.mkFirejailCustom {
+        pkg = "piper";
+        dir = "piper";
+        exe = "${import ./piper.nix}/bin/piper";
+      }
       // fj.mkFirejailOffline {
         pkg = "vi";
         exe = "${
@@ -918,6 +923,7 @@ in {
         qmk
         qmk-setup
         # cura
+        git-lfs
         lesspass-cli
         # mkdir -p ~/macos/Public
         # cd ~/macos
@@ -938,6 +944,7 @@ in {
       ];
       programs.git = {
         enable = true;
+        lfs.enable = true;
         userName = "functora";
         userEmail = "functora@proton.me";
       };

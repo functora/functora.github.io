@@ -1,4 +1,5 @@
 with (import ./project.nix {}); let
+  bak = import ./bak.nix;
   misc = import ./misc.nix;
   newpkgs = import ./newpkgs.nix;
 in
@@ -20,6 +21,10 @@ in
         pkgs.elixir
         newpkgs.litecli
         misc.nix-bundle
+        bak.bak-status
+        bak.bak-commit
+        bak.bak-encrypt
+        # bak.bak-decrypt
       ]
       ++ (import ./tools.nix)
       ++ (import ./../pub/dazzle/nix/tools.nix)
@@ -29,4 +34,8 @@ in
       ++ (pkgs.lib.optional
         (builtins.pathExists ./../prv/nix/tools.nix)
         (import ./../prv/nix/tools.nix));
+    shellHook = ''
+      mkdir -p ${toString ../.}/bak
+      mkdir -p ${toString ../.}/out
+    '';
   }

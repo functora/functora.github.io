@@ -850,9 +850,8 @@ in {
           import ./tabby-admin.nix {sock = "./tabby.sock";}
         }/bin/tabby-admin";
       }
-      // fj.mkFirejailCustom {
+      // fj.mkFirejailOffline {
         pkg = "piper";
-        dir = "piper";
         exe = "${import ./piper.nix}/bin/piper";
       }
       // fj.mkFirejailOffline {

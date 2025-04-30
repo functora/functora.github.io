@@ -4,7 +4,7 @@ in
   pkgs.writeShellApplication {
     name = "piper";
     text = ''
-      export PIPER_VOICES="${import ./piper-voices.nix}"
+      export PIPER_VOICES="${import ./piper-voices-full.nix}"
       cmd="$*"
       eval "set -- $cmd"
       echo "==> show"

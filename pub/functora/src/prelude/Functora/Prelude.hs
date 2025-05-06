@@ -241,6 +241,7 @@ import Data.List.Extra as X
   ( chunksOf,
     enumerate,
     escapeHTML,
+    groupOnKey,
     notNull,
     nubOrd,
     nubOrdBy,

@@ -520,7 +520,7 @@ in {
       ];
       blocked_services.schedule = let
         unBlock = {
-          start = "20h";
+          start = "19h";
           end = "24h";
         };
       in {

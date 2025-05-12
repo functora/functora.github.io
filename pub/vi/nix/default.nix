@@ -102,8 +102,8 @@ in
               #
               # AI
               #
-              nvim-lspconfig
-              unst.vimPlugins.vim-tabby
+              # nvim-lspconfig
+              # unst.vimPlugins.vim-tabby
             ];
             opt = [
             ];

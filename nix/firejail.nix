@@ -45,7 +45,6 @@ in rec {
         notv
         nou2f
         novideo
-        shell none
 
         disable-mnt
         seccomp
@@ -99,7 +98,6 @@ in rec {
         notv
         nou2f
         novideo
-        shell none
 
         disable-mnt
         private ${

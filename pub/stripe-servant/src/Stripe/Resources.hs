@@ -249,7 +249,8 @@ data CheckoutSession = CheckoutSession
     csSuccessUrl :: T.Text,
     csPaymentMethodTypes :: V.Vector T.Text, -- TODO: make enum
     csSubscription :: Maybe SubscriptionId,
-    csAllowPromotionCodes :: Maybe Bool
+    csAllowPromotionCodes :: Maybe Bool,
+    csUrl :: T.Text
   }
   deriving (Show, Eq)
 
@@ -321,7 +322,9 @@ instance ToForm PriceCreate where
             Nothing -> []
             Just x ->
               [ ("recurring[interval]", [prcInterval x]),
-                ("recurring[interval_count]", maybeToList $ fmap toUrlPiece $ prcIntervalCount x)
+                ( "recurring[interval_count]",
+                  maybeToList $ fmap toUrlPiece $ prcIntervalCount x
+                )
               ]
      in Form $
           HM.fromList $
@@ -337,7 +340,9 @@ instance ToForm SubscriptionCreate where
   toForm sc =
     let convertItem (idx, itm) =
           [ ("items[" <> toUrlPiece idx <> "][price]", [toUrlPiece $ sciPrice itm]),
-            ("items[" <> toUrlPiece idx <> "][quantity]", maybeToList $ toUrlPiece <$> sciQuantity itm)
+            ( "items[" <> toUrlPiece idx <> "][quantity]",
+              maybeToList $ toUrlPiece <$> sciQuantity itm
+            )
           ]
         lineItems =
           concatMap convertItem (zip ([0 ..] :: [Int]) (scItems sc))
@@ -353,7 +358,9 @@ instance ToForm CheckoutSessionCreate where
   toForm csc =
     let convertItem (idx, itm) =
           [ ("line_items[" <> toUrlPiece idx <> "][price]", [toUrlPiece $ cscliPrice itm]),
-            ("line_items[" <> toUrlPiece idx <> "][quantity]", [toUrlPiece $ cscliQuantity itm])
+            ( "line_items[" <> toUrlPiece idx <> "][quantity]",
+              [toUrlPiece $ cscliQuantity itm]
+            )
           ]
         lineItems =
           concatMap convertItem (zip ([0 ..] :: [Int]) (cscLineItems csc))
@@ -370,7 +377,9 @@ instance ToForm CheckoutSessionCreate where
               ("mode", [cscMode csc]),
               ("client_reference_id", maybeToList $ cscClientReferenceId csc),
               ("customer", maybeToList $ fmap toUrlPiece $ cscCustomer csc),
-              ("allow_promotion_codes", maybeToList $ toUrlPiece <$> cscAllowPromotionCodes csc)
+              ( "allow_promotion_codes",
+                maybeToList $ toUrlPiece <$> cscAllowPromotionCodes csc
+              )
             ]
               <> lineItems
               <> pmt

@@ -68,4 +68,5 @@ in [
   styleTest
   prettier
   pkgs.alejandra
+  pkgs.haskellPackages.cpphs
 ]

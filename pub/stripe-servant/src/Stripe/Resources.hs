@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -37,6 +39,7 @@ module Stripe.Resources
 
     -- * Checkout
     CheckoutSessionId (..),
+    CheckoutSessionStatus (..),
     CheckoutSession (..),
     CheckoutSessionCreate (..),
     CheckoutSessionCreateLineItem (..),
@@ -49,6 +52,7 @@ module Stripe.Resources
 where
 
 import qualified Data.Aeson as A
+import Data.Data (Data)
 import qualified Data.HashMap.Strict as HM
 import Data.Maybe
 import qualified Data.Text as T
@@ -241,6 +245,12 @@ data SubscriptionCreate = SubscriptionCreate
 newtype CheckoutSessionId = CheckoutSessionId {unCheckoutSessionId :: T.Text}
   deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
 
+data CheckoutSessionStatus
+  = CssOpen
+  | CssExpired
+  | CssComplete
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
+
 data CheckoutSession = CheckoutSession
   { csId :: CheckoutSessionId,
     csLivemode :: Bool,
@@ -250,6 +260,7 @@ data CheckoutSession = CheckoutSession
     csPaymentMethodTypes :: V.Vector T.Text, -- TODO: make enum
     csSubscription :: Maybe SubscriptionId,
     csAllowPromotionCodes :: Maybe Bool,
+    csStatus :: CheckoutSessionStatus,
     csUrl :: T.Text
   }
   deriving (Show, Eq)
@@ -295,6 +306,7 @@ $(deriveJSON (jsonOpts 2) ''StripeList)
 $(deriveJSON (jsonOpts 1) ''Customer)
 $(deriveJSON (jsonOpts 2) ''EventData)
 $(deriveJSON (jsonOpts 1) ''Event)
+$(deriveJSON (jsonOpts 3) ''CheckoutSessionStatus)
 $(deriveJSON (jsonOpts 2) ''CheckoutSession)
 $(deriveJSON (jsonOpts 2) ''PriceRecurring)
 $(deriveJSON (jsonOpts 1) ''Price)

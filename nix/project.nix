@@ -44,6 +44,15 @@ in
       name = "functora";
       src = ./..;
     };
+    modules = [
+      {
+        # enableProfiling = true;
+        # enableLibraryProfiling = true;
+        packages.stripe-hs.components.library.build-tools = [
+          pkgs.haskellPackages.cpphs
+        ];
+      }
+    ];
     # Specify the GHC version to use.
     #
     # NOTE : Fallback from 948 to 928 for aarch64 cross support.

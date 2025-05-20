@@ -70,6 +70,8 @@ else
       pub/functora/*.cabal
       pub/xlsx/*.cabal
       pub/bfx/*.cabal
+      pub/stripe-servant/*.cabal
+      pub/stripe-hs/*.cabal
       ghcjs/*/*.cabal
     optional-packages:
       prv/*/*.cabal

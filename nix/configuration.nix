@@ -748,6 +748,7 @@ in {
     programs.firejail.wrappedBinaries =
       fj.mkFirejailSimple "chromium"
       // mkOpenArena "rat"
+      // import ./doom.nix
       // fj.mkFirejailCustom {
         pkg = "doom-infinite";
         dir = "doom";
@@ -766,18 +767,6 @@ in {
             -file "./liquid/Liquid Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
             -file "./liquid/LTP V4.0 Shader pack.pk3" \
             -file "./liquid/LTP V4.0 Sky shader addon.pk3" \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "doom-64";
-        dir = "doom";
-        exe = ''
-          ${unst.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./BD64-VoH_game.pk3 \
-            -file ./BD64-VoH_maps.pk3 \
-            -file ./relite_0.7.3b.pk3 \
             -file ./SimpleSlots.1.1.pk7
         '';
       }

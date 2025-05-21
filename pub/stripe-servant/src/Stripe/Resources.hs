@@ -74,7 +74,7 @@ formOptions x =
 
 -- | A 'UTCTime' wrapper that has unix timestamp JSON representation
 newtype TimeStamp = TimeStamp {unTimeStamp :: UTCTime}
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 instance A.ToJSON TimeStamp where
   toJSON = A.Number . fromRational . toRational . utcTimeToPOSIXSeconds . unTimeStamp
@@ -95,7 +95,7 @@ data StripeList a = StripeList
   { slHasMore :: Bool,
     slData :: V.Vector a
   }
-  deriving (Show, Eq, Functor)
+  deriving (Eq, Ord, Show, Read, Data, Generic, Functor)
 
 instance Semigroup (StripeList a) where
   (<>) a b = StripeList (slHasMore a || slHasMore b) (slData a <> slData b)
@@ -108,7 +108,7 @@ instance Applicative StripeList where
   (<*>) go x = StripeList (slHasMore go || slHasMore x) (slData go <*> slData x)
 
 newtype CustomerId = CustomerId {unCustomerId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data Customer = Customer
   { cId :: CustomerId,
@@ -117,22 +117,22 @@ data Customer = Customer
     cName :: Maybe T.Text,
     cEmail :: Maybe T.Text
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data CustomerCreate = CustomerCreate
   { ccName :: Maybe T.Text,
     ccEmail :: Maybe T.Text
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data CustomerUpdate = CustomerUpdate
   { cuName :: Maybe T.Text,
     cuEmail :: Maybe T.Text
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype EventId = EventId {unEventId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data Event = Event
   { eId :: EventId,
@@ -142,15 +142,15 @@ data Event = Event
     eApiVersion :: T.Text,
     eData :: EventData
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data EventData = EventData
   { edObject :: A.Value
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype PriceId = PriceId {unPriceId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data Price = Price
   { pId :: PriceId,
@@ -163,13 +163,13 @@ data Price = Price
     pProduct :: ProductId,
     pLookupKey :: Maybe T.Text
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data PriceRecurring = PriceRecurring
   { prInterval :: T.Text, -- TODO: make enum
     prIntervalCount :: Int
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data PriceCreate = PriceCreate
   { pcCurrency :: T.Text,
@@ -179,16 +179,16 @@ data PriceCreate = PriceCreate
     pcTransferLookupKey :: Bool,
     pcRecurring :: Maybe PriceCreateRecurring
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data PriceCreateRecurring = PriceCreateRecurring
   { prcInterval :: T.Text, -- TODO: make enum
     prcIntervalCount :: Maybe Int
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype ProductId = ProductId {unProductId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data Product = Product
   { prId :: ProductId,
@@ -196,16 +196,16 @@ data Product = Product
     prName :: T.Text,
     prDescription :: Maybe T.Text
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data ProductCreate = ProductCreate
   { prcName :: T.Text,
     prcDescription :: Maybe T.Text
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype SubscriptionId = SubscriptionId {unSubscriptionId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data SubscriptionStatus
   = SsIncomplete
@@ -227,10 +227,10 @@ data Subscription = Subscription
     sItems :: StripeList SubscriptionItem,
     sStatus :: SubscriptionStatus
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype SubscriptionItemId = SubscriptionItemId {unSubscriptionItemId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data SubscriptionItem = SubscriptionItem
   { siId :: SubscriptionItemId,
@@ -238,13 +238,13 @@ data SubscriptionItem = SubscriptionItem
     siQuantity :: Maybe Int,
     siSubscription :: SubscriptionId
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data SubscriptionCreateItem = SubscriptionCreateItem
   { sciPrice :: PriceId,
     sciQuantity :: Maybe Int
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data SubscriptionCreate = SubscriptionCreate
   { scCustomer :: CustomerId,
@@ -252,10 +252,10 @@ data SubscriptionCreate = SubscriptionCreate
     scCancelAtPeriodEnd :: Maybe Bool,
     scTrialEnd :: Maybe TimeStamp
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype CheckoutSessionId = CheckoutSessionId {unCheckoutSessionId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data CheckoutSessionStatus
   = CssOpen
@@ -275,7 +275,7 @@ data CheckoutSession = CheckoutSession
     csStatus :: CheckoutSessionStatus,
     csUrl :: T.Text
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data CheckoutSessionCreate = CheckoutSessionCreate
   { cscCancelUrl :: T.Text,
@@ -287,16 +287,16 @@ data CheckoutSessionCreate = CheckoutSessionCreate
     cscAllowPromotionCodes :: Maybe Bool,
     cscLineItems :: [CheckoutSessionCreateLineItem]
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data CheckoutSessionCreateLineItem = CheckoutSessionCreateLineItem
   { cscliPrice :: PriceId,
     cscliQuantity :: Integer
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 newtype CustomerPortalId = CustomerPortalId {unCustomerPortalId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
 
 data CustomerPortal = CustomerPortal
   { cpId :: CustomerPortalId,
@@ -306,13 +306,13 @@ data CustomerPortal = CustomerPortal
     cpReturnUrl :: Maybe T.Text,
     cpUrl :: T.Text
   }
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 data CustomerPortalCreate = CustomerPortalCreate
   { cpcCustomer :: CustomerId,
     cpcReturnUrl :: Maybe T.Text
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Ord, Show, Read, Data, Generic)
 
 $(deriveJSON (jsonOpts 2) ''StripeList)
 $(deriveJSON (jsonOpts 1) ''Customer)

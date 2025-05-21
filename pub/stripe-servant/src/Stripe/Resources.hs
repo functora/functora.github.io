@@ -27,6 +27,7 @@ module Stripe.Resources
     -- * Subscriptions
     SubscriptionId (..),
     SubscriptionItemId (..),
+    SubscriptionStatus (..),
     Subscription (..),
     SubscriptionItem (..),
     SubscriptionCreate (..),
@@ -206,6 +207,17 @@ data ProductCreate = ProductCreate
 newtype SubscriptionId = SubscriptionId {unSubscriptionId :: T.Text}
   deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
 
+data SubscriptionStatus
+  = SsIncomplete
+  | SsIncompleteExpired
+  | SsTrialing
+  | SsActive
+  | SsPastDue
+  | SsCanceled
+  | SsUnpaid
+  | SsPaused
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
+
 data Subscription = Subscription
   { sId :: SubscriptionId,
     sCancelAtPeriodEnd :: Bool,
@@ -213,7 +225,7 @@ data Subscription = Subscription
     sCurrentPeriodStart :: TimeStamp,
     sCustomer :: CustomerId,
     sItems :: StripeList SubscriptionItem,
-    sStatus :: T.Text -- TODO: make enum
+    sStatus :: SubscriptionStatus
   }
   deriving (Show, Eq)
 
@@ -312,6 +324,7 @@ $(deriveJSON (jsonOpts 2) ''PriceRecurring)
 $(deriveJSON (jsonOpts 1) ''Price)
 $(deriveJSON (jsonOpts 2) ''Product)
 $(deriveJSON (jsonOpts 2) ''SubscriptionItem)
+$(deriveJSON (jsonOpts 2) ''SubscriptionStatus)
 $(deriveJSON (jsonOpts 1) ''Subscription)
 $(deriveJSON (jsonOpts 2) ''CustomerPortal)
 

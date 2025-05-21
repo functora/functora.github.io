@@ -40,6 +40,7 @@ module Stripe.Client
     -- * Subscriptions
     SubscriptionId (..),
     SubscriptionItemId (..),
+    SubscriptionStatus (..),
     Subscription (..),
     SubscriptionItem (..),
     SubscriptionCreate (..),

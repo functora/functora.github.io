@@ -1,62 +1,105 @@
-{-# OPTIONS_GHC -cpp -pgmPcpphs -optP--cpp #-}
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -cpp -pgmPcpphs -optP--cpp #-}
+
 module Stripe.Client
   ( -- * Basics
-    ApiKey, StripeClient, makeStripeClient, ClientError(..)
+    ApiKey,
+    StripeClient,
+    makeStripeClient,
+    ClientError (..),
+
     -- * Helper types
-  , TimeStamp(..), StripeList(..)
+    TimeStamp (..),
+    StripeList (..),
+
     -- * Customers
-  , createCustomer, retrieveCustomer, updateCustomer, listCustomers
-  , CustomerId(..), Customer(..), CustomerCreate(..), CustomerUpdate(..)
+    createCustomer,
+    retrieveCustomer,
+    updateCustomer,
+    listCustomers,
+    CustomerId (..),
+    Customer (..),
+    CustomerCreate (..),
+    CustomerUpdate (..),
+
     -- * Product catalog
-  , ProductId(..), PriceId(..), Product(..), Price(..), PriceRecurring(..)
-  , ProductCreate(..), PriceCreate(..), PriceCreateRecurring(..)
-  , createProduct, retrieveProduct
-  , createPrice, retrievePrice, listPrices
+    ProductId (..),
+    PriceId (..),
+    Product (..),
+    Price (..),
+    PriceRecurring (..),
+    ProductCreate (..),
+    PriceCreate (..),
+    PriceCreateRecurring (..),
+    createProduct,
+    retrieveProduct,
+    createPrice,
+    retrievePrice,
+    listPrices,
+
     -- * Subscriptions
-  , SubscriptionId(..), SubscriptionItemId(..), Subscription(..), SubscriptionItem(..), SubscriptionCreate(..), SubscriptionCreateItem(..)
-  , createSubscription, retrieveSubscription, listSubscriptions
+    SubscriptionId (..),
+    SubscriptionItemId (..),
+    SubscriptionStatus (..),
+    Subscription (..),
+    SubscriptionItem (..),
+    SubscriptionCreate (..),
+    SubscriptionCreateItem (..),
+    createSubscription,
+    retrieveSubscription,
+    listSubscriptions,
+
     -- * Customer Portal
-  , CustomerPortalId(..), CustomerPortal(..), CustomerPortalCreate(..)
-  , createCustomerPortal
+    CustomerPortalId (..),
+    CustomerPortal (..),
+    CustomerPortalCreate (..),
+    createCustomerPortal,
+
     -- * Checkout
-  , CheckoutSessionId(..), CheckoutSession(..), CheckoutSessionCreate(..), CheckoutSessionCreateLineItem(..)
-  , createCheckoutSession, retrieveCheckoutSession
+    CheckoutSessionId (..),
+    CheckoutSessionStatus (..),
+    CheckoutSession (..),
+    CheckoutSessionCreate (..),
+    CheckoutSessionCreateLineItem (..),
+    createCheckoutSession,
+    retrieveCheckoutSession,
+
     -- * Events
-  , retrieveEvent, listEvents
-  , EventId(..), Event(..), EventData(..)
+    retrieveEvent,
+    listEvents,
+    EventId (..),
+    Event (..),
+    EventData (..),
   )
 where
 
-import Stripe.Api
-import Stripe.Resources
-import Stripe.Client.Internal.Helpers
-
 import Data.Proxy
-import Servant.API
-import Servant.Client
-import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import Network.HTTP.Client (Manager)
+import Servant.API
+import Servant.Client
+import Stripe.Api
+import Stripe.Client.Internal.Helpers
+import Stripe.Resources
 
 -- | Your Stripe API key. Can be obtained from the Stripe dashboard. Format: @sk_<mode>_<redacted>@
 type ApiKey = T.Text
 
 -- | Holds a 'Manager' and your API key.
-data StripeClient
-  = StripeClient
-  { scBasicAuthData :: BasicAuthData
-  , scManager :: Manager
-  , scMaxRetries :: Int
+data StripeClient = StripeClient
+  { scBasicAuthData :: BasicAuthData,
+    scManager :: Manager,
+    scMaxRetries :: Int
   }
 
 -- | Construct a 'StripeClient'. Note that the passed 'Manager' must support https (e.g. via @http-client-tls@)
 makeStripeClient ::
-  ApiKey
-  -> Manager
-  -> Int
-  -- ^ Number of automatic retries the library should attempt. See also <https://stripe.com/docs/error-handling#safely-retrying-requests-with-idempotency Stripe Error Handling>
-  -> StripeClient
+  ApiKey ->
+  Manager ->
+  -- | Number of automatic retries the library should attempt. See also <https://stripe.com/docs/error-handling#safely-retrying-requests-with-idempotency Stripe Error Handling>
+  Int ->
+  StripeClient
 makeStripeClient k = StripeClient (BasicAuthData (T.encodeUtf8 k) "")
 
 api :: Proxy StripeApi
@@ -80,29 +123,29 @@ stripeBaseUrl = BaseUrl Https "api.stripe.com" 443 ""
     N :: StripeClient -> ARG -> ARG2 -> ARG3 -> IO (Either ClientError R);\
     N sc a b c = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b c) (mkClientEnv (scManager sc) stripeBaseUrl)
 
-EP(createCustomer, CustomerCreate, Customer)
-EP(retrieveCustomer, CustomerId, Customer)
-EP2(updateCustomer, CustomerId, CustomerUpdate, Customer)
-EP(listCustomers, Maybe CustomerId, (StripeList Customer))
+EP (createCustomer, CustomerCreate, Customer)
+EP (retrieveCustomer, CustomerId, Customer)
+EP2 (updateCustomer, CustomerId, CustomerUpdate, Customer)
+EP (listCustomers, Maybe CustomerId, (StripeList Customer))
 
-EP(createProduct, ProductCreate, Product)
-EP(retrieveProduct, ProductId, Product)
+EP (createProduct, ProductCreate, Product)
+EP (retrieveProduct, ProductId, Product)
 
-EP(createPrice, PriceCreate, Price)
-EP(retrievePrice, PriceId, Price)
-EP(listPrices, Maybe T.Text, (StripeList Price))
+EP (createPrice, PriceCreate, Price)
+EP (retrievePrice, PriceId, Price)
+EP (listPrices, Maybe T.Text, (StripeList Price))
 
-EP(createSubscription, SubscriptionCreate, Subscription)
-EP(retrieveSubscription, SubscriptionId, Subscription)
-EP(listSubscriptions, Maybe CustomerId, (StripeList Subscription))
+EP (createSubscription, SubscriptionCreate, Subscription)
+EP (retrieveSubscription, SubscriptionId, Subscription)
+EP (listSubscriptions, Maybe CustomerId, (StripeList Subscription))
 
-EP(createCheckoutSession, CheckoutSessionCreate, CheckoutSession)
-EP(retrieveCheckoutSession, CheckoutSessionId, CheckoutSession)
+EP (createCheckoutSession, CheckoutSessionCreate, CheckoutSession)
+EP (retrieveCheckoutSession, CheckoutSessionId, CheckoutSession)
 
-EP(createCustomerPortal, CustomerPortalCreate, CustomerPortal)
+EP (createCustomerPortal, CustomerPortalCreate, CustomerPortal)
 
-EP(retrieveEvent, EventId, Event)
-EP(listEvents, Maybe EventId, (StripeList Event))
+EP (retrieveEvent, EventId, Event)
+EP (listEvents, Maybe EventId, (StripeList Event))
 
 (createCustomer' :<|> retrieveCustomer' :<|> updateCustomer' :<|> listCustomers')
   :<|> (createProduct' :<|> retrieveProduct')
@@ -110,5 +153,5 @@ EP(listEvents, Maybe EventId, (StripeList Event))
   :<|> (createSubscription' :<|> retrieveSubscription' :<|> listSubscriptions')
   :<|> (createCheckoutSession' :<|> retrieveCheckoutSession')
   :<|> (createCustomerPortal')
-  :<|> (retrieveEvent' :<|> listEvents')
-  = client api
+  :<|> (retrieveEvent' :<|> listEvents') =
+    client api

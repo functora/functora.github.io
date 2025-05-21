@@ -1,8 +1,4 @@
--- |
-
-module Stripe.Util.Aeson
-  ( jsonOpts, deriveJSON, ToJSON, FromJSON )
-where
+module Stripe.Util.Aeson (jsonOpts, deriveJSON, ToJSON, FromJSON) where
 
 import Data.Aeson
 import Data.Aeson.TH
@@ -11,6 +7,7 @@ import Text.Casing (quietSnake)
 jsonOpts :: Int -> Options
 jsonOpts x =
   defaultOptions
-  { fieldLabelModifier = quietSnake . drop x
-  , constructorTagModifier = quietSnake
-  }
+    { fieldLabelModifier = quietSnake . drop x,
+      constructorTagModifier = quietSnake . drop x,
+      sumEncoding = UntaggedValue
+    }

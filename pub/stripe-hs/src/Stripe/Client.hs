@@ -76,7 +76,7 @@ where
 import Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import Network.HTTP.Client (Manager)
+import Network.HTTP.Client (Manager, Request (..))
 import Servant.API
 import Servant.Client
 import Stripe.Api
@@ -108,20 +108,36 @@ api = Proxy
 stripeBaseUrl :: BaseUrl
 stripeBaseUrl = BaseUrl Https "api.stripe.com" 443 ""
 
+newClientEnv :: Manager -> BaseUrl -> ClientEnv
+newClientEnv man url =
+  env
+    { makeClientRequest = mkReq
+    }
+  where
+    env = mkClientEnv man url
+    mkReq x y = do
+      req <- makeClientRequest env x y
+      pure
+        req
+          { requestHeaders =
+              ("Stripe-Version", "2025-02-24.acacia")
+                : requestHeaders req
+          }
+
 #define EP(N, ARG, R) \
     N##' :: BasicAuthData -> ARG -> ClientM R;\
     N :: StripeClient -> ARG -> IO (Either ClientError R);\
-    N sc a = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a) (mkClientEnv (scManager sc) stripeBaseUrl)
+    N sc a = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a) (newClientEnv (scManager sc) stripeBaseUrl)
 
 #define EP2(N, ARG, ARG2, R) \
     N##' :: BasicAuthData -> ARG -> ARG2 -> ClientM R;\
     N :: StripeClient -> ARG -> ARG2 -> IO (Either ClientError R);\
-    N sc a b = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b) (mkClientEnv (scManager sc) stripeBaseUrl)
+    N sc a b = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b) (newClientEnv (scManager sc) stripeBaseUrl)
 
 #define EP3(N, ARG, ARG2, ARG3, R) \
     N##' :: BasicAuthData -> ARG -> ARG2 -> ARG3 -> ClientM R;\
     N :: StripeClient -> ARG -> ARG2 -> ARG3 -> IO (Either ClientError R);\
-    N sc a b c = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b c) (mkClientEnv (scManager sc) stripeBaseUrl)
+    N sc a b c = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b c) (newClientEnv (scManager sc) stripeBaseUrl)
 
 EP (createCustomer, CustomerCreate, Customer)
 EP (retrieveCustomer, CustomerId, Customer)

@@ -273,7 +273,7 @@ data CheckoutSession = CheckoutSession
     csSubscription :: Maybe SubscriptionId,
     csAllowPromotionCodes :: Maybe Bool,
     csStatus :: CheckoutSessionStatus,
-    csUrl :: T.Text
+    csUrl :: Maybe T.Text
   }
   deriving (Eq, Ord, Show, Read, Data, Generic)
 

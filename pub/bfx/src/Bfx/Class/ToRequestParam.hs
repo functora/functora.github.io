@@ -7,7 +7,6 @@ module Bfx.Class.ToRequestParam
   )
 where
 
-import Bfx.Data.Web
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import Functora.Money

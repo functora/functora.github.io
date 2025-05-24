@@ -355,23 +355,27 @@ in {
     #
     # GPU
     #
-    systemd.tmpfiles.rules = [
-      "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.rocmPackages_5.clr}"
+    systemd.tmpfiles.rules = let
+      rocmEnv = pkgs.symlinkJoin {
+        name = "rocm-combined";
+        paths = with pkgs.rocmPackages; [
+          rocblas
+          hipblas
+          clr
+        ];
+      };
+    in [
+      "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
     ];
     hardware.opengl = {
       enable = true;
       driSupport32Bit = true;
       extraPackages = with pkgs; [
         amdvlk
-        rocmPackages_5.clr.icd
-        rocmPackages_5.clr
-        rocmPackages_5.rocminfo
-        rocmPackages_5.rocm-runtime
-        # vulkan-validation-layers
-        # intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        # vaapiIntel # LIBVA_DRIVER_NAME=i965
-        # vaapiVdpau
-        # libvdpau-va-gl
+        rocmPackages.clr.icd
+        rocmPackages.clr
+        rocmPackages.rocminfo
+        rocmPackages.rocm-runtime
       ];
       extraPackages32 = with pkgs; [
         driversi686Linux.amdvlk
@@ -1246,8 +1250,10 @@ in {
       lib.mkMerge
       (map mkLocalBorg config.services.functora.localBorg);
     #
-    # Tabby
+    # AI
     #
+    services.ollama.enable = true;
+    services.ollama.acceleration = "rocm";
     # services.tabby-server.enable = true;
     # services.tabby-socket.enable = true;
   };

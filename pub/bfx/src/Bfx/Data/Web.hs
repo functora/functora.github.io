@@ -7,7 +7,6 @@ module Bfx.Data.Web
     BaseUrl (..),
     withNonce,
     parseJsonBs,
-    utcTimeToMicros,
   )
 where
 
@@ -16,7 +15,6 @@ import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
 import Functora.Cfg
 import Functora.Prelude
-import qualified Prelude
 
 newtype PrvKey = PrvKey
   { unPrvKey :: Text

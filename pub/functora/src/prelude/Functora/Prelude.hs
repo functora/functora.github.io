@@ -126,6 +126,7 @@ module Functora.Prelude
     NonceGen,
     newNonceGen,
     withNonce,
+    utcTimeToMicros,
 
     -- * FixedPoint
     -- $fixedPoint

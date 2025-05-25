@@ -1,0 +1,39 @@
+version "4.13.0"
+
+class DBloodHandler : EventHandler
+{
+	override void WorldThingSpawned(WorldEvent e)
+	{
+		if (!e.Thing)
+			return;
+
+		Actor mo = e.Thing;
+
+		if (!mo.bShootable)
+			return;
+
+		DBlood.Process(mo);
+	}
+}
+
+class DBlood play
+{
+	static void Process(Actor mo)
+	{
+    if (mo.bIsMonster || mo.player)
+    {
+			Actor x = Actor.Spawn("DBloodDefault");
+			mo.bNoBlood = x.bNoBlood;
+			mo.CopyBloodColor(x);
+      x.Destroy();
+    }
+	}
+}
+
+class DBloodDefault: Actor
+{
+	Default
+	{
+		BloodColor "3C 00 08";
+	}
+}

@@ -1,4 +1,4 @@
-version "4.14.1"
+version "4.13.0"
 
 // Copyright 2020 - 2025 Nash Muhandes
 // All rights reserved.
@@ -28,14 +28,14 @@ version "4.14.1"
 
 //===========================================================================
 //
-// CBlood
+// CDBlood
 // Written by Nash Muhandes
 //
 // License: MIT
 //
 //===========================================================================
 
-class CBloodHandler : EventHandler
+class CDBloodHandler : EventHandler
 {
 	override void WorldThingSpawned(WorldEvent e)
 	{
@@ -47,7 +47,7 @@ class CBloodHandler : EventHandler
 		if (!mo.bShootable)
 			return;
 
-		CBlood.Process(mo);
+		CDBlood.Process(mo);
 	}
 }
 
@@ -57,11 +57,11 @@ class CBloodHandler : EventHandler
 //
 //===========================================================================
 
-class CBlood play
+class CDBlood play
 {
 	static void Process(Actor mo)
 	{
-		String className = "CBlood" .. mo.GetClassName();
+		String className = "CDBlood" .. mo.GetClassName();
 		class<Actor> cls = className;
 		if (cls)
 		{
@@ -72,6 +72,31 @@ class CBlood play
 				mo.CopyBloodColor(cblood);
 			}
 		}
+    else
+    {
+      if (mo.bIsMonster || mo.player)
+      {
+				String className = "CDBloodDefault";
+				class<Actor> cls = className;
+				if (cls)
+				{
+					let cblood = GetDefaultByType(cls);
+					if (cblood)
+					{
+						mo.bNoBlood = cblood.bNoBlood;
+						mo.CopyBloodColor(cblood);
+					}
+				}
+      }
+    }
+	}
+}
+
+class CDBloodDefault: Actor abstract
+{
+	Default
+	{
+		BloodColor "3C 00 08";
 	}
 }
 
@@ -81,7 +106,7 @@ class CBlood play
 //
 //===========================================================================
 
-class CBloodBaronOfHell : Actor abstract
+class CDBloodBaronOfHell : Actor abstract
 {
 	Default
 	{
@@ -89,9 +114,9 @@ class CBloodBaronOfHell : Actor abstract
 	}
 }
 
-class CBloodHellKnight : CBloodBaronOfHell abstract {}
+class CDBloodHellKnight : CDBloodBaronOfHell abstract {}
 
-class CBloodCacodemon : Actor abstract
+class CDBloodCacodemon : Actor abstract
 {
 	Default
 	{
@@ -99,7 +124,7 @@ class CBloodCacodemon : Actor abstract
 	}
 }
 
-class CBloodLostSoul : Actor abstract
+class CDBloodLostSoul : Actor abstract
 {
 	Default
 	{
@@ -116,7 +141,7 @@ class CBloodLostSoul : Actor abstract
 //
 //===========================================================================
 
-class CBloodChexBlood : Actor abstract
+class CDBloodChexBlood : Actor abstract
 {
 	Default
 	{
@@ -125,27 +150,27 @@ class CBloodChexBlood : Actor abstract
 	}
 }
 
-class CBloodChexPlayer : CBloodChexBlood abstract {}
-class CBloodFlemoidusCommonus : CBloodChexBlood abstract {}
-class CBloodFlemoidusBipedicus : CBloodChexBlood abstract {}
-class CBloodArmoredFlemoidusBipedicus : CBloodChexBlood abstract {}
-class CBloodFlemoidusCycloptisCommonus : CBloodChexBlood abstract {}
-class CBloodFlembrane : CBloodChexBlood abstract {}
-class CBloodChexSoul : CBloodChexBlood abstract {}
+class CDBloodChexPlayer : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusCommonus : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusBipedicus : CDBloodChexBlood abstract {}
+class CDBloodArmoredFlemoidusBipedicus : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusCycloptisCommonus : CDBloodChexBlood abstract {}
+class CDBloodFlembrane : CDBloodChexBlood abstract {}
+class CDBloodChexSoul : CDBloodChexBlood abstract {}
 
-class CBloodFlemoidusCommonusV3 : CBloodChexBlood abstract {}
-class CBloodFlemoidusBipedicusV3 : CBloodChexBlood abstract {}
-class CBloodArmoredFlemoidusBipedicusV3 : CBloodChexBlood abstract {}
-class CBloodFlemoidusStridicus : CBloodChexBlood abstract {}
-class CBloodFlemoidusCycloptisCommonusV3 : CBloodChexBlood abstract {}
-class CBloodFlemMine : CBloodChexBlood abstract {}
-class CBloodSuperCycloptis : CBloodChexBlood abstract {}
-class CBloodFlemoidusMaximus : CBloodChexBlood abstract {}
-class CBloodFlembraneV3 : CBloodChexBlood abstract {}
-class CBloodLarva : CBloodChexBlood abstract {}
-class CBloodQuadrumpus : CBloodChexBlood abstract {}
-class CBloodSnotfolus : CBloodChexBlood abstract {}
-class CBloodFlembomination : CBloodChexBlood abstract {}
+class CDBloodFlemoidusCommonusV3 : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusBipedicusV3 : CDBloodChexBlood abstract {}
+class CDBloodArmoredFlemoidusBipedicusV3 : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusStridicus : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusCycloptisCommonusV3 : CDBloodChexBlood abstract {}
+class CDBloodFlemMine : CDBloodChexBlood abstract {}
+class CDBloodSuperCycloptis : CDBloodChexBlood abstract {}
+class CDBloodFlemoidusMaximus : CDBloodChexBlood abstract {}
+class CDBloodFlembraneV3 : CDBloodChexBlood abstract {}
+class CDBloodLarva : CDBloodChexBlood abstract {}
+class CDBloodQuadrumpus : CDBloodChexBlood abstract {}
+class CDBloodSnotfolus : CDBloodChexBlood abstract {}
+class CDBloodFlembomination : CDBloodChexBlood abstract {}
 
 //===========================================================================
 //
@@ -154,7 +179,7 @@ class CBloodFlembomination : CBloodChexBlood abstract {}
 //
 //===========================================================================
 
-class CBloodAstralCaco : Actor abstract
+class CDBloodAstralCaco : Actor abstract
 {
 	Default
 	{
@@ -162,7 +187,7 @@ class CBloodAstralCaco : Actor abstract
 	}
 }
 
-class CBloodNightmareDemon : Actor abstract
+class CDBloodNightmareDemon : Actor abstract
 {
 	Default
 	{

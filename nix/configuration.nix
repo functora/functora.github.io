@@ -285,7 +285,6 @@ in {
       (import "${home-manager}/nixos")
       (import ./rigtora.nix)
     ]
-    ++ (import ./tabby-services.nix)
     ++ (
       if builtins.pathExists ./../prv/nix/configuration.nix
       then [(import ./../prv/nix/configuration.nix)]
@@ -754,27 +753,6 @@ in {
       // mkOpenArena "rat"
       // import ./doom.nix
       // fj.mkFirejailCustom {
-        pkg = "doom-infinite";
-        dir = "doom";
-        exe = ''
-          ${pkgs.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./DOOM_Infinite_DEMO_0978_6.pk3 \
-            -file "./duhd/1 lights2.wad" "./duhd/8 DHTP Textures.pk3" "./duhd/9 JFO.wad" "./duhd/10 HD_SFX.wad" "./duhd/12 Flashlight++.pk3" "./duhd/13 Tilt++.pk3" "./duhd/14 brightmaps2.wad" "./duhd/16 d3snds.wad" "./duhd/17 brutaldoom_stuff.wad" "./duhd/19 SpriteShadow.wad" "./duhd/20 WorldGamma.wad" "./duhd/21 BloomBoost.wad" "./duhd/22 MotionBlur.pk3" "./duhd/23 hires_decals.wad" "./duhd/24 Terrains.wad" "./duhd/25 HD HUD.pk3" "./duhd/26 Liquids.pk3" "./duhd/27 marcelus_hd_sprites.pk3" "./duhd/29 Universal Rain and Snow v3.pk3" "./duhd/30 OST Remake.pk3" "./duhd/31 texture_lights.wad" "./duhd/0 Parallax PBR.pk3" \
-            -file ./DoomBSMS.wad \
-            -file ./mod.pk3 \
-            -file ./UniversalGibs-master.zip \
-            -file ./CodeFX.pk3 \
-            -file ./CodeFXFire.pk3 \
-            -file ./CodeFXBlood.pk3 \
-            -file "./liquid/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
-            -file "./liquid/Liquid Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
-            -file "./liquid/LTP V4.0 Shader pack.pk3" \
-            -file "./liquid/LTP V4.0 Sky shader addon.pk3" \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
-      // fj.mkFirejailCustom {
         pkg = "doom-mall";
         dir = "doom";
         exe = ''
@@ -785,77 +763,13 @@ in {
             -file ./SimpleSlots.1.1.pk7
         '';
       }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-download-embed";
-        dir = "tabby-download";
-        net = true;
-        exe = ''
-          ${import ./tabby.nix}/bin/tabby \
-            download --model Nomic-Embed-Text
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-download-deepseek";
-        dir = "tabby-download";
-        net = true;
-        #
-        # NOTE : DeepSeekCoder-6.7B is out of memory on 4GB GPU.
-        # Seems like only models up to 3B size are supported.
-        #
-        exe = ''
-          ${import ./tabby.nix}/bin/tabby \
-            download --model DeepSeekCoder-1.3B
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-download-gemma";
-        dir = "tabby-download";
-        net = true;
-        exe = ''
-          ${import ./tabby.nix}/bin/tabby \
-            download --model CodeGemma-2B
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-download-instruct";
-        dir = "tabby-download";
-        net = true;
-        exe = ''
-          ${import ./tabby.nix}/bin/tabby \
-            download --model Qwen2.5-Coder-1.5B-Instruct
-        '';
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-agent";
-        dir = "tabby";
-        exe = "${
-          import ./tabby-agent.nix {
-            sock = "/home/${
-              config.services.functora.userName
-            }/.firejail/tabby/tabby.sock";
-          }
-        }/bin/tabby-agent";
-      }
-      // fj.mkFirejailCustom {
-        pkg = "tabby-admin";
-        dir = "tabby";
-        exe = "${
-          import ./tabby-admin.nix {sock = "./tabby.sock";}
-        }/bin/tabby-admin";
+      // fj.mkFirejailOffline {
+        pkg = "vi";
+        exe = "${vi}/bin/vi";
       }
       // fj.mkFirejailOffline {
         pkg = "piper";
         exe = "${import ./piper.nix}/bin/piper";
-      }
-      // fj.mkFirejailOffline {
-        pkg = "vi";
-        exe = "${
-          import ./vi-socat.nix {
-            sock = "/home/${
-              config.services.functora.userName
-            }/.firejail/tabby/tabby.sock";
-          }
-        }/bin/vi";
       }
       // fj.mkFirejailOffline {
         pkg = "hoogle-w3m";
@@ -1253,8 +1167,5 @@ in {
     # AI
     #
     services.ollama.enable = true;
-    services.ollama.acceleration = "rocm";
-    # services.tabby-server.enable = true;
-    # services.tabby-socket.enable = true;
   };
 }

@@ -1,11 +1,13 @@
 let
+  olds = import ./oldpkgs.nix;
   pkgs = import ./nixpkgs.nix;
   unst = import ./nixpkgs-unstable.nix;
   fj = import ./firejail.nix;
+  duhd = ../bak/doom/duhd;
 in
   pkgs.lib.optionalAttrs (builtins.pathExists ../bak/doom)
   (
-    fj.mkFirejailCustom rec {
+    fj.mkFirejailCustom {
       pkg = "doom-64";
       dir = "doom";
       exe = ''
@@ -18,12 +20,19 @@ in
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
       '';
     }
-    // fj.mkFirejailCustom rec {
+    // fj.mkFirejailCustom {
       pkg = "doom-ashes1";
       dir = "doom";
       exe = ''
         ${unst.gzdoom}/bin/gzdoom \
           -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/CodeFX.pk3} \
+          -file ${../bak/doom/CodeFXFire.pk3} \
+          -file ${../bak/doom/CodeFXBlood.pk3} \
+          -file "${../bak/doom/liquid}/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
+          -file "${../bak/doom/liquid}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Shader pack.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Sky shader addon.pk3" \
           -file ${../bak/doom/AshesStandalone_V1_51/Resources/AshesSAMenu.pk3} \
           -file ${../bak/doom/AshesStandalone_V1_51/Resources/lightmodepatch.pk3} \
           -file ${../bak/doom/AshesStandalone_V1_51/Resources/Ashes2063Enriched2_23.pk3} \
@@ -35,8 +44,50 @@ in
           -file ${../bak/doom/ashes-wpn-tracers.pk3} \
           -file ${../bak/doom/relite_0.7.3b.pk3} \
           -file ${../bak/doom/nashgore.pk3} \
-          -file ${../bak/doom/MaterialsNashgoreNext.pk3} \
-          -file ${../bak/doom/purple.pk3} \
+          -file ${../bak/doom/cblood.pk3} \
+          -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
+      pkg = "doom-free2";
+      dir = "doom";
+      exe = ''
+        ${unst.gzdoom}/bin/gzdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/DoomBSMS.wad} \
+          -file "${duhd}/1 lights2.wad" "${duhd}/8 DHTP Textures.pk3" "${duhd}/9 JFO.wad" "${duhd}/10 HD_SFX.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/16 d3snds.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/23 hires_decals.wad" "${duhd}/24 Terrains.wad" "${duhd}/25 HD HUD.pk3" "${duhd}/26 Liquids.pk3" "${duhd}/27 marcelus_hd_sprites.pk3" "${duhd}/29 Universal Rain and Snow v3.pk3" "${duhd}/30 OST Remake.pk3" "${duhd}/31 texture_lights.wad" "${duhd}/0 Parallax PBR.pk3" \
+          -file ${../bak/doom/CodeFX.pk3} \
+          -file ${../bak/doom/CodeFXFire.pk3} \
+          -file ${../bak/doom/CodeFXBlood.pk3} \
+          -file "${../bak/doom/liquid}/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
+          -file "${../bak/doom/liquid}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Shader pack.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Sky shader addon.pk3" \
+          -file ${../bak/doom/Project_Brutality-PB_Staging.zip} \
+          -file ${../bak/doom/relite_0.7.3b.pk3} \
+          -file ${../bak/doom/cblood.pk3} \
+          -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
+      pkg = "doom-infinite";
+      dir = "doom";
+      exe = ''
+        ${olds.gzdoom}/bin/gzdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/DOOM_Infinite_DEMO_0978_6.pk3} \
+          -file "${duhd}/1 lights2.wad" "${duhd}/8 DHTP Textures.pk3" "${duhd}/9 JFO.wad" "${duhd}/10 HD_SFX.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/13 Tilt++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/16 d3snds.wad" "${duhd}/17 brutaldoom_stuff.wad" "${duhd}/19 SpriteShadow.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/22 MotionBlur.pk3" "${duhd}/23 hires_decals.wad" "${duhd}/24 Terrains.wad" "${duhd}/25 HD HUD.pk3" "${duhd}/26 Liquids.pk3" "${duhd}/27 marcelus_hd_sprites.pk3" "${duhd}/29 Universal Rain and Snow v3.pk3" "${duhd}/30 OST Remake.pk3" "${duhd}/31 texture_lights.wad" "${duhd}/0 Parallax PBR.pk3" \
+          -file ${../bak/doom/DoomBSMS.wad} \
+          -file ${../bak/doom/DoomInfiniteWeaponsSkins.pk3} \
+          -file ${../bak/doom/CodeFX.pk3} \
+          -file ${../bak/doom/CodeFXFire.pk3} \
+          -file ${../bak/doom/CodeFXBlood.pk3} \
+          -file "${../bak/doom/liquid}/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
+          -file "${../bak/doom/liquid}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Shader pack.pk3" \
+          -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Sky shader addon.pk3" \
+          -file ${../bak/doom/nashgore.pk3} \
+          -file ${../bak/doom/dblood.pk3} \
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
       '';
     }

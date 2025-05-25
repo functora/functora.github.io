@@ -15,11 +15,12 @@ in rec {
     grp ? null,
     cfg ? "",
     profile ? mkFirejailProfile {inherit pkg dir net grp cfg;},
+    extraArgs ? [],
     exe,
   }: {
     "${pkg}" = {
       executable = exe;
-      inherit profile;
+      inherit profile extraArgs;
     };
   };
   mkFirejailOffline = {
@@ -29,8 +30,8 @@ in rec {
     mkFirejailCustom {
       inherit pkg exe;
       profile = pkgs.writeText "${pkg}.local" ''
-        no3d
-        nosound
+        # no3d
+        # nosound
         apparmor
         caps.drop all
         machine-id

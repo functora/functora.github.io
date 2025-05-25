@@ -8,10 +8,6 @@
   fj = import ./firejail.nix;
   dns = ["8.8.8.8" "8.8.4.4"];
   unst = import ./nixpkgs-unstable.nix;
-  vkdoom = import ./vkdoom.nix {inherit pkgs;};
-  # xkb = pkgs.writeText "xkb-layout" (builtins.readFile ./../cfg/.Xmodmap);
-  # yewtube = import ./yewtube.nix;
-  qmk-setup = import ./qmk-setup.nix;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/8d5e27b4807d25308dfe369d5a923d87e7dbfda3.tar.gz";
@@ -279,9 +275,6 @@
 in {
   imports =
     [
-      # (import "${nixos-hardware}/common/cpu/intel")
-      # (import "${nixos-hardware}/common/pc/laptop")
-      # (import "${nixos-hardware}/common/pc/laptop/ssd")
       (import "${home-manager}/nixos")
       (import ./rigtora.nix)
     ]
@@ -539,11 +532,6 @@ in {
     };
 
     #
-    # Keyboards
-    #
-    hardware.keyboard.qmk.enable = true;
-
-    #
     # TODO : remove when this is fixed
     # https://github.com/NixOS/nixpkgs/issues/180175
     #
@@ -558,53 +546,8 @@ in {
       package = kmonad-pkg;
       keyboards.miniM = mkTkl "/dev/input/by-id/usb-Unicomp_Inc_U_AP1_4_87k_Kbrd_v7_57-event-kbd";
       keyboards.k995p = mk100 "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
-      keyboards.maxfit61 = mk60p "/dev/input/by-id/usb-FANTECH_MAXFIT61_Mechanical_Keyboard-event-kbd";
       keyboards.feker80 = mkAlice "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
       keyboards.aks068 = mkAlice "/dev/input/by-id/usb-RDR_AKS068-event-kbd";
-      keyboards.md600 = {
-        device = "/dev/input/by-id/usb-Mistel_MD600-event-kbd";
-        defcfg = {
-          enable = true;
-          fallthrough = true;
-          allowCommands = false;
-        };
-        config = ''
-          (defalias
-            fst  (layer-toggle fst-layer)
-            snd  (layer-toggle snd-layer)
-            til  (around lsft grv)
-            ltab (around lsft tab)
-          )
-          (defsrc
-            esc  1    2    3    4    5              6    7    8    9    0    -    =    bspc
-            tab  q    w    e    r    t              y    u    i    o    p    [    ]    \
-            caps a    s    d    f    g              h    j    k    l    ;    '    ret
-            lsft z    x    c    v    b              n    m    ,    .    /    rsft
-            lctl lmet lalt      spc                      spc       ralt      rctl
-          )
-          (deflayer qwerty
-            _    _    _    _    _    _              _    _    _    _    _    _    _    _
-            esc  _    _    _    _    _              _    _    _    _    _    _    _    _
-            @fst _    _    _    _    _              _    _    _    _    _    _    _
-            _    _    _    _    _    _              _    _    _    _    _    ret
-            _    _    _         _                        _         _         _
-          )
-          (deflayer fst-layer
-            _    f1   f2   f3   f4   f5             f6   f7   f8   f9   f10  f11  f12  _
-            @snd _    _    _    _    _              _    _    _    _    _    _    _    grv
-            _    _    _    slck _    _              lft  down up   rght _    _    _
-            _    _    _    _    _    _              _    _    _    _    _    _
-            _    _    ralt      tab                      tab       _         _
-          )
-          (deflayer snd-layer
-            _    brdn bru  _    _    _              _    prev pp   next mute vold volu _
-            _    _    _    _    _    _              _    _    _    _    _    _    _    @til
-            _    _    _    _    _    _              home pgdn pgup end  _    _    _
-            _    _    _    _    _    _              _    _    _    _    _    _
-            _    _    _         @ltab                    @ltab     _         _
-          )
-        '';
-      };
       keyboards.a275 = {
         device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
         defcfg = {
@@ -667,7 +610,6 @@ in {
     services.tor.enable = true;
     hardware.sane.enable = true;
     hardware.sane.extraBackends = [pkgs.hplip];
-    # hardware.sane.extraBackends = [pkgs.sane-airscan];
     services.ipp-usb.enable = true;
     services.printing.enable = true;
     services.printing.drivers = [pkgs.hplip];
@@ -675,13 +617,11 @@ in {
     services.tor.client.enable = true;
     networking.firewall.enable = true;
     networking.nameservers = dns;
-    virtualisation.virtualbox.host.enable = true;
     virtualisation.containers.enable = true;
     virtualisation.podman.enable = true;
     virtualisation.podman.dockerCompat = true;
     virtualisation.podman.dockerSocket.enable = true;
     virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
-    users.extraGroups.vboxusers.members = [config.services.functora.userName];
     networking.extraHosts = blocked-hosts;
 
     users.groups.plugdev = {};
@@ -827,8 +767,6 @@ in {
         tor-browser-bundle-bin
         kooha
         mpv
-        qmk
-        qmk-setup
         # cura
         git-lfs
         lesspass-cli
@@ -838,9 +776,6 @@ in {
         # quickget macos monterey
         # quickemu --vm macos-monterey.conf --public-dir ./Public --extra_args "-cpu host,+vmx"
         quickemu
-        pavucontrol
-        via
-        vial
         usbutils
         simple-scan
         system-config-printer
@@ -889,10 +824,6 @@ in {
         ".config/qutebrowser/blocked-hosts".text = blocked-hosts;
         ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
         ".config/warpd/config".source = ../cfg/warpd.txt;
-        # ".xkb" = {
-        #   source = ./xkb;
-        #   recursive = true;
-        # };
         ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
       };
       programs.i3status-rust = {
@@ -1111,13 +1042,6 @@ in {
           seat = {"*" = {hide_cursor = "2000";};};
           input = {
             "*" = {
-              #
-              # NOTE : Moved from xkb to kmonad
-              # for better cross-system compatibility.
-              # Also can add 'compose:ralt' option if
-              # advanced symbol composition is needed.
-              #
-              # xkb_file = "~/.xkb/keymap/custom";
               xkb_layout = "us,ru";
               xkb_variant = "altgr-intl,";
               xkb_options = "grp:sclk_toggle";

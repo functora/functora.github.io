@@ -101,6 +101,7 @@ in
     mkOci = {
       srv,
       img,
+      env ? {},
       cfg ? [],
       mnt ? [],
     }: {
@@ -129,6 +130,7 @@ in
             # TODO : remove after bugfix https://github.com/NixOS/nixpkgs/issues/272480
             #
             extraOptions = ["--network=host"];
+            environment = env;
             volumes =
               (map (x: x + ":" + x + ":ro") cfg)
               ++ (map (x: x + ":" + x) mnt);

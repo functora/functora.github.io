@@ -47,6 +47,7 @@ module Stripe.Client
     SubscriptionCreateItem (..),
     createSubscription,
     retrieveSubscription,
+    cancelSubscription,
     listSubscriptions,
 
     -- * Customer Portal
@@ -153,6 +154,7 @@ EP (listPrices, Maybe T.Text, (StripeList Price))
 
 EP (createSubscription, SubscriptionCreate, Subscription)
 EP (retrieveSubscription, SubscriptionId, Subscription)
+EP (cancelSubscription, SubscriptionId, Subscription)
 EP (listSubscriptions, Maybe CustomerId, (StripeList Subscription))
 
 EP (createCheckoutSession, CheckoutSessionCreate, CheckoutSession)
@@ -166,7 +168,11 @@ EP (listEvents, Maybe EventId, (StripeList Event))
 (createCustomer' :<|> retrieveCustomer' :<|> updateCustomer' :<|> listCustomers')
   :<|> (createProduct' :<|> retrieveProduct')
   :<|> (createPrice' :<|> retrievePrice' :<|> listPrices')
-  :<|> (createSubscription' :<|> retrieveSubscription' :<|> listSubscriptions')
+  :<|> ( createSubscription'
+          :<|> retrieveSubscription'
+          :<|> cancelSubscription'
+          :<|> listSubscriptions'
+        )
   :<|> (createCheckoutSession' :<|> retrieveCheckoutSession')
   :<|> (createCustomerPortal')
   :<|> (retrieveEvent' :<|> listEvents') =

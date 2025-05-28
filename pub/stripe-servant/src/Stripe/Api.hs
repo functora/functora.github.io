@@ -55,6 +55,9 @@ type SubscriptionApi =
       :> Capture ":subscription_id" SubscriptionId
       :> Get '[JSON] Subscription
     :<|> StripeAuth
+      :> Capture ":subscription_id" SubscriptionId
+      :> Delete '[JSON] Subscription
+    :<|> StripeAuth
       :> QueryParam "customer" CustomerId
       :> Get '[JSON] (StripeList Subscription)
 

@@ -93,6 +93,7 @@ in
               neoformat
               vim-terraform
               vim-commentary
+              render-markdown-nvim
               #
               # Productivity
               #

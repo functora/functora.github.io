@@ -1091,5 +1091,11 @@ in {
     # AI
     #
     services.ollama.enable = true;
+    #
+    # Fonts
+    #
+    fonts.packages = builtins.filter lib.attrsets.isDerivation (
+      builtins.attrValues pkgs.nerd-fonts
+    );
   };
 }

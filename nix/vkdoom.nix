@@ -1,17 +1,17 @@
 {pkgs, ...}: let
   repo = {
     pname = "vkdoom";
-    version = "640a2b2c4104d957309ffe6d11de8b7e62e1cbb6";
+    version = "83441734da61cff298ec5e0c11cf799c7bac1aac";
     src = pkgs.fetchgit {
       url = "https://github.com/dpjudas/VkDoom";
-      rev = "640a2b2c4104d957309ffe6d11de8b7e62e1cbb6";
+      rev = "83441734da61cff298ec5e0c11cf799c7bac1aac";
       fetchSubmodules = false;
       deepClone = false;
       leaveDotGit = true;
       sparseCheckout = [];
-      sha256 = "sha256-ahHtgOyB/Z+8J4Uou1CWEg1gR5jUUayoWnb3N1ahRpg=";
+      sha256 = "sha256-vngGHLeAkBPOYuINqf8er6XFWTuTbfJDT3YCF/MbIQk=";
     };
-    date = "2025-02-22";
+    date = "2025-05-30";
   };
 in
   pkgs.stdenv.mkDerivation {

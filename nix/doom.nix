@@ -87,6 +87,17 @@ in
           -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Sky shader addon.pk3" \
           -file ${../bak/doom/nashgore.pk3} \
           -file ${../bak/doom/dblood.pk3} \
+          -file ${../bak/doom/relite_0.7.3b.pk3} \
+          -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
+      pkg = "doom-siren";
+      dir = "doom";
+      exe = ''
+        ${vkdm}/bin/vkdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/Siren-0.86c.pk3} \
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
       '';
     }

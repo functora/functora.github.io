@@ -1,0 +1,13 @@
+syntax: regexp
+\#.*\#$
+\.\#
+\.sw[op]
+\.DS_Store$
+\.cabal-sandbox/
+\.hpc/
+\.tix$
+cabal\.sandbox\.config$
+dist/
+dist-newstyle/
+\.stack-work/
+^tags$

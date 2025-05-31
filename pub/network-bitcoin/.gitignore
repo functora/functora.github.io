@@ -1,0 +1,14 @@
+*.hi
+*.o
+*.swp
+.dist-scion/
+.hsproject
+.project
+Setup.hs
+dist/
+dist-newstyle/
+cabal-dev/
+cabal.sandbox.config
+.cabal-sandbox/
+.stack-work
+tags

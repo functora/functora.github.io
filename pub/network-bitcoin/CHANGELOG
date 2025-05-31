@@ -1,0 +1,18 @@
+1.9.1
+
+  * tries to call 'generate' before falling back to 'generatetoaddress'
+
+1.9.0
+
+  * removes 'generate' rpc call
+  * adds test case for 'generateToAddress' and updates tests
+
+1.8.5
+
+  * ...
+
+1.1.0
+
+  * Added missing HashData fields
+  * Added a ToJSON instance for HashData
+  * Fixed getAddressesByAccount

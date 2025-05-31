@@ -54,7 +54,7 @@ in
     }
     // fj.mkFirejailCustom rec {
       pkg = "doom-infinite";
-      dir = "doom";
+      dir = pkg;
       exe = ''
         ${olds.gzdoom}/bin/gzdoom \
           -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
@@ -62,6 +62,7 @@ in
           -file ${../bak/doom/DMSF_ALX-R3.WAD} \
           -file "${duhd}/1 lights2.wad" "${duhd}/8 DHTP Textures.pk3" "${duhd}/9 JFO.wad" "${duhd}/10 HD_SFX.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/13 Tilt++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/16 d3snds.wad" "${duhd}/17 brutaldoom_stuff.wad" "${duhd}/19 SpriteShadow.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/22 MotionBlur.pk3" "${duhd}/23 hires_decals.wad" "${duhd}/24 Terrains.wad" "${duhd}/25 HD HUD.pk3" "${duhd}/26 Liquids.pk3" "${duhd}/27 marcelus_hd_sprites.pk3" "${duhd}/29 Universal Rain and Snow v3.pk3" "${duhd}/30 OST Remake.pk3" "${duhd}/31 texture_lights.wad" "${duhd}/0 Parallax PBR.pk3" \
           -file ${../bak/doom/HD_Map_Enhancements.wad} \
+          -file ${../bak/doom/DoomInfiniteWeaponsSkins.pk3} \
           -file "${../bak/doom/liquid}/Liquid Texture Pack/(GZDoom) Liquid Texture Pack V4.0.pk3" \
           -file "${../bak/doom/liquid}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" \
           -file "${../bak/doom/liquid}/Shader Pack/LTP V4.0 Shader pack.pk3" \
@@ -69,12 +70,14 @@ in
           -file ${../bak/doom/Barrels.pk3} \
           -file ${../bak/doom/nashgore.pk3} \
           -file ${../bak/doom/dblood.pk3} \
+          -file ${../bak/doom/bulletzborn.pk3} \
+          -file ${../bak/doom/aenipuffs_v4.pk3} \
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
       '';
     }
-    // fj.mkFirejailCustom {
+    // fj.mkFirejailCustom rec {
       pkg = "doom-furdoom";
-      dir = "doom";
+      dir = pkg;
       exe = ''
         ${vkdm}/bin/vkdoom \
           -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
@@ -89,6 +92,15 @@ in
           -file ${../bak/doom/dblood.pk3} \
           -file ${../bak/doom/relite_0.7.3b.pk3} \
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
+      pkg = "doom-puff";
+      dir = "doom";
+      exe = ''
+        ${olds.gzdoom}/bin/gzdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/bulletzborn.pk3}
       '';
     }
     // fj.mkFirejailCustom {

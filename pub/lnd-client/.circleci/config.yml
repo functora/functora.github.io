@@ -1,0 +1,43 @@
+version: 2.1
+
+configure: &configure
+  docker:
+  - image: nixos/nix:2.3.12
+  resource_class: xlarge
+
+release: &release
+  run:
+    name: Create release
+    command: ./nix/bootstrap.sh && nix-build -v --show-trace
+    no_output_timeout: 60m
+
+filters: &filters
+  filters:
+    branches: {}
+
+jobs:
+  release:
+    <<: *configure
+    environment:
+      NIX_SSHOPTS: 'source /etc/profile.d/nix.sh;'
+    steps:
+    - checkout
+    - setup_remote_docker
+    - *release
+
+workflows:
+  version: 2
+  nightly:
+    triggers:
+      - schedule:
+          <<: *filters
+          cron: "0 5 * * *"  # 05:00 UTC
+    jobs:
+      - release:
+          <<: *filters
+          context: global
+  push:
+    jobs:
+      - release:
+          <<: *filters
+          context: global

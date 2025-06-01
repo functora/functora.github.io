@@ -14,6 +14,8 @@
 
 name: Stack CI
 
+permissions: read-all
+
 on:
   push:
     branches:
@@ -40,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: true
 
@@ -49,7 +51,7 @@ jobs:
         run: |
           cat matrix.yaml
           CI_BUILDS=$(yq eval -o json -I 0 matrix.yaml)
-          echo "::set-output name=ci-builds::$CI_BUILDS"
+          echo "ci-builds=$CI_BUILDS" >> $GITHUB_OUTPUT
 
   build:
     name: Build and Test
@@ -70,20 +72,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           submodules: true
 
       # Installs the recent protoc, for now unpinned to gain some experience
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
         with:
-          version: '3.x'
+          version: '28.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Install Stack without GHC first, so we have an opportunity to cache the
       # Pantry package index.
       - name: Install Stack
-        uses: haskell/actions/setup@eb3073b623d53d0cdd38e4d4c2408f14e3fc71c5
+        uses: haskell-actions/setup@64445b6b5dd545faf5f8e2acee8253eb5c2b29aa # v2.7.11
         id: setup-stack
         with:
           enable-stack: true
@@ -100,7 +103,7 @@ jobs:
       # out-of-date one, so we benefit from using restore-keys to bootstrap it
       # with a previous index.
       - name: Cache Pantry Package Index
-        uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           # Everything except the decompressed Hackage index tarball.  Why is
           # that even materialized to disk?
@@ -117,7 +120,7 @@ jobs:
       # GHC takes a while to gunzip and configure; let's try caching it
       # pre-configured with zstd.
       - name: Cache Configured GHC
-        uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           # Omit the tarball itself; it'll double the cache size assuming
           # similar compression ratios.
@@ -142,7 +145,7 @@ jobs:
       # other builds with the same GHC version to benefit from any packages in
       # common between two lockfiles.
       - name: Cache Dependencies
-        uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           # The Stack global work directory, minus GHC installations (already
           # extracted from a tarball) and the Pantry package index (already
@@ -178,7 +181,7 @@ jobs:
       # Cache pre-built modules for incremental builds, making sure to keep
       # builds with different dependencies separate.
       - name: Cache Modules
-        uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: "**/.stack-work"
           key: |

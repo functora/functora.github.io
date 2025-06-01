@@ -1,0 +1,24 @@
+on:
+  - push
+  - pull_request
+name: cabal build
+jobs:
+  runhaskell:
+    name: cabal test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+          - ghc: 9.10.1
+            cabal: 3.12.1.0
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+      - uses: haskell-actions/setup@64445b6b5dd545faf5f8e2acee8253eb5c2b29aa # v2.7.11
+        with:
+          ghc-version: ${{ matrix.version.ghc }}
+          cabal-version: ${{ matrix.version.cabal }}
+      - run: cabal build --dependencies-only --project-file ghc${{ matrix.version.ghc }}.cabal.project all
+      - run: cabal build                     --project-file ghc${{ matrix.version.ghc }}.cabal.project all
+      - run: cabal test                      --project-file ghc${{ matrix.version.ghc }}.cabal.project all

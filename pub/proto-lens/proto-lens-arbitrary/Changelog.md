@@ -1,5 +1,11 @@
 # Changelog for `proto-lens-arbitrary`
 
+## v0.1.2.14
+- Relax upper bounds for ghc-9.10.
+
+## v0.1.2.11
+- Relax upper bounds for ghc-9.2
+
 ## v0.1.2.9
 - Bump upper bound to allow base-4.14.
 

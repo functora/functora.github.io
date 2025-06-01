@@ -30,7 +30,7 @@ propNegLTPos :: Num a => Sort a -> (a, a) -> Bool
 propNegLTPos s (l, r) = sortCompare s (negate (abs l)) (abs r) == LT
 
 propNegZeroLTZero :: Fractional a => Sort a -> Bool
-propNegZeroLTZero s = sortCompare s (-0.0) (0.0) == LT
+propNegZeroLTZero s = sortCompare s (-0.0) 0.0 == LT
 
 inf :: Fractional a => a
 inf = 1.0 / 0
@@ -80,7 +80,7 @@ nansTestGroup
        , Arbitrary b, FiniteBits b, Ord b, Show b
        )
     => Sort a -> (a -> b) -> (Bool -> b -> a) -> (b -> b) -> Test
-nansTestGroup s toWord makeNaN makePayload = testGroup "NaNs" $
+nansTestGroup s toWord makeNaN makePayload = testGroup "NaNs"
     [ testProperty "-NaN < everything" $ \x payload ->
         sortCompare s (makeNaN True payload) x == LT
     , testProperty "-NaN < -Infinity" $ \payload ->
@@ -122,7 +122,7 @@ comparisonsTestGroup nm s toWord makeNaN makePayload = testGroup nm
     , testProperty "INF > x" $
         propInfGTNumbers s
 
-    , testGroup "agrees with Ord" $ ($propAgreesWithOrd s) <$>
+    , testGroup "agrees with Ord" $ ($ propAgreesWithOrd s) <$>
         [ testProperty "l = 0" . (. (0,))
         , testProperty "r = 0" . (. (,0))
         , testProperty "l = -INF" . (. (negInf,))

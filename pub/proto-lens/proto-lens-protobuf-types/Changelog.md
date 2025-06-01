@@ -1,5 +1,17 @@
 # Changelog for `proto-lens-protobuf-types`
 
+## v0.7.2.2
+- Bump upper bounds for ghc-9.10.
+
+## v0.7.2.0
+- Add support for additional well known types
+
+## v0.7.1.2
+- Add protobuf struct types (#438)
+
+## v0.7.1.1
+- Relax upper bounds for ghc-9.2
+
 ## v0.7.1.0
 - Support GHC 9.0.
 - Add ServiceDescriptor to generated services (#409)

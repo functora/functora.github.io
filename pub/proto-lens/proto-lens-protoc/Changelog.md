@@ -1,5 +1,18 @@
 # Changelog for `proto-lens-protoc`
 
+## v0.9.0.0
+- Support Protobuf Editions 2023 and 2024.
+- Update bootstrap protobuf bindings to protobuf v28.0.
+- Relax upper bounds for ghc-9.10.
+
+## v0.8.0.0
+- Relax upper bounds for ghc-9.6
+- Incompatible change: change `forall` to `forall'` in generated code
+  due to GHC warning of the upcoming change.
+
+## v0.7.1.1
+- Relax upper bounds for ghc-9.2
+
 ## v0.7.1.0
 - Support GHC 9.0.
 - Add ServiceDescriptor to generated services. (#409)

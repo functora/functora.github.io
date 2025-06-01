@@ -3,7 +3,6 @@
 -- Upstream docs: <https://developers.google.com/protocol-buffers/docs/encoding>
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -18,12 +17,16 @@ import qualified Data.Map as Map
 import Data.Semigroup ((<>))
 #endif
 import qualified Data.Text as Text
-import Lens.Family2 (view, (^.))
+import Lens.Family2 ((^.))
 import GHC.SourceGen
 
 import Data.ProtoLens.Compiler.Definitions
 import Data.ProtoLens.Compiler.Generate.Field
 import Data.ProtoLens.Encoding.Wire (joinTypeAndTag)
+import Proto.Google.Protobuf.Descriptor
+  ( FieldDescriptorProto'Type(..)
+  , FeatureSet'MessageEncoding(..)
+  )
 
 generatedParser :: Env RdrNameStr -> MessageInfo OccNameStr -> HsExpr'
 generatedParser env m =
@@ -75,7 +78,7 @@ generatedParser env m =
         | Just g <- groupFieldNumber m = do'
             [ tag <-- getVarInt'
             , stmt $ case' tag $
-                (match [int (groupEndTag g)] (finish m exprs))
+                match [int (groupEndTag g)] (finish m exprs)
                     : parseTagCases continue exprs m
             ]
         {- Regular message type:
@@ -121,14 +124,14 @@ finish m s = do' $
     [ stmt $ checkMissingFields s
     , stmt $ var "Prelude.return" @@
         (over' unknownFields' (var "Prelude.reverse")
-            @@(foldr (@@)
+            @@ foldr (@@)
                 (partialMessage s)
                 (Map.intersectionWith
                     (\finfo frozen ->
                         var "Lens.Family2.set"
                             @@ fieldOfVector finfo
                             @@ var (unqual frozen))
-                repeatedInfos frozenNames)))
+                repeatedInfos frozenNames))
             ]
 
   where
@@ -216,7 +219,7 @@ updateParseState ::
        HsExpr' -- ^ An expression of type @msg -> msg@
     -> ParseState HsExpr'
     -> ParseState HsExpr'
-updateParseState f s = s { partialMessage = f @@ (partialMessage s) }
+updateParseState f s = s { partialMessage = f @@ partialMessage s }
 
 -- | Transform the loop arguments by marking a required field
 -- as having been set.
@@ -250,7 +253,7 @@ checkMissingFields s =
        in if null missing then return ()
           else fail ("Missing required fields: " ++ show missing)
     -}
-    let' [valBind missing $ allMissingFields]
+    let' [valBind missing allMissingFields]
     $ if' (var "Prelude.null" @@ var missing) (var "Prelude.return" @@ unit)
     $ var "Prelude.fail"
         @@ (var "Prelude.++"
@@ -260,7 +263,7 @@ checkMissingFields s =
     missing = "missing"
     allMissingFields = Map.foldrWithKey consIfMissing (list []) (requiredFieldsUnset s)
     consIfMissing (FieldId f) e rest =
-        (if' e (cons @@ string (Text.unpack f)) (var "Prelude.id")) @@ rest
+        if' e (cons @@ string (Text.unpack f)) (var "Prelude.id") @@ rest
 
 -- | A list case alternatives for the fields of a message.
 --
@@ -368,7 +371,7 @@ unknownFieldCase ::
         loop (over unknownFields (\!t -> y:t) x) ...
 -}
 unknownFieldCase info loop x = match [wire] $ do' $
-    [ strictP y <-- if messageDescriptor info ^. #options ^. #messageSetWireFormat
+    [ strictP y <-- if messageDescriptor info ^. #options . #messageSetWireFormat
         then var "Data.ProtoLens.Encoding.Wire.parseMessageSetTaggedValueFromWire" @@ wire
         else var "Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire" @@ wire
     ]
@@ -455,7 +458,7 @@ generatedBuilder :: MessageInfo OccNameStr -> HsExpr'
 generatedBuilder m =
     lambda [x] $ foldMapExp $ map (buildPlainField x) (messageFields m)
                                 ++ map (buildOneofField x) (messageOneofFields m)
-                            ++ [if messageDescriptor m ^. #options ^. #messageSetWireFormat
+                            ++ [if messageDescriptor m ^. #options . #messageSetWireFormat
                                   then buildUnknownMessageSet x else buildUnknown x]
                             ++ buildGroupEnd
   where
@@ -493,7 +496,7 @@ buildPlainField x f = case plainFieldKind f of
                             , match [conP "Prelude.Just" [v']]
                                 $ buildTaggedField info v'
                             ]
-    OptionalValueField -> let' [valBind v $ fieldValue]
+    OptionalValueField -> let' [valBind v fieldValue]
                           $ if' (var "Prelude.==" @@ v' @@ var "Data.ProtoLens.fieldDefault")
                                 mempty'
                                 (buildTaggedField info v')
@@ -580,7 +583,7 @@ buildPackedField f x = let' [valBind p x]
 
 buildOneofField :: HsExpr' -> OneofInfo -> HsExpr'
 buildOneofField x info = case' (view' @@ fieldOfOneof info @@ x) $
-    (match [conP_ "Prelude.Nothing"] mempty')
+    match [conP_ "Prelude.Nothing"] mempty'
     : [ match [conP "Prelude.Just" [conP (unqual $ caseConstructorName c)
                                  [v]]]
             $ buildTaggedField (caseField c) v
@@ -626,7 +629,7 @@ unsafeLiftIO' = var "Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO"
 -- | Returns an expression of type @Parser a@ for the given field.
 parseField :: FieldInfo -> HsExpr'
 parseField f = var "Data.ProtoLens.Encoding.Bytes.<?>"
-                    @@ (parseFieldType $ fieldInfoEncoding f)
+                    @@ parseFieldType (fieldInfoEncoding f)
                     @@ string n
   where
     n = Text.unpack (fieldDescriptor f ^. #name)
@@ -636,7 +639,19 @@ buildField :: FieldInfo -> HsExpr'
 buildField = buildFieldType . fieldInfoEncoding
 
 fieldInfoEncoding :: FieldInfo -> FieldEncoding
-fieldInfoEncoding = fieldEncoding . view #type' . fieldDescriptor
+fieldInfoEncoding info
+  -- In almost all cases, the encoding of a type is determined only by the type.
+  -- There is one exception introduced in Protobuf Editions, and this is the
+  -- ability to control the message encoding with "features.message_encoding".
+  | isMessage = messageEncoding
+  | otherwise = fieldEncoding $ fieldDescriptor info ^. #type'
+  where
+    descriptor = fieldDescriptor info
+    isMessage = descriptor ^. #type' == FieldDescriptorProto'TYPE_MESSAGE
+    messageEncoding = case descriptor ^. #options . #features . #messageEncoding of
+      -- DELIMITED encoding is the same as proto2 group encoding.
+      FeatureSet'DELIMITED -> fieldEncoding FieldDescriptorProto'TYPE_GROUP
+      _ -> fieldEncoding FieldDescriptorProto'TYPE_MESSAGE
 
 growingType :: Env RdrNameStr -> FieldInfo -> HsType'
 growingType env f

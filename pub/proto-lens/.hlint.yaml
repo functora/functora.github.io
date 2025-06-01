@@ -1,0 +1,20 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+
+# Ignore generated files.
+- ignore: {within: Proto.Google.Protobuf.Descriptor}
+- ignore: {within: Proto.Google.Protobuf.Descriptor_Fields}
+- ignore: {within: Proto.Google.Protobuf.Compiler.Plugin}
+- ignore: {within: Proto.Google.Protobuf.Compiler.Plugin_Fields}
+
+
+# Warnings currently triggered by existing code.
+- ignore: {name: "Avoid lambda"} # 1 hint
+- ignore: {name: "Eta reduce"} # 1 hint
+- ignore: {name: "Use <$"} # 1 hint
+- ignore: {name: "Use <$>"} # 1 hint
+- ignore: {name: "Use ?~"} # 5 hints
+- ignore: {name: "Use fmap"} # 10 hints
+- ignore: {name: "Use lambda-case"} # 3 hints

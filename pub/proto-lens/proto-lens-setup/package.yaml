@@ -1,5 +1,5 @@
 name: proto-lens-setup
-version: '0.4.0.5'
+version: '0.4.0.9'
 synopsis: 'Cabal support for codegen with proto-lens.'
 description: |
   This package provides Cabal support for the @proto-lens@ package.
@@ -50,20 +50,20 @@ extra-source-files:
 library:
   source-dirs: src
   dependencies:
-    - base >= 4.10 && < 4.16
-    - bytestring == 0.10.*
-    - containers >= 0.5 && < 0.7
-    - Cabal >= 2.0 && < 3.5
-    - deepseq == 1.4.*
+    - base >= 4.10 && < 4.21
+    - bytestring >= 0.10 && < 0.13
+    - containers >= 0.5 && < 0.8
+    - Cabal >= 2.0 && < 3.13
+    - deepseq >=1.4 && <1.6
     - directory >= 1.2 && < 1.4
     - filepath >= 1.4 && < 1.6
     - process >= 1.2 && < 1.7
     # Depend transitively on the binary.
     # TODO: once there's sufficient support from Stack and Cabal,
     # make this a build-tool dependency.
-    - proto-lens-protoc >= 0.4 && < 0.8
+    - proto-lens-protoc >= 0.4 && < 0.10
     - temporary >= 1.2 && < 1.4
-    - text == 1.2.*
+    - text >= 1.2 && < 2.2
   exposed-modules:
     - Data.ProtoLens.Setup
 

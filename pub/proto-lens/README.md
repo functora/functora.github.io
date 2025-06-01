@@ -1,6 +1,6 @@
 # proto-lens
 
-[![Build Status](https://travis-ci.org/google/proto-lens.svg?branch=master)](https://travis-ci.org/google/proto-lens)
+[![Cabal build](https://github.com/google/proto-lens/actions/workflows/cabal-ci.yml/badge.svg)](https://github.com/google/proto-lens/actions/workflows/cabal-ci.yml)
 
 The proto-lens library provides an API for protocol buffers using modern Haskell
 language and library patterns.  Specifically, it provides:
@@ -23,7 +23,7 @@ There is also a [reference document](docs/types.md) showing the protobuf scalar 
 First, install the "protoc" binary somewhere in your PATH.  You can get it by
 following [these instructions](docs/installing-protoc.md).
 
-This project requires at least `protoc` version 3.12.0.
+This project requires at least `protoc` version 28.0.
 
 ## Building from HEAD
 
@@ -117,6 +117,15 @@ will generate the haskell files `Proto/Project/{Foo,Bar}.hs`.
 - Extensions (proto2-only) are not supported.
 - Unknown proto2 enum values cause a decoding error, instead of being preserved
   round-trip.
+
+## Protobuf Editions
+
+- `features.utf8_validation = NONE` does not disable UTF-8 validation.
+
+- If more than one field sharing the same message type are
+  in a single message type, and if one of the fields has
+  `features.message_encoding = DELIMITED`, then all of these
+  fields will use `DELIMITED` encoding.
 
 # Troubleshooting
 

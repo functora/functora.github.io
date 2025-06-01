@@ -1,5 +1,5 @@
 name: proto-lens-runtime
-version: '0.7.0.1'
+version: '0.7.0.7'
 author: Judah Jacobson
 maintainer: proto-lens@googlegroups.com
 github: google/proto-lens/proto-lens-runtime
@@ -14,23 +14,17 @@ description: >
 extra-source-files:
   - Changelog.md
 
-system-build-tools:
-  - protoc
-
-extra-libraries:
-  - ncurses
-
 library:
   dependencies:
-    - base >= 4.10 && < 4.16
-    - bytestring == 0.10.*
-    - containers >= 0.5 && < 0.7
-    - deepseq == 1.4.*
+    - base >= 4.10 && < 4.21
+    - bytestring >= 0.10 && < 0.13
+    - containers >= 0.5 && < 0.8
+    - deepseq >= 1.4 && <1.6
     - filepath >= 1.4 && < 1.6
     - lens-family >= 1.2 && < 2.2
     - proto-lens == 0.7.*
-    - text == 1.2.*
-    - vector >= 0.11 && < 0.13
+    - text >= 1.2 && < 2.2
+    - vector >= 0.11 && < 0.14
 
 
   reexported-modules:
@@ -62,4 +56,4 @@ library:
     - Lens.Family2.Unchecked as Data.ProtoLens.Runtime.Lens.Family2.Unchecked
     - Text.Read as Data.ProtoLens.Runtime.Text.Read
 
-
+ 

@@ -7,7 +7,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PatternSynonyms #-}
 module Main where
 
 import Control.Monad.IO.Class (liftIO)
@@ -31,15 +30,14 @@ import Proto.Google.Protobuf.Compiler.Plugin
     , CodeGeneratorResponse
     , CodeGeneratorResponse'Feature(..)
     )
-import Proto.Google.Protobuf.Descriptor (FileDescriptorProto)
+import Proto.Google.Protobuf.Descriptor (FileDescriptorProto, Edition(..))
 import System.Environment (getProgName)
 import System.Exit (exitWith, ExitCode(..))
 import System.IO as IO
 
-import Data.ProtoLens.Compiler.Generate.Commented (CommentedModule, getModuleName)
+import Data.ProtoLens.Compiler.Generate.Commented (getModuleName)
 import Data.ProtoLens.Compiler.Generate
 import Data.ProtoLens.Compiler.Plugin
-import qualified Data.ProtoLens.Compiler.Parameter as Parameter
 
 #if MIN_VERSION_ghc(9,0,0)
 import GHC.Driver.Session (DynFlags, getDynFlags)
@@ -66,46 +64,54 @@ makeResponse dflags prog request = let
     outputFiles = generateFiles dflags header
                       (request ^. #protoFile)
                       (request ^. #fileToGenerate)
-                      (Parameter.newOptions $ request ^. #parameter)
     header :: FileDescriptorProto -> Text
     header f = "{- This file was auto-generated from "
                 <> (f ^. #name)
                 <> " by the " <> pack prog <> " program. -}\n"
-    features = [CodeGeneratorResponse'FEATURE_PROTO3_OPTIONAL]
-    in defMessage
-           & #supportedFeatures .~
-               (foldl (.|.) zeroBits $ fmap (toEnum . fromEnum) features)
-           & #file .~ [ defMessage
-                            & #name .~ outputName
-                            & #content .~ outputContent
-                     | (outputName, outputContent) <- outputFiles
-                     ]
-
+    features = [ CodeGeneratorResponse'FEATURE_PROTO3_OPTIONAL
+               , CodeGeneratorResponse'FEATURE_SUPPORTS_EDITIONS
+               ]
+    preamble = defMessage
+               & #supportedFeatures .~
+                 foldl (.|.) zeroBits (fmap (toEnum . fromEnum) features)
+               -- Do not process actual Protobuf Editions files yet.
+               & #minimumEdition .~ fromIntegral (fromEnum EDITION_PROTO2)
+               & #maximumEdition .~ fromIntegral (fromEnum EDITION_2024)
+    in case outputFiles of
+         Right fs -> preamble & #file .~
+           [ defMessage
+             & #name .~ outputName
+             & #content .~ outputContent
+           | (outputName, outputContent) <- fs
+           ]
+         Left e -> preamble & #error .~ e
 
 generateFiles :: DynFlags -> (FileDescriptorProto -> Text)
               -> [FileDescriptorProto] -> [ProtoFileName]
-              -> Parameter.Options -> [(Text, Text)]
-generateFiles dflags header files toGenerate opts = let
-  filesByName = analyzeProtoFiles files
-  -- The contents of the generated Haskell file for a given .proto file.
-  modulesToBuild :: ProtoFile -> [CommentedModule]
-  modulesToBuild f = let
-      deps = descriptor f ^. #dependency
-      imports = Set.toAscList $ Set.fromList
-                  $ map (haskellModule . (filesByName !)) deps
-      in generateModule (haskellModule f) (descriptor f) imports
+              -> Either Text [(Text, Text)]
+generateFiles dflags header files toGenerate = do
+  filesByName <- analyzeProtoFiles files
+
+  let modulesToBuild f =
+        generateModule (haskellModule f) (descriptor f) imports
             (publicImports f)
-             (definitions f)
-             (collectEnvFromDeps deps filesByName)
-             (services f)
-             opts
-  in [ ( moduleFilePath $ pack $ showPpr dflags (getModuleName modul)
-       , header (descriptor f) <> pack (showPpr dflags modul)
-       )
-     | fileName <- toGenerate
-     , let f = filesByName ! fileName
-     , modul <- modulesToBuild f
-     ]
+            (definitions f)
+            (collectEnvFromDeps deps filesByName)
+            (services f)
+        where
+          deps = descriptor f ^. #dependency
+          imports = Set.toAscList $ Set.fromList
+                    $ map (haskellModule . (filesByName !)) deps
+
+
+  -- The contents of the generated Haskell file for a given .proto file.
+  return [ ( moduleFilePath $ pack $ showPpr dflags (getModuleName modul)
+           , header (descriptor f) <> pack (showPpr dflags modul)
+           )
+         | fileName <- toGenerate
+         , let f = filesByName ! fileName
+         , modul <- modulesToBuild f
+         ]
 
 moduleFilePath :: Text -> Text
 moduleFilePath n = T.replace "." "/" n <> ".hs"

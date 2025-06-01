@@ -1,5 +1,5 @@
 name: proto-lens-tests
-version: '0.1.0.1'
+version: '0.1.0.2'
 synopsis: Unit tests for proto-lens
 description: This package contains a set of test suites for proto-lens.
 category: Data
@@ -55,6 +55,17 @@ tests:
     generated-other-modules:
       - Proto.Canonical
       - Proto.Canonical_Fields
+
+  edition2023_test:
+    main: edition2023_test.hs
+    source-dirs: tests
+    dependencies:
+      - proto-lens-tests
+    generated-other-modules:
+      - Proto.Edition2023
+      - Proto.Edition2023_Fields
+      - Proto.Edition2023Fileoptions
+      - Proto.Edition2023Fileoptions_Fields
 
   group_test:
     main: group_test.hs

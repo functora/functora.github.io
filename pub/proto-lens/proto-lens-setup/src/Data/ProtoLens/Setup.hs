@@ -14,7 +14,6 @@
 --
 -- See @README.md@ for instructions on how to use proto-lens with Cabal.
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE BangPatterns #-}
 module Data.ProtoLens.Setup
     ( defaultMainGeneratingProtos
     , defaultMainGeneratingSpecificProtos
@@ -24,7 +23,7 @@ module Data.ProtoLens.Setup
     , generateProtos
     ) where
 
-import Control.Monad (filterM, forM_, when)
+import Control.Monad (filterM, forM_, unless, when)
 import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import Data.Maybe (maybeToList)
@@ -241,7 +240,7 @@ generateSources root l files = withSystemTempDirectory "protoc-out" $ \tmpDir ->
     -- Generate .hs files for all active components into a single temporary
     -- directory.
     let activeModules = collectActiveModules l
-    let allModules = Set.fromList . concat . map snd $ activeModules
+    let allModules = Set.fromList . concatMap snd $ activeModules
     let usedInComponent f = ModuleName.fromString (protoModuleName f)
                           `Set.member` allModules
     generateProtosWithImports (root : importDirs) tmpDir
@@ -274,7 +273,7 @@ copyIfDifferent sourcePath targetPath = do
                 targetContents <- BS.readFile targetPath
                 return (sourceContents == targetContents)
     -- Do the move if necessary.
-    when (not identical) $ do
+    unless identical $ do
         createDirectoryIfMissing True (takeDirectory targetPath)
         copyFile sourcePath targetPath
 

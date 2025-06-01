@@ -35,19 +35,29 @@ import GHC.Hs (ideclName, ideclAs)
 #else
 import HsSyn (ideclName, ideclAs)
 #endif
+#if MIN_VERSION_ghc(9,10,0)
+import GHC.Parser.Annotation (noAnn)
+#elif MIN_VERSION_ghc(9,2,0)
+import GHC.Parser.Annotation (EpAnn(EpAnnNotUsed), SrcSpanAnn'(SrcSpanAnn))
+#endif
 #if MIN_VERSION_ghc(9,0,0)
+#if MIN_VERSION_ghc(9,6,0)
+import Language.Haskell.Syntax.Module.Name (moduleNameString, mkModuleName)
+#else
 import GHC.Unit.Module.Name (moduleNameString, mkModuleName)
+#endif
 import qualified GHC.Utils.Outputable as Outputable
-import GHC.Types.SrcLoc (unLoc, noLoc)
+import GHC.Types.SrcLoc (unLoc)
+import qualified GHC.Types.SrcLoc as SrcLoc
 #else
 import Module (moduleNameString, mkModuleName)
 import qualified Outputable
-import SrcLoc (unLoc, noLoc)
+import SrcLoc (unLoc)
+import qualified SrcLoc
 #endif
 import Lens.Family2 ((^.))
 import Text.Printf (printf)
 
-import qualified Data.ProtoLens.Compiler.Parameter as Parameter
 import Proto.Google.Protobuf.Descriptor
     ( EnumValueDescriptorProto
     , FileDescriptorProto
@@ -80,19 +90,18 @@ generateModule :: ModuleNameStr
                -> Env OccNameStr      -- ^ Definitions in this file
                -> Env RdrNameStr     -- ^ Definitions in the imported modules
                -> [ServiceInfo]
-               -> Parameter.Options
                -> [CommentedModule]
-generateModule modName fdesc imports publicImports definitions importedEnv services opts
+generateModule modName fdesc imports publicImports definitions importedEnv services
     = [ CommentedModule pragmas
             (module' (Just modName)
                 (Just $ serviceExports
                         ++ concatMap generateExports (Map.elems definitions)
                         ++ map moduleContents publicImports)
-                (mainImports ++ parameterImports ++ sharedImports
+                (mainImports ++ sharedImports
                     ++ map importQualified (imports List.\\ publicImports)
                     ++ map import' publicImports)
                 [])
-          $ (concatMap generateDecls $ Map.toList definitions)
+          $ concatMap generateDecls (Map.toList definitions)
          ++ map uncommented (concatMap (generateServiceDecls env) services)
          ++ map uncommented packedFileDescriptorProto
       , CommentedModule pragmas
@@ -104,14 +113,13 @@ generateModule modName fdesc imports publicImports definitions importedEnv servi
   where
     fieldModName = fromString $ moduleNameString (unModuleNameStr modName) ++ "_Fields"
     pragmas =
-          [ languagePragma . List.intercalate ", " . map fromString $ List.nub
+          [ languagePragma $ List.intercalate ", " $ map fromString
               ["ScopedTypeVariables", "DataKinds", "TypeFamilies",
                "UndecidableInstances", "GeneralizedNewtypeDeriving",
                "MultiParamTypeClasses", "FlexibleContexts", "FlexibleInstances",
                "PatternSynonyms", "MagicHash", "NoImplicitPrelude",
                "DataKinds", "BangPatterns", "TypeApplications",
                "OverloadedStrings", "DerivingStrategies"]
-              ++ Parameter.pragmas' opts
               -- Allow unused imports in case we don't import anything from
               -- Data.Text, Data.Int, etc.
           , optionsGhcPragma "-Wno-unused-imports"
@@ -123,7 +131,6 @@ generateModule modName fdesc imports publicImports definitions importedEnv servi
           ]
     mainImports = map (reexported . importQualified)
                     [ "Control.DeepSeq", "Data.ProtoLens.Prism" ]
-    parameterImports = map importQualified $ Parameter.imports' opts
     sharedImports = map (reexported . importQualified)
               [ "Prelude", "Data.Int", "Data.Monoid", "Data.Word"
               , "Data.ProtoLens"
@@ -144,9 +151,9 @@ generateModule modName fdesc imports publicImports definitions importedEnv servi
               ]
     env = Map.union (unqualifyEnv definitions) importedEnv
     generateDecls (protoName, Message m)
-        = generateMessageDecls fieldModName env (stripDotPrefix protoName) m opts
+        = generateMessageDecls fieldModName env (stripDotPrefix protoName) m
        ++ map uncommented (concatMap (generatePrisms env) (messageOneofFields m))
-    generateDecls (_, Enum e) = map uncommented $ generateEnumDecls e opts
+    generateDecls (_, Enum e) = map uncommented $ generateEnumDecls e
     generateExports (Message m) = generateMessageExports m
                                ++ concatMap generatePrismExports (messageOneofFields m)
     generateExports (Enum e) = generateEnumExports e
@@ -207,6 +214,13 @@ type ModifyImports = ImportDecl' -> ImportDecl'
 reexported :: ModifyImports
 reexported imp = imp { ideclName = noLoc m', ideclAs = Just m }
   where
+#if MIN_VERSION_ghc(9,10,0)
+    noLoc = SrcLoc.L noAnn
+#elif MIN_VERSION_ghc(9,2,0)
+    noLoc = SrcLoc.L (SrcSpanAnn EpAnnNotUsed SrcLoc.noSrcSpan)
+#else
+    noLoc = SrcLoc.noLoc
+#endif
     m' = mkModuleName $ "Data.ProtoLens.Runtime." ++ moduleNameString (unLoc m)
     m = ideclName imp
 
@@ -221,7 +235,7 @@ messageComment fieldModName n fields =
                  (moduleNameStrToString fieldModName)
                  (occNameStrToString $ nameFromSymbol $ lensSymbol l))
              Outputable.<>
-                 (Outputable.ppr $ var "Lens'" @@ t @@ (lensFieldType l))
+                 Outputable.ppr (var "Lens'" @@ t @@ lensFieldType l)
              Outputable.<> Outputable.char '@'
     t = var (unqual n)
 
@@ -291,10 +305,8 @@ generateServiceDecls env si =
                        Enum _ -> error "Service must have a message type"
 
 
-generateMessageDecls :: ModuleNameStr -> Env RdrNameStr -> T.Text
-                        -> MessageInfo OccNameStr -> Parameter.Options
-                        -> [CommentedDecl]
-generateMessageDecls fieldModName env protoName info opts =
+generateMessageDecls :: ModuleNameStr -> Env RdrNameStr -> T.Text -> MessageInfo OccNameStr -> [CommentedDecl]
+generateMessageDecls fieldModName env protoName info =
     -- data Bar = Bar {
     --    foo :: Baz
     -- }
@@ -306,10 +318,7 @@ generateMessageDecls fieldModName env protoName info opts =
                 ]
                 ++ [(messageUnknownFields info, strict $ field $ var "Data.ProtoLens.FieldSet")]
             ]
-            [derivingStock $
-               [var "Prelude.Eq", var "Prelude.Ord"]
-               ++ Parameter.stockInstances' opts
-            ]
+            [derivingStock [var "Prelude.Eq", var "Prelude.Ord"]]
     -- instance Show Bar where
     --   showsPrec __x __s = showChar '{' (showString (showMessageShort __x) (showChar '}' s))
     , uncommented $
@@ -320,8 +329,6 @@ generateMessageDecls fieldModName env protoName info opts =
                             @@ (var "Data.ProtoLens.showMessageShort" @@ var "__x")
                         @@ (var "Prelude.showChar" @@ char '}' @@ var "__s"))]
     ] ++
-    -- instance CustomClass Bar
-    (uncommented <$> Parameter.newDefaultInstances dataType opts) ++
     -- oneof field data type declarations
     -- proto: message Foo {
     --          oneof bar {
@@ -337,22 +344,9 @@ generateMessageDecls fieldModName env protoName info opts =
       , let f = caseField c
       , let consName = caseConstructorName c
       ]
-      [derivingStock $
-         [var "Prelude.Show", var "Prelude.Eq", var "Prelude.Ord"]
-         ++ Parameter.stockInstances' opts
-      ]
+      [derivingStock [var "Prelude.Show", var "Prelude.Eq", var "Prelude.Ord"]]
     | oneofInfo <- messageOneofFields info
     ] ++
-    -- instance CustomClass Foo'Bar
-    (
-      messageOneofFields info >>=
-        (\oneofInfo ->
-            uncommented
-              <$> Parameter.newDefaultInstances
-                    (var . unqual $ oneofTypeName oneofInfo)
-                    opts
-        )
-    ) ++
     -- instance HasField Foo "foo" Bar
     --   fieldOf _ = ...
     -- Note: for optional fields, this generates an instance both for "foo" and
@@ -422,7 +416,7 @@ generatePrisms env oneofInfo =
                                 -- The oneof sum type name
                              @@ (var . unqual $ oneofTypeName oneofInfo)
                                 -- The field contained in the sum
-                             @@ (hsFieldType env f)
+                             @@ hsFieldType env f
         -- Generate function definition
         -- Prism' is constructed with Constructor for building value
         -- and Deconstructor and wrapping in Just for getting value
@@ -432,15 +426,14 @@ generatePrisms env oneofInfo =
                -- Sum type constructor
             @@ var (unqual consName)
                -- Case deconstruction
-            @@ (lambda [bvar "p__"] $
+            @@ lambda [bvar "p__"] (
                     case' (var "p__") $
-                       [ match [conP (unqual consName) [bvar "p__val"]]
-                             $ var "Prelude.Just" @@ var "p__val"
-                       ]
+                       match [conP (unqual consName) [bvar "p__val"]]
+                             (var "Prelude.Just" @@ var "p__val")
                        -- We want to generate the otherwise case
                        -- depending on the amount of sum type cases there are
-                       ++ otherwiseCase
-               )
+                       : otherwiseCase
+                    )
         generatePrism :: [RawMatch] -> OneofCase -> [HsDecl']
         generatePrism otherwiseCase oneofCase =
             let consName = caseConstructorName oneofCase
@@ -465,29 +458,18 @@ generateEnumExports e = [thingAll n, thingWith n aliases] ++ proto3NewType
 generateServiceExports :: ServiceInfo -> IE'
 generateServiceExports si = thingAll $ unqual $ fromString $ T.unpack $ serviceName si
 
-generateEnumDecls :: EnumInfo OccNameStr -> Parameter.Options -> [HsDecl']
-generateEnumDecls info opts =
+generateEnumDecls :: EnumInfo OccNameStr -> [HsDecl']
+generateEnumDecls info =
     -- Proto3-only:
     -- newtype FooEnum'UnrecognizedValue = FooEnum'UnrecognizedValue Data.Int.Int32
     --   deriving (Prelude.Eq, Prelude.Ord, Prelude.Show, Prelude.Read)
     [ newtype' (unrecognizedValueName u) []
        (prefixCon (unrecognizedValueName u) [field $ var "Data.Int.Int32"])
-       [derivingStock $
-          [var "Prelude.Eq", var "Prelude.Ord", var "Prelude.Show"]
-          ++ Parameter.stockInstances' opts
-       ]
+       [derivingStock [var "Prelude.Eq", var "Prelude.Ord", var "Prelude.Show"]]
     | Just u <- [unrecognized]
     ]
     ++
-    -- instance CustomClass FooEnum'UnrecognizedValue
-    (
-      case unrecognized of
-        Nothing -> []
-        Just u ->
-          Parameter.newDefaultInstances
-            (var . unqual $ unrecognizedValueName u)
-            opts
-    ) ++
+
     -- data FooEnum
     --     = Enum1
     --     | Enum2
@@ -500,10 +482,7 @@ generateEnumDecls info opts =
            | Just u <- [unrecognized]
            ]
         )
-        [derivingStock $
-           [var "Prelude.Show", var "Prelude.Eq", var "Prelude.Ord"]
-           ++ Parameter.stockInstances' opts
-        ]
+        [derivingStock [var "Prelude.Show", var "Prelude.Eq", var "Prelude.Ord"]]
 
     -- instance Data.ProtoLens.MessageEnum FooEnum where
     --       maybeToEnum 0 = Prelude.Just Enum1
@@ -620,7 +599,7 @@ generateEnumDecls info opts =
     -- instance Data.ProtoLens.FieldDefault Foo where
     --   fieldDefault = FirstEnumValue
     , instance' (var "Data.ProtoLens.FieldDefault" @@ dataType)
-        [valBind "fieldDefault" $ defaultCon]
+        [valBind "fieldDefault" defaultCon]
 
     -- instance NFData Foo where
     --   rnf x__ = seq x__ ()
@@ -629,8 +608,7 @@ generateEnumDecls info opts =
         [ funBind "rnf" $ match [bvar "x__"]
             $ var "Prelude.seq" @@ var "x__" @@ var "()" ]
     ] ++
-    -- instance CustomClass FooEnum
-    Parameter.newDefaultInstances dataType opts ++
+
     -- pattern Enum2a :: FooEnum
     -- pattern Enum2a = Enum2
     concat
@@ -667,14 +645,14 @@ generateEnumDecls info opts =
                             ]
     constructorNames = map fst constructors
 
-    defaultCon = var $ unqual $ head constructorNames
+    defaultCon = var $ unqual minBoundName
 
-    minBoundName = head constructorNames
-    maxBoundName = last constructorNames
+    (minBoundName, maxBoundName, succPairs) =
+      case constructorNames of
+        (c : cs) -> (c, last constructorNames, zip constructorNames cs)
+        _ -> error $ "Unexpected empty constructors in " <> show (enumName info)
 
     constructorNumbers = map (second (fromIntegral . (^. #number))) constructors
-
-    succPairs = zip constructorNames $ tail constructorNames
 
     succDecl :: OccNameStr -> OccNameStr -> [(OccNameStr, OccNameStr)] -> RawInstDecl
     succDecl funName boundName thePairs = funBinds funName $
@@ -837,15 +815,14 @@ oneofRecordField env oneofInfo
         -- since oneofs don't have a notion of a "default" case.
         -- data Foo = Foo { _Foo'bar = Maybe Foo'Bar }
         -- type instance Field "maybe'bar" Foo = Maybe Foo'Bar
-        [LensInstance
+        LensInstance
           { lensSymbol = "maybe'" <> overloadedName
                                         (oneofFieldName oneofInfo)
           , lensFieldType =
                 var "Prelude.Maybe" @@ var (unqual $ oneofTypeName oneofInfo)
           , lensExp = var "Prelude.id"
           }
-         ]
-         ++ concat
+        : concat
           -- Generate the same lenses for each sub-field of the oneof
           -- as if they were proto2 optional fields.
           -- type instance Field "bar" Foo = Bar
@@ -905,7 +882,7 @@ hsFieldValueDefault env fd = case fd ^. #type' of
         -> var "Data.Text.pack" @@ string (T.unpack def)
     FieldDescriptorProto'TYPE_BYTES
         -> var "Data.ByteString.pack"
-                @@ list ((mkByte . fromEnum) <$> T.unpack def)
+                @@ list (mkByte . fromEnum <$> T.unpack def)
       where mkByte c
               | c > 0 && c < 255 = int $ fromIntegral c
               | otherwise = errorMessage "bytes"
@@ -978,7 +955,7 @@ messageInstance env protoName m =
     , funBind "packedMessageDescriptor" $ match [wildP] $ string msgDescriptor
     , funBind "packedFileDescriptor" $ match [wildP] $ var "packedFileDescriptor"
     , valBind "fieldsByTag" $
-          let' (map (fieldDescriptorVarBind $ messageName m) $ fields)
+          let' (map (fieldDescriptorVarBind $ messageName m) fields)
               $ var "Data.Map.fromList" @@ list fieldsByTag
     , valBind "unknownFields"
            $ rawFieldAccessor (unqual $ messageUnknownFields m)
@@ -1114,7 +1091,7 @@ fieldTypeDescriptorExpr = \case
 -- instance NFData Bar where
 --    rnf = \x -> deepseq (_Bar'foo x) (deepseq (_Bar'bar x) ())
 messageRnfExpr :: MessageInfo OccNameStr -> HsExpr'
-messageRnfExpr msg = lambda [bvar "x__"] $ foldr (@@) unit (map seqField fieldNames)
+messageRnfExpr msg = lambda [bvar "x__"] $ foldr ((@@) . seqField) unit fieldNames
   where
     fieldNames = messageUnknownFields msg
                 : map (haskellRecordFieldName . fieldName . plainFieldInfo)

@@ -42,7 +42,6 @@ module Data.ProtoLens.Compiler.Definitions
     , overloadedFieldName
     ) where
 
-import Control.Applicative (liftA2)
 import Data.Char (isUpper, toUpper)
 import Data.Int (Int32)
 import Data.List (mapAccumL)
@@ -52,6 +51,10 @@ import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid ((<>))
 #endif
 import Data.ProtoLens.Labels ()
+import Data.ProtoLens.Compiler.Editions.Features
+    ( featuresForEdition
+    , mergedInto
+    )
 import qualified Data.Semigroup as Semigroup
 import qualified Data.Set as Set
 import Data.String (IsString(..))
@@ -65,8 +68,14 @@ import Data.Tree
 import Lens.Family2 ((^.), (^..), toListOf)
 import Proto.Google.Protobuf.Descriptor
     ( DescriptorProto
+    , Edition(..)
     , EnumDescriptorProto
     , EnumValueDescriptorProto
+    , FeatureSet
+    , FeatureSet'EnumType(..)
+    , FeatureSet'FieldPresence(..)
+    , FeatureSet'MessageEncoding(..)
+    , FeatureSet'RepeatedFieldEncoding(..)
     , FieldDescriptorProto
     , FieldDescriptorProto'Label(..)
     , FieldDescriptorProto'Type(..)
@@ -94,15 +103,38 @@ import GHC.SourceGen
 -- either from this or another file).
 type Env n = Map.Map Text (Definition n)
 
-data SyntaxType = Proto2 | Proto3
-    deriving (Show, Eq)
+{-| Returns the edition for the file.
 
-fileSyntaxType :: FileDescriptorProto -> SyntaxType
-fileSyntaxType f = case f ^. #syntax of
-    "proto2" -> Proto2
-    "proto3" -> Proto3
-    "" -> Proto2  -- The proto compiler doesn't set syntax for proto2 files.
-    s -> error $ "Unknown syntax type " ++ show s
+For proto2 and proto3 files, 'EDITION_PROTO2' and 'EDITION_PROTO3' are returned,
+respectively, which will map to the equivalent feature set compatible with
+proto2 and proto3.
+
+>>> fileEdition $ defMessage & #syntax .~ "proto2"
+Right EDITION_PROTO2
+>>> fileEdition $ defMessage & #syntax .~ "proto3"
+Right EDITION_PROTO3
+
+-}
+fileEdition :: FileDescriptorProto -> Either Text Edition
+fileEdition f = case f ^. #syntax of
+  "editions" -> Right $ f ^. #edition
+  "proto3" -> Right EDITION_PROTO3
+  "proto2" -> Right EDITION_PROTO2
+  "" -> Right EDITION_PROTO2
+  s -> Left $ "Unknown syntax type " <> T.pack (show s)
+
+{-| Returns the feature defaults for the file.
+
+This includes the file-scope options which override
+the feature defaults for an edition.
+-}
+fileFeatures :: FileDescriptorProto -> Either Text FeatureSet
+fileFeatures f = do
+  edition <- fileEdition f
+  features <- featuresForEdition edition
+  return $ case f ^. #options . #maybe'features of
+             Just overrides -> overrides `mergedInto` features
+             Nothing -> features
 
 data Definition n = Message (MessageInfo n) | Enum (EnumInfo n)
     deriving Functor
@@ -302,16 +334,17 @@ definedType ty = fromMaybe err . Map.lookup ty
 
 -- | Collect all the definitions in the given file (including definitions
 -- nested in other messages), and assign Haskell names to them.
-collectDefinitions :: FileDescriptorProto -> Env OccNameStr
-collectDefinitions fd = let
-    protoPrefix = case fd ^. #package of
-        "" -> "."
-        p -> "." <> p <> "."
-    hsPrefix = ""
-    in Map.fromList $ concatMap flatten $
-            messageAndEnumDefs (fileSyntaxType fd)
-                protoPrefix hsPrefix Map.empty
-                (fd ^. #messageType) (fd ^. #enumType)
+collectDefinitions :: FileDescriptorProto -> Either Text (Env OccNameStr)
+collectDefinitions fd = do
+  let protoPrefix = case fd ^. #package of
+                      "" -> "."
+                      p -> "." <> p <> "."
+  let hsPrefix = ""
+  features <- fileFeatures fd
+  return $ Map.fromList $ concatMap flatten $
+    messageAndEnumDefs
+        features protoPrefix hsPrefix Map.empty
+        (fd ^. #messageType) (fd ^. #enumType)
 
 collectServices :: FileDescriptorProto -> [ServiceInfo]
 collectServices fd = fmap (toServiceInfo $ fd ^. #package) $ fd ^. #service
@@ -337,7 +370,7 @@ collectServices fd = fmap (toServiceInfo $ fd ^. #package) $ fd ^. #service
             }
 
 messageAndEnumDefs ::
-    SyntaxType -> Text -> String
+    FeatureSet -> Text -> String
     -> GroupMap
         -- ^ Group fields of the parent message (if any).
     -> [DescriptorProto]
@@ -345,17 +378,17 @@ messageAndEnumDefs ::
     -> Forest (Text, Definition OccNameStr)
         -- ^ Organized as a list of trees, to make it possible for callers
         -- to get the immediate child nested types.
-messageAndEnumDefs syntaxType protoPrefix hsPrefix groups messages enums
-    = map (messageDefs syntaxType protoPrefix hsPrefix groups) messages
+messageAndEnumDefs features protoPrefix hsPrefix groups messages enums
+    = map (messageDefs features protoPrefix hsPrefix groups) messages
         ++ map
             (flip Node [] -- Enums have no sub-definitions
-                . enumDef syntaxType protoPrefix hsPrefix)
+                . enumDef features protoPrefix hsPrefix)
             enums
 
 -- | Generate the definitions for a message and its nested types (if any).
-messageDefs :: SyntaxType -> Text -> String -> GroupMap -> DescriptorProto
+messageDefs :: FeatureSet -> Text -> String -> GroupMap -> DescriptorProto
             -> Tree (Text, Definition OccNameStr)
-messageDefs syntaxType protoPrefix hsPrefix groups d
+messageDefs features protoPrefix hsPrefix groups d
     = Node (protoName, thisDef) subDefs
   where
     protoName = protoPrefix <> d ^. #name
@@ -370,8 +403,8 @@ messageDefs syntaxType protoPrefix hsPrefix groups d
                                 ++ "'_constructor"
             , messageDescriptor = d
             , messageFields =
-                  map (liftA2 PlainFieldInfo
-                              (fieldKind syntaxType mapEntries) (fieldInfo hsPrefix'))
+                  map (PlainFieldInfo <$>
+                              fieldKind features' mapEntries <*> fieldInfo hsPrefix')
                       $ Map.findWithDefault [] Nothing allFields
             , messageOneofFields = collectOneofFields hsPrefix' d allFields
             , messageUnknownFields =
@@ -379,7 +412,7 @@ messageDefs syntaxType protoPrefix hsPrefix groups d
             , groupFieldNumber = Map.lookup protoName groups
             }
     subDefs = messageAndEnumDefs
-                    syntaxType
+                    features'
                     (protoName <> ".")
                     hsPrefix'
                     (collectGroupFields $ d ^. #field)
@@ -388,6 +421,10 @@ messageDefs syntaxType protoPrefix hsPrefix groups d
     -- For efficiency, only look for map entries within the immediate
     -- nested types, rather than recursively searching through all of them.
     mapEntries = collectMapEntries $ map rootLabel subDefs
+    -- Include message-scope feature overrides.
+    features' = case d ^. #options . #maybe'features of
+      Just overrides -> overrides `mergedInto ` features
+      Nothing -> features
 
 -- | If this type is a map entry, retrieves the relevant information
 -- along with the proto name of this type.
@@ -417,8 +454,10 @@ collectGroupFields :: [FieldDescriptorProto] -> GroupMap
 collectGroupFields fs = Map.fromList
     [ (f ^. #typeName, f ^. #number)
     | f <- fs
-    , f ^. #type' == FieldDescriptorProto'TYPE_GROUP
-      ]
+    , (f ^. #type' == FieldDescriptorProto'TYPE_GROUP) ||
+      -- Message fields with DELIMITED encoding are the same as proto2 groups.
+      (f ^. #options . #features . #messageEncoding == FeatureSet'DELIMITED)
+    ]
 
 fieldInfo :: String -> FieldDescriptorProto -> FieldInfo
 fieldInfo hsPrefix f = FieldInfo
@@ -427,15 +466,19 @@ fieldInfo hsPrefix f = FieldInfo
                             }
 
 fieldKind ::
-    SyntaxType -> Map.Map Text MapEntryInfo -> FieldDescriptorProto
+    FeatureSet -> Map.Map Text MapEntryInfo -> FieldDescriptorProto
     -> FieldKind
-fieldKind syntaxType mapEntries f = case f ^. #label of
-            FieldDescriptorProto'LABEL_OPTIONAL
-                | syntaxType == Proto3
-                    && f ^. #type' /= FieldDescriptorProto'TYPE_MESSAGE
-                    && not (f ^. #proto3Optional)
-                    -> OptionalValueField
-                | otherwise -> OptionalMaybeField
+fieldKind features mapEntries f = case f ^. #label of
+            FieldDescriptorProto'LABEL_OPTIONAL ->
+                case features' ^. #fieldPresence of
+                  FeatureSet'IMPLICIT
+                    | f ^. #type' /= FieldDescriptorProto'TYPE_MESSAGE
+                      && not (f ^. #proto3Optional)
+                      -> OptionalValueField
+                    | otherwise -> OptionalMaybeField
+                  FeatureSet'EXPLICIT -> OptionalMaybeField
+                  FeatureSet'LEGACY_REQUIRED -> RequiredField
+                  _ -> error $ "Has unknown field presence: " ++ show (f ^. #name)
             FieldDescriptorProto'LABEL_REQUIRED -> RequiredField
             FieldDescriptorProto'LABEL_REPEATED
                 | Just entryInfo <- Map.lookup (f ^. #typeName) mapEntries
@@ -446,16 +489,22 @@ fieldKind syntaxType mapEntries f = case f ^. #label of
         | f ^. #type' `elem` unpackableTypes = NotPackable
         | packedByDefault = Packed
         | otherwise = Packable
-    -- If the "packed" attribute isn't set, then default to packed if proto3.
-    -- Unfortunately, protoc doesn't implement this logic for us automatically.
-    packedByDefault = fromMaybe (syntaxType == Proto3)
-                        $ f ^. #options . #maybe'packed
+
+    packedByDefault =
+        fromMaybe (features' ^. #repeatedFieldEncoding == FeatureSet'PACKED)
+        $ f ^. #options . #maybe'packed
+
     unpackableTypes =
         [ FieldDescriptorProto'TYPE_MESSAGE
         , FieldDescriptorProto'TYPE_GROUP
         , FieldDescriptorProto'TYPE_STRING
         , FieldDescriptorProto'TYPE_BYTES
         ]
+
+    -- Include field-scope feature overrides
+    features' = case f ^. #options . #maybe'features of
+      Just overrides -> overrides `mergedInto` features
+      Nothing -> features
 
 collectOneofFields
     :: String -> DescriptorProto -> Map.Map (Maybe Int32) [FieldDescriptorProto]
@@ -570,7 +619,7 @@ reservedKeywords = Set.fromList $
     -- Haskell2010 keywords:
     -- https://www.haskell.org/onlinereport/haskell2010/haskellch2.html#x7-180002.4
     -- We don't include keywords that are allowed to be variable names,
-    -- in particular: "as", "forall", and "hiding".
+    -- in particular: "as" and "hiding".
     [ "case"
     , "class"
     , "data"
@@ -578,6 +627,7 @@ reservedKeywords = Set.fromList $
     , "deriving"
     , "do"
     , "else"
+    , "forall"
     , "foreign"
     , "if"
     , "import"
@@ -602,24 +652,30 @@ reservedKeywords = Set.fromList $
     ]
 
 -- | Generate the definition for an enum type.
-enumDef :: SyntaxType -> Text -> String -> EnumDescriptorProto
+enumDef :: FeatureSet -> Text -> String -> EnumDescriptorProto
           -> (Text, Definition OccNameStr)
-enumDef syntaxType protoPrefix hsPrefix d = let
+enumDef features protoPrefix hsPrefix d = let
     mkText n = protoPrefix <> n
     mkHsName n = fromString $ hsPrefix ++ case hsName n of
       ('_':xs) -> 'X':xs
       xs       -> xs
+    -- Include enum-scope feature overrides.
+    features' = case d ^. #options . #maybe'features of
+      Just overrides -> overrides `mergedInto` features
+      Nothing -> features
     in (mkText (d ^. #name)
        , Enum EnumInfo
             { enumName = mkHsName (d ^. #name)
-            , enumUnrecognized = if syntaxType == Proto2
-                    then Nothing
-                    else Just EnumUnrecognizedInfo
-                            { unrecognizedName
-                                = mkHsName (d ^. #name <> "'Unrecognized")
-                            , unrecognizedValueName
-                                = mkHsName (d ^. #name <> "'UnrecognizedValue")
-                            }
+            , enumUnrecognized = case features' ^. #enumType of
+                FeatureSet'CLOSED -> Nothing
+                FeatureSet'OPEN ->
+                  Just EnumUnrecognizedInfo
+                      { unrecognizedName
+                          = mkHsName (d ^. #name <> "'Unrecognized")
+                      , unrecognizedValueName
+                          = mkHsName (d ^. #name <> "'UnrecognizedValue")
+                      }
+                _ -> error $ "Has unknown enum type: " ++ show (d ^. #name)
             , enumDescriptor = d
             , enumValues = collectEnumValues mkHsName $ d ^. #value
             })

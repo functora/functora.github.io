@@ -6,7 +6,6 @@
 
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
@@ -22,6 +21,8 @@ module Data.ProtoLens.Encoding.Bytes(
     -- * Bytestrings
     getBytes,
     putBytes,
+    -- * Text
+    getText,
     -- * Integral types
     getVarInt,
     getVarIntH,
@@ -61,14 +62,14 @@ import Data.Semigroup ((<>))
 import qualified Data.Vector.Generic as V
 import Data.Word (Word8, Word32, Word64)
 import Foreign.Marshal (malloc, free)
-import Foreign.Storable (peek)
 import System.IO (Handle, hGetBuf)
 #if MIN_VERSION_base(4,11,0)
 import qualified GHC.Float as Float
+import Foreign.Storable (peek)
 #else
 import Foreign.Ptr (castPtr)
 import Foreign.Marshal.Alloc (alloca)
-import Foreign.Storable (Storable, poke)
+import Foreign.Storable (Storable, peek, poke)
 import System.IO.Unsafe (unsafePerformIO)
 #endif
 
@@ -94,9 +95,9 @@ getVarIntH :: Handle -> ExceptT String IO Word64
 getVarIntH h = do
     buf <- liftIO malloc
     let loopStart !n !s =
-          (liftIO $ hGetBuf h buf 1) >>=
+          liftIO (hGetBuf h buf 1) >>=
           \case
-            1 -> (liftIO $ peek buf) >>=
+            1 -> liftIO (peek buf) >>=
                  getVarIntLoopFinish loopStart n s
             _ -> throwE "Unexpected end of file"
     res <- loopStart 0 1

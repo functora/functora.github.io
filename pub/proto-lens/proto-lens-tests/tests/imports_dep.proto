@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+// Test that nested package names can be parsed and imported.
+package dep.pkg;
+
+import public "imports_transitive.proto";
+// Test that we supress warnings about reexporting empty modules.
+import public "empty.proto";
+
+message DepPkg {
+  optional int32 x = 1;
+  optional transitive.TransitiveDep y = 2;
+  optional transitive.TransitiveDep2 z = 3;
+}

@@ -1,0 +1,34 @@
+name: person
+
+custom-setup:
+  dependencies:
+    - base
+    - Cabal
+    - proto-lens-setup
+
+build-tools: proto-lens-protoc:proto-lens-protoc
+
+extra-source-files: proto/**/*.proto
+
+library:
+  dependencies:
+    - base
+    - proto-lens-runtime
+
+  exposed-modules:
+    - Proto.Person
+    - Proto.Person_Fields
+
+executables:
+  person:
+    main: Main.hs
+    source-dirs:
+      - src
+    dependencies:
+      - base
+      - person
+      - microlens
+      - proto-lens
+      # The following dependency works around a bug with Cabal-1.*.  It is not
+      # needed with Cabal-2.0 or later (stack lts-10.0 or later).
+      - proto-lens-runtime

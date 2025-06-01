@@ -1,0 +1,26 @@
+# Copyright 2019 Google LLC
+#
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file or at
+# https://developers.google.com/open-source/licenses/bsd
+
+resolver: lts-18.10
+packages:
+- discrimination-ieee754
+- proto-lens
+- proto-lens-arbitrary
+- proto-lens-benchmarks
+- proto-lens-discrimination
+- proto-lens-optparse
+- proto-lens-protobuf-types
+- proto-lens-protoc
+- proto-lens-runtime
+- proto-lens-setup
+- proto-lens-tests
+- proto-lens-tests-dep
+
+ghc-options:
+  "$locals": -Wall -Werror
+
+extra-deps:
+- discrimination-0.4.1@sha256:2870c50b9582610a7f20b8b9a7f3b8dc5d37e5ba0082dee22107c6aeb2405a6a,3482

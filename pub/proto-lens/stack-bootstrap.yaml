@@ -1,0 +1,15 @@
+resolver: lts-12.7
+
+packages:
+- proto-lens-protoc
+
+# Build the current HEAD proto-lens-protoc against older revisions of proto-lens
+# and proto-lens-descriptors that are consistent with each other.
+extra-deps:
+- ghc-source-gen-0.4.0.0
+- git: https://github.com/google/proto-lens
+  subdirs:
+  - proto-lens
+  - proto-lens-runtime
+  # A line like below will be appended by bootstrap.hs.
+  # commit: 0bef8c2f3da645f068b8a26ac168c1da41608182

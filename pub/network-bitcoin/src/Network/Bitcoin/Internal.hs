@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wall #-}
+
 -- | The API exposed in this module should be considered unstable, and is
 --   subject to change between minor revisions.
 --
@@ -11,33 +12,36 @@
 --   module is guaranteed to be stable.
 --
 --   If only d changes, then there were no user-facing code changes made.
-module Network.Bitcoin.Internal ( module Network.Bitcoin.Types
-                                , Text, Vector
-                                , FromJSON(..)
-                                , callApi
-                                , getClient
-                                , Nil(..)
-                                , NilOrArray(..)
-                                , tj
-                                , tjm
-                                , tja
-                                , AddrAddress(..)
-                                , BitcoinRpcResponse(..)
-                                ) where
+module Network.Bitcoin.Internal
+  ( module Network.Bitcoin.Types,
+    Text,
+    Vector,
+    FromJSON (..),
+    callApi,
+    getClient,
+    Nil (..),
+    NilOrArray (..),
+    tj,
+    tjm,
+    tja,
+    AddrAddress (..),
+    BitcoinRpcResponse (..),
+  )
+where
 
-import           Control.Exception
-import           Control.Monad
-import           Control.Applicative
-import           Data.Aeson
-import qualified Data.ByteString           as BS
-import           Data.Maybe
-import           Data.Text                 (Text)
-import           Data.Vector               (Vector)
-import qualified Data.Vector               as V
-import           Network.Bitcoin.Types
-import           Network.HTTP.Client
-import           Network.HTTP.Types.Header
-
+import Control.Applicative
+import Control.Exception
+import Control.Monad
+import Data.Aeson
+import qualified Data.Aeson.Key as AK
+import qualified Data.ByteString as BS
+import Data.Maybe
+import Data.Text (Text)
+import Data.Vector (Vector)
+import qualified Data.Vector as V
+import Network.Bitcoin.Types
+import Network.HTTP.Client
+import Network.HTTP.Types.Header
 
 -- | RPC calls return an error object. It can either be empty; or have an
 --   error message + error code.
@@ -56,7 +60,7 @@ data BitcoinRpcResponse a
   | BitcoinRpcResult a
   deriving (Show, Read, Ord, Eq)
 
-instance FromJSON a => FromJSON (BitcoinRpcResponse a) where
+instance (FromJSON a) => FromJSON (BitcoinRpcResponse a) where
   parseJSON (Object v) =
     (BitcoinRpcError <$> v .: "error")
       <|> (BitcoinRpcResult <$> v .: "result")
@@ -68,19 +72,26 @@ instance FromJSON a => FromJSON (BitcoinRpcResponse a) where
 --   Client encloses a Manager (from http-client) that re-uses
 --   connections for requests, so long as the same Client is
 --   is used for each call.
-getClient :: String
-          -> BS.ByteString
-          -> BS.ByteString
-          -> IO Client
+getClient ::
+  String ->
+  BS.ByteString ->
+  BS.ByteString ->
+  IO Client
 getClient url user pass = do
-    url' <- parseUrlThrow url
-    mgr <- newManager defaultManagerSettings
-    let baseReq = setRequestIgnoreStatus $ applyBasicAuth user pass url'
-            { method = "POST"
-            , requestHeaders = [(hContentType, "application/json")] }
-    return $ \r -> do
-        resp <- httpLbs (baseReq { requestBody = RequestBodyLBS r }) mgr
-        return $ responseBody resp
+  url' <- parseUrlThrow url
+  mgr <- newManager defaultManagerSettings
+  let baseReq =
+        setRequestIgnoreStatus $
+          applyBasicAuth
+            user
+            pass
+            url'
+              { method = "POST",
+                requestHeaders = [(hContentType, "application/json")]
+              }
+  return $ \r -> do
+    resp <- httpLbs (baseReq {requestBody = RequestBodyLBS r}) mgr
+    return $ responseBody resp
 
 -- | 'callApi' is a low-level interface for making authenticated API
 --   calls to a Bitcoin daemon. The first argument specifies
@@ -94,54 +105,60 @@ getClient url user pass = do
 --       callApi client "getblockhash" [tj 0]
 --
 --   On error, throws a 'BitcoinException'.
-callApi :: FromJSON v
-        => Client  -- ^ RPC client for bitcoind
-        -> Text    -- ^ command name
-        -> [Value] -- ^ command arguments
-        -> IO v
+callApi ::
+  (FromJSON v) =>
+  -- | RPC client for bitcoind
+  Client ->
+  -- | command name
+  Text ->
+  -- | command arguments
+  [Value] ->
+  IO v
 callApi client cmd params = readVal =<< client jsonRpcReqBody
-    where
-        readVal bs = do
-            case decode' bs of
-                         Just (BitcoinRpcResult r)
-                             -> return r
-                         Just (BitcoinRpcError (BitcoinRpcFailure code msg))
-                             -> throw $ BitcoinApiError code msg
-                         Nothing
-                             -> throw $ BitcoinResultTypeError bs
-        jsonRpcReqBody =
-            encode $ object [ "jsonrpc" .= ("2.0" :: Text)
-                            , "method"  .= cmd
-                            , "params"  .= params
-                            , "id"      .= (1 :: Int)
-                            ]
+  where
+    readVal bs = do
+      case decode' bs of
+        Just (BitcoinRpcResult r) ->
+          return r
+        Just (BitcoinRpcError (BitcoinRpcFailure code msg)) ->
+          throw $ BitcoinApiError code msg
+        Nothing ->
+          throw $ BitcoinResultTypeError bs
+    jsonRpcReqBody =
+      encode $
+        object
+          [ "jsonrpc" .= ("2.0" :: Text),
+            "method" .= cmd,
+            "params" .= params,
+            "id" .= (1 :: Int)
+          ]
 {-# INLINE callApi #-}
 
 -- | Used to allow "null" to decode to a tuple.
-newtype Nil = Nil { unNil :: () }
+newtype Nil = Nil {unNil :: ()}
 
 instance FromJSON Nil where
-    parseJSON Null = return $ Nil ()
-    parseJSON x    = fail $ "\"null\" was expected, but " ++ show x ++ " was recieved."
+  parseJSON Null = return $ Nil ()
+  parseJSON x = fail $ "\"null\" was expected, but " ++ show x ++ " was recieved."
 
 -- | Used to parse "null" or [HexString]
 newtype NilOrArray = NilOrArray {unArr :: Maybe [HexString]}
 
 instance FromJSON NilOrArray where
-    parseJSON Null = return $ NilOrArray Nothing
-    parseJSON a@(Array _) = NilOrArray <$> parseJSON a
-    parseJSON x = fail $ "Expected \"null\" or array, but " ++ show x ++ " was recieved."
+  parseJSON Null = return $ NilOrArray Nothing
+  parseJSON a@(Array _) = NilOrArray <$> parseJSON a
+  parseJSON x = fail $ "Expected \"null\" or array, but " ++ show x ++ " was recieved."
 
 -- | A handy shortcut for toJSON, because I'm lazy.
-tj :: ToJSON a => a -> Value
+tj :: (ToJSON a) => a -> Value
 tj = toJSON
 {-# INLINE tj #-}
 
-tjm :: ToJSON a => a -> Maybe a -> Value
+tjm :: (ToJSON a) => a -> Maybe a -> Value
 tjm d m = tj $ fromMaybe d m
 {-# INLINE tjm #-}
 
-tja :: ToJSON a => Maybe a -> [Value]
+tja :: (ToJSON a) => Maybe a -> [Value]
 tja = maybe [] (pure . tj)
 {-# INLINE tja #-}
 
@@ -151,4 +168,7 @@ tja = maybe [] (pure . tj)
 newtype AddrAddress = AA (Vector (Address, BTC))
 
 instance ToJSON AddrAddress where
-    toJSON (AA vec) = object . V.toList $ uncurry (.=) <$> vec
+  toJSON (AA vec) =
+    object
+      . V.toList
+      $ fmap (\(k, v) -> AK.fromText k .= v) vec

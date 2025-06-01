@@ -1,41 +1,47 @@
-Name:                network-bitcoin
-Version:             1.9.1
-Synopsis:            An interface to bitcoind.
-Description:
-    This can be used to send Bitcoins, query balances, etc.  It
-    requires the Bitcoin daemon to be running and accessible via
-    HTTP.
-    .
-    > import Network.Bitcoin
-    >
-    > main = do
-    >    client <- getClient "http://127.0.0.1:8332" "user" "password"
-    >    balance <- getBalance client
-    >    putStrLn $ show balance ++ " BTC"
-    .
-    To learn more about Bitcoin, see <http://www.bitcoin.org>.
-License:             BSD3
-License-file:        LICENSE
-Author:              Michael Hendricks <michael@ndrix.org>
-                     Clark Gaebel <cgaebel@uwaterloo.ca>
-Maintainer:          Matt Wraith <matt@bitnomial.com>
-Homepage:            http://github.com/bitnomial/network-bitcoin
-Bug-reports:         http://github.com/bitnomial/network-bitcoin/issues
-Copyright:           2012 Michael Hendricks <michael@ndrix.org>
-                     2013 Clark Gaebel <cgaebel@uwaterloo.ca>
-Stability:           experimental
-Category:            Network
-Build-type:          Simple
-Cabal-version:       >=1.8
-tested-with:         GHC ==8.4.3
+name:          network-bitcoin
+version:       1.9.1
+synopsis:      An interface to bitcoind.
+description:
+  This can be used to send Bitcoins, query balances, etc.  It
+  requires the Bitcoin daemon to be running and accessible via
+  HTTP.
+  .
+  > import Network.Bitcoin
+  >
+  > main = do
+  >    client <- getClient "http://127.0.0.1:8332" "user" "password"
+  >    balance <- getBalance client
+  >    putStrLn $ show balance ++ " BTC"
+  .
+  To learn more about Bitcoin, see <http://www.bitcoin.org>.
 
-Library
-  hs-source-dirs: src
-  ghc-options: -Wall
+license:       BSD3
+license-file:  LICENSE
+author:
+  Michael Hendricks <michael@ndrix.org>
+  Clark Gaebel <cgaebel@uwaterloo.ca>
 
-  Exposed-modules:
+maintainer:    Matt Wraith <matt@bitnomial.com>
+homepage:      http://github.com/bitnomial/network-bitcoin
+bug-reports:   http://github.com/bitnomial/network-bitcoin/issues
+copyright:
+  2012 Michael Hendricks <michael@ndrix.org>
+  2013 Clark Gaebel <cgaebel@uwaterloo.ca>
+
+stability:     experimental
+category:      Network
+build-type:    Simple
+cabal-version: >=1.8
+tested-with:   GHC ==8.4.3
+
+library
+  hs-source-dirs:  src
+  ghc-options:     -Wall
+  exposed-modules:
     Network.Bitcoin
     Network.Bitcoin.BlockChain
+    Network.Bitcoin.BtcEnv
+    Network.Bitcoin.BtcMultiEnv
     Network.Bitcoin.Dump
     Network.Bitcoin.Internal
     Network.Bitcoin.Mining
@@ -43,49 +49,47 @@ Library
     Network.Bitcoin.RawTransaction
     Network.Bitcoin.Types
     Network.Bitcoin.Wallet
-    Network.Bitcoin.BtcEnv
-    Network.Bitcoin.BtcMultiEnv
 
-  Build-depends:
-    aeson >= 0.8,
-    bytestring >= 0.9 && < 0.11,
-    cookie >= 0.4,
-    attoparsec >= 0.12,
-    unordered-containers >= 0.2,
-    HTTP >= 4000,
-    http-types >= 0.8.5,
-    network >= 2.3,
-    text >= 0.11,
-    vector >= 0.10,
-    base == 4.*,
-    time >= 1.4.2,
-    http-client >= 0.4.6,
-    network-uri,
-    transformers
+  build-depends:
+      aeson                 >=0.8
+    , attoparsec            >=0.12
+    , base                  >=4     && <5
+    , bytestring            >=0.9
+    , cookie                >=0.4
+    , HTTP                  >=4000
+    , http-client           >=0.4.6
+    , http-types            >=0.8.5
+    , network               >=2.3
+    , network-uri
+    , text                  >=0.11
+    , time                  >=1.4.2
+    , transformers
+    , unordered-containers  >=0.2
+    , vector                >=0.10
 
-Source-repository head
-  type: git
+source-repository head
+  type:     git
   location: git://github.com/bitnomial/network-bitcoin.git
 
-Test-suite network-bitcoin-tests
+test-suite network-bitcoin-tests
   hs-source-dirs: src/Test
-  main-is: Main.hs
-  type: exitcode-stdio-1.0
+  main-is:        Main.hs
+  type:           exitcode-stdio-1.0
   build-depends:
-    aeson >= 0.8,
-    bytestring >= 0.9 && < 0.11,
-    cookie >= 0.4,
-    attoparsec >= 0.12,
-    unordered-containers >= 0.2,
-    HTTP >= 4000,
-    http-types >= 0.8.5,
-    network >= 2.3,
-    text >= 0.11,
-    vector >= 0.10,
-    base == 4.*,
-    time >= 1.4.2,
-    QuickCheck >= 2.6,
-    tasty >= 1.0,
-    tasty-quickcheck >= 0.10,
-    http-client >= 0.4.6,
-    network-bitcoin
+      aeson                 >=0.8
+    , attoparsec            >=0.12
+    , base                  >=4     && <5
+    , bytestring            >=0.9
+    , cookie                >=0.4
+    , HTTP                  >=4000
+    , http-client           >=0.4.6
+    , http-types            >=0.8.5
+    , network               >=2.3
+    , network-bitcoin
+    , QuickCheck            >=2.6
+    , tasty                 >=1.0
+    , tasty-quickcheck      >=0.10
+    , text                  >=0.11
+    , time                  >=1.4.2
+    , unordered-containers  >=0.2
+    , vector                >=0.10

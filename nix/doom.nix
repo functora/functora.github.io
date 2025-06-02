@@ -71,7 +71,7 @@ in
           -file ${../bak/doom/nashgore.pk3} \
           -file ${../bak/doom/dblood.pk3} \
           -file ${../bak/doom/bulletzborn.pk3} \
-          -file ${../bak/doom/aenipuffs_v4.pk3} \
+          -file ${../bak/doom/puff.pk3} \
           -file ${../bak/doom/SimpleSlots.1.1.pk7}
       '';
     }

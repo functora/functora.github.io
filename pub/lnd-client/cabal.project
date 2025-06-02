@@ -1,6 +1,26 @@
-packages: *.cabal
+allow-newer: *
+packages:
+  *.cabal
+  ../network-bitcoin/*.cabal
+  ../proto-lens/discrimination-ieee754/*.cabal
+  ../proto-lens/proto-lens/*.cabal
+  ../proto-lens/proto-lens-arbitrary/*.cabal
+  ../proto-lens/proto-lens-benchmarks/*.cabal
+  ../proto-lens/proto-lens-discrimination/*.cabal
+  ../proto-lens/proto-lens-optparse/*.cabal
+  ../proto-lens/proto-lens-protobuf-types/*.cabal
+  ../proto-lens/proto-lens-protoc/*.cabal
+  ../proto-lens/proto-lens-runtime/*.cabal
+  ../proto-lens/proto-lens-setup/*.cabal
+  ../proto-lens/proto-lens-tests/*.cabal
+  ../proto-lens/proto-lens-tests-dep/*.cabal
 
-index-state: 2022-04-06T00:00:00Z
+--
+-- TODO : upgrade all
+--
+constraints:
+  tls < 1.8,
+  http2 >= 3 && <= 3.0.3
 
 package witch
   flags: +remove-time
@@ -10,34 +30,6 @@ source-repository-package
   location: https://github.com/21it/witch.git
   --sha256: 17dvcqj29883sysx5qcgjbi3smn1c9kjaj807a9a2vj24fg2jwja
   tag: ee0259bc5eb46d9c47d1c15473ff3e7d8212dc43
-
-source-repository-package
-  type: git
-  location: https://github.com/coingaming/proto-lens.git
-  tag: 7e75e2c95d9bf608965ff8335ee618978181034a
-  --sha256: 11k3y5p7m771n48d5qkzm5dj2rzdc0b26ixm35yh71rvrbxszhnf
-  subdir: proto-lens
-
-source-repository-package
-  type: git
-  location: https://github.com/coingaming/proto-lens.git
-  tag: 7e75e2c95d9bf608965ff8335ee618978181034a
-  --sha256: 11k3y5p7m771n48d5qkzm5dj2rzdc0b26ixm35yh71rvrbxszhnf
-  subdir: proto-lens-runtime
-
-source-repository-package
-  type: git
-  location: https://github.com/coingaming/src.git
-  tag: 79c3ac57bcd985d3952181d2cc22cf10e61b7db2
-  --sha256: sha256-1T0cQARQMHBmsQAdOspqb+s6YravQ5TJb+NwMXZnbjY=
-  subdir: generic-pretty-instances
-
-source-repository-package
-  type: git
-  location: https://github.com/coingaming/src.git
-  tag: 79c3ac57bcd985d3952181d2cc22cf10e61b7db2
-  --sha256: sha256-1T0cQARQMHBmsQAdOspqb+s6YravQ5TJb+NwMXZnbjY=
-  subdir: network-bitcoin
 
 source-repository-package
   type: git

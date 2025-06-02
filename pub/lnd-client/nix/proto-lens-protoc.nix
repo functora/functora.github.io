@@ -1,7 +1,7 @@
 let
-  header = (import ./header.nix);
+  header = import ./header.nix;
   proto-lens-src = fetchGit {
-    url = "git@github.com:coingaming/proto-lens.git";
+    url = "https://github.com/coingaming/proto-lens.git";
     ref = "master";
     rev = "7e75e2c95d9bf608965ff8335ee618978181034a";
   };
@@ -11,4 +11,3 @@ let
   };
 in
   proto-lens-protoc.hsPkgs.proto-lens-protoc.components.exes.proto-lens-protoc
-

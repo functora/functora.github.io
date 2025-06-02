@@ -1,22 +1,22 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
-name:           lnd-client
-version:        0.1.0.2
-synopsis:       Lightning Network Daemon (LND) client library for Haskell
-description:    You can find documentation at <https://hackage.haskell.org/package/lnd-client>
-category:       Lightning, Bitcoin, Finance, Network, Payments
-homepage:       https://github.com/coingaming/lnd-client#readme
-bug-reports:    https://github.com/coingaming/lnd-client/issues
-author:         21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
-maintainer:     21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
-copyright:      2022 Yolo <hello@coingaming.io>
-license:        BSD3
-license-file:   LICENSE
-build-type:     Simple
+name:               lnd-client
+version:            0.1.0.2
+synopsis:           Lightning Network Daemon (LND) client library for Haskell
+description:        You can find documentation at <https://hackage.haskell.org/package/lnd-client>
+category:           Lightning, Bitcoin, Finance, Network, Payments
+homepage:           https://github.com/coingaming/lnd-client#readme
+bug-reports:        https://github.com/coingaming/lnd-client/issues
+author:             21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
+maintainer:         21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
+copyright:          2022 Yolo <hello@coingaming.io>
+license:            BSD3
+license-file:       LICENSE
+build-type:         Simple
 extra-source-files:
     README.md
     ChangeLog.md
@@ -151,8 +151,7 @@ library
       FlexibleInstances
   ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures
   build-depends:
-      GenericPretty
-    , JuicyPixels >=3.3.3 && <3.4
+      JuicyPixels >=3.3.3 && <3.4
     , aeson >=1.4.4.0
     , async >=2.2.2 && <2.3
     , base >=4.7 && <5
@@ -165,9 +164,8 @@ library
     , cryptonite >=0.25 && <0.31
     , envparse ==0.4.1.*
     , extra >=1.6.18 && <1.8
-    , generic-pretty-instances
     , http2 >=3.0.3
-    , http2-client
+    , http2-client >=0.10.0.0
     , http2-client-grpc >=0.8.0.0
     , http2-grpc-proto-lens >=0.1.0.0
     , http2-grpc-types >=0.5.0.0
@@ -192,9 +190,9 @@ library
     , witch
     , x509 ==1.7.5.*
     , x509-store
+  default-language: Haskell2010
   if impl(ghc >= 8.10.7)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances
-  default-language: Haskell2010
 
 library lnd-client-tkit
   exposed-modules:
@@ -226,9 +224,9 @@ library lnd-client-tkit
     , http2-client-grpc
     , lnd-client
     , network-bitcoin
+  default-language: Haskell2010
   if impl(ghc >= 8.10.7)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances
-  default-language: Haskell2010
 
 executable lnd-client-prof
   main-is: LndClient/Main.hs
@@ -260,6 +258,7 @@ executable lnd-client-prof
     , base >=4.7 && <5
     , lnd-client
     , lnd-client-tkit
+  default-language: Haskell2010
   if impl(ghc >= 8.10.7)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances
   if flag(ghcid)
@@ -367,8 +366,7 @@ executable lnd-client-prof
         tkit
     ghc-options: -Wno-unused-packages
     build-depends:
-        GenericPretty
-      , JuicyPixels >=3.3.3 && <3.4
+        JuicyPixels >=3.3.3 && <3.4
       , aeson >=1.4.4.0
       , async >=2.2.2 && <2.3
       , base >=4.7 && <5
@@ -381,9 +379,8 @@ executable lnd-client-prof
       , cryptonite >=0.25 && <0.31
       , envparse ==0.4.1.*
       , extra >=1.6.18 && <1.8
-      , generic-pretty-instances
       , http2 >=3.0.3
-      , http2-client
+      , http2-client >=0.10.0.0
       , http2-client-grpc >=0.8.0.0
       , http2-grpc-proto-lens >=0.1.0.0
       , http2-grpc-types >=0.5.0.0
@@ -412,7 +409,6 @@ executable lnd-client-prof
     build-depends:
         lnd-client
       , lnd-client-tkit
-  default-language: Haskell2010
 
 test-suite lnd-client-test
   type: exitcode-stdio-1.0
@@ -449,6 +445,7 @@ test-suite lnd-client-test
     , containers
     , hspec
     , unliftio
+  default-language: Haskell2010
   if impl(ghc >= 8.10.7)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances
   if flag(ghcid)
@@ -556,8 +553,7 @@ test-suite lnd-client-test
         tkit
     ghc-options: -Wno-unused-packages
     build-depends:
-        GenericPretty
-      , JuicyPixels >=3.3.3 && <3.4
+        JuicyPixels >=3.3.3 && <3.4
       , aeson >=1.4.4.0
       , async >=2.2.2 && <2.3
       , base >=4.7 && <5
@@ -570,9 +566,8 @@ test-suite lnd-client-test
       , cryptonite >=0.25 && <0.31
       , envparse ==0.4.1.*
       , extra >=1.6.18 && <1.8
-      , generic-pretty-instances
       , http2 >=3.0.3
-      , http2-client
+      , http2-client >=0.10.0.0
       , http2-client-grpc >=0.8.0.0
       , http2-grpc-proto-lens >=0.1.0.0
       , http2-grpc-types >=0.5.0.0
@@ -601,4 +596,3 @@ test-suite lnd-client-test
     build-depends:
         lnd-client
       , lnd-client-tkit
-  default-language: Haskell2010

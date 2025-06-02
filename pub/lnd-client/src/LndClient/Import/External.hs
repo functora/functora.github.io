@@ -68,13 +68,6 @@ import Katip as Import
     runKatipContextT,
     sl,
   )
-import Text.PrettyPrint.GenericPretty.Import as Import
-  ( Out (..),
-    PrettyLog (..),
-    SecretVision (..),
-    inspectPlain,
-  )
-import Text.PrettyPrint.GenericPretty.Instance as Import ()
 import Universum as Import hiding (Text, catch, finally, fromIntegral, show)
 import UnliftIO as Import
   ( Handler (..),

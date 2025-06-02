@@ -1,5 +1,5 @@
 {- This file was auto-generated from signrpc/signer.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -11,6 +11,7 @@ module Proto.Signrpc.Signer (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -44,7 +45,10 @@ data InputScript
   = InputScript'_constructor {_InputScript'witness :: !(Data.Vector.Vector Data.ByteString.ByteString),
                               _InputScript'sigScript :: !Data.ByteString.ByteString,
                               _InputScript'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show InputScript where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -221,7 +225,10 @@ instance Control.DeepSeq.NFData InputScript where
 data InputScriptResp
   = InputScriptResp'_constructor {_InputScriptResp'inputScripts :: !(Data.Vector.Vector InputScript),
                                   _InputScriptResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show InputScriptResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -360,7 +367,10 @@ data KeyDescriptor
   = KeyDescriptor'_constructor {_KeyDescriptor'rawKeyBytes :: !Data.ByteString.ByteString,
                                 _KeyDescriptor'keyLoc :: !(Prelude.Maybe KeyLocator),
                                 _KeyDescriptor'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show KeyDescriptor where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -525,7 +535,10 @@ data KeyLocator
   = KeyLocator'_constructor {_KeyLocator'keyFamily :: !Data.Int.Int32,
                              _KeyLocator'keyIndex :: !Data.Int.Int32,
                              _KeyLocator'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show KeyLocator where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -681,7 +694,10 @@ data SharedKeyRequest
                                    _SharedKeyRequest'keyLoc :: !(Prelude.Maybe KeyLocator),
                                    _SharedKeyRequest'keyDesc :: !(Prelude.Maybe KeyDescriptor),
                                    _SharedKeyRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SharedKeyRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -896,7 +912,10 @@ instance Control.DeepSeq.NFData SharedKeyRequest where
 data SharedKeyResponse
   = SharedKeyResponse'_constructor {_SharedKeyResponse'sharedKey :: !Data.ByteString.ByteString,
                                     _SharedKeyResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SharedKeyResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1025,7 +1044,10 @@ data SignDescriptor
                                  _SignDescriptor'sighash :: !Data.Word.Word32,
                                  _SignDescriptor'inputIndex :: !Data.Int.Int32,
                                  _SignDescriptor'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignDescriptor where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1420,7 +1442,10 @@ data SignMessageReq
                                  _SignMessageReq'doubleHash :: !Prelude.Bool,
                                  _SignMessageReq'compactSig :: !Prelude.Bool,
                                  _SignMessageReq'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignMessageReq where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1663,7 +1688,10 @@ instance Control.DeepSeq.NFData SignMessageReq where
 data SignMessageResp
   = SignMessageResp'_constructor {_SignMessageResp'signature :: !Data.ByteString.ByteString,
                                   _SignMessageResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignMessageResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1780,7 +1808,10 @@ data SignReq
   = SignReq'_constructor {_SignReq'rawTxBytes :: !Data.ByteString.ByteString,
                           _SignReq'signDescs :: !(Data.Vector.Vector SignDescriptor),
                           _SignReq'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignReq where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1960,7 +1991,10 @@ instance Control.DeepSeq.NFData SignReq where
 data SignResp
   = SignResp'_constructor {_SignResp'rawSigs :: !(Data.Vector.Vector Data.ByteString.ByteString),
                            _SignResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2090,7 +2124,10 @@ data TxOut
   = TxOut'_constructor {_TxOut'value :: !Data.Int.Int64,
                         _TxOut'pkScript :: !Data.ByteString.ByteString,
                         _TxOut'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show TxOut where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2241,7 +2278,10 @@ data VerifyMessageReq
                                    _VerifyMessageReq'signature :: !Data.ByteString.ByteString,
                                    _VerifyMessageReq'pubkey :: !Data.ByteString.ByteString,
                                    _VerifyMessageReq'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show VerifyMessageReq where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2438,7 +2478,10 @@ instance Control.DeepSeq.NFData VerifyMessageReq where
 data VerifyMessageResp
   = VerifyMessageResp'_constructor {_VerifyMessageResp'valid :: !Prelude.Bool,
                                     _VerifyMessageResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show VerifyMessageResp where
   showsPrec _ __x __s
     = Prelude.showChar

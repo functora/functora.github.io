@@ -1,5 +1,5 @@
 {- This file was auto-generated from stateservice.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -10,6 +10,7 @@ module Proto.Stateservice (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -38,7 +39,10 @@ import qualified Data.ProtoLens.Runtime.Text.Read as Text.Read
       -}
 data GetStateRequest
   = GetStateRequest'_constructor {_GetStateRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetStateRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -105,7 +109,10 @@ instance Control.DeepSeq.NFData GetStateRequest where
 data GetStateResponse
   = GetStateResponse'_constructor {_GetStateResponse'state :: !WalletState,
                                    _GetStateResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetStateResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -213,7 +220,10 @@ instance Control.DeepSeq.NFData GetStateResponse where
       -}
 data SubscribeStateRequest
   = SubscribeStateRequest'_constructor {_SubscribeStateRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SubscribeStateRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -281,7 +291,10 @@ instance Control.DeepSeq.NFData SubscribeStateRequest where
 data SubscribeStateResponse
   = SubscribeStateResponse'_constructor {_SubscribeStateResponse'state :: !WalletState,
                                          _SubscribeStateResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SubscribeStateResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -390,6 +403,7 @@ newtype WalletState'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data WalletState
   = NON_EXISTING |
@@ -402,6 +416,7 @@ data WalletState
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum WalletState where
   maybeToEnum 0 = Prelude.Just NON_EXISTING

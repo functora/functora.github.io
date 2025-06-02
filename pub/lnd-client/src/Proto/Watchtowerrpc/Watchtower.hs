@@ -1,5 +1,5 @@
 {- This file was auto-generated from watchtowerrpc/watchtower.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -8,6 +8,7 @@ module Proto.Watchtowerrpc.Watchtower (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -36,7 +37,10 @@ import qualified Data.ProtoLens.Runtime.Text.Read as Text.Read
       -}
 data GetInfoRequest
   = GetInfoRequest'_constructor {_GetInfoRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetInfoRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -108,7 +112,10 @@ data GetInfoResponse
                                   _GetInfoResponse'listeners :: !(Data.Vector.Vector Data.Text.Text),
                                   _GetInfoResponse'uris :: !(Data.Vector.Vector Data.Text.Text),
                                   _GetInfoResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetInfoResponse where
   showsPrec _ __x __s
     = Prelude.showChar

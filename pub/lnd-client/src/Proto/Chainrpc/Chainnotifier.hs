@@ -1,5 +1,5 @@
 {- This file was auto-generated from chainrpc/chainnotifier.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -12,6 +12,7 @@ module Proto.Chainrpc.Chainnotifier (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -44,7 +45,10 @@ data BlockEpoch
   = BlockEpoch'_constructor {_BlockEpoch'hash :: !Data.ByteString.ByteString,
                              _BlockEpoch'height :: !Data.Word.Word32,
                              _BlockEpoch'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show BlockEpoch where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -197,7 +201,10 @@ data ConfDetails
                               _ConfDetails'blockHeight :: !Data.Word.Word32,
                               _ConfDetails'txIndex :: !Data.Word.Word32,
                               _ConfDetails'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConfDetails where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -435,7 +442,10 @@ instance Control.DeepSeq.NFData ConfDetails where
 data ConfEvent
   = ConfEvent'_constructor {_ConfEvent'event :: !(Prelude.Maybe ConfEvent'Event),
                             _ConfEvent'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConfEvent where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -447,6 +457,7 @@ data ConfEvent'Event
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.Field.HasField ConfEvent "maybe'event" (Prelude.Maybe ConfEvent'Event) where
   fieldOf _
@@ -653,7 +664,10 @@ data ConfRequest
                               _ConfRequest'numConfs :: !Data.Word.Word32,
                               _ConfRequest'heightHint :: !Data.Word.Word32,
                               _ConfRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConfRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -887,7 +901,10 @@ data Outpoint
   = Outpoint'_constructor {_Outpoint'hash :: !Data.ByteString.ByteString,
                            _Outpoint'index :: !Data.Word.Word32,
                            _Outpoint'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Outpoint where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1030,7 +1047,10 @@ instance Control.DeepSeq.NFData Outpoint where
       -}
 data Reorg
   = Reorg'_constructor {_Reorg'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Reorg where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1101,7 +1121,10 @@ data SpendDetails
                                _SpendDetails'spendingInputIndex :: !Data.Word.Word32,
                                _SpendDetails'spendingHeight :: !Data.Word.Word32,
                                _SpendDetails'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SpendDetails where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1407,7 +1430,10 @@ instance Control.DeepSeq.NFData SpendDetails where
 data SpendEvent
   = SpendEvent'_constructor {_SpendEvent'event :: !(Prelude.Maybe SpendEvent'Event),
                              _SpendEvent'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SpendEvent where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1419,6 +1445,7 @@ data SpendEvent'Event
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.Field.HasField SpendEvent "maybe'event" (Prelude.Maybe SpendEvent'Event) where
   fieldOf _
@@ -1626,7 +1653,10 @@ data SpendRequest
                                _SpendRequest'script :: !Data.ByteString.ByteString,
                                _SpendRequest'heightHint :: !Data.Word.Word32,
                                _SpendRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SpendRequest where
   showsPrec _ __x __s
     = Prelude.showChar

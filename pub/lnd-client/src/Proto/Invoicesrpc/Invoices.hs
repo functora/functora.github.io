@@ -1,5 +1,5 @@
 {- This file was auto-generated from invoicesrpc/invoices.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -14,6 +14,7 @@ module Proto.Invoicesrpc.Invoices (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -65,7 +66,10 @@ data AddHoldInvoiceRequest
                                         _AddHoldInvoiceRequest'routeHints :: !(Data.Vector.Vector Proto.Lnrpc.Ln0.RouteHint),
                                         _AddHoldInvoiceRequest'private :: !Prelude.Bool,
                                         _AddHoldInvoiceRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show AddHoldInvoiceRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -600,7 +604,10 @@ data AddHoldInvoiceResp
                                      _AddHoldInvoiceResp'addIndex :: !Data.Word.Word64,
                                      _AddHoldInvoiceResp'paymentAddr :: !Data.ByteString.ByteString,
                                      _AddHoldInvoiceResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show AddHoldInvoiceResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -800,7 +807,10 @@ instance Control.DeepSeq.NFData AddHoldInvoiceResp where
 data CancelInvoiceMsg
   = CancelInvoiceMsg'_constructor {_CancelInvoiceMsg'paymentHash :: !Data.ByteString.ByteString,
                                    _CancelInvoiceMsg'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show CancelInvoiceMsg where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -913,7 +923,10 @@ instance Control.DeepSeq.NFData CancelInvoiceMsg where
       -}
 data CancelInvoiceResp
   = CancelInvoiceResp'_constructor {_CancelInvoiceResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show CancelInvoiceResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -989,7 +1002,10 @@ data LookupInvoiceMsg
   = LookupInvoiceMsg'_constructor {_LookupInvoiceMsg'lookupModifier :: !LookupModifier,
                                    _LookupInvoiceMsg'invoiceRef :: !(Prelude.Maybe LookupInvoiceMsg'InvoiceRef),
                                    _LookupInvoiceMsg'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show LookupInvoiceMsg where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1003,6 +1019,7 @@ data LookupInvoiceMsg'InvoiceRef
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.Field.HasField LookupInvoiceMsg "lookupModifier" LookupModifier where
   fieldOf _
@@ -1325,6 +1342,7 @@ newtype LookupModifier'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data LookupModifier
   = DEFAULT |
@@ -1334,6 +1352,7 @@ data LookupModifier
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum LookupModifier where
   maybeToEnum 0 = Prelude.Just DEFAULT
@@ -1402,7 +1421,10 @@ instance Control.DeepSeq.NFData LookupModifier where
 data SettleInvoiceMsg
   = SettleInvoiceMsg'_constructor {_SettleInvoiceMsg'preimage :: !Data.ByteString.ByteString,
                                    _SettleInvoiceMsg'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SettleInvoiceMsg where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1514,7 +1536,10 @@ instance Control.DeepSeq.NFData SettleInvoiceMsg where
       -}
 data SettleInvoiceResp
   = SettleInvoiceResp'_constructor {_SettleInvoiceResp'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SettleInvoiceResp where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1582,7 +1607,10 @@ instance Control.DeepSeq.NFData SettleInvoiceResp where
 data SubscribeSingleInvoiceRequest
   = SubscribeSingleInvoiceRequest'_constructor {_SubscribeSingleInvoiceRequest'rHash :: !Data.ByteString.ByteString,
                                                 _SubscribeSingleInvoiceRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SubscribeSingleInvoiceRequest where
   showsPrec _ __x __s
     = Prelude.showChar

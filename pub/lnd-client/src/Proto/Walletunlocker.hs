@@ -1,5 +1,5 @@
 {- This file was auto-generated from walletunlocker.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -11,6 +11,7 @@ module Proto.Walletunlocker (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -48,7 +49,10 @@ data ChangePasswordRequest
                                         _ChangePasswordRequest'statelessInit :: !Prelude.Bool,
                                         _ChangePasswordRequest'newMacaroonRootKey :: !Prelude.Bool,
                                         _ChangePasswordRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChangePasswordRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -298,7 +302,10 @@ instance Control.DeepSeq.NFData ChangePasswordRequest where
 data ChangePasswordResponse
   = ChangePasswordResponse'_constructor {_ChangePasswordResponse'adminMacaroon :: !Data.ByteString.ByteString,
                                          _ChangePasswordResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChangePasswordResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -418,7 +425,10 @@ data GenSeedRequest
   = GenSeedRequest'_constructor {_GenSeedRequest'aezeedPassphrase :: !Data.ByteString.ByteString,
                                  _GenSeedRequest'seedEntropy :: !Data.ByteString.ByteString,
                                  _GenSeedRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GenSeedRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -583,7 +593,10 @@ data GenSeedResponse
   = GenSeedResponse'_constructor {_GenSeedResponse'cipherSeedMnemonic :: !(Data.Vector.Vector Data.Text.Text),
                                   _GenSeedResponse'encipheredSeed :: !Data.ByteString.ByteString,
                                   _GenSeedResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GenSeedResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -785,7 +798,10 @@ data InitWalletRequest
                                     _InitWalletRequest'extendedMasterKeyBirthdayTimestamp :: !Data.Word.Word64,
                                     _InitWalletRequest'watchOnly :: !(Prelude.Maybe WatchOnly),
                                     _InitWalletRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show InitWalletRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1312,7 +1328,10 @@ instance Control.DeepSeq.NFData InitWalletRequest where
 data InitWalletResponse
   = InitWalletResponse'_constructor {_InitWalletResponse'adminMacaroon :: !Data.ByteString.ByteString,
                                      _InitWalletResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show InitWalletResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1437,7 +1456,10 @@ data UnlockWalletRequest
                                       _UnlockWalletRequest'channelBackups :: !(Prelude.Maybe Proto.Lnrpc.Ln1.ChanBackupSnapshot),
                                       _UnlockWalletRequest'statelessInit :: !Prelude.Bool,
                                       _UnlockWalletRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show UnlockWalletRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1691,7 +1713,10 @@ instance Control.DeepSeq.NFData UnlockWalletRequest where
       -}
 data UnlockWalletResponse
   = UnlockWalletResponse'_constructor {_UnlockWalletResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show UnlockWalletResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1764,7 +1789,10 @@ data WatchOnly
                             _WatchOnly'masterKeyFingerprint :: !Data.ByteString.ByteString,
                             _WatchOnly'accounts :: !(Data.Vector.Vector WatchOnlyAccount),
                             _WatchOnly'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show WatchOnly where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1991,7 +2019,10 @@ data WatchOnlyAccount
                                    _WatchOnlyAccount'account :: !Data.Word.Word32,
                                    _WatchOnlyAccount'xpub :: !Data.Text.Text,
                                    _WatchOnlyAccount'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show WatchOnlyAccount where
   showsPrec _ __x __s
     = Prelude.showChar

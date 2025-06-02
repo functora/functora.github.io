@@ -1,5 +1,5 @@
 {- This file was auto-generated from autopilotrpc/autopilot.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -13,6 +13,7 @@ module Proto.Autopilotrpc.Autopilot (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -43,7 +44,10 @@ import qualified Data.ProtoLens.Runtime.Text.Read as Text.Read
 data ModifyStatusRequest
   = ModifyStatusRequest'_constructor {_ModifyStatusRequest'enable :: !Prelude.Bool,
                                       _ModifyStatusRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ModifyStatusRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -148,7 +152,10 @@ instance Control.DeepSeq.NFData ModifyStatusRequest where
       -}
 data ModifyStatusResponse
   = ModifyStatusResponse'_constructor {_ModifyStatusResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ModifyStatusResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -219,7 +226,10 @@ data QueryScoresRequest
   = QueryScoresRequest'_constructor {_QueryScoresRequest'pubkeys :: !(Data.Vector.Vector Data.Text.Text),
                                      _QueryScoresRequest'ignoreLocalState :: !Prelude.Bool,
                                      _QueryScoresRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show QueryScoresRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -396,7 +406,10 @@ instance Control.DeepSeq.NFData QueryScoresRequest where
 data QueryScoresResponse
   = QueryScoresResponse'_constructor {_QueryScoresResponse'results :: !(Data.Vector.Vector QueryScoresResponse'HeuristicResult),
                                       _QueryScoresResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show QueryScoresResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -536,7 +549,10 @@ data QueryScoresResponse'HeuristicResult
   = QueryScoresResponse'HeuristicResult'_constructor {_QueryScoresResponse'HeuristicResult'heuristic :: !Data.Text.Text,
                                                       _QueryScoresResponse'HeuristicResult'scores :: !(Data.Map.Map Data.Text.Text Prelude.Double),
                                                       _QueryScoresResponse'HeuristicResult'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show QueryScoresResponse'HeuristicResult where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -721,7 +737,10 @@ data QueryScoresResponse'HeuristicResult'ScoresEntry
   = QueryScoresResponse'HeuristicResult'ScoresEntry'_constructor {_QueryScoresResponse'HeuristicResult'ScoresEntry'key :: !Data.Text.Text,
                                                                   _QueryScoresResponse'HeuristicResult'ScoresEntry'value :: !Prelude.Double,
                                                                   _QueryScoresResponse'HeuristicResult'ScoresEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show QueryScoresResponse'HeuristicResult'ScoresEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -884,7 +903,10 @@ data SetScoresRequest
   = SetScoresRequest'_constructor {_SetScoresRequest'heuristic :: !Data.Text.Text,
                                    _SetScoresRequest'scores :: !(Data.Map.Map Data.Text.Text Prelude.Double),
                                    _SetScoresRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SetScoresRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1064,7 +1086,10 @@ data SetScoresRequest'ScoresEntry
   = SetScoresRequest'ScoresEntry'_constructor {_SetScoresRequest'ScoresEntry'key :: !Data.Text.Text,
                                                _SetScoresRequest'ScoresEntry'value :: !Prelude.Double,
                                                _SetScoresRequest'ScoresEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SetScoresRequest'ScoresEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1216,7 +1241,10 @@ instance Control.DeepSeq.NFData SetScoresRequest'ScoresEntry where
       -}
 data SetScoresResponse
   = SetScoresResponse'_constructor {_SetScoresResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SetScoresResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1282,7 +1310,10 @@ instance Control.DeepSeq.NFData SetScoresResponse where
       -}
 data StatusRequest
   = StatusRequest'_constructor {_StatusRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show StatusRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1347,7 +1378,10 @@ instance Control.DeepSeq.NFData StatusRequest where
 data StatusResponse
   = StatusResponse'_constructor {_StatusResponse'active :: !Prelude.Bool,
                                  _StatusResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show StatusResponse where
   showsPrec _ __x __s
     = Prelude.showChar

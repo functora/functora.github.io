@@ -1,5 +1,5 @@
 {- This file was auto-generated from lightning.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -40,6 +40,7 @@ module Proto.Lightning (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -71,6 +72,7 @@ newtype AddressType'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data AddressType
   = WITNESS_PUBKEY_HASH |
@@ -81,6 +83,7 @@ data AddressType
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum AddressType where
   maybeToEnum 0 = Prelude.Just WITNESS_PUBKEY_HASH
@@ -174,7 +177,10 @@ data BatchOpenChannel
                                    _BatchOpenChannel'pendingChanId :: !Data.ByteString.ByteString,
                                    _BatchOpenChannel'commitmentType :: !Proto.Lnrpc.Ln0.CommitmentType,
                                    _BatchOpenChannel'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show BatchOpenChannel where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -652,7 +658,10 @@ data BatchOpenChannelRequest
                                           _BatchOpenChannelRequest'spendUnconfirmed :: !Prelude.Bool,
                                           _BatchOpenChannelRequest'label :: !Data.Text.Text,
                                           _BatchOpenChannelRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show BatchOpenChannelRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1005,7 +1014,10 @@ instance Control.DeepSeq.NFData BatchOpenChannelRequest where
 data BatchOpenChannelResponse
   = BatchOpenChannelResponse'_constructor {_BatchOpenChannelResponse'pendingChannels :: !(Data.Vector.Vector Proto.Lnrpc.Ln0.PendingUpdate),
                                            _BatchOpenChannelResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show BatchOpenChannelResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1146,7 +1158,10 @@ data Chain
   = Chain'_constructor {_Chain'chain :: !Data.Text.Text,
                         _Chain'network :: !Data.Text.Text,
                         _Chain'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Chain where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1324,7 +1339,10 @@ data ChannelAcceptRequest
                                        _ChannelAcceptRequest'channelFlags :: !Data.Word.Word32,
                                        _ChannelAcceptRequest'commitmentType :: !Proto.Lnrpc.Ln0.CommitmentType,
                                        _ChannelAcceptRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChannelAcceptRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2006,7 +2024,10 @@ data ChannelAcceptResponse
                                         _ChannelAcceptResponse'minHtlcIn :: !Data.Word.Word64,
                                         _ChannelAcceptResponse'minAcceptDepth :: !Data.Word.Word32,
                                         _ChannelAcceptResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChannelAcceptResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2500,7 +2521,10 @@ data ChannelCloseUpdate
   = ChannelCloseUpdate'_constructor {_ChannelCloseUpdate'closingTxid :: !Data.ByteString.ByteString,
                                      _ChannelCloseUpdate'success :: !Prelude.Bool,
                                      _ChannelCloseUpdate'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChannelCloseUpdate where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2654,7 +2678,10 @@ instance Control.DeepSeq.NFData ChannelCloseUpdate where
 data ChannelOpenUpdate
   = ChannelOpenUpdate'_constructor {_ChannelOpenUpdate'channelPoint :: !(Prelude.Maybe Proto.Lnrpc.Ln0.ChannelPoint),
                                     _ChannelOpenUpdate'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ChannelOpenUpdate where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -2787,7 +2814,10 @@ data CloseChannelRequest
                                       _CloseChannelRequest'deliveryAddress :: !Data.Text.Text,
                                       _CloseChannelRequest'satPerVbyte :: !Data.Word.Word64,
                                       _CloseChannelRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show CloseChannelRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -3121,7 +3151,10 @@ instance Control.DeepSeq.NFData CloseChannelRequest where
 data CloseStatusUpdate
   = CloseStatusUpdate'_constructor {_CloseStatusUpdate'update :: !(Prelude.Maybe CloseStatusUpdate'Update),
                                     _CloseStatusUpdate'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show CloseStatusUpdate where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -3134,6 +3167,7 @@ data CloseStatusUpdate'Update
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.Field.HasField CloseStatusUpdate "maybe'update" (Prelude.Maybe CloseStatusUpdate'Update) where
   fieldOf _
@@ -3359,7 +3393,10 @@ data ClosedChannelsRequest
                                         _ClosedChannelsRequest'fundingCanceled :: !Prelude.Bool,
                                         _ClosedChannelsRequest'abandoned :: !Prelude.Bool,
                                         _ClosedChannelsRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ClosedChannelsRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -3675,7 +3712,10 @@ instance Control.DeepSeq.NFData ClosedChannelsRequest where
 data ClosedChannelsResponse
   = ClosedChannelsResponse'_constructor {_ClosedChannelsResponse'channels :: !(Data.Vector.Vector Proto.Lnrpc.Ln0.ChannelCloseSummary),
                                          _ClosedChannelsResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ClosedChannelsResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -3813,7 +3853,10 @@ data ConfirmationUpdate
                                      _ConfirmationUpdate'blockHeight :: !Data.Int.Int32,
                                      _ConfirmationUpdate'numConfsLeft :: !Data.Word.Word32,
                                      _ConfirmationUpdate'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConfirmationUpdate where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4016,7 +4059,10 @@ data ConnectPeerRequest
                                      _ConnectPeerRequest'perm :: !Prelude.Bool,
                                      _ConnectPeerRequest'timeout :: !Data.Word.Word64,
                                      _ConnectPeerRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConnectPeerRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4204,7 +4250,10 @@ instance Control.DeepSeq.NFData ConnectPeerRequest where
       -}
 data ConnectPeerResponse
   = ConnectPeerResponse'_constructor {_ConnectPeerResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ConnectPeerResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4276,7 +4325,10 @@ data CustomMessage
                                 _CustomMessage'type' :: !Data.Word.Word32,
                                 _CustomMessage'data' :: !Data.ByteString.ByteString,
                                 _CustomMessage'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show CustomMessage where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4465,7 +4517,10 @@ instance Control.DeepSeq.NFData CustomMessage where
 data DisconnectPeerRequest
   = DisconnectPeerRequest'_constructor {_DisconnectPeerRequest'pubKey :: !Data.Text.Text,
                                         _DisconnectPeerRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show DisconnectPeerRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4576,7 +4631,10 @@ instance Control.DeepSeq.NFData DisconnectPeerRequest where
       -}
 data DisconnectPeerResponse
   = DisconnectPeerResponse'_constructor {_DisconnectPeerResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show DisconnectPeerResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4650,7 +4708,10 @@ data EstimateFeeRequest
                                      _EstimateFeeRequest'minConfs :: !Data.Int.Int32,
                                      _EstimateFeeRequest'spendUnconfirmed :: !Prelude.Bool,
                                      _EstimateFeeRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show EstimateFeeRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -4912,7 +4973,10 @@ data EstimateFeeRequest'AddrToAmountEntry
   = EstimateFeeRequest'AddrToAmountEntry'_constructor {_EstimateFeeRequest'AddrToAmountEntry'key :: !Data.Text.Text,
                                                        _EstimateFeeRequest'AddrToAmountEntry'value :: !Data.Int.Int64,
                                                        _EstimateFeeRequest'AddrToAmountEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show EstimateFeeRequest'AddrToAmountEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -5072,7 +5136,10 @@ data EstimateFeeResponse
                                       _EstimateFeeResponse'feerateSatPerByte :: !Data.Int.Int64,
                                       _EstimateFeeResponse'satPerVbyte :: !Data.Word.Word64,
                                       _EstimateFeeResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show EstimateFeeResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -5258,7 +5325,10 @@ instance Control.DeepSeq.NFData EstimateFeeResponse where
       -}
 data GetInfoRequest
   = GetInfoRequest'_constructor {_GetInfoRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetInfoRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -5360,7 +5430,10 @@ data GetInfoResponse
                                   _GetInfoResponse'uris :: !(Data.Vector.Vector Data.Text.Text),
                                   _GetInfoResponse'features :: !(Data.Map.Map Data.Word.Word32 Proto.Lnrpc.Ln0.Feature),
                                   _GetInfoResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetInfoResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -6345,7 +6418,10 @@ data GetInfoResponse'FeaturesEntry
   = GetInfoResponse'FeaturesEntry'_constructor {_GetInfoResponse'FeaturesEntry'key :: !Data.Word.Word32,
                                                 _GetInfoResponse'FeaturesEntry'value :: !(Prelude.Maybe Proto.Lnrpc.Ln0.Feature),
                                                 _GetInfoResponse'FeaturesEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetInfoResponse'FeaturesEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -6501,7 +6577,10 @@ instance Control.DeepSeq.NFData GetInfoResponse'FeaturesEntry where
       -}
 data GetRecoveryInfoRequest
   = GetRecoveryInfoRequest'_constructor {_GetRecoveryInfoRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetRecoveryInfoRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -6573,7 +6652,10 @@ data GetRecoveryInfoResponse
                                           _GetRecoveryInfoResponse'recoveryFinished :: !Prelude.Bool,
                                           _GetRecoveryInfoResponse'progress :: !Prelude.Double,
                                           _GetRecoveryInfoResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetRecoveryInfoResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -6774,7 +6856,10 @@ data GetTransactionsRequest
                                          _GetTransactionsRequest'endHeight :: !Data.Int.Int32,
                                          _GetTransactionsRequest'account :: !Data.Text.Text,
                                          _GetTransactionsRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetTransactionsRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -6971,7 +7056,10 @@ data LightningAddress
   = LightningAddress'_constructor {_LightningAddress'pubkey :: !Data.Text.Text,
                                    _LightningAddress'host :: !Data.Text.Text,
                                    _LightningAddress'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show LightningAddress where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7134,7 +7222,10 @@ data ListChannelsRequest
                                       _ListChannelsRequest'privateOnly :: !Prelude.Bool,
                                       _ListChannelsRequest'peer :: !Data.ByteString.ByteString,
                                       _ListChannelsRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListChannelsRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7412,7 +7503,10 @@ instance Control.DeepSeq.NFData ListChannelsRequest where
 data ListChannelsResponse
   = ListChannelsResponse'_constructor {_ListChannelsResponse'channels :: !(Data.Vector.Vector Proto.Lnrpc.Ln0.Channel),
                                        _ListChannelsResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListChannelsResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7546,7 +7640,10 @@ instance Control.DeepSeq.NFData ListChannelsResponse where
 data ListPeersRequest
   = ListPeersRequest'_constructor {_ListPeersRequest'latestError :: !Prelude.Bool,
                                    _ListPeersRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListPeersRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7657,7 +7754,10 @@ instance Control.DeepSeq.NFData ListPeersRequest where
 data ListPeersResponse
   = ListPeersResponse'_constructor {_ListPeersResponse'peers :: !(Data.Vector.Vector Peer),
                                     _ListPeersResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListPeersResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7791,7 +7891,10 @@ data ListUnspentRequest
                                      _ListUnspentRequest'maxConfs :: !Data.Int.Int32,
                                      _ListUnspentRequest'account :: !Data.Text.Text,
                                      _ListUnspentRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListUnspentRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -7984,7 +8087,10 @@ instance Control.DeepSeq.NFData ListUnspentRequest where
 data ListUnspentResponse
   = ListUnspentResponse'_constructor {_ListUnspentResponse'utxos :: !(Data.Vector.Vector Utxo),
                                       _ListUnspentResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListUnspentResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -8116,7 +8222,10 @@ data NewAddressRequest
   = NewAddressRequest'_constructor {_NewAddressRequest'type' :: !AddressType,
                                     _NewAddressRequest'account :: !Data.Text.Text,
                                     _NewAddressRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show NewAddressRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -8270,7 +8379,10 @@ instance Control.DeepSeq.NFData NewAddressRequest where
 data NewAddressResponse
   = NewAddressResponse'_constructor {_NewAddressResponse'address :: !Data.Text.Text,
                                      _NewAddressResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show NewAddressResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -8418,7 +8530,10 @@ data OpenChannelRequest
                                      _OpenChannelRequest'maxLocalCsv :: !Data.Word.Word32,
                                      _OpenChannelRequest'commitmentType :: !Proto.Lnrpc.Ln0.CommitmentType,
                                      _OpenChannelRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show OpenChannelRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -9328,7 +9443,10 @@ data OpenStatusUpdate
   = OpenStatusUpdate'_constructor {_OpenStatusUpdate'pendingChanId :: !Data.ByteString.ByteString,
                                    _OpenStatusUpdate'update :: !(Prelude.Maybe OpenStatusUpdate'Update),
                                    _OpenStatusUpdate'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show OpenStatusUpdate where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -9342,6 +9460,7 @@ data OpenStatusUpdate'Update
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.Field.HasField OpenStatusUpdate "pendingChanId" Data.ByteString.ByteString where
   fieldOf _
@@ -9695,7 +9814,10 @@ data Peer
                        _Peer'lastFlapNs :: !Data.Int.Int64,
                        _Peer'lastPingPayload :: !Data.ByteString.ByteString,
                        _Peer'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Peer where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -10424,7 +10546,10 @@ data Peer'FeaturesEntry
   = Peer'FeaturesEntry'_constructor {_Peer'FeaturesEntry'key :: !Data.Word.Word32,
                                      _Peer'FeaturesEntry'value :: !(Prelude.Maybe Proto.Lnrpc.Ln0.Feature),
                                      _Peer'FeaturesEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Peer'FeaturesEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -10578,6 +10703,7 @@ newtype Peer'SyncType'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data Peer'SyncType
   = Peer'UNKNOWN_SYNC |
@@ -10588,6 +10714,7 @@ data Peer'SyncType
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum Peer'SyncType where
   maybeToEnum 0 = Prelude.Just Peer'UNKNOWN_SYNC
@@ -10663,7 +10790,10 @@ data PeerEvent
   = PeerEvent'_constructor {_PeerEvent'pubKey :: !Data.Text.Text,
                             _PeerEvent'type' :: !PeerEvent'EventType,
                             _PeerEvent'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show PeerEvent where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -10816,6 +10946,7 @@ newtype PeerEvent'EventType'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data PeerEvent'EventType
   = PeerEvent'PEER_ONLINE |
@@ -10824,6 +10955,7 @@ data PeerEvent'EventType
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum PeerEvent'EventType where
   maybeToEnum 0 = Prelude.Just PeerEvent'PEER_ONLINE
@@ -10884,7 +11016,10 @@ instance Control.DeepSeq.NFData PeerEvent'EventType where
       -}
 data PeerEventSubscription
   = PeerEventSubscription'_constructor {_PeerEventSubscription'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show PeerEventSubscription where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -10956,7 +11091,10 @@ data ReadyForPsbtFunding
                                       _ReadyForPsbtFunding'fundingAmount :: !Data.Int.Int64,
                                       _ReadyForPsbtFunding'psbt :: !Data.ByteString.ByteString,
                                       _ReadyForPsbtFunding'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ReadyForPsbtFunding where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -11174,7 +11312,10 @@ data SendCoinsRequest
                                    _SendCoinsRequest'minConfs :: !Data.Int.Int32,
                                    _SendCoinsRequest'spendUnconfirmed :: !Prelude.Bool,
                                    _SendCoinsRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendCoinsRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -11615,7 +11756,10 @@ instance Control.DeepSeq.NFData SendCoinsRequest where
 data SendCoinsResponse
   = SendCoinsResponse'_constructor {_SendCoinsResponse'txid :: !Data.Text.Text,
                                     _SendCoinsResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendCoinsResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -11730,7 +11874,10 @@ data SendCustomMessageRequest
                                            _SendCustomMessageRequest'type' :: !Data.Word.Word32,
                                            _SendCustomMessageRequest'data' :: !Data.ByteString.ByteString,
                                            _SendCustomMessageRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendCustomMessageRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -11920,7 +12067,10 @@ instance Control.DeepSeq.NFData SendCustomMessageRequest where
       -}
 data SendCustomMessageResponse
   = SendCustomMessageResponse'_constructor {_SendCustomMessageResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendCustomMessageResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -12001,7 +12151,10 @@ data SendManyRequest
                                   _SendManyRequest'minConfs :: !Data.Int.Int32,
                                   _SendManyRequest'spendUnconfirmed :: !Prelude.Bool,
                                   _SendManyRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendManyRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -12386,7 +12539,10 @@ data SendManyRequest'AddrToAmountEntry
   = SendManyRequest'AddrToAmountEntry'_constructor {_SendManyRequest'AddrToAmountEntry'key :: !Data.Text.Text,
                                                     _SendManyRequest'AddrToAmountEntry'value :: !Data.Int.Int64,
                                                     _SendManyRequest'AddrToAmountEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendManyRequest'AddrToAmountEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -12540,7 +12696,10 @@ instance Control.DeepSeq.NFData SendManyRequest'AddrToAmountEntry where
 data SendManyResponse
   = SendManyResponse'_constructor {_SendManyResponse'txid :: !Data.Text.Text,
                                    _SendManyResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendManyResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -12683,7 +12842,10 @@ data SendRequest
                               _SendRequest'destFeatures :: !(Data.Vector.Vector Proto.Lnrpc.Ln0.FeatureBit),
                               _SendRequest'paymentAddr :: !Data.ByteString.ByteString,
                               _SendRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -13592,7 +13754,10 @@ data SendRequest'DestCustomRecordsEntry
   = SendRequest'DestCustomRecordsEntry'_constructor {_SendRequest'DestCustomRecordsEntry'key :: !Data.Word.Word64,
                                                      _SendRequest'DestCustomRecordsEntry'value :: !Data.ByteString.ByteString,
                                                      _SendRequest'DestCustomRecordsEntry'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendRequest'DestCustomRecordsEntry where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -13747,7 +13912,10 @@ data SendResponse
                                _SendResponse'paymentRoute :: !(Prelude.Maybe Proto.Lnrpc.Ln0.Route),
                                _SendResponse'paymentHash :: !Data.ByteString.ByteString,
                                _SendResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14012,7 +14180,10 @@ data SendToRouteRequest
                                      _SendToRouteRequest'paymentHashString :: !Data.Text.Text,
                                      _SendToRouteRequest'route :: !(Prelude.Maybe Proto.Lnrpc.Ln0.Route),
                                      _SendToRouteRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SendToRouteRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14226,7 +14397,10 @@ data SignMessageRequest
   = SignMessageRequest'_constructor {_SignMessageRequest'msg :: !Data.ByteString.ByteString,
                                      _SignMessageRequest'singleHash :: !Prelude.Bool,
                                      _SignMessageRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignMessageRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14379,7 +14553,10 @@ instance Control.DeepSeq.NFData SignMessageRequest where
 data SignMessageResponse
   = SignMessageResponse'_constructor {_SignMessageResponse'signature :: !Data.Text.Text,
                                       _SignMessageResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SignMessageResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14492,7 +14669,10 @@ instance Control.DeepSeq.NFData SignMessageResponse where
       -}
 data SubscribeCustomMessagesRequest
   = SubscribeCustomMessagesRequest'_constructor {_SubscribeCustomMessagesRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show SubscribeCustomMessagesRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14565,7 +14745,10 @@ data TimestampedError
   = TimestampedError'_constructor {_TimestampedError'timestamp :: !Data.Word.Word64,
                                    _TimestampedError'error :: !Data.Text.Text,
                                    _TimestampedError'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show TimestampedError where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -14732,7 +14915,10 @@ data Transaction
                               _Transaction'rawTxHex :: !Data.Text.Text,
                               _Transaction'label :: !Data.Text.Text,
                               _Transaction'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Transaction where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -15275,7 +15461,10 @@ instance Control.DeepSeq.NFData Transaction where
 data TransactionDetails
   = TransactionDetails'_constructor {_TransactionDetails'transactions :: !(Data.Vector.Vector Transaction),
                                      _TransactionDetails'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show TransactionDetails where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -15422,7 +15611,10 @@ data Utxo
                        _Utxo'outpoint :: !(Prelude.Maybe Proto.Lnrpc.Ln0.OutPoint),
                        _Utxo'confirmations :: !Data.Int.Int64,
                        _Utxo'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Utxo where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -15752,7 +15944,10 @@ data VerifyMessageRequest
   = VerifyMessageRequest'_constructor {_VerifyMessageRequest'msg :: !Data.ByteString.ByteString,
                                        _VerifyMessageRequest'signature :: !Data.Text.Text,
                                        _VerifyMessageRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show VerifyMessageRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -15910,7 +16105,10 @@ data VerifyMessageResponse
   = VerifyMessageResponse'_constructor {_VerifyMessageResponse'valid :: !Prelude.Bool,
                                         _VerifyMessageResponse'pubkey :: !Data.Text.Text,
                                         _VerifyMessageResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show VerifyMessageResponse where
   showsPrec _ __x __s
     = Prelude.showChar

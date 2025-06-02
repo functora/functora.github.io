@@ -1,5 +1,5 @@
 {- This file was auto-generated from wtclientrpc/wtclient.proto by the proto-lens-protoc program. -}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveGeneric#-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies, DeriveDataTypeable, DeriveGeneric#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
 {-# OPTIONS_GHC -Wno-dodgy-exports#-}
@@ -13,6 +13,7 @@ module Proto.Wtclientrpc.Wtclient (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
+import qualified Data.Data
 import qualified GHC.Generics
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
@@ -45,7 +46,10 @@ data AddTowerRequest
   = AddTowerRequest'_constructor {_AddTowerRequest'pubkey :: !Data.ByteString.ByteString,
                                   _AddTowerRequest'address :: !Data.Text.Text,
                                   _AddTowerRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show AddTowerRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -198,7 +202,10 @@ instance Control.DeepSeq.NFData AddTowerRequest where
       -}
 data AddTowerResponse
   = AddTowerResponse'_constructor {_AddTowerResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show AddTowerResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -268,7 +275,10 @@ data GetTowerInfoRequest
   = GetTowerInfoRequest'_constructor {_GetTowerInfoRequest'pubkey :: !Data.ByteString.ByteString,
                                       _GetTowerInfoRequest'includeSessions :: !Prelude.Bool,
                                       _GetTowerInfoRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show GetTowerInfoRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -424,7 +434,10 @@ instance Control.DeepSeq.NFData GetTowerInfoRequest where
 data ListTowersRequest
   = ListTowersRequest'_constructor {_ListTowersRequest'includeSessions :: !Prelude.Bool,
                                     _ListTowersRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListTowersRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -538,7 +551,10 @@ instance Control.DeepSeq.NFData ListTowersRequest where
 data ListTowersResponse
   = ListTowersResponse'_constructor {_ListTowersResponse'towers :: !(Data.Vector.Vector Tower),
                                      _ListTowersResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show ListTowersResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -670,7 +686,10 @@ instance Control.DeepSeq.NFData ListTowersResponse where
 data PolicyRequest
   = PolicyRequest'_constructor {_PolicyRequest'policyType :: !PolicyType,
                                 _PolicyRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show PolicyRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -788,7 +807,10 @@ data PolicyResponse
                                  _PolicyResponse'sweepSatPerByte :: !Data.Word.Word32,
                                  _PolicyResponse'sweepSatPerVbyte :: !Data.Word.Word32,
                                  _PolicyResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show PolicyResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -985,6 +1007,7 @@ newtype PolicyType'UnrecognizedValue
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 data PolicyType
   = LEGACY |
@@ -993,6 +1016,7 @@ data PolicyType
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
+                  Data.Data.Data,
                   GHC.Generics.Generic)
 instance Data.ProtoLens.MessageEnum PolicyType where
   maybeToEnum 0 = Prelude.Just LEGACY
@@ -1052,7 +1076,10 @@ data RemoveTowerRequest
   = RemoveTowerRequest'_constructor {_RemoveTowerRequest'pubkey :: !Data.ByteString.ByteString,
                                      _RemoveTowerRequest'address :: !Data.Text.Text,
                                      _RemoveTowerRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show RemoveTowerRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1205,7 +1232,10 @@ instance Control.DeepSeq.NFData RemoveTowerRequest where
       -}
 data RemoveTowerResponse
   = RemoveTowerResponse'_constructor {_RemoveTowerResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show RemoveTowerResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1271,7 +1301,10 @@ instance Control.DeepSeq.NFData RemoveTowerResponse where
       -}
 data StatsRequest
   = StatsRequest'_constructor {_StatsRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show StatsRequest where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1344,7 +1377,10 @@ data StatsResponse
                                 _StatsResponse'numSessionsAcquired :: !Data.Word.Word32,
                                 _StatsResponse'numSessionsExhausted :: !Data.Word.Word32,
                                 _StatsResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show StatsResponse where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1638,7 +1674,10 @@ data Tower
                         _Tower'numSessions :: !Data.Word.Word32,
                         _Tower'sessions :: !(Data.Vector.Vector TowerSession),
                         _Tower'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show Tower where
   showsPrec _ __x __s
     = Prelude.showChar
@@ -1966,7 +2005,10 @@ data TowerSession
                                _TowerSession'sweepSatPerByte :: !Data.Word.Word32,
                                _TowerSession'sweepSatPerVbyte :: !Data.Word.Word32,
                                _TowerSession'_unknownFields :: !Data.ProtoLens.FieldSet}
-  deriving stock (Prelude.Eq, Prelude.Ord, GHC.Generics.Generic)
+  deriving stock (Prelude.Eq,
+                  Prelude.Ord,
+                  Data.Data.Data,
+                  GHC.Generics.Generic)
 instance Prelude.Show TowerSession where
   showsPrec _ __x __s
     = Prelude.showChar

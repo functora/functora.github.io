@@ -444,6 +444,7 @@ test-suite lnd-client-test
       async
     , base >=4.7 && <5
     , containers
+    , functora
     , hspec
     , unliftio
   default-language: Haskell2010

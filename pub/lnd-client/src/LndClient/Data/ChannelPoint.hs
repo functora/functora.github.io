@@ -59,14 +59,25 @@ channelPointParser x =
         Right txidHex -> do
           idxTS <-
             first
-              ( const
-                  $ FromGrpcError "Invalid ChannelPoint outputIndex"
+              ( \e ->
+                  FromGrpcError
+                    $ "Invalid ChannelPoint outputIndex BS "
+                    <> inspect idxBS
+                    <> " "
+                    <> show e
               )
               $ decodeUtf8' idxBS
           ChannelPoint (TxId $ BS.reverse txidHex)
-            <$> maybeToRight
-              (FromGrpcError "Invalid ChannelPoint outputIndex")
-              (readMaybe $ TS.unpack idxTS)
+            <$> maybe
+              ( Left
+                  . FromGrpcError
+                  $ "Invalid ChannelPoint outputIndex TS "
+                  <> inspect idxTS
+              )
+              ( Right . Vout
+              )
+              ( readMaybe $ TS.unpack idxTS
+              )
         Left {} ->
           Left $ FromGrpcError "Invalid ChannelPoint fundingTxidBytes"
     _ ->

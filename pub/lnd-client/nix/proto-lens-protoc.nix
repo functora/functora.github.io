@@ -1,13 +1,8 @@
 let
-  header = import ./header.nix;
-  proto-lens-src = fetchGit {
-    url = "https://github.com/coingaming/proto-lens.git";
-    ref = "master";
-    rev = "7e75e2c95d9bf608965ff8335ee618978181034a";
+  src = fetchTarball {
+    url = "https://github.com/functora/functora.github.io/archive/53356131206ffdc2eae2f1a18f55333ef3465639.tar.gz";
+    sha256 = "1qsg53kakcjpk1qn2vwj90ypwynqw6zvj224664498a6mxl6j868";
   };
-  proto-lens-protoc = header.pkgs.haskell-nix.project {
-    src = "${proto-lens-src}/proto-lens-protoc";
-    compiler-nix-name = "ghc902";
-  };
+  prj = import "${src}/nix/project.nix" {};
 in
-  proto-lens-protoc.hsPkgs.proto-lens-protoc.components.exes.proto-lens-protoc
+  prj.proto-lens-protoc.components.exes.proto-lens-protoc

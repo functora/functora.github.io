@@ -1,6 +1,6 @@
 {
   extraBuildInputs ? [],
-  withShellHook ? false,
+  withShellHook ? true,
   profile ? false,
 }: let
   # project = import ./default.nix {inherit profile;};
@@ -9,7 +9,7 @@
   # pkgs = header.pkgs;
   # nixPkgsLegacy = header.nixPkgsLegacy;
   # lnd = import ./nix/lnd.nix {inherit pkgs;};
-  # proto-lens-protoc = import ./nix/proto-lens-protoc.nix;
+  proto-lens-protoc = import ./nix/proto-lens-protoc.nix;
   project = import ../../nix/project.nix {};
   pkgs = project.pkgs;
 in
@@ -23,17 +23,16 @@ in
         # haskellPackages.hpack
         # haskellPackages.stack
         # haskellPackages.hp2pretty
-        # pkgs.bitcoin
-        # pkgs.openssl
-        # pkgs.expect
-        # pkgs.ps
-        # pkgs.jq
         # pkgs.ormolu
         # pkgs.niv
-        # lnd
+        pkgs.bitcoin
+        pkgs.openssl
+        pkgs.expect
+        pkgs.ps
+        pkgs.jq
+        pkgs.lnd
         pkgs.protobuf
-        # proto-lens-protoc
-        project.proto-lens-protoc.components.exes.proto-lens-protoc
+        proto-lens-protoc
       ]
       ++ extraBuildInputs;
     tools = {

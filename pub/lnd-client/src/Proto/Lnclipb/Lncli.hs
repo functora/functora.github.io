@@ -8,9 +8,7 @@ module Proto.Lnclipb.Lncli (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -52,7 +50,6 @@ instance Prelude.Show VersionResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out VersionResponse
 instance Data.ProtoLens.Field.HasField VersionResponse "lncli" Proto.Verrpc.Verrpc.Version where
   fieldOf _
     = (Prelude..)

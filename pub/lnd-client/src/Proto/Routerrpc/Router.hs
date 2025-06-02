@@ -35,9 +35,7 @@ module Proto.Routerrpc.Router (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -85,7 +83,6 @@ instance Prelude.Show BuildRouteRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out BuildRouteRequest
 instance Data.ProtoLens.Field.HasField BuildRouteRequest "amtMsat" Data.Int.Int64 where
   fieldOf _
     = (Prelude..)
@@ -391,7 +388,6 @@ instance Prelude.Show BuildRouteResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out BuildRouteResponse
 instance Data.ProtoLens.Field.HasField BuildRouteResponse "route" Proto.Lnrpc.Ln0.Route where
   fieldOf _
     = (Prelude..)
@@ -503,7 +499,6 @@ newtype ChanStatusAction'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out ChanStatusAction'UnrecognizedValue
 data ChanStatusAction
   = ENABLE |
     DISABLE |
@@ -574,7 +569,6 @@ instance Data.ProtoLens.FieldDefault ChanStatusAction where
   fieldDefault = ENABLE
 instance Control.DeepSeq.NFData ChanStatusAction where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out ChanStatusAction
 {- | Fields :
      
          * 'Proto.Routerrpc.Router_Fields.chanId' @:: Lens' CircuitKey Data.Word.Word64@
@@ -590,7 +584,6 @@ instance Prelude.Show CircuitKey where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out CircuitKey
 instance Data.ProtoLens.Field.HasField CircuitKey "chanId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -719,7 +712,6 @@ newtype FailureDetail'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out FailureDetail'UnrecognizedValue
 data FailureDetail
   = UNKNOWN |
     NO_DETAIL |
@@ -939,7 +931,6 @@ instance Data.ProtoLens.FieldDefault FailureDetail where
   fieldDefault = UNKNOWN
 instance Control.DeepSeq.NFData FailureDetail where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out FailureDetail
 {- | Fields :
      
          * 'Proto.Routerrpc.Router_Fields.info' @:: Lens' ForwardEvent HtlcInfo@
@@ -954,7 +945,6 @@ instance Prelude.Show ForwardEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardEvent
 instance Data.ProtoLens.Field.HasField ForwardEvent "info" HtlcInfo where
   fieldOf _
     = (Prelude..)
@@ -1068,7 +1058,6 @@ instance Prelude.Show ForwardFailEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardFailEvent
 instance Data.ProtoLens.Message ForwardFailEvent where
   messageName _ = Data.Text.pack "routerrpc.ForwardFailEvent"
   packedMessageDescriptor _
@@ -1105,13 +1094,13 @@ instance Data.ProtoLens.Message ForwardFailEvent where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ForwardFailEvent"
@@ -1154,7 +1143,6 @@ instance Prelude.Show ForwardHtlcInterceptRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardHtlcInterceptRequest
 instance Data.ProtoLens.Field.HasField ForwardHtlcInterceptRequest "incomingCircuitKey" CircuitKey where
   fieldOf _
     = (Prelude..)
@@ -1660,7 +1648,6 @@ instance Prelude.Show ForwardHtlcInterceptRequest'CustomRecordsEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardHtlcInterceptRequest'CustomRecordsEntry
 instance Data.ProtoLens.Field.HasField ForwardHtlcInterceptRequest'CustomRecordsEntry "key" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -1820,7 +1807,6 @@ instance Prelude.Show ForwardHtlcInterceptResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardHtlcInterceptResponse
 instance Data.ProtoLens.Field.HasField ForwardHtlcInterceptResponse "incomingCircuitKey" CircuitKey where
   fieldOf _
     = (Prelude..)
@@ -2032,7 +2018,6 @@ instance Prelude.Show GetMissionControlConfigRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GetMissionControlConfigRequest
 instance Data.ProtoLens.Message GetMissionControlConfigRequest where
   messageName _
     = Data.Text.pack "routerrpc.GetMissionControlConfigRequest"
@@ -2071,13 +2056,13 @@ instance Data.ProtoLens.Message GetMissionControlConfigRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage)
@@ -2105,7 +2090,6 @@ instance Prelude.Show GetMissionControlConfigResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GetMissionControlConfigResponse
 instance Data.ProtoLens.Field.HasField GetMissionControlConfigResponse "config" MissionControlConfig where
   fieldOf _
     = (Prelude..)
@@ -2249,7 +2233,6 @@ instance Prelude.Show HtlcEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out HtlcEvent
 data HtlcEvent'Event
   = HtlcEvent'ForwardEvent !ForwardEvent |
     HtlcEvent'ForwardFailEvent !ForwardFailEvent |
@@ -2259,7 +2242,6 @@ data HtlcEvent'Event
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out HtlcEvent'Event
 instance Data.ProtoLens.Field.HasField HtlcEvent "incomingChannelId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -2843,7 +2825,6 @@ newtype HtlcEvent'EventType'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out HtlcEvent'EventType'UnrecognizedValue
 data HtlcEvent'EventType
   = HtlcEvent'UNKNOWN |
     HtlcEvent'SEND |
@@ -2920,7 +2901,6 @@ instance Data.ProtoLens.FieldDefault HtlcEvent'EventType where
   fieldDefault = HtlcEvent'UNKNOWN
 instance Control.DeepSeq.NFData HtlcEvent'EventType where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out HtlcEvent'EventType
 {- | Fields :
      
          * 'Proto.Routerrpc.Router_Fields.incomingTimelock' @:: Lens' HtlcInfo Data.Word.Word32@
@@ -2940,7 +2920,6 @@ instance Prelude.Show HtlcInfo where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out HtlcInfo
 instance Data.ProtoLens.Field.HasField HtlcInfo "incomingTimelock" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -3179,7 +3158,6 @@ instance Prelude.Show LinkFailEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out LinkFailEvent
 instance Data.ProtoLens.Field.HasField LinkFailEvent "info" HtlcInfo where
   fieldOf _
     = (Prelude..)
@@ -3329,14 +3307,9 @@ instance Data.ProtoLens.Message LinkFailEvent where
                                      (Data.ProtoLens.Field.field @"failureDetail") y x)
                         34
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "failure_string"
                                 loop
                                   (Lens.Family2.set
@@ -3449,7 +3422,6 @@ instance Prelude.Show MissionControlConfig where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MissionControlConfig
 instance Data.ProtoLens.Field.HasField MissionControlConfig "halfLifeSeconds" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -3739,7 +3711,6 @@ instance Prelude.Show PairData where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PairData
 instance Data.ProtoLens.Field.HasField PairData "failTime" Data.Int.Int64 where
   fieldOf _
     = (Prelude..)
@@ -4063,7 +4034,6 @@ instance Prelude.Show PairHistory where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PairHistory
 instance Data.ProtoLens.Field.HasField PairHistory "nodeFrom" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -4260,7 +4230,6 @@ newtype PaymentState'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out PaymentState'UnrecognizedValue
 data PaymentState
   = IN_FLIGHT |
     SUCCEEDED |
@@ -4363,7 +4332,6 @@ instance Data.ProtoLens.FieldDefault PaymentState where
   fieldDefault = IN_FLIGHT
 instance Control.DeepSeq.NFData PaymentState where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out PaymentState
 {- | Fields :
      
          * 'Proto.Routerrpc.Router_Fields.state' @:: Lens' PaymentStatus PaymentState@
@@ -4382,7 +4350,6 @@ instance Prelude.Show PaymentStatus where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PaymentStatus
 instance Data.ProtoLens.Field.HasField PaymentStatus "state" PaymentState where
   fieldOf _
     = (Prelude..)
@@ -4600,7 +4567,6 @@ instance Prelude.Show QueryMissionControlRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryMissionControlRequest
 instance Data.ProtoLens.Message QueryMissionControlRequest where
   messageName _
     = Data.Text.pack "routerrpc.QueryMissionControlRequest"
@@ -4639,13 +4605,13 @@ instance Data.ProtoLens.Message QueryMissionControlRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "QueryMissionControlRequest"
@@ -4672,7 +4638,6 @@ instance Prelude.Show QueryMissionControlResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryMissionControlResponse
 instance Data.ProtoLens.Field.HasField QueryMissionControlResponse "pairs" [PairHistory] where
   fieldOf _
     = (Prelude..)
@@ -4810,7 +4775,6 @@ instance Prelude.Show QueryProbabilityRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryProbabilityRequest
 instance Data.ProtoLens.Field.HasField QueryProbabilityRequest "fromNode" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -5009,7 +4973,6 @@ instance Prelude.Show QueryProbabilityResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryProbabilityResponse
 instance Data.ProtoLens.Field.HasField QueryProbabilityResponse "probability" Prelude.Double where
   fieldOf _
     = (Prelude..)
@@ -5169,7 +5132,6 @@ instance Prelude.Show ResetMissionControlRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ResetMissionControlRequest
 instance Data.ProtoLens.Message ResetMissionControlRequest where
   messageName _
     = Data.Text.pack "routerrpc.ResetMissionControlRequest"
@@ -5208,13 +5170,13 @@ instance Data.ProtoLens.Message ResetMissionControlRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ResetMissionControlRequest"
@@ -5238,7 +5200,6 @@ instance Prelude.Show ResetMissionControlResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ResetMissionControlResponse
 instance Data.ProtoLens.Message ResetMissionControlResponse where
   messageName _
     = Data.Text.pack "routerrpc.ResetMissionControlResponse"
@@ -5277,13 +5238,13 @@ instance Data.ProtoLens.Message ResetMissionControlResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ResetMissionControlResponse"
@@ -5302,7 +5263,6 @@ newtype ResolveHoldForwardAction'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out ResolveHoldForwardAction'UnrecognizedValue
 data ResolveHoldForwardAction
   = SETTLE |
     FAIL |
@@ -5374,7 +5334,6 @@ instance Data.ProtoLens.FieldDefault ResolveHoldForwardAction where
   fieldDefault = SETTLE
 instance Control.DeepSeq.NFData ResolveHoldForwardAction where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out ResolveHoldForwardAction
 {- | Fields :
      
          * 'Proto.Routerrpc.Router_Fields.dest' @:: Lens' RouteFeeRequest Data.ByteString.ByteString@
@@ -5390,7 +5349,6 @@ instance Prelude.Show RouteFeeRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RouteFeeRequest
 instance Data.ProtoLens.Field.HasField RouteFeeRequest "dest" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -5542,7 +5500,6 @@ instance Prelude.Show RouteFeeResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RouteFeeResponse
 instance Data.ProtoLens.Field.HasField RouteFeeResponse "routingFeeMsat" Data.Int.Int64 where
   fieldOf _
     = (Prelude..)
@@ -5743,7 +5700,6 @@ instance Prelude.Show SendPaymentRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SendPaymentRequest
 instance Data.ProtoLens.Field.HasField SendPaymentRequest "dest" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -6314,14 +6270,9 @@ instance Data.ProtoLens.Message SendPaymentRequest where
                                   mutable'destFeatures mutable'outgoingChanIds mutable'routeHints
                         42
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_request"
                                 loop
                                   (Lens.Family2.set
@@ -7022,7 +6973,6 @@ instance Prelude.Show SendPaymentRequest'DestCustomRecordsEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SendPaymentRequest'DestCustomRecordsEntry
 instance Data.ProtoLens.Field.HasField SendPaymentRequest'DestCustomRecordsEntry "key" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -7177,7 +7127,6 @@ instance Prelude.Show SendToRouteRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SendToRouteRequest
 instance Data.ProtoLens.Field.HasField SendToRouteRequest "paymentHash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -7345,7 +7294,6 @@ instance Prelude.Show SendToRouteResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SendToRouteResponse
 instance Data.ProtoLens.Field.HasField SendToRouteResponse "preimage" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -7510,7 +7458,6 @@ instance Prelude.Show SetMissionControlConfigRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetMissionControlConfigRequest
 instance Data.ProtoLens.Field.HasField SetMissionControlConfigRequest "config" MissionControlConfig where
   fieldOf _
     = (Prelude..)
@@ -7632,7 +7579,6 @@ instance Prelude.Show SetMissionControlConfigResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetMissionControlConfigResponse
 instance Data.ProtoLens.Message SetMissionControlConfigResponse where
   messageName _
     = Data.Text.pack "routerrpc.SetMissionControlConfigResponse"
@@ -7671,13 +7617,13 @@ instance Data.ProtoLens.Message SetMissionControlConfigResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage)
@@ -7704,7 +7650,6 @@ instance Prelude.Show SettleEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SettleEvent
 instance Data.ProtoLens.Field.HasField SettleEvent "preimage" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -7816,7 +7761,6 @@ instance Prelude.Show SubscribeHtlcEventsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SubscribeHtlcEventsRequest
 instance Data.ProtoLens.Message SubscribeHtlcEventsRequest where
   messageName _
     = Data.Text.pack "routerrpc.SubscribeHtlcEventsRequest"
@@ -7855,13 +7799,13 @@ instance Data.ProtoLens.Message SubscribeHtlcEventsRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "SubscribeHtlcEventsRequest"
@@ -7889,7 +7833,6 @@ instance Prelude.Show TrackPaymentRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out TrackPaymentRequest
 instance Data.ProtoLens.Field.HasField TrackPaymentRequest "paymentHash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -8052,7 +7995,6 @@ instance Prelude.Show UpdateChanStatusRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out UpdateChanStatusRequest
 instance Data.ProtoLens.Field.HasField UpdateChanStatusRequest "chanPoint" Proto.Lnrpc.Ln0.ChannelPoint where
   fieldOf _
     = (Prelude..)
@@ -8215,7 +8157,6 @@ instance Prelude.Show UpdateChanStatusResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out UpdateChanStatusResponse
 instance Data.ProtoLens.Message UpdateChanStatusResponse where
   messageName _ = Data.Text.pack "routerrpc.UpdateChanStatusResponse"
   packedMessageDescriptor _
@@ -8252,13 +8193,13 @@ instance Data.ProtoLens.Message UpdateChanStatusResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "UpdateChanStatusResponse"
@@ -8285,7 +8226,6 @@ instance Prelude.Show XImportMissionControlRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out XImportMissionControlRequest
 instance Data.ProtoLens.Field.HasField XImportMissionControlRequest "pairs" [PairHistory] where
   fieldOf _
     = (Prelude..)
@@ -8417,7 +8357,6 @@ instance Prelude.Show XImportMissionControlResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out XImportMissionControlResponse
 instance Data.ProtoLens.Message XImportMissionControlResponse where
   messageName _
     = Data.Text.pack "routerrpc.XImportMissionControlResponse"
@@ -8456,13 +8395,13 @@ instance Data.ProtoLens.Message XImportMissionControlResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "XImportMissionControlResponse"

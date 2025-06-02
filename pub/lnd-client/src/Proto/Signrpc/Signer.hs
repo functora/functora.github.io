@@ -11,9 +11,7 @@ module Proto.Signrpc.Signer (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -53,7 +51,6 @@ instance Prelude.Show InputScript where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InputScript
 instance Data.ProtoLens.Field.HasField InputScript "witness" [Data.ByteString.ByteString] where
   fieldOf _
     = (Prelude..)
@@ -231,7 +228,6 @@ instance Prelude.Show InputScriptResp where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InputScriptResp
 instance Data.ProtoLens.Field.HasField InputScriptResp "inputScripts" [InputScript] where
   fieldOf _
     = (Prelude..)
@@ -371,7 +367,6 @@ instance Prelude.Show KeyDescriptor where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out KeyDescriptor
 instance Data.ProtoLens.Field.HasField KeyDescriptor "rawKeyBytes" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -537,7 +532,6 @@ instance Prelude.Show KeyLocator where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out KeyLocator
 instance Data.ProtoLens.Field.HasField KeyLocator "keyFamily" Data.Int.Int32 where
   fieldOf _
     = (Prelude..)
@@ -694,7 +688,6 @@ instance Prelude.Show SharedKeyRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SharedKeyRequest
 instance Data.ProtoLens.Field.HasField SharedKeyRequest "ephemeralPubkey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -910,7 +903,6 @@ instance Prelude.Show SharedKeyResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SharedKeyResponse
 instance Data.ProtoLens.Field.HasField SharedKeyResponse "sharedKey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1040,7 +1032,6 @@ instance Prelude.Show SignDescriptor where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SignDescriptor
 instance Data.ProtoLens.Field.HasField SignDescriptor "keyDesc" KeyDescriptor where
   fieldOf _
     = (Prelude..)
@@ -1436,7 +1427,6 @@ instance Prelude.Show SignMessageReq where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SignMessageReq
 instance Data.ProtoLens.Field.HasField SignMessageReq "msg" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1680,7 +1670,6 @@ instance Prelude.Show SignMessageResp where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SignMessageResp
 instance Data.ProtoLens.Field.HasField SignMessageResp "signature" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1798,7 +1787,6 @@ instance Prelude.Show SignReq where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SignReq
 instance Data.ProtoLens.Field.HasField SignReq "rawTxBytes" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1979,7 +1967,6 @@ instance Prelude.Show SignResp where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SignResp
 instance Data.ProtoLens.Field.HasField SignResp "rawSigs" [Data.ByteString.ByteString] where
   fieldOf _
     = (Prelude..)
@@ -2110,7 +2097,6 @@ instance Prelude.Show TxOut where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out TxOut
 instance Data.ProtoLens.Field.HasField TxOut "value" Data.Int.Int64 where
   fieldOf _
     = (Prelude..)
@@ -2262,7 +2248,6 @@ instance Prelude.Show VerifyMessageReq where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out VerifyMessageReq
 instance Data.ProtoLens.Field.HasField VerifyMessageReq "msg" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -2460,7 +2445,6 @@ instance Prelude.Show VerifyMessageResp where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out VerifyMessageResp
 instance Data.ProtoLens.Field.HasField VerifyMessageResp "valid" Prelude.Bool where
   fieldOf _
     = (Prelude..)

@@ -10,9 +10,7 @@ module Proto.Stateservice (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -47,7 +45,6 @@ instance Prelude.Show GetStateRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GetStateRequest
 instance Data.ProtoLens.Message GetStateRequest where
   messageName _ = Data.Text.pack "lnrpc.GetStateRequest"
   packedMessageDescriptor _
@@ -84,13 +81,13 @@ instance Data.ProtoLens.Message GetStateRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "GetStateRequest"
@@ -115,7 +112,6 @@ instance Prelude.Show GetStateResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GetStateResponse
 instance Data.ProtoLens.Field.HasField GetStateResponse "state" WalletState where
   fieldOf _
     = (Prelude..)
@@ -224,7 +220,6 @@ instance Prelude.Show SubscribeStateRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SubscribeStateRequest
 instance Data.ProtoLens.Message SubscribeStateRequest where
   messageName _ = Data.Text.pack "lnrpc.SubscribeStateRequest"
   packedMessageDescriptor _
@@ -261,13 +256,13 @@ instance Data.ProtoLens.Message SubscribeStateRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "SubscribeStateRequest"
@@ -293,7 +288,6 @@ instance Prelude.Show SubscribeStateResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SubscribeStateResponse
 instance Data.ProtoLens.Field.HasField SubscribeStateResponse "state" WalletState where
   fieldOf _
     = (Prelude..)
@@ -397,7 +391,6 @@ newtype WalletState'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out WalletState'UnrecognizedValue
 data WalletState
   = NON_EXISTING |
     LOCKED |
@@ -488,7 +481,6 @@ instance Data.ProtoLens.FieldDefault WalletState where
   fieldDefault = NON_EXISTING
 instance Control.DeepSeq.NFData WalletState where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out WalletState
 data State = State {}
 instance Data.ProtoLens.Service.Types.Service State where
   type ServiceName State = "State"

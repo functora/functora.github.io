@@ -13,9 +13,7 @@ module Proto.Autopilotrpc.Autopilot (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -52,7 +50,6 @@ instance Prelude.Show ModifyStatusRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ModifyStatusRequest
 instance Data.ProtoLens.Field.HasField ModifyStatusRequest "enable" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -158,7 +155,6 @@ instance Prelude.Show ModifyStatusResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ModifyStatusResponse
 instance Data.ProtoLens.Message ModifyStatusResponse where
   messageName _ = Data.Text.pack "autopilotrpc.ModifyStatusResponse"
   packedMessageDescriptor _
@@ -195,13 +191,13 @@ instance Data.ProtoLens.Message ModifyStatusResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ModifyStatusResponse"
@@ -230,7 +226,6 @@ instance Prelude.Show QueryScoresRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryScoresRequest
 instance Data.ProtoLens.Field.HasField QueryScoresRequest "pubkeys" [Data.Text.Text] where
   fieldOf _
     = (Prelude..)
@@ -325,14 +320,9 @@ instance Data.ProtoLens.Message QueryScoresRequest where
                       case tag of
                         10
                           -> do !y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                        (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                        Data.ProtoLens.Encoding.Bytes.getBytes
-                                                          (Prelude.fromIntegral len)
-                                            Data.ProtoLens.Encoding.Bytes.runEither
-                                              (case Data.Text.Encoding.decodeUtf8' value of
-                                                 (Prelude.Left err)
-                                                   -> Prelude.Left (Prelude.show err)
-                                                 (Prelude.Right r) -> Prelude.Right r))
+                                        (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                            Data.ProtoLens.Encoding.Bytes.getText
+                                              (Prelude.fromIntegral len))
                                         "pubkeys"
                                 v <- Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO
                                        (Data.ProtoLens.Encoding.Growing.append mutable'pubkeys y)
@@ -413,7 +403,6 @@ instance Prelude.Show QueryScoresResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryScoresResponse
 instance Data.ProtoLens.Field.HasField QueryScoresResponse "results" [QueryScoresResponse'HeuristicResult] where
   fieldOf _
     = (Prelude..)
@@ -554,7 +543,6 @@ instance Prelude.Show QueryScoresResponse'HeuristicResult where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryScoresResponse'HeuristicResult
 instance Data.ProtoLens.Field.HasField QueryScoresResponse'HeuristicResult "heuristic" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -643,14 +631,9 @@ instance Data.ProtoLens.Message QueryScoresResponse'HeuristicResult where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "heuristic"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"heuristic") y x)
@@ -745,7 +728,6 @@ instance Prelude.Show QueryScoresResponse'HeuristicResult'ScoresEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out QueryScoresResponse'HeuristicResult'ScoresEntry
 instance Data.ProtoLens.Field.HasField QueryScoresResponse'HeuristicResult'ScoresEntry "key" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -832,14 +814,9 @@ instance Data.ProtoLens.Message QueryScoresResponse'HeuristicResult'ScoresEntry 
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "key"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"key") y x)
                         17
@@ -914,7 +891,6 @@ instance Prelude.Show SetScoresRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetScoresRequest
 instance Data.ProtoLens.Field.HasField SetScoresRequest "heuristic" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -999,14 +975,9 @@ instance Data.ProtoLens.Message SetScoresRequest where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "heuristic"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"heuristic") y x)
@@ -1100,7 +1071,6 @@ instance Prelude.Show SetScoresRequest'ScoresEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetScoresRequest'ScoresEntry
 instance Data.ProtoLens.Field.HasField SetScoresRequest'ScoresEntry "key" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -1181,14 +1151,9 @@ instance Data.ProtoLens.Message SetScoresRequest'ScoresEntry where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "key"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"key") y x)
                         17
@@ -1258,7 +1223,6 @@ instance Prelude.Show SetScoresResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetScoresResponse
 instance Data.ProtoLens.Message SetScoresResponse where
   messageName _ = Data.Text.pack "autopilotrpc.SetScoresResponse"
   packedMessageDescriptor _
@@ -1295,13 +1259,13 @@ instance Data.ProtoLens.Message SetScoresResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "SetScoresResponse"
@@ -1325,7 +1289,6 @@ instance Prelude.Show StatusRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out StatusRequest
 instance Data.ProtoLens.Message StatusRequest where
   messageName _ = Data.Text.pack "autopilotrpc.StatusRequest"
   packedMessageDescriptor _
@@ -1360,13 +1323,13 @@ instance Data.ProtoLens.Message StatusRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "StatusRequest"
@@ -1391,7 +1354,6 @@ instance Prelude.Show StatusResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out StatusResponse
 instance Data.ProtoLens.Field.HasField StatusResponse "active" Prelude.Bool where
   fieldOf _
     = (Prelude..)

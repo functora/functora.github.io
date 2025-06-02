@@ -55,9 +55,7 @@ module Proto.Lnrpc.Ln1 (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -103,7 +101,6 @@ instance Prelude.Show AMP where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AMP
 instance Data.ProtoLens.Field.HasField AMP "rootShare" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -386,7 +383,6 @@ instance Prelude.Show AMPInvoiceState where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AMPInvoiceState
 instance Data.ProtoLens.Field.HasField AMPInvoiceState "state" InvoiceHTLCState where
   fieldOf _
     = (Prelude..)
@@ -623,7 +619,6 @@ instance Prelude.Show AbandonChannelRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AbandonChannelRequest
 instance Data.ProtoLens.Field.HasField AbandonChannelRequest "channelPoint" Proto.Lnrpc.Ln0.ChannelPoint where
   fieldOf _
     = (Prelude..)
@@ -833,7 +828,6 @@ instance Prelude.Show AbandonChannelResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AbandonChannelResponse
 instance Data.ProtoLens.Message AbandonChannelResponse where
   messageName _ = Data.Text.pack "lnrpc.AbandonChannelResponse"
   packedMessageDescriptor _
@@ -870,13 +864,13 @@ instance Data.ProtoLens.Message AbandonChannelResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "AbandonChannelResponse"
@@ -908,7 +902,6 @@ instance Prelude.Show AddInvoiceResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AddInvoiceResponse
 instance Data.ProtoLens.Field.HasField AddInvoiceResponse "rHash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1033,14 +1026,9 @@ instance Data.ProtoLens.Message AddInvoiceResponse where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"rHash") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_request"
                                 loop
                                   (Lens.Family2.set
@@ -1161,7 +1149,6 @@ instance Prelude.Show BakeMacaroonRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out BakeMacaroonRequest
 instance Data.ProtoLens.Field.HasField BakeMacaroonRequest "permissions" [MacaroonPermission] where
   fieldOf _
     = (Prelude..)
@@ -1381,7 +1368,6 @@ instance Prelude.Show BakeMacaroonResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out BakeMacaroonResponse
 instance Data.ProtoLens.Field.HasField BakeMacaroonResponse "macaroon" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -1443,14 +1429,9 @@ instance Data.ProtoLens.Message BakeMacaroonResponse where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "macaroon"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"macaroon") y x)
@@ -1500,7 +1481,6 @@ instance Prelude.Show ChanBackupExportRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChanBackupExportRequest
 instance Data.ProtoLens.Message ChanBackupExportRequest where
   messageName _ = Data.Text.pack "lnrpc.ChanBackupExportRequest"
   packedMessageDescriptor _
@@ -1537,13 +1517,13 @@ instance Data.ProtoLens.Message ChanBackupExportRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ChanBackupExportRequest"
@@ -1573,7 +1553,6 @@ instance Prelude.Show ChanBackupSnapshot where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChanBackupSnapshot
 instance Data.ProtoLens.Field.HasField ChanBackupSnapshot "singleChanBackups" ChannelBackups where
   fieldOf _
     = (Prelude..)
@@ -1752,7 +1731,6 @@ instance Prelude.Show ChannelBackup where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChannelBackup
 instance Data.ProtoLens.Field.HasField ChannelBackup "chanPoint" Proto.Lnrpc.Ln0.ChannelPoint where
   fieldOf _
     = (Prelude..)
@@ -1918,7 +1896,6 @@ instance Prelude.Show ChannelBackupSubscription where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChannelBackupSubscription
 instance Data.ProtoLens.Message ChannelBackupSubscription where
   messageName _ = Data.Text.pack "lnrpc.ChannelBackupSubscription"
   packedMessageDescriptor _
@@ -1956,13 +1933,13 @@ instance Data.ProtoLens.Message ChannelBackupSubscription where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ChannelBackupSubscription"
@@ -1989,7 +1966,6 @@ instance Prelude.Show ChannelBackups where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChannelBackups
 instance Data.ProtoLens.Field.HasField ChannelBackups "chanBackups" [ChannelBackup] where
   fieldOf _
     = (Prelude..)
@@ -2134,7 +2110,6 @@ instance Prelude.Show ChannelFeeReport where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChannelFeeReport
 instance Data.ProtoLens.Field.HasField ChannelFeeReport "chanId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -2274,14 +2249,9 @@ instance Data.ProtoLens.Message ChannelFeeReport where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"chanId") y x)
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "channel_point"
                                 loop
                                   (Lens.Family2.set
@@ -2433,7 +2403,6 @@ instance Prelude.Show ChannelUpdate where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChannelUpdate
 instance Data.ProtoLens.Field.HasField ChannelUpdate "signature" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -3016,7 +2985,6 @@ instance Prelude.Show CheckMacPermRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out CheckMacPermRequest
 instance Data.ProtoLens.Field.HasField CheckMacPermRequest "macaroon" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -3154,14 +3122,9 @@ instance Data.ProtoLens.Message CheckMacPermRequest where
                                 loop x v
                         26
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "fullMethod"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"fullMethod") y x)
@@ -3253,7 +3216,6 @@ instance Prelude.Show CheckMacPermResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out CheckMacPermResponse
 instance Data.ProtoLens.Field.HasField CheckMacPermResponse "valid" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -3362,7 +3324,6 @@ instance Prelude.Show DebugLevelRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DebugLevelRequest
 instance Data.ProtoLens.Field.HasField DebugLevelRequest "show" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -3448,14 +3409,9 @@ instance Data.ProtoLens.Message DebugLevelRequest where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"show") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "level_spec"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"levelSpec") y x)
@@ -3520,7 +3476,6 @@ instance Prelude.Show DebugLevelResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DebugLevelResponse
 instance Data.ProtoLens.Field.HasField DebugLevelResponse "subSystems" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -3583,14 +3538,9 @@ instance Data.ProtoLens.Message DebugLevelResponse where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "sub_systems"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"subSystems") y x)
@@ -3645,7 +3595,6 @@ instance Prelude.Show DeleteAllPaymentsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeleteAllPaymentsRequest
 instance Data.ProtoLens.Field.HasField DeleteAllPaymentsRequest "failedPaymentsOnly" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -3802,7 +3751,6 @@ instance Prelude.Show DeleteAllPaymentsResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeleteAllPaymentsResponse
 instance Data.ProtoLens.Message DeleteAllPaymentsResponse where
   messageName _ = Data.Text.pack "lnrpc.DeleteAllPaymentsResponse"
   packedMessageDescriptor _
@@ -3840,13 +3788,13 @@ instance Data.ProtoLens.Message DeleteAllPaymentsResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "DeleteAllPaymentsResponse"
@@ -3872,7 +3820,6 @@ instance Prelude.Show DeleteMacaroonIDRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeleteMacaroonIDRequest
 instance Data.ProtoLens.Field.HasField DeleteMacaroonIDRequest "rootKeyId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -3979,7 +3926,6 @@ instance Prelude.Show DeleteMacaroonIDResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeleteMacaroonIDResponse
 instance Data.ProtoLens.Field.HasField DeleteMacaroonIDResponse "deleted" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -4090,7 +4036,6 @@ instance Prelude.Show DeletePaymentRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeletePaymentRequest
 instance Data.ProtoLens.Field.HasField DeletePaymentRequest "paymentHash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -4248,7 +4193,6 @@ instance Prelude.Show DeletePaymentResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out DeletePaymentResponse
 instance Data.ProtoLens.Message DeletePaymentResponse where
   messageName _ = Data.Text.pack "lnrpc.DeletePaymentResponse"
   packedMessageDescriptor _
@@ -4285,13 +4229,13 @@ instance Data.ProtoLens.Message DeletePaymentResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "DeletePaymentResponse"
@@ -4318,7 +4262,6 @@ instance Prelude.Show ExportChannelBackupRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ExportChannelBackupRequest
 instance Data.ProtoLens.Field.HasField ExportChannelBackupRequest "chanPoint" Proto.Lnrpc.Ln0.ChannelPoint where
   fieldOf _
     = (Prelude..)
@@ -4448,7 +4391,6 @@ instance Prelude.Show FailedUpdate where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out FailedUpdate
 instance Data.ProtoLens.Field.HasField FailedUpdate "outpoint" Proto.Lnrpc.Ln0.OutPoint where
   fieldOf _
     = (Prelude..)
@@ -4569,14 +4511,9 @@ instance Data.ProtoLens.Message FailedUpdate where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"reason") y x)
                         26
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "update_error"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"updateError") y x)
@@ -4676,7 +4613,6 @@ instance Prelude.Show Failure where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Failure
 instance Data.ProtoLens.Field.HasField Failure "code" Failure'FailureCode where
   fieldOf _
     = (Prelude..)
@@ -5102,7 +5038,6 @@ newtype Failure'FailureCode'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out Failure'FailureCode'UnrecognizedValue
 data Failure'FailureCode
   = Failure'RESERVED |
     Failure'INCORRECT_OR_UNKNOWN_PAYMENT_DETAILS |
@@ -5403,7 +5338,6 @@ instance Data.ProtoLens.FieldDefault Failure'FailureCode where
   fieldDefault = Failure'RESERVED
 instance Control.DeepSeq.NFData Failure'FailureCode where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out Failure'FailureCode
 {- | Fields :
       -}
 data FeeReportRequest
@@ -5415,7 +5349,6 @@ instance Prelude.Show FeeReportRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out FeeReportRequest
 instance Data.ProtoLens.Message FeeReportRequest where
   messageName _ = Data.Text.pack "lnrpc.FeeReportRequest"
   packedMessageDescriptor _
@@ -5452,13 +5385,13 @@ instance Data.ProtoLens.Message FeeReportRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "FeeReportRequest"
@@ -5491,7 +5424,6 @@ instance Prelude.Show FeeReportResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out FeeReportResponse
 instance Data.ProtoLens.Field.HasField FeeReportResponse "channelFees" [ChannelFeeReport] where
   fieldOf _
     = (Prelude..)
@@ -5761,7 +5693,6 @@ instance Prelude.Show ForwardingEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardingEvent
 instance Data.ProtoLens.Field.HasField ForwardingEvent "timestamp" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -6199,7 +6130,6 @@ instance Prelude.Show ForwardingHistoryRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardingHistoryRequest
 instance Data.ProtoLens.Field.HasField ForwardingHistoryRequest "startTime" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -6427,7 +6357,6 @@ instance Prelude.Show ForwardingHistoryResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ForwardingHistoryResponse
 instance Data.ProtoLens.Field.HasField ForwardingHistoryResponse "forwardingEvents" [ForwardingEvent] where
   fieldOf _
     = (Prelude..)
@@ -6627,7 +6556,6 @@ instance Prelude.Show HTLCAttempt where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out HTLCAttempt
 instance Data.ProtoLens.Field.HasField HTLCAttempt "attemptId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -7002,7 +6930,6 @@ newtype HTLCAttempt'HTLCStatus'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out HTLCAttempt'HTLCStatus'UnrecognizedValue
 data HTLCAttempt'HTLCStatus
   = HTLCAttempt'IN_FLIGHT |
     HTLCAttempt'SUCCEEDED |
@@ -7073,7 +7000,6 @@ instance Data.ProtoLens.FieldDefault HTLCAttempt'HTLCStatus where
   fieldDefault = HTLCAttempt'IN_FLIGHT
 instance Control.DeepSeq.NFData HTLCAttempt'HTLCStatus where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out HTLCAttempt'HTLCStatus
 {- | Fields :
      
          * 'Proto.Lnrpc.Ln1_Fields.error' @:: Lens' InterceptFeedback Data.Text.Text@
@@ -7091,7 +7017,6 @@ instance Prelude.Show InterceptFeedback where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InterceptFeedback
 instance Data.ProtoLens.Field.HasField InterceptFeedback "error" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -7191,14 +7116,9 @@ instance Data.ProtoLens.Message InterceptFeedback where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "error"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"error") y x)
                         16
@@ -7356,7 +7276,6 @@ instance Prelude.Show Invoice where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Invoice
 instance Data.ProtoLens.Field.HasField Invoice "memo" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -7932,14 +7851,9 @@ instance Data.ProtoLens.Message Invoice where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "memo"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"memo") y x)
@@ -8009,14 +7923,9 @@ instance Data.ProtoLens.Message Invoice where
                                   mutable'htlcs mutable'routeHints
                         74
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_request"
                                 loop
                                   (Lens.Family2.set
@@ -8043,14 +7952,9 @@ instance Data.ProtoLens.Message Invoice where
                                   mutable'htlcs mutable'routeHints
                         98
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "fallback_addr"
                                 loop
                                   (Lens.Family2.set
@@ -8820,7 +8724,6 @@ instance Prelude.Show Invoice'AmpInvoiceStateEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Invoice'AmpInvoiceStateEntry
 instance Data.ProtoLens.Field.HasField Invoice'AmpInvoiceStateEntry "key" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -8907,14 +8810,9 @@ instance Data.ProtoLens.Message Invoice'AmpInvoiceStateEntry where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "key"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"key") y x)
                         18
@@ -8992,7 +8890,6 @@ instance Prelude.Show Invoice'FeaturesEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Invoice'FeaturesEntry
 instance Data.ProtoLens.Field.HasField Invoice'FeaturesEntry "key" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -9141,7 +9038,6 @@ newtype Invoice'InvoiceState'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out Invoice'InvoiceState'UnrecognizedValue
 data Invoice'InvoiceState
   = Invoice'OPEN |
     Invoice'SETTLED |
@@ -9219,7 +9115,6 @@ instance Data.ProtoLens.FieldDefault Invoice'InvoiceState where
   fieldDefault = Invoice'OPEN
 instance Control.DeepSeq.NFData Invoice'InvoiceState where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out Invoice'InvoiceState
 {- | Fields :
      
          * 'Proto.Lnrpc.Ln1_Fields.chanId' @:: Lens' InvoiceHTLC Data.Word.Word64@
@@ -9254,7 +9149,6 @@ instance Prelude.Show InvoiceHTLC where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InvoiceHTLC
 instance Data.ProtoLens.Field.HasField InvoiceHTLC "chanId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -9804,7 +9698,6 @@ instance Prelude.Show InvoiceHTLC'CustomRecordsEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InvoiceHTLC'CustomRecordsEntry
 instance Data.ProtoLens.Field.HasField InvoiceHTLC'CustomRecordsEntry "key" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -9945,7 +9838,6 @@ newtype InvoiceHTLCState'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out InvoiceHTLCState'UnrecognizedValue
 data InvoiceHTLCState
   = ACCEPTED |
     SETTLED |
@@ -10016,7 +9908,6 @@ instance Data.ProtoLens.FieldDefault InvoiceHTLCState where
   fieldDefault = ACCEPTED
 instance Control.DeepSeq.NFData InvoiceHTLCState where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out InvoiceHTLCState
 {- | Fields :
      
          * 'Proto.Lnrpc.Ln1_Fields.addIndex' @:: Lens' InvoiceSubscription Data.Word.Word64@
@@ -10032,7 +9923,6 @@ instance Prelude.Show InvoiceSubscription where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InvoiceSubscription
 instance Data.ProtoLens.Field.HasField InvoiceSubscription "addIndex" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -10182,7 +10072,6 @@ instance Prelude.Show ListInvoiceRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListInvoiceRequest
 instance Data.ProtoLens.Field.HasField ListInvoiceRequest "pendingOnly" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -10414,7 +10303,6 @@ instance Prelude.Show ListInvoiceResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListInvoiceResponse
 instance Data.ProtoLens.Field.HasField ListInvoiceResponse "invoices" [Invoice] where
   fieldOf _
     = (Prelude..)
@@ -10628,7 +10516,6 @@ instance Prelude.Show ListMacaroonIDsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListMacaroonIDsRequest
 instance Data.ProtoLens.Message ListMacaroonIDsRequest where
   messageName _ = Data.Text.pack "lnrpc.ListMacaroonIDsRequest"
   packedMessageDescriptor _
@@ -10665,13 +10552,13 @@ instance Data.ProtoLens.Message ListMacaroonIDsRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ListMacaroonIDsRequest"
@@ -10698,7 +10585,6 @@ instance Prelude.Show ListMacaroonIDsResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListMacaroonIDsResponse
 instance Data.ProtoLens.Field.HasField ListMacaroonIDsResponse "rootKeyIds" [Data.Word.Word64] where
   fieldOf _
     = (Prelude..)
@@ -10861,7 +10747,6 @@ instance Prelude.Show ListPaymentsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListPaymentsRequest
 instance Data.ProtoLens.Field.HasField ListPaymentsRequest "includeIncomplete" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -11093,7 +10978,6 @@ instance Prelude.Show ListPaymentsResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListPaymentsResponse
 instance Data.ProtoLens.Field.HasField ListPaymentsResponse "payments" [Payment] where
   fieldOf _
     = (Prelude..)
@@ -11307,7 +11191,6 @@ instance Prelude.Show ListPermissionsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListPermissionsRequest
 instance Data.ProtoLens.Message ListPermissionsRequest where
   messageName _ = Data.Text.pack "lnrpc.ListPermissionsRequest"
   packedMessageDescriptor _
@@ -11344,13 +11227,13 @@ instance Data.ProtoLens.Message ListPermissionsRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "ListPermissionsRequest"
@@ -11376,7 +11259,6 @@ instance Prelude.Show ListPermissionsResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListPermissionsResponse
 instance Data.ProtoLens.Field.HasField ListPermissionsResponse "methodPermissions" (Data.Map.Map Data.Text.Text MacaroonPermissionList) where
   fieldOf _
     = (Prelude..)
@@ -11516,7 +11398,6 @@ instance Prelude.Show ListPermissionsResponse'MethodPermissionsEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListPermissionsResponse'MethodPermissionsEntry
 instance Data.ProtoLens.Field.HasField ListPermissionsResponse'MethodPermissionsEntry "key" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -11612,14 +11493,9 @@ instance Data.ProtoLens.Message ListPermissionsResponse'MethodPermissionsEntry w
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "key"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"key") y x)
                         18
@@ -11700,7 +11576,6 @@ instance Prelude.Show MacaroonId where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MacaroonId
 instance Data.ProtoLens.Field.HasField MacaroonId "nonce" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -11921,7 +11796,6 @@ instance Prelude.Show MacaroonPermission where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MacaroonPermission
 instance Data.ProtoLens.Field.HasField MacaroonPermission "entity" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -12000,26 +11874,16 @@ instance Data.ProtoLens.Message MacaroonPermission where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "entity"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"entity") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "action"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"action") y x)
                         wire
@@ -12089,7 +11953,6 @@ instance Prelude.Show MacaroonPermissionList where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MacaroonPermissionList
 instance Data.ProtoLens.Field.HasField MacaroonPermissionList "permissions" [MacaroonPermission] where
   fieldOf _
     = (Prelude..)
@@ -12231,7 +12094,6 @@ instance Prelude.Show MiddlewareRegistration where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MiddlewareRegistration
 instance Data.ProtoLens.Field.HasField MiddlewareRegistration "middlewareName" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -12332,28 +12194,18 @@ instance Data.ProtoLens.Message MiddlewareRegistration where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "middleware_name"
                                 loop
                                   (Lens.Family2.set
                                      (Data.ProtoLens.Field.field @"middlewareName") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "custom_macaroon_caveat_name"
                                 loop
                                   (Lens.Family2.set
@@ -12455,7 +12307,6 @@ instance Prelude.Show MultiChanBackup where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out MultiChanBackup
 instance Data.ProtoLens.Field.HasField MultiChanBackup "chanPoints" [Proto.Lnrpc.Ln0.ChannelPoint] where
   fieldOf _
     = (Prelude..)
@@ -12644,7 +12495,6 @@ instance Prelude.Show Op where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Op
 instance Data.ProtoLens.Field.HasField Op "entity" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -12733,28 +12583,18 @@ instance Data.ProtoLens.Message Op where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "entity"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"entity") y x)
                                   mutable'actions
                         18
                           -> do !y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                        (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                        Data.ProtoLens.Encoding.Bytes.getBytes
-                                                          (Prelude.fromIntegral len)
-                                            Data.ProtoLens.Encoding.Bytes.runEither
-                                              (case Data.Text.Encoding.decodeUtf8' value of
-                                                 (Prelude.Left err)
-                                                   -> Prelude.Left (Prelude.show err)
-                                                 (Prelude.Right r) -> Prelude.Right r))
+                                        (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                            Data.ProtoLens.Encoding.Bytes.getText
+                                              (Prelude.fromIntegral len))
                                         "actions"
                                 v <- Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO
                                        (Data.ProtoLens.Encoding.Growing.append mutable'actions y)
@@ -12850,7 +12690,6 @@ instance Prelude.Show PayReq where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PayReq
 instance Data.ProtoLens.Field.HasField PayReq "destination" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -13148,28 +12987,18 @@ instance Data.ProtoLens.Message PayReq where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "destination"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"destination") y x)
                                   mutable'routeHints
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_hash"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"paymentHash") y x)
@@ -13203,28 +13032,18 @@ instance Data.ProtoLens.Message PayReq where
                                   mutable'routeHints
                         50
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "description"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"description") y x)
                                   mutable'routeHints
                         58
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "description_hash"
                                 loop
                                   (Lens.Family2.set
@@ -13232,14 +13051,9 @@ instance Data.ProtoLens.Message PayReq where
                                   mutable'routeHints
                         66
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "fallback_addr"
                                 loop
                                   (Lens.Family2.set
@@ -13585,7 +13399,6 @@ instance Prelude.Show PayReq'FeaturesEntry where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PayReq'FeaturesEntry
 instance Data.ProtoLens.Field.HasField PayReq'FeaturesEntry "key" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -13741,7 +13554,6 @@ instance Prelude.Show PayReqString where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PayReqString
 instance Data.ProtoLens.Field.HasField PayReqString "payReq" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -13801,14 +13613,9 @@ instance Data.ProtoLens.Message PayReqString where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "pay_req"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"payReq") y x)
                         wire
@@ -13888,7 +13695,6 @@ instance Prelude.Show Payment where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Payment
 instance Data.ProtoLens.Field.HasField Payment "paymentHash" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -14223,14 +14029,9 @@ instance Data.ProtoLens.Message Payment where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_hash"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"paymentHash") y x)
@@ -14265,14 +14066,9 @@ instance Data.ProtoLens.Message Payment where
                                   mutable'htlcs
                         50
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_preimage"
                                 loop
                                   (Lens.Family2.set
@@ -14298,14 +14094,9 @@ instance Data.ProtoLens.Message Payment where
                                   mutable'htlcs
                         74
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "payment_request"
                                 loop
                                   (Lens.Family2.set
@@ -14668,7 +14459,6 @@ newtype Payment'PaymentStatus'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out Payment'PaymentStatus'UnrecognizedValue
 data Payment'PaymentStatus
   = Payment'UNKNOWN |
     Payment'IN_FLIGHT |
@@ -14746,14 +14536,12 @@ instance Data.ProtoLens.FieldDefault Payment'PaymentStatus where
   fieldDefault = Payment'UNKNOWN
 instance Control.DeepSeq.NFData Payment'PaymentStatus where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out Payment'PaymentStatus
 newtype PaymentFailureReason'UnrecognizedValue
   = PaymentFailureReason'UnrecognizedValue Data.Int.Int32
   deriving stock (Prelude.Eq,
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out PaymentFailureReason'UnrecognizedValue
 data PaymentFailureReason
   = FAILURE_REASON_NONE |
     FAILURE_REASON_TIMEOUT |
@@ -14858,7 +14646,6 @@ instance Data.ProtoLens.FieldDefault PaymentFailureReason where
   fieldDefault = FAILURE_REASON_NONE
 instance Control.DeepSeq.NFData PaymentFailureReason where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out PaymentFailureReason
 {- | Fields :
      
          * 'Proto.Lnrpc.Ln1_Fields.rHashStr' @:: Lens' PaymentHash Data.Text.Text@
@@ -14874,7 +14661,6 @@ instance Prelude.Show PaymentHash where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PaymentHash
 instance Data.ProtoLens.Field.HasField PaymentHash "rHashStr" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -14953,14 +14739,9 @@ instance Data.ProtoLens.Message PaymentHash where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "r_hash_str"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"rHashStr") y x)
@@ -15052,7 +14833,6 @@ instance Prelude.Show PolicyUpdateRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PolicyUpdateRequest
 data PolicyUpdateRequest'Scope
   = PolicyUpdateRequest'Global !Prelude.Bool |
     PolicyUpdateRequest'ChanPoint !Proto.Lnrpc.Ln0.ChannelPoint
@@ -15060,7 +14840,6 @@ data PolicyUpdateRequest'Scope
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out PolicyUpdateRequest'Scope
 instance Data.ProtoLens.Field.HasField PolicyUpdateRequest "baseFeeMsat" Data.Int.Int64 where
   fieldOf _
     = (Prelude..)
@@ -15517,7 +15296,6 @@ instance Prelude.Show PolicyUpdateResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PolicyUpdateResponse
 instance Data.ProtoLens.Field.HasField PolicyUpdateResponse "failedUpdates" [FailedUpdate] where
   fieldOf _
     = (Prelude..)
@@ -15661,7 +15439,6 @@ instance Prelude.Show RPCMessage where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RPCMessage
 instance Data.ProtoLens.Field.HasField RPCMessage "methodFullUri" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -15783,14 +15560,9 @@ instance Data.ProtoLens.Message RPCMessage where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "method_full_uri"
                                 loop
                                   (Lens.Family2.set
@@ -15804,14 +15576,9 @@ instance Data.ProtoLens.Message RPCMessage where
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"streamRpc") y x)
                         26
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "type_name"
                                 loop
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"typeName") y x)
@@ -15937,7 +15704,6 @@ instance Prelude.Show RPCMiddlewareRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RPCMiddlewareRequest
 data RPCMiddlewareRequest'InterceptType
   = RPCMiddlewareRequest'StreamAuth !StreamAuth |
     RPCMiddlewareRequest'Request !RPCMessage |
@@ -15946,7 +15712,6 @@ data RPCMiddlewareRequest'InterceptType
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out RPCMiddlewareRequest'InterceptType
 instance Data.ProtoLens.Field.HasField RPCMiddlewareRequest "requestId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -16202,14 +15967,9 @@ instance Data.ProtoLens.Message RPCMiddlewareRequest where
                                   (Lens.Family2.set (Data.ProtoLens.Field.field @"rawMacaroon") y x)
                         26
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "custom_caveat_condition"
                                 loop
                                   (Lens.Family2.set
@@ -16409,7 +16169,6 @@ instance Prelude.Show RPCMiddlewareResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RPCMiddlewareResponse
 data RPCMiddlewareResponse'MiddlewareMessage
   = RPCMiddlewareResponse'Register !MiddlewareRegistration |
     RPCMiddlewareResponse'Feedback !InterceptFeedback
@@ -16417,7 +16176,6 @@ data RPCMiddlewareResponse'MiddlewareMessage
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out RPCMiddlewareResponse'MiddlewareMessage
 instance Data.ProtoLens.Field.HasField RPCMiddlewareResponse "refMsgId" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -16678,7 +16436,6 @@ instance Prelude.Show RestoreBackupResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RestoreBackupResponse
 instance Data.ProtoLens.Message RestoreBackupResponse where
   messageName _ = Data.Text.pack "lnrpc.RestoreBackupResponse"
   packedMessageDescriptor _
@@ -16715,13 +16472,13 @@ instance Data.ProtoLens.Message RestoreBackupResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "RestoreBackupResponse"
@@ -16751,7 +16508,6 @@ instance Prelude.Show RestoreChanBackupRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RestoreChanBackupRequest
 data RestoreChanBackupRequest'Backup
   = RestoreChanBackupRequest'ChanBackups !ChannelBackups |
     RestoreChanBackupRequest'MultiChanBackup !Data.ByteString.ByteString
@@ -16759,7 +16515,6 @@ data RestoreChanBackupRequest'Backup
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out RestoreChanBackupRequest'Backup
 instance Data.ProtoLens.Field.HasField RestoreChanBackupRequest "maybe'backup" (Prelude.Maybe RestoreChanBackupRequest'Backup) where
   fieldOf _
     = (Prelude..)
@@ -16985,7 +16740,6 @@ instance Prelude.Show SetID where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SetID
 instance Data.ProtoLens.Field.HasField SetID "setId" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -17094,7 +16848,6 @@ instance Prelude.Show StreamAuth where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out StreamAuth
 instance Data.ProtoLens.Field.HasField StreamAuth "methodFullUri" Data.Text.Text where
   fieldOf _
     = (Prelude..)
@@ -17156,14 +16909,9 @@ instance Data.ProtoLens.Message StreamAuth where
                       case tag of
                         10
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "method_full_uri"
                                 loop
                                   (Lens.Family2.set
@@ -17211,7 +16959,6 @@ newtype UpdateFailure'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out UpdateFailure'UnrecognizedValue
 data UpdateFailure
   = UPDATE_FAILURE_UNKNOWN |
     UPDATE_FAILURE_PENDING |
@@ -17303,7 +17050,6 @@ instance Data.ProtoLens.FieldDefault UpdateFailure where
   fieldDefault = UPDATE_FAILURE_UNKNOWN
 instance Control.DeepSeq.NFData UpdateFailure where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out UpdateFailure
 {- | Fields :
       -}
 data VerifyChanBackupResponse
@@ -17315,7 +17061,6 @@ instance Prelude.Show VerifyChanBackupResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out VerifyChanBackupResponse
 instance Data.ProtoLens.Message VerifyChanBackupResponse where
   messageName _ = Data.Text.pack "lnrpc.VerifyChanBackupResponse"
   packedMessageDescriptor _
@@ -17352,13 +17097,13 @@ instance Data.ProtoLens.Message VerifyChanBackupResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "VerifyChanBackupResponse"

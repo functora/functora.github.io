@@ -12,9 +12,7 @@ module Proto.Chainrpc.Chainnotifier (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -53,7 +51,6 @@ instance Prelude.Show BlockEpoch where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out BlockEpoch
 instance Data.ProtoLens.Field.HasField BlockEpoch "hash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -207,7 +204,6 @@ instance Prelude.Show ConfDetails where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ConfDetails
 instance Data.ProtoLens.Field.HasField ConfDetails "rawTx" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -446,14 +442,12 @@ instance Prelude.Show ConfEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ConfEvent
 data ConfEvent'Event
   = ConfEvent'Conf !ConfDetails | ConfEvent'Reorg !Reorg
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out ConfEvent'Event
 instance Data.ProtoLens.Field.HasField ConfEvent "maybe'event" (Prelude.Maybe ConfEvent'Event) where
   fieldOf _
     = (Prelude..)
@@ -666,7 +660,6 @@ instance Prelude.Show ConfRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ConfRequest
 instance Data.ProtoLens.Field.HasField ConfRequest "txid" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -901,7 +894,6 @@ instance Prelude.Show Outpoint where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Outpoint
 instance Data.ProtoLens.Field.HasField Outpoint "hash" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1045,7 +1037,6 @@ instance Prelude.Show Reorg where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Reorg
 instance Data.ProtoLens.Message Reorg where
   messageName _ = Data.Text.pack "chainrpc.Reorg"
   packedMessageDescriptor _
@@ -1078,13 +1069,13 @@ instance Data.ProtoLens.Message Reorg where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "Reorg"
@@ -1117,7 +1108,6 @@ instance Prelude.Show SpendDetails where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SpendDetails
 instance Data.ProtoLens.Field.HasField SpendDetails "spendingOutpoint" Outpoint where
   fieldOf _
     = (Prelude..)
@@ -1424,14 +1414,12 @@ instance Prelude.Show SpendEvent where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SpendEvent
 data SpendEvent'Event
   = SpendEvent'Spend !SpendDetails | SpendEvent'Reorg !Reorg
   deriving stock (Prelude.Show,
                   Prelude.Eq,
                   Prelude.Ord,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out SpendEvent'Event
 instance Data.ProtoLens.Field.HasField SpendEvent "maybe'event" (Prelude.Maybe SpendEvent'Event) where
   fieldOf _
     = (Prelude..)
@@ -1645,7 +1633,6 @@ instance Prelude.Show SpendRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out SpendRequest
 instance Data.ProtoLens.Field.HasField SpendRequest "outpoint" Outpoint where
   fieldOf _
     = (Prelude..)

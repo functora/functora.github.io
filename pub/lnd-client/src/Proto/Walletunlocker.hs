@@ -11,9 +11,7 @@ module Proto.Walletunlocker (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -57,7 +55,6 @@ instance Prelude.Show ChangePasswordRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChangePasswordRequest
 instance Data.ProtoLens.Field.HasField ChangePasswordRequest "currentPassword" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -308,7 +305,6 @@ instance Prelude.Show ChangePasswordResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ChangePasswordResponse
 instance Data.ProtoLens.Field.HasField ChangePasswordResponse "adminMacaroon" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -429,7 +425,6 @@ instance Prelude.Show GenSeedRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GenSeedRequest
 instance Data.ProtoLens.Field.HasField GenSeedRequest "aezeedPassphrase" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -595,7 +590,6 @@ instance Prelude.Show GenSeedResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GenSeedResponse
 instance Data.ProtoLens.Field.HasField GenSeedResponse "cipherSeedMnemonic" [Data.Text.Text] where
   fieldOf _
     = (Prelude..)
@@ -692,14 +686,9 @@ instance Data.ProtoLens.Message GenSeedResponse where
                       case tag of
                         10
                           -> do !y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                        (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                        Data.ProtoLens.Encoding.Bytes.getBytes
-                                                          (Prelude.fromIntegral len)
-                                            Data.ProtoLens.Encoding.Bytes.runEither
-                                              (case Data.Text.Encoding.decodeUtf8' value of
-                                                 (Prelude.Left err)
-                                                   -> Prelude.Left (Prelude.show err)
-                                                 (Prelude.Right r) -> Prelude.Right r))
+                                        (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                            Data.ProtoLens.Encoding.Bytes.getText
+                                              (Prelude.fromIntegral len))
                                         "cipher_seed_mnemonic"
                                 v <- Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO
                                        (Data.ProtoLens.Encoding.Growing.append
@@ -803,7 +792,6 @@ instance Prelude.Show InitWalletRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InitWalletRequest
 instance Data.ProtoLens.Field.HasField InitWalletRequest "walletPassword" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1060,14 +1048,9 @@ instance Data.ProtoLens.Message InitWalletRequest where
                                   mutable'cipherSeedMnemonic
                         18
                           -> do !y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                        (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                        Data.ProtoLens.Encoding.Bytes.getBytes
-                                                          (Prelude.fromIntegral len)
-                                            Data.ProtoLens.Encoding.Bytes.runEither
-                                              (case Data.Text.Encoding.decodeUtf8' value of
-                                                 (Prelude.Left err)
-                                                   -> Prelude.Left (Prelude.show err)
-                                                 (Prelude.Right r) -> Prelude.Right r))
+                                        (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                            Data.ProtoLens.Encoding.Bytes.getText
+                                              (Prelude.fromIntegral len))
                                         "cipher_seed_mnemonic"
                                 v <- Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO
                                        (Data.ProtoLens.Encoding.Growing.append
@@ -1114,14 +1097,9 @@ instance Data.ProtoLens.Message InitWalletRequest where
                                   mutable'cipherSeedMnemonic
                         58
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "extended_master_key"
                                 loop
                                   (Lens.Family2.set
@@ -1341,7 +1319,6 @@ instance Prelude.Show InitWalletResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out InitWalletResponse
 instance Data.ProtoLens.Field.HasField InitWalletResponse "adminMacaroon" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1467,7 +1444,6 @@ instance Prelude.Show UnlockWalletRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out UnlockWalletRequest
 instance Data.ProtoLens.Field.HasField UnlockWalletRequest "walletPassword" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1722,7 +1698,6 @@ instance Prelude.Show UnlockWalletResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out UnlockWalletResponse
 instance Data.ProtoLens.Message UnlockWalletResponse where
   messageName _ = Data.Text.pack "lnrpc.UnlockWalletResponse"
   packedMessageDescriptor _
@@ -1759,13 +1734,13 @@ instance Data.ProtoLens.Message UnlockWalletResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "UnlockWalletResponse"
@@ -1796,7 +1771,6 @@ instance Prelude.Show WatchOnly where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out WatchOnly
 instance Data.ProtoLens.Field.HasField WatchOnly "masterKeyBirthdayTimestamp" Data.Word.Word64 where
   fieldOf _
     = (Prelude..)
@@ -2024,7 +1998,6 @@ instance Prelude.Show WatchOnlyAccount where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out WatchOnlyAccount
 instance Data.ProtoLens.Field.HasField WatchOnlyAccount "purpose" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -2161,14 +2134,9 @@ instance Data.ProtoLens.Message WatchOnlyAccount where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"account") y x)
                         34
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "xpub"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"xpub") y x)
                         wire

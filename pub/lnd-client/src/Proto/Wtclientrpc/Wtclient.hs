@@ -13,9 +13,7 @@ module Proto.Wtclientrpc.Wtclient (
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
-import qualified Text.PrettyPrint.GenericPretty.Instance
 import qualified GHC.Generics
-import qualified Text.PrettyPrint.GenericPretty
 import qualified Data.ProtoLens.Runtime.Prelude as Prelude
 import qualified Data.ProtoLens.Runtime.Data.Int as Data.Int
 import qualified Data.ProtoLens.Runtime.Data.Monoid as Data.Monoid
@@ -54,7 +52,6 @@ instance Prelude.Show AddTowerRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AddTowerRequest
 instance Data.ProtoLens.Field.HasField AddTowerRequest "pubkey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -140,14 +137,9 @@ instance Data.ProtoLens.Message AddTowerRequest where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"pubkey") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "address"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"address") y x)
                         wire
@@ -213,7 +205,6 @@ instance Prelude.Show AddTowerResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out AddTowerResponse
 instance Data.ProtoLens.Message AddTowerResponse where
   messageName _ = Data.Text.pack "wtclientrpc.AddTowerResponse"
   packedMessageDescriptor _
@@ -250,13 +241,13 @@ instance Data.ProtoLens.Message AddTowerResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "AddTowerResponse"
@@ -284,7 +275,6 @@ instance Prelude.Show GetTowerInfoRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out GetTowerInfoRequest
 instance Data.ProtoLens.Field.HasField GetTowerInfoRequest "pubkey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -441,7 +431,6 @@ instance Prelude.Show ListTowersRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListTowersRequest
 instance Data.ProtoLens.Field.HasField ListTowersRequest "includeSessions" Prelude.Bool where
   fieldOf _
     = (Prelude..)
@@ -556,7 +545,6 @@ instance Prelude.Show ListTowersResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out ListTowersResponse
 instance Data.ProtoLens.Field.HasField ListTowersResponse "towers" [Tower] where
   fieldOf _
     = (Prelude..)
@@ -689,7 +677,6 @@ instance Prelude.Show PolicyRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PolicyRequest
 instance Data.ProtoLens.Field.HasField PolicyRequest "policyType" PolicyType where
   fieldOf _
     = (Prelude..)
@@ -808,7 +795,6 @@ instance Prelude.Show PolicyResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out PolicyResponse
 instance Data.ProtoLens.Field.HasField PolicyResponse "maxUpdates" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -1000,7 +986,6 @@ newtype PolicyType'UnrecognizedValue
                   Prelude.Ord,
                   Prelude.Show,
                   GHC.Generics.Generic)
-instance Text.PrettyPrint.GenericPretty.Out PolicyType'UnrecognizedValue
 data PolicyType
   = LEGACY |
     ANCHOR |
@@ -1059,7 +1044,6 @@ instance Data.ProtoLens.FieldDefault PolicyType where
   fieldDefault = LEGACY
 instance Control.DeepSeq.NFData PolicyType where
   rnf x__ = Prelude.seq x__ ()
-instance Text.PrettyPrint.GenericPretty.Out PolicyType
 {- | Fields :
      
          * 'Proto.Wtclientrpc.Wtclient_Fields.pubkey' @:: Lens' RemoveTowerRequest Data.ByteString.ByteString@
@@ -1075,7 +1059,6 @@ instance Prelude.Show RemoveTowerRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RemoveTowerRequest
 instance Data.ProtoLens.Field.HasField RemoveTowerRequest "pubkey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1161,14 +1144,9 @@ instance Data.ProtoLens.Message RemoveTowerRequest where
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"pubkey") y x)
                         18
                           -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                       (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                       Data.ProtoLens.Encoding.Bytes.getBytes
-                                                         (Prelude.fromIntegral len)
-                                           Data.ProtoLens.Encoding.Bytes.runEither
-                                             (case Data.Text.Encoding.decodeUtf8' value of
-                                                (Prelude.Left err)
-                                                  -> Prelude.Left (Prelude.show err)
-                                                (Prelude.Right r) -> Prelude.Right r))
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
                                        "address"
                                 loop (Lens.Family2.set (Data.ProtoLens.Field.field @"address") y x)
                         wire
@@ -1234,7 +1212,6 @@ instance Prelude.Show RemoveTowerResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out RemoveTowerResponse
 instance Data.ProtoLens.Message RemoveTowerResponse where
   messageName _ = Data.Text.pack "wtclientrpc.RemoveTowerResponse"
   packedMessageDescriptor _
@@ -1271,13 +1248,13 @@ instance Data.ProtoLens.Message RemoveTowerResponse where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "RemoveTowerResponse"
@@ -1301,7 +1278,6 @@ instance Prelude.Show StatsRequest where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out StatsRequest
 instance Data.ProtoLens.Message StatsRequest where
   messageName _ = Data.Text.pack "wtclientrpc.StatsRequest"
   packedMessageDescriptor _
@@ -1336,13 +1312,13 @@ instance Data.ProtoLens.Message StatsRequest where
                            Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
                else
                    do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                      case tag of {
+                      case tag of
                         wire
                           -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
                                         wire
                                 loop
                                   (Lens.Family2.over
-                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x) }
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
       in
         (Data.ProtoLens.Encoding.Bytes.<?>)
           (do loop Data.ProtoLens.defMessage) "StatsRequest"
@@ -1375,7 +1351,6 @@ instance Prelude.Show StatsResponse where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out StatsResponse
 instance Data.ProtoLens.Field.HasField StatsResponse "numBackups" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)
@@ -1670,7 +1645,6 @@ instance Prelude.Show Tower where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out Tower
 instance Data.ProtoLens.Field.HasField Tower "pubkey" Data.ByteString.ByteString where
   fieldOf _
     = (Prelude..)
@@ -1840,14 +1814,9 @@ instance Data.ProtoLens.Message Tower where
                                   mutable'addresses mutable'sessions
                         18
                           -> do !y <- (Data.ProtoLens.Encoding.Bytes.<?>)
-                                        (do value <- do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
-                                                        Data.ProtoLens.Encoding.Bytes.getBytes
-                                                          (Prelude.fromIntegral len)
-                                            Data.ProtoLens.Encoding.Bytes.runEither
-                                              (case Data.Text.Encoding.decodeUtf8' value of
-                                                 (Prelude.Left err)
-                                                   -> Prelude.Left (Prelude.show err)
-                                                 (Prelude.Right r) -> Prelude.Right r))
+                                        (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                            Data.ProtoLens.Encoding.Bytes.getText
+                                              (Prelude.fromIntegral len))
                                         "addresses"
                                 v <- Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO
                                        (Data.ProtoLens.Encoding.Growing.append mutable'addresses y)
@@ -2004,7 +1973,6 @@ instance Prelude.Show TowerSession where
         '{'
         (Prelude.showString
            (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
-instance Text.PrettyPrint.GenericPretty.Out TowerSession
 instance Data.ProtoLens.Field.HasField TowerSession "numBackups" Data.Word.Word32 where
   fieldOf _
     = (Prelude..)

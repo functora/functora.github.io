@@ -9,31 +9,8 @@ import Chronos as Import
     encodeTimespan,
     stopwatch,
   )
-import Control.Concurrent.Async as Import
-  ( Async,
-  )
 import Control.Concurrent.STM as Import (check)
-import Control.Concurrent.STM.TChan as Import
-  ( TChan,
-    dupTChan,
-    newBroadcastTChan,
-    readTChan,
-    writeTChan,
-  )
-import Control.Monad.Extra as Import
-  ( eitherM,
-    fromMaybeM,
-  )
 import Data.Aeson as Import (FromJSON (..), ToJSON, fromJSON)
-import Data.List.Extra as Import (enumerate)
-import Data.Text as Import (Text, pack, unpack)
-import Data.Time.Clock as Import
-  ( UTCTime (..),
-    diffTimeToPicoseconds,
-    getCurrentTime,
-    picosecondsToDiffTime,
-    secondsToDiffTime,
-  )
 import Data.Type.Equality as Import
   ( TestEquality (..),
     (:~:) (..),
@@ -43,7 +20,7 @@ import Database.Persist.Class as Import (PersistField (..))
 import Database.Persist.PersistValue as Import
 import Database.Persist.Sql as Import (PersistFieldSql)
 import Database.Persist.TH as Import (derivePersistField)
-import GHC.Generics as Import (Rep)
+import Functora.Prelude as Import hiding (qq)
 import Katip as Import
   ( ColorStrategy (..),
     Katip (..),
@@ -68,13 +45,7 @@ import Katip as Import
     runKatipContextT,
     sl,
   )
-import Universum as Import hiding (Text, catch, finally, fromIntegral, show)
 import UnliftIO as Import
   ( Handler (..),
-    MonadUnliftIO (..),
-    UnliftIO (..),
-    catch,
     catches,
-    finally,
   )
-import Witch as Import (From (..), TryFrom (..), unsafeFrom)

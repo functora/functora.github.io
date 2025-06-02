@@ -20,18 +20,14 @@ data Invoice = Invoice
     addIndex :: AddIndex,
     state :: InvoiceState
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out Invoice
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data InvoiceState
   = OPEN
   | SETTLED
   | CANCELED
   | ACCEPTED
-  deriving stock (Eq, Show, Generic)
-
-instance Out InvoiceState
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance FromGrpc Invoice LnGRPC.Invoice where
   fromGrpc x =
@@ -57,4 +53,5 @@ instance FromGrpc InvoiceState LnGRPC.Invoice'InvoiceState where
       LnGRPC.Invoice'InvoiceState'Unrecognized v ->
         Left
           . FromGrpcError
-          $ "Cannot parse InvoiceState, value:" <> inspectPlain v
+          $ "Cannot parse InvoiceState, value:"
+          <> inspect v

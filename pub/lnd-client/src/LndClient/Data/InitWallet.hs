@@ -16,14 +16,10 @@ data InitWalletRequest = InitWalletRequest
     cipherSeedMnemonic :: CipherSeedMnemonic,
     aezeedPassphrase :: Maybe AezeedPassphrase
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Ord, Read, Data, Generic)
 
 instance Show InitWalletRequest where
   show = const "SECRET"
-
-instance Out InitWalletRequest where
-  docPrec = const $ const "SECRET"
-  doc = const "SECRET"
 
 instance ToGrpc InitWalletRequest LnGRPC.InitWalletRequest where
   toGrpc x =
@@ -35,6 +31,9 @@ instance ToGrpc InitWalletRequest LnGRPC.InitWalletRequest where
       msg :: ByteString -> [Text] -> ByteString -> LnGRPC.InitWalletRequest
       msg gWalletPassword gCipherSeedMnemonic gAezeedPassphrase =
         defMessage
-          & LnGRPC.walletPassword .~ gWalletPassword
-          & LnGRPC.cipherSeedMnemonic .~ gCipherSeedMnemonic
-          & LnGRPC.aezeedPassphrase .~ gAezeedPassphrase
+          & LnGRPC.walletPassword
+          .~ gWalletPassword
+          & LnGRPC.cipherSeedMnemonic
+          .~ gCipherSeedMnemonic
+          & LnGRPC.aezeedPassphrase
+          .~ gAezeedPassphrase

@@ -15,18 +15,14 @@ data HtlcEvent = HtlcEvent
     timestampNs :: Word64,
     eventType :: EventType
   }
-  deriving stock (Eq, Generic)
-
-instance Out HtlcEvent
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data EventType
   = UNKNOWN
   | SEND
   | RECEIVE
   | FORWARD
-  deriving stock (Eq, Generic)
-
-instance Out EventType
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance FromGrpc HtlcEvent LnGRPC.HtlcEvent where
   fromGrpc x =
@@ -48,4 +44,5 @@ instance FromGrpc EventType LnGRPC.HtlcEvent'EventType where
       LnGRPC.HtlcEvent'EventType'Unrecognized v ->
         Left
           . FromGrpcError
-          $ "Cannot parse EventType, value:" <> inspectPlain v
+          $ "Cannot parse EventType, value:"
+          <> inspect v

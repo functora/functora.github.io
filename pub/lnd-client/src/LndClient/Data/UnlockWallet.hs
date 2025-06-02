@@ -16,14 +16,10 @@ data UnlockWalletRequest = UnlockWalletRequest
     --  TODO : channel_backups
     --
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Ord, Read, Data, Generic)
 
 instance Show UnlockWalletRequest where
   show = const "SECRET"
-
-instance Out UnlockWalletRequest where
-  docPrec = const $ const "SECRET"
-  doc = const "SECRET"
 
 instance ToGrpc UnlockWalletRequest LnGRPC.UnlockWalletRequest where
   toGrpc x =
@@ -34,5 +30,7 @@ instance ToGrpc UnlockWalletRequest LnGRPC.UnlockWalletRequest where
       msg :: ByteString -> Int32 -> LnGRPC.UnlockWalletRequest
       msg gWalletPassword gRecoveryWindow =
         defMessage
-          & LnGRPC.walletPassword .~ gWalletPassword
-          & LnGRPC.recoveryWindow .~ gRecoveryWindow
+          & LnGRPC.walletPassword
+          .~ gWalletPassword
+          & LnGRPC.recoveryWindow
+          .~ gRecoveryWindow

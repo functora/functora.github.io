@@ -15,9 +15,7 @@ data PendingOpenChannel = PendingOpenChannel
     commitWeight :: Int64,
     feePerKw :: Msat
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out PendingOpenChannel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance
   FromGrpc

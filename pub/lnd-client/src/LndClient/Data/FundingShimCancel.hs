@@ -10,9 +10,7 @@ import qualified Proto.Lnrpc.Ln0_Fields as L
 newtype FundingShimCancel = FundingShimCancel
   { pendingChanId :: PendingChannelId
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundingShimCancel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FundingShimCancel L.FundingShimCancel where
   toGrpc x = msg <$> toGrpc (pendingChanId x)

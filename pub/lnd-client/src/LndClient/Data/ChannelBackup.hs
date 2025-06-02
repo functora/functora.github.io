@@ -14,35 +14,20 @@ data ChannelBackup = ChannelBackup
   { chanPoint :: Ch.ChannelPoint,
     chanBackup :: SingleChanBackupBlob
   }
-  deriving stock
-    ( Eq,
-      Ord,
-      Show,
-      Generic
-    )
-
-instance Out ChannelBackup
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 newtype SingleChanBackupBlob = SingleChanBackupBlob
   { unSingleChanBackupBlob :: ByteString
   }
-  deriving newtype
-    ( Eq,
-      Ord,
-      Show,
-      PersistField,
-      PersistFieldSql
-    )
-  deriving stock
-    ( Generic
-    )
-
-instance Out SingleChanBackupBlob
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
 instance FromGrpc [ChannelBackup] Ln1.ChanBackupSnapshot where
   fromGrpc x =
-    fromGrpc $
-      x ^. Ln1.singleChanBackups . Ln1.chanBackups
+    fromGrpc
+      $ x
+      ^. Ln1.singleChanBackups
+      . Ln1.chanBackups
 
 instance FromGrpc ChannelBackup Ln1.ChannelBackup where
   fromGrpc x =
@@ -58,8 +43,10 @@ instance ToGrpc ChannelBackup Ln1.ChannelBackup where
     where
       msg cp bak =
         defMessage
-          & Ln1.chanPoint .~ cp
-          & Ln1.chanBackup .~ bak
+          & Ln1.chanPoint
+          .~ cp
+          & Ln1.chanBackup
+          .~ bak
 
 instance FromGrpc SingleChanBackupBlob ByteString where
   fromGrpc x =
@@ -67,10 +54,11 @@ instance FromGrpc SingleChanBackupBlob ByteString where
       then
         Left
           . FromGrpcError
-          $ "Cannot parse SingleChanBackupBlob from " <> inspectPlain x
+          $ "Cannot parse SingleChanBackupBlob from "
+          <> inspect x
       else
-        Right $
-          SingleChanBackupBlob x
+        Right
+          $ SingleChanBackupBlob x
 
 instance ToGrpc SingleChanBackupBlob ByteString where
   toGrpc =
@@ -79,9 +67,10 @@ instance ToGrpc SingleChanBackupBlob ByteString where
 instance ToGrpc [ChannelBackup] Ln1.RestoreChanBackupRequest where
   toGrpc xs0 = do
     xs <- mapM toGrpc xs0
-    pure $
-      defMessage
-        & Ln1.chanBackups
-          .~ ( defMessage
-                 & Ln1.chanBackups .~ xs
-             )
+    pure
+      $ defMessage
+      & Ln1.chanBackups
+      .~ ( defMessage
+            & Ln1.chanBackups
+            .~ xs
+         )

@@ -5,15 +5,15 @@ cabal-version: 2.0
 -- see: https://github.com/sol/hpack
 
 name:               lnd-client
-version:            0.1.0.2
+version:            0.1.0.3
 synopsis:           Lightning Network Daemon (LND) client library for Haskell
 description:        You can find documentation at <https://hackage.haskell.org/package/lnd-client>
 category:           Lightning, Bitcoin, Finance, Network, Payments
-homepage:           https://github.com/coingaming/lnd-client#readme
-bug-reports:        https://github.com/coingaming/lnd-client/issues
-author:             21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
-maintainer:         21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>
-copyright:          2022 Yolo <hello@coingaming.io>
+homepage:           https://github.com/functora.github.io/pub#readme
+bug-reports:        https://github.com/functora.github.io/pub/issues
+author:             functora <functora@proton.me>
+maintainer:         functora <functora@proton.me>
+copyright:          2025 functora <functora@proton.me>
 license:            BSD3
 license-file:       LICENSE
 build-type:         Simple
@@ -23,7 +23,8 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/coingaming/lnd-client
+  location: https://github.com/functora.github.io/pub
+  subdir: lnd-client
 
 flag ghcid
   manual: True
@@ -89,7 +90,6 @@ library
       LndClient.Import.External
       LndClient.LndTest
       LndClient.Log
-      LndClient.Orphan
       LndClient.QRCode
       LndClient.RPC.Generic
       LndClient.RPC.Katip
@@ -149,7 +149,8 @@ library
       TypeOperators
       FlexibleContexts
       FlexibleInstances
-  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures
+      DeriveDataTypeable
+  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-kind-signatures -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures
   build-depends:
       JuicyPixels >=3.3.3 && <3.4
     , aeson >=1.4.4.0
@@ -161,9 +162,12 @@ library
     , chronos >=1.0.7 && <1.2
     , containers >=0.6.0.1 && <0.6.6
     , cryptohash-sha256 >=0.11.101.0 && <0.12
+    , crypton-x509 ==1.7.5.*
+    , crypton-x509-store
     , cryptonite >=0.25 && <0.31
     , envparse ==0.4.1.*
     , extra >=1.6.18 && <1.8
+    , functora
     , http2 >=3.0.3
     , http2-client >=0.10.0.0
     , http2-client-grpc >=0.8.0.0
@@ -182,14 +186,10 @@ library
     , stm >=2.5.0.0 && <2.5.1
     , template-haskell >=2.14.0.0 && <2.19
     , text >=1.2.3.1 && <2.1
-    , time
     , tls
     , unbounded-delays >=0.1.1.0 && <0.1.2
     , universum >=1.5.0 && <1.8
     , unliftio >=0.2.12
-    , witch
-    , x509 ==1.7.5.*
-    , x509-store
   default-language: Haskell2010
   if impl(ghc >= 8.10.7)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -fenable-th-splice-warnings -fprint-potential-instances
@@ -218,7 +218,8 @@ library lnd-client-tkit
       TypeOperators
       FlexibleContexts
       FlexibleInstances
-  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures
+      DeriveDataTypeable
+  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-kind-signatures -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures
   build-depends:
       base >=4.7 && <5
     , http2-client-grpc
@@ -251,7 +252,8 @@ executable lnd-client-prof
       TypeOperators
       FlexibleContexts
       FlexibleInstances
-  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -main-is LndClient.Main -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts "-with-rtsopts=-N -s -p -h -xt" -prof -fprof-auto -optl-fuse-ld=gold
+      DeriveDataTypeable
+  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-kind-signatures -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -main-is LndClient.Main -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts "-with-rtsopts=-N -s -p -h -xt" -prof -fprof-auto -optl-fuse-ld=gold
   ld-options: -fuse-ld=gold
   build-depends:
       async
@@ -321,7 +323,6 @@ executable lnd-client-prof
         LndClient.Import.External
         LndClient.LndTest
         LndClient.Log
-        LndClient.Orphan
         LndClient.QRCode
         LndClient.RPC.Generic
         LndClient.RPC.Katip
@@ -376,9 +377,12 @@ executable lnd-client-prof
       , chronos >=1.0.7 && <1.2
       , containers >=0.6.0.1 && <0.6.6
       , cryptohash-sha256 >=0.11.101.0 && <0.12
+      , crypton-x509 ==1.7.5.*
+      , crypton-x509-store
       , cryptonite >=0.25 && <0.31
       , envparse ==0.4.1.*
       , extra >=1.6.18 && <1.8
+      , functora
       , http2 >=3.0.3
       , http2-client >=0.10.0.0
       , http2-client-grpc >=0.8.0.0
@@ -397,14 +401,10 @@ executable lnd-client-prof
       , stm >=2.5.0.0 && <2.5.1
       , template-haskell >=2.14.0.0 && <2.19
       , text >=1.2.3.1 && <2.1
-      , time
       , tls
       , unbounded-delays >=0.1.1.0 && <0.1.2
       , universum >=1.5.0 && <1.8
       , unliftio >=0.2.12
-      , witch
-      , x509 ==1.7.5.*
-      , x509-store
   else
     build-depends:
         lnd-client
@@ -437,7 +437,8 @@ test-suite lnd-client-test
       TypeOperators
       FlexibleContexts
       FlexibleInstances
-  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -optl-fuse-ld=gold
+      DeriveDataTypeable
+  ghc-options: -Weverything -Werror -Wno-missing-export-lists -Wno-missing-kind-signatures -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -O2 -optc-O3 -funfolding-use-threshold=16 -threaded -rtsopts -with-rtsopts=-N -optl-fuse-ld=gold
   ld-options: -fuse-ld=gold
   build-depends:
       async
@@ -508,7 +509,6 @@ test-suite lnd-client-test
         LndClient.Import.External
         LndClient.LndTest
         LndClient.Log
-        LndClient.Orphan
         LndClient.QRCode
         LndClient.RPC.Generic
         LndClient.RPC.Katip
@@ -563,9 +563,12 @@ test-suite lnd-client-test
       , chronos >=1.0.7 && <1.2
       , containers >=0.6.0.1 && <0.6.6
       , cryptohash-sha256 >=0.11.101.0 && <0.12
+      , crypton-x509 ==1.7.5.*
+      , crypton-x509-store
       , cryptonite >=0.25 && <0.31
       , envparse ==0.4.1.*
       , extra >=1.6.18 && <1.8
+      , functora
       , http2 >=3.0.3
       , http2-client >=0.10.0.0
       , http2-client-grpc >=0.8.0.0
@@ -584,14 +587,10 @@ test-suite lnd-client-test
       , stm >=2.5.0.0 && <2.5.1
       , template-haskell >=2.14.0.0 && <2.19
       , text >=1.2.3.1 && <2.1
-      , time
       , tls
       , unbounded-delays >=0.1.1.0 && <0.1.2
       , universum >=1.5.0 && <1.8
       , unliftio >=0.2.12
-      , witch
-      , x509 ==1.7.5.*
-      , x509-store
   else
     build-depends:
         lnd-client

@@ -19,9 +19,7 @@ data ListChannelsRequest = ListChannelsRequest
     privateOnly :: Bool,
     peer :: Maybe NodePubKey
   }
-  deriving stock (Generic, Show)
-
-instance Out ListChannelsRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ListChannelsRequest LnGRPC.ListChannelsRequest where
   toGrpc x =
@@ -34,8 +32,13 @@ instance ToGrpc ListChannelsRequest LnGRPC.ListChannelsRequest where
     where
       msg gActiveOnly gInactiveOnly gPrivateOnly gPublicOnly gPeer =
         defMessage
-          & LnGRPC.activeOnly .~ gActiveOnly
-          & LnGRPC.inactiveOnly .~ gInactiveOnly
-          & LnGRPC.privateOnly .~ gPrivateOnly
-          & LnGRPC.publicOnly .~ gPublicOnly
-          & LnGRPC.peer .~ gPeer
+          & LnGRPC.activeOnly
+          .~ gActiveOnly
+          & LnGRPC.inactiveOnly
+          .~ gInactiveOnly
+          & LnGRPC.privateOnly
+          .~ gPrivateOnly
+          & LnGRPC.publicOnly
+          .~ gPublicOnly
+          & LnGRPC.peer
+          .~ gPeer

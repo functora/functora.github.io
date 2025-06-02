@@ -11,9 +11,7 @@ data WalletBalance = WalletBalance
   { totalBalance :: Msat,
     confirmedBalance :: Msat
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out WalletBalance
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc WalletBalance Proto.WalletBalanceResponse where
   fromGrpc x =

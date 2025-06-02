@@ -20,14 +20,13 @@ data FundingStateStepRequest
   | FundingStateStepPsbtFinalizeRequest FundingPsbtFinalize
   | FundingStateStepPsbtVerifyRequest FundingPsbtVerify
   | FundingStateStepShimRegister FundingShim
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundingStateStepRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FundingStateStepRequest L.FundingTransitionMsg where
   toGrpc x = msg <$> mapTrigger x
     where
-      mapTrigger :: FundingStateStepRequest -> Either LndError L.FundingTransitionMsg'Trigger
+      mapTrigger ::
+        FundingStateStepRequest -> Either LndError L.FundingTransitionMsg'Trigger
       mapTrigger (FundingStateStepShimCancelRequest t) = L.FundingTransitionMsg'ShimCancel <$> toGrpc t
       mapTrigger (FundingStateStepPsbtFinalizeRequest t) = L.FundingTransitionMsg'PsbtFinalize <$> toGrpc t
       mapTrigger (FundingStateStepPsbtVerifyRequest t) = L.FundingTransitionMsg'PsbtVerify <$> toGrpc t

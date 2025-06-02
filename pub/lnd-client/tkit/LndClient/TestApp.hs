@@ -30,17 +30,10 @@ data Env = Env
     envKatipLE :: LogEnv
   }
 
-data Owner = Alice | Bob
-  deriving stock
-    ( Eq,
-      Ord,
-      Show,
-      Bounded,
-      Enum,
-      Generic
-    )
-
-instance Out Owner
+data Owner
+  = Alice
+  | Bob
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 proxyOwner :: Proxy Owner
 proxyOwner = Proxy
@@ -56,8 +49,8 @@ newBobEnv env =
                 x -> x
           },
       envLndCipherSeedMnemonic =
-        Just $
-          CipherSeedMnemonic
+        Just
+          $ CipherSeedMnemonic
             [ "absent",
               "betray",
               "direct",
@@ -109,8 +102,8 @@ withEnv action = do
     runKatipContextT le (mempty :: LogContexts) mempty $ do
       withTestEnv aliceLndEnv (NodeLocation "localhost:9735") $ \alice ->
         withTestEnv (newBobEnv aliceLndEnv) (NodeLocation "localhost:9734") $ \bob ->
-          liftIO $
-            runApp
+          liftIO
+            $ runApp
               Env
                 { envAlice = alice,
                   envBob = bob,
@@ -119,9 +112,9 @@ withEnv action = do
                   envKatipCTX = mempty,
                   envKatipNS = mempty
                 }
-              $ do
-                setupZeroChannels proxyOwner
-                action
+            $ do
+              setupZeroChannels proxyOwner
+              action
   where
     rmLogEnv :: LogEnv -> IO ()
     rmLogEnv =

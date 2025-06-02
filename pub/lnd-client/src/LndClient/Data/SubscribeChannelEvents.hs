@@ -18,9 +18,7 @@ data ChannelEventUpdate = ChannelEventUpdate
   { channelEvent :: UpdateChannel,
     eventType :: UpdateType
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ChannelEventUpdate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data UpdateChannel
   = ChannelEventUpdateChannelOpenChannel Channel
@@ -29,9 +27,7 @@ data UpdateChannel
   | ChannelEventUpdateChannelInactiveChannel ChannelPoint
   | ChannelEventUpdateChannelPendingOpenChannel (PendingUpdate 'Funding)
   | ChannelEventUpdateChannelFullyResolved ChannelPoint
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out UpdateChannel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data UpdateType
   = OPEN_CHANNEL
@@ -40,9 +36,7 @@ data UpdateType
   | INACTIVE_CHANNEL
   | PENDING_OPEN_CHANNEL
   | FULLY_RESOLVED_CHANNEL
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out UpdateType
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance FromGrpc UpdateType LnGRPC.ChannelEventUpdate'UpdateType where
   fromGrpc x = case x of
@@ -55,7 +49,8 @@ instance FromGrpc UpdateType LnGRPC.ChannelEventUpdate'UpdateType where
     LnGRPC.ChannelEventUpdate'UpdateType'Unrecognized v ->
       Left
         . FromGrpcError
-        $ "Cannot parse ChannelUpdateType, value:" <> inspectPlain v
+        $ "Cannot parse ChannelUpdateType, value:"
+        <> inspect v
 
 instance FromGrpc UpdateChannel LnGRPC.ChannelEventUpdate'Channel where
   fromGrpc x = case x of
@@ -74,4 +69,4 @@ instance FromGrpc ChannelEventUpdate LnGRPC.ChannelEventUpdate where
                 (FromGrpcError "Empty channelUpdate")
                 (x ^. LnGRPC.maybe'channel)
           )
-        <*> fromGrpc (x ^. LnGRPC.type')
+      <*> fromGrpc (x ^. LnGRPC.type')

@@ -20,18 +20,14 @@ data ListInvoiceRequest = ListInvoiceRequest
     numMaxInvoices :: Word64,
     reversed :: Bool
   }
-  deriving stock (Generic, Show)
-
-instance Out ListInvoiceRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ListInvoiceResponse = ListInvoiceResponse
   { invoices :: [Invoice],
     lastIndexOffset :: AddIndex,
     firstIndexOffset :: AddIndex
   }
-  deriving stock (Generic, Show)
-
-instance Out ListInvoiceResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ListInvoiceRequest LnGRPC.ListInvoiceRequest where
   toGrpc x =
@@ -43,10 +39,14 @@ instance ToGrpc ListInvoiceRequest LnGRPC.ListInvoiceRequest where
     where
       msg gPendingOnly gIndexOffset gNumMaxInvoices gReversed =
         defMessage
-          & LnGRPC.pendingOnly .~ gPendingOnly
-          & LnGRPC.indexOffset .~ gIndexOffset
-          & LnGRPC.numMaxInvoices .~ gNumMaxInvoices
-          & LnGRPC.reversed .~ gReversed
+          & LnGRPC.pendingOnly
+          .~ gPendingOnly
+          & LnGRPC.indexOffset
+          .~ gIndexOffset
+          & LnGRPC.numMaxInvoices
+          .~ gNumMaxInvoices
+          & LnGRPC.reversed
+          .~ gReversed
 
 instance FromGrpc ListInvoiceResponse LnGRPC.ListInvoiceResponse where
   fromGrpc x =

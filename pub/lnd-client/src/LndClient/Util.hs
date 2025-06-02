@@ -16,7 +16,6 @@ module LndClient.Util
   )
 where
 
-import qualified Control.Concurrent.Async as Async
 import qualified Control.Concurrent.STM.TVar as TVar (registerDelay)
 import qualified Control.Concurrent.Thread.Delay as Delay (delay)
 import Control.Exception hiding (Handler, catches)
@@ -42,7 +41,7 @@ psbtBtcCli :: ByteString -> Text
 psbtBtcCli x = T.decodeUtf8 $ B64.encode x
 
 retrySilent ::
-  MonadIO m => m (Either LndError a) -> m (Either LndError a)
+  (MonadIO m) => m (Either LndError a) -> m (Either LndError a)
 retrySilent = this 0
   where
     this (attempt0 :: Integer) f = do
@@ -59,7 +58,7 @@ retrySilent = this 0
           pure res
 
 retryKatip ::
-  KatipContext m => m (Either LndError a) -> m (Either LndError a)
+  (KatipContext m) => m (Either LndError a) -> m (Either LndError a)
 retryKatip = this 0
   where
     this (attempt0 :: Integer) f = do
@@ -75,25 +74,8 @@ retryKatip = this 0
         _ ->
           pure res
 
-spawnLink :: (MonadUnliftIO m) => m a -> m (Async a)
-spawnLink x =
-  withRunInIO $ \run -> do
-    pid <- Async.async $ run x
-    Async.link pid
-    pure pid
-
-withSpawnLink :: (MonadUnliftIO m) => m a -> (Async a -> m b) -> m b
-withSpawnLink action inner =
-  withRunInIO $ \run ->
-    Async.withAsync
-      (run action)
-      ( \pid -> do
-          Async.link pid
-          run $ inner pid
-      )
-
 readTChanTimeout ::
-  MonadUnliftIO m => MicroSecondsDelay -> TChan a -> m (Maybe a)
+  (MonadUnliftIO m) => MicroSecondsDelay -> TChan a -> m (Maybe a)
 readTChanTimeout t x = do
   t0 <-
     liftIO
@@ -101,10 +83,13 @@ readTChanTimeout t x = do
       $ unMicroSecondsDelay t
   (join <$>)
     . (rightToMaybe <$>)
+    . liftIO
     . catchAsync
     . atomically
-    $ Just <$> readTChan x
-      <|> Nothing <$ fini t0
+    $ Just
+    <$> readTChan x
+    <|> Nothing
+    <$ fini t0
 
 fini :: TVar Bool -> STM ()
 fini = check <=< readTVar
@@ -122,5 +107,5 @@ catchAsync x =
                   )
               ]
 
-sleep :: MonadIO m => MicroSecondsDelay -> m ()
+sleep :: (MonadIO m) => MicroSecondsDelay -> m ()
 sleep = liftIO . Delay.delay . from @Int . unMicroSecondsDelay

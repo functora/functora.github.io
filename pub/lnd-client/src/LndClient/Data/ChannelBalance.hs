@@ -19,14 +19,7 @@ data ChannelBalanceResponse = ChannelBalanceResponse
     pendingOpenLocalBalance :: Msat,
     pendingOpenRemoteBalance :: Msat
   }
-  deriving stock
-    ( Eq,
-      Ord,
-      Show,
-      Generic
-    )
-
-instance Out ChannelBalanceResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc ChannelBalanceResponse Proto.ChannelBalanceResponse where
   fromGrpc x =

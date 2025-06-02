@@ -10,7 +10,6 @@ module LndClient.Data.FundPsbt
 where
 
 import Data.ProtoLens.Message
-import Lens.Micro
 import LndClient.Data.OutPoint
 import LndClient.Import
 import qualified Proto.Walletrpc.Walletkit as W
@@ -20,19 +19,19 @@ data TxTemplate = TxTemplate
   { inputs :: [OutPoint],
     outputs :: Map Text Msat
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out TxTemplate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc TxTemplate W.FundPsbtRequest'Template where
-  toGrpc x = W.FundPsbtRequest'Raw <$> (msg <$> mapM toGrpc (inputs x) <*> mapM toGrpcSat (outputs x))
+  toGrpc x =
+    W.FundPsbtRequest'Raw
+      <$> (msg <$> mapM toGrpc (inputs x) <*> mapM toGrpcSat (outputs x))
     where
       msg i o = defMessage & W.inputs .~ i & W.outputs .~ o
 
-data Fee = TargetConf Word32 | SatPerVbyte Word64
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out Fee
+data Fee
+  = TargetConf Word32
+  | SatPerVbyte Word64
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data FundPsbtRequest = FundPsbtRequest
   { account :: Text,
@@ -41,9 +40,7 @@ data FundPsbtRequest = FundPsbtRequest
     spendUnconfirmed :: Bool,
     fee :: Fee
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundPsbtRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FundPsbtRequest W.FundPsbtRequest where
   toGrpc x =
@@ -57,19 +54,21 @@ instance ToGrpc FundPsbtRequest W.FundPsbtRequest where
       feeMap (SatPerVbyte n) = W.FundPsbtRequest'SatPerVbyte n
       msg a s f t =
         defMessage
-          & W.account .~ a
-          & W.maybe'template ?~ t
-          & W.maybe'fees ?~ f
-          & W.spendUnconfirmed .~ s
+          & W.account
+          .~ a
+          & W.maybe'template
+          ?~ t
+          & W.maybe'fees
+          ?~ f
+          & W.spendUnconfirmed
+          .~ s
 
 data UtxoLease = UtxoLease
   { id :: ByteString,
     outpoint :: OutPoint,
     expiration :: Word64
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out UtxoLease
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc UtxoLease W.UtxoLease where
   fromGrpc x =
@@ -83,9 +82,7 @@ data FundPsbtResponse = FundPsbtResponse
     changeOutputIndex :: Int32,
     lockedUtxos :: [UtxoLease]
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundPsbtResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc FundPsbtResponse W.FundPsbtResponse where
   fromGrpc x =

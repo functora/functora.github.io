@@ -17,9 +17,7 @@ data ReleaseOutputRequest = ReleaseOutputRequest
   { id' :: ByteString,
     outpoint :: Maybe OutPoint
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ReleaseOutputRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ReleaseOutputRequest W.ReleaseOutputRequest where
   toGrpc x = msg (id' x) <$> out'
@@ -33,9 +31,8 @@ instance ToGrpc ReleaseOutputRequest W.ReleaseOutputRequest where
           & (W.id .~ i)
           & (W.maybe'outpoint .~ o)
 
-data ReleaseOutputResponse = ReleaseOutputResponse deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ReleaseOutputResponse
+data ReleaseOutputResponse = ReleaseOutputResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc ReleaseOutputResponse W.ReleaseOutputResponse where
   fromGrpc = const $ Right ReleaseOutputResponse

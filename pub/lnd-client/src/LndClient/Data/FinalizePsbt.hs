@@ -15,25 +15,23 @@ data FinalizePsbtRequest = FinalizePsbtRequest
   { fundedPsbt :: ByteString,
     account :: Text
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FinalizePsbtRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FinalizePsbtRequest W.FinalizePsbtRequest where
   toGrpc x = pure $ msg (fundedPsbt x) (account x)
     where
       msg f a =
         defMessage
-          & W.fundedPsbt .~ f
-          & W.account .~ a
+          & W.fundedPsbt
+          .~ f
+          & W.account
+          .~ a
 
 data FinalizePsbtResponse = FinalizePsbtResponse
   { signedPsbt :: ByteString,
     rawFinalTx :: ByteString
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FinalizePsbtResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc FinalizePsbtResponse W.FinalizePsbtResponse where
   fromGrpc x = Right $ FinalizePsbtResponse (x ^. W.signedPsbt) (x ^. W.rawFinalTx)

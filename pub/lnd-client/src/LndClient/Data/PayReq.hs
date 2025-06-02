@@ -6,8 +6,6 @@ module LndClient.Data.PayReq
   )
 where
 
-import Data.Time.Clock (addUTCTime)
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import LndClient.Import
 import qualified Proto.Lnrpc.Ln1 as LnGRPC
 import qualified Proto.Lnrpc.Ln1_Fields as LnGRPC
@@ -20,9 +18,7 @@ data PayReq = PayReq
     timestamp :: UTCTime,
     expiresAt :: UTCTime
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out PayReq
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc PayReq LnGRPC.PayReq where
   fromGrpc x = do
@@ -59,7 +55,3 @@ secToUtcTime x =
         $ from @Int64 @Integer x
     )
     epoch
-
-epoch :: UTCTime
-epoch =
-  posixSecondsToUTCTime 0

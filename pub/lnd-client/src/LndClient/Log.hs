@@ -25,9 +25,9 @@ import LndClient.Import.External
 import qualified Network.GRPC.Client.Helpers as Grpc
 
 type family SecretRpc (t :: GHC.Symbol) :: GHC.Nat where
---
--- Sync
---
+  --
+  -- Sync
+  --
   SecretRpc "unlockWallet" = 1
   SecretRpc "initWallet" = 1
   SecretRpc "newAddress" = 0
@@ -62,9 +62,9 @@ type family SecretRpc (t :: GHC.Symbol) :: GHC.Nat where
   SecretRpc "restoreChannelBackups" = 0
   SecretRpc "walletBalance" = 0
   SecretRpc "channelBalance" = 0
---
--- Sub
---
+  --
+  -- Sub
+  --
   SecretRpc "trackPaymentV2" = 0
   SecretRpc "subscribeHtlcEvents" = 0
   SecretRpc "closeChannel" = 0
@@ -75,24 +75,24 @@ type family SecretRpc (t :: GHC.Symbol) :: GHC.Nat where
 
 rpcIsSecret ::
   forall t.
-  GHC.KnownNat (SecretRpc t) =>
+  (GHC.KnownNat (SecretRpc t)) =>
   Bool
 rpcIsSecret =
   natVal (Proxy @(SecretRpc t)) > 0
 
 inspectSecret ::
   forall (rpc :: GHC.Symbol) raw.
-  ( Out raw,
+  ( Show raw,
+    Data raw,
     KnownNat (SecretRpc rpc)
   ) =>
   LndEnv ->
   raw ->
   Text
 inspectSecret env =
-  inspectPlain
-    . if rpcIsSecret @rpc
-      then SecretLog (loggingStrategySecret $ envLndLogStrategy env)
-      else PrettyLog
+  if rpcIsSecret @rpc && loggingStrategySecret (envLndLogStrategy env)
+    then const "<REDACTED>"
+    else inspect
 
 katipAddLndMeta ::
   (KatipContext m) =>
@@ -108,7 +108,8 @@ katipAddLndMeta env meta slp this =
 
 katipAddLndSecret ::
   forall (rpc :: GHC.Symbol) a m b.
-  ( Out a,
+  ( Show a,
+    Data a,
     KatipContext m,
     KnownNat (SecretRpc rpc)
   ) =>
@@ -119,11 +120,12 @@ katipAddLndSecret ::
   m b
 katipAddLndSecret env meta =
   katipAddLndMeta env meta
-    . sl (inspectPlain meta :: Text)
+    . sl (inspect meta :: Text)
     . inspectSecret @rpc env
 
 katipAddLndPublic ::
-  ( Out a,
+  ( Show a,
+    Data a,
     KatipContext m
   ) =>
   LndEnv ->
@@ -133,8 +135,8 @@ katipAddLndPublic ::
   m b
 katipAddLndPublic env meta =
   katipAddLndMeta env meta
-    . sl (inspectPlain meta :: Text)
-    . inspectPlain @Text
+    . sl (inspect meta :: Text)
+    . inspect @Text
 
 katipAddLndLoc ::
   ( KatipContext m

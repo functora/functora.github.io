@@ -12,12 +12,14 @@ data FundingPsbtVerify = FundingPsbtVerify
     pendingChanId :: PendingChannelId,
     skipFinalize :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundingPsbtVerify
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FundingPsbtVerify L.FundingPsbtVerify where
-  toGrpc x = msg <$> toGrpc (fundedPsbt x) <*> toGrpc (pendingChanId x) <*> pure (skipFinalize x)
+  toGrpc x =
+    msg
+      <$> toGrpc (fundedPsbt x)
+      <*> toGrpc (pendingChanId x)
+      <*> pure (skipFinalize x)
     where
       msg fp pci sf =
         defMessage & L.fundedPsbt .~ fp & L.pendingChanId .~ pci & L.skipFinalize .~ sf

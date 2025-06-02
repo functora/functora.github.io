@@ -16,9 +16,7 @@ data ForceClosedChannel = ForceClosedChannel
     blocksTilMaturity :: Int32,
     recoveredBalance :: Msat
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out ForceClosedChannel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance
   FromGrpc

@@ -17,9 +17,7 @@ data Peer = Peer
   { pubKey :: NodePubKey,
     address :: NodeLocation
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out Peer
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc Peer LnGRPC.Peer where
   fromGrpc x =
@@ -31,9 +29,7 @@ data LightningAddress = LightningAddress
   { pubkey :: NodePubKey,
     host :: NodeLocation
   }
-  deriving stock (Eq, Show, Read, Generic)
-
-instance Out LightningAddress
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc LightningAddress LnGRPC.LightningAddress where
   toGrpc x =
@@ -43,16 +39,16 @@ instance ToGrpc LightningAddress LnGRPC.LightningAddress where
     where
       msg gPubkey gHost =
         defMessage
-          & LnGRPC.pubkey .~ gPubkey
-          & LnGRPC.host .~ gHost
+          & LnGRPC.pubkey
+          .~ gPubkey
+          & LnGRPC.host
+          .~ gHost
 
 data ConnectPeerRequest = ConnectPeerRequest
   { addr :: LightningAddress,
     perm :: Bool
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out ConnectPeerRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ConnectPeerRequest LnGRPC.ConnectPeerRequest where
   toGrpc x =
@@ -62,8 +58,10 @@ instance ToGrpc ConnectPeerRequest LnGRPC.ConnectPeerRequest where
     where
       msg gAddr gPerm =
         defMessage
-          & LnGRPC.addr .~ gAddr
-          & LnGRPC.perm .~ gPerm
+          & LnGRPC.addr
+          .~ gAddr
+          & LnGRPC.perm
+          .~ gPerm
 
 instance FromGrpc [Peer] LnGRPC.ListPeersResponse where
   fromGrpc x = mapM fromGrpc (x ^. LnGRPC.peers)

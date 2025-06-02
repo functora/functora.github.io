@@ -25,25 +25,19 @@ data CloseChannelRequest = CloseChannelRequest
     satPerByte :: Maybe Int64,
     deliveryAddress :: Maybe Text
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out CloseChannelRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data CloseStatusUpdate
   = Pending (PendingUpdate 'Closing)
   | Close ChannelCloseUpdate
   | NothingUpdate
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out CloseStatusUpdate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ChannelCloseUpdate = ChannelCloseUpdate
   { closingTxid :: TxId 'Closing,
     success :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ChannelCloseUpdate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ChannelCloseSummary = ChannelCloseSummary
   { remotePubkey :: NodePubKey,
@@ -52,9 +46,7 @@ data ChannelCloseSummary = ChannelCloseSummary
     settledBalance :: Msat,
     closingTxId :: TxId 'Closing
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ChannelCloseSummary
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc [ChannelCloseSummary] LnGRPC.ClosedChannelsResponse where
   fromGrpc x = mapM fromGrpc (x ^. LnGRPC.channels)
@@ -70,11 +62,16 @@ instance ToGrpc CloseChannelRequest LnGRPC.CloseChannelRequest where
     where
       msg gChannelPoint gForce gTargetConf gSatPerByte gDeliveryAddress =
         defMessage
-          & LnGRPC.channelPoint .~ gChannelPoint
-          & LnGRPC.force .~ gForce
-          & LnGRPC.targetConf .~ gTargetConf
-          & LnGRPC.satPerByte .~ gSatPerByte
-          & LnGRPC.deliveryAddress .~ gDeliveryAddress
+          & LnGRPC.channelPoint
+          .~ gChannelPoint
+          & LnGRPC.force
+          .~ gForce
+          & LnGRPC.targetConf
+          .~ gTargetConf
+          & LnGRPC.satPerByte
+          .~ gSatPerByte
+          & LnGRPC.deliveryAddress
+          .~ gDeliveryAddress
 
 instance FromGrpc CloseStatusUpdate LnGRPC.CloseStatusUpdate where
   fromGrpc x =

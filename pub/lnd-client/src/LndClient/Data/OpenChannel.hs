@@ -31,40 +31,31 @@ data OpenChannelRequest = OpenChannelRequest
     closeAddress :: Maybe Text,
     fundingShim :: Maybe PsbtShim
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out OpenChannelRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data OpenStatusUpdate = OpenStatusUpdate
   { pendingChanId :: ByteString,
     update :: Maybe OpenStatusUpdate'
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out OpenStatusUpdate
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data OpenStatusUpdate'
   = OpenStatusUpdateChanPending (PendingUpdate 'Funding)
   | OpenStatusUpdateChanOpen ChannelOpenUpdate
   | OpenStatusUpdatePsbtFund ReadyForPsbtFunding
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-instance Out OpenStatusUpdate'
-
-newtype ChannelOpenUpdate = ChannelOpenUpdate {unChannelOpenUpdate :: ChannelPoint}
-  deriving newtype (Eq, Show)
-  deriving stock (Generic)
-
-instance Out ChannelOpenUpdate
+newtype ChannelOpenUpdate = ChannelOpenUpdate
+  { unChannelOpenUpdate :: ChannelPoint
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data ReadyForPsbtFunding = ReadyForPsbtFunding
   { fundingAddress :: Text,
     fundingAmount :: Msat,
     psbt :: Psbt
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out ReadyForPsbtFunding
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc OpenStatusUpdate LnGRPC.OpenStatusUpdate where
   fromGrpc x =
@@ -109,15 +100,27 @@ instance ToGrpc OpenChannelRequest LnGRPC.OpenChannelRequest where
     where
       msg gNodePubKey gLocalFindingAmount gPushSat gTargetConf gSatPerByte gPrivate gMinHtlcMsat gRemoteCsvDelay gMinConfs gSpendUnconfirmed gCloseAddress gFundingShim =
         defMessage
-          & LnGRPC.nodePubkey .~ gNodePubKey
-          & LnGRPC.localFundingAmount .~ gLocalFindingAmount
-          & LnGRPC.pushSat .~ gPushSat
-          & LnGRPC.targetConf .~ gTargetConf
-          & LnGRPC.satPerByte .~ gSatPerByte
-          & LnGRPC.private .~ gPrivate
-          & LnGRPC.minHtlcMsat .~ gMinHtlcMsat
-          & LnGRPC.remoteCsvDelay .~ gRemoteCsvDelay
-          & LnGRPC.minConfs .~ gMinConfs
-          & LnGRPC.spendUnconfirmed .~ gSpendUnconfirmed
-          & LnGRPC.closeAddress .~ gCloseAddress
-          & LnGRPC.maybe'fundingShim .~ gFundingShim
+          & LnGRPC.nodePubkey
+          .~ gNodePubKey
+          & LnGRPC.localFundingAmount
+          .~ gLocalFindingAmount
+          & LnGRPC.pushSat
+          .~ gPushSat
+          & LnGRPC.targetConf
+          .~ gTargetConf
+          & LnGRPC.satPerByte
+          .~ gSatPerByte
+          & LnGRPC.private
+          .~ gPrivate
+          & LnGRPC.minHtlcMsat
+          .~ gMinHtlcMsat
+          & LnGRPC.remoteCsvDelay
+          .~ gRemoteCsvDelay
+          & LnGRPC.minConfs
+          .~ gMinConfs
+          & LnGRPC.spendUnconfirmed
+          .~ gSpendUnconfirmed
+          & LnGRPC.closeAddress
+          .~ gCloseAddress
+          & LnGRPC.maybe'fundingShim
+          .~ gFundingShim

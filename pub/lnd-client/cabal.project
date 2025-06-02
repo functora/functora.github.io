@@ -1,6 +1,7 @@
 allow-newer: *
 packages:
   *.cabal
+  ../functora/*.cabal
   ../network-bitcoin/*.cabal
   ../proto-lens/discrimination-ieee754/*.cabal
   ../proto-lens/proto-lens/*.cabal

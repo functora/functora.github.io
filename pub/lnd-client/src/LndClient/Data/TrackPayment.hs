@@ -14,9 +14,7 @@ data TrackPaymentRequest = TrackPaymentRequest
   { paymentHash :: RHash,
     noInflightUpdates :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out TrackPaymentRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc TrackPaymentRequest LnGRPC.TrackPaymentRequest where
   toGrpc x =
@@ -26,5 +24,7 @@ instance ToGrpc TrackPaymentRequest LnGRPC.TrackPaymentRequest where
     where
       msg x0 x1 =
         defMessage
-          & LnGRPC.paymentHash .~ x0
-          & LnGRPC.noInflightUpdates .~ x1
+          & LnGRPC.paymentHash
+          .~ x0
+          & LnGRPC.noInflightUpdates
+          .~ x1

@@ -14,9 +14,7 @@ data GetInfoResponse = GetInfoResponse
     syncedToChain :: Bool,
     syncedToGraph :: Bool
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out GetInfoResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc GetInfoResponse LnGRPC.GetInfoResponse where
   fromGrpc x =

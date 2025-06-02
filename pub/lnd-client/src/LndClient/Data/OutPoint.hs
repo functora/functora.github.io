@@ -9,16 +9,16 @@ data OutPoint = OutPoint
   { txid :: ByteString,
     outputIndex :: Word32
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out OutPoint
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc OutPoint LnGRPC.OutPoint where
   toGrpc x =
-    Right $
-      defMessage
-        & LnGRPC.txidBytes .~ txid x
-        & LnGRPC.outputIndex .~ outputIndex x
+    Right
+      $ defMessage
+      & LnGRPC.txidBytes
+      .~ txid x
+      & LnGRPC.outputIndex
+      .~ outputIndex x
 
 instance FromGrpc OutPoint LnGRPC.OutPoint where
   fromGrpc x =

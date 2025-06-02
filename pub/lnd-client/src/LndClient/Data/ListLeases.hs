@@ -13,9 +13,8 @@ import LndClient.Import
 import qualified Proto.Walletrpc.Walletkit as W
 import qualified Proto.Walletrpc.Walletkit_Fields as W
 
-data ListLeasesRequest = ListLeasesRequest deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ListLeasesRequest
+data ListLeasesRequest = ListLeasesRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ListLeasesRequest W.ListLeasesRequest where
   toGrpc = const (pure defMessage)
@@ -25,15 +24,12 @@ data UtxoLease = UtxoLease
     outpoint :: Maybe OutPoint,
     expiration :: Word64
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out UtxoLease
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 newtype ListLeasesResponse = ListLeasesResponse
   { lockedUtxos :: [UtxoLease]
   }
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc UtxoLease W.UtxoLease where
   fromGrpc x = lease (x ^. W.id) (x ^. W.expiration) <$> out'
@@ -43,8 +39,6 @@ instance FromGrpc UtxoLease W.UtxoLease where
         Just op -> Just <$> fromGrpc op
         Nothing -> Right Nothing
       lease id' expr op = UtxoLease id' op expr
-
-instance Out ListLeasesResponse
 
 instance FromGrpc ListLeasesResponse W.ListLeasesResponse where
   fromGrpc x = ListLeasesResponse <$> mapM fromGrpc (x ^. W.lockedUtxos)

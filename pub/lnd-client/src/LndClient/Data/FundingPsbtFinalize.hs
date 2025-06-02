@@ -12,12 +12,14 @@ data FundingPsbtFinalize = FundingPsbtFinalize
     pendingChanId :: PendingChannelId,
     finalRawTx :: RawTx
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out FundingPsbtFinalize
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc FundingPsbtFinalize L.FundingPsbtFinalize where
-  toGrpc x = msg <$> toGrpc (signedPsbt x) <*> toGrpc (pendingChanId x) <*> toGrpc (finalRawTx x)
+  toGrpc x =
+    msg
+      <$> toGrpc (signedPsbt x)
+      <*> toGrpc (pendingChanId x)
+      <*> toGrpc (finalRawTx x)
     where
       msg sp pci frt =
         defMessage & L.signedPsbt .~ sp & L.pendingChanId .~ pci & L.finalRawTx .~ frt

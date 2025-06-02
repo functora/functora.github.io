@@ -8,6 +8,7 @@ module LndClient.Data.NewAddress
 where
 
 import Data.ProtoLens.Message
+import qualified Data.Text as T
 import LndClient.Import
 import qualified Proto.Lightning as LnGRPC
 import qualified Proto.Lightning_Fields as LnGRPC
@@ -16,9 +17,7 @@ data NewAddressRequest = NewAddressRequest
   { addrType :: AddressType,
     account :: Maybe String
   }
-  deriving stock (Show, Eq, Generic)
-
-instance Out NewAddressRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data AddressType
   = WITNESS_PUBKEY_HASH
@@ -26,28 +25,25 @@ data AddressType
   | UNUSED_WITNESS_PUBKEY_HASH
   | UNUSED_NESTED_PUBKEY_HASH
   | UNKNOWN
-  deriving stock (Show, Eq, Ord, Generic)
-
-instance Out AddressType
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 newtype NewAddressResponse = NewAddressResponse
   { address :: Text
   }
-  deriving newtype (Show, Eq)
-  deriving stock (Generic)
-
-instance Out NewAddressResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc NewAddressRequest LnGRPC.NewAddressRequest where
   toGrpc x =
     msg
       <$> toGrpc (addrType x)
-      <*> toGrpc (pack <$> account x)
+      <*> toGrpc (T.pack <$> account x)
     where
       msg gAddrType gAccount =
         defMessage
-          & LnGRPC.type' .~ gAddrType
-          & LnGRPC.account .~ gAccount
+          & LnGRPC.type'
+          .~ gAddrType
+          & LnGRPC.account
+          .~ gAccount
 
 instance ToGrpc AddressType LnGRPC.AddressType where
   toGrpc x =

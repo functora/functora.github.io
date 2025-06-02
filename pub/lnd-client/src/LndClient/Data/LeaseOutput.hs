@@ -18,9 +18,7 @@ data LeaseOutputRequest = LeaseOutputRequest
     outpoint :: Maybe OutPoint,
     expirationSeconds :: Word64
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out LeaseOutputRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc LeaseOutputRequest W.LeaseOutputRequest where
   toGrpc x = msg (id' x) (expirationSeconds x) <$> out'
@@ -36,11 +34,9 @@ instance ToGrpc LeaseOutputRequest W.LeaseOutputRequest where
           & (W.expirationSeconds .~ e)
 
 newtype LeaseOutputResponse = LeaseOutputResponse
-  {expiration :: Word64}
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out LeaseOutputResponse
+  { expiration :: Word64
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc LeaseOutputResponse W.LeaseOutputResponse where
   fromGrpc x = LeaseOutputResponse <$> fromGrpc (x ^. W.expiration)

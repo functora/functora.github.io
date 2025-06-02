@@ -16,17 +16,12 @@ data SendCoinsRequest = SendCoinsRequest
     amount :: Msat,
     sendAll :: Bool
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out SendCoinsRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 newtype SendCoinsResponse = SendCoinsResponse
   { txid :: Text
   }
-  deriving newtype (Eq, Show)
-  deriving stock (Generic)
-
-instance Out SendCoinsResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc SendCoinsRequest LnGRPC.SendCoinsRequest where
   toGrpc x =
@@ -37,9 +32,12 @@ instance ToGrpc SendCoinsRequest LnGRPC.SendCoinsRequest where
     where
       msg gAmt gAddr gSendAll =
         defMessage
-          & LnGRPC.amount .~ gAmt
-          & LnGRPC.addr .~ gAddr
-          & LnGRPC.sendAll .~ gSendAll
+          & LnGRPC.amount
+          .~ gAmt
+          & LnGRPC.addr
+          .~ gAddr
+          & LnGRPC.sendAll
+          .~ gSendAll
 
 instance FromGrpc SendCoinsResponse LnGRPC.SendCoinsResponse where
   fromGrpc x = SendCoinsResponse <$> fromGrpc (x ^. LnGRPC.txid)

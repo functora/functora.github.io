@@ -1,10 +1,10 @@
 name: lnd-client
-version: 0.1.0.2
-github: "coingaming/lnd-client"
+version: 0.1.0.3
+github: "functora.github.io/pub/lnd-client"
 license: BSD3
-author: "21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>"
-maintainer: "21it <21it@tuta.io>, Mikhail Prushinskiy <mprushinsky@gmail.com>, Artem Markov <drownbes@gmail.com>"
-copyright: "2022 Yolo <hello@coingaming.io>"
+author: "functora <functora@proton.me>"
+maintainer: "functora <functora@proton.me>"
+copyright: "2025 functora <functora@proton.me>"
 synopsis: Lightning Network Daemon (LND) client library for Haskell
 category: Lightning, Bitcoin, Finance, Network, Payments
 description: You can find documentation at <https://hackage.haskell.org/package/lnd-client>
@@ -18,9 +18,8 @@ _deps: &deps
     # foundation
     - base >= 4.7 && < 5
     - universum             >= 1.5.0 && < 1.8
-    - witch
+    - functora
     # time
-    - time
     - chronos               >= 1.0.7 && < 1.2
     - unbounded-delays      >= 0.1.1.0 && < 0.1.2
     # storage
@@ -44,8 +43,8 @@ _deps: &deps
     # crypto
     - cryptonite            >= 0.25 && < 0.31
     - cryptohash-sha256     >= 0.11.101.0 && < 0.12
-    - x509                  >= 1.7.5 && < 1.7.6
-    - x509-store
+    - crypton-x509          >= 1.7.5 && < 1.7.6
+    - crypton-x509-store
     - pem                   >= 0.2.4 && < 0.3
     # bitcoin
     - network-bitcoin       >= 1.8.3
@@ -97,12 +96,14 @@ default-extensions:
   - TypeOperators
   - FlexibleContexts
   - FlexibleInstances
+  - DeriveDataTypeable
 ghc-options:
   # For details on warnings: https://downloads.haskell.org/~ghc/master/users-guide/using-warnings.html
   # Enable all warnings with -Weverything, then disable the ones we don’t care about
   - -Weverything
   - -Werror
   - -Wno-missing-export-lists
+  - -Wno-missing-kind-signatures
   - -Wno-missing-exported-signatures # missing-exported-signatures turns off the more strict -Wmissing-signatures. See https://ghc.haskell.org/trac/ghc/ticket/14794#ticket
   - -Wno-missing-import-lists # Requires explicit imports of _every_ function (e.g. ‘$’); too strict
   - -Wno-missed-specialisations # When GHC can’t specialize a polymorphic function. No big deal and requires fixing underlying libraries to solve.

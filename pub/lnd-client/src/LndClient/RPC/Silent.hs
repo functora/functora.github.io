@@ -60,7 +60,9 @@ module LndClient.RPC.Silent
 where
 
 import Data.ProtoLens.Message
-import LndClient.Data.AddHodlInvoice as AddHodlInvoice (AddHodlInvoiceRequest (..))
+import LndClient.Data.AddHodlInvoice as AddHodlInvoice
+  ( AddHodlInvoiceRequest (..),
+  )
 import LndClient.Data.AddInvoice as AddInvoice (AddInvoiceResponse (..))
 import qualified LndClient.Data.Channel as Channel
 import LndClient.Data.CloseChannel as CloseChannel
@@ -94,8 +96,9 @@ waitForGrpc env = this 30
               sleep $ MicroSecondsDelay 1000000
               this $ x - 1
         else do
-          return . Left $
-            LndError "waitForGrpc attempt limit exceeded"
+          return
+            . Left
+            $ LndError "waitForGrpc attempt limit exceeded"
 
 lazyUnlockWallet ::
   (MonadUnliftIO m) =>
@@ -129,8 +132,8 @@ ensureHodlInvoice env req = do
   return $ case res of
     Left x -> Left x
     Right x ->
-      Right $
-        AddInvoice.AddInvoiceResponse
+      Right
+        $ AddInvoice.AddInvoiceResponse
           { AddInvoice.rHash = rh,
             AddInvoice.paymentRequest = Invoice.paymentRequest x,
             AddInvoice.addIndex = Invoice.addIndex x
@@ -143,7 +146,10 @@ closeChannelSync ::
   CloseChannelRequest ->
   m (Either LndError CloseStatusUpdate)
 closeChannelSync env conn req = do
-  cs0 <- listChannels env (ListChannels.ListChannelsRequest False False False False Nothing)
+  cs0 <-
+    listChannels
+      env
+      (ListChannels.ListChannelsRequest False False False False Nothing)
   case cs0 of
     Left err -> pure $ Left err
     Right x ->
@@ -156,12 +162,12 @@ closeChannelSync env conn req = do
     closeChannelRecursive _ (0 :: Int) = return $ Left $ LndError "Cannot close channel"
     closeChannelRecursive mVar0 n = do
       void $ lazyConnectPeer env conn
-      void $
-        Util.spawnLink $
-          closeChannel
-            (void . tryPutMVar mVar0)
-            env
-            req
+      void
+        $ Util.spawnLink
+        $ closeChannel
+          (void . tryPutMVar mVar0)
+          env
+          req
       sleep $ MicroSecondsDelay 1000000
       upd <- tryTakeMVar mVar0
       case upd of
@@ -193,7 +199,7 @@ trackPaymentSync env req = do
 
 grpcCatchWalletLockSilent ::
   forall m a.
-  MonadUnliftIO m =>
+  (MonadUnliftIO m) =>
   LndEnv ->
   m (Either LndError a) ->
   m (Either LndError a)

@@ -31,17 +31,13 @@ data Channel = Channel
     numUpdates :: Word64,
     prv :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out Channel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data PendingUpdate (a :: TxKind) = PendingUpdate
   { txid :: TxId a,
     outputIndex :: Vout a
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out (PendingUpdate a)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc Channel LnGRPC.Channel where
   fromGrpc x =

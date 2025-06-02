@@ -112,8 +112,9 @@ withWatcher env sub handler action =
       ( withSpawnLink
           ( do
               watchPid <- takeMVar varWatchPid
-              run . loop $
-                WatcherState
+              run
+                . loop
+                $ WatcherState
                   { watcherStateCmdChan = readCmdChan,
                     watcherStateLndChan = readLndChan,
                     watcherStateSub =
@@ -155,7 +156,8 @@ withWatcherUnit env0 sub handler =
 
 watch :: (MonadUnliftIO m) => Watcher req res -> req -> m ()
 watch w =
-  atomically
+  liftIO
+    . atomically
     . writeTChan (watcherCmdChan w)
     . Watch (watcherPid w)
 
@@ -163,16 +165,16 @@ watchUnit :: (MonadUnliftIO m) => Watcher () res -> m ()
 watchUnit w = watch w ()
 
 unWatch :: (MonadUnliftIO m) => Watcher req res -> req -> m ()
-unWatch w = atomically . writeTChan (watcherCmdChan w) . UnWatch
+unWatch w = liftIO . atomically . writeTChan (watcherCmdChan w) . UnWatch
 
 unWatchUnit :: (MonadUnliftIO m) => Watcher () res -> m ()
 unWatchUnit w = unWatch w ()
 
 unWatchAll :: (MonadUnliftIO m) => Watcher req res -> m ()
-unWatchAll w = atomically $ writeTChan (watcherCmdChan w) UnWatchAll
+unWatchAll w = liftIO . atomically $ writeTChan (watcherCmdChan w) UnWatchAll
 
 dupLndTChan :: (MonadIO m) => Watcher req res -> m (TChan (req, res))
-dupLndTChan = atomically . dupTChan . watcherLndChan
+dupLndTChan = liftIO . atomically . dupTChan . watcherLndChan
 
 loop ::
   (Ord req, MonadUnliftIO m, KatipContext m) =>
@@ -188,14 +190,17 @@ loop w = do
   -- alternative computation but without reading from
   -- watcherStateLndChan.
   me <-
-    catchAsync . atomically $
-      if tasksEmpty
+    catchAsync
+      . liftIO
+      . atomically
+      $ if tasksEmpty
         then cmd <|> lnd
         else cmd <|> lnd <|> task
   event <- case me of
     Left _ ->
-      atomically $
-        if tasksEmpty
+      liftIO
+        . atomically
+        $ if tasksEmpty
           then cmd
           else cmd <|> task
     Right x ->
@@ -205,8 +210,8 @@ loop w = do
     EventCmd x -> applyCmd w x
     EventLnd x -> applyLnd w (second Right x)
     EventTask (Left (KilledTask x)) ->
-      loop $
-        w
+      loop
+        $ w
           { watcherStateTasks =
               Map.delete x $ watcherStateTasks w
           }

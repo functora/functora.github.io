@@ -12,9 +12,7 @@ data WaitingCloseChannel = WaitingCloseChannel
   { channel :: PendingChannel,
     limboBalance :: Msat
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out WaitingCloseChannel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance
   FromGrpc

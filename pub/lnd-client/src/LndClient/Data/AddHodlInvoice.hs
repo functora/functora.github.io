@@ -16,9 +16,7 @@ data AddHodlInvoiceRequest = AddHodlInvoiceRequest
     valueMsat :: Msat,
     expiry :: Maybe Seconds
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out AddHodlInvoiceRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc AddHodlInvoiceRequest LnGRPC.AddHoldInvoiceRequest where
   toGrpc x =
@@ -30,7 +28,11 @@ instance ToGrpc AddHodlInvoiceRequest LnGRPC.AddHoldInvoiceRequest where
     where
       msg gMemo gHash gValue gExp =
         defMessage
-          & LnGRPC.memo .~ gMemo
-          & LnGRPC.hash .~ gHash
-          & LnGRPC.valueMsat .~ gValue
-          & LnGRPC.expiry .~ gExp
+          & LnGRPC.memo
+          .~ gMemo
+          & LnGRPC.hash
+          .~ gHash
+          & LnGRPC.valueMsat
+          .~ gValue
+          & LnGRPC.expiry
+          .~ gExp

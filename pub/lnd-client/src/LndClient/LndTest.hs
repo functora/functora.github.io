@@ -118,10 +118,10 @@ data TestEnv = TestEnv
 uniquePairs :: (Ord a, Enum a, Bounded a) => [(a, a)]
 uniquePairs = [(x0, x1) | x0 <- enumerate, x1 <- enumerate, x0 < x1]
 
-newBtcClient :: MonadIO m => BtcEnv -> m Btc.Client
+newBtcClient :: (MonadIO m) => BtcEnv -> m Btc.Client
 newBtcClient x =
-  liftIO $
-    Btc.getClient
+  liftIO
+    $ Btc.getClient
       (unBtcUrl $ btcUrl x)
       (unBtcLogin $ btcLogin x)
       (unBtcPassword $ btcPassword x)
@@ -152,7 +152,8 @@ class
     Ord owner,
     Enum owner,
     Bounded owner,
-    Out owner
+    Show owner,
+    Data owner
   ) =>
   LndTest m owner
   where
@@ -185,7 +186,7 @@ class
     env <- getTestEnv owner
     Watcher.watch (testSingleInvoiceWatcher env) rh
 
-walletAddress :: LndTest m owner => owner -> m Text
+walletAddress :: (LndTest m owner) => owner -> m Text
 walletAddress owner = do
   lnd <- getLndEnv owner
   Lnd.NewAddressResponse x <-
@@ -195,13 +196,13 @@ walletAddress owner = do
         (Lnd.NewAddressRequest Lnd.WITNESS_PUBKEY_HASH Nothing)
   pure x
 
-confirmedBalance :: LndTest m owner => owner -> m Msat
+confirmedBalance :: (LndTest m owner) => owner -> m Msat
 confirmedBalance owner = do
   lnd <- getLndEnv owner
   bal <- liftLndResult =<< Lnd.walletBalance lnd
   pure $ Wallet.confirmedBalance bal
 
-lazyMineInitialCoins :: forall m owner. LndTest m owner => Proxy owner -> m ()
+lazyMineInitialCoins :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 lazyMineInitialCoins = const $ do
   mapM_ (liftLndResult <=< Lnd.lazyInitWallet <=< getLndEnv) owners
   bc <- getBtcClient (minBound :: owner)
@@ -222,7 +223,7 @@ lazyMineInitialCoins = const $ do
       when (unMsat confirmedBal < 100000000000) $ do
         mine blocksPerOwner owner
 
-lazyConnectNodes :: forall m owner. LndTest m owner => Proxy owner -> m ()
+lazyConnectNodes :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 lazyConnectNodes = const $ mapM_ this uniquePairs
   where
     this :: (owner, owner) -> m ()
@@ -242,7 +243,7 @@ lazyConnectNodes = const $ mapM_ this uniquePairs
       lndEnvOwner1 <- getLndEnv owner1
       liftLndResult =<< Lnd.lazyConnectPeer lndEnvOwner1 req
 
-watchDefaults :: forall m owner. LndTest m owner => Proxy owner -> m ()
+watchDefaults :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 watchDefaults = const $ mapM_ this (enumerate :: [owner])
   where
     this owner = do
@@ -256,39 +257,42 @@ watchDefaults = const $ mapM_ this (enumerate :: [owner])
       --
       SubscribeInvoicesRequest (Just $ AddIndex 1) Nothing
 
-mine :: forall m owner. LndTest m owner => Int -> owner -> m ()
+mine :: forall m owner. (LndTest m owner) => Int -> owner -> m ()
 mine blocks owner = do
   btcAddr <- walletAddress owner
   bc <- getBtcClient owner
   sev <- getSev owner DebugS
-  $(logTM) sev $
-    logStr $
-      "Mining "
-        <> inspectPlain @Text blocks
-        <> " blocks to "
-        <> inspectPlain owner
-        <> " wallet"
-  void . liftIO $
-    Btc.generateToAddress
+  $(logTM) sev
+    $ logStr
+    $ "Mining "
+    <> inspect @Text blocks
+    <> " blocks to "
+    <> inspect owner
+    <> " wallet"
+  void
+    . liftIO
+    $ Btc.generateToAddress
       bc
       blocks
       btcAddr
       Nothing
   liftLndResult =<< syncWallets (Proxy :: Proxy owner)
 
-mine1 :: forall m owner. LndTest m owner => Proxy owner -> m ()
+mine1 :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 mine1 = const $ mine 1 (minBound :: owner)
 
-liftLndResult :: MonadIO m => Either LndError a -> m a
+liftLndResult :: (MonadIO m) => Either LndError a -> m a
 liftLndResult (Right x) =
   pure x
 liftLndResult (Left x) =
-  liftIO . fail $
-    "LiftLndResult failed " <> inspectPlain @String x
+  liftIO
+    . fail
+    $ "LiftLndResult failed "
+    <> inspect @String x
 
 syncWallets ::
   forall m owner.
-  LndTest m owner =>
+  (LndTest m owner) =>
   Proxy owner ->
   m (Either LndError ())
 syncWallets = const $ this 0
@@ -311,13 +315,13 @@ syncWallets = const $ this 0
       Left {} -> False
       Right x -> Lnd.syncedToChain x
 
-syncPendingChannels :: forall m owner. LndTest m owner => Proxy owner -> m ()
+syncPendingChannels :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 syncPendingChannels =
   const $ mapM_ (liftLndResult <=< syncPendingChannelsFor) (enumerate :: [owner])
 
 syncPendingChannelsFor ::
   forall m owner.
-  LndTest m owner =>
+  (LndTest m owner) =>
   owner ->
   m (Either LndError ())
 syncPendingChannelsFor owner = this 0
@@ -325,18 +329,18 @@ syncPendingChannelsFor owner = this 0
     this 30 = do
       let msg =
             "SyncPendingChannelsFor "
-              <> inspectPlain @Text owner
+              <> inspect @Text owner
               <> " attempt limit exceeded"
       sev <- getSev owner ErrorS
       $(logTM) sev $ logStr msg
       pure . Left $ LndError msg
     this (attempt :: Int) = do
       sev <- getSev owner DebugS
-      $(logTM) sev $
-        logStr $
-          "SyncPendingChannelsFor "
-            <> inspectPlain @Text owner
-            <> " is running"
+      $(logTM) sev
+        $ logStr
+        $ "SyncPendingChannelsFor "
+        <> inspect @Text owner
+        <> " is running"
       res <- Lnd.pendingChannels =<< getLndEnv owner
       case res of
         Left {} -> this (attempt + 1)
@@ -350,7 +354,7 @@ syncPendingChannelsFor owner = this 0
 
 receiveClosedChannels ::
   forall m owner.
-  LndTest m owner =>
+  (LndTest m owner) =>
   Proxy owner ->
   [ChannelPoint] ->
   m (Either LndError ())
@@ -359,9 +363,9 @@ receiveClosedChannels po = this 0
     this _ [] =
       pure $ Right ()
     this 30 _ =
-      pure $
-        Left $
-          LndError "receiveClosedChannels - exceeded"
+      pure
+        $ Left
+        $ LndError "receiveClosedChannels - exceeded"
     this (attempt :: Integer) cps = do
       let owners = enumerate :: [owner]
       xs <- rights <$> mapM getOwnersCloseCPs owners
@@ -382,7 +386,7 @@ receiveClosedChannels po = this 0
 
 cancelAllInvoices ::
   forall m owner.
-  LndTest m owner =>
+  (LndTest m owner) =>
   Proxy owner ->
   m ()
 cancelAllInvoices =
@@ -397,8 +401,9 @@ cancelAllInvoices =
         }
     this :: Int -> owner -> m ()
     this 30 owner =
-      error $
-        "CancelAllInvoices attempt limit exceeded for " <> inspectPlain owner
+      error
+        $ "CancelAllInvoices attempt limit exceeded for "
+        <> inspect owner
     this attempt owner = do
       lnd <- getLndEnv owner
       let getInvoices :: m [Invoice] =
@@ -413,15 +418,16 @@ cancelAllInvoices =
           sleep $ MicroSecondsDelay 1000000
           this (attempt + 1) owner
 
-closeAllChannels :: forall m owner. LndTest m owner => Proxy owner -> m ()
+closeAllChannels :: forall m owner. (LndTest m owner) => Proxy owner -> m ()
 closeAllChannels po = do
   cancelAllInvoices po
   mapM_ (this 0) uniquePairs
   where
     this :: Int -> (owner, owner) -> m ()
     this 30 owners =
-      error $
-        "CloseAllChannels - limit exceeded for " <> inspectPlain owners
+      error
+        $ "CloseAllChannels - limit exceeded for "
+        <> inspect owners
     this attempt (owner0, owner1) = do
       sev <- getSev owner0 DebugS
       $(logTM) sev "CloseAllChannels - closing channels"
@@ -441,8 +447,8 @@ closeAllChannels po = do
           ( \cp ->
               Lnd.closeChannelSync
                 lnd0
-                ( Just $
-                    ConnectPeerRequest (LightningAddress peerPubKey peerLocation) False
+                ( Just
+                    $ ConnectPeerRequest (LightningAddress peerPubKey peerLocation) False
                 )
                 (CloseChannelRequest cp False Nothing Nothing Nothing)
           )
@@ -455,7 +461,7 @@ closeAllChannels po = do
           this (attempt + 1) (owner0, owner1)
 
 receiveActiveChannel ::
-  LndTest m owner =>
+  (LndTest m owner) =>
   Proxy owner ->
   ChannelPoint ->
   TChan ((), ChannelEventUpdate) ->
@@ -475,7 +481,7 @@ receiveActiveChannel po = this 0
             _ ->
               mine1 po >> this (attempt + 1) cp cq
 
-setupZeroChannels :: LndTest m owner => Proxy owner -> m ()
+setupZeroChannels :: (LndTest m owner) => Proxy owner -> m ()
 setupZeroChannels x = do
   lazyMineInitialCoins x
   lazyConnectNodes x
@@ -485,7 +491,7 @@ setupZeroChannels x = do
 
 setupOneChannel ::
   forall m owner.
-  LndTest m owner =>
+  (LndTest m owner) =>
   owner ->
   owner ->
   m ChannelPoint
@@ -534,7 +540,7 @@ setupOneChannel ownerFrom ownerTo = do
   $(logTM) sev "SetupOneChannel - finished"
   pure cp
 
-sendTestPayment :: LndTest m owner => Msat -> owner -> owner -> m ()
+sendTestPayment :: (LndTest m owner) => Msat -> owner -> owner -> m ()
 sendTestPayment amt0 sender0 recepient0 = do
   sender <- getLndEnv sender0
   recepient <- getLndEnv recepient0
@@ -569,28 +575,28 @@ receiveInvoice ::
 receiveInvoice env rh s q = do
   mx0 <- readTChanTimeout (MicroSecondsDelay 30000000) q
   let mx = snd <$> mx0
-  katipAddLndPublic env LndTestReceiveInvoice mx $
-    $(logTM) DebugS rpcSucceeded
+  katipAddLndPublic env LndTestReceiveInvoice mx
+    $ $(logTM) DebugS rpcSucceeded
   case (\x -> Invoice.rHash x == rh && Invoice.state x == s) <$> mx of
     Just True -> return $ Right ()
     Just False -> receiveInvoice env rh s q
     Nothing -> return . Left $ TChanTimeout "receiveInvoice"
 
-liftMaybe :: MonadIO m => String -> Maybe a -> m a
+liftMaybe :: (MonadIO m) => String -> Maybe a -> m a
 liftMaybe msg mx =
   case mx of
     Just x -> pure x
     Nothing -> liftIO $ fail msg
 
-purgeChan :: MonadUnliftIO m => TChan a -> m ()
+purgeChan :: (MonadUnliftIO m) => TChan a -> m ()
 purgeChan chan = do
   x <- readTChanTimeout (MicroSecondsDelay 500000) chan
   when (isJust x) $ purgeChan chan
 
-ignore2 :: Monad m => a -> b -> m ()
+ignore2 :: (Monad m) => a -> b -> m ()
 ignore2 _ _ = pure ()
 
-ignore3 :: Monad m => a -> b -> c -> m ()
+ignore3 :: (Monad m) => a -> b -> c -> m ()
 ignore3 _ _ _ = pure ()
 
 withChannelWatcher ::

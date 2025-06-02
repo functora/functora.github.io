@@ -21,9 +21,7 @@ data ChannelPoint = ChannelPoint
   { fundingTxId :: TxId 'Funding,
     outputIndex :: Vout 'Funding
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ChannelPoint
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc ChannelPoint LnGRPC.ChannelPoint where
   fromGrpc x =
@@ -39,8 +37,10 @@ instance ToGrpc ChannelPoint LnGRPC.ChannelPoint where
     where
       msg gFundingTxIdBytes gOutputIndex =
         defMessage
-          & LnGRPC.fundingTxidBytes .~ gFundingTxIdBytes
-          & LnGRPC.outputIndex .~ gOutputIndex
+          & LnGRPC.fundingTxidBytes
+          .~ gFundingTxIdBytes
+          & LnGRPC.outputIndex
+          .~ gOutputIndex
 
 instance ToGrpc ChannelPoint Ln1.ExportChannelBackupRequest where
   toGrpc x =
@@ -48,7 +48,8 @@ instance ToGrpc ChannelPoint Ln1.ExportChannelBackupRequest where
     where
       msg cp =
         defMessage
-          & Ln1.chanPoint .~ cp
+          & Ln1.chanPoint
+          .~ cp
 
 channelPointParser :: Text -> Either LndError ChannelPoint
 channelPointParser x =
@@ -58,8 +59,8 @@ channelPointParser x =
         Right txidHex -> do
           idxTS <-
             first
-              ( const $
-                  FromGrpcError "Invalid ChannelPoint outputIndex"
+              ( const
+                  $ FromGrpcError "Invalid ChannelPoint outputIndex"
               )
               $ decodeUtf8' idxBS
           ChannelPoint (TxId $ BS.reverse txidHex)

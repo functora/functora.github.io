@@ -20,9 +20,7 @@ data PendingChannelsResponse = PendingChannelsResponse
     pendingForceClosingChannels :: [ForceClosedChannel],
     waitingCloseChannels :: [WaitingCloseChannel]
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out PendingChannelsResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc PendingChannelsResponse LnGRPC.PendingChannelsResponse where
   fromGrpc x =

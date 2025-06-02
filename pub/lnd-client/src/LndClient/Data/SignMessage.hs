@@ -21,15 +21,12 @@ data SignMessageRequest = SignMessageRequest
     doubleHash :: Bool,
     compactSig :: Bool
   }
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-instance Out SignMessageRequest
-
-newtype SignMessageResponse = SignMessageResponse {unSignMessageResponse :: ByteString}
-  deriving newtype (Eq, Show)
-  deriving stock (Generic)
-
-instance Out SignMessageResponse
+newtype SignMessageResponse = SignMessageResponse
+  { unSignMessageResponse :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc SignMessageRequest LnGRPC.SignMessageReq where
   toGrpc x =
@@ -41,10 +38,14 @@ instance ToGrpc SignMessageRequest LnGRPC.SignMessageReq where
     where
       msg gMsg gKeyLoc gDoubleHash gCompactSig =
         defMessage
-          & LnGRPC.msg .~ gMsg
-          & LnGRPC.keyLoc .~ gKeyLoc
-          & LnGRPC.doubleHash .~ gDoubleHash
-          & LnGRPC.compactSig .~ gCompactSig
+          & LnGRPC.msg
+          .~ gMsg
+          & LnGRPC.keyLoc
+          .~ gKeyLoc
+          & LnGRPC.doubleHash
+          .~ gDoubleHash
+          & LnGRPC.compactSig
+          .~ gCompactSig
 
 instance FromGrpc SignMessageResponse LnGRPC.SignMessageResp where
   fromGrpc x = SignMessageResponse <$> fromGrpc (x ^. LnGRPC.signature)
@@ -53,9 +54,7 @@ data KeyLocator = KeyLocator
   { keyFamily :: Int32,
     keyIndex :: Int32
   }
-  deriving stock (Eq, Show, Ord, Generic)
-
-instance Out KeyLocator
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc KeyLocator LnGRPC.KeyLocator where
   toGrpc x =
@@ -65,8 +64,10 @@ instance ToGrpc KeyLocator LnGRPC.KeyLocator where
     where
       msg gKeyFamily gKeyIndex =
         defMessage
-          & LnGRPC.keyFamily .~ gKeyFamily
-          & LnGRPC.keyIndex .~ gKeyIndex
+          & LnGRPC.keyFamily
+          .~ gKeyFamily
+          & LnGRPC.keyIndex
+          .~ gKeyIndex
 
 instance ToGrpc KeyLocator L.KeyLocator where
   toGrpc x = pure $ msg (keyFamily x) (keyIndex x)

@@ -17,15 +17,12 @@ data VerifyMessageRequest = VerifyMessageRequest
     signature :: ByteString,
     pubkey :: ByteString
   }
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
-instance Out VerifyMessageRequest
-
-newtype VerifyMessageResponse = VerifyMessageResponse {unVerifyMessageResponse :: Bool}
-  deriving newtype (Eq, Show)
-  deriving stock (Generic)
-
-instance Out VerifyMessageResponse
+newtype VerifyMessageResponse = VerifyMessageResponse
+  { unVerifyMessageResponse :: Bool
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc VerifyMessageRequest LnGRPC.VerifyMessageReq where
   toGrpc x =
@@ -36,9 +33,12 @@ instance ToGrpc VerifyMessageRequest LnGRPC.VerifyMessageReq where
     where
       msg gMsg gSignature gPubKey =
         defMessage
-          & LnGRPC.msg .~ gMsg
-          & LnGRPC.signature .~ gSignature
-          & LnGRPC.pubkey .~ gPubKey
+          & LnGRPC.msg
+          .~ gMsg
+          & LnGRPC.signature
+          .~ gSignature
+          & LnGRPC.pubkey
+          .~ gPubKey
 
 instance FromGrpc VerifyMessageResponse LnGRPC.VerifyMessageResp where
   fromGrpc x =

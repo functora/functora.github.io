@@ -53,8 +53,11 @@ import qualified Network.TLS.Extra.Cipher as TLS
 import qualified Universum
 import qualified Prelude
 
-newtype LndWalletPassword = LndWalletPassword {unLndWalletPassword :: Text}
-  deriving newtype (PersistField, PersistFieldSql, Eq, FromJSON, IsString)
+newtype LndWalletPassword = LndWalletPassword
+  { unLndWalletPassword :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql, FromJSON, IsString)
 
 data LndTlsCert = LndTlsCert ByteString SignedCertificate
   deriving stock (Eq, Show)
@@ -66,13 +69,9 @@ newtype LndHost' = LndHost' {unLndHost :: Text}
   deriving newtype (PersistField, PersistFieldSql, Eq, FromJSON, IsString)
   deriving stock (Generic)
 
-instance Out LndHost'
-
 newtype LndPort' = LndPort' {unLndPort :: Int}
   deriving newtype (PersistField, PersistFieldSql, Eq)
   deriving stock (Generic)
-
-instance Out LndPort'
 
 data LndConfig = LndConfig
   { lndConfigHost :: HostName,
@@ -118,8 +117,9 @@ instance FromJSON LndTlsCert where
       e -> failure e
     where
       failure err =
-        fail $
-          "Json certificate parsing error: " <> Prelude.show err
+        fail
+          $ "Json certificate parsing error: "
+          <> Prelude.show err
 
 instance FromJSON LndPort' where
   parseJSON x =
@@ -135,8 +135,9 @@ instance FromJSON LndPort' where
       err -> failure err
     where
       failure err =
-        fail $
-          "Json port loading error: " <> Prelude.show err
+        fail
+          $ "Json port loading error: "
+          <> Prelude.show err
 
 instance FromJSON RawConfig where
   parseJSON =
@@ -176,18 +177,21 @@ instance FromJSON LndEnv where
                           }
                     }
               )
-                <$> obj .:? "lnd_sync_grpc_timeout_seconds"
-                <*> obj .:? "lnd_async_grpc_timeout_seconds"
-                <*> obj .:? "lnd_log_severity"
-                <*> obj .:? "lnd_log_meta"
+                <$> obj
+                .:? "lnd_sync_grpc_timeout_seconds"
+                <*> obj
+                .:? "lnd_async_grpc_timeout_seconds"
+                <*> obj
+                .:? "lnd_log_severity"
+                <*> obj
+                .:? "lnd_log_meta"
           )
           arg
 
 createLndTlsCert :: ByteString -> Either LndError LndTlsCert
 createLndTlsCert bs = do
   pemsM <- first (LndEnvError . pack) $ Pem.pemParseBS bs
-  pem <-
-    note (LndEnvError $ pack "No pem found") $ safeHead pemsM
+  pem <- maybeToRight (LndEnvError $ pack "No pem found") $ safeHead pemsM
   bimap
     (LndEnvError . pack . ("Certificate is not valid: " <>))
     (LndTlsCert bs)
@@ -198,7 +202,10 @@ unLndTlsCert (LndTlsCert bs _) = bs
 
 createLndPort :: Word32 -> Either LndError LndPort'
 createLndPort p =
-  bimap (LndEnvError . ("Wrong port " <>) . Universum.show) LndPort' (tryFrom @Word32 @Int p)
+  bimap
+    (LndEnvError . ("Wrong port " <>) . Universum.show)
+    LndPort'
+    (tryFrom @Word32 @Int p)
 
 readLndEnv :: IO LndEnv
 readLndEnv =
@@ -207,19 +214,26 @@ readLndEnv =
     $ var
       (parser <=< nonempty)
       "LND_CLIENT_ENV_DATA"
-      (keep <> help "")
+      (help "")
   where
     parser :: String -> Either Error LndEnv
     parser x =
       first UnreadError $ eitherDecodeStrict $ C8.pack x
 
-selfSignedCertificateValidation :: [SignedCertificate] -> TLS.ClientParams -> TLS.ClientParams
+selfSignedCertificateValidation ::
+  [SignedCertificate] -> TLS.ClientParams -> TLS.ClientParams
 selfSignedCertificateValidation extraCerts cp =
   cp
     { TLS.clientShared =
-        (TLS.clientShared cp) {TLS.sharedCAStore = makeCertificateStore extraCerts},
+        (TLS.clientShared cp)
+          { TLS.sharedCAStore =
+              makeCertificateStore extraCerts
+          },
       TLS.clientSupported =
-        (TLS.clientSupported cp) {TLS.supportedCiphers = TLS.ciphersuite_default}
+        (TLS.clientSupported cp)
+          { TLS.supportedCiphers =
+              TLS.ciphersuite_default
+          }
     }
 
 newLndEnv ::
@@ -247,15 +261,16 @@ newLndEnv pwd (LndTlsCert _ cert) mac (LndHost' host) (LndPort' port) seed aezee
               [ ("macaroon", encodeUtf8 (unLndHexMacaroon mac :: Text))
               ],
             _grpcClientConfigTLS =
-              Just . selfSignedCertificateValidation [cert] $
-                TLS.defaultParamsClient host_ (Universum.show port_)
+              Just
+                . selfSignedCertificateValidation [cert]
+                $ TLS.defaultParamsClient host_ (Universum.show port_)
           },
       envLndLogSeverity = Just DebugS
     }
   where
     host_ = unpack host
     port_ :: PortNumber
-    port_ = fromInteger (toInteger port)
+    port_ = Prelude.fromInteger (toInteger port)
 
 enforceDebugSev :: LndEnv -> LndEnv
 enforceDebugSev env =

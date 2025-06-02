@@ -16,18 +16,14 @@ data SendPaymentRequest = SendPaymentRequest
     amt :: Maybe Msat,
     outgoingChanId :: Maybe ChanId
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out SendPaymentRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data SendPaymentResponse = SendPaymentResponse
   { paymentError :: Text,
     paymentPreimage :: RPreimage,
     paymentHash :: RHash
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out SendPaymentResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc SendPaymentRequest LnGRPC.SendRequest where
   toGrpc x =
@@ -38,9 +34,12 @@ instance ToGrpc SendPaymentRequest LnGRPC.SendRequest where
     where
       msg gAmt gPaymentRequest gChanId =
         defMessage
-          & LnGRPC.amtMsat .~ gAmt
-          & LnGRPC.paymentRequest .~ gPaymentRequest
-          & LnGRPC.outgoingChanId .~ gChanId
+          & LnGRPC.amtMsat
+          .~ gAmt
+          & LnGRPC.paymentRequest
+          .~ gPaymentRequest
+          & LnGRPC.outgoingChanId
+          .~ gChanId
 
 instance FromGrpc SendPaymentResponse LnGRPC.SendResponse where
   fromGrpc x = do
@@ -52,6 +51,7 @@ instance FromGrpc SendPaymentResponse LnGRPC.SendResponse where
     if newRHash (paymentPreimage res) == paymentHash res
       then Right res
       else
-        Left . LndError $
-          "paymentPreimage doesn't match paymentHash, error: "
-            <> paymentError res
+        Left
+          . LndError
+          $ "paymentPreimage doesn't match paymentHash, error: "
+          <> paymentError res

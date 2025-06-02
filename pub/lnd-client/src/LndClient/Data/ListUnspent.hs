@@ -16,18 +16,19 @@ data ListUnspentRequest = ListUnspentRequest
     maxConfs :: Int32,
     account :: Text
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ListUnspentRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ListUnspentRequest W.ListUnspentRequest where
   toGrpc x = pure $ msg (minConfs x) (maxConfs x) (account x)
     where
       msg mn mx a =
         defMessage
-          & W.minConfs .~ mn
-          & W.maxConfs .~ mx
-          & W.account .~ a
+          & W.minConfs
+          .~ mn
+          & W.maxConfs
+          .~ mx
+          & W.account
+          .~ a
 
 data Utxo = Utxo
   { addressType :: AddressType,
@@ -37,9 +38,7 @@ data Utxo = Utxo
     outpoint :: OutPoint,
     confirmations :: Int64
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out Utxo
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc Utxo L.Utxo where
   fromGrpc x =
@@ -54,10 +53,7 @@ instance FromGrpc Utxo L.Utxo where
 newtype ListUnspentResponse = ListUnspentResponse
   { utxos :: [Utxo]
   }
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out ListUnspentResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc ListUnspentResponse W.ListUnspentResponse where
   fromGrpc x = ListUnspentResponse <$> mapM fromGrpc (x ^. W.utxos)

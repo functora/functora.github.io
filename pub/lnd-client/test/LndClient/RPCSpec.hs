@@ -11,6 +11,7 @@ module LndClient.RPCSpec
 where
 
 import qualified Control.Concurrent.Async as Async
+import Functora.Prelude hiding (qq)
 import LndClient.Data.AddHodlInvoice as HodlInvoice (AddHodlInvoiceRequest (..))
 import LndClient.Data.AddInvoice as AddInvoice
   ( AddInvoiceRequest (..),
@@ -54,8 +55,9 @@ spec = do
     x <- readLndEnv
     envLndSyncGrpcTimeout x `shouldBe` newGrpcTimeout 59
     envLndAsyncGrpcTimeout x `shouldBe` Nothing
-  it "decodePayReq" $
-    withEnv $ do
+  it "decodePayReq"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       x0 <- liftLndResult =<< addInvoice lnd addInvoiceRequest
       ct <- liftIO getCurrentTime
@@ -71,16 +73,16 @@ spec = do
               $ utctDayTime ct
       let expSec = Seconds 1000
       let utc = ct {utctDayTime = dt}
-      liftIO $
-        x1
-          `shouldBe` PayReq.PayReq
-            { PayReq.destination = pub,
-              PayReq.paymentHash = AddInvoice.rHash x0,
-              PayReq.numMsat = AddInvoice.valueMsat addInvoiceRequest,
-              PayReq.expiry = Seconds 1000,
-              PayReq.timestamp = ct {utctDayTime = dt},
-              PayReq.expiresAt = PayReq.addSeconds expSec utc
-            }
+      liftIO
+        $ x1
+        `shouldBe` PayReq.PayReq
+          { PayReq.destination = pub,
+            PayReq.paymentHash = AddInvoice.rHash x0,
+            PayReq.numMsat = AddInvoice.valueMsat addInvoiceRequest,
+            PayReq.expiry = Seconds 1000,
+            PayReq.timestamp = ct {utctDayTime = dt},
+            PayReq.expiresAt = PayReq.addSeconds expSec utc
+          }
       liftIO $ do
         PayReq.paymentHash x1
           `shouldBe` AddInvoice.rHash x0
@@ -88,8 +90,9 @@ spec = do
           `shouldBe` AddInvoice.valueMsat addInvoiceRequest
         Just (PayReq.expiry x1)
           `shouldBe` AddInvoice.expiry addInvoiceRequest
-  it "lookupInvoice" $
-    withEnv $ do
+  it "lookupInvoice"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       x0 <- liftLndResult =<< addInvoice lnd addInvoiceRequest
       x1 <- liftLndResult =<< lookupInvoice lnd (AddInvoice.rHash x0)
@@ -104,19 +107,22 @@ spec = do
           `shouldBe` AddInvoice.memo addInvoiceRequest
         Invoice.valueMsat x1
           `shouldBe` AddInvoice.valueMsat addInvoiceRequest
-  it "addInvoice" $
-    withEnv $ do
+  it "addInvoice"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       res <- addInvoice lnd addInvoiceRequest
       liftIO $ res `shouldSatisfy` isRight
-  it "addInvoiceQrCode" $
-    withEnv $ do
+  it "addInvoiceQrCode"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       res <- liftLndResult =<< addInvoice lnd addInvoiceRequest
       let qr = qrPngDataUrl qrDefOpts (AddInvoice.paymentRequest res)
       liftIO $ qr `shouldSatisfy` isJust
-  it "addNormalInvoice" $
-    withEnv $ do
+  it "addNormalInvoice"
+    $ withEnv
+    $ do
       queue <- getInvoiceTChan Bob
       lnd <- getLndEnv Bob
       inv <- liftLndResult =<< addInvoice lnd addInvoiceRequest
@@ -127,8 +133,9 @@ spec = do
           Invoice.OPEN
           queue
       liftIO $ res `shouldSatisfy` isRight
-  it "settleNormalInvoice" $
-    withEnv $ do
+  it "settleNormalInvoice"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       chan <- getInvoiceTChan Bob
       bob <- getLndEnv Bob
@@ -142,8 +149,9 @@ spec = do
       void $ liftLndResult =<< sendPayment alice spr
       res <- receiveInvoice bob rh Invoice.SETTLED chan
       liftIO $ res `shouldSatisfy` isRight
-  it "settleNormalInvoice amt not specified" $
-    withEnv $ do
+  it "settleNormalInvoice amt not specified"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       chan <- getInvoiceTChan Bob
       bob <- getLndEnv Bob
@@ -157,8 +165,9 @@ spec = do
       void $ liftLndResult =<< sendPayment alice spr
       res <- receiveInvoice bob rh Invoice.SETTLED chan
       liftIO $ res `shouldSatisfy` isRight
-  it "addHodlInvoice" $
-    withEnv $ do
+  it "addHodlInvoice"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       r <- newRPreimage
       let req =
@@ -173,8 +182,9 @@ spec = do
       liftIO $ do
         x0 `shouldSatisfy` isRight
         x0 `shouldBe` AddInvoice.paymentRequest <$> x1
-  it "watchNormal" $
-    withEnv $ do
+  it "watchNormal"
+    $ withEnv
+    $ do
       bob <- getLndEnv Bob
       Watcher.withWatcher bob subscribeInvoicesChan ignore3 $ \w -> do
         chan <- Watcher.dupLndTChan w
@@ -187,8 +197,9 @@ spec = do
             Invoice.OPEN
             chan
         liftIO $ res `shouldSatisfy` isRight
-  it "watchUnit" $
-    withEnv $ do
+  it "watchUnit"
+    $ withEnv
+    $ do
       bob <- getLndEnv Bob
       alice <- getLndEnv Alice
       Watcher.withWatcherUnit bob subscribeChannelEventsChan ignore2 $ \w -> do
@@ -213,8 +224,9 @@ spec = do
         cp <- liftLndResult =<< openChannelSync alice openChannelRequest
         res <- receiveActiveChannel proxyOwner cp chan
         liftIO $ res `shouldSatisfy` isRight
-  it "unWatch" $
-    withEnv $ do
+  it "unWatch"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       Watcher.withWatcher
         lnd
@@ -231,8 +243,9 @@ spec = do
           void . liftLndResult =<< addInvoice lnd addInvoiceRequest
           res <- readTChanTimeout (MicroSecondsDelay 500000) chan
           liftIO $ res `shouldBe` Nothing
-  it "ensureHodlInvoice" $
-    withEnv $ do
+  it "ensureHodlInvoice"
+    $ withEnv
+    $ do
       r <- newRPreimage
       let req =
             AddHodlInvoiceRequest
@@ -244,8 +257,9 @@ spec = do
       bob <- getLndEnv Bob
       res <- ensureHodlInvoice bob req
       liftIO $ res `shouldSatisfy` isRight
-  it "cancelInvoice" $
-    withEnv $ do
+  it "cancelInvoice"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       r <- newRPreimage
       let rh = newRHash r
@@ -281,8 +295,9 @@ spec = do
               =<< receiveInvoice bob rh Invoice.CANCELED qq
             liftIO $ res `shouldSatisfy` isRight
         )
-  it "settleInvoice" $
-    withEnv $ do
+  it "settleInvoice"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       r <- newRPreimage
       let rh = newRHash r
@@ -312,8 +327,9 @@ spec = do
               =<< receiveInvoice bob rh Invoice.SETTLED qq
             liftIO $ res `shouldSatisfy` isRight
         )
-  it "listInvoices" $
-    withEnv $ do
+  it "listInvoices"
+    $ withEnv
+    $ do
       lnd <- getLndEnv Bob
       rh <-
         AddInvoice.rHash
@@ -329,16 +345,18 @@ spec = do
         ListInvoices.invoices
           <$> (liftLndResult =<< listInvoices lnd listReq)
       liftIO $ xs `shouldSatisfy` any ((rh ==) . Invoice.rHash)
-  it "listChannelAndClose" $
-    withEnv $ do
+  it "listChannelAndClose"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       lnd <- getLndEnv Bob
       let listReq = ListChannelsRequest False False False False Nothing
       cs0 <- liftLndResult =<< listChannels lnd listReq
       lazyConnectNodes proxyOwner
       cp <-
-        liftMaybe "ChannelPoint is required" $
-          Channel.channelPoint <$> safeHead cs0
+        liftMaybe "ChannelPoint is required"
+          $ Channel.channelPoint
+          <$> safeHead cs0
       withSpawnLink
         ( closeChannel
             (const $ return ())
@@ -350,15 +368,17 @@ spec = do
             cs1 <- liftLndResult =<< listChannels lnd listReq
             liftIO $ (length cs0 - length cs1) `shouldBe` 1
         )
-  it "closedChannels" $
-    withEnv $ do
+  it "closedChannels"
+    $ withEnv
+    $ do
       cp <- setupOneChannel Alice Bob
       closeAllChannels proxyOwner
       lnd <- getLndEnv Bob
       res <- liftLndResult =<< closedChannels lnd ClosedChannels.defReq
       liftIO $ res `shouldSatisfy` any ((cp ==) . CloseChannel.chPoint)
-  it "subscriptionCanBeCancelled" $
-    withEnv $ do
+  it "subscriptionCanBeCancelled"
+    $ withEnv
+    $ do
       bob <- getLndEnv Bob
       alice <- getLndEnv Alice
       GetInfoResponse bobPubKey _ _ <- liftLndResult =<< getInfo bob
@@ -378,39 +398,40 @@ spec = do
                 fundingShim = Nothing
               }
       a <-
-        spawnLink $
-          liftLndResult
-            =<< openChannel (const $ return ()) alice openChannelRequest
+        spawnLink
+          $ liftLndResult
+          =<< openChannel (const $ return ()) alice openChannelRequest
       liftIO $ do
         res <- Async.race (sleep $ MicroSecondsDelay 100000) $ Async.cancel a
         res `shouldSatisfy` isRight
-  it "trackPaymentV2" $
-    withEnv $
-      do
-        void $ setupOneChannel Alice Bob
-        --
-        -- prepare invoice and subscription
-        --
-        alice <- getLndEnv Alice
-        bob <- getLndEnv Bob
-        inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
-        let req =
-              SendPaymentRequest
-                (AddInvoice.paymentRequest inv)
-                (Just $ AddInvoice.valueMsat addInvoiceRequest)
-                Nothing
-        --
-        -- spawn payment watcher and settle invoice
-        --
-        Watcher.withWatcher alice trackPaymentV2Chan (\_ _ _ -> pure ()) $ \w -> do
-          void $ liftLndResult =<< sendPayment alice req
-          chan <- Watcher.dupLndTChan w
-          Watcher.watch w $
-            TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
-          res <- readTChanTimeout (MicroSecondsDelay 2000000) chan
-          liftIO $ res `shouldSatisfy` isJust
-  it "signVerify" $
-    withEnv $ do
+  it "trackPaymentV2"
+    $ withEnv
+    $ do
+      void $ setupOneChannel Alice Bob
+      --
+      -- prepare invoice and subscription
+      --
+      alice <- getLndEnv Alice
+      bob <- getLndEnv Bob
+      inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
+      let req =
+            SendPaymentRequest
+              (AddInvoice.paymentRequest inv)
+              (Just $ AddInvoice.valueMsat addInvoiceRequest)
+              Nothing
+      --
+      -- spawn payment watcher and settle invoice
+      --
+      Watcher.withWatcher alice trackPaymentV2Chan (\_ _ _ -> pure ()) $ \w -> do
+        void $ liftLndResult =<< sendPayment alice req
+        chan <- Watcher.dupLndTChan w
+        Watcher.watch w
+          $ TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
+        res <- readTChanTimeout (MicroSecondsDelay 2000000) chan
+        liftIO $ res `shouldSatisfy` isJust
+  it "signVerify"
+    $ withEnv
+    $ do
       alice <- getLndEnv Alice
       bob <- getLndEnv Bob
       --
@@ -427,14 +448,17 @@ spec = do
       VerifyMessageResponse res <-
         liftLndResult
           =<< verifyMessage bob (VerifyMessageRequest "test" sig (unNodePubKey pubKey))
-      liftIO $
-        res `shouldBe` True
-  it "waitForGrpc" $
-    withEnv $ do
+      liftIO
+        $ res
+        `shouldBe` True
+  it "waitForGrpc"
+    $ withEnv
+    $ do
       res <- waitForGrpc =<< getLndEnv Alice
       liftIO $ res `shouldSatisfy` isRight
-  it "setupChannelAndClose" $
-    withEnv $ do
+  it "setupChannelAndClose"
+    $ withEnv
+    $ do
       lndAlice <- getLndEnv Alice
       lndBob <- getLndEnv Bob
       GetInfoResponse merchantPubKey _ _ <-
@@ -463,48 +487,50 @@ spec = do
             Left {} -> fail "Pending channels fail"
             Right (PendingChannelsResponse _ x _ _ _) -> x
       liftIO $ pc `shouldNotSatisfy` null
-  it "trackPaymentV2Sync SUCCEEDED" $
-    withEnv $
-      do
-        void $ setupOneChannel Alice Bob
-        alice <- getLndEnv Alice
-        bob <- getLndEnv Bob
-        inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
-        let req =
-              SendPaymentRequest
-                (AddInvoice.paymentRequest inv)
-                (Just $ AddInvoice.valueMsat addInvoiceRequest)
-                Nothing
-        let tpreq = TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
-        _ <- sendPayment alice req
-        tp <- liftLndResult =<< trackPaymentSync alice tpreq
-        liftIO $ Payment.state tp `shouldBe` Payment.SUCCEEDED
-  it "trackPaymentV2Sync FAILED" $
-    withEnv $
-      do
-        void $ setupZeroChannels proxyOwner
-        alice <- getLndEnv Alice
-        bob <- getLndEnv Bob
-        inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
-        let req =
-              SendPaymentRequest
-                (AddInvoice.paymentRequest inv)
-                (Just $ AddInvoice.valueMsat addInvoiceRequest)
-                Nothing
-        let tpreq = TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
-        _ <- sendPayment alice req
-        tp <- liftLndResult =<< trackPaymentSync alice tpreq
-        liftIO $ Payment.state tp `shouldBe` Payment.FAILED
-  it "walletBalance" $
-    withEnv $ do
+  it "trackPaymentV2Sync SUCCEEDED"
+    $ withEnv
+    $ do
+      void $ setupOneChannel Alice Bob
+      alice <- getLndEnv Alice
+      bob <- getLndEnv Bob
+      inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
+      let req =
+            SendPaymentRequest
+              (AddInvoice.paymentRequest inv)
+              (Just $ AddInvoice.valueMsat addInvoiceRequest)
+              Nothing
+      let tpreq = TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
+      _ <- sendPayment alice req
+      tp <- liftLndResult =<< trackPaymentSync alice tpreq
+      liftIO $ Payment.state tp `shouldBe` Payment.SUCCEEDED
+  it "trackPaymentV2Sync FAILED"
+    $ withEnv
+    $ do
+      void $ setupZeroChannels proxyOwner
+      alice <- getLndEnv Alice
+      bob <- getLndEnv Bob
+      inv <- liftLndResult =<< addInvoice bob addInvoiceRequest
+      let req =
+            SendPaymentRequest
+              (AddInvoice.paymentRequest inv)
+              (Just $ AddInvoice.valueMsat addInvoiceRequest)
+              Nothing
+      let tpreq = TrackPayment.TrackPaymentRequest (AddInvoice.rHash inv) False
+      _ <- sendPayment alice req
+      tp <- liftLndResult =<< trackPaymentSync alice tpreq
+      liftIO $ Payment.state tp `shouldBe` Payment.FAILED
+  it "walletBalance"
+    $ withEnv
+    $ do
       void $ setupOneChannel Alice Bob
       lnd <- getLndEnv Alice
       res <- liftLndResult =<< walletBalance lnd
       liftIO $ do
         Wallet.totalBalance res `shouldSatisfy` (> 0)
         Wallet.confirmedBalance res `shouldSatisfy` (> 0)
-  it "channelBalance" $
-    withEnv $ do
+  it "channelBalance"
+    $ withEnv
+    $ do
       setupZeroChannels proxyOwner
       void $ setupOneChannel Alice Bob
       sleep $ MicroSecondsDelay 1000000

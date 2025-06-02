@@ -11,9 +11,7 @@ where
 import Control.Exception (BlockedIndefinitelyOnMVar (..))
 import Data.ProtoLens.Message
 import Data.ProtoLens.Service.Types (HasMethod, HasMethodImpl (..))
-import Data.Text
 import GHC.IO.Exception (IOException)
-import GHC.TypeLits (Symbol)
 import LndClient.Data.LndEnv
 import LndClient.Import
 import Network.GRPC.Client.Helpers
@@ -43,18 +41,20 @@ runUnary rpc env req = do
         Just "wallet locked, unlock it to enable full RPC access" -> Left LndWalletLocked
         _ -> Left $ LndError $ pack e
     Right (Right (Right (Left e))) ->
-      Left $ LndError ("LndGrpc response error, code: " <> inspectPlain e)
+      Left $ LndError ("LndGrpc response error, code: " <> inspect e)
     Right (Right (Left e)) ->
-      Left . LndError $
-        "LndGrpc TooMuchConcurrency error" <> fromString (Prelude.show e)
+      Left
+        . LndError
+        $ "LndGrpc TooMuchConcurrency error"
+        <> fromString (Prelude.show e)
     Right (Left e) ->
-      Left $ LndGrpcError e
+      Left . LndGrpcError $ show e
     Left e ->
       Left e
   where
     this =
-      runClientIO $
-        bracket
+      runClientIO
+        $ bracket
           (setupGrpcClient $ envLndConfig env)
           close
           (\grpc -> rawUnary rpc grpc req)
@@ -77,27 +77,32 @@ runStreamServer rpc env req handler = do
     Right (Right (Right ((), _, _))) ->
       Right defMessage
     Right (Right (Left e)) ->
-      Left . LndError $
-        "LndGrpc response error: " <> fromString (Prelude.show e)
+      Left
+        . LndError
+        $ "LndGrpc response error: "
+        <> fromString (Prelude.show e)
     Right (Left e) ->
-      Left $ LndGrpcError e
+      Left . LndGrpcError $ show e
     Left e ->
       Left e
   where
     this =
-      runClientIO $
-        bracket
+      runClientIO
+        $ bracket
           (setupGrpcClient $ envLndConfig env)
           close
           (\grpc -> rawStreamServer rpc grpc () req $ const handler)
 
-catchExceptions :: MonadUnliftIO m => m (Either LndError a) -> m (Either LndError a)
+catchExceptions ::
+  (MonadUnliftIO m) => m (Either LndError a) -> m (Either LndError a)
 catchExceptions x =
   x
-    `catches` [ Handler (\(e :: BlockedIndefinitelyOnMVar) -> pure (Left $ LndGrpcException $ inspectPlain e)),
+    `catches` [ Handler
+                  ( \(e :: BlockedIndefinitelyOnMVar) -> pure (Left $ LndGrpcException $ show e)
+                  ),
                 Handler
                   ( \(ex :: IOException) -> case stripPrefix ("Network.Socket.connect" :: Text) (pack $ Prelude.show ex) of
                       Just mes -> pure $ Left $ NetworkException mes
-                      Nothing -> pure $ Left $ LndIOException ex
+                      Nothing -> pure $ Left . LndIOException $ show ex
                   )
               ]

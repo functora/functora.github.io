@@ -10,16 +10,13 @@ module LndClient.Data.Type
   )
 where
 
-import Control.Exception (IOException)
 import qualified Data.Set as Set
 import LndClient.Import.External
-import LndClient.Orphan ()
-import qualified Network.HTTP2.Client2.Exceptions as E
 
 data LndError
   = ToGrpcError Text
   | FromGrpcError Text
-  | LndGrpcError E.ClientError
+  | LndGrpcError Text
   | LndGrpcException Text
   | LndWalletLocked
   | LndWalletNotExists
@@ -29,10 +26,8 @@ data LndError
   | LndEnvError Text
   | TChanTimeout Text
   | NetworkException Text
-  | LndIOException IOException
-  deriving stock (Eq, Show, Generic)
-
-instance Out LndError
+  | LndIOException Text
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data LoggingMeta
   = LndHost
@@ -53,12 +48,11 @@ data LoggingMeta
       Ord,
       Show,
       Read,
+      Data,
       Generic,
       Enum,
       Bounded
     )
-
-instance Out LoggingMeta
 
 instance ToJSON LoggingMeta
 
@@ -70,7 +64,7 @@ data LoggingStrategy = LoggingStrategy
       Maybe Timespan ->
       Maybe LndError ->
       Severity,
-    loggingStrategySecret :: SecretVision,
+    loggingStrategySecret :: Bool,
     loggingStrategyMeta :: Set LoggingMeta
   }
 
@@ -79,9 +73,7 @@ data LnInitiator
   | LnInitiatorLocal
   | LnInitiatorRemote
   | LnInitiatorBoth
-  deriving stock (Eq, Ord, Show, Read, Generic)
-
-instance Out LnInitiator
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 derivePersistField "LnInitiator"
 
@@ -89,7 +81,7 @@ logDefault :: LoggingStrategy
 logDefault =
   LoggingStrategy
     { loggingStrategySeverity = \x _ _ -> x,
-      loggingStrategySecret = SecretHidden,
+      loggingStrategySecret = True,
       loggingStrategyMeta = Set.fromList enumerate
     }
 
@@ -97,7 +89,7 @@ logDebug :: LoggingStrategy
 logDebug =
   LoggingStrategy
     { loggingStrategySeverity = \_ _ _ -> DebugS,
-      loggingStrategySecret = SecretHidden,
+      loggingStrategySecret = True,
       loggingStrategyMeta = Set.fromList enumerate
     }
 

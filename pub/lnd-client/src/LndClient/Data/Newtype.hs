@@ -59,32 +59,28 @@ import qualified Proto.Lnrpc.Ln1 as LnGrpc
 import qualified Proto.Lnrpc.Ln1_Fields as LnGrpc
 import qualified Universum (show)
 
-newtype PendingChannelId = PendingChannelId {unPendingChannelId :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show)
-  deriving stock (Generic)
+newtype PendingChannelId = PendingChannelId
+  { unPendingChannelId :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-instance Out PendingChannelId
+newtype Psbt = Psbt
+  { unPsbt :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-newtype Psbt = Psbt {unPsbt :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show)
-  deriving stock (Generic)
+newtype RawTx = RawTx
+  { unRawTx :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-instance Out Psbt
-
-newtype RawTx = RawTx {unRawTx :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out RawTx
-
-newtype ChanId = ChanId {unChanId :: Natural}
-  deriving newtype
-    ( Eq,
-      Ord,
-      Show,
-      Read
-    )
-  deriving stock (Generic)
+newtype ChanId = ChanId
+  { unChanId :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance PersistField ChanId where
   toPersistValue =
@@ -94,11 +90,10 @@ instance PersistField ChanId where
 
 deriving via Word64 instance PersistFieldSql ChanId
 
-instance Out ChanId
-
-newtype Vout (a :: TxKind) = Vout {unVout :: Natural}
-  deriving newtype (Eq, Ord, Show, Read)
-  deriving stock (Generic)
+newtype Vout (a :: TxKind) = Vout
+  { unVout :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance PersistField (Vout a) where
   toPersistValue =
@@ -108,29 +103,28 @@ instance PersistField (Vout a) where
 
 deriving via Word32 instance PersistFieldSql (Vout a)
 
-instance Out (Vout a)
+newtype TxId (a :: TxKind) = TxId
+  { unTxId :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-newtype TxId (a :: TxKind) = TxId {unTxId :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show, Read)
-  deriving stock (Generic)
+newtype NodePubKey = NodePubKey
+  { unNodePubKey :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-instance Out (TxId a)
+newtype NodeLocation = NodeLocation
+  { unNodeLocation :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-newtype NodePubKey = NodePubKey {unNodePubKey :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show, Read)
-  deriving stock (Generic)
-
-instance Out NodePubKey
-
-newtype NodeLocation = NodeLocation {unNodeLocation :: Text}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show, Read)
-  deriving stock (Generic)
-
-instance Out NodeLocation
-
-newtype AddIndex = AddIndex {unAddIndex :: Natural}
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
+newtype AddIndex = AddIndex
+  { unAddIndex :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance PersistField AddIndex where
   toPersistValue =
@@ -140,11 +134,10 @@ instance PersistField AddIndex where
 
 deriving via Word64 instance PersistFieldSql AddIndex
 
-instance Out AddIndex
-
-newtype SettleIndex = SettleIndex {unSettleIndex :: Natural}
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
+newtype SettleIndex = SettleIndex
+  { unSettleIndex :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance PersistField SettleIndex where
   toPersistValue =
@@ -154,38 +147,29 @@ instance PersistField SettleIndex where
 
 deriving via Word32 instance PersistFieldSql SettleIndex
 
-instance Out SettleIndex
+newtype PaymentRequest = PaymentRequest
+  { unPaymentRequest :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql, QR.ToText)
 
-newtype PaymentRequest = PaymentRequest {unPaymentRequest :: Text}
-  deriving newtype (PersistField, PersistFieldSql, Eq, QR.ToText, Show)
-  deriving stock (Generic)
+newtype RHash = RHash
+  { unRHash :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-instance Out PaymentRequest
+newtype RPreimage = RPreimage
+  { unRPreimage :: ByteString
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql)
 
-newtype RHash = RHash {unRHash :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out RHash
-
-newtype RPreimage = RPreimage {unRPreimage :: ByteString}
-  deriving newtype (PersistField, PersistFieldSql, Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out RPreimage
-
-newtype Msat = Msat {unMsat :: Natural}
-  deriving newtype
-    ( Eq,
-      Num,
-      Ord,
-      FromJSON,
-      Show,
-      Read
-    )
-  deriving stock
-    ( Generic
-    )
+newtype Msat = Msat
+  { unMsat :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (FromJSON, Num)
 
 instance PersistField Msat where
   toPersistValue =
@@ -195,30 +179,27 @@ instance PersistField Msat where
 
 deriving via Word64 instance PersistFieldSql Msat
 
-instance Out Msat
-
 instance FromGrpc Msat LnGrpc.Amount where
   fromGrpc =
     fromGrpcMSat . (^. LnGrpc.msat)
 
-newtype CipherSeedMnemonic = CipherSeedMnemonic {unCipherSeedMnemonic :: [Text]}
-  deriving newtype (PersistField, PersistFieldSql, Eq, FromJSON)
+newtype CipherSeedMnemonic = CipherSeedMnemonic
+  { unCipherSeedMnemonic :: [Text]
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql, FromJSON)
 
-newtype AezeedPassphrase = AezeedPassphrase {unAezeedPassphrase :: Text}
-  deriving newtype (PersistField, PersistFieldSql, Eq, FromJSON)
+newtype AezeedPassphrase = AezeedPassphrase
+  { unAezeedPassphrase :: Text
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (PersistField, PersistFieldSql, FromJSON)
 
-newtype Seconds = Seconds {unSeconds :: Natural}
-  deriving newtype
-    ( Eq,
-      Ord,
-      FromJSON,
-      Show,
-      Num,
-      Real,
-      Enum,
-      Integral
-    )
-  deriving stock (Generic)
+newtype Seconds = Seconds
+  { unSeconds :: Natural
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (FromJSON, Num, Real, Enum, Integral)
 
 instance PersistField Seconds where
   toPersistValue =
@@ -228,10 +209,11 @@ instance PersistField Seconds where
 
 deriving via Word64 instance PersistFieldSql Seconds
 
-instance Out Seconds
-
-newtype GrpcTimeoutSeconds = GrpcTimeoutSeconds {unGrpcTimeoutSeconds :: Int}
-  deriving newtype (Eq, Ord, FromJSON, Show)
+newtype GrpcTimeoutSeconds = GrpcTimeoutSeconds
+  { unGrpcTimeoutSeconds :: Int
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving newtype (FromJSON)
 
 instance ToGrpc NodePubKey ByteString where
   toGrpc = Right . unNodePubKey
@@ -264,7 +246,9 @@ instance FromGrpc NodePubKey ByteString where
 
 instance FromGrpc NodePubKey Text where
   fromGrpc =
-    bimap (const $ FromGrpcError "NodePubKey hex decoding error") NodePubKey . B16.decode . encodeUtf8
+    bimap (const $ FromGrpcError "NodePubKey hex decoding error") NodePubKey
+      . B16.decode
+      . encodeUtf8
 
 instance FromGrpc NodeLocation Text where
   fromGrpc = Right . NodeLocation
@@ -273,10 +257,16 @@ instance ToGrpc (TxId a) ByteString where
   toGrpc = Right . unTxId
 
 instance ToGrpc (Vout a) Word32 where
-  toGrpc x = first (ToGrpcError . ("Vout overflow: " <>) . Universum.show) (tryFrom @Natural @Word32 $ unVout x)
+  toGrpc x =
+    first
+      (ToGrpcError . ("Vout overflow: " <>) . Universum.show)
+      (tryFrom @Natural @Word32 $ unVout x)
 
 instance ToGrpc ChanId Word64 where
-  toGrpc x = first (ToGrpcError . ("ChanId overflow: " <>) . Universum.show) (tryFrom @Natural @Word64 $ unChanId x)
+  toGrpc x =
+    first
+      (ToGrpcError . ("ChanId overflow: " <>) . Universum.show)
+      (tryFrom @Natural @Word64 $ unChanId x)
 
 instance ToGrpc PendingChannelId ByteString where
   toGrpc = Right . unPendingChannelId
@@ -288,10 +278,16 @@ instance ToGrpc RawTx ByteString where
   toGrpc = Right . unRawTx
 
 instance ToGrpc AddIndex Word64 where
-  toGrpc x = first (ToGrpcError . ("AddIndex overflow: " <>) . Universum.show) (tryFrom @Natural @Word64 $ unAddIndex x)
+  toGrpc x =
+    first
+      (ToGrpcError . ("AddIndex overflow: " <>) . Universum.show)
+      (tryFrom @Natural @Word64 $ unAddIndex x)
 
 instance ToGrpc SettleIndex Word64 where
-  toGrpc x = first (ToGrpcError . ("SettleIndex overflow: " <>) . Universum.show) (tryFrom @Natural @Word64 $ unSettleIndex x)
+  toGrpc x =
+    first
+      (ToGrpcError . ("SettleIndex overflow: " <>) . Universum.show)
+      (tryFrom @Natural @Word64 $ unSettleIndex x)
 
 instance FromGrpc ChanId Word64 where
   fromGrpc = Right . ChanId . from @Word64 @Natural
@@ -319,7 +315,10 @@ instance FromGrpc PaymentRequest IGrpc.AddHoldInvoiceResp where
 
 instance FromGrpc Seconds Int64 where
   fromGrpc x =
-    bimap (ToGrpcError . ("Seconds overflow: " <>) . Universum.show) Seconds (tryFrom @Int64 @Natural $ x)
+    bimap
+      (ToGrpcError . ("Seconds overflow: " <>) . Universum.show)
+      Seconds
+      (tryFrom @Int64 @Natural $ x)
 
 instance FromGrpc RHash Text where
   fromGrpc x0 =
@@ -338,7 +337,9 @@ instance ToGrpc PaymentRequest Text where
 
 instance ToGrpc Seconds Int64 where
   toGrpc x =
-    first (ToGrpcError . ("Seconds overflow: " <>) . Universum.show) (tryFrom @Natural @Int64 $ unSeconds x)
+    first
+      (ToGrpcError . ("Seconds overflow: " <>) . Universum.show)
+      (tryFrom @Natural @Int64 $ unSeconds x)
 
 instance ToGrpc CipherSeedMnemonic [Text] where
   toGrpc = Right . unCipherSeedMnemonic
@@ -373,7 +374,12 @@ instance ToGrpc RHash IGrpc.SubscribeSingleInvoiceRequest where
     rh <- toGrpc x
     Right $ defMessage & IGrpc.rHash .~ rh
 
-unsafeToPersistValue :: forall a b c. (TryFrom a b, PersistField b, Show a, Typeable a, Typeable b) => (c -> a) -> c -> PersistValue
+unsafeToPersistValue ::
+  forall a b c.
+  (TryFrom a b, PersistField b, Show a, Typeable a, Typeable b) =>
+  (c -> a) ->
+  c ->
+  PersistValue
 unsafeToPersistValue x = toPersistValue . unsafeFrom @a @b . x
 
 safeFromPersistValue ::
@@ -387,10 +393,10 @@ safeFromPersistValue x = (x . from @a @b <$>) . fromPersistValue
 newRHash :: RPreimage -> RHash
 newRHash = RHash . SHA256.hash . unRPreimage
 
-newRPreimage :: MonadIO m => m RPreimage
+newRPreimage :: (MonadIO m) => m RPreimage
 newRPreimage = RPreimage <$> liftIO (getRandomBytes 32)
 
-newPendingChanId :: MonadIO m => m PendingChannelId
+newPendingChanId :: (MonadIO m) => m PendingChannelId
 newPendingChanId = PendingChannelId <$> liftIO (getRandomBytes 32)
 
 newGrpcTimeout :: Int -> Maybe GrpcTimeoutSeconds
@@ -408,20 +414,31 @@ defaultSyncGrpcTimeout = GrpcTimeoutSeconds 60
 defaultAsyncGrpcTimeout :: GrpcTimeoutSeconds
 defaultAsyncGrpcTimeout = GrpcTimeoutSeconds 3600
 
-toGrpcSat :: forall a. (TryFrom Natural a, Typeable a) => Msat -> Either LndError a
+toGrpcSat ::
+  forall a. (TryFrom Natural a, Typeable a) => Msat -> Either LndError a
 toGrpcSat mSat = do
   let mVal = unMsat mSat
   case divMod mVal 1000 of
-    (val, 0) -> first (ToGrpcError . ("Msat overflow " <>) . Universum.show) (tryFrom @Natural @a val)
-    _ -> Left $ ToGrpcError ("Cannot convert " <> inspectPlain mVal <> " to Sat")
+    (val, 0) ->
+      first
+        (ToGrpcError . ("Msat overflow " <>) . Universum.show)
+        (tryFrom @Natural @a val)
+    _ -> Left $ ToGrpcError ("Cannot convert " <> inspect mVal <> " to Sat")
 
-fromGrpcSat :: forall a. (TryFrom a Natural, Show a, Typeable a) => a -> Either LndError Msat
+fromGrpcSat ::
+  forall a. (TryFrom a Natural, Show a, Typeable a) => a -> Either LndError Msat
 fromGrpcSat x =
-  bimap (ToGrpcError . ("Sat overflow: " <>) . Universum.show) (Msat . (1000 *)) (tryFrom @a @Natural $ x)
+  bimap
+    (ToGrpcError . ("Sat overflow: " <>) . Universum.show)
+    (Msat . (1000 *))
+    (tryFrom @a @Natural $ x)
 
-toGrpcMSat :: forall a. (TryFrom Natural a, Typeable a) => Msat -> Either LndError a
+toGrpcMSat ::
+  forall a. (TryFrom Natural a, Typeable a) => Msat -> Either LndError a
 toGrpcMSat x =
-  first (ToGrpcError . ("Msat overflow: " <>) . Universum.show) (tryFrom @Natural @a $ unMsat x)
+  first
+    (ToGrpcError . ("Msat overflow: " <>) . Universum.show)
+    (tryFrom @Natural @a $ unMsat x)
 
 toGrpcMaybe :: (ToGrpc a b) => Maybe a -> Either LndError (Maybe b)
 toGrpcMaybe (Just fs) = Just <$> toGrpc fs
@@ -431,6 +448,10 @@ fromGrpcMSat :: forall a. (From a Natural) => a -> Either LndError Msat
 fromGrpcMSat =
   Right . Msat . from @a @Natural
 
-tryFromGrpcMSat :: forall a. (TryFrom a Natural, Show a, Typeable a) => a -> Either LndError Msat
+tryFromGrpcMSat ::
+  forall a. (TryFrom a Natural, Show a, Typeable a) => a -> Either LndError Msat
 tryFromGrpcMSat x =
-  bimap (ToGrpcError . ("Msat overflow: " <>) . Universum.show) Msat (tryFrom @a @Natural $ x)
+  bimap
+    (ToGrpcError . ("Msat overflow: " <>) . Universum.show)
+    Msat
+    (tryFrom @a @Natural $ x)

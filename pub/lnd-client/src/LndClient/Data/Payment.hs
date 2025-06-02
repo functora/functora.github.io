@@ -4,10 +4,9 @@ module LndClient.Data.Payment
   )
 where
 
-import LndClient.Import hiding (state)
+import LndClient.Import
 import qualified Proto.Lnrpc.Ln1 as LnGRPC
 import qualified Proto.Lnrpc.Ln1_Fields as LnGRPC
-import Text.PrettyPrint.GenericPretty.Import
 
 data Payment = Payment
   { paymentHash :: RHash,
@@ -15,18 +14,14 @@ data Payment = Payment
     valueMsat :: Msat,
     state :: PaymentStatus
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out Payment
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data PaymentStatus
   = UNKNOWN
   | IN_FLIGHT
   | SUCCEEDED
   | FAILED
-  deriving stock (Eq, Show, Generic)
-
-instance Out PaymentStatus
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
 
 instance FromGrpc Payment LnGRPC.Payment where
   fromGrpc x = do
@@ -39,9 +34,10 @@ instance FromGrpc Payment LnGRPC.Payment where
     if (state res == SUCCEEDED)
       && (newRHash (paymentPreimage res) /= paymentHash res)
       then
-        Left . LndError $
-          "paymentPreimage doesn't match paymentHash, got: "
-            <> inspectPlain res
+        Left
+          . LndError
+          $ "paymentPreimage doesn't match paymentHash, got: "
+          <> inspect res
       else Right res
 
 instance FromGrpc PaymentStatus LnGRPC.Payment'PaymentStatus where
@@ -54,4 +50,5 @@ instance FromGrpc PaymentStatus LnGRPC.Payment'PaymentStatus where
       LnGRPC.Payment'PaymentStatus'Unrecognized v ->
         Left
           . FromGrpcError
-          $ "Cannot parse PaymentStatus, value:" <> inspect v
+          $ "Cannot parse PaymentStatus, value:"
+          <> inspect v

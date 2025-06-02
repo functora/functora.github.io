@@ -16,18 +16,14 @@ data AddInvoiceRequest = AddInvoiceRequest
     memo :: Maybe Text,
     expiry :: Maybe Seconds
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out AddInvoiceRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 data AddInvoiceResponse = AddInvoiceResponse
   { rHash :: RHash,
     paymentRequest :: PaymentRequest,
     addIndex :: AddIndex
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out AddInvoiceResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc AddInvoiceRequest LnGRPC.Invoice where
   toGrpc x =
@@ -38,9 +34,12 @@ instance ToGrpc AddInvoiceRequest LnGRPC.Invoice where
     where
       msg gMemo gValue gExp =
         defMessage
-          & LnGRPC.memo .~ gMemo
-          & LnGRPC.valueMsat .~ gValue
-          & LnGRPC.expiry .~ gExp
+          & LnGRPC.memo
+          .~ gMemo
+          & LnGRPC.valueMsat
+          .~ gValue
+          & LnGRPC.expiry
+          .~ gExp
 
 instance FromGrpc AddInvoiceResponse LnGRPC.AddInvoiceResponse where
   fromGrpc x =

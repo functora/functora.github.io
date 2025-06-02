@@ -14,9 +14,7 @@ data SubscribeInvoicesRequest = SubscribeInvoicesRequest
   { addIndex :: Maybe AddIndex,
     settleIndex :: Maybe SettleIndex
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out SubscribeInvoicesRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc SubscribeInvoicesRequest LnGRPC.InvoiceSubscription where
   toGrpc x =
@@ -26,5 +24,7 @@ instance ToGrpc SubscribeInvoicesRequest LnGRPC.InvoiceSubscription where
     where
       msg gAddIndex gSettleIndex =
         defMessage
-          & LnGRPC.addIndex .~ gAddIndex
-          & LnGRPC.settleIndex .~ gSettleIndex
+          & LnGRPC.addIndex
+          .~ gAddIndex
+          & LnGRPC.settleIndex
+          .~ gSettleIndex

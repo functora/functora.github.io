@@ -12,9 +12,7 @@ data ClosedChannel = ClosedChannel
   { channel :: PendingChannel,
     closingTxid :: TxId 'Closing
   }
-  deriving stock (Eq, Show, Generic)
-
-instance Out ClosedChannel
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance
   FromGrpc

@@ -19,9 +19,7 @@ data ClosedChannelsRequest = ClosedChannelsRequest
     fundingCanceled :: Bool,
     abandoned :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out ClosedChannelsRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc ClosedChannelsRequest LnGRPC.ClosedChannelsRequest where
   toGrpc x =
@@ -35,12 +33,18 @@ instance ToGrpc ClosedChannelsRequest LnGRPC.ClosedChannelsRequest where
     where
       msg gCooperative gLocalForce gRemoteForce gBreach gFundingCanceled gAbandoned =
         defMessage
-          & LnGRPC.cooperative .~ gCooperative
-          & LnGRPC.localForce .~ gLocalForce
-          & LnGRPC.remoteForce .~ gRemoteForce
-          & LnGRPC.breach .~ gBreach
-          & LnGRPC.fundingCanceled .~ gFundingCanceled
-          & LnGRPC.abandoned .~ gAbandoned
+          & LnGRPC.cooperative
+          .~ gCooperative
+          & LnGRPC.localForce
+          .~ gLocalForce
+          & LnGRPC.remoteForce
+          .~ gRemoteForce
+          & LnGRPC.breach
+          .~ gBreach
+          & LnGRPC.fundingCanceled
+          .~ gFundingCanceled
+          & LnGRPC.abandoned
+          .~ gAbandoned
 
 defReq :: ClosedChannelsRequest
 defReq =

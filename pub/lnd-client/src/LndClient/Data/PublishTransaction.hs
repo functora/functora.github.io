@@ -15,25 +15,22 @@ data PublishTransactionRequest = PublishTransactionRequest
   { txHex :: ByteString,
     label :: Text
   }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance Out PublishTransactionRequest
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance ToGrpc PublishTransactionRequest W.Transaction where
   toGrpc x = pure $ msg (txHex x) (label x)
     where
       msg f a =
         defMessage
-          & W.txHex .~ f
-          & W.label .~ a
+          & W.txHex
+          .~ f
+          & W.label
+          .~ a
 
 newtype PublishTransactionResponse = PublishTransactionResponse
   { publishError :: Text
   }
-  deriving newtype (Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance Out PublishTransactionResponse
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
 
 instance FromGrpc PublishTransactionResponse W.PublishResponse where
   fromGrpc x = Right $ PublishTransactionResponse (x ^. W.publishError)

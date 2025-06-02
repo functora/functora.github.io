@@ -3,6 +3,7 @@
 
 module Functora.PreludeOrphan () where
 
+import Control.Exception.Safe (throw)
 import Data.Binary (Binary)
 import qualified Data.Coerce as Coerce
 import qualified Data.Data as Data
@@ -15,6 +16,7 @@ import Functora.Witch
 import Text.URI
 import qualified Type.Reflection as Reflection
 import Universum
+import UnliftIO (MonadUnliftIO (..))
 import qualified Prelude
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import Data.JSString (JSString)
@@ -122,6 +124,19 @@ withTarget ::
   TryFromException source target2
 withTarget =
   Coerce.coerce
+
+instance
+  ( Exception e,
+    MonadCatch m,
+    MonadUnliftIO m
+  ) =>
+  MonadUnliftIO (ExceptT e m)
+  where
+  withRunInIO inner =
+    ExceptT . try $ withRunInIO $ \run ->
+      inner
+        $ run
+        . (either throw pure <=< runExceptT)
 
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 

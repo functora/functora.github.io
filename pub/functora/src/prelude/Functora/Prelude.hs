@@ -298,6 +298,7 @@ import Data.Time.Clock as X
     diffTimeToPicoseconds,
     diffUTCTime,
     nominalDay,
+    picosecondsToDiffTime,
     secondsToDiffTime,
   )
 import qualified Data.Time.Clock as Clock
@@ -340,7 +341,6 @@ import Universum as X hiding
     break,
     catch,
     catchAny,
-    decodeUtf8',
     drop,
     filter,
     finally,
@@ -357,7 +357,6 @@ import Universum as X hiding
     preview,
     print,
     set,
-    show,
     state,
     swap,
     tails,

@@ -39,7 +39,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Builder as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
-import Functora.Prelude hiding (error)
+import Functora.Prelude hiding (error, show)
 import Prelude (Show (..), error)
 
 newtype Hex = Hex

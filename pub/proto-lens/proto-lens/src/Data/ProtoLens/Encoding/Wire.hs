@@ -7,6 +7,10 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Data.ProtoLens.Encoding.Wire
     ( Tag(..)
     , TaggedValue(..)
@@ -21,6 +25,8 @@ module Data.ProtoLens.Encoding.Wire
     , parseMessageSetTaggedValueFromWire
     ) where
 
+import Data.Data
+import GHC.Generics
 import Control.DeepSeq (NFData(..))
 import Data.Bits ((.&.), (.|.), shiftL, shiftR)
 import qualified Data.ByteString as B
@@ -36,6 +42,10 @@ import Data.ProtoLens.Encoding.Bytes
 newtype Tag = Tag { unTag :: Int }
     deriving (Show, Eq, Ord, Num, NFData)
 
+deriving stock instance Read Tag
+deriving stock instance Data Tag
+deriving stock instance Generic Tag
+
 -- | The encoding of some unknown field on the wire.
 data WireValue
     = VarInt !Word64
@@ -46,9 +56,19 @@ data WireValue
     | Fixed32 !Word32
     deriving (Eq, Ord)
 
+deriving stock instance Show WireValue
+deriving stock instance Read WireValue
+deriving stock instance Data WireValue
+deriving stock instance Generic WireValue
+
 -- | A pair of an encoded field and a value.
 data TaggedValue = TaggedValue !Tag !WireValue
     deriving (Eq, Ord)
+
+deriving stock instance Show TaggedValue
+deriving stock instance Read TaggedValue
+deriving stock instance Data TaggedValue
+deriving stock instance Generic TaggedValue
 
 type FieldSet = [TaggedValue]
 

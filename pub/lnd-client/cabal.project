@@ -1,4 +1,8 @@
-allow-newer: *
+allow-newer: http2-client:*,
+             http2-client-grpc:*,
+             http2-grpc-types:*,
+             http2-grpc-proto-lens:*,
+             http2-grpc-proto3-wire:*,
 packages:
   *.cabal
   ../functora/*.cabal
@@ -16,21 +20,9 @@ packages:
   ../proto-lens/proto-lens-tests/*.cabal
   ../proto-lens/proto-lens-tests-dep/*.cabal
 
---
--- TODO : upgrade all
---
 constraints:
   tls < 1.8,
   http2 >= 3 && <= 3.0.3
-
-package witch
-  flags: +remove-time
-
-source-repository-package
-  type: git
-  location: https://github.com/21it/witch.git
-  --sha256: 17dvcqj29883sysx5qcgjbi3smn1c9kjaj807a9a2vj24fg2jwja
-  tag: ee0259bc5eb46d9c47d1c15473ff3e7d8212dc43
 
 source-repository-package
   type: git

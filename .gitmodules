@@ -4,3 +4,6 @@
 [submodule "apps"]
 	path = apps
 	url = git@github.com-functora:functora/apps.git
+[submodule "pub/proto-lens/proto-lens/proto-lens-imports/google/protobuf"]
+	path = pub/proto-lens/proto-lens/proto-lens-imports/google/protobuf
+	url = https://github.com/protocolbuffers/protobuf

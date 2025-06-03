@@ -61,8 +61,19 @@ else
                  secp256k1-haskell,
                  ghc,
     packages:
-      pub/proto-lens/proto-lens-protoc/*.cabal
       pub/network-bitcoin/*.cabal
+      pub/proto-lens/discrimination-ieee754/*.cabal
+      pub/proto-lens/proto-lens/*.cabal
+      pub/proto-lens/proto-lens-arbitrary/*.cabal
+      pub/proto-lens/proto-lens-benchmarks/*.cabal
+      pub/proto-lens/proto-lens-discrimination/*.cabal
+      pub/proto-lens/proto-lens-optparse/*.cabal
+      pub/proto-lens/proto-lens-protobuf-types/*.cabal
+      pub/proto-lens/proto-lens-protoc/*.cabal
+      pub/proto-lens/proto-lens-runtime/*.cabal
+      pub/proto-lens/proto-lens-setup/*.cabal
+      pub/proto-lens/proto-lens-tests/*.cabal
+      pub/proto-lens/proto-lens-tests-dep/*.cabal
       pub/hs-bitcoin-hash/bitcoin-hash/*.cabal
       pub/hs-bitcoin-keys/bitcoin-keys/*.cabal
       pub/haskell-bitcoin-script/*.cabal

@@ -19,6 +19,7 @@ in
         pkgs.gleam
         pkgs.erlang
         pkgs.elixir
+        pkgs.libwebp
         newpkgs.litecli
         misc.nix-bundle
         bak.bak-status

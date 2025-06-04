@@ -65,6 +65,14 @@ module Stripe.Client
     createCheckoutSession,
     retrieveCheckoutSession,
 
+    -- * Invoices
+    InvoiceId (..),
+    InvoiceStatus (..),
+    Invoice (..),
+    retrieveInvoice,
+    cancelInvoice,
+    listInvoices,
+
     -- * Events
     retrieveEvent,
     listEvents,
@@ -157,6 +165,10 @@ EP (retrieveSubscription, SubscriptionId, Subscription)
 EP (cancelSubscription, SubscriptionId, Subscription)
 EP (listSubscriptions, Maybe CustomerId, (StripeList Subscription))
 
+EP (retrieveInvoice, InvoiceId, Invoice)
+EP (cancelInvoice, InvoiceId, Invoice)
+EP (listInvoices, Maybe CustomerId, (StripeList Invoice))
+
 EP (createCheckoutSession, CheckoutSessionCreate, CheckoutSession)
 EP (retrieveCheckoutSession, CheckoutSessionId, CheckoutSession)
 
@@ -172,6 +184,10 @@ EP (listEvents, Maybe EventId, (StripeList Event))
           :<|> retrieveSubscription'
           :<|> cancelSubscription'
           :<|> listSubscriptions'
+        )
+  :<|> ( retrieveInvoice'
+          :<|> cancelInvoice'
+          :<|> listInvoices'
         )
   :<|> (createCheckoutSession' :<|> retrieveCheckoutSession')
   :<|> (createCustomerPortal')

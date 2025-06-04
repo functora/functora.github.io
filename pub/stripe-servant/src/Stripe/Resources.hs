@@ -45,6 +45,11 @@ module Stripe.Resources
     CheckoutSessionCreate (..),
     CheckoutSessionCreateLineItem (..),
 
+    -- * Invoices
+    InvoiceId (..),
+    InvoiceStatus (..),
+    Invoice (..),
+
     -- * Events
     EventId (..),
     Event (..),
@@ -314,6 +319,30 @@ data CustomerPortalCreate = CustomerPortalCreate
   }
   deriving (Eq, Ord, Show, Read, Data, Generic)
 
+newtype InvoiceId = InvoiceId
+  { unInvoiceId :: T.Text
+  }
+  deriving (Eq, Ord, Show, Read, Data, Generic, ToJSON, FromJSON, ToHttpApiData)
+
+data InvoiceStatus
+  = -- Tmp
+    InvDraft
+  | InvOpen
+  | -- Fin
+    InvPaid
+  | InvUncollectible
+  | InvVoid
+  deriving stock (Eq, Ord, Show, Read, Data, Generic, Enum, Bounded)
+
+data Invoice = Invoice
+  { invId :: InvoiceId,
+    invCustomer :: CustomerId,
+    invAmountPaid :: Int,
+    invCurrency :: T.Text,
+    invStatus :: InvoiceStatus
+  }
+  deriving (Eq, Ord, Show, Read, Data, Generic)
+
 $(deriveJSON (jsonOpts 2) ''StripeList)
 $(deriveJSON (jsonOpts 1) ''Customer)
 $(deriveJSON (jsonOpts 2) ''EventData)
@@ -327,6 +356,8 @@ $(deriveJSON (jsonOpts 2) ''SubscriptionItem)
 $(deriveJSON (jsonOpts 2) ''SubscriptionStatus)
 $(deriveJSON (jsonOpts 1) ''Subscription)
 $(deriveJSON (jsonOpts 2) ''CustomerPortal)
+$(deriveJSON (jsonOpts 3) ''InvoiceStatus)
+$(deriveJSON (jsonOpts 3) ''Invoice)
 
 instance ToForm CustomerCreate where
   toForm = genericToForm (formOptions 2)

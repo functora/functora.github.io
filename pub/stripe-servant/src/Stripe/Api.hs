@@ -15,6 +15,7 @@ type StripeApiInternal =
     :<|> "products" :> ProductApi
     :<|> "prices" :> PriceApi
     :<|> "subscriptions" :> SubscriptionApi
+    :<|> "invoices" :> InvoicesApi
     :<|> "checkout" :> "sessions" :> CheckoutApi
     :<|> "billing_portal" :> "sessions" :> CustomerPortalApi
     :<|> "events" :> EventApi
@@ -60,6 +61,17 @@ type SubscriptionApi =
     :<|> StripeAuth
       :> QueryParam "customer" CustomerId
       :> Get '[JSON] (StripeList Subscription)
+
+type InvoicesApi =
+  StripeAuth
+    :> Capture ":invoice_id" InvoiceId
+    :> Get '[JSON] Invoice
+    :<|> StripeAuth
+      :> Capture ":invoice_id" InvoiceId
+      :> Delete '[JSON] Invoice
+    :<|> StripeAuth
+      :> QueryParam "customer" CustomerId
+      :> Get '[JSON] (StripeList Invoice)
 
 type CheckoutApi =
   StripeAuth

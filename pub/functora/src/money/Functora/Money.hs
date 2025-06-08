@@ -21,7 +21,6 @@ import qualified Data.Aeson.Combinators.Decode as A
 import Functora.Cfg
 import Functora.MoneySing as X
 import Functora.Prelude
-import Functora.Tags as X
 
 data Money = Money
   { moneyAmount :: MoneyAmount,

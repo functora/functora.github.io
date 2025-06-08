@@ -5,8 +5,8 @@ module Functora.MoneySing where
 import Data.Type.Equality
 import Functora.Cfg
 import Functora.Prelude
-import Functora.Tags
 import qualified Language.Haskell.TH.Syntax as TH
+import Singlethongs
 
 data CurrencyKind = Crypto | Stable | Fiat
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
@@ -47,26 +47,6 @@ data Revenue = Revenue
 data SignedOrUnsigned = Signed | Unsigned
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded, Data, Generic, TH.Lift)
   deriving (HasCodec, HasItemCodec) via GenericEnum SignedOrUnsigned
-
-type instance Fgpt CurrencyKind = "Functora.MoneySing.CurrencyKind"
-
-type instance Fgpt BuyOrSell = "Functora.MoneySing.BuyOrSell"
-
-type instance Fgpt NetOrGross = "Functora.MoneySing.NetOrGross"
-
-type instance Fgpt GainOrLose = "Functora.MoneySing.GainOrLose"
-
-type instance Fgpt BaseOrQuote = "Functora.MoneySing.BaseOrQuote"
-
-type instance Fgpt MakerOrTaker = "Functora.MoneySing.MakerOrTaker"
-
-type instance Fgpt LocalOrRemote = "Functora.MoneySing.LocalOrRemote"
-
-type instance Fgpt MinOrMax = "Functora.MoneySing.MinOrMax"
-
-type instance Fgpt Revenue = "Functora.MoneySing.Revenue"
-
-type instance Fgpt SignedOrUnsigned = "Functora.MoneySing.SignedOrUnsigned"
 
 --
 -- SignedOrUnsigned

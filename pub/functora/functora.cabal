@@ -248,7 +248,7 @@ common pkg-money
     , aeson-combinators
     , base
     , cfg
-    , tags
+    , singlethongs
     , template-haskell
 
 common pkg-rates

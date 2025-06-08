@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package bench;
+
+service Bench {
+  rpc UnaryQuery(BenchObject) returns (BenchObject) {}
+  rpc ServerStreamQuery(BenchObject) returns (stream BenchObject) {}
+  rpc ClientStreamQuery(stream BenchObject) returns (BenchObject) {}
+}
+
+message BenchObject {
+  message StringContent {
+    string content = 1;
+  }
+  message Stats {
+    int32 count = 1;
+  }
+  message Req {
+    int32 iterations = 1;
+  }
+  repeated StringContent strings = 1;
+  Stats stats = 2;
+  Req req = 3;
+}

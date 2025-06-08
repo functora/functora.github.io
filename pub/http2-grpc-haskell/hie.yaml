@@ -1,0 +1,68 @@
+cradle:
+  multi:
+    - path: "bench-tool"
+      config:
+        cradle:
+          stack:
+    - path: "bench-tool/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"
+    - path: "http2-client-grpc"
+      config:
+        cradle:
+          stack:
+    - path: "http2-client-grpc/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"
+    - path: "http2-grpc-proto-lens"
+      config:
+        cradle:
+          stack:
+    - path: "http2-grpc-proto-lens/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"
+    - path: "http2-grpc-proto3-wire"
+      config:
+        cradle:
+          stack:
+    - path: "http2-grpc-proto3-wire/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"
+    - path: "http2-grpc-types"
+      config:
+        cradle:
+          stack:
+    - path: "http2-grpc-types/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"
+    - path: "warp-grpc"
+      config:
+        cradle:
+          stack:
+    - path: "warp-grpc/Setup.hs"
+      config:
+        cradle:
+          direct:
+            arguments:
+              - "-package Cabal"
+              - "-package base"

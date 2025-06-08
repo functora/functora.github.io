@@ -1,0 +1,13 @@
+resolver: nightly-2021-06-14
+packages:
+  - http2-client-grpc
+  - http2-grpc-proto-lens
+  - http2-grpc-proto3-wire
+  - http2-grpc-types
+  - warp-grpc
+- proto3-wire-1.2.2
+- http2-3.0.2
+- proto-lens-0.7.0.0
+- profunctors-5.5.2
+- git: https://github.com/akshaymankar/http2-client
+  commit: 3b986f9d86ac283e1d7bb07e81890e616cffa6c5

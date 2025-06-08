@@ -338,10 +338,10 @@ in {
       "nix-command"
       "flakes"
     ];
-    nix.extraOptions = ''
-      keep-outputs = true
-      keep-derivations = true
-    '';
+    # nix.extraOptions = ''
+    #   keep-outputs = true
+    #   keep-derivations = true
+    # '';
     security.polkit.enable = true;
     security.pam.services.swaylock = {};
     #

@@ -36,13 +36,9 @@
       (
         if config.services.functora.blockHosts
         then [
-          "err.ee"
-          "delfi.ee"
-          "postimees.ee"
-          # "rumble.com"
-          # "odysee.com"
-          # "bastyon.com"
-          # "bitchute.com"
+          # "err.ee"
+          # "delfi.ee"
+          # "postimees.ee"
         ]
         else []
       ));
@@ -1091,6 +1087,7 @@ in {
     # AI
     #
     services.ollama.enable = true;
+    services.ollama.package = unst.ollama;
     #
     # Fonts
     #

@@ -7,7 +7,9 @@
   vi = import ./../pub/vi/nix/default.nix {};
   fj = import ./firejail.nix;
   dns = ["8.8.8.8" "8.8.4.4"];
+  olds = import ./oldpkgs.nix;
   unst = import ./nixpkgs-unstable.nix;
+  rocm = olds.rocmPackages_5;
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/8d5e27b4807d25308dfe369d5a923d87e7dbfda3.tar.gz";
@@ -284,6 +286,9 @@ in {
     userName = mkOption {
       type = types.str;
     };
+    xmrAddr = mkOption {
+      type = types.str;
+    };
     blockHosts = mkOption {
       type = types.bool;
       default = true;
@@ -305,7 +310,7 @@ in {
     #
     # Misc
     #
-    environment.variables = {
+    environment.sessionVariables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
       BROWSER = "qutebrowser";
@@ -313,8 +318,8 @@ in {
       WLR_NO_HARDWARE_CURSORS = "1";
       NIXOS_OZONE_WL = "1";
       ROC_ENABLE_PRE_VEGA = "1";
+      LD_LIBRARY_PATH = ["/opt/rocm/lib"];
     };
-    environment.sessionVariables = environment.variables;
     #
     # Nix
     #
@@ -346,7 +351,7 @@ in {
     systemd.tmpfiles.rules = let
       rocmEnv = pkgs.symlinkJoin {
         name = "rocm-combined";
-        paths = with pkgs.rocmPackages; [
+        paths = with rocm; [
           rocblas
           hipblas
           clr
@@ -358,15 +363,43 @@ in {
     hardware.opengl = {
       enable = true;
       driSupport32Bit = true;
-      extraPackages = with pkgs; [
-        amdvlk
-        rocmPackages.clr.icd
-        rocmPackages.clr
-        rocmPackages.rocminfo
-        rocmPackages.rocm-runtime
+      extraPackages = [
+        pkgs.amdvlk
+        rocm.clr.icd
+        rocm.clr
+        rocm.rocminfo
+        rocm.rocm-runtime
       ];
       extraPackages32 = with pkgs; [
         driversi686Linux.amdvlk
+      ];
+    };
+    environment.systemPackages = [pkgs.clinfo];
+    hardware.graphics.extraPackages = [rocm.clr.icd];
+    systemd.services.xmrig.environment.ROC_ENABLE_PRE_VEGA = "1";
+    services.xmrig.settings = {
+      autosave = true;
+      opencl = {
+        loader = "/opt/rocm/lib/libOpenCL.so";
+        enabled = true;
+        kawpow = false;
+        "rx/graft" = false;
+        "rx/keva" = false;
+        "rx/sfx" = false;
+        "rx/arq" = false;
+        "rx/0" = false;
+        "rx/wow" = false;
+        "cn/gpu" = false;
+      };
+      cuda = false;
+      cpu = false;
+      pools = [
+        {
+          url = "stratum+tcp://cryptonight_upx.na.mine.zergpool.com:4457";
+          user = config.services.functora.xmrAddr;
+          pass = "c=XMR,mc=UPX";
+          algo = "cn/upx2";
+        }
       ];
     };
     #

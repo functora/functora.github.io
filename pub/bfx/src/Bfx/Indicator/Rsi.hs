@@ -12,7 +12,6 @@ import Bfx.Data.Type
 import Conduit ((.|))
 import qualified Conduit as C
 import qualified Data.Conduit.List as C
-import Functora.Money
 import Functora.Prelude
 import qualified Prelude
 

@@ -5,7 +5,7 @@
 module Bfx.Data.Kind where
 
 import Functora.Cfg
-import Functora.Money
+import Singlethongs
 
 data Method
   = PlatformStatus

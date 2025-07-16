@@ -8,7 +8,6 @@ where
 import Bfx.Data.Type
 import qualified Data.Aeson as A
 import Functora.Cfg
-import Functora.Money
 import Functora.Prelude
 
 data Request

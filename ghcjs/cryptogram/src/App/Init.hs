@@ -1,11 +1,10 @@
-module App.Widgets.Templates
+module App.Init
   ( newModel,
   )
 where
 
 import App.Types
 import Functora.Miso.Prelude
-import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 
 newModel ::
@@ -20,25 +19,16 @@ newModel ::
 newModel webOpts sink mMod mApp = do
   defSt <- maybe (liftIO newSt) pure $ mMod ^? _Just . #modelState
   donate <- newDonateViewer
-  market <- maybe Rates.newMarket pure $ mMod ^? _Just . #modelMarket
-  ct <- getCurrentTime
   pure
     Model
       { modelSink = sink,
         modelMenu = Closed,
         modelDonate = Closed,
-        modelAppLinks = Closed,
-        modelShareApp = Closed,
-        modelPlaceOrder = Closed,
-        modelRemoveOrder = Closed,
-        modelMarketLinks = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
         modelUriViewer = mempty,
         modelDonateViewer = donate,
-        modelWebOpts = webOpts,
-        modelMarket = market,
-        modelTime = ct
+        modelWebOpts = webOpts
       }
 
 newDonateViewer :: (MonadIO m) => m [FieldPair DynamicField Unique]

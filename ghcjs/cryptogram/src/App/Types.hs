@@ -37,7 +37,6 @@ import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Prelude as Prelude
-import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import qualified Paths_cryptogram as Paths
 import qualified Text.URI as URI
@@ -46,18 +45,11 @@ data Model = Model
   { modelSink :: MVar (Action -> IO ()),
     modelMenu :: OpenedOrClosed,
     modelDonate :: OpenedOrClosed,
-    modelAppLinks :: OpenedOrClosed,
-    modelShareApp :: OpenedOrClosed,
-    modelPlaceOrder :: OpenedOrClosed,
-    modelRemoveOrder :: OpenedOrClosed,
-    modelMarketLinks :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
     modelUriViewer :: [FieldPair DynamicField Unique],
     modelDonateViewer :: [FieldPair DynamicField Unique],
-    modelWebOpts :: Web.Opts,
-    modelMarket :: MVar Rates.Market,
-    modelTime :: UTCTime
+    modelWebOpts :: Web.Opts
   }
   deriving stock (Eq, Generic)
 

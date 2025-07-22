@@ -107,6 +107,7 @@ in rec {
         --compilation_level ADVANCED_OPTIMIZATIONS \
         --externs ${app}/bin/${label}.jsexe/all.js.externs \
         --externs ${./static/app.js} \
+        --externs ${./static/telegram-web-app-58.js} \
         --externs ${
         pkgs.haskell.packages.ghc865.bitcoin-hash.src
       }/js/index.compiled.js \

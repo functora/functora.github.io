@@ -15,9 +15,9 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Language.Javascript.JSaddle.Wasm as JSaddle.Wasm
 #endif
 
+import App.Init
 import App.Types
 import App.Widgets.Main
-import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
@@ -74,6 +74,7 @@ runApp :: JSM () -> IO ()
 runApp app = do
   js0 <- BL.readFile "../miso-functora/js/main.min.js"
   js1 <- BL.readFile "static/app.js"
+  js2 <- BL.readFile "static/telegram-web-app-58.js"
   Warp.runSettings
     ( Warp.setPort
         8080
@@ -82,7 +83,7 @@ runApp app = do
     =<< JS.jsaddleOr
       Ws.defaultConnectionOptions
       (app >> syncPoint)
-      (router $ js0 <> js1)
+      (router $ js0 <> js1 <> js2)
   where
     router js req =
       case Wai.pathInfo req of

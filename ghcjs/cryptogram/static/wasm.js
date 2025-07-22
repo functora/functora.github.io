@@ -1,4 +1,5 @@
 import "./app.js";
+import "./telegram-web-app-58.js";
 
 import { ConsoleStdout, File, OpenFile, WASI } from "@bjorn3/browser_wasi_shim";
 

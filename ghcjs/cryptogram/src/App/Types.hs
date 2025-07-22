@@ -55,7 +55,7 @@ import qualified Functora.Prelude as Prelude
 import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import qualified Network.URI as NetUri
-import qualified Paths_delivery_calculator as Paths
+import qualified Paths_cryptogram as Paths
 import qualified Text.Regex as Re
 import qualified Text.URI as URI
 import qualified Text.URI.Lens as URILens
@@ -542,7 +542,7 @@ mkGooglePlayLink st =
             }
     uri <-
       mkURI
-        "https://play.google.com/store/apps/details?id=com.functora.delivery_calculator"
+        "https://play.google.com/store/apps/details?id=com.functora.cryptogram"
     pure
       $ uri
       & URILens.uriQuery

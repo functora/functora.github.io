@@ -12,7 +12,6 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as Map
 import qualified Data.Time.Format as TF
 import Functora.Miso.Prelude
-import Lens.Micro ((?~))
 
 newXlsx :: St Unique -> Map Unicode Rfc2397 -> BL.ByteString
 newXlsx st imgs = xlsx

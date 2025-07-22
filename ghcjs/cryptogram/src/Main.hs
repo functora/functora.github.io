@@ -430,7 +430,7 @@ evalModel prev = do
                 ( ^.
                     #quoteMoneyAmount
                       . to
-                        ( from @(Ratio Natural) @Rational
+                        ( from @FixNonNeg @Rational
                             . Money.unMoneyAmount
                         )
                 )

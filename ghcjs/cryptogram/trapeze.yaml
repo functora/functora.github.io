@@ -3,7 +3,7 @@ platforms:
     appName: Cryptogram
     versionCode: 23
     versionName: 0.1.0.23
-    packageName: com.functora.delivery_calculator
+    packageName: com.functora.cryptogram
     manifest:
       - file: AndroidManifest.xml
         target: manifest/application/activity

@@ -8,10 +8,8 @@ module App.Types
     newSt,
     newFieldPair,
     newFieldPairId,
-    mkShortUri,
-    unShortUri,
-    mkLongUri,
-    unLongUri,
+    mkUri,
+    unUri,
     emitter,
     icon,
     vsn,
@@ -26,6 +24,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
 import qualified Data.Generics as Syb
 import qualified Data.Version as Version
+import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Theme as Theme
@@ -37,7 +36,6 @@ import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Prelude as Prelude
-import qualified Functora.Web as Web
 import qualified Paths_cryptogram as Paths
 import qualified Text.URI as URI
 
@@ -47,9 +45,7 @@ data Model = Model
     modelDonate :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
-    modelUriViewer :: [FieldPair DynamicField Unique],
-    modelDonateViewer :: [FieldPair DynamicField Unique],
-    modelWebOpts :: Web.Opts
+    modelDonateViewer :: [FieldPair DynamicField Unique]
   }
   deriving stock (Eq, Generic)
 
@@ -61,10 +57,9 @@ data Action
   | PushUpdate (Update Model)
 
 data St f = St
-  { stPwd :: Field Unicode f,
-    stEncReq :: Field Unicode f,
-    stDecReq :: Field Unicode f,
-    stDecRes :: Field Unicode f,
+  { stKm :: Aes.Km,
+    stIkm :: Field Unicode f,
+    stMsg :: Field Unicode f,
     stEnableTheme :: Bool,
     stTheme :: Theme
   }
@@ -78,10 +73,6 @@ deriving stock instance (Hkt f) => Show (St f)
 
 deriving stock instance (Hkt f) => Data (St f)
 
-deriving via (GenericType (St f)) instance (Hkt f) => ToQuery (St f)
-
-deriving via (GenericType (St Identity)) instance FromQuery (St Identity)
-
 instance FunctorB St
 
 instance TraversableB St
@@ -90,16 +81,14 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 newSt :: (MonadIO m) => m (St Unique)
 newSt = do
-  pwd <- newTextField mempty
-  encReq <- newTextField mempty
-  decReq <- newTextField mempty
-  decRes <- newTextField mempty
+  km <- Aes.randomKm 32
+  ikm <- newPasswordField . decodeUtf8 $ km ^. #kmIkm . #unIkm
+  msg <- newTextField mempty
   pure
     St
-      { stPwd = pwd,
-        stEncReq = encReq,
-        stDecReq = decReq,
-        stDecRes = decRes,
+      { stKm = km,
+        stIkm = ikm,
+        stMsg = msg,
         stEnableTheme = True,
         stTheme = Theme.Matcha
       }
@@ -130,19 +119,8 @@ newFieldPairId key val = do
     . #fieldOptsAllowCopy
     .~ False
 
-mkShortUri :: (MonadThrow m) => Model -> m URI
-mkShortUri st = do
-  uri <- mkURI $ from @Unicode @Prelude.Text baseUri
-  let qxs = toQuery . uniqueToIdentity $ modelState st
-  pure $ uri {URI.uriQuery = qxs}
-
-unShortUri :: (MonadIO m, MonadThrow m) => URI -> m (St Unique)
-unShortUri uri = do
-  st <- either throw pure . fromQuery $ URI.uriQuery uri
-  identityToUnique st
-
-mkLongUri :: (MonadThrow m) => Model -> m URI
-mkLongUri st = do
+mkUri :: (MonadThrow m) => Model -> m URI
+mkUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
   qxs <-
     stQuery
@@ -169,13 +147,13 @@ mkLongUri st = do
       { URI.uriQuery = qxs
       }
 
-unLongUri ::
+unUri ::
   ( MonadIO m,
     MonadThrow m
   ) =>
   URI ->
   m (Maybe (St Unique))
-unLongUri uri = do
+unUri uri = do
   kSt <- URI.mkQueryKey "d"
   case qsGet kSt $ URI.uriQuery uri of
     Nothing -> pure Nothing

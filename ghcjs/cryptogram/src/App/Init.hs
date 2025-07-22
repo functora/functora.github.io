@@ -5,18 +5,16 @@ where
 
 import App.Types
 import Functora.Miso.Prelude
-import qualified Functora.Web as Web
 
 newModel ::
   ( MonadThrow m,
     MonadUnliftIO m
   ) =>
-  Web.Opts ->
   MVar (Action -> IO ()) ->
   Maybe Model ->
   Maybe (St Unique) ->
   m Model
-newModel webOpts sink mMod mApp = do
+newModel sink mMod mApp = do
   defSt <- maybe (liftIO newSt) pure $ mMod ^? _Just . #modelState
   donate <- newDonateViewer
   pure
@@ -26,9 +24,7 @@ newModel webOpts sink mMod mApp = do
         modelDonate = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
-        modelUriViewer = mempty,
-        modelDonateViewer = donate,
-        modelWebOpts = webOpts
+        modelDonateViewer = donate
       }
 
 newDonateViewer :: (MonadIO m) => m [FieldPair DynamicField Unique]

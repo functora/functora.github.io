@@ -89,17 +89,11 @@ common pkg
     , base
     , base64-bytestring
     , bytestring
-    , containers
     , functora-ghcjs
-    , microlens
     , miso
     , miso-functora
     , modern-uri
-    , network-uri
-    , regex-compat
     , syb
-    , time
-    , xlsx
 
   if flag(ghcid)
     build-depends: jsaddle
@@ -152,5 +146,4 @@ test-suite cryptogram-test
   build-depends:
     , aeson
     , hspec
-    , optics-core
     , quickcheck-instances

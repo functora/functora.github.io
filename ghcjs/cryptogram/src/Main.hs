@@ -22,7 +22,6 @@ import qualified Data.Generics as Syb
 import qualified Data.Map as Map
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
-import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
@@ -44,10 +43,9 @@ main =
       )
     $ do
       uri <- URI.mkURI . inspect =<< getCurrentURI
-      mSt <- handleAny (const $ pure Nothing) . fmap Just $ unShortUri uri
-      web <- getWebOpts
+      mSt <- handleAny (const $ pure Nothing) $ unUri uri
       sink <- newEmptyMVar
-      st <- newModel web sink Nothing mSt
+      st <- newModel sink Nothing mSt
       startApp
         App
           { model = st,
@@ -59,15 +57,6 @@ main =
             mountPoint = Nothing,
             logLevel = Off
           }
-
-getWebOpts :: JSM Web.Opts
-getWebOpts = do
-#ifdef wasi_HOST_OS
-  ctx <- JS.askJSM
-  pure $ Web.defOpts ctx
-#else
-  pure Web.defOpts
-#endif
 
 #if !defined(__GHCJS__) && !defined(ghcjs_HOST_OS) && !defined(wasi_HOST_OS)
 runApp :: JSM () -> IO ()
@@ -133,7 +122,7 @@ updateModel (InitUpdate mShortSt) prevSt = do
               .~ False
           Just {} -> do
             let st = mShortSt
-            finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
+            finSt <- newModel mvSink (Just nextSt) st
             liftIO
               . sink
               . PushUpdate
@@ -143,9 +132,9 @@ updateModel (InitUpdate mShortSt) prevSt = do
               & #modelLoading
               .~ False
       Just uri -> do
-        mLongSt <- unLongUri uri
+        mLongSt <- unUri uri
         let st = mShortSt <|> mLongSt
-        finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
+        finSt <- newModel mvSink (Just nextSt) st
         liftIO
           . sink
           . PushUpdate
@@ -182,7 +171,7 @@ updateModel (EvalUpdate f) st = do
             . PushUpdate
             . PureUpdate
             $ unload
-        longUri <- mkLongUri next
+        longUri <- mkUri next
         Jsm.insertStorage ("cryptogram-" <> vsn) longUri
         pure Noop,
       do

@@ -1119,8 +1119,11 @@ in {
     #
     # AI
     #
-    services.ollama.enable = true;
-    services.ollama.package = unst.ollama;
+    services.llama-cpp.enable = true;
+    services.llama-cpp.port = 11434;
+    services.llama-cpp.package = pkgs.llama-cpp.override {vulkanSupport = true;};
+    services.llama-cpp.model =
+      ../../Downloads/microsoft_Phi-4-reasoning-plus-Q5_K_M.gguf;
     #
     # Fonts
     #

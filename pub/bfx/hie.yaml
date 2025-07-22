@@ -1,8 +1,0 @@
-cradle:
-  stack:
-    - path: "./src"
-      component: bitfinex-client:lib
-    - path: "./app"
-      component: bitfinex-client:exe:bitfinex-client-exe
-    - path: "./test"
-      component: bitfinex-client:test:bitfinex-client-test

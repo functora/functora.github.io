@@ -1,18 +1,10 @@
 module App.Widgets.Main (mainWidget) where
 
 import App.Types
-import qualified App.Widgets.Asset as Asset
-import qualified App.Widgets.GooglePlay as GooglePlay
-import qualified App.Widgets.MarketLinks as MarketLinks
 import qualified App.Widgets.Menu as Menu
-import qualified App.Widgets.PlaceOrder as PlaceOrder
-import qualified App.Widgets.RemoveOrder as RemoveOrder
-import qualified App.Widgets.ShareApp as ShareApp
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
-import qualified Functora.Miso.Widgets.FieldPairs as FieldPairs
 import qualified Functora.Miso.Widgets.Flex as Flex
-import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Spinner as Spinner
 import Miso hiding (at, view)
 
@@ -49,42 +41,31 @@ mainWidget st =
                     ]
                 ]
             )
-            ( tosWidget
-                : ShareApp.shareApp st Bottom
-                  <> GooglePlay.googlePlay st Bottom
-            )
+            [tosWidget]
        ]
-    <> MarketLinks.marketLinks st
     <> ( if not $ st ^. #modelLoading
           then mempty
           else Spinner.spinner
        )
 
 screenWidget :: Model -> [View Action]
-screenWidget st =
-  ( if null assets
-      then mempty
-      else buttons
-  )
-    <> [ Flex.flexCol
-          main_
-          ( <>
-              [ style_
-                  [ ("flex-direction", "column-reverse")
-                  ]
+screenWidget _ =
+  [ Flex.flexCol
+      main_
+      ( <>
+          [ style_
+              [ ("flex-direction", "column-reverse")
               ]
-          )
-          $ totalViewer st
-          <> Asset.assetsViewer st
-       ]
+          ]
+      )
+      mempty
+  ]
     <> buttons
   where
-    assets :: [View Action]
-    assets = Asset.assetsViewer st
     buttons :: [View Action]
     buttons =
       singleton
-        . Flex.flexRowCenter
+        $ Flex.flexRowCenter
           main_
           ( mappend
               [ style_
@@ -95,42 +76,7 @@ screenWidget st =
                   ]
               ]
           )
-        $ ( button_
-              [ onClick . PushUpdate . ImpureUpdate $ do
-                  asset <- newAsset
-                  pure
-                    $ #modelState
-                    . #stAssets
-                    %~ (<> [asset])
-              ]
-              [ icon Icon.IconAdd,
-                text " Add item"
-              ]
-          )
-        : ShareApp.shareApp st Top
-          <> GooglePlay.googlePlay st Top
-          <> RemoveOrder.removeOrder st
-          <> PlaceOrder.placeOrder st
-
-totalViewer :: Model -> [View Action]
-totalViewer st =
-  if null total
-    then mempty
-    else
-      singleton
-        . keyed "total"
-        . fieldset_ mempty
-        $ (legend_ mempty [text "Total"])
-        : FieldPairs.fieldPairsViewer
-          FieldPairs.defOpts
-          FieldPairs.Args
-            { FieldPairs.argsModel = st,
-              FieldPairs.argsOptic = constTraversal total,
-              FieldPairs.argsAction = PushUpdate,
-              FieldPairs.argsEmitter = emitter st
-            }
-  where
-    total = newTotal $ modelState st
+          mempty
 
 tosWidget :: View Action
 tosWidget =

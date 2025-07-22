@@ -36,8 +36,6 @@ newModel webOpts sink mMod mApp = do
         modelState = fromMaybe defSt mApp,
         modelUriViewer = mempty,
         modelDonateViewer = donate,
-        modelCurrencies =
-          fromMaybe [btc, usd, rub, cny] (mMod ^? _Just . #modelCurrencies),
         modelWebOpts = webOpts,
         modelMarket = market,
         modelTime = ct

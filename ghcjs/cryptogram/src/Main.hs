@@ -20,11 +20,8 @@ import App.Widgets.Main
 import App.Widgets.Templates
 import qualified Data.Generics as Syb
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 import qualified Functora.Miso.Jsm as Jsm
 import Functora.Miso.Prelude
-import qualified Functora.Money as Money
-import qualified Functora.Rates as Rates
 import qualified Functora.Web as Web
 import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
@@ -101,7 +98,7 @@ runApp app = do
           staticApp (defaultWebAppSettings "static") req
         ("site.webmanifest" : _) ->
           staticApp (defaultWebAppSettings "static") req
-        (file : _) | (isSuffixOf ".js" file) && (file /= "jsaddle.js") ->
+        (file : _) | isSuffixOf ".js" file && (file /= "jsaddle.js") ->
           staticApp (defaultWebAppSettings "static") req
         _ ->
           JS.jsaddleAppWithJs (JS.jsaddleJs False <> js) req
@@ -119,74 +116,43 @@ runApp = JSaddle.Wasm.run
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel (Tick f) st =
-  f st <# do
-    sleepSeconds 1
-    ct <- getCurrentTime
-    pure . Tick $ #modelTime .~ ct
 updateModel (InitUpdate mShortSt) prevSt = do
   effectSub prevSt $ \sink -> do
-    liftIO . sink $ Tick id
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
     Jsm.selectStorage ("cryptogram-" <> vsn) $ \case
       Nothing ->
         Jsm.fetchInstallReferrerUri $ \case
-          Nothing -> do
+          Nothing ->
             liftIO
               . sink
               . PushUpdate
               . PureUpdate
               $ #modelLoading
               .~ False
-            opfsSync sink nextSt
-          Just ref -> do
-            mLongSt <-
-              handleAny
-                ( \e -> do
-                    Jsm.popupText $ displayException e
-                    pure Nothing
-                )
-                . fmap Just
-                $ unGooglePlayLink ref
-            let st =
-                  ( mShortSt <|> mLongSt
-                  )
-                    & _Just
-                    . #stAssets
-                    .~ ( fromMaybe mempty $ mLongSt ^? _Just . #stAssets
-                       )
+          Just {} -> do
+            let st = mShortSt
             finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
             liftIO
               . sink
               . PushUpdate
               . PureUpdate
-              $ ( const
-                    $ finSt
-                    & #modelLoading
-                    .~ False
-                )
-            opfsSync sink finSt
+              . const
+              $ finSt
+              & #modelLoading
+              .~ False
       Just uri -> do
         mLongSt <- unLongUri uri
-        let st =
-              ( mShortSt <|> mLongSt
-              )
-                & _Just
-                . #stAssets
-                .~ ( fromMaybe mempty $ mLongSt ^? _Just . #stAssets
-                   )
+        let st = mShortSt <|> mLongSt
         finSt <- newModel (nextSt ^. #modelWebOpts) mvSink (Just nextSt) st
         liftIO
           . sink
           . PushUpdate
           . PureUpdate
-          $ ( const
-                $ finSt
-                & #modelLoading
-                .~ False
-            )
-        opfsSync sink finSt
+          . const
+          $ finSt
+          & #modelLoading
+          .~ False
     liftIO
       . sink
       . PushUpdate
@@ -198,8 +164,6 @@ updateModel SyncInputs st = do
         syncInputs st
         pure Noop
     ]
-updateModel (LinkUpdate f) st =
-  noEff $ f st
 updateModel (EvalUpdate f) st = do
   let prev = f st
   let unload = #modelLoading .~ False :: Model -> Model
@@ -219,29 +183,7 @@ updateModel (EvalUpdate f) st = do
             $ unload
         longUri <- mkLongUri next
         Jsm.insertStorage ("cryptogram-" <> vsn) longUri
-        shortUri <- mkShortUri next
-        uriViewer <-
-          newFieldPair mempty
-            . DynamicFieldText
-            . from @String @Unicode
-            $ URI.renderStr shortUri
-        pure
-          . LinkUpdate
-          $ #modelUriViewer
-          %~ mergeFieldPairs
-            [ uriViewer
-                & #fieldPairValue
-                . #fieldOpts
-                . #fieldOptsAllowCopy
-                .~ True
-                & #fieldPairValue
-                . #fieldType
-                .~ FieldTypeQrCode
-                & #fieldPairValue
-                . #fieldOpts
-                . #fieldOptsTruncateLimit
-                .~ Nothing
-            ],
+        pure Noop,
       do
         --
         -- NOTE : Workaround to fix slow rendering after screen switch.
@@ -326,7 +268,7 @@ viewModel st =
     (
       [ keyed "css-pre-theme" $ link_
           [ rel_ "stylesheet",
-            href_ $ "miso-functora/pre-theme.css"
+            href_ "miso-functora/pre-theme.css"
           ]
       ] <>
       ( if not (st ^. #modelState . #stEnableTheme)
@@ -340,7 +282,7 @@ viewModel st =
       ) <>
       [ keyed "css-post-theme" $ link_
           [ rel_ "stylesheet",
-            href_ $ "miso-functora/post-theme.css"
+            href_ "miso-functora/post-theme.css"
           ]
       ]
     )
@@ -378,164 +320,5 @@ syncInputs st = do
           ^. JS.jss ("value" :: Unicode) (txt ^. #uniqueValue)
       pure txt
 
-evalModel :: (MonadThrow m, MonadUnliftIO m) => Model -> m (Model -> Model)
-evalModel prev = do
-  let oof = prev ^. #modelState . #stOnlineOrOffline
-  let web = prev ^. #modelWebOpts
-  case oof of
-    Offline -> pure id
-    Online ->
-      Rates.withMarket web (prev ^. #modelMarket) $ do
-        let prevCurs :: [Money.CurrencyInfo] =
-              Syb.listify (const True) $ prev ^. #modelState
-        --
-        -- TODO : don't need this, create map from nextCursList
-        --
-        nextCursMap :: Map Money.CurrencyCode Money.CurrencyInfo <-
-          foldlM
-            ( \acc prevCur -> do
-                let code =
-                      Money.currencyInfoCode prevCur
-                nextCur <-
-                  fmap (fromRight prevCur)
-                    . Rates.tryMarket
-                    $ Rates.getCurrencyInfo web code
-                pure
-                  $ Map.insert code nextCur acc
-            )
-            mempty
-            prevCurs
-        nextCursList :: NonEmpty Money.CurrencyInfo <-
-          fmap (fromRight $ prev ^. #modelCurrencies)
-            . Rates.tryMarket
-            . fmap (^. #currenciesList)
-            $ Rates.getCurrencies web
-        let base =
-              Money.Money
-                (Money.MoneyAmount 1)
-                $ prev
-                ^. #modelState
-                . #stAssetCurrency
-                . #currencyOutput
-                . #currencyInfoCode
-        rateValue <-
-          fmap
-            ( either
-                ( const
-                    $ prev
-                    ^. #modelState
-                    . #stExchangeRate
-                    . #fieldOutput
-                )
-                ( ^.
-                    #quoteMoneyAmount
-                      . to
-                        ( from @FixNonNeg @Rational
-                            . Money.unMoneyAmount
-                        )
-                )
-            )
-            . Rates.tryMarket
-            . Rates.getQuote web base
-            $ prev
-            ^. #modelState
-            . #stMerchantCurrency
-            . #currencyOutput
-            . #currencyInfoCode
-        pure
-          $ ( #modelState
-                %~ Syb.everywhere
-                  ( Syb.mkT $ \cur ->
-                      fromMaybe cur
-                        $ Map.lookup (cur ^. #currencyInfoCode) nextCursMap
-                  )
-            )
-          . ( #modelCurrencies
-                .~ nextCursList
-            )
-          . ( #modelState
-                . #stExchangeRate
-                . #fieldInput
-                . #uniqueValue
-                .~ inspectRatioDef rateValue
-            )
-          . ( #modelState
-                . #stExchangeRate
-                . #fieldOutput
-                .~ rateValue
-            )
-
-opfsSync :: (Action -> IO ()) -> Model -> JSM ()
-opfsSync sink st = do
-  opfsRead sink st
-  opfsFree st
-
-opfsRead :: (Action -> IO ()) -> Model -> JSM ()
-opfsRead sink st =
-  forM_ (zip [0 ..] assets) . uncurry $ \assetIdx asset -> do
-    let fields = fmap (^. #fieldPairValue) $ asset ^. #assetFieldPairs
-    forM_ (zip [0 ..] fields) . uncurry $ \fieldIdx field -> do
-      let optic =
-            #modelState
-              . #stAssets
-              . ix assetIdx
-              . #assetFieldPairs
-              . ix fieldIdx
-              . #fieldPairValue
-      when
-        ( (field ^. #fieldType == FieldTypeImage)
-            && isJust (field ^. #fieldBlobOpts . #blobOptsOpfsDir)
-            && isJust (field ^. #fieldBlobOpts . #blobOptsOpfsFile)
-        )
-        $ Jsm.opfsRead (fieldBlobOpts field)
-        . flip whenJust
-        $ \uri ->
-          liftIO
-            . sink
-            . PushUpdate
-            . PureUpdate
-            $ ( cloneTraversal optic
-                  . #fieldInput
-                  . #uniqueValue
-                  .~ uri
-              )
-            . ( cloneTraversal optic
-                  . #fieldOutput
-                  .~ DynamicFieldText uri
-              )
-  where
-    assets = st ^. #modelState . #stAssets
-
---
--- NOTE : test with
---
-opfsFree :: Model -> JSM ()
-opfsFree st =
-  forM_ groups $ \case
-    items@((dir, _) : _) ->
-      Jsm.opfsList dir $ \case
-        Nothing -> pure ()
-        Just opfsFiles -> do
-          let modelFiles = fromList $ fmap snd items
-          forM_ opfsFiles $ \file ->
-            when (Set.notMember file modelFiles)
-              $ Jsm.opfsRemove
-                defBlobOpts
-                  { blobOptsOpfsDir = Just dir,
-                    blobOptsOpfsFile = Just file
-                  }
-    _ ->
-      pure ()
-  where
-    groups :: [[(Unicode, Unicode)]]
-    groups =
-      groupAllOn fst
-        . catMaybes
-        . map
-          ( \x ->
-              (,)
-                <$> (x ^. #fieldBlobOpts . #blobOptsOpfsDir)
-                <*> (x ^. #fieldBlobOpts . #blobOptsOpfsFile)
-          )
-        . Syb.listify (\(_ :: Field DynamicField Unique) -> True)
-        $ modelState st
+evalModel :: (MonadThrow m) => Model -> m (Model -> Model)
+evalModel prev = pure $ const prev

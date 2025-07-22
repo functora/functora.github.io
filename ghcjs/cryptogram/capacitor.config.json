@@ -1,0 +1,14 @@
+{
+  "appId": "com.functora.app",
+  "appName": "app",
+  "webDir": "dist/latest",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  }
+}

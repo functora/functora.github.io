@@ -1,0 +1,162 @@
+cabal-version: 2.2
+name:          cryptogram
+version:       0.1.0.23
+synopsis:      Cryptogram
+category:      Web
+build-type:    Simple
+
+flag ghcid
+  manual:  True
+  default: False
+
+common pkg
+  other-modules:      Paths_delivery_calculator
+  autogen-modules:    Paths_delivery_calculator
+  default-language:   Haskell2010
+  hs-source-dirs:     src
+  js-sources:         static/app.js
+  other-modules:
+    App.I18n
+    App.Jsm
+    App.Types
+    App.Widgets.Asset
+    App.Widgets.Donate
+    App.Widgets.GooglePlay
+    App.Widgets.Main
+    App.Widgets.MarketLinks
+    App.Widgets.Menu
+    App.Widgets.PlaceOrder
+    App.Widgets.RemoveOrder
+    App.Widgets.ShareApp
+    App.Widgets.Templates
+    App.Xlsx
+
+  ghc-options:
+    -Werror -Weverything -Wno-all-missed-specialisations
+    -Wno-missed-specialisations -Wno-missing-exported-signatures
+    -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-safe
+    -Wno-unsafe -fprint-potential-instances -fwarn-tabs
+
+  if impl(ghc >=8.10.7)
+    ghc-options:
+      -Wno-prepositive-qualified-module -Wno-missing-safe-haskell-mode
+
+  if impl(ghc >8.10.7)
+    ghc-options: -Wno-missing-kind-signatures
+
+  if impl(ghc >=9.8)
+    ghc-options:
+      -Wno-missing-role-annotations -Wno-missing-poly-kind-signatures
+
+  cpp-options:        -Wno-trigraphs
+  default-extensions:
+    AllowAmbiguousTypes
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveDataTypeable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DerivingStrategies
+    DerivingVia
+    EmptyCase
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NoImplicitPrelude
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedLists
+    OverloadedStrings
+    PackageImports
+    PolyKinds
+    QuantifiedConstraints
+    QuasiQuotes
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StrictData
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+  build-depends:
+    , barbies
+    , base
+    , base64-bytestring
+    , bytestring
+    , containers
+    , functora-ghcjs
+    , microlens
+    , miso
+    , miso-functora
+    , modern-uri
+    , network-uri
+    , regex-compat
+    , syb
+    , time
+    , xlsx
+
+  if flag(ghcid)
+    build-depends: jsaddle
+
+  if os(wasi)
+    build-depends: jsaddle-wasm
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+
+executable cryptogram
+  import:        pkg
+  main-is:       Main.hs
+  ghcjs-options: -dedupe
+  build-depends: containers
+
+  if ((impl(ghcjs) || arch(javascript)) || os(wasi))
+    build-depends: jsaddle
+
+  else
+    build-depends:
+      , jsaddle-warp
+      , wai
+      , wai-app-static
+      , warp
+      , websockets
+
+  if impl(ghcjs)
+    ghc-options: -Wno-missing-home-modules
+    cpp-options: -DGHCJS_BROWSER
+
+  if !flag(ghcid)
+    ghc-options: -O2 -optc-O3 -funfolding-use-threshold=16
+
+  if (!flag(ghcid) && !os(wasi))
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+  if flag(ghcid)
+    cpp-options: -DGHCID
+
+  if (flag(ghcid) && impl(ghc >=8.10.7))
+    ghc-options: -Wno-unused-packages
+
+test-suite cryptogram-test
+  import:         pkg
+  type:           exitcode-stdio-1.0
+  main-is:        Spec.hs
+  hs-source-dirs: test
+  other-modules:  App.TypesSpec
+  ghc-options:    -Wno-missing-export-lists
+  build-depends:
+    , aeson
+    , hspec
+    , optics-core
+    , quickcheck-instances

@@ -1,0 +1,49 @@
+platforms:
+  android:
+    appName: Cryptogram
+    versionCode: 23
+    versionName: 0.1.0.23
+    packageName: com.functora.delivery_calculator
+    manifest:
+      - file: AndroidManifest.xml
+        target: manifest/application/activity
+        attrs:
+          android:label: "@string/app_name"
+      - file: AndroidManifest.xml
+        target: manifest
+        merge: |
+          <manifest>
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+          </manifest>
+    gradle:
+      - file: variables.gradle
+        target:
+          ext:
+            minSdkVersion:
+        replace:
+          minSdkVersion: 26
+      - file: build.gradle
+        target:
+          allprojects:
+            repositories:
+        replace:
+          repositories: |
+            {
+                google()
+                mavenCentral()
+                maven {
+                    url 'https://maven.mozilla.org/maven2/'
+                }
+                maven {
+                    url 'https://pkgs.dev.azure.com/OutSystemsRD/9e79bc5b-69b2-4476-9ca5-d67594972a52/_packaging/PublicArtifactRepository/maven/v1'
+                    name 'Azure'
+                    credentials {
+                        username = "optional"
+                        password = ""
+                    }
+                    content {
+                        includeGroup "com.github.outsystems"
+                    }
+                }
+            }

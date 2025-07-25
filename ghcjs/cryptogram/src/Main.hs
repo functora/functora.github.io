@@ -25,7 +25,6 @@ import Functora.Miso.Prelude
 import Language.Javascript.JSaddle ((!))
 import qualified Language.Javascript.JSaddle as JS
 import qualified Miso
-import qualified Text.URI as URI
 
 #ifdef wasi_HOST_OS
 foreign export javascript "hs_start" main :: IO ()
@@ -42,10 +41,8 @@ main =
           sleepSeconds 5
       )
     $ do
-      uri <- URI.mkURI . inspect =<< getCurrentURI
-      mSt <- handleAny (const $ pure Nothing) $ unUri uri
       sink <- newEmptyMVar
-      st <- newModel sink Nothing mSt
+      st <- newModel sink Nothing Nothing
       startApp
         App
           { model = st,
@@ -53,7 +50,7 @@ main =
             Miso.view = viewModel,
             subs = mempty,
             events = Map.insert "focus" True defaultEvents,
-            initialAction = InitUpdate mSt,
+            initialAction = InitUpdate,
             mountPoint = Nothing,
             logLevel = Off
           }
@@ -106,43 +103,19 @@ runApp = JSaddle.Wasm.run
 
 updateModel :: Action -> Model -> Effect Action Model
 updateModel Noop st = noEff st
-updateModel (InitUpdate mShortSt) prevSt = do
+updateModel InitUpdate prevSt = do
   effectSub prevSt $ \sink -> do
     mvSink <- newMVar sink
     let nextSt = prevSt {modelSink = mvSink}
-    Jsm.selectStorage ("cryptogram-" <> vsn) $ \case
-      Nothing ->
-        Jsm.fetchInstallReferrerUri $ \case
-          Nothing ->
-            liftIO
-              . sink
-              . PushUpdate
-              . PureUpdate
-              $ #modelLoading
-              .~ False
-          Just {} -> do
-            let st = mShortSt
-            finSt <- newModel mvSink (Just nextSt) st
-            liftIO
-              . sink
-              . PushUpdate
-              . PureUpdate
-              . const
-              $ finSt
-              & #modelLoading
-              .~ False
-      Just uri -> do
-        mLongSt <- unUri uri
-        let st = mShortSt <|> mLongSt
-        finSt <- newModel mvSink (Just nextSt) st
-        liftIO
-          . sink
-          . PushUpdate
-          . PureUpdate
-          . const
-          $ finSt
-          & #modelLoading
-          .~ False
+    finSt <- newModel mvSink (Just nextSt) . Just $ modelState nextSt
+    liftIO
+      . sink
+      . PushUpdate
+      . PureUpdate
+      . const
+      $ finSt
+      & #modelLoading
+      .~ False
     liftIO
       . sink
       . PushUpdate

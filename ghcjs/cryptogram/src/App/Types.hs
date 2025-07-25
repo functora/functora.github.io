@@ -8,7 +8,6 @@ module App.Types
     newSt,
     newFieldPair,
     mkUri,
-    unUri,
     emitter,
     icon,
     vsn,
@@ -18,10 +17,7 @@ module App.Types
   )
 where
 
-import qualified Data.ByteString.Base64.URL as B64URL
-import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Barbie
-import qualified Data.Generics as Syb
 import qualified Data.Version as Version
 import qualified Functora.Aes as Aes
 import Functora.Cfg
@@ -29,7 +25,6 @@ import Functora.Miso.Prelude
 import qualified Functora.Miso.Theme as Theme
 import Functora.Miso.Types as X hiding (newFieldPair)
 import qualified Functora.Miso.Types as FM
-import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Prelude as Prelude
 import qualified Paths_cryptogram as Paths
@@ -41,16 +36,17 @@ data Model = Model
     modelDonate :: OpenedOrClosed,
     modelLoading :: Bool,
     modelState :: St Unique,
+    modelChatId :: Int,
     modelDonateViewer :: [FieldPair DynamicField Unique]
   }
   deriving stock (Eq, Generic)
 
 data Action
   = Noop
-  | SyncInputs
-  | InitUpdate (Maybe (St Unique))
+  | InitUpdate
   | EvalUpdate (Model -> Model)
   | PushUpdate (Update Model)
+  | SyncInputs
 
 data St f = St
   { stReq :: StReq,
@@ -78,7 +74,7 @@ deriving via GenericType (St Identity) instance Binary (St Identity)
 
 data StReq = StReq
   { stReqKm :: Aes.Km,
-    stReqMsg :: Maybe Aes.Crypto
+    stReqCpt :: Maybe Aes.Crypto
   }
   deriving stock (Eq, Ord, Show, Read, Data, Generic)
   deriving (Binary) via GenericType StReq
@@ -116,71 +112,27 @@ newFieldPair key val = do
 mkUri :: (MonadThrow m) => Model -> m URI
 mkUri st = do
   uri <- mkURI $ from @Unicode @Prelude.Text baseUri
-  qxs <-
-    stQuery
-      . Syb.everywhere
-        ( Syb.mkT
-            $ const Blurred
-        )
-      . Syb.everywhere
-        ( Syb.mkT $ \x ->
-            if x ^. #fieldType /= FieldTypeImage
-              then x :: Field DynamicField Identity
-              else
-                x
-                  & #fieldInput
-                  .~ mempty
-                  & #fieldOutput
-                  .~ DynamicFieldText mempty
-        )
-      $ uniqueToIdentity
-        ( st ^. #modelState
-        )
+  key <- URI.mkQueryKey "startattach"
+  val <-
+    URI.mkQueryValue
+      $ encodeBinaryB64Url
+        StReq
+          { stReqKm = km,
+            stReqCpt = Just cpt
+          }
   pure
     $ uri
-      { URI.uriQuery = qxs
+      { URI.uriQuery = [URI.QueryParam key val]
       }
-
-unUri ::
-  ( MonadIO m,
-    MonadThrow m
-  ) =>
-  URI ->
-  m (Maybe (St Unique))
-unUri uri = do
-  kSt <- URI.mkQueryKey "d"
-  case qsGet kSt $ URI.uriQuery uri of
-    Nothing -> pure Nothing
-    Just tSt -> do
-      bSt <- either throwString pure . B64URL.decode $ encodeUtf8 tSt
-      iSt <- either (throwString . thd3) pure $ decodeBinary bSt
-      uSt <-
-        identityToUnique
-          $ Syb.everywhere (Syb.mkT Field.expandDynamicField) iSt
-      pure
-        $ Just uSt
-
-stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
-stQuery st = do
-  kSt <- URI.mkQueryKey "startapp"
-  vSt <- URI.mkQueryValue <=< encode $ encodeBinary st
-  pure [URI.QueryParam kSt vSt]
   where
-    encode :: (MonadThrow m) => BL.ByteString -> m Text
-    encode =
-      either throw pure
-        . decodeUtf8Strict
-        . B64URL.encode
-        . from @BL.ByteString @ByteString
+    km = st ^. #modelState . #stReq . #stReqKm & #kmIkm .~ Ikm mempty
+    ikm = encodeUtf8 $ st ^. #modelState . #stIkm . #fieldOutput
+    aes = Aes.drvSomeAesKey @Aes.Word256 $ km & #kmIkm .~ Ikm ikm
+    msg = encodeBinary $ st ^. #modelState . #stOut . #fieldOutput
+    cpt = Aes.encryptHmac aes msg
 
 baseUri :: Unicode
-#ifdef GHCID
-baseUri =
-  "http://localhost:8080"
-#else
-baseUri =
-  "https://functora.github.io/apps/cryptogram/" <> vsn <> "/index.html"
-#endif
+baseUri = "https://t.me/functora_cryptogram_bot"
 
 emitter :: (MonadIO m) => Model -> Update Model -> m ()
 emitter st updater = do

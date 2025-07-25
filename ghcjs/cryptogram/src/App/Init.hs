@@ -3,19 +3,18 @@ module App.Init
   )
 where
 
+import qualified App.Jsm as Jsm
 import App.Types
 import Functora.Miso.Prelude
 
 newModel ::
-  ( MonadThrow m,
-    MonadUnliftIO m
-  ) =>
   MVar (Action -> IO ()) ->
   Maybe Model ->
   Maybe (St Unique) ->
-  m Model
+  JSM Model
 newModel sink mMod mApp = do
   defSt <- maybe (liftIO newSt) pure $ mMod ^? _Just . #modelState
+  chatId <- Jsm.getChatId
   donate <- newDonateViewer
   pure
     Model
@@ -24,6 +23,7 @@ newModel sink mMod mApp = do
         modelDonate = Closed,
         modelLoading = True,
         modelState = fromMaybe defSt mApp,
+        modelChatId = chatId,
         modelDonateViewer = donate
       }
 

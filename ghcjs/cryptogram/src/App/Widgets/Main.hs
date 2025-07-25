@@ -1,10 +1,12 @@
 module App.Widgets.Main (mainWidget) where
 
+import qualified App.Jsm as Jsm
 import App.Types
 import qualified App.Widgets.Menu as Menu
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Widgets.BrowserLink as BrowserLink
 import qualified Functora.Miso.Widgets.Flex as Flex
+import qualified Functora.Miso.Widgets.Icon as Icon
 import qualified Functora.Miso.Widgets.Spinner as Spinner
 import Miso hiding (at, view)
 
@@ -76,7 +78,17 @@ screenWidget _ =
                   ]
               ]
           )
-          mempty
+          [ button_
+              [ onClick . PushUpdate . ImpureUpdate $ do
+                  doc <- liftIO newSt
+                  cid <- Jsm.getChatId
+                  Jsm.switchInlineQuery $ "Success " <> inspect cid
+                  pure $ (#modelMenu .~ Closed) . (#modelState .~ doc)
+              ]
+              [ icon Icon.IconBitcoin,
+                text " Donate"
+              ]
+          ]
 
 tosWidget :: View Action
 tosWidget =

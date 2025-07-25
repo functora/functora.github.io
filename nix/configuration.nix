@@ -705,14 +705,6 @@ in {
       extraPortals = [pkgs.xdg-desktop-portal-gtk];
       config.common.default = "*";
     };
-
-    #
-    # Via/Vial
-    #
-    services.udev.packages = with pkgs; [
-      via
-    ];
-
     #
     # Firejail
     #

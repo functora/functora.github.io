@@ -20,6 +20,7 @@ common pkg
 
   other-modules:
     App.Init
+    App.Jsm
     App.Types
     App.Widgets.Donate
     App.Widgets.Main

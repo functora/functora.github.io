@@ -7,7 +7,6 @@ module App.Types
     St (..),
     newSt,
     newFieldPair,
-    newFieldPairId,
     mkUri,
     unUri,
     emitter,
@@ -28,10 +27,7 @@ import qualified Functora.Aes as Aes
 import Functora.Cfg
 import Functora.Miso.Prelude
 import qualified Functora.Miso.Theme as Theme
-import Functora.Miso.Types as X hiding
-  ( newFieldPair,
-    newFieldPairId,
-  )
+import Functora.Miso.Types as X hiding (newFieldPair)
 import qualified Functora.Miso.Types as FM
 import qualified Functora.Miso.Widgets.Field as Field
 import qualified Functora.Miso.Widgets.Icon as Icon
@@ -57,9 +53,10 @@ data Action
   | PushUpdate (Update Model)
 
 data St f = St
-  { stKm :: Aes.Km,
+  { stReq :: StReq,
     stIkm :: Field Unicode f,
-    stMsg :: Field Unicode f,
+    stInp :: Unicode,
+    stOut :: Field Unicode f,
     stEnableTheme :: Bool,
     stTheme :: Theme
   }
@@ -79,16 +76,24 @@ instance TraversableB St
 
 deriving via GenericType (St Identity) instance Binary (St Identity)
 
+data StReq = StReq
+  { stReqKm :: Aes.Km,
+    stReqMsg :: Maybe Aes.Crypto
+  }
+  deriving stock (Eq, Ord, Show, Read, Data, Generic)
+  deriving (Binary) via GenericType StReq
+
 newSt :: (MonadIO m) => m (St Unique)
 newSt = do
   km <- Aes.randomKm 32
   ikm <- newPasswordField . decodeUtf8 $ km ^. #kmIkm . #unIkm
-  msg <- newTextField mempty
+  out <- newTextField mempty
   pure
     St
-      { stKm = km,
+      { stReq = StReq km Nothing,
         stIkm = ikm,
-        stMsg = msg,
+        stInp = mempty,
+        stOut = out,
         stEnableTheme = True,
         stTheme = Theme.Matcha
       }
@@ -103,17 +108,6 @@ newFieldPair key val = do
   res <- FM.newFieldPair key val
   pure
     $ res
-    & #fieldPairValue
-    . #fieldOpts
-    . #fieldOptsAllowCopy
-    .~ False
-
-newFieldPairId ::
-  Unicode ->
-  DynamicField ->
-  FieldPair DynamicField Identity
-newFieldPairId key val = do
-  FM.newFieldPairId key val
     & #fieldPairValue
     . #fieldOpts
     . #fieldOptsAllowCopy
@@ -139,9 +133,9 @@ mkUri st = do
                   & #fieldOutput
                   .~ DynamicFieldText mempty
         )
-      . uniqueToIdentity
-      $ st
-      ^. #modelState
+      $ uniqueToIdentity
+        ( st ^. #modelState
+        )
   pure
     $ uri
       { URI.uriQuery = qxs
@@ -168,7 +162,7 @@ unUri uri = do
 
 stQuery :: (MonadThrow m) => St Identity -> m [URI.QueryParam]
 stQuery st = do
-  kSt <- URI.mkQueryKey "d"
+  kSt <- URI.mkQueryKey "startapp"
   vSt <- URI.mkQueryValue <=< encode $ encodeBinary st
   pure [URI.QueryParam kSt vSt]
   where

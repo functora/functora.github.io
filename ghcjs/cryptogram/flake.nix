@@ -14,6 +14,12 @@
       app-ghcid = pkgs.writeScriptBin "app-ghcid" ''
         ${pkgs.ghcid}/bin/ghcid --test="Main.main" --command="${pkgs.cabal-install}/bin/cabal new-repl ${label} --disable-optimization --repl-options=-fobject-code --repl-options=-fno-break-on-exception --repl-options=-fno-break-on-error --repl-options=-v1 --repl-options=-ferror-spans --repl-options=-j -fghcid"
       '';
+      app-tunnel = pkgs.writeShellApplication {
+        name = "app-tunnel";
+        text = ''
+          ${pkgs.cloudflared}/bin/cloudflared --url http://localhost:8080/
+        '';
+      };
       app-serve-latest = pkgs.writeShellApplication rec {
         name = "app-serve-latest";
         text = ''
@@ -133,6 +139,7 @@
             pkgs.postgresql
             inputs.ghc-wasm-meta.packages.${system}.all_9_10
             app-ghcid
+            app-tunnel
             app-serve-latest
             app-release-wasm
             app-release-latest

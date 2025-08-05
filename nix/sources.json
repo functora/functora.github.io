@@ -1,4 +1,16 @@
 {
+    "flake-compat": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "9100a0f413b0c601e0533d1d94ffd501ce2e7885",
+        "sha256": "09m84vsz1py50giyfpx0fpc7a4i0r1xsb54dh0dpdg308lp4p188",
+        "type": "tarball",
+        "url": "https://github.com/edolstra/flake-compat/archive/9100a0f413b0c601e0533d1d94ffd501ce2e7885.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "haskellNix": {
         "branch": "master",
         "description": "Alternative Haskell Infrastructure for Nixpkgs",
@@ -21,6 +33,18 @@
         "sha256": "1x52f7a1izy2697d5bcm62rysl0cs7scdzkg0fzqxpldjzlnffj0",
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs/archive/21a2e1ea4388d7f775c304697cee826eb69060c5.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpak": {
+        "branch": "master",
+        "description": "Runtime sandboxing for Nix",
+        "homepage": null,
+        "owner": "nixpak",
+        "repo": "nixpak",
+        "rev": "7835fc4f5c5b97218b3371eda633c9448a030e50",
+        "sha256": "1jhm20aihqrmlirhr909jrxiza603ssbh8ga908qkrpxqcbdhq4d",
+        "type": "tarball",
+        "url": "https://github.com/nixpak/nixpak/archive/7835fc4f5c5b97218b3371eda633c9448a030e50.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {

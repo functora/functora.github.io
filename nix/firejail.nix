@@ -14,7 +14,8 @@ in rec {
     net ? false,
     grp ? null,
     cfg ? "",
-    profile ? mkFirejailProfile {inherit pkg dir net grp cfg;},
+    dbus ? false,
+    profile ? mkFirejailProfile {inherit pkg dir net grp cfg dbus;},
     extraArgs ? [],
     exe,
   }: {
@@ -63,6 +64,7 @@ in rec {
     net,
     grp,
     cfg,
+    dbus ? false,
   }:
     pkgs.writeText "${pkg}.local" (
       ''
@@ -104,7 +106,7 @@ in rec {
         private ${
           if dir == null
           then ""
-          else ''''${HOME}/.firejail/${dir}''
+          else ''''${HOME}/firejail/${dir}''
         }
         private-bin none
         private-cache
@@ -127,9 +129,20 @@ in rec {
         }
 
         dbus-system none
-        dbus-user none
+        ${
+          if dbus
+          then ""
+          else ''
+            dbus-user none
+          ''
+        }
 
         restrict-namespaces
+
+        rmenv STRIPE_KEY
+        rmenv OPENAI_API_KEY
+        rmenv BITFINEX_API_KEY
+        rmenv BITFINEX_PRV_KEY
       ''
       + cfg
     );

@@ -29,7 +29,7 @@ in [
           TCP-LISTEN:8080,fork,reuseaddr,keepalive \
           UNIX:/home/${
           config.services.functora.userName
-        }/.firejail/tabby/tabby.sock,keepalive
+        }/firejail/tabby/tabby.sock,keepalive
       '';
     }
   )

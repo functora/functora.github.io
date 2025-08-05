@@ -81,7 +81,7 @@
       dir = "q3";
       exe = ''
         ${pkgs.openarena}/bin/openarena \
-          +set fs_homepath ~/.firejail/q3/.openarena \
+          +set fs_homepath ~/firejail/q3/.openarena \
           +set fs_game ${mod}
       '';
     };
@@ -735,6 +735,13 @@ in {
       // fj.mkFirejailOffline {
         pkg = "hoogle-w3m";
         exe = "${import ./hoogle-w3m.nix}/bin/hoogle-w3m";
+      }
+      // fj.mkFirejailCustom {
+        pkg = "ze";
+        dir = "ze";
+        exe = "${pkgs.zed-editor}/bin/zeditor";
+        net = true;
+        dbus = true;
       };
     #
     # Home
@@ -840,13 +847,15 @@ in {
       programs.bash.enable = true;
       programs.direnv.enable = true;
       programs.direnv.nix-direnv.enable = true;
-      home.file = {
-        ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
-        ".config/qutebrowser/blocked-hosts".text = blocked-hosts;
-        ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
-        ".config/warpd/config".source = ../cfg/warpd.txt;
-        ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
-      };
+      home.file =
+        {
+          ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
+          ".config/qutebrowser/blocked-hosts".text = blocked-hosts;
+          ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
+          ".config/warpd/config".source = ../cfg/warpd.txt;
+          ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
+        }
+        // import ./ze.nix {inherit pkgs;};
       programs.i3status-rust = {
         enable = true;
         bars.bottom.blocks = [

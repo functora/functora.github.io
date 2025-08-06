@@ -1,65 +1,52 @@
-let
-  pkgs = import ./nixpkgs.nix;
+{pkgs ? import <nixpkgs> {}}: let
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
     inherit (pkgs) lib;
     inherit pkgs;
   };
+  app = pkgs.writeShellApplication {
+    name = "zed";
+    text = "${pkgs.zed-editor}/bin/zeditor";
+  };
   sandbox = mkNixPak {
     config = {sloth, ...}: {
-      # the application to isolate
-      app.package = pkgs.hello;
-
-      # path to the executable to be wrapped
-      # this is usually autodetected but
-      # can be set explicitly nonetheless
-      app.binPath = "bin/hello";
-
-      # enabled by default, flip to disable
-      # and to remove dependency on xdg-dbus-proxy
-      dbus.enable = true;
-
-      # same usage as --see, --talk, --own
-      dbus.policies = {
-        "org.freedesktop.DBus" = "talk";
-        "ca.desrt.dconf" = "talk";
-      };
-
-      # needs to be set for Flatpak emulation
-      # defaults to com.nixpak.${name}
-      # where ${name} is generated from the drv name like:
-      # hello -> Hello
-      # my-app -> MyApp
-      flatpak.appId = "org.myself.HelloApp";
+      app.package = app;
+      gpu.enable = true;
+      gpu.provider = "bundle";
+      fonts.enable = true;
+      locale.enable = true;
+      etc.sslCertificates.enable = true;
 
       bubblewrap = {
-        # disable all network access
-        network = false;
+        network = true;
+        sockets.pulse = true;
+        sockets.wayland = true;
+        env.RUST_BACKTRACE = "full";
+        bindEntireStore = true;
 
-        # lists of paths to be mounted inside the sandbox
-        # supports runtime resolution of environment variables
-        # see "Sloth values" below
-
-        # bind.rw = [
-        #   (sloth.concat' sloth.homeDir "/Documents")
-        #   (sloth.env "XDG_RUNTIME_DIR")
-        #   # a nested list represents a src -> dest mapping
-        #   # where src != dest
-        #   [
-        #     (sloth.concat' sloth.homeDir "/.local/state/nixpak/hello/config")
-        #     (sloth.concat' sloth.homeDir "/.config")
-        #   ]
-        # ];
-
-        bind.ro = [
-          (sloth.concat' sloth.homeDir "/Downloads")
+        bind.rw = [
+          [
+            (sloth.mkdir (sloth.concat' sloth.homeDir "/zed"))
+            sloth.homeDir
+          ]
         ];
 
-        bind.dev = [
-          "/dev/dri"
+        bind.ro = [
+          "/etc/group"
+          "/etc/passwd"
+          "/run/current-system/sw/bin/bash"
+          (sloth.concat' sloth.homeDir "/.nix-profile")
+          [
+            (toString (import ./zed-config.nix {inherit pkgs;}))
+            (sloth.concat' sloth.homeDir "/.config/zed/settings.json")
+          ]
+        ];
+
+        tmpfs = [
+          "/tmp"
         ];
       };
     };
   };
 in
-  sandbox.config.script
+  sandbox.config.env

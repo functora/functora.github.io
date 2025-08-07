@@ -1,4 +1,4 @@
-{pkgs ? import <nixpkgs> {}}: let
+{pkgs}: let
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
     inherit (pkgs) lib;

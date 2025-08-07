@@ -27,11 +27,12 @@
         bind.rw = [
           [
             (sloth.mkdir (sloth.concat' sloth.homeDir "/zed"))
-            sloth.homeDir
+            (sloth.concat' sloth.homeDir "/zed")
           ]
         ];
 
         bind.ro = [
+          "/bin/sh"
           "/etc/group"
           "/etc/passwd"
           "/run/current-system/sw/bin/bash"

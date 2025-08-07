@@ -16,9 +16,8 @@
   ui_font_size = 18;
   buffer_font_size = 18;
   soft_wrap = "editor_width";
-  # buffer_font_family = "JetBrains Mono";
-  # base_keymap = "JetBrains";
   autosave = "off";
+  theme = "One Dark";
 
   lsp = {
     nil = {

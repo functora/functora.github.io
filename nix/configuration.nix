@@ -805,6 +805,7 @@ in {
         (import ./clipmaker.nix)
         neovim
         (import ./zed.nix {inherit pkgs;})
+        (import ./bar.nix {inherit pkgs;})
       ];
       programs.git = {
         enable = true;

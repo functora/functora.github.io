@@ -19,6 +19,11 @@
   autosave = "off";
   theme = "One Dark";
 
+  agent.default_model = {
+    provider = "google";
+    model = "gemini-2.5-pro";
+  };
+
   lsp = {
     nil = {
       binary = {

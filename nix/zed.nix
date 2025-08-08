@@ -36,6 +36,7 @@
           "/etc/group"
           "/etc/passwd"
           "/run/current-system/sw/bin/bash"
+          "/run/current-system/sw/bin/less"
           (sloth.concat' sloth.homeDir "/.nix-profile")
           [
             (toString (import ./zed-config.nix {inherit pkgs;}))

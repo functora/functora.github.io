@@ -13,7 +13,9 @@ import Data.Aeson
 import qualified Data.Aeson as A
 import qualified Data.Binary as Binary
 import Data.Binary.Instances ()
-import Functora.Prelude
+import Data.Char (isLower, toLower)
+import Data.Typeable (typeRep)
+import Functora.Prelude hiding (toLower)
 import qualified GHC.Generics as Generics
 import qualified Text.URI as URI
 import Toml (HasCodec, HasItemCodec)
@@ -32,10 +34,33 @@ genericTomlCodec =
   Toml.genericCodecWithOptions
     Toml.TomlOptions
       { Toml.tomlOptionsFieldModifier = \proxy ->
-          Toml.stripTypeNamePrefix proxy . \case
+          stripTypeNamePrefix proxy . \case
             ('_' : xs) -> xs
             xs -> xs
       }
+
+stripTypeNamePrefix :: forall a. (Typeable a) => Proxy a -> String -> String
+stripTypeNamePrefix _ fieldName =
+  case stripPrefix (headToLower $ typeName @a) fieldName of
+    Just rest -> leaveIfEmpty rest
+    Nothing -> leaveIfEmpty (dropWhile isLower fieldName)
+  where
+    headToLower :: String -> String
+    headToLower = \case
+      [] -> error "Cannot use 'headToLower' on empty Text"
+      x : xs -> toLower x : xs
+    -- if all lower case then leave field as it is
+    leaveIfEmpty :: String -> String
+    leaveIfEmpty rest = if null rest then fieldName else headToLower rest
+
+typeName :: forall a. (Typeable a) => String
+typeName =
+  fromMaybe mempty
+    . safeHead
+    . words
+    . show
+    . typeRep
+    $ Proxy @a
 
 instance A.ToJSON URI where
   toJSON =

@@ -518,7 +518,7 @@ in {
         # "soundcloud"
         "spotify"
         "steam"
-        # "telegram"
+        "telegram"
         "temu"
         "tidal"
         "tiktok"
@@ -1113,7 +1113,6 @@ in {
     #
     # AI
     #
-    services.llama-cpp.enable = true;
     services.llama-cpp.port = 11434;
     services.llama-cpp.package = pkgs.llama-cpp.override {vulkanSupport = true;};
     services.llama-cpp.model = ../../llms/microsoft_Phi-4-reasoning-plus-Q5_K_M.gguf;

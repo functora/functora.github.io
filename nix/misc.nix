@@ -2,6 +2,7 @@ let
   repo = builtins.toString ./..;
 in
   with (import ./project.nix {}); rec {
+    inherit pkgs;
     pkgBin = pkg: "${pkgs.${pkg}}/bin/${pkg}";
     nix-bundle = pkgs.nix-bundle.overrideAttrs (attrs: {
       buildInputs =
@@ -62,7 +63,7 @@ in
       };
     mkService = {
       srv,
-      usr ? null,
+      opts ? {},
       mkExe,
     }: {
       lib,
@@ -75,12 +76,17 @@ in
         ];
 
         options = {
-          services."${srv}" = {
-            enable = mkOption {
-              default = false;
-              type = types.bool;
-            };
-          };
+          services."${srv}" =
+            {
+              enable = mkOption {
+                default = false;
+                type = types.bool;
+              };
+              runAsUser = mkOption {
+                type = types.nullOr types.str;
+              };
+            }
+            // opts;
         };
 
         config = mkIf config.services."${srv}".enable {
@@ -89,7 +95,9 @@ in
             wantedBy = ["default.target"];
             script = "PATH=$PATH:${pkgs.busybox}/bin ${mkExe config}";
             serviceConfig = {
-              User =
+              User = let
+                usr = config.services."${srv}".runAsUser;
+              in
                 if usr == null
                 then config.services.functora.userName
                 else usr;

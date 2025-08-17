@@ -45,6 +45,17 @@ in
       '';
     }
     // fj.mkFirejailCustom {
+      pkg = "doom-mall";
+      dir = "doom";
+      exe = ''
+        ${unst.gzdoom}/bin/gzdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/brutalv22test4.pk3} \
+          -file ${../bak/doom/mall.pk3} \
+          -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
       pkg = "doom-ashes1";
       dir = "doom";
       exe = ''

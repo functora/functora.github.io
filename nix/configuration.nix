@@ -713,17 +713,6 @@ in {
       fj.mkFirejailSimple "chromium"
       // mkOpenArena "rat"
       // import ./doom.nix
-      // fj.mkFirejailCustom {
-        pkg = "doom-mall";
-        dir = "doom";
-        exe = ''
-          ${unst.gzdoom}/bin/gzdoom \
-            -iwad ./freedoom-0.13.0/freedoom2.wad \
-            -file ./brutalv22test4.pk3 \
-            -file ./mall.pk3 \
-            -file ./SimpleSlots.1.1.pk7
-        '';
-      }
       // fj.mkFirejailOffline {
         pkg = "vi";
         exe = "${vi}/bin/vi";

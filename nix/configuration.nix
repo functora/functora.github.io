@@ -577,6 +577,7 @@ in {
       keyboards.k995p = mk100 "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
       keyboards.feker80 = mkAlice "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";
       keyboards.aks068 = mkAlice "/dev/input/by-id/usb-RDR_AKS068-event-kbd";
+      keyboards.aks068w = mkAlice "/dev/input/by-id/usb-Telink_Wireless_Gaming_Keyboard-event-kbd";
       keyboards.a275 = {
         device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
         defcfg = {

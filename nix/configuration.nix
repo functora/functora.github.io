@@ -776,26 +776,19 @@ in {
         ccrypt
         libreoffice
         tor-browser-bundle-bin
-        kooha
         mpv
         # cura
         git-lfs
         lesspass-cli
-        # mkdir -p ~/macos/Public
-        # cd ~/macos
-        # chmod 777 ./Public
-        # quickget macos monterey
-        # quickemu --vm macos-monterey.conf --public-dir ./Public --extra_args "-cpu host,+vmx"
-        quickemu
         usbutils
         simple-scan
         system-config-printer
         pulsemixer
+        neovim
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
-        neovim
-        (import ./zed.nix {inherit pkgs;})
         (import ./bar.nix {inherit pkgs;})
+        (import ./vibe.nix {inherit pkgs;})
       ];
       programs.git = {
         enable = true;
@@ -1104,8 +1097,9 @@ in {
     # AI
     #
     services.llama-cpp.port = 11434;
-    services.llama-cpp.package = pkgs.llama-cpp.override {vulkanSupport = true;};
-    services.llama-cpp.model = ../../llms/microsoft_Phi-4-reasoning-plus-Q5_K_M.gguf;
+    services.llama-cpp.package = unst.llama-cpp.override {vulkanSupport = true;};
+    services.llama-cpp.model = ../../llms/google_gemma-3-270m-it-qat-Q5_K_M.gguf;
+    services.llama-cpp.extraFlags = ["-c" "32000"];
     #
     # Fonts
     #

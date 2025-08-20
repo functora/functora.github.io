@@ -16,19 +16,14 @@ in
     buildInputs =
       [
         pkgs.hlint
-        pkgs.gleam
-        pkgs.erlang
-        pkgs.elixir
         pkgs.libwebp
         newpkgs.litecli
-        misc.nix-bundle
         bak.bak-status
         bak.bak-commit
         bak.bak-encrypt
         # bak.bak-decrypt
       ]
       ++ (import ./tools.nix)
-      ++ (import ./../pub/dazzle/nix/tools.nix)
       ++ (import ./../pub/functora-hakyll/nix/tools.nix)
       ++ (import ./../pub/functora/nix/tools.nix)
       ++ (import ./../pub/bfx/nix/tools.nix)

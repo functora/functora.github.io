@@ -85,13 +85,9 @@ in
               haskell-vim
               hlint-refactor-vim
               vim-nix
-              dhall-vim
               psc-ide-vim
               purescript-vim
-              vim-elixir
-              gleam-vim
               neoformat
-              vim-terraform
               vim-commentary
               render-markdown-nvim
               #
@@ -103,6 +99,7 @@ in
               #
               # AI
               #
+              avante-nvim
               # nvim-lspconfig
               # unst.vimPlugins.vim-tabby
             ];

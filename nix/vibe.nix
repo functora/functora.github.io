@@ -9,6 +9,7 @@
     text = "alacritty";
     runtimeInputs = with pkgs; [
       (import ./../pub/vi/nix/default.nix {})
+      fontconfig
       busybox
       curl
       wget
@@ -24,6 +25,11 @@
       gpu.enable = true;
       gpu.provider = "bundle";
       fonts.enable = true;
+      fonts.fonts =
+        builtins.filter pkgs.lib.attrsets.isDerivation (
+          builtins.attrValues pkgs.nerd-fonts
+        )
+        ++ [pkgs.dejavu_fonts];
       locale.enable = true;
       etc.sslCertificates.enable = true;
       bubblewrap = {
@@ -32,6 +38,7 @@
         sockets.wayland = true;
         bind.ro = [
           "/bin/sh"
+          "/usr/bin/env"
           "/run/current-system/sw/bin/bash"
           "/run/current-system/sw/bin/less"
           (sloth.concat' sloth.homeDir "/.config/tmux")
@@ -47,9 +54,7 @@
         tmpfs = [
           "/tmp"
         ];
-        env.NIX_CONFIG = ''
-          experimental-features = nix-command flakes
-        '';
+        env.NIX_CONFIG = "experimental-features = nix-command flakes";
       };
     };
   };

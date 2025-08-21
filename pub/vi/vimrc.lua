@@ -5,3 +5,8 @@ require("gp").setup({
     }
   }
 })
+
+require("avante_lib").load()
+require("avante").setup({
+  provider = "gemini"
+})

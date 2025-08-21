@@ -3,6 +3,7 @@ let
   unst = import ./../../../nix/nixpkgs-unstable.nix;
 in
   {
+    ai ? false,
     mini ? true,
     formatter ? "ormolu",
     vimBackground ? "light",
@@ -64,45 +65,45 @@ in
             ''
             + (getAttr formatter formatter-registry);
           packages.vim-functora = with pkgs.vimPlugins; {
-            start = [
-              #
-              # Interface
-              #
-              ack-vim
-              ctrlp-vim
-              vim-fugitive
-              vim-gitgutter
-              lightline-vim
-              vim-togglelist
-              papercolor-theme
-              vim-better-whitespace
-              catppuccin-nvim
-              everforest
-              edge
-              #
-              # Programming
-              #
-              haskell-vim
-              hlint-refactor-vim
-              vim-nix
-              psc-ide-vim
-              purescript-vim
-              neoformat
-              vim-commentary
-              render-markdown-nvim
-              #
-              # Productivity
-              #
-              coc-nvim
-              sideways-vim
-              vim-LanguageTool
-              #
-              # AI
-              #
-              avante-nvim
-              # nvim-lspconfig
-              # unst.vimPlugins.vim-tabby
-            ];
+            start =
+              [
+                #
+                # Interface
+                #
+                ack-vim
+                ctrlp-vim
+                vim-fugitive
+                vim-gitgutter
+                lightline-vim
+                vim-togglelist
+                papercolor-theme
+                vim-better-whitespace
+                catppuccin-nvim
+                everforest
+                edge
+                #
+                # Programming
+                #
+                haskell-vim
+                hlint-refactor-vim
+                vim-nix
+                psc-ide-vim
+                purescript-vim
+                neoformat
+                vim-commentary
+                render-markdown-nvim
+                #
+                # Productivity
+                #
+                coc-nvim
+                sideways-vim
+                vim-LanguageTool
+              ]
+              ++ (
+                if ai
+                then [unst.vimPlugins.avante-nvim]
+                else []
+              );
             opt = [
             ];
           };

@@ -407,7 +407,12 @@ import UnliftIO as X
     withRunInIO,
     withUnliftIO,
   )
-import UnliftIO.MVar as X (modifyMVar)
+import UnliftIO.MVar as X
+  ( modifyMVar,
+    modifyMVar_,
+    readMVar,
+    withMVar,
+  )
 import qualified Prelude
 #if defined(__GHCJS__) || defined(ghcjs_HOST_OS) || defined(wasi_HOST_OS)
 import qualified Data.JSString as JS

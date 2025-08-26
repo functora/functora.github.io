@@ -356,6 +356,7 @@ import Universum as X hiding
     over,
     preview,
     print,
+    readMVar,
     set,
     state,
     swap,

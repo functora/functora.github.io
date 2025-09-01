@@ -1098,7 +1098,7 @@ in {
     #
     services.llama-cpp.port = 11434;
     services.llama-cpp.package = unst.llama-cpp.override {vulkanSupport = true;};
-    services.llama-cpp.model = ../../llms/microsoft_Phi-4-mini-reasoning-Q4_K_M.gguf;
+    services.llama-cpp.model = ../../llms/OpenGVLab_InternVL3_5-1B-Q4_K_M.gguf;
     services.llama-cpp.extraFlags = ["-c" "32000"];
     #
     # Fonts

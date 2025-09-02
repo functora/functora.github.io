@@ -85,7 +85,11 @@ mkRsiConduit mkCandle (RsiPeriod natPer) =
                     let nextAvgLoss = (prevAvgLoss * (fixPer - 1) + loss) / fixPer
                     let nextAvgGain = (prevAvgGain * (fixPer - 1) + gain) / fixPer
                     let rs = nextAvgGain / nextAvgLoss
-                    let rsi = Rsi $ 100 - (100 / (1 + rs))
+                    let rsi =
+                          Rsi
+                            $ if nextAvgLoss == 0
+                              then 100
+                              else 100 - (100 / (1 + rs))
                     C.yield (c, rsi)
                     pure $ Left (nextAvgLoss, nextAvgGain)
        )

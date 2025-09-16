@@ -1,6 +1,10 @@
 let
   pkgs = import ./../../../nix/nixpkgs.nix;
   unst = import ./../../../nix/nixpkgs-unstable.nix;
+  olds = import (fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/a94ea3486da532f88e87e698b2f0e6b87aea321e.tar.gz";
+    sha256 = "1h9x7zcfxhmakfn5azaxg7wsakz3g47cwfgpqp6kc96h0by8r5k8";
+  }) {};
 in
   {
     ai ? false,
@@ -55,7 +59,7 @@ in
               let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'
-              let g:languagetool_jar='${languagetool}/share/languagetool-commandline.jar'
+              let g:languagetool_jar='${olds.languagetool}/share/languagetool-commandline.jar'
               source ${vi-src}/vimrc.vim
               luafile ${vi-src}/vimrc.lua
               try

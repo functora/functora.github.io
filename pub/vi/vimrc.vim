@@ -727,8 +727,8 @@ map <leader>\ gc
 " => LanguageTool
 "
 let g:languagetool_disable_rules="DASH_RULE,WHITESPACE_RULE,EN_QUOTES"
-nnoremap <leader>/ :LanguageToolCheck<cr>
-nnoremap <leader>// :LanguageToolClear<cr>
+nnoremap <leader>[ :LanguageToolCheck<cr>
+nnoremap <leader>] :LanguageToolClear<cr>
 
 "
 " => Location list

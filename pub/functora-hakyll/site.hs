@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Control.Monad (replicateM)
+import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Hakyll
 import Main.Utf8 (withUtf8)
@@ -70,6 +72,53 @@ main = withUtf8 . hakyllWith cfg $ do
         >>= loadAndApplyTemplate "templates/blog-archive.html" blogCtx
         >>= loadAndApplyTemplate "templates/default.html" blogCtx
         >>= relativizeUrls
+  create ["bip39-dice.html"] $ do
+    let defCtx = mkStyleCtx Formal
+    route idRoute
+    compile $ do
+      let idxs items label =
+            listField
+              label
+              ( field "idx" (pure . itemBody)
+                  <> defCtx
+              )
+              ( mapM
+                  (makeItem . ("\8470" <>) . show)
+                  items
+              )
+      let rows top label =
+            listField
+              label
+              ( listFieldWith
+                  "cols"
+                  (field "col" (pure . itemBody))
+                  ( \item -> do
+                      let (idx, raw) = itemBody item
+                      let mkItem = makeItem raw
+                      xs <- replicateM 11 mkItem
+                      x <-
+                        if top || idx > 7
+                          then mkItem
+                          else makeItem mempty
+                      pure $ xs <> [x]
+                  )
+              )
+              ( mapM makeItem
+                  . zip [1 ..]
+                  . (<> ["\8721+1=", "W="])
+                  $ fmap (show . (2 ^)) [10, 9 .. 0]
+              )
+      let ctx =
+            idxs [1 .. 12] "idxs-top"
+              <> idxs [13 .. 24] "idxs-bottom"
+              <> rows True "rows-top"
+              <> rows False "rows-bottom"
+              <> constField "title" "BIP39 Dice"
+              <> defCtx
+      makeItem ""
+        >>= loadAndApplyTemplate "templates/bip39-dice.html" ctx
+        >>= loadAndApplyTemplate "templates/default.html" ctx
+        >>= relativizeUrls
   match "templates/*" $ compile templateBodyCompiler
   match "license.markdown" $ compile pandocCompiler
   match "index/*.markdown" $ compile pandocCompiler
@@ -78,10 +127,10 @@ main = withUtf8 . hakyllWith cfg $ do
       posts <- recentFirst =<< loadAll "blog/*"
       meta <- getMetadata =<< getUnderlying
       pairs <-
-        mapM makeItem $
-          makePairs $
-            maybe mempty id $
-              lookupStringList "pairs" meta
+        mapM makeItem
+          . makePairs
+          . fromMaybe mempty
+          $ lookupStringList "pairs" meta
       let pairCtx =
             field "left" (return . fst . itemBody)
               <> field "right" (return . snd . itemBody)
@@ -126,21 +175,22 @@ newIndex style = do
   compile $ do
     blocks <- chronological =<< loadAll "index/*"
     let indexCtx =
-          listField "blocks" formalCtx (return blocks)
-            <> formalCtx
+          listField "blocks" (mkStyleCtx style) (return blocks)
+            <> mkStyleCtx style
     getResourceBody
       >>= applyAsTemplate indexCtx
       >>= loadAndApplyTemplate "templates/default.html" indexCtx
       >>= relativizeUrls
-  where
-    --
-    -- TODO : add when condition for formal stuff, generate docx
-    --
-    formalCtx =
-      case style of
-        Informal ->
-          defaultContext
-        Formal ->
-          constField "formal" "true"
-            <> constField "color" "white"
-            <> defaultContext
+
+--
+-- TODO : add when condition for formal stuff, generate docx
+--
+mkStyleCtx :: Style -> Context String
+mkStyleCtx style =
+  case style of
+    Informal ->
+      defaultContext
+    Formal ->
+      constField "formal" "true"
+        <> constField "color" "white"
+        <> defaultContext

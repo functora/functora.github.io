@@ -1,0 +1,34 @@
+<table>
+  <thead>
+    <tr>
+      $for(idxs-top)$
+      <th>$idx$</th>
+      $endfor$
+    </tr>
+  </thead>
+  <tbody>
+    $for(rows-top)$
+    <tr>
+      $for(cols)$
+      <td>$col$</td>
+      $endfor$
+    </tr>
+    $endfor$
+  </tbody>
+  <thead>
+    <tr>
+      $for(idxs-bottom)$
+      <th>$idx$</th>
+      $endfor$
+    </tr>
+  </thead>
+  <tbody>
+    $for(rows-bottom)$
+    <tr>
+      $for(cols)$
+      <td>$col$</td>
+      $endfor$
+    </tr>
+    $endfor$
+  </tbody>
+</table>

@@ -97,7 +97,7 @@ main = withUtf8 . hakyllWith cfg $ do
                       let mkItem = makeItem raw
                       xs <- replicateM 11 mkItem
                       x <-
-                        if top || idx > 7
+                        if top || idx > 8
                           then mkItem
                           else makeItem mempty
                       pure $ xs <> [x]

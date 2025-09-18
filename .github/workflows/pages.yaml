@@ -25,15 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout without submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout
         with:
           submodules: false
       - name: Setup Pages
-        uses: actions/configure-pages@v2
+        uses: actions/configure-pages
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact
         with:
           path: "docs/"
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages

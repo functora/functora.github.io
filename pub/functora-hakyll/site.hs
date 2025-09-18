@@ -72,7 +72,10 @@ main = withUtf8 . hakyllWith cfg $ do
         >>= loadAndApplyTemplate "templates/blog-archive.html" blogCtx
         >>= loadAndApplyTemplate "templates/default.html" blogCtx
         >>= relativizeUrls
-  create ["bip39-dice.html"] $ do
+  match "bip39/*" $ do
+    route idRoute
+    compile copyFileCompiler
+  create ["bip39/calculator.html"] $ do
     let defCtx = mkStyleCtx Formal
     route idRoute
     compile $ do
@@ -113,10 +116,10 @@ main = withUtf8 . hakyllWith cfg $ do
               <> idxs [13 .. 24] "idxs-bottom"
               <> rows True "rows-top"
               <> rows False "rows-bottom"
-              <> constField "title" "BIP39 Dice"
+              <> constField "title" "BIP39 Dice Calculator"
               <> defCtx
       makeItem ""
-        >>= loadAndApplyTemplate "templates/bip39-dice.html" ctx
+        >>= loadAndApplyTemplate "templates/bip39-dice-calculator.html" ctx
         >>= loadAndApplyTemplate "templates/default.html" ctx
         >>= relativizeUrls
   match "templates/*" $ compile templateBodyCompiler

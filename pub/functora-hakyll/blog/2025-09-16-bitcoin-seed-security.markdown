@@ -18,9 +18,9 @@ Bitcoin is global money with a very limited supply. Criminals, national governme
 
 Because of how important your Bitcoin seed is, we cannot afford to take any risks. We cannot trust any online or offline digital device to generate the main part of the seed entropy, but we also cannot easily verify them. Therefore, we will not use any digital device to generate the first 23 words of the seed. The 24th word is a checksum that requires computing a SHA-256 hash, which is difficult to do manually. For this step, it is reasonable to use an offline, open-source, amnesic operating system such as Linux Tails OS.
 
-### Tools
+### Generator tools
 
-1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need a dice with an even number of sides.
+1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need a die with an even number of sides.
 2. A printed BIP39 dice [calculator](/bip39/calculator.html).
 3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist.
 4. A pen or pencil.
@@ -59,3 +59,43 @@ To calculate the 24th word, a laptop or desktop computer is required. The ideal 
 
 1. Boot Linux Tails OS from the USB stick. Do not create permanent storage if the OS prompts you.
 2. Ensure the machine is not connected to the internet or any other network. Check the connection status in the system tray. If you are using an external USB network dongle or Ethernet cable, physically disconnect it from the machine. If you are using a wireless connection, turn off the router and modem.
+3. Connect the second USB stick containing the original BIP39 wordlist and the 24th word calculator Python script. Make sure they are located in the same directory. Then run the script:
+
+```shell
+python3 ./24th-word-calculator.py
+```
+
+4. Follow the script’s instructions and enter the first 23 seed words. If everything is correct, the script will generate 8 possible candidates for the 24th word.
+5. Choose one of the 8 proposed words using the dice-roll or coin-flip method, as described in the previous section. The only difference is that you need only 3 bits of entropy, since 2<sup>3</sup> = 8. Write the selected 24th word in its place on the printed BIP39 dice calculator sheet.
+6. Turn off the computer and disconnect the USB sticks.
+
+### Seed backup
+
+Now you have a strong, high-entropy, and secure BIP39 Bitcoin seed. This seed will be used in the future to create or restore your Bitcoin wallets. It is extremely important and must be backed up securely.
+
+It is a good idea to have multiple backups. The printed seed calculator sheet can be one of them. Store it in a location where only you have access. The same surveillance countermeasures used in the previous steps apply here. However, keep in mind that paper is not a reliable long-term storage medium. It burns easily, is vulnerable to water damage, and could even be accidentally destroyed by pets.
+
+Remember: losing your seed means losing all of your Bitcoin. Therefore, you should create at least one additional backup on a more durable, non-digital medium. Never store your seed digitally, as digital storage is vulnerable to many types of attacks. Physical, durable, offline storage is the safest option.
+
+One of the simplest and most effective backup methods is stamping the seed words onto a small piece of sheet metal. Avoid using aluminum, as it is very soft, melts easily, and is unlikely to survive a serious fire.
+
+Titanium is the ideal material, but it can be expensive, and purchasing it from a Bitcoin-related company will expose your identity. A good compromise is steel sheet metal with a thickness of at least a few millimeters. It is inexpensive, widely available, and can often be obtained without raising any suspicion about your Bitcoin ownership.
+
+### Backup tools
+
+1. Steel sheet metal.
+2. Angle grinder or metal snips.
+3. Hammer.
+4. Set of letter stamps for metal stamping.
+5. Metal file (optional).
+6. Paint (optional).
+
+Use the angle grinder or snips to cut the sheet metal into a rectangle about the size of a credit card. Use the hammer and letter stamps to imprint the first four letters of each word in your seed phrase, in order from the 1st to the 24th word. You only need to back up the first four letters of each word because the BIP39 wordlist is designed so that the first four letters of every word are unique. This makes it easy to reconstruct the full word later, since the BIP39 wordlist is publicly available.
+
+If you are precise and stamp only four letters per word, you should be able to fit the entire seed phrase onto a single credit card sized piece of sheet metal. After stamping, smooth any remaining sharp edges with the angle grinder or metal file. You can then coat the backup plate with a few layers of paint to prevent corrosion, especially if you are using regular (non-stainless) steel.
+
+Store your steel backup plate in a secure location that only you can access. The same surveillance countermeasures discussed in the previous steps apply here.
+
+### Conclusion
+
+You have created the strongest, highest-entropy analog seed possible and secured it with a durable backup. You are now ready to take your first steps in interacting with the Bitcoin blockchain. This is just the beginning of your journey toward financial sovereignty. In upcoming articles, I will cover more essential concepts and best practices for Bitcoin. See you soon, sovereign!

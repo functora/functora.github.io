@@ -16,7 +16,7 @@ Bitcoin is global money with a very limited supply. Criminals, national governme
 4. Supply chain attacks: Your hardware wallet could be swapped with a malicious one during shipping.
 5. Physical security risks: Buying a hardware wallet exposes your identity. You are essentially announcing to the world that you probably own Bitcoin.
 
-Because of how important your Bitcoin seed is, we cannot afford to take any risks. We cannot trust any online or offline digital device to generate the main part of the seed entropy, but we also cannot easily verify them. Therefore, we will not use any digital device to generate the first 23 words of the seed. The 24th word is a checksum that requires computing a SHA-256 hash, which is difficult to do manually. For this step, it is reasonable to use an offline, open-source, amnesic operating system such as Tails Linux.
+Because of how important your Bitcoin seed is, we cannot afford to take any risks. We cannot trust any online or offline digital device to generate the main part of the seed entropy, but we also cannot easily verify them. Therefore, we will not use any digital device to generate the first 23 words of the seed. The 24th word is a checksum that requires computing a SHA-256 hash, which is difficult to do manually. For this step, it is reasonable to use an offline, open-source, amnesic operating system such as Linux Tails OS.
 
 ### Tools
 
@@ -25,7 +25,7 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist.
 4. A pen or pencil.
 5. A pocket calculator (optional).
-6. A Linux Tails bootable USB stick (for calculating the 24th word only).
+6. A Linux Tails OS bootable USB stick (for calculating the 24th word only).
 7. A second USB stick containing both the original BIP39 [wordlist](/bip39/wordlist.txt) and a Python [script](/bip39/24th-word-calculator.py) to calculate the 24th word. Do not trust me. The original BIP39 wordlist is available in the main Bitcoin BIPs [repository](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt), and the script is simple enough for review and verification.
 
 ### 1st-23th words
@@ -37,7 +37,25 @@ The BIP39 wordlist contains 2048 words. To randomly select one of them, you need
 1. Flip a coin 11 times or roll the dice 11 times.
    - Coin: heads = 0 bit, tails = 1 bit
    - Dice: even side = 0 bit, odd side = 1 bit
-2. On the printed BIP39 dice calculator, for each of the 11 bits in the word column, cross out the corresponding number if the bit value is 0, or circle the corresponding number if the bit value is 1.
-3. Calculate the sum of all circled numbers in the word column. Ignore the crossed-out numbers.
+2. On the printed BIP39 dice calculator, for each of the 11 bits in the word column, cross out the corresponding bit weight if the bit value is 0, or circle the corresponding bit weight if the bit value is 1.
+3. Calculate the sum of all circled bit weights in the word column. Ignore the crossed-out bit weights.
 4. Add 1 to the sum because the BIP39 wordlist is indexed starting at 1 (not 0). The resulting number is the index of the word in the BIP39 wordlist.
 5. Write down the corresponding BIP39 seed word, which you can find by its index in the printed BIP39 indexed wordlist.
+
+Example:
+
+1. Rolling the standard six-sided die:
+   - Rolls: 3, 2, 1, 4, 4, 2, 5, 4, 5, 6, 1.
+   - Parity: odd, even, odd, even, even, even, odd, even, odd, even, odd.
+   - Bits: 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1.
+2. Weights: 1, ~~2~~, 4, ~~8~~, ~~16~~, ~~32~~, 64, ~~128~~, 256, ~~512~~, 1024.
+3. Sum: 1 + 4 + 64 + 256 + 1024 = 1349.
+4. Index: 1349 + 1 = 1350.
+5. Word: post.
+
+### 24th word
+
+To calculate the 24th word, a laptop or desktop computer is required. The ideal setup for working with the seed is a stateless, amnesic, permanently offline, air-gapped machine. However, maintaining a separate device solely for this purpose may not be practical for everyone. A reasonable middle ground is to use a stateless, amnesic Linux system, such as Tails OS, booted from a USB stick. This method works on any laptop or desktop with USB ports. The same surveillance countermeasures used in the previous step apply here, except for computer usage.
+
+1. Boot Linux Tails OS from the USB stick. Do not create permanent storage if the OS prompts you.
+2. Ensure the machine is not connected to the internet or any other network. Check the connection status in the system tray. If you are using an external USB network dongle or Ethernet cable, physically disconnect it from the machine. If you are using a wireless connection, turn off the router and modem.

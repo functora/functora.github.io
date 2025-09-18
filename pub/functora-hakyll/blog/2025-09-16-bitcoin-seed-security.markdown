@@ -1,5 +1,5 @@
 ---
-title: Secure Bitcoin Seed
+title: Bitcoin Seed Security
 ---
 
 Practicing financial sovereignty and Bitcoin self-custody comes with a surprising number of non-trivial challenges, but they can only catch you off guard if you are unaware of them or do not know how to counter them in advance. In this series of articles and tutorials, I will teach you how to use Bitcoin securely. There are many aspects to cover: technical, social, geopolitical, and economic. We will start with the basics and work through each area step by step. The first step is to create and back up a strong, high-entropy, and secure BIP39 Bitcoin seed. A good seed is the foundation of your financial sovereignty. If you do not generate it correctly, doing anything else with Bitcoin does not make much sense. Here is the main principle that applies to everything we will cover in these tutorials:

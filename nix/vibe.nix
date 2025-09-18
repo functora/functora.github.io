@@ -15,6 +15,7 @@
       wget
       git
       alacritty
+      python3Minimal
       tmux
       nix
     ];

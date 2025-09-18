@@ -92,10 +92,10 @@ Titanium is the ideal material, but it can be expensive, and purchasing it from 
 
 Use the angle grinder or snips to cut the sheet metal into a rectangle about the size of a credit card. Use the hammer and letter stamps to imprint the first four letters of each word in your seed phrase, in order from the 1st to the 24th word. You only need to back up the first four letters of each word because the BIP39 wordlist is designed so that the first four letters of every word are unique. This makes it easy to reconstruct the full word later, since the BIP39 wordlist is publicly available.
 
-If you are precise and stamp only four letters per word, you should be able to fit the entire seed phrase onto a single credit card sized piece of sheet metal. After stamping, smooth any remaining sharp edges with the angle grinder or metal file. You can then coat the backup plate with a few layers of paint to prevent corrosion, especially if you are using regular (non-stainless) steel.
+If you are precise and stamp only four letters per word, you should be able to fit the entire seed phrase onto a single credit card sized piece of sheet metal, especially if you use both sides. After stamping, smooth any remaining sharp edges with the angle grinder or metal file. You can then coat the backup plate with a few layers of paint to prevent corrosion, especially if you are using regular (non-stainless) steel.
 
 Store your steel backup plate in a secure location that only you can access. The same surveillance countermeasures discussed in the previous steps apply here.
 
 ### Conclusion
 
-You have created the strongest, highest-entropy analog seed possible and secured it with a durable backup. You are now ready to take your first steps in interacting with the Bitcoin blockchain. This is just the beginning of your journey toward financial sovereignty. In upcoming articles, I will cover more essential concepts and best practices for Bitcoin. See you soon, sovereign!
+You have created a strong, pure analog high-entropy seed and secured it with a durable backup. You are ready to take your first steps in interacting with the Bitcoin blockchain. This is just the beginning of your journey toward financial sovereignty. In upcoming articles, I will explore more essential concepts and best practices for using Bitcoin. See you soon, sovereign!

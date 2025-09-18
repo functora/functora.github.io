@@ -10,7 +10,7 @@ class Bip39Check(object):
 
         counter = 0
 
-        with open('%s.txt' % (self._get_directory(), language), 'r') as file:
+        with open('%s/%s.txt' % (self._get_directory(), language), 'r') as file:
             for w in file.readlines():
                 word = w.strip() if sys.version < '3' else w.strip()
                 self.worddict[word] = counter
@@ -22,7 +22,7 @@ class Bip39Check(object):
 
     @classmethod
     def _get_directory(cls):
-        return os.path.join(os.path.dirname(__file__), 'wordlist')
+        return os.path.dirname(__file__)
 
     def _check_size(self, phrase):
         self.size = len(phrase) + 1

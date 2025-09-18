@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure." />
+    <meta name="keywords" content="software,development,outsource,company,haskell,websites" />
+    
+    <title>Functora - BIP39 Dice Calculator</title>
+    
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/devicons.min.css" />
+    <link rel="stylesheet" href="../css/picnic.min.css" />
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
+    <link rel="manifest" href="../site.webmanifest" />
+  </head>
+
+  <body>
+      
+    <div class="content page">
+        <table>
+  <thead>
+    <tr>
+      
+      <th style="padding-right: 0.6em"></th>
+      
+      <th style="padding-right: 0.6em">№1</th>
+      
+      <th style="padding-right: 0.6em">№2</th>
+      
+      <th style="padding-right: 0.6em">№3</th>
+      
+      <th style="padding-right: 0.6em">№4</th>
+      
+      <th style="padding-right: 0.6em">№5</th>
+      
+      <th style="padding-right: 0.6em">№6</th>
+      
+      <th style="padding-right: 0.6em">№7</th>
+      
+      <th style="padding-right: 0.6em">№8</th>
+      
+      <th style="padding-right: 0.6em">№9</th>
+      
+      <th style="padding-right: 0.6em">№10</th>
+      
+      <th style="padding-right: 0.6em">№11</th>
+      
+      <th style="padding-right: 0.6em">№12</th>
+      
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 1</b></td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 2</b></td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 3</b></td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 4</b></td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 5</b></td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 6</b></td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 7</b></td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 8</b></td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 9</b></td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 10</b></td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 11</b></td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>sum=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>sum+1=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>word=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+  </tbody>
+  <thead>
+    <tr>
+      
+      <th style="padding-right: 0.6em"></th>
+      
+      <th style="padding-right: 0.6em">№13</th>
+      
+      <th style="padding-right: 0.6em">№14</th>
+      
+      <th style="padding-right: 0.6em">№15</th>
+      
+      <th style="padding-right: 0.6em">№16</th>
+      
+      <th style="padding-right: 0.6em">№17</th>
+      
+      <th style="padding-right: 0.6em">№18</th>
+      
+      <th style="padding-right: 0.6em">№19</th>
+      
+      <th style="padding-right: 0.6em">№20</th>
+      
+      <th style="padding-right: 0.6em">№21</th>
+      
+      <th style="padding-right: 0.6em">№22</th>
+      
+      <th style="padding-right: 0.6em">№23</th>
+      
+      <th style="padding-right: 0.6em">№24</th>
+      
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 1</b></td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+      <td style="padding-right: 0.6em">1</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 2</b></td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+      <td style="padding-right: 0.6em">2</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 3</b></td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+      <td style="padding-right: 0.6em">4</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 4</b></td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em">8</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 5</b></td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em">16</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 6</b></td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em">32</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 7</b></td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em">64</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 8</b></td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em">128</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 9</b></td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em">256</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 10</b></td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em">512</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>bit 11</b></td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em">1024</td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>sum=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>sum+1=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em"><b>word=</b></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+      <td style="padding-right: 0.6em"></td>
+      
+    </tr>
+    
+  </tbody>
+</table>
+<div style="padding-top: 55px"></div>
+
+    </div>
+    
+  </body>
+</html>

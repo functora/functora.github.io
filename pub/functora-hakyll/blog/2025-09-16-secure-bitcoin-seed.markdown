@@ -26,7 +26,7 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 4. A pen or pencil.
 5. A pocket calculator (optional).
 6. A Linux Tails OS bootable USB stick (for calculating the 24th word only).
-7. A second USB stick containing both the original BIP39 [wordlist](/bip39/wordlist.txt) and a Python [script](/bip39/24th-word-calculator.py) to calculate the 24th word. Do not trust me. The original BIP39 wordlist is available in the main Bitcoin BIPs [repository](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt), and the script is simple enough for review and verification.
+7. A second USB stick containing both the original BIP39 [wordlist](/bip39/english.txt) and a Python [script](/bip39/24th-word-calculator.py) to calculate the 24th word. Do not trust me. The original BIP39 wordlist is available in the main Bitcoin BIPs [repository](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt), and the script is simple enough for review and verification.
 
 ### 1st-23th words
 

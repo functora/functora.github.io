@@ -85,9 +85,10 @@ main = withUtf8 . hakyllWith cfg $ do
               ( field "idx" (pure . itemBody)
                   <> defCtx
               )
-              ( mapM
-                  (makeItem . ("\8470" <>) . show)
-                  items
+              ( do
+                  xs <- mapM (makeItem . ("\8470" <>) . show) items
+                  x <- makeItem mempty
+                  pure $ x : xs
               )
       let rows top label =
             listField
@@ -97,19 +98,28 @@ main = withUtf8 . hakyllWith cfg $ do
                   (field "col" (pure . itemBody))
                   ( \item -> do
                       let (idx, raw) = itemBody item
-                      let mkItem = makeItem raw
-                      xs <- replicateM 11 mkItem
-                      x <-
-                        if top || idx > 8
-                          then mkItem
-                          else makeItem mempty
-                      pure $ xs <> [x]
+                      h <-
+                        makeItem . (\x -> "<b>" <> x <> "</b>") $
+                          if idx <= 11
+                            then "bit " <> show idx
+                            else raw
+                      xs <-
+                        replicateM 11 . makeItem $
+                          if idx <= 11
+                            then raw
+                            else mempty
+                      t <-
+                        makeItem $
+                          if (top || idx < 4) && idx <= 11
+                            then raw
+                            else mempty
+                      pure $ [h] <> xs <> [t]
                   )
               )
               ( mapM makeItem
                   . zip [1 ..]
-                  . (<> ["\8721+1=", "W="])
-                  $ fmap (show . (2 ^)) [10, 9 .. 0]
+                  . (<> ["sum=", "sum+1=", "word="])
+                  $ fmap (show . (2 ^)) [0 .. 10]
               )
       let ctx =
             idxs [1 .. 12] "idxs-top"

@@ -20,7 +20,7 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 
 ### Tools
 
-1. A good non-digital source of randomness. Coin is acceptable, but casino-grade dice is better.
+1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need a dice with an even number of sides.
 2. A printed BIP39 dice [calculator](/bip39/calculator.html).
 3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist.
 4. A pen or pencil.
@@ -31,3 +31,13 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 ### 1st-23th words
 
 This is the main source of your seed entropy. When performing this step, or working with your seed at any point, it is absolutely essential to ensure there are no phones, laptops, cameras, or other devices in sight, and that no one is watching. For maximum security, choose a private room with no electronic devices present, close all doors and windows, and use only dice, paper, pen, and (optionally) a pocket calculator.
+
+The BIP39 wordlist contains 2048 words. To randomly select one of them, you need exactly 11 bits of randomness, since 2<sup>11</sup> = 2048. For each of the first 23 words, repeat the following procedure:
+
+1. Flip a coin 11 times or roll the dice 11 times.
+   - Coin: heads = 0 bit, tails = 1 bit
+   - Dice: even side = 0 bit, odd side = 1 bit
+2. On the printed BIP39 dice calculator, for each of the 11 bits in the word column, cross out the corresponding number if the bit value is 0, or circle the corresponding number if the bit value is 1.
+3. Calculate the sum of all circled numbers in the word column. Ignore the crossed-out numbers.
+4. Add 1 to the sum because the BIP39 wordlist is indexed starting at 1 (not 0). The resulting number is the index of the word in the BIP39 wordlist.
+5. Write down the corresponding BIP39 seed word, which you can find by its index in the printed BIP39 indexed wordlist.

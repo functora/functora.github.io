@@ -2,7 +2,7 @@
   <thead>
     <tr>
       $for(idxs-top)$
-      <th>$idx$</th>
+      <th style="padding-right: 0.6em">$idx$</th>
       $endfor$
     </tr>
   </thead>
@@ -10,7 +10,7 @@
     $for(rows-top)$
     <tr>
       $for(cols)$
-      <td>$col$</td>
+      <td style="padding-right: 0.6em">$col$</td>
       $endfor$
     </tr>
     $endfor$
@@ -18,7 +18,7 @@
   <thead>
     <tr>
       $for(idxs-bottom)$
-      <th>$idx$</th>
+      <th style="padding-right: 0.6em">$idx$</th>
       $endfor$
     </tr>
   </thead>
@@ -26,9 +26,10 @@
     $for(rows-bottom)$
     <tr>
       $for(cols)$
-      <td>$col$</td>
+      <td style="padding-right: 0.6em">$col$</td>
       $endfor$
     </tr>
     $endfor$
   </tbody>
 </table>
+<div style="padding-top: 55px"></div>

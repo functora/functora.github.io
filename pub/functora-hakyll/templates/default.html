@@ -65,8 +65,9 @@
     </nav>
     $endif$ $if(index)$ $body$ $else$
     <div class="content page">
+      $if(formal)$ $else$
       <h2 class="text-center">$title$</h2>
-      $body$
+      $endif$ $body$
     </div>
     $endif$
   </body>

@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Hi-end quality software development. Reliable. Functional. Pure." />
+    <meta name="keywords" content="software,development,outsource,company,haskell,websites" />
+    
+    <title>Functora - BIP39 Dice Calculator</title>
+    
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/devicons.min.css" />
+    <link rel="stylesheet" href="../css/picnic.min.css" />
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
+    <link rel="manifest" href="../site.webmanifest" />
+  </head>
+
+  <body>
+      
+    <div class="content page">
+        <table>
+  <thead>
+    <tr>
+      
+      <th style="padding-right: 0.6em; color: cyan"></th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№1</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№2</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№3</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№4</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№5</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№6</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№7</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№8</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№9</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№10</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№11</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№12</th>
+      
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 1</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 2</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 3</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 4</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 5</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 6</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 7</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 8</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 9</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 10</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 11</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>sum=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>sum+1=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>word=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+  </tbody>
+  <thead>
+    <tr>
+      
+      <th style="padding-right: 0.6em; color: cyan"></th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№13</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№14</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№15</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№16</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№17</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№18</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№19</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№20</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№21</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№22</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№23</th>
+      
+      <th style="padding-right: 0.6em; color: cyan">№24</th>
+      
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 1</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 2</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">2</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 3</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">4</td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 4</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">8</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 5</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">16</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 6</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">32</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 7</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">64</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 8</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">128</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 9</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">256</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 10</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">512</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>bit 11</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan">1024</td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>sum=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>sum+1=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td style="padding-right: 0.6em; color: cyan"><b>word=</b></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+      <td style="padding-right: 0.6em; color: cyan"></td>
+      
+    </tr>
+    
+  </tbody>
+</table>
+<div style="padding-top: 55px"></div>
+
+    </div>
+    
+  </body>
+</html>

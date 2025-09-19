@@ -66,9 +66,23 @@
 <p>Because of how important your Bitcoin seed is, we cannot afford to take any risks. We cannot trust any online or offline digital device to generate the main part of the seed entropy, but we also cannot easily verify them. Therefore, we will not use any digital device to generate the first 23 words of the seed. The 24th word is a checksum that requires computing a SHA-256 hash, which is difficult to do manually. For this step, it is reasonable to use an offline, open-source, amnesic operating system such as Linux Tails OS.</p>
 <h3 id="generator-tools">Generator tools</h3>
 <ol type="1">
-<li>A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need a die with an even number of sides.</li>
-<li>A printed BIP39 dice <a href="../bip39/calculator.html">calculator</a>.</li>
-<li>A printed BIP39 indexed <a href="../bip39/wordlist.html">wordlist</a>. Do not trust me. Verify the <a href="https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix">script</a> and generate your own wordlist.</li>
+<li>A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need dice with an even number of sides.</li>
+<li>A printed BIP39 dice <a href="../bip39/calculator.html">calculator</a>. If your printer is missing ink in certain colors, you can use the other available colors instead:
+<ul>
+<li><a href="../bip39/calculator-red.html">red</a></li>
+<li><a href="../bip39/calculator-green.html">green</a></li>
+<li><a href="../bip39/calculator-blue.html">blue</a></li>
+<li><a href="../bip39/calculator-cyan.html">cyan</a></li>
+<li><a href="../bip39/calculator-magenta.html">magenta</a></li>
+</ul></li>
+<li>A printed BIP39 indexed <a href="../bip39/wordlist.html">wordlist</a>. Do not trust me. Verify the <a href="https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix">script</a> and generate your own wordlist. Wordlists in other colors are also available:
+<ul>
+<li><a href="../bip39/wordlist-red.html">red</a></li>
+<li><a href="../bip39/wordlist-green.html">green</a></li>
+<li><a href="../bip39/wordlist-blue.html">blue</a></li>
+<li><a href="../bip39/wordlist-cyan.html">cyan</a></li>
+<li><a href="../bip39/wordlist-magenta.html">magenta</a></li>
+</ul></li>
 <li>A pen or pencil.</li>
 <li>A pocket calculator (optional).</li>
 <li>A Linux Tails OS bootable USB stick (for calculating the 24th word only).</li>
@@ -90,7 +104,7 @@
 </ol>
 <p>Example:</p>
 <ol type="1">
-<li>Rolling the standard six-sided die:
+<li>Rolling the standard six-sided dice:
 <ul>
 <li>Rolls: 3, 2, 1, 4, 4, 2, 5, 4, 5, 6, 1.</li>
 <li>Parity: odd, even, odd, even, even, even, odd, even, odd, even, odd.</li>

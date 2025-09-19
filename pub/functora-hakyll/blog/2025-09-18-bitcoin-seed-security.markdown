@@ -21,18 +21,8 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 ### Generator tools
 
 1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need dice with an even number of sides.
-2. A printed BIP39 dice [calculator](/bip39/calculator.html). If your printer is missing ink in certain colors, you can use the other available colors instead:
-   - [red](/bip39/calculator-red.html)
-   - [green](/bip39/calculator-green.html)
-   - [blue](/bip39/calculator-blue.html)
-   - [cyan](/bip39/calculator-cyan.html)
-   - [magenta](/bip39/calculator-magenta.html)
-3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist. Wordlists in other colors are also available:
-   - [red](/bip39/wordlist-red.html)
-   - [green](/bip39/wordlist-green.html)
-   - [blue](/bip39/wordlist-blue.html)
-   - [cyan](/bip39/wordlist-cyan.html)
-   - [magenta](/bip39/wordlist-magenta.html)
+2. A printed BIP39 dice [calculator](/bip39/calculator.html). If your printer is missing ink in certain colors, you can use the other available colors instead: [red](/bip39/calculator-red.html), [green](/bip39/calculator-green.html), [blue](/bip39/calculator-blue.html), [cyan](/bip39/calculator-cyan.html), [magenta](/bip39/calculator-magenta.html).
+3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist. Wordlists in other colors are also available: [red](/bip39/wordlist-red.html), [green](/bip39/wordlist-green.html), [blue](/bip39/wordlist-blue.html), [cyan](/bip39/wordlist-cyan.html), [magenta](/bip39/wordlist-magenta.html).
 4. A pen or pencil.
 5. A pocket calculator (optional).
 6. A Linux Tails OS bootable USB stick (for calculating the 24th word only).

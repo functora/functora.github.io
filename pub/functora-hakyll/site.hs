@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Control.Monad (replicateM)
+import Control.Monad (forM_, replicateM)
 import Data.Maybe (fromMaybe)
 import Data.Monoid
+import Data.String (fromString)
 import Hakyll
 import Main.Utf8 (withUtf8)
 import System.FilePath
@@ -75,63 +76,73 @@ main = withUtf8 . hakyllWith cfg $ do
   match "bip39/*" $ do
     route idRoute
     compile copyFileCompiler
-  create ["bip39/calculator.html"] $ do
-    let defCtx = mkStyleCtx Formal
-    route idRoute
-    compile $ do
-      let idxs items label =
-            listField
-              label
-              ( field "idx" (pure . itemBody)
-                  <> defCtx
-              )
-              ( do
-                  xs <- mapM (makeItem . ("\8470" <>) . show) items
-                  x <- makeItem mempty
-                  pure $ x : xs
-              )
-      let rows top label =
-            listField
-              label
-              ( listFieldWith
-                  "cols"
-                  (field "col" (pure . itemBody))
-                  ( \item -> do
-                      let (idx, raw) = itemBody item
-                      h <-
-                        makeItem . (\x -> "<b>" <> x <> "</b>") $
-                          if idx <= 11
-                            then "bit " <> show idx
-                            else raw
-                      xs <-
-                        replicateM 11 . makeItem $
-                          if idx <= 11
-                            then raw
-                            else mempty
-                      t <-
-                        makeItem $
-                          if (top || idx < 4) && idx <= 11
-                            then raw
-                            else mempty
-                      pure $ [h] <> xs <> [t]
-                  )
-              )
-              ( mapM makeItem
-                  . zip [1 ..]
-                  . (<> ["sum=", "sum+1=", "word="])
-                  $ fmap (show . (2 ^)) [0 .. 10]
-              )
-      let ctx =
-            idxs [1 .. 12] "idxs-top"
-              <> idxs [13 .. 24] "idxs-bottom"
-              <> rows True "rows-top"
-              <> rows False "rows-bottom"
-              <> constField "title" "BIP39 Dice Calculator"
-              <> defCtx
-      makeItem ""
-        >>= loadAndApplyTemplate "templates/bip39-dice-calculator.html" ctx
-        >>= loadAndApplyTemplate "templates/default.html" ctx
-        >>= relativizeUrls
+  forM_ colors $ \mcolor -> do
+    let color = fromMaybe "black" mcolor
+    let name =
+          "bip39/calculator"
+            <> maybe mempty ("-" <>) mcolor
+            <> ".html"
+    create [fromString name] $ do
+      let defCtx =
+            mkStyleCtx Formal
+              <> constField "table-color" color
+      route idRoute
+      compile $ do
+        let idxs items label =
+              listField
+                label
+                ( field "idx" (pure . itemBody)
+                    <> defCtx
+                )
+                ( do
+                    xs <- mapM (makeItem . ("\8470" <>) . show) items
+                    x <- makeItem mempty
+                    pure $ x : xs
+                )
+        let rows top label =
+              listField
+                label
+                ( listFieldWith
+                    "cols"
+                    ( field "col" (pure . itemBody)
+                        <> defCtx
+                    )
+                    ( \item -> do
+                        let (idx, raw) = itemBody item
+                        h <-
+                          makeItem . (\x -> "<b>" <> x <> "</b>") $
+                            if idx <= 11
+                              then "bit " <> show idx
+                              else raw
+                        xs <-
+                          replicateM 11 . makeItem $
+                            if idx <= 11
+                              then raw
+                              else mempty
+                        t <-
+                          makeItem $
+                            if (top || idx < 4) && idx <= 11
+                              then raw
+                              else mempty
+                        pure $ [h] <> xs <> [t]
+                    )
+                )
+                ( mapM makeItem
+                    . zip [1 ..]
+                    . (<> ["sum=", "sum+1=", "word="])
+                    $ fmap (show . (2 ^)) [0 .. 10]
+                )
+        let ctx =
+              idxs [1 .. 12] "idxs-top"
+                <> idxs [13 .. 24] "idxs-bottom"
+                <> rows True "rows-top"
+                <> rows False "rows-bottom"
+                <> constField "title" "BIP39 Dice Calculator"
+                <> defCtx
+        makeItem ""
+          >>= loadAndApplyTemplate "templates/bip39-dice-calculator.html" ctx
+          >>= loadAndApplyTemplate "templates/default.html" ctx
+          >>= relativizeUrls
   match "templates/*" $ compile templateBodyCompiler
   match "license.markdown" $ compile pandocCompiler
   match "index/*.markdown" $ compile pandocCompiler
@@ -207,3 +218,13 @@ mkStyleCtx style =
       constField "formal" "true"
         <> constField "color" "white"
         <> defaultContext
+
+colors :: [Maybe String]
+colors =
+  [ Nothing,
+    Just "red",
+    Just "green",
+    Just "blue",
+    Just "cyan",
+    Just "magenta"
+  ]

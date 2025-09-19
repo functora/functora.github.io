@@ -20,9 +20,14 @@ Because of how important your Bitcoin seed is, we cannot afford to take any risk
 
 ### Generator tools
 
-1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need a die with an even number of sides.
-2. A printed BIP39 dice [calculator](/bip39/calculator.html).
-3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist. If your printer is missing ink in certain colors, you can choose or generate a word list that only uses the colors available:
+1. A good non-digital source of randomness. A coin is acceptable, but casino-grade dice are better. You need dice with an even number of sides.
+2. A printed BIP39 dice [calculator](/bip39/calculator.html). If your printer is missing ink in certain colors, you can use the other available colors instead:
+   - [red](/bip39/calculator-red.html)
+   - [green](/bip39/calculator-green.html)
+   - [blue](/bip39/calculator-blue.html)
+   - [cyan](/bip39/calculator-cyan.html)
+   - [magenta](/bip39/calculator-magenta.html)
+3. A printed BIP39 indexed [wordlist](/bip39/wordlist.html). Do not trust me. Verify the [script](https://github.com/functora/functora.github.io/blob/master/nix/bip39-wordlist.nix) and generate your own wordlist. Wordlists in other colors are also available:
    - [red](/bip39/wordlist-red.html)
    - [green](/bip39/wordlist-green.html)
    - [blue](/bip39/wordlist-blue.html)
@@ -49,7 +54,7 @@ The BIP39 wordlist contains 2048 words. To randomly select one of them, you need
 
 Example:
 
-1. Rolling the standard six-sided die:
+1. Rolling the standard six-sided dice:
    - Rolls: 3, 2, 1, 4, 4, 2, 5, 4, 5, 6, 1.
    - Parity: odd, even, odd, even, even, even, odd, even, odd, even, odd.
    - Bits: 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1.

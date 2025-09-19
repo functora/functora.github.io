@@ -789,6 +789,7 @@ in {
         (import ./clipmaker.nix)
         (import ./bar.nix {inherit pkgs;})
         (import ./vibe.nix {inherit pkgs;})
+        (import ./bip39-wordlist.nix)
       ];
       programs.git = {
         enable = true;

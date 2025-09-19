@@ -8,10 +8,11 @@ in
   pkgs.writeShellApplication {
     name = "bip39-wordlist";
     text = ''
+      COLOR="${"$"}{1:-black}"
       echo '<!DOCTYPE html>'
       echo '<html><head><meta charset="UTF-8">'
       echo '<style>'
-      echo '* { margin: 0; padding: 0; font-family: sans-serif; font-size: 7.5pt; }'
+      echo "* { margin: 0; padding: 0; font-family: sans-serif; font-size: 7.5pt; color: $COLOR; }"
       echo '.container { column-width: 68px; column-gap: 1px; }'
       echo '.item { break-inside: avoid; white-space: nowrap; line-height: 1; }'
       echo '</style></head><body>'

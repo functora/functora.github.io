@@ -96,6 +96,9 @@ in
                 neoformat
                 vim-commentary
                 render-markdown-nvim
+                rust-vim
+                coc-snippets
+                unst.vimPlugins.coc-rust-analyzer
                 #
                 # Productivity
                 #

@@ -16,8 +16,14 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
-          packages = [
-            pkgs.rustup
+          packages = with pkgs; [
+            bacon
+            cargo
+            cargo-edit
+            clippy
+            rust-analyzer
+            rustc
+            rustfmt
           ];
         };
       }

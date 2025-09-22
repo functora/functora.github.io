@@ -10,6 +10,7 @@
   olds = import ./oldpkgs.nix;
   unst = import ./nixpkgs-unstable.nix;
   rocm = olds.rocmPackages_5;
+  vibe = import ./vibe.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   home-manager = builtins.fetchTarball {
     url = "https://github.com/nix-community/home-manager/archive/8d5e27b4807d25308dfe369d5a923d87e7dbfda3.tar.gz";
@@ -785,10 +786,10 @@ in {
         system-config-printer
         pulsemixer
         neovim
+        vibe
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
         (import ./bar.nix {inherit pkgs;})
-        (import ./vibe.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
       ];
       programs.git = {
@@ -989,7 +990,7 @@ in {
             "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
           };
           cfgProgrKeys = {
-            "${mod}+Return" = "exec ${alacritty}/bin/alacritty";
+            "${mod}+Return" = "exec ${vibe}/bin/vibe";
             "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${pkgs.yewtube}/bin/yt";
             "${mod}+b" = "exec ${qutebrowser}/bin/qutebrowser";
           };

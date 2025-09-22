@@ -18,6 +18,8 @@
       python3Minimal
       tmux
       nix
+      direnv
+      nix-direnv
     ];
   };
   sandbox = mkNixPak {
@@ -42,6 +44,8 @@
           "/usr/bin/env"
           "/run/current-system/sw/bin/bash"
           "/run/current-system/sw/bin/less"
+          (sloth.concat' sloth.homeDir "/.bashrc")
+          (sloth.concat' sloth.homeDir "/.bash_profile")
           (sloth.concat' sloth.homeDir "/.config/tmux")
           (sloth.concat' sloth.homeDir "/.config/alacritty")
           (sloth.concat' sloth.homeDir "/.config/nvim/coc-settings.json")

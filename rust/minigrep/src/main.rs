@@ -5,8 +5,7 @@ use std::fs;
 use std::process;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let config = Config::build(&args).unwrap_or_else(|e| {
+    let config = Config::build(env::args()).unwrap_or_else(|e| {
         eprintln!("Problem parsing args: {e}");
         process::exit(1);
     });
@@ -18,14 +17,12 @@ fn main() {
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
-    let results = if config.ignore_case {
-        search_case_insensitive(&config.query, &contents)
+    let print = |line| println!("{line}");
+    if config.ignore_case {
+        search_case_insensitive(&config.query, &contents).for_each(print);
     } else {
-        search(&config.query, &contents)
+        search(&config.query, &contents).for_each(print);
     };
-    for line in results {
-        println!("{line}")
-    }
     Ok(())
 }
 
@@ -36,12 +33,16 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough args!");
-        }
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file path"),
+        };
         let ignore_case = env::var("IGNORE_CASE").is_ok();
         Ok(Config {
             query,

@@ -1,5 +1,7 @@
 {
   "codeLens.enable": true,
+  "rust-analyzer.inlayHints.typeHints": false,
+  "rust-analyzer.inlayHints.chainingHints.enable": false,
   "languageserver": {
     "haskell": {
       "command": "haskell-language-server",

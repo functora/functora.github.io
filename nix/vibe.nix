@@ -8,7 +8,7 @@
     name = "vibe";
     text = "alacritty";
     runtimeInputs = with pkgs; [
-      (import ./../pub/vi/nix/default.nix {ai = true;})
+      (import ./../pub/vi/nix/default.nix {ai = false;})
       fontconfig
       busybox
       curl

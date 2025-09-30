@@ -54,8 +54,9 @@ fn use_parser<'src>()
 
         let group = use_parser
             .separated_by(just(','))
+            .allow_trailing()
             .collect::<Vec<_>>()
-            .delimited_by(just('{'), just('}'))
+            .delimited_by(just('{').padded(), just('}').padded())
             .map(UseExpr::Group);
 
         let glob = just("*").padded().map(|_| UseExpr::Glob);

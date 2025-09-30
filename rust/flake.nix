@@ -14,6 +14,12 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
+        mkRustPkg = pkg:
+          pkgs.rustPlatform.buildRustPackage {
+            name = pkg;
+            src = pkgs.nix-gitignore.gitignoreSource [] ./${pkg};
+            cargoLock.lockFile = ./${pkg}/Cargo.lock;
+          };
       in {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
@@ -26,6 +32,10 @@
             rustc
             rustfmt
           ];
+        };
+        packages = {
+          rustell = mkRustPkg "rustell";
+          default = self.packages.${system}.rustell;
         };
       }
     );

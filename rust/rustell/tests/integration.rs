@@ -4,14 +4,14 @@ use rustell::*;
 fn test_parser() {
     let src = "use std::io::Read;";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "std",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Path {
-            ident: "io",
+        nested: Some(Box::new(UseExpr::Item {
+            module: "io",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "Read",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "Read",
                 rename: None,
                 nested: None,
             })),
@@ -21,27 +21,27 @@ fn test_parser() {
 }
 
 #[test]
-fn test_parser_group() {
+fn test_parser_many() {
     let src = "use std::{io::Read, fs::File};";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "std",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Group(vec![
-            UseExpr::Path {
-                ident: "io",
+        nested: Some(Box::new(UseExpr::Many(vec![
+            UseExpr::Item {
+                module: "io",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Path {
-                    ident: "Read",
+                nested: Some(Box::new(UseExpr::Item {
+                    module: "Read",
                     rename: None,
                     nested: None,
                 })),
             },
-            UseExpr::Path {
-                ident: "fs",
+            UseExpr::Item {
+                module: "fs",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Path {
-                    ident: "File",
+                nested: Some(Box::new(UseExpr::Item {
+                    module: "File",
                     rename: None,
                     nested: None,
                 })),
@@ -55,11 +55,11 @@ fn test_parser_group() {
 fn test_parser_glob() {
     let src = "use std::io::*;";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "std",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Path {
-            ident: "io",
+        nested: Some(Box::new(UseExpr::Item {
+            module: "io",
             rename: None,
             nested: Some(Box::new(UseExpr::Glob)),
         })),
@@ -71,14 +71,14 @@ fn test_parser_glob() {
 fn test_parser_rename() {
     let src = "use std::io::Read as Readable;";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "std",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Path {
-            ident: "io",
+        nested: Some(Box::new(UseExpr::Item {
+            module: "io",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "Read",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "Read",
                 rename: Some("Readable"),
                 nested: None,
             })),
@@ -91,21 +91,21 @@ fn test_parser_rename() {
 fn test_parser_complex() {
     let src = "use std::{io::Read as Readable, fs::*};";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "std",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Group(vec![
-            UseExpr::Path {
-                ident: "io",
+        nested: Some(Box::new(UseExpr::Many(vec![
+            UseExpr::Item {
+                module: "io",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Path {
-                    ident: "Read",
+                nested: Some(Box::new(UseExpr::Item {
+                    module: "Read",
                     rename: Some("Readable"),
                     nested: None,
                 })),
             },
-            UseExpr::Path {
-                ident: "fs",
+            UseExpr::Item {
+                module: "fs",
                 rename: None,
                 nested: Some(Box::new(UseExpr::Glob)),
             },
@@ -118,14 +118,14 @@ fn test_parser_complex() {
 fn test_parser_crate() {
     let src = "use crate::module::Type;";
     let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Path {
-        ident: "crate",
+    let rhs = vec![Expr::Use(UseExpr::Item {
+        module: "crate",
         rename: None,
-        nested: Some(Box::new(UseExpr::Path {
-            ident: "module",
+        nested: Some(Box::new(UseExpr::Item {
+            module: "module",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "Type",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "Type",
                 rename: None,
                 nested: None,
             })),
@@ -149,14 +149,14 @@ fn test_parser_other_then_use() {
         println!("Hello");
     }"#,
         ),
-        Expr::Use(UseExpr::Path {
-            ident: "crate",
+        Expr::Use(UseExpr::Item {
+            module: "crate",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "module",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "module",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Path {
-                    ident: "Type",
+                nested: Some(Box::new(UseExpr::Item {
+                    module: "Type",
                     rename: None,
                     nested: None,
                 })),
@@ -174,20 +174,20 @@ fn test_parser_multiple() {
     "#;
     let lhs = parser().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Path {
-            ident: "std",
+        Expr::Use(UseExpr::Item {
+            module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "io",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "io",
                 rename: None,
                 nested: None,
             })),
         }),
-        Expr::Use(UseExpr::Path {
-            ident: "std",
+        Expr::Use(UseExpr::Item {
+            module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "fs",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "fs",
                 rename: None,
                 nested: None,
             })),
@@ -207,11 +207,11 @@ fn test_parser_multiple_with_other() {
     "#;
     let lhs = parser().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Path {
-            ident: "std",
+        Expr::Use(UseExpr::Item {
+            module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "io",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "io",
                 rename: None,
                 nested: None,
             })),
@@ -221,11 +221,11 @@ fn test_parser_multiple_with_other() {
         println!("Hello");
     }"#,
         ),
-        Expr::Use(UseExpr::Path {
-            ident: "std",
+        Expr::Use(UseExpr::Item {
+            module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "fs",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "fs",
                 rename: None,
                 nested: None,
             })),
@@ -249,41 +249,43 @@ fn test_parser_mixed_all_cases() {
     "#;
     let lhs = parser().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Path {
-            ident: "std",
+        Expr::Use(UseExpr::Item {
+            module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Group(vec![
-                UseExpr::Path {
-                    ident: "io",
+            nested: Some(Box::new(UseExpr::Many(vec![
+                UseExpr::Item {
+                    module: "io",
                     rename: None,
-                    nested: Some(Box::new(UseExpr::Group(vec![
-                        UseExpr::Path {
-                            ident: "self",
-                            rename: None,
-                            nested: None,
-                        },
-                        UseExpr::Path {
-                            ident: "Read",
-                            rename: Some("R"),
-                            nested: None,
-                        },
-                    ]))),
+                    nested: Some(Box::new(UseExpr::Many(
+                        vec![
+                            UseExpr::Item {
+                                module: "self",
+                                rename: None,
+                                nested: None,
+                            },
+                            UseExpr::Item {
+                                module: "Read",
+                                rename: Some("R"),
+                                nested: None,
+                            },
+                        ],
+                    ))),
                 },
-                UseExpr::Path {
-                    ident: "fs",
+                UseExpr::Item {
+                    module: "fs",
                     rename: None,
                     nested: Some(Box::new(UseExpr::Glob)),
                 },
             ]))),
         }),
-        Expr::Use(UseExpr::Path {
-            ident: "crate",
+        Expr::Use(UseExpr::Item {
+            module: "crate",
             rename: None,
-            nested: Some(Box::new(UseExpr::Path {
-                ident: "module",
+            nested: Some(Box::new(UseExpr::Item {
+                module: "module",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Path {
-                    ident: "Type",
+                nested: Some(Box::new(UseExpr::Item {
+                    module: "Type",
                     rename: Some("T"),
                     nested: None,
                 })),

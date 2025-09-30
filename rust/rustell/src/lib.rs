@@ -13,12 +13,12 @@ pub enum Expr<'src> {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum UseExpr<'src> {
-    Path {
-        ident: &'src str,
+    Item {
+        module: &'src str,
         rename: Option<&'src str>,
         nested: Option<Box<UseExpr<'src>>>,
     },
-    Group(Vec<UseExpr<'src>>),
+    Many(Vec<UseExpr<'src>>),
     Glob,
 }
 
@@ -54,7 +54,7 @@ fn use_parser<'src>() -> impl Parser<
 > {
     recursive(|use_parser| {
         let ident = || text::ascii::ident().padded();
-        let path = ident()
+        let item = ident()
             .then(
                 lexeme("as").ignore_then(ident()).or_not(),
             )
@@ -63,24 +63,24 @@ fn use_parser<'src>() -> impl Parser<
                     .ignore_then(use_parser.clone())
                     .or_not(),
             )
-            .map(|((ident, rename), nested)| {
-                UseExpr::Path {
-                    ident,
+            .map(|((module, rename), nested)| {
+                UseExpr::Item {
+                    module,
                     rename,
                     nested: nested.map(Box::new),
                 }
             });
 
-        let group = use_parser
+        let many = use_parser
             .separated_by(lexeme(','))
             .allow_trailing()
             .collect::<Vec<_>>()
             .delimited_by(lexeme('{'), lexeme('}'))
-            .map(UseExpr::Group);
+            .map(UseExpr::Many);
 
         let glob = lexeme("*").map(|_| UseExpr::Glob);
 
-        path.or(group).or(glob)
+        item.or(many).or(glob)
     })
 }
 

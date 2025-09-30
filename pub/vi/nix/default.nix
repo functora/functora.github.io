@@ -49,7 +49,7 @@ in
           cp -R ./ $out/
         '';
       };
-      vi = neovim.override {
+      vi = unst.neovim.override {
         viAlias = true;
         vimAlias = true;
         configure = {
@@ -108,7 +108,7 @@ in
               ]
               ++ (
                 if ai
-                then [unst.vimPlugins.avante-nvim]
+                then [unst.vimPlugins.minuet-ai-nvim]
                 else []
               );
             opt = [

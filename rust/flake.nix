@@ -17,6 +17,7 @@
       in {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
+            alejandra
             bacon
             cargo
             cargo-edit

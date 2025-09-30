@@ -10,7 +10,7 @@ if ok then
     provider = "gemini",
     provider_options = {
       gemini = {
-        model = 'gemini-2.0-flash-lite'
+        model = 'gemini-2.5-flash-lite'
       }
     },
     virtualtext = {

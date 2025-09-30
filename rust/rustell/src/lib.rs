@@ -1,5 +1,9 @@
+use chumsky::container::OrderedSeq;
+use chumsky::extra::ParserExtra;
 pub use chumsky::prelude::Parser;
 use chumsky::prelude::*;
+use chumsky::primitive::Just;
+use chumsky::text::{Char, Padded};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Expr<'src> {
@@ -18,13 +22,16 @@ pub enum UseExpr<'src> {
     Glob,
 }
 
-pub fn parser<'src>()
--> impl Parser<'src, &'src str, Vec<Expr<'src>>, extra::Err<Rich<'src, char>>> {
+pub fn parser<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    Vec<Expr<'src>>,
+    extra::Err<Rich<'src, char>>,
+> {
     let use_expr = || {
-        just("use")
-            .padded()
+        lexeme("use")
             .ignore_then(use_parser())
-            .then_ignore(just(";").padded().or_not())
+            .then_ignore(lexeme(";").or_not())
             .map(Expr::Use)
     };
 
@@ -39,28 +46,50 @@ pub fn parser<'src>()
     use_expr().or(other).repeated().collect::<Vec<_>>()
 }
 
-fn use_parser<'src>()
--> impl Parser<'src, &'src str, UseExpr<'src>, extra::Err<Rich<'src, char>>> {
+fn use_parser<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    UseExpr<'src>,
+    extra::Err<Rich<'src, char>>,
+> {
     recursive(|use_parser| {
         let ident = || text::ascii::ident().padded();
         let path = ident()
-            .then(just("as").padded().ignore_then(ident()).or_not())
-            .then(just("::").padded().ignore_then(use_parser.clone()).or_not())
-            .map(|((ident, rename), nested)| UseExpr::Path {
-                ident,
-                rename,
-                nested: nested.map(Box::new),
+            .then(
+                lexeme("as").ignore_then(ident()).or_not(),
+            )
+            .then(
+                lexeme("::")
+                    .ignore_then(use_parser.clone())
+                    .or_not(),
+            )
+            .map(|((ident, rename), nested)| {
+                UseExpr::Path {
+                    ident,
+                    rename,
+                    nested: nested.map(Box::new),
+                }
             });
 
         let group = use_parser
-            .separated_by(just(','))
+            .separated_by(lexeme(','))
             .allow_trailing()
             .collect::<Vec<_>>()
-            .delimited_by(just('{').padded(), just('}').padded())
+            .delimited_by(lexeme('{'), lexeme('}'))
             .map(UseExpr::Group);
 
-        let glob = just("*").padded().map(|_| UseExpr::Glob);
+        let glob = lexeme("*").map(|_| UseExpr::Glob);
 
         path.or(group).or(glob)
     })
+}
+
+fn lexeme<'src, T, I, E>(seq: T) -> Padded<Just<T, I, E>>
+where
+    I: Input<'src>,
+    I::Token: Char,
+    E: ParserExtra<'src, I>,
+    T: OrderedSeq<'src, I::Token> + Clone,
+{
+    just(seq).padded()
 }

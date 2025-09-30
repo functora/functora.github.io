@@ -6,8 +6,10 @@ fn main() {
     io::stdin()
         .read_to_string(&mut src)
         .expect("Failed to read stdin");
-    match parser().parse(src.trim()).into_result() {
+    match expr().parse(src.trim()).into_result() {
         Ok(ast) => println!("{:#?}", ast),
-        Err(errs) => errs.into_iter().for_each(|e| println!("{e:?}")),
+        Err(errs) => {
+            errs.into_iter().for_each(|e| println!("{e:?}"))
+        }
     };
 }

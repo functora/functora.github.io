@@ -3,14 +3,14 @@ use rustell::*;
 #[test]
 fn test_parser() {
     let src = "use std::io::Read;";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Item {
             module: "io",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "Read",
                 rename: None,
                 nested: None,
@@ -23,24 +23,24 @@ fn test_parser() {
 #[test]
 fn test_parser_many() {
     let src = "use std::{io::Read, fs::File};";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Many(vec![
-            UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Many(vec![
+            ExprUse::Item {
                 module: "io",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Item {
+                nested: Some(Box::new(ExprUse::Item {
                     module: "Read",
                     rename: None,
                     nested: None,
                 })),
             },
-            UseExpr::Item {
+            ExprUse::Item {
                 module: "fs",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Item {
+                nested: Some(Box::new(ExprUse::Item {
                     module: "File",
                     rename: None,
                     nested: None,
@@ -54,14 +54,14 @@ fn test_parser_many() {
 #[test]
 fn test_parser_glob() {
     let src = "use std::io::*;";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Item {
             module: "io",
             rename: None,
-            nested: Some(Box::new(UseExpr::Glob)),
+            nested: Some(Box::new(ExprUse::Glob)),
         })),
     })];
     assert_eq!(lhs, rhs)
@@ -70,14 +70,14 @@ fn test_parser_glob() {
 #[test]
 fn test_parser_rename() {
     let src = "use std::io::Read as Readable;";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Item {
             module: "io",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "Read",
                 rename: Some("Readable"),
                 nested: None,
@@ -90,24 +90,24 @@ fn test_parser_rename() {
 #[test]
 fn test_parser_complex() {
     let src = "use std::{io::Read as Readable, fs::*};";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
-        nested: Some(Box::new(UseExpr::Many(vec![
-            UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Many(vec![
+            ExprUse::Item {
                 module: "io",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Item {
+                nested: Some(Box::new(ExprUse::Item {
                     module: "Read",
                     rename: Some("Readable"),
                     nested: None,
                 })),
             },
-            UseExpr::Item {
+            ExprUse::Item {
                 module: "fs",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Glob)),
+                nested: Some(Box::new(ExprUse::Glob)),
             },
         ]))),
     })];
@@ -117,14 +117,14 @@ fn test_parser_complex() {
 #[test]
 fn test_parser_crate() {
     let src = "use crate::module::Type;";
-    let lhs = parser().parse(src).into_result().unwrap();
-    let rhs = vec![Expr::Use(UseExpr::Item {
+    let lhs = expr().parse(src).into_result().unwrap();
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "crate",
         rename: None,
-        nested: Some(Box::new(UseExpr::Item {
+        nested: Some(Box::new(ExprUse::Item {
             module: "module",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "Type",
                 rename: None,
                 nested: None,
@@ -141,7 +141,7 @@ fn test_parser_other_then_use() {
         println!("Hello");
     }
     use crate::module::Type;"#;
-    let lhs = parser().parse(src).into_result().unwrap();
+    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
         Expr::Other(
             r#"
@@ -149,13 +149,13 @@ fn test_parser_other_then_use() {
         println!("Hello");
     }"#,
         ),
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "crate",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "module",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Item {
+                nested: Some(Box::new(ExprUse::Item {
                     module: "Type",
                     rename: None,
                     nested: None,
@@ -172,21 +172,21 @@ fn test_parser_multiple() {
     use std::io;
     use std::fs;
     "#;
-    let lhs = parser().parse(src).into_result().unwrap();
+    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "io",
                 rename: None,
                 nested: None,
             })),
         }),
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "fs",
                 rename: None,
                 nested: None,
@@ -205,12 +205,12 @@ fn test_parser_multiple_with_other() {
     }
     use std::fs;
     "#;
-    let lhs = parser().parse(src).into_result().unwrap();
+    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "io",
                 rename: None,
                 nested: None,
@@ -221,10 +221,10 @@ fn test_parser_multiple_with_other() {
         println!("Hello");
     }"#,
         ),
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "fs",
                 rename: None,
                 nested: None,
@@ -247,23 +247,23 @@ fn test_parser_mixed_all_cases() {
         println!("Hello");
     }
     "#;
-    let lhs = parser().parse(src).into_result().unwrap();
+    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
-            nested: Some(Box::new(UseExpr::Many(vec![
-                UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Many(vec![
+                ExprUse::Item {
                     module: "io",
                     rename: None,
-                    nested: Some(Box::new(UseExpr::Many(
+                    nested: Some(Box::new(ExprUse::Many(
                         vec![
-                            UseExpr::Item {
+                            ExprUse::Item {
                                 module: "self",
                                 rename: None,
                                 nested: None,
                             },
-                            UseExpr::Item {
+                            ExprUse::Item {
                                 module: "Read",
                                 rename: Some("R"),
                                 nested: None,
@@ -271,20 +271,20 @@ fn test_parser_mixed_all_cases() {
                         ],
                     ))),
                 },
-                UseExpr::Item {
+                ExprUse::Item {
                     module: "fs",
                     rename: None,
-                    nested: Some(Box::new(UseExpr::Glob)),
+                    nested: Some(Box::new(ExprUse::Glob)),
                 },
             ]))),
         }),
-        Expr::Use(UseExpr::Item {
+        Expr::Use(ExprUse::Item {
             module: "crate",
             rename: None,
-            nested: Some(Box::new(UseExpr::Item {
+            nested: Some(Box::new(ExprUse::Item {
                 module: "module",
                 rename: None,
-                nested: Some(Box::new(UseExpr::Item {
+                nested: Some(Box::new(ExprUse::Item {
                     module: "Type",
                     rename: Some("T"),
                     nested: None,

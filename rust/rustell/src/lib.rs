@@ -7,52 +7,52 @@ use chumsky::text::{Char, Padded};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Expr<'src> {
-    Use(UseExpr<'src>),
+    Use(ExprUse<'src>),
     Other(&'src str),
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-pub enum UseExpr<'src> {
+pub enum ExprUse<'src> {
     Item {
         module: &'src str,
         rename: Option<&'src str>,
-        nested: Option<Box<UseExpr<'src>>>,
+        nested: Option<Box<ExprUse<'src>>>,
     },
-    Many(Vec<UseExpr<'src>>),
+    Many(Vec<ExprUse<'src>>),
     Glob,
 }
 
-pub fn parser<'src>() -> impl Parser<
+pub fn expr<'src>() -> impl Parser<
     'src,
     &'src str,
     Vec<Expr<'src>>,
     extra::Err<Rich<'src, char>>,
 > {
-    let use_expr = || {
-        lexeme("use")
-            .ignore_then(use_parser())
-            .then_ignore(lexeme(";").or_not())
-            .map(Expr::Use)
-    };
-
-    let other = use_expr()
-        .not()
-        .ignore_then(any())
+    expr_use()
+        .or(expr_other())
         .repeated()
-        .at_least(1)
-        .to_slice()
-        .map(Expr::Other);
-
-    use_expr().or(other).repeated().collect::<Vec<_>>()
+        .collect::<Vec<_>>()
 }
 
-fn use_parser<'src>() -> impl Parser<
+fn expr_use<'src>() -> impl Parser<
     'src,
     &'src str,
-    UseExpr<'src>,
+    Expr<'src>,
     extra::Err<Rich<'src, char>>,
 > {
-    recursive(|use_parser| {
+    lexeme("use")
+        .ignore_then(expr_use_rec())
+        .then_ignore(lexeme(";").or_not())
+        .map(Expr::Use)
+}
+
+fn expr_use_rec<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    ExprUse<'src>,
+    extra::Err<Rich<'src, char>>,
+> {
+    recursive(|expr_use| {
         let ident = || text::ascii::ident().padded();
         let item = ident()
             .then(
@@ -60,28 +60,43 @@ fn use_parser<'src>() -> impl Parser<
             )
             .then(
                 lexeme("::")
-                    .ignore_then(use_parser.clone())
+                    .ignore_then(expr_use.clone())
                     .or_not(),
             )
             .map(|((module, rename), nested)| {
-                UseExpr::Item {
+                ExprUse::Item {
                     module,
                     rename,
                     nested: nested.map(Box::new),
                 }
             });
 
-        let many = use_parser
+        let many = expr_use
             .separated_by(lexeme(','))
             .allow_trailing()
             .collect::<Vec<_>>()
             .delimited_by(lexeme('{'), lexeme('}'))
-            .map(UseExpr::Many);
+            .map(ExprUse::Many);
 
-        let glob = lexeme("*").map(|_| UseExpr::Glob);
+        let glob = lexeme("*").map(|_| ExprUse::Glob);
 
         item.or(many).or(glob)
     })
+}
+
+fn expr_other<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    Expr<'src>,
+    extra::Err<Rich<'src, char>>,
+> {
+    expr_use()
+        .not()
+        .ignore_then(any())
+        .repeated()
+        .at_least(1)
+        .to_slice()
+        .map(Expr::Other)
 }
 
 fn lexeme<'src, T, I, E>(seq: T) -> Padded<Just<T, I, E>>

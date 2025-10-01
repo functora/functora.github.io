@@ -147,7 +147,8 @@ fn test_parser_other_then_use() {
             r#"
     fn test() {
         println!("Hello");
-    }"#,
+    }
+    "#,
         ),
         Expr::Use(ExprUse::Item {
             module: "crate",
@@ -174,6 +175,7 @@ fn test_parser_multiple() {
     "#;
     let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
+        Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -183,6 +185,7 @@ fn test_parser_multiple() {
                 nested: None,
             })),
         }),
+        Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -192,6 +195,7 @@ fn test_parser_multiple() {
                 nested: None,
             })),
         }),
+        Expr::Other("\n    "),
     ];
     assert_eq!(lhs, rhs)
 }
@@ -207,6 +211,7 @@ fn test_parser_multiple_with_other() {
     "#;
     let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
+        Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -217,9 +222,11 @@ fn test_parser_multiple_with_other() {
             })),
         }),
         Expr::Other(
-            r#"fn test() {
+            r#"
+    fn test() {
         println!("Hello");
-    }"#,
+    }
+    "#,
         ),
         Expr::Use(ExprUse::Item {
             module: "std",
@@ -230,6 +237,7 @@ fn test_parser_multiple_with_other() {
                 nested: None,
             })),
         }),
+        Expr::Other("\n    "),
     ];
     assert_eq!(lhs, rhs)
 }
@@ -249,6 +257,7 @@ fn test_parser_mixed_all_cases() {
     "#;
     let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
+        Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -278,6 +287,7 @@ fn test_parser_mixed_all_cases() {
                 },
             ]))),
         }),
+        Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
             module: "crate",
             rename: None,
@@ -292,7 +302,9 @@ fn test_parser_mixed_all_cases() {
             })),
         }),
         Expr::Other(
-            r#"fn hello() {
+            r#"
+
+    fn hello() {
         println!("Hello");
     }
     "#,

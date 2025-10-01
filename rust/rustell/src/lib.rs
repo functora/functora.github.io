@@ -50,10 +50,11 @@ fn expr_use_rec<'src>() -> impl Parser<
     extra::Err<Rich<'src, char>>,
 > {
     recursive(|expr_use_rec| {
-        let ident = || token(text::ascii::ident());
-        let item = ident()
+        let item = expr_use_tok()
             .then(
-                lexeme("as").ignore_then(ident()).or_not(),
+                lexeme("as")
+                    .ignore_then(expr_use_tok())
+                    .or_not(),
             )
             .then(
                 lexeme("::")
@@ -79,6 +80,17 @@ fn expr_use_rec<'src>() -> impl Parser<
 
         item.or(many).or(glob)
     })
+}
+
+fn expr_use_tok<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    &'src str,
+    extra::Err<Rich<'src, char>>,
+> + Clone {
+    keyword_except(&["crate", "super", "self", "Self"])
+        .not()
+        .ignore_then(token(text::ascii::ident()))
 }
 
 fn expr_other<'src>() -> impl Parser<
@@ -123,7 +135,9 @@ fn lexeme<'src>(
     token(just(seq))
 }
 
-fn keyword<'src>() -> impl Parser<
+fn keyword_except<'src>(
+    except: &[&str],
+) -> impl Parser<
     'src,
     &'src str,
     &'src str,
@@ -142,6 +156,12 @@ fn keyword<'src>() -> impl Parser<
             "macro", "override", "priv", "typeof",
             "unsized", "virtual", "yield", "try", "gen",
         ]
-        .map(lexeme),
+        .iter()
+        .filter(|x| !except.contains(x))
+        .map(|&x| {
+            lexeme(x)
+                .then_ignore(text::ascii::ident().not())
+        })
+        .collect::<Vec<_>>(),
     )
 }

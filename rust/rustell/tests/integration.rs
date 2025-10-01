@@ -138,14 +138,14 @@ fn test_parser_crate() {
 fn test_parser_other_then_use() {
     let lhs = r#"
     fn test() {
-        println!("Hello");
+        println!("Hello")
     }
     use crate::module::Type;"#;
     let rhs = vec![
         Expr::Other(
             r#"
     fn test() {
-        println!("Hello");
+        println!("Hello")
     }
     "#,
         ),
@@ -164,7 +164,7 @@ fn test_parser_other_then_use() {
         }),
     ];
     assert_eq!(parse(lhs), rhs);
-    // assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]

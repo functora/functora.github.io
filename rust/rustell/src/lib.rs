@@ -97,7 +97,7 @@ fn expr_other<'src>() -> impl Parser<
 }
 
 fn lexeme<'src>(
-    seq: &'static str,
+    seq: &'src str,
 ) -> impl Parser<
     'src,
     &'src str,

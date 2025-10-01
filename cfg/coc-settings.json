@@ -1,5 +1,4 @@
 {
-  "codeLens.enable": true,
   "rust-analyzer.inlayHints.typeHints": false,
   "rust-analyzer.inlayHints.chainingHints.enable": false,
   "languageserver": {

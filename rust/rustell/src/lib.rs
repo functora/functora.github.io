@@ -1,9 +1,6 @@
-use chumsky::container::OrderedSeq;
-use chumsky::extra::ParserExtra;
 pub use chumsky::prelude::Parser;
 use chumsky::prelude::*;
-use chumsky::primitive::Just;
-use chumsky::text::{Char, Padded};
+use chumsky::text::whitespace;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Expr<'src> {
@@ -40,7 +37,7 @@ fn expr_use<'src>() -> impl Parser<
     Expr<'src>,
     extra::Err<Rich<'src, char>>,
 > {
-    lexeme("use")
+    just("use")
         .ignore_then(expr_use_rec())
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Use)
@@ -72,10 +69,10 @@ fn expr_use_rec<'src>() -> impl Parser<
             });
 
         let many = expr_use
-            .separated_by(lexeme(','))
+            .separated_by(lexeme(","))
             .allow_trailing()
             .collect::<Vec<_>>()
-            .delimited_by(lexeme('{'), lexeme('}'))
+            .delimited_by(lexeme("{"), lexeme("}"))
             .map(ExprUse::Many);
 
         let glob = lexeme("*").map(|_| ExprUse::Glob);
@@ -99,12 +96,13 @@ fn expr_other<'src>() -> impl Parser<
         .map(Expr::Other)
 }
 
-fn lexeme<'src, T, I, E>(seq: T) -> Padded<Just<T, I, E>>
-where
-    I: Input<'src>,
-    I::Token: Char,
-    E: ParserExtra<'src, I>,
-    T: OrderedSeq<'src, I::Token> + Clone,
-{
-    just(seq).padded()
+fn lexeme<'src>(
+    seq: &'static str,
+) -> impl Parser<
+    'src,
+    &'src str,
+    &'src str,
+    extra::Err<Rich<'src, char>>,
+> + Clone {
+    whitespace().or_not().ignore_then(just(seq))
 }

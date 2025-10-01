@@ -2,8 +2,7 @@ use rustell::*;
 
 #[test]
 fn test_parser() {
-    let src = "use std::io::Read;";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use std::io::Read;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
@@ -17,13 +16,13 @@ fn test_parser() {
             })),
         })),
     })];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_many() {
-    let src = "use std::{io::Read, fs::File};";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use std::{io::Read, fs::File};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
@@ -48,13 +47,13 @@ fn test_parser_many() {
             },
         ]))),
     })];
-    assert_eq!(lhs, rhs);
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_glob() {
-    let src = "use std::io::*;";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use std::io::*;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
@@ -64,13 +63,13 @@ fn test_parser_glob() {
             nested: Some(Box::new(ExprUse::Glob)),
         })),
     })];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_rename() {
-    let src = "use std::io::Read as Readable;";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use std::io::Read as Readable;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
@@ -84,13 +83,13 @@ fn test_parser_rename() {
             })),
         })),
     })];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_complex() {
-    let src = "use std::{io::Read as Readable, fs::*};";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use std::{io::Read as Readable, fs::*};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
@@ -111,13 +110,13 @@ fn test_parser_complex() {
             },
         ]))),
     })];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_crate() {
-    let src = "use crate::module::Type;";
-    let lhs = expr().parse(src).into_result().unwrap();
+    let lhs = "use crate::module::Type;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "crate",
         rename: None,
@@ -131,17 +130,17 @@ fn test_parser_crate() {
             })),
         })),
     })];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_other_then_use() {
-    let src = r#"
+    let lhs = r#"
     fn test() {
         println!("Hello");
     }
     use crate::module::Type;"#;
-    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
         Expr::Other(
             r#"
@@ -164,16 +163,16 @@ fn test_parser_other_then_use() {
             })),
         }),
     ];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    // assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_multiple() {
-    let src = r#"
+    let lhs = r#"
     use std::io;
     use std::fs;
     "#;
-    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
         Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
@@ -197,7 +196,8 @@ fn test_parser_multiple() {
         }),
         Expr::Other("\n    "),
     ];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
@@ -311,4 +311,12 @@ fn test_parser_mixed_all_cases() {
         ),
     ];
     assert_eq!(lhs, rhs)
+}
+
+fn sloppy(src: &str) -> String {
+    src.replace(";", "")
+}
+
+fn parse(src: &str) -> Vec<Expr> {
+    expr().parse(src).into_result().unwrap()
 }

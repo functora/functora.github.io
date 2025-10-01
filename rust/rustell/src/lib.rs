@@ -49,15 +49,15 @@ fn expr_use_rec<'src>() -> impl Parser<
     ExprUse<'src>,
     extra::Err<Rich<'src, char>>,
 > {
-    recursive(|expr_use| {
-        let ident = || text::ascii::ident().padded();
+    recursive(|expr_use_rec| {
+        let ident = || token(text::ascii::ident());
         let item = ident()
             .then(
                 lexeme("as").ignore_then(ident()).or_not(),
             )
             .then(
                 lexeme("::")
-                    .ignore_then(expr_use.clone())
+                    .ignore_then(expr_use_rec.clone())
                     .or_not(),
             )
             .map(|((module, rename), nested)| {
@@ -68,7 +68,7 @@ fn expr_use_rec<'src>() -> impl Parser<
                 }
             });
 
-        let many = expr_use
+        let many = expr_use_rec
             .separated_by(lexeme(","))
             .allow_trailing()
             .collect::<Vec<_>>()
@@ -96,6 +96,22 @@ fn expr_other<'src>() -> impl Parser<
         .map(Expr::Other)
 }
 
+fn token<'src>(
+    tok: impl Parser<
+        'src,
+        &'src str,
+        &'src str,
+        extra::Err<Rich<'src, char>>,
+    > + Clone,
+) -> impl Parser<
+    'src,
+    &'src str,
+    &'src str,
+    extra::Err<Rich<'src, char>>,
+> + Clone {
+    whitespace().or_not().ignore_then(tok)
+}
+
 fn lexeme<'src>(
     seq: &'src str,
 ) -> impl Parser<
@@ -104,5 +120,28 @@ fn lexeme<'src>(
     &'src str,
     extra::Err<Rich<'src, char>>,
 > + Clone {
-    whitespace().or_not().ignore_then(just(seq))
+    token(just(seq))
+}
+
+fn keyword<'src>() -> impl Parser<
+    'src,
+    &'src str,
+    &'src str,
+    extra::Err<Rich<'src, char>>,
+> + Clone {
+    choice(
+        [
+            "as", "break", "const", "continue", "crate",
+            "else", "enum", "extern", "false", "fn", "for",
+            "if", "impl", "in", "let", "loop", "match",
+            "mod", "move", "mut", "pub", "ref", "return",
+            "self", "Self", "static", "struct", "super",
+            "trait", "true", "type", "unsafe", "use",
+            "where", "while", "async", "await", "dyn",
+            "abstract", "become", "box", "do", "final",
+            "macro", "override", "priv", "typeof",
+            "unsized", "virtual", "yield", "try", "gen",
+        ]
+        .map(lexeme),
+    )
 }

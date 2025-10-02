@@ -1,3 +1,4 @@
+use rustell::decode;
 use rustell::*;
 
 #[test]
@@ -202,14 +203,13 @@ fn test_parser_multiple() {
 
 #[test]
 fn test_parser_multiple_with_other() {
-    let src = r#"
+    let lhs = r#"
     use std::io;
     fn test() {
-        println!("Hello");
+        println!("Hello")
     }
     use std::fs;
     "#;
-    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
         Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
@@ -224,7 +224,7 @@ fn test_parser_multiple_with_other() {
         Expr::Other(
             r#"
     fn test() {
-        println!("Hello");
+        println!("Hello")
     }
     "#,
         ),
@@ -239,12 +239,13 @@ fn test_parser_multiple_with_other() {
         }),
         Expr::Other("\n    "),
     ];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 #[test]
 fn test_parser_mixed_all_cases() {
-    let src = r#"
+    let lhs = r#"
     use std::{
         io::{self, Read as R},
         fs::*,
@@ -252,10 +253,9 @@ fn test_parser_mixed_all_cases() {
     use crate::module::Type as T;
 
     fn hello() {
-        println!("Hello");
+        println!("Hello")
     }
     "#;
-    let lhs = expr().parse(src).into_result().unwrap();
     let rhs = vec![
         Expr::Other("\n    "),
         Expr::Use(ExprUse::Item {
@@ -305,12 +305,13 @@ fn test_parser_mixed_all_cases() {
             r#"
 
     fn hello() {
-        println!("Hello");
+        println!("Hello")
     }
     "#,
         ),
     ];
-    assert_eq!(lhs, rhs)
+    assert_eq!(parse(lhs), rhs);
+    assert_eq!(parse(&sloppy(lhs)), rhs)
 }
 
 fn sloppy(src: &str) -> String {
@@ -318,5 +319,5 @@ fn sloppy(src: &str) -> String {
 }
 
 fn parse(src: &str) -> Vec<Expr> {
-    expr().parse(src).into_result().unwrap()
+    decode::expr().parse(src).into_result().unwrap()
 }

@@ -1,3 +1,4 @@
+use rustell::decode;
 use rustell::*;
 use std::io::{self, Read};
 
@@ -6,7 +7,7 @@ fn main() {
     io::stdin()
         .read_to_string(&mut src)
         .expect("Failed to read stdin");
-    match expr().parse(src.trim()).into_result() {
+    match decode::expr().parse(src.trim()).into_result() {
         Ok(ast) => println!("{:#?}", ast),
         Err(errs) => {
             errs.into_iter().for_each(|e| println!("{e:?}"))

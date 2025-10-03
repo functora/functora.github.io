@@ -1,4 +1,5 @@
 pub mod decode;
+pub mod encode;
 pub use chumsky::prelude::Parser;
 
 #[derive(Eq, PartialEq, Debug, Clone)]

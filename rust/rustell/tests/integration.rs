@@ -1,10 +1,12 @@
 use rustell::decode;
+use rustell::encode;
 use rustell::*;
 
 #[test]
 fn test_parser() {
-    let lhs = "use std::io::Read;";
-    let rhs = vec![Expr::Use(ExprUse::Item {
+    let src = "use std::io::Read;";
+    let slp = sloppy(src);
+    let ast = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
         nested: Some(Box::new(ExprUse::Item {
@@ -17,8 +19,9 @@ fn test_parser() {
             })),
         })),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(parse(src), ast);
+    assert_eq!(parse(&slp), ast);
+    assert_eq!(parse(&encode(ast.clone())), ast)
 }
 
 #[test]
@@ -320,4 +323,8 @@ fn sloppy(src: &str) -> String {
 
 fn parse(src: &str) -> Vec<Expr> {
     decode::expr().parse(src).into_result().unwrap()
+}
+
+fn encode(ast: Vec<Expr>) -> String {
+    encode::expr(ast).collect()
 }

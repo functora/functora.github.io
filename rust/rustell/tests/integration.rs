@@ -4,9 +4,8 @@ use rustell::*;
 
 #[test]
 fn test_parser() {
-    let src = "use std::io::Read;";
-    let slp = sloppy(src);
-    let ast = vec![Expr::Use(ExprUse::Item {
+    let lhs = "use std::io::Read;";
+    let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
         rename: None,
         nested: Some(Box::new(ExprUse::Item {
@@ -19,9 +18,9 @@ fn test_parser() {
             })),
         })),
     })];
-    assert_eq!(parse(src), ast);
-    assert_eq!(parse(&slp), ast);
-    assert_eq!(parse(&encode(ast.clone())), ast)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -51,8 +50,9 @@ fn test_parser_many() {
             },
         ]))),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -67,8 +67,9 @@ fn test_parser_glob() {
             nested: Some(Box::new(ExprUse::Glob)),
         })),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -87,8 +88,9 @@ fn test_parser_rename() {
             })),
         })),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -114,8 +116,9 @@ fn test_parser_complex() {
             },
         ]))),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -134,8 +137,9 @@ fn test_parser_crate() {
             })),
         })),
     })];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -167,8 +171,9 @@ fn test_parser_other_then_use() {
             })),
         }),
     ];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -200,8 +205,9 @@ fn test_parser_multiple() {
         }),
         Expr::Other("\n    "),
     ];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -242,8 +248,9 @@ fn test_parser_multiple_with_other() {
         }),
         Expr::Other("\n    "),
     ];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 #[test]
@@ -313,18 +320,19 @@ fn test_parser_mixed_all_cases() {
     "#,
         ),
     ];
-    assert_eq!(parse(lhs), rhs);
-    assert_eq!(parse(&sloppy(lhs)), rhs)
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
 fn sloppy(src: &str) -> String {
     src.replace(";", "")
 }
 
-fn parse(src: &str) -> Vec<Expr> {
+fn decode(src: &str) -> Vec<Expr> {
     decode::expr().parse(src).into_result().unwrap()
 }
 
-fn encode(ast: Vec<Expr>) -> String {
+fn encode(ast: &[Expr]) -> String {
     encode::expr(ast).collect()
 }

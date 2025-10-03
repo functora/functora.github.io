@@ -10,7 +10,7 @@ fn main() {
         .expect("Failed to read stdin");
     match decode::expr().parse(src.trim()).into_result() {
         Ok(ast) => {
-            encode::expr(ast).for_each(|x| print!("{}", x))
+            encode::expr(&ast).for_each(|x| print!("{}", x))
         }
         Err(errs) => {
             errs.into_iter().for_each(|e| println!("{e:?}"))

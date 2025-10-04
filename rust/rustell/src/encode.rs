@@ -22,7 +22,7 @@ fn expr_use<'a>(
     top: bool,
     ast: &'a ExprUse<'a>,
 ) -> IntoIter<&'a str> {
-    let x0 = if top { vec!["use"] } else { vec![] };
+    let x0 = if top { vec!["use "] } else { vec![] };
 
     let x1 = match ast {
         ExprUse::Item {

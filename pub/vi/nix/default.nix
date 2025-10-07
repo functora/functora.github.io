@@ -56,7 +56,7 @@ in
           customRC =
             ''
               set runtimepath+=${vi-src}
-              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin'
+              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'
               let g:languagetool_jar='${olds.languagetool}/share/languagetool-commandline.jar'
@@ -108,7 +108,10 @@ in
               ]
               ++ (
                 if ai
-                then [unst.vimPlugins.minuet-ai-nvim]
+                then [
+                  unst.vimPlugins.minuet-ai-nvim
+                  unst.vimPlugins.codecompanion-nvim
+                ]
                 else []
               );
             opt = [

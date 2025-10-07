@@ -1,4 +1,5 @@
 {pkgs ? import <nixpkgs> {}}: let
+  unst = import ./nixpkgs-unstable.nix;
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
     inherit (pkgs) lib;
@@ -20,7 +21,12 @@
       nix
       direnv
       nix-direnv
+      unst.gemini-cli
     ];
+  };
+  passwd = pkgs.writeTextFile {
+    name = "passwd";
+    text = "vibe:x:1000:1000:vibe:/tmp:/bin/sh";
   };
   sandbox = mkNixPak {
     config = {sloth, ...}: {
@@ -44,6 +50,7 @@
           "/usr/bin/env"
           "/run/current-system/sw/bin/bash"
           "/run/current-system/sw/bin/less"
+          [(toString passwd) "/etc/passwd"]
           (sloth.concat' sloth.homeDir "/.bashrc")
           (sloth.concat' sloth.homeDir "/.bash_profile")
           (sloth.concat' sloth.homeDir "/.config/tmux")

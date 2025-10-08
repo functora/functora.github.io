@@ -9,8 +9,7 @@ pub fn expr<'src>() -> impl Parser<
     Vec<Expr<'src>>,
     extra::Err<Rich<'src, char>>,
 > {
-    expr_use()
-        .or(expr_other())
+    choice((expr_use(), expr_other()))
         .repeated()
         .collect::<Vec<_>>()
 }

@@ -4,6 +4,7 @@ pub use chumsky::prelude::Parser;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Expr<'src> {
+    Mod(&'src str),
     Use(ExprUse<'src>),
     Other(&'src str),
 }

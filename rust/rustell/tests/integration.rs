@@ -325,6 +325,14 @@ fn test_parser_mixed_all_cases() {
     assert_eq!(decode(&encode(&rhs)), rhs)
 }
 
+#[test]
+fn test_rountrip_lib() {
+    let src =
+        std::fs::read_to_string("./src/lib.rs").unwrap();
+    let ast = decode(&src);
+    assert_eq!(decode(&encode(&ast)), ast);
+}
+
 fn sloppy(src: &str) -> String {
     src.replace(";", "")
 }

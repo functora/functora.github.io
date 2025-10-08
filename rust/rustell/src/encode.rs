@@ -10,6 +10,7 @@ pub fn expr<'a>(
 
 fn expr_one<'a>(ast: &'a Expr<'a>) -> IntoIter<&'a str> {
     match ast {
+        Expr::Mod(x) => vec!["mod ", x, ";"].into_iter(),
         Expr::Use(x) => expr_use(true, x)
             .chain(once(";"))
             .collect::<Vec<_>>()

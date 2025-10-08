@@ -3,34 +3,31 @@ use chumsky::prelude::Parser;
 use chumsky::prelude::*;
 use chumsky::text::whitespace;
 
-pub fn expr<'src>() -> impl Parser<
-    'src,
-    &'src str,
-    Vec<Expr<'src>>,
-    extra::Err<Rich<'src, char>>,
+pub fn expr<'a>() -> impl Parser<
+    'a,
+    &'a str,
+    Vec<Expr<'a>>,
+    extra::Err<Rich<'a, char>>,
 > {
     choice((expr_use(), expr_other()))
         .repeated()
         .collect::<Vec<_>>()
 }
 
-fn expr_use<'src>() -> impl Parser<
-    'src,
-    &'src str,
-    Expr<'src>,
-    extra::Err<Rich<'src, char>>,
-> {
+fn expr_use<'a>()
+-> impl Parser<'a, &'a str, Expr<'a>, extra::Err<Rich<'a, char>>>
+{
     just("use")
         .ignore_then(expr_use_rec())
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Use)
 }
 
-fn expr_use_rec<'src>() -> impl Parser<
-    'src,
-    &'src str,
-    ExprUse<'src>,
-    extra::Err<Rich<'src, char>>,
+fn expr_use_rec<'a>() -> impl Parser<
+    'a,
+    &'a str,
+    ExprUse<'a>,
+    extra::Err<Rich<'a, char>>,
 > {
     recursive(|expr_use_rec| {
         let item = expr_use_tok()
@@ -65,24 +62,18 @@ fn expr_use_rec<'src>() -> impl Parser<
     })
 }
 
-fn expr_use_tok<'src>() -> impl Parser<
-    'src,
-    &'src str,
-    &'src str,
-    extra::Err<Rich<'src, char>>,
-> + Clone {
+fn expr_use_tok<'a>()
+-> impl Parser<'a, &'a str, &'a str, extra::Err<Rich<'a, char>>>
++ Clone {
     token(text::ascii::ident()).and_is(
         keyword_except(&["crate", "super", "self", "Self"])
             .not(),
     )
 }
 
-fn expr_other<'src>() -> impl Parser<
-    'src,
-    &'src str,
-    Expr<'src>,
-    extra::Err<Rich<'src, char>>,
-> {
+fn expr_other<'a>()
+-> impl Parser<'a, &'a str, Expr<'a>, extra::Err<Rich<'a, char>>>
+{
     any()
         .and_is(expr_use().not())
         .repeated()
@@ -91,40 +82,40 @@ fn expr_other<'src>() -> impl Parser<
         .map(Expr::Other)
 }
 
-fn token<'src>(
+fn token<'a>(
     tok: impl Parser<
-        'src,
-        &'src str,
-        &'src str,
-        extra::Err<Rich<'src, char>>,
+        'a,
+        &'a str,
+        &'a str,
+        extra::Err<Rich<'a, char>>,
     > + Clone,
 ) -> impl Parser<
-    'src,
-    &'src str,
-    &'src str,
-    extra::Err<Rich<'src, char>>,
+    'a,
+    &'a str,
+    &'a str,
+    extra::Err<Rich<'a, char>>,
 > + Clone {
     whitespace().or_not().ignore_then(tok)
 }
 
-fn lexeme<'src>(
-    seq: &'src str,
+fn lexeme<'a>(
+    seq: &'a str,
 ) -> impl Parser<
-    'src,
-    &'src str,
-    &'src str,
-    extra::Err<Rich<'src, char>>,
+    'a,
+    &'a str,
+    &'a str,
+    extra::Err<Rich<'a, char>>,
 > + Clone {
     token(just(seq))
 }
 
-fn keyword_except<'src>(
+fn keyword_except<'a>(
     except: &[&str],
 ) -> impl Parser<
-    'src,
-    &'src str,
-    &'src str,
-    extra::Err<Rich<'src, char>>,
+    'a,
+    &'a str,
+    &'a str,
+    extra::Err<Rich<'a, char>>,
 > + Clone {
     choice(
         [

@@ -3,19 +3,19 @@ pub mod encode;
 pub use chumsky::prelude::Parser;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-pub enum Expr<'src> {
-    Mod(&'src str),
-    Use(ExprUse<'src>),
-    Other(&'src str),
+pub enum Expr<'a> {
+    Mod(&'a str),
+    Use(ExprUse<'a>),
+    Other(&'a str),
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-pub enum ExprUse<'src> {
+pub enum ExprUse<'a> {
     Item {
-        module: &'src str,
-        rename: Option<&'src str>,
-        nested: Option<Box<ExprUse<'src>>>,
+        module: &'a str,
+        rename: Option<&'a str>,
+        nested: Option<Box<ExprUse<'a>>>,
     },
-    Many(Vec<ExprUse<'src>>),
+    Many(Vec<ExprUse<'a>>),
     Glob,
 }

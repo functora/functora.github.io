@@ -3,32 +3,43 @@ use chumsky::prelude::Parser;
 use chumsky::prelude::*;
 use chumsky::text::whitespace;
 
-pub fn expr<'a>() -> impl Parser<
-    'a,
-    &'a str,
-    Vec<Expr<'a>>,
-    extra::Err<Rich<'a, char>>,
-> {
-    choice((expr_use(), expr_other()))
+pub trait Decode<'a, T>:
+    Parser<'a, &'a str, T, extra::Err<Rich<'a, char>>>
+{
+}
+
+impl<'a, T, U> Decode<'a, T> for U where
+    U: Parser<'a, &'a str, T, extra::Err<Rich<'a, char>>>
+{
+}
+
+pub fn expr<'a>() -> impl Decode<'a, Vec<Expr<'a>>> {
+    choice((expr_ast(), expr_raw()))
         .repeated()
         .collect::<Vec<_>>()
 }
 
-fn expr_use<'a>()
--> impl Parser<'a, &'a str, Expr<'a>, extra::Err<Rich<'a, char>>>
-{
+fn expr_ast<'a>() -> impl Decode<'a, Expr<'a>> {
+    choice((expr_mod(), expr_use()))
+}
+
+fn expr_mod<'a>() -> impl Decode<'a, Expr<'a>> {
+    let tok =
+        token(text::ascii::ident()).and_is(keyword().not());
+    just("mod")
+        .ignore_then(tok)
+        .then_ignore(lexeme(";").or_not())
+        .map(Expr::Mod)
+}
+
+fn expr_use<'a>() -> impl Decode<'a, Expr<'a>> {
     just("use")
         .ignore_then(expr_use_rec())
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Use)
 }
 
-fn expr_use_rec<'a>() -> impl Parser<
-    'a,
-    &'a str,
-    ExprUse<'a>,
-    extra::Err<Rich<'a, char>>,
-> {
+fn expr_use_rec<'a>() -> impl Decode<'a, ExprUse<'a>> {
     recursive(|expr_use_rec| {
         let item = expr_use_tok()
             .then(
@@ -62,61 +73,41 @@ fn expr_use_rec<'a>() -> impl Parser<
     })
 }
 
-fn expr_use_tok<'a>()
--> impl Parser<'a, &'a str, &'a str, extra::Err<Rich<'a, char>>>
-+ Clone {
+fn expr_use_tok<'a>() -> impl Decode<'a, &'a str> + Clone {
     token(text::ascii::ident()).and_is(
         keyword_except(&["crate", "super", "self", "Self"])
             .not(),
     )
 }
 
-fn expr_other<'a>()
--> impl Parser<'a, &'a str, Expr<'a>, extra::Err<Rich<'a, char>>>
-{
+fn expr_raw<'a>() -> impl Decode<'a, Expr<'a>> {
     any()
-        .and_is(expr_use().not())
+        .and_is(expr_ast().not())
         .repeated()
         .at_least(1)
         .to_slice()
-        .map(Expr::Other)
+        .map(Expr::Raw)
 }
 
 fn token<'a>(
-    tok: impl Parser<
-        'a,
-        &'a str,
-        &'a str,
-        extra::Err<Rich<'a, char>>,
-    > + Clone,
-) -> impl Parser<
-    'a,
-    &'a str,
-    &'a str,
-    extra::Err<Rich<'a, char>>,
-> + Clone {
+    tok: impl Decode<'a, &'a str> + Clone,
+) -> impl Decode<'a, &'a str> + Clone {
     whitespace().or_not().ignore_then(tok)
 }
 
 fn lexeme<'a>(
     seq: &'a str,
-) -> impl Parser<
-    'a,
-    &'a str,
-    &'a str,
-    extra::Err<Rich<'a, char>>,
-> + Clone {
+) -> impl Decode<'a, &'a str> + Clone {
     token(just(seq))
+}
+
+fn keyword<'a>() -> impl Decode<'a, &'a str> + Clone {
+    keyword_except(&[])
 }
 
 fn keyword_except<'a>(
     except: &[&str],
-) -> impl Parser<
-    'a,
-    &'a str,
-    &'a str,
-    extra::Err<Rich<'a, char>>,
-> + Clone {
+) -> impl Decode<'a, &'a str> + Clone {
     choice(
         [
             "as", "break", "const", "continue", "crate",

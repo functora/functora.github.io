@@ -6,7 +6,7 @@ pub use chumsky::prelude::Parser;
 pub enum Expr<'a> {
     Mod(&'a str),
     Use(ExprUse<'a>),
-    Other(&'a str),
+    Raw(&'a str),
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]

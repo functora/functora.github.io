@@ -15,7 +15,7 @@ fn expr_one<'a>(ast: &'a Expr<'a>) -> IntoIter<&'a str> {
             .chain(once(";"))
             .collect::<Vec<_>>()
             .into_iter(),
-        Expr::Other(x) => vec![*x].into_iter(),
+        Expr::Raw(x) => vec![*x].into_iter(),
     }
 }
 

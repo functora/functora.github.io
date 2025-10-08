@@ -143,14 +143,14 @@ fn test_parser_crate() {
 }
 
 #[test]
-fn test_parser_other_then_use() {
+fn test_parser_raw_then_use() {
     let lhs = r#"
     fn test() {
         println!("Hello")
     }
     use crate::module::Type;"#;
     let rhs = vec![
-        Expr::Other(
+        Expr::Raw(
             r#"
     fn test() {
         println!("Hello")
@@ -183,7 +183,7 @@ fn test_parser_multiple() {
     use std::fs;
     "#;
     let rhs = vec![
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -193,7 +193,7 @@ fn test_parser_multiple() {
                 nested: None,
             })),
         }),
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -203,7 +203,7 @@ fn test_parser_multiple() {
                 nested: None,
             })),
         }),
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
     ];
     assert_eq!(decode(lhs), rhs);
     assert_eq!(decode(&sloppy(lhs)), rhs);
@@ -211,7 +211,7 @@ fn test_parser_multiple() {
 }
 
 #[test]
-fn test_parser_multiple_with_other() {
+fn test_parser_multiple_with_raw() {
     let lhs = r#"
     use std::io;
     fn test() {
@@ -220,7 +220,7 @@ fn test_parser_multiple_with_other() {
     use std::fs;
     "#;
     let rhs = vec![
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -230,7 +230,7 @@ fn test_parser_multiple_with_other() {
                 nested: None,
             })),
         }),
-        Expr::Other(
+        Expr::Raw(
             r#"
     fn test() {
         println!("Hello")
@@ -246,7 +246,7 @@ fn test_parser_multiple_with_other() {
                 nested: None,
             })),
         }),
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
     ];
     assert_eq!(decode(lhs), rhs);
     assert_eq!(decode(&sloppy(lhs)), rhs);
@@ -267,7 +267,7 @@ fn test_parser_mixed_all_cases() {
     }
     "#;
     let rhs = vec![
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
             module: "std",
             rename: None,
@@ -297,7 +297,7 @@ fn test_parser_mixed_all_cases() {
                 },
             ]))),
         }),
-        Expr::Other("\n    "),
+        Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
             module: "crate",
             rename: None,
@@ -311,7 +311,7 @@ fn test_parser_mixed_all_cases() {
                 })),
             })),
         }),
-        Expr::Other(
+        Expr::Raw(
             r#"
 
     fn hello() {

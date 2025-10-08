@@ -75,9 +75,9 @@ if ok then
 		local next = rust .. (prev and " " .. prev or "")
 		vim.cmd("CodeCompanionChat " .. next)
 	end, { nargs = "*", complete = "file" })
-	vim.keymap.set("n", "<leader>zz", "<CMD>CodeCompanionChat Toggle<CR>", {})
-	vim.keymap.set("n", "<leader>zx", "<CMD>CodeCompanionActions<CR>", {})
-	vim.keymap.set("n", "<leader>zc", ":CodeCompanionRust ", {})
+	vim.keymap.set({ "v", "n" }, "<leader>zz", "<CMD>CodeCompanionChat Toggle<CR>", {})
+	vim.keymap.set({ "v", "n" }, "<leader>zx", "<CMD>CodeCompanionActions<CR>", {})
+	vim.keymap.set({ "v", "n" }, "<leader>zc", ":CodeCompanionRust ", {})
 	-- vim.g.codecompanion_yolo_mode = true
 end
 

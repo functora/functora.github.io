@@ -8,7 +8,6 @@ let
 in
   {
     ai ? false,
-    mini ? true,
     formatter ? "ormolu",
     vimBackground ? "light",
     vimColorScheme ? "PaperColor", # "edge",
@@ -57,6 +56,7 @@ in
             ''
               set runtimepath+=${vi-src}
               let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin'
+              let $SHELL='/run/current-system/sw/bin/bash'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'
               let g:languagetool_jar='${olds.languagetool}/share/languagetool-commandline.jar'
@@ -120,33 +120,24 @@ in
         };
       };
     in
-      if mini
-      then vi
-      else {
-        #
-        # Vi
-        #
-        inherit vi;
-        #
-        # Haskell
-        #
-        ghc = haskell.compiler.ghc902;
-        stack = haskellPackages.stack;
-        cabal = cabal-install;
-        hlint = haskellPackages.hlint;
-        hoogle = haskellPackages.hoogle;
-        apply-refact = haskellPackages.apply-refact;
-        hspec-discover = haskellPackages.hspec-discover;
-        implicit-hie = haskellPackages.implicit-hie;
-        ormolu = haskellPackages.ormolu;
-        brittany = haskellPackages.brittany;
-        inherit zlib haskell-language-server cabal2nix ghcid;
-        #
-        # Dhall
-        #
-        inherit dhall dhall-json;
-        #
-        # Misc
-        #
-        inherit nix niv git curl;
-      }
+      vi.overrideAttrs (next: prev: {
+        nativeBuildInputs =
+          (
+            if builtins.hasAttr "nativeBuildInputs" prev
+            then prev.nativeBuildInputs
+            else []
+          )
+          ++ [
+            pkgs.makeShellWrapper
+          ];
+        postInstall =
+          (
+            if builtins.hasAttr "postInstall" prev
+            then prev.postInstall
+            else ""
+          )
+          + ''
+            wrapProgram $out/bin/vi \
+              --set SHELL /run/current-system/sw/bin/bash
+          '';
+      })

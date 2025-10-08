@@ -63,9 +63,6 @@
             rustfmt
             wasmtime
           ];
-          shellHook = ''
-            SHELL=/run/current-system/sw/bin/bash
-          '';
         };
         packages = {
           rustell = mkRustPkg "rustell";

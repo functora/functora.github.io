@@ -89,18 +89,6 @@ fn expr_raw<'a>() -> impl Decode<'a, Expr<'a>> {
         .map(Expr::Raw)
 }
 
-fn token<'a>(
-    tok: impl Decode<'a, &'a str> + Clone,
-) -> impl Decode<'a, &'a str> + Clone {
-    whitespace().or_not().ignore_then(tok)
-}
-
-fn lexeme<'a>(
-    seq: &'a str,
-) -> impl Decode<'a, &'a str> + Clone {
-    token(just(seq))
-}
-
 fn keyword<'a>() -> impl Decode<'a, &'a str> + Clone {
     keyword_except(&[])
 }
@@ -129,4 +117,16 @@ fn keyword_except<'a>(
         })
         .collect::<Vec<_>>(),
     )
+}
+
+fn token<'a>(
+    tok: impl Decode<'a, &'a str> + Clone,
+) -> impl Decode<'a, &'a str> + Clone {
+    whitespace().or_not().ignore_then(tok)
+}
+
+fn lexeme<'a>(
+    seq: &'a str,
+) -> impl Decode<'a, &'a str> + Clone {
+    token(just(seq))
 }

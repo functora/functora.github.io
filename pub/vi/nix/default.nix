@@ -111,6 +111,13 @@ in
                 then [
                   unst.vimPlugins.minuet-ai-nvim
                   unst.vimPlugins.codecompanion-nvim
+                  (
+                    builtins.getFlake (
+                      toString ../../../rust
+                    )
+                  ).packages.${
+                    builtins.currentSystem
+                  }.rustell-wasm-nvim
                 ]
                 else []
               );

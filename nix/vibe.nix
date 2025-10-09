@@ -21,6 +21,8 @@
       nix
       direnv
       nix-direnv
+      asciinema
+      asciinema-agg
       unst.gemini-cli
     ];
   };

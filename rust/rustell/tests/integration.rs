@@ -326,11 +326,36 @@ fn test_parser_mixed_all_cases() {
 }
 
 #[test]
-fn test_rountrip_lib() {
-    let src =
-        std::fs::read_to_string("./src/lib.rs").unwrap();
-    let ast = decode(&src);
-    assert_eq!(decode(&encode(&ast)), ast);
+fn test_roundtrip_own_sources() {
+    get_rust_files("./").into_iter().for_each(|path| {
+        let lhs = std::fs::read_to_string(&path).unwrap();
+        let rhs = decode(&lhs);
+        assert_eq!(
+            decode(&encode(&rhs)),
+            rhs,
+            "Roundtrip failed for the file: {}",
+            path
+        );
+    });
+}
+
+fn get_rust_files(dir: &str) -> Vec<String> {
+    std::fs::read_dir(dir)
+        .unwrap()
+        .flat_map(|item| {
+            let path = item.unwrap().path();
+            let name = path.to_str().unwrap();
+            if path.is_dir() {
+                get_rust_files(name)
+            } else if path.is_file()
+                && name.ends_with(".rs")
+            {
+                vec![name.to_string()]
+            } else {
+                vec![]
+            }
+        })
+        .collect()
 }
 
 fn sloppy(src: &str) -> String {

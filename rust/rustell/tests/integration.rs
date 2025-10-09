@@ -3,7 +3,79 @@ use rustell::encode;
 use rustell::*;
 
 #[test]
-fn test_parser() {
+fn module() {
+    let lhs = "mod hello;";
+    let rhs = vec![Expr::Mod("hello")];
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
+}
+
+#[test]
+fn module_then_use() {
+    let lhs = "mod hello; use std::io;";
+    let rhs = vec![
+        Expr::Mod("hello"),
+        Expr::Raw(" "),
+        Expr::Use(ExprUse::Item {
+            module: "std",
+            rename: None,
+            nested: Some(Box::new(ExprUse::Item {
+                module: "io",
+                rename: None,
+                nested: None,
+            })),
+        }),
+    ];
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
+}
+
+#[test]
+fn raw_then_module() {
+    let lhs = r#"
+    fn test() {
+        println!("Hello")
+    }
+    mod hello;"#;
+    let rhs = vec![
+        Expr::Raw(
+            r#"
+    fn test() {
+        println!("Hello")
+    }
+    "#,
+        ),
+        Expr::Mod("hello"),
+    ];
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
+}
+
+#[test]
+fn module_then_raw() {
+    let lhs = "mod hello;
+fn test() {
+    println!(\"Hello\")
+}";
+    let rhs = vec![
+        Expr::Mod("hello"),
+        Expr::Raw(
+            "
+fn test() {
+    println!(\"Hello\")
+}",
+        ),
+    ];
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
+}
+
+#[test]
+fn simple() {
     let lhs = "use std::io::Read;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -24,7 +96,7 @@ fn test_parser() {
 }
 
 #[test]
-fn test_parser_many() {
+fn many() {
     let lhs = "use std::{io::Read, fs::File};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -56,7 +128,7 @@ fn test_parser_many() {
 }
 
 #[test]
-fn test_parser_glob() {
+fn glob() {
     let lhs = "use std::io::*;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -73,7 +145,7 @@ fn test_parser_glob() {
 }
 
 #[test]
-fn test_parser_rename() {
+fn rename() {
     let lhs = "use std::io::Read as Readable;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -94,7 +166,7 @@ fn test_parser_rename() {
 }
 
 #[test]
-fn test_parser_complex() {
+fn complex() {
     let lhs = "use std::{io::Read as Readable, fs::*};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -122,7 +194,7 @@ fn test_parser_complex() {
 }
 
 #[test]
-fn test_parser_crate() {
+fn use_crate() {
     let lhs = "use crate::module::Type;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "crate",
@@ -143,7 +215,7 @@ fn test_parser_crate() {
 }
 
 #[test]
-fn test_parser_raw_then_use() {
+fn raw_then_use() {
     let lhs = r#"
     fn test() {
         println!("Hello")
@@ -177,7 +249,7 @@ fn test_parser_raw_then_use() {
 }
 
 #[test]
-fn test_parser_multiple() {
+fn multiple() {
     let lhs = r#"
     use std::io;
     use std::fs;
@@ -211,7 +283,7 @@ fn test_parser_multiple() {
 }
 
 #[test]
-fn test_parser_multiple_with_raw() {
+fn multiple_with_raw() {
     let lhs = r#"
     use std::io;
     fn test() {
@@ -254,7 +326,7 @@ fn test_parser_multiple_with_raw() {
 }
 
 #[test]
-fn test_parser_mixed_all_cases() {
+fn mixed_all_cases() {
     let lhs = r#"
     use std::{
         io::{self, Read as R},
@@ -326,7 +398,7 @@ fn test_parser_mixed_all_cases() {
 }
 
 #[test]
-fn test_roundtrip_own_sources() {
+fn roundtrip_own_sources() {
     get_rust_files("./").into_iter().for_each(|path| {
         let lhs = std::fs::read_to_string(&path).unwrap();
         let rhs = decode(&lhs);

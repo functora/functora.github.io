@@ -1,5 +1,7 @@
 # Rustell
 
+![Demo](docs/rustell.gif)
+
 Rustell is a development tool for Rust, designed for users who are not accustomed to using the semicolon (";") as a statement separator - for example, developers coming from languages like Haskell.
 
 Its usage is similar to "rustfmt": Rustell reads Rust source code (which may omit some required semicolons) from standard input ("stdin") and produces corrected output with all necessary semicolons inserted through standard output ("stdout"). It is intended to be used as a text editor plugin, typically invoked right before running "rustfmt".

@@ -120,7 +120,7 @@
           rustell-wasm = mkRustPkgWasm "rustell";
           rustell-wasm-nvim = mkRustellNvim "${
             pkgs.wasmtime
-          }/bin/wasmtime ${rustell-wasm}/bin/rustell.wasm";
+          }/bin/wasmtime ${rustell-wasm}/lib/rustell.wasm";
           default = self.packages.${system}.rustell;
         };
       }

@@ -398,6 +398,76 @@ fn mixed_use_and_raw_cases() {
 }
 
 #[test]
+fn small_mixed_lib() {
+    let lhs = r#"
+    pub mod decode;
+    pub mod encode;
+    pub use chumsky::prelude::Parser;
+
+    #[derive(Eq, PartialEq, Debug, Clone)]
+    pub enum Expr<'a> {
+        Mod(&'a str),
+        Use(ExprUse<'a>),
+        Raw(&'a str),
+    }
+
+    #[derive(Eq, PartialEq, Debug, Clone)]
+    pub enum ExprUse<'a> {
+        Item {
+            module: &'a str,
+            rename: Option<&'a str>,
+            nested: Option<Box<ExprUse<'a>>>,
+        },
+        Many(Vec<ExprUse<'a>>),
+        Glob,
+    }"#;
+    let rhs = vec![
+        Expr::Raw("\n    pub "),
+        Expr::Mod("decode"),
+        Expr::Raw("\n    pub "),
+        Expr::Mod("encode"),
+        Expr::Raw("\n    pub "),
+        Expr::Use(ExprUse::Item {
+            module: "chumsky",
+            rename: None,
+            nested: Some(Box::new(ExprUse::Item {
+                module: "prelude",
+                rename: None,
+                nested: Some(Box::new(ExprUse::Item {
+                    module: "Parser",
+                    rename: None,
+                    nested: None,
+                })),
+            })),
+        }),
+        Expr::Raw(
+            r#"
+
+    #[derive(Eq, PartialEq, Debug, Clone)]
+    pub enum Expr<'a> {
+        Mod(&'a str),
+        Use(ExprUse<'a>),
+        Raw(&'a str),
+    }
+
+    #[derive(Eq, PartialEq, Debug, Clone)]
+    pub enum ExprUse<'a> {
+        Item {
+            module: &'a str,
+            rename: Option<&'a str>,
+            nested: Option<Box<ExprUse<'a>>>,
+        },
+        Many(Vec<ExprUse<'a>>),
+        Glob,
+    }"#,
+        ),
+    ];
+    assert_eq!(decode(lhs), rhs);
+    assert_eq!(decode(&sloppy(lhs)), rhs);
+    assert_eq!(decode(&encode(&rhs)), rhs)
+}
+
+#[test]
 fn roundtrip_source_files() {
     get_rust_files("./").into_iter().for_each(|path| {
         let lhs = std::fs::read_to_string(&path).unwrap();

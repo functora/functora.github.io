@@ -27,6 +27,7 @@ fn expr_mod<'a>() -> impl Decode<'a, Expr<'a>> {
     let tok =
         token(text::ascii::ident()).and_is(keyword().not());
     just("mod")
+        .then_ignore(whitespace().at_least(1))
         .ignore_then(tok)
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Mod)
@@ -34,6 +35,7 @@ fn expr_mod<'a>() -> impl Decode<'a, Expr<'a>> {
 
 fn expr_use<'a>() -> impl Decode<'a, Expr<'a>> {
     just("use")
+        .then_ignore(whitespace().at_least(1))
         .ignore_then(expr_use_rec())
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Use)

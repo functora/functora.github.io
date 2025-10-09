@@ -3,7 +3,7 @@ use rustell::encode;
 use rustell::*;
 
 #[test]
-fn module() {
+fn mod_declaration() {
     let lhs = "mod hello;";
     let rhs = vec![Expr::Mod("hello")];
     assert_eq!(decode(lhs), rhs);
@@ -12,7 +12,7 @@ fn module() {
 }
 
 #[test]
-fn module_then_use() {
+fn mod_then_use_statement() {
     let lhs = "mod hello; use std::io;";
     let rhs = vec![
         Expr::Mod("hello"),
@@ -33,7 +33,7 @@ fn module_then_use() {
 }
 
 #[test]
-fn raw_then_module() {
+fn raw_code_then_mod() {
     let lhs = r#"
     fn test() {
         println!("Hello")
@@ -55,7 +55,7 @@ fn raw_then_module() {
 }
 
 #[test]
-fn module_then_raw() {
+fn mod_then_raw_code() {
     let lhs = "mod hello;
 fn test() {
     println!(\"Hello\")
@@ -75,7 +75,7 @@ fn test() {
 }
 
 #[test]
-fn simple() {
+fn simple_use_statement() {
     let lhs = "use std::io::Read;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -96,7 +96,7 @@ fn simple() {
 }
 
 #[test]
-fn many() {
+fn multiple_use_items() {
     let lhs = "use std::{io::Read, fs::File};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -128,7 +128,7 @@ fn many() {
 }
 
 #[test]
-fn glob() {
+fn use_glob_pattern() {
     let lhs = "use std::io::*;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -145,7 +145,7 @@ fn glob() {
 }
 
 #[test]
-fn rename() {
+fn use_with_rename() {
     let lhs = "use std::io::Read as Readable;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -166,7 +166,7 @@ fn rename() {
 }
 
 #[test]
-fn complex() {
+fn complex_use_statement() {
     let lhs = "use std::{io::Read as Readable, fs::*};";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "std",
@@ -194,7 +194,7 @@ fn complex() {
 }
 
 #[test]
-fn use_crate() {
+fn use_crate_path() {
     let lhs = "use crate::module::Type;";
     let rhs = vec![Expr::Use(ExprUse::Item {
         module: "crate",
@@ -215,7 +215,7 @@ fn use_crate() {
 }
 
 #[test]
-fn raw_then_use() {
+fn raw_code_then_use() {
     let lhs = r#"
     fn test() {
         println!("Hello")
@@ -249,7 +249,7 @@ fn raw_then_use() {
 }
 
 #[test]
-fn multiple() {
+fn multiple_separate_uses() {
     let lhs = r#"
     use std::io;
     use std::fs;
@@ -283,7 +283,7 @@ fn multiple() {
 }
 
 #[test]
-fn multiple_with_raw() {
+fn multiple_uses_with_raw_code() {
     let lhs = r#"
     use std::io;
     fn test() {
@@ -326,7 +326,7 @@ fn multiple_with_raw() {
 }
 
 #[test]
-fn mixed_all_cases() {
+fn mixed_use_and_raw_cases() {
     let lhs = r#"
     use std::{
         io::{self, Read as R},
@@ -398,7 +398,7 @@ fn mixed_all_cases() {
 }
 
 #[test]
-fn roundtrip_own_sources() {
+fn roundtrip_source_files() {
     get_rust_files("./").into_iter().for_each(|path| {
         let lhs = std::fs::read_to_string(&path).unwrap();
         let rhs = decode(&lhs);

@@ -7,8 +7,11 @@ end
 local ok, codecompanion = pcall(require, "codecompanion")
 if ok then
 	local rust =
-		"Read about the project in README.md. Your code must be in a strictly functional style while being highly efficient, avoid mutable variables (mut), avoid imperative statements like loops, for, while, and return, use functional style iterators instead, avoid redundant closures and redundant variables, use method and function chaining/compositions as much as possible, avoid the clone method, avoid redundant allocations, cover the code with tests, and follow the existing project code style. However, to achieve this, use only standard, simple Rust. Avoid relying on fancy custom traits, and write code in a simple, functional style. Ensure that all functions, variables, types, and other identifiers in the code are meaningful and clear in their context, while still preferring shorter names, as in the original code. Do not write any comments in the code, as good code should always be clear on its own. After making your changes, ensure that the code is formatted with rustfmt, compiles successfully, and passes all tests."
+		"Read about the project in README.md. Your code must be in a strictly functional style while being highly efficient, avoid mutable variables (mut), avoid imperative statements like loops, for, while, and return, use functional style iterators instead, avoid redundant closures and redundant variables, use method and function chaining/compositions as much as possible, avoid the clone method, avoid redundant allocations, and follow the existing project code style. However, to achieve this, use only standard, simple Rust. Avoid redundant dependencies. Ensure that all functions, variables, types, and other identifiers in the code are meaningful and clear in their context, while still preferring shorter names, as in the original code. Do not write any comments in the code, as good code should always be clear on its own."
 	codecompanion.setup({
+		extensions = {
+			spinner = {},
+		},
 		strategies = {
 			chat = {
 				adapter = "gemini_cli",
@@ -26,8 +29,8 @@ if ok then
 		prompt_library = {
 			rust = {
 				strategy = "chat",
-				prompts = { { role = "system", content = rust } },
-				opts = {},
+				prompts = { { role = "user", content = rust } },
+				opts = { short_name = "rust", is_slash_cmd = true },
 			},
 		},
 		adapters = {
@@ -78,7 +81,6 @@ if ok then
 	vim.keymap.set({ "v", "n" }, "<leader>zz", "<CMD>CodeCompanionChat Toggle<CR>", {})
 	vim.keymap.set({ "v", "n" }, "<leader>zx", "<CMD>CodeCompanionActions<CR>", {})
 	vim.keymap.set({ "v", "n" }, "<leader>zc", ":CodeCompanionRust ", {})
-	-- vim.g.codecompanion_yolo_mode = true
 end
 
 local ok, minuet = pcall(require, "minuet")

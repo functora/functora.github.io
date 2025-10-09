@@ -111,6 +111,7 @@ in
                 then [
                   unst.vimPlugins.minuet-ai-nvim
                   unst.vimPlugins.codecompanion-nvim
+                  unst.vimPlugins.codecompanion-spinner-nvim
                 ]
                 else []
               );

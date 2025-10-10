@@ -13,7 +13,7 @@ pub fn expr<'a>(
 fn expr_ast<'a>(
     last: bool,
     ast: &'a Expr<'a>,
-) -> IntoIter<&'a str> {
+) -> impl Iterator<Item = &'a str> + 'a {
     let end = if last { vec![] } else { vec![";"] };
     match ast {
         Expr::Mod(x) => vec!["mod ", x, ";"],
@@ -58,7 +58,7 @@ fn expr_use<'a>(
 
 fn expr_jump<'a>(
     ast: &'a ExprJump<'a>,
-) -> IntoIter<&'a str> {
+) -> impl Iterator<Item = &'a str> + 'a {
     match ast {
         ExprJump::Break => vec!["break"],
         ExprJump::Continue => vec!["continue"],

@@ -4,12 +4,13 @@ use chumsky::prelude::*;
 use chumsky::text::whitespace;
 
 pub trait Decode<'a, T>:
-    Parser<'a, &'a str, T, extra::Err<Rich<'a, char>>>
+    Parser<'a, &'a str, T, extra::Err<Rich<'a, char>>> + Clone
 {
 }
 
 impl<'a, T, U> Decode<'a, T> for U where
     U: Parser<'a, &'a str, T, extra::Err<Rich<'a, char>>>
+        + Clone
 {
 }
 
@@ -20,22 +21,26 @@ pub fn expr<'a>() -> impl Decode<'a, Vec<Expr<'a>>> {
 }
 
 fn expr_ast<'a>() -> impl Decode<'a, Expr<'a>> {
-    choice((expr_mod(), expr_use()))
+    recursive(|expr_ast| {
+        choice((
+            expr_mod(),
+            expr_use(),
+            expr_jump(expr_ast),
+        ))
+    })
 }
 
 fn expr_mod<'a>() -> impl Decode<'a, Expr<'a>> {
     let tok =
         token(text::ascii::ident()).and_is(keyword().not());
-    just("mod")
-        .then_ignore(whitespace().at_least(1))
+    space_after(just("mod"))
         .ignore_then(tok)
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Mod)
 }
 
 fn expr_use<'a>() -> impl Decode<'a, Expr<'a>> {
-    just("use")
-        .then_ignore(whitespace().at_least(1))
+    space_after(just("use"))
         .ignore_then(expr_use_rec())
         .then_ignore(lexeme(";").or_not())
         .map(Expr::Use)
@@ -75,11 +80,29 @@ fn expr_use_rec<'a>() -> impl Decode<'a, ExprUse<'a>> {
     })
 }
 
-fn expr_use_tok<'a>() -> impl Decode<'a, &'a str> + Clone {
+fn expr_use_tok<'a>() -> impl Decode<'a, &'a str> {
     token(text::ascii::ident()).and_is(
         keyword_except(&["crate", "super", "self", "Self"])
             .not(),
     )
+}
+
+fn expr_jump<'a>(
+    expr_ast: impl Decode<'a, Expr<'a>>,
+) -> impl Decode<'a, Expr<'a>> {
+    choice((
+        space_after(just("break"))
+            .then_ignore(lexeme(";").or_not())
+            .map(|_| ExprJump::Break),
+        space_after(just("continue"))
+            .then_ignore(lexeme(";").or_not())
+            .map(|_| ExprJump::Continue),
+        space_after(just("return"))
+            .ignore_then(expr_ast)
+            .then_ignore(lexeme(";").or_not())
+            .map(|x| ExprJump::Return(Box::new(x))),
+    ))
+    .map(Expr::Jump)
 }
 
 fn expr_raw<'a>() -> impl Decode<'a, Expr<'a>> {
@@ -91,13 +114,13 @@ fn expr_raw<'a>() -> impl Decode<'a, Expr<'a>> {
         .map(Expr::Raw)
 }
 
-fn keyword<'a>() -> impl Decode<'a, &'a str> + Clone {
+fn keyword<'a>() -> impl Decode<'a, &'a str> {
     keyword_except(&[])
 }
 
 fn keyword_except<'a>(
     except: &[&str],
-) -> impl Decode<'a, &'a str> + Clone {
+) -> impl Decode<'a, &'a str> {
     choice(
         [
             "as", "break", "const", "continue", "crate",
@@ -121,14 +144,18 @@ fn keyword_except<'a>(
     )
 }
 
+fn space_after<'a>(
+    tok: impl Decode<'a, &'a str>,
+) -> impl Decode<'a, &'a str> {
+    tok.then_ignore(whitespace().at_least(1))
+}
+
 fn token<'a>(
-    tok: impl Decode<'a, &'a str> + Clone,
-) -> impl Decode<'a, &'a str> + Clone {
+    tok: impl Decode<'a, &'a str>,
+) -> impl Decode<'a, &'a str> {
     whitespace().or_not().ignore_then(tok)
 }
 
-fn lexeme<'a>(
-    seq: &'a str,
-) -> impl Decode<'a, &'a str> + Clone {
+fn lexeme<'a>(seq: &'a str) -> impl Decode<'a, &'a str> {
     token(just(seq))
 }

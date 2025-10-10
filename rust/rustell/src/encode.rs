@@ -3,20 +3,34 @@ use std::iter::{IntoIterator, once};
 use std::vec::IntoIter;
 
 pub fn expr<'a>(
-    ast: &'a [Expr<'a>],
+    xs: &'a [Expr<'a>],
 ) -> impl Iterator<Item = &'a str> + 'a {
-    ast.iter().flat_map(expr_one)
+    xs.iter()
+        .enumerate()
+        .flat_map(|(i, x)| expr_ast(i + 1 == xs.len(), x))
 }
 
-fn expr_one<'a>(ast: &'a Expr<'a>) -> IntoIter<&'a str> {
+fn expr_ast<'a>(
+    last: bool,
+    ast: &'a Expr<'a>,
+) -> IntoIter<&'a str> {
+    let end = if last { vec![] } else { vec![";"] };
     match ast {
-        Expr::Mod(x) => vec!["mod ", x, ";"].into_iter(),
+        Expr::Mod(x) => vec!["mod ", x, ";"],
         Expr::Use(x) => expr_use(true, x)
             .chain(once(";"))
-            .collect::<Vec<_>>()
-            .into_iter(),
-        Expr::Raw(x) => vec![*x].into_iter(),
+            .collect::<Vec<_>>(),
+        Expr::Jump(x) => {
+            expr_jump(x).chain(end).collect::<Vec<_>>()
+        }
+        Expr::Block(xs) => once("{")
+            .chain(expr(xs))
+            .chain(once("}"))
+            .chain(end)
+            .collect::<Vec<_>>(),
+        Expr::Raw(x) => vec![*x],
     }
+    .into_iter()
 }
 
 fn expr_use<'a>(
@@ -40,6 +54,19 @@ fn expr_use<'a>(
     };
 
     x0.into_iter().chain(x1).collect::<Vec<_>>().into_iter()
+}
+
+fn expr_jump<'a>(
+    ast: &'a ExprJump<'a>,
+) -> IntoIter<&'a str> {
+    match ast {
+        ExprJump::Break => vec!["break"],
+        ExprJump::Continue => vec!["continue"],
+        ExprJump::Return(x) => once("return ")
+            .chain(expr_ast(true, x))
+            .collect::<Vec<_>>(),
+    }
+    .into_iter()
 }
 
 fn expr_use_item<'a>(

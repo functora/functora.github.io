@@ -6,6 +6,8 @@ pub use chumsky::prelude::Parser;
 pub enum Expr<'a> {
     Mod(&'a str),
     Use(ExprUse<'a>),
+    Jump(ExprJump<'a>),
+    Block(Vec<Expr<'a>>),
     Raw(&'a str),
 }
 
@@ -18,4 +20,11 @@ pub enum ExprUse<'a> {
     },
     Many(Vec<ExprUse<'a>>),
     Glob,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub enum ExprJump<'a> {
+    Break,
+    Continue,
+    Return(Box<Expr<'a>>),
 }

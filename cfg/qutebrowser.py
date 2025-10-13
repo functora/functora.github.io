@@ -2001,7 +2001,7 @@ c.url.searchengines = {
         'trans': 'https://translate.google.com/details?sl=auto&tl=auto&op=translate&text={}',
         'sound': 'https://soundcloud.com/search/sets?q={}',
         'github': 'https://github.com/search?type=code&q={}',
-        'repo': 'https://github.com/search?type=repositories&s=stars&o=desc&q=language:rust created:<2023 {}',
+        'code': 'https://github.com/search?type=repositories&s=stars&o=desc&q=language:rust created:<2023 {}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
         'docs': 'https://docs.rs/releases/search?query={}',

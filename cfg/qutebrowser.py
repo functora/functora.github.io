@@ -1980,8 +1980,7 @@ c.content.headers.user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://hoogle.haskell.org/'
 c.url.searchengines = {
-        'DEFAULT': 'https://google.com/search?q={}',
-        'noai': 'https://google.com/search?q={} before:2022 -site:youtube.com -site:facebook.com -site:rumble.com -site:tiktok.com',
+        'DEFAULT': 'https://google.com/search?q=before:2023 {}',
         'ggl': 'https://google.com/search?q={}',
         'ddg': 'https://duckduckgo.com/?q={}',
         'gpt': 'https://chatgpt.com/?q={}',
@@ -2002,9 +2001,10 @@ c.url.searchengines = {
         'trans': 'https://translate.google.com/details?sl=auto&tl=auto&op=translate&text={}',
         'sound': 'https://soundcloud.com/search/sets?q={}',
         'github': 'https://github.com/search?type=code&q={}',
+        'repo': 'https://github.com/search?type=repositories&s=stars&o=desc&q=language:rust created:<2023 {}',
         'hoogle': 'https://hoogle.haskell.org/?hoogle={}',
         'hackage': 'https://hackage.haskell.org/packages/search?terms={}',
-        'rust': 'https://docs.rs/releases/search?query={}',
+        'docs': 'https://docs.rs/releases/search?query={}',
         'crate': 'https://crates.io/search?q={}',
         'nixpkgs': 'https://search.nixos.org/packages?query={}',
         'nixos': 'https://search.nixos.org/options?query={}',

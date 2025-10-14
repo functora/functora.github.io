@@ -768,6 +768,7 @@ augroup fmt
   autocmd!
   autocmd BufWritePre * try | undojoin | Neoformat | catch /E790/ | Neoformat | endtry
 augroup end
+let g:neoformat_enabled_sql = ['sleek', 'sql-formatter']
 let g:neoformat_enabled_toml = ['taplo', 'topiary', 'prettier']
 let g:neoformat_toml_prettier = {
       \ 'exe': 'prettier',

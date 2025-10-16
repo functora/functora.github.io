@@ -1,7 +1,11 @@
 [package]
 name = "functora-cfg"
+license = "MIT"
 version = "0.1.0"
 edition = "2024"
+keywords = ["config", "configuration", "settings", "env", "environment"]
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-cfg"
+description = "A Rust library that merges configuration values from multiple sources into a single typed value."
 
 [dependencies]
 config = "0.15.18"

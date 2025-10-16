@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 pub use config::ConfigError;
 use config::{Config, Environment, File, Value};
 use serde::{Serialize, de::DeserializeOwned};
@@ -26,12 +27,6 @@ where
     Src: Serialize,
     Dst: Serialize + DeserializeOwned,
 {
-    //
-    // TODO : use functional style with tierator over
-    // trait object array and try_fold into builder,
-    // maybe somthing else, this looks too bad:
-    //
-
     let mut builder = Config::builder();
 
     builder =

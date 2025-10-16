@@ -4,27 +4,27 @@ use serde::{Serialize, de::DeserializeOwned};
 use std::path::Path;
 use toml::Value as TomlValue;
 
-pub struct Args<'a, Src: Serialize> {
+pub struct Cfg<'a, Src: Serialize> {
     pub default: &'a Src,
     pub file_path: fn(&Src) -> Option<&str>,
     pub env_prefix: &'a str,
     pub command_line: &'a Src,
 }
 
-impl<'a, Src: Serialize> Args<'a, Src> {
-    pub fn eval<Cfg: Serialize + DeserializeOwned>(
+impl<'a, Src: Serialize> Cfg<'a, Src> {
+    pub fn eval<Dst: Serialize + DeserializeOwned>(
         &self,
-    ) -> Result<Cfg, ConfigError> {
-        new(self)
+    ) -> Result<Dst, ConfigError> {
+        eval(self)
     }
 }
 
-pub fn new<Src, Cfg>(
-    args: &Args<Src>,
-) -> Result<Cfg, ConfigError>
+pub fn eval<Src, Dst>(
+    cfg: &Cfg<Src>,
+) -> Result<Dst, ConfigError>
 where
     Src: Serialize,
-    Cfg: Serialize + DeserializeOwned,
+    Dst: Serialize + DeserializeOwned,
 {
     //
     // TODO : use functional style with tierator over
@@ -35,11 +35,11 @@ where
     let mut builder = Config::builder();
 
     builder =
-        builder.add_source(term_to_config(args.default)?);
+        builder.add_source(term_to_config(cfg.default)?);
 
-    let getter = args.file_path;
+    let getter = cfg.file_path;
     if let Some(path) =
-        getter(args.command_line).or(getter(args.default))
+        getter(cfg.command_line).or(getter(cfg.default))
     {
         let path = Path::new(&path);
         if path.exists() && path.is_file() {
@@ -53,13 +53,13 @@ where
 
     builder = builder.add_source(
         Environment::with_prefix(
-            &args.env_prefix.to_uppercase(),
+            &cfg.env_prefix.to_uppercase(),
         )
         .separator("_"),
     );
 
     builder = builder
-        .add_source(term_to_config(args.command_line)?);
+        .add_source(term_to_config(cfg.command_line)?);
 
     builder.build()?.try_deserialize()
 }

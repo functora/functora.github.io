@@ -14,7 +14,7 @@ fn new_cfg(cli: &Cli) -> Cfg {
         }),
         tags: None,
     };
-    functora_cfg::Args {
+    functora_cfg::Cfg {
         default: &def,
         file_path: |cli: &Cli| cli.cfg.as_deref(),
         env_prefix: "fun_app",

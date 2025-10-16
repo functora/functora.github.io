@@ -112,6 +112,7 @@
             rustc
             rustfmt
             wasmtime
+            license-generator
           ];
         };
         packages = rec {

@@ -2,23 +2,25 @@ use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use temp_env::with_vars;
 
-fn new_fun_cfg(cli: &Cli) -> Cfg {
-    let def = Cfg {
-        host: "127.0.0.1".into(),
-        port: 8080,
-        debug: false,
+fn new_cfg(cli: &Cli) -> Cfg {
+    let def = Cli {
+        cfg: None,
+        host: Some("127.0.0.1".into()),
+        port: Some(8080),
+        debug: Some(false),
         nested: Some(CfgNest {
             name: "foo".into(),
             value: 42,
         }),
         tags: None,
     };
-    functora_cfg::new(
-        "fun_app",
-        Some(&def),
-        |cli| cli.cfg.as_deref(),
-        cli,
-    )
+    functora_cfg::Args {
+        default: &def,
+        file_path: |cli: &Cli| cli.cfg.as_deref(),
+        env_prefix: "fun_app",
+        command_line: cli,
+    }
+    .eval()
     .unwrap()
 }
 
@@ -43,6 +45,7 @@ struct Cli {
     host: Option<String>,
     port: Option<u16>,
     debug: Option<bool>,
+    nested: Option<CfgNest>,
     tags: Option<Vec<String>>,
 }
 
@@ -64,9 +67,10 @@ fn defaults_only() {
         host: None,
         port: None,
         debug: None,
+        nested: None,
         tags: None,
     };
-    let cfg: Cfg = new_fun_cfg(&cli);
+    let cfg: Cfg = new_cfg(&cli);
     assert_eq!(cfg, def);
 }
 
@@ -86,9 +90,10 @@ fn with_file_override() {
         host: None,
         port: None,
         debug: None,
+        nested: None,
         tags: None,
     };
-    let cfg: Cfg = new_fun_cfg(&cli);
+    let cfg: Cfg = new_cfg(&cli);
     assert_eq!(cfg.host, "192.168.1.100");
     assert_eq!(cfg.port, 9090);
     assert_eq!(cfg.debug, true);
@@ -103,6 +108,7 @@ fn env_override() {
         host: None,
         port: None,
         debug: None,
+        nested: None,
         tags: None,
     };
     with_vars(
@@ -112,7 +118,7 @@ fn env_override() {
             ("FUN_APP_DEBUG", Some("true")),
         ],
         || {
-            let cfg: Cfg = new_fun_cfg(&cli);
+            let cfg: Cfg = new_cfg(&cli);
             assert_eq!(cfg.host, "10.0.0.1");
             assert_eq!(cfg.port, 7070);
             assert_eq!(cfg.debug, true);
@@ -128,9 +134,10 @@ fn cli_override() {
         host: Some("cli.host".into()),
         port: Some(6060),
         debug: Some(true),
+        nested: None,
         tags: Some(vec!["cli1".into(), "cli2".into()]),
     };
-    let cfg: Cfg = new_fun_cfg(&cli);
+    let cfg: Cfg = new_cfg(&cli);
     assert_eq!(cfg.host, "cli.host");
     assert_eq!(cfg.port, 6060);
     assert_eq!(cfg.debug, true);
@@ -145,9 +152,10 @@ fn nested_struct() {
         host: None,
         port: None,
         debug: None,
+        nested: None,
         tags: None,
     };
-    let cfg: Cfg = new_fun_cfg(&cli);
+    let cfg: Cfg = new_cfg(&cli);
     assert_eq!(cfg.nested.as_ref().unwrap().name, "foo");
     assert_eq!(cfg.nested.as_ref().unwrap().value, 42);
 }

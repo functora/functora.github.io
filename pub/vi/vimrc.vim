@@ -411,6 +411,7 @@ let g:AutoPairsFlyMode = 0
 let g:AutoPairs = {}
 nnoremap <c-a> *``
 nnoremap <c-s> :call AckStr(expand("<cword>"))<CR>
+vnoremap // y/\V<C-R>=escape(@",'/\')<CR><CR>
 "autocmd VimEnter * :vs | :startinsert | :te
 "set colorcolumn=67
 

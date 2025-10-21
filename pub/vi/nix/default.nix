@@ -38,6 +38,16 @@ in
           let g:ormolu_disable = 1
         '';
       };
+      pretty = pkgs.writeShellApplication {
+        name = "prettier";
+        text = ''
+          ${
+            pkgs.nodePackages.prettier
+          }/bin/prettier --plugin ${
+            pkgs.nodePackages.prettier-plugin-toml
+          }/lib/node_modules/prettier-plugin-toml/lib/index.js "$@"
+        '';
+      };
       lesspipeWrapper = writeShellScriptBin "lesspipe" "${lesspipe}/bin/lesspipe.sh";
       vi-src = stdenv.mkDerivation {
         name = "vi-src";
@@ -55,7 +65,7 @@ in
           customRC =
             ''
               set runtimepath+=${vi-src}
-              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin:${sleek}/bin'
+              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin:${sleek}/bin:${pretty}/bin:${html-tidy}/bin'
               let $SHELL='/run/current-system/sw/bin/bash'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'

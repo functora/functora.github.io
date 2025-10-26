@@ -11,7 +11,7 @@ All sources are optional. Only the ones you provide will be applied.
 
 ## Example
 
-```rust
+```text
 use clap::{Parser, Subcommand};
 use functora_cfg;
 use serde::{Deserialize, Serialize};

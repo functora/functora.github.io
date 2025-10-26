@@ -50,7 +50,8 @@ where
         Environment::with_prefix(
             &cfg.env_prefix.to_uppercase(),
         )
-        .separator("_"),
+        .prefix_separator("__")
+        .separator("__"),
     );
 
     builder = builder

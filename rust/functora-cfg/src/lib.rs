@@ -3,7 +3,7 @@ use clap::{Args, FromArgMatches, Subcommand};
 pub use config::ConfigError;
 use config::{Config, Environment, File, Value};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 use toml::Value as TomlValue;
 
 pub struct Cfg<'a, Src: Serialize> {
@@ -121,6 +121,31 @@ where
     pub next: Option<Box<U>>,
 }
 
+impl<T, U> ReClap<T, U>
+where
+    T: Args,
+    U: Subcommand,
+{
+    pub fn vec(self, f: fn(U) -> ReClap<T, U>) -> Vec<T> {
+        let mut prev = vec![self.prev];
+        if let Some(next) = self.next {
+            prev.extend(f(*next).vec(f))
+        }
+        prev
+    }
+
+    pub fn hash_map(
+        self,
+        f: fn(U) -> ReClap<T, U>,
+    ) -> HashMap<String, T> {
+        self.vec(f)
+            .into_iter()
+            .enumerate()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect()
+    }
+}
+
 impl<T, U> Args for ReClap<T, U>
 where
     T: Args,
@@ -165,6 +190,54 @@ where
         &mut self,
         _: &clap::ArgMatches,
     ) -> Result<(), clap::Error> {
+        unimplemented!()
+    }
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+)]
+pub struct IdClap<T>(T);
+
+impl<T> IdClap<T> {
+    pub fn run(IdClap(x): Self) -> T {
+        x
+    }
+}
+
+impl<T> FromArgMatches for IdClap<T> {
+    fn from_arg_matches(
+        _: &clap::ArgMatches,
+    ) -> Result<Self, clap::Error> {
+        unimplemented!()
+    }
+    fn update_from_arg_matches(
+        &mut self,
+        _: &clap::ArgMatches,
+    ) -> Result<(), clap::Error> {
+        unimplemented!()
+    }
+}
+
+impl<T> Subcommand for IdClap<T> {
+    fn augment_subcommands(
+        _: clap::Command,
+    ) -> clap::Command {
+        unimplemented!()
+    }
+    fn augment_subcommands_for_update(
+        _: clap::Command,
+    ) -> clap::Command {
+        unimplemented!()
+    }
+    fn has_subcommand(_: &str) -> bool {
         unimplemented!()
     }
 }

@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
+    unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -10,12 +11,13 @@
   outputs = {
     self,
     nixpkgs,
+    unstable,
     rust-overlay,
     flake-utils,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = unstable.legacyPackages.${system};
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {
             name = pkg;

@@ -204,7 +204,7 @@ where
     Serialize,
     Deserialize,
 )]
-pub struct IdClap<T>(T);
+pub struct IdClap<T>(pub T);
 
 impl<T> IdClap<T> {
     pub fn run(IdClap(x): Self) -> T {

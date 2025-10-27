@@ -9,6 +9,7 @@ repository = "https://github.com/functora/functora.github.io/tree/master/rust/fu
 description = "A Rust library that merges configuration values from multiple sources into a single typed value."
 
 [dependencies]
+clap = { version = "4.5.50", features = ["derive"] }
 config = "0.15.18"
 serde = "1.0.228"
 toml = "0.9.8"

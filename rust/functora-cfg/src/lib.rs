@@ -1,7 +1,8 @@
 #![doc = include_str!("../README.md")]
+use clap::{Args, FromArgMatches, Subcommand};
 pub use config::ConfigError;
 use config::{Config, Environment, File, Value};
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::path::Path;
 use toml::Value as TomlValue;
 
@@ -98,5 +99,72 @@ fn toml_to_config(toml: TomlValue) -> Value {
                 .map(|(k, v)| (k, toml_to_config(v)))
                 .collect::<config::Map<String, Value>>(),
         ),
+    }
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+)]
+pub struct ReClap<T, U>
+where
+    T: Args,
+    U: Subcommand,
+{
+    pub prev: T,
+    pub next: Option<Box<U>>,
+}
+
+impl<T, U> Args for ReClap<T, U>
+where
+    T: Args,
+    U: Subcommand,
+{
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        T::augment_args(cmd).defer(|cmd| {
+            U::augment_subcommands(
+                cmd.disable_help_subcommand(true),
+            )
+        })
+    }
+    fn augment_args_for_update(
+        _: clap::Command,
+    ) -> clap::Command {
+        unimplemented!()
+    }
+}
+
+impl<T, U> FromArgMatches for ReClap<T, U>
+where
+    T: Args,
+    U: Subcommand,
+{
+    fn from_arg_matches(
+        matches: &clap::ArgMatches,
+    ) -> Result<Self, clap::Error> {
+        let prev = T::from_arg_matches(matches)?;
+        let next = if let Some((_name, _sub)) =
+            matches.subcommand()
+        {
+            Some(U::from_arg_matches(matches)?)
+        } else {
+            None
+        };
+        Ok(Self {
+            prev,
+            next: next.map(Box::new),
+        })
+    }
+    fn update_from_arg_matches(
+        &mut self,
+        _: &clap::ArgMatches,
+    ) -> Result<(), clap::Error> {
+        unimplemented!()
     }
 }

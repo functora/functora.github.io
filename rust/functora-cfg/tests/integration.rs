@@ -1,4 +1,5 @@
 use clap::{Args, Parser, Subcommand};
+use functor_derive::Functor;
 use functora_cfg::*;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
@@ -18,16 +19,13 @@ struct Cfg {
 }
 
 impl Cfg {
-    pub fn new(
-        cli: &Cli<IdClap<HashMap<String, Account>>>,
-    ) -> Self {
+    pub fn new(cli: Cli<SubAccounts>) -> Self {
         functora_cfg::Cfg {
             default: &Cli::def(),
-            file_path: |cli: &Cli<
-                IdClap<HashMap<String, Account>>,
-            >| cli.toml.as_deref(),
+            file_path: |cli| cli.toml.as_deref(),
             env_prefix: "FUNCTORA",
-            command_line: cli,
+            command_line: &cli
+                .fmap(|x| IdClap(x.hash_map())),
         }
         .eval()
         .unwrap()
@@ -45,7 +43,7 @@ impl Cfg {
     Deserialize,
     Args,
 )]
-struct Account {
+pub struct Account {
     #[arg(long)]
     alias: String,
     #[arg(long)]
@@ -57,8 +55,37 @@ struct Account {
 #[derive(
     Eq,
     PartialEq,
+    Ord,
+    PartialOrd,
     Debug,
     Clone,
+    Serialize,
+    Deserialize,
+    Subcommand,
+)]
+#[command(subcommand_precedence_over_arg = true)]
+pub enum SubAccounts {
+    SubAccounts(ReClap<Account, Self>),
+}
+
+impl SubAccounts {
+    pub fn vec(self) -> Vec<Account> {
+        let SubAccounts::SubAccounts(prev) = self;
+        prev.vec(|SubAccounts::SubAccounts(next)| next)
+    }
+
+    pub fn hash_map(self) -> HashMap<String, Account> {
+        let SubAccounts::SubAccounts(prev) = self;
+        prev.hash_map(|SubAccounts::SubAccounts(next)| next)
+    }
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Functor,
     Serialize,
     Deserialize,
     Parser,
@@ -84,7 +111,7 @@ where
     #[command(flatten)]
     main_account: Option<Account>,
     #[command(subcommand)]
-    sub_accounts: T,
+    sub_accounts: Option<T>,
 }
 
 impl Cli<IdClap<HashMap<String, Account>>> {
@@ -99,7 +126,7 @@ impl Cli<IdClap<HashMap<String, Account>>> {
                 balance: 42,
                 tags: None,
             }),
-            sub_accounts: IdClap(HashMap::new()),
+            sub_accounts: Some(IdClap(HashMap::new())),
         }
     }
 }
@@ -107,14 +134,19 @@ impl Cli<IdClap<HashMap<String, Account>>> {
 #[test]
 #[serial]
 fn defaults_only() {
-    let lhs = Cfg::new(&Cli {
-        toml: None,
-        host: None,
-        port: None,
-        logs: None,
-        main_account: None,
-        sub_accounts: IdClap(HashMap::new()),
-    });
+    let cli = Cli::parse_from(["test"]);
+    let lhs = Cfg::new(cli);
+    // let lhs = Cfg::new(Cli {
+    //     toml: None,
+    //     host: None,
+    //     port: None,
+    //     logs: None,
+    //     main_account: None,
+    //     sub_accounts: SubAccounts::SubAccounts(ReClap {
+    //         prev: None,
+    //         next: None,
+    //     }),
+    // });
     let rhs = Cfg {
         host: "127.0.0.1".into(),
         port: 8080,
@@ -150,9 +182,9 @@ fn with_file_override() {
         port: None,
         logs: None,
         main_account: None,
-        sub_accounts: IdClap(HashMap::new()),
+        sub_accounts: None,
     };
-    let cfg: Cfg = Cfg::new(&cli);
+    let cfg: Cfg = Cfg::new(cli);
     assert_eq!(cfg.host, "192.168.1.100");
     assert_eq!(cfg.port, 9090);
     assert_eq!(cfg.logs, true);
@@ -178,7 +210,7 @@ fn env_override() {
         port: None,
         logs: None,
         main_account: None,
-        sub_accounts: IdClap(HashMap::new()),
+        sub_accounts: None,
     };
     with_vars(
         vec![
@@ -196,7 +228,7 @@ fn env_override() {
             ),
         ],
         || {
-            let cfg: Cfg = Cfg::new(&cli);
+            let cfg: Cfg = Cfg::new(cli);
             assert_eq!(cfg.host, "10.0.0.1");
             assert_eq!(cfg.port, 7070);
             assert_eq!(cfg.logs, true);
@@ -232,9 +264,9 @@ fn cli_override() {
         port: Some(6060),
         logs: Some(true),
         main_account: None,
-        sub_accounts: IdClap(HashMap::new()),
+        sub_accounts: None,
     };
-    let cfg: Cfg = Cfg::new(&cli);
+    let cfg: Cfg = Cfg::new(cli);
     assert_eq!(cfg.host, "cli.host");
     assert_eq!(cfg.port, 6060);
     assert_eq!(cfg.logs, true);
@@ -249,9 +281,9 @@ fn nested_struct() {
         port: None,
         logs: None,
         main_account: None,
-        sub_accounts: IdClap(HashMap::new()),
+        sub_accounts: None,
     };
-    let cfg: Cfg = Cfg::new(&cli);
+    let cfg: Cfg = Cfg::new(cli);
     assert_eq!(cfg.main_account.alias, "foo");
     assert_eq!(cfg.main_account.balance, 42);
 }

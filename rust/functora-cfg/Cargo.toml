@@ -19,3 +19,4 @@ functor_derive = "0.4.3"
 serde = { version = "1.0.228", features = ["derive"] }
 serial_test = "3.2.0"
 temp-env = "0.3.6"
+tempfile = "3.23.0"

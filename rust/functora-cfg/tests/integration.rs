@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::io::Write;
 use temp_env::with_vars;
+use tempfile::NamedTempFile;
 
 #[derive(
     Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
@@ -19,7 +21,7 @@ struct Cfg {
 }
 
 impl Cfg {
-    pub fn new(cli: Cli<SubAccounts>) -> Self {
+    pub fn new(cli: Cli<SubAccount>) -> Self {
         functora_cfg::Cfg {
             default: &Cli::def(),
             file_path: |cli| cli.toml.as_deref(),
@@ -33,30 +35,17 @@ impl Cfg {
 }
 
 #[derive(
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-    Args,
+    Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
 )]
 pub struct Account {
-    #[arg(long)]
     alias: String,
-    #[arg(long)]
     balance: i32,
-    #[arg(long)]
     tags: Option<Vec<String>>,
 }
 
 #[derive(
     Eq,
     PartialEq,
-    Ord,
-    PartialOrd,
     Debug,
     Clone,
     Serialize,
@@ -64,14 +53,14 @@ pub struct Account {
     Subcommand,
 )]
 #[command(subcommand_precedence_over_arg = true)]
-pub enum SubAccounts {
-    SubAccounts(ReClap<Account, Self>),
+pub enum SubAccount {
+    SubAccount(ReClap<CliAccount, Self>),
 }
 
-impl SubAccounts {
-    pub fn hash_map(self) -> HashMap<String, Account> {
-        let SubAccounts::SubAccounts(prev) = self;
-        prev.hash_map(|SubAccounts::SubAccounts(next)| next)
+impl SubAccount {
+    pub fn hash_map(self) -> HashMap<String, CliAccount> {
+        let SubAccount::SubAccount(prev) = self;
+        prev.hash_map(|SubAccount::SubAccount(next)| next)
     }
 }
 
@@ -112,8 +101,6 @@ where
 #[derive(
     Eq,
     PartialEq,
-    Ord,
-    PartialOrd,
     Debug,
     Clone,
     Serialize,
@@ -129,7 +116,7 @@ pub struct CliAccount {
     tags: Option<Vec<String>>,
 }
 
-impl Cli<IdClap<HashMap<String, Account>>> {
+impl Cli<IdClap<HashMap<String, CliAccount>>> {
     pub fn def() -> Self {
         Cli {
             toml: None,
@@ -148,7 +135,7 @@ impl Cli<IdClap<HashMap<String, Account>>> {
 
 #[test]
 #[serial]
-fn defaults_only() {
+fn defaults() {
     let lhs = Cfg::new(Cli::parse_from(["functora"]));
     let rhs = Cfg {
         host: "127.0.0.1".into(),
@@ -167,8 +154,9 @@ fn defaults_only() {
 #[test]
 #[serial]
 fn file_override() {
-    let path = std::env::temp_dir().join("fun.toml");
-    let file = r#"
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
         host = "192.168.1.100"
         logs = true
 
@@ -177,11 +165,11 @@ fn file_override() {
         balance = 101
         tags = ["retro", "story"]
     "#;
-    std::fs::write(&path, file).unwrap();
+    file.write(text.as_bytes()).unwrap();
     let lhs = Cfg::new(Cli::parse_from([
         "functora",
         "--toml",
-        &path.to_string_lossy().into_owned(),
+        &file.path().to_string_lossy().into_owned(),
     ]));
     let rhs = Cfg {
         host: "192.168.1.100".into(),
@@ -263,7 +251,7 @@ fn cli_override() {
         "6060",
         "--logs",
         "true",
-        "sub-accounts",
+        "sub-account",
         "--alias",
         "Cli Carol",
         "--balance",

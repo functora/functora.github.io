@@ -284,3 +284,88 @@ fn cli_override() {
     };
     assert_eq!(lhs, rhs);
 }
+
+#[test]
+#[serial]
+fn layered_override() {
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        host = "192.168.0.10"
+        logs = true
+        [main_account]
+        alias = "File Functora"
+        balance = 100
+        [sub_accounts.alice]
+        alias = "File Alice"
+        balance = 5
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+    with_vars(
+        vec![
+            ("FUNCTORA__PORT", Some("9090")),
+            (
+                "FUNCTORA__MAIN_ACCOUNT__BALANCE",
+                Some("200"),
+            ),
+            (
+                "FUNCTORA__SUB_ACCOUNTS__ALICE__BALANCE",
+                Some("50"),
+            ),
+        ],
+        || {
+            let lhs = Cfg::new(Cli::parse_from([
+                "functora",
+                "--toml",
+                &file.path().to_string_lossy().into_owned(),
+                "--host",
+                "10.10.10.10",
+                "--logs",
+                "false",
+                "sub-account",
+                "--alias",
+                "Cli Bob",
+                "--balance",
+                "999",
+                "--tags",
+                "vip",
+                "--tags",
+                "beta",
+            ]));
+
+            let rhs = Cfg {
+                host: "10.10.10.10".into(),
+                port: 9090,
+                logs: false,
+                main_account: Account {
+                    alias: "File Functora".into(),
+                    balance: 200,
+                    tags: None,
+                },
+                sub_accounts: HashMap::from([
+                    (
+                        "alice".into(),
+                        Account {
+                            alias: "File Alice".into(),
+                            balance: 50,
+                            tags: None,
+                        },
+                    ),
+                    (
+                        "0".into(),
+                        Account {
+                            alias: "Cli Bob".into(),
+                            balance: 999,
+                            tags: Some(vec![
+                                "vip".into(),
+                                "beta".into(),
+                            ]),
+                        },
+                    ),
+                ]),
+            };
+
+            assert_eq!(lhs, rhs);
+        },
+    );
+}

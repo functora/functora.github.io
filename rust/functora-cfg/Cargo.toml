@@ -1,22 +1,22 @@
 [package]
 name = "functora-cfg"
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 keywords = ["config", "configuration", "settings", "env", "environment"]
 categories = ["config"]
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-cfg"
+documentation = "https://docs.rs/functora-cfg"
 description = "A Rust library that merges configuration values from multiple sources into a single typed value."
 
 [dependencies]
 clap = { version = "4.5.50", features = ["derive"] }
 config = "0.15.18"
-serde = "1.0.228"
+serde = { version = "1.0.228", features = ["derive"] }
 toml = "0.9.8"
 
 [dev-dependencies]
 functor_derive = "0.4.3"
-serde = { version = "1.0.228", features = ["derive"] }
 serial_test = "3.2.0"
 temp-env = "0.3.6"
 tempfile = "3.23.0"

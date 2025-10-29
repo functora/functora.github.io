@@ -165,11 +165,11 @@ fn file_override() {
         balance = 101
         tags = ["retro", "story"]
     "#;
-    file.write(text.as_bytes()).unwrap();
+    file.write_all(text.as_bytes()).unwrap();
     let lhs = Cfg::new(Cli::parse_from([
         "functora",
         "--toml",
-        &file.path().to_string_lossy().into_owned(),
+        &file.path().to_string_lossy(),
     ]));
     let rhs = Cfg {
         host: "192.168.1.100".into(),
@@ -317,7 +317,7 @@ fn layered_override() {
             let lhs = Cfg::new(Cli::parse_from([
                 "functora",
                 "--toml",
-                &file.path().to_string_lossy().into_owned(),
+                &file.path().to_string_lossy(),
                 "--host",
                 "10.10.10.10",
                 "--logs",

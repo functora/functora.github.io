@@ -10,6 +10,10 @@ documentation = "https://docs.rs/functora-tagged"
 description = "Lightweight, macro-free newtypes with refinement and derived traits."
 
 [dependencies]
-diesel = "2.3.3"
+diesel = { version = "2.3.3", optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 thiserror = "2.0.17"
+
+[features]
+default = []
+diesel = ["dep:diesel"]

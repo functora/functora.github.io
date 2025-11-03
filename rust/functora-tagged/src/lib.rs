@@ -106,89 +106,94 @@ macro_rules! lit {
     }};
 }
 
-//
-// Diesel
-//
+#[cfg(feature = "diesel")]
+mod diesel_impl {
+    use crate::*;
+    use diesel::Queryable;
+    use diesel::backend::Backend;
+    use diesel::deserialize::FromSql;
+    use diesel::expression::AsExpression;
+    use diesel::serialize::{Output, ToSql};
+    use diesel::sql_types::{SingleValue, SqlType};
 
-use diesel::Queryable;
-use diesel::backend::Backend;
-use diesel::deserialize::FromSql;
-use diesel::expression::AsExpression;
-use diesel::serialize::{Output, ToSql};
-use diesel::sql_types::{SingleValue, SqlType};
+    impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
+    where
+        Rep: Refine<Tag> + AsExpression<ST>,
+        ST: SqlType + SingleValue,
+    {
+        type Expression =
+            <Rep as AsExpression<ST>>::Expression;
 
-impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag> + AsExpression<ST>,
-    ST: SqlType + SingleValue,
-{
-    type Expression = <Rep as AsExpression<ST>>::Expression;
-
-    fn as_expression(self) -> Self::Expression {
-        self.0.clone().as_expression()
+        fn as_expression(self) -> Self::Expression {
+            self.0.clone().as_expression()
+        }
     }
-}
 
-impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag> + AsExpression<ST>,
-    ST: SqlType + SingleValue,
-{
-    type Expression = <Rep as AsExpression<ST>>::Expression;
+    impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
+    where
+        Rep: Refine<Tag> + AsExpression<ST>,
+        ST: SqlType + SingleValue,
+    {
+        type Expression =
+            <Rep as AsExpression<ST>>::Expression;
 
-    fn as_expression(self) -> Self::Expression {
-        self.0.clone().as_expression()
+        fn as_expression(self) -> Self::Expression {
+            self.0.clone().as_expression()
+        }
     }
-}
 
-impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag> + ToSql<ST, DB>,
-    ST: SqlType + SingleValue,
-    DB: Backend,
-    Tag: Debug,
-{
-    fn to_sql<'a>(
-        &'a self,
-        out: &mut Output<'a, '_, DB>,
-    ) -> diesel::serialize::Result {
-        self.0.to_sql(out)
+    impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
+    where
+        Rep: Refine<Tag> + ToSql<ST, DB>,
+        ST: SqlType + SingleValue,
+        DB: Backend,
+        Tag: Debug,
+    {
+        fn to_sql<'a>(
+            &'a self,
+            out: &mut Output<'a, '_, DB>,
+        ) -> diesel::serialize::Result {
+            self.0.to_sql(out)
+        }
     }
-}
 
-impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag> + FromSql<ST, DB>,
-    ST: SqlType + SingleValue,
-    DB: Backend,
-{
-    fn from_sql(
-        bytes: DB::RawValue<'_>,
-    ) -> diesel::deserialize::Result<Self> {
-        let rep = Rep::from_sql(bytes)?;
-        Tagged::new(rep).map_err(|e| {
-            format!("Tagged decode/refine failed: {e}")
-                .into()
-        })
+    impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
+    where
+        Rep: Refine<Tag> + FromSql<ST, DB>,
+        ST: SqlType + SingleValue,
+        DB: Backend,
+    {
+        fn from_sql(
+            bytes: DB::RawValue<'_>,
+        ) -> diesel::deserialize::Result<Self> {
+            let rep = Rep::from_sql(bytes)?;
+            Tagged::new(rep).map_err(|e| {
+                format!("Tagged decode/refine failed: {e}")
+                    .into()
+            })
+        }
     }
-}
 
-impl<Rep, Tag, ST, DB> Queryable<ST, DB>
-    for Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag> + FromSql<ST, DB> + Queryable<ST, DB>,
-    ST: SqlType + SingleValue,
-    DB: Backend,
-{
-    type Row = <Rep as Queryable<ST, DB>>::Row;
+    impl<Rep, Tag, ST, DB> Queryable<ST, DB>
+        for Tagged<Rep, Tag>
+    where
+        Rep: Refine<Tag>
+            + FromSql<ST, DB>
+            + Queryable<ST, DB>,
+        ST: SqlType + SingleValue,
+        DB: Backend,
+    {
+        type Row = <Rep as Queryable<ST, DB>>::Row;
 
-    fn build(
-        row: Self::Row,
-    ) -> diesel::deserialize::Result<Self> {
-        let rep = <Rep as Queryable<ST, DB>>::build(row)?;
-        Tagged::new(rep).map_err(|e| {
-            format!("Tagged decode/refine failed: {e}")
-                .into()
-        })
+        fn build(
+            row: Self::Row,
+        ) -> diesel::deserialize::Result<Self> {
+            let rep =
+                <Rep as Queryable<ST, DB>>::build(row)?;
+            Tagged::new(rep).map_err(|e| {
+                format!("Tagged decode/refine failed: {e}")
+                    .into()
+            })
+        }
     }
 }

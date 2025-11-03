@@ -1978,7 +1978,7 @@ c.content.blocking.method = "both"
 c.content.headers.user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
 c.url.start_pages = ['about:blank']
-c.url.default_page = 'https://hoogle.haskell.org/'
+c.url.default_page = 'https://grok.com/'
 c.url.searchengines = {
         'DEFAULT': 'https://google.com/search?q=before:2023 {}',
         'ggl': 'https://google.com/search?q={}',

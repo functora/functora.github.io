@@ -1,25 +1,19 @@
-use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(
-    Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Serialize,
-)]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>)
 where
     Rep: Refine<Tag>;
 
 pub trait Refine<Tag>:
-    Eq
-    + PartialEq
-    + Ord
-    + PartialOrd
-    + Clone
-    + Debug
-    + Serialize
-    + FromStr
+    Eq + PartialEq + Ord + PartialOrd + Clone + Debug + FromStr
 {
     type DecodeErr: Debug
         + Display
@@ -43,6 +37,7 @@ where
 {
     #[error("Tagged Decode error: {0}")]
     Decode(Rep::DecodeErr),
+
     #[error("Tagged Refine error: {0}")]
     Refine(Rep::RefineErr),
 }
@@ -75,6 +70,21 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! lit {
+    ($arg:expr) => {{
+        $crate::tagged::Tagged::from_str(stringify!($arg))
+            .unwrap_or_else(|e| {
+                panic!(
+                    "lit!({}) failed: {}",
+                    stringify!($arg),
+                    e
+                )
+            })
+    }};
+}
+
+#[cfg(feature = "serde")]
 impl<'a, Rep, Tag> Deserialize<'a> for Tagged<Rep, Tag>
 where
     Rep: Refine<Tag>,
@@ -90,20 +100,6 @@ where
         )?)
         .map_err(serde::de::Error::custom)
     }
-}
-
-#[macro_export]
-macro_rules! lit {
-    ($arg:expr) => {{
-        $crate::tagged::Tagged::from_str(stringify!($arg))
-            .unwrap_or_else(|e| {
-                panic!(
-                    "lit!({}) failed: {}",
-                    stringify!($arg),
-                    e
-                )
-            })
-    }};
 }
 
 #[cfg(feature = "diesel")]

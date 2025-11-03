@@ -1,0 +1,12 @@
+[package]
+name = "functora-tagged"
+license = "MIT"
+version = "0.1.0"
+edition = "2024"
+keywords = ["derive", "tagged", "newtype", "refinement"]
+categories = ["data-structures", "rust-patterns"]
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-tagged"
+documentation = "https://docs.rs/functora-tagged"
+description = "Lightweight, macro-free newtypes with refinement and derived traits."
+
+[dependencies]

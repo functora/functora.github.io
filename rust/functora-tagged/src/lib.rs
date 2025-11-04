@@ -3,12 +3,12 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>)
 where
     Rep: Refine<Tag>;
 
-pub trait Refine<Tag>: Clone + Sized {
+pub trait Refine<Tag>: Sized {
     type RefineErrorRep: Debug + Display;
     fn refine(self) -> Result<Self, Self::RefineErrorRep> {
         Ok(self)
@@ -37,9 +37,18 @@ where
     }
 }
 
+impl<Rep, Tag> Clone for Tagged<Rep, Tag>
+where
+    Rep: Clone + Refine<Tag>,
+{
+    fn clone(&self) -> Self {
+        Tagged(self.rep().clone(), PhantomData)
+    }
+}
+
 impl<Rep, Tag> PartialEq for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag> + PartialEq,
+    Rep: PartialEq + Refine<Tag>,
 {
     fn eq(&self, other: &Self) -> bool {
         self.rep() == other.rep()
@@ -47,13 +56,13 @@ where
 }
 
 impl<Rep, Tag> Eq for Tagged<Rep, Tag> where
-    Rep: Refine<Tag> + Eq
+    Rep: Eq + Refine<Tag>
 {
 }
 
 impl<Rep, Tag> PartialOrd for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag> + PartialOrd,
+    Rep: PartialOrd + Refine<Tag>,
 {
     fn partial_cmp(
         &self,
@@ -65,7 +74,7 @@ where
 
 impl<Rep, Tag> Ord for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag> + Ord,
+    Rep: Ord + Refine<Tag>,
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.rep().cmp(other.rep())
@@ -145,7 +154,7 @@ mod diesel_impl {
 
     impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
     where
-        Rep: Refine<Tag> + AsExpression<ST>,
+        Rep: Clone + Refine<Tag> + AsExpression<ST>,
         ST: SqlType + SingleValue,
     {
         type Expression =
@@ -157,7 +166,7 @@ mod diesel_impl {
 
     impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
     where
-        Rep: Refine<Tag> + AsExpression<ST>,
+        Rep: Clone + Refine<Tag> + AsExpression<ST>,
         ST: SqlType + SingleValue,
     {
         type Expression =

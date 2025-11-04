@@ -11,10 +11,16 @@ description = "Lightweight, macro-free newtypes with refinement and derived trai
 
 [dependencies]
 diesel = { version = "2.3.3", optional = true }
-serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde = { version = "1.0.228", optional = true }
 thiserror = "2.0.17"
 
 [features]
 default = []
 diesel = ["dep:diesel"]
 serde = ["dep:serde"]
+
+[dev-dependencies]
+diesel = { version = "2.3.3", features = ["sqlite"] }
+libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "0.9.8"

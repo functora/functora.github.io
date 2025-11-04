@@ -4,12 +4,11 @@ use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Debug)]
-pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>)
-where
-    Rep: Refine<Tag>;
+pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
 pub trait Refine<Tag>: Sized {
     type RefineErrorRep: Debug + Display;
+
     fn refine(self) -> Result<Self, Self::RefineErrorRep> {
         Ok(self)
     }
@@ -21,13 +20,13 @@ pub struct RefineError<Rep, Tag>(pub Rep::RefineErrorRep)
 where
     Rep: Refine<Tag>;
 
-impl<Rep, Tag> Tagged<Rep, Tag>
-where
-    Rep: Refine<Tag>,
-{
+impl<Rep, Tag> Tagged<Rep, Tag> {
     pub fn new(
         rep: Rep,
-    ) -> Result<Self, RefineError<Rep, Tag>> {
+    ) -> Result<Self, RefineError<Rep, Tag>>
+    where
+        Rep: Refine<Tag>,
+    {
         rep.refine()
             .map(|rep| Tagged(rep, PhantomData))
             .map_err(RefineError)
@@ -37,33 +36,21 @@ where
     }
 }
 
-impl<Rep, Tag> Clone for Tagged<Rep, Tag>
-where
-    Rep: Clone + Refine<Tag>,
-{
-    fn clone(&self) -> Self {
-        Tagged(self.rep().clone(), PhantomData)
-    }
-}
+impl<Rep: Eq, Tag> Eq for Tagged<Rep, Tag> {}
 
-impl<Rep, Tag> PartialEq for Tagged<Rep, Tag>
-where
-    Rep: PartialEq + Refine<Tag>,
-{
+impl<Rep: PartialEq, Tag> PartialEq for Tagged<Rep, Tag> {
     fn eq(&self, other: &Self) -> bool {
         self.rep() == other.rep()
     }
 }
 
-impl<Rep, Tag> Eq for Tagged<Rep, Tag> where
-    Rep: Eq + Refine<Tag>
-{
+impl<Rep: Ord, Tag> Ord for Tagged<Rep, Tag> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.rep().cmp(other.rep())
+    }
 }
 
-impl<Rep, Tag> PartialOrd for Tagged<Rep, Tag>
-where
-    Rep: PartialOrd + Refine<Tag>,
-{
+impl<Rep: PartialOrd, Tag> PartialOrd for Tagged<Rep, Tag> {
     fn partial_cmp(
         &self,
         other: &Self,
@@ -72,12 +59,9 @@ where
     }
 }
 
-impl<Rep, Tag> Ord for Tagged<Rep, Tag>
-where
-    Rep: Ord + Refine<Tag>,
-{
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.rep().cmp(other.rep())
+impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
+    fn clone(&self) -> Self {
+        Tagged(self.rep().clone(), PhantomData)
     }
 }
 
@@ -109,10 +93,7 @@ where
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-impl<Rep, Tag> Serialize for Tagged<Rep, Tag>
-where
-    Rep: Serialize + Refine<Tag>,
-{
+impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
     fn serialize<S>(
         &self,
         serializer: S,
@@ -154,7 +135,7 @@ mod diesel_impl {
 
     impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
     where
-        Rep: Clone + Refine<Tag> + AsExpression<ST>,
+        Rep: Clone + AsExpression<ST>,
         ST: SqlType + SingleValue,
     {
         type Expression =
@@ -166,7 +147,7 @@ mod diesel_impl {
 
     impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
     where
-        Rep: Clone + Refine<Tag> + AsExpression<ST>,
+        Rep: Clone + AsExpression<ST>,
         ST: SqlType + SingleValue,
     {
         type Expression =
@@ -178,7 +159,7 @@ mod diesel_impl {
 
     impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
     where
-        Rep: Refine<Tag> + ToSql<ST, DB>,
+        Rep: ToSql<ST, DB>,
         ST: SqlType + SingleValue,
         DB: Backend,
         Tag: Debug,
@@ -193,7 +174,7 @@ mod diesel_impl {
 
     impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
     where
-        Rep: Refine<Tag> + FromSql<ST, DB>,
+        Rep: FromSql<ST, DB> + Refine<Tag>,
         ST: SqlType + SingleValue,
         DB: Backend,
     {
@@ -210,9 +191,7 @@ mod diesel_impl {
     impl<Rep, Tag, ST, DB> Queryable<ST, DB>
         for Tagged<Rep, Tag>
     where
-        Rep: Refine<Tag>
-            + FromSql<ST, DB>
-            + Queryable<ST, DB>,
+        Rep: Queryable<ST, DB> + Refine<Tag>,
         ST: SqlType + SingleValue,
         DB: Backend,
     {

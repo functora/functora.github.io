@@ -3,9 +3,6 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use thiserror::Error;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>)
 where
@@ -65,6 +62,9 @@ where
         .map_err(ParseError::Refine)
     }
 }
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
 impl<Rep, Tag> Serialize for Tagged<Rep, Tag>

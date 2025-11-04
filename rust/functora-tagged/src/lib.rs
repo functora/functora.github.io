@@ -12,67 +12,64 @@ where
     Rep: Refine<Tag>;
 
 pub trait Refine<Tag>:
-    Eq + PartialEq + Ord + PartialOrd + Clone + Debug + FromStr
+    Eq + PartialEq + Ord + PartialOrd + Clone + Debug
 {
-    type DecodeErr: Debug
-        + Display
-        + From<<Self as FromStr>::Err>;
-
-    fn decode(txt: &str) -> Result<Self, Self::DecodeErr> {
-        Self::from_str(txt).map_err(Self::DecodeErr::from)
-    }
-
-    type RefineErr: Debug + Display;
-
-    fn refine(rep: Self) -> Result<Self, Self::RefineErr> {
-        Ok(rep)
+    type RefineErrorRep: Debug + Display;
+    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+        Ok(self)
     }
 }
 
 #[derive(Debug, Error)]
-pub enum Error<Rep, Tag>
+#[error("Refine error: {0}")]
+pub struct RefineError<Rep, Tag>(pub Rep::RefineErrorRep)
 where
-    Rep: Refine<Tag>,
-{
-    #[error("Tagged Decode error: {0}")]
-    Decode(Rep::DecodeErr),
-
-    #[error("Tagged Refine error: {0}")]
-    Refine(Rep::RefineErr),
-}
+    Rep: Refine<Tag>;
 
 impl<Rep, Tag> Tagged<Rep, Tag>
 where
     Rep: Refine<Tag>,
 {
-    pub fn new(rep: Rep) -> Result<Self, Error<Rep, Tag>> {
-        Rep::refine(rep)
+    pub fn new(
+        rep: Rep,
+    ) -> Result<Self, RefineError<Rep, Tag>> {
+        rep.refine()
             .map(|rep| Tagged(rep, PhantomData))
-            .map_err(Error::Refine)
+            .map_err(RefineError)
     }
-
     pub fn rep(self) -> Rep {
         self.0
     }
 }
 
+#[derive(Debug, Error)]
+pub enum ParseError<Rep, Tag>
+where
+    Rep: FromStr + Refine<Tag>,
+{
+    #[error("Decode failed: {0}")]
+    Decode(Rep::Err),
+    #[error("Refine failed: {0}")]
+    Refine(RefineError<Rep, Tag>),
+}
+
 impl<Rep, Tag> FromStr for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag>,
+    Rep: FromStr + Refine<Tag>,
 {
-    type Err = Error<Rep, Tag>;
-
-    fn from_str(txt: &str) -> Result<Self, Self::Err> {
-        Rep::decode(txt)
-            .map_err(Error::Decode)
-            .and_then(Tagged::new)
+    type Err = ParseError<Rep, Tag>;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Tagged::new(
+            Rep::from_str(s).map_err(ParseError::Decode)?,
+        )
+        .map_err(ParseError::Refine)
     }
 }
 
 #[cfg(feature = "serde")]
 impl<Rep, Tag> Serialize for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag> + Serialize,
+    Rep: Serialize + Refine<Tag>,
 {
     fn serialize<S>(
         &self,
@@ -86,20 +83,20 @@ where
 }
 
 #[cfg(feature = "serde")]
-impl<'a, Rep, Tag> Deserialize<'a> for Tagged<Rep, Tag>
+impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
 where
-    Rep: Refine<Tag>,
+    Rep: FromStr + Refine<Tag>,
+    Rep::Err: Debug + Display,
 {
     fn deserialize<D>(
         deserializer: D,
     ) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'a>,
+        D: serde::Deserializer<'de>,
     {
-        Tagged::<Rep, Tag>::from_str(&String::deserialize(
-            deserializer,
-        )?)
-        .map_err(serde::de::Error::custom)
+        let s = String::deserialize(deserializer)?;
+        Tagged::from_str(&s)
+            .map_err(serde::de::Error::custom)
     }
 }
 
@@ -120,9 +117,8 @@ mod diesel_impl {
     {
         type Expression =
             <Rep as AsExpression<ST>>::Expression;
-
         fn as_expression(self) -> Self::Expression {
-            self.0.clone().as_expression()
+            self.0.as_expression()
         }
     }
 
@@ -133,7 +129,6 @@ mod diesel_impl {
     {
         type Expression =
             <Rep as AsExpression<ST>>::Expression;
-
         fn as_expression(self) -> Self::Expression {
             self.0.clone().as_expression()
         }
@@ -165,8 +160,7 @@ mod diesel_impl {
         ) -> diesel::deserialize::Result<Self> {
             let rep = Rep::from_sql(bytes)?;
             Tagged::new(rep).map_err(|e| {
-                format!("Tagged decode/refine failed: {e}")
-                    .into()
+                format!("Refine failed: {e}").into()
             })
         }
     }
@@ -181,15 +175,13 @@ mod diesel_impl {
         DB: Backend,
     {
         type Row = <Rep as Queryable<ST, DB>>::Row;
-
         fn build(
             row: Self::Row,
         ) -> diesel::deserialize::Result<Self> {
             let rep =
                 <Rep as Queryable<ST, DB>>::build(row)?;
             Tagged::new(rep).map_err(|e| {
-                format!("Tagged decode/refine failed: {e}")
-                    .into()
+                format!("Refine failed: {e}").into()
             })
         }
     }

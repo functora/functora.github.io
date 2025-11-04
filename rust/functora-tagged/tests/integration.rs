@@ -1,19 +1,24 @@
-use functora_tagged::{Error, Refine, Tagged};
+use functora_tagged::{
+    ParseError, Refine, RefineError, Tagged,
+};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug, str::FromStr};
+use std::fmt::Debug;
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum NonEmptyTag {}
+
 pub type NonEmpty<T> = Tagged<T, NonEmptyTag>;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UserIdTag {}
+
 pub type UserId = Tagged<NonEmpty<String>, UserIdTag>;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EmailTag {}
+
 pub type Email = Tagged<NonEmpty<String>, EmailTag>;
 
 #[derive(Debug, Error)]
@@ -21,14 +26,12 @@ pub type Email = Tagged<NonEmpty<String>, EmailTag>;
 pub struct EmptyError;
 
 impl Refine<NonEmptyTag> for String {
-    type DecodeErr = <Self as FromStr>::Err;
-    type RefineErr = EmptyError;
-
-    fn refine(rep: Self) -> Result<Self, Self::RefineErr> {
-        if rep.is_empty() {
+    type RefineErrorRep = EmptyError;
+    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+        if self.is_empty() {
             Err(EmptyError)
         } else {
-            Ok(rep)
+            Ok(self)
         }
     }
 }
@@ -38,13 +41,11 @@ impl Refine<NonEmptyTag> for String {
 pub struct UserIdError;
 
 impl Refine<UserIdTag> for NonEmpty<String> {
-    type DecodeErr = <Self as FromStr>::Err;
-    type RefineErr = UserIdError;
-
-    fn refine(rep: Self) -> Result<Self, Self::RefineErr> {
-        let txt = rep.clone().rep();
+    type RefineErrorRep = UserIdError;
+    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+        let txt = self.clone().rep();
         if txt.starts_with("user_") && txt.len() > 5 {
-            Ok(rep)
+            Ok(self)
         } else {
             Err(UserIdError)
         }
@@ -56,22 +57,16 @@ impl Refine<UserIdTag> for NonEmpty<String> {
 pub struct EmailError(usize);
 
 impl Refine<EmailTag> for NonEmpty<String> {
-    type DecodeErr = <Self as FromStr>::Err;
-    type RefineErr = EmailError;
-
-    fn refine(rep: Self) -> Result<Self, Self::RefineErr> {
-        let len = rep.clone().rep().len();
+    type RefineErrorRep = EmailError;
+    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+        let len = self.clone().rep().len();
         if len < 3 {
             Err(EmailError(len))
         } else {
-            Ok(rep)
+            Ok(self)
         }
     }
 }
-
-//
-// Core
-//
 
 #[test]
 fn test_non_empty_from_str_success() {
@@ -80,9 +75,9 @@ fn test_non_empty_from_str_success() {
 }
 
 #[test]
-fn test_non_empty_from_str_decode_error() {
+fn test_non_empty_from_str_refine_error() {
     let err: Result<NonEmpty<String>, _> = "".parse();
-    assert!(matches!(err, Err(Error::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(_))));
 }
 
 #[test]
@@ -98,7 +93,7 @@ fn test_user_id_refine_failure() {
     let inner =
         "invalid".parse::<NonEmpty<String>>().unwrap();
     let err = UserId::new(inner).unwrap_err();
-    assert!(matches!(err, Error::Refine(_)));
+    assert!(matches!(err, RefineError(_)));
 }
 
 #[test]
@@ -110,7 +105,7 @@ fn test_user_id_from_str_success() {
 #[test]
 fn test_user_id_from_str_refine_failure() {
     let err: Result<UserId, _> = "invalid".parse();
-    assert!(matches!(err, Err(Error::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(_))));
 }
 
 #[test]
@@ -123,13 +118,13 @@ fn test_email_success() {
 fn test_email_refine_failure() {
     let inner = "ab".parse::<NonEmpty<String>>().unwrap();
     let err = Email::new(inner).unwrap_err();
-    assert!(matches!(err, Error::Refine(_)));
+    assert!(matches!(err, RefineError(_)));
 }
 
 #[test]
 fn test_email_from_str_refine_failure() {
     let err: Result<Email, _> = "ab".parse();
-    assert!(matches!(err, Err(Error::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(_))));
 }
 
 #[test]
@@ -150,10 +145,6 @@ fn test_tagged_clone_debug() {
     assert!(dbg.contains("Tagged"));
     assert!(dbg.contains("PhantomData"));
 }
-
-//
-// Serde
-//
 
 #[cfg(feature = "serde")]
 #[test]
@@ -182,14 +173,12 @@ fn test_serde_user_id_invalid_refine() {
     struct Wrapper {
         user_id: UserId,
     }
-
     let toml = r#"user_id = "bad""#;
     let err = toml::from_str::<Wrapper>(toml).unwrap_err();
     assert!(
-        err.to_string().contains("Tagged Refine error"),
+        err.to_string().contains("Refine failed"),
         "Deserialization should fail with a Refine error for invalid user_id"
     );
-
     let toml = r#"user_id = "user_123""#;
     let wrapper: Wrapper = toml::from_str(toml).unwrap();
     assert_eq!(wrapper.user_id.rep().rep(), "user_123");
@@ -214,10 +203,6 @@ fn test_serde_email_roundtrip() {
         "hello@example.com"
     );
 }
-
-//
-// Diesel
-//
 
 #[cfg(feature = "diesel")]
 mod diesel_tests {
@@ -249,13 +234,11 @@ mod diesel_tests {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-
         sql_query(
             "CREATE TABLE users (id TEXT NOT NULL, email TEXT NOT NULL);",
         )
         .execute(&mut conn)
         .expect("failed to create table");
-
         conn
     }
 
@@ -269,12 +252,10 @@ mod diesel_tests {
             ))
             .execute(&mut conn)
             .unwrap();
-
         let rows: Vec<UserRow> =
             sql_query("SELECT id, email FROM users")
                 .load(&mut conn)
                 .unwrap();
-
         assert_eq!(rows.len(), 1);
         assert_eq!(
             rows[0].id.clone().rep().rep(),
@@ -296,15 +277,10 @@ mod diesel_tests {
             ))
             .execute(&mut conn)
             .unwrap();
-
         let err = sql_query("SELECT id, email FROM users")
             .load::<UserRow>(&mut conn)
             .unwrap_err();
-
-        assert!(
-            err.to_string()
-                .contains("Tagged decode/refine failed")
-        );
+        assert!(err.to_string().contains("Refine failed"));
     }
 
     #[test]
@@ -313,7 +289,6 @@ mod diesel_tests {
         let uid: UserId = "user_999".parse().unwrap();
         let email: Email =
             "test@domain.com".parse().unwrap();
-
         insert_into(users::table)
             .values((
                 users::id.eq(&uid),
@@ -321,12 +296,10 @@ mod diesel_tests {
             ))
             .execute(&mut conn)
             .unwrap();
-
         let rows: Vec<(String, String)> = users::table
             .select((users::id, users::email))
             .load(&mut conn)
             .unwrap();
-
         assert_eq!(rows[0].0, "user_999");
         assert_eq!(rows[0].1, "test@domain.com");
     }

@@ -177,7 +177,7 @@ fn test_serde_user_id_invalid_refine() {
     let err = toml::from_str::<Wrapper>(toml).unwrap_err();
     assert!(
         err.to_string().contains("Refine failed"),
-        "Deserialization should fail with a Refine error for invalid user_id"
+        "Unexpected failure: {err}"
     );
     let toml = r#"user_id = "user_123""#;
     let wrapper: Wrapper = toml::from_str(toml).unwrap();

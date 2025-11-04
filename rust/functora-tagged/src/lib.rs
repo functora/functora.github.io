@@ -16,7 +16,7 @@ pub trait Refine<Tag>: Clone + Sized {
 }
 
 #[derive(Debug, Error)]
-#[error("Refine error: {0}")]
+#[error("Refine failed: {0}")]
 pub struct RefineError<Rep, Tag>(pub Rep::RefineErrorRep)
 where
     Rep: Refine<Tag>;
@@ -118,8 +118,7 @@ where
 #[cfg(feature = "serde")]
 impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
 where
-    Rep: FromStr + Refine<Tag>,
-    Rep::Err: Debug + Display,
+    Rep: Deserialize<'de> + Refine<Tag>,
 {
     fn deserialize<D>(
         deserializer: D,
@@ -127,9 +126,10 @@ where
     where
         D: serde::Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        Tagged::from_str(&s)
-            .map_err(serde::de::Error::custom)
+        Rep::deserialize(deserializer).and_then(|rep| {
+            Tagged::new(rep)
+                .map_err(serde::de::Error::custom)
+        })
     }
 }
 

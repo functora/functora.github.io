@@ -43,7 +43,7 @@ pub struct UserIdError;
 impl Refine<UserIdTag> for NonEmpty<String> {
     type RefineErrorRep = UserIdError;
     fn refine(self) -> Result<Self, Self::RefineErrorRep> {
-        let txt = self.clone().rep();
+        let txt = self.rep();
         if txt.starts_with("user_") && txt.len() > 5 {
             Ok(self)
         } else {

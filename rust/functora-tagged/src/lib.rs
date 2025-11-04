@@ -32,8 +32,8 @@ where
             .map(|rep| Tagged(rep, PhantomData))
             .map_err(RefineError)
     }
-    pub fn rep(self) -> Rep {
-        self.0
+    pub fn rep(&self) -> &Rep {
+        &self.0
     }
 }
 
@@ -42,7 +42,7 @@ where
     Rep: Refine<Tag> + PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
+        self.rep() == other.rep()
     }
 }
 
@@ -59,7 +59,7 @@ where
         &self,
         other: &Self,
     ) -> Option<std::cmp::Ordering> {
-        self.0.partial_cmp(&other.0)
+        self.rep().partial_cmp(other.rep())
     }
 }
 
@@ -68,7 +68,7 @@ where
     Rep: Refine<Tag> + Ord,
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.cmp(&other.0)
+        self.rep().cmp(other.rep())
     }
 }
 
@@ -111,7 +111,7 @@ where
     where
         S: serde::Serializer,
     {
-        self.0.serialize(serializer)
+        self.rep().serialize(serializer)
     }
 }
 
@@ -151,7 +151,7 @@ mod diesel_impl {
         type Expression =
             <Rep as AsExpression<ST>>::Expression;
         fn as_expression(self) -> Self::Expression {
-            self.0.as_expression()
+            self.rep().clone().as_expression()
         }
     }
 
@@ -163,7 +163,7 @@ mod diesel_impl {
         type Expression =
             <Rep as AsExpression<ST>>::Expression;
         fn as_expression(self) -> Self::Expression {
-            self.0.clone().as_expression()
+            self.rep().clone().as_expression()
         }
     }
 
@@ -178,7 +178,7 @@ mod diesel_impl {
             &'a self,
             out: &mut Output<'a, '_, DB>,
         ) -> diesel::serialize::Result {
-            self.0.to_sql(out)
+            self.rep().to_sql(out)
         }
     }
 

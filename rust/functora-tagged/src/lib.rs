@@ -3,14 +3,12 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>)
 where
     Rep: Refine<Tag>;
 
-pub trait Refine<Tag>:
-    Eq + PartialEq + Ord + PartialOrd + Clone + Debug
-{
+pub trait Refine<Tag>: Clone + Sized {
     type RefineErrorRep: Debug + Display;
     fn refine(self) -> Result<Self, Self::RefineErrorRep> {
         Ok(self)
@@ -36,6 +34,41 @@ where
     }
     pub fn rep(self) -> Rep {
         self.0
+    }
+}
+
+impl<Rep, Tag> PartialEq for Tagged<Rep, Tag>
+where
+    Rep: Refine<Tag> + PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<Rep, Tag> Eq for Tagged<Rep, Tag> where
+    Rep: Refine<Tag> + Eq
+{
+}
+
+impl<Rep, Tag> PartialOrd for Tagged<Rep, Tag>
+where
+    Rep: Refine<Tag> + PartialOrd,
+{
+    fn partial_cmp(
+        &self,
+        other: &Self,
+    ) -> Option<std::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<Rep, Tag> Ord for Tagged<Rep, Tag>
+where
+    Rep: Refine<Tag> + Ord,
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
     }
 }
 

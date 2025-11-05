@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -21,7 +22,6 @@ impl<Rep, Tag> Tagged<Rep, Tag> {
     {
         rep.refine().map(|rep| Tagged(rep, PhantomData))
     }
-
     pub fn rep(&self) -> &Rep {
         &self.0
     }
@@ -123,15 +123,14 @@ mod diesel_impl {
     use diesel::deserialize::FromSql;
     use diesel::expression::AsExpression;
     use diesel::serialize::{Output, ToSql};
-    use diesel::sql_types::{SingleValue, SqlType};
+    use diesel::sql_types::SingleValue;
 
     impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
     where
         Rep: Clone + AsExpression<ST>,
-        ST: SqlType + SingleValue,
+        ST: SingleValue,
     {
-        type Expression =
-            <Rep as AsExpression<ST>>::Expression;
+        type Expression = Rep::Expression;
         fn as_expression(self) -> Self::Expression {
             self.rep().clone().as_expression()
         }
@@ -140,10 +139,9 @@ mod diesel_impl {
     impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
     where
         Rep: Clone + AsExpression<ST>,
-        ST: SqlType + SingleValue,
+        ST: SingleValue,
     {
-        type Expression =
-            <Rep as AsExpression<ST>>::Expression;
+        type Expression = Rep::Expression;
         fn as_expression(self) -> Self::Expression {
             self.rep().clone().as_expression()
         }
@@ -152,7 +150,6 @@ mod diesel_impl {
     impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
     where
         Rep: ToSql<ST, DB>,
-        ST: SqlType + SingleValue,
         DB: Backend,
         Tag: Debug,
     {
@@ -167,17 +164,14 @@ mod diesel_impl {
     impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
     where
         Rep: FromSql<ST, DB> + Refine<Tag>,
-        Rep::RefineError: Display,
-        ST: SqlType + SingleValue,
+        Rep::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
         fn from_sql(
             bytes: DB::RawValue<'_>,
         ) -> diesel::deserialize::Result<Self> {
             let rep = Rep::from_sql(bytes)?;
-            Tagged::new(rep).map_err(|e| {
-                format!("Refine failed: {e}").into()
-            })
+            Ok(Tagged::new(rep).map_err(Box::new)?)
         }
     }
 
@@ -185,19 +179,15 @@ mod diesel_impl {
         for Tagged<Rep, Tag>
     where
         Rep: Queryable<ST, DB> + Refine<Tag>,
-        Rep::RefineError: Display,
-        ST: SqlType + SingleValue,
+        Rep::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
-        type Row = <Rep as Queryable<ST, DB>>::Row;
+        type Row = Rep::Row;
         fn build(
             row: Self::Row,
         ) -> diesel::deserialize::Result<Self> {
-            let rep =
-                <Rep as Queryable<ST, DB>>::build(row)?;
-            Tagged::new(rep).map_err(|e| {
-                format!("Refine failed: {e}").into()
-            })
+            let rep = Queryable::build(row)?;
+            Ok(Tagged::new(rep).map_err(Box::new)?)
         }
     }
 }

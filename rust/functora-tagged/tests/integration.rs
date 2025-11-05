@@ -277,7 +277,10 @@ mod diesel_tests {
         let err = sql_query("SELECT id, email FROM users")
             .load::<UserRow>(&mut conn)
             .unwrap_err();
-        assert!(err.to_string().contains("Refine failed"));
+        assert!(
+            err.to_string()
+                .contains("Invalid UserId format")
+        );
     }
 
     #[test]

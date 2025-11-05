@@ -1,33 +1,30 @@
-use functora_tagged::{
-    ParseError, Refine, RefineError, Tagged,
-};
+use functora_tagged::{ParseError, Refine, Tagged};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use thiserror::Error;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum NonEmptyTag {}
-
 pub type NonEmpty<T> = Tagged<T, NonEmptyTag>;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum UserIdTag {}
-
 pub type UserId = Tagged<NonEmpty<String>, UserIdTag>;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum EmailTag {}
-
 pub type Email = Tagged<NonEmpty<String>, EmailTag>;
 
-#[derive(Debug, Error)]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Error,
+)]
 #[error("Empty value is not allowed")]
 pub struct EmptyError;
 
 impl Refine<NonEmptyTag> for String {
-    type RefineErrorRep = EmptyError;
-    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+    type RefineError = EmptyError;
+    fn refine(self) -> Result<Self, Self::RefineError> {
         if self.is_empty() {
             Err(EmptyError)
         } else {
@@ -36,13 +33,13 @@ impl Refine<NonEmptyTag> for String {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Error)]
 #[error("Invalid UserId format")]
 pub struct UserIdError;
 
 impl Refine<UserIdTag> for NonEmpty<String> {
-    type RefineErrorRep = UserIdError;
-    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+    type RefineError = UserIdError;
+    fn refine(self) -> Result<Self, Self::RefineError> {
         let txt = self.rep();
         if txt.starts_with("user_") && txt.len() > 5 {
             Ok(self)
@@ -52,13 +49,13 @@ impl Refine<UserIdTag> for NonEmpty<String> {
     }
 }
 
-#[derive(Debug, Error)]
-#[error("string too short: {0}, minimum length 3")]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Error)]
+#[error("String is too short: {0}, minimum length: 3")]
 pub struct EmailError(usize);
 
 impl Refine<EmailTag> for NonEmpty<String> {
-    type RefineErrorRep = EmailError;
-    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+    type RefineError = EmailError;
+    fn refine(self) -> Result<Self, Self::RefineError> {
         let len = self.clone().rep().len();
         if len < 3 {
             Err(EmailError(len))
@@ -93,7 +90,7 @@ fn test_user_id_refine_failure() {
     let inner =
         "invalid".parse::<NonEmpty<String>>().unwrap();
     let err = UserId::new(inner).unwrap_err();
-    assert!(matches!(err, RefineError(_)));
+    assert_eq!(err, UserIdError);
 }
 
 #[test]
@@ -118,7 +115,7 @@ fn test_email_success() {
 fn test_email_refine_failure() {
     let inner = "ab".parse::<NonEmpty<String>>().unwrap();
     let err = Email::new(inner).unwrap_err();
-    assert!(matches!(err, RefineError(_)));
+    assert_eq!(err, EmailError(2));
 }
 
 #[test]
@@ -176,7 +173,7 @@ fn test_serde_user_id_invalid_refine() {
     let toml = r#"user_id = "bad""#;
     let err = toml::from_str::<Wrapper>(toml).unwrap_err();
     assert!(
-        err.to_string().contains("Refine failed"),
+        err.to_string().contains("Invalid UserId format"),
         "Unexpected failure: {err}"
     );
     let toml = r#"user_id = "user_123""#;

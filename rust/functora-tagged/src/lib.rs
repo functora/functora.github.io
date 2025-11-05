@@ -7,30 +7,21 @@ use thiserror::Error;
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
 pub trait Refine<Tag>: Sized {
-    type RefineErrorRep: Debug + Display;
+    type RefineError: Debug + Display;
 
-    fn refine(self) -> Result<Self, Self::RefineErrorRep> {
+    fn refine(self) -> Result<Self, Self::RefineError> {
         Ok(self)
     }
 }
 
-#[derive(Debug, Error)]
-#[error("Refine failed: {0}")]
-pub struct RefineError<Rep, Tag>(pub Rep::RefineErrorRep)
-where
-    Rep: Refine<Tag>;
-
 impl<Rep, Tag> Tagged<Rep, Tag> {
-    pub fn new(
-        rep: Rep,
-    ) -> Result<Self, RefineError<Rep, Tag>>
+    pub fn new(rep: Rep) -> Result<Self, Rep::RefineError>
     where
         Rep: Refine<Tag>,
     {
-        rep.refine()
-            .map(|rep| Tagged(rep, PhantomData))
-            .map_err(RefineError)
+        rep.refine().map(|rep| Tagged(rep, PhantomData))
     }
+
     pub fn rep(&self) -> &Rep {
         &self.0
     }
@@ -73,7 +64,7 @@ where
     #[error("Decode failed: {0}")]
     Decode(Rep::Err),
     #[error("Refine failed: {0}")]
-    Refine(RefineError<Rep, Tag>),
+    Refine(Rep::RefineError),
 }
 
 impl<Rep, Tag> FromStr for Tagged<Rep, Tag>

@@ -1,5 +1,4 @@
-use std::error::Error;
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::str::FromStr;
 use thiserror::Error;
@@ -82,6 +81,8 @@ where
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde")]
+use std::fmt::Display;
 
 #[cfg(feature = "serde")]
 impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
@@ -124,6 +125,7 @@ mod diesel_impl {
     use diesel::expression::AsExpression;
     use diesel::serialize::{Output, ToSql};
     use diesel::sql_types::SingleValue;
+    use std::error::Error;
 
     impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
     where

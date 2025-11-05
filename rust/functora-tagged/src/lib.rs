@@ -7,7 +7,7 @@ use thiserror::Error;
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
 pub trait Refine<Tag>: Sized {
-    type RefineError: Debug + Display;
+    type RefineError;
 
     fn refine(self) -> Result<Self, Self::RefineError> {
         Ok(self)
@@ -100,6 +100,7 @@ impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
 impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
 where
     Rep: Deserialize<'de> + Refine<Tag>,
+    Rep::RefineError: Display,
 {
     fn deserialize<D>(
         deserializer: D,
@@ -166,6 +167,7 @@ mod diesel_impl {
     impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
     where
         Rep: FromSql<ST, DB> + Refine<Tag>,
+        Rep::RefineError: Display,
         ST: SqlType + SingleValue,
         DB: Backend,
     {
@@ -183,6 +185,7 @@ mod diesel_impl {
         for Tagged<Rep, Tag>
     where
         Rep: Queryable<ST, DB> + Refine<Tag>,
+        Rep::RefineError: Display,
         ST: SqlType + SingleValue,
         DB: Backend,
     {

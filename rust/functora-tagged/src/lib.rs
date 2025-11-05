@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -6,20 +7,20 @@ use thiserror::Error;
 #[derive(Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
-pub trait Refine<Tag>: Sized {
+pub trait Refine<Rep>: Sized {
     type RefineError;
 
-    fn refine(self) -> Result<Self, Self::RefineError> {
-        Ok(self)
+    fn refine(rep: Rep) -> Result<Rep, Self::RefineError> {
+        Ok(rep)
     }
 }
 
 impl<Rep, Tag> Tagged<Rep, Tag> {
-    pub fn new(rep: Rep) -> Result<Self, Rep::RefineError>
+    pub fn new(rep: Rep) -> Result<Self, Tag::RefineError>
     where
-        Rep: Refine<Tag>,
+        Tag: Refine<Rep>,
     {
-        rep.refine().map(|rep| Tagged(rep, PhantomData))
+        Tag::refine(rep).map(|rep| Tagged(rep, PhantomData))
     }
     pub fn rep(&self) -> &Rep {
         &self.0
@@ -58,17 +59,19 @@ impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
 #[derive(Debug, Error)]
 pub enum ParseError<Rep, Tag>
 where
-    Rep: FromStr + Refine<Tag>,
+    Rep: FromStr,
+    Tag: Refine<Rep>,
 {
     #[error("Decode failed: {0}")]
     Decode(Rep::Err),
     #[error("Refine failed: {0}")]
-    Refine(Rep::RefineError),
+    Refine(Tag::RefineError),
 }
 
 impl<Rep, Tag> FromStr for Tagged<Rep, Tag>
 where
-    Rep: FromStr + Refine<Tag>,
+    Rep: FromStr,
+    Tag: Refine<Rep>,
 {
     type Err = ParseError<Rep, Tag>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -100,8 +103,9 @@ impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
 #[cfg(feature = "serde")]
 impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
 where
-    Rep: Deserialize<'de> + Refine<Tag>,
-    Rep::RefineError: Display,
+    Rep: Deserialize<'de>,
+    Tag: Refine<Rep>,
+    Tag::RefineError: Display,
 {
     fn deserialize<D>(
         deserializer: D,
@@ -165,8 +169,9 @@ mod diesel_impl {
 
     impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
     where
-        Rep: FromSql<ST, DB> + Refine<Tag>,
-        Rep::RefineError: 'static + Error + Send + Sync,
+        Rep: FromSql<ST, DB>,
+        Tag: Refine<Rep>,
+        Tag::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
         fn from_sql(
@@ -180,8 +185,9 @@ mod diesel_impl {
     impl<Rep, Tag, ST, DB> Queryable<ST, DB>
         for Tagged<Rep, Tag>
     where
-        Rep: Queryable<ST, DB> + Refine<Tag>,
-        Rep::RefineError: 'static + Error + Send + Sync,
+        Rep: Queryable<ST, DB>,
+        Tag: Refine<Rep>,
+        Tag::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
         type Row = Rep::Row;

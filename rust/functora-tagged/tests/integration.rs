@@ -22,13 +22,15 @@ pub type Email = Tagged<NonEmpty<String>, EmailTag>;
 #[error("Empty value is not allowed")]
 pub struct EmptyError;
 
-impl Refine<NonEmptyTag> for String {
+impl Refine<String> for NonEmptyTag {
     type RefineError = EmptyError;
-    fn refine(self) -> Result<Self, Self::RefineError> {
-        if self.is_empty() {
+    fn refine(
+        rep: String,
+    ) -> Result<String, Self::RefineError> {
+        if rep.is_empty() {
             Err(EmptyError)
         } else {
-            Ok(self)
+            Ok(rep)
         }
     }
 }
@@ -37,12 +39,14 @@ impl Refine<NonEmptyTag> for String {
 #[error("Invalid UserId format")]
 pub struct UserIdError;
 
-impl Refine<UserIdTag> for NonEmpty<String> {
+impl Refine<NonEmpty<String>> for UserIdTag {
     type RefineError = UserIdError;
-    fn refine(self) -> Result<Self, Self::RefineError> {
-        let txt = self.rep();
+    fn refine(
+        rep: NonEmpty<String>,
+    ) -> Result<NonEmpty<String>, Self::RefineError> {
+        let txt = rep.rep();
         if txt.starts_with("user_") && txt.len() > 5 {
-            Ok(self)
+            Ok(rep)
         } else {
             Err(UserIdError)
         }
@@ -53,14 +57,16 @@ impl Refine<UserIdTag> for NonEmpty<String> {
 #[error("String is too short: {0}, minimum length: 3")]
 pub struct EmailError(usize);
 
-impl Refine<EmailTag> for NonEmpty<String> {
+impl Refine<NonEmpty<String>> for EmailTag {
     type RefineError = EmailError;
-    fn refine(self) -> Result<Self, Self::RefineError> {
-        let len = self.clone().rep().len();
+    fn refine(
+        rep: NonEmpty<String>,
+    ) -> Result<NonEmpty<String>, Self::RefineError> {
+        let len = rep.clone().rep().len();
         if len < 3 {
             Err(EmailError(len))
         } else {
-            Ok(self)
+            Ok(rep)
         }
     }
 }

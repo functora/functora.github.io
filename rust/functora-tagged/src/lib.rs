@@ -68,6 +68,56 @@ where
     Refine(Tag::RefineError),
 }
 
+impl<Rep, Tag> Eq for ParseError<Rep, Tag>
+where
+    Rep: FromStr,
+    Tag: Refine<Rep>,
+    Rep::Err: Eq,
+    Tag::RefineError: Eq,
+{
+}
+
+impl<Rep, Tag> PartialEq for ParseError<Rep, Tag>
+where
+    Rep: FromStr,
+    Tag: Refine<Rep>,
+    Rep::Err: PartialEq,
+    Tag::RefineError: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                ParseError::Decode(a),
+                ParseError::Decode(b),
+            ) => a == b,
+            (
+                ParseError::Refine(a),
+                ParseError::Refine(b),
+            ) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl<Rep, Tag> Clone for ParseError<Rep, Tag>
+where
+    Rep: FromStr,
+    Tag: Refine<Rep>,
+    Rep::Err: Clone,
+    Tag::RefineError: Clone,
+{
+    fn clone(&self) -> Self {
+        match self {
+            ParseError::Decode(err) => {
+                ParseError::Decode(err.clone())
+            }
+            ParseError::Refine(err) => {
+                ParseError::Refine(err.clone())
+            }
+        }
+    }
+}
+
 impl<Rep, Tag> FromStr for Tagged<Rep, Tag>
 where
     Rep: FromStr,

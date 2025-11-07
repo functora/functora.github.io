@@ -20,28 +20,15 @@
     url = "https://github.com/NixOS/nixos-hardware/archive/fa194fc484fd7270ab324bb985593f71102e84d1.tar.gz";
     sha256 = "06yn179lbhql3vkk4cjca4mdwr6lfdh6n1vqma3a4266dap6hcf4";
   };
-  kmonad-src = builtins.fetchTarball {
-    url = "https://github.com/kmonad/kmonad/archive/820af08d1ef1bff417829415d5f673041b67ef4d.tar.gz";
-    sha256 = "0kkayvcc9jmjm1z1rgabkq36hyrpqdkm8z998dsyg6yh05aqpfzz";
-  };
-  kmonad-pkg =
-    (import (
-      fetchTarball {
-        url = "https://github.com/edolstra/flake-compat/archive/35bb57c0c8d8b62bbfd284272c928ceb64ddbde9.tar.gz";
-        sha256 = "1prd9b1xx8c0sfwnyzkspplh30m613j42l1k789s521f4kv4c2z2";
-      }
-    ) {src = "${kmonad-src}/nix";})
-    .defaultNix
-    .default;
   blocked-hosts =
     builtins.concatStringsSep "\n"
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
       (
         if config.services.functora.blockHosts
         then [
-          # "err.ee"
-          # "delfi.ee"
-          # "postimees.ee"
+          #
+          # TODO : some blocked hosts
+          #
         ]
         else []
       ));
@@ -226,29 +213,29 @@
       esc  1    2    3    4    5    6              7    8    9    0    -    =    bspc
       tab  q    w    e    r    t              y    u    i    o    p    [    ]    \         del
       caps a    s    d    f    g              h    j    k    l    ;    '    ret            pgup
-      lsft z    x    c    v    b              b    n    m    ,    .    /    rsft      up   pgdn
-      lctl      lmet      spc       lalt      spc       ralt      rctl           lft  down rght
+      lsft z    x    c    v                   b    n    m    ,    .    /    rsft      up   pgdn
+      lctl      lmet      spc       lalt                ralt      rctl           lft  down rght
     )
     (deflayer qwerty
       _    _    _    _    _    _    _              _    _    _    _    _    _    _
       esc  _    _    _    _    _              _    _    _    _    _    _    _    _         _
       @fst _    _    _    _    _              _    _    _    _    _    _    _              _
-      _    _    _    _    _    _              _    _    _    _    _    _    ret       _    _
-      _         _         _         _         _         _         _              _    _    _
+      _    _    _    _    _                   _    _    _    _    _    _    ret       _    _
+      _         _         _         _                   _         _              _    _    _
     )
     (deflayer fst-layer
       _    f1   f2   f3   f4   f5   f6             f7   f8   f9   f10  f11  f12  _
       @snd _    _    _    _    _              _    _    _    _    _    _    _    grv       _
       _    _    _    slck _    _              lft  down up   rght _    _    _              _
-      _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
-      _         _         tab       ralt      tab       _         _              _    _    _
+      _    _    _    _    _                   _    _    _    _    _    _    _         _    _
+      _         _         tab       ralt                _         _              _    _    _
     )
     (deflayer snd-layer
       _    brdn bru  _    _    _    _              prev pp   next mute vold volu _
       _    _    _    _    _    _              _    _    _    _    _    _    _    @til      _
       _    _    _    _    _    _              home pgdn pgup end  _    _    _              _
-      _    _    _    _    _    _              _    _    _    _    _    _    _         _    _
-      _         _         @ltab     _         @ltab     _         _              _    _    _
+      _    _    _    _    _                   _    _    _    _    _    _    _         _    _
+      _         _         @ltab     _                   _         _              _    _    _
     )
   '';
   baseBorg = {
@@ -573,7 +560,6 @@ in {
 
     services.kmonad = {
       enable = true;
-      package = kmonad-pkg;
       keyboards.miniM = mkTkl "/dev/input/by-id/usb-Unicomp_Inc_U_AP1_4_87k_Kbrd_v7_57-event-kbd";
       keyboards.k995p = mk100 "/dev/input/by-id/usb-CATEX_TECH._104EC-XRGB_CA2017090001-event-kbd";
       keyboards.feker80 = mkAlice "/dev/input/by-id/usb-Telink_FEKER_Alice80-event-kbd";

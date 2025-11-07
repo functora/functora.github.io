@@ -1,8 +1,9 @@
+use derive_more::Display;
 use functora_tagged::{ParseError, Refine, Tagged};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::fmt::Debug;
-use thiserror::Error;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum NonEmptyTag {}
@@ -17,27 +18,29 @@ pub enum EmailTag {}
 pub type Email = Tagged<NonEmpty<String>, EmailTag>;
 
 #[derive(
-    Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Error,
+    Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Display,
 )]
-#[error("Empty value is not allowed")]
-pub struct EmptyError;
+pub struct NonEmptyError;
+impl Error for NonEmptyError {}
 
 impl Refine<String> for NonEmptyTag {
-    type RefineError = EmptyError;
+    type RefineError = NonEmptyError;
     fn refine(
         rep: String,
     ) -> Result<String, Self::RefineError> {
         if rep.is_empty() {
-            Err(EmptyError)
+            Err(NonEmptyError)
         } else {
             Ok(rep)
         }
     }
 }
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Error)]
-#[error("Invalid UserId format")]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, Debug, Display,
+)]
 pub struct UserIdError;
+impl Error for UserIdError {}
 
 impl Refine<NonEmpty<String>> for UserIdTag {
     type RefineError = UserIdError;
@@ -53,9 +56,11 @@ impl Refine<NonEmpty<String>> for UserIdTag {
     }
 }
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Error)]
-#[error("String is too short: {0}, minimum length: 3")]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, Debug, Display,
+)]
 pub struct EmailError(usize);
+impl Error for EmailError {}
 
 impl Refine<NonEmpty<String>> for EmailTag {
     type RefineError = EmailError;
@@ -179,7 +184,7 @@ fn test_serde_user_id_invalid_refine() {
     let toml = r#"user_id = "bad""#;
     let err = toml::from_str::<Wrapper>(toml).unwrap_err();
     assert!(
-        err.to_string().contains("Invalid UserId format"),
+        err.to_string().contains("UserIdError"),
         "Unexpected failure: {err}"
     );
     let toml = r#"user_id = "user_123""#;
@@ -283,10 +288,7 @@ mod diesel_tests {
         let err = sql_query("SELECT id, email FROM users")
             .load::<UserRow>(&mut conn)
             .unwrap_err();
-        assert!(
-            err.to_string()
-                .contains("Invalid UserId format")
-        );
+        assert!(err.to_string().contains("UserIdError"));
     }
 
     #[test]

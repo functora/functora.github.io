@@ -1,8 +1,9 @@
 #![doc = include_str!("../README.md")]
-use std::fmt::Debug;
+use derive_more::Display;
+use std::error::Error;
+use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::str::FromStr;
-use thiserror::Error;
 
 #[derive(Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
@@ -56,16 +57,32 @@ impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
     }
 }
 
-#[derive(Debug, Error)]
+impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        self.rep().fmt(f)
+    }
+}
+
+#[derive(Debug, Display)]
 pub enum ParseError<Rep, Tag>
 where
     Rep: FromStr,
     Tag: Refine<Rep>,
 {
-    #[error("Decode failed: {0}")]
     Decode(Rep::Err),
-    #[error("Refine failed: {0}")]
     Refine(Tag::RefineError),
+}
+
+impl<Rep, Tag> Error for ParseError<Rep, Tag>
+where
+    Rep: Debug + FromStr,
+    Tag: Debug + Refine<Rep>,
+    Rep::Err: Debug + Display,
+    Tag::RefineError: Debug + Display,
+{
 }
 
 impl<Rep, Tag> Eq for ParseError<Rep, Tag>
@@ -134,8 +151,6 @@ where
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "serde")]
-use std::fmt::Display;
 
 #[cfg(feature = "serde")]
 impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {

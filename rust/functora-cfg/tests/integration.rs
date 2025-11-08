@@ -21,16 +21,17 @@ struct Cfg {
 }
 
 impl Cfg {
-    pub fn new(cli: Cli<SubAccount>) -> Self {
+    pub fn new(
+        cli: Cli<SubAccount>,
+    ) -> Result<Self, ConfigError> {
         functora_cfg::Cfg {
             default: &Cli::def(),
             file_path: |cli| cli.toml.as_deref(),
             env_prefix: "FUNCTORA",
             command_line: &cli
-                .fmap(|x| IdClap(x.hash_map())),
+                .try_fmap(|kv| kv.hash_map().map(IdClap))?,
         }
         .eval()
-        .unwrap()
     }
 }
 
@@ -58,9 +59,15 @@ pub enum SubAccount {
 }
 
 impl SubAccount {
-    pub fn hash_map(self) -> HashMap<String, CliAccount> {
+    pub fn hash_map(
+        self,
+    ) -> Result<HashMap<String, CliAccount>, ConfigError>
+    {
         let SubAccount::SubAccount(prev) = self;
-        prev.hash_map(|SubAccount::SubAccount(next)| next)
+        prev.hash_map(
+            |k| Ok(k.to_string()),
+            |SubAccount::SubAccount(next)| next,
+        )
     }
 }
 
@@ -136,7 +143,8 @@ impl Cli<IdClap<HashMap<String, CliAccount>>> {
 #[test]
 #[serial]
 fn defaults() {
-    let lhs = Cfg::new(Cli::parse_from(["functora"]));
+    let lhs =
+        Cfg::new(Cli::parse_from(["functora"])).unwrap();
     let rhs = Cfg {
         host: "127.0.0.1".into(),
         port: 8080,
@@ -170,7 +178,8 @@ fn file_override() {
         "functora",
         "--toml",
         &file.path().to_string_lossy(),
-    ]));
+    ]))
+    .unwrap();
     let rhs = Cfg {
         host: "192.168.1.100".into(),
         port: 8080,
@@ -218,7 +227,8 @@ fn env_override() {
         ],
         || {
             let lhs =
-                Cfg::new(Cli::parse_from(["functora"]));
+                Cfg::new(Cli::parse_from(["functora"]))
+                    .unwrap();
             let rhs = Cfg {
                 host: "10.0.0.1".into(),
                 port: 7070,
@@ -260,7 +270,8 @@ fn cli_override() {
         "pure",
         "--tags",
         "geek",
-    ]));
+    ]))
+    .unwrap();
     let rhs = Cfg {
         host: "127.0.0.1".into(),
         port: 6060,
@@ -331,7 +342,8 @@ fn layered_override() {
                 "vip",
                 "--tags",
                 "beta",
-            ]));
+            ]))
+            .unwrap();
 
             let rhs = Cfg {
                 host: "10.10.10.10".into(),

@@ -3,6 +3,7 @@ use clap::{Args, FromArgMatches, Subcommand};
 pub use config::ConfigError;
 use config::{Config, Environment, File, Value};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use std::hash::Hash;
 use std::{collections::HashMap, path::Path};
 use toml::Value as TomlValue;
 
@@ -97,7 +98,7 @@ fn toml_to_config(toml: TomlValue) -> Value {
         TomlValue::Table(kv) => Value::from(
             kv.into_iter()
                 .map(|(k, v)| (k, toml_to_config(v)))
-                .collect::<config::Map<String, Value>>(),
+                .collect::<config::Map<_, Value>>(),
         ),
     }
 }
@@ -126,22 +127,26 @@ where
     T: Args,
     U: Subcommand,
 {
-    pub fn vec(self, f: fn(U) -> ReClap<T, U>) -> Vec<T> {
+    pub fn vec(self, rec: fn(U) -> ReClap<T, U>) -> Vec<T> {
         let mut prev = vec![self.prev];
         if let Some(next) = self.next {
-            prev.extend(f(*next).vec(f))
+            prev.extend(rec(*next).vec(rec))
         }
         prev
     }
 
-    pub fn hash_map(
+    pub fn hash_map<K, E>(
         self,
-        f: fn(U) -> ReClap<T, U>,
-    ) -> HashMap<String, T> {
-        self.vec(f)
+        key: fn(usize) -> Result<K, E>,
+        rec: fn(U) -> ReClap<T, U>,
+    ) -> Result<HashMap<K, T>, E>
+    where
+        K: Eq + Hash,
+    {
+        self.vec(rec)
             .into_iter()
             .enumerate()
-            .map(|(k, v)| (k.to_string(), v))
+            .map(|(k, v)| key(k).map(|k| (k, v)))
             .collect()
     }
 }

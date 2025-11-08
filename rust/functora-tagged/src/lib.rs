@@ -2,7 +2,9 @@
 use derive_more::Display;
 use std::error::Error;
 use std::fmt::{Debug, Display};
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
+use std::ops::Deref;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -63,6 +65,20 @@ impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         self.rep().fmt(f)
+    }
+}
+
+impl<Rep: Hash, Tag> Hash for Tagged<Rep, Tag> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.rep().hash(state);
+    }
+}
+
+impl<Rep, Tag> Deref for Tagged<Rep, Tag> {
+    type Target = Rep;
+
+    fn deref(&self) -> &Self::Target {
+        self.rep()
     }
 }
 

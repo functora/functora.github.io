@@ -88,17 +88,18 @@ When a `Tag` type has a default `Refine` implementation that doesn't add new con
 
 ```rust
 use functora_tagged::*;
+use std::convert::Infallible;
 
 pub enum NonNegTag {}
 
 impl Refine<usize> for NonNegTag {
-    type RefineError = ();
+    type RefineError = Infallible;
 }
 
 pub type NonNeg = Tagged<usize, NonNegTag>;
 
 let rep = 123;
-let new = NonNeg::new(rep).unwrap();
+let new = NonNeg::new(rep).infallible();
 
 assert_eq!(*new.rep(), rep);
 ```

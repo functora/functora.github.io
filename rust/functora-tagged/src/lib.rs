@@ -6,6 +6,8 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
+pub mod infallible;
+pub use infallible::*;
 
 #[derive(Debug)]
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);

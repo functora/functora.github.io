@@ -1,7 +1,10 @@
 use derive_more::Display;
-use functora_tagged::{ParseError, Refine, Tagged};
+use functora_tagged::{
+    InfallibleInto, ParseError, Refine, Tagged,
+};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
 
@@ -16,6 +19,10 @@ pub type UserId = Tagged<NonEmpty<String>, UserIdTag>;
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum EmailTag {}
 pub type Email = Tagged<NonEmpty<String>, EmailTag>;
+
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
+pub enum UpperTag {}
+pub type UpperString = Tagged<String, UpperTag>;
 
 #[derive(
     Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Display,
@@ -73,6 +80,15 @@ impl Refine<NonEmpty<String>> for EmailTag {
         } else {
             Ok(rep)
         }
+    }
+}
+
+impl Refine<String> for UpperTag {
+    type RefineError = Infallible;
+    fn refine(
+        rep: String,
+    ) -> Result<String, Self::RefineError> {
+        Ok(rep.to_uppercase())
     }
 }
 
@@ -152,6 +168,13 @@ fn test_tagged_clone_debug() {
     let dbg = format!("{:?}", tagged);
     assert!(dbg.contains("Tagged"));
     assert!(dbg.contains("PhantomData"));
+}
+
+#[test]
+fn test_upper_string_infallible() {
+    let tagged: UpperString =
+        UpperString::new("test".into()).infallible();
+    assert_eq!(tagged.rep(), "TEST");
 }
 
 #[cfg(feature = "serde")]

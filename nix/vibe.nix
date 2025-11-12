@@ -5,6 +5,15 @@
     inherit (pkgs) lib;
     inherit pkgs;
   };
+  gemini = pkgs.writeShellApplication {
+    name = "gemini";
+    text = ''
+      ${unst.gemini-cli}/bin/gemini \
+        --model gemini-2.5-flash-lite \
+        --yolo \
+        "$@"
+    '';
+  };
   app = pkgs.writeShellApplication {
     name = "vibe";
     text = "alacritty";
@@ -25,7 +34,7 @@
       asciinema
       asciinema-agg
       unst.codex
-      unst.gemini-cli
+      gemini
     ];
   };
   passwd = pkgs.writeTextFile {
@@ -35,7 +44,7 @@
   agentsMd = pkgs.writeTextFile {
     name = "AGENTS.md";
     text = ''
-      Read the `README.md` file if available. Study the project source code. Write your code in a strictly functional style while ensuring high efficiency. Avoid mutable variables (`mut`), imperative constructs (e.g., `for`, `while`, `loop`, or `return`), and instead use functional iterators. Eliminate redundant closures and variables. Maximize method and function chaining. Avoid `.clone()`, unnecessary allocations, and extra dependencies. Prefer the standard library exclusively when possible. Follow the existing project code style. Use meaningful, context-clear identifiers with a preference for brevity, as in the original code. Do not include comments; the code must be self-explanatory.
+      Read the `README.md` file if available. Study the project source code. Write your code in a strictly functional style while ensuring high efficiency. Avoid mutable variables (`mut`), imperative constructs (e.g., `for`, `while`, `loop`, or `return`), and instead use functional iterators. Eliminate redundant closures and variables. Maximize method and function chaining. Avoid `.clone()`, unnecessary allocations, and extra dependencies. Prefer the standard library exclusively when possible. Follow the existing project code style. Use meaningful, context-clear identifiers with a preference for brevity, as in the original code. Do not include comments; the code must be self-explanatory. To test Rust code changes you can use the command `cargo test --all-features`.
     '';
   };
   codexToml = pkgs.writeTextFile {

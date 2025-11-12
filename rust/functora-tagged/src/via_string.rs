@@ -1,7 +1,4 @@
-use crate::infallible::*;
 use crate::*;
-use derive_more::Display;
-use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
@@ -98,7 +95,7 @@ where
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
+impl<Rep: ToString, Tag> Serialize for ViaString<Rep, Tag> {
     fn serialize<S>(
         &self,
         serializer: S,
@@ -106,14 +103,15 @@ impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
     where
         S: serde::Serializer,
     {
-        self.rep().serialize(serializer)
+        self.to_string().serialize(serializer)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
+impl<'de, Rep, Tag> Deserialize<'de> for ViaString<Rep, Tag>
 where
-    Rep: Deserialize<'de>,
+    Rep: FromStr,
+    Rep::Err: Display,
     Tag: Refine<Rep>,
     Tag::RefineError: Display,
 {
@@ -123,8 +121,8 @@ where
     where
         D: serde::Deserializer<'de>,
     {
-        Rep::deserialize(deserializer).and_then(|rep| {
-            Tagged::new(rep)
+        String::deserialize(deserializer).and_then(|s| {
+            ViaString::from_str(&s)
                 .map_err(serde::de::Error::custom)
         })
     }
@@ -137,75 +135,100 @@ mod diesel_impl {
     use diesel::backend::Backend;
     use diesel::deserialize::FromSql;
     use diesel::expression::AsExpression;
+    use diesel::query_builder::bind_collector::RawBytesBindCollector;
     use diesel::serialize::{Output, ToSql};
     use diesel::sql_types::SingleValue;
     use std::error::Error;
 
-    impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
+    impl<Rep, Tag, ST> AsExpression<ST> for ViaString<Rep, Tag>
     where
-        Rep: Clone + AsExpression<ST>,
+        Rep: ToString,
         ST: SingleValue,
+        String: AsExpression<ST>,
     {
-        type Expression = Rep::Expression;
+        type Expression =
+            <String as AsExpression<ST>>::Expression;
         fn as_expression(self) -> Self::Expression {
-            self.rep().clone().as_expression()
+            <String as AsExpression<ST>>::as_expression(
+                self.to_string(),
+            )
         }
     }
 
-    impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
+    impl<Rep, Tag, ST> AsExpression<ST> for &ViaString<Rep, Tag>
     where
-        Rep: Clone + AsExpression<ST>,
+        Rep: ToString,
         ST: SingleValue,
+        String: AsExpression<ST>,
     {
-        type Expression = Rep::Expression;
+        type Expression =
+            <String as AsExpression<ST>>::Expression;
         fn as_expression(self) -> Self::Expression {
-            self.rep().clone().as_expression()
+            <String as AsExpression<ST>>::as_expression(
+                self.to_string(),
+            )
         }
     }
 
-    impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
+    impl<DB, Rep, Tag, ST> ToSql<ST, DB> for ViaString<Rep, Tag>
     where
-        Rep: ToSql<ST, DB>,
-        DB: Backend,
+        Rep: ToString + Debug,
         Tag: Debug,
+        String: ToSql<ST, DB>,
+        for<'a> DB: Backend<
+            BindCollector<'a> = RawBytesBindCollector<DB>,
+        >,
     {
         fn to_sql<'a>(
             &'a self,
             out: &mut Output<'a, '_, DB>,
         ) -> diesel::serialize::Result {
-            self.rep().to_sql(out)
+            let s = self.to_string();
+            <String as ToSql<ST, DB>>::to_sql(
+                &s,
+                &mut out.reborrow(),
+            )
         }
     }
 
-    impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
+    impl<DB, Rep, Tag, ST> FromSql<ST, DB>
+        for ViaString<Rep, Tag>
     where
-        Rep: FromSql<ST, DB>,
+        Rep: FromStr,
+        Rep::Err: 'static + Error + Send + Sync,
         Tag: Refine<Rep>,
         Tag::RefineError: 'static + Error + Send + Sync,
+        String: FromSql<ST, DB>,
         DB: Backend,
     {
         fn from_sql(
             bytes: DB::RawValue<'_>,
         ) -> diesel::deserialize::Result<Self> {
-            let rep = Rep::from_sql(bytes)?;
-            Ok(Tagged::new(rep).map_err(Box::new)?)
+            let s = String::from_sql(bytes)?;
+            let rep = Rep::from_str(&s)?;
+            Ok(ViaString::new(rep).map_err(Box::new)?)
         }
     }
 
     impl<Rep, Tag, ST, DB> Queryable<ST, DB>
-        for Tagged<Rep, Tag>
+        for ViaString<Rep, Tag>
     where
-        Rep: Queryable<ST, DB>,
+        Rep: FromStr,
+        Rep::Err: 'static + Error + Send + Sync,
         Tag: Refine<Rep>,
         Tag::RefineError: 'static + Error + Send + Sync,
+        String: Queryable<ST, DB>,
         DB: Backend,
     {
-        type Row = Rep::Row;
+        type Row = <String as Queryable<ST, DB>>::Row;
         fn build(
             row: Self::Row,
         ) -> diesel::deserialize::Result<Self> {
-            let rep = Queryable::build(row)?;
-            Ok(Tagged::new(rep).map_err(Box::new)?)
+            let s: String =
+                Queryable::<ST, DB>::build(row)?;
+            let rep =
+                Rep::from_str(&s).map_err(Box::new)?;
+            Ok(ViaString::new(rep).map_err(Box::new)?)
         }
     }
 }

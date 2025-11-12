@@ -1,4 +1,5 @@
-#![doc = include_str!("../README.md")]
+use crate::infallible::*;
+use crate::*;
 use derive_more::Display;
 use std::error::Error;
 use std::fmt::{Debug, Display};
@@ -6,49 +7,42 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
-pub mod infallible;
-pub use infallible::*;
-pub mod via_string;
-pub use via_string::*;
 
 #[derive(Debug)]
-pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
+pub struct ViaString<Rep, Tag>(Rep, PhantomData<Tag>);
 
-pub trait Refine<Rep>: Sized {
-    type RefineError;
-
-    fn refine(rep: Rep) -> Result<Rep, Self::RefineError> {
-        Ok(rep)
-    }
-}
-
-impl<Rep, Tag> Tagged<Rep, Tag> {
+impl<Rep, Tag> ViaString<Rep, Tag> {
     pub fn new(rep: Rep) -> Result<Self, Tag::RefineError>
     where
         Tag: Refine<Rep>,
     {
-        Tag::refine(rep).map(|rep| Tagged(rep, PhantomData))
+        Tag::refine(rep)
+            .map(|rep| ViaString(rep, PhantomData))
     }
     pub fn rep(&self) -> &Rep {
         &self.0
     }
 }
 
-impl<Rep: Eq, Tag> Eq for Tagged<Rep, Tag> {}
+impl<Rep: Eq, Tag> Eq for ViaString<Rep, Tag> {}
 
-impl<Rep: PartialEq, Tag> PartialEq for Tagged<Rep, Tag> {
+impl<Rep: PartialEq, Tag> PartialEq
+    for ViaString<Rep, Tag>
+{
     fn eq(&self, other: &Self) -> bool {
         self.rep() == other.rep()
     }
 }
 
-impl<Rep: Ord, Tag> Ord for Tagged<Rep, Tag> {
+impl<Rep: Ord, Tag> Ord for ViaString<Rep, Tag> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.rep().cmp(other.rep())
     }
 }
 
-impl<Rep: PartialOrd, Tag> PartialOrd for Tagged<Rep, Tag> {
+impl<Rep: PartialOrd, Tag> PartialOrd
+    for ViaString<Rep, Tag>
+{
     fn partial_cmp(
         &self,
         other: &Self,
@@ -57,13 +51,13 @@ impl<Rep: PartialOrd, Tag> PartialOrd for Tagged<Rep, Tag> {
     }
 }
 
-impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
+impl<Rep: Clone, Tag> Clone for ViaString<Rep, Tag> {
     fn clone(&self) -> Self {
-        Tagged(self.rep().clone(), PhantomData)
+        ViaString(self.rep().clone(), PhantomData)
     }
 }
 
-impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
+impl<Rep: Display, Tag> Display for ViaString<Rep, Tag> {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
@@ -72,13 +66,13 @@ impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
     }
 }
 
-impl<Rep: Hash, Tag> Hash for Tagged<Rep, Tag> {
+impl<Rep: Hash, Tag> Hash for ViaString<Rep, Tag> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.rep().hash(state);
     }
 }
 
-impl<Rep, Tag> Deref for Tagged<Rep, Tag> {
+impl<Rep, Tag> Deref for ViaString<Rep, Tag> {
     type Target = Rep;
 
     fn deref(&self) -> &Self::Target {
@@ -86,83 +80,14 @@ impl<Rep, Tag> Deref for Tagged<Rep, Tag> {
     }
 }
 
-#[derive(Debug, Display)]
-pub enum ParseError<Rep, Tag>
-where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-{
-    Decode(Rep::Err),
-    Refine(Tag::RefineError),
-}
-
-impl<Rep, Tag> Error for ParseError<Rep, Tag>
-where
-    Rep: Debug + FromStr,
-    Tag: Debug + Refine<Rep>,
-    Rep::Err: Debug + Display,
-    Tag::RefineError: Debug + Display,
-{
-}
-
-impl<Rep, Tag> Eq for ParseError<Rep, Tag>
-where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: Eq,
-    Tag::RefineError: Eq,
-{
-}
-
-impl<Rep, Tag> PartialEq for ParseError<Rep, Tag>
-where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: PartialEq,
-    Tag::RefineError: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                ParseError::Decode(a),
-                ParseError::Decode(b),
-            ) => a == b,
-            (
-                ParseError::Refine(a),
-                ParseError::Refine(b),
-            ) => a == b,
-            _ => false,
-        }
-    }
-}
-
-impl<Rep, Tag> Clone for ParseError<Rep, Tag>
-where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: Clone,
-    Tag::RefineError: Clone,
-{
-    fn clone(&self) -> Self {
-        match self {
-            ParseError::Decode(err) => {
-                ParseError::Decode(err.clone())
-            }
-            ParseError::Refine(err) => {
-                ParseError::Refine(err.clone())
-            }
-        }
-    }
-}
-
-impl<Rep, Tag> FromStr for Tagged<Rep, Tag>
+impl<Rep, Tag> FromStr for ViaString<Rep, Tag>
 where
     Rep: FromStr,
     Tag: Refine<Rep>,
 {
     type Err = ParseError<Rep, Tag>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Tagged::new(
+        ViaString::new(
             Rep::from_str(s).map_err(ParseError::Decode)?,
         )
         .map_err(ParseError::Refine)

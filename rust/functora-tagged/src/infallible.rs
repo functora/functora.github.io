@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+pub use std::convert::Infallible;
 
 pub trait InfallibleInto<T> {
     fn infallible(self) -> T;

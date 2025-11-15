@@ -22,7 +22,7 @@ impl Refine<String> for MyTag {
 }
 
 #[test]
-fn test_refine_default_implementation() {
+fn test_refine_my_tag_implementation() {
     let rep_value = String::from("test_string");
     let refined_rep = MyTag::refine(rep_value.clone());
 
@@ -50,7 +50,7 @@ impl Refine<String> for StrictTag {
 }
 
 #[test]
-fn test_refine_custom_implementation() {
+fn test_refine_strict_tag_implementation() {
     let strict_value = String::from("strict_value");
     let refined_strict =
         StrictTag::refine(strict_value.clone());
@@ -68,4 +68,22 @@ fn test_refine_custom_implementation() {
             non_strict_value
         )
     );
+}
+
+#[derive(Debug)]
+struct DefaultRefineTag;
+
+impl Refine<String> for DefaultRefineTag {
+    type RefineError = String;
+}
+
+#[test]
+fn test_refine_default_implementation() {
+    let rep_value = String::from("test_default_refine");
+
+    let refined_rep =
+        DefaultRefineTag::refine(rep_value.clone());
+
+    assert!(refined_rep.is_ok());
+    assert_eq!(refined_rep.unwrap(), rep_value);
 }

@@ -109,6 +109,7 @@
             bacon
             cargo
             cargo-edit
+            cargo-tarpaulin
             clippy
             rust-analyzer
             rustc

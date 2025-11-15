@@ -4,9 +4,11 @@ use functora_tagged::{
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
+use std::hash::{Hash, Hasher};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum NonEmptyTag {}
@@ -175,6 +177,51 @@ fn test_upper_string_infallible() {
     let tagged: UpperString =
         UpperString::new("test".into()).infallible();
     assert_eq!(tagged.rep(), "TEST");
+}
+
+#[test]
+fn test_tagged_display() {
+    let tagged: NonEmpty<String> =
+        "display_test".parse().unwrap();
+    let display_str = format!("{}", tagged);
+    assert_eq!(display_str, "display_test");
+}
+
+#[test]
+fn test_tagged_hash() {
+    let tagged1: NonEmpty<String> =
+        "hash_test".parse().unwrap();
+    let tagged2: NonEmpty<String> =
+        "hash_test".parse().unwrap();
+    let tagged3: NonEmpty<String> =
+        "another_hash_test".parse().unwrap();
+
+    let mut hasher1 = DefaultHasher::new();
+    tagged1.hash(&mut hasher1);
+    let hash1 = hasher1.finish();
+
+    let mut hasher2 = DefaultHasher::new();
+    tagged2.hash(&mut hasher2);
+    let hash2 = hasher2.finish();
+
+    let mut hasher3 = DefaultHasher::new();
+    tagged3.hash(&mut hasher3);
+    let hash3 = hasher3.finish();
+
+    assert_eq!(hash1, hash2);
+    assert_ne!(hash1, hash3);
+}
+
+#[test]
+fn test_tagged_deref() {
+    let tagged: UpperString = UpperString::new(
+        "deref_test".into(),
+    )
+    .expect(
+        "This should not fail as Infallible cannot fail",
+    );
+    assert_eq!(tagged.to_uppercase(), "DEREF_TEST");
+    assert_eq!(tagged.len(), 10);
 }
 
 #[cfg(feature = "serde")]

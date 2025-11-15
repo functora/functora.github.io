@@ -18,9 +18,15 @@ impl<Rep, Tag> Error for ParseError<Rep, Tag>
 where
     Rep: Debug + FromStr,
     Tag: Debug + Refine<Rep>,
-    Rep::Err: Debug + Display,
-    Tag::RefineError: Debug + Display,
+    Rep::Err: Error + Debug + Display + 'static,
+    Tag::RefineError: Error + Debug + Display + 'static,
 {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            ParseError::Decode(e) => Some(e),
+            ParseError::Refine(e) => Some(e),
+        }
+    }
 }
 
 impl<Rep, Tag> Eq for ParseError<Rep, Tag>

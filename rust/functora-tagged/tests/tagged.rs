@@ -176,3 +176,162 @@ fn test_tagged_from_str() {
         _ => panic!("Expected Refine error"),
     }
 }
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "serde")]
+#[test]
+fn test_serde_tagged_roundtrip() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Wrapper {
+        tagged_value: TestTagged,
+    }
+    let original = Wrapper {
+        tagged_value: TestTagged::new(100).unwrap(),
+    };
+    let toml = toml::to_string(&original).unwrap();
+    let deserialized: Wrapper =
+        toml::from_str(&toml).unwrap();
+    assert_eq!(original, deserialized);
+    assert_eq!(deserialized.tagged_value.rep(), &100);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn test_serde_tagged_invalid_refine() {
+    #[derive(Deserialize, Debug)]
+    struct Wrapper {
+        tagged_value: TestTagged,
+    }
+
+    let toml = r"tagged_value = -1";
+    let err = toml::from_str::<Wrapper>(toml).unwrap_err();
+    assert!(
+        err.to_string().contains("MyRefineError"),
+        "Unexpected failure: {err}"
+    );
+
+    let toml_valid = r"tagged_value = 50";
+    let wrapper: Wrapper =
+        toml::from_str(toml_valid).unwrap();
+    assert_eq!(wrapper.tagged_value.rep(), &50);
+}
+
+#[cfg(feature = "diesel")]
+mod diesel_tests {
+    use super::*;
+    use diesel::Connection;
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+    use diesel::QueryableByName;
+    use diesel::RunQueryDsl;
+    use diesel::insert_into;
+    use diesel::sql_query;
+    use diesel::sql_types::Integer;
+    use diesel::sqlite::SqliteConnection;
+    use diesel::table;
+
+    table! {
+        tagged_values (id) {
+            id -> Integer,
+            value -> Integer,
+        }
+    }
+
+    #[derive(QueryableByName, PartialEq, Debug)]
+    struct TaggedRow {
+        #[diesel(sql_type = Integer)]
+        id: i32,
+        #[diesel(sql_type = Integer)]
+        value: TestTagged,
+    }
+
+    fn memory_db() -> SqliteConnection {
+        let mut conn =
+            SqliteConnection::establish(":memory:")
+                .unwrap_or_else(|_| {
+                    panic!("cannot create in-memory DB")
+                });
+        sql_query(
+            "CREATE TABLE tagged_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value INTEGER NOT NULL);",
+        )
+        .execute(&mut conn)
+        .expect("failed to create table");
+        conn
+    }
+
+    #[test]
+    fn test_diesel_tagged_queryable_success() {
+        let mut conn = memory_db();
+        let valid_tagged_value =
+            TestTagged::new(100).unwrap();
+
+        insert_into(tagged_values::table)
+            .values((tagged_values::value
+                .eq(&valid_tagged_value),))
+            .execute(&mut conn)
+            .unwrap();
+
+        let rows: Vec<TaggedRow> = sql_query(
+            "SELECT id, value FROM tagged_values",
+        )
+        .load(&mut conn)
+        .unwrap();
+
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].value, valid_tagged_value);
+        assert_eq!(rows[0].value.rep(), &100);
+    }
+
+    #[test]
+    fn test_diesel_tagged_queryable_refine_failure() {
+        let mut conn = memory_db();
+
+        let insert_result = sql_query(
+            "INSERT INTO tagged_values (value) VALUES (?)",
+        )
+        .bind::<Integer, _>(-5i32)
+        .execute(&mut conn);
+        assert!(
+            insert_result.is_ok(),
+            "Insert statement failed unexpectedly"
+        );
+
+        let err = sql_query(
+            "SELECT id, value FROM tagged_values",
+        )
+        .load::<TaggedRow>(&mut conn)
+        .unwrap_err();
+
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("MyRefineError"),
+            "Expected MyRefineError, but got: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_diesel_tagged_to_sql() {
+        let mut conn = memory_db();
+        let tagged_value = TestTagged::new(150).unwrap();
+
+        insert_into(tagged_values::table)
+            .values((
+                tagged_values::value.eq(&tagged_value),
+            ))
+            .execute(&mut conn)
+            .unwrap();
+
+        let rows: Vec<(i32, i32)> = tagged_values::table
+            .select((
+                tagged_values::id,
+                tagged_values::value,
+            ))
+            .load(&mut conn)
+            .unwrap();
+
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].1, 150);
+    }
+}

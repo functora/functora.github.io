@@ -194,3 +194,181 @@ fn test_via_string_from_str() {
         _ => panic!("Expected Refine error"),
     }
 }
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "serde")]
+#[test]
+fn test_serde_via_string_roundtrip() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Wrapper {
+        via_string_value: TestViaString,
+    }
+    let original = Wrapper {
+        via_string_value: TestViaString::new(
+            "valid_serde_test".to_string(),
+        )
+        .unwrap(),
+    };
+    let toml = toml::to_string(&original).unwrap();
+    let deserialized: Wrapper =
+        toml::from_str(&toml).unwrap();
+    assert_eq!(original, deserialized);
+    assert_eq!(
+        deserialized.via_string_value.rep(),
+        "valid_serde_test"
+    );
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn test_serde_via_string_invalid_refine() {
+    #[derive(Deserialize, Debug)]
+    struct Wrapper {
+        via_string_value: TestViaString,
+    }
+
+    let toml = r#"via_string_value = "invalid_string""#;
+    let err = toml::from_str::<Wrapper>(toml).unwrap_err();
+    assert!(
+        err.to_string().contains("MyRefineError"),
+        "Unexpected failure: {err}"
+    );
+
+    let toml_valid =
+        r#"via_string_value = "valid_serde_refine""#;
+    let wrapper: Wrapper =
+        toml::from_str(toml_valid).unwrap();
+    assert_eq!(
+        wrapper.via_string_value.rep(),
+        "valid_serde_refine"
+    );
+}
+
+#[cfg(feature = "diesel")]
+mod diesel_tests {
+    use super::*;
+    use diesel::Connection;
+    use diesel::ExpressionMethods;
+    use diesel::QueryDsl;
+    use diesel::QueryableByName;
+    use diesel::RunQueryDsl;
+    use diesel::SqliteConnection;
+    use diesel::insert_into;
+    use diesel::sql_query;
+    use diesel::sql_types::Integer;
+    use diesel::sql_types::Text;
+    use diesel::table;
+
+    table! {
+        via_string_values (id) {
+            id -> Integer,
+            value -> Text,
+        }
+    }
+
+    #[derive(QueryableByName, PartialEq, Debug)]
+    struct ViaStringRow {
+        #[diesel(sql_type = Integer)]
+        id: i32,
+        #[diesel(sql_type = Text)]
+        value: TestViaString,
+    }
+
+    fn memory_db() -> SqliteConnection {
+        let mut conn =
+            SqliteConnection::establish(":memory:")
+                .unwrap_or_else(|_| {
+                    panic!("cannot create in-memory DB")
+                });
+        sql_query(
+            "CREATE TABLE via_string_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL);",
+        )
+        .execute(&mut conn)
+        .expect("failed to create table");
+        conn
+    }
+
+    #[test]
+    fn test_diesel_via_string_queryable_success() {
+        let mut conn = memory_db();
+        let valid_via_string_value = TestViaString::new(
+            "valid_diesel_test".to_string(),
+        )
+        .unwrap();
+
+        insert_into(via_string_values::table)
+            .values((via_string_values::value
+                .eq(&valid_via_string_value),))
+            .execute(&mut conn)
+            .unwrap();
+
+        let rows: Vec<ViaStringRow> = sql_query(
+            "SELECT id, value FROM via_string_values",
+        )
+        .load(&mut conn)
+        .unwrap();
+
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].value, valid_via_string_value);
+        assert_eq!(
+            rows[0].value.rep(),
+            "valid_diesel_test"
+        );
+    }
+
+    #[test]
+    fn test_diesel_via_string_queryable_refine_failure() {
+        let mut conn = memory_db();
+
+        let insert_result = sql_query(
+            "INSERT INTO via_string_values (value) VALUES (?)",
+        )
+        .bind::<Text, _>("invalid_string")
+        .execute(&mut conn);
+        assert!(
+            insert_result.is_ok(),
+            "Insert statement failed unexpectedly"
+        );
+
+        let err = sql_query(
+            "SELECT id, value FROM via_string_values",
+        )
+        .load::<ViaStringRow>(&mut conn)
+        .unwrap_err();
+
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("MyRefineError"),
+            "Expected MyRefineError, but got: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_diesel_via_string_to_sql() {
+        let mut conn = memory_db();
+        let via_string_value = TestViaString::new(
+            "valid_to_sql_test".to_string(),
+        )
+        .unwrap();
+
+        insert_into(via_string_values::table)
+            .values((via_string_values::value
+                .eq(&via_string_value),))
+            .execute(&mut conn)
+            .unwrap();
+
+        let rows: Vec<(i32, String)> =
+            via_string_values::table
+                .select((
+                    via_string_values::id,
+                    via_string_values::value,
+                ))
+                .load(&mut conn)
+                .unwrap();
+
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].1, "valid_to_sql_test");
+    }
+}

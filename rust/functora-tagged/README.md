@@ -31,6 +31,17 @@ use std::marker::PhantomData;
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 ```
 
+The `Tagged::new` constructor returns a `Result` that can be `unwrap`ped directly if the `Tag`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
+
+## ViaString Struct
+
+The `ViaString<Rep, Tag>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`Rep`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
+
+- **Serialization**: `ViaString` serializes to its string representation (via `ToString` on `Rep`), whereas `Tagged` serializes the `Rep` directly.
+- **Deserialization**: `ViaString` deserializes from a string, then attempts to parse it into `Rep` using `FromStr`. `Tagged` deserializes `Rep` directly.
+
+It also implements `FromStr` and derives common traits, similar to `Tagged`, respecting the `Refine` trait for validation.
+
 ## Refine Trait
 
 To enforce specific refinement rules for your newtypes, you implement the `Refine<Rep>` trait for the `Tag` type. This trait allows you to define custom logic for refining the newtype representation.
@@ -55,6 +66,8 @@ impl Refine<String> for NonEmptyTag {
 }
 ```
 
+Note that the `Refine` trait has a default implementation that simply returns the input `Rep` without modification. This allows you to create simple newtypes for type distinction without needing to implement the `refine` function, as demonstrated in the `NonNegTag` example.
+
 ## Derived Traits
 
 `functora-tagged` provides blanket implementations for several important traits. These traits work seamlessly with your newtypes, respecting the underlying representation behavior and customizable refinement rules defined by the `Tag` type's implementation of `Refine<Rep>`.
@@ -73,10 +86,19 @@ impl Refine<String> for NonEmptyTag {
 
 ### Refined Derive:
 
-- FromStr
-- serde::Deserialize (with `serde` feature)
-- diesel::Queryable (with `diesel` feature)
-- diesel::deserialize::FromSql (with `diesel` feature)
+- **FromStr**: Implemented for `Tagged<Rep, Tag>` and `ViaString<Rep, Tag>`. Returns a `ParseError<Rep, Tag>`, which can be either a `Decode` error (from `Rep::from_str`) or a `Refine` error (from `Tag::refine`). For nested types, these errors can be further nested.
+- **serde::Deserialize** (with `serde` feature)
+- **diesel::Queryable** (with `diesel` feature)
+- **diesel::deserialize::FromSql** (with `diesel` feature)
+
+## Integrations
+
+`functora-tagged` provides optional integrations for common Rust ecosystems:
+
+- **`serde`**: For serialization and deserialization. Enable with the `serde` feature.
+- **`diesel`**: For database interactions. Enable with the `diesel` feature.
+
+These integrations respect the `Refine` rules defined for your types.
 
 ## Examples
 
@@ -299,18 +321,10 @@ assert_eq!(
     ))
 );
 
-let err = "-1".parse::<UserId<isize>>().unwrap_err();
+let err =
+    "-1".parse::<UserId<isize>>().unwrap_err();
 assert_eq!(err, ParseError::Refine(UserIdError));
 ```
-
-## Integrations
-
-`functora-tagged` provides optional integrations for common Rust ecosystems:
-
-- **`serde`**: For serialization and deserialization. Enable with the `serde` feature.
-- **`diesel`**: For database interactions. Enable with the `diesel` feature.
-
-These integrations respect the `Refine` rules defined for your types.
 
 <hr>
 

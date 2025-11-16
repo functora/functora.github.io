@@ -196,58 +196,83 @@ fn test_via_string_from_str() {
 }
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+mod serde_tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "serde")]
-#[test]
-fn test_serde_via_string_roundtrip() {
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Wrapper {
-        via_string_value: TestViaString,
-    }
-    let original = Wrapper {
-        via_string_value: TestViaString::new(
-            "valid_serde_test".to_string(),
-        )
-        .unwrap(),
-    };
-    let toml = toml::to_string(&original).unwrap();
-    let deserialized: Wrapper =
-        toml::from_str(&toml).unwrap();
-    assert_eq!(original, deserialized);
-    assert_eq!(
-        deserialized.via_string_value.rep(),
-        "valid_serde_test"
-    );
-}
-
-#[cfg(feature = "serde")]
-#[test]
-fn test_serde_via_string_invalid_refine() {
-    #[derive(Deserialize, Debug)]
-    struct Wrapper {
-        via_string_value: TestViaString,
+    #[test]
+    fn test_serde_via_string_roundtrip() {
+        #[derive(
+            Serialize, Deserialize, PartialEq, Debug,
+        )]
+        struct Wrapper {
+            via_string_value: TestViaString,
+        }
+        let original = Wrapper {
+            via_string_value: TestViaString::new(
+                "valid_serde_test".to_string(),
+            )
+            .unwrap(),
+        };
+        let toml = toml::to_string(&original).unwrap();
+        let deserialized: Wrapper =
+            toml::from_str(&toml).unwrap();
+        assert_eq!(original, deserialized);
+        assert_eq!(
+            deserialized.via_string_value.rep(),
+            "valid_serde_test"
+        );
     }
 
-    let toml = r#"via_string_value = "invalid_string""#;
-    let err = toml::from_str::<Wrapper>(toml).unwrap_err();
-    assert!(
-        err.to_string().contains("MyRefineError"),
-        "Unexpected failure: {err}"
-    );
+    #[test]
+    fn test_serde_via_string_invalid_refine() {
+        #[derive(Deserialize, Debug)]
+        struct Wrapper {
+            via_string_value: TestViaString,
+        }
 
-    let toml_valid =
-        r#"via_string_value = "valid_serde_refine""#;
-    let wrapper: Wrapper =
-        toml::from_str(toml_valid).unwrap();
-    assert_eq!(
-        wrapper.via_string_value.rep(),
-        "valid_serde_refine"
-    );
+        let toml =
+            r##"via_string_value = "invalid_string""##;
+        let err =
+            toml::from_str::<Wrapper>(toml).unwrap_err();
+        assert!(
+            err.to_string().contains("MyRefineError"),
+            "Unexpected failure: {err}"
+        );
+
+        let toml_valid =
+            r##"via_string_value = "valid_serde_refine""##;
+        let wrapper: Wrapper =
+            toml::from_str(toml_valid).unwrap();
+        assert_eq!(
+            wrapper.via_string_value.rep(),
+            "valid_serde_refine"
+        );
+    }
+
+    #[test]
+    fn test_serde_via_string_roundtrip_explicit() {
+        #[derive(
+            Serialize, Deserialize, PartialEq, Debug,
+        )]
+        struct Wrapper {
+            via_string_value: TestViaString,
+        }
+        let original = Wrapper {
+            via_string_value: TestViaString::new(
+                "valid_serde_test".to_string(),
+            )
+            .unwrap(),
+        };
+        let toml = toml::to_string(&original).unwrap();
+        let deserialized: Wrapper =
+            toml::from_str(&toml).unwrap();
+        assert_eq!(original, deserialized);
+    }
 }
 
 #[cfg(feature = "diesel")]
-mod diesel_tests {
+mod via_string_diesel_tests_inline {
     use super::*;
     use diesel::Connection;
     use diesel::ExpressionMethods;
@@ -269,14 +294,14 @@ mod diesel_tests {
     }
 
     #[derive(QueryableByName, PartialEq, Debug)]
-    struct ViaStringRow {
+    pub struct ViaStringRow {
         #[diesel(sql_type = Integer)]
         id: i32,
         #[diesel(sql_type = Text)]
-        value: TestViaString,
+        pub value: TestViaString,
     }
 
-    fn memory_db() -> SqliteConnection {
+    pub fn memory_db() -> SqliteConnection {
         let mut conn =
             SqliteConnection::establish(":memory:")
                 .unwrap_or_else(|_| {
@@ -371,4 +396,109 @@ mod diesel_tests {
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].1, "valid_to_sql_test");
     }
+}
+
+#[test]
+fn test_via_string_eq_partial_eq_explicit() {
+    let vs1 =
+        TestViaString::new(String::from("valid_eq_test"))
+            .unwrap();
+    let vs2 =
+        TestViaString::new(String::from("valid_eq_test"))
+            .unwrap();
+    let vs3 =
+        TestViaString::new(String::from("valid_neq_test"))
+            .unwrap();
+
+    assert!(vs1 == vs2);
+    assert!(vs1 != vs3);
+    assert!(vs1.eq(&vs2));
+    assert!(!vs1.eq(&vs3));
+}
+
+#[test]
+fn test_via_string_ord_partial_ord_explicit() {
+    let vs1 =
+        TestViaString::new(String::from("valid_ord_a"))
+            .unwrap();
+    let vs2 =
+        TestViaString::new(String::from("valid_ord_a"))
+            .unwrap();
+    let vs3 =
+        TestViaString::new(String::from("valid_ord_b"))
+            .unwrap();
+
+    assert_eq!(vs1.cmp(&vs2), std::cmp::Ordering::Equal);
+    assert_eq!(
+        vs1.partial_cmp(&vs2),
+        Some(std::cmp::Ordering::Equal)
+    );
+    assert_eq!(vs1.cmp(&vs3), std::cmp::Ordering::Less);
+    assert_eq!(
+        vs1.partial_cmp(&vs3),
+        Some(std::cmp::Ordering::Less)
+    );
+}
+
+#[test]
+fn test_via_string_clone_explicit() {
+    let vs1 = TestViaString::new(String::from(
+        "valid_clone_test",
+    ))
+    .unwrap();
+    let vs2 = vs1.clone();
+    assert_eq!(vs1, vs2);
+}
+
+#[test]
+fn test_via_string_display_explicit() {
+    let vs_instance = TestViaString::new(String::from(
+        "valid_display_test",
+    ))
+    .unwrap();
+    assert_eq!(
+        vs_instance.to_string(),
+        "valid_display_test"
+    );
+}
+
+#[test]
+fn test_via_string_hash_explicit() {
+    let vs1 =
+        TestViaString::new(String::from("valid_hash_test"))
+            .unwrap();
+    let vs2 =
+        TestViaString::new(String::from("valid_hash_test"))
+            .unwrap();
+
+    let mut hasher1 =
+        std::collections::hash_map::DefaultHasher::new();
+    vs1.hash(&mut hasher1);
+    let hash1 = hasher1.finish();
+
+    let mut hasher2 =
+        std::collections::hash_map::DefaultHasher::new();
+    vs2.hash(&mut hasher2);
+    let hash2 = hasher2.finish();
+
+    assert_eq!(hash1, hash2);
+}
+
+#[test]
+fn test_via_string_deref_explicit() {
+    let vs_instance = TestViaString::new(String::from(
+        "valid_deref_test",
+    ))
+    .unwrap();
+    assert_eq!(*vs_instance, "valid_deref_test");
+}
+
+#[test]
+fn test_via_string_from_str_explicit() {
+    let s_ok = "valid_from_str";
+    let vs_ok = TestViaString::from_str(s_ok).unwrap();
+    assert_eq!(
+        vs_ok.rep(),
+        &String::from("valid_from_str")
+    );
 }

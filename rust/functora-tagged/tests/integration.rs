@@ -2,8 +2,6 @@ use derive_more::Display;
 use functora_tagged::{
     InfallibleInto, ParseError, Refine, Tagged,
 };
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::convert::Infallible;
 use std::error::Error;
@@ -225,65 +223,74 @@ fn test_tagged_deref() {
 }
 
 #[cfg(feature = "serde")]
-#[test]
-fn test_serde_user_id_roundtrip() {
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Wrapper {
-        user_id: UserId,
-    }
-    let original = Wrapper {
-        user_id: "user_456".parse().unwrap(),
-    };
-    let toml = toml::to_string(&original).unwrap();
-    let deserialized: Wrapper =
-        toml::from_str(&toml).unwrap();
-    assert_eq!(original, deserialized);
-    assert_eq!(
-        deserialized.user_id.rep().rep(),
-        "user_456"
-    );
-}
+mod serde_tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "serde")]
-#[test]
-fn test_serde_user_id_invalid_refine() {
-    #[derive(Deserialize, Debug)]
-    struct Wrapper {
-        user_id: UserId,
+    #[test]
+    fn test_serde_user_id_roundtrip() {
+        #[derive(
+            Serialize, Deserialize, PartialEq, Debug,
+        )]
+        struct Wrapper {
+            user_id: UserId,
+        }
+        let original = Wrapper {
+            user_id: "user_456".parse().unwrap(),
+        };
+        let toml = toml::to_string(&original).unwrap();
+        let deserialized: Wrapper =
+            toml::from_str(&toml).unwrap();
+        assert_eq!(original, deserialized);
+        assert_eq!(
+            deserialized.user_id.rep().rep(),
+            "user_456"
+        );
     }
-    let toml = r#"user_id = "bad""#;
-    let err = toml::from_str::<Wrapper>(toml).unwrap_err();
-    assert!(
-        err.to_string().contains("UserIdError"),
-        "Unexpected failure: {err}"
-    );
-    let toml = r#"user_id = "user_123""#;
-    let wrapper: Wrapper = toml::from_str(toml).unwrap();
-    assert_eq!(wrapper.user_id.rep().rep(), "user_123");
-}
 
-#[cfg(feature = "serde")]
-#[test]
-fn test_serde_email_roundtrip() {
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Wrapper {
-        email: Email,
+    #[test]
+    fn test_serde_user_id_invalid_refine() {
+        #[derive(Deserialize, Debug)]
+        struct Wrapper {
+            user_id: UserId,
+        }
+        let toml = r#"user_id = "bad""#;
+        let err =
+            toml::from_str::<Wrapper>(toml).unwrap_err();
+        assert!(
+            err.to_string().contains("UserIdError"),
+            "Unexpected failure: {err}"
+        );
+        let toml = r#"user_id = "user_123""#;
+        let wrapper: Wrapper =
+            toml::from_str(toml).unwrap();
+        assert_eq!(wrapper.user_id.rep().rep(), "user_123");
     }
-    let original = Wrapper {
-        email: "hello@example.com".parse().unwrap(),
-    };
-    let toml = toml::to_string(&original).unwrap();
-    let deserialized: Wrapper =
-        toml::from_str(&toml).unwrap();
-    assert_eq!(original, deserialized);
-    assert_eq!(
-        deserialized.email.rep().rep(),
-        "hello@example.com"
-    );
+
+    #[test]
+    fn test_serde_email_roundtrip() {
+        #[derive(
+            Serialize, Deserialize, PartialEq, Debug,
+        )]
+        struct Wrapper {
+            email: Email,
+        }
+        let original = Wrapper {
+            email: "hello@example.com".parse().unwrap(),
+        };
+        let toml = toml::to_string(&original).unwrap();
+        let deserialized: Wrapper =
+            toml::from_str(&toml).unwrap();
+        assert_eq!(original, deserialized);
+        assert_eq!(
+            deserialized.email.rep().rep(),
+            "hello@example.com"
+        );
+    }
 }
 
 #[cfg(feature = "diesel")]
-mod diesel_tests {
+mod diesel_integration_tests {
     use super::*;
     use diesel::insert_into;
     use diesel::prelude::*;

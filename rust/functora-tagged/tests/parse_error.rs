@@ -3,6 +3,7 @@ use functora_tagged::parse_error::ParseError;
 use functora_tagged::refine::Refine;
 use std::error::Error;
 use std::fmt::Debug;
+use std::str::FromStr;
 
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 struct MyRefineError;
@@ -167,4 +168,339 @@ fn test_parse_error_clone_variants() {
         TestParseError::Refine(refine_err.clone());
     let cloned_refine = parse_error_refine.clone();
     assert_eq!(parse_error_refine, cloned_refine);
+}
+
+#[test]
+fn test_parse_error_decode_clone_refine_eq() {
+    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err_orig.clone());
+    let cloned_decode = parse_error_decode.clone();
+    let refine_err_orig = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err_orig);
+
+    assert_eq!(parse_error_decode, cloned_decode);
+
+    assert_ne!(cloned_decode, parse_error_refine);
+}
+
+#[test]
+fn test_parse_error_refine_clone_decode_eq() {
+    let refine_err_orig = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err_orig.clone());
+    let cloned_refine = parse_error_refine.clone();
+
+    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err_orig);
+
+    assert_eq!(parse_error_refine, cloned_refine);
+
+    assert_ne!(cloned_refine, parse_error_decode);
+}
+
+#[test]
+fn test_parse_error_debug_formatting() {
+    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err.clone());
+    assert_eq!(
+        format!("{:?}", parse_error_decode),
+        "Decode(ParseIntError { kind: InvalidDigit })"
+    );
+
+    let refine_err = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err.clone());
+    assert_eq!(
+        format!("{:?}", parse_error_refine),
+        "Refine(MyRefineError)"
+    );
+}
+
+#[test]
+fn test_parse_error_display_formatting() {
+    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err.clone());
+    assert!(
+        format!("{}", parse_error_decode)
+            .contains(&decode_err.to_string())
+    );
+
+    let refine_err = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err.clone());
+    assert!(
+        format!("{}", parse_error_refine)
+            .contains(&refine_err.to_string())
+    );
+}
+
+#[test]
+fn test_parse_error_source_method_downcasting() {
+    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err_orig.clone());
+    if let Some(source) = parse_error_decode.source() {
+        assert!(source.is::<std::num::ParseIntError>());
+        assert_eq!(
+            source
+                .downcast_ref::<std::num::ParseIntError>(),
+            Some(&decode_err_orig)
+        );
+    } else {
+        panic!(
+            "Source should not be None for Decode variant"
+        );
+    }
+
+    let refine_err_orig = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err_orig.clone());
+    if let Some(source) = parse_error_refine.source() {
+        assert!(source.is::<MyRefineError>());
+        assert_eq!(
+            source.downcast_ref::<MyRefineError>(),
+            Some(&refine_err_orig)
+        );
+    } else {
+        panic!(
+            "Source should not be None for Refine variant"
+        );
+    }
+}
+
+#[test]
+fn test_parse_error_partial_eq_different_variants() {
+    let parse_int_err: std::num::ParseIntError =
+        "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(parse_int_err);
+
+    let refine_err = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err);
+
+    assert_ne!(parse_error_decode, parse_error_refine);
+}
+
+#[test]
+fn test_parse_error_eq_with_different_types() {
+    #[derive(Debug, PartialEq, Eq, Clone, Display)]
+    struct AnotherRefineError;
+    impl Error for AnotherRefineError {}
+
+    #[derive(Debug, Display)]
+    struct AnotherTag;
+    impl Refine<i32> for AnotherTag {
+        type RefineError = AnotherRefineError;
+        fn refine(
+            rep: i32,
+        ) -> Result<i32, Self::RefineError> {
+            if rep > 100 {
+                Ok(rep)
+            } else {
+                Err(AnotherRefineError)
+            }
+        }
+    }
+
+    type AnotherParseError = ParseError<i32, AnotherTag>;
+
+    let decode_err1 = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode1 =
+        AnotherParseError::Decode(decode_err1);
+
+    let refine_err1 = AnotherRefineError;
+    let parse_error_refine1 =
+        AnotherParseError::Refine(refine_err1);
+
+    assert_ne!(parse_error_decode1, parse_error_refine1);
+}
+
+#[test]
+fn test_parse_error_partial_eq_with_different_types() {
+    #[derive(Debug, PartialEq, Eq, Clone, Display)]
+    struct YetAnotherRefineError;
+    impl Error for YetAnotherRefineError {}
+
+    #[derive(Debug, Display)]
+    struct YetAnotherTag;
+    impl Refine<i32> for YetAnotherTag {
+        type RefineError = YetAnotherRefineError;
+        fn refine(
+            rep: i32,
+        ) -> Result<i32, Self::RefineError> {
+            if rep > 200 {
+                Ok(rep)
+            } else {
+                Err(YetAnotherRefineError)
+            }
+        }
+    }
+
+    type YetAnotherParseError =
+        ParseError<i32, YetAnotherTag>;
+
+    let decode_err1 = "xyz".parse::<i32>().unwrap_err();
+    let parse_error_decode1 =
+        YetAnotherParseError::Decode(decode_err1);
+
+    let refine_err1 = YetAnotherRefineError;
+    let parse_error_refine1 =
+        YetAnotherParseError::Refine(refine_err1);
+
+    assert_ne!(parse_error_decode1, parse_error_refine1);
+}
+
+#[test]
+fn test_parse_error_clone_with_different_types() {
+    #[derive(Debug, PartialEq, Eq, Clone, Display)]
+    struct CloneRefineError;
+    impl Error for CloneRefineError {}
+
+    #[derive(Debug, Display)]
+    struct CloneTag;
+    impl Refine<i32> for CloneTag {
+        type RefineError = CloneRefineError;
+        fn refine(
+            rep: i32,
+        ) -> Result<i32, Self::RefineError> {
+            if rep > 300 {
+                Ok(rep)
+            } else {
+                Err(CloneRefineError)
+            }
+        }
+    }
+
+    type CloneParseError = ParseError<i32, CloneTag>;
+
+    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        CloneParseError::Decode(decode_err_orig.clone());
+    let cloned_decode = parse_error_decode.clone();
+    assert_eq!(parse_error_decode, cloned_decode);
+
+    let refine_err_orig = CloneRefineError;
+    let parse_error_refine =
+        CloneParseError::Refine(refine_err_orig.clone());
+    let cloned_refine = parse_error_refine.clone();
+    assert_eq!(parse_error_refine, cloned_refine);
+}
+
+#[test]
+fn test_parse_error_impl_error_where_clause() {
+    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        TestParseError::Decode(decode_err);
+    assert!(parse_error_decode.source().is_some());
+
+    let refine_err = MyRefineError;
+    let parse_error_refine =
+        TestParseError::Refine(refine_err);
+    assert!(parse_error_refine.source().is_some());
+}
+
+#[test]
+fn test_parse_error_impl_error_with_different_types() {
+    #[derive(Debug, PartialEq, Eq, Clone, Display)]
+    struct DifferentRefineError;
+    impl Error for DifferentRefineError {}
+
+    #[derive(Debug, Display)]
+    struct DifferentTag;
+    impl Refine<i32> for DifferentTag {
+        type RefineError = DifferentRefineError;
+        fn refine(
+            rep: i32,
+        ) -> Result<i32, Self::RefineError> {
+            if rep > 100 {
+                Ok(rep)
+            } else {
+                Err(DifferentRefineError)
+            }
+        }
+    }
+
+    type DifferentParseError =
+        ParseError<i32, DifferentTag>;
+
+    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let parse_error_decode =
+        DifferentParseError::Decode(decode_err);
+    assert!(parse_error_decode.source().is_some());
+
+    let refine_err = DifferentRefineError;
+    let parse_error_refine =
+        DifferentParseError::Refine(refine_err);
+    assert!(parse_error_refine.source().is_some());
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Display)]
+struct CommonError;
+impl Error for CommonError {}
+
+#[derive(Debug, Display)]
+struct CommonTag;
+impl Refine<i32> for CommonTag {
+    type RefineError = CommonError;
+    fn refine(rep: i32) -> Result<i32, Self::RefineError> {
+        if rep > 0 { Ok(rep) } else { Err(CommonError) }
+    }
+}
+
+#[derive(Debug, Display)]
+struct DummyRepWithCommonErr(i32);
+impl FromStr for DummyRepWithCommonErr {
+    type Err = CommonError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "valid" {
+            Ok(DummyRepWithCommonErr(1))
+        } else {
+            Err(CommonError)
+        }
+    }
+}
+
+impl PartialEq for DummyRepWithCommonErr {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+impl Eq for DummyRepWithCommonErr {}
+impl Clone for DummyRepWithCommonErr {
+    fn clone(&self) -> Self {
+        DummyRepWithCommonErr(self.0)
+    }
+}
+
+impl Refine<DummyRepWithCommonErr> for CommonTag {
+    type RefineError = CommonError;
+    fn refine(
+        rep: DummyRepWithCommonErr,
+    ) -> Result<DummyRepWithCommonErr, Self::RefineError>
+    {
+        Ok(rep)
+    }
+}
+
+type CommonParseError =
+    ParseError<DummyRepWithCommonErr, CommonTag>;
+
+#[test]
+fn test_parse_error_partial_eq_same_error_type_different_variants()
+ {
+    let decode_err = CommonError;
+    let parse_error_decode =
+        CommonParseError::Decode(decode_err);
+
+    let refine_err = CommonError;
+    let parse_error_refine =
+        CommonParseError::Refine(refine_err);
+
+    assert_ne!(parse_error_decode, parse_error_refine);
 }

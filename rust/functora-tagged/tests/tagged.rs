@@ -6,6 +6,11 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
+#[cfg(feature = "diesel")]
+use diesel::ExpressionMethods;
+#[cfg(feature = "diesel")]
+use diesel::prelude::*;
+
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 struct MyRefineError;
 
@@ -181,55 +186,59 @@ fn test_tagged_from_str() {
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-#[test]
-fn test_serde_tagged_roundtrip() {
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Wrapper {
-        tagged_value: TestTagged,
-    }
-    let original = Wrapper {
-        tagged_value: TestTagged::new(100).unwrap(),
-    };
-    let toml = toml::to_string(&original).unwrap();
-    let deserialized: Wrapper =
-        toml::from_str(&toml).unwrap();
-    assert_eq!(original, deserialized);
-    assert_eq!(deserialized.tagged_value.rep(), &100);
-}
+mod serde_tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "serde")]
-#[test]
-fn test_serde_tagged_invalid_refine() {
-    #[derive(Deserialize, Debug)]
-    struct Wrapper {
-        tagged_value: TestTagged,
+    #[test]
+    fn test_serde_tagged_roundtrip() {
+        #[derive(Serialize, Deserialize, PartialEq, Debug)]
+        struct Wrapper {
+            tagged_value: TestTagged,
+        }
+        let original = Wrapper {
+            tagged_value: TestTagged::new(100).unwrap(),
+        };
+        let toml = toml::to_string(&original).unwrap();
+        let deserialized: Wrapper =
+            toml::from_str(&toml).unwrap();
+        assert_eq!(original, deserialized);
+        assert_eq!(deserialized.tagged_value.rep(), &100);
     }
 
-    let toml = r"tagged_value = -1";
-    let err = toml::from_str::<Wrapper>(toml).unwrap_err();
-    assert!(
-        err.to_string().contains("MyRefineError"),
-        "Unexpected failure: {err}"
-    );
+    #[test]
+    fn test_serde_tagged_invalid_refine() {
+        #[derive(Deserialize, Debug)]
+        struct Wrapper {
+            tagged_value: TestTagged,
+        }
 
-    let toml_valid = r"tagged_value = 50";
-    let wrapper: Wrapper =
-        toml::from_str(toml_valid).unwrap();
-    assert_eq!(wrapper.tagged_value.rep(), &50);
+        let toml = r"tagged_value = -1";
+        let err = toml::from_str::<Wrapper>(toml).unwrap_err();
+        assert!(
+            err.to_string().contains("MyRefineError"),
+            "Unexpected failure: {err}"
+        );
+
+        let toml_valid = r"tagged_value = 50";
+        let wrapper: Wrapper =
+            toml::from_str(toml_valid).unwrap();
+        assert_eq!(wrapper.tagged_value.rep(), &50);
+    }
 }
 
 #[cfg(feature = "diesel")]
-mod diesel_tests {
+mod tagged_diesel_tests {
     use super::*;
     use diesel::Connection;
     use diesel::ExpressionMethods;
     use diesel::QueryDsl;
     use diesel::QueryableByName;
     use diesel::RunQueryDsl;
+    use diesel::sqlite::SqliteConnection;
     use diesel::insert_into;
     use diesel::sql_query;
     use diesel::sql_types::Integer;
-    use diesel::sqlite::SqliteConnection;
     use diesel::table;
 
     table! {
@@ -240,14 +249,14 @@ mod diesel_tests {
     }
 
     #[derive(QueryableByName, PartialEq, Debug)]
-    struct TaggedRow {
+    pub struct TaggedRow {
         #[diesel(sql_type = Integer)]
         id: i32,
         #[diesel(sql_type = Integer)]
-        value: TestTagged,
+        pub value: TestTagged,
     }
 
-    fn memory_db() -> SqliteConnection {
+    pub fn memory_db() -> SqliteConnection {
         let mut conn =
             SqliteConnection::establish(":memory:")
                 .unwrap_or_else(|_| {
@@ -317,21 +326,138 @@ mod diesel_tests {
         let tagged_value = TestTagged::new(150).unwrap();
 
         insert_into(tagged_values::table)
-            .values((
-                tagged_values::value.eq(&tagged_value),
-            ))
+            .values((tagged_values::value.eq(&tagged_value),))
             .execute(&mut conn)
             .unwrap();
 
         let rows: Vec<(i32, i32)> = tagged_values::table
-            .select((
-                tagged_values::id,
-                tagged_values::value,
-            ))
+            .select((tagged_values::id, tagged_values::value,))
             .load(&mut conn)
             .unwrap();
 
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].1, 150);
     }
+}
+
+#[test]
+fn test_tagged_eq_partial_eq_explicit() {
+    let tagged1 = TestTagged::new(30).unwrap();
+    let tagged2 = TestTagged::new(30).unwrap();
+    let tagged3 = TestTagged::new(40).unwrap();
+
+    assert!(tagged1 == tagged2);
+    assert!(tagged1 != tagged3);
+    assert!(tagged1.eq(&tagged2));
+    assert!(!tagged1.eq(&tagged3));
+}
+
+#[test]
+fn test_tagged_ord_partial_ord_explicit() {
+    let tagged1 = TestTagged::new(50).unwrap();
+    let tagged2 = TestTagged::new(50).unwrap();
+    let tagged3 = TestTagged::new(60).unwrap();
+
+    assert_eq!(
+        tagged1.cmp(&tagged2),
+        std::cmp::Ordering::Equal
+    );
+    assert_eq!(
+        tagged1.partial_cmp(&tagged2),
+        Some(std::cmp::Ordering::Equal)
+    );
+    assert_eq!(
+        tagged1.cmp(&tagged3),
+        std::cmp::Ordering::Less
+    );
+    assert_eq!(
+        tagged1.partial_cmp(&tagged3),
+        Some(std::cmp::Ordering::Less)
+    );
+}
+
+#[test]
+fn test_tagged_clone_explicit() {
+    let tagged1 = TestTagged::new(70).unwrap();
+    let tagged2 = tagged1.clone();
+    assert_eq!(tagged1, tagged2);
+}
+
+#[test]
+fn test_tagged_display_explicit() {
+    let tagged_instance = TestTagged::new(80).unwrap();
+    assert_eq!(tagged_instance.to_string(), "80");
+}
+
+#[test]
+fn test_tagged_hash_explicit() {
+    let tagged1 = TestTagged::new(90).unwrap();
+    let tagged2 = TestTagged::new(90).unwrap();
+
+    let mut hasher1 =
+        std::collections::hash_map::DefaultHasher::new();
+    tagged1.hash(&mut hasher1);
+    let hash1 = hasher1.finish();
+
+    let mut hasher2 =
+        std::collections::hash_map::DefaultHasher::new();
+    tagged2.hash(&mut hasher2);
+    let hash2 = hasher2.finish();
+
+    assert_eq!(hash1, hash2);
+}
+
+#[test]
+fn test_tagged_deref_explicit() {
+    let tagged_instance = TestTagged::new(110).unwrap();
+    assert_eq!(*tagged_instance, 110);
+}
+
+#[test]
+fn test_tagged_from_str_explicit() {
+    let s_ok = "120";
+    let tagged_ok = TestTagged::from_str(s_ok).unwrap();
+    assert_eq!(tagged_ok.rep(), &120);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn test_serde_tagged_roundtrip_explicit() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Wrapper {
+        tagged_value: TestTagged,
+    }
+    let original = Wrapper {
+        tagged_value: TestTagged::new(100).unwrap(),
+    };
+    let toml = toml::to_string(&original).unwrap();
+    let deserialized: Wrapper =
+        toml::from_str(&toml).unwrap();
+    assert_eq!(original, deserialized);
+}
+
+#[cfg(feature = "diesel")]
+#[test]
+fn test_diesel_tagged_queryable_success_explicit() {
+    use crate::tagged_diesel_tests::memory_db;
+    use diesel::sql_query;
+
+    let mut conn = memory_db();
+    let valid_tagged_value = TestTagged::new(100).unwrap();
+
+    diesel::insert_into(
+        crate::tagged_diesel_tests::tagged_values::table,
+    )
+    .values((crate::tagged_diesel_tests::tagged_values::value
+        .eq(&valid_tagged_value),))
+    .execute(&mut conn)
+    .unwrap();
+
+    let rows: Vec<crate::tagged_diesel_tests::TaggedRow> =
+        sql_query("SELECT id, value FROM tagged_values")
+            .load(&mut conn)
+            .unwrap();
+
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].value, valid_tagged_value);
 }

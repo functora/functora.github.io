@@ -1,4 +1,5 @@
-use crate::*;
+use crate::parse_error::*;
+use crate::refine::*;
 pub use std::fmt::{Debug, Display};
 pub use std::hash::{Hash, Hasher};
 pub use std::marker::PhantomData;
@@ -130,7 +131,7 @@ where
 
 #[cfg(feature = "diesel")]
 mod diesel_impl {
-    use crate::*;
+    use super::*;
     use diesel::Queryable;
     use diesel::backend::Backend;
     use diesel::deserialize::FromSql;

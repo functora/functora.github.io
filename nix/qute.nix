@@ -7,7 +7,8 @@
   app = pkgs.writeShellApplication {
     name = "qute";
     text = ''
-      ${pkgs.qutebrowser}/bin/qutebrowser "$@"
+      ${pkgs.qutebrowser}/bin/qutebrowser \
+        -C ${../cfg/qutebrowser.py} "$@"
     '';
   };
   sandbox = mkNixPak {
@@ -22,16 +23,6 @@
         network = true;
         sockets.pulse = true;
         sockets.wayland = true;
-        bind.ro = [
-          [
-            (toString ../cfg/qutebrowser.py)
-            (
-              sloth.concat'
-              sloth.homeDir
-              ".config/qutebrowser/config.py"
-            )
-          ]
-        ];
         bind.rw = [
           [
             (sloth.mkdir (sloth.concat' sloth.homeDir "/qute"))

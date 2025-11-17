@@ -776,6 +776,7 @@ in {
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
         (import ./bar.nix {inherit pkgs;})
+        (import ./qute.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
       ];
       programs.git = {

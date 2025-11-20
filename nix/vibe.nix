@@ -26,6 +26,7 @@
       git
       ripgrep
       alacritty
+      xdg-utils
       python3Minimal
       tmux
       nix
@@ -130,6 +131,7 @@
           "/tmp"
         ];
         env.NIX_CONFIG = "experimental-features = nix-command flakes";
+        env.NIXPKGS_ALLOW_UNFREE = "1";
       };
     };
   };

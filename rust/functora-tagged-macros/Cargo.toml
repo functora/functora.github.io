@@ -1,0 +1,13 @@
+[package]
+name = "functora-tagged-macros"
+license = "MIT"
+version = "0.1.0"
+edition = "2024"
+keywords = ["derive", "tagged", "newtype", "refinement", "literal"]
+categories = ["data-structures", "rust-patterns"]
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-tagged-macros"
+documentation = "https://docs.rs/functora-tagged-macros"
+description = "Procedural macros for inlining refined `functora-tagged` literals, eliminating boilerplate and runtime overhead."
+
+[dependencies]
+functora-tagged = "0.1.2"

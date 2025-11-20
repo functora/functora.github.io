@@ -2,6 +2,7 @@
   description = "Rust Dev Shell";
 
   inputs = {
+    master.url = "github:nixos/nixpkgs";
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
@@ -10,6 +11,7 @@
 
   outputs = {
     self,
+    master,
     nixpkgs,
     unstable,
     rust-overlay,
@@ -18,6 +20,21 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = unstable.legacyPackages.${system};
+        shell = {
+          packages = with pkgs; [
+            alejandra
+            bacon
+            cargo
+            cargo-edit
+            cargo-tarpaulin
+            clippy
+            rust-analyzer
+            rustc
+            rustfmt
+            wasmtime
+            license-generator
+          ];
+        };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {
             name = pkg;
@@ -103,21 +120,16 @@
             '';
           };
       in {
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            alejandra
-            bacon
-            cargo
-            cargo-edit
-            cargo-tarpaulin
-            clippy
-            rust-analyzer
-            rustc
-            rustfmt
-            wasmtime
-            license-generator
-          ];
-        };
+        devShells.default = pkgs.mkShell shell;
+        devShells.unfree = pkgs.mkShell (shell
+          // {
+            packages =
+              shell.packages
+              ++ [
+                pkgs.qutebrowser
+                master.legacyPackages.${system}.antigravity
+              ];
+          });
         packages = rec {
           rustell = mkRustPkg "rustell";
           rustell-nvim = mkRustellNvim "${rustell}/bin/rustell";

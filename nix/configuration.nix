@@ -775,6 +775,7 @@ in {
         neovim
         vibe
         qute
+        (import ./pdfmaker.nix)
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
         (import ./bar.nix {inherit pkgs;})

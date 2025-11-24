@@ -12,7 +12,6 @@
     config = {sloth, ...}: {
       app.package = app;
       gpu.enable = true;
-      gpu.provider = "bundle";
       fonts.enable = true;
       locale.enable = true;
       etc.sslCertificates.enable = true;

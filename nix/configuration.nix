@@ -778,6 +778,7 @@ in {
         (import ./pdfmaker.nix)
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
+        (import ./openarena.nix)
         (import ./bar.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
       ];

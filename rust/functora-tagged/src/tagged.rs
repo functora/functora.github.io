@@ -50,6 +50,8 @@ impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
     }
 }
 
+impl<Rep: Copy, Tag> Copy for Tagged<Rep, Tag> {}
+
 impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
     fn fmt(
         &self,

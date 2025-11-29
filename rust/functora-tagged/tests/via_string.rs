@@ -502,3 +502,24 @@ fn test_via_string_from_str_explicit() {
         &String::from("valid_from_str")
     );
 }
+
+#[test]
+fn test_via_string_copy() {
+    #[derive(Debug)]
+    struct CopyTag;
+    impl Refine<i32> for CopyTag {
+        type RefineError = MyRefineError;
+        fn refine(
+            rep: i32,
+        ) -> Result<i32, Self::RefineError> {
+            Ok(rep)
+        }
+    }
+
+    type TestViaStringCopy = ViaString<i32, CopyTag>;
+
+    let vs1 = TestViaStringCopy::new(123).unwrap();
+    let vs2 = vs1;
+    assert_eq!(vs1, vs2);
+    assert_eq!(vs1.rep(), vs2.rep());
+}

@@ -55,6 +55,8 @@ impl<Rep: Clone, Tag> Clone for ViaString<Rep, Tag> {
     }
 }
 
+impl<Rep: Copy, Tag> Copy for ViaString<Rep, Tag> {}
+
 impl<Rep: Display, Tag> Display for ViaString<Rep, Tag> {
     fn fmt(
         &self,

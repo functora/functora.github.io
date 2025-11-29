@@ -192,7 +192,9 @@ mod serde_tests {
 
     #[test]
     fn test_serde_tagged_roundtrip() {
-        #[derive(Serialize, Deserialize, PartialEq, Debug)]
+        #[derive(
+            Serialize, Deserialize, PartialEq, Debug,
+        )]
         struct Wrapper {
             tagged_value: TestTagged,
         }
@@ -214,7 +216,8 @@ mod serde_tests {
         }
 
         let toml = r"tagged_value = -1";
-        let err = toml::from_str::<Wrapper>(toml).unwrap_err();
+        let err =
+            toml::from_str::<Wrapper>(toml).unwrap_err();
         assert!(
             err.to_string().contains("MyRefineError"),
             "Unexpected failure: {err}"
@@ -235,10 +238,10 @@ mod tagged_diesel_tests {
     use diesel::QueryDsl;
     use diesel::QueryableByName;
     use diesel::RunQueryDsl;
-    use diesel::sqlite::SqliteConnection;
     use diesel::insert_into;
     use diesel::sql_query;
     use diesel::sql_types::Integer;
+    use diesel::sqlite::SqliteConnection;
     use diesel::table;
 
     table! {
@@ -326,12 +329,17 @@ mod tagged_diesel_tests {
         let tagged_value = TestTagged::new(150).unwrap();
 
         insert_into(tagged_values::table)
-            .values((tagged_values::value.eq(&tagged_value),))
+            .values((
+                tagged_values::value.eq(&tagged_value),
+            ))
             .execute(&mut conn)
             .unwrap();
 
         let rows: Vec<(i32, i32)> = tagged_values::table
-            .select((tagged_values::id, tagged_values::value,))
+            .select((
+                tagged_values::id,
+                tagged_values::value,
+            ))
             .load(&mut conn)
             .unwrap();
 
@@ -448,8 +456,10 @@ fn test_diesel_tagged_queryable_success_explicit() {
     diesel::insert_into(
         crate::tagged_diesel_tests::tagged_values::table,
     )
-    .values((crate::tagged_diesel_tests::tagged_values::value
-        .eq(&valid_tagged_value),))
+    .values((
+        crate::tagged_diesel_tests::tagged_values::value
+            .eq(&valid_tagged_value),
+    ))
     .execute(&mut conn)
     .unwrap();
 
@@ -460,4 +470,11 @@ fn test_diesel_tagged_queryable_success_explicit() {
 
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].value, valid_tagged_value);
+}
+#[test]
+fn test_tagged_copy() {
+    let tagged1 = TestTagged::new(100).unwrap();
+    let tagged2 = tagged1;
+    assert_eq!(tagged1, tagged2);
+    assert_eq!(tagged1.rep(), tagged2.rep());
 }

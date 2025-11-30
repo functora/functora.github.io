@@ -20,6 +20,23 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = unstable.legacyPackages.${system};
+        wasm-bindgen-cli-0_2_106 = with pkgs;
+          rustPlatform.buildRustPackage rec {
+            pname = "wasm-bindgen-cli";
+            version = "0.2.106";
+            src = pkgs.fetchCrate {
+              pname = "wasm-bindgen-cli";
+              version = "0.2.106";
+              sha256 = "sha256-M6WuGl7EruNopHZbqBpucu4RWz44/MSdv6f0zkYw+44=";
+            };
+            cargoLock.lockFile = "${src}/Cargo.lock";
+            nativeBuildInputs = [pkg-config];
+            buildInputs =
+              [openssl]
+              ++ lib.optionals stdenv.hostPlatform.isDarwin [curl];
+            nativeCheckInputs = [nodejs_latest];
+            doCheck = false;
+          };
         shell = {
           packages = with pkgs; [
             alejandra
@@ -33,6 +50,28 @@
             rustfmt
             wasmtime
             license-generator
+            dioxus-cli
+            # web
+            lld
+            clang
+            wasm-bindgen-cli-0_2_106
+            # linux
+            pkg-config
+            webkitgtk_4_1
+            openssl
+            xdotool
+            libayatana-appindicator
+            librsvg
+            gtk3
+            gdk-pixbuf
+            cairo
+            pango
+            # fonts
+            noto-fonts
+            noto-fonts-cjk-sans
+            noto-fonts-emoji
+            liberation_ttf
+            dejavu_fonts
           ];
         };
         mkRustPkg = pkg:

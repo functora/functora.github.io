@@ -767,8 +767,21 @@ let g:mix_format_silent_errors = 1
 
 augroup fmt
   autocmd!
-  autocmd BufWritePre * try | undojoin | Neoformat | catch /E790/ | Neoformat | endtry
-augroup end
+  autocmd BufWritePre * call s:format_on_save()
+augroup END
+
+function! s:format_on_save() abort
+  silent! undojoin
+  if &ft ==# 'rust' && exists(':DxFormatBuffer') == 2
+    silent! DxFormatBuffer
+  endif
+  try
+    Neoformat
+  catch /^Vim:E790:/
+    Neoformat
+  endtry
+endfunction
+
 let g:neoformat_enabled_sql = ['sleek', 'sql-formatter']
 let g:neoformat_enabled_toml = ['taplo', 'topiary', 'prettier']
 let g:neoformat_toml_prettier = {

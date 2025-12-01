@@ -1,3 +1,8 @@
+pcall(function()
+  local ok, d = pcall(require, "dioxus")
+  if ok and d and d.setup then d.setup({}) end
+end)
+
 local ok, avante_lib = pcall(require, "avante_lib")
 if ok then
 	avante_lib.load()

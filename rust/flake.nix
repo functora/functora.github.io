@@ -51,6 +51,7 @@
             wasmtime
             license-generator
             dioxus-cli
+            tailwindcss_4
             # web
             lld
             clang

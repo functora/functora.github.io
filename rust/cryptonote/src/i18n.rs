@@ -43,14 +43,12 @@ impl Language {
 
 #[derive(Clone)]
 pub struct Translations {
-    pub app_title: &'static str,
-    pub app_subtitle: &'static str,
-    pub your_note: &'static str,
     pub note_placeholder: &'static str,
     pub encryption_options: &'static str,
     pub no_encryption: &'static str,
     pub password_encryption: &'static str,
     pub cipher: &'static str,
+    pub password: &'static str,
     pub password_placeholder: &'static str,
     pub generate_button: &'static str,
     pub share_title: &'static str,
@@ -76,14 +74,12 @@ pub struct Translations {
 pub fn get_translations(lang: Language) -> Translations {
     match lang {
         Language::English => Translations {
-            app_title: "Cryptonote",
-            app_subtitle: "Create encrypted notes that live in URLs",
-            your_note: "Your Note",
             note_placeholder: "Enter your note here...",
             encryption_options: "Encryption Options",
             no_encryption: "No encryption (plaintext)",
             password_encryption: "Password encryption",
             cipher: "Cipher",
+            password: "Password",
             password_placeholder: "Enter password",
             generate_button: "Generate Shareable Link",
             share_title: "Share Your Note",
@@ -106,14 +102,12 @@ pub fn get_translations(lang: Language) -> Translations {
             invalid_utf8: "Decrypted data is not valid UTF-8",
         },
         Language::Spanish => Translations {
-            app_title: "Cryptonote",
-            app_subtitle: "Crea notas cifradas que viven en URLs",
-            your_note: "Tu Nota",
             note_placeholder: "Escribe tu nota aquí...",
             encryption_options: "Opciones de Cifrado",
             no_encryption: "Sin cifrado (texto plano)",
             password_encryption: "Cifrado con contraseña",
             cipher: "Cifrado",
+            password: "Contraseña",
             password_placeholder: "Ingresa contraseña",
             generate_button: "Generar Enlace Compartible",
             share_title: "Comparte Tu Nota",
@@ -136,14 +130,12 @@ pub fn get_translations(lang: Language) -> Translations {
             invalid_utf8: "Los datos descifrados no son UTF-8 válidos",
         },
         Language::Russian => Translations {
-            app_title: "Cryptonote",
-            app_subtitle: "Создавайте зашифрованные заметки в URL",
-            your_note: "Ваша Заметка",
             note_placeholder: "Введите вашу заметку здесь...",
             encryption_options: "Параметры Шифрования",
             no_encryption: "Без шифрования (открытый текст)",
             password_encryption: "Шифрование паролем",
             cipher: "Шифр",
+            password: "Пароль",
             password_placeholder: "Введите пароль",
             generate_button: "Создать Ссылку для Обмена",
             share_title: "Поделиться Заметкой",

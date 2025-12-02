@@ -106,12 +106,10 @@ pub fn Home() -> Element {
     };
 
     rsx! {
-        div {
-            h1 { "{t.app_title}" }
-            p { "{t.app_subtitle}" }
+        section {
+            fieldset {
 
-            div {
-                h2 { "{t.your_note}" }
+                label { "{t.password}" }
                 textarea {
                     placeholder: "{t.note_placeholder}",
                     rows: "8",
@@ -119,79 +117,83 @@ pub fn Home() -> Element {
                     oninput: move |evt| note_text.set(evt.value()),
                 }
 
-                h3 { "{t.encryption_options}" }
-                div {
-                    label {
-                        input {
-                            r#type: "radio",
-                            name: "encryption",
-                            value: "none",
-                            checked: encryption_mode() == "none",
-                            onchange: move |_| encryption_mode.set("none".to_string()),
-                        }
-                        " {t.no_encryption}"
-                    }
-                    label {
-                        input {
-                            r#type: "radio",
-                            name: "encryption",
-                            value: "symmetric",
-                            checked: encryption_mode() == "symmetric",
-                            onchange: move |_| encryption_mode.set("symmetric".to_string()),
-                        }
-                        " {t.password_encryption}"
-                    }
+                input {
+                    r#type: "radio",
+                    id: "enc_none",
+                    name: "encryption",
+                    value: "none",
+                    checked: encryption_mode() == "none",
+                    onchange: move |_| encryption_mode.set("none".to_string()),
                 }
+                label { r#for: "enc_none", "{t.no_encryption}" }
+
+                br {}
+
+                input {
+                    r#type: "radio",
+                    id: "enc_symmetric",
+                    name: "encryption",
+                    value: "symmetric",
+                    checked: encryption_mode() == "symmetric",
+                    onchange: move |_| encryption_mode.set("symmetric".to_string()),
+                }
+                label { r#for: "enc_symmetric", "{t.password_encryption}" }
 
                 if encryption_mode() == "symmetric" {
-                    div {
-                        h4 { "{t.cipher}" }
-                        select {
-                            value: "{cipher_type}",
-                            onchange: move |evt| cipher_type.set(evt.value()),
-                            option { value: "chacha20", "ChaCha20-Poly1305" }
-                            option { value: "aes", "AES-256-GCM" }
-                        }
 
-                        input {
-                            r#type: "password",
-                            placeholder: "{t.password_placeholder}",
-                            value: "{password}",
-                            oninput: move |evt| password.set(evt.value()),
-                        }
+                    label { "{t.cipher}" }
+                    select {
+                        value: "{cipher_type}",
+                        onchange: move |evt| cipher_type.set(evt.value()),
+                        option { value: "chacha20", "ChaCha20-Poly1305" }
+                        option { value: "aes", "AES-256-GCM" }
+                    }
+
+                    label { "{t.password}" }
+                    input {
+                        r#type: "password",
+                        placeholder: "{t.password_placeholder}",
+                        value: "{password}",
+                        oninput: move |evt| password.set(evt.value()),
                     }
                 }
 
-                button { onclick: generate_note, "{t.generate_button}" }
+                br {}
+                br {}
 
-                if let Some(err) = error_message() {
-                    div { "{err}" }
+                p {
+                    button { onclick: generate_note, "{t.generate_button}" }
+
+                    if let Some(err) = error_message() {
+                        div { "{err}" }
+                    }
                 }
             }
+        }
 
-            if let Some(url) = generated_url() {
+
+        if let Some(url) = generated_url() {
+            section {
+                h2 { "{t.share_title}" }
                 div {
-                    h2 { "{t.share_title}" }
-                    div {
-                        input {
-                            r#type: "text",
-                            readonly: true,
-                            value: "{url}",
-                            onclick: move |_| {
-                                if let Some(window) = web_sys::window() {
-                                    let clipboard = window.navigator().clipboard();
-                                    let _ = clipboard.write_text(&url);
-                                }
-                            },
-                        }
-                        p { "{t.click_to_copy}" }
+                    input {
+                        r#type: "text",
+                        readonly: true,
+                        value: "{url}",
+                        onclick: move |_| {
+                            if let Some(window) = web_sys::window() {
+                                let clipboard = window.navigator().clipboard();
+                                let _ = clipboard.write_text(&url);
+                            }
+                        },
                     }
+                    p { "{t.click_to_copy}" }
+                }
 
-                    if let Some(svg) = qr_code_svg() {
-                        div {
-                            h3 { "{t.qr_code}" }
-                            div { dangerous_inner_html: "{svg}" }
-                        }
+                if let Some(svg) = qr_code_svg() {
+                    figure {
+                        h3 { "{t.qr_code}" }
+                        div { dangerous_inner_html: "{svg}" }
                     }
                 }
             }

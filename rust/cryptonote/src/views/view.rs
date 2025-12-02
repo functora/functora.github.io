@@ -85,11 +85,9 @@ pub fn View() -> Element {
     };
 
     rsx! {
-        div {
-            h1 { "Cryptonote" }
-
-            if is_encrypted() {
-                div {
+        main {
+                if is_encrypted() {
+                    section {
                     h2 { "{t.encrypted_note}" }
                     p { "{t.encrypted_note_desc}" }
 
@@ -145,7 +143,7 @@ pub fn View() -> Element {
                     }
                 }
             } else if let Some(content) = note_content() {
-                div {
+                article {
                     h2 { "{t.your_note_title}" }
                     div {
                         pre { "{content}" }
@@ -153,16 +151,17 @@ pub fn View() -> Element {
                     a { href: "/", "Create a new note" }
                 }
             } else if let Some(err) = error_message() {
-                div {
+                section {
                     h2 { "{t.error_title}" }
                     p { "{err}" }
                     a { href: "/", "Create a new note" }
                 }
             } else {
-                div {
+                section {
                     p { "{t.loading}" }
                 }
             }
-        }
+            }
+
     }
 }

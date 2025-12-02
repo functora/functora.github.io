@@ -9,22 +9,22 @@ pub fn Navbar() -> Element {
 
     rsx! {
         nav {
-            Link { to: Route::Home {}, "🔐 {t.app_title}" }
-            select {
-                value: "{language().code()}",
-                onchange: move |evt| {
-                    language
-                        .set(
-                            match evt.value().as_str() {
-                                "es" => Language::Spanish,
-                                "ru" => Language::Russian,
-                                _ => Language::English,
-                            },
-                        );
-                },
-                option { value: "en", "English" }
-                option { value: "es", "Español" }
-                option { value: "ru", "Русский" }
+            label {
+                input { r#type: "checkbox" }
+                header {
+                    Link { to: Route::Home {}, "🔐 Cryptonote" }
+                }
+                ul {
+                    li { class: if language() == Language::English { "selected" },
+                        a { onclick: move |_| language.set(Language::English), "English" }
+                    }
+                    li { class: if language() == Language::Spanish { "selected" },
+                        a { onclick: move |_| language.set(Language::Spanish), "Español" }
+                    }
+                    li { class: if language() == Language::Russian { "selected" },
+                        a { onclick: move |_| language.set(Language::Russian), "Русский" }
+                    }
+                }
             }
         }
 

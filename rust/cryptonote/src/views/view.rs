@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 pub fn View() -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
-    
+
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut password_input = use_signal(|| String::new());
@@ -65,18 +65,17 @@ pub fn View() -> Element {
             }
 
             match decrypt_symmetric(enc, &pwd) {
-                Ok(plaintext) => match String::from_utf8(
-                    plaintext,
-                ) {
-                    Ok(text) => {
-                        note_content.set(Some(text));
-                        is_encrypted.set(false);
+                Ok(plaintext) => {
+                    match String::from_utf8(plaintext) {
+                        Ok(text) => {
+                            note_content.set(Some(text));
+                            is_encrypted.set(false);
+                        }
+                        Err(_) => error_message.set(Some(
+                            t.invalid_utf8.to_string(),
+                        )),
                     }
-                    Err(_) => error_message.set(Some(
-                        t.invalid_utf8
-                            .to_string(),
-                    )),
-                },
+                }
                 Err(e) => error_message.set(Some(format!(
                     "{}: {}",
                     t.decryption_failed, e

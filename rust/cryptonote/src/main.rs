@@ -4,9 +4,9 @@ use dioxus::prelude::*;
 
 use views::{Home, Navbar, View};
 
+mod components;
 mod crypto;
 mod encoding;
-mod components;
 mod i18n;
 mod views;
 
@@ -36,10 +36,11 @@ fn main() {
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
-    let mut language = use_signal(|| i18n::detect_browser_language());
-    
+    let mut language =
+        use_signal(|| i18n::detect_browser_language());
+
     use_context_provider(|| language);
-    
+
     // The `rsx!` macro lets us define HTML inside of rust. It expands to an Element with all of our HTML inside.
     // The `rsx!` macro lets us define HTML inside of rust. It expands to an Element with all of our HTML inside.
     rsx! {

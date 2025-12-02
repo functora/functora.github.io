@@ -188,7 +188,7 @@ pub fn Home() -> Element {
                     }
 
                     if let Some(svg) = qr_code_svg() {
-                        div { class: "qr-code",
+                        div {
                             h3 { "{t.qr_code}" }
                             div { dangerous_inner_html: "{svg}" }
                         }

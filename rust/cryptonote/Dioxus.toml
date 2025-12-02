@@ -3,7 +3,7 @@
 [web.app]
 
 # HTML title tag content
-title = "cryptonote"
+title = "Cryptonote"
 
 # include `assets` in web platform
 [web.resource]

@@ -9,10 +9,9 @@
 //! a common wrapper around all child routes.
 
 mod home;
-pub use home::Home;
-
-mod blog;
-pub use blog::Blog;
-
 mod navbar;
+mod view;
+
+pub use home::Home;
 pub use navbar::Navbar;
+pub use view::View;

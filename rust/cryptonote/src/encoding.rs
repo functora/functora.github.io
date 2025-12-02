@@ -1,4 +1,5 @@
 use crate::crypto::EncryptedData;
+use crate::error::AppError;
 use base64::{
     Engine, engine::general_purpose::URL_SAFE_NO_PAD,
 };
@@ -6,60 +7,50 @@ use qrcode::{QrCode, render::svg};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NoteData {
-    pub content: Vec<u8>,
-    pub encrypted: Option<EncryptedData>,
+pub enum NoteData {
+    PlainText(String),
+    CipherText(EncryptedData),
 }
 
 pub fn encode_note(
     note: &NoteData,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     serde_json::to_vec(note)
-        .map_err(|e| format!("Serialization failed: {}", e))
         .map(|bytes| URL_SAFE_NO_PAD.encode(bytes))
+        .map_err(Into::into)
 }
 
 pub fn decode_note(
     encoded: &str,
-) -> Result<NoteData, String> {
-    URL_SAFE_NO_PAD
-        .decode(encoded)
-        .map_err(|e| format!("Base64 decode failed: {}", e))
-        .and_then(|bytes| {
-            serde_json::from_slice(&bytes).map_err(|e| {
-                format!("Deserialization failed: {}", e)
-            })
-        })
+) -> Result<NoteData, AppError> {
+    let bytes = URL_SAFE_NO_PAD.decode(encoded)?;
+    serde_json::from_slice(&bytes).map_err(Into::into)
 }
 
 pub fn build_url(
     base_url: &str,
     note: &NoteData,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     encode_note(note).map(|encoded| {
         format!("{}#note={}", base_url, encoded)
     })
 }
 
-pub fn parse_url(url: &str) -> Result<NoteData, String> {
+pub fn parse_url(url: &str) -> Result<NoteData, AppError> {
     url.split("#note=")
         .nth(1)
-        .ok_or_else(|| "Invalid URL format".to_string())
+        .ok_or_else(|| AppError::InvalidUrl)
         .and_then(decode_note)
 }
 
 pub fn generate_qr_code(
     url: &str,
-) -> Result<String, String> {
-    QrCode::new(url)
-        .map_err(|e| {
-            format!("QR code generation failed: {}", e)
-        })
-        .map(|code| {
-            code.render::<svg::Color>()
-                .min_dimensions(200, 200)
-                .build()
-        })
+) -> Result<String, AppError> {
+    Ok(QrCode::new(url).map(|code| {
+        code.render::<svg::Color>()
+            .min_dimensions(200, 200)
+            .build()
+    })?)
 }
 
 #[cfg(test)]
@@ -69,16 +60,19 @@ mod tests {
 
     #[test]
     fn test_encode_decode_plaintext() {
-        let note = NoteData {
-            content: b"Hello, World!".to_vec(),
-            encrypted: None,
-        };
+        let note = NoteData::PlainText(
+            "Hello, World!".to_string(),
+        );
         let encoded =
             encode_note(&note).expect("Encoding failed");
         let decoded =
             decode_note(&encoded).expect("Decoding failed");
-        assert_eq!(note.content, decoded.content);
-        assert!(decoded.encrypted.is_none());
+        match decoded {
+            NoteData::PlainText(text) => {
+                assert_eq!(text, "Hello, World!")
+            }
+            _ => panic!("Expected PlainText"),
+        }
     }
 
     #[test]
@@ -90,26 +84,29 @@ mod tests {
             CipherType::ChaCha20Poly1305,
         )
         .expect("Encryption failed");
-        let note = NoteData {
-            content: vec![],
-            encrypted: Some(encrypted),
-        };
+        let note = NoteData::CipherText(encrypted);
         let encoded =
             encode_note(&note).expect("Encoding failed");
         let decoded =
             decode_note(&encoded).expect("Decoding failed");
-        assert_eq!(
-            note.encrypted.unwrap().ciphertext,
-            decoded.encrypted.unwrap().ciphertext
-        );
+
+        match decoded {
+            NoteData::CipherText(enc_data) => {
+                assert_eq!(
+                    note.as_ciphertext()
+                        .unwrap()
+                        .ciphertext,
+                    enc_data.ciphertext
+                );
+            }
+            _ => panic!("Expected CipherText"),
+        }
     }
 
     #[test]
     fn test_build_parse_url() {
-        let note = NoteData {
-            content: b"Test note".to_vec(),
-            encrypted: None,
-        };
+        let note =
+            NoteData::PlainText("Test note".to_string());
         let url =
             build_url("https://example.com/view", &note)
                 .expect("URL build failed");
@@ -120,7 +117,12 @@ mod tests {
         );
         let parsed =
             parse_url(&url).expect("URL parse failed");
-        assert_eq!(note.content, parsed.content);
+        match parsed {
+            NoteData::PlainText(text) => {
+                assert_eq!(text, "Test note")
+            }
+            _ => panic!("Expected PlainText"),
+        }
     }
 
     #[test]
@@ -143,5 +145,14 @@ mod tests {
         let result =
             parse_url("https://example.com/no-note-param");
         assert!(result.is_err());
+    }
+}
+
+impl NoteData {
+    pub fn as_ciphertext(&self) -> Option<&EncryptedData> {
+        match self {
+            NoteData::CipherText(data) => Some(data),
+            _ => None,
+        }
     }
 }

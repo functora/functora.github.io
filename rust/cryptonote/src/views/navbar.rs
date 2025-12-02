@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 #[component]
 pub fn Navbar() -> Element {
     let mut language = use_context::<Signal<Language>>();
-    let t = get_translations(language());
+    let _t = get_translations(language());
 
     rsx! {
         nav {

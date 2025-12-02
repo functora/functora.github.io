@@ -7,6 +7,7 @@ use views::{Home, Navbar, View};
 mod components;
 mod crypto;
 mod encoding;
+mod error;
 mod i18n;
 mod views;
 
@@ -36,7 +37,7 @@ fn main() {
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
-    let mut language =
+    let language =
         use_signal(|| i18n::detect_browser_language());
 
     use_context_provider(|| language);

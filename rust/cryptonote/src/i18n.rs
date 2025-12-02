@@ -23,28 +23,11 @@ impl Language {
             _ => Language::English,
         }
     }
-
-    pub fn code(&self) -> &'static str {
-        match self {
-            Language::English => "en",
-            Language::Spanish => "es",
-            Language::Russian => "ru",
-        }
-    }
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            Language::English => "English",
-            Language::Spanish => "Español",
-            Language::Russian => "Русский",
-        }
-    }
 }
 
 #[derive(Clone)]
 pub struct Translations {
     pub note_placeholder: &'static str,
-    pub encryption_options: &'static str,
     pub no_encryption: &'static str,
     pub password_encryption: &'static str,
     pub cipher: &'static str,
@@ -58,7 +41,6 @@ pub struct Translations {
     pub encrypted_note_desc: &'static str,
     pub decrypt_button: &'static str,
     pub your_note_title: &'static str,
-    pub create_new_note: &'static str,
     pub error_title: &'static str,
     pub loading: &'static str,
     pub password_required: &'static str,
@@ -69,13 +51,18 @@ pub struct Translations {
     pub no_note_in_url: &'static str,
     pub decryption_failed: &'static str,
     pub invalid_utf8: &'static str,
+    pub crypto_error: &'static str,
+    pub encoding_error: &'static str,
+    pub utf8_error: &'static str,
+    pub invalid_url_error: &'static str,
+    pub missing_salt_error: &'static str,
+    pub invalid_encryption_mode_error: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
     match lang {
         Language::English => Translations {
             note_placeholder: "Enter your note here...",
-            encryption_options: "Encryption Options",
             no_encryption: "No encryption (plaintext)",
             password_encryption: "Password encryption",
             cipher: "Cipher",
@@ -87,9 +74,8 @@ pub fn get_translations(lang: Language) -> Translations {
             qr_code: "QR Code",
             encrypted_note: "🔒 Encrypted Note",
             encrypted_note_desc: "This note is encrypted. Enter the password to decrypt it.",
-            decrypt_button: "Decrypt",
-            your_note_title: "📝 Your Note",
-            create_new_note: "Create a new note",
+            decrypt_button: "Decrypt Note",
+            your_note_title: "Your Note",
             error_title: "Error",
             loading: "Loading note...",
             password_required: "Password is required for encryption",
@@ -100,10 +86,15 @@ pub fn get_translations(lang: Language) -> Translations {
             no_note_in_url: "No note found in URL",
             decryption_failed: "Decryption failed",
             invalid_utf8: "Decrypted data is not valid UTF-8",
+            crypto_error: "Cryptography error",
+            encoding_error: "Encoding error",
+            utf8_error: "Text encoding error",
+            invalid_url_error: "Invalid URL format",
+            missing_salt_error: "Missing encryption salt",
+            invalid_encryption_mode_error: "Invalid encryption mode",
         },
         Language::Spanish => Translations {
             note_placeholder: "Escribe tu nota aquí...",
-            encryption_options: "Opciones de Cifrado",
             no_encryption: "Sin cifrado (texto plano)",
             password_encryption: "Cifrado con contraseña",
             cipher: "Cifrado",
@@ -115,9 +106,8 @@ pub fn get_translations(lang: Language) -> Translations {
             qr_code: "Código QR",
             encrypted_note: "🔒 Nota Cifrada",
             encrypted_note_desc: "Esta nota está cifrada. Ingresa la contraseña para descifrarla.",
-            decrypt_button: "Descifrar",
-            your_note_title: "📝 Tu Nota",
-            create_new_note: "Crear una nota nueva",
+            decrypt_button: "Descifrar Nota",
+            your_note_title: "Tu Nota",
             error_title: "Error",
             loading: "Cargando nota...",
             password_required: "Se requiere contraseña para el cifrado",
@@ -128,10 +118,15 @@ pub fn get_translations(lang: Language) -> Translations {
             no_note_in_url: "No se encontró nota en la URL",
             decryption_failed: "Falló el descifrado",
             invalid_utf8: "Los datos descifrados no son UTF-8 válidos",
+            crypto_error: "Error criptográfico",
+            encoding_error: "Error de codificación",
+            utf8_error: "Error de codificación de texto",
+            invalid_url_error: "Formato de URL inválido",
+            missing_salt_error: "Falta sal de cifrado",
+            invalid_encryption_mode_error: "Modo de cifrado inválido",
         },
         Language::Russian => Translations {
             note_placeholder: "Введите вашу заметку здесь...",
-            encryption_options: "Параметры Шифрования",
             no_encryption: "Без шифрования (открытый текст)",
             password_encryption: "Шифрование паролем",
             cipher: "Шифр",
@@ -143,9 +138,8 @@ pub fn get_translations(lang: Language) -> Translations {
             qr_code: "QR-код",
             encrypted_note: "🔒 Зашифрованная Заметка",
             encrypted_note_desc: "Эта заметка зашифрована. Введите пароль для расшифровки.",
-            decrypt_button: "Расшифровать",
-            your_note_title: "📝 Ваша Заметка",
-            create_new_note: "Создать новую заметку",
+            decrypt_button: "Расшифровать Заметку",
+            your_note_title: "Ваша Заметка",
             error_title: "Ошибка",
             loading: "Загрузка заметки...",
             password_required: "Для шифрования требуется пароль",
@@ -156,6 +150,12 @@ pub fn get_translations(lang: Language) -> Translations {
             no_note_in_url: "Заметка не найдена в URL",
             decryption_failed: "Ошибка расшифровки",
             invalid_utf8: "Расшифрованные данные не являются допустимым UTF-8",
+            crypto_error: "Криптографическая ошибка",
+            encoding_error: "Ошибка кодирования",
+            utf8_error: "Ошибка кодировки текста",
+            invalid_url_error: "Неверный формат URL",
+            missing_salt_error: "Отсутствует соль шифрования",
+            invalid_encryption_mode_error: "Неверный режим шифрования",
         },
     }
 }

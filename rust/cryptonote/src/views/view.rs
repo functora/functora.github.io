@@ -1,47 +1,40 @@
-use crate::crypto::{EncryptionMode, decrypt_symmetric};
-use crate::encoding::parse_url;
-use crate::i18n::{Language, get_translations};
+use crate::crypto::decrypt_symmetric;
+use crate::encoding::{parse_url, NoteData};
+use crate::i18n::{get_translations, Language};
 use dioxus::prelude::*;
+use web_sys::window;
 
 #[component]
 pub fn View() -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
-
-    let mut note_content =
-        use_signal(|| Option::<String>::None);
-    let mut password_input = use_signal(|| String::new());
+    let mut note_content = use_signal(|| Option::<String>::None);
+    let mut encrypted_data =
+        use_signal(|| Option::<crate::crypto::EncryptedData>::None);
+    let mut password_input = use_signal(String::new);
     let mut error_message =
         use_signal(|| Option::<String>::None);
-    let mut encrypted_data = use_signal(|| {
-        Option::<crate::crypto::EncryptedData>::None
-    });
     let mut is_encrypted = use_signal(|| false);
 
     use_effect(move || {
-        if let Some(window) = web_sys::window() {
+        let t = get_translations(language());
+        if let Some(window) = window() {
             if let Ok(href) = window.location().href() {
                 if href.contains("#note=") {
                     match parse_url(&href) {
                         Ok(note_data) => {
-                            if let Some(enc) =
-                                note_data.encrypted
-                            {
-                                is_encrypted.set(true);
-                                encrypted_data
-                                    .set(Some(enc));
-                            } else {
-                                match String::from_utf8(note_data.content) {
-                                    Ok(text) => note_content.set(Some(text)),
-                                    Err(_) => error_message.set(Some("Invalid UTF-8 in note".to_string())),
+                            match note_data {
+                                NoteData::CipherText(enc) => {
+                                    is_encrypted.set(true);
+                                    encrypted_data.set(Some(enc));
+                                }
+                                NoteData::PlainText(text) => {
+                                    note_content.set(Some(text));
                                 }
                             }
                         }
                         Err(e) => error_message.set(Some(
-                            format!(
-                                "{}: {}",
-                                t.failed_to_parse_url, e
-                            ),
+                            e.localized(&t)
                         )),
                     }
                 } else {
@@ -54,6 +47,7 @@ pub fn View() -> Element {
     });
 
     let decrypt_note = move |_evt: Event<MouseData>| {
+        let t = get_translations(language());
         error_message.set(None);
         if let Some(enc) = encrypted_data.read().as_ref() {
             let pwd = password_input.read().clone();
@@ -76,10 +70,9 @@ pub fn View() -> Element {
                         )),
                     }
                 }
-                Err(e) => error_message.set(Some(format!(
-                    "{}: {}",
-                    t.decryption_failed, e
-                ))),
+                Err(e) => error_message.set(Some(
+                    e.localized(&t)
+                )),
             }
         }
     };
@@ -88,27 +81,18 @@ pub fn View() -> Element {
         main {
                 if is_encrypted() {
                     section {
-                    h2 { "{t.encrypted_note}" }
-                    p { "{t.encrypted_note_desc}" }
+                        h2 { "{t.encrypted_note}" }
+                        p { "{t.encrypted_note_desc}" }
 
-                    if let Some(enc) = encrypted_data.read().as_ref() {
-                        div {
+                        if let Some(enc) = encrypted_data() {
                             p {
-                                "Cipher: "
-                                strong {
-                                    match enc.mode {
-                                        EncryptionMode::Symmetric { cipher } => {
-                                            match cipher {
-                                                crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
-                                                crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",
-                                            }
-                                        }
-                                        _ => "Unknown",
-                                    }
+                                strong { "{t.cipher}: " }
+                                match enc.cipher {
+                                    crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
+                                    crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",
                                 }
                             }
                         }
-                    }
 
                     div {
                         input {
@@ -118,17 +102,23 @@ pub fn View() -> Element {
                             oninput: move |evt| password_input.set(evt.value()),
                             onkeydown: move |evt| {
                                 if evt.key() == Key::Enter {
+                                    let t = get_translations(language());
                                     error_message.set(None);
                                     if let Some(enc) = encrypted_data.read().as_ref() {
                                         let pwd = password_input.read().clone();
                                         if !pwd.is_empty() {
-                                            if let Ok(plaintext) = decrypt_symmetric(enc, &pwd) {
-                                                if let Ok(text) = String::from_utf8(plaintext) {
-                                                    note_content.set(Some(text));
-                                                    is_encrypted.set(false);
+                                            match decrypt_symmetric(enc, &pwd) {
+                                                Ok(plaintext) => {
+                                                    if let Ok(text) = String::from_utf8(plaintext) {
+                                                        note_content.set(Some(text));
+                                                        is_encrypted.set(false);
+                                                    } else {
+                                                        error_message.set(Some(t.invalid_utf8.to_string()));
+                                                    }
                                                 }
-                                            } else {
-                                                error_message.set(Some("Decryption failed".to_string()));
+                                                Err(e) => {
+                                                    error_message.set(Some(e.localized(&t)));
+                                                }
                                             }
                                         }
                                     }

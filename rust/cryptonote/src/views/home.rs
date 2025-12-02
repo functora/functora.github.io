@@ -11,10 +11,7 @@ pub fn Home() -> Element {
     let t = get_translations(language());
 
     let mut note_text = use_signal(|| String::new());
-    let mut encryption_mode =
-        use_signal(|| "none".to_string());
-    let mut cipher_type =
-        use_signal(|| "chacha20".to_string());
+    let mut encryption = use_signal(|| Option::<CipherType>::None);
     let mut password = use_signal(|| String::new());
     let mut generated_url =
         use_signal(|| Option::<String>::None);
@@ -24,25 +21,17 @@ pub fn Home() -> Element {
         use_signal(|| Option::<String>::None);
 
     let generate_note = move |_| {
+        let t = get_translations(language());
         error_message.set(None);
         generated_url.set(None);
         qr_code_svg.set(None);
 
         let note_content = note_text.read().clone();
-        let enc_mode = encryption_mode.read().clone();
-        let cipher =
-            if cipher_type.read().as_str() == "chacha20" {
-                CipherType::ChaCha20Poly1305
-            } else {
-                CipherType::Aes256Gcm
-            };
+        let enc_option = encryption.read().clone();
 
-        let note_data = match enc_mode.as_str() {
-            "none" => NoteData {
-                content: note_content.into_bytes(),
-                encrypted: None,
-            },
-            "symmetric" => {
+        let note_data = match enc_option {
+            None => NoteData::PlainText(note_content),
+            Some(cipher) => {
                 let pwd = password.read().clone();
                 if pwd.is_empty() {
                     error_message.set(Some(
@@ -55,22 +44,14 @@ pub fn Home() -> Element {
                     &pwd,
                     cipher,
                 ) {
-                    Ok(encrypted) => NoteData {
-                        content: vec![],
-                        encrypted: Some(encrypted),
-                    },
+                    Ok(encrypted) => NoteData::CipherText(encrypted),
                     Err(e) => {
-                        error_message.set(Some(format!(
-                            "{}: {}",
-                            t.encryption_failed, e
-                        )));
+                        error_message.set(Some(
+                            e.localized(&t)
+                        ));
                         return;
                     }
                 }
-            }
-            _ => {
-                error_message.set(Some("Asymmetric encryption not yet implemented".to_string()));
-                return;
             }
         };
 
@@ -90,18 +71,16 @@ pub fn Home() -> Element {
                 match generate_qr_code(&url) {
                     Ok(svg) => qr_code_svg.set(Some(svg)),
                     Err(e) => {
-                        error_message.set(Some(format!(
-                            "{}: {}",
-                            t.qr_generation_failed, e
-                        )))
+                        error_message.set(Some(
+                            e.localized(&t)
+                        ))
                     }
                 }
                 generated_url.set(Some(url));
             }
-            Err(e) => error_message.set(Some(format!(
-                "{}: {}",
-                t.url_generation_failed, e
-            ))),
+            Err(e) => error_message.set(Some(
+                e.localized(&t)
+            )),
         }
     };
 
@@ -117,13 +96,15 @@ pub fn Home() -> Element {
                     oninput: move |evt| note_text.set(evt.value()),
                 }
 
+                br {}
+
                 input {
                     r#type: "radio",
                     id: "enc_none",
                     name: "encryption",
                     value: "none",
-                    checked: encryption_mode() == "none",
-                    onchange: move |_| encryption_mode.set("none".to_string()),
+                    checked: encryption().is_none(),
+                    onchange: move |_| encryption.set(None),
                 }
                 label { r#for: "enc_none", "{t.no_encryption}" }
 
@@ -134,17 +115,26 @@ pub fn Home() -> Element {
                     id: "enc_symmetric",
                     name: "encryption",
                     value: "symmetric",
-                    checked: encryption_mode() == "symmetric",
-                    onchange: move |_| encryption_mode.set("symmetric".to_string()),
+                    checked: encryption().is_some(),
+                    onchange: move |_| encryption.set(Some(CipherType::ChaCha20Poly1305)),
                 }
                 label { r#for: "enc_symmetric", "{t.password_encryption}" }
 
-                if encryption_mode() == "symmetric" {
+                if let Some(cipher) = encryption() {
 
                     label { "{t.cipher}" }
                     select {
-                        value: "{cipher_type}",
-                        onchange: move |evt| cipher_type.set(evt.value()),
+                        value: match cipher {
+                            CipherType::ChaCha20Poly1305 => "chacha20",
+                            CipherType::Aes256Gcm => "aes",
+                        },
+                        onchange: move |evt| {
+                            let new_cipher = match evt.value().as_str() {
+                                "aes" => CipherType::Aes256Gcm,
+                                _ => CipherType::ChaCha20Poly1305,
+                            };
+                            encryption.set(Some(new_cipher));
+                        },
                         option { value: "chacha20", "ChaCha20-Poly1305" }
                         option { value: "aes", "AES-256-GCM" }
                     }

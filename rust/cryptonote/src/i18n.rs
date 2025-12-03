@@ -27,10 +27,12 @@ impl Language {
 
 #[derive(Clone)]
 pub struct Translations {
+    pub note: &'static str,
     pub note_placeholder: &'static str,
+    pub mode: &'static str,
     pub no_encryption: &'static str,
     pub password_encryption: &'static str,
-    pub cipher: &'static str,
+    pub algorithm: &'static str,
     pub password: &'static str,
     pub password_placeholder: &'static str,
     pub generate_button: &'static str,
@@ -60,10 +62,12 @@ pub struct Translations {
 pub fn get_translations(lang: Language) -> Translations {
     match lang {
         Language::English => Translations {
+            note: "Note",
             note_placeholder: "Enter your note here...",
+            mode: "Mode",
             no_encryption: "No encryption (plaintext)",
             password_encryption: "Password encryption",
-            cipher: "Cipher",
+            algorithm: "Algorithm",
             password: "Password",
             password_placeholder: "Enter password",
             generate_button: "Generate Shareable Link",
@@ -90,10 +94,12 @@ pub fn get_translations(lang: Language) -> Translations {
             url_error: "Invalid URL format",
         },
         Language::Spanish => Translations {
+            note: "Nota",
             note_placeholder: "Escribe tu nota aquí...",
+            mode: "Modo",
             no_encryption: "Sin cifrado (texto plano)",
             password_encryption: "Cifrado con contraseña",
-            cipher: "Cifrado",
+            algorithm: "Algoritmo",
             password: "Contraseña",
             password_placeholder: "Ingresa contraseña",
             generate_button: "Generar Enlace Compartible",
@@ -120,10 +126,12 @@ pub fn get_translations(lang: Language) -> Translations {
             url_error: "Formato de URL inválido",
         },
         Language::Russian => Translations {
+            note: "Заметка",
             note_placeholder: "Введите вашу заметку здесь...",
+            mode: "Режим",
             no_encryption: "Без шифрования (открытый текст)",
             password_encryption: "Шифрование паролем",
-            cipher: "Шифр",
+            algorithm: "Алгоритм",
             password: "Пароль",
             password_placeholder: "Введите пароль",
             generate_button: "Создать Ссылку для Обмена",

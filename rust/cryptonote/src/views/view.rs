@@ -86,7 +86,7 @@ pub fn View() -> Element {
 
                         if let Some(enc) = encrypted_data() {
                             p {
-                                strong { "{t.cipher}: " }
+                                strong { "{t.algorithm}: " }
                                 match enc.cipher {
                                     crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
                                     crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",

@@ -11,7 +11,8 @@ pub fn Home() -> Element {
     let t = get_translations(language());
 
     let mut note_text = use_signal(|| String::new());
-    let mut encryption = use_signal(|| Option::<CipherType>::None);
+    let mut encryption =
+        use_signal(|| Option::<CipherType>::None);
     let mut password = use_signal(|| String::new());
     let mut generated_url =
         use_signal(|| Option::<String>::None);
@@ -44,11 +45,12 @@ pub fn Home() -> Element {
                     &pwd,
                     cipher,
                 ) {
-                    Ok(encrypted) => NoteData::CipherText(encrypted),
+                    Ok(encrypted) => {
+                        NoteData::CipherText(encrypted)
+                    }
                     Err(e) => {
-                        error_message.set(Some(
-                            e.localized(&t)
-                        ));
+                        error_message
+                            .set(Some(e.localized(&t)));
                         return;
                     }
                 }
@@ -70,17 +72,14 @@ pub fn Home() -> Element {
             Ok(url) => {
                 match generate_qr_code(&url) {
                     Ok(svg) => qr_code_svg.set(Some(svg)),
-                    Err(e) => {
-                        error_message.set(Some(
-                            e.localized(&t)
-                        ))
-                    }
+                    Err(e) => error_message
+                        .set(Some(e.localized(&t))),
                 }
                 generated_url.set(Some(url));
             }
-            Err(e) => error_message.set(Some(
-                e.localized(&t)
-            )),
+            Err(e) => {
+                error_message.set(Some(e.localized(&t)))
+            }
         }
     };
 
@@ -88,7 +87,7 @@ pub fn Home() -> Element {
         section {
             fieldset {
 
-                label { "{t.password}" }
+                label { "{t.note}" }
                 textarea {
                     placeholder: "{t.note_placeholder}",
                     rows: "8",
@@ -96,33 +95,32 @@ pub fn Home() -> Element {
                     oninput: move |evt| note_text.set(evt.value()),
                 }
 
-                br {}
+                label { "{t.mode}" }
 
                 input {
                     r#type: "radio",
-                    id: "enc_none",
-                    name: "encryption",
                     value: "none",
                     checked: encryption().is_none(),
                     onchange: move |_| encryption.set(None),
                 }
-                label { r#for: "enc_none", "{t.no_encryption}" }
+                label { "{t.no_encryption}" }
 
                 br {}
 
                 input {
                     r#type: "radio",
-                    id: "enc_symmetric",
-                    name: "encryption",
                     value: "symmetric",
                     checked: encryption().is_some(),
                     onchange: move |_| encryption.set(Some(CipherType::ChaCha20Poly1305)),
                 }
-                label { r#for: "enc_symmetric", "{t.password_encryption}" }
+                label { "{t.password_encryption}" }
 
                 if let Some(cipher) = encryption() {
 
-                    label { "{t.cipher}" }
+                    br {}
+                    br {}
+
+                    label { "{t.algorithm}" }
                     select {
                         value: match cipher {
                             CipherType::ChaCha20Poly1305 => "chacha20",

@@ -98,7 +98,16 @@ pub fn View() -> Element {
     rsx! {
         if is_encrypted() {
             section {
-                h2 { "{t.encrypted_note}" }
+                div {
+                    a {
+                        href: "#",
+                        onclick: move |_| {
+                            nav.push("/");
+                        },
+                        "{t.home}"
+                    }
+                    " > {t.encrypted_note}"
+                }
                 p { "{t.encrypted_note_desc}" }
 
                 if let Some(enc) = encrypted_data() {
@@ -166,7 +175,16 @@ pub fn View() -> Element {
             }
         } else if let Some(content) = note_content() {
             section {
-                h2 { "{t.your_note_title}" }
+                div {
+                    a {
+                        href: "#",
+                        onclick: move |_| {
+                            nav.push("/");
+                        },
+                        "{t.home}"
+                    }
+                    " > {t.your_note_title}"
+                }
                 article {
                     pre { "{content}" }
                 }
@@ -206,7 +224,16 @@ pub fn View() -> Element {
             }
         } else if let Some(err) = error_message() {
             section {
-                h2 { "{t.error_title}" }
+                div {
+                    a {
+                        href: "#",
+                        onclick: move |_| {
+                            nav.push("/");
+                        },
+                        "{t.home}"
+                    }
+                    " > {t.error_title}"
+                }
                 p { "{err}" }
                 p {
                     button {

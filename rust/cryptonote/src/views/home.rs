@@ -169,6 +169,23 @@ pub fn Home() -> Element {
 
                 p {
                     button { onclick: generate_note, "{t.generate_button}" }
+                    button {
+                        onclick: move |_| {
+                            note_text.set(String::new());
+                            encryption.set(None);
+                            password.set(String::new());
+                            error_message.set(None);
+                            app_context
+                                .set(crate::AppContext {
+                                    content: None,
+                                    password: String::new(),
+                                    cipher: None,
+                                    share_url: None,
+                                    qr_code: None,
+                                });
+                        },
+                        "{t.create_new_note}"
+                    }
 
                     if let Some(err) = error_message() {
                         div { "{err}" }

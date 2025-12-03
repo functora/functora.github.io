@@ -32,13 +32,13 @@ pub fn Navbar() -> Element {
                     }
                 }
                 ul {
-                    li { class: if language() == Language::English { "selected" },
+                    li { class: if language() == Language::English { "primary" },
                         a { onclick: move |_| language.set(Language::English), "English" }
                     }
-                    li { class: if language() == Language::Spanish { "selected" },
+                    li { class: if language() == Language::Spanish { "primary" },
                         a { onclick: move |_| language.set(Language::Spanish), "Español" }
                     }
-                    li { class: if language() == Language::Russian { "selected" },
+                    li { class: if language() == Language::Russian { "primary" },
                         a { onclick: move |_| language.set(Language::Russian), "Русский" }
                     }
                 }

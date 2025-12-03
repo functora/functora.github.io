@@ -59,6 +59,7 @@ pub struct Translations {
     pub encrypt_error: &'static str,
     pub decrypt_error: &'static str,
     pub url_error: &'static str,
+    pub home: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -96,6 +97,7 @@ pub fn get_translations(lang: Language) -> Translations {
             encrypt_error: "Encryption failed",
             decrypt_error: "Decryption failed",
             url_error: "Invalid URL format",
+            home: "Home",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -130,6 +132,7 @@ pub fn get_translations(lang: Language) -> Translations {
             encrypt_error: "Falló el cifrado",
             decrypt_error: "Falló el descifrado",
             url_error: "Formato de URL inválido",
+            home: "Inicio",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -164,6 +167,7 @@ pub fn get_translations(lang: Language) -> Translations {
             encrypt_error: "Ошибка шифрования",
             decrypt_error: "Ошибка расшифровки",
             url_error: "Неверный формат URL",
+            home: "Главная",
         },
     }
 }

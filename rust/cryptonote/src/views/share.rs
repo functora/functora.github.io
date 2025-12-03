@@ -33,14 +33,26 @@ pub fn Share() -> Element {
     });
 
     rsx! {
+        div { "data-element": "card",
+            a {
+                href: "#",
+                onclick: move |_| {
+                    nav.push("/");
+                },
+                "{t.home}"
+            }
+            " > {t.share_title}"
+        }
         section {
-            h2 { "{t.share_title}" }
 
             if !url().is_empty() {
                 fieldset {
+                    if !qr_code().is_empty() {
+                        div { dangerous_inner_html: "{qr_code}" }
+                    }
+
                     label { "{t.click_to_copy}" }
-                    input {
-                        r#type: "text",
+                    textarea {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
@@ -51,37 +63,30 @@ pub fn Share() -> Element {
                             }
                         },
                     }
-                }
 
-                if !qr_code().is_empty() {
-                    figure {
-                        h3 { "{t.qr_code}" }
-                        div { dangerous_inner_html: "{qr_code}" }
-                    }
-                }
-
-                p {
-                    if note_content.peek().is_some() {
+                    p {
+                        if note_content.peek().is_some() {
+                            button {
+                                onclick: move |_| {
+                                    nav.push("/");
+                                },
+                                "{t.edit_note}"
+                            }
+                        }
                         button {
                             onclick: move |_| {
+                                app_context
+                                    .set(crate::AppContext {
+                                        content: None,
+                                        password: String::new(),
+                                        cipher: None,
+                                        share_url: None,
+                                        qr_code: None,
+                                    });
                                 nav.push("/");
                             },
-                            "{t.edit_note}"
+                            "{t.create_new_note}"
                         }
-                    }
-                    button {
-                        onclick: move |_| {
-                            app_context
-                                .set(crate::AppContext {
-                                    content: None,
-                                    password: String::new(),
-                                    cipher: None,
-                                    share_url: None,
-                                    qr_code: None,
-                                });
-                            nav.push("/");
-                        },
-                        "{t.create_new_note}"
                     }
                 }
             } else {

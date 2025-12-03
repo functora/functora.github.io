@@ -22,15 +22,15 @@ impl AppError {
         t: &crate::i18n::Translations,
     ) -> String {
         let msg = match self {
-            AppError::Cipher(_) => t.crypto_error,
-            AppError::Getrandom(_) => t.crypto_error,
-            AppError::Base64(_) => t.encoding_error,
-            AppError::Json(_) => t.encoding_error,
+            AppError::Cipher(_) => t.cipher_error,
+            AppError::Getrandom(_) => t.getrandom_error,
+            AppError::Base64(_) => t.base64_error,
+            AppError::Json(_) => t.json_error,
             AppError::Utf8(_) => t.utf8_error,
-            AppError::Qr(_) => t.utf8_error,
-            AppError::Encrypt => t.crypto_error,
-            AppError::Decrypt => t.crypto_error,
-            AppError::Url => t.invalid_url_error,
+            AppError::Qr(_) => t.qr_error,
+            AppError::Encrypt => t.encrypt_error,
+            AppError::Decrypt => t.decrypt_error,
+            AppError::Url => t.url_error,
         };
         format!("{}: {}", msg, self)
     }

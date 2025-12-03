@@ -74,7 +74,7 @@ pub fn encrypt_symmetric(
                 chacha20poly1305::Nonce::from_slice(&nonce);
             cipher
                 .encrypt(nonce_array, plaintext)
-                .map_err(AppError::ChaChaPoly1305)?
+                .map_err(|_| AppError::Encrypt)?
         }
         CipherType::Aes256Gcm => {
             let cipher = Aes256Gcm::new_from_slice(&key)?;
@@ -82,7 +82,7 @@ pub fn encrypt_symmetric(
                 aes_gcm::Nonce::from_slice(&nonce);
             cipher
                 .encrypt(nonce_array, plaintext)
-                .map_err(AppError::AesGcm)?
+                .map_err(|_| AppError::Encrypt)?
         }
     };
 
@@ -115,7 +115,7 @@ pub fn decrypt_symmetric(
                     nonce_array,
                     data.ciphertext.as_ref(),
                 )
-                .map_err(AppError::ChaChaPoly1305)
+                .map_err(|_| AppError::Decrypt)
         }
         CipherType::Aes256Gcm => {
             let cipher = Aes256Gcm::new_from_slice(&key)?;
@@ -126,7 +126,7 @@ pub fn decrypt_symmetric(
                     nonce_array,
                     data.ciphertext.as_ref(),
                 )
-                .map_err(AppError::AesGcm)
+                .map_err(|_| AppError::Decrypt)
         }
     }
 }

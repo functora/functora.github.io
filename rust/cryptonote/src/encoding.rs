@@ -39,7 +39,7 @@ pub fn build_url(
 pub fn parse_url(url: &str) -> Result<NoteData, AppError> {
     url.split("#note=")
         .nth(1)
-        .ok_or_else(|| AppError::InvalidUrl)
+        .ok_or_else(|| AppError::Url)
         .and_then(decode_note)
 }
 

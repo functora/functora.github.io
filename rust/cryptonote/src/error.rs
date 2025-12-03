@@ -1,18 +1,19 @@
 pub use derive_more::Display;
 use qrcode::types::QrError;
 use sha2::digest;
+use std::string::FromUtf8Error;
 
 #[derive(Debug, Display)]
 pub enum AppError {
-    SymKey(digest::InvalidLength),
-    AesGcm(aes_gcm::Error),
-    ChaChaPoly1305(chacha20poly1305::Error),
-    Getrandom(String),
+    Cipher(digest::InvalidLength),
+    Getrandom(getrandom::Error),
+    Base64(base64::DecodeError),
     Json(serde_json::Error),
-    Base64(String),
-    Utf8(String),
+    Utf8(FromUtf8Error),
     Qr(QrError),
-    InvalidUrl,
+    Encrypt,
+    Decrypt,
+    Url,
 }
 
 impl AppError {
@@ -20,39 +21,40 @@ impl AppError {
         &self,
         t: &crate::i18n::Translations,
     ) -> String {
-        match self {
-            AppError::SymKey(msg) => {
-                format!("{}: {}", t.crypto_error, msg)
-            }
-            AppError::AesGcm(msg) => {
-                format!("{}: {}", t.crypto_error, msg)
-            }
-            AppError::ChaChaPoly1305(msg) => {
-                format!("{}: {}", t.crypto_error, msg)
-            }
-            AppError::Getrandom(msg) => {
-                format!("{}: {}", t.crypto_error, msg)
-            }
-            AppError::Base64(msg) => {
-                format!("{}: {}", t.encoding_error, msg)
-            }
-            AppError::Json(msg) => {
-                format!("{}: {}", t.encoding_error, msg)
-            }
-            AppError::Utf8(msg) => {
-                format!("{}: {}", t.utf8_error, msg)
-            }
-            AppError::Qr(msg) => {
-                format!("{}: {}", t.utf8_error, msg)
-            }
-            AppError::InvalidUrl => {
-                t.invalid_url_error.to_string()
-            }
-        }
+        let msg = match self {
+            AppError::Cipher(_) => t.crypto_error,
+            AppError::Getrandom(_) => t.crypto_error,
+            AppError::Base64(_) => t.encoding_error,
+            AppError::Json(_) => t.encoding_error,
+            AppError::Utf8(_) => t.utf8_error,
+            AppError::Qr(_) => t.utf8_error,
+            AppError::Encrypt => t.crypto_error,
+            AppError::Decrypt => t.crypto_error,
+            AppError::Url => t.invalid_url_error,
+        };
+        format!("{}: {}", msg, self)
     }
 }
 
 impl std::error::Error for AppError {}
+
+impl From<digest::InvalidLength> for AppError {
+    fn from(e: digest::InvalidLength) -> Self {
+        AppError::Cipher(e)
+    }
+}
+
+impl From<getrandom::Error> for AppError {
+    fn from(e: getrandom::Error) -> Self {
+        AppError::Getrandom(e)
+    }
+}
+
+impl From<base64::DecodeError> for AppError {
+    fn from(e: base64::DecodeError) -> Self {
+        AppError::Base64(e)
+    }
+}
 
 impl From<serde_json::Error> for AppError {
     fn from(e: serde_json::Error) -> Self {
@@ -60,27 +62,9 @@ impl From<serde_json::Error> for AppError {
     }
 }
 
-impl From<base64::DecodeError> for AppError {
-    fn from(err: base64::DecodeError) -> Self {
-        AppError::Base64(err.to_string())
-    }
-}
-
-impl From<std::string::FromUtf8Error> for AppError {
-    fn from(err: std::string::FromUtf8Error) -> Self {
-        AppError::Utf8(err.to_string())
-    }
-}
-
-impl From<getrandom::Error> for AppError {
-    fn from(err: getrandom::Error) -> Self {
-        AppError::Getrandom(err.to_string())
-    }
-}
-
-impl From<digest::InvalidLength> for AppError {
-    fn from(e: digest::InvalidLength) -> Self {
-        AppError::SymKey(e)
+impl From<FromUtf8Error> for AppError {
+    fn from(e: FromUtf8Error) -> Self {
+        AppError::Utf8(e)
     }
 }
 

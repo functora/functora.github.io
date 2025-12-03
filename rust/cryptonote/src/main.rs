@@ -1,8 +1,5 @@
-// The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
-// need dioxus
 use dioxus::prelude::*;
-
-use views::{Home, Navbar, View};
+use views::{Home, Navbar, Share, View};
 
 mod components;
 mod crypto;
@@ -19,39 +16,44 @@ enum Route {
         Home {},
         #[route("/view")]
         View {},
+        #[route("/share")]
+        Share {},
 }
 
-// We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
-// The macro returns an `Asset` type that will display as the path to the asset in the browser or a local path in desktop bundles.
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 fn main() {
-    // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
-    // you have enabled
     dioxus::launch(App);
 }
 
-/// App is the main component of our app. Components are the building blocks of dioxus apps. Each component is a function
-/// that takes some props and returns an Element. In this case, App takes no props because it is the root of our app.
-///
-/// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
+#[derive(Clone, Debug)]
+pub struct AppContext {
+    pub content: Option<String>,
+    pub password: String,
+    pub cipher: Option<crypto::CipherType>,
+    pub share_url: Option<String>,
+    pub qr_code: Option<String>,
+}
+
 #[component]
 fn App() -> Element {
     let language =
         use_signal(|| i18n::detect_browser_language());
 
-    use_context_provider(|| language);
+    let app_context = use_signal(|| AppContext {
+        content: None,
+        password: String::new(),
+        cipher: None,
+        share_url: None,
+        qr_code: None,
+    });
 
-    // The `rsx!` macro lets us define HTML inside of rust. It expands to an Element with all of our HTML inside.
-    // The `rsx!` macro lets us define HTML inside of rust. It expands to an Element with all of our HTML inside.
+    use_context_provider(|| language);
+    use_context_provider(|| app_context);
+
     rsx! {
-        // In addition to element and text (which we will see later), rsx can contain other components. In this case,
-        // we are using the `document::Link` component to add a link to our favicon and main CSS file into the head of our app.
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: asset!("/assets/bare.min.css") }
-
-        // The router component renders the route enum we defined above. It will handle synchronization of the URL and render
-        // the layouts and components for the active route.
         Router::<Route> {}
     }
 }

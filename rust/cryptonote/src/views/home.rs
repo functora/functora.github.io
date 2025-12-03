@@ -4,36 +4,49 @@ use crate::encoding::{
 };
 use crate::i18n::{Language, get_translations};
 use dioxus::prelude::*;
+use dioxus_router::prelude::navigator;
 
 #[component]
 pub fn Home() -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
+    let nav = navigator();
+    let mut app_context =
+        use_context::<Signal<crate::AppContext>>();
 
     let mut note_text = use_signal(|| String::new());
     let mut encryption =
         use_signal(|| Option::<CipherType>::None);
     let mut password = use_signal(|| String::new());
-    let mut generated_url =
-        use_signal(|| Option::<String>::None);
-    let mut qr_code_svg =
-        use_signal(|| Option::<String>::None);
     let mut error_message =
         use_signal(|| Option::<String>::None);
+
+    use_effect(move || {
+        let ctx = app_context.read();
+        if let Some(content) = &ctx.content {
+            note_text.set(content.clone());
+        }
+        if !ctx.password.is_empty() {
+            password.set(ctx.password.clone());
+        }
+        if let Some(cipher) = ctx.cipher {
+            encryption.set(Some(cipher));
+        }
+    });
 
     let generate_note = move |_| {
         let t = get_translations(language());
         error_message.set(None);
-        generated_url.set(None);
-        qr_code_svg.set(None);
 
         let note_content = note_text.read().clone();
         let enc_option = encryption.read().clone();
+        let pwd = password.read().clone();
 
         let note_data = match enc_option {
-            None => NoteData::PlainText(note_content),
+            None => {
+                NoteData::PlainText(note_content.clone())
+            }
             Some(cipher) => {
-                let pwd = password.read().clone();
                 if pwd.is_empty() {
                     error_message.set(Some(
                         t.password_required.to_string(),
@@ -57,28 +70,33 @@ pub fn Home() -> Element {
             }
         };
 
-        let base_url = web_sys::window()
-            .and_then(|w| w.location().href().ok())
-            .unwrap_or_else(|| {
-                "http://localhost:8080".to_string()
-            })
-            .split('#')
-            .next()
-            .unwrap_or("http://localhost:8080")
-            .to_string()
-            + "view";
+        if let Some(window) = web_sys::window() {
+            if let Ok(origin) = window.location().origin() {
+                let view_url = format!("{}/view", origin);
+                match build_url(&view_url, &note_data) {
+                    Ok(url) => match generate_qr_code(&url)
+                    {
+                        Ok(qr) => {
+                            app_context.set(
+                                crate::AppContext {
+                                    content: Some(
+                                        note_content,
+                                    ),
+                                    password: pwd,
+                                    cipher: enc_option,
+                                    share_url: Some(url),
+                                    qr_code: Some(qr),
+                                },
+                            );
 
-        match build_url(&base_url, &note_data) {
-            Ok(url) => {
-                match generate_qr_code(&url) {
-                    Ok(svg) => qr_code_svg.set(Some(svg)),
+                            nav.push("/share");
+                        }
+                        Err(e) => error_message
+                            .set(Some(e.localized(&t))),
+                    },
                     Err(e) => error_message
                         .set(Some(e.localized(&t))),
                 }
-                generated_url.set(Some(url));
-            }
-            Err(e) => {
-                error_message.set(Some(e.localized(&t)))
             }
         }
     };
@@ -154,34 +172,6 @@ pub fn Home() -> Element {
 
                     if let Some(err) = error_message() {
                         div { "{err}" }
-                    }
-                }
-            }
-        }
-
-
-        if let Some(url) = generated_url() {
-            section {
-                h2 { "{t.share_title}" }
-                div {
-                    input {
-                        r#type: "text",
-                        readonly: true,
-                        value: "{url}",
-                        onclick: move |_| {
-                            if let Some(window) = web_sys::window() {
-                                let clipboard = window.navigator().clipboard();
-                                let _ = clipboard.write_text(&url);
-                            }
-                        },
-                    }
-                    p { "{t.click_to_copy}" }
-                }
-
-                if let Some(svg) = qr_code_svg() {
-                    figure {
-                        h3 { "{t.qr_code}" }
-                        div { dangerous_inner_html: "{svg}" }
                     }
                 }
             }

@@ -1,18 +1,35 @@
 use crate::Route;
-use crate::i18n::{Language, get_translations};
+use crate::i18n::Language;
 use dioxus::prelude::*;
+use dioxus_router::prelude::navigator;
 
 #[component]
 pub fn Navbar() -> Element {
     let mut language = use_context::<Signal<Language>>();
-    let _t = get_translations(language());
+    let mut app_context =
+        use_context::<Signal<crate::AppContext>>();
+    let nav = navigator();
 
     rsx! {
         nav {
             label {
                 input { r#type: "checkbox" }
                 header {
-                    Link { to: Route::Home {}, "🔐 Cryptonote" }
+                    a {
+                        href: "#",
+                        onclick: move |_| {
+                            app_context
+                                .set(crate::AppContext {
+                                    content: None,
+                                    password: String::new(),
+                                    cipher: None,
+                                    share_url: None,
+                                    qr_code: None,
+                                });
+                            nav.push("/");
+                        },
+                        "🔐 Cryptonote"
+                    }
                 }
                 ul {
                     li { class: if language() == Language::English { "selected" },

@@ -1,5 +1,5 @@
-use crate::dioxus_elements::*;
 use crate::i18n::{Language, get_translations};
+use crate::prelude::*;
 
 #[component]
 pub fn Share() -> Element {

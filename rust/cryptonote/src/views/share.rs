@@ -1,5 +1,6 @@
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
+use crate::views::Breadcrumb;
 
 #[component]
 pub fn Share() -> Element {
@@ -33,16 +34,7 @@ pub fn Share() -> Element {
     });
 
     rsx! {
-        card {
-            a {
-                href: "#",
-                onclick: move |_| {
-                    nav.push("/");
-                },
-                "{t.home}"
-            }
-            " > {t.share_title}"
-        }
+        Breadcrumb { title: t.share_title.to_string() }
         section {
 
             if !url().is_empty() {

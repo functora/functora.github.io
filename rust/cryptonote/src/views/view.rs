@@ -2,6 +2,7 @@ use crate::crypto::decrypt_symmetric;
 use crate::encoding::{NoteData, parse_url};
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
+use crate::views::Breadcrumb;
 use web_sys::window;
 
 #[component]
@@ -97,18 +98,7 @@ pub fn View() -> Element {
 
     rsx! {
         if is_encrypted() {
-            card {
-                big {
-                    a {
-                        href: "#",
-                        onclick: move |_| {
-                            nav.push("/");
-                        },
-                        "{t.home}"
-                    }
-                    " ❭ {t.encrypted_note}"
-                }
-            }
+            Breadcrumb { title: t.encrypted_note.to_string() }
             section {
                 fieldset {
                     p { "{t.encrypted_note_desc}" }
@@ -176,16 +166,7 @@ pub fn View() -> Element {
                 }
             }
         } else if let Some(content) = note_content() {
-            card {
-                a {
-                    href: "#",
-                    onclick: move |_| {
-                        nav.push("/");
-                    },
-                    "{t.home}"
-                }
-                " > {t.your_note_title}"
-            }
+            Breadcrumb { title: t.your_note_title.to_string() }
             section {
                 fieldset {
                     article {
@@ -227,16 +208,7 @@ pub fn View() -> Element {
                 }
             }
         } else if let Some(err) = error_message() {
-            card {
-                a {
-                    href: "#",
-                    onclick: move |_| {
-                        nav.push("/");
-                    },
-                    "{t.home}"
-                }
-                " > {t.error_title}"
-            }
+            Breadcrumb { title: t.error_title.to_string() }
             section {
                 p { "{err}" }
                 p {

@@ -1,7 +1,7 @@
 use crate::crypto::decrypt_symmetric;
 use crate::encoding::{NoteData, parse_url};
 use crate::i18n::{Language, get_translations};
-use dioxus::prelude::*;
+use crate::prelude::*;
 use web_sys::window;
 
 #[component]
@@ -97,8 +97,8 @@ pub fn View() -> Element {
 
     rsx! {
         if is_encrypted() {
-            section {
-                div {
+            card {
+                big {
                     a {
                         href: "#",
                         onclick: move |_| {
@@ -106,21 +106,23 @@ pub fn View() -> Element {
                         },
                         "{t.home}"
                     }
-                    " > {t.encrypted_note}"
+                    " ❭ {t.encrypted_note}"
                 }
-                p { "{t.encrypted_note_desc}" }
+            }
+            section {
+                fieldset {
+                    p { "{t.encrypted_note_desc}" }
 
-                if let Some(enc) = encrypted_data() {
-                    p {
-                        strong { "{t.algorithm}: " }
-                        match enc.cipher {
-                            crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
-                            crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",
+                    if let Some(enc) = encrypted_data() {
+                        p {
+                            strong { "{t.algorithm}: " }
+                            match enc.cipher {
+                                crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
+                                crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",
+                            }
                         }
                     }
-                }
 
-                fieldset {
                     label { "{t.password}" }
                     input {
                         r#type: "password",
@@ -174,66 +176,68 @@ pub fn View() -> Element {
                 }
             }
         } else if let Some(content) = note_content() {
+            card {
+                a {
+                    href: "#",
+                    onclick: move |_| {
+                        nav.push("/");
+                    },
+                    "{t.home}"
+                }
+                " > {t.your_note_title}"
+            }
             section {
-                div {
-                    a {
-                        href: "#",
-                        onclick: move |_| {
-                            nav.push("/");
-                        },
-                        "{t.home}"
+                fieldset {
+                    article {
+                        pre { "{content}" }
                     }
-                    " > {t.your_note_title}"
-                }
-                article {
-                    pre { "{content}" }
-                }
 
-                p {
-                    button {
-                        onclick: move |_| {
-                            if app_context.read().cipher.is_none() {
+                    p {
+                        button {
+                            onclick: move |_| {
+                                if app_context.read().cipher.is_none() {
+                                    app_context
+                                        .set(crate::AppContext {
+                                            content: Some(content.clone()),
+                                            password: String::new(),
+                                            cipher: None,
+                                            share_url: None,
+                                            qr_code: None,
+                                        });
+                                }
+                                nav.push("/");
+                            },
+                            "{t.edit_note}"
+                        }
+                        button {
+                            onclick: move |_| {
                                 app_context
                                     .set(crate::AppContext {
-                                        content: Some(content.clone()),
+                                        content: None,
                                         password: String::new(),
                                         cipher: None,
                                         share_url: None,
                                         qr_code: None,
                                     });
-                            }
-                            nav.push("/");
-                        },
-                        "{t.edit_note}"
-                    }
-                    button {
-                        onclick: move |_| {
-                            app_context
-                                .set(crate::AppContext {
-                                    content: None,
-                                    password: String::new(),
-                                    cipher: None,
-                                    share_url: None,
-                                    qr_code: None,
-                                });
-                            nav.push("/");
-                        },
-                        "{t.create_new_note}"
+                                nav.push("/");
+                            },
+                            "{t.create_new_note}"
+                        }
                     }
                 }
             }
         } else if let Some(err) = error_message() {
-            section {
-                div {
-                    a {
-                        href: "#",
-                        onclick: move |_| {
-                            nav.push("/");
-                        },
-                        "{t.home}"
-                    }
-                    " > {t.error_title}"
+            card {
+                a {
+                    href: "#",
+                    onclick: move |_| {
+                        nav.push("/");
+                    },
+                    "{t.home}"
                 }
+                " > {t.error_title}"
+            }
+            section {
                 p { "{err}" }
                 p {
                     button {

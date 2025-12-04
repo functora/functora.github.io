@@ -51,7 +51,6 @@ pub fn Share() -> Element {
                         div { dangerous_inner_html: "{qr_code}" }
                     }
 
-                    label { "{t.click_to_copy}" }
                     textarea {
                         readonly: true,
                         value: "{url}",

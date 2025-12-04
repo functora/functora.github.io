@@ -1041,7 +1041,7 @@ in {
           input = {
             "*" = {
               xkb_layout = "us,ru";
-              xkb_variant = "altgr-intl,";
+              xkb_variant = "altgr-intl,ruu,";
               xkb_options = "grp:sclk_toggle";
             };
           };

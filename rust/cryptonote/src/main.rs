@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use views::{Home, Navbar, Share, View};
 mod crypto;
+pub mod dioxus_elements;
 mod encoding;
 mod error;
 mod i18n;

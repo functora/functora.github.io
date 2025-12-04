@@ -1,5 +1,5 @@
+use crate::dioxus_elements::*;
 use crate::i18n::{Language, get_translations};
-use dioxus::prelude::*;
 
 #[component]
 pub fn Share() -> Element {
@@ -33,7 +33,7 @@ pub fn Share() -> Element {
     });
 
     rsx! {
-        div { "data-element": "card",
+        card {
             a {
                 href: "#",
                 onclick: move |_| {

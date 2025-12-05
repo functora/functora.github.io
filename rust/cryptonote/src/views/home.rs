@@ -3,6 +3,8 @@ use crate::encoding::{
     NoteData, build_url, generate_qr_code,
 };
 use crate::i18n::{Language, get_translations};
+use crate::views::actions::ActionRow;
+use crate::views::message::UiMessage;
 use dioxus::prelude::*;
 use dioxus_router::prelude::navigator;
 
@@ -19,7 +21,7 @@ pub fn Home() -> Element {
         use_signal(|| Option::<CipherType>::None);
     let mut password = use_signal(|| String::new());
     let mut error_message =
-        use_signal(|| Option::<String>::None);
+        use_signal(|| Option::<UiMessage>::None);
 
     use_effect(move || {
         let ctx = app_context.read();
@@ -35,7 +37,6 @@ pub fn Home() -> Element {
     });
 
     let generate_note = move |_| {
-        let t = get_translations(language());
         error_message.set(None);
 
         let note_content = note_text.read().clone();
@@ -48,9 +49,9 @@ pub fn Home() -> Element {
             }
             Some(cipher) => {
                 if pwd.is_empty() {
-                    error_message.set(Some(
-                        t.password_required.to_string(),
-                    ));
+                    error_message.set(Some(UiMessage::Error(
+                        crate::error::AppError::PasswordRequired,
+                    )));
                     return;
                 }
                 match encrypt_symmetric(
@@ -63,7 +64,7 @@ pub fn Home() -> Element {
                     }
                     Err(e) => {
                         error_message
-                            .set(Some(e.localized(&t)));
+                            .set(Some(UiMessage::Error(e)));
                         return;
                     }
                 }
@@ -91,11 +92,13 @@ pub fn Home() -> Element {
 
                             nav.push("/share");
                         }
-                        Err(e) => error_message
-                            .set(Some(e.localized(&t))),
+                        Err(e) => error_message.set(Some(
+                            UiMessage::Error(e.into()),
+                        )),
                     },
-                    Err(e) => error_message
-                        .set(Some(e.localized(&t))),
+                    Err(e) => error_message.set(Some(
+                        UiMessage::Error(e.into()),
+                    )),
                 }
             }
         }
@@ -167,8 +170,7 @@ pub fn Home() -> Element {
                 br {}
                 br {}
 
-                p {
-                    button { onclick: generate_note, "{t.generate_button}" }
+                ActionRow { message: error_message,
                     button {
                         onclick: move |_| {
                             note_text.set(String::new());
@@ -186,10 +188,7 @@ pub fn Home() -> Element {
                         },
                         "{t.create_new_note}"
                     }
-
-                    if let Some(err) = error_message() {
-                        div { "{err}" }
-                    }
+                    button { onclick: generate_note, "{t.generate_button}" }
                 }
             }
         }

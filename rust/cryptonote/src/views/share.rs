@@ -1,6 +1,8 @@
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 use crate::views::Breadcrumb;
+use crate::views::actions::ActionRow;
+use crate::views::message::UiMessage;
 
 #[component]
 pub fn Share() -> Element {
@@ -12,6 +14,8 @@ pub fn Share() -> Element {
     let mut qr_code = use_signal(|| String::new());
     let mut note_content =
         use_signal(|| Option::<String>::None);
+    let mut message =
+        use_signal(|| Option::<UiMessage>::None);
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
 
@@ -51,19 +55,12 @@ pub fn Share() -> Element {
                                 let clipboard = window.navigator().clipboard();
                                 let url_val = url();
                                 let _ = clipboard.write_text(&url_val);
+                                message.set(Some(UiMessage::Copied));
                             }
                         },
                     }
 
-                    p {
-                        if note_content.peek().is_some() {
-                            button {
-                                onclick: move |_| {
-                                    nav.push("/");
-                                },
-                                "{t.edit_note}"
-                            }
-                        }
+                    ActionRow { message,
                         button {
                             onclick: move |_| {
                                 app_context
@@ -77,6 +74,25 @@ pub fn Share() -> Element {
                                 nav.push("/");
                             },
                             "{t.create_new_note}"
+                        }
+                        if note_content.peek().is_some() {
+                            button {
+                                onclick: move |_| {
+                                    nav.push("/");
+                                },
+                                "{t.edit_note}"
+                            }
+                        }
+                        button {
+                            onclick: move |_| {
+                                if let Some(window) = web_sys::window() {
+                                    let clipboard = window.navigator().clipboard();
+                                    let url_val = url();
+                                    let _ = clipboard.write_text(&url_val);
+                                    message.set(Some(UiMessage::Copied));
+                                }
+                            },
+                            "{t.copy_button}"
                         }
                     }
                 }

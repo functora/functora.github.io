@@ -3,6 +3,8 @@ use crate::encoding::{NoteData, parse_url};
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 use crate::views::Breadcrumb;
+use crate::views::actions::ActionRow;
+use crate::views::message::UiMessage;
 use web_sys::window;
 
 #[component]
@@ -17,11 +19,10 @@ pub fn View() -> Element {
     });
     let mut password_input = use_signal(String::new);
     let mut error_message =
-        use_signal(|| Option::<String>::None);
+        use_signal(|| Option::<UiMessage>::None);
     let mut is_encrypted = use_signal(|| false);
 
     use_effect(move || {
-        let t = get_translations(language());
         if let Some(window) = window() {
             if let Ok(href) = window.location().href() {
                 if href.contains("#note=") {
@@ -37,13 +38,15 @@ pub fn View() -> Element {
                                     .set(Some(text));
                             }
                         },
-                        Err(e) => error_message
-                            .set(Some(e.localized(&t))),
+                        Err(e) => error_message.set(Some(
+                            UiMessage::Error(e),
+                        )),
                     }
                 } else {
-                    error_message.set(Some(
-                        t.no_note_in_url.to_string(),
-                    ));
+                    error_message
+                        .set(Some(UiMessage::Error(
+                        crate::error::AppError::NoNoteInUrl,
+                    )));
                 }
             }
         }
@@ -53,14 +56,13 @@ pub fn View() -> Element {
         use_context::<Signal<crate::AppContext>>();
 
     let decrypt_note = move |_evt: Event<MouseData>| {
-        let t = get_translations(language());
         error_message.set(None);
         if let Some(enc) = encrypted_data.read().as_ref() {
             let pwd = password_input.read().clone();
             if pwd.is_empty() {
-                error_message.set(Some(
-                    t.password_required.to_string(),
-                ));
+                error_message.set(Some(UiMessage::Error(
+                    crate::error::AppError::PasswordRequired,
+                )));
                 return;
             }
 
@@ -84,14 +86,13 @@ pub fn View() -> Element {
                                 },
                             );
                         }
-                        Err(_) => error_message.set(Some(
-                            t.invalid_utf8.to_string(),
-                        )),
+                        Err(e) => error_message.set(Some(UiMessage::Error(
+                            crate::error::AppError::Utf8(e),
+                        ))),
                     }
                 }
-                Err(e) => {
-                    error_message.set(Some(e.localized(&t)))
-                }
+                Err(e) => error_message
+                    .set(Some(UiMessage::Error(e))),
             }
         }
     };
@@ -121,30 +122,35 @@ pub fn View() -> Element {
                         oninput: move |evt| password_input.set(evt.value()),
                         onkeydown: move |evt| {
                             if evt.key() == Key::Enter {
-                                let t = get_translations(language());
                                 error_message.set(None);
                                 if let Some(enc) = encrypted_data.read().as_ref() {
                                     let pwd = password_input.read().clone();
                                     if !pwd.is_empty() {
                                         match decrypt_symmetric(enc, &pwd) {
                                             Ok(plaintext) => {
-                                                if let Ok(text) = String::from_utf8(plaintext) {
-                                                    note_content.set(Some(text.clone()));
-                                                    is_encrypted.set(false);
-                                                    app_context
-                                                        .set(crate::AppContext {
-                                                            content: Some(text),
-                                                            password: pwd,
-                                                            cipher: Some(enc.cipher),
-                                                            share_url: None,
-                                                            qr_code: None,
-                                                        });
-                                                } else {
-                                                    error_message.set(Some(t.invalid_utf8.to_string()));
+                                                match String::from_utf8(plaintext) {
+                                                    Ok(text) => {
+                                                        note_content.set(Some(text.clone()));
+                                                        is_encrypted.set(false);
+                                                        app_context
+                                                            .set(crate::AppContext {
+                                                                content: Some(text),
+                                                                password: pwd,
+                                                                cipher: Some(enc.cipher),
+                                                                share_url: None,
+                                                                qr_code: None,
+                                                            });
+                                                    }
+                                                    Err(e) => {
+                                                        error_message
+                                                            .set(Some(UiMessage::Error(
+                                                                crate::error::AppError::Utf8(e),
+                                                            )));
+                                                    }
                                                 }
                                             }
                                             Err(e) => {
-                                                error_message.set(Some(e.localized(&t)));
+                                                error_message.set(Some(UiMessage::Error(e)));
                                             }
                                         }
                                     }
@@ -156,12 +162,8 @@ pub fn View() -> Element {
                     br {}
                     br {}
 
-                    p {
+                    ActionRow { message: error_message,
                         button { onclick: decrypt_note, "{t.decrypt_button}" }
-
-                        if let Some(err) = error_message() {
-                            div { "{err}" }
-                        }
                     }
                 }
             }
@@ -173,7 +175,21 @@ pub fn View() -> Element {
                         pre { "{content}" }
                     }
 
-                    p {
+                    ActionRow { message: error_message,
+                        button {
+                            onclick: move |_| {
+                                app_context
+                                    .set(crate::AppContext {
+                                        content: None,
+                                        password: String::new(),
+                                        cipher: None,
+                                        share_url: None,
+                                        qr_code: None,
+                                    });
+                                nav.push("/");
+                            },
+                            "{t.create_new_note}"
+                        }
                         button {
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
@@ -190,28 +206,13 @@ pub fn View() -> Element {
                             },
                             "{t.edit_note}"
                         }
-                        button {
-                            onclick: move |_| {
-                                app_context
-                                    .set(crate::AppContext {
-                                        content: None,
-                                        password: String::new(),
-                                        cipher: None,
-                                        share_url: None,
-                                        qr_code: None,
-                                    });
-                                nav.push("/");
-                            },
-                            "{t.create_new_note}"
-                        }
                     }
                 }
             }
-        } else if let Some(err) = error_message() {
+        } else if error_message.read().is_some() {
             Breadcrumb { title: t.error_title.to_string() }
             section {
-                p { "{err}" }
-                p {
+                ActionRow { message: error_message,
                     button {
                         onclick: move |_| {
                             nav.push("/");

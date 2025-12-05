@@ -1,8 +1,10 @@
+pub mod actions;
 mod breadcrumb;
 mod home;
+pub mod message;
 mod navbar;
 mod share;
-mod view;
+pub mod view;
 
 pub use breadcrumb::Breadcrumb;
 pub use home::Home;

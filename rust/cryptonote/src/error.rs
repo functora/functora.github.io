@@ -14,6 +14,8 @@ pub enum AppError {
     Encrypt,
     Decrypt,
     Url,
+    PasswordRequired,
+    NoNoteInUrl,
 }
 
 impl AppError {
@@ -26,11 +28,15 @@ impl AppError {
             AppError::Getrandom(_) => t.getrandom_error,
             AppError::Base64(_) => t.base64_error,
             AppError::Json(_) => t.json_error,
-            AppError::Utf8(_) => t.utf8_error,
+            AppError::Utf8(_) => t.invalid_utf8,
             AppError::Qr(_) => t.qr_error,
             AppError::Encrypt => t.encrypt_error,
             AppError::Decrypt => t.decrypt_error,
             AppError::Url => t.url_error,
+            AppError::PasswordRequired => {
+                t.password_required
+            }
+            AppError::NoNoteInUrl => t.no_note_in_url,
         };
         format!("{}: {}", msg, self)
     }

@@ -56,6 +56,15 @@ pub fn Navbar() -> Element {
                 },
                 "{crate::i18n::get_translations(language()).license}"
             }
+            " | "
+            a {
+                href: "/privacy",
+                onclick: move |evt| {
+                    evt.prevent_default();
+                    nav.push("/privacy");
+                },
+                "{crate::i18n::get_translations(language()).privacy}"
+            }
         }
     }
 }

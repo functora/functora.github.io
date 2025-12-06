@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::navigator;
 
 #[component]
-pub fn Navbar() -> Element {
+pub fn Layout() -> Element {
     let mut language = use_context::<Signal<Language>>();
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();

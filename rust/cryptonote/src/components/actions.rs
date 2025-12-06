@@ -1,4 +1,4 @@
-use crate::views::message::{Message, UiMessage};
+use crate::components::message::{Message, UiMessage};
 use dioxus::prelude::*;
 
 #[component]

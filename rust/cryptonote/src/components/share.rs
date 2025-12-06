@@ -1,9 +1,9 @@
 use crate::i18n::{Language, get_translations};
 use crate::Route;
 use crate::prelude::*;
-use crate::views::Breadcrumb;
-use crate::views::actions::ActionRow;
-use crate::views::message::UiMessage;
+use crate::components::Breadcrumb;
+use crate::components::actions::ActionRow;
+use crate::components::message::UiMessage;
 
 #[component]
 pub fn Share() -> Element {

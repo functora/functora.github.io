@@ -4,8 +4,8 @@ use crate::encoding::{
     NoteData, build_url, generate_qr_code,
 };
 use crate::i18n::{Language, get_translations};
-use crate::views::actions::ActionRow;
-use crate::views::message::UiMessage;
+use crate::components::actions::ActionRow;
+use crate::components::message::UiMessage;
 use dioxus::prelude::*;
 use dioxus_router::prelude::navigator;
 

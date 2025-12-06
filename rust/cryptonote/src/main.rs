@@ -1,16 +1,16 @@
 use dioxus::prelude::*;
-use views::{Home, License, Navbar, Privacy, Share, View};
+use components::{Home, License, Layout, Privacy, Share, View};
 mod crypto;
 mod encoding;
 mod error;
 mod i18n;
 pub mod prelude;
-mod views;
+mod components;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-    #[layout(Navbar)]
+    #[layout(Layout)]
         #[route("/")]
         Home {},
         #[route("/view")]

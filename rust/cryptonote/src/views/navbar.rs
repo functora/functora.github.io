@@ -32,13 +32,13 @@ pub fn Navbar() -> Element {
                     }
                 }
                 ul {
-                    li { class: if language() == Language::English { "primary" },
+                    li {
                         a { onclick: move |_| language.set(Language::English), "English" }
                     }
-                    li { class: if language() == Language::Spanish { "primary" },
+                    li {
                         a { onclick: move |_| language.set(Language::Spanish), "Español" }
                     }
-                    li { class: if language() == Language::Russian { "primary" },
+                    li {
                         a { onclick: move |_| language.set(Language::Russian), "Русский" }
                     }
                 }
@@ -46,5 +46,16 @@ pub fn Navbar() -> Element {
         }
 
         Outlet::<Route> {}
+
+        footer {
+            a {
+                href: "/license",
+                onclick: move |evt| {
+                    evt.prevent_default();
+                    nav.push("/license");
+                },
+                "{crate::i18n::get_translations(language()).license}"
+            }
+        }
     }
 }

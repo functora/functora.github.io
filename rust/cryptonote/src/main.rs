@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use views::{Home, Navbar, Share, View};
+use views::{Home, License, Navbar, Share, View};
 mod crypto;
 mod encoding;
 mod error;
@@ -17,6 +17,8 @@ enum Route {
         View {},
         #[route("/share")]
         Share {},
+        #[route("/license")]
+        License {},
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");

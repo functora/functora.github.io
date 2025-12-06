@@ -19,5 +19,9 @@ pub fn Message(
         None => return rsx! {},
     };
 
-    rsx! { "{text}" }
+    rsx! {
+        pre {
+            code { white_space: "pre-wrap", "{text}" }
+        }
+    }
 }

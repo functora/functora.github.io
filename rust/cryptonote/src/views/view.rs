@@ -38,9 +38,8 @@ pub fn View() -> Element {
                                     .set(Some(text));
                             }
                         },
-                        Err(e) => error_message.set(Some(
-                            UiMessage::Error(e),
-                        )),
+                        Err(e) => error_message
+                            .set(Some(UiMessage::Error(e))),
                     }
                 } else {
                     error_message
@@ -102,16 +101,8 @@ pub fn View() -> Element {
             Breadcrumb { title: t.encrypted_note.to_string() }
             section {
                 fieldset {
-                    p { "{t.encrypted_note_desc}" }
-
-                    if let Some(enc) = encrypted_data() {
-                        p {
-                            strong { "{t.algorithm}: " }
-                            match enc.cipher {
-                                crate::crypto::CipherType::ChaCha20Poly1305 => "ChaCha20-Poly1305",
-                                crate::crypto::CipherType::Aes256Gcm => "AES-256-GCM",
-                            }
-                        }
+                    pre {
+                        code { white_space: "pre-wrap", "{t.encrypted_note_desc}" }
                     }
 
                     label { "{t.password}" }
@@ -143,9 +134,9 @@ pub fn View() -> Element {
                                                     }
                                                     Err(e) => {
                                                         error_message
-                                                            .set(Some(UiMessage::Error(
-                                                                crate::error::AppError::Utf8(e),
-                                                            )));
+                                                            .set(
+                                                                Some(UiMessage::Error(crate::error::AppError::Utf8(e))),
+                                                            );
                                                     }
                                                 }
                                             }
@@ -163,7 +154,7 @@ pub fn View() -> Element {
                     br {}
 
                     ActionRow { message: error_message,
-                        button { onclick: decrypt_note, "{t.decrypt_button}" }
+                        button { "primary": "", onclick: decrypt_note, "{t.decrypt_button}" }
                     }
                 }
             }

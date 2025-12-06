@@ -84,6 +84,7 @@ pub fn Share() -> Element {
                             }
                         }
                         button {
+                            "primary": "",
                             onclick: move |_| {
                                 if let Some(window) = web_sys::window() {
                                     let clipboard = window.navigator().clipboard();

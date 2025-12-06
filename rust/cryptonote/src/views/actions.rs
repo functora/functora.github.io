@@ -7,7 +7,7 @@ pub fn ActionRow(
     message: Signal<Option<UiMessage>>,
 ) -> Element {
     rsx! {
-        p {
+        p { "txt": "r",
             {children}
             br {}
             Message { message }

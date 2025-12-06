@@ -188,7 +188,7 @@ pub fn Home() -> Element {
                         },
                         "{t.create_new_note}"
                     }
-                    button { onclick: generate_note, "{t.generate_button}" }
+                    button { "primary": "", onclick: generate_note, "{t.generate_button}" }
                 }
             }
         }

@@ -1,14 +1,15 @@
 use cryptonote::crypto::{CipherType, encrypt_symmetric};
 use cryptonote::encoding::{
-    build_url, decode_note, encode_note, generate_qr_code,
-    parse_url, NoteData,
+    NoteData, build_url, decode_note, encode_note,
+    generate_qr_code, parse_url,
 };
 
 #[test]
 fn test_encode_decode_plaintext() {
     let note =
         NoteData::PlainText("Hello, World!".to_string());
-    let encoded = encode_note(&note).expect("Encoding failed");
+    let encoded =
+        encode_note(&note).expect("Encoding failed");
     let decoded =
         decode_note(&encoded).expect("Decoding failed");
     match decoded {
@@ -29,7 +30,8 @@ fn test_encode_decode_encrypted() {
     )
     .expect("Encryption failed");
     let note = NoteData::CipherText(encrypted);
-    let encoded = encode_note(&note).expect("Encoding failed");
+    let encoded =
+        encode_note(&note).expect("Encoding failed");
     let decoded =
         decode_note(&encoded).expect("Decoding failed");
 
@@ -49,7 +51,9 @@ fn test_build_parse_url() {
     let note = NoteData::PlainText("Test note".to_string());
     let url = build_url("https://example.com/view", &note)
         .expect("URL build failed");
-    assert!(url.starts_with("https://example.com/view#note="));
+    assert!(
+        url.starts_with("https://example.com/view#note=")
+    );
     let parsed = parse_url(&url).expect("URL parse failed");
     match parsed {
         NoteData::PlainText(text) => {

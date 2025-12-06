@@ -1,11 +1,11 @@
-use crate::crypto::decrypt_symmetric;
 use crate::Route;
-use crate::encoding::{NoteData, parse_url};
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
+use crate::crypto::decrypt_symmetric;
+use crate::encoding::{NoteData, parse_url};
+use crate::i18n::{Language, get_translations};
+use crate::prelude::*;
 use web_sys::window;
 
 #[component]
@@ -204,14 +204,7 @@ pub fn View() -> Element {
         } else if error_message.read().is_some() {
             Breadcrumb { title: t.error_title.to_string() }
             section {
-                ActionRow { message: error_message,
-                    button {
-                        onclick: move |_| {
-                            nav.push(Route::Home {});
-                        },
-                        "{t.create_new_note}"
-                    }
-                }
+                ActionRow { message: error_message }
             }
         } else {
             section {

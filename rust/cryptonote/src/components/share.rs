@@ -1,9 +1,9 @@
-use crate::i18n::{Language, get_translations};
 use crate::Route;
-use crate::prelude::*;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
+use crate::i18n::{Language, get_translations};
+use crate::prelude::*;
 
 #[component]
 pub fn Share() -> Element {
@@ -17,7 +17,7 @@ pub fn Share() -> Element {
         use_signal(|| Option::<String>::None);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
-    let mut app_context =
+    let app_context =
         use_context::<Signal<crate::AppContext>>();
 
     use_effect(move || {
@@ -62,28 +62,6 @@ pub fn Share() -> Element {
                     }
 
                     ActionRow { message,
-                        button {
-                            onclick: move |_| {
-                                app_context
-                                    .set(crate::AppContext {
-                                        content: None,
-                                        password: String::new(),
-                                        cipher: None,
-                                        share_url: None,
-                                        qr_code: None,
-                                    });
-                                nav.push(Route::Home {});
-                            },
-                            "{t.create_new_note}"
-                        }
-                        if note_content.peek().is_some() {
-                            button {
-                                onclick: move |_| {
-                                    nav.push(Route::Home {});
-                                },
-                                "{t.edit_note}"
-                            }
-                        }
                         button {
                             "primary": "",
                             onclick: move |_| {

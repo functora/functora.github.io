@@ -68,6 +68,7 @@ pub struct Translations {
     pub terms_of_service: &'static str,
     pub privacy_policy_and: &'static str,
     pub version_label: &'static str,
+    pub back_button: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -162,6 +163,7 @@ If you have any questions regarding privacy while using the Application, or have
             terms_of_service: "Terms of Service",
             privacy_policy_and: "Privacy Policy",
             version_label: "Version",
+            back_button: "Back",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -253,6 +255,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             terms_of_service: "Términos de Servicio",
             privacy_policy_and: "Política de Privacidad",
             version_label: "Versión",
+            back_button: "Atrás",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -344,6 +347,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             terms_of_service: "Условиями обслуживания",
             privacy_policy_and: "Политикой конфиденциальности",
             version_label: "Версия",
+            back_button: "Назад",
         },
     }
 }

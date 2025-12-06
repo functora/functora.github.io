@@ -56,23 +56,13 @@ pub fn Layout() -> Element {
             " "
             {crate::i18n::get_translations(language()).by_continuing}
             " "
-            a {
-                href: "/license",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav.push(Route::License {});
-                },
+            Link { to: Route::License {},
                 "{crate::i18n::get_translations(language()).terms_of_service}"
             }
             " "
             {crate::i18n::get_translations(language()).you_agree}
             " "
-            a {
-                href: "/privacy",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav.push(Route::Privacy {});
-                },
+            Link { to: Route::Privacy {},
                 "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
             ". "

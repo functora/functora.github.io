@@ -10,15 +10,10 @@ pub struct BreadcrumbProps {
 pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
-    let nav = navigator();
 
     rsx! {
         card { font_size: "larger",
-            a {
-                href: "#",
-                onclick: move |_| {
-                    nav.push("/");
-                },
+            Link { to: crate::Route::Home {},
                 "{t.home}"
             }
             " ❭ {props.title}"

@@ -44,6 +44,7 @@ impl AppError {
 
 impl std::error::Error for AppError {}
 
+
 impl From<digest::InvalidLength> for AppError {
     fn from(e: digest::InvalidLength) -> Self {
         AppError::Cipher(e)

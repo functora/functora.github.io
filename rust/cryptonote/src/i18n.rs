@@ -59,10 +59,15 @@ pub struct Translations {
     pub home: &'static str,
     pub copied: &'static str,
     pub copy_button: &'static str,
-    pub license: &'static str,
     pub license_text: &'static str,
-    pub privacy: &'static str,
     pub privacy_text: &'static str,
+    pub copyright: &'static str,
+    pub all_rights_reserved: &'static str,
+    pub by_continuing: &'static str,
+    pub you_agree: &'static str,
+    pub terms_of_service: &'static str,
+    pub privacy_policy_and: &'static str,
+    pub version_label: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -100,7 +105,6 @@ pub fn get_translations(lang: Language) -> Translations {
             home: "Home",
             copied: "Copied!",
             copy_button: "Copy",
-            license: "License",
             license_text: r#"Copyright (c) 2025 Functora
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -108,7 +112,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."#,
-            privacy: "Privacy Policy",
             privacy_text: r#"Privacy Policy
 
 This privacy policy applies to the app (hereby referred to as “Application”) for mobile devices that was created by Functora (hereby referred to as “Service Provider”) as a Free service. This service is intended for use “AS IS”.
@@ -152,6 +155,13 @@ By using the Application, you are consenting to the processing of your informati
 Contact Us
 
 If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at functora@gmail.com."#,
+            copyright: "©",
+            all_rights_reserved: "All rights reserved.",
+            by_continuing: "By continuing to use this software, you agree to the",
+            you_agree: "and",
+            terms_of_service: "Terms of Service",
+            privacy_policy_and: "Privacy Policy",
+            version_label: "Version",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -186,7 +196,6 @@ If you have any questions regarding privacy while using the Application, or have
             home: "Inicio",
             copied: "¡Copiado!",
             copy_button: "Copiar",
-            license: "Licencia",
             license_text: r#"Copyright (c) 2025 Functora
 
 Por la presente se concede permiso, libre de cargos, a cualquier persona que haya obtenido una copia de este software y archivos de documentación asociados (el "Software"), para utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y a permitir a las personas a las que se les proporcione el Software que hagan lo mismo, sujeto a las siguientes condiciones:
@@ -194,7 +203,6 @@ Por la presente se concede permiso, libre de cargos, a cualquier persona que hay
 El aviso de copyright anterior y este aviso de permiso deberán incluirse en todas las copias o partes sustanciales del Software.
 
 EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS O OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O DE OTRO TIPO, QUE SURJA DE, O EN RELACIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE."#,
-            privacy: "Política de Privacidad",
             privacy_text: r#"Política de Privacidad
 
 Esta política de privacidad se aplica a la aplicación (en adelante, "Aplicación") para dispositivos móviles creada por Functora (en adelante, "Proveedor de Servicios") como un servicio gratuito. Este servicio está destinado a su uso "TAL CUAL".
@@ -238,6 +246,13 @@ Al usar la Aplicación, das tu consentimiento al procesamiento de tu informació
 Contáctanos
 
 Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes preguntas sobre las prácticas, comunícate con el Proveedor de Servicios por correo electrónico a functora@gmail.com."#,
+            copyright: "©",
+            all_rights_reserved: "Todos los derechos reservados.",
+            by_continuing: "Al continuar usando este software, aceptas los",
+            you_agree: "y la",
+            terms_of_service: "Términos de Servicio",
+            privacy_policy_and: "Política de Privacidad",
+            version_label: "Versión",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -272,7 +287,6 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             home: "Главная",
             copied: "Скопировано!",
             copy_button: "Копировать",
-            license: "Лицензия",
             license_text: r#"Copyright (c) 2025 Functora
 
 Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее — «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
@@ -280,7 +294,6 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 Указанное выше уведомление об авторских правах и данное уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
 
 ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ."#,
-            privacy: "Политика конфиденциальности",
             privacy_text: r#"Политика конфиденциальности
 
 Эта политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному Functora (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».
@@ -324,6 +337,13 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 Свяжитесь с нами
 
 Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@gmail.com."#,
+            copyright: "©",
+            all_rights_reserved: "Все права защищены.",
+            by_continuing: "Продолжая использовать это программное обеспечение, вы соглашаетесь с",
+            you_agree: "и",
+            terms_of_service: "Условиями обслуживания",
+            privacy_policy_and: "Политикой конфиденциальности",
+            version_label: "Версия",
         },
     }
 }

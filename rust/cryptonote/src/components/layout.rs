@@ -47,24 +47,41 @@ pub fn Layout() -> Element {
 
         Outlet::<Route> {}
 
-        footer {
+        p { "txt": "c",
+            {crate::i18n::get_translations(language()).copyright}
+            " 2025 "
+            a { href: "https://functora.github.io/", "Functora" }
+            ". "
+            {crate::i18n::get_translations(language()).all_rights_reserved}
+            " "
+            {crate::i18n::get_translations(language()).by_continuing}
+            " "
             a {
                 href: "/license",
                 onclick: move |evt| {
                     evt.prevent_default();
                     nav.push(Route::License {});
                 },
-                "{crate::i18n::get_translations(language()).license}"
+                "{crate::i18n::get_translations(language()).terms_of_service}"
             }
-            " | "
+            " "
+            {crate::i18n::get_translations(language()).you_agree}
+            " "
             a {
                 href: "/privacy",
                 onclick: move |evt| {
                     evt.prevent_default();
                     nav.push(Route::Privacy {});
                 },
-                "{crate::i18n::get_translations(language()).privacy}"
+                "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
+            ". "
+            {crate::i18n::get_translations(language()).version_label}
+            " "
+            {env!("CARGO_PKG_VERSION")}
+            "."
         }
+
+        br {}
     }
 }

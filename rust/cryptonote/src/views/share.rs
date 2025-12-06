@@ -1,4 +1,5 @@
 use crate::i18n::{Language, get_translations};
+use crate::Route;
 use crate::prelude::*;
 use crate::views::Breadcrumb;
 use crate::views::actions::ActionRow;
@@ -33,7 +34,7 @@ pub fn Share() -> Element {
         }
 
         if ctx.share_url.is_none() {
-            nav.push("/");
+            nav.push(Route::Home {});
         }
     });
 
@@ -71,14 +72,14 @@ pub fn Share() -> Element {
                                         share_url: None,
                                         qr_code: None,
                                     });
-                                nav.push("/");
+                                nav.push(Route::Home {});
                             },
                             "{t.create_new_note}"
                         }
                         if note_content.peek().is_some() {
                             button {
                                 onclick: move |_| {
-                                    nav.push("/");
+                                    nav.push(Route::Home {});
                                 },
                                 "{t.edit_note}"
                             }

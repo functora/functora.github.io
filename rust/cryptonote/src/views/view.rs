@@ -1,4 +1,5 @@
 use crate::crypto::decrypt_symmetric;
+use crate::Route;
 use crate::encoding::{NoteData, parse_url};
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
@@ -177,7 +178,7 @@ pub fn View() -> Element {
                                         share_url: None,
                                         qr_code: None,
                                     });
-                                nav.push("/");
+                                nav.push(Route::Home {});
                             },
                             "{t.create_new_note}"
                         }
@@ -193,7 +194,7 @@ pub fn View() -> Element {
                                             qr_code: None,
                                         });
                                 }
-                                nav.push("/");
+                                nav.push(Route::Home {});
                             },
                             "{t.edit_note}"
                         }
@@ -206,7 +207,7 @@ pub fn View() -> Element {
                 ActionRow { message: error_message,
                     button {
                         onclick: move |_| {
-                            nav.push("/");
+                            nav.push(Route::Home {});
                         },
                         "{t.create_new_note}"
                     }

@@ -26,7 +26,7 @@ pub fn Navbar() -> Element {
                                     share_url: None,
                                     qr_code: None,
                                 });
-                            nav.push("/");
+                            nav.push(Route::Home {});
                         },
                         "🔐 Cryptonote"
                     }
@@ -52,7 +52,7 @@ pub fn Navbar() -> Element {
                 href: "/license",
                 onclick: move |evt| {
                     evt.prevent_default();
-                    nav.push("/license");
+                    nav.push(Route::License {});
                 },
                 "{crate::i18n::get_translations(language()).license}"
             }
@@ -61,7 +61,7 @@ pub fn Navbar() -> Element {
                 href: "/privacy",
                 onclick: move |evt| {
                     evt.prevent_default();
-                    nav.push("/privacy");
+                    nav.push(Route::Privacy {});
                 },
                 "{crate::i18n::get_translations(language()).privacy}"
             }

@@ -1,4 +1,5 @@
 use crate::crypto::{CipherType, encrypt_symmetric};
+use crate::Route;
 use crate::encoding::{
     NoteData, build_url, generate_qr_code,
 };
@@ -90,7 +91,7 @@ pub fn Home() -> Element {
                                 },
                             );
 
-                            nav.push("/share");
+                            nav.push(Route::Share {});
                         }
                         Err(e) => error_message.set(Some(
                             UiMessage::Error(e.into()),

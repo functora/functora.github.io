@@ -1,11 +1,13 @@
+use components::{
+    Home, Layout, License, Privacy, Share, View,
+};
 use dioxus::prelude::*;
-use components::{Home, License, Layout, Privacy, Share, View};
+mod components;
 mod crypto;
 mod encoding;
 mod error;
 mod i18n;
 pub mod prelude;
-mod components;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -57,6 +59,7 @@ fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: asset!("/assets/bare.min.css") }
+        document::Link { rel: "stylesheet", href: asset!("/assets/app.css") }
         Router::<Route> {}
     }
 }

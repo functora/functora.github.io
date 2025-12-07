@@ -11,7 +11,11 @@ pub fn ActionRow(
     let t = get_translations(language());
     let nav = navigator();
     let route = use_route::<crate::Route>();
-    let show_back = !matches!(route, crate::Route::Home {});
+    let nav_state =
+        use_context::<Signal<crate::NavigationState>>();
+
+    let not_home = !matches!(route, crate::Route::Home {});
+    let show_back = not_home && nav_state().has_navigated;
 
     rsx! {
         p { "txt": "r",

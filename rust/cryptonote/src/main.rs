@@ -40,6 +40,11 @@ pub struct AppContext {
     pub qr_code: Option<String>,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct NavigationState {
+    pub has_navigated: bool,
+}
+
 #[component]
 fn App() -> Element {
     let language =
@@ -53,8 +58,12 @@ fn App() -> Element {
         qr_code: None,
     });
 
+    let nav_state =
+        use_signal(|| NavigationState::default());
+
     use_context_provider(|| language);
     use_context_provider(|| app_context);
+    use_context_provider(|| nav_state);
 
     rsx! {
         document::Link { rel: "icon", href: FAVICON }

@@ -91,6 +91,11 @@ pub fn Home() -> Element {
                                 },
                             );
 
+                            let mut nav_state = use_context::<
+                                Signal<crate::NavigationState>,
+                            >();
+                            nav_state.write().has_navigated =
+                                true;
                             nav.push(Route::Share {});
                         }
                         Err(e) => error_message.set(Some(

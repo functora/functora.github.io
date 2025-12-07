@@ -1,7 +1,7 @@
 use cryptonote::crypto::{CipherType, encrypt_symmetric};
 use cryptonote::encoding::{
     NoteData, build_url, decode_note, encode_note,
-    generate_qr_code, parse_url,
+    generate_qr_code,
 };
 
 #[test]
@@ -48,20 +48,13 @@ fn test_encode_decode_encrypted() {
 }
 
 #[test]
-fn test_build_parse_url() {
+fn test_build_url_format() {
     let note = NoteData::PlainText("Test note".to_string());
     let url = build_url("https://example.com/view", &note)
         .expect("URL build failed");
     assert!(
         url.starts_with("https://example.com/view?note=")
     );
-    let parsed = parse_url(&url).expect("URL parse failed");
-    match parsed {
-        NoteData::PlainText(text) => {
-            assert_eq!(text, "Test note")
-        }
-        _ => panic!("Expected PlainText"),
-    }
 }
 
 #[test]
@@ -79,9 +72,4 @@ fn test_invalid_base64() {
     assert!(result.is_err());
 }
 
-#[test]
-fn test_invalid_url_format() {
-    let result =
-        parse_url("https://example.com/no-note-param");
-    assert!(result.is_err());
-}
+

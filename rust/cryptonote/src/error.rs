@@ -13,7 +13,7 @@ pub enum AppError {
     Qr(QrError),
     Encrypt,
     Decrypt,
-    Url,
+
     PasswordRequired,
     NoNoteInUrl,
 }
@@ -32,7 +32,7 @@ impl AppError {
             AppError::Qr(_) => t.qr_error,
             AppError::Encrypt => t.encrypt_error,
             AppError::Decrypt => t.decrypt_error,
-            AppError::Url => t.url_error,
+
             AppError::PasswordRequired => {
                 t.password_required
             }

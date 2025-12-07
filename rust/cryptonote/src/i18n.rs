@@ -55,7 +55,7 @@ pub struct Translations {
     pub qr_error: &'static str,
     pub encrypt_error: &'static str,
     pub decrypt_error: &'static str,
-    pub url_error: &'static str,
+
     pub home: &'static str,
     pub copied: &'static str,
     pub copy_button: &'static str,
@@ -102,7 +102,7 @@ pub fn get_translations(lang: Language) -> Translations {
             qr_error: "QR code generation error",
             encrypt_error: "Encryption failed",
             decrypt_error: "Decryption failed",
-            url_error: "Invalid URL format",
+
             home: "Home",
             copied: "Copied!",
             copy_button: "Copy",
@@ -194,7 +194,7 @@ If you have any questions regarding privacy while using the Application, or have
             qr_error: "Error de generación de código QR",
             encrypt_error: "Falló el cifrado",
             decrypt_error: "Falló el descifrado",
-            url_error: "Formato de URL inválido",
+
             home: "Inicio",
             copied: "¡Copiado!",
             copy_button: "Copiar",
@@ -286,7 +286,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             qr_error: "Ошибка генерации QR-кода",
             encrypt_error: "Ошибка шифрования",
             decrypt_error: "Ошибка расшифровки",
-            url_error: "Неверный формат URL",
+
             home: "Главная",
             copied: "Скопировано!",
             copy_button: "Копировать",

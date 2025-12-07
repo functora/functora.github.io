@@ -36,12 +36,7 @@ pub fn build_url(
     })
 }
 
-pub fn parse_url(url: &str) -> Result<NoteData, AppError> {
-    url.split("?note=")
-        .nth(1)
-        .ok_or_else(|| AppError::Url)
-        .and_then(decode_note)
-}
+
 
 pub fn generate_qr_code(
     url: &str,
@@ -82,20 +77,5 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_parse_url() {
-        let note =
-            NoteData::PlainText("secret".to_string());
-        let encoded = encode_note(&note).unwrap();
-        let url =
-            format!("https://example.com?note={}", encoded);
 
-        let parsed = parse_url(&url).unwrap();
-        match parsed {
-            NoteData::PlainText(s) => {
-                assert_eq!(s, "secret")
-            }
-            _ => panic!("Expected PlainText"),
-        }
-    }
 }

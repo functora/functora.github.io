@@ -2,8 +2,6 @@
   description = "Rust Dev Shell";
 
   inputs = {
-    master.url = "github:nixos/nixpkgs";
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
@@ -11,8 +9,6 @@
 
   outputs = {
     self,
-    master,
-    nixpkgs,
     unstable,
     rust-overlay,
     flake-utils,
@@ -77,7 +73,7 @@
             # fonts
             noto-fonts
             noto-fonts-cjk-sans
-            noto-fonts-emoji
+            noto-fonts-color-emoji
             liberation_ttf
             dejavu_fonts
           ];
@@ -90,7 +86,7 @@
           };
         mkRustPkgWasm = pkg: let
           buildTarget = "wasm32-wasip1";
-          pkgs = import nixpkgs {
+          pkgs = import unstable {
             inherit system;
             overlays = [rust-overlay.overlays.default];
           };
@@ -174,7 +170,7 @@
               shell.packages
               ++ [
                 pkgs.qutebrowser
-                master.legacyPackages.${system}.antigravity
+                unstable.legacyPackages.${system}.antigravity
               ];
           });
         packages = rec {

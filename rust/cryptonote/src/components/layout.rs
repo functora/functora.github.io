@@ -1,14 +1,13 @@
 use crate::Route;
 use crate::i18n::Language;
 use dioxus::prelude::*;
-use dioxus_router::prelude::navigator;
 
 #[component]
 pub fn Layout() -> Element {
     let mut language = use_context::<Signal<Language>>();
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
-    let nav = navigator();
+    let nav = use_navigator();
 
     rsx! {
         nav {

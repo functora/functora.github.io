@@ -7,13 +7,12 @@ use crate::i18n::{Language, get_translations};
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
 use dioxus::prelude::*;
-use dioxus_router::prelude::navigator;
 
 #[component]
 pub fn Home() -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
-    let nav = navigator();
+    let nav = use_navigator();
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
 

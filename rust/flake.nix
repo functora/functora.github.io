@@ -55,6 +55,7 @@
             # web
             lld
             clang
+            binaryen
             wasm-bindgen-cli-0_2_106
             # linux
             pkg-config
@@ -67,6 +68,12 @@
             gdk-pixbuf
             cairo
             pango
+            curl
+            wget
+            zlib
+            fuse
+            file
+            gcc
             # fonts
             noto-fonts
             noto-fonts-cjk-sans

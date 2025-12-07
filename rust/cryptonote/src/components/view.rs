@@ -81,8 +81,7 @@ pub fn View() -> Element {
                                     cipher: Some(
                                         enc.cipher,
                                     ),
-                                    share_url: None,
-                                    qr_code: None,
+                                    ..Default::default()
                                 },
                             );
                         }
@@ -124,14 +123,14 @@ pub fn View() -> Element {
                                                     Ok(text) => {
                                                         note_content.set(Some(text.clone()));
                                                         is_encrypted.set(false);
-                                                        app_context
-                                                            .set(crate::AppContext {
+                                                        app_context.set(
+                                                            crate::AppContext {
                                                                 content: Some(text),
                                                                 password: pwd,
                                                                 cipher: Some(enc.cipher),
-                                                                share_url: None,
-                                                                qr_code: None,
-                                                            });
+                                                                ..Default::default()
+                                                            },
+                                                        );
                                                     }
                                                     Err(e) => {
                                                         error_message
@@ -170,14 +169,9 @@ pub fn View() -> Element {
                     ActionRow { message: error_message,
                         button {
                             onclick: move |_| {
-                                app_context
-                                    .set(crate::AppContext {
-                                        content: None,
-                                        password: String::new(),
-                                        cipher: None,
-                                        share_url: None,
-                                        qr_code: None,
-                                    });
+                                app_context.set(
+                                    crate::AppContext::default(),
+                                );
                                 nav.push(Route::Home {});
                             },
                             "{t.create_new_note}"
@@ -185,14 +179,14 @@ pub fn View() -> Element {
                         button {
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
-                                    app_context
-                                        .set(crate::AppContext {
-                                            content: Some(content.clone()),
-                                            password: String::new(),
-                                            cipher: None,
-                                            share_url: None,
-                                            qr_code: None,
-                                        });
+                                    app_context.set(
+                                        crate::AppContext {
+                                            content: Some(
+                                                content.clone(),
+                                            ),
+                                            ..Default::default()
+                                        },
+                                    );
                                 }
                                 nav.push(Route::Home {});
                             },

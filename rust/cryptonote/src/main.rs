@@ -31,7 +31,7 @@ fn main() {
     dioxus::launch(App);
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct AppContext {
     pub content: Option<String>,
     pub password: String,
@@ -50,13 +50,8 @@ fn App() -> Element {
     let language =
         use_signal(|| i18n::detect_browser_language());
 
-    let app_context = use_signal(|| AppContext {
-        content: None,
-        password: String::new(),
-        cipher: None,
-        share_url: None,
-        qr_code: None,
-    });
+    let app_context =
+        use_signal(AppContext::default);
 
     let nav_state =
         use_signal(|| NavigationState::default());

@@ -183,14 +183,9 @@ pub fn Home() -> Element {
                             encryption.set(None);
                             password.set(String::new());
                             error_message.set(None);
-                            app_context
-                                .set(crate::AppContext {
-                                    content: None,
-                                    password: String::new(),
-                                    cipher: None,
-                                    share_url: None,
-                                    qr_code: None,
-                                });
+                            app_context.set(
+                                crate::AppContext::default(),
+                            );
                         },
                         "{t.create_new_note}"
                     }

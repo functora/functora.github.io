@@ -53,11 +53,3 @@ pub fn generate_qr_code(
     })?)
 }
 
-impl NoteData {
-    pub fn as_ciphertext(&self) -> Option<&EncryptedData> {
-        match self {
-            NoteData::CipherText(data) => Some(data),
-            _ => None,
-        }
-    }
-}

@@ -19,13 +19,7 @@ pub fn Layout() -> Element {
                         href: "#",
                         onclick: move |_| {
                             app_context
-                                .set(crate::AppContext {
-                                    content: None,
-                                    password: String::new(),
-                                    cipher: None,
-                                    share_url: None,
-                                    qr_code: None,
-                                });
+                                .set(crate::AppContext::default());
                             nav.push(Route::Home {});
                         },
                         "🔐 Cryptonote"

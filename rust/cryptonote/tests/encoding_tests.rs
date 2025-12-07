@@ -35,14 +35,15 @@ fn test_encode_decode_encrypted() {
     let decoded =
         decode_note(&encoded).expect("Decoding failed");
 
-    match decoded {
-        NoteData::CipherText(enc_data) => {
-            assert_eq!(
-                note.as_ciphertext().unwrap().ciphertext,
-                enc_data.ciphertext
-            );
+    if let NoteData::CipherText(original) = note {
+        match decoded {
+            NoteData::CipherText(enc_data) => {
+                assert_eq!(
+                    original.ciphertext, enc_data.ciphertext
+                );
+            }
+            _ => panic!("Expected CipherText"),
         }
-        _ => panic!("Expected CipherText"),
     }
 }
 

@@ -32,12 +32,12 @@ pub fn build_url(
     note: &NoteData,
 ) -> Result<String, AppError> {
     encode_note(note).map(|encoded| {
-        format!("{}#note={}", base_url, encoded)
+        format!("{}?note={}", base_url, encoded)
     })
 }
 
 pub fn parse_url(url: &str) -> Result<NoteData, AppError> {
-    url.split("#note=")
+    url.split("?note=")
         .nth(1)
         .ok_or_else(|| AppError::Url)
         .and_then(decode_note)
@@ -53,3 +53,49 @@ pub fn generate_qr_code(
     })?)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encode_decode_plaintext() {
+        let note =
+            NoteData::PlainText("hello world".to_string());
+        let encoded = encode_note(&note).unwrap();
+        let decoded = decode_note(&encoded).unwrap();
+        match decoded {
+            NoteData::PlainText(s) => {
+                assert_eq!(s, "hello world")
+            }
+            _ => panic!("Expected PlainText"),
+        }
+    }
+
+    #[test]
+    fn test_build_url_format() {
+        let note = NoteData::PlainText("test".to_string());
+        let url = build_url("https://example.com", &note)
+            .unwrap();
+        assert!(url.contains("?note="));
+        assert!(
+            url.starts_with("https://example.com?note=")
+        );
+    }
+
+    #[test]
+    fn test_parse_url() {
+        let note =
+            NoteData::PlainText("secret".to_string());
+        let encoded = encode_note(&note).unwrap();
+        let url =
+            format!("https://example.com?note={}", encoded);
+
+        let parsed = parse_url(&url).unwrap();
+        match parsed {
+            NoteData::PlainText(s) => {
+                assert_eq!(s, "secret")
+            }
+            _ => panic!("Expected PlainText"),
+        }
+    }
+}

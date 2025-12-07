@@ -53,7 +53,7 @@ fn test_build_parse_url() {
     let url = build_url("https://example.com/view", &note)
         .expect("URL build failed");
     assert!(
-        url.starts_with("https://example.com/view#note=")
+        url.starts_with("https://example.com/view?note=")
     );
     let parsed = parse_url(&url).expect("URL parse failed");
     match parsed {

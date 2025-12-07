@@ -3,13 +3,12 @@ use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
 use crate::crypto::decrypt_symmetric;
-use crate::encoding::{NoteData, parse_url};
+use crate::encoding::NoteData;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
-use web_sys::window;
 
 #[component]
-pub fn View() -> Element {
+pub fn View(note: Option<String>) -> Element {
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
     let nav = navigator();
@@ -24,31 +23,30 @@ pub fn View() -> Element {
     let mut is_encrypted = use_signal(|| false);
 
     use_effect(move || {
-        if let Some(window) = window() {
-            if let Ok(href) = window.location().href() {
-                if href.contains("#note=") {
-                    match parse_url(&href) {
-                        Ok(note_data) => match note_data {
-                            NoteData::CipherText(enc) => {
-                                is_encrypted.set(true);
-                                encrypted_data
-                                    .set(Some(enc));
-                            }
-                            NoteData::PlainText(text) => {
-                                note_content
-                                    .set(Some(text));
-                            }
-                        },
-                        Err(e) => error_message
-                            .set(Some(UiMessage::Error(e))),
-                    }
-                } else {
-                    error_message
-                        .set(Some(UiMessage::Error(
-                        crate::error::AppError::NoNoteInUrl,
-                    )));
+        if let Some(n) = &note {
+            if !n.is_empty() {
+                match crate::encoding::decode_note(n) {
+                    Ok(note_data) => match note_data {
+                        NoteData::CipherText(enc) => {
+                            is_encrypted.set(true);
+                            encrypted_data.set(Some(enc));
+                        }
+                        NoteData::PlainText(text) => {
+                            note_content.set(Some(text));
+                        }
+                    },
+                    Err(e) => error_message
+                        .set(Some(UiMessage::Error(e))),
                 }
+            } else {
+                error_message.set(Some(UiMessage::Error(
+                    crate::error::AppError::NoNoteInUrl,
+                )));
             }
+        } else {
+            error_message.set(Some(UiMessage::Error(
+                crate::error::AppError::NoNoteInUrl,
+            )));
         }
     });
 
@@ -123,14 +121,13 @@ pub fn View() -> Element {
                                                     Ok(text) => {
                                                         note_content.set(Some(text.clone()));
                                                         is_encrypted.set(false);
-                                                        app_context.set(
-                                                            crate::AppContext {
+                                                        app_context
+                                                            .set(crate::AppContext {
                                                                 content: Some(text),
                                                                 password: pwd,
                                                                 cipher: Some(enc.cipher),
                                                                 ..Default::default()
-                                                            },
-                                                        );
+                                                            });
                                                     }
                                                     Err(e) => {
                                                         error_message
@@ -169,9 +166,7 @@ pub fn View() -> Element {
                     ActionRow { message: error_message,
                         button {
                             onclick: move |_| {
-                                app_context.set(
-                                    crate::AppContext::default(),
-                                );
+                                app_context.set(crate::AppContext::default());
                                 nav.push(Route::Home {});
                             },
                             "{t.create_new_note}"
@@ -179,14 +174,11 @@ pub fn View() -> Element {
                         button {
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
-                                    app_context.set(
-                                        crate::AppContext {
-                                            content: Some(
-                                                content.clone(),
-                                            ),
+                                    app_context
+                                        .set(crate::AppContext {
+                                            content: Some(content.clone()),
                                             ..Default::default()
-                                        },
-                                    );
+                                        });
                                 }
                                 nav.push(Route::Home {});
                             },

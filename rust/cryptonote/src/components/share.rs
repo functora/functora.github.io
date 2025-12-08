@@ -2,27 +2,33 @@ use crate::Route;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
+use crate::error::AppError;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 use dioxus_clipboard::prelude::use_clipboard;
 
 #[cfg(not(target_arch = "wasm32"))]
-fn copy_to_clipboard(
-    text: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let _ = use_clipboard().set(text.into());
-    Ok(())
+fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
+    use_clipboard().set(text.into()).map_err(|e| {
+        AppError::ClipboardWrite(format!("{:#?}", e))
+    })
 }
 
 #[cfg(target_arch = "wasm32")]
-fn copy_to_clipboard(
-    text: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(window) = web_sys::window() {
-        let clipboard = window.navigator().clipboard();
-        let _ = clipboard.write_text(text);
+fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
+    //
+    // TODO : refactor with and_then, handle the final result as well
+    //
+    match web_sys::window() {
+        None => Err(AppError::MissingWindow),
+        Some(window) => {
+            let _ = window
+                .navigator()
+                .clipboard()
+                .write_text(text);
+            Ok(())
+        }
     }
-    Ok(())
 }
 
 #[component]
@@ -73,8 +79,11 @@ pub fn Share() -> Element {
                         value: "{url}",
                         onclick: move |_| {
                             let url_val = url();
-                            let _ = copy_to_clipboard(&url_val);
-                            message.set(Some(UiMessage::Copied));
+                            match copy_to_clipboard(&url_val) {
+                                Ok(_) => message.set(Some(UiMessage::Copied)),
+
+                                Err(e) => message.set(Some(UiMessage::Error(e))),
+                            }
                         },
                     }
 
@@ -83,8 +92,11 @@ pub fn Share() -> Element {
                             "primary": "",
                             onclick: move |_| {
                                 let url_val = url();
-                                let _ = copy_to_clipboard(&url_val);
-                                message.set(Some(UiMessage::Copied));
+                                match copy_to_clipboard(&url_val) {
+                                    Ok(_) => message.set(Some(UiMessage::Copied)),
+
+                                    Err(e) => message.set(Some(UiMessage::Error(e))),
+                                }
                             },
                             "{t.copy_button}"
                         }

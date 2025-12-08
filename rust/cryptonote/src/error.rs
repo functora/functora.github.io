@@ -13,9 +13,10 @@ pub enum AppError {
     Qr(QrError),
     Encrypt,
     Decrypt,
-
     PasswordRequired,
     NoNoteInUrl,
+    MissingWindow,
+    ClipboardWrite(String),
 }
 
 impl AppError {
@@ -37,13 +38,18 @@ impl AppError {
                 t.password_required
             }
             AppError::NoNoteInUrl => t.no_note_in_url,
+            AppError::ClipboardWrite(_) => {
+                t.clipboard_write_error
+            }
+            AppError::MissingWindow => {
+                t.missing_window_error
+            }
         };
         format!("{}: {}", msg, self)
     }
 }
 
 impl std::error::Error for AppError {}
-
 
 impl From<digest::InvalidLength> for AppError {
     fn from(e: digest::InvalidLength) -> Self {

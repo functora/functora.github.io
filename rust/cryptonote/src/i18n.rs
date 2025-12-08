@@ -75,6 +75,8 @@ pub struct Translations {
     pub privacy_policy_and: &'static str,
     pub version_label: &'static str,
     pub back_button: &'static str,
+    pub clipboard_write_error: &'static str,
+    pub missing_window_error: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -170,6 +172,8 @@ If you have any questions regarding privacy while using the Application, or have
             privacy_policy_and: "Privacy Policy",
             version_label: "Version",
             back_button: "Back",
+            clipboard_write_error: "Failed to copy to clipboard",
+            missing_window_error: "No browser window available",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -262,6 +266,8 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             privacy_policy_and: "Política de Privacidad",
             version_label: "Versión",
             back_button: "Atrás",
+            clipboard_write_error: "No se pudo copiar al portapapeles",
+            missing_window_error: "No hay ventana del navegador disponible",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -354,6 +360,8 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             privacy_policy_and: "Политикой конфиденциальности",
             version_label: "Версия",
             back_button: "Назад",
+            clipboard_write_error: "Не удалось скопировать в буфер обмена",
+            missing_window_error: "Окно браузера недоступно",
         },
     }
 }

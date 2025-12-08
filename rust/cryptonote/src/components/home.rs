@@ -81,7 +81,7 @@ pub fn Home() -> Element {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 Some(
-                    "https://functora.github.io/cryptonote"
+                    "https://functora.github.io/apps/cryptonote"
                         .to_string(),
                 )
             }

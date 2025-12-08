@@ -4,13 +4,13 @@ use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
+use dioxus_clipboard::prelude::use_clipboard;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn copy_to_clipboard(
-    _text: &str,
+    text: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Clipboard not supported on desktop "out of the box" without external crates
-    // which proved incompatible. Stubbing to prevent build failure.
+    let _ = use_clipboard().set(text.into());
     Ok(())
 }
 

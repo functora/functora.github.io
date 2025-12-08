@@ -16,7 +16,6 @@ pub enum Language {
 }
 
 impl Language {
-    #[allow(dead_code)]
     pub fn from_code(code: &str) -> Self {
         match code
             .split('-')
@@ -373,6 +372,9 @@ pub fn detect_browser_language() -> Language {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
+        if let Some(lang) = sys_locale::get_locale() {
+            return Language::from_code(&lang);
+        }
         Language::English
     }
 }

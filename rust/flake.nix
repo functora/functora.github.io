@@ -48,6 +48,7 @@
             license-generator
             dioxus-cli
             tailwindcss_4
+            simple-http-server
             # web
             lld
             clang

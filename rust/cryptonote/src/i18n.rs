@@ -17,7 +17,13 @@ pub enum Language {
 
 impl Language {
     pub fn from_code(code: &str) -> Self {
-        match code.split('-').next().unwrap_or("en") {
+        match code
+            .split('-')
+            .next()
+            .map(|s| s.to_lowercase())
+            .unwrap_or("en".into())
+            .as_str()
+        {
             "es" => Language::Spanish,
             "ru" => Language::Russian,
             _ => Language::English,

@@ -5,6 +5,26 @@ use crate::components::message::UiMessage;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+fn copy_to_clipboard(
+    _text: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Clipboard not supported on desktop "out of the box" without external crates
+    // which proved incompatible. Stubbing to prevent build failure.
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn copy_to_clipboard(
+    text: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(window) = web_sys::window() {
+        let clipboard = window.navigator().clipboard();
+        let _ = clipboard.write_text(text);
+    }
+    Ok(())
+}
+
 #[component]
 pub fn Share() -> Element {
     let language = use_context::<Signal<Language>>();
@@ -52,12 +72,9 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            if let Some(window) = web_sys::window() {
-                                let clipboard = window.navigator().clipboard();
-                                let url_val = url();
-                                let _ = clipboard.write_text(&url_val);
-                                message.set(Some(UiMessage::Copied));
-                            }
+                            let url_val = url();
+                            let _ = copy_to_clipboard(&url_val);
+                            message.set(Some(UiMessage::Copied));
                         },
                     }
 
@@ -65,12 +82,9 @@ pub fn Share() -> Element {
                         button {
                             "primary": "",
                             onclick: move |_| {
-                                if let Some(window) = web_sys::window() {
-                                    let clipboard = window.navigator().clipboard();
-                                    let url_val = url();
-                                    let _ = clipboard.write_text(&url_val);
-                                    message.set(Some(UiMessage::Copied));
-                                }
+                                let url_val = url();
+                                let _ = copy_to_clipboard(&url_val);
+                                message.set(Some(UiMessage::Copied));
                             },
                             "{t.copy_button}"
                         }

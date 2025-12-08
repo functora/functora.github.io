@@ -16,6 +16,7 @@ pub enum Language {
 }
 
 impl Language {
+    #[allow(dead_code)]
     pub fn from_code(code: &str) -> Self {
         match code
             .split('-')
@@ -359,8 +360,19 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 }
 
 pub fn detect_browser_language() -> Language {
-    web_sys::window()
-        .and_then(|w| w.navigator().language())
-        .map(|lang| Language::from_code(&lang))
-        .unwrap_or(Language::English)
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            if let Some(lang) =
+                window.navigator().language()
+            {
+                return Language::from_code(&lang);
+            }
+        }
+        Language::English
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        Language::English
+    }
 }

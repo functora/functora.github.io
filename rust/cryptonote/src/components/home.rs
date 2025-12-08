@@ -1,11 +1,11 @@
-use crate::crypto::{CipherType, encrypt_symmetric};
 use crate::Route;
+use crate::components::actions::ActionRow;
+use crate::components::message::UiMessage;
+use crate::crypto::{CipherType, encrypt_symmetric};
 use crate::encoding::{
     NoteData, build_url, generate_qr_code,
 };
 use crate::i18n::{Language, get_translations};
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
 use dioxus::prelude::*;
 
 #[component]
@@ -71,40 +71,51 @@ pub fn Home() -> Element {
             }
         };
 
-        if let Some(window) = web_sys::window() {
-            if let Ok(origin) = window.location().origin() {
-                let view_url = format!("{}/view", origin);
-                match build_url(&view_url, &note_data) {
-                    Ok(url) => match generate_qr_code(&url)
-                    {
-                        Ok(qr) => {
-                            app_context.set(
-                                crate::AppContext {
-                                    content: Some(
-                                        note_content,
-                                    ),
-                                    password: pwd,
-                                    cipher: enc_option,
-                                    share_url: Some(url),
-                                    qr_code: Some(qr),
-                                },
-                            );
+        let origin = {
+            #[cfg(target_arch = "wasm32")]
+            {
+                web_sys::window().and_then(|w| {
+                    w.location().origin().ok()
+                })
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                Some(
+                    "https://functora.github.io/cryptonote"
+                        .to_string(),
+                )
+            }
+        };
 
-                            let mut nav_state = use_context::<
-                                Signal<crate::NavigationState>,
-                            >();
-                            nav_state.write().has_navigated =
-                                true;
-                            nav.push(Route::Share {});
-                        }
-                        Err(e) => error_message.set(Some(
-                            UiMessage::Error(e.into()),
-                        )),
-                    },
+        if let Some(origin) = origin {
+            let view_url = format!("{}/view", origin);
+            match build_url(&view_url, &note_data) {
+                Ok(url) => match generate_qr_code(&url) {
+                    Ok(qr) => {
+                        app_context.set(
+                            crate::AppContext {
+                                content: Some(note_content),
+                                password: pwd,
+                                cipher: enc_option,
+                                share_url: Some(url),
+                                qr_code: Some(qr),
+                            },
+                        );
+
+                        let mut nav_state = use_context::<
+                            Signal<crate::NavigationState>,
+                        >(
+                        );
+                        nav_state.write().has_navigated =
+                            true;
+                        nav.push(Route::Share {});
+                    }
                     Err(e) => error_message.set(Some(
                         UiMessage::Error(e.into()),
                     )),
-                }
+                },
+                Err(e) => error_message
+                    .set(Some(UiMessage::Error(e.into()))),
             }
         }
     };
@@ -182,9 +193,7 @@ pub fn Home() -> Element {
                             encryption.set(None);
                             password.set(String::new());
                             error_message.set(None);
-                            app_context.set(
-                                crate::AppContext::default(),
-                            );
+                            app_context.set(crate::AppContext::default());
                         },
                         "{t.create_new_note}"
                     }

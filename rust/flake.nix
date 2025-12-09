@@ -15,7 +15,23 @@
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = unstable.legacyPackages.${system};
+        pkgs = import unstable {
+          inherit system;
+          overlays = [rust-overlay.overlays.default];
+        };
+        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+          targets = [
+            # web
+            "wasm32-unknown-unknown"
+            # mobile
+            "aarch64-linux-android"
+            "arm-linux-androideabi"
+            "armv7-linux-androideabi"
+            "i686-linux-android"
+            "thumbv7neon-linux-androideabi"
+            "x86_64-linux-android"
+          ];
+        };
         wasm-bindgen-cli-0_2_106 = with pkgs;
           rustPlatform.buildRustPackage rec {
             pname = "wasm-bindgen-cli";
@@ -33,25 +49,38 @@
             nativeCheckInputs = [nodejs_latest];
             doCheck = false;
           };
-        shell = {
+        android-sdk-args = {
+          platformVersions = ["33" "34"];
+          buildToolsVersions = ["33.0.2" "34.0.0"];
+          abiVersions = ["armeabi-v7a" "arm64-v8a" "x86" "x86_64"];
+          systemImageTypes = ["default" "google_apis_playstore"];
+          includeNDK = true;
+        };
+        android-sdk =
+          (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
+        shell = rec {
+          ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
+          ANDROID_SDK_ROOT = ANDROID_HOME;
+          NDK_HOME = "${ANDROID_HOME}/ndk-bundle";
+          ANDROID_NDK_HOME = NDK_HOME;
+          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2";
+          CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android28-clang";
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
+          CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";
+          CARGO_TARGET_I686_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang";
           packages = with pkgs; [
             alejandra
             bacon
-            cargo
-            cargo-edit
+            rustToolchain
+            rust-analyzer
             cargo-tarpaulin
             clippy
-            rust-analyzer
-            rustc
-            rustfmt
             wasmtime
             license-generator
             dioxus-cli
             tailwindcss_4
             simple-http-server
             # web
-            lld
-            clang
             binaryen
             wasm-bindgen-cli-0_2_106
             # linux
@@ -71,6 +100,12 @@
             fuse
             file
             gcc
+            # android
+            llvmPackages.lld
+            llvmPackages.clang-unwrapped
+            android-sdk
+            glibc
+            jdk
             # fonts
             noto-fonts
             noto-fonts-cjk-sans

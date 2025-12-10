@@ -16,10 +16,10 @@ pub fn Home() -> Element {
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
 
-    let mut note_text = use_signal(|| String::new());
+    let mut note_text = use_signal(String::new);
     let mut encryption =
         use_signal(|| Option::<CipherType>::None);
-    let mut password = use_signal(|| String::new());
+    let mut password = use_signal(String::new);
     let mut error_message =
         use_signal(|| Option::<UiMessage>::None);
 
@@ -40,7 +40,7 @@ pub fn Home() -> Element {
         error_message.set(None);
 
         let note_content = note_text.read().clone();
-        let enc_option = encryption.read().clone();
+        let enc_option = *encryption.read();
         let pwd = password.read().clone();
 
         let note_data = match enc_option {
@@ -110,12 +110,11 @@ pub fn Home() -> Element {
                             true;
                         nav.push(Route::Share {});
                     }
-                    Err(e) => error_message.set(Some(
-                        UiMessage::Error(e.into()),
-                    )),
+                    Err(e) => error_message
+                        .set(Some(UiMessage::Error(e))),
                 },
                 Err(e) => error_message
-                    .set(Some(UiMessage::Error(e.into()))),
+                    .set(Some(UiMessage::Error(e))),
             }
         }
     };

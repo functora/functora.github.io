@@ -6,26 +6,6 @@ use crate::error::AppError;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
-async fn copy_to_clipboard(
-    text: String,
-) -> Result<(), AppError> {
-    match web_sys::window() {
-        None => Err(AppError::MissingWindow),
-        Some(window) => {
-            //
-            // TODO : refactor with and_then, handle the final result as well
-            //
-            let _ = window
-                .navigator()
-                .clipboard()
-                .write_text(&text);
-            Ok(())
-        }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 async fn copy_to_clipboard(
     text: String,
 ) -> Result<(), AppError> {
@@ -36,7 +16,7 @@ async fn copy_to_clipboard(
             await window.navigator.clipboard.writeText(msg);
             dioxus.send("ok");
         } catch (e) {
-            dioxus.send("error: " + e);
+            dioxus.send("Error " + e);
         }
         "#,
     );
@@ -51,9 +31,7 @@ async fn copy_to_clipboard(
 
     match msg.as_str() {
         "ok" => Ok(()),
-        other => {
-            Err(AppError::ClipboardWrite(other.to_string()))
-        }
+        e => Err(AppError::ClipboardWrite(e.to_string())),
     }
 }
 

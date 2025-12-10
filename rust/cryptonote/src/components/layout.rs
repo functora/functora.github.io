@@ -9,6 +9,9 @@ pub fn Layout() -> Element {
         use_context::<Signal<crate::AppContext>>();
     let nav = use_navigator();
 
+    let mut nav_state =
+        use_context::<Signal<crate::NavigationState>>();
+
     rsx! {
         nav {
             label {
@@ -16,14 +19,15 @@ pub fn Layout() -> Element {
                 header {
                     a {
                         href: "#",
-                        onclick: move |_| {
-                            app_context
-                                .set(crate::AppContext::default());
+                        onclick: move |evt| {
+                            evt.prevent_default();
+                            app_context.set(crate::AppContext::default());
                             nav.push(Route::Home {});
                         },
                         "🔐 Cryptonote"
                     }
                 }
+
                 ul {
                     li {
                         a { onclick: move |_| language.set(Language::English), "English" }
@@ -49,13 +53,25 @@ pub fn Layout() -> Element {
             " "
             {crate::i18n::get_translations(language()).by_continuing}
             " "
-            Link { to: Route::License {},
+            a {
+                href: "#",
+                onclick: move |evt| {
+                    evt.prevent_default();
+                    nav_state.write().has_navigated = true;
+                    nav.push(Route::License {});
+                },
                 "{crate::i18n::get_translations(language()).terms_of_service}"
             }
             " "
             {crate::i18n::get_translations(language()).you_agree}
             " "
-            Link { to: Route::Privacy {},
+            a {
+                href: "#",
+                onclick: move |evt| {
+                    evt.prevent_default();
+                    nav_state.write().has_navigated = true;
+                    nav.push(Route::Privacy {});
+                },
                 "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
             ". "

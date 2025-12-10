@@ -19,6 +19,7 @@ pub fn ActionRow(
 
     rsx! {
         p { "txt": "r",
+            Message { message }
             if show_back {
                 button {
                     onclick: move |_| {
@@ -28,8 +29,6 @@ pub fn ActionRow(
                 }
             }
             {children}
-            br {}
-            Message { message }
         }
     }
 }

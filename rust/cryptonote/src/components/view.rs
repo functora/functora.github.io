@@ -18,7 +18,7 @@ pub fn View(note: Option<String>) -> Element {
         Option::<crate::crypto::EncryptedData>::None
     });
     let mut password_input = use_signal(String::new);
-    let mut error_message =
+    let mut message =
         use_signal(|| Option::<UiMessage>::None);
     let mut is_encrypted = use_signal(|| false);
 
@@ -35,16 +35,16 @@ pub fn View(note: Option<String>) -> Element {
                             note_content.set(Some(text));
                         }
                     },
-                    Err(e) => error_message
+                    Err(e) => message
                         .set(Some(UiMessage::Error(e))),
                 }
             } else {
-                error_message.set(Some(UiMessage::Error(
+                message.set(Some(UiMessage::Error(
                     crate::error::AppError::NoNoteInUrl,
                 )));
             }
         } else {
-            error_message.set(Some(UiMessage::Error(
+            message.set(Some(UiMessage::Error(
                 crate::error::AppError::NoNoteInUrl,
             )));
         }
@@ -54,11 +54,11 @@ pub fn View(note: Option<String>) -> Element {
         use_context::<Signal<crate::AppContext>>();
 
     let decrypt_note = move |_evt: Event<MouseData>| {
-        error_message.set(None);
+        message.set(None);
         if let Some(enc) = encrypted_data.read().as_ref() {
             let pwd = password_input.read().clone();
             if pwd.is_empty() {
-                error_message.set(Some(UiMessage::Error(
+                message.set(Some(UiMessage::Error(
                     crate::error::AppError::PasswordRequired,
                 )));
                 return;
@@ -83,13 +83,14 @@ pub fn View(note: Option<String>) -> Element {
                                 },
                             );
                         }
-                        Err(e) => error_message.set(Some(UiMessage::Error(
+                        Err(e) => message.set(Some(UiMessage::Error(
                             crate::error::AppError::Utf8(e),
                         ))),
                     }
                 }
-                Err(e) => error_message
-                    .set(Some(UiMessage::Error(e))),
+                Err(e) => {
+                    message.set(Some(UiMessage::Error(e)))
+                }
             }
         }
     };
@@ -111,7 +112,7 @@ pub fn View(note: Option<String>) -> Element {
                         oninput: move |evt| password_input.set(evt.value()),
                         onkeydown: move |evt| {
                             if evt.key() == Key::Enter {
-                                error_message.set(None);
+                                message.set(None);
                                 if let Some(enc) = encrypted_data.read().as_ref() {
                                     let pwd = password_input.read().clone();
                                     if !pwd.is_empty() {
@@ -130,7 +131,7 @@ pub fn View(note: Option<String>) -> Element {
                                                             });
                                                     }
                                                     Err(e) => {
-                                                        error_message
+                                                        message
                                                             .set(
                                                                 Some(UiMessage::Error(crate::error::AppError::Utf8(e))),
                                                             );
@@ -138,7 +139,7 @@ pub fn View(note: Option<String>) -> Element {
                                                 }
                                             }
                                             Err(e) => {
-                                                error_message.set(Some(UiMessage::Error(e)));
+                                                message.set(Some(UiMessage::Error(e)));
                                             }
                                         }
                                     }
@@ -150,7 +151,7 @@ pub fn View(note: Option<String>) -> Element {
                     br {}
                     br {}
 
-                    ActionRow { message: error_message,
+                    ActionRow { message,
                         button { "primary": "", onclick: decrypt_note, "{t.decrypt_button}" }
                     }
                 }
@@ -163,7 +164,7 @@ pub fn View(note: Option<String>) -> Element {
                         pre { "{content}" }
                     }
 
-                    ActionRow { message: error_message,
+                    ActionRow { message,
                         button {
                             onclick: move |_| {
                                 app_context.set(crate::AppContext::default());
@@ -187,10 +188,10 @@ pub fn View(note: Option<String>) -> Element {
                     }
                 }
             }
-        } else if error_message.read().is_some() {
+        } else if message.read().is_some() {
             Breadcrumb { title: t.error_title.to_string() }
             section {
-                ActionRow { message: error_message }
+                ActionRow { message }
             }
         } else {
             section {

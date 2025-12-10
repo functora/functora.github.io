@@ -20,7 +20,7 @@ pub fn Home() -> Element {
     let mut encryption =
         use_signal(|| Option::<CipherType>::None);
     let mut password = use_signal(String::new);
-    let mut error_message =
+    let mut message =
         use_signal(|| Option::<UiMessage>::None);
 
     use_effect(move || {
@@ -37,7 +37,7 @@ pub fn Home() -> Element {
     });
 
     let generate_note = move |_| {
-        error_message.set(None);
+        message.set(None);
 
         let note_content = note_text.read().clone();
         let enc_option = *encryption.read();
@@ -49,7 +49,7 @@ pub fn Home() -> Element {
             }
             Some(cipher) => {
                 if pwd.is_empty() {
-                    error_message.set(Some(UiMessage::Error(
+                    message.set(Some(UiMessage::Error(
                         crate::error::AppError::PasswordRequired,
                     )));
                     return;
@@ -63,7 +63,7 @@ pub fn Home() -> Element {
                         NoteData::CipherText(encrypted)
                     }
                     Err(e) => {
-                        error_message
+                        message
                             .set(Some(UiMessage::Error(e)));
                         return;
                     }
@@ -110,11 +110,12 @@ pub fn Home() -> Element {
                             true;
                         nav.push(Route::Share {});
                     }
-                    Err(e) => error_message
+                    Err(e) => message
                         .set(Some(UiMessage::Error(e))),
                 },
-                Err(e) => error_message
-                    .set(Some(UiMessage::Error(e))),
+                Err(e) => {
+                    message.set(Some(UiMessage::Error(e)))
+                }
             }
         }
     };
@@ -185,13 +186,13 @@ pub fn Home() -> Element {
                 br {}
                 br {}
 
-                ActionRow { message: error_message,
+                ActionRow { message,
                     button {
                         onclick: move |_| {
                             note_text.set(String::new());
                             encryption.set(None);
                             password.set(String::new());
-                            error_message.set(None);
+                            message.set(None);
                             app_context.set(crate::AppContext::default());
                         },
                         "{t.create_new_note}"

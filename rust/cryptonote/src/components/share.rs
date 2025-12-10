@@ -5,14 +5,6 @@ use crate::components::message::UiMessage;
 use crate::error::AppError;
 use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
-use dioxus_clipboard::prelude::use_clipboard;
-
-#[cfg(not(target_arch = "wasm32"))]
-fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
-    use_clipboard().set(text.into()).map_err(|e| {
-        AppError::ClipboardWrite(format!("{:#?}", e))
-    })
-}
 
 #[cfg(target_arch = "wasm32")]
 fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
@@ -28,6 +20,36 @@ fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
                 .write_text(text);
             Ok(())
         }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
+    let future = use_resource(move || {
+        let value = text.clone();
+        async move {
+            let mut eval = document::eval(
+                r#"let msg = await dioxus.recv(); window.navigator.clipboard.writeText(msg); dioxus.send("ok");"#,
+            );
+            eval.send(value).map_err(|e| {
+                AppError::ClipboardWrite(e.to_string())
+            })?;
+            let msg = eval.recv::<String>().await.map_err(
+                |e| AppError::ClipboardWrite(e.to_string()),
+            )?;
+            match msg.as_str() {
+                "ok" => Ok(()),
+                e => Err(AppError::ClipboardWrite(
+                    e.to_string(),
+                )),
+            }
+        }
+    });
+    match future.read_unchecked().as_ref() {
+        Some(res) => *res,
+        None => Err(AppError::ClipboardWrite(
+            "Empty future result!".into(),
+        )),
     }
 }
 

@@ -15,6 +15,7 @@ pub enum AppError {
     Decrypt,
     PasswordRequired,
     NoNoteInUrl,
+    #[cfg(target_arch = "wasm32")]
     MissingWindow,
     ClipboardWrite(String),
 }
@@ -41,6 +42,7 @@ impl AppError {
             AppError::ClipboardWrite(_) => {
                 t.clipboard_write_error
             }
+            #[cfg(target_arch = "wasm32")]
             AppError::MissingWindow => {
                 t.missing_window_error
             }

@@ -7,49 +7,53 @@ use crate::i18n::{Language, get_translations};
 use crate::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
-fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
-    //
-    // TODO : refactor with and_then, handle the final result as well
-    //
+async fn copy_to_clipboard(
+    text: String,
+) -> Result<(), AppError> {
     match web_sys::window() {
         None => Err(AppError::MissingWindow),
         Some(window) => {
+            //
+            // TODO : refactor with and_then, handle the final result as well
+            //
             let _ = window
                 .navigator()
                 .clipboard()
-                .write_text(text);
+                .write_text(&text);
             Ok(())
         }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
-    let future = use_resource(move || {
-        let value = text.clone();
-        async move {
-            let mut eval = document::eval(
-                r#"let msg = await dioxus.recv(); window.navigator.clipboard.writeText(msg); dioxus.send("ok");"#,
-            );
-            eval.send(value).map_err(|e| {
-                AppError::ClipboardWrite(e.to_string())
-            })?;
-            let msg = eval.recv::<String>().await.map_err(
-                |e| AppError::ClipboardWrite(e.to_string()),
-            )?;
-            match msg.as_str() {
-                "ok" => Ok(()),
-                e => Err(AppError::ClipboardWrite(
-                    e.to_string(),
-                )),
-            }
+async fn copy_to_clipboard(
+    text: String,
+) -> Result<(), AppError> {
+    let mut eval = document::eval(
+        r#"
+        let msg = await dioxus.recv();
+        try {
+            await window.navigator.clipboard.writeText(msg);
+            dioxus.send("ok");
+        } catch (e) {
+            dioxus.send("error: " + e);
         }
-    });
-    match future.read_unchecked().as_ref() {
-        Some(res) => *res,
-        None => Err(AppError::ClipboardWrite(
-            "Empty future result!".into(),
-        )),
+        "#,
+    );
+
+    eval.send(text).map_err(|e| {
+        AppError::ClipboardWrite(e.to_string())
+    })?;
+
+    let msg = eval.recv::<String>().await.map_err(|e| {
+        AppError::ClipboardWrite(e.to_string())
+    })?;
+
+    match msg.as_str() {
+        "ok" => Ok(()),
+        other => {
+            Err(AppError::ClipboardWrite(other.to_string()))
+        }
     }
 }
 
@@ -101,11 +105,12 @@ pub fn Share() -> Element {
                         value: "{url}",
                         onclick: move |_| {
                             let url_val = url();
-                            match copy_to_clipboard(&url_val) {
-                                Ok(_) => message.set(Some(UiMessage::Copied)),
-
-                                Err(e) => message.set(Some(UiMessage::Error(e))),
-                            }
+                            spawn(async move {
+                                match copy_to_clipboard(url_val).await {
+                                    Ok(_) => message.set(Some(UiMessage::Copied)),
+                                    Err(e) => message.set(Some(UiMessage::Error(e))),
+                                }
+                            });
                         },
                     }
 
@@ -114,11 +119,12 @@ pub fn Share() -> Element {
                             "primary": "",
                             onclick: move |_| {
                                 let url_val = url();
-                                match copy_to_clipboard(&url_val) {
-                                    Ok(_) => message.set(Some(UiMessage::Copied)),
-
-                                    Err(e) => message.set(Some(UiMessage::Error(e))),
-                                }
+                                spawn(async move {
+                                    match copy_to_clipboard(url_val).await {
+                                        Ok(_) => message.set(Some(UiMessage::Copied)),
+                                        Err(e) => message.set(Some(UiMessage::Error(e))),
+                                    }
+                                });
                             },
                             "{t.copy_button}"
                         }

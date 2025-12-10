@@ -18,6 +18,7 @@
         pkgs = import unstable {
           inherit system;
           overlays = [rust-overlay.overlays.default];
+          config.android_sdk.accept_license = true;
         };
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           targets = [

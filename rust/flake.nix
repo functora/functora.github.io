@@ -58,6 +58,28 @@
         };
         android-sdk =
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
+        mkRel = app:
+          pkgs.writeShellApplication rec {
+            name = "release-${app}";
+            runtimeInputs = [pkgs.coreutils pkgs.gnugrep pkgs.gnused];
+            text = ''
+              (
+                cd "${app}"
+                dx bundle --release --web
+                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                REL="../../apps/${app}/$VSN"
+                if [ -d "$REL" ]
+                then
+                  echo "$REL does already exist!"
+                  exit 1
+                else
+                  mkdir -p "$REL"
+                fi
+                cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
+                echo "$REL release success!"
+              )
+            '';
+          };
         shell = rec {
           ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
           ANDROID_SDK_ROOT = ANDROID_HOME;
@@ -112,6 +134,8 @@
             noto-fonts-color-emoji
             liberation_ttf
             dejavu_fonts
+            # apps
+            (mkRel "cryptonote")
           ];
         };
         mkRustPkg = pkg:

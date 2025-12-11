@@ -57,6 +57,32 @@ in
       '';
     }
     // fj.mkFirejailCustom {
+      pkg = "doom-ashes2";
+      dir = "doom";
+      exe = ''
+        ${unst.gzdoom}/bin/gzdoom \
+          -iwad ${../bak/doom/freedoom-0.13.0/freedoom2.wad} \
+          -file ${../bak/doom/DMSF_ALX-R3.WAD} \
+          -file ${../bak/doom/CodeFX.pk3} \
+          -file ${../bak/doom/CodeFXFire.pk3} \
+          -file ${../bak/doom/CodeFXBlood.pk3} \
+          -file ${../bak/doom/waterfix.pk3} \
+          -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" \
+          -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 1920x1080 .pk3" \
+          -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3" \
+          -file ${../bak/doom/AshesStandalone_V1_51/Resources/AshesSAMenu.pk3} \
+          -file ${../bak/doom/AshesStandalone_V1_51/Resources/lightmodepatch.pk3} \
+          -file ${../bak/doom/AshesStandalone_V1_51/Resources/AshesAfterglow1_16.pk3} \
+          -file ${../bak/doom/AshesSmooth/ashesafterglow-smooth-enemies.pk3} \
+          -file ${../bak/doom/AshesVoxelPickups-Ep2.pk3} \
+          -file ${../bak/doom/ashes-wpn-tracers.pk3} \
+          -file ${../bak/doom/relite_0.7.3b.pk3} \
+          -file ${../bak/doom/nashgore.pk3} \
+          -file ${../bak/doom/cblood.pk3} \
+          -file ${../bak/doom/SimpleSlots.1.1.pk7}
+      '';
+    }
+    // fj.mkFirejailCustom {
       pkg = "doom-ashes1";
       dir = "doom";
       exe = ''

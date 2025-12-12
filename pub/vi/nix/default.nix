@@ -65,7 +65,7 @@ in
           customRC =
             ''
               set runtimepath+=${vi-src}
-              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin:${sleek}/bin:${pretty}/bin:${html-tidy}/bin'
+              let $PATH.=':${silver-searcher}/bin:${nodejs}/bin:${less}/bin:${lesspipeWrapper}/bin:${python311Packages.grip}/bin:${xdg-utils}/bin:${git}/bin:${jre8}/bin:${stylua}/bin:${sleek}/bin:${pretty}/bin:${html-tidy}/bin:${alejandra}/bin'
               let $SHELL='/run/current-system/sw/bin/bash'
               let g:vimBackground = '${vimBackground}'
               let g:vimColorScheme = '${vimColorScheme}'

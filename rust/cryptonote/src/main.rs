@@ -10,24 +10,104 @@ mod error;
 mod i18n;
 pub mod prelude;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Screen {
+    Home,
+    View,
+    Share,
+    Open,
+    Donate,
+    License,
+    Privacy,
+}
+
+impl std::fmt::Display for Screen {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Home => "home",
+            Self::View => "view",
+            Self::Share => "share",
+            Self::Open => "open",
+            Self::Donate => "donate",
+            Self::License => "license",
+            Self::Privacy => "privacy",
+        })
+    }
+}
+
+impl std::str::FromStr for Screen {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "home" => Ok(Self::Home),
+            "view" => Ok(Self::View),
+            "share" => Ok(Self::Share),
+            "open" => Ok(Self::Open),
+            "donate" => Ok(Self::Donate),
+            "license" => Ok(Self::License),
+            "privacy" => Ok(Self::Privacy),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Screen {
+    pub(crate) fn to_route(
+        self,
+        note: Option<String>,
+    ) -> Route {
+        Route::Root {
+            screen: Some(self.to_string()),
+            note,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
     #[layout(Layout)]
-        #[route("/")]
-        Home {},
-        #[route("/view?:note")]
-        View {note: Option<String>},
-        #[route("/share")]
-        Share {},
-        #[route("/open")]
-        Open {},
-        #[route("/donate")]
-        Donate {},
-        #[route("/license")]
-        License {},
-        #[route("/privacy")]
-        Privacy {},
+        #[route("/?:screen&:note")]
+        Root { screen: Option<String>, note: Option<String> },
+}
+
+#[component]
+fn Root(
+    screen: Option<String>,
+    note: Option<String>,
+) -> Element {
+    let parsed_screen = screen
+        .as_deref()
+        .and_then(|s| s.parse::<Screen>().ok())
+        .unwrap_or(Screen::Home);
+
+    match parsed_screen {
+        Screen::Home => rsx! {
+            Home {}
+        },
+        Screen::View => rsx! {
+            View { note }
+        },
+        Screen::Share => rsx! {
+            Share {}
+        },
+        Screen::Open => rsx! {
+            Open {}
+        },
+        Screen::Donate => rsx! {
+            Donate {}
+        },
+        Screen::License => rsx! {
+            License {}
+        },
+        Screen::Privacy => rsx! {
+            Privacy {}
+        },
+    }
 }
 
 const FAVICON_ICO: Asset =

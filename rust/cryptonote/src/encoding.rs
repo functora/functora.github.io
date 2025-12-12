@@ -32,11 +32,16 @@ pub fn build_url(
     note: &NoteData,
 ) -> Result<String, AppError> {
     encode_note(note).map(|encoded| {
-        format!("{}?note={}", base_url, encoded)
+        let separator =
+            if base_url.contains('?') { "&" } else { "?" };
+        format!(
+            "{}{}{}",
+            base_url,
+            separator,
+            format!("note={}", encoded)
+        )
     })
 }
-
-
 
 pub fn generate_qr_code(
     url: &str,
@@ -75,7 +80,15 @@ mod tests {
         assert!(
             url.starts_with("https://example.com?note=")
         );
+
+        let url_with_query = build_url(
+            "https://example.com/?screen=view",
+            &note,
+        )
+        .unwrap();
+        assert!(url_with_query.contains("&note="));
+        assert!(url_with_query.starts_with(
+            "https://example.com/?screen=view&note="
+        ));
     }
-
-
 }

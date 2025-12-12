@@ -1,4 +1,4 @@
-use crate::Route;
+use crate::Screen;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
@@ -168,7 +168,7 @@ pub fn View(note: Option<String>) -> Element {
                         button {
                             onclick: move |_| {
                                 app_context.set(crate::AppContext::default());
-                                nav.push(Route::Home {});
+                                nav.push(Screen::Home.to_route(None));
                             },
                             "{t.create_new_note}"
                         }
@@ -182,7 +182,7 @@ pub fn View(note: Option<String>) -> Element {
                                             ..Default::default()
                                         });
                                 }
-                                nav.push(Route::Home {});
+                                nav.push(Screen::Home.to_route(None));
                             },
                             "{t.edit_note}"
                         }

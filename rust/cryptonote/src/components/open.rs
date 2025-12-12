@@ -1,4 +1,4 @@
-use crate::Route;
+use crate::Screen;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
@@ -33,7 +33,7 @@ pub fn Open() -> Element {
                     Signal<crate::NavigationState>,
                 >();
                 nav_state.write().has_navigated = true;
-                nav.push(Route::View { note: Some(note) });
+                nav.push(Screen::View.to_route(Some(note)));
             }
             None => {
                 message.set(Some(UiMessage::Error(

@@ -1,4 +1,4 @@
-use crate::Route;
+use crate::Screen;
 use crate::components::Breadcrumb;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
@@ -64,7 +64,7 @@ pub fn Share() -> Element {
         }
 
         if ctx.share_url.is_none() {
-            nav.push(Route::Home {});
+            nav.push(Screen::Home.to_route(None));
         }
     });
 
@@ -98,7 +98,7 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 let mut nav_state = use_context::<Signal<crate::NavigationState>>();
                                 nav_state.write().has_navigated = true;
-                                nav.push(Route::Open {});
+                                nav.push(Screen::Open.to_route(None));
                             },
                             "{t.open_button}"
                         }

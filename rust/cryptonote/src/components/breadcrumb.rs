@@ -13,9 +13,7 @@ pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
 
     rsx! {
         card { font_size: "larger",
-            Link { to: crate::Route::Home {},
-                "{t.home}"
-            }
+            Link { to: crate::Screen::Home.to_route(None), "{t.home}" }
             " ❭ {props.title}"
         }
     }

@@ -1,4 +1,4 @@
-use crate::Route;
+use crate::Screen;
 use crate::components::actions::ActionRow;
 use crate::components::message::UiMessage;
 use crate::crypto::{CipherType, encrypt_symmetric};
@@ -85,7 +85,11 @@ pub fn Home() -> Element {
         };
 
         if let Some(origin) = origin {
-            let view_url = format!("{}/view", origin);
+            let view_url = format!(
+                "{}/?screen={}",
+                origin,
+                crate::Screen::View
+            );
             match build_url(&view_url, &note_data) {
                 Ok(url) => match generate_qr_code(&url) {
                     Ok(qr) => {
@@ -105,7 +109,9 @@ pub fn Home() -> Element {
                         );
                         nav_state.write().has_navigated =
                             true;
-                        nav.push(Route::Share {});
+                        nav.push(
+                            Screen::Share.to_route(None),
+                        );
                     }
                     Err(e) => message
                         .set(Some(UiMessage::Error(e))),
@@ -209,7 +215,7 @@ pub fn Home() -> Element {
                         onclick: move |_| {
                             let mut nav_state = use_context::<Signal<crate::NavigationState>>();
                             nav_state.write().has_navigated = true;
-                            nav.push(Route::Open {});
+                            nav.push(Screen::Open.to_route(None));
                         },
                         "{t.open_button}"
                     }

@@ -1,5 +1,5 @@
-use crate::Route;
 use crate::i18n::Language;
+use crate::{Route, Screen};
 use dioxus::prelude::*;
 
 #[component]
@@ -22,7 +22,7 @@ pub fn Layout() -> Element {
                         onclick: move |evt| {
                             evt.prevent_default();
                             app_context.set(crate::AppContext::default());
-                            nav.push(Route::Home {});
+                            nav.push(Screen::Home.to_route(None));
                         },
                         "🔐 Cryptonote"
                     }
@@ -58,7 +58,7 @@ pub fn Layout() -> Element {
                 onclick: move |evt| {
                     evt.prevent_default();
                     nav_state.write().has_navigated = true;
-                    nav.push(Route::License {});
+                    nav.push(Screen::License.to_route(None));
                 },
                 "{crate::i18n::get_translations(language()).terms_of_service}"
             }
@@ -70,7 +70,7 @@ pub fn Layout() -> Element {
                 onclick: move |evt| {
                     evt.prevent_default();
                     nav_state.write().has_navigated = true;
-                    nav.push(Route::Privacy {});
+                    nav.push(Screen::Privacy.to_route(None));
                 },
                 "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
@@ -82,7 +82,7 @@ pub fn Layout() -> Element {
                 onclick: move |evt| {
                     evt.prevent_default();
                     nav_state.write().has_navigated = true;
-                    nav.push(Route::Donate {});
+                    nav.push(Screen::Donate.to_route(None));
                 },
                 "{crate::i18n::get_translations(language()).donate_link}"
             }

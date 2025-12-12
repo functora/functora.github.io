@@ -10,11 +10,16 @@ pub fn ActionRow(
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
     let nav = navigator();
-    let route = use_route::<crate::Route>();
+    let crate::Route::Root { screen, .. } =
+        use_route::<crate::Route>();
     let nav_state =
         use_context::<Signal<crate::NavigationState>>();
 
-    let not_home = !matches!(route, crate::Route::Home {});
+    let not_home = screen
+        .as_ref()
+        .and_then(|s| s.parse::<crate::Screen>().ok())
+        .map(|s| s != crate::Screen::Home)
+        .unwrap_or(false);
     let show_back = not_home && nav_state().has_navigated;
 
     rsx! {

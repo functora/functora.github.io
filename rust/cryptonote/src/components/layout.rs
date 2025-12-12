@@ -38,17 +38,6 @@ pub fn Layout() -> Element {
                     li {
                         a { onclick: move |_| language.set(Language::Russian), "Русский" }
                     }
-                    li {
-                        a {
-                            href: "#",
-                            onclick: move |evt| {
-                                evt.prevent_default();
-                                nav_state.write().has_navigated = true;
-                                nav.push(Route::Open {});
-                            },
-                            "{crate::i18n::get_translations(language()).open_title}"
-                        }
-                    }
                 }
             }
         }

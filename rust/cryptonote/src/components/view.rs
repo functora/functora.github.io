@@ -173,6 +173,7 @@ pub fn View(note: Option<String>) -> Element {
                             "{t.create_new_note}"
                         }
                         button {
+                            "primary": "",
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
                                     app_context

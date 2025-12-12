@@ -197,6 +197,15 @@ pub fn Home() -> Element {
                         },
                         "{t.create_new_note}"
                     }
+                    button {
+                        "primary": "",
+                        onclick: move |_| {
+                            let mut nav_state = use_context::<Signal<crate::NavigationState>>();
+                            nav_state.write().has_navigated = true;
+                            nav.push(Route::Open {});
+                        },
+                        "{t.open_button}"
+                    }
                     button { "primary": "", onclick: generate_note, "{t.generate_button}" }
                 }
             }

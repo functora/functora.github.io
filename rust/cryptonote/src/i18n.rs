@@ -80,6 +80,12 @@ pub struct Translations {
     pub clipboard_write_error: &'static str,
     #[cfg(target_arch = "wasm32")]
     pub missing_window_error: &'static str,
+    pub open_title: &'static str,
+    pub open_url_label: &'static str,
+    pub open_url_placeholder: &'static str,
+    pub open_button: &'static str,
+    pub invalid_url: &'static str,
+    pub no_note_param: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -180,6 +186,12 @@ If you have any questions regarding privacy while using the Application, or have
             clipboard_write_error: "Failed to copy to clipboard",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "No browser window available",
+            open_title: "Open",
+            open_url_label: "URL",
+            open_url_placeholder: "Paste shared note URL here...",
+            open_button: "Open",
+            invalid_url: "Invalid URL format",
+            no_note_param: "URL does not contain a note parameter",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -277,6 +289,12 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             clipboard_write_error: "No se pudo copiar al portapapeles",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "No hay ventana del navegador disponible",
+            open_title: "Abrir",
+            open_url_label: "URL",
+            open_url_placeholder: "Pega la URL de la nota compartida aquí...",
+            open_button: "Abrir",
+            invalid_url: "Formato de URL inválido",
+            no_note_param: "La URL no contiene un parámetro de nota",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -374,6 +392,12 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             clipboard_write_error: "Не удалось скопировать в буфер обмена",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "Окно браузера недоступно",
+            open_title: "Открыть",
+            open_url_label: "URL",
+            open_url_placeholder: "Вставьте URL общей заметки здесь...",
+            open_button: "Открыть",
+            invalid_url: "Неверный формат URL",
+            no_note_param: "URL не содержит параметр заметки",
         },
     }
 }

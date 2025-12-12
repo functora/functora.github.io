@@ -1,5 +1,5 @@
 use components::{
-    Home, Layout, License, Privacy, Share, View,
+    Home, Layout, License, Open, Privacy, Share, View,
 };
 use dioxus::prelude::*;
 mod components;
@@ -19,6 +19,8 @@ enum Route {
         View {note: Option<String>},
         #[route("/share")]
         Share {},
+        #[route("/open")]
+        Open {},
         #[route("/license")]
         License {},
         #[route("/privacy")]

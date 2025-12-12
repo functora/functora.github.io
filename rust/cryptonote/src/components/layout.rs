@@ -74,7 +74,9 @@ pub fn Layout() -> Element {
                 },
                 "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
-            ". Please "
+            ". "
+            {crate::i18n::get_translations(language()).please}
+            " "
             a {
                 href: "#",
                 onclick: move |evt| {

@@ -90,6 +90,7 @@ pub struct Translations {
     pub donate_greeting: &'static str,
     pub donate_intro: &'static str,
     pub donate_link: &'static str,
+    pub please: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -200,6 +201,7 @@ If you have any questions regarding privacy while using the Application, or have
             donate_greeting: "Hello, User!",
             donate_intro: "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
             donate_link: "Donate",
+            please: "Please",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -307,6 +309,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             donate_greeting: "¡Hola, Usuario!",
             donate_intro: "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
             donate_link: "Donar",
+            please: "Por favor",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -413,7 +416,8 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             donate_title: "Пожертвовать",
             donate_greeting: "Здравствуйте, пользователь!",
             donate_intro: "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
-            donate_link: "Пожертвовать",
+            donate_link: "сделайте пожертвование",
+            please: "Пожалуйста",
         },
     }
 }

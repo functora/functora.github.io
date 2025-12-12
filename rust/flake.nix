@@ -20,18 +20,20 @@
           overlays = [rust-overlay.overlays.default];
           config.android_sdk.accept_license = true;
         };
+        mobile-targets = [
+          "aarch64-linux-android"
+          "arm-linux-androideabi"
+          "armv7-linux-androideabi"
+          "i686-linux-android"
+          "thumbv7neon-linux-androideabi"
+          "x86_64-linux-android"
+        ];
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-          targets = [
-            # web
-            "wasm32-unknown-unknown"
-            # mobile
-            "aarch64-linux-android"
-            "arm-linux-androideabi"
-            "armv7-linux-androideabi"
-            "i686-linux-android"
-            "thumbv7neon-linux-androideabi"
-            "x86_64-linux-android"
-          ];
+          targets =
+            [
+              "wasm32-unknown-unknown"
+            ]
+            ++ mobile-targets;
         };
         wasm-bindgen-cli-0_2_106 = with pkgs;
           rustPlatform.buildRustPackage rec {
@@ -59,14 +61,47 @@
         };
         android-sdk =
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
-        mkRel = app:
+        mkAab = app: let
+          mkCmd = target: ''
+            dx bundle --release --android --target "${target}"
+            echo "Aab ${app} release success for ${target}!"
+          '';
+        in
+          (
+            map (
+              target:
+                pkgs.writeShellApplication {
+                  name = "release-aab-${app}-${target}";
+                  text = ''
+                    (
+                      cd "${app}"
+                      ${mkCmd target}
+                    )
+                  '';
+                }
+            )
+            mobile-targets
+          )
+          ++ [
+            (
+              pkgs.writeShellApplication {
+                name = "release-aab-${app}-all";
+                text = ''
+                  (
+                    cd "${app}"
+                    ${builtins.concatStringsSep "\n" (map mkCmd mobile-targets)}
+                  )
+                '';
+              }
+            )
+          ];
+        mkWeb = app:
           pkgs.writeShellApplication rec {
-            name = "release-${app}";
+            name = "release-web-${app}";
             runtimeInputs = [pkgs.coreutils pkgs.gnugrep pkgs.gnused];
             text = ''
               (
                 cd "${app}"
-                dx bundle --release --web
                 VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                 REL="../../apps/${app}/$VSN"
                 if [ -d "$REL" ]
@@ -76,9 +111,58 @@
                 else
                   mkdir -p "$REL"
                 fi
+                dx bundle --release --web
                 cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
-                echo "$REL release success!"
+                echo "$REL web release success!"
               )
+            '';
+          };
+        android-keygen = pkgs.writeShellApplication {
+          name = "android-keygen";
+          text = ''
+            if [ ! -f ~/keys/app-key.jks ]; then
+              mkdir -p ~/keys
+              ${pkgs.zulu}/bin/keytool -genkey -v \
+                -keystore ~/keys/app-key.jks \
+                -keyalg RSA \
+                -keysize 2048 \
+                -validity 10000 \
+                -alias app-key
+            fi
+          '';
+        };
+        mkApk = app:
+          pkgs.writeShellApplication {
+            name = "release-apk-${app}";
+            text = ''
+              DEF="./${app}/target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
+              DIR="''${1:-$DEF}"
+
+              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2";
+              export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
+              export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
+
+              for AAB in "$DIR"/*.aab; do
+                [ -f "$AAB" ] || continue
+
+                NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
+                APK="$DIR/$NAME.apk"
+                TMP="$DIR/$NAME.apks"
+
+                "${pkgs.bundletool}/bin/bundletool" build-apks \
+                  --bundle="$AAB" \
+                  --output="$TMP" \
+                  --mode=universal \
+                  --aapt2="$BUNDLETOOL_AAPT2_PATH" \
+                  --ks="$HOME/keys/app-key.jks" \
+                  --ks-key-alias=app-key \
+                  --overwrite
+
+                "${pkgs.unzip}/bin/unzip" -p "$TMP" universal.apk > "$APK"
+                rm -f "$TMP"
+
+                echo "READY: $APK"
+              done
             '';
           };
         shell = rec {
@@ -91,53 +175,58 @@
           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
           CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";
           CARGO_TARGET_I686_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang";
-          packages = with pkgs; [
-            alejandra
-            bacon
-            rustToolchain
-            rust-analyzer
-            cargo-tarpaulin
-            clippy
-            wasmtime
-            license-generator
-            dioxus-cli
-            tailwindcss_4
-            simple-http-server
-            # web
-            binaryen
-            wasm-bindgen-cli-0_2_106
-            # linux
-            pkg-config
-            webkitgtk_4_1
-            openssl
-            xdotool
-            libayatana-appindicator
-            librsvg
-            gtk3
-            gdk-pixbuf
-            cairo
-            pango
-            curl
-            wget
-            zlib
-            fuse
-            file
-            gcc
-            # android
-            llvmPackages.lld
-            llvmPackages.clang-unwrapped
-            android-sdk
-            glibc
-            jdk
-            # fonts
-            noto-fonts
-            noto-fonts-cjk-sans
-            noto-fonts-color-emoji
-            liberation_ttf
-            dejavu_fonts
-            # apps
-            (mkRel "cryptonote")
-          ];
+          packages = with pkgs;
+            [
+              alejandra
+              bacon
+              rustToolchain
+              rust-analyzer
+              cargo-tarpaulin
+              clippy
+              wasmtime
+              license-generator
+              dioxus-cli
+              tailwindcss_4
+              simple-http-server
+              strace
+              # web
+              binaryen
+              wasm-bindgen-cli-0_2_106
+              # linux
+              pkg-config
+              webkitgtk_4_1
+              openssl
+              xdotool
+              libayatana-appindicator
+              librsvg
+              gtk3
+              gdk-pixbuf
+              cairo
+              pango
+              curl
+              wget
+              zlib
+              fuse
+              file
+              gcc
+              # android
+              llvmPackages.lld
+              llvmPackages.clang-unwrapped
+              android-sdk
+              glibc
+              jdk
+              android-keygen
+              # fonts
+              noto-fonts
+              noto-fonts-cjk-sans
+              noto-fonts-color-emoji
+              liberation_ttf
+              dejavu_fonts
+              # apps
+              (mkWeb "cryptonote")
+              (mkApk "cryptonote")
+            ]
+            ++ (mkAab "cryptonote");
         };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {

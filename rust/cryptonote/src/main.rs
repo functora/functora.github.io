@@ -57,12 +57,11 @@ pub struct NavigationState {
 #[component]
 fn App() -> Element {
     let language =
-        use_signal(|| i18n::detect_browser_language());
+        use_signal(i18n::detect_browser_language);
 
     let app_context = use_signal(AppContext::default);
 
-    let nav_state =
-        use_signal(|| NavigationState::default());
+    let nav_state = use_signal(NavigationState::default);
 
     use_context_provider(|| language);
     use_context_provider(|| app_context);

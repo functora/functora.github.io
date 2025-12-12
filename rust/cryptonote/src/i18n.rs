@@ -86,6 +86,10 @@ pub struct Translations {
     pub open_button: &'static str,
     pub invalid_url: &'static str,
     pub no_note_param: &'static str,
+    pub donate_title: &'static str,
+    pub donate_greeting: &'static str,
+    pub donate_intro: &'static str,
+    pub donate_link: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -192,6 +196,10 @@ If you have any questions regarding privacy while using the Application, or have
             open_button: "Open",
             invalid_url: "Invalid URL format",
             no_note_param: "URL does not contain a note parameter",
+            donate_title: "Donate",
+            donate_greeting: "Hello, User!",
+            donate_intro: "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
+            donate_link: "Donate",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -295,6 +303,10 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             open_button: "Abrir",
             invalid_url: "Formato de URL inválido",
             no_note_param: "La URL no contiene un parámetro de nota",
+            donate_title: "Donar",
+            donate_greeting: "¡Hola, Usuario!",
+            donate_intro: "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
+            donate_link: "Donar",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -398,6 +410,10 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             open_button: "Открыть",
             invalid_url: "Неверный формат URL",
             no_note_param: "URL не содержит параметр заметки",
+            donate_title: "Пожертвовать",
+            donate_greeting: "Здравствуйте, пользователь!",
+            donate_intro: "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
+            donate_link: "Пожертвовать",
         },
     }
 }

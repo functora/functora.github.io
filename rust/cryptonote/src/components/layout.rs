@@ -74,6 +74,16 @@ pub fn Layout() -> Element {
                 },
                 "{crate::i18n::get_translations(language()).privacy_policy_and}"
             }
+            ". Please "
+            a {
+                href: "#",
+                onclick: move |evt| {
+                    evt.prevent_default();
+                    nav_state.write().has_navigated = true;
+                    nav.push(Route::Donate {});
+                },
+                "{crate::i18n::get_translations(language()).donate_link}"
+            }
             ". "
             {crate::i18n::get_translations(language()).version_label}
             " "

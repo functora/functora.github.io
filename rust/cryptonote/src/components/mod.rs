@@ -1,5 +1,6 @@
 pub mod actions;
 mod breadcrumb;
+mod donate;
 mod home;
 mod layout;
 mod license;
@@ -10,6 +11,7 @@ mod share;
 mod view;
 
 pub use breadcrumb::Breadcrumb;
+pub use donate::Donate;
 pub use home::Home;
 pub use layout::Layout;
 pub use license::License;

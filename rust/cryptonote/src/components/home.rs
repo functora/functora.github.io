@@ -16,32 +16,20 @@ pub fn Home() -> Element {
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
 
-    let mut note_text = use_signal(String::new);
-    let mut encryption =
-        use_signal(|| Option::<CipherType>::None);
-    let mut password = use_signal(String::new);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
-
-    use_effect(move || {
-        let ctx = app_context.read();
-        if let Some(content) = &ctx.content {
-            note_text.set(content.clone());
-        }
-        if !ctx.password.is_empty() {
-            password.set(ctx.password.clone());
-        }
-        if let Some(cipher) = ctx.cipher {
-            encryption.set(Some(cipher));
-        }
-    });
 
     let generate_note = move |_| {
         message.set(None);
 
-        let note_content = note_text.read().clone();
-        let enc_option = *encryption.read();
-        let pwd = password.read().clone();
+        let (note_content, enc_option, pwd) = {
+            let ctx = app_context.read();
+            (
+                ctx.content.clone().unwrap_or_default(),
+                ctx.cipher,
+                ctx.password.clone(),
+            )
+        };
 
         let note_data = match enc_option {
             None => {
@@ -75,15 +63,24 @@ pub fn Home() -> Element {
             #[cfg(target_arch = "wasm32")]
             {
                 web_sys::window().and_then(|w| {
-                    w.location().origin().ok()
+                    let loc = w.location();
+                    let protocol = loc.protocol().ok()?;
+                    let host = loc.host().ok()?;
+                    let pathname = loc.pathname().ok()?;
+                    let path =
+                        pathname.trim_end_matches('/');
+                    Some(format!(
+                        "{}//{}{}",
+                        protocol, host, path
+                    ))
                 })
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                Some(
-                    "https://functora.github.io/apps/cryptonote"
-                        .to_string(),
-                )
+                Some(format!(
+                    "https://functora.github.io/apps/cryptonote/{}",
+                    env!("CARGO_PKG_VERSION")
+                ))
             }
         };
 
@@ -128,8 +125,11 @@ pub fn Home() -> Element {
                 textarea {
                     placeholder: "{t.note_placeholder}",
                     rows: "8",
-                    value: "{note_text}",
-                    oninput: move |evt| note_text.set(evt.value()),
+                    value: "{app_context.read().content.clone().unwrap_or_default()}",
+                    oninput: move |evt| {
+                        let mut ctx = app_context.write();
+                        ctx.content = Some(evt.value());
+                    },
                 }
 
                 label { "{t.mode}" }
@@ -137,8 +137,11 @@ pub fn Home() -> Element {
                 input {
                     r#type: "radio",
                     value: "none",
-                    checked: encryption().is_none(),
-                    onchange: move |_| encryption.set(None),
+                    checked: app_context.read().cipher.is_none(),
+                    onchange: move |_| {
+                        let mut ctx = app_context.write();
+                        ctx.cipher = None;
+                    },
                 }
                 label { "{t.no_encryption}" }
 
@@ -147,12 +150,15 @@ pub fn Home() -> Element {
                 input {
                     r#type: "radio",
                     value: "symmetric",
-                    checked: encryption().is_some(),
-                    onchange: move |_| encryption.set(Some(CipherType::ChaCha20Poly1305)),
+                    checked: app_context.read().cipher.is_some(),
+                    onchange: move |_| {
+                        let mut ctx = app_context.write();
+                        ctx.cipher = Some(CipherType::ChaCha20Poly1305);
+                    },
                 }
                 label { "{t.password_encryption}" }
 
-                if let Some(cipher) = encryption() {
+                if let Some(cipher) = app_context.read().cipher {
 
                     br {}
                     br {}
@@ -168,7 +174,8 @@ pub fn Home() -> Element {
                                 "aes" => CipherType::Aes256Gcm,
                                 _ => CipherType::ChaCha20Poly1305,
                             };
-                            encryption.set(Some(new_cipher));
+                            let mut ctx = app_context.write();
+                            ctx.cipher = Some(new_cipher);
                         },
                         option { value: "chacha20", "ChaCha20-Poly1305" }
                         option { value: "aes", "AES-256-GCM" }
@@ -178,8 +185,11 @@ pub fn Home() -> Element {
                     input {
                         r#type: "password",
                         placeholder: "{t.password_placeholder}",
-                        value: "{password}",
-                        oninput: move |evt| password.set(evt.value()),
+                        value: "{app_context.read().password}",
+                        oninput: move |evt| {
+                            let mut ctx = app_context.write();
+                            ctx.password = evt.value();
+                        },
                     }
                 }
 
@@ -189,9 +199,6 @@ pub fn Home() -> Element {
                 ActionRow { message,
                     button {
                         onclick: move |_| {
-                            note_text.set(String::new());
-                            encryption.set(None);
-                            password.set(String::new());
                             message.set(None);
                             app_context.set(crate::AppContext::default());
                         },

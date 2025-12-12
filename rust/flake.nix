@@ -131,12 +131,31 @@
             fi
           '';
         };
+        android-icons = pkgs.writeShellApplication {
+          name = "android-icons";
+          runtimeInputs = [pkgs.imagemagick];
+          text = ''
+            INPUT="assets/favicon/android-chrome-512x512.png"
+            DIR="assets/favicon"
+
+            magick "$INPUT" -resize 48x48   "$DIR/mipmap-mdpi.png"
+            magick "$INPUT" -resize 72x72   "$DIR/mipmap-hdpi.png"
+            magick "$INPUT" -resize 96x96   "$DIR/mipmap-xhdpi.png"
+            magick "$INPUT" -resize 144x144 "$DIR/mipmap-xxhdpi.png"
+            magick "$INPUT" -resize 192x192 "$DIR/mipmap-xxxhdpi.png"
+            magick "$INPUT" -resize 432x432 "$DIR/android-foreground.png"
+            magick -size 432x432 xc:#1E1E2E "$DIR/android-background.png"
+          '';
+        };
         mkApk = app:
           pkgs.writeShellApplication {
             name = "release-apk-${app}";
             text = ''
               DEF="./${app}/target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
               DIR="''${1:-$DEF}"
+
+              IFS= read -r -s -p "Keystore password: " KS_PASS
+              echo
 
               export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2";
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
@@ -155,6 +174,7 @@
                   --mode=universal \
                   --aapt2="$BUNDLETOOL_AAPT2_PATH" \
                   --ks="$HOME/keys/app-key.jks" \
+                  --ks-pass=pass:"$KS_PASS" \
                   --ks-key-alias=app-key \
                   --overwrite
 
@@ -215,6 +235,7 @@
               android-sdk
               glibc
               jdk
+              android-icons
               android-keygen
               # fonts
               noto-fonts

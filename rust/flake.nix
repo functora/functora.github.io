@@ -113,7 +113,7 @@
                 fi
                 dx bundle --release --web
                 cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
-                echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN/index.html\"></head><body></body></html>" > ../../apps/${app}/index.html
+                echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
               )
             '';

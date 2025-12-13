@@ -1,6 +1,5 @@
 use components::{
-    Donate, Home, Layout, License, Open, Privacy, Share,
-    View,
+    Donate, Home, Layout, License, Privacy, Share, View,
 };
 use dioxus::prelude::*;
 mod components;
@@ -15,7 +14,6 @@ pub enum Screen {
     Home,
     View,
     Share,
-    Open,
     Donate,
     License,
     Privacy,
@@ -30,7 +28,6 @@ impl std::fmt::Display for Screen {
             Self::Home => "home",
             Self::View => "view",
             Self::Share => "share",
-            Self::Open => "open",
             Self::Donate => "donate",
             Self::License => "license",
             Self::Privacy => "privacy",
@@ -46,7 +43,6 @@ impl std::str::FromStr for Screen {
             "home" => Ok(Self::Home),
             "view" => Ok(Self::View),
             "share" => Ok(Self::Share),
-            "open" => Ok(Self::Open),
             "donate" => Ok(Self::Donate),
             "license" => Ok(Self::License),
             "privacy" => Ok(Self::Privacy),
@@ -94,9 +90,6 @@ fn Root(
         },
         Screen::Share => rsx! {
             Share {}
-        },
-        Screen::Open => rsx! {
-            Open {}
         },
         Screen::Donate => rsx! {
             Donate {}

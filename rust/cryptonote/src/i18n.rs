@@ -80,17 +80,19 @@ pub struct Translations {
     pub clipboard_write_error: &'static str,
     #[cfg(target_arch = "wasm32")]
     pub missing_window_error: &'static str,
-    pub open_title: &'static str,
     pub open_url_label: &'static str,
     pub open_url_placeholder: &'static str,
     pub open_button: &'static str,
-    pub invalid_url: &'static str,
     pub no_note_param: &'static str,
     pub donate_title: &'static str,
     pub donate_greeting: &'static str,
     pub donate_intro: &'static str,
     pub donate_link: &'static str,
     pub please: &'static str,
+
+    pub action_label: &'static str,
+    pub action_create: &'static str,
+    pub action_open: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -191,17 +193,19 @@ If you have any questions regarding privacy while using the Application, or have
             clipboard_write_error: "Failed to copy to clipboard",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "No browser window available",
-            open_title: "Open",
             open_url_label: "URL",
             open_url_placeholder: "Paste shared note URL here...",
             open_button: "Open",
-            invalid_url: "Invalid URL format",
             no_note_param: "URL does not contain a note parameter",
             donate_title: "Donate",
             donate_greeting: "Hello, User!",
             donate_intro: "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
             donate_link: "Donate",
             please: "Please",
+
+            action_label: "Action",
+            action_create: "Create new note",
+            action_open: "Open shared note",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -299,17 +303,19 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             clipboard_write_error: "No se pudo copiar al portapapeles",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "No hay ventana del navegador disponible",
-            open_title: "Abrir",
             open_url_label: "URL",
             open_url_placeholder: "Pega la URL de la nota compartida aquí...",
             open_button: "Abrir",
-            invalid_url: "Formato de URL inválido",
             no_note_param: "La URL no contiene un parámetro de nota",
             donate_title: "Donar",
             donate_greeting: "¡Hola, Usuario!",
             donate_intro: "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
             donate_link: "Donar",
             please: "Por favor",
+
+            action_label: "Acción",
+            action_create: "Crear nueva nota",
+            action_open: "Abrir nota compartida",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -407,17 +413,19 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             clipboard_write_error: "Не удалось скопировать в буфер обмена",
             #[cfg(target_arch = "wasm32")]
             missing_window_error: "Окно браузера недоступно",
-            open_title: "Открыть",
             open_url_label: "URL",
             open_url_placeholder: "Вставьте URL общей заметки здесь...",
             open_button: "Открыть",
-            invalid_url: "Неверный формат URL",
             no_note_param: "URL не содержит параметр заметки",
             donate_title: "Пожертвовать",
             donate_greeting: "Здравствуйте, пользователь!",
             donate_intro: "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
             donate_link: "сделайте пожертвование",
             please: "Пожалуйста",
+
+            action_label: "Действие",
+            action_create: "Создать новую заметку",
+            action_open: "Открыть общую заметку",
         },
     }
 }

@@ -96,15 +96,6 @@ pub fn Share() -> Element {
                         button {
                             "primary": "",
                             onclick: move |_| {
-                                let mut nav_state = use_context::<Signal<crate::NavigationState>>();
-                                nav_state.write().has_navigated = true;
-                                nav.push(Screen::Open.to_route(None));
-                            },
-                            "{t.open_button}"
-                        }
-                        button {
-                            "primary": "",
-                            onclick: move |_| {
                                 let url_val = url();
                                 spawn(async move {
                                     match copy_to_clipboard(url_val).await {

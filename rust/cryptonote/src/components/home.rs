@@ -5,8 +5,15 @@ use crate::crypto::{CipherType, encrypt_symmetric};
 use crate::encoding::{
     NoteData, build_url, generate_qr_code,
 };
+use crate::error::AppError;
 use crate::i18n::{Language, get_translations};
 use dioxus::prelude::*;
+
+#[derive(PartialEq, Clone, Copy)]
+enum ActionMode {
+    Create,
+    Open,
+}
 
 #[component]
 pub fn Home() -> Element {
@@ -18,6 +25,36 @@ pub fn Home() -> Element {
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
+
+    let mut action_mode = use_signal(|| ActionMode::Create);
+    let mut url_input = use_signal(String::new);
+
+    let open_url = move |_| {
+        message.set(None);
+        let url = url_input.read().trim().to_string();
+
+        if url.is_empty() {
+            message.set(Some(UiMessage::Error(
+                AppError::NoNoteInUrl,
+            )));
+            return;
+        }
+
+        match extract_note_param(&url) {
+            Some(note) => {
+                let mut nav_state = use_context::<
+                    Signal<crate::NavigationState>,
+                >();
+                nav_state.write().has_navigated = true;
+                nav.push(Screen::View.to_route(Some(note)));
+            }
+            None => {
+                message.set(Some(UiMessage::Error(
+                    AppError::NoNoteParam,
+                )));
+            }
+        }
+    };
 
     let generate_note = move |_| {
         message.set(None);
@@ -127,101 +164,158 @@ pub fn Home() -> Element {
         section {
             fieldset {
 
-                label { "{t.note}" }
-                textarea {
-                    placeholder: "{t.note_placeholder}",
-                    rows: "8",
-                    value: "{app_context.read().content.clone().unwrap_or_default()}",
-                    oninput: move |evt| {
-                        let mut ctx = app_context.write();
-                        ctx.content = Some(evt.value());
-                    },
-                }
-
-                label { "{t.mode}" }
-
+                label { "{t.action_label}" }
                 input {
                     r#type: "radio",
-                    value: "none",
-                    checked: app_context.read().cipher.is_none(),
+                    value: "create",
+                    checked: action_mode() == ActionMode::Create,
                     onchange: move |_| {
-                        let mut ctx = app_context.write();
-                        ctx.cipher = None;
+                        message.set(None);
+                        action_mode.set(ActionMode::Create);
                     },
                 }
-                label { "{t.no_encryption}" }
+                label { "{t.action_create}" }
+                br {}
+                input {
+                    r#type: "radio",
+                    value: "open",
+                    checked: action_mode() == ActionMode::Open,
+                    onchange: move |_| {
+                        message.set(None);
+                        action_mode.set(ActionMode::Open);
+                    },
+                }
+                label { "{t.action_open}" }
 
                 br {}
+                br {}
 
-                input {
-                    r#type: "radio",
-                    value: "symmetric",
-                    checked: app_context.read().cipher.is_some(),
-                    onchange: move |_| {
-                        let mut ctx = app_context.write();
-                        ctx.cipher = Some(CipherType::ChaCha20Poly1305);
-                    },
-                }
-                label { "{t.password_encryption}" }
-
-                if let Some(cipher) = app_context.read().cipher {
-
-                    br {}
-                    br {}
-
-                    label { "{t.algorithm}" }
-                    select {
-                        value: match cipher {
-                            CipherType::ChaCha20Poly1305 => "chacha20",
-                            CipherType::Aes256Gcm => "aes",
-                        },
-                        onchange: move |evt| {
-                            let new_cipher = match evt.value().as_str() {
-                                "aes" => CipherType::Aes256Gcm,
-                                _ => CipherType::ChaCha20Poly1305,
-                            };
-                            let mut ctx = app_context.write();
-                            ctx.cipher = Some(new_cipher);
-                        },
-                        option { value: "chacha20", "ChaCha20-Poly1305" }
-                        option { value: "aes", "AES-256-GCM" }
-                    }
-
-                    label { "{t.password}" }
-                    input {
-                        r#type: "password",
-                        placeholder: "{t.password_placeholder}",
-                        value: "{app_context.read().password}",
+                if action_mode() == ActionMode::Create {
+                    label { "{t.note}" }
+                    textarea {
+                        placeholder: "{t.note_placeholder}",
+                        rows: "8",
+                        value: "{app_context.read().content.clone().unwrap_or_default()}",
                         oninput: move |evt| {
                             let mut ctx = app_context.write();
-                            ctx.password = evt.value();
+                            ctx.content = Some(evt.value());
                         },
+                    }
+
+                    label { "{t.mode}" }
+
+                    input {
+                        r#type: "radio",
+                        value: "none",
+                        checked: app_context.read().cipher.is_none(),
+                        onchange: move |_| {
+                            let mut ctx = app_context.write();
+                            ctx.cipher = None;
+                        },
+                    }
+                    label { "{t.no_encryption}" }
+
+                    br {}
+
+                    input {
+                        r#type: "radio",
+                        value: "symmetric",
+                        checked: app_context.read().cipher.is_some(),
+                        onchange: move |_| {
+                            let mut ctx = app_context.write();
+                            ctx.cipher = Some(CipherType::ChaCha20Poly1305);
+                        },
+                    }
+                    label { "{t.password_encryption}" }
+
+                    if let Some(cipher) = app_context.read().cipher {
+
+                        br {}
+                        br {}
+
+                        label { "{t.algorithm}" }
+                        select {
+                            value: match cipher {
+                                CipherType::ChaCha20Poly1305 => "chacha20",
+                                CipherType::Aes256Gcm => "aes",
+                            },
+                            onchange: move |evt| {
+                                let new_cipher = match evt.value().as_str() {
+                                    "aes" => CipherType::Aes256Gcm,
+                                    _ => CipherType::ChaCha20Poly1305,
+                                };
+                                let mut ctx = app_context.write();
+                                ctx.cipher = Some(new_cipher);
+                            },
+                            option { value: "chacha20", "ChaCha20-Poly1305" }
+                            option { value: "aes", "AES-256-GCM" }
+                        }
+
+                        label { "{t.password}" }
+                        input {
+                            r#type: "password",
+                            placeholder: "{t.password_placeholder}",
+                            value: "{app_context.read().password}",
+                            oninput: move |evt| {
+                                let mut ctx = app_context.write();
+                                ctx.password = evt.value();
+                            },
+                        }
+                    }
+
+                    br {}
+                    br {}
+
+                    ActionRow { message,
+                        button {
+                            onclick: move |_| {
+                                message.set(None);
+                                app_context.set(crate::AppContext::default());
+                            },
+                            "{t.create_new_note}"
+                        }
+                        button { "primary": "", onclick: generate_note, "{t.generate_button}" }
                     }
                 }
 
-                br {}
-                br {}
+                if action_mode() == ActionMode::Open {
+                    label { "{t.open_url_label}" }
+                    textarea {
+                        placeholder: "{t.open_url_placeholder}",
+                        rows: "6",
+                        value: "{url_input}",
+                        oninput: move |evt| url_input.set(evt.value()),
+                    }
 
-                ActionRow { message,
-                    button {
-                        onclick: move |_| {
-                            message.set(None);
-                            app_context.set(crate::AppContext::default());
-                        },
-                        "{t.create_new_note}"
+                    br {}
+                    br {}
+
+                    ActionRow { message,
+                        button {
+                            onclick: move |_| {
+                                url_input.set(String::new());
+                                message.set(None);
+                            },
+                            "{t.create_new_note}"
+                        }
+                        button { "primary": "", onclick: open_url, "{t.open_button}" }
                     }
-                    button {
-                        "primary": "",
-                        onclick: move |_| {
-                            let mut nav_state = use_context::<Signal<crate::NavigationState>>();
-                            nav_state.write().has_navigated = true;
-                            nav.push(Screen::Open.to_route(None));
-                        },
-                        "{t.open_button}"
-                    }
-                    button { "primary": "", onclick: generate_note, "{t.generate_button}" }
                 }
             }
         }
     }
+}
+
+fn extract_note_param(url: &str) -> Option<String> {
+    url.split('?').nth(1).and_then(|query| {
+        query.split('&').find_map(|param| {
+            let mut parts = param.split('=');
+            match (parts.next(), parts.next()) {
+                (Some("note"), Some(value)) => {
+                    Some(value.to_string())
+                }
+                _ => None,
+            }
+        })
+    })
 }

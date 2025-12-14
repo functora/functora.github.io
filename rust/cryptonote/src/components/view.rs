@@ -149,7 +149,6 @@ pub fn View(note: Option<String>) -> Element {
                     }
 
                     br {}
-                    br {}
 
                     ActionRow { message,
                         button { "primary": "", onclick: decrypt_note, "{t.decrypt_button}" }

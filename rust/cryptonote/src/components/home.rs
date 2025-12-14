@@ -176,6 +176,7 @@ pub fn Home() -> Element {
                 }
                 label { "{t.action_create}" }
                 br {}
+
                 input {
                     r#type: "radio",
                     value: "open",
@@ -186,7 +187,6 @@ pub fn Home() -> Element {
                     },
                 }
                 label { "{t.action_open}" }
-
                 br {}
                 br {}
 
@@ -214,7 +214,6 @@ pub fn Home() -> Element {
                         },
                     }
                     label { "{t.no_encryption}" }
-
                     br {}
 
                     input {
@@ -227,12 +226,10 @@ pub fn Home() -> Element {
                         },
                     }
                     label { "{t.password_encryption}" }
+                    br {}
+                    br {}
 
                     if let Some(cipher) = app_context.read().cipher {
-
-                        br {}
-                        br {}
-
                         label { "{t.algorithm}" }
                         select {
                             value: match cipher {
@@ -262,8 +259,6 @@ pub fn Home() -> Element {
                             },
                         }
                     }
-
-                    br {}
                     br {}
 
                     ActionRow { message,
@@ -286,8 +281,6 @@ pub fn Home() -> Element {
                         value: "{url_input}",
                         oninput: move |evt| url_input.set(evt.value()),
                     }
-
-                    br {}
                     br {}
 
                     ActionRow { message,

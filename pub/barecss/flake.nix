@@ -14,11 +14,19 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = unstable.legacyPackages.${system};
+        release-barecss = pkgs.writeShellApplication {
+          name = "release-barecss";
+          text = ''
+            ${pkgs.lessc}/bin/lessc ./less/bare.less \
+              | ${pkgs.clean-css-cli}/bin/cleancss > ./css/bare.min.css
+          '';
+        };
         shell = {
           packages = with pkgs; [
             djlint
             clean-css-cli
             lessc
+            release-barecss
           ];
         };
       in {

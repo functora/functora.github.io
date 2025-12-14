@@ -7,9 +7,9 @@
 	// buttons
 
 button {
-	
+
 	// normal button styling
-	
+
 	&@{n}, &@{x} {
 		cursor: pointer;
 		color: @primary;
@@ -27,30 +27,30 @@ button {
 		line-height: 1rem;
 		margin: 0 1rem 1rem 0;
 		-webkit-appearance: none;
-		
+
 		&:not(:disabled):hover, &:not(:disabled):focus {
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 			background: @grey-ultralight;
 		}
 	}
-	
+
 	// primary button styling
-	
+
 	&.primary {
 		border-color: darken(@primary, 6%);
 		background: @primary;
 		color: @primary--;
 		font-weight: 700;
-		
+
 		&:not(:disabled):hover, &:not(:disabled):focus { background: darken(@primary, 6%)	}
 	}
-	
+
 	&.m-full {
 		@media (max-width: @mobile) { width: 100% }
 	}
-	
+
 	// disabled button styling
-	
+
 	&:disabled,
 	&.disabled {
 		border-color: @grey-light;
@@ -69,7 +69,7 @@ label@{n}, label@{x} {
 	font-size: @fs-s;
 	font-weight: 400;
 	margin-top: 1rem;
-	
+
 	&:first-child { margin-top: 0 }
 }
 
@@ -84,7 +84,7 @@ label@{n}, label@{x} {
 	font-size: @fs-m;
 	font-weight: 300;
 	border-radius: 0;
-	
+
 	&:focus,
 	&:hover {
 		color: @primary;
@@ -101,7 +101,7 @@ input:not([type=radio]):not([type=checkbox]):not([type=button]) {
 
 textarea@{n}, textarea@{x} {
 	.mx-input;
-	
+
 	min-height: 8rem;
 	border-right: 1px solid @grey-light;
 	padding-right: 2rem;
@@ -126,7 +126,7 @@ select@{n}, select@{x} {
 	margin: 0.5rem 0 2rem;
 	appearance: none;
 	cursor: pointer;
-	
+
 	&:focus,
 	&:hover {
 		border-color: @primary;
@@ -148,13 +148,13 @@ input {
 			height: 2rem;
 			vertical-align: middle;
 			cursor: pointer;
-			
+
 			// note that the label must be placed after the radio or checkbox tag
-			
+
 			+ label {
 				width: auto;
 				text-transform: none;
-				
+
 				&:before {
 					content: "";
 					display: inline-block;
@@ -165,7 +165,7 @@ input {
 					vertical-align: middle;
 					margin-right: 1rem;
 				}
-				
+
 				&:after {
 					content: "";
 					position: absolute;
@@ -181,25 +181,25 @@ input {
 			}
 		}
 	}
-	
-	
+
+
 	// radio
 	// eg: <input type="radio" name="radio" id="radio-1"> <label for="radio-1">Select me</label>
-	
+
 	&[type=radio]@{n}, &[type=radio]@{x} {
 		+ label {
 			font-size: @fs-m;
 			font-weight: 200;
-			
+
 			&:before { border-radius: 100% }
 		}
-		
+
 		&:checked + label {
 			&:before {
 				background: @primary;
 				border-color: @primary;
 			}
-			
+
 			&:after {
 				opacity: 1;
 				visibility: visible;
@@ -211,32 +211,32 @@ input {
 			}
 		}
 	}
-	
-	
+
+
 	// checkbox
 	// eg: <input type="checkbox" id="checkbox-1"> <label for="checkbox-1">Check me</label>
-	
+
 	&[type=checkbox]@{n}, &[type=checkbox]@{x} {
 		+ label {
 			font-size: @fs-m;
 			font-weight: 200;
-			
+
 			&:before { border-radius: 2px }
-			
+
 			&:after {
 				background: data-uri('../icons/done.svg') no-repeat center center;
 				border-radius: 100%;
 				background-size: 100%;
 			}
 		}
-		
+
 		&:checked {
 			+ label {
 				&:before {
 					background: @primary;
 					border-color: @primary;
 				}
-				
+
 				&:after {
 					opacity: 1;
 					visibility: visible;

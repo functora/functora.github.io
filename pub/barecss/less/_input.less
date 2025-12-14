@@ -76,11 +76,17 @@ select@{x} {
 	margin: 0.5rem 0 2rem;
 	appearance: none;
 	cursor: pointer;
+	color: @black;
 
 	&:focus,
 	&:hover {
 		border-color: @primary;
 		outline: 0;
+	}
+
+	option {
+		background: @surface;
+		color: @black;
 	}
 }
 

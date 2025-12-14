@@ -74,7 +74,7 @@ nav@{x} {
 
 			@media (min-width: (@mobile + .1)) {
 				&:not(:only-child) {
-					background-image: data-uri('../icons/chevron-down.svg');
+					background-image: var(--icon-chevron);
 					background-repeat: no-repeat;
 					background-position: right 1.5rem;
 					background-size: 2rem;
@@ -153,11 +153,11 @@ nav@{x} {
 		}
 
 		&:before {
-			background-image: data-uri('../icons/hamburger.svg');
+			background-image: var(--icon-hamburger);
 		}
 
 		&:after {
-			background-image: data-uri('../icons/close.svg');
+			background-image: var(--icon-close);
 			opacity: 0;
 			transform: rotate(180deg);
 		}

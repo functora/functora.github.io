@@ -1,5 +1,5 @@
 {
-  description = "Rust Dev Shell";
+  description = "Functora Dev Shell";
 
   inputs = {
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -17,13 +17,21 @@
         shell = {
           packages = with pkgs; [
             djlint
-            nodejs
             clean-css-cli
             lessc
           ];
         };
       in {
         devShells.default = pkgs.mkShell shell;
+        devShells.unfree = pkgs.mkShell (shell
+          // {
+            packages =
+              shell.packages
+              ++ [
+                pkgs.qutebrowser
+                pkgs.antigravity
+              ];
+          });
       }
     );
 }

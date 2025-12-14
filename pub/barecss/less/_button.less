@@ -5,17 +5,17 @@
 
 
 button@{n}, button@{x}, input[type=submit], [btn] {
-	
+
 	// normal button styling
-	
+
 	cursor: pointer;
 	color: @primary;
 	display: inline-block;
 	padding: 1.4rem 2rem;
-	background: #fff;
+	background: @surface;
 	border: 1px solid @primary;
 	border-radius: 2px;
-	box-shadow: 0 0 0 rgba(0,0,0,0);
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 	text-transform: uppercase;
 	text-decoration: none;
 	text-align: center;
@@ -24,7 +24,8 @@ button@{n}, button@{x}, input[type=submit], [btn] {
 	line-height: 1rem;
 	margin: 0 1rem 1rem 0;
 	-webkit-appearance: none;
-	
+	appearance: none;
+
 	&:before {
 		content: "";
 		position: absolute;
@@ -34,41 +35,45 @@ button@{n}, button@{x}, input[type=submit], [btn] {
 		height: 100%;
 		left: 0;
 		top: 0;
-		transform: scale3d(1.2,1.2,1.2);
+		transform: scale3d(1.2, 1.2, 1.2);
 		background: @primary;
 	}
-	
+
 	&:not(:disabled):hover {
 		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 		background: @grey-ultralight;
-		
+
 		&:active {
 			box-shadow: none;
 			transition: none;
 		}
 	}
-	
+
 	// primary button styling
-	
+
 	&[primary] {
-		border-color: darken(@primary, 6%);
+		border-color: @primary-hover;
 		background: @primary;
 		color: @primary--;
 		font-weight: 700;
-		
-		&:not(:disabled):hover { background: darken(@primary, 6%)	}
+
+		&:not(:disabled):hover {
+			background: @primary-hover
+		}
 	}
-	
+
 	&[round] {
 		border-radius: 4rem;
 	}
-	
+
 	&[m-full] {
-		@media (max-width: @mobile) { width: 100% }
+		@media (max-width: @mobile) {
+			width: 100%
+		}
 	}
-	
+
 	// disabled button styling
-	
+
 	&:disabled,
 	&.disabled {
 		border-color: @grey-light;

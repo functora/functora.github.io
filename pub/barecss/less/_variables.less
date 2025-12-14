@@ -28,10 +28,12 @@
 
 // set your brand colour
 
-@primary:			#679;
-@primary--:			#fff; // contrasting colour to the primary colour
+// brand colour
 
-@secondary:			#fd0;
+@primary: var(--primary);
+@primary--: var(--primary-contrast); // contrasting colour to the primary colour
+
+@secondary: var(--secondary);
 
 // set overall temperature with hue and intensity with saturation
 
@@ -41,29 +43,102 @@
 
 // blacks and greys inherit colour temperature of hue and saturation
 
-@black:				hsl(@hue,@sat,20%);
+@black: var(--black);
 
-@grey-ultralight:	hsl(@hue,@sat,96%);
-@grey-light:		hsl(@hue,@sat,90%);
-@grey-mid:			hsl(@hue,@sat,70%);
-@grey-dark:			hsl(@hue,@sat,50%);
-@grey-ultradark:	hsl(@hue,@sat,30%);
+@grey-ultralight: var(--grey-ultralight);
+@grey-light: var(--grey-light);
+@grey-mid: var(--grey-mid);
+@grey-dark: var(--grey-dark);
+@grey-ultradark: var(--grey-ultradark);
 
 
 // transparent overlays to darken or lighten background colour
 
-@dark:				rgba(0,0,0,0.5);
-@darken:			rgba(0,0,0,0.1);
-@light:				rgba(255,255,255,0.5);
-@lighten:			rgba(255,255,255,0.1);
+@dark: rgba(0, 0, 0, 0.5);
+@darken: rgba(0, 0, 0, 0.1);
+@light: rgba(255, 255, 255, 0.5);
+@lighten: rgba(255, 255, 255, 0.1);
 
 
 // shadows
 
-@box-shadow: 0 1px 4px 0 rgba(0,0,0,0.2);
+@box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.2);
 
 
 // widths
 
 @width: 90rem;
 @mobile: 50rem;
+
+@primary-hover: var(--primary-hover);
+@surface: var(--surface);
+@nav-bg: var(--nav-bg);
+
+:root {
+    --primary: #679;
+    --primary-hover: #556688;
+    /* Approx darken(primary, 6%) */
+    --primary-contrast: #fff;
+    --secondary: #fd0;
+
+    /* Base HSL values for calculations if needed, but for now strict mapping */
+    --hue: 200;
+    --sat: 10%;
+
+    --black: hsl(var(--hue), var(--sat), 20%);
+    --grey-ultralight: hsl(var(--hue), var(--sat), 96%);
+    --grey-light: hsl(var(--hue), var(--sat), 90%);
+    --grey-mid: hsl(var(--hue), var(--sat), 70%);
+    --grey-dark: hsl(var(--hue), var(--sat), 50%);
+    --grey-ultradark: hsl(var(--hue), var(--sat), 30%);
+
+    /* Background for body - strictly strictly speaking barecss applies color to body, but usually white/transparent.
+       We might need a --bg variable if body background isn't defined elsewhere.
+       _reset.less defines body { color: @black; ... } but no background-color.
+       Browsers default to white. We should explicit it for dark mode.
+    */
+    --bg-color: #fff;
+    --surface: #fff;
+    --nav-bg: rgba(255, 255, 255, 0.95);
+    --fg-color: var(--black);
+}
+
+
+[data-theme="dark"] {
+    --bg-color: #222;
+    --surface: #333;
+    /* Slightly lighter than bg */
+    --nav-bg: rgba(34, 34, 34, 0.95);
+
+    --primary: #89b;
+    --primary-hover: #9ac;
+    /* Lighten for dark mode? */
+    --primary-contrast: #fff;
+
+    /* Invert grayscale lightness */
+    --black: hsl(var(--hue), var(--sat), 80%);
+    --grey-ultralight: hsl(var(--hue), var(--sat), 10%);
+    --grey-light: hsl(var(--hue), var(--sat), 15%);
+    --grey-mid: hsl(var(--hue), var(--sat), 40%);
+    --grey-dark: hsl(var(--hue), var(--sat), 60%);
+    --grey-ultradark: hsl(var(--hue), var(--sat), 90%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #222;
+        --surface: #333;
+        --nav-bg: rgba(34, 34, 34, 0.95);
+
+        --primary: #89b;
+        --primary-hover: #9ac;
+        --primary-contrast: #fff;
+
+        --black: hsl(var(--hue), var(--sat), 80%);
+        --grey-ultralight: hsl(var(--hue), var(--sat), 10%);
+        --grey-light: hsl(var(--hue), var(--sat), 15%);
+        --grey-mid: hsl(var(--hue), var(--sat), 40%);
+        --grey-dark: hsl(var(--hue), var(--sat), 60%);
+        --grey-ultradark: hsl(var(--hue), var(--sat), 90%);
+    }
+}

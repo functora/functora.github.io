@@ -9,20 +9,25 @@ html {
 	-webkit-text-size-adjust: 100%;
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
 	box-sizing: inherit;
 	position: relative;
 }
 
-:focus { outline: 0 }
+:focus {
+	outline: 0
+}
 
 body {
 	color: @black;
+	background-color: var(--bg-color);
 	margin: 0;
 	font-size: @fs-m;
 	line-height: 1.8;
 	font-weight: 300;
-	
+
 	@media (max-width: @mobile) {
 		overflow-x: hidden;
 	}
@@ -30,19 +35,31 @@ body {
 
 a {
 	background-color: transparent;
-	
+
 	&:active,
-	&:hover { outline: 0 }
+	&:hover {
+		outline: 0
+	}
 }
 
-b, strong { font-weight: 700 }
+b,
+strong {
+	font-weight: 700
+}
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	margin: 0 0 2rem;
 	font-weight: 200;
 }
 
-img { border: 0 }
+img {
+	border: 0
+}
 
 ::selection {
 	background-color: @primary;

@@ -1,9 +1,69 @@
 use crate::i18n::Language;
 use crate::{Route, Screen};
+use derive_more::Display;
+use dioxus::document::EvalError;
 use dioxus::prelude::*;
+use either::*;
+use enum_iterator::{Sequence, next_cycle};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Sequence,
+    Display,
+    Serialize,
+    Deserialize,
+)]
+pub enum Theme {
+    Light,
+    Dark,
+}
+
+async fn jsfun<
+    A: Serialize + 'static,
+    B: DeserializeOwned + 'static,
+    C,
+>(
+    arg: A,
+    out: fn(Result<B, EvalError>) -> C,
+    fun: &'static str,
+) {
+    let code = &format!(
+        r#"
+        let arg = await dioxus.recv();
+        try {{
+            let res = await (async {fun})(arg);
+            dioxus.send({{"Right": res}});
+        }} catch (e) {{
+            dioxus.send({{"Left": String(e)}});
+        }}
+        "#
+    );
+
+    let mut eval = document::eval(code);
+
+    let res = match eval.send(arg) {
+        Ok(()) => eval
+            .recv::<Either<String, B>>()
+            .await
+            .and_then(|res| match res {
+                Either::Right(rhs) => Ok(rhs),
+                Either::Left(lhs) => {
+                    Err(EvalError::InvalidJs(lhs))
+                }
+            }),
+        Err(e) => Err(e),
+    };
+
+    out(res);
+}
 
 #[component]
 pub fn Layout() -> Element {
+    let mut theme = use_signal(|| Theme::Light);
     let mut language = use_context::<Signal<Language>>();
     let mut app_context =
         use_context::<Signal<crate::AppContext>>();
@@ -11,6 +71,21 @@ pub fn Layout() -> Element {
 
     let mut nav_state =
         use_context::<Signal<crate::NavigationState>>();
+
+    use_effect(move || {
+        let _ = spawn(jsfun(
+            (*theme.read()).to_string().to_lowercase(),
+            |res: Result<(), _>| {
+                tracing::debug!("{:#?}", res)
+            },
+            r#"function(arg){
+              window
+                .document
+                .documentElement
+                .setAttribute("data-theme", arg);
+            }"#,
+        ));
+    });
 
     rsx! {
         nav {
@@ -37,6 +112,15 @@ pub fn Layout() -> Element {
                     }
                     li {
                         a { onclick: move |_| language.set(Language::Russian), "Русский" }
+                    }
+                    li {
+                        a {
+                            onclick: move |_| {
+                                let prev = (*theme.read()).clone();
+                                theme.set(next_cycle(&prev))
+                            },
+                            "Theme"
+                        }
                     }
                 }
             }

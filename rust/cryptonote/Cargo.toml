@@ -24,6 +24,9 @@ web-sys = { version = "0.3", features = [
   "Navigator",
   "Clipboard",
 ] }
+either = { version = "1.15.0", features = ["serde"] }
+tracing = "0.1.43"
+enum-iterator = "2.3.0"
 
 [features]
 default = ["web"]

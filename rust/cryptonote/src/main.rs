@@ -12,100 +12,6 @@ pub use error::*;
 pub use i18n::*;
 pub use prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Screen {
-    Home,
-    View,
-    Share,
-    Donate,
-    License,
-    Privacy,
-}
-
-impl std::fmt::Display for Screen {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::Home => "home",
-            Self::View => "view",
-            Self::Share => "share",
-            Self::Donate => "donate",
-            Self::License => "license",
-            Self::Privacy => "privacy",
-        })
-    }
-}
-
-impl std::str::FromStr for Screen {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "home" => Ok(Self::Home),
-            "view" => Ok(Self::View),
-            "share" => Ok(Self::Share),
-            "donate" => Ok(Self::Donate),
-            "license" => Ok(Self::License),
-            "privacy" => Ok(Self::Privacy),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Screen {
-    pub(crate) fn to_route(
-        &self,
-        note: Option<String>,
-    ) -> Route {
-        Route::Root {
-            screen: Some(self.to_string()),
-            note,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Routable, PartialEq)]
-#[rustfmt::skip]
-enum Route {
-    #[layout(Layout)]
-        #[route("/?:screen&:note")]
-        Root { screen: Option<String>, note: Option<String> },
-}
-
-#[component]
-fn Root(
-    screen: Option<String>,
-    note: Option<String>,
-) -> Element {
-    let parsed_screen = screen
-        .as_deref()
-        .and_then(|s| s.parse::<Screen>().ok())
-        .unwrap_or(Screen::Home);
-
-    match parsed_screen {
-        Screen::Home => rsx! {
-            Home {}
-        },
-        Screen::View => rsx! {
-            View { note }
-        },
-        Screen::Share => rsx! {
-            Share {}
-        },
-        Screen::Donate => rsx! {
-            Donate {}
-        },
-        Screen::License => rsx! {
-            License {}
-        },
-        Screen::Privacy => rsx! {
-            Privacy {}
-        },
-    }
-}
-
 const FAVICON_ICO: Asset =
     asset!("/assets/favicon/favicon.ico");
 const FAVICON_16: Asset =
@@ -119,20 +25,6 @@ const WEB_MANIFEST: Asset =
 
 fn main() {
     dioxus::launch(App);
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct AppContext {
-    pub content: Option<String>,
-    pub password: String,
-    pub cipher: Option<crypto::CipherType>,
-    pub share_url: Option<String>,
-    pub qr_code: Option<String>,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct NavigationState {
-    pub has_navigated: bool,
 }
 
 #[component]

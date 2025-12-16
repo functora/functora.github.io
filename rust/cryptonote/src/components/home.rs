@@ -12,7 +12,7 @@ pub fn Home() -> Element {
     let t = get_translations(language());
     let nav = use_navigator();
     let mut app_context =
-        use_context::<Signal<crate::AppContext>>();
+        use_context::<Signal<AppContext>>();
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -34,7 +34,7 @@ pub fn Home() -> Element {
         match extract_note_param(&url) {
             Some(note) => {
                 let mut nav_state = use_context::<
-                    Signal<crate::NavigationState>,
+                    Signal<NavigationState>,
                 >();
                 nav_state.write().has_navigated = true;
                 nav.push(Screen::View.to_route(Some(note)));
@@ -66,7 +66,7 @@ pub fn Home() -> Element {
             Some(cipher) => {
                 if pwd.is_empty() {
                     message.set(Some(UiMessage::Error(
-                        crate::error::AppError::PasswordRequired,
+                        AppError::PasswordRequired,
                     )));
                     return;
                 }
@@ -116,23 +116,21 @@ pub fn Home() -> Element {
             let view_url = format!(
                 "{}/?screen={}",
                 origin,
-                crate::Screen::View
+                Screen::View
             );
             match build_url(&view_url, &note_data) {
                 Ok(url) => match generate_qr_code(&url) {
                     Ok(qr) => {
-                        app_context.set(
-                            crate::AppContext {
-                                content: Some(note_content),
-                                password: pwd,
-                                cipher: enc_option,
-                                share_url: Some(url),
-                                qr_code: Some(qr),
-                            },
-                        );
+                        app_context.set(AppContext {
+                            content: Some(note_content),
+                            password: pwd,
+                            cipher: enc_option,
+                            share_url: Some(url),
+                            qr_code: Some(qr),
+                        });
 
                         let mut nav_state = use_context::<
-                            Signal<crate::NavigationState>,
+                            Signal<NavigationState>,
                         >(
                         );
                         nav_state.write().has_navigated =
@@ -256,7 +254,7 @@ pub fn Home() -> Element {
                         button {
                             onclick: move |_| {
                                 message.set(None);
-                                app_context.set(crate::AppContext::default());
+                                app_context.set(AppContext::default());
                             },
                             "{t.create_new_note}"
                         }

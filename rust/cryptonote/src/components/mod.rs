@@ -6,6 +6,7 @@ mod layout;
 mod license;
 mod message;
 mod privacy;
+mod root;
 mod share;
 mod view;
 
@@ -17,5 +18,6 @@ pub use layout::*;
 pub use license::*;
 pub use message::*;
 pub use privacy::*;
+pub use root::*;
 pub use share::*;
 pub use view::*;

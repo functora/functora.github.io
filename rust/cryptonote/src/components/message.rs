@@ -1,9 +1,8 @@
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
+use crate::*;
 
 pub enum UiMessage {
     Copied,
-    Error(crate::error::AppError),
+    Error(AppError),
 }
 
 #[component]

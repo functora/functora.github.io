@@ -1,6 +1,4 @@
-use crate::components::message::{Message, UiMessage};
-use crate::i18n::{Language, get_translations};
-use dioxus::prelude::*;
+use crate::*;
 
 #[component]
 pub fn ActionRow(
@@ -10,15 +8,14 @@ pub fn ActionRow(
     let language = use_context::<Signal<Language>>();
     let t = get_translations(language());
     let nav = navigator();
-    let crate::Route::Root { screen, .. } =
-        use_route::<crate::Route>();
+    let Route::Root { screen, .. } = use_route::<Route>();
     let nav_state =
-        use_context::<Signal<crate::NavigationState>>();
+        use_context::<Signal<NavigationState>>();
 
     let not_home = screen
         .as_ref()
-        .and_then(|s| s.parse::<crate::Screen>().ok())
-        .map(|s| s != crate::Screen::Home)
+        .and_then(|s| s.parse::<Screen>().ok())
+        .map(|s| s != Screen::Home)
         .unwrap_or(false);
     let show_back = not_home && nav_state().has_navigated;
 

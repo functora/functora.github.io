@@ -1,12 +1,7 @@
-use crate::i18n::Language;
-use crate::{Route, Screen};
-use derive_more::Display;
+use crate::*;
 use dioxus::document::EvalError;
-use dioxus::prelude::*;
 use either::*;
 use enum_iterator::{Sequence, next_cycle};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 
 #[derive(
     Debug,
@@ -66,11 +61,11 @@ pub fn Layout() -> Element {
     let mut theme = use_signal(|| Theme::Light);
     let mut language = use_context::<Signal<Language>>();
     let mut app_context =
-        use_context::<Signal<crate::AppContext>>();
+        use_context::<Signal<AppContext>>();
     let nav = use_navigator();
 
     let mut nav_state =
-        use_context::<Signal<crate::NavigationState>>();
+        use_context::<Signal<NavigationState>>();
 
     use_effect(move || {
         let _ = spawn(jsfun(
@@ -96,7 +91,7 @@ pub fn Layout() -> Element {
                         href: "#",
                         onclick: move |evt| {
                             evt.prevent_default();
-                            app_context.set(crate::AppContext::default());
+                            app_context.set(AppContext::default());
                             nav.push(Screen::Home.to_route(None));
                         },
                         "🔐 Cryptonote"
@@ -129,13 +124,13 @@ pub fn Layout() -> Element {
         Outlet::<Route> {}
 
         p { "txt": "c",
-            {crate::i18n::get_translations(language()).copyright}
+            {get_translations(language()).copyright}
             " 2025 "
             a { href: "https://functora.github.io/", "Functora" }
             ". "
-            {crate::i18n::get_translations(language()).all_rights_reserved}
+            {get_translations(language()).all_rights_reserved}
             " "
-            {crate::i18n::get_translations(language()).by_continuing}
+            {get_translations(language()).by_continuing}
             " "
             a {
                 href: "#",
@@ -144,10 +139,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::License.to_route(None));
                 },
-                "{crate::i18n::get_translations(language()).terms_of_service}"
+                "{get_translations(language()).terms_of_service}"
             }
             " "
-            {crate::i18n::get_translations(language()).you_agree}
+            {get_translations(language()).you_agree}
             " "
             a {
                 href: "#",
@@ -156,10 +151,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::Privacy.to_route(None));
                 },
-                "{crate::i18n::get_translations(language()).privacy_policy_and}"
+                "{get_translations(language()).privacy_policy_and}"
             }
             ". "
-            {crate::i18n::get_translations(language()).please}
+            {get_translations(language()).please}
             " "
             a {
                 href: "#",
@@ -168,10 +163,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::Donate.to_route(None));
                 },
-                "{crate::i18n::get_translations(language()).donate_link}"
+                "{get_translations(language()).donate_link}"
             }
             ". "
-            {crate::i18n::get_translations(language()).version_label}
+            {get_translations(language()).version_label}
             " "
             {env!("CARGO_PKG_VERSION")}
             "."

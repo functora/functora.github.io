@@ -1,11 +1,4 @@
-use crate::Screen;
-use crate::components::Breadcrumb;
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
-use crate::crypto::decrypt_symmetric;
-use crate::encoding::NoteData;
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
+use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
@@ -14,9 +7,8 @@ pub fn View(note: Option<String>) -> Element {
     let nav = navigator();
     let mut note_content =
         use_signal(|| Option::<String>::None);
-    let mut encrypted_data = use_signal(|| {
-        Option::<crate::crypto::EncryptedData>::None
-    });
+    let mut encrypted_data =
+        use_signal(|| Option::<EncryptedData>::None);
     let mut password_input = use_signal(String::new);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -25,7 +17,7 @@ pub fn View(note: Option<String>) -> Element {
     use_effect(move || {
         if let Some(n) = &note {
             if !n.is_empty() {
-                match crate::encoding::decode_note(n) {
+                match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
                             is_encrypted.set(true);
@@ -40,18 +32,18 @@ pub fn View(note: Option<String>) -> Element {
                 }
             } else {
                 message.set(Some(UiMessage::Error(
-                    crate::error::AppError::NoNoteInUrl,
+                    AppError::NoNoteInUrl,
                 )));
             }
         } else {
             message.set(Some(UiMessage::Error(
-                crate::error::AppError::NoNoteInUrl,
+                AppError::NoNoteInUrl,
             )));
         }
     });
 
     let mut app_context =
-        use_context::<Signal<crate::AppContext>>();
+        use_context::<Signal<AppContext>>();
 
     let decrypt_note = move |_evt: Event<MouseData>| {
         message.set(None);
@@ -59,7 +51,7 @@ pub fn View(note: Option<String>) -> Element {
             let pwd = password_input.read().clone();
             if pwd.is_empty() {
                 message.set(Some(UiMessage::Error(
-                    crate::error::AppError::PasswordRequired,
+                    AppError::PasswordRequired,
                 )));
                 return;
             }
@@ -72,20 +64,18 @@ pub fn View(note: Option<String>) -> Element {
                                 .set(Some(text.clone()));
                             is_encrypted.set(false);
 
-                            app_context.set(
-                                crate::AppContext {
-                                    content: Some(text),
-                                    password: pwd,
-                                    cipher: Some(
-                                        enc.cipher,
-                                    ),
-                                    ..Default::default()
-                                },
-                            );
+                            app_context.set(AppContext {
+                                content: Some(text),
+                                password: pwd,
+                                cipher: Some(enc.cipher),
+                                ..Default::default()
+                            });
                         }
-                        Err(e) => message.set(Some(UiMessage::Error(
-                            crate::error::AppError::Utf8(e),
-                        ))),
+                        Err(e) => message.set(Some(
+                            UiMessage::Error(
+                                AppError::Utf8(e),
+                            ),
+                        )),
                     }
                 }
                 Err(e) => {
@@ -123,7 +113,7 @@ pub fn View(note: Option<String>) -> Element {
                                                         note_content.set(Some(text.clone()));
                                                         is_encrypted.set(false);
                                                         app_context
-                                                            .set(crate::AppContext {
+                                                            .set(AppContext {
                                                                 content: Some(text),
                                                                 password: pwd,
                                                                 cipher: Some(enc.cipher),
@@ -131,10 +121,7 @@ pub fn View(note: Option<String>) -> Element {
                                                             });
                                                     }
                                                     Err(e) => {
-                                                        message
-                                                            .set(
-                                                                Some(UiMessage::Error(crate::error::AppError::Utf8(e))),
-                                                            );
+                                                        message.set(Some(UiMessage::Error(AppError::Utf8(e))));
                                                     }
                                                 }
                                             }
@@ -166,7 +153,7 @@ pub fn View(note: Option<String>) -> Element {
                     ActionRow { message,
                         button {
                             onclick: move |_| {
-                                app_context.set(crate::AppContext::default());
+                                app_context.set(AppContext::default());
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.create_new_note}"
@@ -176,7 +163,7 @@ pub fn View(note: Option<String>) -> Element {
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
                                     app_context
-                                        .set(crate::AppContext {
+                                        .set(AppContext {
                                             content: Some(content.clone()),
                                             ..Default::default()
                                         });

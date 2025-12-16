@@ -1,9 +1,4 @@
-use crate::components::Breadcrumb;
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
-use crate::error::AppError;
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
+use crate::*;
 use qrcode::{QrCode, render::svg};
 
 const BTC_ADDRESS: &str =

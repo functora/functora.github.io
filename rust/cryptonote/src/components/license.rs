@@ -1,14 +1,9 @@
-use crate::components::Breadcrumb;
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
-use crate::i18n::Language;
-use dioxus::prelude::*;
+use crate::*;
 
 #[component]
 pub fn License() -> Element {
     let language = use_context::<Signal<Language>>();
-    let translations =
-        crate::i18n::get_translations(language());
+    let translations = get_translations(language());
     let message = use_signal(|| Option::<UiMessage>::None);
 
     rsx! {

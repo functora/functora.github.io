@@ -1,10 +1,4 @@
-use crate::Screen;
-use crate::components::Breadcrumb;
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
-use crate::error::AppError;
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
+use crate::*;
 
 async fn copy_to_clipboard(
     text: String,
@@ -41,14 +35,13 @@ pub fn Share() -> Element {
     let t = get_translations(language());
     let nav = navigator();
 
-    let mut url = use_signal(|| String::new());
-    let mut qr_code = use_signal(|| String::new());
+    let mut url = use_signal(String::new);
+    let mut qr_code = use_signal(String::new);
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
-    let app_context =
-        use_context::<Signal<crate::AppContext>>();
+    let app_context = use_context::<Signal<AppContext>>();
 
     use_effect(move || {
         let ctx = app_context.read();

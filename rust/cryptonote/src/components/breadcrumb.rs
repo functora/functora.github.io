@@ -1,5 +1,4 @@
-use crate::i18n::{Language, get_translations};
-use crate::prelude::*;
+use crate::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct BreadcrumbProps {
@@ -13,7 +12,7 @@ pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
 
     rsx! {
         card { font_size: "larger",
-            Link { to: crate::Screen::Home.to_route(None), "{t.home}" }
+            Link { to: Screen::Home.to_route(None), "{t.home}" }
             " ❭ {props.title}"
         }
     }

@@ -1,4 +1,5 @@
-pub use derive_more::Display;
+use crate::prelude::*;
+use crate::*;
 use qrcode::types::QrError;
 use sha2::digest;
 use std::string::FromUtf8Error;
@@ -24,7 +25,7 @@ pub enum AppError {
 impl AppError {
     pub fn localized(
         &self,
-        t: &crate::i18n::Translations,
+        t: &i18n::Translations,
     ) -> String {
         let msg = match self {
             AppError::Cipher(_) => t.cipher_error,

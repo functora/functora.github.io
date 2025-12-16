@@ -53,7 +53,7 @@ impl std::str::FromStr for Screen {
 
 impl Screen {
     pub(crate) fn to_route(
-        self,
+        &self,
         note: Option<String>,
     ) -> Route {
         Route::Root {

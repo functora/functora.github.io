@@ -732,6 +732,7 @@ dependencies = [
  "dioxus",
  "either",
  "enum-iterator",
+ "functora",
  "getrandom 0.2.16",
  "hkdf",
  "qrcode",
@@ -1766,6 +1767,12 @@ checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
 ]
+
+[[package]]
+name = "functora"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fea53a2c5e0f48e6485cfdf0ee76dd7bdf5992c3748f4b0597ebcbee92913c9"
 
 [[package]]
 name = "futf"

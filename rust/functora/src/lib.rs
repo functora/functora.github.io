@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 pub fn id<T>(x: T) -> T {
     x
 }

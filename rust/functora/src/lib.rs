@@ -10,6 +10,18 @@ impl<T> Void for T {
     fn void(&self) {}
 }
 
+pub fn once<T, U>(x: T) -> impl FnOnce(U) -> T {
+    move |_| x
+}
+pub trait Once<T> {
+    fn once<U>(self) -> impl FnOnce(U) -> T;
+}
+impl<T> Once<T> for T {
+    fn once<U>(self) -> impl FnOnce(U) -> T {
+        move |_| self
+    }
+}
+
 pub fn always<T: Copy, U>(x: T) -> impl Fn(U) -> T {
     move |_| x
 }
@@ -38,6 +50,17 @@ mod tests {
     #[test]
     fn void_method() {
         assert_eq!("Hello".void(), ());
+    }
+
+    #[test]
+    fn once_function() {
+        let f = once("Hello");
+        assert_eq!(f(3), "Hello");
+    }
+    #[test]
+    fn once_method() {
+        let f = "Hello".once();
+        assert_eq!(f(3), "Hello");
     }
 
     #[test]

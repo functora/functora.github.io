@@ -1,13 +1,16 @@
-use components::{
-    Donate, Home, Layout, License, Privacy, Share, View,
-};
-use dioxus::prelude::*;
 mod components;
 mod crypto;
 mod encoding;
 mod error;
 mod i18n;
-pub mod prelude;
+mod prelude;
+
+pub use components::*;
+pub use crypto::*;
+pub use encoding::*;
+pub use error::*;
+pub use i18n::*;
+pub use prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Screen {

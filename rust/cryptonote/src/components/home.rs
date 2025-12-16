@@ -1,13 +1,4 @@
-use crate::Screen;
-use crate::components::actions::ActionRow;
-use crate::components::message::UiMessage;
-use crate::crypto::{CipherType, encrypt_symmetric};
-use crate::encoding::{
-    NoteData, build_url, generate_qr_code,
-};
-use crate::error::AppError;
-use crate::i18n::{Language, get_translations};
-use dioxus::prelude::*;
+use crate::*;
 
 #[derive(PartialEq, Clone, Copy)]
 enum ActionMode {

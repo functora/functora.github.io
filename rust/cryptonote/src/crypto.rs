@@ -1,4 +1,4 @@
-use crate::error::AppError;
+use crate::error::*;
 use aes_gcm::{
     Aes256Gcm,
     aead::{Aead, KeyInit},

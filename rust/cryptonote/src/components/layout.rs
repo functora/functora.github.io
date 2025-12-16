@@ -68,7 +68,7 @@ pub fn Layout() -> Element {
         use_context::<Signal<NavigationState>>();
 
     use_effect(move || {
-        let _ = spawn(jsfun(
+        spawn(jsfun(
             (*theme.read()).to_string().to_lowercase(),
             |res: Result<(), _>| {
                 tracing::debug!("{:#?}", res)

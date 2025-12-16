@@ -78,8 +78,6 @@ pub struct Translations {
     pub version_label: &'static str,
     pub back_button: &'static str,
     pub clipboard_write_error: &'static str,
-    #[cfg(target_arch = "wasm32")]
-    pub missing_window_error: &'static str,
     pub open_url_label: &'static str,
     pub open_url_placeholder: &'static str,
     pub open_button: &'static str,
@@ -191,8 +189,6 @@ If you have any questions regarding privacy while using the Application, or have
             version_label: "Version",
             back_button: "Back",
             clipboard_write_error: "Failed to copy to clipboard",
-            #[cfg(target_arch = "wasm32")]
-            missing_window_error: "No browser window available",
             open_url_label: "URL",
             open_url_placeholder: "Paste shared note URL here...",
             open_button: "Open",
@@ -301,8 +297,6 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             version_label: "Versión",
             back_button: "Atrás",
             clipboard_write_error: "No se pudo copiar al portapapeles",
-            #[cfg(target_arch = "wasm32")]
-            missing_window_error: "No hay ventana del navegador disponible",
             open_url_label: "URL",
             open_url_placeholder: "Pega la URL de la nota compartida aquí...",
             open_button: "Abrir",
@@ -411,8 +405,6 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             version_label: "Версия",
             back_button: "Назад",
             clipboard_write_error: "Не удалось скопировать в буфер обмена",
-            #[cfg(target_arch = "wasm32")]
-            missing_window_error: "Окно браузера недоступно",
             open_url_label: "URL",
             open_url_placeholder: "Вставьте URL общей заметки здесь...",
             open_button: "Открыть",
@@ -433,20 +425,15 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 pub fn detect_browser_language() -> Language {
     #[cfg(target_arch = "wasm32")]
     {
-        if let Some(window) = web_sys::window() {
-            if let Some(lang) =
-                window.navigator().language()
-            {
-                return Language::from_code(&lang);
-            }
-        }
-        Language::English
+        web_sys::window()
+            .and_then(|w| w.navigator().language())
+            .as_deref()
+            .map_or(Language::English, Language::from_code)
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if let Some(lang) = sys_locale::get_locale() {
-            return Language::from_code(&lang);
-        }
-        Language::English
+        sys_locale::get_locale()
+            .as_deref()
+            .map_or(Language::English, Language::from_code)
     }
 }

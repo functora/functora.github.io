@@ -34,12 +34,7 @@ pub fn build_url(
     encode_note(note).map(|encoded| {
         let separator =
             if base_url.contains('?') { "&" } else { "?" };
-        format!(
-            "{}{}{}",
-            base_url,
-            separator,
-            format!("note={}", encoded)
-        )
+        format!("{}{}note={}", base_url, separator, encoded)
     })
 }
 
@@ -51,44 +46,4 @@ pub fn generate_qr_code(
             .min_dimensions(200, 200)
             .build()
     })?)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_encode_decode_plaintext() {
-        let note =
-            NoteData::PlainText("hello world".to_string());
-        let encoded = encode_note(&note).unwrap();
-        let decoded = decode_note(&encoded).unwrap();
-        match decoded {
-            NoteData::PlainText(s) => {
-                assert_eq!(s, "hello world")
-            }
-            _ => panic!("Expected PlainText"),
-        }
-    }
-
-    #[test]
-    fn test_build_url_format() {
-        let note = NoteData::PlainText("test".to_string());
-        let url = build_url("https://example.com", &note)
-            .unwrap();
-        assert!(url.contains("?note="));
-        assert!(
-            url.starts_with("https://example.com?note=")
-        );
-
-        let url_with_query = build_url(
-            "https://example.com/?screen=view",
-            &note,
-        )
-        .unwrap();
-        assert!(url_with_query.contains("&note="));
-        assert!(url_with_query.starts_with(
-            "https://example.com/?screen=view&note="
-        ));
-    }
 }

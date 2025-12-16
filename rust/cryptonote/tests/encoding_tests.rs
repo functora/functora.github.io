@@ -39,7 +39,8 @@ fn test_encode_decode_encrypted() {
         match decoded {
             NoteData::CipherText(enc_data) => {
                 assert_eq!(
-                    original.ciphertext, enc_data.ciphertext
+                    original.ciphertext,
+                    enc_data.ciphertext
                 );
             }
             _ => panic!("Expected CipherText"),
@@ -58,6 +59,25 @@ fn test_build_url_format() {
 }
 
 #[test]
+fn test_build_url_format2() {
+    let note = NoteData::PlainText("test".to_string());
+    let url =
+        build_url("https://example.com", &note).unwrap();
+    assert!(url.contains("?note="));
+    assert!(url.starts_with("https://example.com?note="));
+
+    let url_with_query = build_url(
+        "https://example.com/?screen=view",
+        &note,
+    )
+    .unwrap();
+    assert!(url_with_query.contains("&note="));
+    assert!(url_with_query.starts_with(
+        "https://example.com/?screen=view&note="
+    ));
+}
+
+#[test]
 fn test_qr_code_generation() {
     let url = "https://example.com/test";
     let svg = generate_qr_code(url)
@@ -71,5 +91,3 @@ fn test_invalid_base64() {
     let result = decode_note("not-valid-base64!!!");
     assert!(result.is_err());
 }
-
-

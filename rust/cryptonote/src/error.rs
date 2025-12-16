@@ -17,8 +17,6 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    #[cfg(target_arch = "wasm32")]
-    MissingWindow,
     ClipboardWrite(String),
 }
 
@@ -44,10 +42,6 @@ impl AppError {
             AppError::NoNoteParam => t.no_note_param,
             AppError::ClipboardWrite(_) => {
                 t.clipboard_write_error
-            }
-            #[cfg(target_arch = "wasm32")]
-            AppError::MissingWindow => {
-                t.missing_window_error
             }
         };
         format!("{}: {}", msg, self)

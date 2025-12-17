@@ -12,13 +12,12 @@ pub fn Layout() -> Element {
         use_context::<Signal<NavigationState>>();
 
     use_effect(move || {
-        js_data_theme(
-            (*theme.read()).clone(),
-            |res: Result<(), _>| {
-                tracing::debug!("{:#?}", res)
-            },
-        )
-        .spawn()
+        let theme = *theme.read();
+        spawn(async move {
+            if let Err(e) = js_data_theme(&theme).await {
+                tracing::error!("{:#?}", e);
+            }
+        });
     });
 
     rsx! {
@@ -52,7 +51,7 @@ pub fn Layout() -> Element {
                     li {
                         a {
                             onclick: move |_| {
-                                let prev = (*theme.read()).clone();
+                                let prev = *theme.read();
                                 theme.set(next_cycle(&prev))
                             },
                             {

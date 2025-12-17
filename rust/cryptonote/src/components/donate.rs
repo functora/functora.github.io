@@ -49,17 +49,12 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             let addr = BTC_ADDRESS.to_string();
                             spawn(async move {
-                                js_clipboard_write(
-                                        addr,
-                                        |res| match res {
-                                            Ok(_) => btc_message.set(Some(UiMessage::Copied)),
-                                            Err(e) => {
-                                                btc_message
-                                                    .set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
-                                            }
-                                        },
-                                    )
-                                    .await
+                                match js_clipboard_write(addr).await {
+                                    Ok(()) => btc_message.set(Some(UiMessage::Copied)),
+                                    Err(e) => {
+                                        btc_message.set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
+                                    }
+                                }
                             });
                         },
                         "{t.copy_button}"
@@ -84,17 +79,13 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             let addr = XMR_ADDRESS.to_string();
                             spawn(async move {
-                                js_clipboard_write(
-                                        addr,
-                                        |res| match res {
-                                            Ok(_) => xmr_message.set(Some(UiMessage::Copied)),
-                                            Err(e) => {
-                                                xmr_message
-                                                    .set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
-                                            }
-                                        },
-                                    )
-                                    .await
+                                match js_clipboard_write(addr).await {
+                                    Ok(()) => xmr_message.set(Some(UiMessage::Copied)),
+                                    Err(e) => {
+
+                                        xmr_message.set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
+                                    }
+                                }
                             });
                         },
                         "{t.copy_button}"

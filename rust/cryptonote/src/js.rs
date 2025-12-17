@@ -2,6 +2,7 @@ use crate::prelude::*;
 use either::*;
 
 #[derive(
+    Copy,
     Debug,
     Clone,
     PartialEq,
@@ -16,12 +17,10 @@ pub enum Theme {
 }
 
 pub async fn js_data_theme(
-    theme: Theme,
-    after: impl FnOnce(Result<(), EvalError>),
-) {
+    theme: &Theme,
+) -> Result<(), EvalError> {
     js_fun(
         theme.to_string().to_lowercase(),
-        after,
         r#"function(arg){
                window
                  .document
@@ -34,11 +33,9 @@ pub async fn js_data_theme(
 
 pub async fn js_clipboard_write(
     msg: String,
-    after: impl FnOnce(Result<(), EvalError>),
-) {
+) -> Result<(), EvalError> {
     js_fun(
         msg,
-        after,
         r#"function(arg){
                await window
                        .navigator
@@ -52,12 +49,10 @@ pub async fn js_clipboard_write(
 async fn js_fun<
     A: Serialize + 'static,
     B: DeserializeOwned + 'static,
-    C,
 >(
     arg: A,
-    out: impl FnOnce(Result<B, EvalError>) -> C,
     fun: &'static str,
-) {
+) -> Result<B, EvalError> {
     let code = &format!(
         r#"
         let arg = await dioxus.recv();
@@ -72,7 +67,7 @@ async fn js_fun<
 
     let mut eval = document::eval(code);
 
-    let res = match eval.send(arg) {
+    match eval.send(arg) {
         Ok(()) => eval
             .recv::<Either<String, B>>()
             .await
@@ -83,7 +78,5 @@ async fn js_fun<
                 }
             }),
         Err(e) => Err(e),
-    };
-
-    out(res);
+    }
 }

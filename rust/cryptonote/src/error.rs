@@ -17,7 +17,7 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    ClipboardWrite(EvalError),
+    JsWriteClipboard(EvalError),
 }
 
 impl AppError {
@@ -40,7 +40,7 @@ impl AppError {
             }
             AppError::NoNoteInUrl => t.no_note_in_url,
             AppError::NoNoteParam => t.no_note_param,
-            AppError::ClipboardWrite(_) => {
+            AppError::JsWriteClipboard(_) => {
                 t.clipboard_write_error
             }
         };

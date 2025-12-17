@@ -16,7 +16,7 @@ pub enum Theme {
     Dark,
 }
 
-pub async fn js_data_theme(
+pub async fn js_set_theme(
     theme: &Theme,
 ) -> Result<(), EvalError> {
     js_fun(
@@ -31,7 +31,7 @@ pub async fn js_data_theme(
     .await
 }
 
-pub async fn js_clipboard_write(
+pub async fn js_write_clipboard(
     msg: String,
 ) -> Result<(), EvalError> {
     js_fun(

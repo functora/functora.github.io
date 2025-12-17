@@ -49,10 +49,11 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             let addr = BTC_ADDRESS.to_string();
                             spawn(async move {
-                                match js_clipboard_write(addr).await {
+                                match js_write_clipboard(addr).await {
                                     Ok(()) => btc_message.set(Some(UiMessage::Copied)),
                                     Err(e) => {
-                                        btc_message.set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
+                                        btc_message
+                                            .set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
                                     }
                                 }
                             });
@@ -79,11 +80,12 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             let addr = XMR_ADDRESS.to_string();
                             spawn(async move {
-                                match js_clipboard_write(addr).await {
+                                match js_write_clipboard(addr).await {
                                     Ok(()) => xmr_message.set(Some(UiMessage::Copied)),
                                     Err(e) => {
 
-                                        xmr_message.set(Some(UiMessage::Error(AppError::ClipboardWrite(e))))
+                                        xmr_message
+                                            .set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
                                     }
                                 }
                             });

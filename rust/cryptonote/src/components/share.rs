@@ -1,35 +1,5 @@
 use crate::*;
 
-async fn copy_to_clipboard(
-    text: String,
-) -> Result<(), AppError> {
-    let mut eval = document::eval(
-        r#"
-        let msg = await dioxus.recv();
-        try {
-            await window.navigator.clipboard.writeText(msg);
-            dioxus.send("ok");
-        } catch (e) {
-            dioxus.send("Error " + e);
-        }
-        "#,
-    );
-
-    eval.send(text).map_err(AppError::ClipboardWrite)?;
-
-    let msg = eval
-        .recv::<String>()
-        .await
-        .map_err(AppError::ClipboardWrite)?;
-
-    match msg.as_str() {
-        "ok" => Ok(()),
-        e => Err(AppError::ClipboardWrite(
-            EvalError::InvalidJs(e.to_string()),
-        )),
-    }
-}
-
 #[component]
 pub fn Share() -> Element {
     let language = use_context::<Signal<Language>>();
@@ -78,9 +48,11 @@ pub fn Share() -> Element {
                         onclick: move |_| {
                             let url_val = url();
                             spawn(async move {
-                                match copy_to_clipboard(url_val).await {
-                                    Ok(_) => message.set(Some(UiMessage::Copied)),
-                                    Err(e) => message.set(Some(UiMessage::Error(e))),
+                                match js_write_clipboard(url_val).await {
+                                    Ok(()) => message.set(Some(UiMessage::Copied)),
+                                    Err(e) => {
+                                        message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
+                                    }
                                 }
                             });
                         },
@@ -92,9 +64,11 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 let url_val = url();
                                 spawn(async move {
-                                    match copy_to_clipboard(url_val).await {
-                                        Ok(_) => message.set(Some(UiMessage::Copied)),
-                                        Err(e) => message.set(Some(UiMessage::Error(e))),
+                                    match js_write_clipboard(url_val).await {
+                                        Ok(()) => message.set(Some(UiMessage::Copied)),
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
+                                        }
                                     }
                                 });
                             },

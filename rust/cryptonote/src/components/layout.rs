@@ -14,7 +14,7 @@ pub fn Layout() -> Element {
     use_effect(move || {
         let theme = *theme.read();
         spawn(async move {
-            if let Err(e) = js_data_theme(&theme).await {
+            if let Err(e) = js_set_theme(&theme).await {
                 tracing::error!("{:#?}", e);
             }
         });

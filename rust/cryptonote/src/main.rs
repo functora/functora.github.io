@@ -3,6 +3,7 @@ mod crypto;
 mod encoding;
 mod error;
 mod i18n;
+mod js;
 mod prelude;
 
 pub use components::*;
@@ -10,6 +11,7 @@ pub use crypto::*;
 pub use encoding::*;
 pub use error::*;
 pub use i18n::*;
+pub use js::*;
 pub use prelude::*;
 
 const FAVICON_ICO: Asset =

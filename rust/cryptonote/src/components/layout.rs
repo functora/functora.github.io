@@ -1,60 +1,4 @@
 use crate::*;
-use dioxus::document::EvalError;
-use either::*;
-use enum_iterator::{Sequence, next_cycle};
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Sequence,
-    Display,
-    Serialize,
-    Deserialize,
-)]
-pub enum Theme {
-    Light,
-    Dark,
-}
-
-async fn jsfun<
-    A: Serialize + 'static,
-    B: DeserializeOwned + 'static,
-    C,
->(
-    arg: A,
-    out: fn(Result<B, EvalError>) -> C,
-    fun: &'static str,
-) {
-    let code = &format!(
-        r#"
-        let arg = await dioxus.recv();
-        try {{
-            let res = await (async {fun})(arg);
-            dioxus.send({{"Right": res}});
-        }} catch (e) {{
-            dioxus.send({{"Left": String(e)}});
-        }}
-        "#
-    );
-
-    let mut eval = document::eval(code);
-
-    let res = match eval.send(arg) {
-        Ok(()) => eval
-            .recv::<Either<String, B>>()
-            .await
-            .and_then(|res| match res {
-                Either::Right(rhs) => Ok(rhs),
-                Either::Left(lhs) => {
-                    Err(EvalError::InvalidJs(lhs))
-                }
-            }),
-        Err(e) => Err(e),
-    };
-
-    out(res);
-}
 
 #[component]
 pub fn Layout() -> Element {
@@ -68,18 +12,10 @@ pub fn Layout() -> Element {
         use_context::<Signal<NavigationState>>();
 
     use_effect(move || {
-        spawn(jsfun(
-            (*theme.read()).to_string().to_lowercase(),
-            |res: Result<(), _>| {
-                tracing::debug!("{:#?}", res)
-            },
-            r#"function(arg){
-              window
-                .document
-                .documentElement
-                .setAttribute("data-theme", arg);
-            }"#,
-        ));
+        js_data_theme(theme, |res: Result<(), _>| {
+            tracing::debug!("{:#?}", res)
+        })
+        .spawn()
     });
 
     rsx! {

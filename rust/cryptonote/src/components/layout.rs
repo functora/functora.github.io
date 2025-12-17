@@ -100,13 +100,15 @@ pub fn Layout() -> Element {
 
                 ul {
                     li {
-                        a { onclick: move |_| language.set(Language::English), "English" }
+                        a { onclick: move |_| language.set(Language::English), "🇬🇧 English" }
                     }
                     li {
-                        a { onclick: move |_| language.set(Language::Spanish), "Español" }
+                        a { onclick: move |_| language.set(Language::Spanish), "🇪🇸 Español" }
                     }
                     li {
-                        a { onclick: move |_| language.set(Language::Russian), "Русский" }
+                        a { onclick: move |_| language.set(Language::Russian),
+                            "🇷🇺 Русский"
+                        }
                     }
                     li {
                         a {
@@ -114,7 +116,13 @@ pub fn Layout() -> Element {
                                 let prev = (*theme.read()).clone();
                                 theme.set(next_cycle(&prev))
                             },
-                            "Theme"
+                            {
+                                match *theme.read() {
+                                    Theme::Light => "🌚 ",
+                                    Theme::Dark => "🌝 ",
+                                }
+                            }
+                            {get_translations(language()).theme}
                         }
                     }
                 }

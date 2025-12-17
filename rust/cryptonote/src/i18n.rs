@@ -91,6 +91,7 @@ pub struct Translations {
     pub action_label: &'static str,
     pub action_create: &'static str,
     pub action_open: &'static str,
+    pub theme: &'static str,
 }
 
 pub fn get_translations(lang: Language) -> Translations {
@@ -202,6 +203,7 @@ If you have any questions regarding privacy while using the Application, or have
             action_label: "Action",
             action_create: "Create new note",
             action_open: "Open shared note",
+            theme: "Theme",
         },
         Language::Spanish => Translations {
             note: "Nota",
@@ -310,6 +312,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             action_label: "Acción",
             action_create: "Crear nueva nota",
             action_open: "Abrir nota compartida",
+            theme: "Tema",
         },
         Language::Russian => Translations {
             note: "Заметка",
@@ -418,6 +421,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             action_label: "Действие",
             action_create: "Создать новую заметку",
             action_open: "Открыть общую заметку",
+            theme: "Тема",
         },
     }
 }
@@ -426,7 +430,7 @@ pub fn detect_browser_language() -> Language {
     #[cfg(target_arch = "wasm32")]
     {
         web_sys::window()
-            .and_then(|w| w.navigator().language())
+            .and_then(|x| x.navigator().language())
             .as_deref()
             .map_or(Language::English, Language::from_code)
     }

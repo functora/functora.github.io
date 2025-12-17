@@ -15,17 +15,18 @@ async fn copy_to_clipboard(
         "#,
     );
 
-    eval.send(text).map_err(|e| {
-        AppError::ClipboardWrite(e.to_string())
-    })?;
+    eval.send(text).map_err(AppError::ClipboardWrite)?;
 
-    let msg = eval.recv::<String>().await.map_err(|e| {
-        AppError::ClipboardWrite(e.to_string())
-    })?;
+    let msg = eval
+        .recv::<String>()
+        .await
+        .map_err(AppError::ClipboardWrite)?;
 
     match msg.as_str() {
         "ok" => Ok(()),
-        e => Err(AppError::ClipboardWrite(e.to_string())),
+        e => Err(AppError::ClipboardWrite(
+            EvalError::InvalidJs(e.to_string()),
+        )),
     }
 }
 

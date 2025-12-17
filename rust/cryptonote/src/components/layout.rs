@@ -12,9 +12,12 @@ pub fn Layout() -> Element {
         use_context::<Signal<NavigationState>>();
 
     use_effect(move || {
-        js_data_theme(theme, |res: Result<(), _>| {
-            tracing::debug!("{:#?}", res)
-        })
+        js_data_theme(
+            (*theme.read()).clone(),
+            |res: Result<(), _>| {
+                tracing::debug!("{:#?}", res)
+            },
+        )
         .spawn()
     });
 

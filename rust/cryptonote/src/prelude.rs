@@ -1,5 +1,6 @@
 pub use derive_more::Display;
 pub use dioxus::core::SpawnIfAsync;
+pub use dioxus::document::EvalError;
 pub use dioxus::prelude::*;
 pub use either::*;
 pub use enum_iterator::{Sequence, next_cycle};

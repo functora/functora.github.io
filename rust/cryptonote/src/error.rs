@@ -17,7 +17,7 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    ClipboardWrite(String),
+    ClipboardWrite(EvalError),
 }
 
 impl AppError {

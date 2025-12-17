@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use dioxus::document::EvalError;
 use either::*;
 
 #[derive(
@@ -17,19 +16,35 @@ pub enum Theme {
 }
 
 pub async fn js_data_theme(
-    theme: Signal<Theme>,
-    after: fn(Result<(), EvalError>) -> (),
+    theme: Theme,
+    after: impl FnOnce(Result<(), EvalError>),
 ) {
-    let next = (*theme.read()).clone();
     js_fun(
-        next.to_string().to_lowercase(),
+        theme.to_string().to_lowercase(),
         after,
         r#"function(arg){
-              window
-                .document
-                .documentElement
-                .setAttribute("data-theme", arg);
-            }"#,
+               window
+                 .document
+                 .documentElement
+                 .setAttribute("data-theme", arg);
+             }"#,
+    )
+    .await
+}
+
+pub async fn js_clipboard_write(
+    msg: String,
+    after: impl FnOnce(Result<(), EvalError>),
+) {
+    js_fun(
+        msg,
+        after,
+        r#"function(arg){
+               await window
+                       .navigator
+                       .clipboard
+                       .writeText(arg);
+             }"#,
     )
     .await
 }
@@ -40,7 +55,7 @@ async fn js_fun<
     C,
 >(
     arg: A,
-    out: fn(Result<B, EvalError>) -> C,
+    out: impl FnOnce(Result<B, EvalError>) -> C,
     fun: &'static str,
 ) {
     let code = &format!(

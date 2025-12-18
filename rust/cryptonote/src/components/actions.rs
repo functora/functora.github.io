@@ -27,6 +27,7 @@ pub fn ActionRow(
                     onclick: move |_| {
                         nav.go_back();
                     },
+                    Icon { icon: FaArrowLeft }
                     "{t.back_button}"
                 }
             }

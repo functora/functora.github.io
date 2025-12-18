@@ -4,3 +4,10 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+
+button,
+label:not(nav label) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.3em !important;
+}

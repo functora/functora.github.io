@@ -163,7 +163,10 @@ pub fn Home() -> Element {
                         action_mode.set(ActionMode::Create);
                     },
                 }
-                label { "{t.action_create}" }
+                label {
+                    Icon { icon: FaSquarePlus }
+                    "{t.action_create}"
+                }
                 br {}
 
                 input {
@@ -175,7 +178,10 @@ pub fn Home() -> Element {
                         action_mode.set(ActionMode::Open);
                     },
                 }
-                label { "{t.action_open}" }
+                label {
+                    Icon { icon: FaFolderOpen }
+                    "{t.action_open}"
+                }
                 br {}
                 br {}
 
@@ -202,7 +208,10 @@ pub fn Home() -> Element {
                             ctx.cipher = None;
                         },
                     }
-                    label { "{t.no_encryption}" }
+                    label {
+                        Icon { icon: FaLockOpen }
+                        "{t.no_encryption}"
+                    }
                     br {}
 
                     input {
@@ -214,7 +223,10 @@ pub fn Home() -> Element {
                             ctx.cipher = Some(CipherType::ChaCha20Poly1305);
                         },
                     }
-                    label { "{t.password_encryption}" }
+                    label {
+                        Icon { icon: FaLock }
+                        "{t.password_encryption}"
+                    }
                     br {}
                     br {}
 
@@ -256,9 +268,13 @@ pub fn Home() -> Element {
                                 message.set(None);
                                 app_context.set(AppContext::default());
                             },
+                            Icon { icon: FaTrash }
                             "{t.create_new_note}"
                         }
-                        button { "primary": "", onclick: generate_note, "{t.generate_button}" }
+                        button { "primary": "", onclick: generate_note,
+                            Icon { icon: FaShareNodes }
+                            "{t.generate_button}"
+                        }
                     }
                 }
 

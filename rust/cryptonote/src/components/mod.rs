@@ -1,5 +1,6 @@
 mod actions;
 mod breadcrumb;
+mod button;
 mod donate;
 mod home;
 mod layout;
@@ -12,6 +13,7 @@ mod view;
 
 pub use actions::*;
 pub use breadcrumb::*;
+pub use button::*;
 pub use donate::*;
 pub use home::*;
 pub use layout::*;

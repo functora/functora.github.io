@@ -263,16 +263,18 @@ pub fn Home() -> Element {
                     br {}
 
                     ActionRow { message,
-                        button {
+                        Button {
+                            icon: FaTrash,
                             onclick: move |_| {
                                 message.set(None);
                                 app_context.set(AppContext::default());
                             },
-                            Icon { icon: FaTrash }
                             "{t.create_new_note}"
                         }
-                        button { "primary": "", onclick: generate_note,
-                            Icon { icon: FaShareNodes }
+                        Button {
+                            icon: FaShareNodes,
+                            primary: true,
+                            onclick: generate_note,
                             "{t.generate_button}"
                         }
                     }

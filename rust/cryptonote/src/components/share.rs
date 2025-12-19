@@ -59,8 +59,9 @@ pub fn Share() -> Element {
                     }
 
                     ActionRow { message,
-                        button {
-                            "primary": "",
+                        Button {
+                            icon: FaCopy,
+                            primary: true,
                             onclick: move |_| {
                                 let url_val = url();
                                 spawn(async move {

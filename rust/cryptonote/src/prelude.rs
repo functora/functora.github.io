@@ -4,8 +4,8 @@ pub use dioxus::document::EvalError;
 pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::FaRust;
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaFolderOpen, FaLock, FaLockOpen,
-    FaShareNodes, FaSquarePlus, FaTrash,
+    FaArrowLeft, FaCopy, FaFolderOpen, FaLock, FaLockOpen,
+    FaPenToSquare, FaShareNodes, FaSquarePlus, FaTrash,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;

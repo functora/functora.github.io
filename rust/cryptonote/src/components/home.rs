@@ -291,14 +291,20 @@ pub fn Home() -> Element {
                     br {}
 
                     ActionRow { message,
-                        button {
+                        Button {
+                            icon: FaTrash,
                             onclick: move |_| {
                                 url_input.set(String::new());
                                 message.set(None);
                             },
                             "{t.create_new_note}"
                         }
-                        button { "primary": "", onclick: open_url, "{t.open_button}" }
+                        Button {
+                            icon: FaFolderOpen,
+                            primary: true,
+                            onclick: open_url,
+                            "{t.open_button}"
+                        }
                     }
                 }
             }

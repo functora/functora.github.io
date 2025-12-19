@@ -138,7 +138,12 @@ pub fn View(note: Option<String>) -> Element {
                     br {}
 
                     ActionRow { message,
-                        button { "primary": "", onclick: decrypt_note, "{t.decrypt_button}" }
+                        Button {
+                            icon: FaLockOpen,
+                            primary: true,
+                            onclick: decrypt_note,
+                            "{t.decrypt_button}"
+                        }
                     }
                 }
             }
@@ -151,15 +156,17 @@ pub fn View(note: Option<String>) -> Element {
                     }
 
                     ActionRow { message,
-                        button {
+                        Button {
+                            icon: FaTrash,
                             onclick: move |_| {
                                 app_context.set(AppContext::default());
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.create_new_note}"
                         }
-                        button {
-                            "primary": "",
+                        Button {
+                            icon: FaPenToSquare,
+                            primary: true,
                             onclick: move |_| {
                                 if app_context.read().cipher.is_none() {
                                     app_context

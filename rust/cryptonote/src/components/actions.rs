@@ -23,11 +23,11 @@ pub fn ActionRow(
         p { "txt": "r",
             Message { message }
             if show_back {
-                button {
+                Button {
+                    icon: FaArrowLeft,
                     onclick: move |_| {
                         nav.go_back();
                     },
-                    Icon { icon: FaArrowLeft }
                     "{t.back_button}"
                 }
             }

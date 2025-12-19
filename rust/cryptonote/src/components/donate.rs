@@ -44,8 +44,9 @@ pub fn Donate() -> Element {
                 textarea { readonly: true, rows: "2", value: "{BTC_ADDRESS}" }
 
                 ActionRow { message: btc_message,
-                    button {
-                        "primary": "",
+                    Button {
+                        icon: FaPenToSquare,
+                        primary: true,
                         onclick: move |_| {
                             let addr = BTC_ADDRESS.to_string();
                             spawn(async move {
@@ -75,8 +76,9 @@ pub fn Donate() -> Element {
                 textarea { readonly: true, rows: "2", value: "{XMR_ADDRESS}" }
 
                 ActionRow { message: xmr_message,
-                    button {
-                        "primary": "",
+                    Button {
+                        icon: FaPenToSquare,
+                        primary: true,
                         onclick: move |_| {
                             let addr = XMR_ADDRESS.to_string();
                             spawn(async move {

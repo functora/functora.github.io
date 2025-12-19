@@ -65,11 +65,6 @@ pub struct AppContext {
     pub qr_code: Option<String>,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct NavigationState {
-    pub has_navigated: bool,
-}
-
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {

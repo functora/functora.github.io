@@ -1,16 +1,16 @@
-use crate::components::{NavigationState, Route};
+use crate::components::Route;
 use crate::prelude::*;
 use dioxus_router::Navigator;
 
 #[derive(Clone, Copy)]
 pub struct AppNavigator {
     nav: Navigator,
-    state: Signal<NavigationState>,
+    pub has_navigated: Signal<bool>,
 }
 
 impl AppNavigator {
     pub fn push(mut self, route: Route) {
-        self.state.write().has_navigated = true;
+        self.has_navigated.set(true);
         self.nav.push(route);
     }
 
@@ -31,6 +31,6 @@ impl AppNavigator {
 
 pub fn use_app_navigator() -> AppNavigator {
     let nav = use_navigator();
-    let state = use_context::<Signal<NavigationState>>();
-    AppNavigator { nav, state }
+    let has_navigated = use_context::<Signal<bool>>();
+    AppNavigator { nav, has_navigated }
 }

@@ -4,7 +4,7 @@ use crate::*;
 pub fn View(note: Option<String>) -> Element {
     let app_settings = use_context::<Signal<AppSettings>>();
     let t = get_translations(app_settings.read().language);
-    let nav = navigator();
+    let nav = use_app_navigator();
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut encrypted_data =

@@ -7,7 +7,7 @@ pub fn Dock(
 ) -> Element {
     let app_settings = use_context::<Signal<AppSettings>>();
     let t = get_translations(app_settings.read().language);
-    let nav = navigator();
+    let nav = use_app_navigator();
     let Route::Root { screen, .. } = use_route::<Route>();
     let nav_state =
         use_context::<Signal<NavigationState>>();

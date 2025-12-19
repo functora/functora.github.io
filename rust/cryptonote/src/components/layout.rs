@@ -2,13 +2,11 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut app_settings = use_context::<Signal<AppSettings>>();
+    let mut app_settings =
+        use_context::<Signal<AppSettings>>();
     let mut app_context =
         use_context::<Signal<AppContext>>();
-    let nav = use_navigator();
-
-    let mut nav_state =
-        use_context::<Signal<NavigationState>>();
+    let nav = use_app_navigator();
 
     let t = get_translations(app_settings.read().language);
 
@@ -39,10 +37,14 @@ pub fn Layout() -> Element {
 
                 ul {
                     li {
-                        a { onclick: move |_| app_settings.write().language = Language::English, "🇬🇧 English" }
+                        a { onclick: move |_| app_settings.write().language = Language::English,
+                            "🇬🇧 English"
+                        }
                     }
                     li {
-                        a { onclick: move |_| app_settings.write().language = Language::Spanish, "🇪🇸 Español" }
+                        a { onclick: move |_| app_settings.write().language = Language::Spanish,
+                            "🇪🇸 Español"
+                        }
                     }
                     li {
                         a { onclick: move |_| app_settings.write().language = Language::Russian,
@@ -80,39 +82,19 @@ pub fn Layout() -> Element {
             " "
             {t.by_continuing}
             " "
-            a {
-                href: "#",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav_state.write().has_navigated = true;
-                    nav.push(Screen::License.to_route(None));
-                },
+            a { href: "#", onclick: nav.link(Screen::License.to_route(None)),
                 "{t.terms_of_service}"
             }
             " "
             {t.you_agree}
             " "
-            a {
-                href: "#",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav_state.write().has_navigated = true;
-                    nav.push(Screen::Privacy.to_route(None));
-                },
+            a { href: "#", onclick: nav.link(Screen::Privacy.to_route(None)),
                 "{t.privacy_policy_and}"
             }
             ". "
             {t.please}
             " "
-            a {
-                href: "#",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav_state.write().has_navigated = true;
-                    nav.push(Screen::Donate.to_route(None));
-                },
-                "{t.donate_link}"
-            }
+            a { href: "#", onclick: nav.link(Screen::Donate.to_route(None)), "{t.donate_link}" }
             ". "
             {t.version_label}
             " "

@@ -4,7 +4,7 @@ use crate::*;
 pub fn Share() -> Element {
     let app_settings = use_context::<Signal<AppSettings>>();
     let t = get_translations(app_settings.read().language);
-    let nav = navigator();
+    let nav = use_app_navigator();
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);

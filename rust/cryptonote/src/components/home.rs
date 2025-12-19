@@ -10,7 +10,7 @@ enum ActionMode {
 pub fn Home() -> Element {
     let app_settings = use_context::<Signal<AppSettings>>();
     let t = get_translations(app_settings.read().language);
-    let nav = use_navigator();
+    let nav = use_app_navigator();
     let mut app_context =
         use_context::<Signal<AppContext>>();
 
@@ -33,10 +33,6 @@ pub fn Home() -> Element {
 
         match extract_note_param(&url) {
             Some(note) => {
-                let mut nav_state = use_context::<
-                    Signal<NavigationState>,
-                >();
-                nav_state.write().has_navigated = true;
                 nav.push(Screen::View.to_route(Some(note)));
             }
             None => {
@@ -129,12 +125,6 @@ pub fn Home() -> Element {
                             qr_code: Some(qr),
                         });
 
-                        let mut nav_state = use_context::<
-                            Signal<NavigationState>,
-                        >(
-                        );
-                        nav_state.write().has_navigated =
-                            true;
                         nav.push(
                             Screen::Share.to_route(None),
                         );

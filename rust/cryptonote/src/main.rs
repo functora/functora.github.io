@@ -39,9 +39,11 @@ fn App() -> Element {
     let app_settings =
         use_persistent("settings", AppSettings::default);
     let app_context = use_signal(AppContext::default);
+    let has_navigated = use_signal(|| false);
 
     use_context_provider(|| app_settings);
     use_context_provider(|| app_context);
+    use_context_provider(|| has_navigated);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

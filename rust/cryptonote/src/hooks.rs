@@ -1,25 +1,42 @@
-use crate::components::Route;
+use crate::components::*;
 use crate::prelude::*;
 use dioxus_router::Navigator;
 
 #[derive(Clone, Copy)]
 pub struct AppNavigator {
     nav: Navigator,
-    has_navigated: Signal<bool>,
+    idx: Signal<u32>,
 }
 
 impl AppNavigator {
     pub fn push(mut self, route: Route) {
-        self.has_navigated.set(true);
+        let Route::Root { screen, .. } = route.clone();
+        let is_home = screen
+            .as_ref()
+            .and_then(|x| x.parse::<Screen>().ok())
+            .map(|x| x == Screen::Home)
+            .unwrap_or(true);
+        let next = if is_home {
+            0
+        } else {
+            (self.idx)().saturating_add(1)
+        };
+        self.idx.set(next);
         self.nav.push(route);
     }
 
-    pub fn go_back(self) {
-        self.nav.go_back();
+    pub fn go_back(mut self) {
+        if self.nav.can_go_back() {
+            let next = (self.idx)().saturating_sub(1);
+            self.idx.set(next);
+            self.nav.go_back();
+        } else {
+            self.idx.set(0);
+        }
     }
 
-    pub fn has_havigated(self) -> bool {
-        (self.has_navigated)()
+    pub fn has_navigated(self) -> bool {
+        (self.idx)() > 0
     }
 
     pub fn link(
@@ -35,6 +52,6 @@ impl AppNavigator {
 
 pub fn use_app_navigator() -> AppNavigator {
     let nav = use_navigator();
-    let has_navigated = use_context::<Signal<bool>>();
-    AppNavigator { nav, has_navigated }
+    let idx = use_context::<Signal<u32>>();
+    AppNavigator { nav, idx }
 }

@@ -39,7 +39,7 @@ fn App() -> Element {
     let app_settings =
         use_persistent("settings", AppSettings::default);
     let app_context = use_signal(AppContext::default);
-    let has_navigated = use_signal(|| false);
+    let has_navigated: Signal<u32> = use_signal(|| 0);
 
     use_context_provider(|| app_settings);
     use_context_provider(|| app_context);

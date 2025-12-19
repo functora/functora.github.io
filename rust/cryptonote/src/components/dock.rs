@@ -8,19 +8,11 @@ pub fn Dock(
     let app_settings = use_context::<Signal<AppSettings>>();
     let t = get_translations(app_settings.read().language);
     let nav = use_app_navigator();
-    let Route::Root { screen, .. } = use_route::<Route>();
-
-    let not_home = screen
-        .as_ref()
-        .and_then(|s| s.parse::<Screen>().ok())
-        .map(|s| s != Screen::Home)
-        .unwrap_or(false);
-    let show_back = not_home && nav.has_havigated();
 
     rsx! {
         p { "txt": "r",
             Message { message }
-            if show_back {
+            if nav.has_navigated() {
                 Button {
                     icon: FaArrowLeft,
                     onclick: move |_| {

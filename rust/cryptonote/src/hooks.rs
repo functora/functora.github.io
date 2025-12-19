@@ -5,7 +5,7 @@ use dioxus_router::Navigator;
 #[derive(Clone, Copy)]
 pub struct AppNavigator {
     nav: Navigator,
-    pub has_navigated: Signal<bool>,
+    has_navigated: Signal<bool>,
 }
 
 impl AppNavigator {
@@ -16,6 +16,10 @@ impl AppNavigator {
 
     pub fn go_back(self) {
         self.nav.go_back();
+    }
+
+    pub fn has_havigated(self) -> bool {
+        (self.has_navigated)()
     }
 
     pub fn link(

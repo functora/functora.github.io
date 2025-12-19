@@ -15,7 +15,7 @@ pub fn Dock(
         .and_then(|s| s.parse::<Screen>().ok())
         .map(|s| s != Screen::Home)
         .unwrap_or(false);
-    let show_back = not_home && (nav.has_navigated)();
+    let show_back = not_home && nav.has_havigated();
 
     rsx! {
         p { "txt": "r",

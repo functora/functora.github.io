@@ -5,8 +5,8 @@ pub fn ActionRow(
     children: Element,
     message: Signal<Option<UiMessage>>,
 ) -> Element {
-    let language = use_context::<Signal<Language>>();
-    let t = get_translations(language());
+    let app_settings = use_context::<Signal<AppSettings>>();
+    let t = get_translations(app_settings.read().language);
     let nav = navigator();
     let Route::Root { screen, .. } = use_route::<Route>();
     let nav_state =

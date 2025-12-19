@@ -8,8 +8,8 @@ enum ActionMode {
 
 #[component]
 pub fn Home() -> Element {
-    let language = use_context::<Signal<Language>>();
-    let t = get_translations(language());
+    let app_settings = use_context::<Signal<AppSettings>>();
+    let t = get_translations(app_settings.read().language);
     let nav = use_navigator();
     let mut app_context =
         use_context::<Signal<AppContext>>();

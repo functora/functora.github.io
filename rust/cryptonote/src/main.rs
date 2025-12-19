@@ -5,14 +5,17 @@ mod error;
 mod i18n;
 mod js;
 mod prelude;
+mod storage;
 
 pub use components::*;
 pub use crypto::*;
+use dioxus_sdk::storage::use_persistent;
 pub use encoding::*;
 pub use error::*;
 pub use i18n::*;
 pub use js::*;
 pub use prelude::*;
+pub use storage::*;
 
 const FAVICON_ICO: Asset =
     asset!("/assets/favicon/favicon.ico");
@@ -31,14 +34,12 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let language =
-        use_signal(i18n::detect_browser_language);
-
+    let app_settings =
+        use_persistent("settings", AppSettings::default);
     let app_context = use_signal(AppContext::default);
-
     let nav_state = use_signal(NavigationState::default);
 
-    use_context_provider(|| language);
+    use_context_provider(|| app_settings);
     use_context_provider(|| app_context);
     use_context_provider(|| nav_state);
 

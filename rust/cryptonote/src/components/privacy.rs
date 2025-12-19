@@ -2,8 +2,8 @@ use crate::*;
 
 #[component]
 pub fn Privacy() -> Element {
-    let language = use_context::<Signal<Language>>();
-    let translations = get_translations(language());
+    let app_settings = use_context::<Signal<AppSettings>>();
+    let translations = get_translations(app_settings.read().language);
     let message = use_signal(|| Option::<UiMessage>::None);
 
     rsx! {

@@ -29,6 +29,7 @@ tracing = "0.1.43"
 enum-iterator = "2.3.0"
 functora = "0.1.1"
 dioxus-free-icons = { version = "0.10.0", features = ["font-awesome-brands", "font-awesome-solid"] }
+dioxus-sdk = { version = "0.7.0", features = ["storage"] }
 
 [features]
 default = ["web"]

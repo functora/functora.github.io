@@ -2,8 +2,7 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut theme = use_signal(|| Theme::Light);
-    let mut language = use_context::<Signal<Language>>();
+    let mut app_settings = use_context::<Signal<AppSettings>>();
     let mut app_context =
         use_context::<Signal<AppContext>>();
     let nav = use_navigator();
@@ -11,8 +10,10 @@ pub fn Layout() -> Element {
     let mut nav_state =
         use_context::<Signal<NavigationState>>();
 
+    let t = get_translations(app_settings.read().language);
+
     use_effect(move || {
-        let theme = *theme.read();
+        let theme = app_settings.read().theme;
         spawn(async move {
             if let Err(e) = js_set_theme(&theme).await {
                 tracing::error!("{:#?}", e);
@@ -38,29 +39,30 @@ pub fn Layout() -> Element {
 
                 ul {
                     li {
-                        a { onclick: move |_| language.set(Language::English), "🇬🇧 English" }
+                        a { onclick: move |_| app_settings.write().language = Language::English, "🇬🇧 English" }
                     }
                     li {
-                        a { onclick: move |_| language.set(Language::Spanish), "🇪🇸 Español" }
+                        a { onclick: move |_| app_settings.write().language = Language::Spanish, "🇪🇸 Español" }
                     }
                     li {
-                        a { onclick: move |_| language.set(Language::Russian),
+                        a { onclick: move |_| app_settings.write().language = Language::Russian,
                             "🇷🇺 Русский"
                         }
                     }
                     li {
                         a {
                             onclick: move |_| {
-                                let prev = *theme.read();
-                                theme.set(next_cycle(&prev))
+                                let mut settings = app_settings.write();
+                                let prev = settings.theme;
+                                settings.theme = next_cycle(&prev);
                             },
                             {
-                                match *theme.read() {
+                                match app_settings.read().theme {
                                     Theme::Light => "🌚 ",
                                     Theme::Dark => "🌝 ",
                                 }
                             }
-                            {get_translations(language()).theme}
+                            {t.theme}
                         }
                     }
                 }
@@ -70,13 +72,13 @@ pub fn Layout() -> Element {
         Outlet::<Route> {}
 
         p { "txt": "c",
-            {get_translations(language()).copyright}
+            {t.copyright}
             " 2025 "
             a { href: "https://functora.github.io/", "Functora" }
             ". "
-            {get_translations(language()).all_rights_reserved}
+            {t.all_rights_reserved}
             " "
-            {get_translations(language()).by_continuing}
+            {t.by_continuing}
             " "
             a {
                 href: "#",
@@ -85,10 +87,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::License.to_route(None));
                 },
-                "{get_translations(language()).terms_of_service}"
+                "{t.terms_of_service}"
             }
             " "
-            {get_translations(language()).you_agree}
+            {t.you_agree}
             " "
             a {
                 href: "#",
@@ -97,10 +99,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::Privacy.to_route(None));
                 },
-                "{get_translations(language()).privacy_policy_and}"
+                "{t.privacy_policy_and}"
             }
             ". "
-            {get_translations(language()).please}
+            {t.please}
             " "
             a {
                 href: "#",
@@ -109,10 +111,10 @@ pub fn Layout() -> Element {
                     nav_state.write().has_navigated = true;
                     nav.push(Screen::Donate.to_route(None));
                 },
-                "{get_translations(language()).donate_link}"
+                "{t.donate_link}"
             }
             ". "
-            {get_translations(language()).version_label}
+            {t.version_label}
             " "
             {env!("CARGO_PKG_VERSION")}
             "."

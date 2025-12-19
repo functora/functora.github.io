@@ -9,8 +9,8 @@ pub enum UiMessage {
 pub fn Message(
     message: Signal<Option<UiMessage>>,
 ) -> Element {
-    let language = use_context::<Signal<Language>>();
-    let t = get_translations(language());
+    let app_settings = use_context::<Signal<AppSettings>>();
+    let t = get_translations(app_settings.read().language);
 
     let text = match &*message.read() {
         Some(UiMessage::Copied) => t.copied.to_string(),

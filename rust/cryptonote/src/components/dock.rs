@@ -1,7 +1,7 @@
 use crate::*;
 
 #[component]
-pub fn ActionRow(
+pub fn Dock(
     children: Element,
     message: Signal<Option<UiMessage>>,
 ) -> Element {

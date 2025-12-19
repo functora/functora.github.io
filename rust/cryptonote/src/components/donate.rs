@@ -43,7 +43,7 @@ pub fn Donate() -> Element {
 
                 textarea { readonly: true, rows: "2", value: "{BTC_ADDRESS}" }
 
-                ActionRow { message: btc_message,
+                Dock { message: btc_message,
                     Button {
                         icon: FaPenToSquare,
                         primary: true,
@@ -75,7 +75,7 @@ pub fn Donate() -> Element {
 
                 textarea { readonly: true, rows: "2", value: "{XMR_ADDRESS}" }
 
-                ActionRow { message: xmr_message,
+                Dock { message: xmr_message,
                     Button {
                         icon: FaPenToSquare,
                         primary: true,

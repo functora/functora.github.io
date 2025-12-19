@@ -262,7 +262,7 @@ pub fn Home() -> Element {
                     }
                     br {}
 
-                    ActionRow { message,
+                    Dock { message,
                         Button {
                             icon: FaTrash,
                             onclick: move |_| {
@@ -290,7 +290,7 @@ pub fn Home() -> Element {
                     }
                     br {}
 
-                    ActionRow { message,
+                    Dock { message,
                         Button {
                             icon: FaTrash,
                             onclick: move |_| {

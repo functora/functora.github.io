@@ -1,6 +1,6 @@
-mod actions;
 mod breadcrumb;
 mod button;
+mod dock;
 mod donate;
 mod home;
 mod layout;
@@ -11,9 +11,9 @@ mod root;
 mod share;
 mod view;
 
-pub use actions::*;
 pub use breadcrumb::*;
 pub use button::*;
+pub use dock::*;
 pub use donate::*;
 pub use home::*;
 pub use layout::*;

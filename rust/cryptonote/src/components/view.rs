@@ -137,7 +137,7 @@ pub fn View(note: Option<String>) -> Element {
 
                     br {}
 
-                    ActionRow { message,
+                    Dock { message,
                         Button {
                             icon: FaLockOpen,
                             primary: true,
@@ -155,7 +155,7 @@ pub fn View(note: Option<String>) -> Element {
                         pre { "{content}" }
                     }
 
-                    ActionRow { message,
+                    Dock { message,
                         Button {
                             icon: FaTrash,
                             onclick: move |_| {
@@ -185,7 +185,7 @@ pub fn View(note: Option<String>) -> Element {
         } else if message.read().is_some() {
             Breadcrumb { title: t.error_title.to_string() }
             section {
-                ActionRow { message }
+                Dock { message }
             }
         } else {
             section {

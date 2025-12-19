@@ -3,7 +3,8 @@ use crate::*;
 #[component]
 pub fn License() -> Element {
     let app_settings = use_context::<Signal<AppSettings>>();
-    let translations = get_translations(app_settings.read().language);
+    let translations =
+        get_translations(app_settings.read().language);
     let message = use_signal(|| Option::<UiMessage>::None);
 
     rsx! {
@@ -11,7 +12,7 @@ pub fn License() -> Element {
         section {
             pre { white_space: "pre-wrap", "{translations.license_text}" }
 
-            ActionRow { message }
+            Dock { message }
         }
     }
 }

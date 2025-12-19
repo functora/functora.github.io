@@ -58,7 +58,7 @@ pub fn Share() -> Element {
                         },
                     }
 
-                    ActionRow { message,
+                    Dock { message,
                         Button {
                             icon: FaCopy,
                             primary: true,

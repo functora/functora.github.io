@@ -3,12 +3,12 @@ use crate::prelude::*;
 use dioxus_router::Navigator;
 
 #[derive(Clone, Copy)]
-pub struct AppNavigator {
+pub struct AppNav {
     nav: Navigator,
     idx: Signal<u32>,
 }
 
-impl AppNavigator {
+impl AppNav {
     pub fn push(mut self, route: Route) {
         let Route::Root { screen, .. } = route.clone();
         let is_home = screen
@@ -40,8 +40,8 @@ impl AppNavigator {
     }
 }
 
-pub fn use_app_navigator() -> AppNavigator {
+pub fn use_app_nav() -> AppNav {
     let nav = use_navigator();
     let idx = use_context::<Signal<u32>>();
-    AppNavigator { nav, idx }
+    AppNav { nav, idx }
 }

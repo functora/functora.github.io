@@ -5,12 +5,12 @@ use crate::prelude::*;
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq,
 )]
-pub struct AppSettings {
+pub struct AppCfg {
     pub theme: Theme,
     pub language: Language,
 }
 
-impl Default for AppSettings {
+impl Default for AppCfg {
     fn default() -> Self {
         Self {
             theme: Theme::Light,

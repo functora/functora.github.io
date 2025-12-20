@@ -7,7 +7,7 @@ pub struct BreadcrumbProps {
 
 #[component]
 pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
-    let app_settings = use_context::<Signal<AppSettings>>();
+    let app_settings = use_context::<Signal<AppCfg>>();
     let t = get_translations(app_settings.read().language);
     rsx! {
         card { font_size: "larger",

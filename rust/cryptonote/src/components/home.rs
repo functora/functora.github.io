@@ -8,11 +8,10 @@ enum ActionMode {
 
 #[component]
 pub fn Home() -> Element {
-    let app_settings = use_context::<Signal<AppSettings>>();
+    let app_settings = use_context::<Signal<AppCfg>>();
     let t = get_translations(app_settings.read().language);
-    let nav = use_app_navigator();
-    let mut app_context =
-        use_context::<Signal<AppContext>>();
+    let nav = use_app_nav();
+    let mut app_context = use_context::<Signal<AppCtx>>();
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -117,7 +116,7 @@ pub fn Home() -> Element {
             match build_url(&view_url, &note_data) {
                 Ok(url) => match generate_qr_code(&url) {
                     Ok(qr) => {
-                        app_context.set(AppContext {
+                        app_context.set(AppCtx {
                             content: Some(note_content),
                             password: pwd,
                             cipher: enc_option,
@@ -257,7 +256,7 @@ pub fn Home() -> Element {
                             icon: FaTrash,
                             onclick: move |_| {
                                 message.set(None);
-                                app_context.set(AppContext::default());
+                                app_context.set(AppCtx::default());
                             },
                             "{t.create_new_note}"
                         }

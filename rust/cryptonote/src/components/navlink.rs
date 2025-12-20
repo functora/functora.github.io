@@ -8,7 +8,7 @@ pub fn NavLink(
     #[props(extends = button, extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
 ) -> Element {
-    let nav = use_app_navigator();
+    let nav = use_app_nav();
     rsx! {
         a {
             href: "#",

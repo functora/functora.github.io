@@ -37,8 +37,8 @@ fn main() {
 #[component]
 fn App() -> Element {
     let app_settings =
-        use_persistent("settings", AppSettings::default);
-    let app_context = use_signal(AppContext::default);
+        use_persistent("settings", AppCfg::default);
+    let app_context = use_signal(AppCtx::default);
     let has_navigated: Signal<u32> = use_signal(|| 0);
 
     use_context_provider(|| app_settings);

@@ -2,9 +2,9 @@ use crate::*;
 
 #[component]
 pub fn Share() -> Element {
-    let app_settings = use_context::<Signal<AppSettings>>();
+    let app_settings = use_context::<Signal<AppCfg>>();
     let t = get_translations(app_settings.read().language);
-    let nav = use_app_navigator();
+    let nav = use_app_nav();
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
@@ -12,7 +12,7 @@ pub fn Share() -> Element {
         use_signal(|| Option::<String>::None);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
-    let app_context = use_context::<Signal<AppContext>>();
+    let app_context = use_context::<Signal<AppCtx>>();
 
     use_effect(move || {
         let ctx = app_context.read();

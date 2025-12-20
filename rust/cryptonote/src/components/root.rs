@@ -57,7 +57,7 @@ impl Screen {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct AppContext {
+pub struct AppCtx {
     pub content: Option<String>,
     pub password: String,
     pub cipher: Option<CipherType>,

@@ -2,10 +2,8 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut app_settings =
-        use_context::<Signal<AppSettings>>();
-    let mut app_context =
-        use_context::<Signal<AppContext>>();
+    let mut app_settings = use_context::<Signal<AppCfg>>();
+    let mut app_context = use_context::<Signal<AppCtx>>();
 
     let t = get_translations(app_settings.read().language);
 
@@ -25,7 +23,7 @@ pub fn Layout() -> Element {
                 header {
                     NavLink {
                         route: Screen::Home.to_route(None),
-                        onclick: move |_| app_context.set(AppContext::default()),
+                        onclick: move |_| app_context.set(AppCtx::default()),
                         "🔐 Cryptonote"
                     }
                 }

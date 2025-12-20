@@ -6,7 +6,6 @@ pub fn Layout() -> Element {
         use_context::<Signal<AppSettings>>();
     let mut app_context =
         use_context::<Signal<AppContext>>();
-    let nav = use_app_navigator();
 
     let t = get_translations(app_settings.read().language);
 
@@ -24,13 +23,9 @@ pub fn Layout() -> Element {
             label {
                 input { r#type: "checkbox" }
                 header {
-                    a {
-                        href: "#",
-                        onclick: move |evt| {
-                            evt.prevent_default();
-                            app_context.set(AppContext::default());
-                            nav.push(Screen::Home.to_route(None));
-                        },
+                    NavLink {
+                        route: Screen::Home.to_route(None),
+                        onclick: move |_| app_context.set(AppContext::default()),
                         "🔐 Cryptonote"
                     }
                 }
@@ -82,19 +77,15 @@ pub fn Layout() -> Element {
             " "
             {t.by_continuing}
             " "
-            a { href: "#", onclick: nav.link(Screen::License.to_route(None)),
-                "{t.terms_of_service}"
-            }
+            NavLink { route: Screen::License.to_route(None), "{t.terms_of_service}" }
             " "
             {t.you_agree}
             " "
-            a { href: "#", onclick: nav.link(Screen::Privacy.to_route(None)),
-                "{t.privacy_policy_and}"
-            }
+            NavLink { route: Screen::Privacy.to_route(None), "{t.privacy_policy_and}" }
             ". "
             {t.please}
             " "
-            a { href: "#", onclick: nav.link(Screen::Donate.to_route(None)), "{t.donate_link}" }
+            NavLink { route: Screen::Donate.to_route(None), "{t.donate_link}" }
             ". "
             {t.version_label}
             " "

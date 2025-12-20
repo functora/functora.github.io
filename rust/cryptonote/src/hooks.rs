@@ -38,16 +38,6 @@ impl AppNavigator {
     pub fn has_navigated(self) -> bool {
         (self.idx)() > 0
     }
-
-    pub fn link(
-        self,
-        route: Route,
-    ) -> impl Fn(Event<MouseData>) {
-        move |evt: Event<MouseData>| {
-            evt.prevent_default();
-            self.push(route.clone());
-        }
-    }
 }
 
 pub fn use_app_navigator() -> AppNavigator {

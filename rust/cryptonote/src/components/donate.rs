@@ -13,14 +13,35 @@ fn generate_crypto_qr(address: &str) -> Option<String> {
     })
 }
 
+fn onclick(
+    addr: &'static str,
+    mut message: Signal<Option<UiMessage>>,
+) -> impl FnMut(Event<MouseData>) {
+    move |_: Event<MouseData>| {
+        spawn(async move {
+            match js_write_clipboard(addr.to_string()).await
+            {
+                Ok(()) => {
+                    message.set(Some(UiMessage::Copied))
+                }
+                Err(e) => {
+                    message.set(Some(UiMessage::Error(
+                        AppError::JsWriteClipboard(e),
+                    )))
+                }
+            }
+        });
+    }
+}
+
 #[component]
 pub fn Donate() -> Element {
     let cfg = use_context::<Signal<AppCfg>>();
     let t = get_translations(cfg.read().language);
 
-    let mut btc_message =
+    let btc_message =
         use_signal(|| Option::<UiMessage>::None);
-    let mut xmr_message =
+    let xmr_message =
         use_signal(|| Option::<UiMessage>::None);
 
     let btc_qr = generate_crypto_qr(BTC_ADDRESS);
@@ -41,24 +62,19 @@ pub fn Donate() -> Element {
                     div { dangerous_inner_html: "{qr}" }
                 }
 
-                textarea { readonly: true, rows: "2", value: "{BTC_ADDRESS}" }
+
+                textarea {
+                    readonly: true,
+                    rows: "2",
+                    value: "{BTC_ADDRESS}",
+                    onclick: onclick(BTC_ADDRESS, btc_message),
+                }
 
                 Dock { message: btc_message,
                     Button {
                         icon: FaPenToSquare,
                         primary: true,
-                        onclick: move |_| {
-                            let addr = BTC_ADDRESS.to_string();
-                            spawn(async move {
-                                match js_write_clipboard(addr).await {
-                                    Ok(()) => btc_message.set(Some(UiMessage::Copied)),
-                                    Err(e) => {
-                                        btc_message
-                                            .set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
-                                    }
-                                }
-                            });
-                        },
+                        onclick: onclick(BTC_ADDRESS, btc_message),
                         "{t.copy_button}"
                     }
                 }
@@ -73,25 +89,18 @@ pub fn Donate() -> Element {
                     div { dangerous_inner_html: "{qr}" }
                 }
 
-                textarea { readonly: true, rows: "2", value: "{XMR_ADDRESS}" }
+                textarea {
+                    readonly: true,
+                    rows: "2",
+                    value: "{XMR_ADDRESS}",
+                    onclick: onclick(XMR_ADDRESS, xmr_message),
+                }
 
                 Dock { message: xmr_message,
                     Button {
                         icon: FaPenToSquare,
                         primary: true,
-                        onclick: move |_| {
-                            let addr = XMR_ADDRESS.to_string();
-                            spawn(async move {
-                                match js_write_clipboard(addr).await {
-                                    Ok(()) => xmr_message.set(Some(UiMessage::Copied)),
-                                    Err(e) => {
-
-                                        xmr_message
-                                            .set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
-                                    }
-                                }
-                            });
-                        },
+                        onclick: onclick(XMR_ADDRESS, xmr_message),
                         "{t.copy_button}"
                     }
                 }

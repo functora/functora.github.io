@@ -409,7 +409,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             back_button: "Назад",
             clipboard_write_error: "Не удалось скопировать в буфер обмена",
             open_url_label: "URL",
-            open_url_placeholder: "Вставьте URL общей заметки здесь...",
+            open_url_placeholder: "Вставьте URL заметки здесь...",
             open_button: "Открыть",
             no_note_param: "URL не содержит параметр заметки",
             donate_title: "Пожертвовать",
@@ -420,7 +420,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 
             action_label: "Действие",
             action_create: "Создать новую заметку",
-            action_open: "Открыть общую заметку",
+            action_open: "Открыть заметку",
             theme: "Тема",
         },
     }

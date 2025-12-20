@@ -762,7 +762,6 @@ in {
         xournalpp
         nautilus
         ccrypt
-        libreoffice
         tor-browser-bundle-bin
         mpv
         # cura
@@ -780,6 +779,7 @@ in {
         (import ./clipmaker.nix)
         (import ./openarena.nix)
         (import ./bar.nix {inherit pkgs;})
+        (import ./libreoffice.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
       ];
       programs.git = {

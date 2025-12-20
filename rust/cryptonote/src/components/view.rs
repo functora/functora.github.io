@@ -2,9 +2,10 @@ use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
-    let app_settings = use_context::<Signal<AppCfg>>();
-    let t = get_translations(app_settings.read().language);
     let nav = use_app_nav();
+    let cfg = use_context::<Signal<AppCfg>>();
+    let mut ctx = use_context::<Signal<AppCtx>>();
+    let t = get_translations(cfg.read().language);
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut encrypted_data =
@@ -42,8 +43,6 @@ pub fn View(note: Option<String>) -> Element {
         }
     });
 
-    let mut app_context = use_context::<Signal<AppCtx>>();
-
     let decrypt_note = move |_evt: Event<MouseData>| {
         message.set(None);
         if let Some(enc) = encrypted_data.read().as_ref() {
@@ -63,7 +62,7 @@ pub fn View(note: Option<String>) -> Element {
                                 .set(Some(text.clone()));
                             is_encrypted.set(false);
 
-                            app_context.set(AppCtx {
+                            ctx.set(AppCtx {
                                 content: Some(text),
                                 password: pwd,
                                 cipher: Some(enc.cipher),
@@ -111,13 +110,12 @@ pub fn View(note: Option<String>) -> Element {
                                                     Ok(text) => {
                                                         note_content.set(Some(text.clone()));
                                                         is_encrypted.set(false);
-                                                        app_context
-                                                            .set(AppCtx {
-                                                                content: Some(text),
-                                                                password: pwd,
-                                                                cipher: Some(enc.cipher),
-                                                                ..Default::default()
-                                                            });
+                                                        ctx.set(AppCtx {
+                                                            content: Some(text),
+                                                            password: pwd,
+                                                            cipher: Some(enc.cipher),
+                                                            ..Default::default()
+                                                        });
                                                     }
                                                     Err(e) => {
                                                         message.set(Some(UiMessage::Error(AppError::Utf8(e))));
@@ -158,7 +156,7 @@ pub fn View(note: Option<String>) -> Element {
                         Button {
                             icon: FaTrash,
                             onclick: move |_| {
-                                app_context.set(AppCtx::default());
+                                ctx.set(AppCtx::default());
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.create_new_note}"
@@ -167,12 +165,11 @@ pub fn View(note: Option<String>) -> Element {
                             icon: FaPenToSquare,
                             primary: true,
                             onclick: move |_| {
-                                if app_context.read().cipher.is_none() {
-                                    app_context
-                                        .set(AppCtx {
-                                            content: Some(content.clone()),
-                                            ..Default::default()
-                                        });
+                                if ctx.read().cipher.is_none() {
+                                    ctx.set(AppCtx {
+                                        content: Some(content.clone()),
+                                        ..Default::default()
+                                    });
                                 }
                                 nav.push(Screen::Home.to_route(None));
                             },

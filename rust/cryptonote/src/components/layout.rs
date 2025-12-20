@@ -2,13 +2,12 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut app_settings = use_context::<Signal<AppCfg>>();
-    let mut app_context = use_context::<Signal<AppCtx>>();
-
-    let t = get_translations(app_settings.read().language);
+    let mut cfg = use_context::<Signal<AppCfg>>();
+    let mut ctx = use_context::<Signal<AppCtx>>();
+    let t = get_translations(cfg.read().language);
 
     use_effect(move || {
-        let theme = app_settings.read().theme;
+        let theme = cfg.read().theme;
         spawn(async move {
             if let Err(e) = js_set_theme(&theme).await {
                 tracing::error!("{:#?}", e);
@@ -23,36 +22,36 @@ pub fn Layout() -> Element {
                 header {
                     NavLink {
                         route: Screen::Home.to_route(None),
-                        onclick: move |_| app_context.set(AppCtx::default()),
+                        onclick: move |_| ctx.set(AppCtx::default()),
                         "🔐 Cryptonote"
                     }
                 }
 
                 ul {
                     li {
-                        a { onclick: move |_| app_settings.write().language = Language::English,
+                        a { onclick: move |_| cfg.write().language = Language::English,
                             "🇬🇧 English"
                         }
                     }
                     li {
-                        a { onclick: move |_| app_settings.write().language = Language::Spanish,
+                        a { onclick: move |_| cfg.write().language = Language::Spanish,
                             "🇪🇸 Español"
                         }
                     }
                     li {
-                        a { onclick: move |_| app_settings.write().language = Language::Russian,
+                        a { onclick: move |_| cfg.write().language = Language::Russian,
                             "🇷🇺 Русский"
                         }
                     }
                     li {
                         a {
                             onclick: move |_| {
-                                let mut settings = app_settings.write();
-                                let prev = settings.theme;
-                                settings.theme = next_cycle(&prev);
+                                cfg.with_mut(|x| {
+                                    x.theme = next_cycle(&x.theme);
+                                });
                             },
                             {
-                                match app_settings.read().theme {
+                                match cfg.read().theme {
                                     Theme::Light => "🌚 ",
                                     Theme::Dark => "🌝 ",
                                 }

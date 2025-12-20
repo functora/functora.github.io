@@ -8,10 +8,10 @@ enum ActionMode {
 
 #[component]
 pub fn Home() -> Element {
-    let app_settings = use_context::<Signal<AppCfg>>();
-    let t = get_translations(app_settings.read().language);
     let nav = use_app_nav();
-    let mut app_context = use_context::<Signal<AppCtx>>();
+    let cfg = use_context::<Signal<AppCfg>>();
+    let mut ctx = use_context::<Signal<AppCtx>>();
+    let t = get_translations(cfg.read().language);
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -46,7 +46,7 @@ pub fn Home() -> Element {
         message.set(None);
 
         let (note_content, enc_option, pwd) = {
-            let ctx = app_context.read();
+            let ctx = ctx.read();
             (
                 ctx.content.clone().unwrap_or_default(),
                 ctx.cipher,
@@ -116,7 +116,7 @@ pub fn Home() -> Element {
             match build_url(&view_url, &note_data) {
                 Ok(url) => match generate_qr_code(&url) {
                     Ok(qr) => {
-                        app_context.set(AppCtx {
+                        ctx.set(AppCtx {
                             content: Some(note_content),
                             password: pwd,
                             cipher: enc_option,
@@ -179,10 +179,9 @@ pub fn Home() -> Element {
                     textarea {
                         placeholder: "{t.note_placeholder}",
                         rows: "8",
-                        value: "{app_context.read().content.clone().unwrap_or_default()}",
+                        value: "{ctx.read().content.clone().unwrap_or_default()}",
                         oninput: move |evt| {
-                            let mut ctx = app_context.write();
-                            ctx.content = Some(evt.value());
+                            ctx.write().content = Some(evt.value());
                         },
                     }
 
@@ -191,11 +190,8 @@ pub fn Home() -> Element {
                     input {
                         r#type: "radio",
                         value: "none",
-                        checked: app_context.read().cipher.is_none(),
-                        onchange: move |_| {
-                            let mut ctx = app_context.write();
-                            ctx.cipher = None;
-                        },
+                        checked: ctx.read().cipher.is_none(),
+                        onchange: move |_| ctx.write().cipher = None,
                     }
                     label {
                         Icon { icon: FaLockOpen }
@@ -206,10 +202,9 @@ pub fn Home() -> Element {
                     input {
                         r#type: "radio",
                         value: "symmetric",
-                        checked: app_context.read().cipher.is_some(),
+                        checked: ctx.read().cipher.is_some(),
                         onchange: move |_| {
-                            let mut ctx = app_context.write();
-                            ctx.cipher = Some(CipherType::ChaCha20Poly1305);
+                            ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
                         },
                     }
                     label {
@@ -219,7 +214,7 @@ pub fn Home() -> Element {
                     br {}
                     br {}
 
-                    if let Some(cipher) = app_context.read().cipher {
+                    if let Some(cipher) = ctx.read().cipher {
                         label { "{t.algorithm}" }
                         select {
                             value: match cipher {
@@ -231,8 +226,7 @@ pub fn Home() -> Element {
                                     "aes" => CipherType::Aes256Gcm,
                                     _ => CipherType::ChaCha20Poly1305,
                                 };
-                                let mut ctx = app_context.write();
-                                ctx.cipher = Some(new_cipher);
+                                ctx.write().cipher = Some(new_cipher);
                             },
                             option { value: "chacha20", "ChaCha20-Poly1305" }
                             option { value: "aes", "AES-256-GCM" }
@@ -242,10 +236,9 @@ pub fn Home() -> Element {
                         input {
                             r#type: "password",
                             placeholder: "{t.password_placeholder}",
-                            value: "{app_context.read().password}",
+                            value: "{ctx.read().password}",
                             oninput: move |evt| {
-                                let mut ctx = app_context.write();
-                                ctx.password = evt.value();
+                                ctx.write().password = evt.value();
                             },
                         }
                     }
@@ -256,7 +249,7 @@ pub fn Home() -> Element {
                             icon: FaTrash,
                             onclick: move |_| {
                                 message.set(None);
-                                app_context.set(AppCtx::default());
+                                ctx.set(AppCtx::default());
                             },
                             "{t.create_new_note}"
                         }

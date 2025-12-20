@@ -36,14 +36,19 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let app_settings =
-        use_persistent("settings", AppCfg::default);
-    let app_context = use_signal(AppCtx::default);
-    let has_navigated: Signal<u32> = use_signal(|| 0);
+    let nav: Signal<u32> = use_signal(|| 0);
+    let cfg = use_persistent(
+        format!(
+            "cryptonote-{}-cfg",
+            env!("CARGO_PKG_VERSION")
+        ),
+        AppCfg::default,
+    );
+    let ctx = use_signal(AppCtx::default);
 
-    use_context_provider(|| app_settings);
-    use_context_provider(|| app_context);
-    use_context_provider(|| has_navigated);
+    use_context_provider(|| nav);
+    use_context_provider(|| cfg);
+    use_context_provider(|| ctx);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

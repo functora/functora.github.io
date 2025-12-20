@@ -2,9 +2,10 @@ use crate::*;
 
 #[component]
 pub fn Share() -> Element {
-    let app_settings = use_context::<Signal<AppCfg>>();
-    let t = get_translations(app_settings.read().language);
     let nav = use_app_nav();
+    let cfg = use_context::<Signal<AppCfg>>();
+    let ctx = use_context::<Signal<AppCtx>>();
+    let t = get_translations(cfg.read().language);
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
@@ -12,10 +13,9 @@ pub fn Share() -> Element {
         use_signal(|| Option::<String>::None);
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
-    let app_context = use_context::<Signal<AppCtx>>();
 
     use_effect(move || {
-        let ctx = app_context.read();
+        let ctx = ctx.read();
 
         if let Some(share_url) = &ctx.share_url {
             url.set(share_url.clone());

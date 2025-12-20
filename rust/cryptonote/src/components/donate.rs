@@ -15,8 +15,8 @@ fn generate_crypto_qr(address: &str) -> Option<String> {
 
 #[component]
 pub fn Donate() -> Element {
-    let app_settings = use_context::<Signal<AppCfg>>();
-    let t = get_translations(app_settings.read().language);
+    let cfg = use_context::<Signal<AppCfg>>();
+    let t = get_translations(cfg.read().language);
 
     let mut btc_message =
         use_signal(|| Option::<UiMessage>::None);

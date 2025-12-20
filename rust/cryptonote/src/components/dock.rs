@@ -5,9 +5,9 @@ pub fn Dock(
     children: Element,
     message: Signal<Option<UiMessage>>,
 ) -> Element {
-    let app_settings = use_context::<Signal<AppCfg>>();
-    let t = get_translations(app_settings.read().language);
     let nav = use_app_nav();
+    let cfg = use_context::<Signal<AppCfg>>();
+    let t = get_translations(cfg.read().language);
 
     rsx! {
         p { "txt": "r",

@@ -4,7 +4,7 @@
 
 # HTML title tag content
 title = "Cryptonote"
-base_path = "apps/cryptonote/0.1.0"
+base_path = "apps/cryptonote/0.1.1"
 
 # include `assets` in web platform
 [web.resource]

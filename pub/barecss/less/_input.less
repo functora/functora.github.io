@@ -112,6 +112,7 @@ input {
 
 			+label {
 				width: auto;
+				display: inline;
 				text-transform: none;
 
 				&:before {
@@ -123,19 +124,6 @@ input {
 					background: @surface;
 					vertical-align: middle;
 					margin-right: 1rem;
-				}
-
-				&:after {
-					content: "";
-					position: absolute;
-					opacity: 0;
-					visibility: hidden;
-					pointer-events: none;
-					width: 1.6rem;
-					height: 1.6rem;
-					left: 2px;
-					top: 4px;
-					transform: scale(0);
 				}
 			}
 		}
@@ -158,18 +146,8 @@ input {
 
 		&:checked+label {
 			&:before {
-				background: @primary;
+				background: radial-gradient(circle, @primary 0%, @primary 45%, @surface 50%, @surface 100%);
 				border-color: @primary;
-			}
-
-			&:after {
-				opacity: 1;
-				visibility: visible;
-				background: @primary;
-				border: 1px solid @primary--;
-				border-radius: 100%;
-				transform: scale(1);
-				top: 0.5rem;
 			}
 		}
 	}
@@ -188,26 +166,14 @@ input {
 				border-radius: 2px
 			}
 
-			&:after {
-				background: data-uri('../icons/done.svg') no-repeat center center;
-				border-radius: 100%;
-				background-size: 100%;
-			}
 		}
 
 		&:checked {
 			+label {
 				&:before {
-					background: @primary;
+					background: @primary var(--icon-done) no-repeat center center;
+					background-size: 80%;
 					border-color: @primary;
-				}
-
-				&:after {
-					opacity: 1;
-					visibility: visible;
-					left: 2px;
-					top: 0.5rem;
-					transform: scale(1);
 				}
 			}
 		}

@@ -141,8 +141,8 @@ pub fn Home() -> Element {
     rsx! {
         section {
             fieldset {
-
                 label { "{t.action_label}" }
+
                 input {
                     r#type: "radio",
                     checked: action_mode() == ActionMode::Create,
@@ -187,17 +187,6 @@ pub fn Home() -> Element {
 
                     input {
                         r#type: "radio",
-                        checked: ctx.read().cipher.is_none(),
-                        onchange: move |_| ctx.write().cipher = None,
-                    }
-                    label {
-                        Icon { icon: FaLockOpen }
-                        "{t.no_encryption}"
-                    }
-                    br {}
-
-                    input {
-                        r#type: "radio",
                         checked: ctx.read().cipher.is_some(),
                         onchange: move |_| {
                             ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
@@ -208,10 +197,23 @@ pub fn Home() -> Element {
                         "{t.password_encryption}"
                     }
                     br {}
+
+
+                    input {
+                        r#type: "radio",
+                        checked: ctx.read().cipher.is_none(),
+                        onchange: move |_| ctx.write().cipher = None,
+                    }
+                    label {
+                        Icon { icon: FaLockOpen }
+                        "{t.no_encryption}"
+                    }
                     br {}
 
                     if let Some(cipher) = ctx.read().cipher {
+                        br {}
                         label { "{t.algorithm}" }
+
                         select {
                             value: match cipher {
                                 CipherType::ChaCha20Poly1305 => "chacha20",

@@ -205,6 +205,7 @@
               cargo-tarpaulin
               clippy
               wasmtime
+              vimb
               license-generator
               dioxus-cli
               tailwindcss_4

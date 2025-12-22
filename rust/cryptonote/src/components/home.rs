@@ -223,7 +223,7 @@ pub fn Home() -> Element {
 
                     if let Some(cipher) = ctx.read().cipher {
                         br {}
-                        label { "{t.algorithm}" }
+                        label { "{t.cipher}" }
 
                         select {
                             value: match cipher {
@@ -237,8 +237,8 @@ pub fn Home() -> Element {
                                 };
                                 ctx.write().cipher = Some(new_cipher);
                             },
-                            option { value: "chacha20", "ChaCha20-Poly1305" }
                             option { value: "aes", "AES-256-GCM" }
+                            option { value: "chacha20", "ChaCha20-Poly1305" }
                         }
 
                         label { "{t.password}" }

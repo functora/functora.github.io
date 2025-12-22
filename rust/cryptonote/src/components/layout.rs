@@ -52,8 +52,8 @@ pub fn Layout() -> Element {
                             },
                             {
                                 match cfg.read().theme {
-                                    Theme::Light => "🌚 ",
-                                    Theme::Dark => "🌝 ",
+                                    Theme::Light => "🌝 ",
+                                    Theme::Dark => "🌚 ",
                                 }
                             }
                             {t.theme}

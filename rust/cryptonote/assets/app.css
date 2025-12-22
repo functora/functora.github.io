@@ -5,9 +5,13 @@ body {
   overflow-x: hidden;
 }
 
-button,
-label:not(nav label) {
+label svg {
+  margin-right: 0.8rem;
+  vertical-align: top;
+}
+
+button {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 0.3em !important;
+  gap: 0.4em !important;
 }

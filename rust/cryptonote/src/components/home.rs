@@ -145,7 +145,6 @@ pub fn Home() -> Element {
                 label { "{t.action_label}" }
                 input {
                     r#type: "radio",
-                    value: "create",
                     checked: action_mode() == ActionMode::Create,
                     onchange: move |_| {
                         message.set(None);
@@ -160,7 +159,6 @@ pub fn Home() -> Element {
 
                 input {
                     r#type: "radio",
-                    value: "open",
                     checked: action_mode() == ActionMode::Open,
                     onchange: move |_| {
                         message.set(None);
@@ -189,7 +187,6 @@ pub fn Home() -> Element {
 
                     input {
                         r#type: "radio",
-                        value: "none",
                         checked: ctx.read().cipher.is_none(),
                         onchange: move |_| ctx.write().cipher = None,
                     }
@@ -201,7 +198,6 @@ pub fn Home() -> Element {
 
                     input {
                         r#type: "radio",
-                        value: "symmetric",
                         checked: ctx.read().cipher.is_some(),
                         onchange: move |_| {
                             ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);

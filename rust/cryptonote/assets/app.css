@@ -15,3 +15,8 @@ button {
   align-items: center !important;
   gap: 0.4em !important;
 }
+
+input[type="radio"] + label,
+input[type="checkbox"] + label {
+  cursor: pointer;
+}

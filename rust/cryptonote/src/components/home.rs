@@ -152,6 +152,10 @@ pub fn Home() -> Element {
                     },
                 }
                 label {
+                    onclick: move |_| {
+                        message.set(None);
+                        action_mode.set(ActionMode::Create);
+                    },
                     Icon { icon: FaSquarePlus }
                     "{t.action_create}"
                 }
@@ -166,6 +170,10 @@ pub fn Home() -> Element {
                     },
                 }
                 label {
+                    onclick: move |_| {
+                        message.set(None);
+                        action_mode.set(ActionMode::Open);
+                    },
                     Icon { icon: FaFolderOpen }
                     "{t.action_open}"
                 }
@@ -193,6 +201,9 @@ pub fn Home() -> Element {
                         },
                     }
                     label {
+                        onclick: move |_| {
+                            ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
+                        },
                         Icon { icon: FaLock }
                         "{t.password_encryption}"
                     }
@@ -204,7 +215,7 @@ pub fn Home() -> Element {
                         checked: ctx.read().cipher.is_none(),
                         onchange: move |_| ctx.write().cipher = None,
                     }
-                    label {
+                    label { onclick: move |_| ctx.write().cipher = None,
                         Icon { icon: FaLockOpen }
                         "{t.no_encryption}"
                     }

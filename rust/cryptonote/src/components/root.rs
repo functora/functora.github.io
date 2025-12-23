@@ -65,22 +65,18 @@ impl Screen {
 #[derive(Clone, Debug)]
 pub struct AppCtx {
     pub action: ActionMode,
-    pub content: Option<String>,
+    pub content: String,
     pub password: String,
     pub cipher: Option<CipherType>,
-    pub share_url: Option<String>,
-    pub qr_code: Option<String>,
 }
 
 impl Default for AppCtx {
     fn default() -> Self {
         Self {
             action: ActionMode::Create,
-            content: None,
+            content: String::new(),
             password: String::new(),
             cipher: Some(CipherType::Aes256Gcm),
-            share_url: None,
-            qr_code: None,
         }
     }
 }

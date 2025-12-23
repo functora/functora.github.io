@@ -28,7 +28,7 @@ pub fn View(note: Option<String>) -> Element {
                             note_content
                                 .set(Some(text.clone()));
                             ctx.set(AppCtx {
-                                content: Some(text),
+                                content: text,
                                 cipher: None,
                                 ..Default::default()
                             });
@@ -69,7 +69,7 @@ pub fn View(note: Option<String>) -> Element {
                             is_encrypted.set(false);
 
                             ctx.set(AppCtx {
-                                content: Some(text),
+                                content: text,
                                 password: pwd,
                                 cipher: Some(enc.cipher),
                                 ..Default::default()
@@ -117,7 +117,7 @@ pub fn View(note: Option<String>) -> Element {
                                                         note_content.set(Some(text.clone()));
                                                         is_encrypted.set(false);
                                                         ctx.set(AppCtx {
-                                                            content: Some(text),
+                                                            content: text,
                                                             password: pwd,
                                                             cipher: Some(enc.cipher),
                                                             ..Default::default()

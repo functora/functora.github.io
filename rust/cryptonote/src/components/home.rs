@@ -38,98 +38,14 @@ pub fn Home() -> Element {
     let generate_note = move |_| {
         message.set(None);
 
-        let (note_content, enc_option, pwd) = {
-            let ctx = ctx.read();
-            (
-                ctx.content.clone().unwrap_or_default(),
-                ctx.cipher,
-                ctx.password.clone(),
-            )
-        };
-
-        let note_data = match enc_option {
-            None => {
-                NoteData::PlainText(note_content.clone())
-            }
-            Some(cipher) => {
-                if pwd.is_empty() {
-                    message.set(Some(UiMessage::Error(
-                        AppError::PasswordRequired,
-                    )));
-                    return;
-                }
-                match encrypt_symmetric(
-                    note_content.as_bytes(),
-                    &pwd,
-                    cipher,
-                ) {
-                    Ok(encrypted) => {
-                        NoteData::CipherText(encrypted)
-                    }
-                    Err(e) => {
-                        message
-                            .set(Some(UiMessage::Error(e)));
-                        return;
-                    }
-                }
-            }
-        };
-
-        let origin = {
-            #[cfg(target_arch = "wasm32")]
-            {
-                web_sys::window().and_then(|w| {
-                    let loc = w.location();
-                    let protocol = loc.protocol().ok()?;
-                    let host = loc.host().ok()?;
-                    let pathname = loc.pathname().ok()?;
-                    let path =
-                        pathname.trim_end_matches('/');
-                    Some(format!(
-                        "{}//{}{}",
-                        protocol, host, path
-                    ))
-                })
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                Some(format!(
-                    "https://functora.github.io/apps/cryptonote/{}",
-                    env!("CARGO_PKG_VERSION")
-                ))
-            }
-        };
-
-        if let Some(origin) = origin {
-            let view_url = format!(
-                "{}/?screen={}",
-                origin,
-                Screen::View
-            );
-            match build_url(&view_url, &note_data) {
-                Ok(url) => match generate_qr_code(&url) {
-                    Ok(qr) => {
-                        let act = ctx.read().action;
-                        ctx.set(AppCtx {
-                            action: act,
-                            content: Some(note_content),
-                            password: pwd,
-                            cipher: enc_option,
-                            share_url: Some(url),
-                            qr_code: Some(qr),
-                        });
-
-                        nav.push(
-                            Screen::Share.to_route(None),
-                        );
-                    }
-                    Err(e) => message
-                        .set(Some(UiMessage::Error(e))),
-                },
-                Err(e) => {
-                    message.set(Some(UiMessage::Error(e)))
-                }
-            }
+        if ctx.read().cipher.is_some()
+            && ctx.read().password.is_empty()
+        {
+            message.set(Some(UiMessage::Error(
+                AppError::PasswordRequired,
+            )));
+        } else {
+            nav.push(Screen::Share.to_route(None));
         }
     };
 
@@ -182,9 +98,9 @@ pub fn Home() -> Element {
                     textarea {
                         placeholder: "{t.note_placeholder}",
                         rows: "8",
-                        value: "{ctx.read().content.clone().unwrap_or_default()}",
+                        value: "{ctx.read().content.clone()}",
                         oninput: move |evt| {
-                            ctx.write().content = Some(evt.value());
+                            ctx.write().content = evt.value();
                         },
                     }
 

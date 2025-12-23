@@ -25,7 +25,13 @@ pub fn View(note: Option<String>) -> Element {
                             encrypted_data.set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            note_content.set(Some(text));
+                            note_content
+                                .set(Some(text.clone()));
+                            ctx.set(AppCtx {
+                                content: Some(text),
+                                cipher: None,
+                                ..Default::default()
+                            });
                         }
                     },
                     Err(e) => message
@@ -165,12 +171,6 @@ pub fn View(note: Option<String>) -> Element {
                             icon: FaPenToSquare,
                             primary: true,
                             onclick: move |_| {
-                                if ctx.read().cipher.is_none() {
-                                    ctx.set(AppCtx {
-                                        content: Some(content.clone()),
-                                        ..Default::default()
-                                    });
-                                }
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.edit_note}"

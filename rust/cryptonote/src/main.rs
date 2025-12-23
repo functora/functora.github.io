@@ -10,7 +10,6 @@ mod storage;
 
 pub use components::*;
 pub use crypto::*;
-use dioxus_sdk::storage::use_persistent;
 pub use encoding::*;
 pub use error::*;
 pub use hooks::*;
@@ -37,18 +36,35 @@ fn main() {
 #[component]
 fn App() -> Element {
     let nav: Signal<u32> = use_signal(|| 0);
-    let cfg = use_persistent(
-        format!(
-            "cryptonote-{}-cfg",
-            env!("CARGO_PKG_VERSION")
-        ),
-        AppCfg::default,
-    );
     let ctx = use_signal(AppCtx::default);
+    #[cfg(target_arch = "wasm32")]
+    let cfg = {
+        use dioxus_sdk::storage::{
+            LocalStorage, use_synced_storage,
+        };
+        use_synced_storage::<LocalStorage, AppCfg>(
+            format!(
+                "cryptonote-{}-cfg",
+                env!("CARGO_PKG_VERSION")
+            ),
+            AppCfg::default,
+        )
+    };
+    #[cfg(not(target_arch = "wasm32"))]
+    let cfg = {
+        use dioxus_sdk::storage::use_persistent;
+        use_persistent(
+            format!(
+                "cryptonote-{}-cfg",
+                env!("CARGO_PKG_VERSION")
+            ),
+            AppCfg::default,
+        )
+    };
 
     use_context_provider(|| nav);
-    use_context_provider(|| cfg);
     use_context_provider(|| ctx);
+    use_context_provider(|| cfg);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

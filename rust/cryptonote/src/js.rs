@@ -22,10 +22,11 @@ pub async fn js_set_theme(
     js_fun(
         theme.to_string().to_lowercase(),
         r#"function(arg){
-               window
-                 .document
-                 .documentElement
-                 .setAttribute("data-theme", arg);
+               await window
+                       .document
+                       .documentElement
+                       .setAttribute("data-theme", arg);
+               return null;
              }"#,
     )
     .await
@@ -41,6 +42,7 @@ pub async fn js_write_clipboard(
                        .navigator
                        .clipboard
                        .writeText(arg);
+               return null;
              }"#,
     )
     .await

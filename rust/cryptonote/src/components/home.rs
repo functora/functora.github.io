@@ -1,11 +1,5 @@
 use crate::*;
 
-#[derive(PartialEq, Clone, Copy)]
-enum ActionMode {
-    Create,
-    Open,
-}
-
 #[component]
 pub fn Home() -> Element {
     let nav = use_app_nav();
@@ -16,7 +10,6 @@ pub fn Home() -> Element {
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
 
-    let mut action_mode = use_signal(|| ActionMode::Create);
     let mut url_input = use_signal(String::new);
 
     let open_url = move |_| {
@@ -116,7 +109,9 @@ pub fn Home() -> Element {
             match build_url(&view_url, &note_data) {
                 Ok(url) => match generate_qr_code(&url) {
                     Ok(qr) => {
+                        let act = ctx.read().action;
                         ctx.set(AppCtx {
+                            action: act,
                             content: Some(note_content),
                             password: pwd,
                             cipher: enc_option,
@@ -138,6 +133,8 @@ pub fn Home() -> Element {
         }
     };
 
+    let action = ctx.read().action;
+
     rsx! {
         section {
             fieldset {
@@ -145,16 +142,16 @@ pub fn Home() -> Element {
 
                 input {
                     r#type: "radio",
-                    checked: action_mode() == ActionMode::Create,
+                    checked: action == ActionMode::Create,
                     onchange: move |_| {
                         message.set(None);
-                        action_mode.set(ActionMode::Create);
+                        ctx.write().action = ActionMode::Create;
                     },
                 }
                 label {
                     onclick: move |_| {
                         message.set(None);
-                        action_mode.set(ActionMode::Create);
+                        ctx.write().action = ActionMode::Create;
                     },
                     Icon { icon: FaSquarePlus }
                     "{t.action_create}"
@@ -163,16 +160,16 @@ pub fn Home() -> Element {
 
                 input {
                     r#type: "radio",
-                    checked: action_mode() == ActionMode::Open,
+                    checked: action == ActionMode::Open,
                     onchange: move |_| {
                         message.set(None);
-                        action_mode.set(ActionMode::Open);
+                        ctx.write().action = ActionMode::Open;
                     },
                 }
                 label {
                     onclick: move |_| {
                         message.set(None);
-                        action_mode.set(ActionMode::Open);
+                        ctx.write().action = ActionMode::Open;
                     },
                     Icon { icon: FaFolderOpen }
                     "{t.action_open}"
@@ -180,7 +177,7 @@ pub fn Home() -> Element {
                 br {}
                 br {}
 
-                if action_mode() == ActionMode::Create {
+                if action == ActionMode::Create {
                     label { "{t.note}" }
                     textarea {
                         placeholder: "{t.note_placeholder}",
@@ -271,7 +268,7 @@ pub fn Home() -> Element {
                     }
                 }
 
-                if action_mode() == ActionMode::Open {
+                if action == ActionMode::Open {
                     label { "{t.open_url_label}" }
                     textarea {
                         placeholder: "{t.open_url_placeholder}",
@@ -285,8 +282,8 @@ pub fn Home() -> Element {
                         Button {
                             icon: FaTrash,
                             onclick: move |_| {
-                                url_input.set(String::new());
                                 message.set(None);
+                                ctx.set(AppCtx::default());
                             },
                             "{t.create_new_note}"
                         }

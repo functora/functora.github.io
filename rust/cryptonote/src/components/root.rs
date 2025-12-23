@@ -12,6 +12,12 @@ pub enum Screen {
     Privacy,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ActionMode {
+    Create,
+    Open,
+}
+
 impl Display for Screen {
     fn fmt(
         &self,
@@ -58,6 +64,7 @@ impl Screen {
 
 #[derive(Clone, Debug)]
 pub struct AppCtx {
+    pub action: ActionMode,
     pub content: Option<String>,
     pub password: String,
     pub cipher: Option<CipherType>,
@@ -68,6 +75,7 @@ pub struct AppCtx {
 impl Default for AppCtx {
     fn default() -> Self {
         Self {
+            action: ActionMode::Create,
             content: None,
             password: String::new(),
             cipher: Some(CipherType::Aes256Gcm),

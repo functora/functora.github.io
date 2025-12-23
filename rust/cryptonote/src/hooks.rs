@@ -11,8 +11,7 @@ pub struct AppNav {
 impl AppNav {
     pub fn push(mut self, route: Route) {
         let Route::Root { screen, .. } = route.clone();
-        let is_home = screen.unwrap_or(Screen::Home) == Screen::Home;
-        let next = if is_home {
+        let next = if screen == Screen::Home {
             0
         } else {
             (self.idx)().saturating_add(1)

@@ -57,7 +57,7 @@ impl Screen {
         note: Option<String>,
     ) -> Route {
         Route::Root {
-            screen: Some(self.clone()),
+            screen: self.clone(),
             note,
         }
     }
@@ -87,15 +87,12 @@ impl Default for AppCtx {
 pub enum Route {
     #[layout(Layout)]
         #[route("/?:screen&:note")]
-        Root { screen: Option<Screen>, note: Option<String> },
+        Root { screen: Screen, note: Option<String> },
 }
 
 #[component]
-fn Root(
-    screen: Option<Screen>,
-    note: Option<String>,
-) -> Element {
-    match screen.unwrap_or_default() {
+fn Root(screen: Screen, note: Option<String>) -> Element {
+    match screen {
         Screen::Home => rsx! {
             Home {}
         },

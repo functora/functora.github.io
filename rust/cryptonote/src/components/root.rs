@@ -2,8 +2,9 @@ use crate::components::*;
 use crate::crypto::*;
 use crate::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum Screen {
+    #[default]
     Home,
     View,
     Share,
@@ -35,7 +36,7 @@ impl Display for Screen {
 }
 
 impl FromStr for Screen {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -45,7 +46,7 @@ impl FromStr for Screen {
             "donate" => Ok(Self::Donate),
             "license" => Ok(Self::License),
             "privacy" => Ok(Self::Privacy),
-            _ => Err(()),
+            _ => Err(format!("Unknown screen '{}'", s)),
         }
     }
 }
@@ -56,7 +57,7 @@ impl Screen {
         note: Option<String>,
     ) -> Route {
         Route::Root {
-            screen: Some(self.to_string()),
+            screen: Some(self.clone()),
             note,
         }
     }
@@ -86,20 +87,15 @@ impl Default for AppCtx {
 pub enum Route {
     #[layout(Layout)]
         #[route("/?:screen&:note")]
-        Root { screen: Option<String>, note: Option<String> },
+        Root { screen: Option<Screen>, note: Option<String> },
 }
 
 #[component]
 fn Root(
-    screen: Option<String>,
+    screen: Option<Screen>,
     note: Option<String>,
 ) -> Element {
-    let parsed_screen = screen
-        .as_deref()
-        .and_then(|s| s.parse::<Screen>().ok())
-        .unwrap_or(Screen::Home);
-
-    match parsed_screen {
+    match screen.unwrap_or_default() {
         Screen::Home => rsx! {
             Home {}
         },

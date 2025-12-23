@@ -11,11 +11,7 @@ pub struct AppNav {
 impl AppNav {
     pub fn push(mut self, route: Route) {
         let Route::Root { screen, .. } = route.clone();
-        let is_home = screen
-            .as_ref()
-            .and_then(|x| x.parse::<Screen>().ok())
-            .map(|x| x == Screen::Home)
-            .unwrap_or(true);
+        let is_home = screen.unwrap_or(Screen::Home) == Screen::Home;
         let next = if is_home {
             0
         } else {

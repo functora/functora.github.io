@@ -1,6 +1,5 @@
-use crate::components::*;
-use crate::crypto::*;
-use crate::prelude::*;
+use crate::components::screens::*;
+use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum Screen {

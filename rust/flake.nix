@@ -63,7 +63,7 @@
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
         mkAab = app: let
           mkCmd = target: ''
-            dx bundle --release --android --target "${target}"
+            dx bundle --release --android --debug-symbols=false --target "${target}"
             echo "Aab ${app} release success for ${target}!"
           '';
         in
@@ -111,7 +111,7 @@
                 else
                   mkdir -p "$REL"
                 fi
-                dx bundle --release --web
+                dx bundle --release --web --debug-symbols=false
                 cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"

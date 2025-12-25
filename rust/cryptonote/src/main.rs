@@ -54,7 +54,15 @@ fn App() -> Element {
     #[cfg(not(target_arch = "wasm32"))]
     let cfg = {
         use storage::mobile::use_storage;
-        use_storage(&key, AppCfg::default)
+        use_storage(key, AppCfg::default).unwrap_or_else(
+            |e| {
+                tracing::error!(
+                    "Storage init error: {}",
+                    e
+                );
+                use_signal(AppCfg::default)
+            },
+        )
     };
 
     use_context_provider(|| nav);

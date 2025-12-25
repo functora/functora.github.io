@@ -726,7 +726,6 @@ name = "cryptonote"
 version = "0.1.2"
 dependencies = [
  "aes-gcm",
- "anyhow",
  "base64",
  "chacha20poly1305",
  "derive_more 2.1.0",
@@ -744,6 +743,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sys-locale",
+ "tap",
  "tracing",
  "urlencoding",
  "web-sys",
@@ -4812,6 +4812,12 @@ dependencies = [
  "quote",
  "syn 2.0.111",
 ]
+
+[[package]]
+name = "tap"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "target-lexicon"

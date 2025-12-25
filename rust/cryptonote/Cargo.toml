@@ -34,13 +34,14 @@ dioxus-free-icons = { version = "0.10.0", features = [
   "font-awesome-solid",
 ] }
 dioxus-sdk = { version = "0.7.0", features = ["storage"] }
-anyhow = "1.0.100"
+tap = "1.0.1"
+
+[target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"
 
 [features]
 default = ["web"]
 web = ["dioxus/web"]
-desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 
 [profile.wasm-dev]

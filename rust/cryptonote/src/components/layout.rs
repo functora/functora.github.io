@@ -10,7 +10,10 @@ pub fn Layout() -> Element {
         let theme = cfg.read().theme;
         spawn(async move {
             if let Err(e) = js_set_theme(&theme).await {
-                tracing::error!("{:#?}", e);
+                tracing::error!(
+                    "Set theme error: {:#?}",
+                    e
+                );
             }
         });
     });

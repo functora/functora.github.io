@@ -55,12 +55,10 @@ pub fn Share() -> Element {
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    Some(format!(
-                        "https://functora.github.io/apps/cryptonote/{}",
-                        env!("CARGO_PKG_VERSION")
-                    ))
+                    Some(WEB_APP_URL)
                 }
-            }.ok_or(AppError::NoNoteInUrl)?;
+            }
+            .ok_or(AppError::NoNoteInUrl)?;
 
             let view_url = format!(
                 "{}/?screen={}",

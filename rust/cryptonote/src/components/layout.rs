@@ -74,7 +74,7 @@ pub fn Layout() -> Element {
         p { "txt": "c",
             {t.copyright}
             " 2025 "
-            ExtLink { href: "https://functora.github.io/", "Functora" }
+            ExtLink { href: FUNCTORA_URL, "Functora" }
             ". "
             {t.all_rights_reserved}
             " "
@@ -92,7 +92,7 @@ pub fn Layout() -> Element {
             ". "
             {t.version_label}
             " "
-            {env!("CARGO_PKG_VERSION")}
+            {APP_VERSION}
             "."
         }
 

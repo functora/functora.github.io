@@ -137,15 +137,15 @@ pub fn find_or_init_key<
 pub fn use_storage<
     T: serde::Serialize + DeserializeOwned + Clone + 'static,
 >(
-    key: String,
+    key: &'static str,
     init: impl FnOnce() -> T,
 ) -> Result<Signal<T>, StorageError> {
     let path = storage_path()?;
     let signal =
-        Signal::new(find_or_init_key(&path, &key, init)?);
+        Signal::new(find_or_init_key(&path, key, init)?);
 
     use_effect(move || {
-        update_key(&path, &key, signal.read().clone())
+        update_key(&path, key, signal.read().clone())
             .unwrap_or_else(|e| {
                 tracing::error!(
                     "Storage update error: {}",

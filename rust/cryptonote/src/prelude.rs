@@ -30,3 +30,24 @@ pub mod dioxus_elements {
         }
     }
 }
+
+pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const APP_STORAGE_KEY: &str = concat!(
+    "cryptonote-",
+    env!("CARGO_PKG_VERSION"),
+    "-cfg"
+);
+pub const BETA_TEST_URL: &str =
+    "https://groups.google.com/g/functora";
+pub const GOOGLE_PLAY_URL: &str = "https://play.google.com/store/apps/details?id=com.functora.cryptonote";
+pub const APK_URL: &str = concat!(
+    "https://github.com/functora/functora.github.io/releases/tag/cryptonote-v",
+    env!("CARGO_PKG_VERSION")
+);
+pub const WEB_APP_URL: &str = concat!(
+    "https://functora.github.io/apps/cryptonote/",
+    env!("CARGO_PKG_VERSION")
+);
+pub const FUNCTORA_URL: &str =
+    "https://functora.github.io/";
+pub const SOURCE_CODE_URL: &str = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote";

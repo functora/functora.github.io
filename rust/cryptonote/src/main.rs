@@ -37,32 +37,27 @@ fn main() {
 fn App() -> Element {
     let nav: Signal<u32> = use_signal(|| 0);
     let ctx = use_signal(AppCtx::default);
-    let key = format!(
-        "cryptonote-{}-cfg",
-        env!("CARGO_PKG_VERSION")
-    );
     #[cfg(target_arch = "wasm32")]
     let cfg = {
         use dioxus_sdk::storage::{
             LocalStorage, use_synced_storage,
         };
         use_synced_storage::<LocalStorage, AppCfg>(
-            key,
+            APP_STORAGE_KEY,
             AppCfg::default,
         )
     };
     #[cfg(not(target_arch = "wasm32"))]
     let cfg = {
         use storage::mobile::use_storage;
-        use_storage(key, AppCfg::default).unwrap_or_else(
-            |e| {
+        use_storage(APP_STORAGE_KEY, AppCfg::default)
+            .unwrap_or_else(|e| {
                 tracing::error!(
                     "Storage init error: {}",
                     e
                 );
                 use_signal(AppCfg::default)
-            },
-        )
+            })
     };
 
     use_context_provider(|| nav);

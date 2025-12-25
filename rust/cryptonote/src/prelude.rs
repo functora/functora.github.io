@@ -2,10 +2,13 @@ pub use derive_more::Display;
 pub use dioxus::core::SpawnIfAsync;
 pub use dioxus::document::EvalError;
 pub use dioxus::prelude::*;
-pub use dioxus_free_icons::icons::fa_brands_icons::FaRust;
+pub use dioxus_free_icons::icons::fa_brands_icons::{
+    FaAndroid, FaGithub, FaGoogle, FaGooglePlay,
+};
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaCopy, FaFolderOpen, FaLock, FaLockOpen,
-    FaPenToSquare, FaShareNodes, FaSquarePlus, FaTrash,
+    FaArrowLeft, FaCopy, FaDownload, FaFolderOpen, FaHeart,
+    FaLock, FaLockOpen, FaPenToSquare, FaShareNodes,
+    FaSquarePlus, FaTrash, FaUser,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;

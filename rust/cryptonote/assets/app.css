@@ -10,6 +10,7 @@ label svg {
   vertical-align: top;
 }
 
+a[btn],
 button {
   display: inline-flex !important;
   align-items: center !important;

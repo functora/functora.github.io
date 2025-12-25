@@ -5,6 +5,8 @@ pub fn NavLink(
     route: Route,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
+    #[props(default)] button: bool,
+    #[props(default)] primary: bool,
     #[props(extends = button, extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
 ) -> Element {
@@ -12,6 +14,8 @@ pub fn NavLink(
     rsx! {
         a {
             href: "#",
+            "btn": if button { Some("") } else { None },
+            "primary": if primary { Some("") } else { None },
             onclick: move |evt| {
                 evt.prevent_default();
                 if let Some(f) = &onclick {

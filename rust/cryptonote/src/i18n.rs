@@ -84,6 +84,12 @@ pub struct Translations {
     pub about_android_beta_3: &'static str,
     pub about_android_beta_link_3: &'static str,
     pub about_android_beta_4: &'static str,
+    pub join_testing_button: &'static str,
+    pub google_play_button: &'static str,
+    pub download_apk_button: &'static str,
+    pub source_code_button: &'static str,
+    pub author_button: &'static str,
+    pub donate_button: &'static str,
     pub about_text: &'static str,
     pub back_button: &'static str,
     pub clipboard_write_error: &'static str,
@@ -205,6 +211,12 @@ If you have any questions regarding privacy while using the Application, or have
             about_android_beta_3: ", or download the",
             about_android_beta_link_3: "APK file",
             about_android_beta_4: "directly.",
+            join_testing_button: "Join testing",
+            google_play_button: "Google Play",
+            download_apk_button: "Download APK",
+            source_code_button: "Source code",
+            author_button: "Author",
+            donate_button: "Donate",
             about_text: r#"Cryptonote is a cross-platform, offline app for creating and sharing encrypted notes. It runs serverless on your device or browser - no internet needed.
 
 Features:
@@ -337,6 +349,12 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             about_android_beta_3: ", o descargue el",
             about_android_beta_link_3: "archivo APK",
             about_android_beta_4: "directamente.",
+            join_testing_button: "Unirse a prueba",
+            google_play_button: "Google Play",
+            download_apk_button: "Descargar APK",
+            source_code_button: "Código fuente",
+            author_button: "Autor",
+            donate_button: "Donar",
             about_text: r#"Cryptonote es una app multiplataforma y offline para crear y compartir notas cifradas. Funciona sin servidores en su dispositivo o navegador - no requiere internet.
 
 Características:
@@ -469,6 +487,12 @@ Seguro, privado, offline - sus notas son solo suyas."#,
             about_android_beta_3: " или скачайте",
             about_android_beta_link_3: "APK-файл",
             about_android_beta_4: "напрямую.",
+            join_testing_button: "Вступить в бета-тест",
+            google_play_button: "Google Play",
+            download_apk_button: "Скачать APK",
+            source_code_button: "Исходный код",
+            author_button: "Автор",
+            donate_button: "Пожертвовать",
             about_text: r#"Cryptonote - кроссплатформенное, автономное приложение для создания и обмена зашифрованными заметками. Работает без серверов на вашем устройстве или в браузере - интернет не нужен.
 
 Возможности:

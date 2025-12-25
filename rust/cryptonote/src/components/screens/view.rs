@@ -49,7 +49,7 @@ pub fn View(note: Option<String>) -> Element {
         }
     });
 
-    let decrypt_note = move |_evt: Event<MouseData>| {
+    let mut decrypt_note = move || {
         message.set(None);
         if let Some(enc) = encrypted_data.read().as_ref() {
             let pwd = password_input.read().clone();
@@ -106,34 +106,7 @@ pub fn View(note: Option<String>) -> Element {
                         oninput: move |evt| password_input.set(evt.value()),
                         onkeydown: move |evt| {
                             if evt.key() == Key::Enter {
-                                message.set(None);
-                                if let Some(enc) = encrypted_data.read().as_ref() {
-                                    let pwd = password_input.read().clone();
-                                    if !pwd.is_empty() {
-                                        match decrypt_symmetric(enc, &pwd) {
-                                            Ok(plaintext) => {
-                                                match String::from_utf8(plaintext) {
-                                                    Ok(text) => {
-                                                        note_content.set(Some(text.clone()));
-                                                        is_encrypted.set(false);
-                                                        ctx.set(AppCtx {
-                                                            content: text,
-                                                            password: pwd,
-                                                            cipher: Some(enc.cipher),
-                                                            ..Default::default()
-                                                        });
-                                                    }
-                                                    Err(e) => {
-                                                        message.set(Some(UiMessage::Error(AppError::Utf8(e))));
-                                                    }
-                                                }
-                                            }
-                                            Err(e) => {
-                                                message.set(Some(UiMessage::Error(e)));
-                                            }
-                                        }
-                                    }
-                                }
+                                decrypt_note()
                             }
                         },
                     }
@@ -144,7 +117,7 @@ pub fn View(note: Option<String>) -> Element {
                         Button {
                             icon: FaLockOpen,
                             primary: true,
-                            onclick: decrypt_note,
+                            onclick: move |_| decrypt_note(),
                             "{t.decrypt_button}"
                         }
                     }

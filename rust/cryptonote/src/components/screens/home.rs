@@ -35,7 +35,7 @@ pub fn Home() -> Element {
         }
     };
 
-    let generate_note = move |_| {
+    let mut generate_note = move || {
         message.set(None);
 
         if ctx.read().cipher.is_some()
@@ -162,6 +162,11 @@ pub fn Home() -> Element {
                             oninput: move |evt| {
                                 ctx.write().password = evt.value();
                             },
+                            onkeydown: move |evt| {
+                                if evt.key() == Key::Enter {
+                                    generate_note()
+                                }
+                            },
                         }
                     }
                     br {}
@@ -178,7 +183,7 @@ pub fn Home() -> Element {
                         Button {
                             icon: FaShareNodes,
                             primary: true,
-                            onclick: generate_note,
+                            onclick: move |_| generate_note(),
                             "{t.generate_button}"
                         }
                     }

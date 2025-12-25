@@ -3,7 +3,7 @@ use crate::*;
 #[component]
 pub fn Dock(
     children: Element,
-    message: Signal<Option<UiMessage>>,
+    message: Option<Signal<Option<UiMessage>>>,
 ) -> Element {
     let nav = use_app_nav();
     let cfg = use_context::<Signal<AppCfg>>();
@@ -11,7 +11,9 @@ pub fn Dock(
 
     rsx! {
         p { "txt": "r",
-            Message { message }
+            if let Some(message) = message {
+                Message { message }
+            }
             if nav.has_navigated() {
                 Button {
                     icon: FaArrowLeft,

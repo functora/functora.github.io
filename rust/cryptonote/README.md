@@ -1,8 +1,8 @@
-# CryptoNote
+# Cryptonote
 
-CryptoNote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
+Cryptonote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
 
-With CryptoNote, you can:
+With Cryptonote, you can:
 
 - Write a short plain-text note
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
@@ -11,7 +11,7 @@ With CryptoNote, you can:
 
 All content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code.
 
-CryptoNote follows modern cryptographic best practices:
+Cryptonote follows modern cryptographic best practices:
 
 - Strong key derivation with HKDF, allowing users to supply just a password (which is used directly as the initial keying material)
 - Authenticated encryption for confidentiality, integrity, and authenticity
@@ -19,4 +19,4 @@ CryptoNote follows modern cryptographic best practices:
 
 Secure, private, and truly offline - your notes remain yours alone.
 
-The CryptoNote interface is fully internationalized and currently supports English, Spanish, and Russian.
+The Cryptonote interface is fully internationalized and currently supports English, Spanish, and Russian.

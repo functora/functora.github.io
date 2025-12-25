@@ -7,6 +7,7 @@ pub enum Screen {
     Home,
     View,
     Share,
+    About,
     Donate,
     License,
     Privacy,
@@ -27,6 +28,7 @@ impl Display for Screen {
             Self::Home => "home",
             Self::View => "view",
             Self::Share => "share",
+            Self::About => "about",
             Self::Donate => "donate",
             Self::License => "license",
             Self::Privacy => "privacy",
@@ -42,6 +44,7 @@ impl FromStr for Screen {
             "home" => Ok(Self::Home),
             "view" => Ok(Self::View),
             "share" => Ok(Self::Share),
+            "about" => Ok(Self::About),
             "donate" => Ok(Self::Donate),
             "license" => Ok(Self::License),
             "privacy" => Ok(Self::Privacy),
@@ -100,6 +103,9 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
         },
         Screen::Share => rsx! {
             Share {}
+        },
+        Screen::About => rsx! {
+            About {}
         },
         Screen::Donate => rsx! {
             Donate {}

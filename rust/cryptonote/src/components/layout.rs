@@ -62,6 +62,9 @@ pub fn Layout() -> Element {
                             {t.theme}
                         }
                     }
+                    li {
+                        NavLink { route: Screen::About.to_route(None), "❓{t.about_title}" }
+                    }
                 }
             }
         }

@@ -74,7 +74,7 @@ pub fn Layout() -> Element {
         p { "txt": "c",
             {t.copyright}
             " 2025 "
-            a { href: "https://functora.github.io/", "Functora" }
+            ExtLink { href: "https://functora.github.io/", "Functora" }
             ". "
             {t.all_rights_reserved}
             " "

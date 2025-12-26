@@ -22,7 +22,6 @@
         };
         mobile-targets = [
           "aarch64-linux-android"
-          "arm-linux-androideabi"
           "armv7-linux-androideabi"
           "i686-linux-android"
           "thumbv7neon-linux-androideabi"

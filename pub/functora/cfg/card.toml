@@ -23,15 +23,16 @@ data = "Functora"
 size = 150
 padX = 595
 [[group.item]]
-data = "0xe677"
+data = "0xe602"
 kind = "Icon"
-size = 300
-padX = 100
-padY = -30
+size = 260
+padX = 120
+padY = -10
 [[group.item]]
 data = "https://functora.github.io"
 kind = "Qr"
-size = 590
+size = 594
+padY = 40
 [[group.item]]
 data = "https://functora.github.io"
 kind = "Note"
@@ -44,15 +45,41 @@ kind = "Head"
 data = ""
 size = 150
 [[group.item]]
-data = "0xe636"
+data = "0xe6a8"
 kind = "Icon"
-size = 217
-padX = 164
+size = 300
+padX = 138
+padY = -30
+[[group.item]]
+data = "https://functora.github.io/apps/cryptonote"
+kind = "Qr"
+size = 594
+[[group.item]]
+data = "https://functora.github.io/apps/"
+kind = "Note"
+size = 30
+padY = 16
+[[group.item]]
+data = "cryptonote"
+kind = "Note"
+size = 30
+padY = 0
+
+[[group]]
+[[group.item]]
+kind = "Head"
+data = ""
+size = 150
+[[group.item]]
+data = "0xe677"
+kind = "Icon"
+size = 300
+padX = 100
+padY = -30
 [[group.item]]
 data = "https://functora.github.io/apps/currency-converter"
 kind = "Qr"
-size = 590
-padY = 53
+size = 594
 [[group.item]]
 data = "https://functora.github.io/apps/"
 kind = "Note"
@@ -60,33 +87,6 @@ size = 30
 padY = 8
 [[group.item]]
 data = "currency-converter"
-kind = "Note"
-size = 30
-padY = 0
-
-[[group]]
-[[group.item]]
-kind = "Head"
-data = ""
-size = 150
-[[group.item]]
-data = "0xe60e"
-kind = "Icon"
-size = 180
-padX = 198
-padY = 30
-[[group.item]]
-data = "https://play.google.com/store/apps/details?id=com.functora.currency_converter"
-kind = "Qr"
-size = 594
-padY = 60
-[[group.item]]
-data = "https://play.google.com/store/apps/"
-kind = "Note"
-size = 30
-padY = 16
-[[group.item]]
-data = "details?id=com.functora.currency_converter"
 kind = "Note"
 size = 30
 padY = 0

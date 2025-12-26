@@ -8,7 +8,7 @@ pub fn License() -> Element {
     rsx! {
         Breadcrumb { title: t.terms_of_service_title.to_string() }
         section {
-            pre { white_space: "pre-wrap", "{t.license_text}" }
+            Pre { "{t.license_text}" }
             Dock {}
         }
     }

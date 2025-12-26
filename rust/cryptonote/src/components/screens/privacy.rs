@@ -8,7 +8,7 @@ pub fn Privacy() -> Element {
     rsx! {
         Breadcrumb { title: t.privacy_policy_title.to_string() }
         section {
-            pre { white_space: "pre-wrap", "{t.privacy_text}" }
+            Pre { "{t.privacy_text}" }
             Dock {}
         }
     }

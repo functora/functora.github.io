@@ -7,7 +7,7 @@ pub fn About() -> Element {
     rsx! {
         Breadcrumb { title: t.about_title.to_string() }
         section {
-            pre { white_space: "pre-wrap", "{t.about_text}" }
+            Pre { "{t.about_text}" }
             br {}
             br {}
             p {

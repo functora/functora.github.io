@@ -19,8 +19,8 @@ pub fn Message(
     };
 
     rsx! {
-        pre {
-            code { white_space: "pre-wrap", "{text}" }
+        Pre {
+            Quote { "{text}" }
         }
     }
 }

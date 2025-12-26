@@ -6,7 +6,7 @@ pub fn ExtLink(
     children: Element,
     #[props(default)] button: bool,
     #[props(default)] primary: bool,
-    #[props(extends = button, extends = GlobalAttributes)]
+    #[props(extends = a, extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {

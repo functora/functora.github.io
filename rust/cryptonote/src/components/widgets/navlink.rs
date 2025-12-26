@@ -7,7 +7,7 @@ pub fn NavLink(
     children: Element,
     #[props(default)] button: bool,
     #[props(default)] primary: bool,
-    #[props(extends = button, extends = GlobalAttributes)]
+    #[props(extends = a, extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
 ) -> Element {
     let nav = use_app_nav();

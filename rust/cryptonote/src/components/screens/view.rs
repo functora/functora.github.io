@@ -94,8 +94,8 @@ pub fn View(note: Option<String>) -> Element {
             Breadcrumb { title: t.encrypted_note.to_string() }
             section {
                 fieldset {
-                    pre {
-                        code { white_space: "pre-wrap", "{t.encrypted_note_desc}" }
+                    Pre {
+                        Quote { "{t.encrypted_note_desc}" }
                     }
 
                     label { "{t.password}" }
@@ -128,7 +128,7 @@ pub fn View(note: Option<String>) -> Element {
             section {
                 fieldset {
                     article {
-                        pre { "{content}" }
+                        Pre { "{content}" }
                     }
 
                     Dock { message,

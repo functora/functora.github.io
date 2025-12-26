@@ -21,11 +21,11 @@
           config.android_sdk.accept_license = true;
         };
         mobile-targets = [
-          "aarch64-linux-android"
-          "armv7-linux-androideabi"
           "i686-linux-android"
-          "thumbv7neon-linux-androideabi"
           "x86_64-linux-android"
+          "thumbv7neon-linux-androideabi"
+          "armv7-linux-androideabi"
+          "aarch64-linux-android"
         ];
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           targets =
@@ -165,8 +165,15 @@
                 [ -f "$AAB" ] || continue
 
                 NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
+                SIG="$DIR/$NAME-signed.aab"
                 APK="$DIR/$NAME.apk"
                 TMP="$DIR/$NAME.apks"
+
+                cp "$AAB" "$SIG"
+                "${pkgs.jdk}/bin/jarsigner" -verbose \
+                  -keystore "$HOME/keys/app-key.jks" \
+                  -storepass "$KS_PASS" \
+                  "$SIG" app-key
 
                 "${pkgs.bundletool}/bin/bundletool" build-apks \
                   --bundle="$AAB" \

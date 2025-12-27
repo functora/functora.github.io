@@ -60,7 +60,7 @@
     <h2 class="text-center">About</h2>
     <div class="flex one three-800 index-block">
       <div class="two-third-800 grow"><p class="padding-left">
-I am pseudonymous software developer Functora. I do specialize in a software development with <a href="https://www.haskell.org/">Haskell</a> and <a href="https://nixos.org/">Nix</a> languages since 2019. I work with passion and create the best software using the best technologies. My areas of expertise and interest are <a href="https://bitcoin.org/en/">Bitcoin</a>, <a href="https://lightning.network/">Lightning Network</a>, sound money, trading, free markets, privacy and sovereignty. My primary technical goals are type-level guarantees of software correctness and safety.
+I am pseudonymous software developer Functora. I do specialize in a software development with <a href="https://www.haskell.org/">Haskell</a>, <a href="https://rust-lang.org/">Rust</a> and <a href="https://nixos.org/">Nix</a> languages since 2019. I work with passion and create the best software using the best technologies. My areas of expertise and interest are <a href="https://bitcoin.org/en/">Bitcoin</a>, <a href="https://lightning.network/">Lightning Network</a>, sound money, trading, free markets, privacy and sovereignty. My primary technical goals are type-level guarantees of software correctness and safety.
 </p></div>
       
       <div class="text-center">
@@ -78,14 +78,22 @@ I am pseudonymous software developer Functora. I do specialize in a software dev
     <h2 class="text-center">Skills</h2>
     <div class="flex one three-800 index-block">
       <div class="two-third-800 grow"><p class="padding-left">
-Haskell is my primary and the most favorte tool. I do have advanced level of Haskell including:
+Haskell is my first programming language. I do have advanced level of Haskell including:
 </p>
 <ul>
 <li><a href="https://wiki.haskell.org/GHC.Generics">GHC.Generics</a>, <a href="https://hackage.haskell.org/package/generic-lens">generic-lens</a> and <a href="https://hackage.haskell.org/package/syb">SYB</a> for efficient data manipulation.</li>
 <li><a href="https://github.com/ghcjs/ghcjs">GHCJS</a> compiler, GHC <a href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html">WASM</a> backend and <a href="https://hackage.haskell.org/package/jsaddle">JSaddle</a> EDSL.</li>
-<li><a href="https://hackage.haskell.org/package/persistent">Presistent</a> and <a href="https://hackage.haskell.org/package/esqueleto">Esqueleto</a> typed SQL drivers.</li>
+<li><a href="https://hackage.haskell.org/package/persistent">Presistent</a> and <a href="https://hackage.haskell.org/package/esqueleto">Esqueleto</a> typed SQL libraries.</li>
 <li><a href="https://www.yesodweb.com/">Yesod</a> enterprise web framework.</li>
 <li><a href="https://haskell-miso.org/">Miso</a> frontend web framework.</li>
+</ul>
+<p class="padding-left">
+Rust is my second programming language, but nowadays I often prefer it over Haskell due to its superior performance and better development experience. I do have good level of Rust including:
+</p>
+<ul>
+<li><a href="https://crates.io/crates/chumsky">Chumsky</a> parser combinators.</li>
+<li><a href="https://crates.io/crates/diesel">Diesel</a> typed SQL library.</li>
+<li><a href="https://crates.io/crates/dioxus">Dioxus</a> cross-platform apps framework.</li>
 </ul>
 <p class="padding-left">
 I am also qualified in other useful areas:
@@ -96,11 +104,11 @@ I am also qualified in other useful areas:
 <li><a href="https://www.postgresql.org/">PostgreSQL</a> and <a href="https://sqlite.org/">SQLite</a> - Strong medium level. I am not database expert, but I am using everything what software developer should use to manipulate data storage. Queries, transactions, joins, locks.</li>
 <li><a href="https://www.docker.com/">Docker</a> and <a href="https://docs.docker.com/engine/swarm/">Swarm</a> - Advanced close to expert level. I am using Docker and Swarm for development, builds and production. Docker is a very handy tool for MacOS and Linux compatibility.</li>
 </ul></div>
-       
-      <div class="text-center">
-        <i class="fab fa-bitcoin fontawesome-logo"></i>
-      </div>
       
+      <div class="text-center">
+        <i class="devicons devicons-rust devicons-logo"></i>
+      </div>
+       
     </div>
     
   </div>
@@ -112,7 +120,7 @@ I am also qualified in other useful areas:
     <h2 class="text-center">Code</h2>
     <div class="flex one three-800 index-block">
       <div class="two-third-800 grow"><p class="padding-left">
-Examples of my personal code:
+Examples of my personal Haskell code:
 </p>
 <ul>
 <li><a href="https://functora.github.io/apps/currency-converter">currency-converter</a> - An app for converting currencies, generating financial documents, and sharing them via links or QR codes. It includes optional client-side encryption. Built using Miso and GHCJS, the source code is available on <a href="https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter">github</a>. Mobile version is also available on <a href="https://play.google.com/store/apps/details?id=com.functora.currency_converter">Google Play</a>.</li>
@@ -123,6 +131,15 @@ Examples of my personal code:
 <li><a href="https://github.com/functora/functora.github.io/tree/master/pub/bfx">bfx</a> - Bitfinex cryptocurrency exchange client library for Haskell.</li>
 <li><a href="https://github.com/functora/functora.github.io/tree/master/ghcjs/miso-functora">miso-functora</a> - Reusable Miso widgets, composable through optics.</li>
 <li><a href="https://github.com/21it/rentier">rentier</a> - My first Haskell project which I have used to learn Haskell. The booking system is based on the Yesod web framework. The code is very obsolete.</li>
+</ul>
+<p class="padding-left">
+Examples of my personal Rust code:
+</p>
+<ul>
+<li><a href="https://functora.github.io/apps/cryptonote">cryptonote</a> - A serverless, cross-platform app that allows users to create encrypted or plain-text notes directly on their device or browser. It uses strong authenticated encryption (AES-GCM or ChaCha20-Poly1305) with HKDF key derivation, embeds content in shareable URLs or QR codes, and ensures no data leaves the device unless explicitly shared. The source code is available on <a href="https://github.com/functora/functora.github.io/tree/master/rust/cryptonote">github</a>.</li>
+<li><a href="https://crates.io/crates/functora-tagged">functora-tagged</a> - Lightweight, macro-free newtypes with refinement and derived traits.</li>
+<li><a href="https://crates.io/crates/functora-cfg">functora-cfg</a> - A Rust library that merges configuration values from multiple sources into a single typed value.</li>
+<li><a href="https://crates.io/crates/functora">functora</a> - Missing pieces of the Rust standard library.</li>
 </ul>
 <p class="padding-left">
 Examples of other code I was actively working on with other people:

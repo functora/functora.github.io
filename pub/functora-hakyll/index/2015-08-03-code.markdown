@@ -5,7 +5,7 @@ color: black
 fontawesome: "fab fa-git-alt"
 ---
 
-<p class="padding-left">Examples of my personal code:</p>
+<p class="padding-left">Examples of my personal Haskell code:</p>
 
 - [currency-converter](https://functora.github.io/apps/currency-converter) - An app for converting currencies, generating financial documents, and sharing them via links or QR codes. It includes optional client-side encryption. Built using Miso and GHCJS, the source code is available on [github](https://github.com/functora/functora.github.io/tree/master/ghcjs/currency-converter). Mobile version is also available on [Google Play](https://play.google.com/store/apps/details?id=com.functora.currency_converter).
 - [lightning-verifier](https://functora.github.io/apps/lightning-verifier) - An app for offline verification of [Lightning Network](https://lightning.network/) invoices and preimages, and sharing them via links or QR codes. It includes optional client-side encryption. Built using Miso and GHCJS, the source code is available on [github](https://github.com/functora/functora.github.io/tree/master/ghcjs/lightning-verifier).
@@ -15,6 +15,13 @@ fontawesome: "fab fa-git-alt"
 - [bfx](https://github.com/functora/functora.github.io/tree/master/pub/bfx) - Bitfinex cryptocurrency exchange client library for Haskell.
 - [miso-functora](https://github.com/functora/functora.github.io/tree/master/ghcjs/miso-functora) - Reusable Miso widgets, composable through optics.
 - [rentier](https://github.com/21it/rentier) - My first Haskell project which I have used to learn Haskell. The booking system is based on the Yesod web framework. The code is very obsolete.
+
+<p class="padding-left">Examples of my personal Rust code:</p>
+
+- [cryptonote](https://functora.github.io/apps/cryptonote) - A serverless, cross-platform app that allows users to create encrypted or plain-text notes directly on their device or browser. It uses strong authenticated encryption (AES-GCM or ChaCha20-Poly1305) with HKDF key derivation, embeds content in shareable URLs or QR codes, and ensures no data leaves the device unless explicitly shared. The source code is available on [github](https://github.com/functora/functora.github.io/tree/master/rust/cryptonote).
+- [functora-tagged](https://crates.io/crates/functora-tagged) - Lightweight, macro-free newtypes with refinement and derived traits.
+- [functora-cfg](https://crates.io/crates/functora-cfg) - A Rust library that merges configuration values from multiple sources into a single typed value.
+- [functora](https://crates.io/crates/functora) - Missing pieces of the Rust standard library.
 
 <p class="padding-left">Examples of other code I was actively working on with other people:</p>
 

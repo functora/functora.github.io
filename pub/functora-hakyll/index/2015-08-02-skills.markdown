@@ -2,16 +2,22 @@
 id: skills
 title: Skills
 color: white
-fontawesome: "fab fa-bitcoin"
+devicon: rust
 ---
 
-<p class="padding-left">Haskell is my primary and the most favorte tool. I do have advanced level of Haskell including:</p>
+<p class="padding-left">Haskell is my first programming language. I do have advanced level of Haskell including:</p>
 
 - [GHC.Generics](https://wiki.haskell.org/GHC.Generics), [generic-lens](https://hackage.haskell.org/package/generic-lens) and [SYB](https://hackage.haskell.org/package/syb) for efficient data manipulation.
 - [GHCJS](https://github.com/ghcjs/ghcjs) compiler, GHC [WASM](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html) backend and [JSaddle](https://hackage.haskell.org/package/jsaddle) EDSL.
-- [Presistent](https://hackage.haskell.org/package/persistent) and [Esqueleto](https://hackage.haskell.org/package/esqueleto) typed SQL drivers.
+- [Presistent](https://hackage.haskell.org/package/persistent) and [Esqueleto](https://hackage.haskell.org/package/esqueleto) typed SQL libraries.
 - [Yesod](https://www.yesodweb.com/) enterprise web framework.
 - [Miso](https://haskell-miso.org/) frontend web framework.
+
+<p class="padding-left">Rust is my second programming language, but nowadays I often prefer it over Haskell due to its superior performance and better development experience. I do have good level of Rust including:</p>
+
+- [Chumsky](https://crates.io/crates/chumsky) parser combinators.
+- [Diesel](https://crates.io/crates/diesel) typed SQL library.
+- [Dioxus](https://crates.io/crates/dioxus) cross-platform apps framework.
 
 <p class="padding-left">I am also qualified in other useful areas:</p>
 

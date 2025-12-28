@@ -64,16 +64,6 @@
       ${pkgs.glib}/bin/gsettings set $gnome_schema gtk-theme 'Dracula'
     '';
   };
-  mkOpenArena = mod:
-    fj.mkFirejailCustom {
-      pkg = "openarena-${mod}";
-      dir = "q3";
-      exe = ''
-        ${pkgs.openarena}/bin/openarena \
-          +set fs_homepath ~/firejail/q3/.openarena \
-          +set fs_game ${mod}
-      '';
-    };
   mkKbd = cfg: dev: {
     config = cfg;
     device = dev;
@@ -700,8 +690,6 @@ in {
     programs.firejail.enable = true;
     programs.firejail.wrappedBinaries =
       fj.mkFirejailSimple "chromium"
-      // mkOpenArena "rat"
-      // import ./doom.nix
       // fj.mkFirejailOffline {
         pkg = "vi";
         exe = "${vi}/bin/vi";
@@ -779,6 +767,7 @@ in {
         (import ./clipmaker.nix)
         (import ./openarena.nix)
         (import ./bar.nix {inherit pkgs;})
+        (import ./doom.nix {inherit pkgs;})
         (import ./libreoffice.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
       ];

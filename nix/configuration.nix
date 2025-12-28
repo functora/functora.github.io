@@ -707,70 +707,71 @@ in {
     #
     home-manager.users.${config.services.functora.userName} = {
       home.stateVersion = "22.11";
-      home.packages = with pkgs; [
-        tree
-        s-tui
-        qutebrowser
-        xorg.xev
-        pkgs.yewtube
-        niv
-        zip
-        unzip
-        p7zip
-        unrar-free
-        pciutils
-        docker-client
-        docker-compose
-        btop-rocm
-        lsof
-        wget
-        #
-        # wayland
-        #
-        bemenu
-        wlr-randr
-        swaylock
-        swayidle
-        wl-clipboard
-        mako
-        wofi
-        waybar
-        dbus-sway-environment
-        configure-gtk
-        xdg-utils
-        glib
-        dracula-theme
-        adwaita-icon-theme
-        #
-        # apps
-        #
-        exfat
-        jmtpfs
-        shellcheck
-        xournalpp
-        nautilus
-        ccrypt
-        tor-browser-bundle-bin
-        mpv
-        # cura
-        git-lfs
-        lesspass-cli
-        usbutils
-        simple-scan
-        system-config-printer
-        pulsemixer
-        neovim
-        vibe
-        qute
-        (import ./pdfmaker.nix)
-        (import ./vidmaker.nix)
-        (import ./clipmaker.nix)
-        (import ./openarena.nix)
-        (import ./bar.nix {inherit pkgs;})
-        (import ./doom.nix {inherit pkgs;})
-        (import ./libreoffice.nix {inherit pkgs;})
-        (import ./bip39-wordlist.nix)
-      ];
+      home.packages = with pkgs;
+        [
+          tree
+          s-tui
+          qutebrowser
+          xorg.xev
+          pkgs.yewtube
+          niv
+          zip
+          unzip
+          p7zip
+          unrar-free
+          pciutils
+          docker-client
+          docker-compose
+          btop-rocm
+          lsof
+          wget
+          #
+          # wayland
+          #
+          bemenu
+          wlr-randr
+          swaylock
+          swayidle
+          wl-clipboard
+          mako
+          wofi
+          waybar
+          dbus-sway-environment
+          configure-gtk
+          xdg-utils
+          glib
+          dracula-theme
+          adwaita-icon-theme
+          #
+          # apps
+          #
+          exfat
+          jmtpfs
+          shellcheck
+          xournalpp
+          nautilus
+          ccrypt
+          tor-browser-bundle-bin
+          mpv
+          # cura
+          git-lfs
+          lesspass-cli
+          usbutils
+          simple-scan
+          system-config-printer
+          pulsemixer
+          neovim
+          vibe
+          qute
+          (import ./pdfmaker.nix)
+          (import ./vidmaker.nix)
+          (import ./clipmaker.nix)
+          (import ./openarena.nix)
+          (import ./bar.nix {inherit pkgs;})
+          (import ./libreoffice.nix {inherit pkgs;})
+          (import ./bip39-wordlist.nix)
+        ]
+        ++ (lib.attrValues (import ./doom.nix {inherit pkgs;}));
       programs.git = {
         enable = true;
         lfs.enable = true;

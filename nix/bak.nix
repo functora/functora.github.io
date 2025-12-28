@@ -1,11 +1,6 @@
 let
   pkgs = import ./nixpkgs.nix;
-  prev = "bak-v0.1.0.0";
-  next = "bak-v0.1.0.0";
-  # prev-derivation = builtins.fetchurl {
-  #   url = "https://github.com/functora/functora.github.io/releases/download/${prev}/${prev}.tar.gz.age";
-  #   sha256 = "";
-  # };
+  vsn = "bak-v0.1.0";
 in {
   bak-status = pkgs.writeShellApplication {
     name = "bak-status";
@@ -13,7 +8,7 @@ in {
       cd ${toString ../.}/bak
       sha256sum -c checksums.txt 2>&1 | grep -v ': OK$' || true
       find . -type f ! -name checksums.txt -exec sh -c 'f="''${1#./}"; grep -q "$f" checksums.txt || echo "$1 NEW"' sh {} \;
-      echo "bak-status ==> completed ${next}"
+      echo "bak-status ==> completed ${vsn}"
     '';
   };
   bak-commit = pkgs.writeShellApplication {
@@ -22,31 +17,34 @@ in {
       cd ${toString ../.}/bak
       find . -type f ! -name 'checksums.txt' \
         -exec sha256sum {} \; > checksums.txt
-      echo "bak-commit ==> completed ${next}"
+      echo "bak-commit ==> completed ${vsn}"
     '';
   };
   bak-encrypt = pkgs.writeShellApplication {
     name = "bak-encrypt";
     text = ''
       cd ${toString ../.}
-      tar -czf ./out/${next}.tar.gz ./bak
+      echo "bak-encrypt ==> starting ${vsn}"
+      tar -czf ./out/${vsn}.tar.gz ./bak
+      echo "bak-encrypt ==> encrypting ${vsn}"
       ${pkgs.age}/bin/age \
         --encrypt \
         --passphrase \
-        --output ./out/${next}.tar.gz.age \
-        ./out/${next}.tar.gz
-      echo "bak-encrypt ==> completed ${next}"
+        --output ./out/${vsn}.tar.gz.age \
+        ./out/${vsn}.tar.gz
+      echo "bak-encrypt ==> completed ${vsn}"
     '';
   };
-  # bak-decrypt = pkgs.writeShellApplication {
-  #   name = "bak-decrypt";
-  #   text = ''
-  #     cd ${toString ../.}
-  #     ${pkgs.age}/bin/age \
-  #       --decrypt \
-  #       --output ./out/${pkg}.tar.gz \
-  #       ${prev-derivation}
-  #     tar -xzf ./out/${pkg}.tar.gz ./
-  #   '';
-  # };
+  bak-decrypt = pkgs.writeShellApplication {
+    name = "bak-decrypt";
+    text = ''
+      cd ${toString ../.}
+      ${pkgs.age}/bin/age \
+        --decrypt \
+        --output ./out/${vsn}.tar.gz \
+        ./out/${vsn}.tar.gz.age
+      tar -xzf ./out/${vsn}.tar.gz ./
+      echo "bak-decrypt ==> completed ${vsn}"
+    '';
+  };
 }

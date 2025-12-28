@@ -21,7 +21,7 @@ in
         bak.bak-status
         bak.bak-commit
         bak.bak-encrypt
-        # bak.bak-decrypt
+        bak.bak-decrypt
       ]
       ++ (import ./tools.nix)
       ++ (import ./../pub/functora-hakyll/nix/tools.nix)

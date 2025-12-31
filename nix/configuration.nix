@@ -752,7 +752,6 @@ in {
         ccrypt
         tor-browser-bundle-bin
         mpv
-        # cura
         git-lfs
         lesspass-cli
         usbutils
@@ -770,6 +769,7 @@ in {
         (import ./libreoffice.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
         (import ./doom.nix {pkgs = unst;})
+        (import ./prusa.nix {inherit pkgs;})
       ];
       programs.git = {
         enable = true;

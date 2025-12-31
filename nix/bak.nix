@@ -1,6 +1,6 @@
 let
   pkgs = import ./nixpkgs.nix;
-  vsn = "bak-v0.1.0";
+  vsn = "bak-v0.1.1";
 in {
   bak-status = pkgs.writeShellApplication {
     name = "bak-status";

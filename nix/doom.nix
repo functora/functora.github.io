@@ -3,6 +3,10 @@
     url = "https://github.com/pa1nki113r/Project_Brutality/archive/3f0b2f51d66ba6dc9f2d316570fa78c04a84101a.tar.gz";
     sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
   };
+  free = pkgs.fetchzip {
+    url = "https://github.com/freedoom/freedoom/releases/download/v0.13.0/freedoom-0.13.0.zip";
+    sha256 = "sha256-ieYfr4TYVRGUVriK/duN+iOlr8oAIAxz4IfnbG4hOis=";
+  };
   duhd = ../bak/doom/duhd;
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
@@ -43,6 +47,9 @@
   mkDoomPb = {
     tag,
     wad,
+    mod ? null,
+    hd ? false,
+    fx ? true,
   }: let
     name = "doom-pb-${tag}";
   in {
@@ -50,14 +57,25 @@
       inherit name;
       text = ''
         ${pkgs.gzdoom}/bin/gzdoom \
-          -iwad ${wad} \
-          -file ${../bak/doom/HD_Map_Enhancements.wad} \
+          -iwad ${wad} ${
+          if mod == null
+          then ""
+          else mod
+        } ${
+          if fx
+          then "-file ${../bak/doom/CodeFX_v2.55.pk3}"
+          else ""
+        } ${
+          if hd
+          then "-file ${../bak/doom/HD_Map_Enhancements.wad}"
+          else ""
+        } \
           -file ${pb} \
           -file "${duhd}/1 lights2.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/0 Parallax PBR.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 1920x1080 .pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3" \
-          -file ${../bak/doom/relite_0.7.3b.pk3} \
+          -file ${../bak/doom/relite_0.6.7a.pk3} \
           -file ${../bak/doom/Doom2016_OST.pk3} \
           -file ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3} \
           -file ${../bak/doom/cblood.pk3} \
@@ -103,6 +121,14 @@
         };
       }
       // mkDoomPb {
+        tag = "free1";
+        wad = "${free}/freedoom1.wad";
+      }
+      // mkDoomPb {
+        tag = "free2";
+        wad = "${free}/freedoom2.wad";
+      }
+      // mkDoomPb {
         tag = "1";
         wad = ../bak/doom/wads/doomu.wad;
       }
@@ -117,6 +143,11 @@
       // mkDoomPb {
         tag = "plutonia";
         wad = ../bak/doom/wads/plutonia.wad;
+      }
+      // mkDoomPb {
+        tag = "annie";
+        wad = ../bak/doom/wads/doom2.wad;
+        mod = "-file ${../bak/doom/Annie-E1-v1.1.zip}";
       });
 in
   pkgs.symlinkJoin {

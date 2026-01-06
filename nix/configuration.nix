@@ -809,7 +809,7 @@ in {
       home.file = {
         ".config/qutebrowser/config.py".source = ../cfg/qutebrowser.py;
         ".config/qutebrowser/blocked-hosts".text = blocked-hosts;
-        ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
+        # ".config/mps-youtube/config.json".source = ../cfg/yewtube.json;
         ".config/warpd/config".source = ../cfg/warpd.txt;
         ".config/nvim/coc-settings.json".source = ../cfg/coc-settings.json;
       };
@@ -995,10 +995,8 @@ in {
           menu = "bemenu-run";
           defaultWorkspace = "workspace number 1";
           output = {
-            DVI-D-1 = {
-              mode = "1280x720@60.000Hz";
-              # mode = "1920x1080@60.000Hz";
-            };
+            DVI-D-1.mode = "1280x720@60.000Hz";
+            HDMI-A-2.mode = "2560x1440@100.000Hz";
           };
           #
           # TODO : remove when kanshi service bug is fixed:

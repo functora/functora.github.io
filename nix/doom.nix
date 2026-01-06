@@ -48,8 +48,8 @@
     tag,
     wad,
     mod ? null,
-    hd ? false,
     fx ? true,
+    hd ? false,
   }: let
     name = "doom-pb-${tag}";
   in {
@@ -63,7 +63,7 @@
           else mod
         } ${
           if fx
-          then "-file ${../bak/doom/CodeFX_v2.55.pk3}"
+          then "-file ${../bak/doom/CryosUltDoomSkies.wad} ${../bak/doom/DestDec_v2.pk3} ${../bak/doom/CodeFX_v2.55.pk3}"
           else ""
         } ${
           if hd
@@ -71,7 +71,7 @@
           else ""
         } \
           -file ${pb} \
-          -file "${duhd}/1 lights2.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/0 Parallax PBR.pk3" \
+          -file "${duhd}/12 Flashlight++.pk3" "${duhd}/0 Parallax PBR.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3" \

@@ -73,7 +73,7 @@
           -file ${pb} \
           -file "${duhd}/1 lights2.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/14 brightmaps2.wad" "${duhd}/20 WorldGamma.wad" "${duhd}/21 BloomBoost.wad" "${duhd}/0 Parallax PBR.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" \
-          -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 1920x1080 .pk3" \
+          -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" \
           -file "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3" \
           -file ${../bak/doom/relite_0.6.7a.pk3} \
           -file ${../bak/doom/Doom2016_OST.pk3} \

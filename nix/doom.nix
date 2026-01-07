@@ -94,7 +94,7 @@
     // mkDoomGame {
       name = "doom-cats-${tag}";
       game = ../bak/doom/Space_Cats_Saga_1.41.wad;
-      relite = ../bak/doom/relite_0.5.2a.pk3;
+      relite = ../bak/doom/relite_0.5a.pk3;
       nashgore = ../bak/doom/nashgore.pk3;
     };
   games =

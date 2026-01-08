@@ -71,11 +71,13 @@
             if hd
             then ../bak/doom/HD_Map_Enhancements.wad
             else ""
-          } ${game} "${duhd}/12 Flashlight++.pk3" "${duhd}/0 Parallax PBR.pk3" \
+          } ${game} \
+            "${duhd}/1 lights2.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/0 Parallax PBR.pk3" \
             "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" \
             "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" \
             "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3" \
             ${relite} \
+            ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
             ${../bak/doom/Doom2016_OST.pk3} \
             ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3} \
             ${nashgore} \

@@ -762,6 +762,7 @@ in {
         vibe
         qute
         fastfetch
+        (import ./trimout.nix)
         (import ./pdfmaker.nix)
         (import ./vidmaker.nix)
         (import ./clipmaker.nix)
@@ -771,7 +772,6 @@ in {
         (import ./bip39-wordlist.nix)
         (import ./doom.nix {pkgs = unst;})
         (import ./prusa.nix {inherit pkgs;})
-        (import ./shotcut.nix {})
         (import ./wf-recorder.nix {})
       ];
       programs.git = {

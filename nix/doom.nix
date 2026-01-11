@@ -47,7 +47,7 @@
     sandbox.config.env;
   mkDoom = {
     tag,
-    wad,
+    wad ? ../bak/doom/wads/doom2.wad,
     mod ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? pb,
@@ -92,7 +92,6 @@
       }
       // mkDoom {
         tag = "2";
-        wad = ../bak/doom/wads/doom2.wad;
       }
       // mkDoom {
         tag = "tnt";
@@ -104,12 +103,25 @@
       }
       // mkDoom {
         tag = "annie";
-        wad = ../bak/doom/wads/doom2.wad;
         mod = ../bak/doom/Annie-E1-v1.1.zip;
       }
       // mkDoom {
+        tag = "scorched-heritage";
+        mod = ../bak/doom/ScorchedHeritage.wad;
+        relite = "";
+      }
+      // mkDoom {
+        tag = "slum-alley";
+        mod = ../bak/doom/SlumAlley.wad;
+        relite = "";
+      }
+      // mkDoom {
+        tag = "eviternity";
+        mod = ../bak/doom/Eviternity.wad;
+        relite = "";
+      }
+      // mkDoom {
         tag = "cats";
-        wad = ../bak/doom/wads/doom2.wad;
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
         total = ../bak/doom/Space_Cats_Saga_1.41.wad;
         music = "";
@@ -118,7 +130,6 @@
       }
       // mkDoom {
         tag = "bloom";
-        wad = ../bak/doom/wads/doom2.wad;
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
         total = ../bak/doom/bloom/Bloom.pk3;
         music = "";
@@ -127,7 +138,6 @@
       }
       // mkDoom {
         tag = "infinite";
-        wad = ../bak/doom/wads/doom2.wad;
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;
         liquid = ''"${duhd}/26 Liquids.pk3"'';

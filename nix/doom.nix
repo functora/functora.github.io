@@ -52,8 +52,10 @@
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? pb,
     music ? "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}",
+    lights ? ''"${duhd}/1 lights2.wad"'',
     liquid ? ltp701,
     relite ? ../bak/doom/relite_0.6.7a.pk3,
+    parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
   }: {
     "doom-${tag}" = mkDoomSand {
@@ -66,11 +68,13 @@
           ${gfx} \
           ${total} \
           ${music} \
-          "${duhd}/1 lights2.wad" "${duhd}/12 Flashlight++.pk3" "${duhd}/0 Parallax PBR.pk3" \
+          ${lights} \
           ${liquid} \
           ${relite} \
-          ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
+          ${parallax} \
           ${nashgore} \
+          "${duhd}/12 Flashlight++.pk3" \
+          ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
           ${../bak/doom/cblood.pk3} \
           ${../bak/doom/LastWeapon.pk3}
       '';
@@ -116,9 +120,32 @@
         relite = "";
       }
       // mkDoom {
-        tag = "eviternity";
-        mod = ../bak/doom/Eviternity.wad;
+        tag = "i-hate-storm";
+        mod = ../bak/doom/IHateStorm.wad;
         relite = "";
+      }
+      // mkDoom {
+        tag = "lilliput-lane";
+        mod = ../bak/doom/LilliputLane.wad;
+        relite = "";
+      }
+      // mkDoom {
+        tag = "hell-fire";
+        mod = ../bak/doom/HellFireCollectionV1-6.pk3;
+      }
+      // mkDoom {
+        tag = "dbp37-augzen";
+        mod = ../bak/doom/DBP37_AUGZEN.wad;
+        relite = ../bak/doom/relite_0.5a.pk3;
+      }
+      // mkDoom {
+        tag = "mmdcxiv-debut";
+        mod = ../bak/doom/MMDCXIV-Debut.pk3;
+        relite = ../bak/doom/relite_0.5a.pk3;
+      }
+      // mkDoom {
+        tag = "dex";
+        mod = ../bak/doom/DEX_1.wad;
       }
       // mkDoom {
         tag = "cats";

@@ -41,6 +41,17 @@ macro_rules! always {
     ($x:expr) => {{ move |_| $x }};
 }
 
+pub trait Tweak {
+    fn tweak(&mut self, f: impl FnOnce(&Self) -> Self)
+    where
+        Self: Sized;
+}
+impl<T> Tweak for T {
+    fn tweak(&mut self, f: impl FnOnce(&T) -> T) {
+        *self = f(self);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,5 +130,18 @@ mod tests {
         });
         assert_eq!(f(3), "He");
         assert_eq!(f(4), "He");
+    }
+
+    #[test]
+    fn tweak_method() {
+        let mut x = "Hello".to_string();
+        x.tweak(|s| s.to_uppercase());
+        assert_eq!(x, "HELLO");
+    }
+    #[test]
+    fn tweak_nested() {
+        let mut x = ((("hello".to_string(), 3), 2), 1);
+        x.0.0.0.tweak(|x| x.to_uppercase());
+        assert_eq!(x, ((("HELLO".to_string(), 3), 2), 1));
     }
 }

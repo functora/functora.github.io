@@ -1,0 +1,7 @@
+addkeysection "Fast Swap" FastSwapSection
+addmenukey "Fast Swap" +fastswap
+
+alias +fastswap "netevent FastSwapPressed"
+alias -fastswap "netevent FastSwapReleased"
+
+defaultbind q +fastswap

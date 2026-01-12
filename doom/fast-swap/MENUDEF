@@ -1,0 +1,13 @@
+AddOptionMenu "OptionsMenu"
+{
+    Submenu "Fast Swap Options", "FastSwapOptionsMenu"
+}
+
+OptionMenu "FastSwapOptionsMenu"
+{
+    Title "Fast Swap Options"
+
+    Control "Fast Swap", "+fastswap"
+    Slider  "Update Delay (ms)", "fastswap_delay", 0, 5000, 1
+}
+

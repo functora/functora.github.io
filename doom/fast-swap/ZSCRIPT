@@ -1,0 +1,109 @@
+version "4.13.0"
+
+class FastSwapHandler : EventHandler
+{
+    struct PlayerSwapData
+    {
+        Class<Weapon> CurrentWeapon;   // last committed weapon
+        Class<Weapon> PreviousWeapon;  // weapon before CurrentWeapon
+
+        Class<Weapon> ObservedWeapon;  // currently observed ReadyWeapon
+        int StableTimer;               // debounce timer
+
+        bool WasPressed;               // key edge detect
+    }
+
+    private PlayerSwapData data[MAXPLAYERS];
+    private bool keyPressed[MAXPLAYERS];
+
+    private CVar fastswapDelay;
+
+    override void WorldTick()
+    {
+        // Lazy CVar init (EventHandler-safe)
+        if (fastswapDelay == null)
+            fastswapDelay = CVar.FindCVar("fastswap_delay");
+
+        int delayTics = 0;
+        if (fastswapDelay != null)
+            delayTics = (fastswapDelay.GetInt() * 35) / 1000;
+
+        for (int i = 0; i < MAXPLAYERS; i++)
+        {
+            if (!playeringame[i] || players[i].mo == null)
+                continue;
+
+            PlayerInfo p = players[i];
+            PlayerPawn pmo = p.mo;
+
+            Class<Weapon> now =
+                (p.ReadyWeapon != null) ? p.ReadyWeapon.GetClass() : null;
+
+            // --- INITIALIZE ---
+            if (data[i].CurrentWeapon == null && now != null)
+            {
+                data[i].CurrentWeapon  = now;
+                data[i].ObservedWeapon = now;
+                data[i].StableTimer    = 0;
+            }
+
+            // --- DEBOUNCED WEAPON TRACKING (SCROLL SAFE) ---
+            if (now != data[i].ObservedWeapon)
+            {
+                data[i].ObservedWeapon = now;
+                data[i].StableTimer    = delayTics;
+            }
+            else if (data[i].StableTimer > 0)
+            {
+                data[i].StableTimer--;
+
+                if (data[i].StableTimer == 0 &&
+                    now != data[i].CurrentWeapon)
+                {
+                    data[i].PreviousWeapon = data[i].CurrentWeapon;
+                    data[i].CurrentWeapon  = now;
+                }
+            }
+
+            // --- FASTSWAP INPUT EDGE ---
+            bool justPressed =
+                keyPressed[i] && !data[i].WasPressed;
+
+            // 🔥 CRITICAL: force-commit pending change
+            if (justPressed && data[i].StableTimer > 0)
+            {
+                if (data[i].ObservedWeapon != data[i].CurrentWeapon)
+                {
+                    data[i].PreviousWeapon = data[i].CurrentWeapon;
+                    data[i].CurrentWeapon  = data[i].ObservedWeapon;
+                }
+                data[i].StableTimer = 0;
+            }
+
+            // --- FAST SWAP EXECUTION ---
+            if (justPressed)
+            {
+                if (data[i].PreviousWeapon != null &&
+                    (p.ReadyWeapon == null ||
+                     p.ReadyWeapon.GetClass() != data[i].PreviousWeapon))
+                {
+                    pmo.A_SelectWeapon(data[i].PreviousWeapon);
+                }
+            }
+
+            data[i].WasPressed = keyPressed[i];
+        }
+    }
+
+    override void NetworkProcess(ConsoleEvent e)
+    {
+        if (e.Player < 0 || e.Player >= MAXPLAYERS)
+            return;
+
+        if (e.Name ~== "FastSwapPressed")
+            keyPressed[e.Player] = true;
+        else if (e.Name ~== "FastSwapReleased")
+            keyPressed[e.Player] = false;
+    }
+}
+

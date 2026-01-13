@@ -50,11 +50,11 @@
     wad ? ../bak/doom/wads/doom2.wad,
     mod ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
-    total ? pb,
+    total ? ../bak/doom/DiamondDragon.pk3,
     music ? "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}",
     lights ? ''"${duhd}/1 lights2.wad"'',
-    liquid ? ltp701,
-    relite ? ../bak/doom/relite_0.6.7a.pk3,
+    liquid ? ../bak/doom/new-liquids.pk3,
+    relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
   }: {
@@ -76,7 +76,7 @@
           "${duhd}/12 Flashlight++.pk3" \
           ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
           ${../bak/doom/cblood.pk3} \
-          ${../bak/doom/LastWeapon.pk3}
+          ${../bak/doom/fast-swap.pk3}
       '';
     };
   };
@@ -108,6 +108,7 @@
       // mkDoom {
         tag = "annie";
         mod = ../bak/doom/Annie-E1-v1.1.zip;
+        relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
         tag = "scorched-heritage";
@@ -127,6 +128,18 @@
       // mkDoom {
         tag = "lilliput-lane";
         mod = ../bak/doom/LilliputLane.wad;
+      }
+      // mkDoom {
+        tag = "rmg-adcd";
+        mod = ../bak/doom/RMG_ADCD.wad;
+      }
+      // mkDoom {
+        tag = "rmg-urban";
+        mod = ../bak/doom/RMG-UrbnCrsd_24-04-23.wad;
+      }
+      // mkDoom {
+        tag = "rmg-city";
+        mod = ../bak/doom/RMG_City.wad;
         relite = "";
       }
       // mkDoom {
@@ -136,7 +149,7 @@
       // mkDoom {
         tag = "dbp37-augzen";
         mod = ../bak/doom/DBP37_AUGZEN.wad;
-        relite = ../bak/doom/relite_0.5a.pk3;
+        relite = "";
       }
       // mkDoom {
         tag = "mmdcxiv-debut";
@@ -148,11 +161,27 @@
         mod = ../bak/doom/DEX_1.wad;
       }
       // mkDoom {
+        tag = "the-experiment";
+        mod = ../bak/doom/TheExperiment.wad;
+        music = ../bak/doom/TEX_Mus.wad;
+      }
+      // mkDoom {
+        tag = "neon-overdrive";
+        mod = ../bak/doom/NEONOVER.wad;
+        relite = ../bak/doom/relite_0.5.2a.pk3;
+      }
+      // mkDoom {
+        tag = "reds-over-world";
+        total = ../bak/doom/RedsOverWorld_2.0.pk3;
+        liquid = ltp701;
+      }
+      // mkDoom {
         tag = "cats";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
         total = ../bak/doom/Space_Cats_Saga_1.41.wad;
         music = "";
         relite = ../bak/doom/relite_0.5a.pk3;
+        liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {
@@ -160,7 +189,7 @@
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
         total = ../bak/doom/bloom/Bloom.pk3;
         music = "";
-        relite = ../bak/doom/relite_0.7.3b.pk3;
+        liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {

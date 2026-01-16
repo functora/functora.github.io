@@ -14,6 +14,7 @@
     sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
   };
   ltp701 = ''"${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3"'';
+  mkCod = mod: ''"${../bak/doom/cod-full}/(001)_CodV_FileA_BrutalV22test4_FIX.pk3" "${../bak/doom/cod-full}/(001)Addon_gearbox-0.7.3.pk3" ${mod} "${../bak/doom/cod-full}/ZZD_CodV_FileB_Graphics.wad" "${../bak/doom/cod-full}/ZZD_CodV_FileC_MainData.wad"'';
   mkDoomSand = {
     name,
     text,
@@ -161,19 +162,16 @@
         mod = ../bak/doom/DEX_1.wad;
       }
       // mkDoom {
-        tag = "the-experiment";
-        mod = ../bak/doom/TheExperiment.wad;
-        music = ../bak/doom/TEX_Mus.wad;
-      }
-      // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
+        music = "";
         relite = ../bak/doom/relite_0.5.2a.pk3;
       }
       // mkDoom {
-        tag = "reds-over-world";
-        total = ../bak/doom/RedsOverWorld_2.0.pk3;
-        liquid = ltp701;
+        tag = "hacx";
+        wad = ../bak/doom/hacx-2.0-r61.wad;
+        music = "";
+        relite = ../bak/doom/relite_0.5.2a.pk3;
       }
       // mkDoom {
         tag = "cats";

@@ -63,8 +63,6 @@ in
       EXT="''${BASE##*.}"
       OUTPUT="''${NAME}_trimmed_fadeout.''${EXT}"
 
-      FILTER="[0:v]fade=t=out:st=''${FADE_START}:d=''${FADE},scale='min(iw*2,4096)':'min(ih*2,4096)':flags=lanczos:force_original_aspect_ratio=decrease,format=nv12,hwupload[v];[0:a]afade=t=out:st=''${FADE_START}:d=''${FADE}[a]"
-
       echo "Input duration: $DURATION"
       echo "Trim start:     $TRIM_START"
       echo "Trim end:       $TRIM_END"
@@ -74,22 +72,26 @@ in
       echo "Output:         $OUTPUT"
       echo
 
+      FILTER="[0:v]fps=60:round=near,setpts=PTS-STARTPTS,fade=t=out:st=''${FADE_START}:d=''${FADE},format=yuv420p[v];[0:a]asetpts=PTS-STARTPTS,afade=t=out:st=''${FADE_START}:d=''${FADE},aresample=async=1:min_hard_comp=0.300:first_pts=0,aresample=48000:osr=48000[a]"
+
       ffmpeg -y \
-        -init_hw_device vaapi=va:/dev/dri/renderD128 \
-        -filter_hw_device va \
-        -ss "$TRIM_START" \
+        -fflags +genpts \
+        -avoid_negative_ts make_zero \
         -i "$INPUT" \
+        -ss "$TRIM_START" \
         -t "$NEW_DURATION" \
+        -r 60 \
+        -vsync cfr \
         -filter_complex "$FILTER" \
         -map "[v]" -map "[a]" \
         -movflags +faststart \
-        -c:v h264_vaapi \
+        -c:v libx264 \
+        -preset medium \
+        -crf 18 \
         -profile:v high \
         -level:v 4.2 \
-        -rc_mode CQP \
-        -qp 16 \
         -bf 2 \
-        -refs 3 \
+        -g 120 \
         -c:a aac \
         "$OUTPUT"
 

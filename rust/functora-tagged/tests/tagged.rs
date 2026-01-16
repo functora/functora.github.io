@@ -478,3 +478,12 @@ fn test_tagged_copy() {
     assert_eq!(tagged1, tagged2);
     assert_eq!(tagged1.rep(), tagged2.rep());
 }
+
+#[test]
+fn test_tagged_untag() {
+    let rep_value = 110;
+    let tagged_instance =
+        TestTagged::new(rep_value).unwrap();
+    let untagged_value = tagged_instance.untag();
+    assert_eq!(untagged_value, rep_value);
+}

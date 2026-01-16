@@ -102,7 +102,7 @@ These integrations respect the `Refine` rules defined for your types.
 
 ## Examples
 
-You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
+You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
 
 ### Default Newtype
 

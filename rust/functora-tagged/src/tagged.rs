@@ -19,6 +19,9 @@ impl<Rep, Tag> Tagged<Rep, Tag> {
     pub fn rep(&self) -> &Rep {
         &self.0
     }
+    pub fn untag(self) -> Rep {
+        self.0
+    }
 }
 
 impl<Rep: Eq, Tag> Eq for Tagged<Rep, Tag> {}

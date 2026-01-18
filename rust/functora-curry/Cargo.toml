@@ -1,0 +1,12 @@
+[package]
+name = "functora-curry"
+license = "MIT"
+version = "0.1.0"
+edition = "2024"
+keywords = ["rust-patterns"]
+categories = ["rust-patterns"]
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-curry"
+documentation = "https://docs.rs/functora-curry"
+description = "Macro-free currying on stable Rust."
+
+[dependencies]

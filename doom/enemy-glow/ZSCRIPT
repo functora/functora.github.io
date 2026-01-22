@@ -1,0 +1,45 @@
+version "4.12.2"
+
+class EnemyGlowFlag : Inventory
+{
+    default
+    {
+        Inventory.MaxAmount 1;
+    }
+}
+
+class EnemyGlowHandler : EventHandler
+{
+    override void WorldThingSpawned(WorldEvent e)
+    {
+        super.WorldThingSpawned(e);
+
+        let mo = e.Thing;
+        if (mo && mo.bIsMonster && !mo.bFriendly && !mo.CountInv("EnemyGlowFlag"))
+        {
+            mo.GiveInventory("EnemyGlowFlag", 1);
+
+            // Pulsing flame-red light: illuminates floors/walls/ceilings/objects AROUND enemy
+            // (enemy sprite stays normal/unlit; auto-occludes through walls/doors)
+            mo.A_AttachLight(
+                "RedGlow",                              // ID
+                DynamicLight.PulseLight,                // Pulsing type (flame-like!)
+                "ff6600",                               // Flame-orange-red color
+                180,                                    // Max radius (lights ~10-15 units around)
+                90,                                     // Min radius (pulse range)
+                DynamicLight.LF_ATTENUATE | DynamicLight.LF_DONTLIGHTSELF,  // Realistic shading + NO self-glow on enemy
+                (0, 0, mo.Height * 0.5)                 // Center-body offset
+            );
+        }
+    }
+
+    override void WorldThingDied(WorldEvent e)
+    {
+        super.WorldThingDied(e);
+        let mo = e.Thing;
+        if (mo && mo.bIsMonster)
+        {
+            mo.A_RemoveLight("RedGlow");
+        }
+    }
+}

@@ -77,7 +77,8 @@
           "${duhd}/12 Flashlight++.pk3" \
           ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
           ${../bak/doom/cblood.pk3} \
-          ${../bak/doom/fast-swap.pk3}
+          ${../bak/doom/fast-swap.pk3} \
+          ${../bak/doom/enemy-glow.pk3}
       '';
     };
   };
@@ -166,6 +167,34 @@
         mod = ../bak/doom/NEONOVER.wad;
         music = "";
         relite = ../bak/doom/relite_0.5.2a.pk3;
+      }
+      // mkDoom {
+        tag = "city-assault";
+        mod = ../bak/doom/city-assault.wad;
+        music = "";
+      }
+      // mkDoom {
+        tag = "slime";
+        mod = ../bak/doom/SLIMECTY.wad;
+        relite = "";
+      }
+      // mkDoom {
+        tag = "d2ico";
+        mod = ../bak/doom/D2ICO.wad;
+        music = "";
+      }
+      // mkDoom {
+        tag = "ihni";
+        total = ../bak/doom/ihni-1.04.pk3;
+        music = "";
+        relite = "";
+      }
+      // mkDoom {
+        wad = ../bak/doom/wads/doom.wad;
+        tag = "spectacle-creep";
+        mod = ../bak/doom/spectacle_creep_build10D.wad;
+        music = "";
+        relite = "";
       }
       // mkDoom {
         tag = "hacx";

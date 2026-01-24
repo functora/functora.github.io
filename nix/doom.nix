@@ -104,8 +104,25 @@
         wad = ../bak/doom/wads/tnt.wad;
       }
       // mkDoom {
+        tag = "tnt2";
+        mod = ../bak/doom/TNT2_1_1.wad;
+        gfx = ../bak/doom/CodeFX_v1.101.pk3;
+        relite = ../bak/doom/relite_0.6.7a.pk3;
+      }
+      // mkDoom {
         tag = "plutonia";
         wad = ../bak/doom/wads/plutonia.wad;
+      }
+      // mkDoom {
+        tag = "ltg-2";
+        total = ../bak/doom/LaTailorGirl_v190.pk3;
+        relite = ../bak/doom/relite_0.6.7a.pk3;
+      }
+      // mkDoom {
+        tag = "aby-2";
+        total = ../bak/doom/AbyssalMarine.pk3;
+        liquid = ltp701;
+        relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
         tag = "annie";
@@ -161,6 +178,10 @@
       // mkDoom {
         tag = "dex";
         mod = ../bak/doom/DEX_1.wad;
+      }
+      // mkDoom {
+        tag = "nostalgic-entropy";
+        mod = ../bak/doom/NE.wad;
       }
       // mkDoom {
         tag = "neon-overdrive";

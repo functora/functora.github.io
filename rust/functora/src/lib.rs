@@ -12,35 +12,6 @@ impl<T> Void for T {
     fn void(&self) {}
 }
 
-pub fn once<T, U>(x: T) -> impl FnOnce(U) -> T {
-    move |_| x
-}
-pub trait Once<T> {
-    fn once<U>(self) -> impl FnOnce(U) -> T;
-}
-impl<T> Once<T> for T {
-    fn once<U>(self) -> impl FnOnce(U) -> T {
-        move |_| self
-    }
-}
-
-pub fn always<T: Copy, U>(x: T) -> impl Fn(U) -> T {
-    move |_| x
-}
-pub trait Always<T> {
-    fn always<U>(self) -> impl Fn(U) -> Self;
-}
-impl<T: Copy> Always<T> for T {
-    fn always<U>(self) -> impl Fn(U) -> Self {
-        move |_| self
-    }
-}
-
-#[macro_export]
-macro_rules! always {
-    ($x:expr) => {{ move |_| $x }};
-}
-
 pub trait Tweak {
     fn tweak(&mut self, f: impl FnOnce(&Self) -> Self)
     where
@@ -50,6 +21,18 @@ impl<T> Tweak for T {
     fn tweak(&mut self, f: impl FnOnce(&T) -> T) {
         *self = f(self);
     }
+}
+
+pub trait Guard {
+    fn guard(&self) -> Option<()>;
+}
+impl Guard for bool {
+    fn guard(&self) -> Option<()> {
+        self.then_some(())
+    }
+}
+pub fn guard<T: Guard>(x: &T) -> Option<()> {
+    x.guard()
 }
 
 #[cfg(test)]
@@ -84,52 +67,6 @@ mod tests {
         let x = "Hello".to_string();
         assert_eq!(x.void(), ());
         assert_eq!(x.void(), ());
-    }
-
-    #[test]
-    fn once_function() {
-        let f = once("Hello".to_string());
-        assert_eq!(f(3), "Hello");
-    }
-    #[test]
-    fn once_method() {
-        let f = "Hello".to_string().once();
-        assert_eq!(f(3), "Hello");
-    }
-
-    #[test]
-    fn always_function() {
-        let f = always("Hello");
-        assert_eq!(f(3), "Hello");
-        assert_eq!(f(4), "Hello");
-    }
-    #[test]
-    fn always_method() {
-        let f = "Hello".always();
-        assert_eq!(f(3), "Hello");
-        assert_eq!(f(4), "Hello");
-    }
-
-    #[test]
-    fn always_macro_lit() {
-        let f = always!("Hello");
-        assert_eq!(f(3), "Hello");
-        assert_eq!(f(4), "Hello");
-    }
-    #[test]
-    fn always_macro_exp() {
-        let f = always!("Hello".split_at(2).0);
-        assert_eq!(f(3), "He");
-        assert_eq!(f(4), "He");
-    }
-    #[test]
-    fn always_macro_blk() {
-        let f = always!({
-            let x = "Hello".split_at(2);
-            x.0
-        });
-        assert_eq!(f(3), "He");
-        assert_eq!(f(4), "He");
     }
 
     #[test]

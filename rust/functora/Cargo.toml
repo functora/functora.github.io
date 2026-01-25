@@ -1,7 +1,7 @@
 [package]
 name = "functora"
 license = "MIT"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 keywords = ["rust-patterns", "prelude"]
 categories = ["rust-patterns"]
@@ -10,3 +10,21 @@ documentation = "https://docs.rs/functora"
 description = "Missing pieces of the Rust standard library."
 
 [dependencies]
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+# strict
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+# relaxed
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }

@@ -31,6 +31,22 @@ impl Guard for bool {
         self.then_some(())
     }
 }
+impl<T> Guard for Option<T>
+where
+    T: Guard,
+{
+    fn guard(self) -> Option<()> {
+        self?.guard()
+    }
+}
+impl<T, E> Guard for Result<T, E>
+where
+    T: Guard,
+{
+    fn guard(self) -> Option<()> {
+        self.ok()?.guard()
+    }
+}
 pub fn guard<T: Guard>(x: T) -> Option<()> {
     x.guard()
 }
@@ -100,5 +116,33 @@ mod tests {
         };
         assert_eq!(f(1), Some(42));
         assert_eq!(f(0), None);
+    }
+    #[test]
+    fn guard_option() {
+        assert_eq!(Some(true).guard(), Some(()));
+        assert_eq!(Some(false).guard(), None);
+        assert_eq!(None::<bool>.guard(), None);
+    }
+    #[test]
+    fn guard_result() {
+        assert_eq!(Ok::<_, ()>(true).guard(), Some(()));
+        assert_eq!(Ok::<_, ()>(false).guard(), None);
+        assert_eq!(Err::<bool, _>(()).guard(), None);
+    }
+    #[test]
+    fn guard_nested() {
+        assert_eq!(Some(Some(true)).guard(), Some(()));
+        assert_eq!(Some(Some(false)).guard(), None);
+        assert_eq!(Some(None::<bool>).guard(), None);
+        assert_eq!(
+            Ok::<_, ()>(Some(true)).guard(),
+            Some(())
+        );
+        assert_eq!(Ok::<_, ()>(Some(false)).guard(), None);
+        assert_eq!(Ok::<_, ()>(None::<bool>).guard(), None);
+        assert_eq!(
+            Err::<Option<bool>, _>(()).guard(),
+            None
+        );
     }
 }

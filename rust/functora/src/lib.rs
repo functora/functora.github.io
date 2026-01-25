@@ -24,14 +24,14 @@ impl<T> Tweak for T {
 }
 
 pub trait Guard {
-    fn guard(&self) -> Option<()>;
+    fn guard(self) -> Option<()>;
 }
 impl Guard for bool {
-    fn guard(&self) -> Option<()> {
+    fn guard(self) -> Option<()> {
         self.then_some(())
     }
 }
-pub fn guard<T: Guard>(x: &T) -> Option<()> {
+pub fn guard<T: Guard>(x: T) -> Option<()> {
     x.guard()
 }
 
@@ -80,5 +80,25 @@ mod tests {
         let mut x = ((("hello".to_string(), 3), 2), 1);
         x.0.0.0.tweak(|x| x.to_uppercase());
         assert_eq!(x, ((("HELLO".to_string(), 3), 2), 1));
+    }
+
+    #[test]
+    fn guard_function() {
+        assert_eq!(guard(true), Some(()));
+        assert_eq!(guard(false), None);
+    }
+    #[test]
+    fn guard_method() {
+        assert_eq!(true.guard(), Some(()));
+        assert_eq!(false.guard(), None);
+    }
+    #[test]
+    fn guard_expression() {
+        let f = |x: u32| {
+            guard(x > 0)?;
+            Some(42)
+        };
+        assert_eq!(f(1), Some(42));
+        assert_eq!(f(0), None);
     }
 }

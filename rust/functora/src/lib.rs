@@ -8,58 +8,93 @@ pub fn ok<E>() -> Result<(), E> {
     Ok(())
 }
 
-pub fn void<T>(_: T) {}
 pub trait Void {
     fn void(&self);
 }
+
 impl<T> Void for T {
     fn void(&self) {}
 }
+
+pub fn void<T>(_: T) {}
 
 pub trait Tweak {
     fn tweak(&mut self, f: impl FnOnce(&Self) -> Self)
     where
         Self: Sized;
 }
+
 impl<T> Tweak for T {
     fn tweak(&mut self, f: impl FnOnce(&T) -> T) {
         *self = f(self);
     }
 }
 
-pub trait Guard<E> {
-    fn guard(self, e: E) -> Result<(), E>;
-}
-impl<E> Guard<E> for bool {
+pub trait Guard<E>
+where
+    Self: Sized,
+{
     fn guard(self, e: E) -> Result<(), E> {
-        if self { ok() } else { Err(e) }
+        self.guard_then(|| e)
+    }
+    fn guard_then(
+        self,
+        f: impl FnOnce() -> E,
+    ) -> Result<(), E>;
+}
+
+impl<E> Guard<E> for bool {
+    fn guard_then(
+        self,
+        f: impl FnOnce() -> E,
+    ) -> Result<(), E> {
+        if self { ok() } else { Err(f()) }
     }
 }
+
 impl<T, E> Guard<E> for Option<T>
 where
     T: Guard<E>,
 {
-    fn guard(self, e: E) -> Result<(), E> {
+    fn guard_then(
+        self,
+        f: impl FnOnce() -> E,
+    ) -> Result<(), E> {
         match self {
-            None => Err(e),
-            Some(x) => x.guard(e),
+            None => Err(f()),
+            Some(x) => x.guard_then(f),
         }
     }
 }
+
 impl<T, EOuter, EInner> Guard<EOuter> for Result<T, EInner>
 where
     T: Guard<EOuter>,
     EOuter: From<EInner>,
 {
-    fn guard(self, e: EOuter) -> Result<(), EOuter> {
-        self?.guard(e)
+    fn guard_then(
+        self,
+        f: impl FnOnce() -> EOuter,
+    ) -> Result<(), EOuter> {
+        self?.guard_then(f)
     }
 }
+
 pub fn guard<T, E>(x: T, e: E) -> Result<(), E>
 where
     T: Guard<E>,
 {
     x.guard(e)
+}
+
+pub fn guard_then<T, E>(
+    x: T,
+    f: impl FnOnce() -> E,
+) -> Result<(), E>
+where
+    T: Guard<E>,
+{
+    x.guard_then(f)
 }
 
 #[cfg(test)]

@@ -9,8 +9,6 @@ repository = "https://github.com/functora/functora.github.io/tree/master/rust/fu
 documentation = "https://docs.rs/functora"
 description = "Missing pieces of the Rust standard library."
 
-[dependencies]
-
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

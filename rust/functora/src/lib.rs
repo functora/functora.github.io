@@ -65,6 +65,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::convert::Infallible;
 
     #[test]
     fn id_function() {
@@ -74,6 +75,11 @@ mod tests {
         assert_eq!(id(x), "Hello");
         let x = "Hello".to_string();
         assert_eq!(id(x), "Hello");
+    }
+
+    #[test]
+    fn ok_function() {
+        assert_eq!(ok::<Infallible>(), Ok(()));
     }
 
     #[test]
@@ -111,49 +117,161 @@ mod tests {
 
     #[test]
     fn guard_function() {
-        assert_eq!(guard(true), Some(()));
-        assert_eq!(guard(false), None);
+        assert_eq!(guard(true, ()), Ok(()));
+        assert_eq!(guard(false, "error"), Err("error"));
     }
     #[test]
     fn guard_method() {
-        assert_eq!(true.guard(), Some(()));
-        assert_eq!(false.guard(), None);
+        assert_eq!(true.guard(()), Ok(()));
+        assert_eq!(false.guard("error"), Err("error"));
     }
     #[test]
     fn guard_expression() {
         let f = |x: u32| {
-            guard(x > 0)?;
-            Some(42)
+            guard(x > 0, ())?;
+            Ok(42u32)
         };
-        assert_eq!(f(1), Some(42));
-        assert_eq!(f(0), None);
+        assert_eq!(f(1), Ok(42));
+        assert_eq!(f(0), Err(()));
     }
     #[test]
     fn guard_option() {
-        assert_eq!(Some(true).guard(), Some(()));
-        assert_eq!(Some(false).guard(), None);
-        assert_eq!(None::<bool>.guard(), None);
+        assert_eq!(Some(true).guard(()), Ok(()));
+        assert_eq!(
+            Some(false).guard("error"),
+            Err("error")
+        );
+        assert_eq!(
+            None::<bool>.guard("error"),
+            Err("error")
+        );
     }
     #[test]
     fn guard_result() {
-        assert_eq!(Ok::<_, ()>(true).guard(), Some(()));
-        assert_eq!(Ok::<_, ()>(false).guard(), None);
-        assert_eq!(Err::<bool, _>(()).guard(), None);
+        assert_eq!(
+            Ok::<_, &str>(true).guard("error"),
+            Ok(())
+        );
+        assert_eq!(
+            Ok::<_, &str>(false).guard("error"),
+            Err("error")
+        );
+        assert_eq!(
+            Err::<bool, _>("orig").guard("error"),
+            Err("orig")
+        );
     }
     #[test]
     fn guard_nested() {
-        assert_eq!(Some(Some(true)).guard(), Some(()));
-        assert_eq!(Some(Some(false)).guard(), None);
-        assert_eq!(Some(None::<bool>).guard(), None);
+        assert_eq!(Some(Some(true)).guard(()), Ok(()));
         assert_eq!(
-            Ok::<_, ()>(Some(true)).guard(),
-            Some(())
+            Some(Some(false)).guard("error"),
+            Err("error")
         );
-        assert_eq!(Ok::<_, ()>(Some(false)).guard(), None);
-        assert_eq!(Ok::<_, ()>(None::<bool>).guard(), None);
         assert_eq!(
-            Err::<Option<bool>, _>(()).guard(),
-            None
+            Some(None::<bool>).guard("error"),
+            Err("error")
+        );
+        assert_eq!(
+            Ok::<_, &str>(Some(true)).guard("error"),
+            Ok(())
+        );
+        assert_eq!(
+            Ok::<_, &str>(Some(false)).guard("error"),
+            Err("error")
+        );
+        assert_eq!(
+            Ok::<_, &str>(None::<bool>).guard("error"),
+            Err("error")
+        );
+        assert_eq!(
+            Err::<Option<bool>, _>("orig").guard("error"),
+            Err("orig")
+        );
+    }
+
+    #[test]
+    fn guard_real_life_scenarios() {
+        struct Request {
+            path: String,
+            token: Option<String>,
+        }
+
+        #[derive(Debug, PartialEq)]
+        enum Error {
+            AccessDenied,
+            RateLimitExceeded,
+            InvalidInput,
+        }
+
+        let check_access = |user_id: u32, role: &str| {
+            guard(user_id != 0, Error::InvalidInput)?;
+            guard(role == "admin", Error::AccessDenied)?;
+            Ok("Success")
+        };
+
+        assert_eq!(check_access(1, "admin"), Ok("Success"));
+        assert_eq!(
+            check_access(0, "admin"),
+            Err(Error::InvalidInput)
+        );
+        assert_eq!(
+            check_access(1, "user"),
+            Err(Error::AccessDenied)
+        );
+
+        let process_data =
+            |data: Option<u32>, limit: u32| {
+                let val =
+                    data.ok_or(Error::InvalidInput)?;
+                guard(
+                    val < limit,
+                    Error::RateLimitExceeded,
+                )?;
+                Ok(val * 2)
+            };
+
+        assert_eq!(process_data(Some(10), 20), Ok(20));
+        assert_eq!(
+            process_data(None, 20),
+            Err(Error::InvalidInput)
+        );
+        assert_eq!(
+            process_data(Some(30), 20),
+            Err(Error::RateLimitExceeded)
+        );
+
+        let handle_request = |req: Request| {
+            guard(
+                req.path.starts_with("/api"),
+                Error::InvalidInput,
+            )?;
+            req.token
+                .is_some()
+                .guard(Error::AccessDenied)?;
+            Ok("Authorized")
+        };
+
+        assert_eq!(
+            handle_request(Request {
+                path: "/api/v1".into(),
+                token: Some("abc".into())
+            }),
+            Ok("Authorized")
+        );
+        assert_eq!(
+            handle_request(Request {
+                path: "/home".into(),
+                token: Some("abc".into())
+            }),
+            Err(Error::InvalidInput)
+        );
+        assert_eq!(
+            handle_request(Request {
+                path: "/api/v1".into(),
+                token: None
+            }),
+            Err(Error::AccessDenied)
         );
     }
 }

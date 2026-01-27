@@ -184,6 +184,12 @@
         mod = ../bak/doom/NE.wad;
       }
       // mkDoom {
+        tag = "elementalism";
+        mod = ../bak/doom/Elementalism_Phase1_Full_Release_v1.3.pk3;
+        total = ../bak/doom/LaTailorGirl_v190.pk3;
+        relite = "";
+      }
+      // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
         music = "";

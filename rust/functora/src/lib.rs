@@ -18,15 +18,29 @@ impl<T> Void for T {
 
 pub fn void<T>(_: T) {}
 
-pub trait Tweak {
-    fn tweak(&mut self, f: impl FnOnce(&Self) -> Self)
-    where
-        Self: Sized;
+pub trait Tweak
+where
+    Self: Sized,
+{
+    fn tweak(&mut self, f: impl FnOnce(&Self) -> Self);
+    fn try_tweak<E>(
+        &mut self,
+        f: impl FnOnce(&Self) -> Result<Self, E>,
+    ) -> Result<(), E>;
 }
 
 impl<T> Tweak for T {
     fn tweak(&mut self, f: impl FnOnce(&T) -> T) {
         *self = f(self);
+    }
+    fn try_tweak<E>(
+        &mut self,
+        f: impl FnOnce(&T) -> Result<Self, E>,
+    ) -> Result<(), E> {
+        f(self).and_then(|x| {
+            *self = x;
+            ok()
+        })
     }
 }
 
@@ -148,6 +162,49 @@ mod tests {
         let mut x = ((("hello".to_string(), 3), 2), 1);
         x.0.0.0.tweak(|x| x.to_uppercase());
         assert_eq!(x, ((("HELLO".to_string(), 3), 2), 1));
+    }
+
+    #[test]
+    fn try_tweak_method_ok() {
+        let mut x = "41".to_string();
+        assert_eq!(
+            x.try_tweak(|s| {
+                let n: u32 = s.parse()?;
+                Ok::<String, std::num::ParseIntError>(
+                    (n + 1).to_string(),
+                )
+            }),
+            Ok(())
+        );
+        assert_eq!(x, "42");
+    }
+    #[test]
+    fn try_tweak_method_err_does_not_mutate() {
+        let mut x = "not a number".to_string();
+        assert!(
+            x.try_tweak(|s| {
+                let n: u32 = s.parse()?;
+                Ok::<String, std::num::ParseIntError>(
+                    (n + 1).to_string(),
+                )
+            })
+            .is_err()
+        );
+        assert_eq!(x, "not a number");
+    }
+    #[test]
+    fn try_tweak_nested_ok() {
+        let mut x = ((("41".to_string(), 3), 2), 1);
+        assert_eq!(
+            x.0.0.0.try_tweak(|s| {
+                let n: u32 = s.parse()?;
+                Ok::<String, std::num::ParseIntError>(
+                    (n + 1).to_string(),
+                )
+            }),
+            Ok(())
+        );
+        assert_eq!(x, ((("42".to_string(), 3), 2), 1));
     }
 
     #[test]

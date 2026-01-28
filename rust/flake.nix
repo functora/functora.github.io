@@ -350,6 +350,14 @@
               ++ [
                 pkgs.qutebrowser
                 unstable.legacyPackages.${system}.antigravity
+                (pkgs.writeShellApplication {
+                  name = "cursor";
+                  text = ''
+                    ${
+                      unstable.legacyPackages.${system}.cursor-cli
+                    }/bin/cursor-agent -f --model auto "$@"
+                  '';
+                })
               ];
           });
         packages = rec {

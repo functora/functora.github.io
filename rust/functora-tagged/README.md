@@ -33,7 +33,7 @@ pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
 The `Tagged::new` constructor returns a `Result` that can be `unwrap`ped directly if the `Tag`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
 
-## ViaString Struct
+## `ViaString` Struct
 
 The `ViaString<Rep, Tag>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`Rep`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
 
@@ -74,22 +74,22 @@ Note that the `Refine` trait has a default implementation that simply returns th
 
 ### Direct Derive:
 
-- Eq
-- PartialEq
-- Ord
-- PartialOrd
-- Clone
-- Debug
-- serde::Serialize (with `serde` feature)
-- diesel::serialize::ToSql (with `diesel` feature)
-- diesel::expression::AsExpression (with `diesel` feature)
+- `Eq`
+- `PartialEq`
+- `Ord`
+- `PartialOrd`
+- `Clone`
+- `Debug`
+- `serde::Serialize` (with `serde` feature)
+- `diesel::serialize::ToSql` (with `diesel` feature)
+- `diesel::expression::AsExpression` (with `diesel` feature)
 
 ### Refined Derive:
 
-- **FromStr**: Implemented for `Tagged<Rep, Tag>` and `ViaString<Rep, Tag>`. Returns a `ParseError<Rep, Tag>`, which can be either a `Decode` error (from `Rep::from_str`) or a `Refine` error (from `Tag::refine`). For nested types, these errors can be further nested.
-- **serde::Deserialize** (with `serde` feature)
-- **diesel::Queryable** (with `diesel` feature)
-- **diesel::deserialize::FromSql** (with `diesel` feature)
+- `FromStr`: Implemented for `Tagged<Rep, Tag>` and `ViaString<Rep, Tag>`. Returns a `ParseError<Rep, Tag>`, which can be either a `Decode` error (from `Rep::from_str`) or a `Refine` error (from `Tag::refine`). For nested types, these errors can be further nested.
+- `serde::Deserialize` (with `serde` feature)
+- `diesel::Queryable` (with `diesel` feature)
+- `diesel::deserialize::FromSql` (with `diesel` feature)
 
 ## Integrations
 

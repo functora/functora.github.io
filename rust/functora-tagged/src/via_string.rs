@@ -10,12 +10,12 @@ pub use std::str::FromStr;
 pub struct ViaString<Rep, Tag>(Rep, PhantomData<Tag>);
 
 impl<Rep, Tag> ViaString<Rep, Tag> {
-    pub fn new(rep: Rep) -> Result<Self, Tag::RefineError>
+    pub fn new(prev: Rep) -> Result<Self, Tag::RefineError>
     where
         Tag: Refine<Rep>,
     {
-        Tag::refine(rep)
-            .map(|rep| ViaString(rep, PhantomData))
+        Tag::refine(prev)
+            .map(|next| ViaString(next, PhantomData))
     }
     pub fn rep(&self) -> &Rep {
         &self.0

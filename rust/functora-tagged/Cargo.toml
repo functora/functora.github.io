@@ -12,7 +12,9 @@ description = "Lightweight, macro-free newtypes with refinement and derived trai
 [dependencies]
 derive_more = { version = "2.0.1", features = ["display"] }
 diesel = { version = "2.3.3", optional = true }
+num-traits = "0.2.19"
 serde = { version = "1.0.228", optional = true }
+tap = "1.0.1"
 
 [features]
 default = []
@@ -25,3 +27,25 @@ libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
 num-traits = "0.2.19"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "0.9.8"
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+# strict
+or_fun_call = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+shadow_same = "warn"
+shadow_reuse = "warn"
+shadow_unrelated = "warn"
+# relaxed
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }

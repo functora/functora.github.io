@@ -114,6 +114,14 @@ impl Refine<Number> for Times<Meter, Meter> {
     type RefineError = ();
 }
 
+impl Refine<Number> for Per<Number, Meter> {
+    type RefineError = ();
+}
+
+impl Refine<Number> for Times<Meter, Second> {
+    type RefineError = ();
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FailNumber;
 
@@ -356,6 +364,29 @@ fn test_fdiv_cancel_2() {
     let res: Tagged<Number, Per<Number, Second>> =
         lhs.fdiv(&rhs).unwrap();
     assert_eq!(res.rep(), &Number(5.0));
+}
+
+#[test]
+fn test_scalar_ops() {
+    let t = Tagged::<Number, Meter>::new(Number(10.0)).unwrap();
+    let s = Number(2.0);
+
+    // Tag * Rep
+    let res1: Tagged<Number, Meter> = t.fmul(&s).unwrap();
+    assert_eq!(res1.rep(), &Number(20.0));
+
+    // Rep * Tag
+    let res2: Tagged<Number, Meter> = s.fmul(&t).unwrap();
+    assert_eq!(res2.rep(), &Number(20.0));
+
+    // Tag / Rep
+    let res3: Tagged<Number, Meter> = t.fdiv(&s).unwrap();
+    assert_eq!(res3.rep(), &Number(5.0));
+
+    // Rep / Tag = 1/Tag (Per<Rep, Tag>)
+    let res4: Tagged<Number, Per<Number, Meter>> =
+        s.fdiv(&t).unwrap();
+    assert_eq!(res4.rep(), &Number(0.2));
 }
 
 #[test]

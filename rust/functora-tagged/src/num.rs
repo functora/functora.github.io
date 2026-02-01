@@ -200,6 +200,47 @@ where
     }
 }
 
+impl<Rep, Tag> FMul<Rep, Tagged<Rep, Tag>>
+    for Tagged<Rep, Tag>
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fmul(
+        &self,
+        rhs: &Rep,
+    ) -> Result<
+        Tagged<Rep, Tag>,
+        FNumError<Tagged<Rep, Tag>, Rep>,
+    > {
+        self.rep()
+            .fmul(rhs)
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
+impl<Rep, Tag> FMul<Tagged<Rep, Tag>, Tagged<Rep, Tag>>
+    for Rep
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fmul(
+        &self,
+        rhs: &Tagged<Rep, Tag>,
+    ) -> Result<
+        Tagged<Rep, Tag>,
+        FNumError<Rep, Tagged<Rep, Tag>>,
+    > {
+        self.fmul(rhs.rep())
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
 impl<Rep, LTag, RTag>
     FMul<Tagged<Rep, RTag>, Tagged<Rep, LTag>>
     for Tagged<Rep, Per<LTag, RTag>>
@@ -255,6 +296,27 @@ where
     }
 }
 
+impl<Rep, Tag> FDiv<Rep, Tagged<Rep, Tag>>
+    for Tagged<Rep, Tag>
+where
+    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fdiv(
+        &self,
+        rhs: &Rep,
+    ) -> Result<
+        Tagged<Rep, Tag>,
+        FNumError<Tagged<Rep, Tag>, Rep>,
+    > {
+        self.rep()
+            .fdiv(rhs)
+            .map_err(|_| FNumError::Div(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Div(*self, *rhs))
+    }
+}
+
 impl<Rep, Tag> FDiv<Tagged<Rep, Tag>, Rep>
     for Tagged<Rep, Tag>
 where
@@ -263,10 +325,35 @@ where
 {
     fn fdiv(
         &self,
-        rhs: &Self,
-    ) -> Result<Rep, FNumError<Self, Self>> {
+        rhs: &Tagged<Rep, Tag>,
+    ) -> Result<
+        Rep,
+        FNumError<Tagged<Rep, Tag>, Tagged<Rep, Tag>>,
+    > {
         self.rep()
             .fdiv(rhs.rep())
+            .map_err(|_| FNumError::Div(*self, *rhs))
+    }
+}
+
+impl<Rep, Tag>
+    FDiv<Tagged<Rep, Tag>, Tagged<Rep, Per<Rep, Tag>>>
+    for Rep
+where
+    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    Tag: Debug,
+    Per<Rep, Tag>: Refine<Rep>,
+{
+    fn fdiv(
+        &self,
+        rhs: &Tagged<Rep, Tag>,
+    ) -> Result<
+        Tagged<Rep, Per<Rep, Tag>>,
+        FNumError<Rep, Tagged<Rep, Tag>>,
+    > {
+        self.fdiv(rhs.rep())
+            .map_err(|_| FNumError::Div(*self, *rhs))?
+            .pipe(Tagged::new)
             .map_err(|_| FNumError::Div(*self, *rhs))
     }
 }
@@ -322,6 +409,9 @@ where
     }
 }
 
+//
+// (LTag / RTag) / LTag = 1 / RTag
+//
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, LTag>, Tagged<Rep, Per<Rep, RTag>>>
     for Tagged<Rep, Per<LTag, RTag>>

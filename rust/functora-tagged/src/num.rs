@@ -141,6 +141,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub enum TimesTag {}
 pub type Times<LTag, RTag> = (TimesTag, LTag, RTag);
 
@@ -212,6 +213,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub enum PerTag {}
 pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
 

@@ -5,7 +5,7 @@ use num_traits::*;
 use std::error::Error;
 use tap::prelude::*;
 
-#[derive(Debug, Display)]
+#[derive(Eq, PartialEq, Debug, Display)]
 #[display("{:?}", self)]
 pub enum FNumError<Lhs, Rhs>
 where
@@ -73,7 +73,7 @@ where
 }
 
 pub enum PerTag {}
-type Per<LTag, RTag> = (PerTag, LTag, RTag);
+pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
 
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, RTag>, Tagged<Rep, Per<LTag, RTag>>>

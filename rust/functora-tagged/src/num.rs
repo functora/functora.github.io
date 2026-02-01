@@ -25,6 +25,14 @@ where
 {
 }
 
+#[derive(Debug)]
+pub enum TimesTag {}
+pub type Times<LTag, RTag> = (TimesTag, LTag, RTag);
+
+#[derive(Debug)]
+pub enum PerTag {}
+pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
+
 //
 // Add
 //
@@ -141,10 +149,6 @@ where
     }
 }
 
-#[derive(Debug)]
-pub enum TimesTag {}
-pub type Times<LTag, RTag> = (TimesTag, LTag, RTag);
-
 impl<Rep, LTag, RTag>
     FMul<Tagged<Rep, RTag>, Tagged<Rep, Times<LTag, RTag>>>
     for Tagged<Rep, LTag>
@@ -160,6 +164,60 @@ where
     ) -> Result<
         Tagged<Rep, Times<LTag, RTag>>,
         FNumError<Tagged<Rep, LTag>, Tagged<Rep, RTag>>,
+    > {
+        self.rep()
+            .fmul(rhs.rep())
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
+impl<Rep, LTag, RTag>
+    FMul<Tagged<Rep, Per<RTag, LTag>>, Tagged<Rep, RTag>>
+    for Tagged<Rep, LTag>
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    LTag: Debug,
+    RTag: Debug + Refine<Rep>,
+    Per<RTag, LTag>: Debug,
+{
+    fn fmul(
+        &self,
+        rhs: &Tagged<Rep, Per<RTag, LTag>>,
+    ) -> Result<
+        Tagged<Rep, RTag>,
+        FNumError<
+            Tagged<Rep, LTag>,
+            Tagged<Rep, Per<RTag, LTag>>,
+        >,
+    > {
+        self.rep()
+            .fmul(rhs.rep())
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
+impl<Rep, LTag, RTag>
+    FMul<Tagged<Rep, RTag>, Tagged<Rep, LTag>>
+    for Tagged<Rep, Per<LTag, RTag>>
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    LTag: Debug + Refine<Rep>,
+    RTag: Debug,
+    Per<LTag, RTag>: Debug,
+{
+    fn fmul(
+        &self,
+        rhs: &Tagged<Rep, RTag>,
+    ) -> Result<
+        Tagged<Rep, LTag>,
+        FNumError<
+            Tagged<Rep, Per<LTag, RTag>>,
+            Tagged<Rep, RTag>,
+        >,
     > {
         self.rep()
             .fmul(rhs.rep())
@@ -213,10 +271,6 @@ where
     }
 }
 
-#[derive(Debug)]
-pub enum PerTag {}
-pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
-
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, RTag>, Tagged<Rep, Per<LTag, RTag>>>
     for Tagged<Rep, LTag>
@@ -232,6 +286,61 @@ where
     ) -> Result<
         Tagged<Rep, Per<LTag, RTag>>,
         FNumError<Tagged<Rep, LTag>, Tagged<Rep, RTag>>,
+    > {
+        self.rep()
+            .fdiv(rhs.rep())
+            .map_err(|_| FNumError::Div(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Div(*self, *rhs))
+    }
+}
+
+impl<Rep, LTag, RTag>
+    FDiv<Tagged<Rep, Per<LTag, RTag>>, Tagged<Rep, RTag>>
+    for Tagged<Rep, LTag>
+where
+    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    LTag: Debug,
+    RTag: Debug + Refine<Rep>,
+    Per<LTag, RTag>: Debug,
+{
+    fn fdiv(
+        &self,
+        rhs: &Tagged<Rep, Per<LTag, RTag>>,
+    ) -> Result<
+        Tagged<Rep, RTag>,
+        FNumError<
+            Tagged<Rep, LTag>,
+            Tagged<Rep, Per<LTag, RTag>>,
+        >,
+    > {
+        self.rep()
+            .fdiv(rhs.rep())
+            .map_err(|_| FNumError::Div(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Div(*self, *rhs))
+    }
+}
+
+impl<Rep, LTag, RTag>
+    FDiv<Tagged<Rep, LTag>, Tagged<Rep, Per<Rep, RTag>>>
+    for Tagged<Rep, Per<LTag, RTag>>
+where
+    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    LTag: Debug,
+    RTag: Debug,
+    Per<LTag, RTag>: Debug,
+    Per<Rep, RTag>: Refine<Rep>,
+{
+    fn fdiv(
+        &self,
+        rhs: &Tagged<Rep, LTag>,
+    ) -> Result<
+        Tagged<Rep, Per<Rep, RTag>>,
+        FNumError<
+            Tagged<Rep, Per<LTag, RTag>>,
+            Tagged<Rep, LTag>,
+        >,
     > {
         self.rep()
             .fdiv(rhs.rep())

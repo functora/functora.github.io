@@ -102,6 +102,14 @@ impl Refine<Number> for Per<EUR, USD> {
     type RefineError = ();
 }
 
+impl Refine<Number> for Per<Second, Meter> {
+    type RefineError = ();
+}
+
+impl Refine<Number> for Per<Number, Second> {
+    type RefineError = ();
+}
+
 impl Refine<Number> for Times<Meter, Meter> {
     type RefineError = ();
 }
@@ -292,6 +300,62 @@ fn test_fmul_tagged() {
     let res: Tagged<Number, Times<Meter, Meter>> =
         lhs.fmul(&rhs).unwrap();
     assert_eq!(res.rep(), &Number(20.0));
+}
+
+#[test]
+fn test_fmul_per_cancel_1() {
+    // Meter * (Second / Meter) = Second
+    let lhs =
+        Tagged::<Number, Meter>::new(Number(10.0)).unwrap();
+    let rhs = Tagged::<Number, Per<Second, Meter>>::new(
+        Number(2.0),
+    )
+    .unwrap();
+    let res: Tagged<Number, Second> =
+        lhs.fmul(&rhs).unwrap();
+    assert_eq!(res.rep(), &Number(20.0));
+}
+
+#[test]
+fn test_fmul_per_cancel_2() {
+    // (Meter / Second) * Second = Meter
+    let lhs = Tagged::<Number, Per<Meter, Second>>::new(
+        Number(10.0),
+    )
+    .unwrap();
+    let rhs =
+        Tagged::<Number, Second>::new(Number(2.0)).unwrap();
+    let res: Tagged<Number, Meter> =
+        lhs.fmul(&rhs).unwrap();
+    assert_eq!(res.rep(), &Number(20.0));
+}
+
+#[test]
+fn test_fdiv_cancel_1() {
+    // Meter / (Meter / Second) = Second
+    let lhs =
+        Tagged::<Number, Meter>::new(Number(10.0)).unwrap();
+    let rhs = Tagged::<Number, Per<Meter, Second>>::new(
+        Number(2.0),
+    )
+    .unwrap();
+    let res: Tagged<Number, Second> =
+        lhs.fdiv(&rhs).unwrap();
+    assert_eq!(res.rep(), &Number(5.0));
+}
+
+#[test]
+fn test_fdiv_cancel_2() {
+    // (Meter / Second) / Meter = 1/Second (Per<Number, Second>)
+    let lhs = Tagged::<Number, Per<Meter, Second>>::new(
+        Number(10.0),
+    )
+    .unwrap();
+    let rhs =
+        Tagged::<Number, Meter>::new(Number(2.0)).unwrap();
+    let res: Tagged<Number, Per<Number, Second>> =
+        lhs.fdiv(&rhs).unwrap();
+    assert_eq!(res.rep(), &Number(5.0));
 }
 
 #[test]

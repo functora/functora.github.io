@@ -33,9 +33,9 @@ pub type Times<LTag, RTag> = (TimesTag, LTag, RTag);
 pub enum PerTag {}
 pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
 
-//
-// Add
-//
+/////////
+// Add //
+/////////
 
 pub trait FAdd
 where
@@ -47,6 +47,9 @@ where
     ) -> Result<Self, FNumError<Self, Self>>;
 }
 
+//
+// Rep + Rep = Rep
+//
 impl<Rep> FAdd for Rep
 where
     Rep: Copy + Debug + CheckedAdd,
@@ -60,6 +63,9 @@ where
     }
 }
 
+//
+// Tag + Tag = Tag
+//
 impl<Rep, Tag> FAdd for Tagged<Rep, Tag>
 where
     Rep: Copy + Debug + FAdd,
@@ -77,9 +83,9 @@ where
     }
 }
 
-//
-// Sub
-//
+/////////
+// Sub //
+/////////
 
 pub trait FSub
 where
@@ -91,6 +97,9 @@ where
     ) -> Result<Self, FNumError<Self, Self>>;
 }
 
+//
+// Rep - Rep = Rep
+//
 impl<Rep> FSub for Rep
 where
     Rep: Copy + Debug + CheckedSub,
@@ -104,6 +113,9 @@ where
     }
 }
 
+//
+// Tag - Tag = Tag
+//
 impl<Rep, Tag> FSub for Tagged<Rep, Tag>
 where
     Rep: Copy + Debug + FSub,
@@ -121,9 +133,9 @@ where
     }
 }
 
-//
-// Mul
-//
+/////////
+// Mul //
+/////////
 
 pub trait FMul<Rhs, Output>
 where
@@ -136,6 +148,9 @@ where
     ) -> Result<Output, FNumError<Self, Rhs>>;
 }
 
+//
+// Rep * Rep = Rep
+//
 impl<Rep> FMul<Rep, Rep> for Rep
 where
     Rep: Copy + Debug + CheckedMul,
@@ -149,6 +164,56 @@ where
     }
 }
 
+//
+// Rep * Tag = Tag
+//
+impl<Rep, Tag> FMul<Tagged<Rep, Tag>, Tagged<Rep, Tag>>
+    for Rep
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fmul(
+        &self,
+        rhs: &Tagged<Rep, Tag>,
+    ) -> Result<
+        Tagged<Rep, Tag>,
+        FNumError<Rep, Tagged<Rep, Tag>>,
+    > {
+        self.fmul(rhs.rep())
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
+//
+// Tag * Rep = Tag
+//
+impl<Rep, Tag> FMul<Rep, Tagged<Rep, Tag>>
+    for Tagged<Rep, Tag>
+where
+    Rep: Copy + Debug + FMul<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fmul(
+        &self,
+        rhs: &Rep,
+    ) -> Result<
+        Tagged<Rep, Tag>,
+        FNumError<Tagged<Rep, Tag>, Rep>,
+    > {
+        self.rep()
+            .fmul(rhs)
+            .map_err(|_| FNumError::Mul(*self, *rhs))?
+            .pipe(Tagged::new)
+            .map_err(|_| FNumError::Mul(*self, *rhs))
+    }
+}
+
+//
+// LTag * RTag = Times<LTag, RTag>
+//
 impl<Rep, LTag, RTag>
     FMul<Tagged<Rep, RTag>, Tagged<Rep, Times<LTag, RTag>>>
     for Tagged<Rep, LTag>
@@ -173,6 +238,9 @@ where
     }
 }
 
+//
+// LTag * Per<RTag, LTag> = RTag
+//
 impl<Rep, LTag, RTag>
     FMul<Tagged<Rep, Per<RTag, LTag>>, Tagged<Rep, RTag>>
     for Tagged<Rep, LTag>
@@ -200,47 +268,9 @@ where
     }
 }
 
-impl<Rep, Tag> FMul<Rep, Tagged<Rep, Tag>>
-    for Tagged<Rep, Tag>
-where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
-{
-    fn fmul(
-        &self,
-        rhs: &Rep,
-    ) -> Result<
-        Tagged<Rep, Tag>,
-        FNumError<Tagged<Rep, Tag>, Rep>,
-    > {
-        self.rep()
-            .fmul(rhs)
-            .map_err(|_| FNumError::Mul(*self, *rhs))?
-            .pipe(Tagged::new)
-            .map_err(|_| FNumError::Mul(*self, *rhs))
-    }
-}
-
-impl<Rep, Tag> FMul<Tagged<Rep, Tag>, Tagged<Rep, Tag>>
-    for Rep
-where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
-{
-    fn fmul(
-        &self,
-        rhs: &Tagged<Rep, Tag>,
-    ) -> Result<
-        Tagged<Rep, Tag>,
-        FNumError<Rep, Tagged<Rep, Tag>>,
-    > {
-        self.fmul(rhs.rep())
-            .map_err(|_| FNumError::Mul(*self, *rhs))?
-            .pipe(Tagged::new)
-            .map_err(|_| FNumError::Mul(*self, *rhs))
-    }
-}
-
+//
+// Per<LTag, RTag> * RTag = LTag
+//
 impl<Rep, LTag, RTag>
     FMul<Tagged<Rep, RTag>, Tagged<Rep, LTag>>
     for Tagged<Rep, Per<LTag, RTag>>
@@ -268,9 +298,9 @@ where
     }
 }
 
-//
-// Div
-//
+/////////
+// Div //
+/////////
 
 pub trait FDiv<Rhs, Output>
 where
@@ -283,6 +313,9 @@ where
     ) -> Result<Output, FNumError<Self, Rhs>>;
 }
 
+//
+// Rep / Rep = Rep
+//
 impl<Rep> FDiv<Rep, Rep> for Rep
 where
     Rep: Copy + Debug + CheckedDiv,
@@ -296,6 +329,9 @@ where
     }
 }
 
+//
+// Tag / Rep = Tag
+//
 impl<Rep, Tag> FDiv<Rep, Tagged<Rep, Tag>>
     for Tagged<Rep, Tag>
 where
@@ -317,25 +353,9 @@ where
     }
 }
 
-impl<Rep, Tag> FDiv<Tagged<Rep, Tag>, Rep>
-    for Tagged<Rep, Tag>
-where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
-{
-    fn fdiv(
-        &self,
-        rhs: &Tagged<Rep, Tag>,
-    ) -> Result<
-        Rep,
-        FNumError<Tagged<Rep, Tag>, Tagged<Rep, Tag>>,
-    > {
-        self.rep()
-            .fdiv(rhs.rep())
-            .map_err(|_| FNumError::Div(*self, *rhs))
-    }
-}
-
+//
+// Rep / Tag = Per<Rep, Tag>
+//
 impl<Rep, Tag>
     FDiv<Tagged<Rep, Tag>, Tagged<Rep, Per<Rep, Tag>>>
     for Rep
@@ -358,6 +378,31 @@ where
     }
 }
 
+//
+// Tag / Tag = Rep
+//
+impl<Rep, Tag> FDiv<Tagged<Rep, Tag>, Rep>
+    for Tagged<Rep, Tag>
+where
+    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fdiv(
+        &self,
+        rhs: &Tagged<Rep, Tag>,
+    ) -> Result<
+        Rep,
+        FNumError<Tagged<Rep, Tag>, Tagged<Rep, Tag>>,
+    > {
+        self.rep()
+            .fdiv(rhs.rep())
+            .map_err(|_| FNumError::Div(*self, *rhs))
+    }
+}
+
+//
+// LTag / RTag = Per<LTag, RTag>
+//
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, RTag>, Tagged<Rep, Per<LTag, RTag>>>
     for Tagged<Rep, LTag>
@@ -382,6 +427,9 @@ where
     }
 }
 
+//
+// LTag / Per<LTag, RTag> = RTag
+//
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, Per<LTag, RTag>>, Tagged<Rep, RTag>>
     for Tagged<Rep, LTag>
@@ -410,7 +458,7 @@ where
 }
 
 //
-// (LTag / RTag) / LTag = 1 / RTag
+// Per<LTag, RTag> / LTag = Per<Rep, RTag>
 //
 impl<Rep, LTag, RTag>
     FDiv<Tagged<Rep, LTag>, Tagged<Rep, Per<Rep, RTag>>>

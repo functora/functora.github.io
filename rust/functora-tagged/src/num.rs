@@ -134,6 +134,53 @@ where
 }
 
 /////////
+// Gap //
+/////////
+
+pub trait FGap
+where
+    Self: Sized + Debug,
+{
+    fn fgap(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, FNumError<Self, Self>>;
+}
+
+//
+// Rep - Rep = Rep
+//
+impl<Rep> FGap for Rep
+where
+    Rep: Ord + Copy + Debug + CheckedSub,
+{
+    fn fgap(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, FNumError<Rep, Rep>> {
+        self.max(rhs)
+            .checked_sub(self.min(rhs))
+            .ok_or(FNumError::Sub(*self, *rhs))
+    }
+}
+
+//
+// Tag - Tag = Tag
+//
+impl<Rep, Tag> FGap for Tagged<Rep, Tag>
+where
+    Rep: Ord + Copy + Debug + FSub,
+    Tag: Debug + Refine<Rep>,
+{
+    fn fgap(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, FNumError<Self, Self>> {
+        self.max(rhs).fsub(self.min(rhs))
+    }
+}
+
+/////////
 // Mul //
 /////////
 

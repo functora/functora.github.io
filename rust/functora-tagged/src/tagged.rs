@@ -10,11 +10,11 @@ pub use std::str::FromStr;
 pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
 
 impl<Rep, Tag> Tagged<Rep, Tag> {
-    pub fn new(prev: Rep) -> Result<Self, Tag::RefineError>
+    pub fn new(rep: Rep) -> Result<Self, Tag::RefineError>
     where
         Tag: Refine<Rep>,
     {
-        Tag::refine(prev)
+        Tag::refine(rep)
             .map(|next| Tagged(next, PhantomData))
     }
     pub fn rep(&self) -> &Rep {

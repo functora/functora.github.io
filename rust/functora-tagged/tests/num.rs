@@ -368,7 +368,8 @@ fn test_fdiv_cancel_2() {
 
 #[test]
 fn test_scalar_ops() {
-    let t = Tagged::<Number, Meter>::new(Number(10.0)).unwrap();
+    let t =
+        Tagged::<Number, Meter>::new(Number(10.0)).unwrap();
     let s = Number(2.0);
 
     // Tag * Rep
@@ -538,4 +539,48 @@ fn test_fdiv_fail_tagged_refine() {
         }
         _ => panic!("Expected FNumError::Div"),
     }
+}
+
+#[test]
+fn test_real_world_physics_and_currency() {
+    let speed1 = Tagged::<Number, Per<Meter, Second>>::new(
+        Number(25.0),
+    )
+    .unwrap();
+    let speed2 = Tagged::<Number, Per<Meter, Second>>::new(
+        Number(15.0),
+    )
+    .unwrap();
+    let time =
+        Tagged::<Number, Second>::new(Number(4.0)).unwrap();
+    let distance1: Tagged<Number, Meter> =
+        speed1.fmul(&time).unwrap();
+    assert_eq!(distance1.rep().0, 100.0);
+    let distance2: Tagged<Number, Meter> =
+        speed2.fmul(&time).unwrap();
+    assert_eq!(distance2.rep().0, 60.0);
+    let total_distance: Tagged<Number, Meter> =
+        distance1.fadd(&distance2).unwrap();
+    assert_eq!(total_distance.rep().0, 160.0);
+    let distance_diff: Tagged<Number, Meter> =
+        distance1.fsub(&distance2).unwrap();
+    assert_eq!(distance_diff.rep().0, 40.0);
+    let avg_speed: Tagged<Number, Per<Meter, Second>> =
+        total_distance.fdiv(&time).unwrap();
+    assert_eq!(avg_speed.rep().0, 40.0);
+    let usd_amt =
+        Tagged::<Number, USD>::new(Number(100.0)).unwrap();
+    let eur_per_usd =
+        Tagged::<Number, Per<EUR, USD>>::new(Number(0.85))
+            .unwrap();
+    let eur_amt: Tagged<Number, EUR> =
+        usd_amt.fmul(&eur_per_usd).unwrap();
+    assert_eq!(eur_amt.rep().0, 85.0);
+    let new_usd_amt: Tagged<Number, USD> =
+        eur_amt.fdiv(&eur_per_usd).unwrap();
+    assert_eq!(new_usd_amt.rep().0, 100.0);
+    let discount = Number(0.9);
+    let final_usd_amt: Tagged<Number, USD> =
+        usd_amt.fmul(&discount).unwrap();
+    assert_eq!(final_usd_amt.rep().0, 90.0);
 }

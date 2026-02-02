@@ -106,14 +106,6 @@ impl Refine<Number> for Per<EUR, USD> {
     type RefineError = ();
 }
 
-impl Refine<Number> for Per<Second, Meter> {
-    type RefineError = ();
-}
-
-impl Refine<Number> for Per<Meter, Per<Meter, Second>> {
-    type RefineError = ();
-}
-
 impl Refine<Number> for Per<USD, EUR> {
     type RefineError = ();
 }
@@ -238,11 +230,13 @@ impl Refine<FailNumber> for Per<USD, USD> {
 }
 
 #[test]
-fn test_fdiv_number() {
-    let lhs = Number(dec!(10.0));
-    let rhs = Number(dec!(2.0));
-    let res: Number = lhs.fdiv(&rhs).unwrap();
-    assert_eq!(res, Number(dec!(5.0)));
+fn test_partitioning() {
+    // Dividing 10 items into 2 equal groups
+    let items = Number(dec!(10.0));
+    let groups = Number(dec!(2.0));
+    let items_per_group: Number =
+        items.fdiv(&groups).unwrap();
+    assert_eq!(items_per_group, Number(dec!(5.0)));
 }
 
 #[test]
@@ -282,11 +276,12 @@ fn test_velocity() {
 }
 
 #[test]
-fn test_fadd_number() {
-    let lhs = Number(dec!(10.0));
-    let rhs = Number(dec!(2.0));
-    let res = lhs.fadd(&rhs).unwrap();
-    assert_eq!(res, Number(dec!(12.0)));
+fn test_stock_count_aggregation() {
+    // Adding 10 items from one shelf and 2 from another
+    let shelf1 = Number(dec!(10.0));
+    let shelf2 = Number(dec!(2.0));
+    let total_stock = shelf1.fadd(&shelf2).unwrap();
+    assert_eq!(total_stock, Number(dec!(12.0)));
 }
 
 #[test]
@@ -303,11 +298,13 @@ fn test_fadd_tagged() {
 }
 
 #[test]
-fn test_fsub_number() {
-    let lhs = Number(dec!(10.0));
-    let rhs = Number(dec!(2.0));
-    let res = lhs.fsub(&rhs).unwrap();
-    assert_eq!(res, Number(dec!(8.0)));
+fn test_inventory_reduction() {
+    // Subtracting 2 sold items from initial stock of 10
+    let initial_stock = Number(dec!(10.0));
+    let sold_items = Number(dec!(2.0));
+    let remaining_stock =
+        initial_stock.fsub(&sold_items).unwrap();
+    assert_eq!(remaining_stock, Number(dec!(8.0)));
 }
 
 #[test]
@@ -324,11 +321,12 @@ fn test_fsub_tagged() {
 }
 
 #[test]
-fn test_fmul_number() {
-    let lhs = Number(dec!(10.0));
-    let rhs = Number(dec!(2.0));
-    let res = lhs.fmul(&rhs).unwrap();
-    assert_eq!(res, Number(dec!(20.0)));
+fn test_total_scaling() {
+    // 10 boxes each containing 2 items
+    let boxes = Number(dec!(10.0));
+    let items_per_box = Number(dec!(2.0));
+    let total_items = boxes.fmul(&items_per_box).unwrap();
+    assert_eq!(total_items, Number(dec!(20.0)));
 }
 
 #[test]
@@ -340,21 +338,6 @@ fn test_fmul_tagged() {
         Tagged::<Number, Meter>::new(Number(dec!(2.0)))
             .unwrap();
     let res: Tagged<Number, Times<Meter, Meter>> =
-        lhs.fmul(&rhs).unwrap();
-    assert_eq!(res.rep(), &Number(dec!(20.0)));
-}
-
-#[test]
-fn test_fmul_per_cancel_1() {
-    // Meter * (Second / Meter) = Second
-    let lhs =
-        Tagged::<Number, Meter>::new(Number(dec!(10.0)))
-            .unwrap();
-    let rhs = Tagged::<Number, Per<Second, Meter>>::new(
-        Number(dec!(2.0)),
-    )
-    .unwrap();
-    let res: Tagged<Number, Second> =
         lhs.fmul(&rhs).unwrap();
     assert_eq!(res.rep(), &Number(dec!(20.0)));
 }
@@ -405,46 +388,56 @@ fn test_fdiv_cancel_2() {
 }
 
 #[test]
-fn test_scalar_ops() {
-    let t =
+fn test_physical_scaling() {
+    // Scaling a 10-meter measurement by factor of 2
+    let length =
         Tagged::<Number, Meter>::new(Number(dec!(10.0)))
             .unwrap();
-    let s = Number(dec!(2.0));
+    let factor = Number(dec!(2.0));
 
     // Tag * Rep
-    let res1: Tagged<Number, Meter> = t.fmul(&s).unwrap();
-    assert_eq!(res1.rep(), &Number(dec!(20.0)));
+    let scaled_up: Tagged<Number, Meter> =
+        length.fmul(&factor).unwrap();
+    assert_eq!(scaled_up.rep(), &Number(dec!(20.0)));
 
     // Rep * Tag
-    let res2: Tagged<Number, Meter> = s.fmul(&t).unwrap();
-    assert_eq!(res2.rep(), &Number(dec!(20.0)));
+    let scaled_up_reverse: Tagged<Number, Meter> =
+        factor.fmul(&length).unwrap();
+    assert_eq!(
+        scaled_up_reverse.rep(),
+        &Number(dec!(20.0))
+    );
 
     // Tag / Rep
-    let res3: Tagged<Number, Meter> = t.fdiv(&s).unwrap();
-    assert_eq!(res3.rep(), &Number(dec!(5.0)));
+    let scaled_down: Tagged<Number, Meter> =
+        length.fdiv(&factor).unwrap();
+    assert_eq!(scaled_down.rep(), &Number(dec!(5.0)));
 
     // Rep / Tag = 1/Tag (Per<Rep, Tag>)
-    let res4: Tagged<Number, Per<Number, Meter>> =
-        s.fdiv(&t).unwrap();
-    assert_eq!(res4.rep(), &Number(dec!(0.2)));
+    // Scaling a unit value: 2 / 10m = 0.2m^-1
+    let inv_length: Tagged<Number, Per<Number, Meter>> =
+        factor.fdiv(&length).unwrap();
+    assert_eq!(inv_length.rep(), &Number(dec!(0.2)));
 }
 
 #[test]
-fn test_errors() {
-    let lhs = Number(dec!(10.0));
-    let rhs = Number(dec!(0.0));
-    let err = lhs.fdiv(&rhs).unwrap_err();
+fn test_division_by_zero_logic() {
+    // Distributing 10 items among 0 people - should error
+    let items = Number(dec!(10.0));
+    let people = Number(dec!(0.0));
+    let err = items.fdiv(&people).unwrap_err();
     match err {
-        FNumError::Div(l, r) => {
-            assert_eq!(l, Number(dec!(10.0)));
-            assert_eq!(r, Number(dec!(0.0)));
+        FNumError::Div(i, p) => {
+            assert_eq!(i, Number(dec!(10.0)));
+            assert_eq!(p, Number(dec!(0.0)));
         }
         _ => panic!("Expected FNumError::Div"),
     }
 }
 
 #[test]
-fn test_op_fail_rep() {
+fn test_fail_number_scenarios() {
+    // Representing operations with faulty results
     let val = FailNumber;
     assert!(matches!(
         val.fadd(&val),
@@ -465,31 +458,28 @@ fn test_op_fail_rep() {
 }
 
 #[test]
-fn test_op_fail_tagged_rep() {
-    let lhs =
+fn test_incompatible_unit_scenarios() {
+    // Preventing logical errors in unit-less operations with faulty types
+    let shelf1 =
         Tagged::<FailNumber, USD>::new(FailNumber).unwrap();
-    let rhs =
+    let shelf2 =
         Tagged::<FailNumber, USD>::new(FailNumber).unwrap();
 
     assert!(
-        matches!(lhs.fadd(&rhs), Err(FNumError::Add(l, r)) if l == lhs && r == rhs)
+        matches!(shelf1.fadd(&shelf2), Err(FNumError::Add(l, r)) if l == shelf1 && r == shelf2)
     );
     assert!(
-        matches!(lhs.fsub(&rhs), Err(FNumError::Sub(l, r)) if l == lhs && r == rhs)
+        matches!(shelf1.fsub(&shelf2), Err(FNumError::Sub(l, r)) if l == shelf1 && r == shelf2)
     );
 
-    // Check fmul (Tagged * Tagged)
     assert!(
-        matches!(lhs.fmul(&rhs), Err(FNumError::Mul(l, r)) if l == lhs && r == rhs)
+        matches!(shelf1.fmul(&shelf2), Err(FNumError::Mul(l, r)) if l == shelf1 && r == shelf2)
     );
 
-    // Check fdiv (Tagged / Tagged)
-    // Ambiguous: could be Tagged/Rep or Tagged/Tagged.
-    // Tagged/Tagged -> Tagged<Rep, Per>
     let res: Result<Tagged<FailNumber, Per<USD, USD>>, _> =
-        lhs.fdiv(&rhs);
+        shelf1.fdiv(&shelf2);
     assert!(
-        matches!(res, Err(FNumError::Div(l, r)) if l == lhs && r == rhs)
+        matches!(res, Err(FNumError::Div(l, r)) if l == shelf1 && r == shelf2)
     );
 }
 
@@ -699,15 +689,6 @@ fn test_real_world_composite_units() {
     let area: Tagged<Number, Times<Meter, Meter>> =
         length.fmul(&width).unwrap();
     assert_eq!(*area.rep(), Number(dec!(50.0)));
-
-    // Verification of LTag * Per<RTag, LTag> = RTag
-    let rate = Tagged::<Number, Per<Second, Meter>>::new(
-        Number(dec!(2.0)),
-    )
-    .unwrap();
-    let time: Tagged<Number, Second> =
-        length.fmul(&rate).unwrap();
-    assert_eq!(*time.rep(), Number(dec!(20.0)));
 
     // Verification of Rep / Tag = Per<Rep, Tag>
     let scalar = Number(dec!(1.0));

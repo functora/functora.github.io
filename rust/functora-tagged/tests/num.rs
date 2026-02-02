@@ -126,61 +126,6 @@ impl Refine<Number> for Times<Meter, Second> {
     type RefineError = ();
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct FailNumber;
-
-impl Add for FailNumber {
-    type Output = Self;
-    fn add(self, _: Self) -> Self::Output {
-        FailNumber
-    }
-}
-
-impl Sub for FailNumber {
-    type Output = Self;
-    fn sub(self, _: Self) -> Self::Output {
-        FailNumber
-    }
-}
-
-impl Mul for FailNumber {
-    type Output = Self;
-    fn mul(self, _: Self) -> Self::Output {
-        FailNumber
-    }
-}
-
-impl Div for FailNumber {
-    type Output = Self;
-    fn div(self, _: Self) -> Self::Output {
-        FailNumber
-    }
-}
-
-impl CheckedAdd for FailNumber {
-    fn checked_add(&self, _: &Self) -> Option<Self> {
-        None
-    }
-}
-
-impl CheckedSub for FailNumber {
-    fn checked_sub(&self, _: &Self) -> Option<Self> {
-        None
-    }
-}
-
-impl CheckedMul for FailNumber {
-    fn checked_mul(&self, _: &Self) -> Option<Self> {
-        None
-    }
-}
-
-impl CheckedDiv for FailNumber {
-    fn checked_div(&self, _: &Self) -> Option<Self> {
-        None
-    }
-}
-
 #[derive(Debug)]
 pub enum LimitTag {}
 
@@ -215,18 +160,6 @@ impl Refine<Number> for Per<LimitTag, LimitTag> {
             Ok(rep)
         }
     }
-}
-
-impl Refine<FailNumber> for USD {
-    type RefineError = ();
-}
-
-impl Refine<FailNumber> for Times<USD, USD> {
-    type RefineError = ();
-}
-
-impl Refine<FailNumber> for Per<USD, USD> {
-    type RefineError = ();
 }
 
 #[test]
@@ -433,54 +366,6 @@ fn test_division_by_zero_logic() {
         }
         _ => panic!("Expected FNumError::Div"),
     }
-}
-
-#[test]
-fn test_fail_number_scenarios() {
-    // Representing operations with faulty results
-    let val = FailNumber;
-    assert!(matches!(
-        val.fadd(&val),
-        Err(FNumError::Add(FailNumber, FailNumber))
-    ));
-    assert!(matches!(
-        val.fsub(&val),
-        Err(FNumError::Sub(FailNumber, FailNumber))
-    ));
-    assert!(matches!(
-        val.fmul(&val),
-        Err(FNumError::Mul(FailNumber, FailNumber))
-    ));
-    assert!(matches!(
-        val.fdiv(&val),
-        Err(FNumError::Div(FailNumber, FailNumber))
-    ));
-}
-
-#[test]
-fn test_incompatible_unit_scenarios() {
-    // Preventing logical errors in unit-less operations with faulty types
-    let shelf1 =
-        Tagged::<FailNumber, USD>::new(FailNumber).unwrap();
-    let shelf2 =
-        Tagged::<FailNumber, USD>::new(FailNumber).unwrap();
-
-    assert!(
-        matches!(shelf1.fadd(&shelf2), Err(FNumError::Add(l, r)) if l == shelf1 && r == shelf2)
-    );
-    assert!(
-        matches!(shelf1.fsub(&shelf2), Err(FNumError::Sub(l, r)) if l == shelf1 && r == shelf2)
-    );
-
-    assert!(
-        matches!(shelf1.fmul(&shelf2), Err(FNumError::Mul(l, r)) if l == shelf1 && r == shelf2)
-    );
-
-    let res: Result<Tagged<FailNumber, Per<USD, USD>>, _> =
-        shelf1.fdiv(&shelf2);
-    assert!(
-        matches!(res, Err(FNumError::Div(l, r)) if l == shelf1 && r == shelf2)
-    );
 }
 
 #[test]

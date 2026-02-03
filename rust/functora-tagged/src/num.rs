@@ -78,16 +78,35 @@ pub trait DMul<Rhs, Output> {}
 
 pub trait DDiv<Rhs, Output> {}
 
-// Default logic for library markers
-impl<L, R, A> DMul<Scalar<R>, Times<L, R, A>>
-    for Scalar<L>
+// 1. L * R = Times<L, R, A>
+impl<L, R, A> DMul<R, Times<L, R, A>> for L
+where
+    L: IsScalar,
+    R: IsScalar,
+    A: IsTimes<L = L, R = R>,
 {
 }
-impl<L, R, A> DMul<Per<R, L, A>, Scalar<R>> for Scalar<L> {}
-impl<L, R, A> DMul<Scalar<R>, Scalar<L>> for Per<L, R, A> {}
 
-impl<L, R, A> DDiv<Scalar<R>, Per<L, R, A>> for Scalar<L> {}
-impl<L, R, A> DDiv<Per<L, R, A>, Scalar<R>> for Scalar<L> {}
+// 2. Per<L, R, A> * R = L
+impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
+
+// 3. R * Per<L, R, A> = L
+impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
+
+// 4. L / R = Per<L, R, A>
+impl<L, R, A> DDiv<R, Per<L, R, A>> for L
+where
+    L: IsScalar,
+    R: IsScalar,
+    A: IsPer<L = L, R = R>,
+{
+}
+
+// 5. L / Per<L, R, A> = R
+impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
+
+// 6. Times<L, R, A> / R = L
+impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 
 //////////////
 //  Errors  //

@@ -60,28 +60,25 @@ impl Refine<Decimal> for DMeterTimesDMeter {
     type RefineError = std::convert::Infallible;
 }
 
-impl DMul<DMeter, Times<DMeter, DMeter, DMeterTimesDMeter>>
-    for DMeter
-{
+impl IsScalar for DUsd {}
+impl IsScalar for DEur {}
+impl IsScalar for DMeter {}
+impl IsScalar for DSecond {}
+
+impl IsTimes for DMeterTimesDMeter {
+    type L = DMeter;
+    type R = DMeter;
 }
 
-impl DDiv<DSecond, Per<DMeter, DSecond, DMeterPerDSecond>>
-    for DMeter
-{
+impl IsPer for DMeterPerDSecond {
+    type L = DMeter;
+    type R = DSecond;
 }
 
-// impl DDiv<DSecond, DMeterPerDSecond> for DMeter {}
-
-impl DMul<DSecond, DMeter>
-    for Per<DMeter, DSecond, DMeterPerDSecond>
-{
+impl IsPer for DEurPerDUsd {
+    type L = DEur;
+    type R = DUsd;
 }
-
-// impl DMul<DSecond, DMeter> for DMeterPerDSecond {}
-
-impl DDiv<DUsd, Per<DEur, DUsd, DEurPerDUsd>> for DEur {}
-
-impl DMul<Per<DEur, DUsd, DEurPerDUsd>, DEur> for DUsd {}
 
 #[test]
 fn area() {

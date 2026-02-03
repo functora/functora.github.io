@@ -6,127 +6,119 @@ use rust_decimal_macros::dec;
 use std::fmt::Debug;
 
 #[derive(Debug)]
-pub enum USD {}
+pub enum DUsd {}
 #[derive(Debug)]
-pub enum EUR {}
+pub enum DEur {}
 #[derive(Debug)]
-pub enum EurPerUsd {}
+pub enum DEurPerDUsd {}
 #[derive(Debug)]
-pub enum Meter {}
+pub enum DMeter {}
 #[derive(Debug)]
-pub enum Second {}
+pub enum DSecond {}
 #[derive(Debug)]
-pub enum MeterPerSecond {}
+pub enum DMeterPerDSecond {}
 #[derive(Debug)]
-pub enum MeterTimesMeter {}
+pub enum DMeterTimesDMeter {}
 
-impl Refine<Decimal> for USD {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for EUR {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for EurPerUsd {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for Meter {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for Second {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for MeterPerSecond {
-    type RefineError = std::convert::Infallible;
-}
-impl Refine<Decimal> for MeterTimesMeter {
+type Usd = Tagged<Decimal, DUsd>;
+impl Refine<Decimal> for DUsd {
     type RefineError = std::convert::Infallible;
 }
 
-impl TagMul<Meter, Times<Meter, Meter, MeterTimesMeter>>
-    for Meter
+type Eur = Tagged<Decimal, DEur>;
+impl Refine<Decimal> for DEur {
+    type RefineError = std::convert::Infallible;
+}
+
+type EurPerUsd =
+    Tagged<Decimal, Per<DEur, DUsd, DEurPerDUsd>>;
+impl Refine<Decimal> for DEurPerDUsd {
+    type RefineError = std::convert::Infallible;
+}
+
+type Meter = Tagged<Decimal, DMeter>;
+impl Refine<Decimal> for DMeter {
+    type RefineError = std::convert::Infallible;
+}
+
+type Second = Tagged<Decimal, DSecond>;
+impl Refine<Decimal> for DSecond {
+    type RefineError = std::convert::Infallible;
+}
+
+type MeterPerSecond =
+    Tagged<Decimal, Per<DMeter, DSecond, DMeterPerDSecond>>;
+impl Refine<Decimal> for DMeterPerDSecond {
+    type RefineError = std::convert::Infallible;
+}
+
+type MeterTimesMeter = Tagged<
+    Decimal,
+    Times<DMeter, DMeter, DMeterTimesDMeter>,
+>;
+impl Refine<Decimal> for DMeterTimesDMeter {
+    type RefineError = std::convert::Infallible;
+}
+
+impl DMul<DMeter, Times<DMeter, DMeter, DMeterTimesDMeter>>
+    for DMeter
 {
 }
 
-impl TagDiv<Second, Per<Meter, Second, MeterPerSecond>>
-    for Meter
+impl DDiv<DSecond, Per<DMeter, DSecond, DMeterPerDSecond>>
+    for DMeter
 {
 }
 
-impl TagDiv<Second, MeterPerSecond> for Meter {}
+// impl DDiv<DSecond, DMeterPerDSecond> for DMeter {}
 
-impl TagMul<Second, Meter>
-    for Per<Meter, Second, MeterPerSecond>
+impl DMul<DSecond, DMeter>
+    for Per<DMeter, DSecond, DMeterPerDSecond>
 {
 }
 
-impl TagMul<Second, Meter> for MeterPerSecond {}
+// impl DMul<DSecond, DMeter> for DMeterPerDSecond {}
 
-impl TagDiv<USD, Per<EUR, USD, EurPerUsd>> for EUR {}
+impl DDiv<DUsd, Per<DEur, DUsd, DEurPerDUsd>> for DEur {}
 
-impl TagMul<Per<EUR, USD, EurPerUsd>, EUR> for USD {}
-
-fn tag<U: Refine<Decimal>>(v: Decimal) -> Tagged<Decimal, U>
-where
-    U::RefineError: Debug,
-{
-    Tagged::new(v).unwrap()
-}
+impl DMul<Per<DEur, DUsd, DEurPerDUsd>, DEur> for DUsd {}
 
 #[test]
 fn area() {
-    let l = tag::<Meter>(dec!(10));
-    let w = tag::<Meter>(dec!(5));
-
-    let a: Tagged<
-        Decimal,
-        Times<Meter, Meter, MeterTimesMeter>,
-    > = l.fmul(&w).unwrap();
-
+    let l = Meter::new(dec!(10)).unwrap();
+    let w = Meter::new(dec!(5)).unwrap();
+    let a: MeterTimesMeter = l.fmul(&w).unwrap();
     assert_eq!(a.rep(), &dec!(50));
 }
 
 #[test]
 fn velocity() {
-    let d = tag::<Meter>(dec!(100));
-    let t = tag::<Second>(dec!(10));
-
-    let v: Tagged<
-        Decimal,
-        Per<Meter, Second, MeterPerSecond>,
-    > = d.fdiv(&t).unwrap();
-
+    let d = Meter::new(dec!(100)).unwrap();
+    let t = Second::new(dec!(10)).unwrap();
+    let v: MeterPerSecond = d.fdiv(&t).unwrap();
     assert_eq!(v.rep(), &dec!(10));
 }
 
 #[test]
 fn velocity_cancel() {
-    let v =
-        tag::<Per<Meter, Second, MeterPerSecond>>(dec!(10));
-    let t = tag::<Second>(dec!(2));
-
-    let d: Tagged<Decimal, Meter> = v.fmul(&t).unwrap();
-
+    let v = MeterPerSecond::new(dec!(10)).unwrap();
+    let t = Second::new(dec!(2)).unwrap();
+    let d: Meter = v.fmul(&t).unwrap();
     assert_eq!(d.rep(), &dec!(20));
 }
 
 #[test]
 fn exchange_rate() {
-    let eur = tag::<EUR>(dec!(100));
-    let usd = tag::<USD>(dec!(1.2));
-
-    let r: Tagged<Decimal, Per<EUR, USD, EurPerUsd>> =
-        eur.fdiv(&usd).unwrap();
-
-    assert_eq!(r.rep(), &(dec!(100) / dec!(1.2)));
+    let eur = Eur::new(dec!(100)).unwrap();
+    let usd = Usd::new(dec!(1.2)).unwrap();
+    let rate: EurPerUsd = eur.fdiv(&usd).unwrap();
+    assert_eq!(rate.rep(), &(dec!(100) / dec!(1.2)));
 }
 
 #[test]
 fn currency_convert() {
-    let profit = tag::<USD>(dec!(400));
-    let rate = tag::<Per<EUR, USD, EurPerUsd>>(dec!(0.9));
-
-    let profit_eur: Tagged<Decimal, EUR> =
-        profit.fmul(&rate).unwrap();
-
-    assert_eq!(profit_eur.rep(), &dec!(360));
+    let usd = Usd::new(dec!(400)).unwrap();
+    let rate = EurPerUsd::new(dec!(0.9)).unwrap();
+    let eur: Eur = usd.fmul(&rate).unwrap();
+    assert_eq!(eur.rep(), &dec!(360));
 }

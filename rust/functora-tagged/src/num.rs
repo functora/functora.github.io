@@ -74,32 +74,20 @@ where
     }
 }
 
-pub trait TagMul<Rhs, Output> {}
+pub trait DMul<Rhs, Output> {}
 
-pub trait TagDiv<Rhs, Output> {}
+pub trait DDiv<Rhs, Output> {}
 
 // Default logic for library markers
-impl<L, R, A> TagMul<Scalar<R>, Times<L, R, A>>
+impl<L, R, A> DMul<Scalar<R>, Times<L, R, A>>
     for Scalar<L>
 {
 }
-impl<L, R, A> TagMul<Per<R, L, A>, Scalar<R>>
-    for Scalar<L>
-{
-}
-impl<L, R, A> TagMul<Scalar<R>, Scalar<L>>
-    for Per<L, R, A>
-{
-}
+impl<L, R, A> DMul<Per<R, L, A>, Scalar<R>> for Scalar<L> {}
+impl<L, R, A> DMul<Scalar<R>, Scalar<L>> for Per<L, R, A> {}
 
-impl<L, R, A> TagDiv<Scalar<R>, Per<L, R, A>>
-    for Scalar<L>
-{
-}
-impl<L, R, A> TagDiv<Per<L, R, A>, Scalar<R>>
-    for Scalar<L>
-{
-}
+impl<L, R, A> DDiv<Scalar<R>, Per<L, R, A>> for Scalar<L> {}
+impl<L, R, A> DDiv<Per<L, R, A>, Scalar<R>> for Scalar<L> {}
 
 //////////////
 //  Errors  //
@@ -226,7 +214,7 @@ impl<T, L, R, O> FMul<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
     T: Copy + Debug + FMul<T, T>,
-    L: TagMul<R, O> + Debug + Refine<T>,
+    L: DMul<R, O> + Debug + Refine<T>,
     R: Debug + Refine<T>,
     O: Debug + Refine<T>,
 {
@@ -271,7 +259,7 @@ impl<T, L, R, O> FDiv<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
     T: Copy + Debug + FDiv<T, T>,
-    L: TagDiv<R, O> + Debug + Refine<T>,
+    L: DDiv<R, O> + Debug + Refine<T>,
     R: Debug + Refine<T>,
     O: Debug + Refine<T>,
 {

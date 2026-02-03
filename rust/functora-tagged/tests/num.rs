@@ -38,6 +38,9 @@ impl Refine<Decimal> for Second {
 impl Refine<Decimal> for MeterPerSecond {
     type RefineError = std::convert::Infallible;
 }
+impl Refine<Decimal> for MeterTimesMeter {
+    type RefineError = std::convert::Infallible;
+}
 
 impl TagMul<Meter, Times<Meter, Meter, MeterTimesMeter>>
     for Meter

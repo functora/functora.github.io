@@ -7,31 +7,31 @@ use tap::prelude::*;
 
 #[derive(Eq, PartialEq, Debug, Display)]
 #[display("{:?}", self)]
-pub enum FNumError<Lhs, Rhs>
+pub enum FNumError<L, R>
 where
-    Lhs: Debug,
-    Rhs: Debug,
+    L: Debug,
+    R: Debug,
 {
-    Add(Lhs, Rhs),
-    Sub(Lhs, Rhs),
-    Mul(Lhs, Rhs),
-    Div(Lhs, Rhs),
+    Add(L, R),
+    Sub(L, R),
+    Mul(L, R),
+    Div(L, R),
 }
 
-impl<Lhs, Rhs> Error for FNumError<Lhs, Rhs>
+impl<L, R> Error for FNumError<L, R>
 where
-    Lhs: Debug,
-    Rhs: Debug,
+    L: Debug,
+    R: Debug,
 {
 }
 
 #[derive(Debug)]
 pub enum TimesTag {}
-pub type Times<LTag, RTag> = (TimesTag, LTag, RTag);
+pub type Times<L, R> = (TimesTag, L, R);
 
 #[derive(Debug)]
 pub enum PerTag {}
-pub type Per<LTag, RTag> = (PerTag, LTag, RTag);
+pub type Per<L, R> = (PerTag, L, R);
 
 /////////
 // Add //
@@ -48,16 +48,16 @@ where
 }
 
 //
-// Rep + Rep = Rep
+// T + T = T
 //
-impl<Rep> FAdd for Rep
+impl<T> FAdd for T
 where
-    Rep: Copy + Debug + CheckedAdd,
+    T: Copy + Debug + CheckedAdd,
 {
     fn fadd(
         &self,
         rhs: &Self,
-    ) -> Result<Self, FNumError<Rep, Rep>> {
+    ) -> Result<Self, FNumError<T, T>> {
         self.checked_add(rhs)
             .ok_or(FNumError::Add(*self, *rhs))
     }
@@ -66,10 +66,10 @@ where
 //
 // Tag + Tag = Tag
 //
-impl<Rep, Tag> FAdd for Tagged<Rep, Tag>
+impl<T, Tag> FAdd for Tagged<T, Tag>
 where
-    Rep: Copy + Debug + FAdd,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FAdd,
+    Tag: Debug + Refine<T>,
 {
     fn fadd(
         &self,
@@ -98,16 +98,16 @@ where
 }
 
 //
-// Rep - Rep = Rep
+// T - T = T
 //
-impl<Rep> FSub for Rep
+impl<T> FSub for T
 where
-    Rep: Copy + Debug + CheckedSub,
+    T: Copy + Debug + CheckedSub,
 {
     fn fsub(
         &self,
         rhs: &Self,
-    ) -> Result<Self, FNumError<Rep, Rep>> {
+    ) -> Result<Self, FNumError<T, T>> {
         self.checked_sub(rhs)
             .ok_or(FNumError::Sub(*self, *rhs))
     }
@@ -116,10 +116,10 @@ where
 //
 // Tag - Tag = Tag
 //
-impl<Rep, Tag> FSub for Tagged<Rep, Tag>
+impl<T, Tag> FSub for Tagged<T, Tag>
 where
-    Rep: Copy + Debug + FSub,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FSub,
+    Tag: Debug + Refine<T>,
 {
     fn fsub(
         &self,
@@ -148,16 +148,16 @@ where
 }
 
 //
-// Rep - Rep = Rep
+// T - T = T
 //
-impl<Rep> FGap for Rep
+impl<T> FGap for T
 where
-    Rep: Ord + Copy + Debug + CheckedSub,
+    T: Ord + Copy + Debug + CheckedSub,
 {
     fn fgap(
         &self,
         rhs: &Self,
-    ) -> Result<Self, FNumError<Rep, Rep>> {
+    ) -> Result<Self, FNumError<T, T>> {
         self.max(rhs)
             .checked_sub(self.min(rhs))
             .ok_or(FNumError::Sub(*self, *rhs))
@@ -167,10 +167,10 @@ where
 //
 // Tag - Tag = Tag
 //
-impl<Rep, Tag> FGap for Tagged<Rep, Tag>
+impl<T, Tag> FGap for Tagged<T, Tag>
 where
-    Rep: Ord + Copy + Debug + FSub,
-    Tag: Debug + Refine<Rep>,
+    T: Ord + Copy + Debug + FSub,
+    Tag: Debug + Refine<T>,
 {
     fn fgap(
         &self,
@@ -196,37 +196,31 @@ where
 }
 
 //
-// Rep * Rep = Rep
+// T * T = T
 //
-impl<Rep> FMul<Rep, Rep> for Rep
+impl<T> FMul<T, T> for T
 where
-    Rep: Copy + Debug + CheckedMul,
+    T: Copy + Debug + CheckedMul,
 {
-    fn fmul(
-        &self,
-        rhs: &Rep,
-    ) -> Result<Rep, FNumError<Rep, Rep>> {
+    fn fmul(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
         self.checked_mul(rhs)
             .ok_or(FNumError::Mul(*self, *rhs))
     }
 }
 
 //
-// Rep * Tag = Tag
+// T * Tag = Tag
 //
-impl<Rep, Tag> FMul<Tagged<Rep, Tag>, Tagged<Rep, Tag>>
-    for Rep
+impl<T, Tag> FMul<Tagged<T, Tag>, Tagged<T, Tag>> for T
 where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FMul<T, T>,
+    Tag: Debug + Refine<T>,
 {
     fn fmul(
         &self,
-        rhs: &Tagged<Rep, Tag>,
-    ) -> Result<
-        Tagged<Rep, Tag>,
-        FNumError<Rep, Tagged<Rep, Tag>>,
-    > {
+        rhs: &Tagged<T, Tag>,
+    ) -> Result<Tagged<T, Tag>, FNumError<T, Tagged<T, Tag>>>
+    {
         self.fmul(rhs.rep())
             .map_err(|_| FNumError::Mul(*self, *rhs))?
             .pipe(Tagged::new)
@@ -235,21 +229,18 @@ where
 }
 
 //
-// Tag * Rep = Tag
+// Tag * T = Tag
 //
-impl<Rep, Tag> FMul<Rep, Tagged<Rep, Tag>>
-    for Tagged<Rep, Tag>
+impl<T, Tag> FMul<T, Tagged<T, Tag>> for Tagged<T, Tag>
 where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FMul<T, T>,
+    Tag: Debug + Refine<T>,
 {
     fn fmul(
         &self,
-        rhs: &Rep,
-    ) -> Result<
-        Tagged<Rep, Tag>,
-        FNumError<Tagged<Rep, Tag>, Rep>,
-    > {
+        rhs: &T,
+    ) -> Result<Tagged<T, Tag>, FNumError<Tagged<T, Tag>, T>>
+    {
         self.rep()
             .fmul(rhs)
             .map_err(|_| FNumError::Mul(*self, *rhs))?
@@ -259,23 +250,22 @@ where
 }
 
 //
-// LTag * RTag = Times<LTag, RTag>
+// L * R = Times<L, R>
 //
-impl<Rep, LTag, RTag>
-    FMul<Tagged<Rep, RTag>, Tagged<Rep, Times<LTag, RTag>>>
-    for Tagged<Rep, LTag>
+impl<T, L, R> FMul<Tagged<T, R>, Tagged<T, Times<L, R>>>
+    for Tagged<T, L>
 where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    LTag: Debug,
-    RTag: Debug,
-    Times<LTag, RTag>: Refine<Rep>,
+    T: Copy + Debug + FMul<T, T>,
+    L: Debug,
+    R: Debug,
+    Times<L, R>: Refine<T>,
 {
     fn fmul(
         &self,
-        rhs: &Tagged<Rep, RTag>,
+        rhs: &Tagged<T, R>,
     ) -> Result<
-        Tagged<Rep, Times<LTag, RTag>>,
-        FNumError<Tagged<Rep, LTag>, Tagged<Rep, RTag>>,
+        Tagged<T, Times<L, R>>,
+        FNumError<Tagged<T, L>, Tagged<T, R>>,
     > {
         self.rep()
             .fmul(rhs.rep())
@@ -286,26 +276,22 @@ where
 }
 
 //
-// LTag * Per<RTag, LTag> = RTag
+// L * Per<R, L> = R
 //
-impl<Rep, LTag, RTag>
-    FMul<Tagged<Rep, Per<RTag, LTag>>, Tagged<Rep, RTag>>
-    for Tagged<Rep, LTag>
+impl<T, L, R> FMul<Tagged<T, Per<R, L>>, Tagged<T, R>>
+    for Tagged<T, L>
 where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    LTag: Debug,
-    RTag: Debug + Refine<Rep>,
-    Per<RTag, LTag>: Debug,
+    T: Copy + Debug + FMul<T, T>,
+    L: Debug,
+    R: Debug + Refine<T>,
+    Per<R, L>: Debug,
 {
     fn fmul(
         &self,
-        rhs: &Tagged<Rep, Per<RTag, LTag>>,
+        rhs: &Tagged<T, Per<R, L>>,
     ) -> Result<
-        Tagged<Rep, RTag>,
-        FNumError<
-            Tagged<Rep, LTag>,
-            Tagged<Rep, Per<RTag, LTag>>,
-        >,
+        Tagged<T, R>,
+        FNumError<Tagged<T, L>, Tagged<T, Per<R, L>>>,
     > {
         self.rep()
             .fmul(rhs.rep())
@@ -316,26 +302,22 @@ where
 }
 
 //
-// Per<LTag, RTag> * RTag = LTag
+// Per<L, R> * R = L
 //
-impl<Rep, LTag, RTag>
-    FMul<Tagged<Rep, RTag>, Tagged<Rep, LTag>>
-    for Tagged<Rep, Per<LTag, RTag>>
+impl<T, L, R> FMul<Tagged<T, R>, Tagged<T, L>>
+    for Tagged<T, Per<L, R>>
 where
-    Rep: Copy + Debug + FMul<Rep, Rep>,
-    LTag: Debug + Refine<Rep>,
-    RTag: Debug,
-    Per<LTag, RTag>: Debug,
+    T: Copy + Debug + FMul<T, T>,
+    L: Debug + Refine<T>,
+    R: Debug,
+    Per<L, R>: Debug,
 {
     fn fmul(
         &self,
-        rhs: &Tagged<Rep, RTag>,
+        rhs: &Tagged<T, R>,
     ) -> Result<
-        Tagged<Rep, LTag>,
-        FNumError<
-            Tagged<Rep, Per<LTag, RTag>>,
-            Tagged<Rep, RTag>,
-        >,
+        Tagged<T, L>,
+        FNumError<Tagged<T, Per<L, R>>, Tagged<T, R>>,
     > {
         self.rep()
             .fmul(rhs.rep())
@@ -361,37 +343,31 @@ where
 }
 
 //
-// Rep / Rep = Rep
+// T / T = T
 //
-impl<Rep> FDiv<Rep, Rep> for Rep
+impl<T> FDiv<T, T> for T
 where
-    Rep: Copy + Debug + CheckedDiv,
+    T: Copy + Debug + CheckedDiv,
 {
-    fn fdiv(
-        &self,
-        rhs: &Rep,
-    ) -> Result<Rep, FNumError<Rep, Rep>> {
+    fn fdiv(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
         self.checked_div(rhs)
             .ok_or(FNumError::Div(*self, *rhs))
     }
 }
 
 //
-// Tag / Rep = Tag
+// Tag / T = Tag
 //
-impl<Rep, Tag> FDiv<Rep, Tagged<Rep, Tag>>
-    for Tagged<Rep, Tag>
+impl<T, Tag> FDiv<T, Tagged<T, Tag>> for Tagged<T, Tag>
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FDiv<T, T>,
+    Tag: Debug + Refine<T>,
 {
     fn fdiv(
         &self,
-        rhs: &Rep,
-    ) -> Result<
-        Tagged<Rep, Tag>,
-        FNumError<Tagged<Rep, Tag>, Rep>,
-    > {
+        rhs: &T,
+    ) -> Result<Tagged<T, Tag>, FNumError<Tagged<T, Tag>, T>>
+    {
         self.rep()
             .fdiv(rhs)
             .map_err(|_| FNumError::Div(*self, *rhs))?
@@ -401,22 +377,21 @@ where
 }
 
 //
-// Rep / Tag = Per<Rep, Tag>
+// T / Tag = Per<T, Tag>
 //
-impl<Rep, Tag>
-    FDiv<Tagged<Rep, Tag>, Tagged<Rep, Per<Rep, Tag>>>
-    for Rep
+impl<T, Tag> FDiv<Tagged<T, Tag>, Tagged<T, Per<T, Tag>>>
+    for T
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
+    T: Copy + Debug + FDiv<T, T>,
     Tag: Debug,
-    Per<Rep, Tag>: Refine<Rep>,
+    Per<T, Tag>: Refine<T>,
 {
     fn fdiv(
         &self,
-        rhs: &Tagged<Rep, Tag>,
+        rhs: &Tagged<T, Tag>,
     ) -> Result<
-        Tagged<Rep, Per<Rep, Tag>>,
-        FNumError<Rep, Tagged<Rep, Tag>>,
+        Tagged<T, Per<T, Tag>>,
+        FNumError<T, Tagged<T, Tag>>,
     > {
         self.fdiv(rhs.rep())
             .map_err(|_| FNumError::Div(*self, *rhs))?
@@ -426,21 +401,18 @@ where
 }
 
 //
-// Tag / Tag = Rep
+// Tag / Tag = T
 //
-impl<Rep, Tag> FDiv<Tagged<Rep, Tag>, Rep>
-    for Tagged<Rep, Tag>
+impl<T, Tag> FDiv<Tagged<T, Tag>, T> for Tagged<T, Tag>
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    Tag: Debug + Refine<Rep>,
+    T: Copy + Debug + FDiv<T, T>,
+    Tag: Debug + Refine<T>,
 {
     fn fdiv(
         &self,
-        rhs: &Tagged<Rep, Tag>,
-    ) -> Result<
-        Rep,
-        FNumError<Tagged<Rep, Tag>, Tagged<Rep, Tag>>,
-    > {
+        rhs: &Tagged<T, Tag>,
+    ) -> Result<T, FNumError<Tagged<T, Tag>, Tagged<T, Tag>>>
+    {
         self.rep()
             .fdiv(rhs.rep())
             .map_err(|_| FNumError::Div(*self, *rhs))
@@ -448,23 +420,22 @@ where
 }
 
 //
-// LTag / RTag = Per<LTag, RTag>
+// L / R = Per<L, R>
 //
-impl<Rep, LTag, RTag>
-    FDiv<Tagged<Rep, RTag>, Tagged<Rep, Per<LTag, RTag>>>
-    for Tagged<Rep, LTag>
+impl<T, L, R> FDiv<Tagged<T, R>, Tagged<T, Per<L, R>>>
+    for Tagged<T, L>
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    LTag: Debug,
-    RTag: Debug,
-    Per<LTag, RTag>: Refine<Rep>,
+    T: Copy + Debug + FDiv<T, T>,
+    L: Debug,
+    R: Debug,
+    Per<L, R>: Refine<T>,
 {
     fn fdiv(
         &self,
-        rhs: &Tagged<Rep, RTag>,
+        rhs: &Tagged<T, R>,
     ) -> Result<
-        Tagged<Rep, Per<LTag, RTag>>,
-        FNumError<Tagged<Rep, LTag>, Tagged<Rep, RTag>>,
+        Tagged<T, Per<L, R>>,
+        FNumError<Tagged<T, L>, Tagged<T, R>>,
     > {
         self.rep()
             .fdiv(rhs.rep())
@@ -475,26 +446,22 @@ where
 }
 
 //
-// LTag / Per<LTag, RTag> = RTag
+// L / Per<L, R> = R
 //
-impl<Rep, LTag, RTag>
-    FDiv<Tagged<Rep, Per<LTag, RTag>>, Tagged<Rep, RTag>>
-    for Tagged<Rep, LTag>
+impl<T, L, R> FDiv<Tagged<T, Per<L, R>>, Tagged<T, R>>
+    for Tagged<T, L>
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    LTag: Debug,
-    RTag: Debug + Refine<Rep>,
-    Per<LTag, RTag>: Debug,
+    T: Copy + Debug + FDiv<T, T>,
+    L: Debug,
+    R: Debug + Refine<T>,
+    Per<L, R>: Debug,
 {
     fn fdiv(
         &self,
-        rhs: &Tagged<Rep, Per<LTag, RTag>>,
+        rhs: &Tagged<T, Per<L, R>>,
     ) -> Result<
-        Tagged<Rep, RTag>,
-        FNumError<
-            Tagged<Rep, LTag>,
-            Tagged<Rep, Per<LTag, RTag>>,
-        >,
+        Tagged<T, R>,
+        FNumError<Tagged<T, L>, Tagged<T, Per<L, R>>>,
     > {
         self.rep()
             .fdiv(rhs.rep())
@@ -505,27 +472,23 @@ where
 }
 
 //
-// Per<LTag, RTag> / LTag = Per<Rep, RTag>
+// Per<L, R> / L = Per<T, R>
 //
-impl<Rep, LTag, RTag>
-    FDiv<Tagged<Rep, LTag>, Tagged<Rep, Per<Rep, RTag>>>
-    for Tagged<Rep, Per<LTag, RTag>>
+impl<T, L, R> FDiv<Tagged<T, L>, Tagged<T, Per<T, R>>>
+    for Tagged<T, Per<L, R>>
 where
-    Rep: Copy + Debug + FDiv<Rep, Rep>,
-    LTag: Debug,
-    RTag: Debug,
-    Per<LTag, RTag>: Debug,
-    Per<Rep, RTag>: Refine<Rep>,
+    T: Copy + Debug + FDiv<T, T>,
+    L: Debug,
+    R: Debug,
+    Per<L, R>: Debug,
+    Per<T, R>: Refine<T>,
 {
     fn fdiv(
         &self,
-        rhs: &Tagged<Rep, LTag>,
+        rhs: &Tagged<T, L>,
     ) -> Result<
-        Tagged<Rep, Per<Rep, RTag>>,
-        FNumError<
-            Tagged<Rep, Per<LTag, RTag>>,
-            Tagged<Rep, LTag>,
-        >,
+        Tagged<T, Per<T, R>>,
+        FNumError<Tagged<T, Per<L, R>>, Tagged<T, L>>,
     > {
         self.rep()
             .fdiv(rhs.rep())

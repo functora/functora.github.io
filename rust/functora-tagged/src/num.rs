@@ -12,13 +12,13 @@ use tap::prelude::*;
 /////////////
 
 #[derive(Debug)]
-pub struct Scalar<U>(PhantomData<U>);
+pub struct Scalar<S>(PhantomData<S>);
 
 #[derive(Debug)]
-pub struct Times<L, R>(PhantomData<(L, R)>);
+pub struct Times<L, R, A>(PhantomData<(L, R, A)>);
 
 #[derive(Debug)]
-pub struct Per<L, R>(PhantomData<(L, R)>);
+pub struct Per<L, R, A>(PhantomData<(L, R, A)>);
 
 pub trait IsScalar {}
 
@@ -32,40 +32,45 @@ pub trait IsPer {
     type R;
 }
 
-impl<U> IsScalar for Scalar<U> {}
+impl<S> IsScalar for Scalar<S> {}
 
-impl<L, R> IsTimes for Times<L, R> {
+impl<L, R, A> IsTimes for Times<L, R, A> {
     type L = L;
     type R = R;
 }
 
-impl<L, R> IsPer for Per<L, R> {
+impl<L, R, A> IsPer for Per<L, R, A> {
     type L = L;
     type R = R;
 }
 
-impl<T, U: Refine<T>> Refine<T> for Scalar<U> {
-    type RefineError = U::RefineError;
-    fn refine(v: T) -> Result<T, Self::RefineError> {
-        U::refine(v)
+impl<T, S> Refine<T> for Scalar<S>
+where
+    S: Refine<T>,
+{
+    type RefineError = S::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        S::refine(rep)
     }
 }
 
-impl<T, L: Refine<T>, R: Refine<T>> Refine<T>
-    for Per<L, R>
+impl<T, L, R, A> Refine<T> for Per<L, R, A>
+where
+    A: Refine<T>,
 {
-    type RefineError = std::convert::Infallible;
-    fn refine(v: T) -> Result<T, Self::RefineError> {
-        Ok(v)
+    type RefineError = A::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        A::refine(rep)
     }
 }
 
-impl<T, L: Refine<T>, R: Refine<T>> Refine<T>
-    for Times<L, R>
+impl<T, L, R, A> Refine<T> for Times<L, R, A>
+where
+    A: Refine<T>,
 {
-    type RefineError = std::convert::Infallible;
-    fn refine(v: T) -> Result<T, Self::RefineError> {
-        Ok(v)
+    type RefineError = A::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        A::refine(rep)
     }
 }
 
@@ -74,12 +79,27 @@ pub trait TagMul<Rhs, Output> {}
 pub trait TagDiv<Rhs, Output> {}
 
 // Default logic for library markers
-impl<L, R> TagMul<Scalar<R>, Times<L, R>> for Scalar<L> {}
-impl<L, R> TagMul<Per<R, L>, Scalar<R>> for Scalar<L> {}
-impl<L, R> TagMul<Scalar<R>, Scalar<L>> for Per<L, R> {}
+impl<L, R, A> TagMul<Scalar<R>, Times<L, R, A>>
+    for Scalar<L>
+{
+}
+impl<L, R, A> TagMul<Per<R, L, A>, Scalar<R>>
+    for Scalar<L>
+{
+}
+impl<L, R, A> TagMul<Scalar<R>, Scalar<L>>
+    for Per<L, R, A>
+{
+}
 
-impl<L, R> TagDiv<Scalar<R>, Per<L, R>> for Scalar<L> {}
-impl<L, R> TagDiv<Per<L, R>, Scalar<R>> for Scalar<L> {}
+impl<L, R, A> TagDiv<Scalar<R>, Per<L, R, A>>
+    for Scalar<L>
+{
+}
+impl<L, R, A> TagDiv<Per<L, R, A>, Scalar<R>>
+    for Scalar<L>
+{
+}
 
 //////////////
 //  Errors  //

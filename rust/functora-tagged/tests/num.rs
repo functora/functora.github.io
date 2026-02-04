@@ -16,17 +16,9 @@ pub enum DUsd {}
 #[derive(Debug)]
 pub enum DEur {}
 #[derive(Debug)]
-pub enum DEurPerUsd {}
-#[derive(Debug)]
 pub enum DMeter {}
 #[derive(Debug)]
 pub enum DSecond {}
-#[derive(Debug)]
-pub enum DFreePerSecond {}
-#[derive(Debug)]
-pub enum DMeterPerSecond {}
-#[derive(Debug)]
-pub enum DMeterTimesMeter {}
 
 type Num = Tagged<Decimal, Identity<DNum>>;
 impl Refine<Decimal> for DNum {
@@ -35,21 +27,26 @@ impl Refine<Decimal> for DNum {
 
 type Usd = Tagged<Decimal, Prim<DUsd>>;
 impl Refine<Decimal> for DUsd {
-    type RefineError = Infallible;
+    type RefineError = NonNegError<Decimal>;
+    fn refine(
+        rep: Decimal,
+    ) -> Result<Decimal, Self::RefineError> {
+        NonNeg::refine(rep)
+    }
 }
 
 type Eur = Tagged<Decimal, Prim<DEur>>;
 impl Refine<Decimal> for DEur {
-    type RefineError = Infallible;
+    type RefineError = NonNegError<Decimal>;
+    fn refine(
+        rep: Decimal,
+    ) -> Result<Decimal, Self::RefineError> {
+        NonNeg::refine(rep)
+    }
 }
 
-type EurPerUsd = Tagged<
-    Decimal,
-    Per<Prim<DEur>, Prim<DUsd>, DEurPerUsd>,
->;
-impl Refine<Decimal> for DEurPerUsd {
-    type RefineError = Infallible;
-}
+type EurPerUsd =
+    Tagged<Decimal, Per<Prim<DEur>, Prim<DUsd>, Pos>>;
 
 type Meter = Tagged<Decimal, Prim<DMeter>>;
 impl Refine<Decimal> for DMeter {
@@ -63,27 +60,18 @@ impl Refine<Decimal> for DSecond {
 
 type Hertz = Tagged<
     Decimal,
-    Per<Identity<DNum>, Prim<DSecond>, DFreePerSecond>,
+    Per<Identity<DNum>, Prim<DSecond>, Pos>,
 >;
-impl Refine<Decimal> for DFreePerSecond {
-    type RefineError = Infallible;
-}
 
 type MeterPerSecond = Tagged<
     Decimal,
-    Per<Prim<DMeter>, Prim<DSecond>, DMeterPerSecond>,
+    Per<Prim<DMeter>, Prim<DSecond>, NonNeg>,
 >;
-impl Refine<Decimal> for DMeterPerSecond {
-    type RefineError = Infallible;
-}
 
 type MeterTimesMeter = Tagged<
     Decimal,
-    Times<Prim<DMeter>, Prim<DMeter>, DMeterTimesMeter>,
+    Times<Prim<DMeter>, Prim<DMeter>, NonNeg>,
 >;
-impl Refine<Decimal> for DMeterTimesMeter {
-    type RefineError = Infallible;
-}
 
 #[test]
 fn area() -> Test {

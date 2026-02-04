@@ -318,3 +318,63 @@ where
             .map_err(|_| FNumError::Div(*self, *rhs))
     }
 }
+
+////////////
+// Common //
+////////////
+
+//
+// Pos
+//
+
+#[derive(Debug)]
+pub enum Pos {}
+
+#[derive(Debug, Display)]
+#[display("{:?}", self)]
+pub struct PosError<T>(T)
+where
+    T: Debug;
+impl<T> Error for PosError<T> where T: Debug {}
+
+impl<T> Refine<T> for Pos
+where
+    T: Ord + Zero + Debug,
+{
+    type RefineError = PosError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep > Zero::zero() {
+            Ok(rep)
+        } else {
+            PosError(rep).pipe(Err)
+        }
+    }
+}
+
+//
+// NonNeg
+//
+
+#[derive(Debug)]
+pub enum NonNeg {}
+
+#[derive(Debug, Display)]
+#[display("{:?}", self)]
+pub struct NonNegError<T>(T)
+where
+    T: Debug;
+impl<T> Error for NonNegError<T> where T: Debug {}
+
+impl<T> Refine<T> for NonNeg
+where
+    T: Ord + Zero + Debug,
+{
+    type RefineError = NonNegError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep >= Zero::zero() {
+            Ok(rep)
+        } else {
+            NonNegError(rep).pipe(Err)
+        }
+    }
+}

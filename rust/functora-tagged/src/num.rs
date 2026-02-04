@@ -64,68 +64,68 @@ pub trait DMul<R, O> {}
 
 pub trait DDiv<R, O> {}
 
-// 1. L * R = Times<L, R, A>
+// 1. L * R = L ✖ R
 impl<L, R, A> DMul<Prim<R>, Times<Prim<L>, Prim<R>, A>>
     for Prim<L>
 {
 }
 
-// 2. Per<L, R, A> * R = L
+// 2. (L ÷ R) * R = L
 impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
 
-// 3. R * Per<L, R, A> = L
+// 3. R * (L ÷ R) = L
 impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
 
-// 4. L / R = Per<L, R, A>
+// 4. L / R = L ÷ R
 impl<L, R, A> DDiv<Prim<R>, Per<Prim<L>, Prim<R>, A>>
     for Prim<L>
 {
 }
 
-// 5. L / Per<L, R, A> = R
+// 5. L / (L ÷ R) = R
 impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
 
-// 6. Times<L, R, A> / R = L
+// 6. (L ✖ R) / R = L
 impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 
-// 7. Times<L, R, A> / L = R
-// Since (L*R)/L = R and (L*R)/R = L overlap when L=R, we pick a canonical one.
+// 7. (L ✖ R) / L = R
+// Since this overlap with (L ✖ R) / R = L when L = R, we pick the only one.
 // Rule 6 already handles the R cancellation. Rule 7 will conflict.
 
-// 8. Per<L, R, A> / L = Per<Identity, R, B>
+// 8. (L ÷ R) / L = 1 ÷ R
 impl<L, R, A, B, I> DDiv<Prim<L>, Per<Identity<I>, R, B>>
     for Per<Prim<L>, R, A>
 {
 }
 
-// 9. Identity * Any = Any
+// 9. 1 * T = T
 impl<T, I> DMul<T, T> for Identity<I> {}
 
-// 10. Prim * Identity = Prim
+// 10. T * 1 = T
 impl<P, I> DMul<Identity<I>, Prim<P>> for Prim<P> {}
 
-// 11. Per * Identity = Per
+// 11. (L ÷ R) * 1 = L ÷ R
 impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
     for Per<L, R, A>
 {
 }
 
-// 12. Times * Identity = Times
+// 12. (L ÷ R) * 1 = L ÷ R
 impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
     for Times<L, R, A>
 {
 }
 
-// 13. Any / Identity = Any
+// 13. T / 1 = T
 impl<T, I> DDiv<Identity<I>, T> for T {}
 
-// 14. Identity / Prim = Per<Identity, Prim, A>
+// 14. 1 / T = 1 ÷ T
 impl<P, A, I> DDiv<Prim<P>, Per<Identity<I>, Prim<P>, A>>
     for Identity<I>
 {
 }
 
-// 15. Identity / Per<L, R, A> = Per<R, L, B>
+// 15. 1 / (L ÷ R) = R ÷ L
 impl<L, R, A, B, I>
     DDiv<Per<Prim<L>, Prim<R>, A>, Per<Prim<R>, Prim<L>, B>>
     for Identity<I>
@@ -278,41 +278,41 @@ where
 //  Div  //
 ///////////
 
-pub trait FDiv<R, O>: Sized + Debug
+pub trait TDiv<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn fdiv(
+    fn tdiv(
         &self,
         rhs: &R,
     ) -> Result<O, FNumError<Self, R>>;
 }
 
-impl<T> FDiv<T, T> for T
+impl<T> TDiv<T, T> for T
 where
     T: Copy + Debug + CheckedDiv,
 {
-    fn fdiv(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
+    fn tdiv(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
         self.checked_div(rhs)
             .ok_or(FNumError::Div(*self, *rhs))
     }
 }
 
-impl<T, L, R, O> FDiv<Tagged<T, R>, Tagged<T, O>>
+impl<T, L, R, O> TDiv<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
-    T: Copy + FDiv<T, T>,
+    T: Copy + TDiv<T, T>,
     L: Debug + DDiv<R, O>,
     R: Debug,
     O: Refine<T>,
 {
-    fn fdiv(
+    fn tdiv(
         &self,
         rhs: &Tagged<T, R>,
     ) -> Result<Tagged<T, O>, FNumError<Self, Tagged<T, R>>>
     {
         self.rep()
-            .fdiv(rhs.rep())
+            .tdiv(rhs.rep())
             .map_err(|_| FNumError::Div(*self, *rhs))?
             .pipe(Tagged::new)
             .map_err(|_| FNumError::Div(*self, *rhs))

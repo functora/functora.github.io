@@ -91,8 +91,8 @@ fn area() -> Test {
     let w = Meter::new(dec!(5))?;
     let a: MeterTimesMeter = l.tmul(&w)?;
     assert_eq!(a.rep(), &dec!(50));
-    assert_eq!(a.fdiv(&l)?, w);
-    assert_eq!(a.fdiv(&w)?, l);
+    assert_eq!(a.tdiv(&l)?, w);
+    assert_eq!(a.tdiv(&w)?, l);
     ok()
 }
 
@@ -100,8 +100,8 @@ fn area() -> Test {
 fn velocity() -> Test {
     let d = Meter::new(dec!(100))?;
     let t = Second::new(dec!(10))?;
-    let v: MeterPerSecond = d.fdiv(&t)?;
-    let h: Hertz = v.fdiv(&d)?;
+    let v: MeterPerSecond = d.tdiv(&t)?;
+    let h: Hertz = v.tdiv(&d)?;
     assert_eq!(v.rep(), &dec!(10));
     assert_eq!(v.tmul(&t)?, d);
     assert_eq!(t.tmul(&v)?, d);
@@ -122,7 +122,7 @@ fn velocity_cancel() -> Test {
 fn exchange_rate() -> Test {
     let eur = Eur::new(dec!(100))?;
     let usd = Usd::new(dec!(1.2))?;
-    let rate: EurPerUsd = eur.fdiv(&usd)?;
+    let rate: EurPerUsd = eur.tdiv(&usd)?;
     assert_eq!(rate.rep(), &(dec!(100) / dec!(1.2)));
     ok()
 }
@@ -196,10 +196,10 @@ fn test_cancellation() -> Test {
     let w = Meter::new(dec!(5))?;
     let area: MeterTimesMeter = l.tmul(&w)?;
     // Times / L = R
-    let w_back: Meter = area.fdiv(&l)?;
+    let w_back: Meter = area.tdiv(&l)?;
     assert_eq!(w, w_back);
     // Times / R = L
-    let l_back: Meter = area.fdiv(&w)?;
+    let l_back: Meter = area.tdiv(&w)?;
     assert_eq!(l, l_back);
     ok()
 }
@@ -209,10 +209,10 @@ fn test_identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
     // Prim / Identity = Prim
-    let m_back: Meter = m.fdiv(&one)?;
+    let m_back: Meter = m.tdiv(&one)?;
     assert_eq!(m, m_back);
     // Identity / Prim = Per<Identity, Prim>
-    let h: Hertz = one.fdiv(&Second::new(dec!(2))?)?;
+    let h: Hertz = one.tdiv(&Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
     ok()
 }

@@ -92,8 +92,8 @@ impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 // Since (L*R)/L = R and (L*R)/R = L overlap when L=R, we pick a canonical one.
 // Rule 6 already handles the R cancellation. Rule 7 will conflict.
 
-// 8. Per<L, R, A> / L = Per<Identity<I>, R, B>
-impl<L, R, A, I, B> DDiv<Prim<L>, Per<Identity<I>, R, B>>
+// 8. Per<L, R, A> / L = Per<Identity, R, B>
+impl<L, R, A, B, I> DDiv<Prim<L>, Per<Identity<I>, R, B>>
     for Per<Prim<L>, R, A>
 {
 }
@@ -119,14 +119,14 @@ impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
 // 13. Any / Identity = Any
 impl<T, I> DDiv<Identity<I>, T> for T {}
 
-// 14. Identity / Prim = Per<Identity<I>, Prim<P>, A>
+// 14. Identity / Prim = Per<Identity, Prim, A>
 impl<P, A, I> DDiv<Prim<P>, Per<Identity<I>, Prim<P>, A>>
     for Identity<I>
 {
 }
 
 // 15. Identity / Per<L, R, A> = Per<R, L, B>
-impl<I, L, R, A, B>
+impl<L, R, A, B, I>
     DDiv<Per<Prim<L>, Prim<R>, A>, Per<Prim<R>, Prim<L>, B>>
     for Identity<I>
 {
@@ -151,18 +151,18 @@ impl<L: Debug, R: Debug> Error for FNumError<L, R> {}
 //  Add  //
 ///////////
 
-pub trait FAdd: Sized + Debug {
-    fn fadd(
+pub trait TAdd: Sized + Debug {
+    fn tadd(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<Self, Self>>;
 }
 
-impl<T> FAdd for T
+impl<T> TAdd for T
 where
     T: Copy + Debug + CheckedAdd,
 {
-    fn fadd(
+    fn tadd(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<T, T>> {
@@ -171,17 +171,17 @@ where
     }
 }
 
-impl<T, D> FAdd for Tagged<T, D>
+impl<T, D> TAdd for Tagged<T, D>
 where
-    T: Copy + FAdd,
+    T: Copy + TAdd,
     D: Debug + Refine<T>,
 {
-    fn fadd(
+    fn tadd(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<Self, Self>> {
         self.rep()
-            .fadd(rhs.rep())
+            .tadd(rhs.rep())
             .map_err(|_| FNumError::Add(*self, *rhs))?
             .pipe(Tagged::new)
             .map_err(|_| FNumError::Add(*self, *rhs))
@@ -192,18 +192,18 @@ where
 //  Sub  //
 ///////////
 
-pub trait FSub: Sized + Debug {
-    fn fsub(
+pub trait TSub: Sized + Debug {
+    fn tsub(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<Self, Self>>;
 }
 
-impl<T> FSub for T
+impl<T> TSub for T
 where
     T: Copy + Debug + CheckedSub,
 {
-    fn fsub(
+    fn tsub(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<T, T>> {
@@ -212,17 +212,17 @@ where
     }
 }
 
-impl<T, D> FSub for Tagged<T, D>
+impl<T, D> TSub for Tagged<T, D>
 where
-    T: Copy + FSub,
+    T: Copy + TSub,
     D: Debug + Refine<T>,
 {
-    fn fsub(
+    fn tsub(
         &self,
         rhs: &Self,
     ) -> Result<Self, FNumError<Self, Self>> {
         self.rep()
-            .fsub(rhs.rep())
+            .tsub(rhs.rep())
             .map_err(|_| FNumError::Sub(*self, *rhs))?
             .pipe(Tagged::new)
             .map_err(|_| FNumError::Sub(*self, *rhs))
@@ -233,41 +233,41 @@ where
 //  Mul  //
 ///////////
 
-pub trait FMul<R, O>: Sized + Debug
+pub trait TMul<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn fmul(
+    fn tmul(
         &self,
         rhs: &R,
     ) -> Result<O, FNumError<Self, R>>;
 }
 
-impl<T> FMul<T, T> for T
+impl<T> TMul<T, T> for T
 where
     T: Copy + Debug + CheckedMul,
 {
-    fn fmul(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
+    fn tmul(&self, rhs: &T) -> Result<T, FNumError<T, T>> {
         self.checked_mul(rhs)
             .ok_or(FNumError::Mul(*self, *rhs))
     }
 }
 
-impl<T, L, R, O> FMul<Tagged<T, R>, Tagged<T, O>>
+impl<T, L, R, O> TMul<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
-    T: Copy + FMul<T, T>,
+    T: Copy + TMul<T, T>,
     L: Debug + DMul<R, O>,
     R: Debug,
     O: Refine<T>,
 {
-    fn fmul(
+    fn tmul(
         &self,
         rhs: &Tagged<T, R>,
     ) -> Result<Tagged<T, O>, FNumError<Self, Tagged<T, R>>>
     {
         self.rep()
-            .fmul(rhs.rep())
+            .tmul(rhs.rep())
             .map_err(|_| FNumError::Mul(*self, *rhs))?
             .pipe(Tagged::new)
             .map_err(|_| FNumError::Mul(*self, *rhs))

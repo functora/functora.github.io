@@ -89,7 +89,7 @@ impl Refine<Decimal> for DMeterTimesMeter {
 fn area() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a: MeterTimesMeter = l.fmul(&w)?;
+    let a: MeterTimesMeter = l.tmul(&w)?;
     assert_eq!(a.rep(), &dec!(50));
     assert_eq!(a.fdiv(&l)?, w);
     assert_eq!(a.fdiv(&w)?, l);
@@ -103,8 +103,8 @@ fn velocity() -> Test {
     let v: MeterPerSecond = d.fdiv(&t)?;
     let h: Hertz = v.fdiv(&d)?;
     assert_eq!(v.rep(), &dec!(10));
-    assert_eq!(v.fmul(&t)?, d);
-    assert_eq!(t.fmul(&v)?, d);
+    assert_eq!(v.tmul(&t)?, d);
+    assert_eq!(t.tmul(&v)?, d);
     assert_eq!(h.rep(), &dec!(0.1));
     ok()
 }
@@ -113,7 +113,7 @@ fn velocity() -> Test {
 fn velocity_cancel() -> Test {
     let v = MeterPerSecond::new(dec!(10))?;
     let t = Second::new(dec!(2))?;
-    let d: Meter = v.fmul(&t)?;
+    let d: Meter = v.tmul(&t)?;
     assert_eq!(d.rep(), &dec!(20));
     ok()
 }
@@ -131,7 +131,7 @@ fn exchange_rate() -> Test {
 fn currency_convert() -> Test {
     let usd = Usd::new(dec!(400))?;
     let rate = EurPerUsd::new(dec!(0.9))?;
-    let eur: Eur = usd.fmul(&rate)?;
+    let eur: Eur = usd.tmul(&rate)?;
     assert_eq!(eur.rep(), &dec!(360));
     ok()
 }
@@ -140,11 +140,11 @@ fn currency_convert() -> Test {
 fn test_commutative() -> Test {
     let x = Meter::new(dec!(10))?;
     let y = Meter::new(dec!(5))?;
-    assert_eq!(x.fadd(&y)?, y.fadd(&x)?);
+    assert_eq!(x.tadd(&y)?, y.tadd(&x)?);
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a1: MeterTimesMeter = l.fmul(&w)?;
-    let a2: MeterTimesMeter = w.fmul(&l)?;
+    let a1: MeterTimesMeter = l.tmul(&w)?;
+    let a2: MeterTimesMeter = w.tmul(&l)?;
     assert_eq!(a1.rep(), a2.rep());
     ok()
 }
@@ -155,8 +155,8 @@ fn test_associative() -> Test {
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
     assert_eq!(
-        a.fadd(&b)?.fadd(&c)?,
-        a.fadd(&b.fadd(&c)?)?
+        a.tadd(&b)?.tadd(&c)?,
+        a.tadd(&b.tadd(&c)?)?
     );
     ok()
 }
@@ -167,10 +167,10 @@ fn test_distributive() -> Test {
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
     // a * (b + c)
-    let res1: MeterTimesMeter = a.fmul(&b.fadd(&c)?)?;
+    let res1: MeterTimesMeter = a.tmul(&b.tadd(&c)?)?;
     // a * b + a * c
     let res2: MeterTimesMeter =
-        a.fmul(&b)?.fadd(&a.fmul(&c)?)?;
+        a.tmul(&b)?.tadd(&a.tmul(&c)?)?;
     assert_eq!(res1, res2);
     ok()
 }
@@ -180,13 +180,13 @@ fn test_identity() -> Test {
     // x + 0 = x
     let x = Meter::new(dec!(10))?;
     let zero = Meter::new(dec!(0))?;
-    assert_eq!(x.fadd(&zero)?, x);
-    assert_eq!(zero.fadd(&x)?, x);
+    assert_eq!(x.tadd(&zero)?, x);
+    assert_eq!(zero.tadd(&x)?, x);
     // y * 1 = y
     let y = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
-    assert_eq!(y.fmul(&one)?, y);
-    assert_eq!(one.fmul(&y)?, y);
+    assert_eq!(y.tmul(&one)?, y);
+    assert_eq!(one.tmul(&y)?, y);
     ok()
 }
 
@@ -194,16 +194,13 @@ fn test_identity() -> Test {
 fn test_cancellation() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let area: MeterTimesMeter = l.fmul(&w)?;
-
+    let area: MeterTimesMeter = l.tmul(&w)?;
     // Times / L = R
     let w_back: Meter = area.fdiv(&l)?;
     assert_eq!(w, w_back);
-
     // Times / R = L
     let l_back: Meter = area.fdiv(&w)?;
     assert_eq!(l, l_back);
-
     ok()
 }
 
@@ -211,14 +208,11 @@ fn test_cancellation() -> Test {
 fn test_identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
-
     // Prim / Identity = Prim
     let m_back: Meter = m.fdiv(&one)?;
     assert_eq!(m, m_back);
-
     // Identity / Prim = Per<Identity, Prim>
     let h: Hertz = one.fdiv(&Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
-
     ok()
 }

@@ -2,7 +2,6 @@ use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
 use num_traits::*;
-use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -163,12 +162,33 @@ impl<L, R, A, I> DDiv<Identity<I>, Times<L, R, A>>
 {
 }
 
-// 16. Identity / Scalar = Per
+// 16. Identity / Scalar = Per<Identity, Scalar>
 impl<I, S, A> DDiv<S, Per<Identity<I>, S, A>>
     for Identity<I>
 where
     S: IsScalar,
     A: IsPer<L = Identity<I>, R = S>,
+{
+}
+
+// 17. Identity / Per<L, R> = Per<R, L>
+impl<I, L, R, A, B> DDiv<Per<L, R, A>, Per<R, L, B>>
+    for Identity<I>
+where
+    A: IsPer<L = L, R = R>,
+    B: IsPer<L = R, R = L>,
+{
+}
+
+// 18. Identity / Times<L, R> = Per<Identity, Times<L, R>>
+impl<I, L, R, A, B>
+    DDiv<
+        Times<L, R, A>,
+        Per<Identity<I>, Times<L, R, A>, B>,
+    > for Identity<I>
+where
+    A: IsPer<L = L, R = R>,
+    B: IsPer<L = R, R = L>,
 {
 }
 

@@ -45,6 +45,16 @@ where
     }
 }
 
+impl<T, S> Refine<T> for Scalar<S>
+where
+    S: Refine<T>,
+{
+    type RefineError = S::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        S::refine(rep)
+    }
+}
+
 impl<S> IsScalar for Scalar<S> {}
 
 impl<L, R, A> IsTimes for Times<L, R, A> {
@@ -55,16 +65,6 @@ impl<L, R, A> IsTimes for Times<L, R, A> {
 impl<L, R, A> IsPer for Per<L, R, A> {
     type L = L;
     type R = R;
-}
-
-impl<T, S> Refine<T> for Scalar<S>
-where
-    S: Refine<T>,
-{
-    type RefineError = S::RefineError;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        S::refine(rep)
-    }
 }
 
 impl<T, L, R, A> Refine<T> for Per<L, R, A>
@@ -228,10 +228,10 @@ where
     }
 }
 
-impl<T, Tag> FAdd for Tagged<T, Tag>
+impl<T, D> FAdd for Tagged<T, D>
 where
-    T: Copy + Debug + FAdd,
-    Tag: Debug + Refine<T>,
+    T: Copy + FAdd,
+    D: Debug + Refine<T>,
 {
     fn fadd(
         &self,
@@ -269,10 +269,10 @@ where
     }
 }
 
-impl<T, Tag> FSub for Tagged<T, Tag>
+impl<T, D> FSub for Tagged<T, D>
 where
-    T: Copy + Debug + FSub,
-    Tag: Debug + Refine<T>,
+    T: Copy + FSub,
+    D: Debug + Refine<T>,
 {
     fn fsub(
         &self,
@@ -290,14 +290,14 @@ where
 //  Mul  //
 ///////////
 
-pub trait FMul<Rhs, Output>: Sized + Debug
+pub trait FMul<R, O>: Sized + Debug
 where
-    Rhs: Debug,
+    R: Debug,
 {
     fn fmul(
         &self,
-        rhs: &Rhs,
-    ) -> Result<Output, FNumError<Self, Rhs>>;
+        rhs: &R,
+    ) -> Result<O, FNumError<Self, R>>;
 }
 
 impl<T> FMul<T, T> for T
@@ -313,10 +313,10 @@ where
 impl<T, L, R, O> FMul<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
-    T: Copy + Debug + FMul<T, T>,
-    L: DMul<R, O> + Debug + Refine<T>,
-    R: Debug + Refine<T>,
-    O: Debug + Refine<T>,
+    T: Copy + FMul<T, T>,
+    L: Debug + DMul<R, O>,
+    R: Debug,
+    O: Refine<T>,
 {
     fn fmul(
         &self,
@@ -335,14 +335,14 @@ where
 //  Div  //
 ///////////
 
-pub trait FDiv<Rhs, Output>: Sized + Debug
+pub trait FDiv<R, O>: Sized + Debug
 where
-    Rhs: Debug,
+    R: Debug,
 {
     fn fdiv(
         &self,
-        rhs: &Rhs,
-    ) -> Result<Output, FNumError<Self, Rhs>>;
+        rhs: &R,
+    ) -> Result<O, FNumError<Self, R>>;
 }
 
 impl<T> FDiv<T, T> for T
@@ -358,10 +358,10 @@ where
 impl<T, L, R, O> FDiv<Tagged<T, R>, Tagged<T, O>>
     for Tagged<T, L>
 where
-    T: Copy + Debug + FDiv<T, T>,
-    L: DDiv<R, O> + Debug + Refine<T>,
-    R: Debug + Refine<T>,
-    O: Debug + Refine<T>,
+    T: Copy + FDiv<T, T>,
+    L: Debug + DDiv<R, O>,
+    R: Debug,
+    O: Refine<T>,
 {
     fn fdiv(
         &self,

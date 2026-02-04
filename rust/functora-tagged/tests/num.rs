@@ -140,11 +140,13 @@ fn currency_convert() -> Test {
 fn test_commutative() -> Test {
     let x = Meter::new(dec!(10))?;
     let y = Meter::new(dec!(5))?;
+    // x + y = y + x
     assert_eq!(x.tadd(&y)?, y.tadd(&x)?);
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
     let a1: MeterTimesMeter = l.tmul(&w)?;
     let a2: MeterTimesMeter = w.tmul(&l)?;
+    // l * w = w * l
     assert_eq!(a1.rep(), a2.rep());
     ok()
 }
@@ -154,6 +156,7 @@ fn test_associative() -> Test {
     let a = Meter::new(dec!(10))?;
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
+    // (a + b) + c = a + (b + c)
     assert_eq!(
         a.tadd(&b)?.tadd(&c)?,
         a.tadd(&b.tadd(&c)?)?
@@ -166,26 +169,27 @@ fn test_distributive() -> Test {
     let a = Meter::new(dec!(10))?;
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
-    // a * (b + c)
     let res1: MeterTimesMeter = a.tmul(&b.tadd(&c)?)?;
-    // a * b + a * c
     let res2: MeterTimesMeter =
         a.tmul(&b)?.tadd(&a.tmul(&c)?)?;
+    // a * (b + c) = a * b + a * c
     assert_eq!(res1, res2);
     ok()
 }
 
 #[test]
 fn test_identity() -> Test {
-    // x + 0 = x
     let x = Meter::new(dec!(10))?;
     let zero = Meter::new(dec!(0))?;
+    // x + 0 = x
     assert_eq!(x.tadd(&zero)?, x);
+    // 0 + x = x
     assert_eq!(zero.tadd(&x)?, x);
-    // y * 1 = y
     let y = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
+    // y * 1 = y
     assert_eq!(y.tmul(&one)?, y);
+    // 1 * y = y
     assert_eq!(one.tmul(&y)?, y);
     ok()
 }
@@ -195,12 +199,10 @@ fn test_cancellation() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
     let area: MeterTimesMeter = l.tmul(&w)?;
-    // Times / L = R
-    let w_back: Meter = area.tdiv(&l)?;
-    assert_eq!(w, w_back);
-    // Times / R = L
-    let l_back: Meter = area.tdiv(&w)?;
-    assert_eq!(l, l_back);
+    // (L ✖ R) / L = R
+    assert_eq!(w, area.tdiv(&l)?);
+    // (L ✖ R) / R = L
+    assert_eq!(l, area.tdiv(&w)?);
     ok()
 }
 
@@ -208,10 +210,9 @@ fn test_cancellation() -> Test {
 fn test_identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
-    // Prim / Identity = Prim
-    let m_back: Meter = m.tdiv(&one)?;
-    assert_eq!(m, m_back);
-    // Identity / Prim = Per<Identity, Prim>
+    // T / 1 = T
+    assert_eq!(m, m.tdiv(&one)?);
+    // 1 / T = 1 ÷ T
     let h: Hertz = one.tdiv(&Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
     ok()

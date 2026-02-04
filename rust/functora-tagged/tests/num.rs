@@ -10,8 +10,6 @@ use std::fmt::Debug;
 type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[derive(Debug)]
-pub enum DFree {}
-#[derive(Debug)]
 pub enum DUsd {}
 #[derive(Debug)]
 pub enum DEur {}
@@ -28,10 +26,7 @@ pub enum DMeterPerSecond {}
 #[derive(Debug)]
 pub enum DMeterTimesMeter {}
 
-type Free = Tagged<Decimal, Identity<DFree>>;
-impl Refine<Decimal> for DFree {
-    type RefineError = Infallible;
-}
+type Free = Tagged<Decimal, Identity>;
 
 type Usd = Tagged<Decimal, DUsd>;
 impl Refine<Decimal> for DUsd {
@@ -61,7 +56,7 @@ impl Refine<Decimal> for DSecond {
 
 type Hertz = Tagged<
     Decimal,
-    Per<Identity<DFree>, DSecond, DFreePerSecond>,
+    Per<Identity, DSecond, DFreePerSecond>,
 >;
 impl Refine<Decimal> for DFreePerSecond {
     type RefineError = Infallible;
@@ -102,7 +97,7 @@ impl IsPer for DEurPerUsd {
 }
 
 impl IsPer for DFreePerSecond {
-    type L = Identity<DFree>;
+    type L = Identity;
     type R = DSecond;
 }
 

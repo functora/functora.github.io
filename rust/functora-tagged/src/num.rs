@@ -2,6 +2,7 @@ use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
 use num_traits::*;
+use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -33,7 +34,7 @@ pub trait IsPer {
 }
 
 #[derive(Debug)]
-pub struct Identity<I>(PhantomData<I>);
+pub struct Identity<I = ()>(PhantomData<I>);
 
 impl<T, I> Refine<T> for Identity<I>
 where
@@ -42,6 +43,13 @@ where
     type RefineError = I::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         I::refine(rep)
+    }
+}
+
+impl<T> Refine<T> for () {
+    type RefineError = Infallible;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        Ok(rep)
     }
 }
 

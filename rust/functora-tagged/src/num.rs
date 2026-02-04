@@ -23,7 +23,84 @@ pub struct Times<L, R, A>(PhantomData<(L, R, A)>);
 #[derive(Debug)]
 pub struct Per<L, R, A>(PhantomData<(L, R, A)>);
 
-pub trait IsScalar {}
+pub trait DMul<R, O> {}
+
+pub trait DDiv<R, O> {}
+
+// 1. L * R = Times<L, R, A>
+impl<L, R, A>
+    DMul<Scalar<R>, Times<Scalar<L>, Scalar<R>, A>>
+    for Scalar<L>
+{
+}
+
+// 2. Per<L, R, A> * R = L
+impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
+
+// 3. R * Per<L, R, A> = L
+impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
+
+// 4. L / R = Per<L, R, A>
+impl<L, R, A> DDiv<Scalar<R>, Per<Scalar<L>, Scalar<R>, A>>
+    for Scalar<L>
+{
+}
+
+// 5. L / Per<L, R, A> = R
+impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
+
+// 6. Times<L, R, A> / R = L
+impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
+
+// 7. Times<L, R, A> / L = R
+// Consolidated rule for Times cancellation.
+// Since (L*R)/L = R and (L*R)/R = L overlap when L=R, we pick a canonical one.
+// Rule 6 already handles the R cancellation. Rule 7 will conflict.
+// In such system, we usually provide the user with Area / Width = Length.
+// To avoid conflict, we can't have both if they are generic.
+
+// 8. Per<L, R, A> / L = Per<Identity<I>, R, B>
+impl<L, R, A, I, B> DDiv<Scalar<L>, Per<Identity<I>, R, B>>
+    for Per<Scalar<L>, R, A>
+{
+}
+
+// 9. Identity * Any = Any
+impl<T, I> DMul<T, T> for Identity<I> {}
+
+// 10. Scalar * Identity = Scalar
+impl<S, I> DMul<Identity<I>, Scalar<S>> for Scalar<S> {}
+
+// 11. Per * Identity = Per
+impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
+    for Per<L, R, A>
+{
+}
+
+// 12. Times * Identity = Times
+impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
+    for Times<L, R, A>
+{
+}
+
+// 13. Any / Identity = Any
+impl<T, I> DDiv<Identity<I>, T> for T {}
+
+// 14. Identity / Scalar = Per<Identity<I>, Scalar<S>, A>
+impl<S, A, I>
+    DDiv<Scalar<S>, Per<Identity<I>, Scalar<S>, A>>
+    for Identity<I>
+{
+}
+
+// 15. Identity / Per<L, R, A> = Per<R, L, B>
+impl<I, L, R, A, B>
+    DDiv<
+        Per<Scalar<L>, Scalar<R>, A>,
+        Per<Scalar<R>, Scalar<L>, B>,
+    > for Identity<I>
+{
+}
 
 impl<T, I> Refine<T> for Identity<I>
 where
@@ -32,6 +109,16 @@ where
     type RefineError = I::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         I::refine(rep)
+    }
+}
+
+impl<T, S> Refine<T> for Scalar<S>
+where
+    S: Refine<T>,
+{
+    type RefineError = S::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        S::refine(rep)
     }
 }
 
@@ -53,97 +140,6 @@ where
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         A::refine(rep)
     }
-}
-
-pub trait DMul<R, O> {}
-
-pub trait DDiv<R, O> {}
-
-// 1. L * R = Times<L, R>
-impl<L, R, A> DMul<R, Times<L, R, A>> for L {}
-
-// 2. Per<L, R> * R = L
-impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
-
-// 3. R * Per<L, R> = L
-impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
-
-// 4. L / R = Per<L, R, A>
-impl<L, R, A> DDiv<R, Per<L, R, A>> for L
-where
-    L: IsScalar,
-    R: IsScalar,
-{
-}
-
-// 5. L / Per<L, R, A> = R
-impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
-
-// 6. Times<L, R, A> / R = L
-impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
-
-// 8. Per<L, R> / L = Per<Identity, R>
-impl<L, R, A, I, B> DDiv<L, Per<Identity<I>, R, B>>
-    for Per<L, R, A>
-where
-    L: IsScalar,
-{
-}
-
-// 9. Identity * Any = Any
-impl<T, I> DMul<T, T> for Identity<I> {}
-
-// 10. Scalar * Identity = Scalar
-impl<S, I> DMul<Identity<I>, S> for S where S: IsScalar {}
-
-// 11. Per * Identity = Per
-impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
-    for Per<L, R, A>
-{
-}
-
-// 12. Times * Identity = Times
-impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
-    for Times<L, R, A>
-{
-}
-
-// 13. Scalar / Identity = Scalar
-impl<S, I> DDiv<Identity<I>, S> for S where S: IsScalar {}
-
-// 14. Per / Identity = Per
-impl<L, R, A, I> DDiv<Identity<I>, Per<L, R, A>>
-    for Per<L, R, A>
-{
-}
-
-// 15. Times / Identity = Times
-impl<L, R, A, I> DDiv<Identity<I>, Times<L, R, A>>
-    for Times<L, R, A>
-{
-}
-
-// 16. Identity / Scalar = Per<Identity, Scalar>
-impl<I, S, A> DDiv<S, Per<Identity<I>, S, A>>
-    for Identity<I>
-where
-    S: IsScalar,
-{
-}
-
-// 17. Identity / Per<L, R> = Per<R, L>
-impl<I, L, R, A, B> DDiv<Per<L, R, A>, Per<R, L, B>>
-    for Identity<I>
-{
-}
-
-// 18. Identity / Times<L, R> = Per<Identity, Times<L, R>>
-impl<I, L, R, A, B>
-    DDiv<
-        Times<L, R, A>,
-        Per<Identity<I>, Times<L, R, A>, B>,
-    > for Identity<I>
-{
 }
 
 //////////////

@@ -33,58 +33,57 @@ impl Refine<Decimal> for DFree {
     type RefineError = Infallible;
 }
 
-type Usd = Tagged<Decimal, DUsd>;
+type Usd = Tagged<Decimal, Scalar<DUsd>>;
 impl Refine<Decimal> for DUsd {
     type RefineError = Infallible;
 }
 
-type Eur = Tagged<Decimal, DEur>;
+type Eur = Tagged<Decimal, Scalar<DEur>>;
 impl Refine<Decimal> for DEur {
     type RefineError = Infallible;
 }
 
-type EurPerUsd =
-    Tagged<Decimal, Per<DEur, DUsd, DEurPerUsd>>;
+type EurPerUsd = Tagged<
+    Decimal,
+    Per<Scalar<DEur>, Scalar<DUsd>, DEurPerUsd>,
+>;
 impl Refine<Decimal> for DEurPerUsd {
     type RefineError = Infallible;
 }
 
-type Meter = Tagged<Decimal, DMeter>;
+type Meter = Tagged<Decimal, Scalar<DMeter>>;
 impl Refine<Decimal> for DMeter {
     type RefineError = Infallible;
 }
 
-type Second = Tagged<Decimal, DSecond>;
+type Second = Tagged<Decimal, Scalar<DSecond>>;
 impl Refine<Decimal> for DSecond {
     type RefineError = Infallible;
 }
 
 type Hertz = Tagged<
     Decimal,
-    Per<Identity<DFree>, DSecond, DFreePerSecond>,
+    Per<Identity<DFree>, Scalar<DSecond>, DFreePerSecond>,
 >;
 impl Refine<Decimal> for DFreePerSecond {
     type RefineError = Infallible;
 }
 
-type MeterPerSecond =
-    Tagged<Decimal, Per<DMeter, DSecond, DMeterPerSecond>>;
+type MeterPerSecond = Tagged<
+    Decimal,
+    Per<Scalar<DMeter>, Scalar<DSecond>, DMeterPerSecond>,
+>;
 impl Refine<Decimal> for DMeterPerSecond {
     type RefineError = Infallible;
 }
 
 type MeterTimesMeter = Tagged<
     Decimal,
-    Times<DMeter, DMeter, DMeterTimesMeter>,
+    Times<Scalar<DMeter>, Scalar<DMeter>, DMeterTimesMeter>,
 >;
 impl Refine<Decimal> for DMeterTimesMeter {
     type RefineError = Infallible;
 }
-
-impl IsScalar for DUsd {}
-impl IsScalar for DEur {}
-impl IsScalar for DMeter {}
-impl IsScalar for DSecond {}
 
 #[test]
 fn area() -> Test {
@@ -188,5 +187,38 @@ fn test_identity() -> Test {
     let one = Free::new(dec!(1))?;
     assert_eq!(y.fmul(&one)?, y);
     assert_eq!(one.fmul(&y)?, y);
+    ok()
+}
+
+#[test]
+fn test_cancellation() -> Test {
+    let l = Meter::new(dec!(10))?;
+    let w = Meter::new(dec!(5))?;
+    let area: MeterTimesMeter = l.fmul(&w)?;
+
+    // Times / L = R
+    let w_back: Meter = area.fdiv(&l)?;
+    assert_eq!(w, w_back);
+
+    // Times / R = L
+    let l_back: Meter = area.fdiv(&w)?;
+    assert_eq!(l, l_back);
+
+    ok()
+}
+
+#[test]
+fn test_identity_division() -> Test {
+    let m = Meter::new(dec!(10))?;
+    let one = Free::new(dec!(1))?;
+
+    // Scalar / Identity = Scalar
+    let m_back: Meter = m.fdiv(&one)?;
+    assert_eq!(m, m_back);
+
+    // Identity / Scalar = Per<Identity, Scalar>
+    let h: Hertz = one.fdiv(&Second::new(dec!(2))?)?;
+    assert_eq!(h.rep(), &dec!(0.5));
+
     ok()
 }

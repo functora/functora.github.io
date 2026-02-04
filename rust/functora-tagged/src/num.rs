@@ -92,18 +92,15 @@ pub trait DMul<Rhs, Output> {}
 pub trait DDiv<Rhs, Output> {}
 
 // 1. L * R = Times<L, R, A>
-impl<L, R, A> DMul<R, Times<L, R, A>> for L
-where
-    L: IsScalar,
-    R: IsScalar,
-    A: IsTimes<L = L, R = R>,
+impl<L, R, A> DMul<R, Times<L, R, A>> for L where
+    A: IsTimes<L = L, R = R>
 {
 }
 
-// 2. Per<L, R, A> * R = L
+// 2. Per<L, R> * R = L
 impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
 
-// 3. R * Per<L, R, A> = L
+// 3. R * Per<L, R> = L
 impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
 
 // 4. L / R = Per<L, R, A>

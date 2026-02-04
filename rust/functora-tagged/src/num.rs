@@ -32,6 +32,19 @@ pub trait IsPer {
     type R;
 }
 
+#[derive(Debug)]
+pub struct Identity<I>(PhantomData<I>);
+
+impl<T, I> Refine<T> for Identity<I>
+where
+    I: Refine<T>,
+{
+    type RefineError = I::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        I::refine(rep)
+    }
+}
+
 impl<S> IsScalar for Scalar<S> {}
 
 impl<L, R, A> IsTimes for Times<L, R, A> {
@@ -111,8 +124,50 @@ impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 // 8. Per<L, R, A> / L = Per<F, R, B>
 impl<L, R, A, F, B> DDiv<L, Per<F, R, B>> for Per<L, R, A>
 where
-    F: IsScalar,
+    L: IsScalar,
     B: IsPer<L = F, R = R>,
+{
+}
+
+// 9. Identity * Any = Any
+impl<I, T> DMul<T, T> for Identity<I> {}
+
+// 10. Scalar * Identity = Scalar
+impl<S, I> DMul<Identity<I>, S> for S where S: IsScalar {}
+
+// 11. Per * Identity = Per
+impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
+    for Per<L, R, A>
+{
+}
+
+// 12. Times * Identity = Times
+impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
+    for Times<L, R, A>
+{
+}
+
+// 13. Scalar / Identity = Scalar
+impl<S, I> DDiv<Identity<I>, S> for S where S: IsScalar {}
+
+// 14. Per / Identity = Per
+impl<L, R, A, I> DDiv<Identity<I>, Per<L, R, A>>
+    for Per<L, R, A>
+{
+}
+
+// 15. Times / Identity = Times
+impl<L, R, A, I> DDiv<Identity<I>, Times<L, R, A>>
+    for Times<L, R, A>
+{
+}
+
+// 16. Identity / Scalar = Per
+impl<I, S, A> DDiv<S, Per<Identity<I>, S, A>>
+    for Identity<I>
+where
+    S: IsScalar,
+    A: IsPer<L = Identity<I>, R = S>,
 {
 }
 

@@ -28,7 +28,7 @@ pub enum DMeterPerSecond {}
 #[derive(Debug)]
 pub enum DMeterTimesMeter {}
 
-type Free = Tagged<Decimal, DFree>;
+type Free = Tagged<Decimal, Identity<DFree>>;
 impl Refine<Decimal> for DFree {
     type RefineError = Infallible;
 }
@@ -59,8 +59,10 @@ impl Refine<Decimal> for DSecond {
     type RefineError = Infallible;
 }
 
-type Hertz =
-    Tagged<Decimal, Per<DFree, DSecond, DFreePerSecond>>;
+type Hertz = Tagged<
+    Decimal,
+    Per<Identity<DFree>, DSecond, DFreePerSecond>,
+>;
 impl Refine<Decimal> for DFreePerSecond {
     type RefineError = Infallible;
 }
@@ -79,7 +81,6 @@ impl Refine<Decimal> for DMeterTimesMeter {
     type RefineError = Infallible;
 }
 
-impl IsScalar for DFree {}
 impl IsScalar for DUsd {}
 impl IsScalar for DEur {}
 impl IsScalar for DMeter {}
@@ -100,11 +101,8 @@ impl IsPer for DEurPerUsd {
     type R = DUsd;
 }
 
-impl DMul<DMeter, DMeter> for DFree {}
-impl DMul<DFree, DMeter> for DMeter {}
-
 impl IsPer for DFreePerSecond {
-    type L = DFree;
+    type L = Identity<DFree>;
     type R = DSecond;
 }
 

@@ -86,26 +86,6 @@ impl IsScalar for DEur {}
 impl IsScalar for DMeter {}
 impl IsScalar for DSecond {}
 
-impl IsTimes for DMeterTimesMeter {
-    type L = DMeter;
-    type R = DMeter;
-}
-
-impl IsPer for DMeterPerSecond {
-    type L = DMeter;
-    type R = DSecond;
-}
-
-impl IsPer for DEurPerUsd {
-    type L = DEur;
-    type R = DUsd;
-}
-
-impl IsPer for DFreePerSecond {
-    type L = Identity<DFree>;
-    type R = DSecond;
-}
-
 #[test]
 fn area() -> Test {
     let l = Meter::new(dec!(10))?;

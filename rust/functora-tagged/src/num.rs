@@ -25,16 +25,6 @@ pub struct Per<L, R, A>(PhantomData<(L, R, A)>);
 
 pub trait IsScalar {}
 
-pub trait IsTimes {
-    type L;
-    type R;
-}
-
-pub trait IsPer {
-    type L;
-    type R;
-}
-
 impl<T, I> Refine<T> for Identity<I>
 where
     I: Refine<T>,
@@ -42,38 +32,6 @@ where
     type RefineError = I::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         I::refine(rep)
-    }
-}
-
-impl<T, S> Refine<T> for Scalar<S>
-where
-    S: Refine<T>,
-{
-    type RefineError = S::RefineError;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        S::refine(rep)
-    }
-}
-
-impl<S> IsScalar for Scalar<S> {}
-
-impl<L, R, A> IsTimes for Times<L, R, A> {
-    type L = L;
-    type R = R;
-}
-
-impl<L, R, A> IsPer for Per<L, R, A> {
-    type L = L;
-    type R = R;
-}
-
-impl<T, L, R, A> Refine<T> for Per<L, R, A>
-where
-    A: Refine<T>,
-{
-    type RefineError = A::RefineError;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        A::refine(rep)
     }
 }
 
@@ -87,15 +45,22 @@ where
     }
 }
 
-pub trait DMul<Rhs, Output> {}
-
-pub trait DDiv<Rhs, Output> {}
-
-// 1. L * R = Times<L, R, A>
-impl<L, R, A> DMul<R, Times<L, R, A>> for L where
-    A: IsTimes<L = L, R = R>
+impl<T, L, R, A> Refine<T> for Per<L, R, A>
+where
+    A: Refine<T>,
 {
+    type RefineError = A::RefineError;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        A::refine(rep)
+    }
 }
+
+pub trait DMul<R, O> {}
+
+pub trait DDiv<R, O> {}
+
+// 1. L * R = Times<L, R>
+impl<L, R, A> DMul<R, Times<L, R, A>> for L {}
 
 // 2. Per<L, R> * R = L
 impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
@@ -108,7 +73,6 @@ impl<L, R, A> DDiv<R, Per<L, R, A>> for L
 where
     L: IsScalar,
     R: IsScalar,
-    A: IsPer<L = L, R = R>,
 {
 }
 
@@ -118,16 +82,16 @@ impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
 // 6. Times<L, R, A> / R = L
 impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 
-// 8. Per<L, R, A> / L = Per<F, R, B>
-impl<L, R, A, F, B> DDiv<L, Per<F, R, B>> for Per<L, R, A>
+// 8. Per<L, R> / L = Per<Identity, R>
+impl<L, R, A, I, B> DDiv<L, Per<Identity<I>, R, B>>
+    for Per<L, R, A>
 where
     L: IsScalar,
-    B: IsPer<L = F, R = R>,
 {
 }
 
 // 9. Identity * Any = Any
-impl<I, T> DMul<T, T> for Identity<I> {}
+impl<T, I> DMul<T, T> for Identity<I> {}
 
 // 10. Scalar * Identity = Scalar
 impl<S, I> DMul<Identity<I>, S> for S where S: IsScalar {}
@@ -164,16 +128,12 @@ impl<I, S, A> DDiv<S, Per<Identity<I>, S, A>>
     for Identity<I>
 where
     S: IsScalar,
-    A: IsPer<L = Identity<I>, R = S>,
 {
 }
 
 // 17. Identity / Per<L, R> = Per<R, L>
 impl<I, L, R, A, B> DDiv<Per<L, R, A>, Per<R, L, B>>
     for Identity<I>
-where
-    A: IsPer<L = L, R = R>,
-    B: IsPer<L = R, R = L>,
 {
 }
 
@@ -183,9 +143,6 @@ impl<I, L, R, A, B>
         Times<L, R, A>,
         Per<Identity<I>, Times<L, R, A>, B>,
     > for Identity<I>
-where
-    A: IsPer<L = L, R = R>,
-    B: IsPer<L = R, R = L>,
 {
 }
 

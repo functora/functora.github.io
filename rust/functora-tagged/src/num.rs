@@ -13,6 +13,9 @@ use tap::prelude::*;
 /////////////
 
 #[derive(Debug)]
+pub struct Identity<I>(PhantomData<I>);
+
+#[derive(Debug)]
 pub struct Scalar<S>(PhantomData<S>);
 
 #[derive(Debug)]
@@ -33,9 +36,6 @@ pub trait IsPer {
     type R;
 }
 
-#[derive(Debug)]
-pub struct Identity<I = ()>(PhantomData<I>);
-
 impl<T, I> Refine<T> for Identity<I>
 where
     I: Refine<T>,
@@ -43,13 +43,6 @@ where
     type RefineError = I::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         I::refine(rep)
-    }
-}
-
-impl<T> Refine<T> for () {
-    type RefineError = Infallible;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        Ok(rep)
     }
 }
 

@@ -108,6 +108,14 @@ impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
 // 6. Times<L, R, A> / R = L
 impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
 
+// 8. Per<L, R, A> / L = Per<F, R, B>
+impl<L, R, A, F, B> DDiv<L, Per<F, R, B>> for Per<L, R, A>
+where
+    F: IsScalar,
+    B: IsPer<L = F, R = R>,
+{
+}
+
 //////////////
 //  Errors  //
 //////////////

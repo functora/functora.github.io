@@ -6,6 +6,8 @@ use rust_decimal_macros::dec;
 use std::fmt::Debug;
 
 #[derive(Debug)]
+pub enum DFree {}
+#[derive(Debug)]
 pub enum DUsd {}
 #[derive(Debug)]
 pub enum DEur {}
@@ -15,6 +17,8 @@ pub enum DEurPerDUsd {}
 pub enum DMeter {}
 #[derive(Debug)]
 pub enum DSecond {}
+#[derive(Debug)]
+pub enum DFreePerDSecond {}
 #[derive(Debug)]
 pub enum DMeterPerDSecond {}
 #[derive(Debug)]
@@ -46,6 +50,12 @@ impl Refine<Decimal> for DSecond {
     type RefineError = std::convert::Infallible;
 }
 
+type Hertz =
+    Tagged<Decimal, Per<DFree, DSecond, DFreePerDSecond>>;
+impl Refine<Decimal> for DFreePerDSecond {
+    type RefineError = std::convert::Infallible;
+}
+
 type MeterPerSecond =
     Tagged<Decimal, Per<DMeter, DSecond, DMeterPerDSecond>>;
 impl Refine<Decimal> for DMeterPerDSecond {
@@ -60,6 +70,7 @@ impl Refine<Decimal> for DMeterTimesDMeter {
     type RefineError = std::convert::Infallible;
 }
 
+impl IsScalar for DFree {}
 impl IsScalar for DUsd {}
 impl IsScalar for DEur {}
 impl IsScalar for DMeter {}
@@ -80,12 +91,19 @@ impl IsPer for DEurPerDUsd {
     type R = DUsd;
 }
 
+impl IsPer for DFreePerDSecond {
+    type L = DFree;
+    type R = DSecond;
+}
+
 #[test]
 fn area() {
     let l = Meter::new(dec!(10)).unwrap();
     let w = Meter::new(dec!(5)).unwrap();
     let a: MeterTimesMeter = l.fmul(&w).unwrap();
     assert_eq!(a.rep(), &dec!(50));
+    assert_eq!(a.fdiv(&l).unwrap(), w);
+    assert_eq!(a.fdiv(&w).unwrap(), l);
 }
 
 #[test]
@@ -93,7 +111,11 @@ fn velocity() {
     let d = Meter::new(dec!(100)).unwrap();
     let t = Second::new(dec!(10)).unwrap();
     let v: MeterPerSecond = d.fdiv(&t).unwrap();
+    let h: Hertz = v.fdiv(&d).unwrap();
     assert_eq!(v.rep(), &dec!(10));
+    assert_eq!(v.fmul(&t).unwrap(), d);
+    assert_eq!(t.fmul(&v).unwrap(), d);
+    assert_eq!(h.rep(), &dec!(0.1));
 }
 
 #[test]

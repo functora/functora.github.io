@@ -13,94 +13,12 @@ use tap::prelude::*;
 
 #[derive(Debug)]
 pub struct Identity<I>(PhantomData<I>);
-
 #[derive(Debug)]
-pub struct Scalar<S>(PhantomData<S>);
-
+pub struct Prim<P>(PhantomData<P>);
 #[derive(Debug)]
 pub struct Times<L, R, A>(PhantomData<(L, R, A)>);
-
 #[derive(Debug)]
 pub struct Per<L, R, A>(PhantomData<(L, R, A)>);
-
-pub trait DMul<R, O> {}
-
-pub trait DDiv<R, O> {}
-
-// 1. L * R = Times<L, R, A>
-impl<L, R, A>
-    DMul<Scalar<R>, Times<Scalar<L>, Scalar<R>, A>>
-    for Scalar<L>
-{
-}
-
-// 2. Per<L, R, A> * R = L
-impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
-
-// 3. R * Per<L, R, A> = L
-impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
-
-// 4. L / R = Per<L, R, A>
-impl<L, R, A> DDiv<Scalar<R>, Per<Scalar<L>, Scalar<R>, A>>
-    for Scalar<L>
-{
-}
-
-// 5. L / Per<L, R, A> = R
-impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
-
-// 6. Times<L, R, A> / R = L
-impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
-
-// 7. Times<L, R, A> / L = R
-// Consolidated rule for Times cancellation.
-// Since (L*R)/L = R and (L*R)/R = L overlap when L=R, we pick a canonical one.
-// Rule 6 already handles the R cancellation. Rule 7 will conflict.
-// In such system, we usually provide the user with Area / Width = Length.
-// To avoid conflict, we can't have both if they are generic.
-
-// 8. Per<L, R, A> / L = Per<Identity<I>, R, B>
-impl<L, R, A, I, B> DDiv<Scalar<L>, Per<Identity<I>, R, B>>
-    for Per<Scalar<L>, R, A>
-{
-}
-
-// 9. Identity * Any = Any
-impl<T, I> DMul<T, T> for Identity<I> {}
-
-// 10. Scalar * Identity = Scalar
-impl<S, I> DMul<Identity<I>, Scalar<S>> for Scalar<S> {}
-
-// 11. Per * Identity = Per
-impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
-    for Per<L, R, A>
-{
-}
-
-// 12. Times * Identity = Times
-impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
-    for Times<L, R, A>
-{
-}
-
-// 13. Any / Identity = Any
-impl<T, I> DDiv<Identity<I>, T> for T {}
-
-// 14. Identity / Scalar = Per<Identity<I>, Scalar<S>, A>
-impl<S, A, I>
-    DDiv<Scalar<S>, Per<Identity<I>, Scalar<S>, A>>
-    for Identity<I>
-{
-}
-
-// 15. Identity / Per<L, R, A> = Per<R, L, B>
-impl<I, L, R, A, B>
-    DDiv<
-        Per<Scalar<L>, Scalar<R>, A>,
-        Per<Scalar<R>, Scalar<L>, B>,
-    > for Identity<I>
-{
-}
 
 impl<T, I> Refine<T> for Identity<I>
 where
@@ -112,13 +30,13 @@ where
     }
 }
 
-impl<T, S> Refine<T> for Scalar<S>
+impl<T, P> Refine<T> for Prim<P>
 where
-    S: Refine<T>,
+    P: Refine<T>,
 {
-    type RefineError = S::RefineError;
+    type RefineError = P::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        S::refine(rep)
+        P::refine(rep)
     }
 }
 
@@ -140,6 +58,78 @@ where
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         A::refine(rep)
     }
+}
+
+pub trait DMul<R, O> {}
+
+pub trait DDiv<R, O> {}
+
+// 1. L * R = Times<L, R, A>
+impl<L, R, A> DMul<Prim<R>, Times<Prim<L>, Prim<R>, A>>
+    for Prim<L>
+{
+}
+
+// 2. Per<L, R, A> * R = L
+impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
+
+// 3. R * Per<L, R, A> = L
+impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
+
+// 4. L / R = Per<L, R, A>
+impl<L, R, A> DDiv<Prim<R>, Per<Prim<L>, Prim<R>, A>>
+    for Prim<L>
+{
+}
+
+// 5. L / Per<L, R, A> = R
+impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
+
+// 6. Times<L, R, A> / R = L
+impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
+
+// 7. Times<L, R, A> / L = R
+// Since (L*R)/L = R and (L*R)/R = L overlap when L=R, we pick a canonical one.
+// Rule 6 already handles the R cancellation. Rule 7 will conflict.
+
+// 8. Per<L, R, A> / L = Per<Identity<I>, R, B>
+impl<L, R, A, I, B> DDiv<Prim<L>, Per<Identity<I>, R, B>>
+    for Per<Prim<L>, R, A>
+{
+}
+
+// 9. Identity * Any = Any
+impl<T, I> DMul<T, T> for Identity<I> {}
+
+// 10. Prim * Identity = Prim
+impl<P, I> DMul<Identity<I>, Prim<P>> for Prim<P> {}
+
+// 11. Per * Identity = Per
+impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
+    for Per<L, R, A>
+{
+}
+
+// 12. Times * Identity = Times
+impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
+    for Times<L, R, A>
+{
+}
+
+// 13. Any / Identity = Any
+impl<T, I> DDiv<Identity<I>, T> for T {}
+
+// 14. Identity / Prim = Per<Identity<I>, Prim<P>, A>
+impl<P, A, I> DDiv<Prim<P>, Per<Identity<I>, Prim<P>, A>>
+    for Identity<I>
+{
+}
+
+// 15. Identity / Per<L, R, A> = Per<R, L, B>
+impl<I, L, R, A, B>
+    DDiv<Per<Prim<L>, Prim<R>, A>, Per<Prim<R>, Prim<L>, B>>
+    for Identity<I>
+{
 }
 
 //////////////

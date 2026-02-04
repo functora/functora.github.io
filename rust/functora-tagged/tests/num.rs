@@ -10,7 +10,7 @@ use std::fmt::Debug;
 type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[derive(Debug)]
-pub enum DFree {}
+pub enum DNum {}
 #[derive(Debug)]
 pub enum DUsd {}
 #[derive(Debug)]
@@ -28,42 +28,42 @@ pub enum DMeterPerSecond {}
 #[derive(Debug)]
 pub enum DMeterTimesMeter {}
 
-type Free = Tagged<Decimal, Identity<DFree>>;
-impl Refine<Decimal> for DFree {
+type Num = Tagged<Decimal, Identity<DNum>>;
+impl Refine<Decimal> for DNum {
     type RefineError = Infallible;
 }
 
-type Usd = Tagged<Decimal, Scalar<DUsd>>;
+type Usd = Tagged<Decimal, Prim<DUsd>>;
 impl Refine<Decimal> for DUsd {
     type RefineError = Infallible;
 }
 
-type Eur = Tagged<Decimal, Scalar<DEur>>;
+type Eur = Tagged<Decimal, Prim<DEur>>;
 impl Refine<Decimal> for DEur {
     type RefineError = Infallible;
 }
 
 type EurPerUsd = Tagged<
     Decimal,
-    Per<Scalar<DEur>, Scalar<DUsd>, DEurPerUsd>,
+    Per<Prim<DEur>, Prim<DUsd>, DEurPerUsd>,
 >;
 impl Refine<Decimal> for DEurPerUsd {
     type RefineError = Infallible;
 }
 
-type Meter = Tagged<Decimal, Scalar<DMeter>>;
+type Meter = Tagged<Decimal, Prim<DMeter>>;
 impl Refine<Decimal> for DMeter {
     type RefineError = Infallible;
 }
 
-type Second = Tagged<Decimal, Scalar<DSecond>>;
+type Second = Tagged<Decimal, Prim<DSecond>>;
 impl Refine<Decimal> for DSecond {
     type RefineError = Infallible;
 }
 
 type Hertz = Tagged<
     Decimal,
-    Per<Identity<DFree>, Scalar<DSecond>, DFreePerSecond>,
+    Per<Identity<DNum>, Prim<DSecond>, DFreePerSecond>,
 >;
 impl Refine<Decimal> for DFreePerSecond {
     type RefineError = Infallible;
@@ -71,7 +71,7 @@ impl Refine<Decimal> for DFreePerSecond {
 
 type MeterPerSecond = Tagged<
     Decimal,
-    Per<Scalar<DMeter>, Scalar<DSecond>, DMeterPerSecond>,
+    Per<Prim<DMeter>, Prim<DSecond>, DMeterPerSecond>,
 >;
 impl Refine<Decimal> for DMeterPerSecond {
     type RefineError = Infallible;
@@ -79,7 +79,7 @@ impl Refine<Decimal> for DMeterPerSecond {
 
 type MeterTimesMeter = Tagged<
     Decimal,
-    Times<Scalar<DMeter>, Scalar<DMeter>, DMeterTimesMeter>,
+    Times<Prim<DMeter>, Prim<DMeter>, DMeterTimesMeter>,
 >;
 impl Refine<Decimal> for DMeterTimesMeter {
     type RefineError = Infallible;
@@ -184,7 +184,7 @@ fn test_identity() -> Test {
     assert_eq!(zero.fadd(&x)?, x);
     // y * 1 = y
     let y = Meter::new(dec!(10))?;
-    let one = Free::new(dec!(1))?;
+    let one = Num::new(dec!(1))?;
     assert_eq!(y.fmul(&one)?, y);
     assert_eq!(one.fmul(&y)?, y);
     ok()
@@ -210,13 +210,13 @@ fn test_cancellation() -> Test {
 #[test]
 fn test_identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
-    let one = Free::new(dec!(1))?;
+    let one = Num::new(dec!(1))?;
 
-    // Scalar / Identity = Scalar
+    // Prim / Identity = Prim
     let m_back: Meter = m.fdiv(&one)?;
     assert_eq!(m, m_back);
 
-    // Identity / Scalar = Per<Identity, Scalar>
+    // Identity / Prim = Per<Identity, Prim>
     let h: Hertz = one.fdiv(&Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
 

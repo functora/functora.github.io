@@ -23,6 +23,7 @@ serde = ["dep:serde"]
 
 [dev-dependencies]
 diesel = { version = "2.3.3", features = ["sqlite"] }
+functora = "0.1.6"
 libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
 num-traits = "0.2.19"
 rust_decimal = { version = "1.36.0", features = ["maths"] }

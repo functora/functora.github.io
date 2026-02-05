@@ -2,6 +2,7 @@ use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
 use num_traits::*;
+use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -12,51 +13,51 @@ use tap::prelude::*;
 /////////////
 
 #[derive(Debug)]
-pub struct Identity<I>(PhantomData<I>);
+pub struct Identity<I, F>(PhantomData<(I, F)>);
 #[derive(Debug)]
-pub struct Prim<P>(PhantomData<P>);
+pub struct Atomic<A, F>(PhantomData<(A, F)>);
 #[derive(Debug)]
-pub struct Times<L, R, A>(PhantomData<(L, R, A)>);
+pub struct Times<L, R, F>(PhantomData<(L, R, F)>);
 #[derive(Debug)]
-pub struct Per<L, R, A>(PhantomData<(L, R, A)>);
+pub struct Per<L, R, F>(PhantomData<(L, R, F)>);
 
-impl<T, I> Refine<T> for Identity<I>
+impl<T, I, F> Refine<T> for Identity<I, F>
 where
-    I: Refine<T>,
+    F: Refine<T>,
 {
-    type RefineError = I::RefineError;
+    type RefineError = F::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        I::refine(rep)
+        F::refine(rep)
     }
 }
 
-impl<T, P> Refine<T> for Prim<P>
+impl<T, A, F> Refine<T> for Atomic<A, F>
 where
-    P: Refine<T>,
+    F: Refine<T>,
 {
-    type RefineError = P::RefineError;
+    type RefineError = F::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        P::refine(rep)
+        F::refine(rep)
     }
 }
 
-impl<T, L, R, A> Refine<T> for Times<L, R, A>
+impl<T, L, R, F> Refine<T> for Times<L, R, F>
 where
-    A: Refine<T>,
+    F: Refine<T>,
 {
-    type RefineError = A::RefineError;
+    type RefineError = F::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        A::refine(rep)
+        F::refine(rep)
     }
 }
 
-impl<T, L, R, A> Refine<T> for Per<L, R, A>
+impl<T, L, R, F> Refine<T> for Per<L, R, F>
 where
-    A: Refine<T>,
+    F: Refine<T>,
 {
-    type RefineError = A::RefineError;
+    type RefineError = F::RefineError;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        A::refine(rep)
+        F::refine(rep)
     }
 }
 
@@ -65,70 +66,85 @@ pub trait DMul<R, O> {}
 pub trait DDiv<R, O> {}
 
 // 1. L * R = L ✖ R
-impl<L, R, A> DMul<Prim<R>, Times<Prim<L>, Prim<R>, A>>
-    for Prim<L>
+impl<L, R, LF, RF, TF>
+    DMul<
+        Atomic<R, RF>,
+        Times<Atomic<L, LF>, Atomic<R, RF>, TF>,
+    > for Atomic<L, LF>
 {
 }
 
 // 2. (L ÷ R) * R = L
-impl<L, R, A> DMul<R, L> for Per<L, R, A> {}
+impl<L, R, PF> DMul<R, L> for Per<L, R, PF> {}
 
 // 3. R * (L ÷ R) = L
-impl<L, R, A> DMul<Per<L, R, A>, L> for R {}
+impl<L, R, PF> DMul<Per<L, R, PF>, L> for R {}
 
 // 4. L / R = L ÷ R
-impl<L, R, A> DDiv<Prim<R>, Per<Prim<L>, Prim<R>, A>>
-    for Prim<L>
+impl<L, R, LF, RF, PF>
+    DDiv<
+        Atomic<R, RF>,
+        Per<Atomic<L, LF>, Atomic<R, RF>, PF>,
+    > for Atomic<L, LF>
 {
 }
 
 // 5. L / (L ÷ R) = R
-impl<L, R, A> DDiv<Per<L, R, A>, R> for L {}
+impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
 
 // 6. (L ✖ R) / R = L
-impl<L, R, A> DDiv<R, L> for Times<L, R, A> {}
+impl<L, R, TF> DDiv<R, L> for Times<L, R, TF> {}
 
 // 7. (L ✖ R) / L = R
 // Since this overlap with (L ✖ R) / R = L when L = R, we pick the only one.
 // Rule 6 already handles the R cancellation. Rule 7 will conflict.
 
 // 8. (L ÷ R) / L = 1 ÷ R
-impl<L, R, A, B, I> DDiv<Prim<L>, Per<Identity<I>, R, B>>
-    for Per<Prim<L>, R, A>
+impl<L, R, I, LF, IF, PF1, PF2>
+    DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF2>>
+    for Per<Atomic<L, LF>, R, PF1>
 {
 }
 
 // 9. 1 * T = T
-impl<T, I> DMul<T, T> for Identity<I> {}
+impl<T, I, IF> DMul<T, T> for Identity<I, IF> {}
 
 // 10. T * 1 = T
-impl<P, I> DMul<Identity<I>, Prim<P>> for Prim<P> {}
+impl<A, I, AF, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
+    for Atomic<A, AF>
+{
+}
 
 // 11. (L ÷ R) * 1 = L ÷ R
-impl<L, R, A, I> DMul<Identity<I>, Per<L, R, A>>
-    for Per<L, R, A>
+impl<L, R, I, IF, PF> DMul<Identity<I, IF>, Per<L, R, PF>>
+    for Per<L, R, PF>
 {
 }
 
 // 12. (L ÷ R) * 1 = L ÷ R
-impl<L, R, A, I> DMul<Identity<I>, Times<L, R, A>>
-    for Times<L, R, A>
+impl<L, R, I, IF, TF> DMul<Identity<I, IF>, Times<L, R, TF>>
+    for Times<L, R, TF>
 {
 }
 
 // 13. T / 1 = T
-impl<T, I> DDiv<Identity<I>, T> for T {}
+impl<T, I, IF> DDiv<Identity<I, IF>, T> for T {}
 
 // 14. 1 / T = 1 ÷ T
-impl<P, A, I> DDiv<Prim<P>, Per<Identity<I>, Prim<P>, A>>
-    for Identity<I>
+impl<A, I, AF, IF, PF>
+    DDiv<
+        Atomic<A, AF>,
+        Per<Identity<I, IF>, Atomic<A, AF>, PF>,
+    > for Identity<I, IF>
 {
 }
 
 // 15. 1 / (L ÷ R) = R ÷ L
-impl<L, R, A, B, I>
-    DDiv<Per<Prim<L>, Prim<R>, A>, Per<Prim<R>, Prim<L>, B>>
-    for Identity<I>
+impl<L, R, I, LF, RF, IF, PF1, PF2>
+    DDiv<
+        Per<Atomic<L, LF>, Atomic<R, RF>, PF1>,
+        Per<Atomic<R, RF>, Atomic<L, LF>, PF2>,
+    > for Identity<I, IF>
 {
 }
 
@@ -324,11 +340,22 @@ where
 ////////////
 
 //
+// Any
+//
+
+#[derive(Debug)]
+pub enum DAny {}
+
+impl<T> Refine<T> for DAny {
+    type RefineError = Infallible;
+}
+
+//
 // Pos
 //
 
 #[derive(Debug)]
-pub enum Pos {}
+pub enum DPos {}
 
 #[derive(Debug, Display)]
 #[display("{:?}", self)]
@@ -337,7 +364,7 @@ where
     T: Debug;
 impl<T> Error for PosError<T> where T: Debug {}
 
-impl<T> Refine<T> for Pos
+impl<T> Refine<T> for DPos
 where
     T: Ord + Zero + Debug,
 {
@@ -356,7 +383,7 @@ where
 //
 
 #[derive(Debug)]
-pub enum NonNeg {}
+pub enum DNonNeg {}
 
 #[derive(Debug, Display)]
 #[display("{:?}", self)]
@@ -365,7 +392,7 @@ where
     T: Debug;
 impl<T> Error for NonNegError<T> where T: Debug {}
 
-impl<T> Refine<T> for NonNeg
+impl<T> Refine<T> for DNonNeg
 where
     T: Ord + Zero + Debug,
 {

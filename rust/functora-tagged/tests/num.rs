@@ -1,87 +1,44 @@
 use functora::*;
 use functora_tagged::num::*;
-use functora_tagged::refine::Refine;
 use functora_tagged::tagged::Tagged;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use std::convert::Infallible;
 use std::fmt::Debug;
 
 type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[derive(Debug)]
-pub enum DNum {}
+pub enum ANum {}
+type DNum = Identity<ANum, DAny>;
+type Num = Tagged<Decimal, DNum>;
+
 #[derive(Debug)]
-pub enum DUsd {}
+pub enum AUsd {}
+type DUsd = Atomic<AUsd, DNonNeg>;
+type Usd = Tagged<Decimal, DUsd>;
+
 #[derive(Debug)]
-pub enum DEur {}
+pub enum AEur {}
+type DEur = Atomic<AEur, DNonNeg>;
+type Eur = Tagged<Decimal, DEur>;
+
+type EurPerUsd = Tagged<Decimal, Per<DEur, DUsd, DPos>>;
+
 #[derive(Debug)]
-pub enum DMeter {}
+pub enum AMeter {}
+type DMeter = Atomic<AMeter, DNonNeg>;
+type Meter = Tagged<Decimal, DMeter>;
+
 #[derive(Debug)]
-pub enum DSecond {}
+pub enum ASecond {}
+type DSecond = Atomic<ASecond, DNonNeg>;
+type Second = Tagged<Decimal, DSecond>;
 
-type Num = Tagged<Decimal, Identity<DNum>>;
-impl Refine<Decimal> for DNum {
-    type RefineError = Infallible;
-}
-
-type Usd = Tagged<Decimal, Prim<DUsd>>;
-impl Refine<Decimal> for DUsd {
-    type RefineError = NonNegError<Decimal>;
-    fn refine(
-        rep: Decimal,
-    ) -> Result<Decimal, Self::RefineError> {
-        NonNeg::refine(rep)
-    }
-}
-
-type Eur = Tagged<Decimal, Prim<DEur>>;
-impl Refine<Decimal> for DEur {
-    type RefineError = NonNegError<Decimal>;
-    fn refine(
-        rep: Decimal,
-    ) -> Result<Decimal, Self::RefineError> {
-        NonNeg::refine(rep)
-    }
-}
-
-type EurPerUsd =
-    Tagged<Decimal, Per<Prim<DEur>, Prim<DUsd>, Pos>>;
-
-type Meter = Tagged<Decimal, Prim<DMeter>>;
-impl Refine<Decimal> for DMeter {
-    type RefineError = NonNegError<Decimal>;
-    fn refine(
-        rep: Decimal,
-    ) -> Result<Decimal, Self::RefineError> {
-        NonNeg::refine(rep)
-    }
-}
-
-type Second = Tagged<Decimal, Prim<DSecond>>;
-impl Refine<Decimal> for DSecond {
-    type RefineError = NonNegError<Decimal>;
-    fn refine(
-        rep: Decimal,
-    ) -> Result<Decimal, Self::RefineError> {
-        NonNeg::refine(rep)
-    }
-}
-
-type Hertz = Tagged<
-    Decimal,
-    Per<Identity<DNum>, Prim<DSecond>, Pos>,
->;
-
-type MeterPerSecond = Tagged<
-    Decimal,
-    Per<Prim<DMeter>, Prim<DSecond>, NonNeg>,
->;
-
-type MeterTimesMeter = Tagged<
-    Decimal,
-    Times<Prim<DMeter>, Prim<DMeter>, NonNeg>,
->;
+type Hertz = Tagged<Decimal, Per<DNum, DSecond, DPos>>;
+type MeterPerSecond =
+    Tagged<Decimal, Per<DMeter, DSecond, DNonNeg>>;
+type MeterTimesMeter =
+    Tagged<Decimal, Times<DMeter, DMeter, DNonNeg>>;
 
 #[test]
 fn area() -> Test {

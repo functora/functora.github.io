@@ -23,10 +23,10 @@ class EnemyGlowHandler : EventHandler
             // (enemy sprite stays normal/unlit; auto-occludes through walls/doors)
             mo.A_AttachLight(
                 "RedGlow",                              // ID
-                DynamicLight.PulseLight,                // Pulsing type (flame-like!)
+                DynamicLight.PulseLight,                // Pulsing type
                 "ff6600",                               // Flame-orange-red color
-                180,                                    // Max radius (lights ~10-15 units around)
-                90,                                     // Min radius (pulse range)
+                90,                                     // Max radius
+                45,                                     // Min radius
                 DynamicLight.LF_ATTENUATE | DynamicLight.LF_DONTLIGHTSELF,  // Realistic shading + NO self-glow on enemy
                 (0, 0, mo.Height * 0.5)                 // Center-body offset
             );

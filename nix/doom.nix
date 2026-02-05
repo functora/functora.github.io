@@ -173,7 +173,7 @@
       // mkDoom {
         tag = "mmdcxiv-debut";
         mod = ../bak/doom/MMDCXIV-Debut.pk3;
-        relite = ../bak/doom/relite_0.5a.pk3;
+        relite = "";
       }
       // mkDoom {
         tag = "dex";
@@ -182,18 +182,14 @@
       // mkDoom {
         tag = "nostalgic-entropy";
         mod = ../bak/doom/NE.wad;
-      }
-      // mkDoom {
-        tag = "elementalism";
-        mod = ../bak/doom/Elementalism_Phase1_Full_Release_v1.3.pk3;
-        total = ../bak/doom/LaTailorGirl_v190.pk3;
+        music = "";
         relite = "";
       }
       // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
         music = "";
-        relite = ../bak/doom/relite_0.5.2a.pk3;
+        relite = "";
       }
       // mkDoom {
         tag = "city-assault";
@@ -222,12 +218,6 @@
         mod = ../bak/doom/spectacle_creep_build10D.wad;
         music = "";
         relite = "";
-      }
-      // mkDoom {
-        tag = "hacx";
-        wad = ../bak/doom/hacx-2.0-r61.wad;
-        music = "";
-        relite = ../bak/doom/relite_0.5.2a.pk3;
       }
       // mkDoom {
         tag = "cats";

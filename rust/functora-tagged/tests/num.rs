@@ -50,12 +50,22 @@ type EurPerUsd =
 
 type Meter = Tagged<Decimal, Prim<DMeter>>;
 impl Refine<Decimal> for DMeter {
-    type RefineError = Infallible;
+    type RefineError = NonNegError<Decimal>;
+    fn refine(
+        rep: Decimal,
+    ) -> Result<Decimal, Self::RefineError> {
+        NonNeg::refine(rep)
+    }
 }
 
 type Second = Tagged<Decimal, Prim<DSecond>>;
 impl Refine<Decimal> for DSecond {
-    type RefineError = Infallible;
+    type RefineError = NonNegError<Decimal>;
+    fn refine(
+        rep: Decimal,
+    ) -> Result<Decimal, Self::RefineError> {
+        NonNeg::refine(rep)
+    }
 }
 
 type Hertz = Tagged<

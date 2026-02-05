@@ -5,40 +5,40 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::fmt::Debug;
 
-type Test = Result<(), Box<dyn std::error::Error>>;
+type Dim<D> = Tagged<Decimal, D>;
 
 #[derive(Debug)]
-pub enum ANum {}
-type DNum = Identity<ANum, DAny>;
-type Num = Tagged<Decimal, DNum>;
+pub enum INum {}
+type DNum = Identity<INum, DAny>;
+type Num = Dim<DNum>;
 
 #[derive(Debug)]
 pub enum AUsd {}
 type DUsd = Atomic<AUsd, DNonNeg>;
-type Usd = Tagged<Decimal, DUsd>;
+type Usd = Dim<DUsd>;
 
 #[derive(Debug)]
 pub enum AEur {}
 type DEur = Atomic<AEur, DNonNeg>;
-type Eur = Tagged<Decimal, DEur>;
+type Eur = Dim<DEur>;
 
-type EurPerUsd = Tagged<Decimal, Per<DEur, DUsd, DPos>>;
+type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
 
 #[derive(Debug)]
 pub enum AMeter {}
 type DMeter = Atomic<AMeter, DNonNeg>;
-type Meter = Tagged<Decimal, DMeter>;
+type Meter = Dim<DMeter>;
 
 #[derive(Debug)]
 pub enum ASecond {}
 type DSecond = Atomic<ASecond, DNonNeg>;
-type Second = Tagged<Decimal, DSecond>;
+type Second = Dim<DSecond>;
 
-type Hertz = Tagged<Decimal, Per<DNum, DSecond, DPos>>;
-type MeterPerSecond =
-    Tagged<Decimal, Per<DMeter, DSecond, DNonNeg>>;
-type MeterTimesMeter =
-    Tagged<Decimal, Times<DMeter, DMeter, DNonNeg>>;
+type Hertz = Dim<Per<DNum, DSecond, DNonNeg>>;
+type MeterPerSecond = Dim<Per<DMeter, DSecond, DNonNeg>>;
+type MeterTimesMeter = Dim<Times<DMeter, DMeter, DNonNeg>>;
+
+type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[test]
 fn area() -> Test {

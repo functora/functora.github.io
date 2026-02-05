@@ -51,7 +51,7 @@
   codexToml = pkgs.writeTextFile {
     name = "codex";
     text = ''
-      profile = "lite"
+      profile = "free"
       sandbox_mode = "danger-full-access"
 
       [features]
@@ -60,6 +60,10 @@
       apply_patch_freeform = true
       web_search_request = true
       ghost_commit = true
+
+      [profiles.free]
+      model = "qwen/qwen3-coder:free"
+      model_provider = "openrouter"
 
       [profiles.lite]
       model = "gemini-2.5-flash-lite"
@@ -72,6 +76,11 @@
       [profiles.pro]
       model = "gemini-2.5-pro"
       model_provider = "gemini"
+
+      [model_providers.openrouter]
+      name = "openrouter"
+      base_url = "https://openrouter.ai/api/v1"
+      env_key = "OPENROUTER_API_KEY"
 
       [model_providers.gemini]
       name = "gemini"

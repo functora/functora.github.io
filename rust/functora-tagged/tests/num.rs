@@ -13,16 +13,9 @@ type DNum = Identity<INum, DAny>;
 type Num = Dim<DNum>;
 
 #[derive(Debug)]
-pub enum AUsd {}
-type DUsd = Atomic<AUsd, DNonNeg>;
-type Usd = Dim<DUsd>;
-
-#[derive(Debug)]
-pub enum AEur {}
-type DEur = Atomic<AEur, DNonNeg>;
-type Eur = Dim<DEur>;
-
-type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
+pub enum AKg {}
+type DKg = Atomic<AKg, DNonNeg>;
+type Kg = Dim<DKg>;
 
 #[derive(Debug)]
 pub enum AMeter {}
@@ -34,9 +27,33 @@ pub enum ASecond {}
 type DSecond = Atomic<ASecond, DNonNeg>;
 type Second = Dim<DSecond>;
 
-type Hertz = Dim<Per<DNum, DSecond, DNonNeg>>;
-type MeterPerSecond = Dim<Per<DMeter, DSecond, DNonNeg>>;
-type MeterTimesMeter = Dim<Times<DMeter, DMeter, DNonNeg>>;
+type DVelocity = Per<DMeter, DSecond, DNonNeg>;
+type Velocity = Dim<DVelocity>;
+
+type DArea = Times<DMeter, DMeter, DNonNeg>;
+type Area = Dim<DArea>;
+
+type DHertz = Per<DNum, DSecond, DNonNeg>;
+type Hertz = Dim<DHertz>;
+
+type DJoule = Times<
+    DKg,
+    Times<DVelocity, DVelocity, DNonNeg>,
+    DNonNeg,
+>;
+type Joule = Dim<DJoule>;
+
+#[derive(Debug)]
+pub enum AUsd {}
+type DUsd = Atomic<AUsd, DNonNeg>;
+type Usd = Dim<DUsd>;
+
+#[derive(Debug)]
+pub enum AEur {}
+type DEur = Atomic<AEur, DNonNeg>;
+type Eur = Dim<DEur>;
+
+type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
 
 type Test = Result<(), Box<dyn std::error::Error>>;
 
@@ -44,7 +61,7 @@ type Test = Result<(), Box<dyn std::error::Error>>;
 fn area() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a: MeterTimesMeter = l.tmul(&w)?;
+    let a: Area = l.tmul(&w)?;
     assert_eq!(a.rep(), &dec!(50));
     assert_eq!(a.tdiv(&l)?, w);
     assert_eq!(a.tdiv(&w)?, l);
@@ -55,7 +72,7 @@ fn area() -> Test {
 fn velocity() -> Test {
     let d = Meter::new(dec!(100))?;
     let t = Second::new(dec!(10))?;
-    let v: MeterPerSecond = d.tdiv(&t)?;
+    let v: Velocity = d.tdiv(&t)?;
     let h: Hertz = v.tdiv(&d)?;
     assert_eq!(v.rep(), &dec!(10));
     assert_eq!(v.tmul(&t)?, d);
@@ -65,11 +82,13 @@ fn velocity() -> Test {
 }
 
 #[test]
-fn velocity_cancel() -> Test {
-    let v = MeterPerSecond::new(dec!(10))?;
-    let t = Second::new(dec!(2))?;
-    let d: Meter = v.tmul(&t)?;
-    assert_eq!(d.rep(), &dec!(20));
+fn kinetic_energy() -> Test {
+    let m: Kg = Kg::new(dec!(2))?;
+    let d: Meter = Meter::new(dec!(10))?;
+    let t: Second = Second::new(dec!(5))?;
+    let v: Velocity = d.tdiv(&t)?;
+    let e: Joule = m.tmul(&v.tmul(&v)?)?;
+    assert_eq!(e.rep(), &dec!(8));
     ok()
 }
 
@@ -92,22 +111,22 @@ fn currency_convert() -> Test {
 }
 
 #[test]
-fn test_commutative() -> Test {
+fn commutative() -> Test {
     let x = Meter::new(dec!(10))?;
     let y = Meter::new(dec!(5))?;
     // x + y = y + x
     assert_eq!(x.tadd(&y)?, y.tadd(&x)?);
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a1: MeterTimesMeter = l.tmul(&w)?;
-    let a2: MeterTimesMeter = w.tmul(&l)?;
+    let a1: Area = l.tmul(&w)?;
+    let a2: Area = w.tmul(&l)?;
     // l * w = w * l
     assert_eq!(a1.rep(), a2.rep());
     ok()
 }
 
 #[test]
-fn test_associative() -> Test {
+fn associative() -> Test {
     let a = Meter::new(dec!(10))?;
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
@@ -120,20 +139,19 @@ fn test_associative() -> Test {
 }
 
 #[test]
-fn test_distributive() -> Test {
+fn distributive() -> Test {
     let a = Meter::new(dec!(10))?;
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
-    let res1: MeterTimesMeter = a.tmul(&b.tadd(&c)?)?;
-    let res2: MeterTimesMeter =
-        a.tmul(&b)?.tadd(&a.tmul(&c)?)?;
+    let res1: Area = a.tmul(&b.tadd(&c)?)?;
+    let res2: Area = a.tmul(&b)?.tadd(&a.tmul(&c)?)?;
     // a * (b + c) = a * b + a * c
     assert_eq!(res1, res2);
     ok()
 }
 
 #[test]
-fn test_identity() -> Test {
+fn identity() -> Test {
     let x = Meter::new(dec!(10))?;
     let zero = Meter::new(dec!(0))?;
     // x + 0 = x
@@ -150,19 +168,19 @@ fn test_identity() -> Test {
 }
 
 #[test]
-fn test_cancellation() -> Test {
+fn cancellation() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let area: MeterTimesMeter = l.tmul(&w)?;
+    let a: Area = l.tmul(&w)?;
     // (L ✖ R) / L = R
-    assert_eq!(w, area.tdiv(&l)?);
+    assert_eq!(w, a.tdiv(&l)?);
     // (L ✖ R) / R = L
-    assert_eq!(l, area.tdiv(&w)?);
+    assert_eq!(l, a.tdiv(&w)?);
     ok()
 }
 
 #[test]
-fn test_identity_division() -> Test {
+fn identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
     // T / 1 = T

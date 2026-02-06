@@ -348,6 +348,7 @@
             packages =
               shell.packages
               ++ [
+                pkgs.opencode
                 pkgs.qutebrowser
                 unstable.legacyPackages.${system}.antigravity
                 (pkgs.writeShellApplication {

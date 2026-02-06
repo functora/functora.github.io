@@ -61,11 +61,42 @@ where
     }
 }
 
+//////////
+// DMul //
+//////////
+
 pub trait DMul<R, O> {}
 
-pub trait DDiv<R, O> {}
+//
+// Identity
+//
 
-// 1. L * R = L ✖ R
+// 1 * T = T
+impl<T, I, IF> DMul<T, T> for Identity<I, IF> {}
+
+// A * 1 = A
+impl<A, I, AF, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
+    for Atomic<A, AF>
+{
+}
+
+// (L × R) * 1 = L × R
+impl<L, R, I, IF, TF> DMul<Identity<I, IF>, Times<L, R, TF>>
+    for Times<L, R, TF>
+{
+}
+
+// (L ÷ R) * 1 = L ÷ R
+impl<L, R, I, IF, PF> DMul<Identity<I, IF>, Per<L, R, PF>>
+    for Per<L, R, PF>
+{
+}
+
+//
+// Atomic (excluding Identity)
+//
+
+// L * R = L ✖ R
 impl<L, R, LF, RF, TF>
     DMul<
         Atomic<R, RF>,
@@ -74,20 +105,101 @@ impl<L, R, LF, RF, TF>
 {
 }
 
-// 2. (L ÷ R) * R = L
-impl<L, R, PF> DMul<R, L> for Per<L, R, PF> {}
-
-// 3. R * (L ÷ R) = L
-impl<L, R, PF> DMul<Per<L, R, PF>, L> for R {}
-
-// 4. L / R = L ÷ R
-impl<L, R, LF, RF, PF>
-    DDiv<
-        Atomic<R, RF>,
-        Per<Atomic<L, LF>, Atomic<R, RF>, PF>,
-    > for Atomic<L, LF>
+// A * (L ✖ R) = A ✖ (L ✖ R)
+impl<A, L, R, AF, TF1, TF2>
+    DMul<
+        Times<L, R, TF1>,
+        Times<Atomic<A, AF>, Times<L, R, TF1>, TF2>,
+    > for Atomic<A, AF>
 {
 }
+
+// A * (L ÷ R) = A ✖ (L ÷ R)
+impl<A, L, R, AF, PF, TF>
+    DMul<
+        Per<L, R, PF>,
+        Times<Atomic<A, AF>, Per<L, R, PF>, TF>,
+    > for Atomic<A, AF>
+{
+}
+
+// (L ✖ R) * A = (L ✖ R) ✖ A
+impl<L, R, A, TF, AF, TF2>
+    DMul<
+        Atomic<A, AF>,
+        Times<Times<L, R, TF>, Atomic<A, AF>, TF2>,
+    > for Times<L, R, TF>
+{
+}
+
+// (L ÷ R) * A = (L ÷ R) ✖ A
+impl<L, R, A, PF, AF, TF>
+    DMul<
+        Atomic<A, AF>,
+        Times<Per<L, R, PF>, Atomic<A, AF>, TF>,
+    > for Per<L, R, PF>
+{
+}
+
+//
+// Times (excluding Identity and Atomic)
+//
+
+// (L1 × R1) * (L2 × R2) = (L1 × R1) × (L2 × R2)
+impl<L1, R1, L2, R2, TF1, TF2, TF3>
+    DMul<
+        Times<L2, R2, TF2>,
+        Times<Times<L1, R1, TF1>, Times<L2, R2, TF2>, TF3>,
+    > for Times<L1, R1, TF1>
+{
+}
+
+// (L1 × R1) * (L2 ÷ R2) = (L1 × R1) × (L2 ÷ R2)
+impl<L1, R1, L2, R2, TF1, TF2, PF>
+    DMul<
+        Per<L2, R2, PF>,
+        Times<Times<L1, R1, TF1>, Per<L2, R2, PF>, TF2>,
+    > for Times<L1, R1, TF1>
+{
+}
+
+// (L1 ÷ R1) * (L2 × R2) = (L1 ÷ R1) × (L2 × R2)
+impl<L1, R1, L2, R2, TF2, TF3, PF>
+    DMul<
+        Times<L2, R2, TF2>,
+        Times<Per<L1, R1, PF>, Times<L2, R2, TF2>, TF3>,
+    > for Per<L1, R1, PF>
+{
+}
+
+//
+// Per (excluding Identity, Atomic and Times)
+//
+
+// (L1 ÷ R1) * (L2 ÷ R2) = (L1 ÷ R1) × (L2 ÷ R2)
+impl<L1, R1, L2, R2, TF, PF1, PF2>
+    DMul<
+        Per<L2, R2, PF2>,
+        Times<Per<L1, R1, PF1>, Per<L2, R2, PF2>, TF>,
+    > for Per<L1, R1, PF1>
+{
+}
+
+//
+// Cancellation
+//
+
+// (L ÷ R) * R = L
+impl<L, R, PF> DMul<R, L> for Per<L, R, PF> {}
+
+// R * (L ÷ R) = L
+impl<L, R, PF> DMul<Per<L, R, PF>, L> for R {}
+
+//////////
+// DDiv //
+//////////
+
+pub trait DDiv<R, O> {}
 
 // 5. L / (L ÷ R) = R
 impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
@@ -106,27 +218,6 @@ impl<L, R, I, LF, IF, PF1, PF2>
 {
 }
 
-// 9. 1 * T = T
-impl<T, I, IF> DMul<T, T> for Identity<I, IF> {}
-
-// 10. T * 1 = T
-impl<A, I, AF, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
-    for Atomic<A, AF>
-{
-}
-
-// 11. (L ÷ R) * 1 = L ÷ R
-impl<L, R, I, IF, PF> DMul<Identity<I, IF>, Per<L, R, PF>>
-    for Per<L, R, PF>
-{
-}
-
-// 12. (L ÷ R) * 1 = L ÷ R
-impl<L, R, I, IF, TF> DMul<Identity<I, IF>, Times<L, R, TF>>
-    for Times<L, R, TF>
-{
-}
-
 // 13. T / 1 = T
 impl<T, I, IF> DDiv<Identity<I, IF>, T> for T {}
 
@@ -139,30 +230,12 @@ impl<A, I, AF, IF, PF>
 {
 }
 
-// 15. 1 / (L ÷ R) = R ÷ L
-impl<L, R, I, LF, RF, IF, PF1, PF2>
+// 4. L / R = L ÷ R
+impl<L, R, LF, RF, PF>
     DDiv<
-        Per<Atomic<L, LF>, Atomic<R, RF>, PF1>,
-        Per<Atomic<R, RF>, Atomic<L, LF>, PF2>,
-    > for Identity<I, IF>
-{
-}
-
-// 16. (L1 ÷ R1) * (L2 ÷ R2) = (L1 ÷ R1) ✖ (L2 ÷ R2)
-impl<L1, R1, L2, R2, PF1, PF2, TF>
-    DMul<
-        Per<L2, R2, PF2>,
-        Times<Per<L1, R1, PF1>, Per<L2, R2, PF2>, TF>,
-    > for Per<L1, R1, PF1>
-{
-}
-
-// 17. A * (L ✖ R) = A ✖ (L ✖ R)
-impl<A, L, R, AF, TF1, TF2>
-    DMul<
-        Times<L, R, TF1>,
-        Times<Atomic<A, AF>, Times<L, R, TF1>, TF2>,
-    > for Atomic<A, AF>
+        Atomic<R, RF>,
+        Per<Atomic<L, LF>, Atomic<R, RF>, PF>,
+    > for Atomic<L, LF>
 {
 }
 

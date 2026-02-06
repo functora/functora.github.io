@@ -201,27 +201,14 @@ impl<L, R, PF> DMul<Per<L, R, PF>, L> for R {}
 
 pub trait DDiv<R, O> {}
 
-// 5. L / (L ÷ R) = R
-impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
+//
+// Identity
+//
 
-// 6. (L ✖ R) / R = L
-impl<L, R, TF> DDiv<R, L> for Times<L, R, TF> {}
-
-// 7. (L ✖ R) / L = R
-// Since this overlap with (L ✖ R) / R = L when L = R, we pick the only one.
-// Rule 6 already handles the R cancellation. Rule 7 will conflict.
-
-// 8. (L ÷ R) / L = 1 ÷ R
-impl<L, R, I, LF, IF, PF1, PF2>
-    DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF2>>
-    for Per<Atomic<L, LF>, R, PF1>
-{
-}
-
-// 13. T / 1 = T
+// T / 1 = T
 impl<T, I, IF> DDiv<Identity<I, IF>, T> for T {}
 
-// 14. 1 / T = 1 ÷ T
+// 1 / A = 1 ÷ A
 impl<A, I, AF, IF, PF>
     DDiv<
         Atomic<A, AF>,
@@ -230,12 +217,142 @@ impl<A, I, AF, IF, PF>
 {
 }
 
-// 4. L / R = L ÷ R
+// 1 / (L ✖ R) = 1 ÷ (L ✖ R)
+impl<L, R, I, IF, PF>
+    DDiv<
+        Times<L, R, IF>,
+        Per<Identity<I, IF>, Times<L, R, IF>, PF>,
+    > for Identity<I, IF>
+{
+}
+
+// 1 / (L ÷ R) = 1 ÷ (L ÷ R)
+impl<L, R, I, IF, PF>
+    DDiv<
+        Per<L, R, IF>,
+        Per<Identity<I, IF>, Per<L, R, IF>, PF>,
+    > for Identity<I, IF>
+{
+}
+
+//
+// Atomic (excluding Identity)
+//
+
+// L / R = L ÷ R
 impl<L, R, LF, RF, PF>
     DDiv<
         Atomic<R, RF>,
         Per<Atomic<L, LF>, Atomic<R, RF>, PF>,
     > for Atomic<L, LF>
+{
+}
+
+// A / (L ✖ R) = A ÷ (L ✖ R)
+impl<A, L, R, AF, TF, PF>
+    DDiv<
+        Times<L, R, TF>,
+        Per<Atomic<A, AF>, Times<L, R, TF>, PF>,
+    > for Atomic<A, AF>
+{
+}
+
+// A / (L ÷ R) = A ÷ (L ÷ R)
+impl<A, L, R, AF, PF, PF2>
+    DDiv<
+        Per<L, R, PF>,
+        Per<Atomic<A, AF>, Per<L, R, PF>, PF2>,
+    > for Atomic<A, AF>
+{
+}
+
+// (L ✖ R) / A = (L ✖ R) ÷ A
+impl<L, R, A, TF, AF, PF>
+    DDiv<
+        Atomic<A, AF>,
+        Per<Times<L, R, TF>, Atomic<A, AF>, PF>,
+    > for Times<L, R, TF>
+{
+}
+
+// (L ÷ R) / A = (L ÷ R) ÷ A
+impl<L, R, A, PF, AF, PF2>
+    DDiv<
+        Atomic<A, AF>,
+        Per<Per<L, R, PF>, Atomic<A, AF>, PF2>,
+    > for Per<L, R, PF>
+{
+}
+
+//
+// Times (excluding Identity and Atomic)
+//
+
+// (L1 × R1) / (L2 × R2) = (L1 × R1) ÷ (L2 × R2)
+impl<L1, R1, L2, R2, TF1, TF2, PF>
+    DDiv<
+        Times<L2, R2, TF2>,
+        Per<Times<L1, R1, TF1>, Times<L2, R2, TF2>, PF>,
+    > for Times<L1, R1, TF1>
+{
+}
+
+// (L1 × R1) / (L2 ÷ R2) = (L1 × R1) ÷ (L2 ÷ R2)
+impl<L1, R1, L2, R2, TF1, PF, PF2>
+    DDiv<
+        Per<L2, R2, PF>,
+        Per<Times<L1, R1, TF1>, Per<L2, R2, PF>, PF2>,
+    > for Times<L1, R1, TF1>
+{
+}
+
+// (L1 ÷ R1) / (L2 × R2) = (L1 ÷ R1) ÷ (L2 × R2)
+impl<L1, R1, L2, R2, PF, TF, PF2>
+    DDiv<
+        Times<L2, R2, TF>,
+        Per<Per<L1, R1, PF>, Times<L2, R2, TF>, PF2>,
+    > for Per<L1, R1, PF>
+{
+}
+
+//
+// Per (excluding Identity, Atomic and Times)
+//
+
+// (L1 ÷ R1) / (L2 ÷ R2) = (L1 ÷ R1) ÷ (L2 ÷ R2)
+impl<L1, R1, L2, R2, PF1, PF2, PF3>
+    DDiv<
+        Per<L2, R2, PF2>,
+        Per<Per<L1, R1, PF1>, Per<L2, R2, PF2>, PF3>,
+    > for Per<L1, R1, PF1>
+{
+}
+
+//
+// Cancellation
+//
+
+// (L ✖ R) / R = L
+// (L ✖ R) / L = R (overlaps when L = R)
+impl<L, R, TF> DDiv<R, L> for Times<L, R, TF> {}
+
+// L / (L ✖ R) = 1 ÷ R
+// R / (L ✖ R) = 1 ÷ L (overlaps when L = R)
+impl<L, LF, R, I, IF, TF, PF>
+    DDiv<
+        Times<Atomic<L, LF>, R, TF>,
+        Per<Identity<I, IF>, R, PF>,
+    > for Atomic<L, LF>
+{
+}
+
+// L / (L ÷ R) = R
+impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
+
+// (L ÷ R) / L = 1 ÷ R
+impl<L, R, I, LF, IF, PF1, PF2>
+    DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF2>>
+    for Per<Atomic<L, LF>, R, PF1>
 {
 }
 

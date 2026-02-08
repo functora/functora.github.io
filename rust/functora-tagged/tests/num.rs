@@ -64,9 +64,6 @@ type Acceleration = Dim<DAcceleration>;
 type DForce = Times<DKg, DAcceleration, DNonNeg>;
 type Force = Dim<DForce>;
 
-type DPower = Per<DJoule, DSecond, DNonNeg>;
-type Power = Dim<DPower>;
-
 type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[test]

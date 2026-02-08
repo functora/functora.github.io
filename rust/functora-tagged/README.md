@@ -326,6 +326,98 @@ let err =
 assert_eq!(err, ParseError::Refine(UserIdError));
 ```
 
+## Dimensional Math
+
+`functora-tagged` includes a `num` module that enables type-safe dimensional analysis and arithmetic. It prevents accidental mixing of units (e.g., adding meters to seconds) and ensures that operations produce correctly typed results (e.g., dividing meters by seconds yields velocity).
+
+The system is built on four core algebraic types that carry unit information in their PhantomData:
+
+- **`Identity<I, F>`**: Represents a neutral element or a base scalar (like a dimensionless number).
+- **`Atomic<A, F>`**: Represents a fundamental unit (e.g., Meter, Second, Kg).
+- **`Times<L, R, F>`**: Represents the product of two units (e.g., Meter \* Meter = Area).
+- **`Per<L, R, F>`**: Represents the quotient of two units (e.g., Meter / Second = Velocity).
+
+All these types accept a refinement generic `F` (e.g., `DNonNeg`, `DPos`, etc.) to enforce constraints like non-negativity on the underlying values.
+
+### Example
+
+This example demonstrates how to define physical units and calculate Kinetic Energy ($E_k = \frac{1}{2} m v^2$) safely.
+
+```rust
+use functora_tagged::num::*;
+use functora_tagged::*;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+
+//
+// 1. Dimensionless unit (Identity)
+//
+
+#[derive(Debug)]
+pub enum INum {}
+type DNum = Identity<INum, DAny>;
+type Num = Tagged<Decimal, DNum>;
+
+//
+// 2. Fundamental units (Atomic)
+//
+
+#[derive(Debug)]
+pub enum AMeter {}
+#[derive(Debug)]
+pub enum ASecond {}
+#[derive(Debug)]
+pub enum AKg {}
+
+// The "Dimension" types with non-negative refinement
+type DMeter = Atomic<AMeter, DNonNeg>;
+type DSecond = Atomic<ASecond, DNonNeg>;
+type DKg = Atomic<AKg, DNonNeg>;
+
+// The concrete types with Decimal rep
+type Meter = Tagged<Decimal, DMeter>;
+type Second = Tagged<Decimal, DSecond>;
+type Kg = Tagged<Decimal, DKg>;
+
+//
+// 3. Non-fundamental units (Per, Times)
+//
+
+// Velocity = Meter / Second
+type DVelocity = Per<DMeter, DSecond, DNonNeg>;
+type Velocity = Tagged<Decimal, DVelocity>;
+
+// Joule = Kg * Velocity^2
+type DJoule = Times<
+    DKg,
+    Times<DVelocity, DVelocity, DNonNeg>,
+    DNonNeg,
+>;
+type Joule = Tagged<Decimal, DJoule>;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let distance = Meter::new(dec!(50))?; // 50 meters
+    let time = Second::new(dec!(5))?; // 5 seconds
+    let mass = Kg::new(dec!(100))?; // 100 kg
+
+    // Calculate velocity: 50m / 5s = 10 m/s
+    let velocity: Velocity = distance.tdiv(&time)?;
+    assert_eq!(velocity.rep(), &dec!(10));
+
+    // Calculate Energy: 100kg * (10m/s)^2 = 10000J
+    let energy: Joule =
+        mass.tmul(&velocity.tmul(&velocity)?)?;
+    assert_eq!(energy.rep(), &dec!(10000));
+
+    // Scaling by dimensionless 0.5 doesn't change units
+    let half = Num::new(dec!(0.5))?;
+    let half_energy: Joule = energy.tmul(&half)?;
+    assert_eq!(half_energy.rep(), &dec!(5000));
+
+    Ok(())
+}
+```
+
 <hr>
 
 © 2025 [Functora](https://functora.github.io/). All rights reserved.

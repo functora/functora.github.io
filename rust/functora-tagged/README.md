@@ -330,7 +330,7 @@ assert_eq!(err, ParseError::Refine(UserIdError));
 
 `functora-tagged` includes a `num` module that enables type-safe dimensional analysis and arithmetic. It prevents accidental mixing of units (e.g., adding meters to seconds) and ensures that operations produce correctly typed results (e.g., dividing meters by seconds yields velocity).
 
-The system is built on four core algebraic types that carry unit information in their PhantomData:
+The system is built on four core algebraic types that carry unit information in their `PhantomData`:
 
 - **`Identity<I, F>`**: Represents a neutral element or a base scalar (like a dimensionless number).
 - **`Atomic<A, F>`**: Represents a fundamental unit (e.g., Meter, Second, Kg).
@@ -341,7 +341,7 @@ All these types accept a refinement generic `F` (e.g., `DNonNeg`, `DPos`, etc.) 
 
 ### Example
 
-This example demonstrates how to define physical units and calculate Kinetic Energy ($E_k = \frac{1}{2} m v^2$) safely.
+This example demonstrates how to define physical units and calculate Kinetic Energy (i.e. **Ek = kg \* (m/s)^2**) safely.
 
 ```rust
 use functora_tagged::num::*;

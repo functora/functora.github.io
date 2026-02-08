@@ -55,6 +55,18 @@ type Eur = Dim<DEur>;
 
 type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
 
+type DVolume = Times<DArea, DMeter, DNonNeg>;
+type Volume = Dim<DVolume>;
+
+type DAcceleration = Per<DVelocity, DSecond, DNonNeg>;
+type Acceleration = Dim<DAcceleration>;
+
+type DForce = Times<DKg, DAcceleration, DNonNeg>;
+type Force = Dim<DForce>;
+
+type DPower = Per<DJoule, DSecond, DNonNeg>;
+type Power = Dim<DPower>;
+
 type Test = Result<(), Box<dyn std::error::Error>>;
 
 #[test]
@@ -188,5 +200,124 @@ fn identity_division() -> Test {
     // 1 / T = 1 ÷ T
     let h: Hertz = one.tdiv(&Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
+    ok()
+}
+
+#[test]
+fn mul_permutations() -> Test {
+    let one = Num::new(dec!(1))?;
+    let m = Meter::new(dec!(2))?;
+    let s = Second::new(dec!(2))?;
+    let kg = Kg::new(dec!(5))?;
+    let area = Area::new(dec!(6))?; // m^2
+    let vel = Velocity::new(dec!(4))?; // m/s
+
+    // Identity * Times
+    let vol: Volume = one.tmul(&area.tmul(&m)?)?;
+    assert_eq!(vol.rep(), &dec!(12));
+
+    // Identity * Per
+    let acc: Acceleration = one.tmul(&vel.tdiv(&s)?)?;
+    assert_eq!(acc.rep(), &(dec!(4) / dec!(2)));
+
+    // Atomic * Times
+    let force: Force = kg.tmul(&acc)?;
+    assert_eq!(
+        force.rep(),
+        &((dec!(5) * dec!(4)) / dec!(2))
+    );
+
+    // Atomic * Per
+    let momentum: Tagged<
+        Decimal,
+        Times<DKg, DVelocity, DNonNeg>,
+    > = kg.tmul(&vel)?;
+    assert_eq!(momentum.rep(), &dec!(20));
+
+    // Times * Atomic
+    let force2: Tagged<
+        Decimal,
+        Times<DAcceleration, DKg, DNonNeg>,
+    > = acc.tmul(&kg)?; // Commutative check roughly
+    assert_eq!(force2.rep(), force.rep());
+
+    // Per * Atomic (Non-cancelling checked in velocity test)
+    // Per * Per
+    let acc2: Tagged<
+        Decimal,
+        Times<DVelocity, DHertz, DNonNeg>,
+    > = vel.tmul(&Hertz::new(dec!(1))?)?;
+    assert_eq!(acc2.rep(), &dec!(4));
+
+    ok()
+}
+
+#[test]
+fn div_permutations() -> Test {
+    let one = Num::new(dec!(1))?;
+    let m = Meter::new(dec!(10))?;
+    let s = Second::new(dec!(2))?;
+    let area = Area::new(dec!(100))?;
+    let vel = Velocity::new(dec!(5))?;
+
+    // Identity / Times
+    let per_area: Tagged<
+        Decimal,
+        Per<DNum, DArea, DNonNeg>,
+    > = one.tdiv(&area)?;
+    assert_eq!(per_area.rep(), &dec!(0.01));
+
+    // Identity / Per
+    let s_per_m: Tagged<
+        Decimal,
+        Per<DNum, DVelocity, DNonNeg>,
+    > = one.tdiv(&vel)?;
+    assert_eq!(s_per_m.rep(), &dec!(0.2));
+
+    // Atomic / Times
+    let per_m: Tagged<Decimal, Per<DNum, DMeter, DNonNeg>> =
+        m.tdiv(&area)?;
+    assert_eq!(per_m.rep(), &dec!(0.1));
+
+    // Times / Times
+    let ratio: Tagged<Decimal, Per<DArea, DArea, DNonNeg>> =
+        area.tdiv(&area)?;
+    assert_eq!(ratio.rep(), &dec!(1));
+
+    // Times / Per
+    let acc_time: Tagged<
+        Decimal,
+        Per<DVelocity, DSecond, DNonNeg>,
+    > = vel.tdiv(&s)?;
+    assert_eq!(acc_time.rep(), &dec!(2.5));
+
+    ok()
+}
+
+#[test]
+fn cancellation_edge_cases() -> Test {
+    let m = Meter::new(dec!(10))?;
+    let s = Second::new(dec!(2))?;
+    let vel = Velocity::new(dec!(5))?;
+
+    // L / (L * R)
+    let ms: Tagged<
+        Decimal,
+        Times<DMeter, DSecond, DNonNeg>,
+    > = m.tmul(&s)?;
+    let per_s_val: Tagged<
+        Decimal,
+        Per<DNum, DSecond, DPos>,
+    > = m.tdiv(&ms)?;
+    assert_eq!(per_s_val.rep(), &dec!(0.5));
+
+    // L / (L / R) = R
+    let s2: Second = m.tdiv(&vel)?; // m / (m/s) = s
+    assert_eq!(s2.rep(), &dec!(2));
+
+    // (L / R) / L = 1/R
+    let inv_s: Hertz = vel.tdiv(&m)?;
+    assert_eq!(inv_s.rep(), &dec!(0.5));
+
     ok()
 }

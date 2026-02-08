@@ -218,19 +218,19 @@ impl<A, I, AF, IF, PF>
 }
 
 // 1 / (L ✖ R) = 1 ÷ (L ✖ R)
-impl<L, R, I, IF, PF>
+impl<L, R, I, IF, TF, PF>
     DDiv<
-        Times<L, R, IF>,
-        Per<Identity<I, IF>, Times<L, R, IF>, PF>,
+        Times<L, R, TF>,
+        Per<Identity<I, IF>, Times<L, R, TF>, PF>,
     > for Identity<I, IF>
 {
 }
 
 // 1 / (L ÷ R) = 1 ÷ (L ÷ R)
-impl<L, R, I, IF, PF>
+impl<L, R, I, IF, PF1, PF2>
     DDiv<
-        Per<L, R, IF>,
-        Per<Identity<I, IF>, Per<L, R, IF>, PF>,
+        Per<L, R, PF1>,
+        Per<Identity<I, IF>, Per<L, R, PF1>, PF2>,
     > for Identity<I, IF>
 {
 }
@@ -497,10 +497,6 @@ where
             .map_err(|_| TNumError::Mul(*self, *rhs))
     }
 }
-
-//
-// TODO TSquare trait
-//
 
 ///////////
 //  Div  //

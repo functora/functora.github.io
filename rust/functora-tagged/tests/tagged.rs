@@ -31,8 +31,8 @@ impl Refine<i32> for MyTag {
     }
 }
 
-type TestTagged = Tagged<i32, MyTag>;
-type TestParseError = ParseError<i32, MyTag>;
+type TestTagged = Tagged<i32, MyTag, MyTag>;
+type TestParseError = ParseError<i32, MyTag, MyTag>;
 
 #[test]
 fn test_tagged_new() {
@@ -146,7 +146,7 @@ fn test_tagged_hash() {
 
 #[test]
 fn test_tagged_deref() {
-    let rep_value = 110;
+    let rep_value: i32 = 110;
     let tagged_instance =
         TestTagged::new(rep_value).unwrap();
     assert_eq!(*tagged_instance, rep_value);
@@ -166,7 +166,7 @@ fn test_tagged_from_str() {
     > = FromStr::from_str(s_decode_err);
     assert!(parse_result_decode.is_err());
     match parse_result_decode.unwrap_err() {
-        TestParseError::Decode(_) => {}
+        TestParseError::Decode(..) => {}
         _ => panic!("Expected Decode error"),
     }
 
@@ -177,7 +177,7 @@ fn test_tagged_from_str() {
     > = FromStr::from_str(s_refine_err);
     assert!(parse_result_refine.is_err());
     match parse_result_refine.unwrap_err() {
-        TestParseError::Refine(_) => {}
+        TestParseError::Refine(..) => {}
         _ => panic!("Expected Refine error"),
     }
 }

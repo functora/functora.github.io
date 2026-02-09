@@ -21,6 +21,12 @@ pub struct Times<L, R, F>(PhantomData<(L, R, F)>);
 #[derive(Debug)]
 pub struct Per<L, R, F>(PhantomData<(L, R, F)>);
 
+pub trait Refinate<F> {}
+impl<I, F> Refinate<F> for Identity<I, F> {}
+impl<A, F> Refinate<F> for Atomic<A, F> {}
+impl<L, R, F> Refinate<F> for Times<L, R, F> {}
+impl<L, R, F> Refinate<F> for Per<L, R, F> {}
+
 impl<T, I, F> Refine<T> for Identity<I, F>
 where
     F: Refine<T>,
@@ -486,6 +492,7 @@ where
     T: Copy + TMul<T, T>,
     L: Debug + DMul<R, O>,
     R: Debug,
+    O: Refinate<OF>,
     LF: Debug,
     RF: Debug,
     OF: Refine<T>,
@@ -536,6 +543,7 @@ where
     T: Copy + TDiv<T, T>,
     L: Debug + DDiv<R, O>,
     R: Debug,
+    O: Refinate<OF>,
     LF: Debug,
     RF: Debug,
     OF: Refine<T>,

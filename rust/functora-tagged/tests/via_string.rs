@@ -28,8 +28,8 @@ impl Refine<String> for MyTag {
     }
 }
 
-type TestViaString = ViaString<String, MyTag>;
-type TestParseError = ParseError<String, MyTag>;
+type TestViaString = ViaString<String, MyTag, MyTag>;
+type TestParseError = ParseError<String, MyTag, MyTag>;
 
 #[test]
 fn test_via_string_new() {
@@ -190,7 +190,7 @@ fn test_via_string_from_str() {
     > = FromStr::from_str(s_refine_err);
     assert!(parse_result_refine.is_err());
     match parse_result_refine.unwrap_err() {
-        TestParseError::Refine(_) => {}
+        TestParseError::Refine(..) => {}
         _ => panic!("Expected Refine error"),
     }
 }
@@ -516,7 +516,8 @@ fn test_via_string_copy() {
         }
     }
 
-    type TestViaStringCopy = ViaString<i32, CopyTag>;
+    type TestViaStringCopy =
+        ViaString<i32, CopyTag, CopyTag>;
 
     let vs1 = TestViaStringCopy::new(123).unwrap();
     let vs2 = vs1;

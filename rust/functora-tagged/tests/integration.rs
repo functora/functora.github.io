@@ -10,19 +10,21 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum NonEmptyTag {}
-pub type NonEmpty<T> = Tagged<T, NonEmptyTag>;
+pub type NonEmpty<T> = Tagged<T, NonEmptyTag, NonEmptyTag>;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum UserIdTag {}
-pub type UserId = Tagged<NonEmpty<String>, UserIdTag>;
+pub type UserId =
+    Tagged<NonEmpty<String>, UserIdTag, UserIdTag>;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum EmailTag {}
-pub type Email = Tagged<NonEmpty<String>, EmailTag>;
+pub type Email =
+    Tagged<NonEmpty<String>, EmailTag, EmailTag>;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum UpperTag {}
-pub type UpperString = Tagged<String, UpperTag>;
+pub type UpperString = Tagged<String, UpperTag, UpperTag>;
 
 #[derive(
     Eq, PartialEq, Ord, PartialOrd, Clone, Debug, Display,
@@ -101,7 +103,7 @@ fn test_non_empty_from_str_success() {
 #[test]
 fn test_non_empty_from_str_refine_error() {
     let err: Result<NonEmpty<String>, _> = "".parse();
-    assert!(matches!(err, Err(ParseError::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(..))));
 }
 
 #[test]
@@ -129,7 +131,7 @@ fn test_user_id_from_str_success() {
 #[test]
 fn test_user_id_from_str_refine_failure() {
     let err: Result<UserId, _> = "invalid".parse();
-    assert!(matches!(err, Err(ParseError::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(..))));
 }
 
 #[test]
@@ -148,7 +150,7 @@ fn test_email_refine_failure() {
 #[test]
 fn test_email_from_str_refine_failure() {
     let err: Result<Email, _> = "ab".parse();
-    assert!(matches!(err, Err(ParseError::Refine(_))));
+    assert!(matches!(err, Err(ParseError::Refine(..))));
 }
 
 #[test]

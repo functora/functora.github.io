@@ -28,7 +28,7 @@ This structure allows you to create distinct types that behave identically to th
 ```rust
 use std::marker::PhantomData;
 
-pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
+pub struct Tagged<Rep, Tag, F>(Rep, PhantomData<(Tag, F)>);
 ```
 
 The `Tagged::new` constructor returns a `Result` that can be `unwrap`ped directly if the `Tag`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
@@ -118,7 +118,7 @@ impl Refine<usize> for NonNegTag {
     type RefineError = Infallible;
 }
 
-pub type NonNeg = Tagged<usize, NonNegTag>;
+pub type NonNeg = Tagged<usize, NonNegTag, NonNegTag>;
 
 let rep = 123;
 let new = NonNeg::new(rep).infallible();
@@ -135,7 +135,7 @@ use functora_tagged::*;
 
 #[derive(PartialEq, Debug)]
 pub enum PositiveTag {}
-pub type Positive = Tagged<usize, PositiveTag>;
+pub type Positive = Tagged<usize, PositiveTag, PositiveTag>;
 
 #[derive(PartialEq, Debug)]
 pub struct PositiveError;
@@ -172,7 +172,7 @@ use num_traits::Zero;
 
 #[derive(PartialEq, Debug)]
 pub enum PositiveTag {}
-pub type Positive<Rep> = Tagged<Rep, PositiveTag>;
+pub type Positive<Rep> = Tagged<Rep, PositiveTag, PositiveTag>;
 
 #[derive(PartialEq, Debug)]
 pub struct PositiveError;
@@ -218,7 +218,7 @@ use functora_tagged::*;
 
 #[derive(PartialEq, Debug)]
 pub enum NonEmptyTag {}
-pub type NonEmpty<Rep> = Tagged<Rep, NonEmptyTag>;
+pub type NonEmpty<Rep> = Tagged<Rep, NonEmptyTag, NonEmptyTag>;
 
 #[derive(PartialEq, Debug)]
 pub struct NonEmptyError;
@@ -254,7 +254,7 @@ impl Refine<isize> for NonEmptyTag {
 #[derive(PartialEq, Debug)]
 pub enum UserIdTag {}
 pub type UserId<Rep> =
-    Tagged<NonEmpty<Rep>, UserIdTag>;
+    Tagged<NonEmpty<Rep>, UserIdTag, UserIdTag>;
 
 #[derive(PartialEq, Debug)]
 pub struct UserIdError;
@@ -297,14 +297,15 @@ let err = "".parse::<UserId<String>>().unwrap_err();
 assert_eq!(
     err,
     ParseError::Decode(ParseError::Refine(
-        NonEmptyError
-    ))
+        NonEmptyError,
+        PhantomData
+    ), PhantomData)
 );
 
 let err = "post_123"
     .parse::<UserId<String>>()
     .unwrap_err();
-assert_eq!(err, ParseError::Refine(UserIdError));
+assert_eq!(err, ParseError::Refine(UserIdError, PhantomData));
 
 let rep: isize = 123;
 let new = rep
@@ -317,13 +318,14 @@ let err = "0".parse::<UserId<isize>>().unwrap_err();
 assert_eq!(
     err,
     ParseError::Decode(ParseError::Refine(
-        NonEmptyError
-    ))
+        NonEmptyError,
+        PhantomData
+    ), PhantomData)
 );
 
 let err =
     "-1".parse::<UserId<isize>>().unwrap_err();
-assert_eq!(err, ParseError::Refine(UserIdError));
+assert_eq!(err, ParseError::Refine(UserIdError, PhantomData));
 ```
 
 ## Dimensional Math
@@ -356,7 +358,7 @@ use rust_decimal_macros::dec;
 #[derive(Debug)]
 pub enum INum {}
 type DNum = Identity<INum, DAny>;
-type Num = Tagged<Decimal, DNum>;
+type Num = Tagged<Decimal, DNum, DAny>;
 
 //
 // 2. Fundamental units (Atomic)
@@ -375,9 +377,9 @@ type DSecond = Atomic<ASecond, DNonNeg>;
 type DKg = Atomic<AKg, DNonNeg>;
 
 // The concrete types with Decimal rep
-type Meter = Tagged<Decimal, DMeter>;
-type Second = Tagged<Decimal, DSecond>;
-type Kg = Tagged<Decimal, DKg>;
+type Meter = Tagged<Decimal, DMeter, DNonNeg>;
+type Second = Tagged<Decimal, DSecond, DNonNeg>;
+type Kg = Tagged<Decimal, DKg, DNonNeg>;
 
 //
 // 3. Non-fundamental units (Per, Times)
@@ -385,7 +387,7 @@ type Kg = Tagged<Decimal, DKg>;
 
 // Velocity = Meter / Second
 type DVelocity = Per<DMeter, DSecond, DNonNeg>;
-type Velocity = Tagged<Decimal, DVelocity>;
+type Velocity = Tagged<Decimal, DVelocity, DNonNeg>;
 
 // Joule = Kg * Velocity^2
 type DJoule = Times<
@@ -393,7 +395,7 @@ type DJoule = Times<
     Times<DVelocity, DVelocity, DNonNeg>,
     DNonNeg,
 >;
-type Joule = Tagged<Decimal, DJoule>;
+type Joule = Tagged<Decimal, DJoule, DNonNeg>;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let distance = Meter::new(dec!(50))?; // 50 meters

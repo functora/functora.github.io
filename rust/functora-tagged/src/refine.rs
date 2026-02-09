@@ -1,7 +1,7 @@
-pub trait Refine<Rep>: Sized {
+pub trait Refine<T>: Sized {
     type RefineError;
 
-    fn refine(rep: Rep) -> Result<Rep, Self::RefineError> {
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
         Ok(rep)
     }
 }

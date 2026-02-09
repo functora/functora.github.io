@@ -2,78 +2,87 @@ use crate::refine::*;
 pub use derive_more::Display;
 pub use std::error::Error;
 pub use std::fmt::{Debug, Display};
+use std::marker::PhantomData;
 pub use std::str::FromStr;
 
 #[derive(Debug, Display)]
-pub enum ParseError<Rep, Tag>
+#[display("{:?}", self)]
+pub enum ParseError<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug,
+    F::RefineError: Debug,
 {
-    Decode(Rep::Err),
-    Refine(Tag::RefineError),
+    Decode(T::Err, PhantomData<(D, F)>),
+    Refine(F::RefineError, PhantomData<(D, F)>),
 }
 
-impl<Rep, Tag> Error for ParseError<Rep, Tag>
+impl<T, D, F> Error for ParseError<T, D, F>
 where
-    Rep: Debug + FromStr,
-    Tag: Debug + Refine<Rep>,
-    Rep::Err: Error + Debug + Display + 'static,
-    Tag::RefineError: Error + Debug + Display + 'static,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Error + Debug + Display + 'static,
+    F::RefineError: Error + Debug + Display + 'static,
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            ParseError::Decode(e) => Some(e),
-            ParseError::Refine(e) => Some(e),
+            ParseError::Decode(e, PhantomData) => Some(e),
+            ParseError::Refine(e, PhantomData) => Some(e),
         }
     }
 }
 
-impl<Rep, Tag> Eq for ParseError<Rep, Tag>
+impl<T, D, F> Eq for ParseError<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: Eq,
-    Tag::RefineError: Eq,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug + Eq,
+    F::RefineError: Debug + Eq,
 {
 }
 
-impl<Rep, Tag> PartialEq for ParseError<Rep, Tag>
+impl<T, D, F> PartialEq for ParseError<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: PartialEq,
-    Tag::RefineError: PartialEq,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug + PartialEq,
+    F::RefineError: Debug + PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                ParseError::Decode(a),
-                ParseError::Decode(b),
+                ParseError::Decode(a, PhantomData),
+                ParseError::Decode(b, PhantomData),
             ) => a == b,
             (
-                ParseError::Refine(a),
-                ParseError::Refine(b),
+                ParseError::Refine(a, PhantomData),
+                ParseError::Refine(b, PhantomData),
             ) => a == b,
             _ => false,
         }
     }
 }
 
-impl<Rep, Tag> Clone for ParseError<Rep, Tag>
+impl<T, D, F> Clone for ParseError<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
-    Rep::Err: Clone,
-    Tag::RefineError: Clone,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug + Clone,
+    F::RefineError: Debug + Clone,
 {
     fn clone(&self) -> Self {
         match self {
-            ParseError::Decode(err) => {
-                ParseError::Decode(err.clone())
+            ParseError::Decode(err, PhantomData) => {
+                ParseError::Decode(err.clone(), PhantomData)
             }
-            ParseError::Refine(err) => {
-                ParseError::Refine(err.clone())
+            ParseError::Refine(err, PhantomData) => {
+                ParseError::Refine(err.clone(), PhantomData)
             }
         }
     }

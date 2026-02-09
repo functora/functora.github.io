@@ -79,15 +79,18 @@ impl<T, D, F> Deref for Tagged<T, D, F> {
 
 impl<T, D, F> FromStr for Tagged<T, D, F>
 where
-    T: FromStr,
-    F: Refine<T>,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug,
+    F::RefineError: Debug,
 {
-    type Err = ParseError<T, F>;
+    type Err = ParseError<T, D, F>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Tagged::new(
-            T::from_str(s).map_err(ParseError::Decode)?,
-        )
-        .map_err(ParseError::Refine)
+        Tagged::new(T::from_str(s).map_err(|e| {
+            ParseError::Decode(e, PhantomData)
+        })?)
+        .map_err(|e| ParseError::Refine(e, PhantomData))
     }
 }
 

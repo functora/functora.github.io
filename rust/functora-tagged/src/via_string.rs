@@ -79,15 +79,18 @@ impl<T, D, F> Deref for ViaString<T, D, F> {
 
 impl<T, D, F> FromStr for ViaString<T, D, F>
 where
-    T: FromStr,
-    F: Refine<T>,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug,
+    F::RefineError: Debug,
 {
-    type Err = ParseError<T, F>;
+    type Err = ParseError<T, D, F>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ViaString::new(
-            T::from_str(s).map_err(ParseError::Decode)?,
-        )
-        .map_err(ParseError::Refine)
+        ViaString::new(T::from_str(s).map_err(|e| {
+            ParseError::Decode(e, PhantomData)
+        })?)
+        .map_err(|e| ParseError::Refine(e, PhantomData))
     }
 }
 
@@ -110,10 +113,11 @@ impl<T: ToString, D, F> Serialize for ViaString<T, D, F> {
 #[cfg(feature = "serde")]
 impl<'de, T, D, F> Deserialize<'de> for ViaString<T, D, F>
 where
-    T: FromStr,
-    T::Err: Display,
-    F: Refine<T>,
-    F::RefineError: Display,
+    T: Debug + FromStr,
+    D: Debug,
+    F: Debug + Refine<T>,
+    T::Err: Debug + Display,
+    F::RefineError: Debug + Display,
 {
     fn deserialize<DE>(
         deserializer: DE,

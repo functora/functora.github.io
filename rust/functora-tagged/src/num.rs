@@ -21,11 +21,21 @@ pub struct Times<L, R, F>(PhantomData<(L, R, F)>);
 #[derive(Debug)]
 pub struct Per<L, R, F>(PhantomData<(L, R, F)>);
 
-pub trait Refinate<F> {}
-impl<I, F> Refinate<F> for Identity<I, F> {}
-impl<A, F> Refinate<F> for Atomic<A, F> {}
-impl<L, R, F> Refinate<F> for Times<L, R, F> {}
-impl<L, R, F> Refinate<F> for Per<L, R, F> {}
+pub trait Raffinate {
+    type Refinery;
+}
+impl<I, F> Raffinate for Identity<I, F> {
+    type Refinery = F;
+}
+impl<A, F> Raffinate for Atomic<A, F> {
+    type Refinery = F;
+}
+impl<L, R, F> Raffinate for Times<L, R, F> {
+    type Refinery = F;
+}
+impl<L, R, F> Raffinate for Per<L, R, F> {
+    type Refinery = F;
+}
 
 impl<T, I, F> Refine<T> for Identity<I, F>
 where
@@ -486,13 +496,13 @@ where
 }
 
 impl<T, L, R, O, LF, RF, OF>
-    TMul<Tagged<T, R, RF>, Tagged<T, O, OF>>
+    TMul<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where
     T: Copy + TMul<T, T>,
     L: Debug + DMul<R, O>,
     R: Debug,
-    O: Refinate<OF>,
+    O: Raffinate<Refinery = OF>,
     LF: Debug,
     RF: Debug,
     OF: Refine<T>,
@@ -537,13 +547,13 @@ where
 }
 
 impl<T, L, R, O, LF, RF, OF>
-    TDiv<Tagged<T, R, RF>, Tagged<T, O, OF>>
+    TDiv<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where
     T: Copy + TDiv<T, T>,
     L: Debug + DDiv<R, O>,
     R: Debug,
-    O: Refinate<OF>,
+    O: Raffinate<Refinery = OF>,
     LF: Debug,
     RF: Debug,
     OF: Refine<T>,

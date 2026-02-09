@@ -5,64 +5,65 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::fmt::Debug;
 
-type Dim<D, F> = Tagged<Decimal, D, F>;
+type Dim<D> =
+    Tagged<Decimal, D, <D as Raffinate>::Refinery>;
 
 #[derive(Debug)]
 pub enum INum {}
 type DNum = Identity<INum, DAny>;
-type Num = Dim<DNum, DAny>;
+type Num = Dim<DNum>;
 
 #[derive(Debug)]
 pub enum AKg {}
 type DKg = Atomic<AKg, DNonNeg>;
-type Kg = Dim<DKg, DNonNeg>;
+type Kg = Dim<DKg>;
 
 #[derive(Debug)]
 pub enum AMeter {}
 type DMeter = Atomic<AMeter, DNonNeg>;
-type Meter = Dim<DMeter, DNonNeg>;
+type Meter = Dim<DMeter>;
 
 #[derive(Debug)]
 pub enum ASecond {}
 type DSecond = Atomic<ASecond, DNonNeg>;
-type Second = Dim<DSecond, DNonNeg>;
+type Second = Dim<DSecond>;
 
 type DVelocity = Per<DMeter, DSecond, DNonNeg>;
-type Velocity = Dim<DVelocity, DNonNeg>;
+type Velocity = Dim<DVelocity>;
 
 type DArea = Times<DMeter, DMeter, DNonNeg>;
-type Area = Dim<DArea, DNonNeg>;
+type Area = Dim<DArea>;
 
 type DHertz = Per<DNum, DSecond, DNonNeg>;
-type Hertz = Dim<DHertz, DNonNeg>;
+type Hertz = Dim<DHertz>;
 
 type DJoule = Times<
     DKg,
     Times<DVelocity, DVelocity, DNonNeg>,
     DNonNeg,
 >;
-type Joule = Dim<DJoule, DNonNeg>;
+type Joule = Dim<DJoule>;
 
 #[derive(Debug)]
 pub enum AUsd {}
 type DUsd = Atomic<AUsd, DNonNeg>;
-type Usd = Dim<DUsd, DNonNeg>;
+type Usd = Dim<DUsd>;
 
 #[derive(Debug)]
 pub enum AEur {}
 type DEur = Atomic<AEur, DNonNeg>;
-type Eur = Dim<DEur, DNonNeg>;
+type Eur = Dim<DEur>;
 
-type EurPerUsd = Dim<Per<DEur, DUsd, DPos>, DPos>;
+type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
 
 type DVolume = Times<DArea, DMeter, DNonNeg>;
-type Volume = Dim<DVolume, DNonNeg>;
+type Volume = Dim<DVolume>;
 
 type DAcceleration = Per<DVelocity, DSecond, DNonNeg>;
-type Acceleration = Dim<DAcceleration, DNonNeg>;
+type Acceleration = Dim<DAcceleration>;
 
 type DForce = Times<DKg, DAcceleration, DNonNeg>;
-type Force = Dim<DForce, DNonNeg>;
+type Force = Dim<DForce>;
 
 type Test = Result<(), Box<dyn std::error::Error>>;
 

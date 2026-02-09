@@ -4,7 +4,7 @@ Lightweight, macro-free newtypes with refinement and derived traits.
 
 ## Motivation
 
-Newtypes are a fundamental pattern in Rust for enhancing type safety and expressing semantic meaning. By wrapping an existing type (the `Rep`resentation) in a new, distinct type, we prevent accidental misuse and clearly communicate intent. For example, distinguishing between a `UserId` and a `ProductId`, even if both are internally represented as `u64`, prevents bugs where one might be used in place of the other. This style makes code more self-documenting and less prone to logical errors.
+Newtypes are a fundamental pattern in Rust for enhancing type safety and expressing semantic meaning. By wrapping an existing type (the representation) in a new, distinct type, we prevent accidental misuse and clearly communicate intent. For example, distinguishing between a `UserId` and a `ProductId`, even if both are internally represented as `u64`, prevents bugs where one might be used in place of the other. This style makes code more self-documenting and less prone to logical errors.
 
 While standard traits like `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Clone`, and `Debug` can often be derived automatically in Rust, many essential traits are not. These include parsing (`FromStr`), serialization (`serde::Serialize`/`Deserialize`), and database integration (`diesel::Queryable`, `ToSql`, `FromSql`, `AsExpression`). Implementing these traits for newtypes manually can lead to substantial boilerplate.
 
@@ -16,35 +16,36 @@ Rust has common macro-based solutions for the newtype traits derivation problem.
 
 `functora-tagged` offers a superior, macro-free alternative. It provides a clean, idiomatic, and type-safe mechanism for creating newtypes. Through the `Refine` trait, you can define custom validation and transformation logic for your newtype. This logic is then automatically integrated into implementations for crucial, non-trivially derivable traits like `FromStr`, `serde`, and `diesel`, achieving true zero boilerplate for these complex scenarios without the downsides of macros.
 
-## Tagged Struct
+## `Tagged` Struct
 
-The primary newtype building block is the `Tagged<Rep, Tag>` struct.
+The primary newtype building block is the `Tagged<T, D, F>` struct.
 
-- `Rep`: The underlying representation type (e.g., `String`, `i32`).
-- `Tag`: A phantom type used at compile time to distinguish between different newtypes that share the same `Rep`. The `Tag` type itself implements the `Refine<Rep>` trait to define refinement logic.
+- `T`: The underlying representation type (e.g., `String`, `i32`).
+- `D`: The "Dimension". A phantom type used at compile time to distinguish between different newtypes that share the same `T`.
+- `F`: The "Refinery". A phantom type that implements the `Refine<T>` trait to define validation and transformation logic.
 
-This structure allows you to create distinct types that behave identically to their `Rep` type for many traits, unless explicitly customized.
+This separation of `D` and `F` allows you to have the same semantic type (e.g., `Meter`) with different refinements (e.g., `NonNegative` vs `Positive`) without changing the type's identity for dimension-checking purposes.
 
 ```rust
 use std::marker::PhantomData;
 
-pub struct Tagged<Rep, Tag, F>(Rep, PhantomData<(Tag, F)>);
+pub struct Tagged<T, D, F>(T, PhantomData<(D, F)>);
 ```
 
-The `Tagged::new` constructor returns a `Result` that can be `unwrap`ped directly if the `Tag`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
+The `Tagged::new` constructor returns a `Result` that can be unwrapped directly if the `F`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
 
 ## `ViaString` Struct
 
-The `ViaString<Rep, Tag>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`Rep`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
+The `ViaString<T, D, F>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`T`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
 
-- **Serialization**: `ViaString` serializes to its string representation (via `ToString` on `Rep`), whereas `Tagged` serializes the `Rep` directly.
-- **Deserialization**: `ViaString` deserializes from a string, then attempts to parse it into `Rep` using `FromStr`. `Tagged` deserializes `Rep` directly.
+- **Serialization**: `ViaString` serializes to its string representation (via `ToString` on `T`), whereas `Tagged` serializes the `T` directly.
+- **Deserialization**: `ViaString` deserializes from a string, then attempts to parse it into `T` using `FromStr`. `Tagged` deserializes `T` directly.
 
 It also implements `FromStr` and derives common traits, similar to `Tagged`, respecting the `Refine` trait for validation.
 
-## Refine Trait
+## `Refine` Trait
 
-To enforce specific refinement rules for your newtypes, you implement the `Refine<Rep>` trait for the `Tag` type. This trait allows you to define custom logic for refining the newtype representation.
+To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type. This trait allows you to define custom logic for refining the newtype representation.
 
 ```rust
 use functora_tagged::*;
@@ -70,7 +71,7 @@ Note that the `Refine` trait has a default implementation that simply returns th
 
 ## Derived Traits
 
-`functora-tagged` provides blanket implementations for several important traits. These traits work seamlessly with your newtypes, respecting the underlying representation behavior and customizable refinement rules defined by the `Tag` type's implementation of `Refine<Rep>`.
+`functora-tagged` provides blanket implementations for several important traits. These traits work seamlessly with your newtypes, respecting the underlying representation behavior and customizable refinement rules defined by the `F` type's implementation of `Refine<T>`.
 
 ### Direct Derive:
 
@@ -86,7 +87,7 @@ Note that the `Refine` trait has a default implementation that simply returns th
 
 ### Refined Derive:
 
-- `FromStr`: Implemented for `Tagged<Rep, Tag>` and `ViaString<Rep, Tag>`. Returns a `ParseError<Rep, Tag>`, which can be either a `Decode` error (from `Rep::from_str`) or a `Refine` error (from `Tag::refine`). For nested types, these errors can be further nested.
+- `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be either a `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`). For nested types, these errors can be further nested.
 - `serde::Deserialize` (with `serde` feature)
 - `diesel::Queryable` (with `diesel` feature)
 - `diesel::deserialize::FromSql` (with `diesel` feature)
@@ -106,19 +107,19 @@ You can promote `Rep` values into newtype values using `Tagged::new(rep)` applie
 
 ### Default Newtype
 
-When a `Tag` type has a default `Refine` implementation that doesn't add new constraints or transformations, `Tagged` can be used for simple type distinction.
+When a `D` (or `F`) type has a default `Refine` implementation that doesn't add new constraints or transformations, `Tagged` can be used for simple type distinction.
 
 ```rust
 use functora_tagged::*;
 use std::convert::Infallible;
 
-pub enum NonNegTag {}
+pub enum JustDistinction {}
 
-impl Refine<usize> for NonNegTag {
+impl Refine<usize> for JustDistinction {
     type RefineError = Infallible;
 }
 
-pub type NonNeg = Tagged<usize, NonNegTag, NonNegTag>;
+pub type NonNeg = Tagged<usize, JustDistinction, JustDistinction>;
 
 let rep = 123;
 let new = NonNeg::new(rep).infallible();
@@ -134,13 +135,16 @@ This example demonstrates a simple refinement for numeric types to ensure they a
 use functora_tagged::*;
 
 #[derive(PartialEq, Debug)]
-pub enum PositiveTag {}
-pub type Positive = Tagged<usize, PositiveTag, PositiveTag>;
+pub enum Count {} // The Dimension
+#[derive(Debug)]
+pub struct Positive; // The Refinery
+
+pub type PositiveCount = Tagged<usize, Count, Positive>;
 
 #[derive(PartialEq, Debug)]
 pub struct PositiveError;
 
-impl Refine<usize> for PositiveTag {
+impl Refine<usize> for Positive {
     type RefineError = PositiveError;
     fn refine(
         rep: usize,
@@ -155,10 +159,10 @@ impl Refine<usize> for PositiveTag {
 }
 
 let rep = 100;
-let new = Positive::new(rep).unwrap();
+let new = PositiveCount::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
-let err = Positive::new(0).unwrap_err();
+let err = PositiveCount::new(0).unwrap_err();
 assert_eq!(err, PositiveError);
 ```
 
@@ -170,23 +174,26 @@ This demonstrates a generic `Positive<Rep>` newtype that enforces positive value
 use functora_tagged::*;
 use num_traits::Zero;
 
-#[derive(PartialEq, Debug)]
-pub enum PositiveTag {}
-pub type Positive<Rep> = Tagged<Rep, PositiveTag, PositiveTag>;
+#[derive(Debug)]
+pub enum Amount {} // Dimension
+#[derive(Debug)]
+pub struct Positive; // Refinery
+
+pub type PositiveAmount<T> = Tagged<T, Amount, Positive>;
 
 #[derive(PartialEq, Debug)]
 pub struct PositiveError;
 
-impl<Rep> Refine<Rep> for PositiveTag
+impl<T> Refine<T> for Positive
 where
-    Rep: Zero + PartialOrd,
+    T: Zero + PartialOrd,
 {
     type RefineError = PositiveError;
     fn refine(
-        rep: Rep,
-    ) -> Result<Rep, Self::RefineError>
+        rep: T,
+    ) -> Result<T, Self::RefineError>
     {
-        if rep > Rep::zero() {
+        if rep > T::zero() {
             Ok(rep)
         } else {
             Err(PositiveError)
@@ -195,137 +202,70 @@ where
 }
 
 let rep = 100;
-let new = Positive::<i32>::new(rep).unwrap();
+let new = PositiveAmount::<i32>::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
 let rep = 10.5;
-let new = Positive::<f64>::new(rep).unwrap();
+let new = PositiveAmount::<f64>::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
-let err = Positive::<i32>::new(-5).unwrap_err();
+let err = PositiveAmount::<i32>::new(-5).unwrap_err();
 assert_eq!(err, PositiveError);
 
-let err = Positive::<f64>::new(0.0).unwrap_err();
+let err = PositiveAmount::<f64>::new(0.0).unwrap_err();
 assert_eq!(err, PositiveError);
 ```
 
-### Nested Newtype
+### Composite Refinement
 
-This example demonstrates nesting newtypes: `UserId<Rep>` generic newtype is built on top of the other `NonEmpty<Rep>` generic newtype and adds its own refinement logic.
+This example demonstrates how to combine multiple refinement rules (e.g., `NonEmpty` and `UserId` format) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
 
 ```rust
 use functora_tagged::*;
 
 #[derive(PartialEq, Debug)]
-pub enum NonEmptyTag {}
-pub type NonEmpty<Rep> = Tagged<Rep, NonEmptyTag, NonEmptyTag>;
+pub enum UserIdTag {} // Dimension
+#[derive(Debug)]
+pub struct UserIdRefinery; // Refinery
+
+// Flat structure: one Tagged wrapper
+pub type UserId = Tagged<String, UserIdTag, UserIdRefinery>;
 
 #[derive(PartialEq, Debug)]
-pub struct NonEmptyError;
+pub enum UserIdError {
+    Empty,
+    InvalidFormat,
+}
 
-impl Refine<String> for NonEmptyTag {
-    type RefineError = NonEmptyError;
-    fn refine(
-        rep: String,
-    ) -> Result<String, Self::RefineError>
-    {
+impl Refine<String> for UserIdRefinery {
+    type RefineError = UserIdError;
+
+    fn refine(rep: String) -> Result<String, Self::RefineError> {
         if rep.is_empty() {
-            Err(NonEmptyError)
-        } else {
-            Ok(rep)
-        }
-    }
-}
-
-impl Refine<isize> for NonEmptyTag {
-    type RefineError = NonEmptyError;
-    fn refine(
-        rep: isize,
-    ) -> Result<isize, Self::RefineError>
-    {
-        if rep == 0 {
-            Err(NonEmptyError)
-        } else {
-            Ok(rep)
-        }
-    }
-}
-
-#[derive(PartialEq, Debug)]
-pub enum UserIdTag {}
-pub type UserId<Rep> =
-    Tagged<NonEmpty<Rep>, UserIdTag, UserIdTag>;
-
-#[derive(PartialEq, Debug)]
-pub struct UserIdError;
-
-impl Refine<NonEmpty<String>> for UserIdTag {
-    type RefineError = UserIdError;
-    fn refine(
-        rep: NonEmpty<String>,
-    ) -> Result<NonEmpty<String>, Self::RefineError>
-    {
-        if rep.rep().starts_with("user_")
-            && rep.rep().len() > 5
-        {
+            Err(UserIdError::Empty)
+        } else if rep.starts_with("user_") && rep.len() > 5 {
             Ok(rep)
         } else {
-            Err(UserIdError)
-        }
-    }
-}
-
-impl Refine<NonEmpty<isize>> for UserIdTag {
-    type RefineError = UserIdError;
-    fn refine(
-        rep: NonEmpty<isize>,
-    ) -> Result<NonEmpty<isize>, Self::RefineError>
-    {
-        if *rep.rep() > 0 {
-            Ok(rep)
-        } else {
-            Err(UserIdError)
+            Err(UserIdError::InvalidFormat)
         }
     }
 }
 
 let rep = "user_123";
-let new = rep.parse::<UserId<String>>().unwrap();
-assert_eq!(new.rep().rep(), rep);
+let new = rep.parse::<UserId>().unwrap();
+assert_eq!(*new.rep(), rep);
 
-let err = "".parse::<UserId<String>>().unwrap_err();
+let err = "".parse::<UserId>().unwrap_err();
 assert_eq!(
     err,
-    ParseError::Decode(ParseError::Refine(
-        NonEmptyError,
-        PhantomData
-    ), PhantomData)
+    ParseError::Refine(UserIdError::Empty, PhantomData)
 );
 
-let err = "post_123"
-    .parse::<UserId<String>>()
-    .unwrap_err();
-assert_eq!(err, ParseError::Refine(UserIdError, PhantomData));
-
-let rep: isize = 123;
-let new = rep
-    .to_string()
-    .parse::<UserId<isize>>()
-    .unwrap();
-assert_eq!(*new.rep().rep(), rep);
-
-let err = "0".parse::<UserId<isize>>().unwrap_err();
+let err = "post_123".parse::<UserId>().unwrap_err();
 assert_eq!(
     err,
-    ParseError::Decode(ParseError::Refine(
-        NonEmptyError,
-        PhantomData
-    ), PhantomData)
+    ParseError::Refine(UserIdError::InvalidFormat, PhantomData)
 );
-
-let err =
-    "-1".parse::<UserId<isize>>().unwrap_err();
-assert_eq!(err, ParseError::Refine(UserIdError, PhantomData));
 ```
 
 ## Dimensional Math

@@ -7,39 +7,38 @@ pub use std::ops::Deref;
 pub use std::str::FromStr;
 
 #[derive(Debug)]
-pub struct Tagged<Rep, Tag>(Rep, PhantomData<Tag>);
+pub struct Tagged<T, D, F>(T, PhantomData<(D, F)>);
 
-impl<Rep, Tag> Tagged<Rep, Tag> {
-    pub fn new(rep: Rep) -> Result<Self, Tag::RefineError>
+impl<T, D, F> Tagged<T, D, F> {
+    pub fn new(rep: T) -> Result<Self, F::RefineError>
     where
-        Tag: Refine<Rep>,
+        F: Refine<T>,
     {
-        Tag::refine(rep)
-            .map(|next| Tagged(next, PhantomData))
+        F::refine(rep).map(|next| Tagged(next, PhantomData))
     }
-    pub fn rep(&self) -> &Rep {
+    pub fn rep(&self) -> &T {
         &self.0
     }
-    pub fn untag(self) -> Rep {
+    pub fn untag(self) -> T {
         self.0
     }
 }
 
-impl<Rep: Eq, Tag> Eq for Tagged<Rep, Tag> {}
+impl<T: Eq, D, F> Eq for Tagged<T, D, F> {}
 
-impl<Rep: PartialEq, Tag> PartialEq for Tagged<Rep, Tag> {
+impl<T: PartialEq, D, F> PartialEq for Tagged<T, D, F> {
     fn eq(&self, other: &Self) -> bool {
         self.rep() == other.rep()
     }
 }
 
-impl<Rep: Ord, Tag> Ord for Tagged<Rep, Tag> {
+impl<T: Ord, D, F> Ord for Tagged<T, D, F> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.rep().cmp(other.rep())
     }
 }
 
-impl<Rep: PartialOrd, Tag> PartialOrd for Tagged<Rep, Tag> {
+impl<T: PartialOrd, D, F> PartialOrd for Tagged<T, D, F> {
     fn partial_cmp(
         &self,
         other: &Self,
@@ -48,15 +47,15 @@ impl<Rep: PartialOrd, Tag> PartialOrd for Tagged<Rep, Tag> {
     }
 }
 
-impl<Rep: Clone, Tag> Clone for Tagged<Rep, Tag> {
+impl<T: Clone, D, F> Clone for Tagged<T, D, F> {
     fn clone(&self) -> Self {
         Tagged(self.rep().clone(), PhantomData)
     }
 }
 
-impl<Rep: Copy, Tag> Copy for Tagged<Rep, Tag> {}
+impl<T: Copy, D, F> Copy for Tagged<T, D, F> {}
 
-impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
+impl<T: Display, D, F> Display for Tagged<T, D, F> {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
@@ -65,29 +64,28 @@ impl<Rep: Display, Tag> Display for Tagged<Rep, Tag> {
     }
 }
 
-impl<Rep: Hash, Tag> Hash for Tagged<Rep, Tag> {
+impl<T: Hash, D, F> Hash for Tagged<T, D, F> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.rep().hash(state);
     }
 }
 
-impl<Rep, Tag> Deref for Tagged<Rep, Tag> {
-    type Target = Rep;
-
+impl<T, D, F> Deref for Tagged<T, D, F> {
+    type Target = T;
     fn deref(&self) -> &Self::Target {
         self.rep()
     }
 }
 
-impl<Rep, Tag> FromStr for Tagged<Rep, Tag>
+impl<T, D, F> FromStr for Tagged<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
+    T: FromStr,
+    F: Refine<T>,
 {
-    type Err = ParseError<Rep, Tag>;
+    type Err = ParseError<T, F>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Tagged::new(
-            Rep::from_str(s).map_err(ParseError::Decode)?,
+            T::from_str(s).map_err(ParseError::Decode)?,
         )
         .map_err(ParseError::Refine)
     }
@@ -97,7 +95,7 @@ where
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
+impl<T: Serialize, D, F> Serialize for Tagged<T, D, F> {
     fn serialize<S>(
         &self,
         serializer: S,
@@ -110,19 +108,19 @@ impl<Rep: Serialize, Tag> Serialize for Tagged<Rep, Tag> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, Rep, Tag> Deserialize<'de> for Tagged<Rep, Tag>
+impl<'de, T, D, F> Deserialize<'de> for Tagged<T, D, F>
 where
-    Rep: Deserialize<'de>,
-    Tag: Refine<Rep>,
-    Tag::RefineError: Display,
+    T: Deserialize<'de>,
+    F: Refine<T>,
+    F::RefineError: Display,
 {
-    fn deserialize<D>(
-        deserializer: D,
-    ) -> Result<Self, D::Error>
+    fn deserialize<DE>(
+        deserializer: DE,
+    ) -> Result<Self, DE::Error>
     where
-        D: serde::Deserializer<'de>,
+        DE: serde::Deserializer<'de>,
     {
-        Rep::deserialize(deserializer).and_then(|rep| {
+        T::deserialize(deserializer).and_then(|rep| {
             Tagged::new(rep)
                 .map_err(serde::de::Error::custom)
         })
@@ -140,33 +138,34 @@ mod diesel_impl {
     use diesel::sql_types::SingleValue;
     use std::error::Error;
 
-    impl<Rep, Tag, ST> AsExpression<ST> for Tagged<Rep, Tag>
+    impl<T, D, F, ST> AsExpression<ST> for Tagged<T, D, F>
     where
-        Rep: Clone + AsExpression<ST>,
+        T: Clone + AsExpression<ST>,
         ST: SingleValue,
     {
-        type Expression = Rep::Expression;
+        type Expression = T::Expression;
         fn as_expression(self) -> Self::Expression {
             self.rep().clone().as_expression()
         }
     }
 
-    impl<Rep, Tag, ST> AsExpression<ST> for &Tagged<Rep, Tag>
+    impl<T, D, F, ST> AsExpression<ST> for &Tagged<T, D, F>
     where
-        Rep: Clone + AsExpression<ST>,
+        T: Clone + AsExpression<ST>,
         ST: SingleValue,
     {
-        type Expression = Rep::Expression;
+        type Expression = T::Expression;
         fn as_expression(self) -> Self::Expression {
             self.rep().clone().as_expression()
         }
     }
 
-    impl<DB, Rep, Tag, ST> ToSql<ST, DB> for Tagged<Rep, Tag>
+    impl<T, D, F, ST, DB> ToSql<ST, DB> for Tagged<T, D, F>
     where
-        Rep: ToSql<ST, DB>,
+        T: ToSql<ST, DB>,
+        D: Debug,
+        F: Debug,
         DB: Backend,
-        Tag: Debug,
     {
         fn to_sql<'a>(
             &'a self,
@@ -176,30 +175,29 @@ mod diesel_impl {
         }
     }
 
-    impl<DB, Rep, Tag, ST> FromSql<ST, DB> for Tagged<Rep, Tag>
+    impl<T, D, F, ST, DB> FromSql<ST, DB> for Tagged<T, D, F>
     where
-        Rep: FromSql<ST, DB>,
-        Tag: Refine<Rep>,
-        Tag::RefineError: 'static + Error + Send + Sync,
+        T: FromSql<ST, DB>,
+        F: Refine<T>,
+        F::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
         fn from_sql(
             bytes: DB::RawValue<'_>,
         ) -> diesel::deserialize::Result<Self> {
-            let rep = Rep::from_sql(bytes)?;
+            let rep = T::from_sql(bytes)?;
             Ok(Tagged::new(rep).map_err(Box::new)?)
         }
     }
 
-    impl<Rep, Tag, ST, DB> Queryable<ST, DB>
-        for Tagged<Rep, Tag>
+    impl<T, D, F, ST, DB> Queryable<ST, DB> for Tagged<T, D, F>
     where
-        Rep: Queryable<ST, DB>,
-        Tag: Refine<Rep>,
-        Tag::RefineError: 'static + Error + Send + Sync,
+        T: Queryable<ST, DB>,
+        F: Refine<T>,
+        F::RefineError: 'static + Error + Send + Sync,
         DB: Backend,
     {
-        type Row = Rep::Row;
+        type Row = T::Row;
         fn build(
             row: Self::Row,
         ) -> diesel::deserialize::Result<Self> {

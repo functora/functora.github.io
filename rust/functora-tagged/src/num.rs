@@ -395,10 +395,11 @@ where
     }
 }
 
-impl<T, D> TAdd for Tagged<T, D>
+impl<T, D, F> TAdd for Tagged<T, D, F>
 where
     T: Copy + TAdd,
-    D: Debug + Refine<T>,
+    D: Debug,
+    F: Debug + Refine<T>,
 {
     fn tadd(
         &self,
@@ -436,10 +437,11 @@ where
     }
 }
 
-impl<T, D> TSub for Tagged<T, D>
+impl<T, D, F> TSub for Tagged<T, D, F>
 where
     T: Copy + TSub,
-    D: Debug + Refine<T>,
+    D: Debug,
+    F: Debug + Refine<T>,
 {
     fn tsub(
         &self,
@@ -477,19 +479,24 @@ where
     }
 }
 
-impl<T, L, R, O> TMul<Tagged<T, R>, Tagged<T, O>>
-    for Tagged<T, L>
+impl<T, L, R, O, LF, RF, OF>
+    TMul<Tagged<T, R, RF>, Tagged<T, O, OF>>
+    for Tagged<T, L, LF>
 where
     T: Copy + TMul<T, T>,
     L: Debug + DMul<R, O>,
     R: Debug,
-    O: Refine<T>,
+    LF: Debug,
+    RF: Debug,
+    OF: Refine<T>,
 {
     fn tmul(
         &self,
-        rhs: &Tagged<T, R>,
-    ) -> Result<Tagged<T, O>, TNumError<Self, Tagged<T, R>>>
-    {
+        rhs: &Tagged<T, R, RF>,
+    ) -> Result<
+        Tagged<T, O, OF>,
+        TNumError<Self, Tagged<T, R, RF>>,
+    > {
         self.rep()
             .tmul(rhs.rep())
             .map_err(|_| TNumError::Mul(*self, *rhs))?
@@ -522,19 +529,24 @@ where
     }
 }
 
-impl<T, L, R, O> TDiv<Tagged<T, R>, Tagged<T, O>>
-    for Tagged<T, L>
+impl<T, L, R, O, LF, RF, OF>
+    TDiv<Tagged<T, R, RF>, Tagged<T, O, OF>>
+    for Tagged<T, L, LF>
 where
     T: Copy + TDiv<T, T>,
     L: Debug + DDiv<R, O>,
     R: Debug,
-    O: Refine<T>,
+    LF: Debug,
+    RF: Debug,
+    OF: Refine<T>,
 {
     fn tdiv(
         &self,
-        rhs: &Tagged<T, R>,
-    ) -> Result<Tagged<T, O>, TNumError<Self, Tagged<T, R>>>
-    {
+        rhs: &Tagged<T, R, RF>,
+    ) -> Result<
+        Tagged<T, O, OF>,
+        TNumError<Self, Tagged<T, R, RF>>,
+    > {
         self.rep()
             .tdiv(rhs.rep())
             .map_err(|_| TNumError::Div(*self, *rhs))?

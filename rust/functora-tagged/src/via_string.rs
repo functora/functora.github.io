@@ -7,39 +7,37 @@ pub use std::ops::Deref;
 pub use std::str::FromStr;
 
 #[derive(Debug)]
-pub struct ViaString<Rep, Tag>(Rep, PhantomData<Tag>);
+pub struct ViaString<T, D, F>(T, PhantomData<(D, F)>);
 
-impl<Rep, Tag> ViaString<Rep, Tag> {
-    pub fn new(prev: Rep) -> Result<Self, Tag::RefineError>
+impl<T, D, F> ViaString<T, D, F> {
+    pub fn new(rep: T) -> Result<Self, F::RefineError>
     where
-        Tag: Refine<Rep>,
+        F: Refine<T>,
     {
-        Tag::refine(prev)
+        F::refine(rep)
             .map(|next| ViaString(next, PhantomData))
     }
-    pub fn rep(&self) -> &Rep {
+    pub fn rep(&self) -> &T {
         &self.0
     }
 }
 
-impl<Rep: Eq, Tag> Eq for ViaString<Rep, Tag> {}
+impl<T: Eq, D, F> Eq for ViaString<T, D, F> {}
 
-impl<Rep: PartialEq, Tag> PartialEq
-    for ViaString<Rep, Tag>
-{
+impl<T: PartialEq, D, F> PartialEq for ViaString<T, D, F> {
     fn eq(&self, other: &Self) -> bool {
         self.rep() == other.rep()
     }
 }
 
-impl<Rep: Ord, Tag> Ord for ViaString<Rep, Tag> {
+impl<T: Ord, D, F> Ord for ViaString<T, D, F> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.rep().cmp(other.rep())
     }
 }
 
-impl<Rep: PartialOrd, Tag> PartialOrd
-    for ViaString<Rep, Tag>
+impl<T: PartialOrd, D, F> PartialOrd
+    for ViaString<T, D, F>
 {
     fn partial_cmp(
         &self,
@@ -49,15 +47,15 @@ impl<Rep: PartialOrd, Tag> PartialOrd
     }
 }
 
-impl<Rep: Clone, Tag> Clone for ViaString<Rep, Tag> {
+impl<T: Clone, D, F> Clone for ViaString<T, D, F> {
     fn clone(&self) -> Self {
         ViaString(self.rep().clone(), PhantomData)
     }
 }
 
-impl<Rep: Copy, Tag> Copy for ViaString<Rep, Tag> {}
+impl<T: Copy, D, F> Copy for ViaString<T, D, F> {}
 
-impl<Rep: Display, Tag> Display for ViaString<Rep, Tag> {
+impl<T: Display, D, F> Display for ViaString<T, D, F> {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
@@ -66,29 +64,28 @@ impl<Rep: Display, Tag> Display for ViaString<Rep, Tag> {
     }
 }
 
-impl<Rep: Hash, Tag> Hash for ViaString<Rep, Tag> {
+impl<T: Hash, D, F> Hash for ViaString<T, D, F> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.rep().hash(state);
     }
 }
 
-impl<Rep, Tag> Deref for ViaString<Rep, Tag> {
-    type Target = Rep;
-
+impl<T, D, F> Deref for ViaString<T, D, F> {
+    type Target = T;
     fn deref(&self) -> &Self::Target {
         self.rep()
     }
 }
 
-impl<Rep, Tag> FromStr for ViaString<Rep, Tag>
+impl<T, D, F> FromStr for ViaString<T, D, F>
 where
-    Rep: FromStr,
-    Tag: Refine<Rep>,
+    T: FromStr,
+    F: Refine<T>,
 {
-    type Err = ParseError<Rep, Tag>;
+    type Err = ParseError<T, F>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         ViaString::new(
-            Rep::from_str(s).map_err(ParseError::Decode)?,
+            T::from_str(s).map_err(ParseError::Decode)?,
         )
         .map_err(ParseError::Refine)
     }
@@ -98,7 +95,7 @@ where
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-impl<Rep: ToString, Tag> Serialize for ViaString<Rep, Tag> {
+impl<T: ToString, D, F> Serialize for ViaString<T, D, F> {
     fn serialize<S>(
         &self,
         serializer: S,
@@ -111,18 +108,18 @@ impl<Rep: ToString, Tag> Serialize for ViaString<Rep, Tag> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, Rep, Tag> Deserialize<'de> for ViaString<Rep, Tag>
+impl<'de, T, D, F> Deserialize<'de> for ViaString<T, D, F>
 where
-    Rep: FromStr,
-    Rep::Err: Display,
-    Tag: Refine<Rep>,
-    Tag::RefineError: Display,
+    T: FromStr,
+    T::Err: Display,
+    F: Refine<T>,
+    F::RefineError: Display,
 {
-    fn deserialize<D>(
-        deserializer: D,
-    ) -> Result<Self, D::Error>
+    fn deserialize<DE>(
+        deserializer: DE,
+    ) -> Result<Self, DE::Error>
     where
-        D: serde::Deserializer<'de>,
+        DE: serde::Deserializer<'de>,
     {
         String::deserialize(deserializer).and_then(|s| {
             ViaString::from_str(&s)
@@ -143,9 +140,9 @@ mod diesel_impl {
     use diesel::sql_types::SingleValue;
     use std::error::Error;
 
-    impl<Rep, Tag, ST> AsExpression<ST> for ViaString<Rep, Tag>
+    impl<T, D, F, ST> AsExpression<ST> for ViaString<T, D, F>
     where
-        Rep: ToString,
+        T: ToString,
         ST: SingleValue,
         String: AsExpression<ST>,
     {
@@ -158,9 +155,9 @@ mod diesel_impl {
         }
     }
 
-    impl<Rep, Tag, ST> AsExpression<ST> for &ViaString<Rep, Tag>
+    impl<T, D, F, ST> AsExpression<ST> for &ViaString<T, D, F>
     where
-        Rep: ToString,
+        T: ToString,
         ST: SingleValue,
         String: AsExpression<ST>,
     {
@@ -173,10 +170,11 @@ mod diesel_impl {
         }
     }
 
-    impl<DB, Rep, Tag, ST> ToSql<ST, DB> for ViaString<Rep, Tag>
+    impl<T, D, F, ST, DB> ToSql<ST, DB> for ViaString<T, D, F>
     where
-        Rep: ToString + Debug,
-        Tag: Debug,
+        T: ToString + Debug,
+        D: Debug,
+        F: Debug,
         String: ToSql<ST, DB>,
         for<'a> DB: Backend<
             BindCollector<'a> = RawBytesBindCollector<DB>,
@@ -194,13 +192,12 @@ mod diesel_impl {
         }
     }
 
-    impl<DB, Rep, Tag, ST> FromSql<ST, DB>
-        for ViaString<Rep, Tag>
+    impl<T, D, F, ST, DB> FromSql<ST, DB> for ViaString<T, D, F>
     where
-        Rep: FromStr,
-        Rep::Err: 'static + Error + Send + Sync,
-        Tag: Refine<Rep>,
-        Tag::RefineError: 'static + Error + Send + Sync,
+        T: FromStr,
+        T::Err: 'static + Error + Send + Sync,
+        F: Refine<T>,
+        F::RefineError: 'static + Error + Send + Sync,
         String: FromSql<ST, DB>,
         DB: Backend,
     {
@@ -208,18 +205,18 @@ mod diesel_impl {
             bytes: DB::RawValue<'_>,
         ) -> diesel::deserialize::Result<Self> {
             let s = String::from_sql(bytes)?;
-            let rep = Rep::from_str(&s)?;
+            let rep = T::from_str(&s)?;
             Ok(ViaString::new(rep).map_err(Box::new)?)
         }
     }
 
-    impl<Rep, Tag, ST, DB> Queryable<ST, DB>
-        for ViaString<Rep, Tag>
+    impl<T, D, F, ST, DB> Queryable<ST, DB>
+        for ViaString<T, D, F>
     where
-        Rep: FromStr,
-        Rep::Err: 'static + Error + Send + Sync,
-        Tag: Refine<Rep>,
-        Tag::RefineError: 'static + Error + Send + Sync,
+        T: FromStr,
+        T::Err: 'static + Error + Send + Sync,
+        F: Refine<T>,
+        F::RefineError: 'static + Error + Send + Sync,
         String: Queryable<ST, DB>,
         DB: Backend,
     {
@@ -229,8 +226,7 @@ mod diesel_impl {
         ) -> diesel::deserialize::Result<Self> {
             let s: String =
                 Queryable::<ST, DB>::build(row)?;
-            let rep =
-                Rep::from_str(&s).map_err(Box::new)?;
+            let rep = T::from_str(&s).map_err(Box::new)?;
             Ok(ViaString::new(rep).map_err(Box::new)?)
         }
     }

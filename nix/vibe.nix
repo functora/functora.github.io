@@ -62,7 +62,7 @@
       ghost_commit = true
 
       [profiles.free]
-      model = "qwen/qwen3-coder:free"
+      model = "arcee-ai/trinity-large-preview:free"
       model_provider = "openrouter"
 
       [profiles.lite]
@@ -86,6 +86,29 @@
       name = "gemini"
       base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
       env_key = "GEMINI_API_KEY"
+    '';
+  };
+  opencodeJson = pkgs.writeTextFile {
+    name = "opencode";
+    text = ''
+      {
+        "$schema": "https://opencode.ai/config.json",
+        "model": "llama-cpp/self-hosted",
+        "provider": {
+          "llama-cpp": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "llama-cpp",
+            "options": {
+              "baseURL": "http://localhost:11434"
+            },
+            "models": {
+              "self-hosted": {
+                "name": "self-hosted"
+              }
+            }
+          }
+        }
+      }
     '';
   };
   sandbox = mkNixPak {
@@ -122,12 +145,20 @@
             (sloth.concat' sloth.homeDir "/.codex/AGENTS.md")
           ]
           [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.gemini/GEMINI.md")
+          ]
+          [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.claude/CLAUDE.md")
+          ]
+          [
             (toString codexToml)
             (sloth.concat' sloth.homeDir "/.codex/config.toml")
           ]
           [
-            (toString agentsMd)
-            (sloth.concat' sloth.homeDir "/.gemini/GEMINI.md")
+            (toString opencodeJson)
+            (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
           ]
         ];
         bind.rw = [

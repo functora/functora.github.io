@@ -1080,8 +1080,8 @@ in {
     #
     services.llama-cpp.port = 11434;
     services.llama-cpp.package = unst.llama-cpp.override {vulkanSupport = true;};
-    services.llama-cpp.model = ../../llms/NousResearch_Hermes-4-14B-Q4_K_M.gguf;
-    # services.llama-cpp.extraFlags = ["-c" "32000"];
+    services.llama-cpp.model = ../../llms/p-e-w_Qwen3-4B-Instruct-2507-heretic-Q4_K_M.gguf;
+    services.llama-cpp.extraFlags = ["-c" "32000"];
     #
     # Fonts
     #

@@ -1,7 +1,6 @@
 with (import ./project.nix {}); let
   bak = import ./bak.nix;
   misc = import ./misc.nix;
-  newpkgs = import ./newpkgs.nix;
 in
   shellFor {
     tools = {
@@ -17,7 +16,7 @@ in
       [
         pkgs.hlint
         pkgs.libwebp
-        newpkgs.litecli
+        pkgs.litecli
         bak.bak-status
         bak.bak-commit
         bak.bak-encrypt

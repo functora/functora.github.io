@@ -44,7 +44,7 @@ in
           ${
             pkgs.nodePackages.prettier
           }/bin/prettier --plugin ${
-            pkgs.nodePackages.prettier-plugin-toml
+            olds.nodePackages.prettier-plugin-toml
           }/lib/node_modules/prettier-plugin-toml/lib/index.js "$@"
         '';
       };

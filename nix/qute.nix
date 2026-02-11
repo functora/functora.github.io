@@ -1,4 +1,4 @@
-{pkgs}: let
+{pkgs ? import <nixpkgs> {}}: let
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
     inherit (pkgs) lib;
@@ -24,11 +24,14 @@
 
           function skipAds() {
               const skipBtn = document.querySelector('.videoAdUiSkipButton, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
-              if (skipBtn) skipBtn.click();
+              // if (skipBtn) skipBtn.click();
               const adVideo = document.querySelector('.ad-showing .video-stream');
-              if (adVideo && adVideo.duration > 0 && adVideo.currentTime < adVideo.duration) {
-                  adVideo.currentTime = adVideo.duration;
-              }
+              adVideo.muted = true;
+              adVideo.hidden = true;
+              adVideo.playbackRate = 2;
+              // if (adVideo && adVideo.duration > 0 && adVideo.currentTime < adVideo.duration) {
+              //     adVideo.currentTime = adVideo.duration;
+              // }
           }
 
           function removeSponsored() {

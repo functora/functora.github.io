@@ -13,14 +13,6 @@
   vibe = import ./vibe.nix {inherit pkgs;};
   qute = import ./qute.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
-  home-manager = builtins.fetchTarball {
-    url = "https://github.com/nix-community/home-manager/archive/8d5e27b4807d25308dfe369d5a923d87e7dbfda3.tar.gz";
-    sha256 = "05b1g64ra54yrpy8nrwsccrbrbns6v557lqwjnm9xwjlcn7nkc39";
-  };
-  nixos-hardware = builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixos-hardware/archive/fa194fc484fd7270ab324bb985593f71102e84d1.tar.gz";
-    sha256 = "06yn179lbhql3vkk4cjca4mdwr6lfdh6n1vqma3a4266dap6hcf4";
-  };
   blocked-hosts =
     builtins.concatStringsSep "\n"
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
@@ -252,7 +244,8 @@
 in {
   imports =
     [
-      (import "${home-manager}/nixos")
+      (import "${(import ./sources.nix {}).home-manager}/nixos")
+      (import ./night-sleep.nix)
       (import ./rigtora.nix)
     ]
     ++ (
@@ -339,22 +332,15 @@ in {
     in [
       "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
     ];
-    hardware.opengl = {
-      enable = true;
-      driSupport32Bit = true;
-      extraPackages = [
-        pkgs.amdvlk
-        rocm.clr.icd
-        rocm.clr
-        rocm.rocminfo
-        rocm.rocm-runtime
-      ];
-      extraPackages32 = with pkgs; [
-        driversi686Linux.amdvlk
-      ];
-    };
+    hardware.graphics.enable = true;
+    hardware.graphics.enable32Bit = true;
+    hardware.graphics.extraPackages = [
+      rocm.clr
+      rocm.clr.icd
+      rocm.rocminfo
+      rocm.rocm-runtime
+    ];
     environment.systemPackages = [pkgs.clinfo];
-    hardware.graphics.extraPackages = [rocm.clr.icd];
     systemd.services.xmrig.environment.ROC_ENABLE_PRE_VEGA = "1";
     services.xmrig.settings = {
       autosave = true;
@@ -750,7 +736,7 @@ in {
         xournalpp
         nautilus
         ccrypt
-        tor-browser-bundle-bin
+        tor-browser
         mpv
         git-lfs
         lesspass-cli
@@ -777,8 +763,8 @@ in {
       programs.git = {
         enable = true;
         lfs.enable = true;
-        userName = "functora";
-        userEmail = "functora@proton.me";
+        settings.user.name = "functora";
+        settings.user.email = "functora@proton.me";
       };
       programs.alacritty = {
         enable = true;
@@ -876,21 +862,27 @@ in {
       };
       services.kanshi = {
         enable = true;
-        profiles = {
-          docked.outputs = [
-            {
-              criteria = "eDP-1";
-              status = "disable";
-            }
-            {criteria = "HDMI-A-1";}
-          ];
-          undocked.outputs = [
-            {
-              criteria = "eDP-1";
-              status = "enable";
-            }
-          ];
-        };
+        settings = [
+          {
+            profile.outputs = [
+              {
+                criteria = "eDP-1";
+                status = "disable";
+              }
+              {
+                criteria = "HDMI-A-1";
+              }
+            ];
+          }
+          {
+            profile.outputs = [
+              {
+                criteria = "eDP-1";
+                status = "enable";
+              }
+            ];
+          }
+        ];
       };
       wayland.windowManager.sway = {
         enable = true;
@@ -1037,6 +1029,22 @@ in {
           };
         };
       };
+      #
+      # Swayidle
+      #
+      services.swayidle.enable = true;
+      services.swayidle.events = [
+        {
+          event = "before-sleep";
+          command = lockCmd;
+        }
+      ];
+      services.swayidle.timeouts = [
+        {
+          timeout = 3600;
+          command = lockCmd;
+        }
+      ];
     };
     #
     # Automount
@@ -1048,26 +1056,26 @@ in {
     #
     environment.pathsToLink = ["/libexec"];
     services.xserver = {
-      #
-      # Touchpad
-      #
-      libinput = {
-        enable = true;
-        touchpad = {
-          tapping = true;
-          middleEmulation = true;
-          naturalScrolling = true;
-        };
-      };
-      #
-      # GUI
-      #
       enable = true;
       videoDrivers = ["amdgpu"];
-      displayManager.gdm.enable = true;
-      displayManager.gdm.wayland = true;
-      displayManager.defaultSession = "sway";
-      displayManager.sessionPackages = [pkgs.sway];
+    };
+    #
+    # Sway
+    #
+    services.displayManager.gdm.enable = true;
+    services.displayManager.gdm.wayland = true;
+    services.displayManager.defaultSession = "sway";
+    services.displayManager.sessionPackages = [pkgs.sway];
+    #
+    # Touchpad
+    #
+    services.libinput = {
+      enable = true;
+      touchpad = {
+        tapping = true;
+        middleEmulation = true;
+        naturalScrolling = true;
+      };
     };
     #
     # Borg
@@ -1088,5 +1096,11 @@ in {
     fonts.packages = builtins.filter lib.attrsets.isDerivation (
       builtins.attrValues pkgs.nerd-fonts
     );
+    #
+    # Night
+    #
+    services.night-sleep.enable = true;
+    services.night-sleep.sleepAt = "23:00";
+    services.night-sleep.wakeAt = "08:00";
   };
 }

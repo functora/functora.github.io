@@ -1,6 +1,6 @@
 with (import ./project.nix {});
 with pkgs; let
-  newpkgs = import ./newpkgs.nix;
+  olds = import ./oldpkgs.nix;
   repoDir = builtins.toString ./..;
   hlintTest = pkgs.writeShellScriptBin "hlint-test" ''
     ${pkgs.hlint}/bin/hlint ${repoDir} \
@@ -12,7 +12,7 @@ with pkgs; let
   ormolu = pkgs.writeShellApplication {
     name = "ormolu";
     text = ''
-      ${newpkgs.haskellPackages.fourmolu}/bin/fourmolu \
+      ${haskellPackages.fourmolu}/bin/fourmolu \
         --indentation 2 \
         --column-limit 80 \
         --function-arrows trailing \
@@ -53,7 +53,7 @@ with pkgs; let
       ${
         pkgs.nodePackages.prettier
       }/bin/prettier --plugin ${
-        pkgs.nodePackages.prettier-plugin-toml
+        olds.nodePackages.prettier-plugin-toml
       }/lib/node_modules/prettier-plugin-toml/lib/index.js "$@"
     '';
   };

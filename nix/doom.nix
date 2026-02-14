@@ -202,9 +202,10 @@
         relite = "";
       }
       // mkDoom {
-        tag = "d2ico";
+        tag = "ico";
         mod = ../bak/doom/D2ICO.wad;
         music = "";
+        relite = "";
       }
       // mkDoom {
         tag = "ihni";

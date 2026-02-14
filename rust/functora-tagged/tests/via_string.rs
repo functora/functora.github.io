@@ -7,15 +7,18 @@ use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
-struct MyRefineError;
+struct TestRefineError;
 
-impl std::error::Error for MyRefineError {}
+impl std::error::Error for TestRefineError {}
 
 #[derive(Debug, Display)]
-struct MyTag;
+struct DTest;
 
-impl Refine<String> for MyTag {
-    type RefineError = MyRefineError;
+#[derive(Debug, Display)]
+struct FTest;
+
+impl Refine<String> for FTest {
+    type RefineError = TestRefineError;
 
     fn refine(
         rep: String,
@@ -23,13 +26,13 @@ impl Refine<String> for MyTag {
         if rep.starts_with("valid_") {
             Ok(rep)
         } else {
-            Err(MyRefineError)
+            Err(TestRefineError)
         }
     }
 }
 
-type TestViaString = ViaString<String, MyTag, MyTag>;
-type TestParseError = ParseError<String, MyTag, MyTag>;
+type TestViaString = ViaString<String, DTest, FTest>;
+type TestParseError = ParseError<String, DTest, FTest>;
 
 #[test]
 fn test_via_string_new() {
@@ -48,7 +51,7 @@ fn test_via_string_new() {
     assert!(via_string_instance_err.is_err());
     assert_eq!(
         via_string_instance_err.unwrap_err(),
-        MyRefineError
+        TestRefineError
     );
 }
 
@@ -236,7 +239,7 @@ mod serde_tests {
         let err =
             toml::from_str::<Wrapper>(toml).unwrap_err();
         assert!(
-            err.to_string().contains("MyRefineError"),
+            err.to_string().contains("TestRefineError"),
             "Unexpected failure: {err}"
         );
 
@@ -365,8 +368,8 @@ mod via_string_diesel_tests_inline {
 
         let err_msg = err.to_string();
         assert!(
-            err_msg.contains("MyRefineError"),
-            "Expected MyRefineError, but got: {err_msg}"
+            err_msg.contains("TestRefineError"),
+            "Expected TestRefineError, but got: {err_msg}"
         );
     }
 
@@ -506,9 +509,13 @@ fn test_via_string_from_str_explicit() {
 #[test]
 fn test_via_string_copy() {
     #[derive(Debug)]
-    struct CopyTag;
-    impl Refine<i32> for CopyTag {
-        type RefineError = MyRefineError;
+    struct DCopy;
+
+    #[derive(Debug)]
+    struct FCopy;
+
+    impl Refine<i32> for FCopy {
+        type RefineError = TestRefineError;
         fn refine(
             rep: i32,
         ) -> Result<i32, Self::RefineError> {
@@ -517,7 +524,7 @@ fn test_via_string_copy() {
     }
 
     type TestViaStringCopy =
-        ViaString<i32, CopyTag, CopyTag>;
+        ViaString<i32, DCopy, FCopy>;
 
     let vs1 = TestViaStringCopy::new(123).unwrap();
     let vs2 = vs1;

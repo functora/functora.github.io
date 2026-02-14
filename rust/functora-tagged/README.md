@@ -43,31 +43,64 @@ The `ViaString<T, D, F>` struct is a specialized newtype primarily intended for 
 
 It also implements `FromStr` and derives common traits, similar to `Tagged`, respecting the `Refine` trait for validation.
 
-## `Refine` Trait
+## Refinement
 
-To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type. This trait allows you to define custom logic for refining the newtype representation.
+To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom validation logic.
+
+### Example: Even Number Refinement
+
+Here is a complete example of defining a Dimension `D`, a Refinery `F`, and implementing `Refine` to ensure a number is even.
 
 ```rust
 use functora_tagged::*;
 
-pub enum NonEmptyTag {}
-pub struct NonEmptyError;
+// 1. Define the Dimension (D)
+#[derive(Debug)]
+pub enum DCount {}
 
-impl Refine<String> for NonEmptyTag {
-    type RefineError = NonEmptyError;
-    fn refine(
-        rep: String,
-    ) -> Result<String, Self::RefineError> {
-        if rep.is_empty() {
-            Err(NonEmptyError)
-        } else {
+// 2. Define the Refinery (F)
+#[derive(Debug)]
+pub struct FEven;
+
+// 3. Define the Error Type
+#[derive(Debug, PartialEq)]
+pub struct NotEvenError;
+
+// 4. Implement Refine for the Refinery
+impl Refine<i32> for FEven {
+    type RefineError = NotEvenError;
+
+    fn refine(rep: i32) -> Result<i32, Self::RefineError> {
+        if rep % 2 == 0 {
             Ok(rep)
+        } else {
+            Err(NotEvenError)
         }
     }
 }
+
+// 5. Define the Newtype
+pub type EvenCount = Tagged<i32, DCount, FEven>;
+
+// Usage
+let val = EvenCount::new(42);
+assert!(val.is_ok());
+assert_eq!(*val.unwrap().rep(), 42);
+
+let err = EvenCount::new(43);
+assert_eq!(err.unwrap_err(), NotEvenError);
 ```
 
-Note that the `Refine` trait has a default implementation that simply returns the input `Rep` without modification. This allows you to create simple newtypes for type distinction without needing to implement the `refine` function, as demonstrated in the `NonNegTag` example.
+## Common Refineries
+
+`functora-tagged` provides a set of common, ready-to-use refineries in the `common` module (`src/common.rs`). You can use these to quickly create refined newtypes without writing boilerplate.
+
+-   **`FCrude`**: No-op refinement. Used when you only need a distinct type without validation. `RefineError` is `Infallible`.
+-   **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
+-   **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
+-   **`FNonEmpty`**: Ensures a collection (iterable) is not empty.
+
+You can import them via `use functora_tagged::common::*;`.
 
 ## Derived Traits
 
@@ -105,115 +138,74 @@ These integrations respect the `Refine` rules defined for your types.
 
 You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
 
-### Default Newtype
+### Default Newtype (using `FCrude`)
 
-When a `D` (or `F`) type has a default `Refine` implementation that doesn't add new constraints or transformations, `Tagged` can be used for simple type distinction.
+When you don't need validation, use `FCrude` from the `common` module.
 
 ```rust
 use functora_tagged::*;
-use std::convert::Infallible;
+use functora_tagged::common::*;
 
-pub enum JustDistinction {}
+pub enum DUserId {}
 
-impl Refine<usize> for JustDistinction {
-    type RefineError = Infallible;
-}
+pub type UserId = Tagged<u64, DUserId, FCrude>;
 
-pub type NonNeg = Tagged<usize, JustDistinction, JustDistinction>;
-
-let rep = 123;
-let new = NonNeg::new(rep).infallible();
-
-assert_eq!(*new.rep(), rep);
+let id = UserId::new(12345).infallible();
+assert_eq!(*id.rep(), 12345);
 ```
 
-### Refined Newtype
+### Refined Newtype (using `FPositive`)
 
-This example demonstrates a simple refinement for numeric types to ensure they are positive, using `PositiveTag`.
+This example demonstrates ensuring numeric types are positive using `FPositive`.
 
 ```rust
 use functora_tagged::*;
+use functora_tagged::common::*;
 
 #[derive(PartialEq, Debug)]
-pub enum Count {} // The Dimension
-#[derive(Debug)]
-pub struct Positive; // The Refinery
+pub enum DCount {} // The Dimension
 
-pub type PositiveCount = Tagged<usize, Count, Positive>;
-
-#[derive(PartialEq, Debug)]
-pub struct PositiveError;
-
-impl Refine<usize> for Positive {
-    type RefineError = PositiveError;
-    fn refine(
-        rep: usize,
-    ) -> Result<usize, Self::RefineError>
-    {
-        if rep > 0 {
-            Ok(rep)
-        } else {
-            Err(PositiveError)
-        }
-    }
-}
+// Use common FPositive refinery
+pub type PositiveCount = Tagged<usize, DCount, FPositive>;
 
 let rep = 100;
 let new = PositiveCount::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
+// FPositive returns PositiveError on failure
 let err = PositiveCount::new(0).unwrap_err();
-assert_eq!(err, PositiveError);
+assert!(matches!(err, PositiveError(0)));
 ```
 
-### Generic Newtype
+### Generic Newtype (using `FPositive`)
 
-This demonstrates a generic `Positive<Rep>` newtype that enforces positive values for any numeric type `Rep` that implements `Refine<PositiveTag>`.
+This demonstrates a generic `PositiveAmount<T>` newtype that enforces positive values for any numeric type `T` that satisfies `FPositive`.
 
 ```rust
 use functora_tagged::*;
-use num_traits::Zero;
+use functora_tagged::common::*;
 
 #[derive(Debug)]
-pub enum Amount {} // Dimension
-#[derive(Debug)]
-pub struct Positive; // Refinery
+pub enum DAmount {} // Dimension
 
-pub type PositiveAmount<T> = Tagged<T, Amount, Positive>;
+pub type PositiveAmount<T> = Tagged<T, DAmount, FPositive>;
 
-#[derive(PartialEq, Debug)]
-pub struct PositiveError;
-
-impl<T> Refine<T> for Positive
-where
-    T: Zero + PartialOrd,
-{
-    type RefineError = PositiveError;
-    fn refine(
-        rep: T,
-    ) -> Result<T, Self::RefineError>
-    {
-        if rep > T::zero() {
-            Ok(rep)
-        } else {
-            Err(PositiveError)
-        }
-    }
-}
-
+// Works with i32
 let rep = 100;
 let new = PositiveAmount::<i32>::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
+// Works with f64
 let rep = 10.5;
 let new = PositiveAmount::<f64>::new(rep).unwrap();
 assert_eq!(*new.rep(), rep);
 
+// Validation fails
 let err = PositiveAmount::<i32>::new(-5).unwrap_err();
-assert_eq!(err, PositiveError);
+assert!(matches!(err, PositiveError(-5)));
 
 let err = PositiveAmount::<f64>::new(0.0).unwrap_err();
-assert_eq!(err, PositiveError);
+assert!(matches!(err, PositiveError(0.0)));
 ```
 
 ### Composite Refinement
@@ -224,12 +216,12 @@ This example demonstrates how to combine multiple refinement rules (e.g., `NonEm
 use functora_tagged::*;
 
 #[derive(PartialEq, Debug)]
-pub enum UserIdTag {} // Dimension
+pub enum DUserId {} // Dimension
 #[derive(Debug)]
-pub struct UserIdRefinery; // Refinery
+pub struct FUserId; // Refinery
 
 // Flat structure: one Tagged wrapper
-pub type UserId = Tagged<String, UserIdTag, UserIdRefinery>;
+pub type UserId = Tagged<String, DUserId, FUserId>;
 
 #[derive(PartialEq, Debug)]
 pub enum UserIdError {
@@ -237,7 +229,7 @@ pub enum UserIdError {
     InvalidFormat,
 }
 
-impl Refine<String> for UserIdRefinery {
+impl Refine<String> for FUserId {
     type RefineError = UserIdError;
 
     fn refine(rep: String) -> Result<String, Self::RefineError> {
@@ -288,6 +280,7 @@ This example demonstrates how to define physical units and calculate Kinetic Ene
 ```rust
 use functora_tagged::num::*;
 use functora_tagged::*;
+use functora_tagged::common::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 

@@ -11,7 +11,7 @@ use tap::prelude::*;
 //
 
 #[derive(Debug)]
-pub struct FCrude;
+pub enum FCrude {}
 
 impl<T> Refine<T> for FCrude {
     type RefineError = Infallible;
@@ -22,18 +22,27 @@ impl<T> Refine<T> for FCrude {
 //
 
 #[derive(Debug)]
-pub struct FPositive;
+pub enum FPositive {}
 
-#[derive(Debug, Display)]
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
 #[display("{:?}", self)]
-pub struct PositiveError<T>(T)
+pub struct PositiveError<T>(pub T)
 where
     T: Debug;
 impl<T> Error for PositiveError<T> where T: Debug {}
 
 impl<T> Refine<T> for FPositive
 where
-    T: Ord + Zero + Debug,
+    T: PartialOrd + Zero + Debug,
 {
     type RefineError = PositiveError<T>;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
@@ -50,18 +59,27 @@ where
 //
 
 #[derive(Debug)]
-pub struct FNonNeg;
+pub enum FNonNeg {}
 
-#[derive(Debug, Display)]
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
 #[display("{:?}", self)]
-pub struct NonNegError<T>(T)
+pub struct NonNegError<T>(pub T)
 where
     T: Debug;
 impl<T> Error for NonNegError<T> where T: Debug {}
 
 impl<T> Refine<T> for FNonNeg
 where
-    T: Ord + Zero + Debug,
+    T: PartialOrd + Zero + Debug,
 {
     type RefineError = NonNegError<T>;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
@@ -78,11 +96,20 @@ where
 //
 
 #[derive(Debug)]
-pub struct FNonEmpty;
+pub enum FNonEmpty {}
 
-#[derive(Debug, Display)]
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
 #[display("{:?}", self)]
-pub struct NonEmptyError<T>(T)
+pub struct NonEmptyError<T>(pub T)
 where
     T: Debug;
 impl<T> Error for NonEmptyError<T> where T: Debug {}

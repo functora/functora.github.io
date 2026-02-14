@@ -11,11 +11,11 @@ struct TestRefineError;
 
 impl std::error::Error for TestRefineError {}
 
-#[derive(Debug, Display)]
-struct DTest;
+#[derive(Debug)]
+enum DTest {}
 
-#[derive(Debug, Display)]
-struct FTest;
+#[derive(Debug)]
+enum FTest {}
 
 impl Refine<String> for FTest {
     type RefineError = TestRefineError;
@@ -509,10 +509,10 @@ fn test_via_string_from_str_explicit() {
 #[test]
 fn test_via_string_copy() {
     #[derive(Debug)]
-    struct DCopy;
+    enum DCopy {}
 
     #[derive(Debug)]
-    struct FCopy;
+    enum FCopy {}
 
     impl Refine<i32> for FCopy {
         type RefineError = TestRefineError;

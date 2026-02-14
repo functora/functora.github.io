@@ -11,8 +11,8 @@ struct MyRefineError;
 
 impl Error for MyRefineError {}
 
-#[derive(Debug, Display)]
-struct MyTag;
+#[derive(Debug)]
+enum MyTag {}
 
 impl Refine<i32> for MyTag {
     type RefineError = MyRefineError;
@@ -342,8 +342,8 @@ fn test_parse_error_eq_with_different_types() {
     struct AnotherRefineError;
     impl Error for AnotherRefineError {}
 
-    #[derive(Debug, Display)]
-    struct AnotherTag;
+    #[derive(Debug)]
+    enum AnotherTag {}
     impl Refine<i32> for AnotherTag {
         type RefineError = AnotherRefineError;
         fn refine(
@@ -377,8 +377,8 @@ fn test_parse_error_partial_eq_with_different_types() {
     struct YetAnotherRefineError;
     impl Error for YetAnotherRefineError {}
 
-    #[derive(Debug, Display)]
-    struct YetAnotherTag;
+    #[derive(Debug)]
+    enum YetAnotherTag {}
     impl Refine<i32> for YetAnotherTag {
         type RefineError = YetAnotherRefineError;
         fn refine(
@@ -416,8 +416,8 @@ fn test_parse_error_clone_with_different_types() {
     struct CloneRefineError;
     impl Error for CloneRefineError {}
 
-    #[derive(Debug, Display)]
-    struct CloneTag;
+    #[derive(Debug)]
+    enum CloneTag {}
     impl Refine<i32> for CloneTag {
         type RefineError = CloneRefineError;
         fn refine(
@@ -470,8 +470,8 @@ fn test_parse_error_impl_error_with_different_types() {
     struct DifferentRefineError;
     impl Error for DifferentRefineError {}
 
-    #[derive(Debug, Display)]
-    struct DifferentTag;
+    #[derive(Debug)]
+    enum DifferentTag {}
     impl Refine<i32> for DifferentTag {
         type RefineError = DifferentRefineError;
         fn refine(
@@ -507,8 +507,8 @@ fn test_parse_error_impl_error_with_different_types() {
 struct CommonError;
 impl Error for CommonError {}
 
-#[derive(Debug, Display)]
-struct CommonTag;
+#[derive(Debug)]
+enum CommonTag {}
 impl Refine<i32> for CommonTag {
     type RefineError = CommonError;
     fn refine(rep: i32) -> Result<i32, Self::RefineError> {

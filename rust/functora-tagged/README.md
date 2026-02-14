@@ -60,7 +60,7 @@ pub enum DCount {}
 
 // 2. Define the Refinery (F)
 #[derive(Debug)]
-pub struct FEven;
+pub enum FEven {}
 
 // 3. Define the Error Type
 #[derive(Debug, PartialEq)]
@@ -218,7 +218,7 @@ use functora_tagged::*;
 #[derive(PartialEq, Debug)]
 pub enum DUserId {} // Dimension
 #[derive(Debug)]
-pub struct FUserId; // Refinery
+pub enum FUserId {} // Refinery
 
 // Flat structure: one Tagged wrapper
 pub type UserId = Tagged<String, DUserId, FUserId>;

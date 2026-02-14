@@ -17,7 +17,7 @@ struct MyRefineError;
 impl std::error::Error for MyRefineError {}
 
 #[derive(Debug)]
-struct MyTag;
+enum MyTag {}
 
 impl Refine<i32> for MyTag {
     type RefineError = MyRefineError;

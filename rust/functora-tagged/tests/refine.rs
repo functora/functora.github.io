@@ -9,7 +9,7 @@ struct TestRefineError;
 impl Error for TestRefineError {}
 
 #[derive(Debug)]
-struct FTest;
+enum FTest {}
 
 impl Refine<String> for FTest {
     type RefineError = TestRefineError;
@@ -30,7 +30,7 @@ fn test_refine_my_tag_implementation() {
     assert_eq!(refined_rep.unwrap(), rep_value);
 }
 
-struct FStrict;
+enum FStrict {}
 
 impl Refine<String> for FStrict {
     type RefineError = String;
@@ -71,7 +71,7 @@ fn test_refine_strict_tag_implementation() {
 }
 
 #[derive(Debug)]
-struct FDefault;
+enum FDefault {}
 
 impl Refine<String> for FDefault {
     type RefineError = String;

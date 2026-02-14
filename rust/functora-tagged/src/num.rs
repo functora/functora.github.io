@@ -2,7 +2,6 @@ use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
 use num_traits::*;
-use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -570,76 +569,5 @@ where
             .map_err(|_| TNumError::Div(*self, *rhs))?
             .pipe(Tagged::new)
             .map_err(|_| TNumError::Div(*self, *rhs))
-    }
-}
-
-////////////
-// Common //
-////////////
-
-//
-// Any
-//
-
-#[derive(Debug)]
-pub enum DAny {}
-
-impl<T> Refine<T> for DAny {
-    type RefineError = Infallible;
-}
-
-//
-// Pos
-//
-
-#[derive(Debug)]
-pub enum DPos {}
-
-#[derive(Debug, Display)]
-#[display("{:?}", self)]
-pub struct PosError<T>(T)
-where
-    T: Debug;
-impl<T> Error for PosError<T> where T: Debug {}
-
-impl<T> Refine<T> for DPos
-where
-    T: Ord + Zero + Debug,
-{
-    type RefineError = PosError<T>;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        if rep > Zero::zero() {
-            Ok(rep)
-        } else {
-            PosError(rep).pipe(Err)
-        }
-    }
-}
-
-//
-// NonNeg
-//
-
-#[derive(Debug)]
-pub enum DNonNeg {}
-
-#[derive(Debug, Display)]
-#[display("{:?}", self)]
-pub struct NonNegError<T>(T)
-where
-    T: Debug;
-impl<T> Error for NonNegError<T> where T: Debug {}
-
-impl<T> Refine<T> for DNonNeg
-where
-    T: Ord + Zero + Debug,
-{
-    type RefineError = NonNegError<T>;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        if rep >= Zero::zero() {
-            Ok(rep)
-        } else {
-            NonNegError(rep).pipe(Err)
-        }
     }
 }

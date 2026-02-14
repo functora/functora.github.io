@@ -1,6 +1,5 @@
 use functora::*;
-use functora_tagged::num::*;
-use functora_tagged::tagged::Tagged;
+use functora_tagged::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::fmt::Debug;
@@ -10,59 +9,59 @@ type Dim<D> =
 
 #[derive(Debug)]
 pub enum INum {}
-type DNum = Identity<INum, DAny>;
+type DNum = Identity<INum, FCrude>;
 type Num = Dim<DNum>;
 
 #[derive(Debug)]
 pub enum AKg {}
-type DKg = Atomic<AKg, DNonNeg>;
+type DKg = Atomic<AKg, FNonNeg>;
 type Kg = Dim<DKg>;
 
 #[derive(Debug)]
 pub enum AMeter {}
-type DMeter = Atomic<AMeter, DNonNeg>;
+type DMeter = Atomic<AMeter, FNonNeg>;
 type Meter = Dim<DMeter>;
 
 #[derive(Debug)]
 pub enum ASecond {}
-type DSecond = Atomic<ASecond, DNonNeg>;
+type DSecond = Atomic<ASecond, FNonNeg>;
 type Second = Dim<DSecond>;
 
-type DVelocity = Per<DMeter, DSecond, DNonNeg>;
+type DVelocity = Per<DMeter, DSecond, FNonNeg>;
 type Velocity = Dim<DVelocity>;
 
-type DArea = Times<DMeter, DMeter, DNonNeg>;
+type DArea = Times<DMeter, DMeter, FNonNeg>;
 type Area = Dim<DArea>;
 
-type DHertz = Per<DNum, DSecond, DNonNeg>;
+type DHertz = Per<DNum, DSecond, FNonNeg>;
 type Hertz = Dim<DHertz>;
 
 type DJoule = Times<
     DKg,
-    Times<DVelocity, DVelocity, DNonNeg>,
-    DNonNeg,
+    Times<DVelocity, DVelocity, FNonNeg>,
+    FNonNeg,
 >;
 type Joule = Dim<DJoule>;
 
 #[derive(Debug)]
 pub enum AUsd {}
-type DUsd = Atomic<AUsd, DNonNeg>;
+type DUsd = Atomic<AUsd, FNonNeg>;
 type Usd = Dim<DUsd>;
 
 #[derive(Debug)]
 pub enum AEur {}
-type DEur = Atomic<AEur, DNonNeg>;
+type DEur = Atomic<AEur, FNonNeg>;
 type Eur = Dim<DEur>;
 
-type EurPerUsd = Dim<Per<DEur, DUsd, DPos>>;
+type EurPerUsd = Dim<Per<DEur, DUsd, FPositive>>;
 
-type DVolume = Times<DArea, DMeter, DNonNeg>;
+type DVolume = Times<DArea, DMeter, FNonNeg>;
 type Volume = Dim<DVolume>;
 
-type DAcceleration = Per<DVelocity, DSecond, DNonNeg>;
+type DAcceleration = Per<DVelocity, DSecond, FNonNeg>;
 type Acceleration = Dim<DAcceleration>;
 
-type DForce = Times<DKg, DAcceleration, DNonNeg>;
+type DForce = Times<DKg, DAcceleration, FNonNeg>;
 type Force = Dim<DForce>;
 
 type Test = Result<(), Box<dyn std::error::Error>>;
@@ -228,16 +227,16 @@ fn mul_permutations() -> Test {
     // Atomic * Per
     let momentum: Tagged<
         Decimal,
-        Times<DKg, DVelocity, DNonNeg>,
-        DNonNeg,
+        Times<DKg, DVelocity, FNonNeg>,
+        FNonNeg,
     > = kg.tmul(&vel)?;
     assert_eq!(momentum.rep(), &dec!(20));
 
     // Times * Atomic
     let force2: Tagged<
         Decimal,
-        Times<DAcceleration, DKg, DNonNeg>,
-        DNonNeg,
+        Times<DAcceleration, DKg, FNonNeg>,
+        FNonNeg,
     > = acc.tmul(&kg)?; // Commutative check roughly
     assert_eq!(force2.rep(), force.rep());
 
@@ -245,8 +244,8 @@ fn mul_permutations() -> Test {
     // Per * Per
     let acc2: Tagged<
         Decimal,
-        Times<DVelocity, DHertz, DNonNeg>,
-        DNonNeg,
+        Times<DVelocity, DHertz, FNonNeg>,
+        FNonNeg,
     > = vel.tmul(&Hertz::new(dec!(1))?)?;
     assert_eq!(acc2.rep(), &dec!(4));
 
@@ -264,40 +263,40 @@ fn div_permutations() -> Test {
     // Identity / Times
     let per_area: Tagged<
         Decimal,
-        Per<DNum, DArea, DNonNeg>,
-        DNonNeg,
+        Per<DNum, DArea, FNonNeg>,
+        FNonNeg,
     > = one.tdiv(&area)?;
     assert_eq!(per_area.rep(), &dec!(0.01));
 
     // Identity / Per
     let s_per_m: Tagged<
         Decimal,
-        Per<DNum, DVelocity, DNonNeg>,
-        DNonNeg,
+        Per<DNum, DVelocity, FNonNeg>,
+        FNonNeg,
     > = one.tdiv(&vel)?;
     assert_eq!(s_per_m.rep(), &dec!(0.2));
 
     // Atomic / Times
     let per_m: Tagged<
         Decimal,
-        Per<DNum, DMeter, DNonNeg>,
-        DNonNeg,
+        Per<DNum, DMeter, FNonNeg>,
+        FNonNeg,
     > = m.tdiv(&area)?;
     assert_eq!(per_m.rep(), &dec!(0.1));
 
     // Times / Times
     let ratio: Tagged<
         Decimal,
-        Per<DArea, DArea, DNonNeg>,
-        DNonNeg,
+        Per<DArea, DArea, FNonNeg>,
+        FNonNeg,
     > = area.tdiv(&area)?;
     assert_eq!(ratio.rep(), &dec!(1));
 
     // Times / Per
     let acc_time: Tagged<
         Decimal,
-        Per<DVelocity, DSecond, DNonNeg>,
-        DNonNeg,
+        Per<DVelocity, DSecond, FNonNeg>,
+        FNonNeg,
     > = vel.tdiv(&s)?;
     assert_eq!(acc_time.rep(), &dec!(2.5));
 
@@ -313,13 +312,13 @@ fn cancellation_edge_cases() -> Test {
     // L / (L * R)
     let ms: Tagged<
         Decimal,
-        Times<DMeter, DSecond, DNonNeg>,
-        DNonNeg,
+        Times<DMeter, DSecond, FNonNeg>,
+        FNonNeg,
     > = m.tmul(&s)?;
     let per_s_val: Tagged<
         Decimal,
-        Per<DNum, DSecond, DPos>,
-        DPos,
+        Per<DNum, DSecond, FPositive>,
+        FPositive,
     > = m.tdiv(&ms)?;
     assert_eq!(per_s_val.rep(), &dec!(0.5));
 

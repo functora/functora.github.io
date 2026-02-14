@@ -279,7 +279,7 @@ The system is built on four core algebraic types that carry unit information in 
 - **`Times<L, R, F>`**: Represents the product of two units (e.g., Meter \* Meter = Area).
 - **`Per<L, R, F>`**: Represents the quotient of two units (e.g., Meter / Second = Velocity).
 
-All these types accept a refinement generic `F` (e.g., `DNonNeg`, `DPos`, etc.) to enforce constraints like non-negativity on the underlying values.
+All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg`, `FNonEmpty` etc.) to enforce constraints like non-negativity on the underlying values.
 
 ### Example
 
@@ -297,8 +297,8 @@ use rust_decimal_macros::dec;
 
 #[derive(Debug)]
 pub enum INum {}
-type DNum = Identity<INum, DAny>;
-type Num = Tagged<Decimal, DNum, DAny>;
+type DNum = Identity<INum, FCrude>;
+type Num = Tagged<Decimal, DNum, FCrude>;
 
 //
 // 2. Fundamental units (Atomic)
@@ -312,30 +312,30 @@ pub enum ASecond {}
 pub enum AKg {}
 
 // The "Dimension" types with non-negative refinement
-type DMeter = Atomic<AMeter, DNonNeg>;
-type DSecond = Atomic<ASecond, DNonNeg>;
-type DKg = Atomic<AKg, DNonNeg>;
+type DMeter = Atomic<AMeter, FNonNeg>;
+type DSecond = Atomic<ASecond, FNonNeg>;
+type DKg = Atomic<AKg, FNonNeg>;
 
 // The concrete types with Decimal rep
-type Meter = Tagged<Decimal, DMeter, DNonNeg>;
-type Second = Tagged<Decimal, DSecond, DNonNeg>;
-type Kg = Tagged<Decimal, DKg, DNonNeg>;
+type Meter = Tagged<Decimal, DMeter, FNonNeg>;
+type Second = Tagged<Decimal, DSecond, FNonNeg>;
+type Kg = Tagged<Decimal, DKg, FNonNeg>;
 
 //
 // 3. Non-fundamental units (Per, Times)
 //
 
 // Velocity = Meter / Second
-type DVelocity = Per<DMeter, DSecond, DNonNeg>;
-type Velocity = Tagged<Decimal, DVelocity, DNonNeg>;
+type DVelocity = Per<DMeter, DSecond, FNonNeg>;
+type Velocity = Tagged<Decimal, DVelocity, FNonNeg>;
 
 // Joule = Kg * Velocity^2
 type DJoule = Times<
     DKg,
-    Times<DVelocity, DVelocity, DNonNeg>,
-    DNonNeg,
+    Times<DVelocity, DVelocity, FNonNeg>,
+    FNonNeg,
 >;
-type Joule = Tagged<Decimal, DJoule, DNonNeg>;
+type Joule = Tagged<Decimal, DJoule, FNonNeg>;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let distance = Meter::new(dec!(50))?; // 50 meters

@@ -21,7 +21,7 @@ Rust has common macro-based solutions for the newtype traits derivation problem.
 The primary newtype building block is the `Tagged<T, D, F>` struct.
 
 - `T`: The underlying representation type (e.g., `String`, `i32`).
-- `D`: The "Dimension". A phantom type used at compile time to distinguish between different newtypes that share the same `T`.
+- `D`: The "Dimension". A phantom type used at compile time to distinguish between different newtypes that share the same `T` and `F`.
 - `F`: The "Refinery". A phantom type that implements the `Refine<T>` trait to define validation and transformation logic.
 
 This separation of `D` and `F` allows you to have the same semantic type (e.g., `Meter`) with different refinements (e.g., `NonNegative` vs `Positive`) without changing the type's identity for dimension-checking purposes.
@@ -45,9 +45,9 @@ It also implements `FromStr` and derives common traits, similar to `Tagged`, res
 
 ## Refinement
 
-To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom validation logic.
+To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom refinement logic.
 
-### Example: Even Number Refinement
+### Example: Even Number
 
 Here is a complete example of defining a Dimension `D`, a Refinery `F`, and implementing `Refine` to ensure a number is even.
 
@@ -85,7 +85,7 @@ pub type EvenCount = Tagged<i32, DCount, FEven>;
 // Usage
 let val = EvenCount::new(42);
 assert!(val.is_ok());
-assert_eq!(*val.unwrap().rep(), 42);
+assert_eq!(*val.unwrap(), 42);
 
 let err = EvenCount::new(43);
 assert_eq!(err.unwrap_err(), NotEvenError);
@@ -95,12 +95,10 @@ assert_eq!(err.unwrap_err(), NotEvenError);
 
 `functora-tagged` provides a set of common, ready-to-use refineries in the `common` module (`src/common.rs`). You can use these to quickly create refined newtypes without writing boilerplate.
 
--   **`FCrude`**: No-op refinement. Used when you only need a distinct type without validation. `RefineError` is `Infallible`.
+-   **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
 -   **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
 -   **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
 -   **`FNonEmpty`**: Ensures a collection (iterable) is not empty.
-
-You can import them via `use functora_tagged::common::*;`.
 
 ## Derived Traits
 
@@ -120,7 +118,7 @@ You can import them via `use functora_tagged::common::*;`.
 
 ### Refined Derive:
 
-- `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be either a `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`). For nested types, these errors can be further nested.
+- `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be either a `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`).
 - `serde::Deserialize` (with `serde` feature)
 - `diesel::Queryable` (with `diesel` feature)
 - `diesel::deserialize::FromSql` (with `diesel` feature)
@@ -136,7 +134,7 @@ These integrations respect the `Refine` rules defined for your types.
 
 ## Examples
 
-You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
+You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use the `Deref` trait (via `*` operator) to access the underlying representation if it implements `Copy`. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
 
 ### Default Newtype (using `FCrude`)
 
@@ -144,14 +142,13 @@ When you don't need validation, use `FCrude` from the `common` module.
 
 ```rust
 use functora_tagged::*;
-use functora_tagged::common::*;
 
 pub enum DUserId {}
 
 pub type UserId = Tagged<u64, DUserId, FCrude>;
 
 let id = UserId::new(12345).infallible();
-assert_eq!(*id.rep(), 12345);
+assert_eq!(*id, 12345);
 ```
 
 ### Refined Newtype (using `FPositive`)
@@ -160,17 +157,17 @@ This example demonstrates ensuring numeric types are positive using `FPositive`.
 
 ```rust
 use functora_tagged::*;
-use functora_tagged::common::*;
 
+// The Dimension
 #[derive(PartialEq, Debug)]
-pub enum DCount {} // The Dimension
+pub enum DCount {}
 
 // Use common FPositive refinery
 pub type PositiveCount = Tagged<usize, DCount, FPositive>;
 
 let rep = 100;
 let new = PositiveCount::new(rep).unwrap();
-assert_eq!(*new.rep(), rep);
+assert_eq!(*new, rep);
 
 // FPositive returns PositiveError on failure
 let err = PositiveCount::new(0).unwrap_err();
@@ -193,19 +190,19 @@ pub type PositiveAmount<T> = Tagged<T, DAmount, FPositive>;
 // Works with i32
 let rep = 100;
 let new = PositiveAmount::<i32>::new(rep).unwrap();
-assert_eq!(*new.rep(), rep);
+assert_eq!(*new, rep);
 
 // Works with f64
 let rep = 10.5;
 let new = PositiveAmount::<f64>::new(rep).unwrap();
-assert_eq!(*new.rep(), rep);
+assert_eq!(*new, rep);
 
 // Validation fails
 let err = PositiveAmount::<i32>::new(-5).unwrap_err();
-assert!(matches!(err, PositiveError(-5)));
+assert_eq!(err, PositiveError(-5));
 
 let err = PositiveAmount::<f64>::new(0.0).unwrap_err();
-assert!(matches!(err, PositiveError(0.0)));
+assert_eq!(err, PositiveError(0.0));
 ```
 
 ### Composite Refinement
@@ -245,7 +242,7 @@ impl Refine<String> for FUserId {
 
 let rep = "user_123";
 let new = rep.parse::<UserId>().unwrap();
-assert_eq!(*new.rep(), rep);
+assert_eq!(*new, rep);
 
 let err = "".parse::<UserId>().unwrap_err();
 assert_eq!(
@@ -337,17 +334,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Calculate velocity: 50m / 5s = 10 m/s
     let velocity: Velocity = distance.tdiv(&time)?;
-    assert_eq!(velocity.rep(), &dec!(10));
+    assert_eq!(*velocity, dec!(10));
 
     // Calculate Energy: 100kg * (10m/s)^2 = 10000J
     let energy: Joule =
         mass.tmul(&velocity.tmul(&velocity)?)?;
-    assert_eq!(energy.rep(), &dec!(10000));
+    assert_eq!(*energy, dec!(10000));
 
     // Scaling by dimensionless 0.5 doesn't change units
     let half = Num::new(dec!(0.5))?;
     let half_energy: Joule = energy.tmul(&half)?;
-    assert_eq!(half_energy.rep(), &dec!(5000));
+    assert_eq!(*half_energy, dec!(5000));
 
     Ok(())
 }

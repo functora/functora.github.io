@@ -4,17 +4,17 @@ Lightweight, macro-free newtypes with refinement and derived traits.
 
 ## Motivation
 
-Newtypes are a fundamental pattern in Rust for enhancing type safety and expressing semantic meaning. By wrapping an existing type (the representation) in a new, distinct type, we prevent accidental misuse and clearly communicate intent. For example, distinguishing between a `UserId` and a `ProductId`, even if both are internally represented as `u64`, prevents bugs where one might be used in place of the other. This style makes code more self-documenting and less prone to logical errors.
+Newtypes are a fundamental pattern in Rust for enhancing type safety and expressing semantic meaning. By wrapping an existing type (the representation) in a distinct new type, we prevent accidental misuse and clearly communicate intent. For example, distinguishing between a `UserId` and a `ProductId`, even if both are internally represented as `u64`, prevents bugs where one might be used in place of the other. This pattern makes code more self-documenting and less prone to logical errors.
 
-While standard traits like `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Clone`, and `Debug` can often be derived automatically in Rust, many essential traits are not. These include parsing (`FromStr`), serialization (`serde::Serialize`/`Deserialize`), and database integration (`diesel::Queryable`, `ToSql`, `FromSql`, `AsExpression`). Implementing these traits for newtypes manually can lead to substantial boilerplate.
+While standard traits like `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Clone`, and `Debug` can often be derived automatically, many essential traits are not. These include parsing (`FromStr`), serialization (`serde::Serialize`/`Deserialize`), and database integration (`diesel::Queryable`, `ToSql`, `FromSql`, `AsExpression`). Implementing these traits for newtypes manually can lead to substantial boilerplate.
 
-Rust has common macro-based solutions for the newtype traits derivation problem. Macros are often employed as a last resort when language expressiveness is insufficient. However, they introduce significant drawbacks:
+Rust has common macro-based solutions for deriving newtype traits. Macros are often employed as a last resort when language expressiveness is insufficient. However, they introduce significant drawbacks:
 
-- Syntax: Macro-based code is not just Rust code. It acts as a complex, "foreign" DSL that is hard to read, maintain, and extend.
-- Boilerplate: Despite their intent, macros frequently require significant boilerplate, undermining their primary benefit.
-- Complexity: Macros can obscure the underlying logic and make debugging difficult.
+- **Syntax**: Macro-based code is not conventional Rust code. It acts as a complex "foreign" DSL that is hard to read, maintain, and extend.
+- **Boilerplate**: Despite their intent, macros frequently require significant boilerplate, undermining their primary benefit.
+- **Complexity**: Macros can obscure the underlying logic and make debugging difficult.
 
-`functora-tagged` offers a superior, macro-free alternative. It provides a clean, idiomatic, and type-safe mechanism for creating newtypes. Through the `Refine` trait, you can define custom validation and transformation logic for your newtype. This logic is then automatically integrated into implementations for crucial, non-trivially derivable traits like `FromStr`, `serde`, and `diesel`, achieving true zero boilerplate for these complex scenarios without the downsides of macros.
+`functora-tagged` offers a superior, macro-free alternative. It provides a clean, idiomatic, and type-safe mechanism for creating newtypes. Through the `Refine` trait, you can define custom verification and transformation logic for your newtype. This logic is then automatically integrated into implementations for crucial, non-trivially derivable traits like `FromStr`, `serde`, and `diesel`, achieving zero boilerplate for these complex scenarios without the downsides of macros.
 
 ## Tagged
 
@@ -22,7 +22,7 @@ The primary newtype building block is the `Tagged<T, D, F>` struct.
 
 - `T`: The underlying representation type (e.g., `String`, `i32`).
 - `D`: The "Dimension". A phantom type used at compile time to distinguish between different newtypes that share the same `T` and `F`.
-- `F`: The "Refinery". A phantom type that implements the `Refine<T>` trait to define validation and transformation logic.
+- `F`: The "Refinery". A phantom type that implements the `Refine<T>` trait to define refinement logic.
 
 This separation of `D` and `F` allows you to have the same semantic type (e.g., `Meter`) with different refinements (e.g., `NonNegative` vs `Positive`) without changing the type's identity for dimension-checking purposes.
 
@@ -32,20 +32,20 @@ use std::marker::PhantomData;
 pub struct Tagged<T, D, F>(T, PhantomData<(D, F)>);
 ```
 
-The `Tagged::new` constructor returns a `Result` that can be unwrapped directly if the `F`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
+The `Tagged::new` constructor returns a `Result` that you can unwrap directly if the `Refine` implementation for `F` returns `Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
 
-## `ViaString`
+### `ViaString`
 
-The `ViaString<T, D, F>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`T`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
+The `ViaString<T, D, F>` struct is a specialized newtype for scenarios where the underlying representation (`T`) is closely tied to string manipulation or requires string-based serialization or deserialization. It differs from `Tagged` in its serialization behavior:
 
-- **Serialization**: `ViaString` serializes to its string representation (via `ToString` on `T`), whereas `Tagged` serializes the `T` directly.
+- **Serialization**: `ViaString` serializes to its string representation (via the `ToString` implementation of `T`), whereas `Tagged` serializes the `T` directly.
 - **Deserialization**: `ViaString` deserializes from a string, then attempts to parse it into `T` using `FromStr`. `Tagged` deserializes `T` directly.
 
-It also implements `FromStr` and derives common traits, similar to `Tagged`, respecting the `Refine` trait for validation.
+It also implements `FromStr` and derives common traits, similar to `Tagged`, respecting the `Refine` trait.
 
 ## Refinement
 
-To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom refinement logic.
+To enforce specific refinement rules for your newtypes, implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom refinement logic.
 
 ### Custom Refinery
 
@@ -101,7 +101,7 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 
 ## Common Refineries
 
-`functora-tagged` provides a set of common, ready-to-use refineries in the `common` module (`src/common.rs`). You can use these to quickly create refined newtypes without writing boilerplate.
+`functora-tagged` provides a set of common, ready-to-use refineries in the `common` module (`src/common.rs`). These allow you to quickly create refined newtypes with zero boilerplate.
 
 -   **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
 -   **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
@@ -110,7 +110,7 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 
 ## Derives
 
-`functora-tagged` provides blanket implementations for several important traits. These traits work seamlessly with your newtypes, respecting the underlying representation behavior and customizable refinement rules defined by the `F` type's implementation of `Refine<T>`.
+`functora-tagged` provides blanket implementations for several essential traits. These traits work seamlessly with your newtypes, respecting the behavior of the underlying representation and the refinement rules defined by the `F` type's implementation of `Refine<T>`.
 
 ### Direct
 
@@ -126,7 +126,7 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 
 ### Refined
 
-- `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be either a `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`).
+- `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be an upstream `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`).
 - `serde::Deserialize` (with `serde` feature)
 - `diesel::Queryable` (with `diesel` feature)
 - `diesel::deserialize::FromSql` (with `diesel` feature)
@@ -142,11 +142,11 @@ These integrations respect the `Refine` rules defined for your types.
 
 ## Recipes
 
-You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use the `Deref` trait (via `*` operator) to access the underlying representation if it implements `Copy`. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
+You can promote `rep` values into newtypes using `Tagged::new(rep)`. To demote a newtype back to its representation, use the `.rep()` method to get a reference, or `.untag()` to consume it. You can also use the `Deref` trait (via the `*` operator) to access the underlying value if it implements `Copy`. Standard serializers and deserializers available for `Rep` work directly with the newtype as well.
 
 ### Simple Newtype
 
-When you don't need validation, use `FCrude` from the `common` module.
+When you don't need refinement, use `FCrude` from the `common` module.
 
 ```rust
 use functora_tagged::*;
@@ -204,7 +204,7 @@ let rep = 10.5;
 let new = PositiveAmount::<f64>::new(rep).unwrap();
 assert_eq!(*new, rep);
 
-// Validation fails
+// Refinement fails
 let err = PositiveAmount::<i32>::new(-5).unwrap_err();
 assert_eq!(err, PositiveError(-5));
 
@@ -262,7 +262,7 @@ assert_eq!(err, ScoreError::TooHigh(101));
 
 ## Dimensional
 
-`functora-tagged` includes a `num` module that enables type-safe dimensional analysis and arithmetic. It prevents accidental mixing of units (e.g., adding meters to seconds) and ensures that operations produce correctly typed results (e.g., dividing meters by seconds yields velocity).
+`functora-tagged` includes a `num` module that enables type-safe dimensional analysis and arithmetic. It prevents accidental unit mixing (e.g., adding meters to seconds) and ensures that operations produce correctly typed results (e.g., dividing meters by seconds yields velocity).
 
 The system is built on four core algebraic types that carry unit information in their `PhantomData`:
 
@@ -271,11 +271,11 @@ The system is built on four core algebraic types that carry unit information in 
 - **`Times<L, R, F>`**: Represents the product of two units (e.g., Meter \* Meter = Area).
 - **`Per<L, R, F>`**: Represents the quotient of two units (e.g., Meter / Second = Velocity).
 
-All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg`, `FNonEmpty` etc.) to enforce constraints like non-negativity on the underlying values.
+All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg` etc.) to enforce constraints like non-negativity on the underlying values.
 
 ### Physics
 
-This example demonstrates how to define physical units and calculate Kinetic Energy (i.e. **Ek = kg \* (m/s)^2**) safely.
+This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg \* (m/s)^2**) safely.
 
 ```rust
 use functora_tagged::*;

@@ -87,23 +87,24 @@ pub trait DMul<R, O> {}
 //
 
 // 1 * T = T
-impl<T, I, IF> DMul<T, T> for Identity<I, IF> {}
+impl<I, IF, T> DMul<T, T> for Identity<I, IF> {}
 
 // A * 1 = A
-impl<A, I, AF, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
+impl<A, AF, I, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
     for Atomic<A, AF>
 {
 }
 
 // (L × R) * 1 = L × R
-impl<L, R, I, IF, TF> DMul<Identity<I, IF>, Times<L, R, TF>>
-    for Times<L, R, TF>
+impl<L, R, TF1, I, IF>
+    DMul<Identity<I, IF>, Times<L, R, TF1>>
+    for Times<L, R, TF1>
 {
 }
 
 // (L ÷ R) * 1 = L ÷ R
-impl<L, R, I, IF, PF> DMul<Identity<I, IF>, Per<L, R, PF>>
-    for Per<L, R, PF>
+impl<L, R, PF1, I, IF> DMul<Identity<I, IF>, Per<L, R, PF1>>
+    for Per<L, R, PF1>
 {
 }
 
@@ -112,47 +113,47 @@ impl<L, R, I, IF, PF> DMul<Identity<I, IF>, Per<L, R, PF>>
 //
 
 // L * R = L ✖ R
-impl<L, R, LF, RF, TF>
+impl<L, LF, R, RF, TF3>
     DMul<
         Atomic<R, RF>,
-        Times<Atomic<L, LF>, Atomic<R, RF>, TF>,
+        Times<Atomic<L, LF>, Atomic<R, RF>, TF3>,
     > for Atomic<L, LF>
 {
 }
 
 // A * (L ✖ R) = A ✖ (L ✖ R)
-impl<A, L, R, AF, TF1, TF2>
+impl<A, AF, L, R, TF2, TF3>
     DMul<
-        Times<L, R, TF1>,
-        Times<Atomic<A, AF>, Times<L, R, TF1>, TF2>,
+        Times<L, R, TF2>,
+        Times<Atomic<A, AF>, Times<L, R, TF2>, TF3>,
     > for Atomic<A, AF>
 {
 }
 
 // A * (L ÷ R) = A ✖ (L ÷ R)
-impl<A, L, R, AF, PF, TF>
+impl<A, AF, L, R, PF2, TF3>
     DMul<
-        Per<L, R, PF>,
-        Times<Atomic<A, AF>, Per<L, R, PF>, TF>,
+        Per<L, R, PF2>,
+        Times<Atomic<A, AF>, Per<L, R, PF2>, TF3>,
     > for Atomic<A, AF>
 {
 }
 
 // (L ✖ R) * A = (L ✖ R) ✖ A
-impl<L, R, A, TF, AF, TF2>
+impl<L, R, TF1, A, AF, TF3>
     DMul<
         Atomic<A, AF>,
-        Times<Times<L, R, TF>, Atomic<A, AF>, TF2>,
-    > for Times<L, R, TF>
+        Times<Times<L, R, TF1>, Atomic<A, AF>, TF3>,
+    > for Times<L, R, TF1>
 {
 }
 
 // (L ÷ R) * A = (L ÷ R) ✖ A
-impl<L, R, A, PF, AF, TF>
+impl<L, R, PF1, A, AF, TF3>
     DMul<
         Atomic<A, AF>,
-        Times<Per<L, R, PF>, Atomic<A, AF>, TF>,
-    > for Per<L, R, PF>
+        Times<Per<L, R, PF1>, Atomic<A, AF>, TF3>,
+    > for Per<L, R, PF1>
 {
 }
 
@@ -161,7 +162,7 @@ impl<L, R, A, PF, AF, TF>
 //
 
 // (L1 × R1) * (L2 × R2) = (L1 × R1) × (L2 × R2)
-impl<L1, R1, L2, R2, TF1, TF2, TF3>
+impl<L1, R1, TF1, L2, R2, TF2, TF3>
     DMul<
         Times<L2, R2, TF2>,
         Times<Times<L1, R1, TF1>, Times<L2, R2, TF2>, TF3>,
@@ -170,20 +171,20 @@ impl<L1, R1, L2, R2, TF1, TF2, TF3>
 }
 
 // (L1 × R1) * (L2 ÷ R2) = (L1 × R1) × (L2 ÷ R2)
-impl<L1, R1, L2, R2, TF1, TF2, PF>
+impl<L1, R1, TF1, L2, R2, PF2, TF3>
     DMul<
-        Per<L2, R2, PF>,
-        Times<Times<L1, R1, TF1>, Per<L2, R2, PF>, TF2>,
+        Per<L2, R2, PF2>,
+        Times<Times<L1, R1, TF1>, Per<L2, R2, PF2>, TF3>,
     > for Times<L1, R1, TF1>
 {
 }
 
 // (L1 ÷ R1) * (L2 × R2) = (L1 ÷ R1) × (L2 × R2)
-impl<L1, R1, L2, R2, TF2, TF3, PF>
+impl<L1, R1, PF1, L2, R2, TF2, TF3>
     DMul<
         Times<L2, R2, TF2>,
-        Times<Per<L1, R1, PF>, Times<L2, R2, TF2>, TF3>,
-    > for Per<L1, R1, PF>
+        Times<Per<L1, R1, PF1>, Times<L2, R2, TF2>, TF3>,
+    > for Per<L1, R1, PF1>
 {
 }
 
@@ -192,10 +193,10 @@ impl<L1, R1, L2, R2, TF2, TF3, PF>
 //
 
 // (L1 ÷ R1) * (L2 ÷ R2) = (L1 ÷ R1) × (L2 ÷ R2)
-impl<L1, R1, L2, R2, TF, PF1, PF2>
+impl<L1, R1, PF1, L2, R2, PF2, TF3>
     DMul<
         Per<L2, R2, PF2>,
-        Times<Per<L1, R1, PF1>, Per<L2, R2, PF2>, TF>,
+        Times<Per<L1, R1, PF1>, Per<L2, R2, PF2>, TF3>,
     > for Per<L1, R1, PF1>
 {
 }
@@ -224,28 +225,28 @@ pub trait DDiv<R, O> {}
 impl<T, I, IF> DDiv<Identity<I, IF>, T> for T {}
 
 // 1 / A = 1 ÷ A
-impl<A, I, AF, IF, PF>
+impl<I, IF, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
-        Per<Identity<I, IF>, Atomic<A, AF>, PF>,
+        Per<Identity<I, IF>, Atomic<A, AF>, PF3>,
     > for Identity<I, IF>
 {
 }
 
 // 1 / (L ✖ R) = 1 ÷ (L ✖ R)
-impl<L, R, I, IF, TF, PF>
+impl<I, IF, L, R, TF2, PF3>
     DDiv<
-        Times<L, R, TF>,
-        Per<Identity<I, IF>, Times<L, R, TF>, PF>,
+        Times<L, R, TF2>,
+        Per<Identity<I, IF>, Times<L, R, TF2>, PF3>,
     > for Identity<I, IF>
 {
 }
 
 // 1 / (L ÷ R) = 1 ÷ (L ÷ R)
-impl<L, R, I, IF, PF1, PF2>
+impl<I, IF, L, R, PF2, PF3>
     DDiv<
-        Per<L, R, PF1>,
-        Per<Identity<I, IF>, Per<L, R, PF1>, PF2>,
+        Per<L, R, PF2>,
+        Per<Identity<I, IF>, Per<L, R, PF2>, PF3>,
     > for Identity<I, IF>
 {
 }
@@ -255,47 +256,47 @@ impl<L, R, I, IF, PF1, PF2>
 //
 
 // L / R = L ÷ R
-impl<L, R, LF, RF, PF>
+impl<L, LF, R, RF, PF3>
     DDiv<
         Atomic<R, RF>,
-        Per<Atomic<L, LF>, Atomic<R, RF>, PF>,
+        Per<Atomic<L, LF>, Atomic<R, RF>, PF3>,
     > for Atomic<L, LF>
 {
 }
 
 // A / (L ✖ R) = A ÷ (L ✖ R)
-impl<A, L, R, AF, TF, PF>
+impl<A, AF, L, R, TF2, PF3>
     DDiv<
-        Times<L, R, TF>,
-        Per<Atomic<A, AF>, Times<L, R, TF>, PF>,
+        Times<L, R, TF2>,
+        Per<Atomic<A, AF>, Times<L, R, TF2>, PF3>,
     > for Atomic<A, AF>
 {
 }
 
 // A / (L ÷ R) = A ÷ (L ÷ R)
-impl<A, L, R, AF, PF, PF2>
+impl<A, AF, L, R, PF2, PF3>
     DDiv<
-        Per<L, R, PF>,
-        Per<Atomic<A, AF>, Per<L, R, PF>, PF2>,
+        Per<L, R, PF2>,
+        Per<Atomic<A, AF>, Per<L, R, PF2>, PF3>,
     > for Atomic<A, AF>
 {
 }
 
 // (L ✖ R) / A = (L ✖ R) ÷ A
-impl<L, R, A, TF, AF, PF>
+impl<L, R, TF1, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
-        Per<Times<L, R, TF>, Atomic<A, AF>, PF>,
-    > for Times<L, R, TF>
+        Per<Times<L, R, TF1>, Atomic<A, AF>, PF3>,
+    > for Times<L, R, TF1>
 {
 }
 
 // (L ÷ R) / A = (L ÷ R) ÷ A
-impl<L, R, A, PF, AF, PF2>
+impl<L, R, PF1, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
-        Per<Per<L, R, PF>, Atomic<A, AF>, PF2>,
-    > for Per<L, R, PF>
+        Per<Per<L, R, PF1>, Atomic<A, AF>, PF3>,
+    > for Per<L, R, PF1>
 {
 }
 
@@ -304,29 +305,29 @@ impl<L, R, A, PF, AF, PF2>
 //
 
 // (L1 × R1) / (L2 × R2) = (L1 × R1) ÷ (L2 × R2)
-impl<L1, R1, L2, R2, TF1, TF2, PF>
+impl<L1, R1, TF1, L2, R2, TF2, PF3>
     DDiv<
         Times<L2, R2, TF2>,
-        Per<Times<L1, R1, TF1>, Times<L2, R2, TF2>, PF>,
+        Per<Times<L1, R1, TF1>, Times<L2, R2, TF2>, PF3>,
     > for Times<L1, R1, TF1>
 {
 }
 
 // (L1 × R1) / (L2 ÷ R2) = (L1 × R1) ÷ (L2 ÷ R2)
-impl<L1, R1, L2, R2, TF1, PF, PF2>
+impl<L1, R1, TF1, L2, R2, PF2, PF3>
     DDiv<
-        Per<L2, R2, PF>,
-        Per<Times<L1, R1, TF1>, Per<L2, R2, PF>, PF2>,
+        Per<L2, R2, PF2>,
+        Per<Times<L1, R1, TF1>, Per<L2, R2, PF2>, PF3>,
     > for Times<L1, R1, TF1>
 {
 }
 
 // (L1 ÷ R1) / (L2 × R2) = (L1 ÷ R1) ÷ (L2 × R2)
-impl<L1, R1, L2, R2, PF, TF, PF2>
+impl<L1, R1, PF1, L2, R2, TF2, PF3>
     DDiv<
-        Times<L2, R2, TF>,
-        Per<Per<L1, R1, PF>, Times<L2, R2, TF>, PF2>,
-    > for Per<L1, R1, PF>
+        Times<L2, R2, TF2>,
+        Per<Per<L1, R1, PF1>, Times<L2, R2, TF2>, PF3>,
+    > for Per<L1, R1, PF1>
 {
 }
 
@@ -335,7 +336,7 @@ impl<L1, R1, L2, R2, PF, TF, PF2>
 //
 
 // (L1 ÷ R1) / (L2 ÷ R2) = (L1 ÷ R1) ÷ (L2 ÷ R2)
-impl<L1, R1, L2, R2, PF1, PF2, PF3>
+impl<L1, R1, PF1, L2, R2, PF2, PF3>
     DDiv<
         Per<L2, R2, PF2>,
         Per<Per<L1, R1, PF1>, Per<L2, R2, PF2>, PF3>,
@@ -353,10 +354,10 @@ impl<L, R, TF> DDiv<R, L> for Times<L, R, TF> {}
 
 // L / (L ✖ R) = 1 ÷ R
 // R / (L ✖ R) = 1 ÷ L (overlaps when L = R)
-impl<L, LF, R, I, IF, TF, PF>
+impl<L, LF, R, TF2, I, IF, PF3>
     DDiv<
-        Times<Atomic<L, LF>, R, TF>,
-        Per<Identity<I, IF>, R, PF>,
+        Times<Atomic<L, LF>, R, TF2>,
+        Per<Identity<I, IF>, R, PF3>,
     > for Atomic<L, LF>
 {
 }
@@ -365,8 +366,8 @@ impl<L, LF, R, I, IF, TF, PF>
 impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
 
 // (L ÷ R) / L = 1 ÷ R
-impl<L, R, I, LF, IF, PF1, PF2>
-    DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF2>>
+impl<L, LF, R, PF1, I, IF, PF3>
+    DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF3>>
     for Per<Atomic<L, LF>, R, PF1>
 {
 }
@@ -494,7 +495,7 @@ where
     }
 }
 
-impl<T, L, R, O, LF, RF, OF>
+impl<T, L, LF, R, RF, O, OF>
     TMul<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where
@@ -545,7 +546,7 @@ where
     }
 }
 
-impl<T, L, R, O, LF, RF, OF>
+impl<T, L, LF, R, RF, O, OF>
     TDiv<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where

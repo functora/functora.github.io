@@ -4,7 +4,6 @@ use num_traits::*;
 use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
-use std::ops::Deref;
 use tap::prelude::*;
 
 //
@@ -116,88 +115,109 @@ where
 impl<T> Error for NonEmptyError<T> where T: Debug {}
 
 //
-// IsEmpty
+// HasLen
 //
 
-pub trait IsEmpty {
-    fn is_empty(&self) -> bool;
-}
-
-impl<T> IsEmpty for Vec<T> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+pub trait HasLen {
+    fn length(&self) -> usize;
+    fn zero_length(&self) -> bool {
+        self.length() == 0
     }
 }
 
-impl<T> IsEmpty for Box<[T]> {
-    fn is_empty(&self) -> bool {
-        self.deref().is_empty()
+impl<T> HasLen for [T] {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<T: Clone> IsEmpty for std::borrow::Cow<'_, [T]> {
-    fn is_empty(&self) -> bool {
-        self.deref().is_empty()
+impl<T, const N: usize> HasLen for [T; N] {
+    fn length(&self) -> usize {
+        N
     }
 }
 
-impl IsEmpty for String {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl HasLen for str {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl IsEmpty for &str {
-    fn is_empty(&self) -> bool {
-        (*self).is_empty()
+impl HasLen for String {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<T, S> IsEmpty for std::collections::HashSet<T, S> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl<T> HasLen for Vec<T> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<K, V, S> IsEmpty
+impl<T> HasLen for Box<T>
+where
+    T: HasLen + ?Sized,
+{
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+impl<T> HasLen for std::borrow::Cow<'_, T>
+where
+    T: HasLen + ?Sized + ToOwned,
+{
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+impl<T, S> HasLen for std::collections::HashSet<T, S> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<K, V, S> HasLen
     for std::collections::HashMap<K, V, S>
 {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<T> IsEmpty for std::collections::BTreeSet<T> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl<T> HasLen for std::collections::BTreeSet<T> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<K, V> IsEmpty for std::collections::BTreeMap<K, V> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl<K, V> HasLen for std::collections::BTreeMap<K, V> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<T> IsEmpty for std::collections::VecDeque<T> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl<T> HasLen for std::collections::VecDeque<T> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
-impl<T> IsEmpty for std::collections::LinkedList<T> {
-    fn is_empty(&self) -> bool {
-        self.is_empty()
+impl<T> HasLen for std::collections::LinkedList<T> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
 impl<T> Refine<T> for FNonEmpty
 where
-    T: Debug + IsEmpty,
+    T: Debug + HasLen,
 {
     type RefineError = NonEmptyError<T>;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
-        if rep.is_empty() {
+        if rep.zero_length() {
             NonEmptyError(rep).pipe(Err)
         } else {
             Ok(rep)

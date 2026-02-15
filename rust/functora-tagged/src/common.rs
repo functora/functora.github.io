@@ -149,6 +149,42 @@ impl HasLen for String {
     }
 }
 
+impl HasLen for std::path::Path {
+    fn length(&self) -> usize {
+        self.as_os_str().len()
+    }
+}
+
+impl HasLen for std::path::PathBuf {
+    fn length(&self) -> usize {
+        self.as_os_str().len()
+    }
+}
+
+impl HasLen for std::ffi::OsStr {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl HasLen for std::ffi::OsString {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl HasLen for std::ffi::CStr {
+    fn length(&self) -> usize {
+        self.to_bytes().len()
+    }
+}
+
+impl HasLen for std::ffi::CString {
+    fn length(&self) -> usize {
+        self.as_bytes().len()
+    }
+}
+
 impl<T> HasLen for Vec<T> {
     fn length(&self) -> usize {
         self.len()
@@ -208,6 +244,52 @@ impl<T> HasLen for std::collections::VecDeque<T> {
 impl<T> HasLen for std::collections::LinkedList<T> {
     fn length(&self) -> usize {
         self.len()
+    }
+}
+
+impl<T> HasLen for std::collections::BinaryHeap<T> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T> HasLen for std::ops::Range<T>
+where
+    T: Copy + Into<usize> + std::ops::Sub<Output = T>,
+{
+    fn length(&self) -> usize {
+        (self.end - self.start).into()
+    }
+}
+
+impl<T> HasLen for std::ops::RangeInclusive<T>
+where
+    T: Copy
+        + Into<usize>
+        + num_traits::One
+        + std::ops::Add<Output = T>
+        + std::ops::Sub<Output = T>,
+{
+    fn length(&self) -> usize {
+        (*self.end() - *self.start() + T::one()).into()
+    }
+}
+
+impl<T> HasLen for std::rc::Rc<T>
+where
+    T: HasLen + ?Sized,
+{
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+impl<T> HasLen for std::sync::Arc<T>
+where
+    T: HasLen + ?Sized,
+{
+    fn length(&self) -> usize {
+        (**self).length()
     }
 }
 

@@ -275,7 +275,18 @@ All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg` et
 
 ### Physics
 
-This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg \* (m/s)^2**) safely.
+Large dimensional systems can become verbose if the refinery `F` is repeated for every type. To solve this, `functora-tagged` provides the `Raffinate` trait. Each dimensional type (`Identity`, `Atomic`, `Times`, `Per`) implements `Raffinate`, which carries its own refinery through a `Refinery` associated type.
+
+This allows the dimensional types to automatically derive the correct refinery. By defining a simple `Dim<D>` type alias, you can eliminate the need to repeat refinery `F` in your definitions:
+
+```rust
+use functora_tagged::*;
+use rust_decimal::Decimal;
+
+type Dim<D> = Tagged<Decimal, D, <D as Raffinate>::Refinery>;
+```
+
+This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg * (m/s)^2**) safely and concisely.
 
 ```rust
 use functora_tagged::*;
@@ -283,16 +294,22 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
 //
-// 1. Dimensionless unit (Identity)
+// 1. Generic dimensional type alias
+//
+
+type Dim<D> = Tagged<Decimal, D, <D as Raffinate>::Refinery>;
+
+//
+// 2. Dimensionless unit (Identity)
 //
 
 #[derive(Debug)]
 pub enum INum {}
 type DNum = Identity<INum, FCrude>;
-type Num = Tagged<Decimal, DNum, FCrude>;
+type Num = Dim<DNum>;
 
 //
-// 2. Fundamental units (Atomic)
+// 3. Fundamental units (Atomic)
 //
 
 #[derive(Debug)]
@@ -302,23 +319,21 @@ pub enum ASecond {}
 #[derive(Debug)]
 pub enum AKg {}
 
-// The "Dimension" types with non-negative refinement
 type DMeter = Atomic<AMeter, FNonNeg>;
 type DSecond = Atomic<ASecond, FNonNeg>;
 type DKg = Atomic<AKg, FNonNeg>;
 
-// The concrete types with Decimal rep
-type Meter = Tagged<Decimal, DMeter, FNonNeg>;
-type Second = Tagged<Decimal, DSecond, FNonNeg>;
-type Kg = Tagged<Decimal, DKg, FNonNeg>;
+type Meter = Dim<DMeter>;
+type Second = Dim<DSecond>;
+type Kg = Dim<DKg>;
 
 //
-// 3. Non-fundamental units (Per, Times)
+// 4. Composite units (Per, Times)
 //
 
 // Velocity = Meter / Second
 type DVelocity = Per<DMeter, DSecond, FNonNeg>;
-type Velocity = Tagged<Decimal, DVelocity, FNonNeg>;
+type Velocity = Dim<DVelocity>;
 
 // Joule = Kg * Velocity^2
 type DJoule = Times<
@@ -326,7 +341,11 @@ type DJoule = Times<
     Times<DVelocity, DVelocity, FNonNeg>,
     FNonNeg,
 >;
-type Joule = Tagged<Decimal, DJoule, FNonNeg>;
+type Joule = Dim<DJoule>;
+
+//
+// 5. Type-safe calculation
+//
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let distance = Meter::new(dec!(50))?; // 50 meters
@@ -338,11 +357,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(*velocity, dec!(10));
 
     // Calculate Energy: 100kg * (10m/s)^2 = 10000J
-    let energy: Joule =
-        mass.tmul(&velocity.tmul(&velocity)?)?;
+    let energy: Joule = mass.tmul(&velocity.tmul(&velocity)?)?;
     assert_eq!(*energy, dec!(10000));
 
-    // Scaling by dimensionless 0.5 doesn't change units
+    // Scaling by a dimensionless 0.5 doesn't change the units
     let half = Num::new(dec!(0.5))?;
     let half_energy: Joule = energy.tmul(&half)?;
     assert_eq!(*half_energy, dec!(5000));

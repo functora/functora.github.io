@@ -472,6 +472,29 @@ where
 }
 
 ///////////
+//  Gap  //
+///////////
+
+pub trait TGap: Sized + Debug {
+    fn tgap(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, TNumError<Self, Self>>;
+}
+
+impl<T> TGap for T
+where
+    T: Ord + Copy + Debug + TSub,
+{
+    fn tgap(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, TNumError<T, T>> {
+        self.max(rhs).tsub(self.min(rhs))
+    }
+}
+
+///////////
 //  Mul  //
 ///////////
 

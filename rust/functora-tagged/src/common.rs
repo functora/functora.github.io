@@ -1,3 +1,4 @@
+use crate::num::*;
 use crate::refine::*;
 use derive_more::Display;
 use num_traits::*;
@@ -269,23 +270,27 @@ impl<T> HasLength for std::collections::BinaryHeap<T> {
 
 impl<T> HasLength for std::ops::Range<T>
 where
-    T: Copy + Into<usize> + std::ops::Sub<Output = T>,
+    T: Copy + Into<usize> + TGap,
 {
     fn length(&self) -> usize {
-        (self.end - self.start).into()
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.end.tgap(&self.start).unwrap().into()
     }
 }
 
 impl<T> HasLength for std::ops::RangeInclusive<T>
 where
-    T: Copy
-        + Into<usize>
-        + num_traits::One
-        + std::ops::Add<Output = T>
-        + std::ops::Sub<Output = T>,
+    T: Copy + Into<usize> + num_traits::One + TGap + TAdd,
 {
     fn length(&self) -> usize {
-        (*self.end() - *self.start() + T::one()).into()
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.end()
+            .tgap(self.start())
+            .and_then(|x| x.tadd(&T::one()))
+            .unwrap()
+            .into()
     }
 }
 

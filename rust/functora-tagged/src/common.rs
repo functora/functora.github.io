@@ -115,107 +115,107 @@ where
 impl<T> Error for NonEmptyError<T> where T: Debug {}
 
 //
-// HasLen
+// HasLength
 //
 
-pub trait HasLen {
+pub trait HasLength {
     fn length(&self) -> usize;
     fn zero_length(&self) -> bool {
         self.length() == 0
     }
 }
 
-impl<T> HasLen for [T] {
+impl<T> HasLength for [T] {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T, const N: usize> HasLen for [T; N] {
+impl<T, const N: usize> HasLength for [T; N] {
     fn length(&self) -> usize {
         N
     }
 }
 
-impl HasLen for str {
+impl HasLength for str {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl HasLen for String {
+impl HasLength for String {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl HasLen for std::path::Path {
+impl HasLength for std::path::Path {
     fn length(&self) -> usize {
         self.as_os_str().len()
     }
 }
 
-impl HasLen for std::path::PathBuf {
+impl HasLength for std::path::PathBuf {
     fn length(&self) -> usize {
         self.as_os_str().len()
     }
 }
 
-impl HasLen for std::ffi::OsStr {
+impl HasLength for std::ffi::OsStr {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl HasLen for std::ffi::OsString {
+impl HasLength for std::ffi::OsString {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl HasLen for std::ffi::CStr {
+impl HasLength for std::ffi::CStr {
     fn length(&self) -> usize {
         self.to_bytes().len()
     }
 }
 
-impl HasLen for std::ffi::CString {
+impl HasLength for std::ffi::CString {
     fn length(&self) -> usize {
         self.as_bytes().len()
     }
 }
 
-impl<T> HasLen for Vec<T> {
+impl<T> HasLength for Vec<T> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T> HasLen for Box<T>
+impl<T> HasLength for Box<T>
 where
-    T: HasLen + ?Sized,
+    T: HasLength + ?Sized,
 {
     fn length(&self) -> usize {
         (**self).length()
     }
 }
 
-impl<T> HasLen for std::borrow::Cow<'_, T>
+impl<T> HasLength for std::borrow::Cow<'_, T>
 where
-    T: HasLen + ?Sized + ToOwned,
+    T: HasLength + ?Sized + ToOwned,
 {
     fn length(&self) -> usize {
         (**self).length()
     }
 }
 
-impl<T, S> HasLen for std::collections::HashSet<T, S> {
+impl<T, S> HasLength for std::collections::HashSet<T, S> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<K, V, S> HasLen
+impl<K, V, S> HasLength
     for std::collections::HashMap<K, V, S>
 {
     fn length(&self) -> usize {
@@ -223,37 +223,37 @@ impl<K, V, S> HasLen
     }
 }
 
-impl<T> HasLen for std::collections::BTreeSet<T> {
+impl<T> HasLength for std::collections::BTreeSet<T> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<K, V> HasLen for std::collections::BTreeMap<K, V> {
+impl<K, V> HasLength for std::collections::BTreeMap<K, V> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T> HasLen for std::collections::VecDeque<T> {
+impl<T> HasLength for std::collections::VecDeque<T> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T> HasLen for std::collections::LinkedList<T> {
+impl<T> HasLength for std::collections::LinkedList<T> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T> HasLen for std::collections::BinaryHeap<T> {
+impl<T> HasLength for std::collections::BinaryHeap<T> {
     fn length(&self) -> usize {
         self.len()
     }
 }
 
-impl<T> HasLen for std::ops::Range<T>
+impl<T> HasLength for std::ops::Range<T>
 where
     T: Copy + Into<usize> + std::ops::Sub<Output = T>,
 {
@@ -262,7 +262,7 @@ where
     }
 }
 
-impl<T> HasLen for std::ops::RangeInclusive<T>
+impl<T> HasLength for std::ops::RangeInclusive<T>
 where
     T: Copy
         + Into<usize>
@@ -275,18 +275,18 @@ where
     }
 }
 
-impl<T> HasLen for std::rc::Rc<T>
+impl<T> HasLength for std::rc::Rc<T>
 where
-    T: HasLen + ?Sized,
+    T: HasLength + ?Sized,
 {
     fn length(&self) -> usize {
         (**self).length()
     }
 }
 
-impl<T> HasLen for std::sync::Arc<T>
+impl<T> HasLength for std::sync::Arc<T>
 where
-    T: HasLen + ?Sized,
+    T: HasLength + ?Sized,
 {
     fn length(&self) -> usize {
         (**self).length()
@@ -295,7 +295,7 @@ where
 
 impl<T> Refine<T> for FNonEmpty
 where
-    T: Debug + HasLen,
+    T: Debug + HasLength,
 {
     type RefineError = NonEmptyError<T>;
     fn refine(rep: T) -> Result<T, Self::RefineError> {

@@ -1,4 +1,3 @@
-use crate::num::*;
 use crate::refine::*;
 use derive_more::Display;
 use num_traits::*;
@@ -140,6 +139,22 @@ pub trait HasLength {
     }
 }
 
+// Blanket
+
+impl<T: HasLength + ?Sized> HasLength for &T {
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+impl<T: HasLength + ?Sized> HasLength for &mut T {
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+// Slices
+
 impl<T> HasLength for [T] {
     fn length(&self) -> usize {
         self.len()
@@ -151,6 +166,8 @@ impl<T, const N: usize> HasLength for [T; N] {
         N
     }
 }
+
+// Strings
 
 impl HasLength for str {
     fn length(&self) -> usize {
@@ -200,11 +217,7 @@ impl HasLength for std::ffi::CString {
     }
 }
 
-impl<T> HasLength for Vec<T> {
-    fn length(&self) -> usize {
-        self.len()
-    }
-}
+// Smart Pointers
 
 impl<T> HasLength for Box<T>
 where
@@ -221,6 +234,32 @@ where
 {
     fn length(&self) -> usize {
         (**self).length()
+    }
+}
+
+impl<T> HasLength for std::rc::Rc<T>
+where
+    T: HasLength + ?Sized,
+{
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+impl<T> HasLength for std::sync::Arc<T>
+where
+    T: HasLength + ?Sized,
+{
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+// Collections
+
+impl<T> HasLength for Vec<T> {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
 
@@ -265,49 +304,5 @@ impl<T> HasLength for std::collections::LinkedList<T> {
 impl<T> HasLength for std::collections::BinaryHeap<T> {
     fn length(&self) -> usize {
         self.len()
-    }
-}
-
-impl<T> HasLength for std::ops::Range<T>
-where
-    T: Copy + Into<usize> + TGap,
-{
-    fn length(&self) -> usize {
-        #[allow(clippy::unwrap_used)]
-        #[allow(clippy::missing_panics_doc)]
-        self.end.tgap(&self.start).unwrap().into()
-    }
-}
-
-impl<T> HasLength for std::ops::RangeInclusive<T>
-where
-    T: Copy + Into<usize> + num_traits::One + TGap + TAdd,
-{
-    fn length(&self) -> usize {
-        #[allow(clippy::unwrap_used)]
-        #[allow(clippy::missing_panics_doc)]
-        self.end()
-            .tgap(self.start())
-            .and_then(|x| x.tadd(&T::one()))
-            .unwrap()
-            .into()
-    }
-}
-
-impl<T> HasLength for std::rc::Rc<T>
-where
-    T: HasLength + ?Sized,
-{
-    fn length(&self) -> usize {
-        (**self).length()
-    }
-}
-
-impl<T> HasLength for std::sync::Arc<T>
-where
-    T: HasLength + ?Sized,
-{
-    fn length(&self) -> usize {
-        (**self).length()
     }
 }

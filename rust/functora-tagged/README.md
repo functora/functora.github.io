@@ -106,7 +106,7 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 -   **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
 -   **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
 -   **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
--   **`FNonEmpty`**: Ensures a collection (iterable) is not empty.
+-   **`FNonEmpty`**: Ensures the value is not empty, i.e. the length is `> 0`.
 
 ## Derives
 

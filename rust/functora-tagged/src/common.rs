@@ -114,6 +114,20 @@ where
     T: Debug;
 impl<T> Error for NonEmptyError<T> where T: Debug {}
 
+impl<T> Refine<T> for FNonEmpty
+where
+    T: Debug + HasLength,
+{
+    type RefineError = NonEmptyError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep.zero_length() {
+            NonEmptyError(rep).pipe(Err)
+        } else {
+            Ok(rep)
+        }
+    }
+}
+
 //
 // HasLength
 //
@@ -290,19 +304,5 @@ where
 {
     fn length(&self) -> usize {
         (**self).length()
-    }
-}
-
-impl<T> Refine<T> for FNonEmpty
-where
-    T: Debug + HasLength,
-{
-    type RefineError = NonEmptyError<T>;
-    fn refine(rep: T) -> Result<T, Self::RefineError> {
-        if rep.zero_length() {
-            NonEmptyError(rep).pipe(Err)
-        } else {
-            Ok(rep)
-        }
     }
 }

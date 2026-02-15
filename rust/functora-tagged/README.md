@@ -283,7 +283,8 @@ This allows the dimensional types to automatically derive the correct refinery. 
 use functora_tagged::*;
 use rust_decimal::Decimal;
 
-type Dim<D> = Tagged<Decimal, D, <D as Raffinate>::Refinery>;
+type Dim<D> =
+    Tagged<Decimal, D, <D as Raffinate>::Refinery>;
 ```
 
 This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg * (m/s)^2**) safely and concisely.
@@ -297,7 +298,8 @@ use rust_decimal_macros::dec;
 // 1. Generic dimensional type alias
 //
 
-type Dim<D> = Tagged<Decimal, D, <D as Raffinate>::Refinery>;
+type Dim<D> =
+    Tagged<Decimal, D, <D as Raffinate>::Refinery>;
 
 //
 // 2. Dimensionless unit (Identity)
@@ -357,7 +359,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(*velocity, dec!(10));
 
     // Calculate Energy: 100kg * (10m/s)^2 = 10000J
-    let energy: Joule = mass.tmul(&velocity.tmul(&velocity)?)?;
+    let energy: Joule =
+        mass.tmul(&velocity.tmul(&velocity)?)?;
     assert_eq!(*energy, dec!(10000));
 
     // Scaling by a dimensionless 0.5 doesn't change the units

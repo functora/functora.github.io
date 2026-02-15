@@ -49,46 +49,54 @@ To enforce specific refinement rules for your newtypes, you implement the `Refin
 
 ### Custom Refinery
 
-Here is a complete example of defining a Dimension `D`, a Refinery `F`, and implementing `Refine` to ensure a number is even.
+Here is a complete example of defining a Dimension `D`, a Refinery `F`, and implementing `Refine`.
 
 ```rust
 use functora_tagged::*;
 
 // 1. Define the Dimension (D)
 #[derive(Debug)]
-pub enum DCount {}
+pub enum DCurrencyCode {}
 
 // 2. Define the Refinery (F)
 #[derive(Debug)]
-pub enum FEven {}
+pub enum FCurrencyCode {}
 
 // 3. Define the Error Type
 #[derive(Debug, PartialEq)]
-pub struct NotEvenError;
+pub struct CurrencyCodeError;
 
 // 4. Implement Refine for the Refinery
-impl Refine<i32> for FEven {
-    type RefineError = NotEvenError;
+impl Refine<String> for FCurrencyCode {
+    type RefineError = CurrencyCodeError;
 
-    fn refine(rep: i32) -> Result<i32, Self::RefineError> {
-        if rep % 2 == 0 {
-            Ok(rep)
+    fn refine(rep: String) -> Result<String, Self::RefineError> {
+        let trimmed = rep.trim();
+        if trimmed.len() == 3 && trimmed.chars().all(|c| c.is_ascii_alphabetic()) {
+             Ok(trimmed.to_uppercase())
         } else {
-            Err(NotEvenError)
+            Err(CurrencyCodeError)
         }
     }
 }
 
 // 5. Define the Newtype
-pub type EvenCount = Tagged<i32, DCount, FEven>;
+pub type CurrencyCode = Tagged<String, DCurrencyCode, FCurrencyCode>;
 
 // Usage
-let val = EvenCount::new(42);
-assert!(val.is_ok());
-assert_eq!(*val.unwrap(), 42);
+let usd = CurrencyCode::new("USD".to_string());
+assert!(usd.is_ok());
+assert_eq!(*usd.unwrap(), "USD");
 
-let err = EvenCount::new(43);
-assert_eq!(err.unwrap_err(), NotEvenError);
+let eur = CurrencyCode::new("  eur  ".to_string()); // Whitespace stripped, uppercased
+assert!(eur.is_ok());
+assert_eq!(*eur.unwrap(), "EUR");
+
+let err = CurrencyCode::new("us".to_string()); // Too short
+assert_eq!(err.unwrap_err(), CurrencyCodeError);
+
+let err = CurrencyCode::new("123".to_string()); // Not letters
+assert_eq!(err.unwrap_err(), CurrencyCodeError);
 ```
 
 ## Common Refineries
@@ -171,7 +179,7 @@ assert_eq!(*new, rep);
 
 // FPositive returns PositiveError on failure
 let err = PositiveCount::new(0).unwrap_err();
-assert!(matches!(err, PositiveError(0)));
+assert_eq!(err, PositiveError(0));
 ```
 
 ### Generic Newtype
@@ -206,50 +214,50 @@ assert_eq!(err, PositiveError(0.0));
 
 ### Composite Newtype
 
-This example demonstrates how to combine multiple refinement rules (e.g., `NonNeg` and `NotEven` format) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
+This example demonstrates how to combine multiple refinement rules (e.g., `NonNeg` and `Max 100`) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
 
 ```rust
 use functora_tagged::*;
 
 #[derive(Debug)]
-pub enum DCount {} // Dimension
+pub enum DScore {} // Dimension
 #[derive(Debug)]
-pub enum FEvenNonNeg {} // Refinery
+pub enum FScore {} // Refinery
 
 // Flat structure: one Tagged wrapper
-pub type EvenCount = Tagged<i32, DCount, FEvenNonNeg>;
+pub type Score = Tagged<i32, DScore, FScore>;
 
 #[derive(Debug, PartialEq)]
-pub enum EvenNonNegError {
+pub enum ScoreError {
     NonNeg(NonNegError<i32>),
-    NotEven(i32),
+    TooHigh(i32),
 }
 
-impl Refine<i32> for FEvenNonNeg {
-    type RefineError = EvenNonNegError;
+impl Refine<i32> for FScore {
+    type RefineError = ScoreError;
 
     fn refine(rep: i32) -> Result<i32, Self::RefineError> {
         // Reuse FNonNeg logic first (DRY)
-        let val = FNonNeg::refine(rep).map_err(EvenNonNegError::NonNeg)?;
+        let val = FNonNeg::refine(rep).map_err(ScoreError::NonNeg)?;
 
-        // Then apply custom even check
-        if val % 2 == 0 {
+        // Then apply custom max check
+        if val <= 100 {
             Ok(val)
         } else {
-            Err(EvenNonNegError::NotEven(val))
+            Err(ScoreError::TooHigh(val))
         }
     }
 }
 
-let val = 10;
-let new = EvenCount::new(val).unwrap();
-assert_eq!(*new, val);
+let val = 85;
+let score = Score::new(val).unwrap();
+assert_eq!(*score, val);
 
-let err = EvenCount::new(-10).unwrap_err();
-assert_eq!(err, EvenNonNegError::NonNeg(NonNegError(-10)));
+let err = Score::new(-10).unwrap_err();
+assert_eq!(err, ScoreError::NonNeg(NonNegError(-10)));
 
-let err = EvenCount::new(11).unwrap_err();
-assert_eq!(err, EvenNonNegError::NotEven(11));
+let err = Score::new(101).unwrap_err();
+assert_eq!(err, ScoreError::TooHigh(101));
 ```
 
 ## Dimensional

@@ -16,7 +16,7 @@ Rust has common macro-based solutions for the newtype traits derivation problem.
 
 `functora-tagged` offers a superior, macro-free alternative. It provides a clean, idiomatic, and type-safe mechanism for creating newtypes. Through the `Refine` trait, you can define custom validation and transformation logic for your newtype. This logic is then automatically integrated into implementations for crucial, non-trivially derivable traits like `FromStr`, `serde`, and `diesel`, achieving true zero boilerplate for these complex scenarios without the downsides of macros.
 
-## `Tagged` Struct
+## Tagged
 
 The primary newtype building block is the `Tagged<T, D, F>` struct.
 
@@ -34,7 +34,7 @@ pub struct Tagged<T, D, F>(T, PhantomData<(D, F)>);
 
 The `Tagged::new` constructor returns a `Result` that can be unwrapped directly if the `F`'s `Refine` implementation returns `std::convert::Infallible`. The `InfallibleInto` trait and its `infallible()` method provide a convenient way to handle this.
 
-## `ViaString` Struct
+## `ViaString`
 
 The `ViaString<T, D, F>` struct is a specialized newtype primarily intended for scenarios where the underlying representation (`T`) is closely tied to string manipulation or needs to be serialized/deserialized as a string. It differs from `Tagged` in its serialization and deserialization behavior:
 
@@ -47,7 +47,7 @@ It also implements `FromStr` and derives common traits, similar to `Tagged`, res
 
 To enforce specific refinement rules for your newtypes, you implement the `Refine<T>` trait for the `F` type (the Refinery). This trait allows you to define custom refinement logic.
 
-### Example: Even Number
+### Custom Refinery
 
 Here is a complete example of defining a Dimension `D`, a Refinery `F`, and implementing `Refine` to ensure a number is even.
 
@@ -100,11 +100,11 @@ assert_eq!(err.unwrap_err(), NotEvenError);
 -   **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
 -   **`FNonEmpty`**: Ensures a collection (iterable) is not empty.
 
-## Derived Traits
+## Derives
 
 `functora-tagged` provides blanket implementations for several important traits. These traits work seamlessly with your newtypes, respecting the underlying representation behavior and customizable refinement rules defined by the `F` type's implementation of `Refine<T>`.
 
-### Direct Derive:
+### Direct
 
 - `Eq`
 - `PartialEq`
@@ -116,7 +116,7 @@ assert_eq!(err.unwrap_err(), NotEvenError);
 - `diesel::serialize::ToSql` (with `diesel` feature)
 - `diesel::expression::AsExpression` (with `diesel` feature)
 
-### Refined Derive:
+### Refined
 
 - `FromStr`: Implemented for `Tagged<T, D, F>` and `ViaString<T, D, F>`. Returns a `ParseError<T, D, F>`, which can be either a `Decode` error (from `T::from_str`) or a `Refine` error (from `F::refine`).
 - `serde::Deserialize` (with `serde` feature)
@@ -132,11 +132,11 @@ assert_eq!(err.unwrap_err(), NotEvenError);
 
 These integrations respect the `Refine` rules defined for your types.
 
-## Examples
+## Recipes
 
 You can promote `Rep` values into newtype values using `Tagged::new(rep)` applied directly to a `Rep` value. To demote a newtype value back to a `Rep` value, you can use the `.rep()` method to get a reference, or the `.untag()` method to consume the newtype and get the value. You can also use the `Deref` trait (via `*` operator) to access the underlying representation if it implements `Copy`. You can also use any serializer or deserializer for the newtype that is available for `Rep`.
 
-### Default Newtype (using `FCrude`)
+### Simple Newtype
 
 When you don't need validation, use `FCrude` from the `common` module.
 
@@ -151,7 +151,7 @@ let id = UserId::new(12345).infallible();
 assert_eq!(*id, 12345);
 ```
 
-### Refined Newtype (using `FPositive`)
+### Refined Newtype
 
 This example demonstrates ensuring numeric types are positive using `FPositive`.
 
@@ -174,7 +174,7 @@ let err = PositiveCount::new(0).unwrap_err();
 assert!(matches!(err, PositiveError(0)));
 ```
 
-### Generic Newtype (using `FPositive`)
+### Generic Newtype
 
 This demonstrates a generic `PositiveAmount<T>` newtype that enforces positive values for any numeric type `T` that satisfies `FPositive`.
 
@@ -204,7 +204,7 @@ let err = PositiveAmount::<f64>::new(0.0).unwrap_err();
 assert_eq!(err, PositiveError(0.0));
 ```
 
-### Composite Refinement
+### Composite Newtype
 
 This example demonstrates how to combine multiple refinement rules (e.g., `NonNeg` and `NotEven` format) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
 
@@ -252,7 +252,7 @@ let err = EvenCount::new(11).unwrap_err();
 assert_eq!(err, EvenNonNegError::NotEven(11));
 ```
 
-## Dimensional Math
+## Dimensional
 
 `functora-tagged` includes a `num` module that enables type-safe dimensional analysis and arithmetic. It prevents accidental mixing of units (e.g., adding meters to seconds) and ensures that operations produce correctly typed results (e.g., dividing meters by seconds yields velocity).
 
@@ -265,7 +265,7 @@ The system is built on four core algebraic types that carry unit information in 
 
 All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg`, `FNonEmpty` etc.) to enforce constraints like non-negativity on the underlying values.
 
-### Example
+### Physics
 
 This example demonstrates how to define physical units and calculate Kinetic Energy (i.e. **Ek = kg \* (m/s)^2**) safely.
 

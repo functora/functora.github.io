@@ -180,7 +180,6 @@ This demonstrates a generic `PositiveAmount<T>` newtype that enforces positive v
 
 ```rust
 use functora_tagged::*;
-use functora_tagged::common::*;
 
 #[derive(Debug)]
 pub enum DAmount {} // Dimension
@@ -207,54 +206,50 @@ assert_eq!(err, PositiveError(0.0));
 
 ### Composite Refinement
 
-This example demonstrates how to combine multiple refinement rules (e.g., `NonEmpty` and `UserId` format) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
+This example demonstrates how to combine multiple refinement rules (e.g., `NonNeg` and `NotEven` format) into a single, flat `Tagged` type using a composite refinery. This avoids the complexity of nesting `Tagged` types.
 
 ```rust
 use functora_tagged::*;
 
-#[derive(PartialEq, Debug)]
-pub enum DUserId {} // Dimension
 #[derive(Debug)]
-pub enum FUserId {} // Refinery
+pub enum DCount {} // Dimension
+#[derive(Debug)]
+pub enum FEvenNonNeg {} // Refinery
 
 // Flat structure: one Tagged wrapper
-pub type UserId = Tagged<String, DUserId, FUserId>;
+pub type EvenCount = Tagged<i32, DCount, FEvenNonNeg>;
 
-#[derive(PartialEq, Debug)]
-pub enum UserIdError {
-    Empty,
-    InvalidFormat,
+#[derive(Debug, PartialEq)]
+pub enum EvenNonNegError {
+    NonNeg(NonNegError<i32>),
+    NotEven(i32),
 }
 
-impl Refine<String> for FUserId {
-    type RefineError = UserIdError;
+impl Refine<i32> for FEvenNonNeg {
+    type RefineError = EvenNonNegError;
 
-    fn refine(rep: String) -> Result<String, Self::RefineError> {
-        if rep.is_empty() {
-            Err(UserIdError::Empty)
-        } else if rep.starts_with("user_") && rep.len() > 5 {
-            Ok(rep)
+    fn refine(rep: i32) -> Result<i32, Self::RefineError> {
+        // Reuse FNonNeg logic first (DRY)
+        let val = FNonNeg::refine(rep).map_err(EvenNonNegError::NonNeg)?;
+
+        // Then apply custom even check
+        if val % 2 == 0 {
+            Ok(val)
         } else {
-            Err(UserIdError::InvalidFormat)
+            Err(EvenNonNegError::NotEven(val))
         }
     }
 }
 
-let rep = "user_123";
-let new = rep.parse::<UserId>().unwrap();
-assert_eq!(*new, rep);
+let val = 10;
+let new = EvenCount::new(val).unwrap();
+assert_eq!(*new, val);
 
-let err = "".parse::<UserId>().unwrap_err();
-assert_eq!(
-    err,
-    ParseError::Refine(UserIdError::Empty, PhantomData)
-);
+let err = EvenCount::new(-10).unwrap_err();
+assert_eq!(err, EvenNonNegError::NonNeg(NonNegError(-10)));
 
-let err = "post_123".parse::<UserId>().unwrap_err();
-assert_eq!(
-    err,
-    ParseError::Refine(UserIdError::InvalidFormat, PhantomData)
-);
+let err = EvenCount::new(11).unwrap_err();
+assert_eq!(err, EvenNonNegError::NotEven(11));
 ```
 
 ## Dimensional Math
@@ -275,9 +270,7 @@ All these types accept a refinement generic `F` (e.g., `FPositive`, `FNonNeg`, `
 This example demonstrates how to define physical units and calculate Kinetic Energy (i.e. **Ek = kg \* (m/s)^2**) safely.
 
 ```rust
-use functora_tagged::num::*;
 use functora_tagged::*;
-use functora_tagged::common::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 

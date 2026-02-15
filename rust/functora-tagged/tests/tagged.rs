@@ -1,7 +1,5 @@
 use derive_more::Display;
-use functora_tagged::parse_error::ParseError;
-use functora_tagged::refine::Refine;
-use functora_tagged::tagged::Tagged;
+use functora_tagged::*;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;

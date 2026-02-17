@@ -268,7 +268,7 @@ checksum = "8fdb5b85823e13bf326c3efaadd8b9ecae81da0a02be91c2a7ae0f576ba97347"
 
 [[package]]
 name = "functora-tagged"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "derive_more",
  "diesel",

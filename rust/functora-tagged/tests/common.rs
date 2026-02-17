@@ -11,7 +11,10 @@ fn test_vec_i32() {
     let empty: Vec<i32> = vec![];
     let res = NonEmptyVec::new(empty);
     assert!(res.is_err());
-    assert_eq!(res.unwrap_err(), NonEmptyError(vec![]));
+    assert_eq!(
+        res.unwrap_err(),
+        NonEmptyError(PhantomData)
+    );
 
     let non_empty = vec![1, 2, 3];
     let res = NonEmptyVec::new(non_empty.clone());
@@ -24,7 +27,10 @@ fn test_vec_str_slice() {
     let empty: Vec<&str> = vec![];
     let res = NonEmptyVec::new(empty);
     assert!(res.is_err());
-    assert_eq!(res.unwrap_err(), NonEmptyError(vec![]));
+    assert_eq!(
+        res.unwrap_err(),
+        NonEmptyError(PhantomData)
+    );
 
     let non_empty = vec!["a", "b", "c"];
     let res = NonEmptyVec::new(non_empty.clone());
@@ -37,7 +43,10 @@ fn test_vec_string() {
     let empty: Vec<String> = vec![];
     let res = NonEmptyVec::new(empty);
     assert!(res.is_err());
-    assert_eq!(res.unwrap_err(), NonEmptyError(vec![]));
+    assert_eq!(
+        res.unwrap_err(),
+        NonEmptyError(PhantomData)
+    );
 
     let non_empty = vec![
         "a".to_string(),
@@ -56,7 +65,7 @@ fn test_box_slice_i32() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(vec![].into_boxed_slice())
+        NonEmptyError(PhantomData)
     );
 
     let non_empty: Box<[i32]> =
@@ -77,7 +86,7 @@ fn test_cow_slice_i32() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(Cow::Borrowed(&[] as &[i32]))
+        NonEmptyError(PhantomData)
     );
 
     let non_empty: Cow<[i32]> = Cow::Borrowed(&[1, 2, 3]);
@@ -95,7 +104,7 @@ fn test_string_collection() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(String::new())
+        NonEmptyError(PhantomData)
     );
 
     let non_empty = String::from("hello");
@@ -114,7 +123,7 @@ fn test_hash_set() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(HashSet::new())
+        NonEmptyError(PhantomData)
     );
 
     let mut non_empty = HashSet::new();
@@ -135,7 +144,7 @@ fn test_vec_deque() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(VecDeque::new())
+        NonEmptyError(PhantomData)
     );
 
     let mut non_empty = VecDeque::new();
@@ -156,7 +165,7 @@ fn test_linked_list() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        NonEmptyError(LinkedList::new())
+        NonEmptyError(PhantomData)
     );
 
     let mut non_empty = LinkedList::new();

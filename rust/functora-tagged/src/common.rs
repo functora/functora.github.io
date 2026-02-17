@@ -4,6 +4,7 @@ use num_traits::*;
 use std::convert::Infallible;
 use std::error::Error;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use tap::prelude::*;
 
 //
@@ -109,7 +110,7 @@ pub enum FNonEmpty {}
     Display,
 )]
 #[display("{:?}", self)]
-pub struct NonEmptyError<T>(pub T)
+pub struct NonEmptyError<T>(pub PhantomData<T>)
 where
     T: Debug;
 impl<T> Error for NonEmptyError<T> where T: Debug {}
@@ -121,7 +122,7 @@ where
     type RefineError = NonEmptyError<T>;
     fn refine(rep: T) -> Result<T, Self::RefineError> {
         if rep.zero_length() {
-            NonEmptyError(rep).pipe(Err)
+            NonEmptyError(PhantomData).pipe(Err)
         } else {
             Ok(rep)
         }

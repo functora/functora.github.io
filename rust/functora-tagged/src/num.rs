@@ -378,14 +378,14 @@ impl<L, LF, R, PF1, I, IF, PF3>
 
 #[derive(Eq, PartialEq, Debug, Display)]
 #[display("{:?}", self)]
-pub enum TNumError<L: Debug, R: Debug> {
+pub enum NumError<L: Debug, R: Debug> {
     Add(L, R),
     Sub(L, R),
     Mul(L, R),
     Div(L, R),
 }
 
-impl<L: Debug, R: Debug> Error for TNumError<L, R> {}
+impl<L: Debug, R: Debug> Error for NumError<L, R> {}
 
 ///////////
 //  Add  //
@@ -395,7 +395,7 @@ pub trait TAdd: Sized + Debug {
     fn tadd(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<Self, Self>>;
+    ) -> Result<Self, NumError<Self, Self>>;
 }
 
 impl<T> TAdd for T
@@ -405,9 +405,9 @@ where
     fn tadd(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<T, T>> {
+    ) -> Result<Self, NumError<T, T>> {
         self.checked_add(rhs)
-            .ok_or(TNumError::Add(*self, *rhs))
+            .ok_or(NumError::Add(*self, *rhs))
     }
 }
 
@@ -420,12 +420,12 @@ where
     fn tadd(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<Self, Self>> {
+    ) -> Result<Self, NumError<Self, Self>> {
         self.rep()
             .tadd(rhs.rep())
-            .map_err(|_| TNumError::Add(*self, *rhs))?
+            .map_err(|_| NumError::Add(*self, *rhs))?
             .pipe(Tagged::new)
-            .map_err(|_| TNumError::Add(*self, *rhs))
+            .map_err(|_| NumError::Add(*self, *rhs))
     }
 }
 
@@ -437,7 +437,7 @@ pub trait TSub: Sized + Debug {
     fn tsub(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<Self, Self>>;
+    ) -> Result<Self, NumError<Self, Self>>;
 }
 
 impl<T> TSub for T
@@ -447,9 +447,9 @@ where
     fn tsub(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<T, T>> {
+    ) -> Result<Self, NumError<T, T>> {
         self.checked_sub(rhs)
-            .ok_or(TNumError::Sub(*self, *rhs))
+            .ok_or(NumError::Sub(*self, *rhs))
     }
 }
 
@@ -462,12 +462,12 @@ where
     fn tsub(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<Self, Self>> {
+    ) -> Result<Self, NumError<Self, Self>> {
         self.rep()
             .tsub(rhs.rep())
-            .map_err(|_| TNumError::Sub(*self, *rhs))?
+            .map_err(|_| NumError::Sub(*self, *rhs))?
             .pipe(Tagged::new)
-            .map_err(|_| TNumError::Sub(*self, *rhs))
+            .map_err(|_| NumError::Sub(*self, *rhs))
     }
 }
 
@@ -479,7 +479,7 @@ pub trait TGap: Sized + Debug {
     fn tgap(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<Self, Self>>;
+    ) -> Result<Self, NumError<Self, Self>>;
 }
 
 impl<T> TGap for T
@@ -489,7 +489,7 @@ where
     fn tgap(
         &self,
         rhs: &Self,
-    ) -> Result<Self, TNumError<T, T>> {
+    ) -> Result<Self, NumError<T, T>> {
         self.max(rhs).tsub(self.min(rhs))
     }
 }
@@ -502,19 +502,17 @@ pub trait TMul<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn tmul(
-        &self,
-        rhs: &R,
-    ) -> Result<O, TNumError<Self, R>>;
+    fn tmul(&self, rhs: &R)
+    -> Result<O, NumError<Self, R>>;
 }
 
 impl<T> TMul<T, T> for T
 where
     T: Copy + Debug + CheckedMul,
 {
-    fn tmul(&self, rhs: &T) -> Result<T, TNumError<T, T>> {
+    fn tmul(&self, rhs: &T) -> Result<T, NumError<T, T>> {
         self.checked_mul(rhs)
-            .ok_or(TNumError::Mul(*self, *rhs))
+            .ok_or(NumError::Mul(*self, *rhs))
     }
 }
 
@@ -535,13 +533,13 @@ where
         rhs: &Tagged<T, R, RF>,
     ) -> Result<
         Tagged<T, O, OF>,
-        TNumError<Self, Tagged<T, R, RF>>,
+        NumError<Self, Tagged<T, R, RF>>,
     > {
         self.rep()
             .tmul(rhs.rep())
-            .map_err(|_| TNumError::Mul(*self, *rhs))?
+            .map_err(|_| NumError::Mul(*self, *rhs))?
             .pipe(Tagged::new)
-            .map_err(|_| TNumError::Mul(*self, *rhs))
+            .map_err(|_| NumError::Mul(*self, *rhs))
     }
 }
 
@@ -553,19 +551,17 @@ pub trait TDiv<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn tdiv(
-        &self,
-        rhs: &R,
-    ) -> Result<O, TNumError<Self, R>>;
+    fn tdiv(&self, rhs: &R)
+    -> Result<O, NumError<Self, R>>;
 }
 
 impl<T> TDiv<T, T> for T
 where
     T: Copy + Debug + CheckedDiv,
 {
-    fn tdiv(&self, rhs: &T) -> Result<T, TNumError<T, T>> {
+    fn tdiv(&self, rhs: &T) -> Result<T, NumError<T, T>> {
         self.checked_div(rhs)
-            .ok_or(TNumError::Div(*self, *rhs))
+            .ok_or(NumError::Div(*self, *rhs))
     }
 }
 
@@ -586,12 +582,12 @@ where
         rhs: &Tagged<T, R, RF>,
     ) -> Result<
         Tagged<T, O, OF>,
-        TNumError<Self, Tagged<T, R, RF>>,
+        NumError<Self, Tagged<T, R, RF>>,
     > {
         self.rep()
             .tdiv(rhs.rep())
-            .map_err(|_| TNumError::Div(*self, *rhs))?
+            .map_err(|_| NumError::Div(*self, *rhs))?
             .pipe(Tagged::new)
-            .map_err(|_| TNumError::Div(*self, *rhs))
+            .map_err(|_| NumError::Div(*self, *rhs))
     }
 }

@@ -609,3 +609,35 @@ where
             .map_err(|_| NumError::Div(*self, *r))
     }
 }
+
+///////////
+// Zero  //
+///////////
+
+pub trait DZero {}
+
+pub trait TZero: Sized {
+    fn tzero() -> Self;
+}
+
+impl<T> TZero for T
+where
+    T: Zero,
+{
+    fn tzero() -> Self {
+        T::zero()
+    }
+}
+
+impl<T, D, F> TZero for Tagged<T, D, F>
+where
+    T: TZero,
+    D: Debug,
+    F: Refine<T> + DZero,
+    F::RefineError: Debug,
+{
+    fn tzero() -> Self {
+        #[allow(clippy::unwrap_used)]
+        T::tzero().pipe(Tagged::new).unwrap()
+    }
+}

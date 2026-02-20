@@ -332,3 +332,81 @@ fn cancellation_edge_cases() -> Test {
 
     ok()
 }
+
+#[test]
+fn test_polymorphism() -> Test {
+    let m1 = Meter::new(dec!(10))?;
+    let m2 = Meter::new(dec!(5))?;
+
+    // TAdd
+    let _: Meter = m1.tadd(m2)?;
+    let _: Meter = m1.tadd(&m2)?;
+    let _: Meter = (&m1).tadd(m2)?;
+    let _: Meter = (&m1).tadd(&m2)?;
+
+    // TSub
+    let _: Meter = m1.tsub(m2)?;
+    let _: Meter = m1.tsub(&m2)?;
+    let _: Meter = (&m1).tsub(m2)?;
+    let _: Meter = (&m1).tsub(&m2)?;
+
+    // TGap
+    let _: Meter = m1.tgap(m2)?;
+    let _: Meter = m1.tgap(&m2)?;
+    let _: Meter = (&m1).tgap(m2)?;
+    let _: Meter = (&m1).tgap(&m2)?;
+
+    let one = Num::new(dec!(1))?;
+
+    // TMul
+    let _: Meter = m1.tmul(one)?;
+    let _: Meter = m1.tmul(&one)?;
+    let _: Meter = (&m1).tmul(one)?;
+    let _: Meter = (&m1).tmul(&one)?;
+
+    // TDiv
+    let _: Meter = m1.tdiv(one)?;
+    let _: Meter = m1.tdiv(&one)?;
+    let _: Meter = (&m1).tdiv(one)?;
+    let _: Meter = (&m1).tdiv(&one)?;
+
+    ok()
+}
+
+#[test]
+fn test_primitive_polymorphism() -> Test {
+    let x = dec!(10);
+    let y = dec!(5);
+
+    // TAdd
+    let _: Decimal = x.tadd(y)?;
+    let _: Decimal = x.tadd(&y)?;
+    let _: Decimal = (&x).tadd(y)?;
+    let _: Decimal = (&x).tadd(&y)?;
+
+    // TSub
+    let _: Decimal = x.tsub(y)?;
+    let _: Decimal = x.tsub(&y)?;
+    let _: Decimal = (&x).tsub(y)?;
+    let _: Decimal = (&x).tsub(&y)?;
+
+    // TGap
+    let _: Decimal = x.tgap(y)?;
+    let _: Decimal = x.tgap(&y)?;
+    let _: Decimal = (&x).tgap(y)?;
+    let _: Decimal = (&x).tgap(&y)?;
+
+    // TMul
+    let _: Decimal = x.tmul(y)?;
+    let _: Decimal = x.tmul(&y)?;
+    let _: Decimal = (&x).tmul(y)?;
+    let _: Decimal = (&x).tmul(&y)?;
+
+    // TDiv
+    let _: Decimal = x.tdiv(y)?;
+    let _: Decimal = x.tdiv(&y)?;
+    let _: Decimal = (&x).tdiv(y)?;
+    let _: Decimal = (&x).tdiv(&y)?;
+
+    ok()
+}

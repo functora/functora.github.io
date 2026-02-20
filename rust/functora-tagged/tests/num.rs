@@ -339,36 +339,62 @@ fn test_polymorphism() -> Test {
     let m2 = Meter::new(dec!(5))?;
 
     // TAdd
-    let _: Meter = m1.tadd(m2)?;
-    let _: Meter = m1.tadd(&m2)?;
-    let _: Meter = (&m1).tadd(m2)?;
-    let _: Meter = (&m1).tadd(&m2)?;
+    assert_eq!(m1.tadd(m2)?, Meter::new(dec!(15))?);
+    assert_eq!(m1.tadd(&m2)?, Meter::new(dec!(15))?);
+    assert_eq!((&m1).tadd(m2)?, Meter::new(dec!(15))?);
+    assert_eq!((&m1).tadd(&m2)?, Meter::new(dec!(15))?);
 
     // TSub
-    let _: Meter = m1.tsub(m2)?;
-    let _: Meter = m1.tsub(&m2)?;
-    let _: Meter = (&m1).tsub(m2)?;
-    let _: Meter = (&m1).tsub(&m2)?;
+    assert_eq!(m1.tsub(m2)?, Meter::new(dec!(5))?);
+    assert_eq!(m1.tsub(&m2)?, Meter::new(dec!(5))?);
+    assert_eq!((&m1).tsub(m2)?, Meter::new(dec!(5))?);
+    assert_eq!((&m1).tsub(&m2)?, Meter::new(dec!(5))?);
 
     // TGap
-    let _: Meter = m1.tgap(m2)?;
-    let _: Meter = m1.tgap(&m2)?;
-    let _: Meter = (&m1).tgap(m2)?;
-    let _: Meter = (&m1).tgap(&m2)?;
+    assert_eq!(m2.tgap(m1)?, Meter::new(dec!(5))?);
+    assert_eq!(m2.tgap(&m1)?, Meter::new(dec!(5))?);
+    assert_eq!((&m2).tgap(m1)?, Meter::new(dec!(5))?);
+    assert_eq!((&m2).tgap(&m1)?, Meter::new(dec!(5))?);
 
     let one = Num::new(dec!(1))?;
 
     // TMul
-    let _: Meter = m1.tmul(one)?;
-    let _: Meter = m1.tmul(&one)?;
-    let _: Meter = (&m1).tmul(one)?;
-    let _: Meter = (&m1).tmul(&one)?;
+    assert_eq!(m1.tmul(one)?, m1);
+    assert_eq!(m1.tmul(&one)?, m1);
+    assert_eq!((&m1).tmul(one)?, m1);
+    assert_eq!((&m1).tmul(&one)?, m1);
 
     // TDiv
-    let _: Meter = m1.tdiv(one)?;
-    let _: Meter = m1.tdiv(&one)?;
-    let _: Meter = (&m1).tdiv(one)?;
-    let _: Meter = (&m1).tdiv(&one)?;
+    assert_eq!(m1.tdiv(one)?, m1);
+    assert_eq!(m1.tdiv(&one)?, m1);
+    assert_eq!((&m1).tdiv(one)?, m1);
+    assert_eq!((&m1).tdiv(&one)?, m1);
+
+    ok()
+}
+
+#[test]
+fn test_cancellation_bug() -> Test {
+    let m = Meter::new(dec!(10))?;
+    let s = Second::new(dec!(2))?;
+
+    // (Meter * Second) / Second = Meter (Works)
+    let ms: Tagged<
+        Decimal,
+        Times<DMeter, DSecond, FNonNeg>,
+        FNonNeg,
+    > = m.tmul(&s)?;
+    let m2: Meter = ms.tdiv(&s)?;
+    assert_eq!(m2, m);
+
+    // (Second * Meter) / Meter = Second (Works)
+    let sm: Tagged<
+        Decimal,
+        Times<DSecond, DMeter, FNonNeg>,
+        FNonNeg,
+    > = s.tmul(&m)?;
+    let s2: Second = sm.tdiv(&m)?;
+    assert_eq!(s2, s);
 
     ok()
 }
@@ -379,34 +405,34 @@ fn test_primitive_polymorphism() -> Test {
     let y = dec!(5);
 
     // TAdd
-    let _: Decimal = x.tadd(y)?;
-    let _: Decimal = x.tadd(&y)?;
-    let _: Decimal = (&x).tadd(y)?;
-    let _: Decimal = (&x).tadd(&y)?;
+    assert_eq!(x.tadd(y)?, dec!(15));
+    assert_eq!(x.tadd(&y)?, dec!(15));
+    assert_eq!((&x).tadd(y)?, dec!(15));
+    assert_eq!((&x).tadd(&y)?, dec!(15));
 
     // TSub
-    let _: Decimal = x.tsub(y)?;
-    let _: Decimal = x.tsub(&y)?;
-    let _: Decimal = (&x).tsub(y)?;
-    let _: Decimal = (&x).tsub(&y)?;
+    assert_eq!(x.tsub(y)?, dec!(5));
+    assert_eq!(x.tsub(&y)?, dec!(5));
+    assert_eq!((&x).tsub(y)?, dec!(5));
+    assert_eq!((&x).tsub(&y)?, dec!(5));
 
     // TGap
-    let _: Decimal = x.tgap(y)?;
-    let _: Decimal = x.tgap(&y)?;
-    let _: Decimal = (&x).tgap(y)?;
-    let _: Decimal = (&x).tgap(&y)?;
+    assert_eq!(y.tgap(x)?, dec!(5));
+    assert_eq!(y.tgap(&x)?, dec!(5));
+    assert_eq!((&y).tgap(x)?, dec!(5));
+    assert_eq!((&y).tgap(&x)?, dec!(5));
 
-    // TMul
-    let _: Decimal = x.tmul(y)?;
-    let _: Decimal = x.tmul(&y)?;
-    let _: Decimal = (&x).tmul(y)?;
-    let _: Decimal = (&x).tmul(&y)?;
+    ok()
+}
 
-    // TDiv
-    let _: Decimal = x.tdiv(y)?;
-    let _: Decimal = x.tdiv(&y)?;
-    let _: Decimal = (&x).tdiv(y)?;
-    let _: Decimal = (&x).tdiv(&y)?;
+#[test]
+fn test_gap_overflow() -> Test {
+    let max = Decimal::MAX;
+    let min = Decimal::MIN;
+
+    // Gap between MAX and MIN should overflow
+    let res = max.tgap(min);
+    assert!(res.is_err());
 
     ok()
 }

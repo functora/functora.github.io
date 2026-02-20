@@ -18,21 +18,6 @@
         "type": "github"
       }
     },
-    "master": {
-      "locked": {
-        "lastModified": 1771619784,
-        "narHash": "sha256-nUu/g3syVasbDTVKQ5ckZwJu8qddug9MEg7G4q9lmuo=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "dedd80aed58171ba3a9c49c3211676cba26f02f2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1744536153,
@@ -52,7 +37,6 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "master": "master",
         "rust-overlay": "rust-overlay",
         "unstable": "unstable"
       }

@@ -1,4 +1,4 @@
-use crate::{DZero, refine::*};
+use crate::refine::*;
 use derive_more::Display;
 use num_traits::*;
 use std::convert::Infallible;
@@ -13,8 +13,6 @@ use tap::prelude::*;
 
 #[derive(Debug)]
 pub enum FCrude {}
-
-impl DZero for FCrude {}
 
 impl<T> Refine<T> for FCrude {
     type RefineError = Infallible;
@@ -63,8 +61,6 @@ where
 
 #[derive(Debug)]
 pub enum FNonNeg {}
-
-impl DZero for FNonNeg {}
 
 #[derive(
     Eq,

@@ -2,7 +2,6 @@
   description = "Rust Dev Shell";
 
   inputs = {
-    master.url = "github:nixos/nixpkgs";
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
@@ -10,7 +9,6 @@
 
   outputs = {
     self,
-    master,
     unstable,
     rust-overlay,
     flake-utils,
@@ -352,20 +350,12 @@
               ++ [
                 pkgs.opencode
                 pkgs.qutebrowser
-                master.legacyPackages.${system}.antigravity
-                (pkgs.writeShellApplication {
-                  name = "qwen";
-                  text = ''
-                    ${
-                      master.legacyPackages.${system}.qwen-code
-                    }/bin/qwen -y "$@"
-                  '';
-                })
+                unstable.legacyPackages.${system}.antigravity
                 (pkgs.writeShellApplication {
                   name = "cursor";
                   text = ''
                     ${
-                      master.legacyPackages.${system}.cursor-cli
+                      unstable.legacyPackages.${system}.cursor-cli
                     }/bin/cursor-agent -f --model auto "$@"
                   '';
                 })

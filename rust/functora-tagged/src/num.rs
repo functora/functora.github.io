@@ -2,6 +2,7 @@ use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
 use num_traits::*;
+use std::borrow::Borrow;
 use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -392,9 +393,9 @@ impl<L: Debug, R: Debug> Error for NumError<L, R> {}
 ///////////
 
 pub trait TAdd: Sized + Debug {
-    fn tadd(
+    fn tadd<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
+        rhs: Rhs,
     ) -> Result<Self, NumError<Self, Self>>;
 }
 
@@ -402,12 +403,12 @@ impl<T> TAdd for T
 where
     T: Copy + Debug + CheckedAdd,
 {
-    fn tadd(
+    fn tadd<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
-    ) -> Result<Self, NumError<T, T>> {
-        self.checked_add(rhs)
-            .ok_or(NumError::Add(*self, *rhs))
+        rhs: Rhs,
+    ) -> Result<Self, NumError<Self, Self>> {
+        let r = rhs.borrow();
+        self.checked_add(r).ok_or(NumError::Add(*self, *r))
     }
 }
 
@@ -417,15 +418,16 @@ where
     D: Debug,
     F: Debug + Refine<T>,
 {
-    fn tadd(
+    fn tadd<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
+        rhs: Rhs,
     ) -> Result<Self, NumError<Self, Self>> {
+        let r = rhs.borrow();
         self.rep()
-            .tadd(rhs.rep())
-            .map_err(|_| NumError::Add(*self, *rhs))?
+            .tadd(**r)
+            .map_err(|_| NumError::Add(*self, *r))?
             .pipe(Tagged::new)
-            .map_err(|_| NumError::Add(*self, *rhs))
+            .map_err(|_| NumError::Add(*self, *r))
     }
 }
 
@@ -434,9 +436,9 @@ where
 ///////////
 
 pub trait TSub: Sized + Debug {
-    fn tsub(
+    fn tsub<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
+        rhs: Rhs,
     ) -> Result<Self, NumError<Self, Self>>;
 }
 
@@ -444,12 +446,12 @@ impl<T> TSub for T
 where
     T: Copy + Debug + CheckedSub,
 {
-    fn tsub(
+    fn tsub<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
-    ) -> Result<Self, NumError<T, T>> {
-        self.checked_sub(rhs)
-            .ok_or(NumError::Sub(*self, *rhs))
+        rhs: Rhs,
+    ) -> Result<Self, NumError<Self, Self>> {
+        let r = rhs.borrow();
+        self.checked_sub(r).ok_or(NumError::Sub(*self, *r))
     }
 }
 
@@ -459,15 +461,16 @@ where
     D: Debug,
     F: Debug + Refine<T>,
 {
-    fn tsub(
+    fn tsub<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
+        rhs: Rhs,
     ) -> Result<Self, NumError<Self, Self>> {
+        let r = rhs.borrow();
         self.rep()
-            .tsub(rhs.rep())
-            .map_err(|_| NumError::Sub(*self, *rhs))?
+            .tsub(**r)
+            .map_err(|_| NumError::Sub(*self, *r))?
             .pipe(Tagged::new)
-            .map_err(|_| NumError::Sub(*self, *rhs))
+            .map_err(|_| NumError::Sub(*self, *r))
     }
 }
 
@@ -476,9 +479,9 @@ where
 ///////////
 
 pub trait TGap: Sized + Debug {
-    fn tgap(
+    fn tgap<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
+        rhs: Rhs,
     ) -> Result<Self, NumError<Self, Self>>;
 }
 
@@ -486,11 +489,14 @@ impl<T> TGap for T
 where
     T: Ord + Copy + Debug + TSub,
 {
-    fn tgap(
+    fn tgap<Rhs: Borrow<Self>>(
         &self,
-        rhs: &Self,
-    ) -> Result<Self, NumError<T, T>> {
-        self.max(rhs).tsub(self.min(rhs))
+        rhs: Rhs,
+    ) -> Result<Self, NumError<Self, Self>> {
+        let r = rhs.borrow();
+        self.max(r)
+            .tsub(self.min(r))
+            .map_err(|_| NumError::Sub(*self, *r))
     }
 }
 
@@ -502,22 +508,27 @@ pub trait TMul<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn tmul(&self, rhs: &R)
-    -> Result<O, NumError<Self, R>>;
+    fn tmul<Rhs: Borrow<R>>(
+        &self,
+        rhs: Rhs,
+    ) -> Result<O, NumError<Self, R>>;
 }
 
 impl<T> TMul<T, T> for T
 where
     T: Copy + Debug + CheckedMul,
 {
-    fn tmul(&self, rhs: &T) -> Result<T, NumError<T, T>> {
-        self.checked_mul(rhs)
-            .ok_or(NumError::Mul(*self, *rhs))
+    fn tmul<Rhs: Borrow<T>>(
+        &self,
+        rhs: Rhs,
+    ) -> Result<T, NumError<T, T>> {
+        let r = rhs.borrow();
+        self.checked_mul(r).ok_or(NumError::Mul(*self, *r))
     }
 }
 
 impl<T, L, LF, R, RF, O, OF>
-    TMul<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
+    TMul<Tagged<T, R, RF>, Tagged<T, O, OF>>
     for Tagged<T, L, LF>
 where
     T: Copy + TMul<T, T>,
@@ -528,18 +539,19 @@ where
     RF: Debug,
     OF: Refine<T>,
 {
-    fn tmul(
+    fn tmul<Rhs: Borrow<Tagged<T, R, RF>>>(
         &self,
-        rhs: &Tagged<T, R, RF>,
+        rhs: Rhs,
     ) -> Result<
         Tagged<T, O, OF>,
         NumError<Self, Tagged<T, R, RF>>,
     > {
+        let r = rhs.borrow();
         self.rep()
-            .tmul(rhs.rep())
-            .map_err(|_| NumError::Mul(*self, *rhs))?
+            .tmul(**r)
+            .map_err(|_| NumError::Mul(*self, *r))?
             .pipe(Tagged::new)
-            .map_err(|_| NumError::Mul(*self, *rhs))
+            .map_err(|_| NumError::Mul(*self, *r))
     }
 }
 
@@ -551,22 +563,27 @@ pub trait TDiv<R, O>: Sized + Debug
 where
     R: Debug,
 {
-    fn tdiv(&self, rhs: &R)
-    -> Result<O, NumError<Self, R>>;
+    fn tdiv<Rhs: Borrow<R>>(
+        &self,
+        rhs: Rhs,
+    ) -> Result<O, NumError<Self, R>>;
 }
 
 impl<T> TDiv<T, T> for T
 where
     T: Copy + Debug + CheckedDiv,
 {
-    fn tdiv(&self, rhs: &T) -> Result<T, NumError<T, T>> {
-        self.checked_div(rhs)
-            .ok_or(NumError::Div(*self, *rhs))
+    fn tdiv<Rhs: Borrow<T>>(
+        &self,
+        rhs: Rhs,
+    ) -> Result<T, NumError<T, T>> {
+        let r = rhs.borrow();
+        self.checked_div(r).ok_or(NumError::Div(*self, *r))
     }
 }
 
 impl<T, L, LF, R, RF, O, OF>
-    TDiv<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
+    TDiv<Tagged<T, R, RF>, Tagged<T, O, OF>>
     for Tagged<T, L, LF>
 where
     T: Copy + TDiv<T, T>,
@@ -577,17 +594,18 @@ where
     RF: Debug,
     OF: Refine<T>,
 {
-    fn tdiv(
+    fn tdiv<Rhs: Borrow<Tagged<T, R, RF>>>(
         &self,
-        rhs: &Tagged<T, R, RF>,
+        rhs: Rhs,
     ) -> Result<
         Tagged<T, O, OF>,
         NumError<Self, Tagged<T, R, RF>>,
     > {
+        let r = rhs.borrow();
         self.rep()
-            .tdiv(rhs.rep())
-            .map_err(|_| NumError::Div(*self, *rhs))?
+            .tdiv(**r)
+            .map_err(|_| NumError::Div(*self, *r))?
             .pipe(Tagged::new)
-            .map_err(|_| NumError::Div(*self, *rhs))
+            .map_err(|_| NumError::Div(*self, *r))
     }
 }

@@ -527,23 +527,23 @@ where
     }
 }
 
-impl<T, L, LF, R, RF, O, OF>
-    TMul<Tagged<T, R, RF>, Tagged<T, O, OF>>
+impl<T, L, LF, R, RF, O>
+    TMul<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where
     T: Copy + TMul<T, T>,
     L: Debug + DMul<R, O>,
     R: Debug,
-    O: Raffinate<Refinery = OF>,
+    O: Raffinate,
+    O::Refinery: Refine<T>,
     LF: Debug,
     RF: Debug,
-    OF: Refine<T>,
 {
     fn tmul<Rhs: Borrow<Tagged<T, R, RF>>>(
         &self,
         rhs: Rhs,
     ) -> Result<
-        Tagged<T, O, OF>,
+        Tagged<T, O, O::Refinery>,
         NumError<Self, Tagged<T, R, RF>>,
     > {
         let r = rhs.borrow();
@@ -582,23 +582,23 @@ where
     }
 }
 
-impl<T, L, LF, R, RF, O, OF>
-    TDiv<Tagged<T, R, RF>, Tagged<T, O, OF>>
+impl<T, L, LF, R, RF, O>
+    TDiv<Tagged<T, R, RF>, Tagged<T, O, O::Refinery>>
     for Tagged<T, L, LF>
 where
     T: Copy + TDiv<T, T>,
     L: Debug + DDiv<R, O>,
     R: Debug,
-    O: Raffinate<Refinery = OF>,
+    O: Raffinate,
+    O::Refinery: Refine<T>,
     LF: Debug,
     RF: Debug,
-    OF: Refine<T>,
 {
     fn tdiv<Rhs: Borrow<Tagged<T, R, RF>>>(
         &self,
         rhs: Rhs,
     ) -> Result<
-        Tagged<T, O, OF>,
+        Tagged<T, O, O::Refinery>,
         NumError<Self, Tagged<T, R, RF>>,
     > {
         let r = rhs.borrow();

@@ -49,6 +49,7 @@
   mkDoom = {
     tag,
     wad ? ../bak/doom/wads/doom2.wad,
+    sky ? ../bak/doom/CryosUltDoomSkies.wad,
     mod ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? ../bak/doom/DiamondDragon.pk3,
@@ -64,7 +65,7 @@
       text = ''
         ${pkgs.gzdoom}/bin/gzdoom \
           -iwad ${wad} \
-          -file ${../bak/doom/CryosUltDoomSkies.wad} ${../bak/doom/DestDec_v2.pk3} \
+          -file ${sky} ${../bak/doom/DestDec_v2.pk3} \
           ${mod} \
           ${gfx} \
           ${total} \
@@ -75,7 +76,9 @@
           ${parallax} \
           ${nashgore} \
           "${duhd}/12 Flashlight++.pk3" \
-          ${../bak/doom/Cynic_Games_LensFlare_v_1.pk3} \
+          ${../bak/doom/Cynic_Games_Minimap.pk3} \
+          ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
+          ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
           ${../bak/doom/cblood.pk3} \
           ${../bak/doom/fast-swap.pk3} \
           ${../bak/doom/enemy-glow.pk3}
@@ -87,6 +90,7 @@
     (mkDoom {
         tag = "free1";
         wad = "${free}/freedoom1.wad";
+        relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
         tag = "free2";
@@ -116,12 +120,6 @@
       // mkDoom {
         tag = "ltg-2";
         total = ../bak/doom/LaTailorGirl_v190.pk3;
-        relite = ../bak/doom/relite_0.6.7a.pk3;
-      }
-      // mkDoom {
-        tag = "aby-2";
-        total = ../bak/doom/AbyssalMarine.pk3;
-        liquid = ltp701;
         relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
@@ -159,6 +157,22 @@
       // mkDoom {
         tag = "rmg-city";
         mod = ../bak/doom/RMG_City.wad;
+        relite = "";
+      }
+      // mkDoom {
+        tag = "viaje";
+        mod = ../bak/doom/VIAJE.wad;
+        music = "";
+      }
+      // mkDoom {
+        tag = "hellbnd";
+        mod = ../bak/doom/Hellbnd.wad;
+        music = "";
+      }
+      // mkDoom {
+        tag = "c17";
+        total = ../bak/doom/DTB_C17.pk3;
+        music = "";
         relite = "";
       }
       // mkDoom {
@@ -222,7 +236,7 @@
       }
       // mkDoom {
         tag = "cats";
-        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
+        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/Space_Cats_Saga_1.41.wad;
         music = "";
         relite = ../bak/doom/relite_0.5a.pk3;
@@ -231,15 +245,22 @@
       }
       // mkDoom {
         tag = "bloom";
-        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
+        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/bloom/Bloom.pk3;
         music = "";
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {
+        tag = "butcher";
+        total = ../bak/doom/FN-TrenchFoot.pk3;
+        relite = ../bak/doom/relite_0.5a.pk3;
+        liquid = ltp701;
+        nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
         tag = "infinite";
-        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3" "${duhd}/22 MotionBlur.pk3"'';
+        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;
         liquid = ''"${duhd}/26 Liquids.pk3"'';
         relite = "";

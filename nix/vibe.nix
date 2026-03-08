@@ -142,6 +142,10 @@
           (sloth.concat' sloth.homeDir "/.config/nvim/coc-settings.json")
           [
             (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.qwen/QWEN.md")
+          ]
+          [
+            (toString agentsMd)
             (sloth.concat' sloth.homeDir "/.codex/AGENTS.md")
           ]
           [

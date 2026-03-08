@@ -28,8 +28,7 @@ in {
       serviceConfig.Type = "oneshot";
       script = ''
         WAKE_AT="$(${pkgs.coreutils}/bin/date -d "${cfg.wakeAt}" +%s)"
-        ${pkgs.util-linux}/bin/rtcwake -m no -t "$WAKE_AT"
-        ${pkgs.systemd}/bin/systemctl suspend
+        ${pkgs.util-linux}/bin/rtcwake -m off -t "$WAKE_AT"
       '';
     };
 
@@ -40,12 +39,9 @@ in {
       timerConfig = {
         OnCalendar = cfg.sleepAt;
         Unit = "night-sleep.service";
-        Persistent = true; # run missed activations after boot/resume
-        WakeSystem = true; # wake from suspend if timer is due (key feature)
+        Persistent = true;
+        WakeSystem = true;
       };
     };
-
-    # Optional: helps on some hardware/BIOS combinations
-    # powerManagement.enable = true;
   };
 }

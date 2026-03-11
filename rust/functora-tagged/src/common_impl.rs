@@ -33,6 +33,22 @@ where
 }
 
 //
+// Positive
+//
+
+impl<T, D> Tagged<T, D, FPositive>
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    #[must_use]
+    pub fn one() -> Self {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        T::one().pipe(Tagged::new).unwrap()
+    }
+}
+
+//
 // Non-Negative
 //
 

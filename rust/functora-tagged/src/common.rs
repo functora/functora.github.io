@@ -1,4 +1,4 @@
-use crate::refine::*;
+use crate::{Tagged, ViaString, refine::*};
 use derive_more::Display;
 use num_traits::*;
 use std::convert::Infallible;
@@ -137,6 +137,22 @@ pub trait HasLength {
     fn length(&self) -> usize;
     fn zero_length(&self) -> bool {
         self.length() == 0
+    }
+}
+
+// Tagged
+
+impl<T: HasLength, D, F> HasLength for Tagged<T, D, F> {
+    fn length(&self) -> usize {
+        (**self).length()
+    }
+}
+
+// ViaString
+
+impl<T: HasLength, D, F> HasLength for ViaString<T, D, F> {
+    fn length(&self) -> usize {
+        (**self).length()
     }
 }
 

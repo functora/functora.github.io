@@ -523,8 +523,7 @@ fn test_via_string_copy() {
         }
     }
 
-    type TestViaStringCopy =
-        ViaString<i32, DCopy, FCopy>;
+    type TestViaStringCopy = ViaString<i32, DCopy, FCopy>;
 
     let vs1 = TestViaStringCopy::new(123).unwrap();
     let vs2 = vs1;

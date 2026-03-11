@@ -81,8 +81,7 @@ impl Refine<String> for FDefault {
 fn test_refine_default_implementation() {
     let rep_value = String::from("test_default_refine");
 
-    let refined_rep =
-        FDefault::refine(rep_value.clone());
+    let refined_rep = FDefault::refine(rep_value.clone());
 
     assert!(refined_rep.is_ok());
     assert_eq!(refined_rep.unwrap(), rep_value);

@@ -41,3 +41,37 @@ fn test_non_neg_one() {
         Tagged::<rust_decimal::Decimal, D, FNonNeg>::one();
     assert_eq!(*y, dec!(1));
 }
+
+type NeVec = Tagged<Vec<i32>, D, FNonEmpty>;
+
+#[test]
+fn test_non_empty_first() {
+    let xs = NeVec::new(vec![10, 20, 30]).unwrap();
+    assert_eq!(xs.first(), &10);
+}
+
+#[test]
+fn test_non_empty_last() {
+    let xs = NeVec::new(vec![10, 20, 30]).unwrap();
+    assert_eq!(xs.last(), &30);
+}
+
+#[test]
+fn test_non_empty_min_by_key() {
+    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    assert_eq!(xs.min_by_key(|&&x| x), &5);
+}
+
+#[test]
+fn test_non_empty_max_by_key() {
+    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    assert_eq!(xs.max_by_key(|&&x| x), &20);
+}
+
+#[test]
+fn test_non_empty_map() {
+    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let ys: Tagged<Vec<i32>, D, FNonEmpty> =
+        xs.map(|&x| x * 2);
+    assert_eq!(*ys, vec![2, 4, 6]);
+}

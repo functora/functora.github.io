@@ -59,3 +59,73 @@ where
         T::one().pipe(Tagged::new).unwrap()
     }
 }
+
+//
+// Non-Empty
+//
+
+impl<T, D> Tagged<T, D, FNonEmpty> {
+    #[must_use]
+    pub fn first<U>(&self) -> &U
+    where
+        T: AsRef<[U]>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.as_ref().first().unwrap()
+    }
+
+    #[must_use]
+    pub fn last<U>(&self) -> &U
+    where
+        T: AsRef<[U]>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.as_ref().last().unwrap()
+    }
+
+    pub fn min_by_key<U, V>(
+        &self,
+        f: impl FnMut(&&U) -> V,
+    ) -> &U
+    where
+        T: AsRef<[U]>,
+        V: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.as_ref().iter().min_by_key(f).unwrap()
+    }
+
+    pub fn max_by_key<U, V>(
+        &self,
+        f: impl FnMut(&&U) -> V,
+    ) -> &U
+    where
+        T: AsRef<[U]>,
+        V: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.as_ref().iter().max_by_key(f).unwrap()
+    }
+
+    pub fn map<U, V, W>(
+        &self,
+        f: impl FnMut(&U) -> V,
+    ) -> Tagged<W, D, FNonEmpty>
+    where
+        T: AsRef<[U]>,
+        W: Debug + HasLength + FromIterator<V>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.as_ref()
+            .iter()
+            .map(f)
+            .collect::<W>()
+            .pipe(Tagged::new)
+            .unwrap()
+    }
+}

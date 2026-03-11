@@ -530,3 +530,12 @@ fn test_via_string_copy() {
     assert_eq!(vs1, vs2);
     assert_eq!(vs1.rep(), vs2.rep());
 }
+
+#[test]
+fn test_haslength_via_string() {
+    use functora_tagged::*;
+    let vs = TestViaString::new("valid_hello".to_string())
+        .unwrap();
+    assert_eq!(vs.length(), "valid_hello".len());
+    assert!(!vs.zero_length());
+}

@@ -23,6 +23,18 @@ fn test_crude_one() {
 }
 
 #[test]
+fn test_positive_one() {
+    let x = Tagged::<i32, D, FPositive>::one();
+    assert_eq!(*x, 1);
+
+    let y = Tagged::<f64, D, FPositive>::one();
+    assert_eq!(*y, 1.0);
+
+    assert!(Tagged::<i32, D, FPositive>::new(0).is_err());
+    assert!(Tagged::<i32, D, FPositive>::new(-1).is_err());
+}
+
+#[test]
 fn test_non_neg_zero() {
     let x = Tagged::<i32, D, FNonNeg>::zero();
     assert_eq!(*x, 0);

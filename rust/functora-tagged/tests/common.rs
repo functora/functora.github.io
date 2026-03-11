@@ -402,3 +402,13 @@ fn test_haslength_arc() {
     let arc_str: Arc<str> = Arc::from("world");
     assert_eq!(arc_str.length(), 5);
 }
+
+#[test]
+fn test_haslength_tagged() {
+    let xs = NonEmptyVec::new(vec![1, 2, 3]).unwrap();
+    assert_eq!(xs.length(), 3);
+    assert!(!xs.zero_length());
+
+    let single = NonEmptyVec::new(vec![42]).unwrap();
+    assert_eq!(single.length(), 1);
+}

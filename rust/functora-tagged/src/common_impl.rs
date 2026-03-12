@@ -176,6 +176,14 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         self.iter().max_by_key(f).unwrap()
     }
 
+    #[allow(clippy::should_implement_trait)]
+    pub fn into_iter<U>(self) -> T::IntoIter
+    where
+        T: IntoIterator<Item = U>,
+    {
+        self.untag().into_iter()
+    }
+
     pub fn map<U, V, W>(
         self,
         f: impl FnMut(U) -> V,
@@ -186,8 +194,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag()
-            .into_iter()
+        self.into_iter()
             .map(f)
             .collect::<W>()
             .pipe(Tagged::new)
@@ -200,7 +207,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag().into_iter().reduce(f).unwrap()
+        self.into_iter().reduce(f).unwrap()
     }
 
     pub fn rev<U, W>(self) -> Tagged<W, D, FNonEmpty>
@@ -211,8 +218,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag()
-            .into_iter()
+        self.into_iter()
             .rev()
             .collect::<W>()
             .pipe(Tagged::new)
@@ -227,8 +233,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag()
-            .into_iter()
+        self.into_iter()
             .collect::<Vec<_>>()
             .tap_mut(|v| v.sort())
             .into_iter()
@@ -248,8 +253,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag()
-            .into_iter()
+        self.into_iter()
             .collect::<Vec<_>>()
             .tap_mut(|v| v.sort_by_key(f))
             .into_iter()
@@ -266,8 +270,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.untag()
-            .into_iter()
+        self.into_iter()
             .collect::<Vec<_>>()
             .tap_mut(Vec::dedup)
             .into_iter()

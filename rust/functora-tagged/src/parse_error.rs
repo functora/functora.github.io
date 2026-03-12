@@ -56,12 +56,12 @@ where
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                ParseError::Decode(a, PhantomData),
-                ParseError::Decode(b, PhantomData),
+                ParseError::Decode(a, ..),
+                ParseError::Decode(b, ..),
             ) => a == b,
             (
-                ParseError::Refine(a, PhantomData),
-                ParseError::Refine(b, PhantomData),
+                ParseError::Refine(a, ..),
+                ParseError::Refine(b, ..),
             ) => a == b,
             _ => false,
         }
@@ -78,10 +78,10 @@ where
 {
     fn clone(&self) -> Self {
         match self {
-            ParseError::Decode(err, PhantomData) => {
+            ParseError::Decode(err, ..) => {
                 ParseError::Decode(err.clone(), PhantomData)
             }
-            ParseError::Refine(err, PhantomData) => {
+            ParseError::Refine(err, ..) => {
                 ParseError::Refine(err.clone(), PhantomData)
             }
         }

@@ -10,24 +10,22 @@ use tap::prelude::*;
 // Crude
 //
 
-impl<T, D> Tagged<T, D, FCrude>
-where
-    T: Zero,
-{
+impl<T, D> Tagged<T, D, FCrude> {
     #[must_use]
-    pub fn zero() -> Self {
+    pub fn zero() -> Self
+    where
+        T: Zero,
+    {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         T::zero().pipe(Tagged::new).infallible()
     }
-}
 
-impl<T, D> Tagged<T, D, FCrude>
-where
-    T: One,
-{
     #[must_use]
-    pub fn one() -> Self {
+    pub fn one() -> Self
+    where
+        T: One,
+    {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         T::one().pipe(Tagged::new).infallible()
@@ -64,14 +62,12 @@ where
         #[allow(clippy::missing_panics_doc)]
         T::zero().pipe(Tagged::new).unwrap()
     }
-}
 
-impl<T, D> Tagged<T, D, FNonNeg>
-where
-    T: PartialOrd + Zero + One + Debug,
-{
     #[must_use]
-    pub fn one() -> Self {
+    pub fn one() -> Self
+    where
+        T: One,
+    {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         T::one().pipe(Tagged::new).unwrap()

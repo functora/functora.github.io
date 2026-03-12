@@ -487,7 +487,7 @@ pub trait TGap: Sized + Debug {
 
 impl<T> TGap for T
 where
-    T: Ord + Copy + Debug + TSub,
+    T: Ord + Copy + TSub,
 {
     fn tgap<Rhs: Borrow<Self>>(
         &self,

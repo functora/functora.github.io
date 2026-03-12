@@ -87,3 +87,53 @@ fn test_non_empty_map() {
         xs.map(|&x| x * 2);
     assert_eq!(*ys, vec![2, 4, 6]);
 }
+
+#[test]
+fn test_non_empty_min_max() {
+    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    assert_eq!(xs.minimum(), &5);
+    assert_eq!(xs.maximum(), &20);
+}
+
+#[test]
+fn test_non_empty_min_max_by() {
+    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    assert_eq!(xs.min_by(|a, b| a.cmp(b)), &5);
+    assert_eq!(xs.max_by(|a, b| a.cmp(b)), &20);
+}
+
+#[test]
+fn test_non_empty_reduce() {
+    let xs = NeVec::new(vec![1, 2, 3, 4]).unwrap();
+    let sum = xs.reduce(|a, b| a + b);
+    assert_eq!(sum, 10);
+}
+
+#[test]
+fn test_non_empty_rev() {
+    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.rev();
+    assert_eq!(*ys, vec![3, 2, 1]);
+}
+
+#[test]
+fn test_non_empty_sorted() {
+    let xs = NeVec::new(vec![3, 1, 2]).unwrap();
+    let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.sort();
+    assert_eq!(*ys, vec![1, 2, 3]);
+}
+
+#[test]
+fn test_non_empty_sorted_by_key() {
+    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let ys: Tagged<Vec<i32>, D, FNonEmpty> =
+        xs.sort_by_key(|&x| -x);
+    assert_eq!(*ys, vec![3, 2, 1]);
+}
+
+#[test]
+fn test_non_empty_dedup() {
+    let xs = NeVec::new(vec![1, 1, 2, 2, 3, 1]).unwrap();
+    let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.dedup();
+    assert_eq!(*ys, vec![1, 2, 3, 1]);
+}

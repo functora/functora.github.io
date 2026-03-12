@@ -84,7 +84,7 @@ fn test_non_empty_max_by_key() {
 fn test_non_empty_map() {
     let xs = NeVec::new(vec![1, 2, 3]).unwrap();
     let ys: Tagged<Vec<i32>, D, FNonEmpty> =
-        xs.map(|&x| x * 2);
+        xs.map(|x| x * 2);
     assert_eq!(*ys, vec![2, 4, 6]);
 }
 
@@ -127,7 +127,7 @@ fn test_non_empty_sorted() {
 fn test_non_empty_sorted_by_key() {
     let xs = NeVec::new(vec![1, 2, 3]).unwrap();
     let ys: Tagged<Vec<i32>, D, FNonEmpty> =
-        xs.sort_by_key(|&x| -x);
+        xs.sort_by_key(|x| -x);
     assert_eq!(*ys, vec![3, 2, 1]);
 }
 

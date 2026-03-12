@@ -177,58 +177,59 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     }
 
     pub fn map<U, V, W>(
-        &self,
-        f: impl FnMut(&U) -> V,
+        self,
+        f: impl FnMut(U) -> V,
     ) -> Tagged<W, D, FNonEmpty>
     where
-        T: AsRef<[U]>,
+        T: IntoIterator<Item = U>,
         W: Debug + HasLength + FromIterator<V>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.iter()
+        self.untag()
+            .into_iter()
             .map(f)
             .collect::<W>()
             .pipe(Tagged::new)
             .unwrap()
     }
 
-    pub fn reduce<U>(&self, f: impl FnMut(U, U) -> U) -> U
+    pub fn reduce<U>(self, f: impl FnMut(U, U) -> U) -> U
     where
-        T: AsRef<[U]>,
-        U: Clone,
+        T: IntoIterator<Item = U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.iter().cloned().reduce(f).unwrap()
+        self.untag().into_iter().reduce(f).unwrap()
     }
 
-    pub fn rev<U, W>(&self) -> Tagged<W, D, FNonEmpty>
+    pub fn rev<U, W>(self) -> Tagged<W, D, FNonEmpty>
     where
-        T: AsRef<[U]>,
-        U: Clone,
+        T: IntoIterator<Item = U>,
+        T::IntoIter: DoubleEndedIterator,
         W: Debug + HasLength + FromIterator<U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.iter()
+        self.untag()
+            .into_iter()
             .rev()
-            .cloned()
             .collect::<W>()
             .pipe(Tagged::new)
             .unwrap()
     }
 
-    pub fn sort<U, W>(&self) -> Tagged<W, D, FNonEmpty>
+    pub fn sort<U, W>(self) -> Tagged<W, D, FNonEmpty>
     where
-        T: AsRef<[U]>,
-        U: Clone + Ord,
+        T: IntoIterator<Item = U>,
+        U: Ord,
         W: Debug + HasLength + FromIterator<U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.as_ref()
-            .to_vec()
+        self.untag()
+            .into_iter()
+            .collect::<Vec<_>>()
             .tap_mut(|v| v.sort())
             .into_iter()
             .collect::<W>()
@@ -237,19 +238,19 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     }
 
     pub fn sort_by_key<U, V, W>(
-        &self,
+        self,
         f: impl FnMut(&U) -> V,
     ) -> Tagged<W, D, FNonEmpty>
     where
-        T: AsRef<[U]>,
-        U: Clone,
+        T: IntoIterator<Item = U>,
         V: Ord,
         W: Debug + HasLength + FromIterator<U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.as_ref()
-            .to_vec()
+        self.untag()
+            .into_iter()
+            .collect::<Vec<_>>()
             .tap_mut(|v| v.sort_by_key(f))
             .into_iter()
             .collect::<W>()
@@ -257,16 +258,17 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
             .unwrap()
     }
 
-    pub fn dedup<U, W>(&self) -> Tagged<W, D, FNonEmpty>
+    pub fn dedup<U, W>(self) -> Tagged<W, D, FNonEmpty>
     where
-        T: AsRef<[U]>,
-        U: Clone + PartialEq,
+        T: IntoIterator<Item = U>,
+        U: PartialEq,
         W: Debug + HasLength + FromIterator<U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.as_ref()
-            .to_vec()
+        self.untag()
+            .into_iter()
+            .collect::<Vec<_>>()
             .tap_mut(Vec::dedup)
             .into_iter()
             .collect::<W>()

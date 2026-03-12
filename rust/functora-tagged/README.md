@@ -147,7 +147,7 @@ Standard library methods often return `Option<T>` for potentially empty collecti
 
 #### 2. Invariant Preservation
 
-These methods return a new `Tagged<..., FNonEmpty>` instance. Since they are guaranteed to produce a non-empty result, you can chain operations fluently without repeatedly re-verifying the refinement.
+These methods return a new `Tagged<..., FNonEmpty>` instance. Since they take ownership of `self`, they can leverage `into_iter()` to perform transformations without cloning individual elements. This makes them highly efficient for complex or large underlying data.
 
 | Method    | Behavior                      | Invariant            |
 | --------- | ----------------------------- | -------------------- |
@@ -169,10 +169,10 @@ fn main() -> Result<(), Box<dyn Error>> {
   let names = Names::new(vec!["Alice".to_string(), "Bob".to_string()])?;
 
   // 1. Invariant Preservation: map returns a refined collection
-  // We use turbofish to specify the backing type (Vec) for intermediate steps
+  // It consumes 'names' to avoid cloning the Strings
   let upper = names.map::<_, _, Vec<_>>(|n| n.to_uppercase());
 
-  // 2. fluent chaining or reassignment works because sort also returns Tagged<..., FNonEmpty>
+  // 2. fluent chaining works efficiently
   let sorted_upper: Names = upper.sort();
 
   // 3. Infallible access: no Options, no unwraps!

@@ -103,10 +103,85 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 
 `functora-tagged` provides a set of common, ready-to-use refineries in the `common` module (`src/common.rs`). These allow you to quickly create refined newtypes with zero boilerplate.
 
--   **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
--   **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
--   **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
--   **`FNonEmpty`**: Ensures the value is not empty, i.e. the length is `> 0`.
+- **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
+- **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
+- **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
+- **`FNonEmpty`**: Ensures the value is not empty, i.e. the length is `> 0`.
+
+### Numeric Identities (`zero()` / `one()`)
+
+Common refineries provide associated functions to create refined values representing zero or one. These are available for any representation type `T` that implements the corresponding `num_traits`.
+
+| Refinery    | `zero()` | `one()` | Note                         |
+| ----------- | -------- | ------- | ---------------------------- |
+| `FCrude`    | ✅       | ✅      | No restrictions              |
+| `FPositive` | ❌       | ✅      | `0` is not positive          |
+| `FNonNeg`   | ✅       | ✅      | `0` and `1` are both non-neg |
+
+```rust
+use functora_tagged::*;
+
+pub enum DWeight {}
+pub type Weight = Tagged<f64, DWeight, FPositive>;
+
+// Create a positive weight of 1.0 safely
+let w = Weight::one();
+assert_eq!(*w, 1.0);
+```
+
+### Non-Empty Collections (`FNonEmpty`)
+
+When a `Tagged` type is refined with `FNonEmpty`, it provides a powerful set of methods that simplify your code by exploiting the non-emptiness guarantee.
+
+#### 1. Infallible Access
+
+Standard library methods often return `Option<T>` for potentially empty collections. `FNonEmpty` methods return the values directly, eliminating the need for `unwrap()` or `expect()` at the call site.
+
+| Tagged Method | Returns | Stdlib Analogue                      |
+| ------------- | ------- | ------------------------------------ |
+| `first()`     | `&T`    | `xs.first()` -> `Option<&T>`         |
+| `last()`      | `&T`    | `xs.last()` -> `Option<&T>`          |
+| `minimum()`   | `&T`    | `xs.iter().min()` -> `Option<&T>`    |
+| `maximum()`   | `&T`    | `xs.iter().max()` -> `Option<&T>`    |
+| `reduce(f)`   | `T`     | `xs.iter().reduce(f)` -> `Option<T>` |
+
+#### 2. Invariant Preservation
+
+These methods return a new `Tagged<..., FNonEmpty>` instance. Since they are guaranteed to produce a non-empty result, you can chain operations fluently without repeatedly re-verifying the refinement.
+
+| Method    | Behavior                      | Invariant            |
+| --------- | ----------------------------- | -------------------- |
+| `map(f)`  | Transform elements            | Count remains same   |
+| `rev()`   | Reverse elements              | Count remains same   |
+| `sort()`  | Sort elements                 | Count remains same   |
+| `dedup()` | Remove consecutive duplicates | At least one remains |
+
+#### Example
+
+```rust
+use functora_tagged::*;
+use std::error::Error;
+
+fn main() -> Result<(), Box<dyn Error>> {
+  pub enum DNames {}
+  pub type Names = Tagged<Vec<String>, DNames, FNonEmpty>;
+
+  let names = Names::new(vec!["Alice".to_string(), "Bob".to_string()])?;
+
+  // 1. Invariant Preservation: map returns a refined collection
+  // We use turbofish to specify the backing type (Vec) for intermediate steps
+  let upper = names.map::<_, _, Vec<_>>(|n| n.to_uppercase());
+
+  // 2. fluent chaining or reassignment works because sort also returns Tagged<..., FNonEmpty>
+  let sorted_upper: Names = upper.sort();
+
+  // 3. Infallible access: no Options, no unwraps!
+  assert_eq!(sorted_upper.first(), "ALICE");
+  assert_eq!(sorted_upper.last(), "BOB");
+
+  Ok(())
+}
+```
 
 ## Derives
 
@@ -287,7 +362,7 @@ type Dim<D> =
     Tagged<Decimal, D, <D as Raffinate>::Refinery>;
 ```
 
-This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg * (m/s)^2**) safely and concisely.
+This example demonstrates how to define physical units and calculate Kinetic Energy (**Ek = kg \* (m/s)^2**) safely and concisely.
 
 ```rust
 use functora_tagged::*;

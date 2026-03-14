@@ -53,12 +53,14 @@
     mod ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? ../bak/doom/DiamondDragon.pk3,
-    music ? "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}",
+    # music ? "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}",
+    music ? ../bak/doom/FerretJukeBoxV1-0.pk3,
     lights ? ''"${duhd}/1 lights2.wad"'',
     liquid ? ../bak/doom/new-liquids.pk3,
     relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
+    enemyglow ? ../bak/doom/enemy-glow.pk3,
   }: {
     "doom-${tag}" = mkDoomSand {
       name = "doom-${tag}";
@@ -76,12 +78,11 @@
           ${parallax} \
           ${nashgore} \
           "${duhd}/12 Flashlight++.pk3" \
-          ${../bak/doom/Cynic_Games_Minimap.pk3} \
           ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
           ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
           ${../bak/doom/cblood.pk3} \
-          ${../bak/doom/fast-swap.pk3} \
-          ${../bak/doom/enemy-glow.pk3}
+          ${enemyglow} \
+          ${../bak/doom/fast-swap.pk3}
       '';
     };
   };
@@ -111,31 +112,25 @@
         tag = "tnt2";
         mod = ../bak/doom/TNT2_1_1.wad;
         gfx = ../bak/doom/CodeFX_v1.101.pk3;
-        relite = ../bak/doom/relite_0.6.7a.pk3;
+        relite = "";
+        enemyglow = "";
       }
       // mkDoom {
         tag = "plutonia";
         wad = ../bak/doom/wads/plutonia.wad;
       }
       // mkDoom {
-        tag = "ltg-2";
-        total = ../bak/doom/LaTailorGirl_v190.pk3;
-        relite = ../bak/doom/relite_0.6.7a.pk3;
-      }
-      // mkDoom {
-        tag = "annie";
+        tag = "annie1";
         mod = ../bak/doom/Annie-E1-v1.1.zip;
         relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
         tag = "scorched-heritage";
         mod = ../bak/doom/ScorchedHeritage.wad;
-        relite = "";
       }
       // mkDoom {
         tag = "slum-alley";
         mod = ../bak/doom/SlumAlley.wad;
-        relite = "";
       }
       // mkDoom {
         tag = "i-hate-storm";
@@ -176,6 +171,12 @@
         relite = "";
       }
       // mkDoom {
+        tag = "creatomania";
+        mod = ../bak/doom/creatomania.wad;
+        relite = "";
+        enemyglow = "";
+      }
+      // mkDoom {
         tag = "hell-fire";
         mod = ../bak/doom/HellFireCollectionV1-6.pk3;
       }
@@ -213,12 +214,6 @@
       // mkDoom {
         tag = "slime";
         mod = ../bak/doom/SLIMECTY.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "ico";
-        mod = ../bak/doom/D2ICO.wad;
-        music = "";
         relite = "";
       }
       // mkDoom {

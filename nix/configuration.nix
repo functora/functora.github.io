@@ -480,7 +480,7 @@ in {
         "signal"
         "skype"
         "snapchat"
-        "soundcloud"
+        # "soundcloud"
         "spotify"
         "steam"
         "telegram"
@@ -758,6 +758,7 @@ in {
         (import ./bip39-wordlist.nix)
         (import ./doom.nix {pkgs = unst;})
         (import ./prusa.nix {inherit pkgs;})
+        (import ./freecad.nix {inherit pkgs;})
         (import ./wf-recorder.nix {})
       ];
       programs.git = {

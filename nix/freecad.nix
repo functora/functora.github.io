@@ -1,12 +1,16 @@
-{pkgs}: let
+{pkgs ? import <nixpkgs> {}}: let
   nixpak = import ./nixpak.nix;
   mkNixPak = nixpak.lib.nixpak {
     inherit (pkgs) lib;
     inherit pkgs;
   };
   app = pkgs.writeShellApplication {
-    name = "prusa";
-    text = "${pkgs.prusa-slicer}/bin/prusa-slicer";
+    name = "freecad";
+    text = "${pkgs.freecad}/bin/freecad";
+  };
+  passwd = pkgs.writeTextFile {
+    name = "passwd";
+    text = "vibe:x:1000:1000:vibe:/tmp:/bin/sh";
   };
   sandbox = mkNixPak {
     config = {sloth, ...}: {
@@ -19,6 +23,9 @@
         network = false;
         sockets.pulse = true;
         sockets.wayland = true;
+        bind.ro = [
+          [(toString passwd) "/etc/passwd"]
+        ];
         bind.rw = [
           [
             (sloth.mkdir (sloth.concat' sloth.homeDir "/prusa"))

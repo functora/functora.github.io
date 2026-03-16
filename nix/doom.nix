@@ -60,7 +60,6 @@
     relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
-    enemyglow ? ../bak/doom/enemy-glow.pk3,
   }: {
     "doom-${tag}" = mkDoomSand {
       name = "doom-${tag}";
@@ -81,7 +80,6 @@
           ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
           ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
           ${../bak/doom/cblood.pk3} \
-          ${enemyglow} \
           ${../bak/doom/fast-swap.pk3}
       '';
     };
@@ -113,7 +111,6 @@
         mod = ../bak/doom/TNT2_1_1.wad;
         gfx = ../bak/doom/CodeFX_v1.101.pk3;
         relite = "";
-        enemyglow = "";
       }
       // mkDoom {
         tag = "plutonia";
@@ -174,7 +171,6 @@
         tag = "creatomania";
         mod = ../bak/doom/creatomania.wad;
         relite = "";
-        enemyglow = "";
       }
       // mkDoom {
         tag = "hell-fire";
@@ -223,6 +219,11 @@
         relite = "";
       }
       // mkDoom {
+        tag = "lstcv";
+        mod = ../bak/doom/joi_lstcv15.wad;
+        music = "";
+      }
+      // mkDoom {
         wad = ../bak/doom/wads/doom.wad;
         tag = "spectacle-creep";
         mod = ../bak/doom/spectacle_creep_build10D.wad;
@@ -257,6 +258,7 @@
         tag = "infinite";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;
+        music = "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}";
         liquid = ''"${duhd}/26 Liquids.pk3"'';
         relite = "";
         nashgore = ../bak/doom/nashgore.pk3;

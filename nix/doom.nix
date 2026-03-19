@@ -157,6 +157,11 @@
         music = "";
       }
       // mkDoom {
+        tag = "invasion";
+        mod = ../bak/doom/earthinv20.wad;
+        music = "";
+      }
+      // mkDoom {
         tag = "hellbnd";
         mod = ../bak/doom/Hellbnd.wad;
         music = "";
@@ -219,6 +224,10 @@
         relite = "";
       }
       // mkDoom {
+        tag = "stalker";
+        mod = ../bak/doom/stalkerdoom14.wad;
+      }
+      // mkDoom {
         tag = "lstcv";
         mod = ../bak/doom/joi_lstcv15.wad;
         music = "";
@@ -250,6 +259,7 @@
       // mkDoom {
         tag = "butcher";
         total = ../bak/doom/FN-TrenchFoot.pk3;
+        music = "";
         relite = ../bak/doom/relite_0.5a.pk3;
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;

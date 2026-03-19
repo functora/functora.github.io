@@ -93,6 +93,43 @@ where
 }
 
 //
+// Zero (exclusive) to One (exclusive)
+//
+
+#[derive(Debug)]
+pub enum FZeroExclToOneExcl {}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
+#[display("{:?}", self)]
+pub struct ZeroExclToOneExclError<T>(pub T)
+where
+    T: Debug;
+impl<T> Error for ZeroExclToOneExclError<T> where T: Debug {}
+
+impl<T> Refine<T> for FZeroExclToOneExcl
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    type RefineError = ZeroExclToOneExclError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep > Zero::zero() && rep < One::one() {
+            Ok(rep)
+        } else {
+            ZeroExclToOneExclError(rep).pipe(Err)
+        }
+    }
+}
+
+//
 // Non-Empty
 //
 

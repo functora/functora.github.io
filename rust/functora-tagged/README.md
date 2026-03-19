@@ -175,7 +175,7 @@ Standard library methods often return `Option<T>` for potentially empty collecti
 
 #### 2. Invariant Preservation
 
-These methods return a new `Tagged<..., FNonEmpty>` instance. Since they take ownership of `self`, they can leverage `into_iter()` to perform transformations without cloning individual elements. This makes them highly efficient for complex or large underlying data.
+These methods return a new `Tagged<..., FNonEmpty>` value. Since they take ownership of `self`, they can leverage `into_iter()` to perform transformations without cloning individual elements. This makes them highly efficient for complex or large underlying data.
 
 | Method    | Behavior                      | Invariant            |
 | --------- | ----------------------------- | -------------------- |

@@ -106,17 +106,45 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 - **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
 - **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
 - **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
+- **`FZeroExclToOneExcl`**: Ensures the value is in the open interval `(0, 1)` — both endpoints excluded.
+- **`FZeroInclToOneExcl`**: Ensures the value is in the half-open interval `[0, 1)` — zero included, one excluded.
+- **`FZeroExclToOneIncl`**: Ensures the value is in the half-open interval `(0, 1]` — zero excluded, one included.
+- **`FZeroInclToOneIncl`**: Ensures the value is in the closed interval `[0, 1]` — both endpoints included.
 - **`FNonEmpty`**: Ensures the value is not empty, i.e. the length is `> 0`.
+
+```rust
+use functora_tagged::*;
+
+#[derive(Debug)]
+pub enum DProb {}
+pub type Probability = Tagged<f64, DProb, FZeroInclToOneIncl>;
+
+let p = Probability::new(0.0);
+assert!(p.is_ok());
+
+let p = Probability::new(1.0);
+assert!(p.is_ok());
+
+let err = Probability::new(-0.1);
+assert!(err.is_err());
+
+let err = Probability::new(1.1);
+assert!(err.is_err());
+```
 
 ### Numeric Identities (`zero()` / `one()`)
 
 Common refineries provide associated functions to create refined values representing zero or one. These are available for any representation type `T` that implements the corresponding `num_traits`.
 
-| Refinery    | `zero()` | `one()` | Note                         |
-| ----------- | -------- | ------- | ---------------------------- |
-| `FCrude`    | ✅       | ✅      | No restrictions              |
-| `FPositive` | ❌       | ✅      | `0` is not positive          |
-| `FNonNeg`   | ✅       | ✅      | `0` and `1` are both non-neg |
+| Refinery             | `zero()` | `one()` | Note                               |
+| -------------------- | -------- | ------- | ---------------------------------- |
+| `FCrude`             | ✅       | ✅      | No restrictions                    |
+| `FPositive`          | ❌       | ✅      | `0` is not positive                |
+| `FNonNeg`            | ✅       | ✅      | `0` and `1` are both non-neg       |
+| `FZeroExclToOneExcl` | ❌       | ❌      | Neither `0` nor `1` are in `(0,1)` |
+| `FZeroInclToOneExcl` | ✅       | ❌      | `0` ∈ `[0,1)`, `1` ∉ `[0,1)`       |
+| `FZeroExclToOneIncl` | ❌       | ✅      | `0` ∉ `(0,1]`, `1` ∈ `(0,1]`       |
+| `FZeroInclToOneIncl` | ✅       | ✅      | Both `0` and `1` are in `[0,1]`    |
 
 ```rust
 use functora_tagged::*;

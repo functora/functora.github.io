@@ -6,6 +6,6 @@ pub trait InfallibleInto<T> {
 
 impl<T> InfallibleInto<T> for Result<T, Infallible> {
     fn infallible(self) -> T {
-        self.unwrap()
+        self.unwrap_or_else(|e| match e {})
     }
 }

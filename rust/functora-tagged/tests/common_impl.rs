@@ -233,3 +233,24 @@ fn test_zero_incl_to_one_incl() {
             .is_err()
     );
 }
+
+#[test]
+fn test_zero_incl_to_one_excl_zero() {
+    let x = Tagged::<f64, D, FZeroInclToOneExcl>::zero();
+    assert_eq!(*x, 0.0);
+}
+
+#[test]
+fn test_zero_excl_to_one_incl_one() {
+    let x = Tagged::<f64, D, FZeroExclToOneIncl>::one();
+    assert_eq!(*x, 1.0);
+}
+
+#[test]
+fn test_zero_incl_to_one_incl_zero_one() {
+    let x = Tagged::<f64, D, FZeroInclToOneIncl>::zero();
+    assert_eq!(*x, 0.0);
+
+    let y = Tagged::<f64, D, FZeroInclToOneIncl>::one();
+    assert_eq!(*y, 1.0);
+}

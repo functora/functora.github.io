@@ -75,6 +75,61 @@ where
 }
 
 //
+// Zero (inclusive) to One (exclusive)
+//
+
+impl<T, D> Tagged<T, D, FZeroInclToOneExcl>
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    #[must_use]
+    pub fn zero() -> Self {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        T::zero().pipe(Tagged::new).unwrap()
+    }
+}
+
+//
+// Zero (exclusive) to One (inclusive)
+//
+
+impl<T, D> Tagged<T, D, FZeroExclToOneIncl>
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    #[must_use]
+    pub fn one() -> Self {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        T::one().pipe(Tagged::new).unwrap()
+    }
+}
+
+//
+// Zero (inclusive) to One (inclusive)
+//
+
+impl<T, D> Tagged<T, D, FZeroInclToOneIncl>
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    #[must_use]
+    pub fn zero() -> Self {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        T::zero().pipe(Tagged::new).unwrap()
+    }
+
+    #[must_use]
+    pub fn one() -> Self {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        T::one().pipe(Tagged::new).unwrap()
+    }
+}
+
+//
 // Non-Empty
 //
 

@@ -130,6 +130,117 @@ where
 }
 
 //
+// Zero (inclusive) to One (exclusive)
+//
+
+#[derive(Debug)]
+pub enum FZeroInclToOneExcl {}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
+#[display("{:?}", self)]
+pub struct ZeroInclToOneExclError<T>(pub T)
+where
+    T: Debug;
+impl<T> Error for ZeroInclToOneExclError<T> where T: Debug {}
+
+impl<T> Refine<T> for FZeroInclToOneExcl
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    type RefineError = ZeroInclToOneExclError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep >= Zero::zero() && rep < One::one() {
+            Ok(rep)
+        } else {
+            ZeroInclToOneExclError(rep).pipe(Err)
+        }
+    }
+}
+
+//
+// Zero (exclusive) to One (inclusive)
+//
+
+#[derive(Debug)]
+pub enum FZeroExclToOneIncl {}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
+#[display("{:?}", self)]
+pub struct ZeroExclToOneInclError<T>(pub T)
+where
+    T: Debug;
+impl<T> Error for ZeroExclToOneInclError<T> where T: Debug {}
+
+impl<T> Refine<T> for FZeroExclToOneIncl
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    type RefineError = ZeroExclToOneInclError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep > Zero::zero() && rep <= One::one() {
+            Ok(rep)
+        } else {
+            ZeroExclToOneInclError(rep).pipe(Err)
+        }
+    }
+}
+
+//
+// Zero (inclusive) to One (inclusive)
+//
+
+#[derive(Debug)]
+pub enum FZeroInclToOneIncl {}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Copy,
+    Clone,
+    Debug,
+    Display,
+)]
+#[display("{:?}", self)]
+pub struct ZeroInclToOneInclError<T>(pub T)
+where
+    T: Debug;
+impl<T> Error for ZeroInclToOneInclError<T> where T: Debug {}
+
+impl<T> Refine<T> for FZeroInclToOneIncl
+where
+    T: PartialOrd + Zero + One + Debug,
+{
+    type RefineError = ZeroInclToOneInclError<T>;
+    fn refine(rep: T) -> Result<T, Self::RefineError> {
+        if rep >= Zero::zero() && rep <= One::one() {
+            Ok(rep)
+        } else {
+            ZeroInclToOneInclError(rep).pipe(Err)
+        }
+    }
+}
+
+//
 // Non-Empty
 //
 

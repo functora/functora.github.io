@@ -137,3 +137,99 @@ fn test_non_empty_dedup() {
     let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.dedup();
     assert_eq!(*ys, vec![1, 2, 3, 1]);
 }
+
+#[test]
+fn test_zero_excl_to_one_excl() {
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneExcl>::new(0.5)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneExcl>::new(0.0)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneExcl>::new(1.0)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneExcl>::new(-0.1)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneExcl>::new(1.1)
+            .is_err()
+    );
+}
+
+#[test]
+fn test_zero_incl_to_one_excl() {
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneExcl>::new(0.0)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneExcl>::new(0.5)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneExcl>::new(1.0)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneExcl>::new(-0.1)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneExcl>::new(1.1)
+            .is_err()
+    );
+}
+
+#[test]
+fn test_zero_excl_to_one_incl() {
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneIncl>::new(1.0)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneIncl>::new(0.5)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneIncl>::new(0.0)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneIncl>::new(-0.1)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroExclToOneIncl>::new(1.1)
+            .is_err()
+    );
+}
+
+#[test]
+fn test_zero_incl_to_one_incl() {
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneIncl>::new(0.0)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneIncl>::new(1.0)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneIncl>::new(0.5)
+            .is_ok()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneIncl>::new(-0.1)
+            .is_err()
+    );
+    assert!(
+        Tagged::<f64, D, FZeroInclToOneIncl>::new(1.1)
+            .is_err()
+    );
+}

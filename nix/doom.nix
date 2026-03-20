@@ -14,6 +14,8 @@
     sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
   };
   ltp701 = ''"${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3"'';
+  music_doom = "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}";
+  music_juke = ../bak/doom/FerretJukeBoxV1-0.pk3;
   mkCod = mod: ''"${../bak/doom/cod-full}/(001)_CodV_FileA_BrutalV22test4_FIX.pk3" "${../bak/doom/cod-full}/(001)Addon_gearbox-0.7.3.pk3" ${mod} "${../bak/doom/cod-full}/ZZD_CodV_FileB_Graphics.wad" "${../bak/doom/cod-full}/ZZD_CodV_FileC_MainData.wad"'';
   mkDoomSand = {
     name,
@@ -53,8 +55,7 @@
     mod ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? ../bak/doom/DiamondDragon.pk3,
-    # music ? "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}",
-    music ? ../bak/doom/FerretJukeBoxV1-0.pk3,
+    music ? "",
     lights ? ''"${duhd}/1 lights2.wad"'',
     liquid ? ../bak/doom/new-liquids.pk3,
     relite ? ../bak/doom/relite_0.7.3b.pk3,
@@ -98,6 +99,11 @@
       // mkDoom {
         tag = "1";
         wad = ../bak/doom/wads/doomu.wad;
+      }
+      // mkDoom {
+        tag = "frayed";
+        wad = ../bak/doom/wads/doomu.wad;
+        mod = ../bak/doom/FRAYED.wad;
       }
       // mkDoom {
         tag = "2";
@@ -154,22 +160,18 @@
       // mkDoom {
         tag = "viaje";
         mod = ../bak/doom/VIAJE.wad;
-        music = "";
       }
       // mkDoom {
         tag = "invasion";
         mod = ../bak/doom/earthinv20.wad;
-        music = "";
       }
       // mkDoom {
         tag = "hellbnd";
         mod = ../bak/doom/Hellbnd.wad;
-        music = "";
       }
       // mkDoom {
         tag = "c17";
         total = ../bak/doom/DTB_C17.pk3;
-        music = "";
         relite = "";
       }
       // mkDoom {
@@ -198,19 +200,16 @@
       // mkDoom {
         tag = "nostalgic-entropy";
         mod = ../bak/doom/NE.wad;
-        music = "";
         relite = "";
       }
       // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
-        music = "";
         relite = "";
       }
       // mkDoom {
         tag = "city-assault";
         mod = ../bak/doom/city-assault.wad;
-        music = "";
       }
       // mkDoom {
         tag = "slime";
@@ -220,7 +219,6 @@
       // mkDoom {
         tag = "ihni";
         total = ../bak/doom/ihni-1.04.pk3;
-        music = "";
         relite = "";
       }
       // mkDoom {
@@ -230,20 +228,17 @@
       // mkDoom {
         tag = "lstcv";
         mod = ../bak/doom/joi_lstcv15.wad;
-        music = "";
       }
       // mkDoom {
         wad = ../bak/doom/wads/doom.wad;
         tag = "spectacle-creep";
         mod = ../bak/doom/spectacle_creep_build10D.wad;
-        music = "";
         relite = "";
       }
       // mkDoom {
         tag = "cats";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/Space_Cats_Saga_1.41.wad;
-        music = "";
         relite = ../bak/doom/relite_0.5a.pk3;
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
@@ -252,14 +247,12 @@
         tag = "bloom";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/bloom/Bloom.pk3;
-        music = "";
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {
         tag = "butcher";
         total = ../bak/doom/FN-TrenchFoot.pk3;
-        music = "";
         relite = ../bak/doom/relite_0.5a.pk3;
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
@@ -268,7 +261,7 @@
         tag = "infinite";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;
-        music = "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}";
+        music = music_doom;
         liquid = ''"${duhd}/26 Liquids.pk3"'';
         relite = "";
         nashgore = ../bak/doom/nashgore.pk3;

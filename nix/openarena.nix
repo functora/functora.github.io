@@ -25,7 +25,7 @@ let
       locale.enable = true;
       etc.sslCertificates.enable = true;
       bubblewrap = {
-        network = true;
+        network = false;
         sockets.pulse = true;
         sockets.wayland = true;
         bind.rw = [

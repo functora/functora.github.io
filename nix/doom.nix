@@ -50,6 +50,7 @@
     sandbox.config.env;
   mkDoom = {
     tag,
+    pkg ? "${pkgs.gzdoom}/bin/gzdoom",
     wad ? ../bak/doom/wads/doom2.wad,
     sky ? ../bak/doom/CryosUltDoomSkies.wad,
     mod ? "",
@@ -65,23 +66,23 @@
     "doom-${tag}" = mkDoomSand {
       name = "doom-${tag}";
       text = ''
-        ${pkgs.gzdoom}/bin/gzdoom \
-          -iwad ${wad} \
-          -file ${sky} ${../bak/doom/DestDec_v2.pk3} \
-          ${mod} \
-          ${gfx} \
-          ${total} \
-          ${music} \
-          ${lights} \
-          ${liquid} \
-          ${relite} \
-          ${parallax} \
-          ${nashgore} \
-          "${duhd}/12 Flashlight++.pk3" \
-          ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
-          ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
-          ${../bak/doom/cblood.pk3} \
-          ${../bak/doom/fast-swap.pk3}
+        ${pkg} \
+        -iwad ${wad} \
+        -file ${sky} ${../bak/doom/DestDec_v2.pk3} \
+        ${mod} \
+        ${gfx} \
+        ${total} \
+        ${music} \
+        ${lights} \
+        ${liquid} \
+        ${relite} \
+        ${parallax} \
+        ${nashgore} \
+        "${duhd}/12 Flashlight++.pk3" \
+        ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
+        ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
+        ${../bak/doom/cblood.pk3} \
+        ${../bak/doom/fast-swap.pk3}
       '';
     };
   };
@@ -99,11 +100,6 @@
       // mkDoom {
         tag = "1";
         wad = ../bak/doom/wads/doomu.wad;
-      }
-      // mkDoom {
-        tag = "frayed";
-        wad = ../bak/doom/wads/doomu.wad;
-        mod = ../bak/doom/FRAYED.wad;
       }
       // mkDoom {
         tag = "2";
@@ -162,21 +158,12 @@
         mod = ../bak/doom/VIAJE.wad;
       }
       // mkDoom {
-        tag = "invasion";
-        mod = ../bak/doom/earthinv20.wad;
-      }
-      // mkDoom {
         tag = "hellbnd";
         mod = ../bak/doom/Hellbnd.wad;
       }
       // mkDoom {
         tag = "c17";
         total = ../bak/doom/DTB_C17.pk3;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "creatomania";
-        mod = ../bak/doom/creatomania.wad;
         relite = "";
       }
       // mkDoom {
@@ -222,10 +209,6 @@
         relite = "";
       }
       // mkDoom {
-        tag = "stalker";
-        mod = ../bak/doom/stalkerdoom14.wad;
-      }
-      // mkDoom {
         tag = "lstcv";
         mod = ../bak/doom/joi_lstcv15.wad;
       }
@@ -247,6 +230,13 @@
         tag = "bloom";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/bloom/Bloom.pk3;
+        liquid = ltp701;
+        nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
+        tag = "trench";
+        total = "${../bak/doom/TF-maps.pk3} ${../bak/doom/TrenchFoot.pk3}";
+        relite = "";
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }

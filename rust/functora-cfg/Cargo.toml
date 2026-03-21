@@ -13,6 +13,7 @@ description = "A Rust library that merges configuration values from multiple sou
 clap = "4.5.50"
 config = "0.15.18"
 serde = { version = "1.0.228", features = ["derive"] }
+tap = "1.0.1"
 toml = "0.9.8"
 
 [dev-dependencies]

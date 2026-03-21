@@ -31,6 +31,7 @@ impl Cfg {
             env_prefix: "FUNCTORA",
             command_line: &cli
                 .try_fmap(|kv| kv.hash_map().map(IdClap))?,
+            transform_ast: substitute_defaults,
         }
         .eval()
     }

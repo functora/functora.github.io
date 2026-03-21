@@ -5,6 +5,7 @@ use config::{Config, Environment, File, Value};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::hash::Hash;
 use std::{collections::HashMap, path::Path};
+use tap::prelude::*;
 use toml::Value as TomlValue;
 
 pub struct Cfg<'a, Src: Serialize> {
@@ -12,6 +13,7 @@ pub struct Cfg<'a, Src: Serialize> {
     pub file_path: fn(&Src) -> Option<&str>,
     pub env_prefix: &'a str,
     pub command_line: &'a Src,
+    pub transform_ast: fn(Value) -> Value,
 }
 
 impl<Src: Serialize> Cfg<'_, Src> {
@@ -59,7 +61,11 @@ where
     builder = builder
         .add_source(term_to_config(cfg.command_line)?);
 
-    builder.build()?.try_deserialize()
+    builder
+        .build()?
+        .try_deserialize::<Value>()?
+        .pipe(cfg.transform_ast)
+        .try_deserialize()
 }
 
 fn term_to_config<T: Serialize>(
@@ -246,3 +252,15 @@ impl<T> Subcommand for IdClap<T> {
         unimplemented!()
     }
 }
+
+#[must_use]
+pub fn substitute_defaults(ast: Value) -> Value {
+    ast
+    // substitute_defaults_rec(ast, extract_defaults(&ast))
+}
+
+// fn substitute_defaults_rec(ast: Value, defaults: HashMap<String, Value>) -> Value {
+//     match ast {
+
+//     }
+// }

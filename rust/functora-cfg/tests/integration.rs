@@ -1,3 +1,4 @@
+#![allow(unused_results)]
 use clap::{Args, Parser, Subcommand};
 use functor_derive::Functor;
 use functora_cfg::*;
@@ -26,7 +27,7 @@ impl Cfg {
     ) -> Result<Self, ConfigError> {
         functora_cfg::Cfg {
             default: &Cli::def(),
-            file_path: |cli| cli.toml.as_deref(),
+            file_path: |c| c.toml.as_deref(),
             env_prefix: "FUNCTORA",
             command_line: &cli
                 .try_fmap(|kv| kv.hash_map().map(IdClap))?,

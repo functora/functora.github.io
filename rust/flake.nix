@@ -256,6 +256,16 @@
               # apps
               (mkWeb "cryptonote")
               (mkApk "cryptonote")
+              # verify
+              (pkgs.writeShellApplication {
+                name = "verify";
+                text = ''
+                  ${cargo}/bin/cargo fmt \
+                    && ${cargo}/bin/cargo clippy -- -D warnings \
+                    && ${cargo}/bin/cargo test \
+                    && echo "==> All good!"
+                '';
+              })
             ]
             ++ (mkAab "cryptonote");
         };

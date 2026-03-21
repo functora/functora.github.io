@@ -14,7 +14,7 @@ pub struct Cfg<'a, Src: Serialize> {
     pub command_line: &'a Src,
 }
 
-impl<'a, Src: Serialize> Cfg<'a, Src> {
+impl<Src: Serialize> Cfg<'_, Src> {
     pub fn eval<Dst: Serialize + DeserializeOwned>(
         &self,
     ) -> Result<Dst, ConfigError> {
@@ -35,10 +35,10 @@ where
         builder.add_source(term_to_config(cfg.default)?);
 
     let getter = cfg.file_path;
-    if let Some(path) =
-        getter(cfg.command_line).or(getter(cfg.default))
+    if let Some(file_path) = getter(cfg.command_line)
+        .or_else(|| getter(cfg.default))
     {
-        let path = Path::new(&path);
+        let path = Path::new(&file_path);
         if path.exists() && path.is_file() {
             builder = builder.add_source(File::from(path));
         } else {
@@ -146,7 +146,7 @@ where
         self.vec(rec)
             .into_iter()
             .enumerate()
-            .map(|(k, v)| key(k).map(|k| (k, v)))
+            .map(|(idx, v)| key(idx).map(|k| (k, v)))
             .collect()
     }
 }
@@ -157,9 +157,9 @@ where
     U: Subcommand,
 {
     fn augment_args(cmd: clap::Command) -> clap::Command {
-        T::augment_args(cmd).defer(|cmd| {
+        T::augment_args(cmd).defer(|sub_cmd| {
             U::augment_subcommands(
-                cmd.disable_help_subcommand(true),
+                sub_cmd.disable_help_subcommand(true),
             )
         })
     }

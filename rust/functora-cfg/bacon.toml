@@ -1,0 +1,4 @@
+default_job = "clippy-everything"
+[jobs.clippy-everything]
+command = ["cargo", "clippy", "--lib", "--bins", "--examples", "--all-features"]
+need_stdout = false

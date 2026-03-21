@@ -21,3 +21,25 @@ functor_derive = "0.4.3"
 serial_test = "3.2.0"
 temp-env = "0.3.6"
 tempfile = "3.23.0"
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+# strict
+or_fun_call = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+shadow_same = "warn"
+shadow_reuse = "warn"
+shadow_unrelated = "warn"
+# relaxed
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }

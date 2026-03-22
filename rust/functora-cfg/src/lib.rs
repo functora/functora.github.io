@@ -1,7 +1,8 @@
 #![doc = include_str!("../README.md")]
 use clap::{Args, FromArgMatches, Subcommand};
 pub use config::ConfigError;
-use config::{Config, Environment, File, Value};
+use config::{Config, Environment, File, Value, ValueKind};
+use functora::Void;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::hash::Hash;
 use std::{collections::HashMap, path::Path};
@@ -255,12 +256,45 @@ impl<T> Subcommand for IdClap<T> {
 
 #[must_use]
 pub fn substitute_defaults(ast: Value) -> Value {
-    ast
-    // substitute_defaults_rec(ast, extract_defaults(&ast))
+    let mut this = ast;
+    substitute_defaults_rec(&mut this, &HashMap::new());
+    this
 }
 
-// fn substitute_defaults_rec(ast: Value, defaults: HashMap<String, Value>) -> Value {
-//     match ast {
+fn substitute_defaults_rec(
+    ast: &mut Value,
+    def: &HashMap<String, Value>,
+) {
+    if let ValueKind::Table(ref mut kv) = ast.kind {
+        def.iter().for_each(|(k, v)| {
+            kv.entry(k.clone())
+                .or_insert_with(|| v.clone())
+                .void()
+        })
+    }
+    let next = extract_default(ast);
+    if let ValueKind::Table(ref mut kv) = ast.kind {
+        kv.iter_mut().for_each(|(_, v)| {
+            substitute_defaults_rec(v, &next)
+        })
+    }
+}
 
-//     }
-// }
+fn extract_default(
+    ast: &mut Value,
+) -> HashMap<String, Value> {
+    if let ValueKind::Table(ref mut kv) = ast.kind
+        && let Some(Value {
+            kind: ValueKind::Table(_),
+            ..
+        }) = kv.get("default")
+        && let Some(Value {
+            kind: ValueKind::Table(def),
+            ..
+        }) = kv.remove("default")
+    {
+        def
+    } else {
+        HashMap::new()
+    }
+}

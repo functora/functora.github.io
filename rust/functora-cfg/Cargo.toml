@@ -12,6 +12,7 @@ description = "A Rust library that merges configuration values from multiple sou
 [dependencies]
 clap = "4.5.50"
 config = "0.15.18"
+functora = "0.1.6"
 serde = { version = "1.0.228", features = ["derive"] }
 tap = "1.0.1"
 toml = "0.9.8"
@@ -41,6 +42,7 @@ shadow_unrelated = "warn"
 # relaxed
 similar_names = { level = "allow", priority = 1 }
 too_many_lines = { level = "allow", priority = 1 }
+implicit_hasher = { level = "allow", priority = 1 }
 wildcard_imports = { level = "allow", priority = 1 }
 missing_errors_doc = { level = "allow", priority = 1 }
 semicolon_if_nothing_returned = { level = "allow", priority = 1 }

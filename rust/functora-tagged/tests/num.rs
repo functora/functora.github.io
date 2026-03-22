@@ -70,10 +70,10 @@ type Test = Result<(), Box<dyn std::error::Error>>;
 fn area() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a: Area = l.tmul(&w)?;
+    let a: Area = l.tmul(w)?;
     assert_eq!(a.rep(), &dec!(50));
-    assert_eq!(a.tdiv(&l)?, w);
-    assert_eq!(a.tdiv(&w)?, l);
+    assert_eq!(a.tdiv(l)?, w);
+    assert_eq!(a.tdiv(w)?, l);
     ok()
 }
 
@@ -81,11 +81,11 @@ fn area() -> Test {
 fn velocity() -> Test {
     let d = Meter::new(dec!(100))?;
     let t = Second::new(dec!(10))?;
-    let v: Velocity = d.tdiv(&t)?;
-    let h: Hertz = v.tdiv(&d)?;
+    let v: Velocity = d.tdiv(t)?;
+    let h: Hertz = v.tdiv(d)?;
     assert_eq!(v.rep(), &dec!(10));
-    assert_eq!(v.tmul(&t)?, d);
-    assert_eq!(t.tmul(&v)?, d);
+    assert_eq!(v.tmul(t)?, d);
+    assert_eq!(t.tmul(v)?, d);
     assert_eq!(h.rep(), &dec!(0.1));
     ok()
 }
@@ -95,8 +95,8 @@ fn kinetic_energy() -> Test {
     let m: Kg = Kg::new(dec!(2))?;
     let d: Meter = Meter::new(dec!(10))?;
     let t: Second = Second::new(dec!(5))?;
-    let v: Velocity = d.tdiv(&t)?;
-    let e: Joule = m.tmul(&v.tmul(&v)?)?;
+    let v: Velocity = d.tdiv(t)?;
+    let e: Joule = m.tmul(v.tmul(v)?)?;
     assert_eq!(e.rep(), &dec!(8));
     ok()
 }
@@ -105,7 +105,7 @@ fn kinetic_energy() -> Test {
 fn exchange_rate() -> Test {
     let eur = Eur::new(dec!(100))?;
     let usd = Usd::new(dec!(1.2))?;
-    let rate: EurPerUsd = eur.tdiv(&usd)?;
+    let rate: EurPerUsd = eur.tdiv(usd)?;
     assert_eq!(rate.rep(), &(dec!(100) / dec!(1.2)));
     ok()
 }
@@ -114,7 +114,7 @@ fn exchange_rate() -> Test {
 fn currency_convert() -> Test {
     let usd = Usd::new(dec!(400))?;
     let rate = EurPerUsd::new(dec!(0.9))?;
-    let eur: Eur = usd.tmul(&rate)?;
+    let eur: Eur = usd.tmul(rate)?;
     assert_eq!(eur.rep(), &dec!(360));
     ok()
 }
@@ -124,11 +124,11 @@ fn commutative() -> Test {
     let x = Meter::new(dec!(10))?;
     let y = Meter::new(dec!(5))?;
     // x + y = y + x
-    assert_eq!(x.tadd(&y)?, y.tadd(&x)?);
+    assert_eq!(x.tadd(y)?, y.tadd(x)?);
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a1: Area = l.tmul(&w)?;
-    let a2: Area = w.tmul(&l)?;
+    let a1: Area = l.tmul(w)?;
+    let a2: Area = w.tmul(l)?;
     // l * w = w * l
     assert_eq!(a1.rep(), a2.rep());
     ok()
@@ -140,10 +140,7 @@ fn associative() -> Test {
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
     // (a + b) + c = a + (b + c)
-    assert_eq!(
-        a.tadd(&b)?.tadd(&c)?,
-        a.tadd(&b.tadd(&c)?)?
-    );
+    assert_eq!(a.tadd(b)?.tadd(c)?, a.tadd(b.tadd(c)?)?);
     ok()
 }
 
@@ -152,8 +149,8 @@ fn distributive() -> Test {
     let a = Meter::new(dec!(10))?;
     let b = Meter::new(dec!(5))?;
     let c = Meter::new(dec!(2))?;
-    let res1: Area = a.tmul(&b.tadd(&c)?)?;
-    let res2: Area = a.tmul(&b)?.tadd(&a.tmul(&c)?)?;
+    let res1: Area = a.tmul(b.tadd(c)?)?;
+    let res2: Area = a.tmul(b)?.tadd(a.tmul(c)?)?;
     // a * (b + c) = a * b + a * c
     assert_eq!(res1, res2);
     ok()
@@ -164,15 +161,15 @@ fn identity() -> Test {
     let x = Meter::new(dec!(10))?;
     let zero = Meter::new(dec!(0))?;
     // x + 0 = x
-    assert_eq!(x.tadd(&zero)?, x);
+    assert_eq!(x.tadd(zero)?, x);
     // 0 + x = x
-    assert_eq!(zero.tadd(&x)?, x);
+    assert_eq!(zero.tadd(x)?, x);
     let y = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
     // y * 1 = y
-    assert_eq!(y.tmul(&one)?, y);
+    assert_eq!(y.tmul(one)?, y);
     // 1 * y = y
-    assert_eq!(one.tmul(&y)?, y);
+    assert_eq!(one.tmul(y)?, y);
     ok()
 }
 
@@ -180,11 +177,11 @@ fn identity() -> Test {
 fn cancellation() -> Test {
     let l = Meter::new(dec!(10))?;
     let w = Meter::new(dec!(5))?;
-    let a: Area = l.tmul(&w)?;
+    let a: Area = l.tmul(w)?;
     // (L ✖ R) / L = R
-    assert_eq!(w, a.tdiv(&l)?);
+    assert_eq!(w, a.tdiv(l)?);
     // (L ✖ R) / R = L
-    assert_eq!(l, a.tdiv(&w)?);
+    assert_eq!(l, a.tdiv(w)?);
     ok()
 }
 
@@ -193,9 +190,9 @@ fn identity_division() -> Test {
     let m = Meter::new(dec!(10))?;
     let one = Num::new(dec!(1))?;
     // T / 1 = T
-    assert_eq!(m, m.tdiv(&one)?);
+    assert_eq!(m, m.tdiv(one)?);
     // 1 / T = 1 ÷ T
-    let h: Hertz = one.tdiv(&Second::new(dec!(2))?)?;
+    let h: Hertz = one.tdiv(Second::new(dec!(2))?)?;
     assert_eq!(h.rep(), &dec!(0.5));
     ok()
 }
@@ -210,15 +207,15 @@ fn mul_permutations() -> Test {
     let vel = Velocity::new(dec!(4))?; // m/s
 
     // Identity * Times
-    let vol: Volume = one.tmul(&area.tmul(&m)?)?;
+    let vol: Volume = one.tmul(area.tmul(m)?)?;
     assert_eq!(vol.rep(), &dec!(12));
 
     // Identity * Per
-    let acc: Acceleration = one.tmul(&vel.tdiv(&s)?)?;
+    let acc: Acceleration = one.tmul(vel.tdiv(s)?)?;
     assert_eq!(acc.rep(), &(dec!(4) / dec!(2)));
 
     // Atomic * Times
-    let force: Force = kg.tmul(&acc)?;
+    let force: Force = kg.tmul(acc)?;
     assert_eq!(
         force.rep(),
         &((dec!(5) * dec!(4)) / dec!(2))
@@ -229,7 +226,7 @@ fn mul_permutations() -> Test {
         Decimal,
         Times<DKg, DVelocity, FNonNeg>,
         FNonNeg,
-    > = kg.tmul(&vel)?;
+    > = kg.tmul(vel)?;
     assert_eq!(momentum.rep(), &dec!(20));
 
     // Times * Atomic
@@ -237,7 +234,7 @@ fn mul_permutations() -> Test {
         Decimal,
         Times<DAcceleration, DKg, FNonNeg>,
         FNonNeg,
-    > = acc.tmul(&kg)?; // Commutative check roughly
+    > = acc.tmul(kg)?; // Commutative check roughly
     assert_eq!(force2.rep(), force.rep());
 
     // Per * Atomic (Non-cancelling checked in velocity test)
@@ -246,7 +243,7 @@ fn mul_permutations() -> Test {
         Decimal,
         Times<DVelocity, DHertz, FNonNeg>,
         FNonNeg,
-    > = vel.tmul(&Hertz::new(dec!(1))?)?;
+    > = vel.tmul(Hertz::new(dec!(1))?)?;
     assert_eq!(acc2.rep(), &dec!(4));
 
     ok()
@@ -265,7 +262,7 @@ fn div_permutations() -> Test {
         Decimal,
         Per<DNum, DArea, FNonNeg>,
         FNonNeg,
-    > = one.tdiv(&area)?;
+    > = one.tdiv(area)?;
     assert_eq!(per_area.rep(), &dec!(0.01));
 
     // Identity / Per
@@ -273,7 +270,7 @@ fn div_permutations() -> Test {
         Decimal,
         Per<DNum, DVelocity, FNonNeg>,
         FNonNeg,
-    > = one.tdiv(&vel)?;
+    > = one.tdiv(vel)?;
     assert_eq!(s_per_m.rep(), &dec!(0.2));
 
     // Atomic / Times
@@ -281,7 +278,7 @@ fn div_permutations() -> Test {
         Decimal,
         Per<DNum, DMeter, FNonNeg>,
         FNonNeg,
-    > = m.tdiv(&area)?;
+    > = m.tdiv(area)?;
     assert_eq!(per_m.rep(), &dec!(0.1));
 
     // Times / Times
@@ -289,7 +286,7 @@ fn div_permutations() -> Test {
         Decimal,
         Per<DArea, DArea, FNonNeg>,
         FNonNeg,
-    > = area.tdiv(&area)?;
+    > = area.tdiv(area)?;
     assert_eq!(ratio.rep(), &dec!(1));
 
     // Times / Per
@@ -297,7 +294,7 @@ fn div_permutations() -> Test {
         Decimal,
         Per<DVelocity, DSecond, FNonNeg>,
         FNonNeg,
-    > = vel.tdiv(&s)?;
+    > = vel.tdiv(s)?;
     assert_eq!(acc_time.rep(), &dec!(2.5));
 
     ok()
@@ -314,20 +311,20 @@ fn cancellation_edge_cases() -> Test {
         Decimal,
         Times<DMeter, DSecond, FNonNeg>,
         FNonNeg,
-    > = m.tmul(&s)?;
+    > = m.tmul(s)?;
     let per_s_val: Tagged<
         Decimal,
         Per<DNum, DSecond, FPositive>,
         FPositive,
-    > = m.tdiv(&ms)?;
+    > = m.tdiv(ms)?;
     assert_eq!(per_s_val.rep(), &dec!(0.5));
 
     // L / (L / R) = R
-    let s2: Second = m.tdiv(&vel)?; // m / (m/s) = s
+    let s2: Second = m.tdiv(vel)?; // m / (m/s) = s
     assert_eq!(s2.rep(), &dec!(2));
 
     // (L / R) / L = 1/R
-    let inv_s: Hertz = vel.tdiv(&m)?;
+    let inv_s: Hertz = vel.tdiv(m)?;
     assert_eq!(inv_s.rep(), &dec!(0.5));
 
     ok()

@@ -234,8 +234,7 @@ mod serde_tests {
             via_string_value: TestViaString,
         }
 
-        let toml =
-            r##"via_string_value = "invalid_string""##;
+        let toml = r#"via_string_value = "invalid_string""#;
         let err =
             toml::from_str::<Wrapper>(toml).unwrap_err();
         assert!(
@@ -244,7 +243,7 @@ mod serde_tests {
         );
 
         let toml_valid =
-            r##"via_string_value = "valid_serde_refine""##;
+            r#"via_string_value = "valid_serde_refine""#;
         let wrapper: Wrapper =
             toml::from_str(toml_valid).unwrap();
         assert_eq!(

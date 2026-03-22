@@ -42,8 +42,7 @@ impl Refine<String> for FStrict {
             Ok(rep)
         } else {
             Err(format!(
-                "String must start with 'strict_': {}",
-                rep
+                "String must start with 'strict_': {rep}"
             ))
         }
     }
@@ -64,8 +63,7 @@ fn test_refine_strict_tag_implementation() {
     assert_eq!(
         refined_non_strict.unwrap_err(),
         format!(
-            "String must start with 'strict_': {}",
-            non_strict_value
+            "String must start with 'strict_': {non_strict_value}"
         )
     );
 }

@@ -167,7 +167,7 @@ fn test_tagged_clone_debug() {
     let tagged: NonEmpty<String> = "test".parse().unwrap();
     let cloned = tagged.clone();
     assert_eq!(tagged, cloned);
-    let dbg = format!("{:?}", tagged);
+    let dbg = format!("{tagged:?}");
     assert!(dbg.contains("Tagged"));
     assert!(dbg.contains("PhantomData"));
 }
@@ -183,7 +183,7 @@ fn test_upper_string_infallible() {
 fn test_tagged_display() {
     let tagged: NonEmpty<String> =
         "display_test".parse().unwrap();
-    let display_str = format!("{}", tagged);
+    let display_str = format!("{tagged}");
     assert_eq!(display_str, "display_test");
 }
 
@@ -256,16 +256,16 @@ mod serde_tests {
         struct Wrapper {
             user_id: UserId,
         }
-        let toml = r#"user_id = "bad""#;
-        let err =
-            toml::from_str::<Wrapper>(toml).unwrap_err();
+        let toml_str = r#"user_id = "bad""#;
+        let err = toml::from_str::<Wrapper>(toml_str)
+            .unwrap_err();
         assert!(
             err.to_string().contains("UserIdError"),
             "Unexpected failure: {err}"
         );
-        let toml = r#"user_id = "user_123""#;
+        let toml_str = r#"user_id = "user_123""#;
         let wrapper: Wrapper =
-            toml::from_str(toml).unwrap();
+            toml::from_str(toml_str).unwrap();
         assert_eq!(wrapper.user_id.rep().rep(), "user_123");
     }
 

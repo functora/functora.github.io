@@ -32,14 +32,13 @@ fn test_parse_error_decode() {
         PhantomData,
     );
 
-    let formatted_error = format!("{}", parse_error);
+    let formatted_error = format!("{parse_error}");
     assert!(
         formatted_error
-            .contains(&format!("{:?}", decode_err))
+            .contains(&format!("{decode_err:?}"))
     );
 
-    let debug_formatted_error =
-        format!("{:?}", parse_error);
+    let debug_formatted_error = format!("{parse_error:?}");
     assert_eq!(
         debug_formatted_error,
         "Decode(ParseIntError { kind: InvalidDigit }, PhantomData<(parse_error::MyTag, parse_error::MyTag)>)"
@@ -64,13 +63,12 @@ fn test_parse_error_refine() {
         PhantomData,
     );
 
-    let formatted_error = format!("{}", parse_error);
+    let formatted_error = format!("{parse_error}");
     assert!(
         formatted_error.contains(&refine_err.to_string())
     );
 
-    let debug_formatted_error =
-        format!("{:?}", parse_error);
+    let debug_formatted_error = format!("{parse_error:?}");
     assert_eq!(
         debug_formatted_error,
         "Refine(MyRefineError, PhantomData<(parse_error::MyTag, parse_error::MyTag)>)"
@@ -246,7 +244,7 @@ fn test_parse_error_debug_formatting() {
         PhantomData,
     );
     assert_eq!(
-        format!("{:?}", parse_error_decode),
+        format!("{parse_error_decode:?}"),
         "Decode(ParseIntError { kind: InvalidDigit }, PhantomData<(parse_error::MyTag, parse_error::MyTag)>)"
     );
 
@@ -256,7 +254,7 @@ fn test_parse_error_debug_formatting() {
         PhantomData,
     );
     assert_eq!(
-        format!("{:?}", parse_error_refine),
+        format!("{parse_error_refine:?}"),
         "Refine(MyRefineError, PhantomData<(parse_error::MyTag, parse_error::MyTag)>)"
     );
 }
@@ -269,8 +267,8 @@ fn test_parse_error_display_formatting() {
         PhantomData,
     );
     assert!(
-        format!("{}", parse_error_decode)
-            .contains(&format!("{:?}", decode_err))
+        format!("{parse_error_decode}")
+            .contains(&format!("{decode_err:?}"))
     );
 
     let refine_err = MyRefineError;
@@ -279,7 +277,7 @@ fn test_parse_error_display_formatting() {
         PhantomData,
     );
     assert!(
-        format!("{}", parse_error_refine)
+        format!("{parse_error_refine}")
             .contains(&refine_err.to_string())
     );
 }

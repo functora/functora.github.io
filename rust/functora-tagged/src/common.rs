@@ -244,6 +244,8 @@ where
 // Non-Empty
 //
 
+pub type NonEmpty<T> = Tagged<T, FNonEmpty, FNonEmpty>;
+
 #[derive(Debug)]
 pub enum FNonEmpty {}
 

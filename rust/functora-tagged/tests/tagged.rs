@@ -105,7 +105,7 @@ fn test_tagged_ord_partial_ord() {
 #[test]
 fn test_tagged_clone() {
     let tagged1 = TestTagged::new(70).unwrap();
-    let tagged2 = tagged1.clone();
+    let tagged2 = tagged1;
 
     assert_eq!(tagged1, tagged2);
     assert_eq!(tagged1.rep(), tagged2.rep());
@@ -165,7 +165,9 @@ fn test_tagged_from_str() {
     assert!(parse_result_decode.is_err());
     match parse_result_decode.unwrap_err() {
         TestParseError::Decode(..) => {}
-        _ => panic!("Expected Decode error"),
+        TestParseError::Refine(..) => {
+            panic!("Expected Decode error")
+        }
     }
 
     let s_refine_err = "-10";
@@ -176,7 +178,9 @@ fn test_tagged_from_str() {
     assert!(parse_result_refine.is_err());
     match parse_result_refine.unwrap_err() {
         TestParseError::Refine(..) => {}
-        _ => panic!("Expected Refine error"),
+        TestParseError::Decode(..) => {
+            panic!("Expected Refine error")
+        }
     }
 }
 
@@ -385,7 +389,7 @@ fn test_tagged_ord_partial_ord_explicit() {
 #[test]
 fn test_tagged_clone_explicit() {
     let tagged1 = TestTagged::new(70).unwrap();
-    let tagged2 = tagged1.clone();
+    let tagged2 = tagged1;
     assert_eq!(tagged1, tagged2);
 }
 

@@ -273,10 +273,25 @@ fn substitute_defaults_rec(
         })
     }
     let next = extract_default(ast);
-    if let ValueKind::Table(ref mut kv) = ast.kind {
-        kv.iter_mut().for_each(|(_, v)| {
-            substitute_defaults_rec(v, &next)
-        })
+    match ast.kind {
+        ValueKind::Nil
+        | ValueKind::Boolean(_)
+        | ValueKind::I64(_)
+        | ValueKind::I128(_)
+        | ValueKind::U64(_)
+        | ValueKind::U128(_)
+        | ValueKind::Float(_)
+        | ValueKind::String(_) => (),
+        ValueKind::Table(ref mut xs) => {
+            xs.iter_mut().for_each(|(_, x)| {
+                substitute_defaults_rec(x, &next)
+            })
+        }
+        ValueKind::Array(ref mut xs) => {
+            xs.iter_mut().for_each(|x| {
+                substitute_defaults_rec(x, &next)
+            })
+        }
     }
 }
 

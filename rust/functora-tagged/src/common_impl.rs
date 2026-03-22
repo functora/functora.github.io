@@ -129,17 +129,17 @@ where
 //
 
 impl<T, D> Tagged<T, D, FNonEmpty> {
-    pub fn iter<'a, I>(&'a self) -> impl Iterator<Item = I>
+    pub fn iter<'a, U>(&'a self) -> impl Iterator<Item = U>
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
     {
         (*self).into_iter()
     }
 
     #[must_use]
-    pub fn first<'a, I>(&'a self) -> I
+    pub fn first<'a, U>(&'a self) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
@@ -147,9 +147,9 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
     }
 
     #[must_use]
-    pub fn last<'a, I>(&'a self) -> I
+    pub fn last<'a, U>(&'a self) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
         <&'a T as IntoIterator>::IntoIter:
             DoubleEndedIterator,
     {
@@ -158,56 +158,56 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         (*self).into_iter().next_back().unwrap()
     }
 
-    pub fn minimum<'a, I>(&'a self) -> I
+    pub fn minimum<'a, U>(&'a self) -> U
     where
-        &'a T: IntoIterator<Item = I>,
-        I: Ord,
+        &'a T: IntoIterator<Item = U>,
+        U: Ord,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         self.iter().min().unwrap()
     }
 
-    pub fn maximum<'a, I>(&'a self) -> I
+    pub fn maximum<'a, U>(&'a self) -> U
     where
-        &'a T: IntoIterator<Item = I>,
-        I: Ord,
+        &'a T: IntoIterator<Item = U>,
+        U: Ord,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         self.iter().max().unwrap()
     }
 
-    pub fn min_by<'a, I>(
+    pub fn min_by<'a, U>(
         &'a self,
-        f: impl FnMut(&I, &I) -> Ordering,
-    ) -> I
+        f: impl FnMut(&U, &U) -> Ordering,
+    ) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         self.iter().min_by(f).unwrap()
     }
 
-    pub fn max_by<'a, I>(
+    pub fn max_by<'a, U>(
         &'a self,
-        f: impl FnMut(&I, &I) -> Ordering,
-    ) -> I
+        f: impl FnMut(&U, &U) -> Ordering,
+    ) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
         self.iter().max_by(f).unwrap()
     }
 
-    pub fn min_by_key<'a, I, V>(
+    pub fn min_by_key<'a, U, V>(
         &'a self,
-        f: impl FnMut(&I) -> V,
-    ) -> I
+        f: impl FnMut(&U) -> V,
+    ) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
         V: Ord,
     {
         #[allow(clippy::unwrap_used)]
@@ -215,12 +215,12 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         self.iter().min_by_key(f).unwrap()
     }
 
-    pub fn max_by_key<'a, I, V>(
+    pub fn max_by_key<'a, U, V>(
         &'a self,
-        f: impl FnMut(&I) -> V,
-    ) -> I
+        f: impl FnMut(&U) -> V,
+    ) -> U
     where
-        &'a T: IntoIterator<Item = I>,
+        &'a T: IntoIterator<Item = U>,
         V: Ord,
     {
         #[allow(clippy::unwrap_used)]

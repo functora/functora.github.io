@@ -3,7 +3,6 @@ use crate::{InfallibleInto, Tagged};
 use num_traits::*;
 use std::cmp::Ordering;
 use std::fmt::Debug;
-use std::slice::Iter;
 use tap::prelude::*;
 
 //
@@ -130,36 +129,38 @@ where
 //
 
 impl<T, D> Tagged<T, D, FNonEmpty> {
-    pub fn iter<U>(&self) -> Iter<'_, U>
+    pub fn iter<U>(&self) -> impl Iterator<Item = &U>
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
     {
-        self.as_ref().iter()
+        (*self).into_iter()
     }
 
     #[must_use]
     pub fn first<U>(&self) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.as_ref().first().unwrap()
+        (*self).into_iter().next().unwrap()
     }
 
     #[must_use]
     pub fn last<U>(&self) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
+        for<'a> <&'a T as IntoIterator>::IntoIter:
+            DoubleEndedIterator,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        self.as_ref().last().unwrap()
+        (*self).into_iter().next_back().unwrap()
     }
 
     pub fn minimum<U>(&self) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
         U: Ord,
     {
         #[allow(clippy::unwrap_used)]
@@ -169,7 +170,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
 
     pub fn maximum<U>(&self) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
         U: Ord,
     {
         #[allow(clippy::unwrap_used)]
@@ -182,7 +183,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         f: impl FnMut(&&U, &&U) -> Ordering,
     ) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
@@ -194,7 +195,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         f: impl FnMut(&&U, &&U) -> Ordering,
     ) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
@@ -206,7 +207,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         f: impl FnMut(&&U) -> V,
     ) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
         V: Ord,
     {
         #[allow(clippy::unwrap_used)]
@@ -219,7 +220,7 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
         f: impl FnMut(&&U) -> V,
     ) -> &U
     where
-        T: AsRef<[U]>,
+        for<'a> &'a T: IntoIterator<Item = &'a U>,
         V: Ord,
     {
         #[allow(clippy::unwrap_used)]

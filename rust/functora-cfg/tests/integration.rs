@@ -383,3 +383,652 @@ fn layered_override() {
         },
     );
 }
+
+#[derive(
+    Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+)]
+struct DatabaseCfg {
+    connections: HashMap<String, Connection>,
+}
+
+#[derive(
+    Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+)]
+pub struct Connection {
+    host: String,
+    port: u16,
+    timeout: u32,
+    ssl: bool,
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Functor,
+    Serialize,
+    Deserialize,
+    Parser,
+)]
+struct DbCli<T>
+where
+    T: Eq
+        + PartialEq
+        + Debug
+        + Clone
+        + Serialize
+        + Subcommand,
+{
+    #[arg(long)]
+    toml: Option<String>,
+    #[command(subcommand)]
+    connections: Option<T>,
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+    Subcommand,
+)]
+#[command(subcommand_precedence_over_arg = true)]
+pub enum SubConnection {
+    SubConnection(ReClap<DbCliConnection, Self>),
+}
+
+impl SubConnection {
+    pub fn hash_map(
+        self,
+    ) -> Result<HashMap<String, DbCliConnection>, ConfigError>
+    {
+        let SubConnection::SubConnection(prev) = self;
+        prev.hash_map(
+            |k| Ok(k.to_string()),
+            |SubConnection::SubConnection(next)| next,
+        )
+    }
+}
+
+#[derive(
+    Eq,
+    PartialEq,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+    Args,
+)]
+pub struct DbCliConnection {
+    #[arg(long)]
+    name: Option<String>,
+    #[arg(long)]
+    host: Option<String>,
+    #[arg(long)]
+    port: Option<u16>,
+    #[arg(long)]
+    timeout: Option<u32>,
+    #[arg(long)]
+    ssl: Option<bool>,
+}
+
+impl DbCli<IdClap<HashMap<String, DbCliConnection>>> {
+    pub fn def() -> Self {
+        DbCli {
+            toml: None,
+            connections: Some(IdClap(HashMap::new())),
+        }
+    }
+}
+
+impl DbCli<SubConnection> {
+    pub fn new_with_defaults(
+        cli: DbCli<SubConnection>,
+    ) -> Result<DatabaseCfg, ConfigError> {
+        functora_cfg::Cfg {
+            default: &DbCli::def(),
+            file_path: |c| c.toml.as_deref(),
+            env_prefix: "DATABASE",
+            command_line: &cli.try_fmap(|conn| {
+                conn.hash_map().map(IdClap)
+            })?,
+            transform_ast: substitute_defaults,
+        }
+        .eval()
+    }
+}
+
+#[test]
+#[serial]
+fn substitute_defaults_from_file() {
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [connections]
+        [connections.default]
+        host = "localhost"
+        port = 5432
+        timeout = 30
+        ssl = true
+
+        [connections.primary]
+        name = "Primary DB"
+
+        [connections.replica]
+        name = "Replica DB"
+        port = 5433
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+
+    let lhs = DbCli::<SubConnection>::new_with_defaults(
+        DbCli::parse_from([
+            "dbcli",
+            "--toml",
+            &file.path().to_string_lossy(),
+        ]),
+    )
+    .unwrap();
+
+    let rhs = DatabaseCfg {
+        connections: HashMap::from([
+            (
+                "primary".into(),
+                Connection {
+                    host: "localhost".into(),
+                    port: 5432,
+                    timeout: 30,
+                    ssl: true,
+                },
+            ),
+            (
+                "replica".into(),
+                Connection {
+                    host: "localhost".into(),
+                    port: 5433,
+                    timeout: 30,
+                    ssl: true,
+                },
+            ),
+        ]),
+    };
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+#[serial]
+fn substitute_defaults_partial_override() {
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [connections]
+        [connections.default]
+        host = "db.example.com"
+        port = 3306
+        timeout = 60
+        ssl = false
+
+        [connections.analytics]
+        name = "Analytics"
+        host = "analytics.internal"
+        timeout = 120
+
+        [connections.transactions]
+        name = "Transactions"
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+
+    let lhs = DbCli::<SubConnection>::new_with_defaults(
+        DbCli::parse_from([
+            "dbcli",
+            "--toml",
+            &file.path().to_string_lossy(),
+        ]),
+    )
+    .unwrap();
+
+    let rhs = DatabaseCfg {
+        connections: HashMap::from([
+            (
+                "analytics".into(),
+                Connection {
+                    host: "analytics.internal".into(),
+                    port: 3306,
+                    timeout: 120,
+                    ssl: false,
+                },
+            ),
+            (
+                "transactions".into(),
+                Connection {
+                    host: "db.example.com".into(),
+                    port: 3306,
+                    timeout: 60,
+                    ssl: false,
+                },
+            ),
+        ]),
+    };
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+#[serial]
+fn substitute_defaults_with_cli_override() {
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [connections]
+        [connections.default]
+        host = "localhost"
+        port = 5432
+        timeout = 30
+        ssl = true
+
+        [connections.cache]
+        name = "Cache DB"
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+
+    let lhs = DbCli::<SubConnection>::new_with_defaults(
+        DbCli::parse_from([
+            "dbcli",
+            "--toml",
+            &file.path().to_string_lossy(),
+            "sub-connection",
+            "--name",
+            "Session Store",
+            "--host",
+            "redis.local",
+            "--port",
+            "6379",
+        ]),
+    )
+    .unwrap();
+
+    let rhs = DatabaseCfg {
+        connections: HashMap::from([
+            (
+                "cache".into(),
+                Connection {
+                    host: "localhost".into(),
+                    port: 5432,
+                    timeout: 30,
+                    ssl: true,
+                },
+            ),
+            (
+                "0".into(),
+                Connection {
+                    host: "redis.local".into(),
+                    port: 6379,
+                    timeout: 30,
+                    ssl: true,
+                },
+            ),
+        ]),
+    };
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+#[serial]
+fn substitute_defaults_nested_tables() {
+    #[derive(
+        Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+    )]
+    struct ServiceCfg {
+        services: HashMap<String, Service>,
+    }
+
+    #[derive(
+        Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+    )]
+    struct Service {
+        image: String,
+        replicas: u32,
+        cpu: String,
+        memory: String,
+    }
+
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [services]
+        [services.default]
+        image = "myapp:latest"
+        replicas = 1
+        cpu = "100m"
+        memory = "128Mi"
+
+        [services.api]
+        replicas = 3
+        cpu = "500m"
+
+        [services.worker]
+        image = "worker:v2"
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Functor,
+        Serialize,
+        Deserialize,
+        Parser,
+    )]
+    struct ServiceCli<T>
+    where
+        T: Eq
+            + PartialEq
+            + Debug
+            + Clone
+            + Serialize
+            + Subcommand,
+    {
+        #[arg(long)]
+        toml: Option<String>,
+        #[command(subcommand)]
+        services: Option<T>,
+    }
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Serialize,
+        Deserialize,
+        Subcommand,
+    )]
+    #[command(subcommand_precedence_over_arg = true)]
+    pub enum SubService {
+        SubService(ReClap<ServiceCliService, Self>),
+    }
+
+    impl SubService {
+        pub fn hash_map(
+            self,
+        ) -> Result<
+            HashMap<String, ServiceCliService>,
+            ConfigError,
+        > {
+            let SubService::SubService(prev) = self;
+            prev.hash_map(
+                |k| Ok(k.to_string()),
+                |SubService::SubService(next)| next,
+            )
+        }
+    }
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Serialize,
+        Deserialize,
+        Args,
+    )]
+    pub struct ServiceCliService {
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long)]
+        image: Option<String>,
+        #[arg(long)]
+        replicas: Option<u32>,
+        #[arg(long)]
+        cpu: Option<String>,
+        #[arg(long)]
+        memory: Option<String>,
+    }
+
+    impl
+        ServiceCli<
+            IdClap<HashMap<String, ServiceCliService>>,
+        >
+    {
+        pub fn def() -> Self {
+            ServiceCli {
+                toml: None,
+                services: Some(IdClap(HashMap::new())),
+            }
+        }
+    }
+
+    impl ServiceCli<SubService> {
+        pub fn new_with_defaults(
+            cli: ServiceCli<SubService>,
+        ) -> Result<ServiceCfg, ConfigError> {
+            functora_cfg::Cfg {
+                default: &ServiceCli::def(),
+                file_path: |c| c.toml.as_deref(),
+                env_prefix: "SERVICE",
+                command_line: &cli.try_fmap(|svc| {
+                    svc.hash_map().map(IdClap)
+                })?,
+                transform_ast: substitute_defaults,
+            }
+            .eval()
+        }
+    }
+
+    let lhs = ServiceCli::<SubService>::new_with_defaults(
+        ServiceCli::parse_from([
+            "servicecli",
+            "--toml",
+            &file.path().to_string_lossy(),
+        ]),
+    )
+    .unwrap();
+
+    let rhs = ServiceCfg {
+        services: HashMap::from([
+            (
+                "api".into(),
+                Service {
+                    image: "myapp:latest".into(),
+                    replicas: 3,
+                    cpu: "500m".into(),
+                    memory: "128Mi".into(),
+                },
+            ),
+            (
+                "worker".into(),
+                Service {
+                    image: "worker:v2".into(),
+                    replicas: 1,
+                    cpu: "100m".into(),
+                    memory: "128Mi".into(),
+                },
+            ),
+        ]),
+    };
+
+    assert_eq!(lhs, rhs);
+}
+
+#[test]
+#[serial]
+fn substitute_defaults_array_values() {
+    #[derive(
+        Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+    )]
+    struct TeamCfg {
+        teams: HashMap<String, Team>,
+    }
+
+    #[derive(
+        Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
+    )]
+    struct Team {
+        name: String,
+        members: Vec<String>,
+        permissions: Vec<String>,
+    }
+
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [teams]
+        [teams.default]
+        members = ["guest"]
+        permissions = ["read"]
+
+        [teams.admins]
+        name = "Administrators"
+        members = ["alice", "bob"]
+        permissions = ["read", "write", "delete"]
+
+        [teams.developers]
+        name = "Developers"
+        members = ["carol", "dave"]
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Functor,
+        Serialize,
+        Deserialize,
+        Parser,
+    )]
+    struct TeamCli<T>
+    where
+        T: Eq
+            + PartialEq
+            + Debug
+            + Clone
+            + Serialize
+            + Subcommand,
+    {
+        #[arg(long)]
+        toml: Option<String>,
+        #[command(subcommand)]
+        teams: Option<T>,
+    }
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Serialize,
+        Deserialize,
+        Subcommand,
+    )]
+    #[command(subcommand_precedence_over_arg = true)]
+    pub enum SubTeam {
+        SubTeam(ReClap<TeamCliTeam, Self>),
+    }
+
+    impl SubTeam {
+        pub fn hash_map(
+            self,
+        ) -> Result<HashMap<String, TeamCliTeam>, ConfigError>
+        {
+            let SubTeam::SubTeam(prev) = self;
+            prev.hash_map(
+                |k| Ok(k.to_string()),
+                |SubTeam::SubTeam(next)| next,
+            )
+        }
+    }
+
+    #[derive(
+        Eq,
+        PartialEq,
+        Debug,
+        Clone,
+        Serialize,
+        Deserialize,
+        Args,
+    )]
+    pub struct TeamCliTeam {
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long)]
+        members: Option<Vec<String>>,
+        #[arg(long)]
+        permissions: Option<Vec<String>>,
+    }
+
+    impl TeamCli<IdClap<HashMap<String, TeamCliTeam>>> {
+        pub fn def() -> Self {
+            TeamCli {
+                toml: None,
+                teams: Some(IdClap(HashMap::new())),
+            }
+        }
+    }
+
+    impl TeamCli<SubTeam> {
+        pub fn new_with_defaults(
+            cli: TeamCli<SubTeam>,
+        ) -> Result<TeamCfg, ConfigError> {
+            functora_cfg::Cfg {
+                default: &TeamCli::def(),
+                file_path: |c| c.toml.as_deref(),
+                env_prefix: "TEAM",
+                command_line: &cli.try_fmap(|team| {
+                    team.hash_map().map(IdClap)
+                })?,
+                transform_ast: substitute_defaults,
+            }
+            .eval()
+        }
+    }
+
+    let lhs = TeamCli::<SubTeam>::new_with_defaults(
+        TeamCli::parse_from([
+            "teamcli",
+            "--toml",
+            &file.path().to_string_lossy(),
+        ]),
+    )
+    .unwrap();
+
+    let rhs = TeamCfg {
+        teams: HashMap::from([
+            (
+                "admins".into(),
+                Team {
+                    name: "Administrators".into(),
+                    members: vec![
+                        "alice".into(),
+                        "bob".into(),
+                    ],
+                    permissions: vec![
+                        "read".into(),
+                        "write".into(),
+                        "delete".into(),
+                    ],
+                },
+            ),
+            (
+                "developers".into(),
+                Team {
+                    name: "Developers".into(),
+                    members: vec![
+                        "carol".into(),
+                        "dave".into(),
+                    ],
+                    permissions: vec!["read".into()],
+                },
+            ),
+        ]),
+    };
+
+    assert_eq!(lhs, rhs);
+}

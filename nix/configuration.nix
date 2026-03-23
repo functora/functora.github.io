@@ -756,7 +756,10 @@ in {
         (import ./bar.nix {inherit pkgs;})
         (import ./libreoffice.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
-        (import ./doom.nix {pkgs = unst;})
+        (import ./doom.nix {
+          pkgs = unst;
+          user = config.services.functora.userName;
+        })
         (import ./prusa.nix {inherit pkgs;})
         (import ./freecad.nix {inherit pkgs;})
         (import ./wf-recorder.nix {})

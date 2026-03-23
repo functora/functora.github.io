@@ -76,6 +76,7 @@
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
     flashlight ? "${duhd}/12 Flashlight++.pk3",
+    lastweapon ? ../bak/doom/fast-swap.pk3,
   }: {
     "doom-${tag}" = mkDoomSand {
       name = "doom-${tag}";
@@ -95,8 +96,7 @@
         ${flashlight} \
         ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
         ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
-        ${../bak/doom/cblood.pk3} \
-        ${../bak/doom/fast-swap.pk3} "$@"
+        ${../bak/doom/cblood.pk3} ${lastweapon} "$@"
       '';
     };
   };
@@ -233,6 +233,7 @@
         nashgore = "";
         parallax = "";
         flashlight = "";
+        lastweapon = "";
       }
       // mkDoom {
         wad = ../bak/doom/wads/doom.wad;

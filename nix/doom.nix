@@ -17,9 +17,10 @@
     url = "https://github.com/pa1nki113r/Project_Brutality/archive/3f0b2f51d66ba6dc9f2d316570fa78c04a84101a.tar.gz";
     sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
   };
-  qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE_PvPvisibility.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
-  qcde30 = "${../bak/doom/qcde30/QCDEv3.0.pk3} ${../bak/doom/qcde30/QCDEmus3.0.pk3} ${../bak/doom/qcde30/QCDEmaps3.0.pk3} ${../bak/doom/qcde30/QCDE_PvPvisibility.pk3}";
+  qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
+  qcde30 = "${../bak/doom/qcde30/QCDEv3.0.pk3} ${../bak/doom/qcde30/QCDEmus3.0.pk3} ${../bak/doom/qcde30/QCDEmaps3.0.pk3}";
   ltp701 = ''"${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3"'';
+  ltp4 = ''"${../bak/doom/ltp4}/Liquid Texture Pack/(Zandronum) Liquid Texture pack V4.0.pk3" "${../bak/doom/ltp4}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" "${../bak/doom/ltp4}/Shader Pack/LTP V4.0 Shader pack.pk3" "${../bak/doom/ltp4}/Shader Pack/LTP V4.0 Sky shader addon.pk3"'';
   music_doom = "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}";
   music_juke = ../bak/doom/FerretJukeBoxV1-0.pk3;
   mkCod = mod: ''"${../bak/doom/cod-full}/(001)_CodV_FileA_BrutalV22test4_FIX.pk3" "${../bak/doom/cod-full}/(001)Addon_gearbox-0.7.3.pk3" ${mod} "${../bak/doom/cod-full}/ZZD_CodV_FileB_Graphics.wad" "${../bak/doom/cod-full}/ZZD_CodV_FileC_MainData.wad"'';
@@ -71,7 +72,7 @@
     total ? ../bak/doom/DiamondDragon.pk3,
     music ? "",
     lights ? ''"${duhd}/1 lights2.wad"'',
-    liquid ? ../bak/doom/new-liquids.pk3,
+    liquid ? ltp4,
     relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
@@ -227,12 +228,11 @@
         pkg = "${qz}/bin/q-zandronum";
         gfx = "";
         total = qcde30;
-        lights = "";
-        liquid = "";
+        lights = ../bak/doom/q4_zandronum_shader.pk3;
         relite = "";
         nashgore = "";
         parallax = "";
-        flashlight = "";
+        flashlight = ../bak/doom/zand-flashlight.pk3;
         lastweapon = "";
       }
       // mkDoom {

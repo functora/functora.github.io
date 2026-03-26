@@ -65,6 +65,7 @@
   mkDoom = {
     tag,
     pkg ? "${pkgs.gzdoom}/bin/gzdoom",
+    cfg ? null,
     wad ? ../bak/doom/wads/doom2.wad,
     sky ? ../bak/doom/CryosUltDoomSkies.wad,
     mod ? "",
@@ -97,7 +98,13 @@
         ${flashlight} \
         ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
         ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
-        ${../bak/doom/cblood.pk3} ${lastweapon} "$@"
+        ${../bak/doom/cblood.pk3} \
+        ${lastweapon} \
+        ${
+          if cfg == null
+          then ""
+          else "-exec ${cfg}"
+        } "$@"
       '';
     };
   };
@@ -226,6 +233,7 @@
       // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";
+        cfg = ../cfg/doom.cfg;
         gfx = "";
         total = qcde30;
         lights = ../bak/doom/q4_zandronum_shader.pk3;

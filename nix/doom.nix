@@ -236,7 +236,7 @@
         cfg = ../cfg/doom.cfg;
         gfx = "";
         total = qcde30;
-        lights = ../bak/doom/q4_zandronum_shader.pk3;
+        lights = "";
         relite = "";
         nashgore = "";
         parallax = "";

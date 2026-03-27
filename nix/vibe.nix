@@ -34,8 +34,14 @@
       nix-direnv
       asciinema
       asciinema-agg
+      gomplate
+      qutebrowser
       unst.codex
       gemini
+      (pkgs.writeShellApplication {
+        name = "qwen";
+        text = ''${unst.qwen-code}/bin/qwen -y "$@"'';
+      })
     ];
   };
   passwd = pkgs.writeTextFile {

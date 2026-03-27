@@ -1,0 +1,78 @@
+{{- define "join" -}}
+{{- $sep := index $ 0 -}}
+{{- $slice := index $ 1 -}}
+{{- range $i, $v := $slice }}{{ if $i }}{{ $sep }}{{ end }}{{ $v }}{{ end -}}
+{{- end -}}
+
+{{- define "sequence" -}}
+{{- template "join" (coll.Slice "; wait 0; " $) -}}
+{{- end -}}
+
+{{- $gauntlet := "slot 1" -}}
+{{- $machinegun := `slot 2; wait 0; use QCMachinegun; wait 0; use QCMachinegunDM` -}}
+{{- $heavy_machinegun := `use HeavyMachinegun; wait 0; use HeavyMachinegunDM` -}}
+{{- $shotgun := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
+{{- $super_shotgun := `use QCSuperShotgun; wait 0; use QCSuperShotgunDM` -}}
+{{- $nailgun := `slot 4; wait 0; use QCNailgun; wait 0; use QCNailgunDM` -}}
+{{- $super_nailgun := `use QCSuperNailgun; wait 0; use QCSuperNailgunDM` -}}
+{{- $tribolt := "slot 5" -}}
+{{- $rocket := "slot 6" -}}
+{{- $lightning := "slot 7" -}}
+{{- $railgun := "slot 8" -}}
+{{- $bfg := "slot 9" -}}
+{{- $ability := "slot 0" -}}
+
+{{- $best := tmpl.Exec "sequence" (coll.Slice
+      $shotgun
+      $machinegun
+      $nailgun
+      $super_nailgun
+      $heavy_machinegun
+      $super_shotgun
+      $lightning
+      $tribolt
+      $rocket
+      $ability
+      $bfg
+      $railgun
+) -}}
+
+{{- $shot := tmpl.Exec "sequence" (coll.Slice
+      $shotgun
+      $super_shotgun
+      $tribolt
+      $rocket
+      $bfg
+      $railgun
+) -}}
+
+{{- $beam := tmpl.Exec "sequence" (coll.Slice
+      $machinegun
+      $nailgun
+      $super_nailgun
+      $heavy_machinegun
+      $lightning
+      $ability
+) -}}
+
+alias shot_into_beam "bind MWheelDown beam_into_shot; {{ $shot }}"
+alias beam_into_shot "bind MWheelDown shot_into_beam; {{ $beam }}"
+
+bind Mouse3 "+user1"
+bind MWheelUp "bind MWheelDown beam_into_shot; {{ $best }}"
+bind MWheelDown beam_into_shot
+
+bind Q "+user1"
+bind T "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
+bind Y "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
+bind F "{{ $railgun }}"
+bind G "{{ $nailgun }}"
+bind Z "{{ $lightning }}"
+bind X "{{ $rocket }}"
+bind C "{{ $machinegun }}"
+bind V "{{ $tribolt }}"
+bind B "{{ $bfg }}"
+
+fov 120
+switchonpickup 0
+cl_noammoswitch false

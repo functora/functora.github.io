@@ -256,14 +256,21 @@
               # apps
               (mkWeb "cryptonote")
               (mkApk "cryptonote")
-              # verify
+              # tools
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
-                  ${cargo}/bin/cargo fmt \
-                    && ${cargo}/bin/cargo clippy --all-features -- -D warnings \
-                    && ${cargo}/bin/cargo test --all-features \
+                  ${cargo}/bin/cargo fmt "$@" \
+                    && ${cargo}/bin/cargo clippy --all-features "$@" -- -D warnings \
+                    && ${cargo}/bin/cargo test --all-features "$@" \
                     && echo "==> All good!"
+                '';
+              })
+              (pkgs.writeShellApplication {
+                name = "coverage";
+                text = ''
+                  cargo tarpaulin --all-features --engine llvm "$@" \
+                    && echo "==> Coverage done!"
                 '';
               })
             ]

@@ -1,6 +1,6 @@
 #![cfg(feature = "futures")]
 
-use functora::futures::ControlStream;
+use functora::ControlStream;
 use futures::stream;
 use std::ops::ControlFlow;
 

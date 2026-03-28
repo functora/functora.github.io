@@ -1,24 +1,23 @@
 use futures::future::{Map, Ready};
 use futures::stream::TryFold;
 use futures::{FutureExt, StreamExt, TryStream, TryStreamExt, future};
-use std::marker::PhantomData;
 use std::ops::ControlFlow;
 
-pub struct ControlStream<S, Cont, Halt>(S, PhantomData<(Cont, Halt)>);
+pub struct ControlStream<S>(S);
 
-impl<S, Cont, Halt> ControlStream<S, Cont, Halt> {
+impl<S> ControlStream<S> {
     #[allow(clippy::type_complexity)]
-    pub fn new(
+    pub fn new<Cont, Halt>(
         stream: S,
-    ) -> ControlStream<futures::stream::Map<S, fn(Cont) -> Result<Cont, Halt>>, Cont, Halt>
+    ) -> ControlStream<futures::stream::Map<S, fn(Cont) -> Result<Cont, Halt>>>
     where
         S: futures::Stream<Item = Cont>,
     {
-        ControlStream(stream.map(Ok), PhantomData)
+        ControlStream(stream.map(Ok))
     }
 
     #[allow(clippy::type_complexity)]
-    pub fn try_fold<Acc, F>(
+    pub fn try_fold<Cont, Halt, Acc, F>(
         self,
         init: Acc,
         mut f: F,

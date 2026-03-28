@@ -91,14 +91,14 @@ where
 }
 
 #[cfg(feature = "futures")]
-pub mod control_stream {
+pub mod futures {
     use futures::future::{Map, Ready};
     use futures::stream::TryFold;
     use futures::{FutureExt, TryStream, TryStreamExt, future};
     use std::marker::PhantomData;
     use std::ops::ControlFlow;
 
-    pub struct ControlStream<S, Cont, Halt>(S, PhantomData<(Cont, Halt)>);
+    pub struct ControlStream<S, Cont, Halt>(pub S, PhantomData<(Cont, Halt)>);
 
     impl<S, Cont, Halt> ControlStream<S, Cont, Halt>
     where
@@ -247,6 +247,11 @@ mod tests {
         };
         assert_eq!(f(1), Ok(42));
         assert_eq!(f(0), Err(()));
+    }
+    #[test]
+    fn guard_then_function() {
+        assert_eq!(guard_then(true, || "error"), Ok(()));
+        assert_eq!(guard_then(false, || "error"), Err("error"));
     }
     #[test]
     fn guard_option() {

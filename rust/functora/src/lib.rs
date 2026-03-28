@@ -23,20 +23,14 @@ where
     Self: Sized,
 {
     fn tweak(&mut self, f: impl FnOnce(&Self) -> Self);
-    fn try_tweak<E>(
-        &mut self,
-        f: impl FnOnce(&Self) -> Result<Self, E>,
-    ) -> Result<(), E>;
+    fn try_tweak<E>(&mut self, f: impl FnOnce(&Self) -> Result<Self, E>) -> Result<(), E>;
 }
 
 impl<T> Tweak for T {
     fn tweak(&mut self, f: impl FnOnce(&T) -> T) {
         *self = f(self);
     }
-    fn try_tweak<E>(
-        &mut self,
-        f: impl FnOnce(&T) -> Result<Self, E>,
-    ) -> Result<(), E> {
+    fn try_tweak<E>(&mut self, f: impl FnOnce(&T) -> Result<Self, E>) -> Result<(), E> {
         f(self).and_then(|x| {
             *self = x;
             ok()
@@ -51,17 +45,11 @@ where
     fn guard(self, e: E) -> Result<(), E> {
         self.guard_then(|| e)
     }
-    fn guard_then(
-        self,
-        f: impl FnOnce() -> E,
-    ) -> Result<(), E>;
+    fn guard_then(self, f: impl FnOnce() -> E) -> Result<(), E>;
 }
 
 impl<E> Guard<E> for bool {
-    fn guard_then(
-        self,
-        f: impl FnOnce() -> E,
-    ) -> Result<(), E> {
+    fn guard_then(self, f: impl FnOnce() -> E) -> Result<(), E> {
         if self { ok() } else { Err(f()) }
     }
 }
@@ -70,10 +58,7 @@ impl<T, E> Guard<E> for Option<T>
 where
     T: Guard<E>,
 {
-    fn guard_then(
-        self,
-        f: impl FnOnce() -> E,
-    ) -> Result<(), E> {
+    fn guard_then(self, f: impl FnOnce() -> E) -> Result<(), E> {
         match self {
             None => Err(f()),
             Some(x) => x.guard_then(f),
@@ -86,10 +71,7 @@ where
     T: Guard<EOuter>,
     EOuter: From<EInner>,
 {
-    fn guard_then(
-        self,
-        f: impl FnOnce() -> EOuter,
-    ) -> Result<(), EOuter> {
+    fn guard_then(self, f: impl FnOnce() -> EOuter) -> Result<(), EOuter> {
         self?.guard_then(f)
     }
 }
@@ -101,10 +83,7 @@ where
     x.guard(e)
 }
 
-pub fn guard_then<T, E>(
-    x: T,
-    f: impl FnOnce() -> E,
-) -> Result<(), E>
+pub fn guard_then<T, E>(x: T, f: impl FnOnce() -> E) -> Result<(), E>
 where
     T: Guard<E>,
 {
@@ -115,21 +94,15 @@ where
 pub mod control_stream {
     use futures::future::{Map, Ready};
     use futures::stream::TryFold;
-    use futures::{
-        FutureExt, TryStream, TryStreamExt, future,
-    };
+    use futures::{FutureExt, TryStream, TryStreamExt, future};
     use std::marker::PhantomData;
     use std::ops::ControlFlow;
 
-    pub struct ControlStream<S, Cont, Halt>(
-        S,
-        PhantomData<(Cont, Halt)>,
-    );
+    pub struct ControlStream<S, Cont, Halt>(S, PhantomData<(Cont, Halt)>);
 
     impl<S, Cont, Halt> ControlStream<S, Cont, Halt>
     where
-        S: TryStream<Ok = Cont, Error = Halt>
-            + TryStreamExt,
+        S: TryStream<Ok = Cont, Error = Halt> + TryStreamExt,
     {
         pub fn new(val: S) -> Self {
             ControlStream(val, PhantomData)
@@ -145,27 +118,17 @@ pub mod control_stream {
                 S,
                 Ready<Result<Acc, Halt>>,
                 Acc,
-                impl FnMut(
-                    Acc,
-                    Cont,
-                )
-                    -> Ready<Result<Acc, Halt>>,
+                impl FnMut(Acc, Cont) -> Ready<Result<Acc, Halt>>,
             >,
-            impl FnMut(
-                Result<Acc, Halt>,
-            ) -> ControlFlow<Halt, Acc>,
+            impl FnMut(Result<Acc, Halt>) -> ControlFlow<Halt, Acc>,
         >
         where
             F: FnMut(Acc, Cont) -> ControlFlow<Halt, Acc>,
             Self: Sized,
         {
             let g = move |acc, item| match f(acc, item) {
-                ControlFlow::Break(halt) => {
-                    future::ready(Err(halt))
-                }
-                ControlFlow::Continue(cont) => {
-                    future::ready(Ok(cont))
-                }
+                ControlFlow::Break(halt) => future::ready(Err(halt)),
+                ControlFlow::Continue(cont) => future::ready(Ok(cont)),
             };
             let h = |res: Result<Acc, Halt>| match res {
                 Ok(acc) => ControlFlow::Continue(acc),
@@ -235,9 +198,7 @@ mod tests {
         assert_eq!(
             x.try_tweak(|s| {
                 let n: u32 = s.parse()?;
-                Ok::<String, std::num::ParseIntError>(
-                    (n + 1).to_string(),
-                )
+                Ok::<String, std::num::ParseIntError>((n + 1).to_string())
             }),
             Ok(())
         );
@@ -249,9 +210,7 @@ mod tests {
         assert!(
             x.try_tweak(|s| {
                 let n: u32 = s.parse()?;
-                Ok::<String, std::num::ParseIntError>(
-                    (n + 1).to_string(),
-                )
+                Ok::<String, std::num::ParseIntError>((n + 1).to_string())
             })
             .is_err()
         );
@@ -263,9 +222,7 @@ mod tests {
         assert_eq!(
             x.0.0.0.try_tweak(|s| {
                 let n: u32 = s.parse()?;
-                Ok::<String, std::num::ParseIntError>(
-                    (n + 1).to_string(),
-                )
+                Ok::<String, std::num::ParseIntError>((n + 1).to_string())
             }),
             Ok(())
         );
@@ -294,57 +251,24 @@ mod tests {
     #[test]
     fn guard_option() {
         assert_eq!(Some(true).guard(()), Ok(()));
-        assert_eq!(
-            Some(false).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            None::<bool>.guard("error"),
-            Err("error")
-        );
+        assert_eq!(Some(false).guard("error"), Err("error"));
+        assert_eq!(None::<bool>.guard("error"), Err("error"));
     }
     #[test]
     fn guard_result() {
-        assert_eq!(
-            Ok::<_, &str>(true).guard("error"),
-            Ok(())
-        );
-        assert_eq!(
-            Ok::<_, &str>(false).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            Err::<bool, _>("orig").guard("error"),
-            Err("orig")
-        );
+        assert_eq!(Ok::<_, &str>(true).guard("error"), Ok(()));
+        assert_eq!(Ok::<_, &str>(false).guard("error"), Err("error"));
+        assert_eq!(Err::<bool, _>("orig").guard("error"), Err("orig"));
     }
     #[test]
     fn guard_nested() {
         assert_eq!(Some(Some(true)).guard(()), Ok(()));
-        assert_eq!(
-            Some(Some(false)).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            Some(None::<bool>).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            Ok::<_, &str>(Some(true)).guard("error"),
-            Ok(())
-        );
-        assert_eq!(
-            Ok::<_, &str>(Some(false)).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            Ok::<_, &str>(None::<bool>).guard("error"),
-            Err("error")
-        );
-        assert_eq!(
-            Err::<Option<bool>, _>("orig").guard("error"),
-            Err("orig")
-        );
+        assert_eq!(Some(Some(false)).guard("error"), Err("error"));
+        assert_eq!(Some(None::<bool>).guard("error"), Err("error"));
+        assert_eq!(Ok::<_, &str>(Some(true)).guard("error"), Ok(()));
+        assert_eq!(Ok::<_, &str>(Some(false)).guard("error"), Err("error"));
+        assert_eq!(Ok::<_, &str>(None::<bool>).guard("error"), Err("error"));
+        assert_eq!(Err::<Option<bool>, _>("orig").guard("error"), Err("orig"));
     }
 
     #[test]
@@ -368,44 +292,22 @@ mod tests {
         };
 
         assert_eq!(check_access(1, "admin"), Ok("Success"));
-        assert_eq!(
-            check_access(0, "admin"),
-            Err(Error::InvalidInput)
-        );
-        assert_eq!(
-            check_access(1, "user"),
-            Err(Error::AccessDenied)
-        );
+        assert_eq!(check_access(0, "admin"), Err(Error::InvalidInput));
+        assert_eq!(check_access(1, "user"), Err(Error::AccessDenied));
 
-        let process_data =
-            |data: Option<u32>, limit: u32| {
-                let val =
-                    data.ok_or(Error::InvalidInput)?;
-                guard(
-                    val < limit,
-                    Error::RateLimitExceeded,
-                )?;
-                Ok(val * 2)
-            };
+        let process_data = |data: Option<u32>, limit: u32| {
+            let val = data.ok_or(Error::InvalidInput)?;
+            guard(val < limit, Error::RateLimitExceeded)?;
+            Ok(val * 2)
+        };
 
         assert_eq!(process_data(Some(10), 20), Ok(20));
-        assert_eq!(
-            process_data(None, 20),
-            Err(Error::InvalidInput)
-        );
-        assert_eq!(
-            process_data(Some(30), 20),
-            Err(Error::RateLimitExceeded)
-        );
+        assert_eq!(process_data(None, 20), Err(Error::InvalidInput));
+        assert_eq!(process_data(Some(30), 20), Err(Error::RateLimitExceeded));
 
         let handle_request = |req: Request| {
-            guard(
-                req.path.starts_with("/api"),
-                Error::InvalidInput,
-            )?;
-            req.token
-                .is_some()
-                .guard(Error::AccessDenied)?;
+            guard(req.path.starts_with("/api"), Error::InvalidInput)?;
+            req.token.is_some().guard(Error::AccessDenied)?;
             Ok("Authorized")
         };
 

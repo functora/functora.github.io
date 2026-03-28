@@ -19,6 +19,7 @@
   };
   qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
   qcde30 = "${../bak/doom/qcde30/QCDEv3.0.pk3} ${../bak/doom/qcde30/QCDEmus3.0.pk3} ${../bak/doom/qcde30/QCDEmaps3.0.pk3}";
+  qcde31 = "${../bak/doom/qcde31/QCDEv3.1_beta_2.pk3} ${../bak/doom/qcde31/QCDEmus3.0.pk3} ${../bak/doom/qcde31/QCDEmaps3.0.pk3} ${../bak/doom/qcde31/QCDE_UT_Movement_v3.1_beta_2.pk3}";
   ltp701 = ''"${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP V7.0.1.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Reflection Add-on (Must Add To Play)/LTP 16x9 Real Time Reflections Add-on/LTP 16x9 RT Reflection 2560x1440.pk3" "${../bak/doom/ltp701}/Liquid Texture Pack V7.0.1/LTP Demo Map + Map Editing + Add-on Files/LTP Add-on Files/LTP - Doom Terrain Splashes.pk3"'';
   ltp4 = ''"${../bak/doom/ltp4}/Liquid Texture Pack/(Zandronum) Liquid Texture pack V4.0.pk3" "${../bak/doom/ltp4}/Glowing Toxic Texture Pack/LTP V4.0 Glowing Toxic Texture Addon.pk3" "${../bak/doom/ltp4}/Shader Pack/LTP V4.0 Shader pack.pk3" "${../bak/doom/ltp4}/Shader Pack/LTP V4.0 Sky shader addon.pk3"'';
   music_doom = "${../bak/doom/Doom2016_OST.pk3} ${../bak/doom/DOOMIIHellOnEarth_DOOMEternal_OST.pk3}";
@@ -235,7 +236,7 @@
         pkg = "${qz}/bin/q-zandronum";
         cfg = ../cfg/doom.cfg;
         gfx = "";
-        total = qcde30;
+        total = qcde31;
         lights = "";
         relite = "";
         nashgore = "";

@@ -31,9 +31,8 @@ impl<S> ControlStream<S> {
         impl FnMut(Result<Acc, Halt>) -> ControlFlow<Halt, Acc>,
     >
     where
-        S: TryStream<Ok = Cont, Error = Halt> + TryStreamExt,
+        S: TryStream<Ok = Cont, Error = Halt>,
         F: FnMut(Acc, Cont) -> ControlFlow<Halt, Acc>,
-        Self: Sized,
     {
         let g = move |acc, item| match f(acc, item) {
             ControlFlow::Continue(cont) => future::ready(Ok(cont)),

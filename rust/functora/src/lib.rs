@@ -94,18 +94,21 @@ where
 pub mod futures {
     use futures::future::{Map, Ready};
     use futures::stream::TryFold;
-    use futures::{FutureExt, TryStream, TryStreamExt, future};
+    use futures::{FutureExt, StreamExt, TryStream, TryStreamExt, future};
     use std::marker::PhantomData;
     use std::ops::ControlFlow;
 
-    pub struct ControlStream<S, Cont, Halt>(pub S, PhantomData<(Cont, Halt)>);
+    pub struct ControlStream<S, Cont, Halt>(S, PhantomData<(Cont, Halt)>);
 
-    impl<S, Cont, Halt> ControlStream<S, Cont, Halt>
-    where
-        S: TryStream<Ok = Cont, Error = Halt> + TryStreamExt,
-    {
-        pub fn new(val: S) -> Self {
-            ControlStream(val, PhantomData)
+    impl<S, Cont, Halt> ControlStream<S, Cont, Halt> {
+        #[allow(clippy::type_complexity)]
+        pub fn new(
+            stream: S,
+        ) -> ControlStream<futures::stream::Map<S, fn(Cont) -> Result<Cont, Halt>>, Cont, Halt>
+        where
+            S: futures::Stream<Item = Cont>,
+        {
+            ControlStream(stream.map(Ok), PhantomData)
         }
 
         #[allow(clippy::type_complexity)]
@@ -123,6 +126,7 @@ pub mod futures {
             impl FnMut(Result<Acc, Halt>) -> ControlFlow<Halt, Acc>,
         >
         where
+            S: TryStream<Ok = Cont, Error = Halt> + TryStreamExt,
             F: FnMut(Acc, Cont) -> ControlFlow<Halt, Acc>,
             Self: Sized,
         {

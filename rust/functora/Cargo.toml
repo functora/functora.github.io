@@ -26,3 +26,9 @@ too_many_lines = { level = "allow", priority = 1 }
 wildcard_imports = { level = "allow", priority = 1 }
 missing_errors_doc = { level = "allow", priority = 1 }
 semicolon_if_nothing_returned = { level = "allow", priority = 1 }
+
+[dependencies]
+futures = { version = "0.3", optional = true }
+
+[features]
+futures = ["dep:futures"]

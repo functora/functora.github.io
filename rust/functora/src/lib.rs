@@ -111,6 +111,71 @@ where
     x.guard_then(f)
 }
 
+#[cfg(feature = "futures")]
+pub mod control_stream {
+    use futures::future::{Map, Ready};
+    use futures::stream::TryFold;
+    use futures::{
+        FutureExt, TryStream, TryStreamExt, future,
+    };
+    use std::marker::PhantomData;
+    use std::ops::ControlFlow;
+
+    pub struct ControlStream<S, Cont, Halt>(
+        S,
+        PhantomData<(Cont, Halt)>,
+    );
+
+    impl<S, Cont, Halt> ControlStream<S, Cont, Halt>
+    where
+        S: TryStream<Ok = Cont, Error = Halt>
+            + TryStreamExt,
+    {
+        pub fn new(val: S) -> Self {
+            ControlStream(val, PhantomData)
+        }
+
+        #[allow(clippy::type_complexity)]
+        pub fn try_fold<Acc, F>(
+            self,
+            init: Acc,
+            mut f: F,
+        ) -> Map<
+            TryFold<
+                S,
+                Ready<Result<Acc, Halt>>,
+                Acc,
+                impl FnMut(
+                    Acc,
+                    Cont,
+                )
+                    -> Ready<Result<Acc, Halt>>,
+            >,
+            impl FnMut(
+                Result<Acc, Halt>,
+            ) -> ControlFlow<Halt, Acc>,
+        >
+        where
+            F: FnMut(Acc, Cont) -> ControlFlow<Halt, Acc>,
+            Self: Sized,
+        {
+            let g = move |acc, item| match f(acc, item) {
+                ControlFlow::Break(halt) => {
+                    future::ready(Err(halt))
+                }
+                ControlFlow::Continue(cont) => {
+                    future::ready(Ok(cont))
+                }
+            };
+            let h = |res: Result<Acc, Halt>| match res {
+                Ok(acc) => ControlFlow::Continue(acc),
+                Err(halt) => ControlFlow::Break(halt),
+            };
+            self.0.try_fold(init, g).map(h)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

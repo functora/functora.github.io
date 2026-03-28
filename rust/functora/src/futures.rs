@@ -1,7 +1,7 @@
 use futures::future::{Map, Ready};
 use futures::stream::TryFold;
 use futures::{FutureExt, StreamExt, TryStream, TryStreamExt, future};
-use std::ops::ControlFlow;
+pub use std::ops::ControlFlow;
 
 pub struct ControlStream<S>(S);
 
@@ -39,7 +39,7 @@ impl<S> ControlStream<S> {
             ControlFlow::Continue(cont) => future::ready(Ok(cont)),
             ControlFlow::Break(halt) => future::ready(Err(halt)),
         };
-        let h = |res: Result<Acc, Halt>| match res {
+        let h = |res| match res {
             Ok(cont) => ControlFlow::Continue(cont),
             Err(halt) => ControlFlow::Break(halt),
         };

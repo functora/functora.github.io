@@ -91,6 +91,6 @@ where
 }
 
 #[cfg(feature = "futures")]
-pub mod futures;
+mod futures;
 #[cfg(feature = "futures")]
 pub use crate::futures::*;

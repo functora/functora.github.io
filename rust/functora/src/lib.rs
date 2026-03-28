@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+pub use std::ops::ControlFlow;
+
 pub fn id<T>(x: T) -> T {
     x
 }
@@ -88,6 +90,12 @@ where
     T: Guard<E>,
 {
     x.guard_then(f)
+}
+
+pub fn from_control_flow<T>(cf: ControlFlow<T, T>) -> T {
+    match cf {
+        ControlFlow::Continue(x) | ControlFlow::Break(x) => x,
+    }
 }
 
 #[cfg(feature = "futures")]

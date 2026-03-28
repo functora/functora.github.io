@@ -1,5 +1,6 @@
-use functora::{Guard, Tweak, Void, guard, guard_then, id, ok, void};
+use functora::{Guard, Tweak, Void, from_control_flow, guard, guard_then, id, ok, void};
 use std::convert::Infallible;
+use std::ops::ControlFlow;
 
 #[test]
 fn id_function() {
@@ -204,4 +205,28 @@ fn guard_real_life_scenarios() {
         }),
         Err(Error::AccessDenied)
     );
+}
+
+#[test]
+fn from_control_flow_continue() {
+    let cf = ControlFlow::Continue(42);
+    assert_eq!(from_control_flow(cf), 42);
+}
+
+#[test]
+fn from_control_flow_break() {
+    let cf = ControlFlow::Break("error");
+    assert_eq!(from_control_flow(cf), "error");
+}
+
+#[test]
+fn from_control_flow_string() {
+    let cf = ControlFlow::Continue("hello".to_string());
+    assert_eq!(from_control_flow(cf), "hello");
+}
+
+#[test]
+fn from_control_flow_nested() {
+    let cf = ControlFlow::Break((1, 2, 3));
+    assert_eq!(from_control_flow(cf), (1, 2, 3));
 }

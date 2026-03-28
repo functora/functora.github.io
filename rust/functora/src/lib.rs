@@ -127,11 +127,11 @@ pub mod control_stream {
             Self: Sized,
         {
             let g = move |acc, item| match f(acc, item) {
-                ControlFlow::Break(halt) => future::ready(Err(halt)),
                 ControlFlow::Continue(cont) => future::ready(Ok(cont)),
+                ControlFlow::Break(halt) => future::ready(Err(halt)),
             };
             let h = |res: Result<Acc, Halt>| match res {
-                Ok(acc) => ControlFlow::Continue(acc),
+                Ok(cont) => ControlFlow::Continue(cont),
                 Err(halt) => ControlFlow::Break(halt),
             };
             self.0.try_fold(init, g).map(h)

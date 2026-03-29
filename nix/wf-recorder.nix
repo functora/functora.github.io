@@ -6,7 +6,7 @@
   };
   app = pkgs.writeShellApplication {
     name = "wf-recorder";
-    text = ''${pkgs.wf-recorder}/bin/wf-recorder -a --codec h264_vaapi "$@"'';
+    text = ''${pkgs.wf-recorder}/bin/wf-recorder -a -c h264_vaapi -R 44100 "$@"'';
   };
   sandbox = mkNixPak {
     config = {sloth, ...}: {
@@ -16,6 +16,7 @@
       locale.enable = true;
       bubblewrap = {
         network = false;
+        dieWithParent = true;
         sockets.pulse = true;
         sockets.wayland = true;
         bind.rw = [

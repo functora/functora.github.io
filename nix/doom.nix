@@ -28,6 +28,7 @@
   mkDoomSand = {
     name,
     text,
+    network ? false,
   }: let
     app = pkgs.writeShellApplication {
       inherit name text;
@@ -43,7 +44,7 @@
         fonts.enable = true;
         locale.enable = true;
         bubblewrap = {
-          network = false;
+          inherit network;
           sockets.pulse = true;
           sockets.wayland = true;
           bind.ro = [
@@ -111,7 +112,15 @@
   };
   games =
     pkgs.lib.optionalAttrs (builtins.pathExists ../bak/doom)
-    (mkDoom {
+    (
+      {
+        doom-seeker = mkDoomSand {
+          name = "doom-seeker";
+          text = ''${pkgs.doomseeker}/bin/doomseeker "$@"'';
+          network = true;
+        };
+      }
+      // mkDoom {
         tag = "free1";
         wad = "${free}/freedoom1.wad";
         relite = ../bak/doom/relite_0.6.7a.pk3;
@@ -287,7 +296,8 @@
         liquid = ''"${duhd}/26 Liquids.pk3"'';
         relite = "";
         nashgore = ../bak/doom/nashgore.pk3;
-      });
+      }
+    );
 in
   pkgs.symlinkJoin {
     name = "doom-games";

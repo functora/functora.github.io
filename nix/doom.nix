@@ -45,6 +45,7 @@
         locale.enable = true;
         bubblewrap = {
           inherit network;
+          dieWithParent = true;
           sockets.pulse = true;
           sockets.wayland = true;
           bind.ro = [

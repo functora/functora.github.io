@@ -387,6 +387,7 @@ in {
     services.unbound.settings.server.port = 5335;
     services.adguardhome.enable = config.services.functora.blockHosts;
     services.adguardhome.mutableSettings = false;
+    services.adguardhome.settings.dns.bind_hosts = ["127.0.0.1"];
     services.adguardhome.settings.dns.upstream_dns = ["127.0.0.1:5335"];
     services.adguardhome.settings.dns.bootstrap_dns = dns;
     services.adguardhome.settings.filtering = {

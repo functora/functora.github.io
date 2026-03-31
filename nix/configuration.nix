@@ -1091,7 +1091,9 @@ in {
     #
     # AI
     #
+    services.llama-cpp.host = "0.0.0.0";
     services.llama-cpp.port = 11434;
+    services.llama-cpp.openFirewall = true;
     services.llama-cpp.package = unst.llama-cpp.override {vulkanSupport = true;};
     services.llama-cpp.model = ../../llms/Qwen_Qwen3.5-2B-Q4_K_M.gguf;
     services.llama-cpp.extraFlags = ["-c" "32000"];

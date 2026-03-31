@@ -387,6 +387,7 @@ in {
     services.unbound.settings.server.port = 5335;
     services.adguardhome.enable = config.services.functora.blockHosts;
     services.adguardhome.mutableSettings = false;
+    services.adguardhome.settings.dns.bind_hosts = ["127.0.0.1"];
     services.adguardhome.settings.dns.upstream_dns = ["127.0.0.1:5335"];
     services.adguardhome.settings.dns.bootstrap_dns = dns;
     services.adguardhome.settings.filtering = {
@@ -1090,7 +1091,9 @@ in {
     #
     # AI
     #
+    services.llama-cpp.host = "0.0.0.0";
     services.llama-cpp.port = 11434;
+    services.llama-cpp.openFirewall = true;
     services.llama-cpp.package = unst.llama-cpp.override {vulkanSupport = true;};
     services.llama-cpp.model = ../../llms/Qwen_Qwen3.5-2B-Q4_K_M.gguf;
     services.llama-cpp.extraFlags = ["-c" "32000"];

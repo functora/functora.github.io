@@ -242,6 +242,11 @@
         relite = "";
       }
       // mkDoom {
+        tag = "lostdamn";
+        mod = ../bak/doom/lostdamn.pk3;
+        relite = "";
+      }
+      // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";
         cfg = ../cfg/doom.cfg;

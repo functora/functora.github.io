@@ -24,50 +24,50 @@
   {{- end -}}
 {{- end -}}
 
-{{- $gauntlet := "slot 1" -}}
-{{- $machinegun := `slot 2; wait 0; use QCMachinegun; wait 0; use QCMachinegunDM` -}}
-{{- $heavy_machinegun := `use QCHeavyMachinegun; wait 0; use QCHeavyMachinegunDM` -}}
-{{- $shotgun := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
-{{- $super_shotgun := `use QCSuperShotgun; wait 0; use QCSuperShotgunDM` -}}
-{{- $nailgun := `slot 4; wait 0; use QCNailgun; wait 0; use QCNailgunDM` -}}
-{{- $super_nailgun := `use QCSuperNailgun; wait 0; use QCSuperNailgunDM` -}}
-{{- $tribolt := "slot 5" -}}
+{{- $hammer := "slot 1" -}}
+{{- $enforcer := `slot 2; wait 0; use QCMachinegun; wait 0; use QCMachinegunDM` -}}
+{{- $minigun := `use QCHeavyMachinegun; wait 0; use QCHeavyMachinegunDM` -}}
+{{- $dispersion := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
+{{- $flak := `use QCSuperShotgun; wait 0; use QCSuperShotgunDM` -}}
+{{- $linkgun := `slot 4; wait 0; use QCNailgun; wait 0; use QCNailgunDM` -}}
+{{- $pulsegun := `use QCSuperNailgun; wait 0; use QCSuperNailgunDM` -}}
+{{- $bio_ripper := "slot 5" -}}
 {{- $rocket := "slot 6" -}}
-{{- $lightning := "slot 7" -}}
-{{- $railgun := "slot 8" -}}
-{{- $bfg := "slot 9" -}}
+{{- $shock := "slot 7" -}}
+{{- $sniper := "slot 8" -}}
+{{- $redeemer := "slot 9" -}}
 {{- $ability := "slot 0" -}}
 
 {{- $best := coll.Slice
-      $shotgun
-      $machinegun
-      $nailgun
-      $super_nailgun
-      $heavy_machinegun
-      $super_shotgun
-      $lightning
+      $dispersion
+      $enforcer
+      $linkgun
+      $pulsegun
+      $minigun
+      $flak
+      $bio_ripper
       $ability
-      $tribolt
+      $shock
       $rocket
-      $bfg
-      $railgun
+      $redeemer
+      $sniper
 -}}
 
 {{- template "assert_unique" $best -}}
 
 {{- $expl := coll.Slice
-      $railgun
-      $machinegun
-      $nailgun
-      $shotgun
-      $heavy_machinegun
-      $lightning
-      $super_nailgun
-      $super_shotgun
+      $sniper
+      $shock
+      $enforcer
+      $linkgun
+      $dispersion
+      $minigun
+      $pulsegun
+      $flak
       $ability
-      $tribolt
+      $bio_ripper
       $rocket
-      $bfg
+      $redeemer
 -}}
 
 {{- template "assert_reorder" (coll.Slice $best $expl) -}}
@@ -83,15 +83,15 @@ bind MWheelUp "bind MWheelDown expl_into_best; {{ $best_str }}"
 bind MWheelDown expl_into_best
 
 bind Q "+user1"
-bind T "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
-bind Y "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
-bind F "{{ $railgun }}"
-bind G "{{ template "sequence" (coll.Slice $nailgun $super_nailgun) }}"
-bind Z "{{ $lightning }}"
+bind T "{{ template "sequence" (coll.Slice $dispersion $flak) }}"
+bind Y "{{ template "sequence" (coll.Slice $dispersion $flak) }}"
+bind F "{{ $sniper }}"
+bind G "{{ template "sequence" (coll.Slice $linkgun $pulsegun) }}"
+bind Z "{{ $shock }}"
 bind X "{{ $rocket }}"
-bind C "{{ template "sequence" (coll.Slice $machinegun $heavy_machinegun) }}"
-bind V "{{ $tribolt }}"
-bind B "{{ $bfg }}"
+bind C "{{ template "sequence" (coll.Slice $enforcer $minigun) }}"
+bind V "{{ $bio_ripper }}"
+bind B "{{ $redeemer }}"
 
 name Chancho
 fov 120

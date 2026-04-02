@@ -263,7 +263,7 @@
       // mkDoom {
         tag = "utde";
         pkg = "${qz}/bin/q-zandronum";
-        cfg = ../cfg/doom-qcde.cfg;
+        cfg = ../cfg/doom-utde.cfg;
         gfx = "";
         total = utde31;
         lights = "";

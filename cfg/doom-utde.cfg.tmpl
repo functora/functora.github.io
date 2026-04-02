@@ -1,0 +1,101 @@
+{{- define "join" -}}
+  {{- $sep := index . 0 -}}
+  {{- $list := index . 1 -}}
+  {{- range $i, $v := $list }}{{ if $i }}{{ $sep }}{{ end }}{{ $v }}{{ end -}}
+{{- end -}}
+
+{{- define "sequence" -}}
+  {{- template "join" (coll.Slice "; wait 0; " .) -}}
+{{- end -}}
+
+{{- define "assert_unique" -}}
+  {{- assert (eq (len $) (len (uniq $))) -}}
+{{- end -}}
+
+{{- define "assert_reorder" -}}
+  {{- $lhs := index . 0 -}}
+  {{- $rhs := index . 1 -}}
+  {{- assert (eq (len $lhs) (len $rhs)) -}}
+  {{- range $lhs -}}
+    {{- assert (has $rhs .) -}}
+  {{- end -}}
+  {{- range $rhs -}}
+    {{- assert (has $lhs .) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $gauntlet := "slot 1" -}}
+{{- $machinegun := `slot 2; wait 0; use QCMachinegun; wait 0; use QCMachinegunDM` -}}
+{{- $heavy_machinegun := `use QCHeavyMachinegun; wait 0; use QCHeavyMachinegunDM` -}}
+{{- $shotgun := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
+{{- $super_shotgun := `use QCSuperShotgun; wait 0; use QCSuperShotgunDM` -}}
+{{- $nailgun := `slot 4; wait 0; use QCNailgun; wait 0; use QCNailgunDM` -}}
+{{- $super_nailgun := `use QCSuperNailgun; wait 0; use QCSuperNailgunDM` -}}
+{{- $tribolt := "slot 5" -}}
+{{- $rocket := "slot 6" -}}
+{{- $lightning := "slot 7" -}}
+{{- $railgun := "slot 8" -}}
+{{- $bfg := "slot 9" -}}
+{{- $ability := "slot 0" -}}
+
+{{- $best := coll.Slice
+      $shotgun
+      $machinegun
+      $nailgun
+      $super_nailgun
+      $heavy_machinegun
+      $super_shotgun
+      $lightning
+      $ability
+      $tribolt
+      $rocket
+      $bfg
+      $railgun
+-}}
+
+{{- template "assert_unique" $best -}}
+
+{{- $expl := coll.Slice
+      $railgun
+      $machinegun
+      $nailgun
+      $shotgun
+      $heavy_machinegun
+      $lightning
+      $super_nailgun
+      $super_shotgun
+      $ability
+      $tribolt
+      $rocket
+      $bfg
+-}}
+
+{{- template "assert_reorder" (coll.Slice $best $expl) -}}
+
+{{- $best_str := tmpl.Exec "sequence" $best -}}
+{{- $expl_str := tmpl.Exec "sequence" $expl -}}
+
+alias best_into_expl "bind MWheelDown expl_into_best; {{ $best_str }}"
+alias expl_into_best "bind MWheelDown best_into_expl; {{ $expl_str }}"
+
+bind Mouse3 "+user1"
+bind MWheelUp "bind MWheelDown expl_into_best; {{ $best_str }}"
+bind MWheelDown expl_into_best
+
+bind Q "+user1"
+bind T "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
+bind Y "{{ template "sequence" (coll.Slice $shotgun $super_shotgun) }}"
+bind F "{{ $railgun }}"
+bind G "{{ template "sequence" (coll.Slice $nailgun $super_nailgun) }}"
+bind Z "{{ $lightning }}"
+bind X "{{ $rocket }}"
+bind C "{{ template "sequence" (coll.Slice $machinegun $heavy_machinegun) }}"
+bind V "{{ $tribolt }}"
+bind B "{{ $bfg }}"
+
+name Chancho
+fov 120
+movebob 0
+stillbob 0
+switchonpickup 3
+cl_noammoswitch false

@@ -764,6 +764,11 @@ in {
         (import ./prusa.nix {inherit pkgs;})
         (import ./freecad.nix {inherit pkgs;})
         (import ./wf-recorder.nix {})
+        (import ./bubble.nix {
+          inherit pkgs;
+          name = "gomplate";
+          text = ''${pkgs.gomplate}/bin/gomplate "$@"'';
+        })
       ];
       programs.git = {
         enable = true;

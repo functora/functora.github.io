@@ -110,7 +110,28 @@
             },
             "models": {
               "multi-model": {
-                "name": "multi-model"
+                "name": "0) multi-model"
+              },
+              "gpt-5.4": {
+                "name": "1) gpt-5.4"
+              },
+              "minimaxai/minimax-m2.5": {
+                "name": "2) minimaxai/minimax-m2.5"
+              },
+              "moonshotai/kimi-k2.5": {
+                "name": "3) moonshotai/kimi-k2.5"
+              },
+              "qwen3.5-flash": {
+                "name": "4) qwen3.5-flash"
+              },
+              "deepseek-ai/deepseek-v3.2": {
+                "name": "5) deepseek-ai/deepseek-v3.2"
+              },
+              "z-ai/glm5": {
+                "name": "6) z-ai/glm5"
+              },
+              "grok-4.1-fast": {
+                "name": "7) grok-4.1-fast"
               }
             }
           },

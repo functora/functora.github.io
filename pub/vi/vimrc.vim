@@ -377,6 +377,8 @@ let g:PaperColor_Theme_Options = {
   \   }
   \ }
 
+set notermguicolors
+
 if exists('$TMUX')
     if has('nvim')
         set termguicolors
@@ -387,7 +389,6 @@ endif
 
 syntax on
 set t_Co=256
-set notermguicolors
 exe 'colorscheme ' . get(g:, "vimColorScheme", "PaperColor")
 nnoremap <silent> <esc> :noh<return><esc>
 nnoremap <esc>^[ <esc>^[

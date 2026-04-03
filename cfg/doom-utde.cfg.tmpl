@@ -27,7 +27,7 @@
 {{- $hammer := "slot 1" -}}
 {{- $enforcer := `slot 2; wait 0; use QCMachinegun; wait 0; use QCMachinegunDM` -}}
 {{- $minigun := `use QCHeavyMachinegun; wait 0; use QCHeavyMachinegunDM` -}}
-{{- $dispersion := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
+{{- $miniflak := `slot 3; wait 0; use QCShotgun; wait 0; use QCShotgunDM` -}}
 {{- $flak := `use QCSuperShotgun; wait 0; use QCSuperShotgunDM` -}}
 {{- $linkgun := `slot 4; wait 0; use QCNailgun; wait 0; use QCNailgunDM` -}}
 {{- $pulsegun := `use QCSuperNailgun; wait 0; use QCSuperNailgunDM` -}}
@@ -36,17 +36,15 @@
 {{- $shock := "slot 7" -}}
 {{- $sniper := "slot 8" -}}
 {{- $redeemer := "slot 9" -}}
-{{- $ability := "slot 0" -}}
 
 {{- $best := coll.Slice
-      $dispersion
+      $miniflak
       $enforcer
       $linkgun
+      $bio_ripper
+      $flak
       $pulsegun
       $minigun
-      $flak
-      $bio_ripper
-      $ability
       $shock
       $rocket
       $redeemer
@@ -60,11 +58,10 @@
       $shock
       $enforcer
       $linkgun
-      $dispersion
+      $miniflak
       $minigun
       $pulsegun
       $flak
-      $ability
       $bio_ripper
       $rocket
       $redeemer
@@ -83,8 +80,8 @@ bind MWheelUp "bind MWheelDown expl_into_best; {{ $best_str }}"
 bind MWheelDown expl_into_best
 
 bind Q "+user1"
-bind T "{{ template "sequence" (coll.Slice $dispersion $flak) }}"
-bind Y "{{ template "sequence" (coll.Slice $dispersion $flak) }}"
+bind T "{{ template "sequence" (coll.Slice $miniflak $flak) }}"
+bind Y "{{ template "sequence" (coll.Slice $miniflak $flak) }}"
 bind F "{{ $sniper }}"
 bind G "{{ template "sequence" (coll.Slice $linkgun $pulsegun) }}"
 bind Z "{{ $shock }}"

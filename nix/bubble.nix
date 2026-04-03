@@ -4,6 +4,7 @@
   text,
   home ? null,
   user ? "bubble",
+  pasta ? true,
   network ? false,
 }: let
   nixpak = import ./nixpak.nix;
@@ -27,6 +28,7 @@
       app.package = app;
       gpu.enable = true;
       fonts.enable = true;
+      pasta.enable = pasta;
       locale.enable = true;
       etc.sslCertificates.enable = network;
       bubblewrap = {

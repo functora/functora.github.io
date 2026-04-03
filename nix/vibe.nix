@@ -128,6 +128,7 @@
           builtins.attrValues pkgs.nerd-fonts
         )
         ++ [pkgs.dejavu_fonts];
+      pasta.enable = true;
       locale.enable = true;
       etc.sslCertificates.enable = true;
       bubblewrap = {

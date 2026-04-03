@@ -99,8 +99,21 @@
     text = ''
       {
         "$schema": "https://opencode.ai/config.json",
-        "model": "llama-cpp/self-hosted",
+        "model": "free-api/multi-model",
         "provider": {
+          "free-api": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "free-api",
+            "options": {
+              "baseURL": "https://openai.good.hidns.vip/v1",
+              "apiKey": "https://github.com/smanx/free-api"
+            },
+            "models": {
+              "multi-model": {
+                "name": "multi-model"
+              }
+            }
+          },
           "llama-cpp": {
             "npm": "@ai-sdk/openai-compatible",
             "name": "llama-cpp",

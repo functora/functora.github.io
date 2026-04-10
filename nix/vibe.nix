@@ -99,7 +99,7 @@
     text = ''
       {
         "$schema": "https://opencode.ai/config.json",
-        "model": "free-api/multi-model",
+        "model": "opencode/minimax-m2.5-free",
         "provider": {
           "free-api": {
             "npm": "@ai-sdk/openai-compatible",

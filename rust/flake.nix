@@ -2,7 +2,7 @@
   description = "Rust Dev Shell";
 
   inputs = {
-    master.url = "github:nixos/nixpkgs";
+    stable.url = "github:nixos/nixpkgs?ref=nixos-25.11";
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
@@ -10,17 +10,20 @@
 
   outputs = {
     self,
-    master,
+    stable,
     unstable,
     rust-overlay,
     flake-utils,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = import unstable {
+        pkgs = import stable {
           inherit system;
           overlays = [rust-overlay.overlays.default];
           config.android_sdk.accept_license = true;
+        };
+        unst = import unstable {
+          inherit system;
         };
         mobile-targets = [
           "i686-linux-android"
@@ -206,14 +209,12 @@
           CARGO_TARGET_I686_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang";
           packages = with pkgs;
             [
-              alejandra
               bacon
               rustToolchain
               rust-analyzer
               cargo-tarpaulin
               clippy
               wasmtime
-              vimb
               license-generator
               dioxus-cli
               tailwindcss_4
@@ -257,6 +258,8 @@
               (mkWeb "cryptonote")
               (mkApk "cryptonote")
               # tools
+              unst.opencode
+              pkgs.qutebrowser
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
@@ -284,7 +287,7 @@
           };
         mkRustPkgWasm = pkg: let
           buildTarget = "wasm32-wasip1";
-          pkgs = import unstable {
+          pkgs = import stable {
             inherit system;
             overlays = [rust-overlay.overlays.default];
           };
@@ -362,32 +365,6 @@
           };
       in {
         devShells.default = pkgs.mkShell shell;
-        devShells.unfree = pkgs.mkShell (shell
-          // {
-            packages =
-              shell.packages
-              ++ [
-                pkgs.opencode
-                pkgs.qutebrowser
-                master.legacyPackages.${system}.antigravity
-                (pkgs.writeShellApplication {
-                  name = "qwen";
-                  text = ''
-                    ${
-                      master.legacyPackages.${system}.qwen-code
-                    }/bin/qwen -y "$@"
-                  '';
-                })
-                (pkgs.writeShellApplication {
-                  name = "cursor";
-                  text = ''
-                    ${
-                      master.legacyPackages.${system}.cursor-cli
-                    }/bin/cursor-agent -f --model auto "$@"
-                  '';
-                })
-              ];
-          });
         packages = rec {
           rustell = mkRustPkg "rustell";
           rustell-nvim = mkRustellNvim "${rustell}/bin/rustell";

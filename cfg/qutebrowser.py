@@ -1975,7 +1975,6 @@ c.content.mouse_lock = False
 c.content.javascript.clipboard = "access"
 c.content.pdfjs = True
 c.content.blocking.method = "both"
-c.content.headers.user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
 c.url.start_pages = ['about:blank']
 c.url.default_page = 'https://grok.com/'

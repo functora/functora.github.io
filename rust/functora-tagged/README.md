@@ -177,12 +177,18 @@ Standard library methods often return `Option<T>` for potentially empty collecti
 
 These methods return a new `Tagged<..., FNonEmpty>` value. Since they take ownership of `self`, they can leverage `into_iter()` to perform transformations without cloning individual elements. This makes them highly efficient for complex or large underlying data.
 
-| Method    | Behavior                      | Invariant            |
-| --------- | ----------------------------- | -------------------- |
-| `map(f)`  | Transform elements            | Count remains same   |
-| `rev()`   | Reverse elements              | Count remains same   |
-| `sort()`  | Sort elements                 | Count remains same   |
-| `dedup()` | Remove consecutive duplicates | At least one remains |
+| Method       | Behavior                      | Invariant            |
+| ------------ | ----------------------------- | -------------------- |
+| `map(f)`     | Transform elements            | Count remains same   |
+| `rev()`      | Reverse elements              | Count remains same   |
+| `sort()`     | Sort elements                 | Count remains same   |
+| `dedup()`    | Remove consecutive duplicates | At least one remains |
+| `via_into()` | Convert via `From` trait       | Count remains same   |
+| `via_iter()` | Convert via iterator          | At least one remains |
+
+**`via_into()`** uses the standard `From` trait to convert between types (e.g., `Vec<T>` → `Vec<T>` identity conversion). This preserves the non-empty invariant because `From` implementations for collections typically preserve length.
+
+**`via_iter()`** uses `.into_iter().collect()` internally, which is more flexible and works for conversions between types that don't have a direct `From` implementation (e.g., `Vec<(K, V)>` → `HashMap<K, V>`, `Vec<T>` → `BTreeSet<T>`). Since at least one element is guaranteed to exist in a non-empty collection, the result is guaranteed to be non-empty.
 
 #### Example
 

@@ -256,16 +256,16 @@ mod serde_tests {
         struct Wrapper {
             user_id: UserId,
         }
-        let toml_str = r#"user_id = "bad""#;
-        let err = toml::from_str::<Wrapper>(toml_str)
+        let toml_invalid = r#"user_id = "bad""#;
+        let err = toml::from_str::<Wrapper>(toml_invalid)
             .unwrap_err();
         assert!(
             err.to_string().contains("UserIdError"),
             "Unexpected failure: {err}"
         );
-        let toml_str = r#"user_id = "user_123""#;
+        let toml_valid = r#"user_id = "user_123""#;
         let wrapper: Wrapper =
-            toml::from_str(toml_str).unwrap();
+            toml::from_str(toml_valid).unwrap();
         assert_eq!(wrapper.user_id.rep().rep(), "user_123");
     }
 
@@ -321,18 +321,19 @@ mod diesel_integration_tests {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        sql_query(
+        #[allow(clippy::unwrap_used)]
+        let _ = sql_query(
             "CREATE TABLE users (id TEXT NOT NULL, email TEXT NOT NULL);",
         )
         .execute(&mut conn)
-        .expect("failed to create table");
+        .unwrap();
         conn
     }
 
     #[test]
     fn test_diesel_queryable_success() {
         let mut conn = memory_db();
-        insert_into(users::table)
+        let _ = insert_into(users::table)
             .values((
                 users::id.eq("user_789"),
                 users::email.eq("hello@example.com"),
@@ -357,7 +358,7 @@ mod diesel_integration_tests {
     #[test]
     fn test_diesel_queryable_refine_failure() {
         let mut conn = memory_db();
-        insert_into(users::table)
+        let _ = insert_into(users::table)
             .values((
                 users::id.eq("bad_id"),
                 users::email.eq("ab"),
@@ -376,7 +377,7 @@ mod diesel_integration_tests {
         let uid: UserId = "user_999".parse().unwrap();
         let email: Email =
             "test@domain.com".parse().unwrap();
-        insert_into(users::table)
+        let _ = insert_into(users::table)
             .values((
                 users::id.eq(&uid),
                 users::email.eq(&email),

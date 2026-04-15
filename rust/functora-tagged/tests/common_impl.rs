@@ -13,7 +13,7 @@ fn test_crude_zero() {
     assert_eq!(*x, 0);
 
     let y = Tagged::<f64, D, FCrude>::zero();
-    assert_eq!(*y, 0.0);
+    assert!((*y - 0.0).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -22,7 +22,7 @@ fn test_crude_one() {
     assert_eq!(*x, 1);
 
     let y = Tagged::<f64, D, FCrude>::one();
-    assert_eq!(*y, 1.0);
+    assert!((*y - 1.0).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn test_positive_one() {
     assert_eq!(*x, 1);
 
     let y = Tagged::<f64, D, FPositive>::one();
-    assert_eq!(*y, 1.0);
+    assert!((*y - 1.0).abs() < f64::EPSILON);
 
     assert!(Tagged::<i32, D, FPositive>::new(0).is_err());
     assert!(Tagged::<i32, D, FPositive>::new(-1).is_err());
@@ -101,8 +101,8 @@ fn test_non_empty_min_max() {
 #[test]
 fn test_non_empty_min_max_by() {
     let xs = NeVec::new(vec![10, 5, 20]).unwrap();
-    assert_eq!(xs.min_by(|a, b| a.cmp(b)), &5);
-    assert_eq!(xs.max_by(|a, b| a.cmp(b)), &20);
+    assert_eq!(xs.min_by(Ord::cmp), &5);
+    assert_eq!(xs.max_by(Ord::cmp), &20);
 }
 
 #[test]
@@ -240,22 +240,22 @@ fn test_zero_incl_to_one_incl() {
 #[test]
 fn test_zero_incl_to_one_excl_zero() {
     let x = Tagged::<f64, D, FZeroInclToOneExcl>::zero();
-    assert_eq!(*x, 0.0);
+    assert!((*x - 0.0).abs() < f64::EPSILON);
 }
 
 #[test]
 fn test_zero_excl_to_one_incl_one() {
     let x = Tagged::<f64, D, FZeroExclToOneIncl>::one();
-    assert_eq!(*x, 1.0);
+    assert!((*x - 1.0).abs() < f64::EPSILON);
 }
 
 #[test]
 fn test_zero_incl_to_one_incl_zero_one() {
     let x = Tagged::<f64, D, FZeroInclToOneIncl>::zero();
-    assert_eq!(*x, 0.0);
+    assert!((*x - 0.0).abs() < f64::EPSILON);
 
     let y = Tagged::<f64, D, FZeroInclToOneIncl>::one();
-    assert_eq!(*y, 1.0);
+    assert!((*y - 1.0).abs() < f64::EPSILON);
 }
 
 //
@@ -391,7 +391,7 @@ fn test_non_empty_hashset_min_by() {
     let _ = set.insert(5);
     let _ = set.insert(20);
     let xs = NeHashSet::new(set).unwrap();
-    assert_eq!(xs.min_by(|a, b| a.cmp(b)), &5);
+    assert_eq!(xs.min_by(Ord::cmp), &5);
 }
 
 #[test]
@@ -401,7 +401,7 @@ fn test_non_empty_hashset_max_by() {
     let _ = set.insert(5);
     let _ = set.insert(20);
     let xs = NeHashSet::new(set).unwrap();
-    assert_eq!(xs.max_by(|a, b| a.cmp(b)), &20);
+    assert_eq!(xs.max_by(Ord::cmp), &20);
 }
 
 #[test]
@@ -588,4 +588,54 @@ fn test_non_empty_vecdeque_reduce() {
     let xs = NeVecDeque::new(dq).unwrap();
     let sum = xs.reduce(|a, b| a + b);
     assert_eq!(sum, 10);
+}
+
+//
+// Non-Empty convert tests
+//
+
+#[test]
+fn test_non_empty_convert_vec_to_hashmap() {
+    let pairs = NonEmpty::new(vec![
+        (1, "one"),
+        (2, "two"),
+        (3, "three"),
+    ])
+    .unwrap();
+    let map: NonEmpty<HashMap<i32, &'static str>> =
+        pairs.convert(|v| v.into_iter().collect());
+    assert_eq!(map.length(), 3);
+    assert_eq!(map.get(&1), Some(&"one"));
+    assert_eq!(map.get(&2), Some(&"two"));
+    assert_eq!(map.get(&3), Some(&"three"));
+}
+
+#[test]
+fn test_non_empty_convert_vec_to_btreeset() {
+    let xs = NonEmpty::new(vec![3, 1, 2]).unwrap();
+    let set: NonEmpty<BTreeSet<i32>> =
+        xs.convert(|v| v.into_iter().collect());
+    assert_eq!(set.length(), 3);
+    assert_eq!(set.first(), &1);
+    assert_eq!(set.last(), &3);
+}
+
+#[test]
+fn test_non_empty_convert_hashmap_to_vec() {
+    let mut map = HashMap::new();
+    let _ = map.insert(1, "one");
+    let _ = map.insert(2, "two");
+    let ne_map = NonEmpty::new(map).unwrap();
+    let vec: NonEmpty<Vec<(i32, &'static str)>> =
+        ne_map.convert(|m| m.into_iter().collect());
+    assert_eq!(vec.length(), 2);
+}
+
+#[test]
+fn test_non_empty_convert_preserves_nonempty() {
+    let xs = NonEmpty::new(vec![1]).unwrap();
+    let set: NonEmpty<BTreeSet<i32>> =
+        xs.convert(|v| v.into_iter().collect());
+    assert_eq!(set.length(), 1);
+    assert!(set.contains(&1));
 }

@@ -267,11 +267,12 @@ mod tagged_diesel_tests {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        sql_query(
+        #[allow(clippy::unwrap_used)]
+        let _ = sql_query(
             "CREATE TABLE tagged_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value INTEGER NOT NULL);",
         )
         .execute(&mut conn)
-        .expect("failed to create table");
+        .unwrap();
         conn
     }
 
@@ -281,7 +282,7 @@ mod tagged_diesel_tests {
         let valid_tagged_value =
             TestTagged::new(100).unwrap();
 
-        insert_into(tagged_values::table)
+        let _ = insert_into(tagged_values::table)
             .values((tagged_values::value
                 .eq(&valid_tagged_value),))
             .execute(&mut conn)
@@ -330,7 +331,7 @@ mod tagged_diesel_tests {
         let mut conn = memory_db();
         let tagged_value = TestTagged::new(150).unwrap();
 
-        insert_into(tagged_values::table)
+        let _ = insert_into(tagged_values::table)
             .values((
                 tagged_values::value.eq(&tagged_value),
             ))
@@ -455,7 +456,7 @@ fn test_diesel_tagged_queryable_success_explicit() {
     let mut conn = memory_db();
     let valid_tagged_value = TestTagged::new(100).unwrap();
 
-    diesel::insert_into(
+    let _ = diesel::insert_into(
         crate::tagged_diesel_tests::tagged_values::table,
     )
     .values((

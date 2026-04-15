@@ -194,7 +194,9 @@ fn test_via_string_from_str() {
     assert!(parse_result_refine.is_err());
     match parse_result_refine.unwrap_err() {
         TestParseError::Refine(..) => {}
-        _ => panic!("Expected Refine error"),
+        TestParseError::Decode(..) => {
+            panic!("Expected Refine error")
+        }
     }
 }
 
@@ -309,11 +311,12 @@ mod via_string_diesel_tests_inline {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        sql_query(
+        #[allow(clippy::unwrap_used)]
+        let _ = sql_query(
             "CREATE TABLE via_string_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL);",
         )
         .execute(&mut conn)
-        .expect("failed to create table");
+        .unwrap();
         conn
     }
 
@@ -325,7 +328,7 @@ mod via_string_diesel_tests_inline {
         )
         .unwrap();
 
-        insert_into(via_string_values::table)
+        let _ = insert_into(via_string_values::table)
             .values((via_string_values::value
                 .eq(&valid_via_string_value),))
             .execute(&mut conn)
@@ -380,7 +383,7 @@ mod via_string_diesel_tests_inline {
         )
         .unwrap();
 
-        insert_into(via_string_values::table)
+        let _ = insert_into(via_string_values::table)
             .values((via_string_values::value
                 .eq(&via_string_value),))
             .execute(&mut conn)

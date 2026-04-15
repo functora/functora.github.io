@@ -330,4 +330,16 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
             .pipe(Tagged::new)
             .unwrap()
     }
+
+    pub fn convert<W>(
+        self,
+        f: impl FnOnce(T) -> W,
+    ) -> Tagged<W, D, FNonEmpty>
+    where
+        W: Debug + HasLength,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        f(self.untag()).pipe(Tagged::new).unwrap()
+    }
 }

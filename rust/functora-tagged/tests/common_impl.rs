@@ -603,7 +603,7 @@ fn test_non_empty_convert_vec_to_hashmap() {
     ])
     .unwrap();
     let map: NonEmpty<HashMap<i32, &'static str>> =
-        pairs.convert(|v| v.into_iter().collect());
+        pairs.via_iter();
     assert_eq!(map.length(), 3);
     assert_eq!(map.get(&1), Some(&"one"));
     assert_eq!(map.get(&2), Some(&"two"));
@@ -613,8 +613,7 @@ fn test_non_empty_convert_vec_to_hashmap() {
 #[test]
 fn test_non_empty_convert_vec_to_btreeset() {
     let xs = NonEmpty::new(vec![3, 1, 2]).unwrap();
-    let set: NonEmpty<BTreeSet<i32>> =
-        xs.convert(|v| v.into_iter().collect());
+    let set: NonEmpty<BTreeSet<i32>> = xs.via_iter();
     assert_eq!(set.length(), 3);
     assert_eq!(set.first(), &1);
     assert_eq!(set.last(), &3);
@@ -627,15 +626,31 @@ fn test_non_empty_convert_hashmap_to_vec() {
     let _ = map.insert(2, "two");
     let ne_map = NonEmpty::new(map).unwrap();
     let vec: NonEmpty<Vec<(i32, &'static str)>> =
-        ne_map.convert(|m| m.into_iter().collect());
+        ne_map.via_iter();
     assert_eq!(vec.length(), 2);
 }
 
 #[test]
 fn test_non_empty_convert_preserves_nonempty() {
     let xs = NonEmpty::new(vec![1]).unwrap();
-    let set: NonEmpty<BTreeSet<i32>> =
-        xs.convert(|v| v.into_iter().collect());
+    let set: NonEmpty<BTreeSet<i32>> = xs.via_iter();
     assert_eq!(set.length(), 1);
     assert!(set.contains(&1));
+}
+
+#[test]
+fn test_non_empty_into_identity() {
+    let xs = NonEmpty::new(vec![1, 2, 3]).unwrap();
+    let result: NonEmpty<Vec<i32>> = xs.via_into();
+    assert_eq!(result.length(), 3);
+    assert_eq!(result.first(), &1);
+    assert_eq!(result.last(), &3);
+}
+
+#[test]
+fn test_non_empty_into_preserves_nonempty() {
+    let xs = NonEmpty::new(vec![42]).unwrap();
+    let result: NonEmpty<Vec<i32>> = xs.via_into();
+    assert_eq!(result.length(), 1);
+    assert_eq!(result.first(), &42);
 }

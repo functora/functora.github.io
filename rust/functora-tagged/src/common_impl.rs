@@ -331,15 +331,30 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
             .unwrap()
     }
 
-    pub fn convert<W>(
-        self,
-        f: impl FnOnce(T) -> W,
-    ) -> Tagged<W, D, FNonEmpty>
+    pub fn via_into<W>(self) -> Tagged<W, D, FNonEmpty>
     where
+        W: From<T>,
         W: Debug + HasLength,
     {
         #[allow(clippy::unwrap_used)]
         #[allow(clippy::missing_panics_doc)]
-        f(self.untag()).pipe(Tagged::new).unwrap()
+        self.untag()
+            .pipe(W::from)
+            .pipe(Tagged::new)
+            .unwrap()
+    }
+
+    pub fn via_iter<W>(self) -> Tagged<W, D, FNonEmpty>
+    where
+        T: IntoIterator,
+        W: Debug + HasLength + FromIterator<T::Item>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.untag()
+            .into_iter()
+            .collect::<W>()
+            .pipe(Tagged::new)
+            .unwrap()
     }
 }

@@ -38,6 +38,14 @@
       name = "passwd";
       text = "${user}:x:1000:1000:${user}:/home/${user}:/bin/sh";
     };
+    asound = pkgs.writeText "asound.conf" ''
+      pcm.!default {
+        type pulse
+      }
+      ctl.!default {
+        type pulse
+      }
+    '';
     sandbox = mkNixPak {
       config = {sloth, ...}: {
         app.package = app;
@@ -49,8 +57,10 @@
           dieWithParent = true;
           sockets.pulse = true;
           sockets.wayland = true;
+          env.ALSA_PLUGIN_DIR = "${pkgs.alsa-plugins}/lib/alsa-lib";
           bind.ro = [
             [(toString passwd) "/etc/passwd"]
+            [(toString asound) "/etc/asound.conf"]
           ];
           bind.rw = [
             [
@@ -72,7 +82,9 @@
     cfg ? null,
     wad ? ../bak/doom/wads/doom2.wad,
     sky ? ../bak/doom/CryosUltDoomSkies.wad,
+    dec ? ../bak/doom/DestDec_v2.pk3,
     mod ? "",
+    tex ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? ../bak/doom/DiamondDragon.pk3,
     music ? "",
@@ -81,16 +93,21 @@
     relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
+    movement ? "",
     flashlight ? "${duhd}/12 Flashlight++.pk3",
     lastweapon ? ../bak/doom/fast-swap.pk3,
+    cblood ? ../bak/doom/cblood.pk3,
   }: {
     "doom-${tag}" = mkDoomSand {
       name = "doom-${tag}";
       text = ''
         ${pkg} \
         -iwad ${wad} \
-        -file ${sky} ${../bak/doom/DestDec_v2.pk3} \
+        -file \
+        ${sky} \
+        ${dec} \
         ${mod} \
+        ${tex} \
         ${gfx} \
         ${total} \
         ${music} \
@@ -99,11 +116,12 @@
         ${relite} \
         ${parallax} \
         ${nashgore} \
+        ${movement} \
         ${flashlight} \
         ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
         ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
-        ${../bak/doom/cblood.pk3} \
         ${lastweapon} \
+        ${cblood} \
         ${
           if cfg == null
           then ""
@@ -112,17 +130,21 @@
       '';
     };
   };
+  mkDoom64 = args:
+    mkDoom
+    (
+      {
+        sky = ../bak/doom/Cran_D64Patch_skygenerator.pk3;
+        tex = "${../bak/doom/Cran_D64PatchTex_v1.3.1.pk3} ${../bak/doom/Cran_D64Patch_BMapsD2_v2.pk3}";
+        total = "${../bak/doom/BD64-VoH_game_v1.6.1.pk3} ${../bak/doom/BD64-VoH_maps_v1.6.1.pk3}";
+        movement = ../bak/doom/BD64_ZMovement.pk3;
+      }
+      // args
+    );
   games =
     pkgs.lib.optionalAttrs (builtins.pathExists ../bak/doom)
     (
-      {
-        doom-seeker = mkDoomSand {
-          name = "doom-seeker";
-          text = ''${pkgs.doomseeker}/bin/doomseeker "$@"'';
-          network = true;
-        };
-      }
-      // mkDoom {
+      mkDoom {
         tag = "free1";
         wad = "${free}/freedoom1.wad";
         relite = ../bak/doom/relite_0.6.7a.pk3;
@@ -148,9 +170,13 @@
         gfx = ../bak/doom/CodeFX_v1.101.pk3;
         relite = "";
       }
-      // mkDoom {
+      // mkDoom64 {
         tag = "plutonia";
         wad = ../bak/doom/wads/plutonia.wad;
+      }
+      // mkDoom64 {
+        tag = "64";
+        music = ../bak/doom/BD64-VoH_D64D2_Ost.pk3;
       }
       // mkDoom {
         tag = "annie1";
@@ -200,9 +226,10 @@
         total = ../bak/doom/DTB_C17.pk3;
         relite = "";
       }
-      // mkDoom {
-        tag = "hell-fire";
+      // mkDoom64 {
+        tag = "hellfire";
         mod = ../bak/doom/HellFireCollectionV1-6.pk3;
+        music = ../bak/doom/FerretJukeBoxV1-0.pk3;
       }
       // mkDoom {
         tag = "dbp37-augzen";
@@ -240,11 +267,6 @@
       // mkDoom {
         tag = "ihni";
         total = ../bak/doom/ihni-1.04.pk3;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "lostdamn";
-        mod = ../bak/doom/lostdamn.pk3;
         relite = "";
       }
       // mkDoom {

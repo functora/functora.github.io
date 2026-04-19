@@ -2,6 +2,7 @@
   pkgs,
   name,
   text,
+  runtimeInputs ? [],
   home ? null,
   user ? "bubble",
   pasta ? true,
@@ -14,7 +15,7 @@
     inherit pkgs;
   };
   app = pkgs.writeShellApplication {
-    inherit name text;
+    inherit name text runtimeInputs;
   };
   passwd = pkgs.writeTextFile {
     name = "passwd";
@@ -56,7 +57,7 @@
             then []
             else [
               [
-                (sloth.mkdir (sloth.concat' sloth.homeDir home))
+                (sloth.mkdir (sloth.concat' sloth.homeDir "/${home}"))
                 sloth.homeDir
               ]
             ];

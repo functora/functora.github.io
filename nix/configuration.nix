@@ -617,6 +617,8 @@ in {
     virtualisation.podman.dockerCompat = true;
     virtualisation.podman.dockerSocket.enable = true;
     virtualisation.podman.defaultNetwork.settings.dns_enabled = true;
+    # virtualisation.virtualbox.host.enable = true;
+    # users.extraGroups.vboxusers.members = [config.services.functora.userName];
     networking.extraHosts = blocked-hosts;
 
     users.groups.plugdev = {};
@@ -916,10 +918,10 @@ in {
           bindsym Mod4+Shift+u mode mouse
           mode mouse {
 
-              bindsym h exec '${ydotool} mousemove -x -35 -y   0'
-              bindsym j exec '${ydotool} mousemove -x   0 -y  35'
-              bindsym k exec '${ydotool} mousemove -x   0 -y -35'
-              bindsym l exec '${ydotool} mousemove -x  35 -y   0'
+              bindsym h exec '${ydotool} mousemove -x -25 -y   0'
+              bindsym j exec '${ydotool} mousemove -x   0 -y  25'
+              bindsym k exec '${ydotool} mousemove -x   0 -y -25'
+              bindsym l exec '${ydotool} mousemove -x  25 -y   0'
 
               bindsym n exec '${ydotool} mousemove -w -- -1  0'
               bindsym m exec '${ydotool} mousemove -w --  0 -1'

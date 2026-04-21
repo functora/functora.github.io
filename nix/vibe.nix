@@ -94,63 +94,6 @@
       env_key = "GEMINI_API_KEY"
     '';
   };
-  opencodeJson = pkgs.writeTextFile {
-    name = "opencode";
-    text = ''
-      {
-        "$schema": "https://opencode.ai/config.json",
-        "model": "opencode/minimax-m2.5-free",
-        "provider": {
-          "free-api": {
-            "npm": "@ai-sdk/openai-compatible",
-            "name": "free-api",
-            "options": {
-              "baseURL": "https://openai.good.hidns.vip/v1",
-              "apiKey": "https://github.com/smanx/free-api"
-            },
-            "models": {
-              "multi-model": {
-                "name": "0) multi-model"
-              },
-              "gpt-5.4": {
-                "name": "1) gpt-5.4"
-              },
-              "minimaxai/minimax-m2.5": {
-                "name": "2) minimaxai/minimax-m2.5"
-              },
-              "moonshotai/kimi-k2.5": {
-                "name": "3) moonshotai/kimi-k2.5"
-              },
-              "qwen3.5-flash": {
-                "name": "4) qwen3.5-flash"
-              },
-              "deepseek-ai/deepseek-v3.2": {
-                "name": "5) deepseek-ai/deepseek-v3.2"
-              },
-              "z-ai/glm5": {
-                "name": "6) z-ai/glm5"
-              },
-              "grok-4.1-fast": {
-                "name": "7) grok-4.1-fast"
-              }
-            }
-          },
-          "llama-cpp": {
-            "npm": "@ai-sdk/openai-compatible",
-            "name": "llama-cpp",
-            "options": {
-              "baseURL": "http://localhost:11434"
-            },
-            "models": {
-              "self-hosted": {
-                "name": "self-hosted"
-              }
-            }
-          }
-        }
-      }
-    '';
-  };
   sandbox = mkNixPak {
     config = {sloth, ...}: {
       app.package = app;
@@ -202,7 +145,7 @@
             (sloth.concat' sloth.homeDir "/.codex/config.toml")
           ]
           [
-            (toString opencodeJson)
+            (toString ../cfg/opencode.json)
             (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
           ]
         ];

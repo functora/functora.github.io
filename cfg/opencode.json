@@ -13,6 +13,9 @@
         "multi-model": {
           "name": "0) multi-model"
         },
+        "race->fallback": {
+          "name": "0) race->fallback"
+        },
         "gpt-5.4": {
           "name": "1) gpt-5.4"
         },

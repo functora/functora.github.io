@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "opencode/minimax-m2.5-free",
+  "model": "free-api/race->fallback",
   "provider": {
     "free-api": {
       "npm": "@ai-sdk/openai-compatible",
@@ -10,32 +10,32 @@
         "apiKey": "https://github.com/smanx/free-api"
       },
       "models": {
-        "multi-model": {
-          "name": "0) multi-model"
-        },
         "race->fallback": {
-          "name": "0) race->fallback"
+          "name": "1) race->fallback"
+        },
+        "multi-model": {
+          "name": "2) multi-model"
         },
         "gpt-5.4": {
-          "name": "1) gpt-5.4"
+          "name": "3) gpt-5.4"
         },
         "minimaxai/minimax-m2.5": {
-          "name": "2) minimaxai/minimax-m2.5"
+          "name": "4) minimaxai/minimax-m2.5"
         },
         "moonshotai/kimi-k2.5": {
-          "name": "3) moonshotai/kimi-k2.5"
+          "name": "5) moonshotai/kimi-k2.5"
         },
         "qwen3.6-plus": {
-          "name": "4) qwen3.6-plus"
+          "name": "6) qwen3.6-plus"
         },
         "deepseek-ai/deepseek-v3.2": {
-          "name": "5) deepseek-ai/deepseek-v3.2"
+          "name": "7) deepseek-ai/deepseek-v3.2"
         },
         "z-ai/glm5": {
-          "name": "6) z-ai/glm5"
+          "name": "8) z-ai/glm5"
         },
         "grok-4.1-fast": {
-          "name": "7) grok-4.1-fast"
+          "name": "9) grok-4.1-fast"
         }
       }
     },

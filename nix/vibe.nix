@@ -34,13 +34,12 @@
       nix-direnv
       asciinema
       asciinema-agg
-      gomplate
-      qutebrowser
-      unst.codex
-      gemini
-      (pkgs.writeShellApplication {
-        name = "qwen";
-        text = ''${unst.qwen-code}/bin/qwen -y "$@"'';
+      (writeShellApplication {
+        name = "notify-user";
+        text = ''
+          ${mpv}/bin/mpv \
+            "${sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga"
+        '';
       })
     ];
   };
@@ -51,7 +50,7 @@
   agentsMd = pkgs.writeTextFile {
     name = "AGENTS.md";
     text = ''
-      Read the `README.md` file if available. Study the project source code. Write your code in a strictly functional style while ensuring high efficiency. Examples of good code can be found in the latest versions of the crates `functora-tagged` and `functora`, study their source code and use a similar style. Avoid mutable variables (`mut`), imperative constructs (e.g., `for`, `while`, `loop`, or `return`), and instead use functional iterators and control flow with `?` operator. Eliminate redundant closures and variables. Maximize method chaining, always favor chaining and pipelining over temporary one-time variables. Use `?` instead of `.map_err(..)` where possible. Avoid `.clone()`, unnecessary allocations, and extra dependencies. Prefer the standard library exclusively when possible. Follow the existing project code style. Use meaningful, context-clear identifiers with a preference for brevity, as in the original code. Do not include comments; the code must be self-explanatory. Do not nest code blocks too much, avoid nesting brackets like `(.. (..) ..)` or `{.. { .. } ..}`, the code must be as flat as possible, deal with complexity using control flow `?` operator, chaining and piping methods. To check Rust code use the command `cargo clippy --all-features`. The code should not have any warnings or errors. To test Rust code use the command `cargo test --all-features`. To get Rust test coverage report use the command `cargo tarpaulin --all-features --engine llvm -o Lcov`, the report is written into `lcov.info` file. Test coverage should be as high as possible. All tests should be located in `./tests` directory. The final step is to format the code with `cargo fmt`.
+      Read the `README.md` file if available. Study the project source code. Write your code in a strictly functional style while ensuring high efficiency. Examples of good code can be found in the latest versions of the crates `functora-tagged` and `functora`, study their source code and use a similar style. Avoid mutable variables (`mut`), imperative constructs (e.g., `for`, `while`, `loop`, or `return`), and instead use functional iterators and control flow with `?` operator. Eliminate redundant closures and variables. Maximize method chaining, always favor chaining and pipelining over temporary one-time variables. Use `?` instead of `.map_err(..)` where possible. Avoid `.clone()`, unnecessary allocations, and extra dependencies. Prefer the standard library exclusively when possible. Follow the existing project code style. Use meaningful, context-clear identifiers with a preference for brevity, as in the original code. Do not include comments; the code must be self-explanatory. Do not nest code blocks too much, avoid nesting brackets like `(.. (..) ..)` or `{.. { .. } ..}`, the code must be as flat as possible, deal with complexity using control flow `?` operator, chaining and piping methods. To check Rust code use the command `cargo clippy --all-features`. The code should not have any warnings or errors. To test Rust code use the command `cargo test --all-features`. To get Rust test coverage report use the command `cargo tarpaulin --all-features --engine llvm -o Lcov`, the report is written into `lcov.info` file. Test coverage should be as high as possible. All tests should be located in `./tests` directory. The final step is to format the code with `cargo fmt`. When all jobs are done, notify user with `notify-user` command.
     '';
   };
   codexToml = pkgs.writeTextFile {

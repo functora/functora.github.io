@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": "allow",
   "model": "free-api/race->fallback",
   "provider": {
     "free-api": {

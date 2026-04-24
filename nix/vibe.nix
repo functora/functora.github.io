@@ -5,15 +5,6 @@
     inherit (pkgs) lib;
     inherit pkgs;
   };
-  gemini = pkgs.writeShellApplication {
-    name = "gemini";
-    text = ''
-      ${unst.gemini-cli}/bin/gemini \
-        --model gemini-2.5-flash-lite \
-        --yolo \
-        "$@"
-    '';
-  };
   app = pkgs.writeShellApplication {
     name = "vibe";
     text = "alacritty";

@@ -1977,7 +1977,7 @@ c.content.pdfjs = True
 c.content.blocking.method = "both"
 
 c.url.start_pages = ['about:blank']
-c.url.default_page = 'https://grok.com/'
+c.url.default_page = 'https://chatgpt.com/'
 c.url.searchengines = {
         'DEFAULT': 'https://google.com/search?q={}',
         'old': 'https://google.com/search?q=before:2023 {}',

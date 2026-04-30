@@ -6,6 +6,7 @@
     unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    opencode-nix.url = "github:dominicnunez/opencode-nix";
   };
 
   outputs = {
@@ -14,6 +15,7 @@
     unstable,
     rust-overlay,
     flake-utils,
+    opencode-nix,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -258,8 +260,8 @@
               (mkWeb "cryptonote")
               (mkApk "cryptonote")
               # tools
-              unst.opencode
               pkgs.qutebrowser
+              (opencode-nix.packages.${system}.default)
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''

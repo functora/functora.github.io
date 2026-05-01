@@ -3,6 +3,7 @@ use crate::{InfallibleInto, Tagged};
 use num_traits::*;
 use std::cmp::Ordering;
 use std::fmt::Debug;
+use std::ops::Deref;
 use tap::prelude::*;
 
 //
@@ -356,5 +357,115 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
             .collect::<W>()
             .pipe(Tagged::new)
             .unwrap()
+    }
+}
+
+//
+// Non-Empty (reference types via Deref)
+//
+
+impl<T, D> Tagged<T, D, FNonEmpty>
+where
+    T: Deref,
+{
+    pub fn ref_iter<'a, U>(
+        &'a self,
+    ) -> impl Iterator<Item = U> + 'a
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+    {
+        (**self).into_iter()
+    }
+
+    #[must_use]
+    pub fn ref_first<'a, U>(&'a self) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        (**self).into_iter().next().unwrap()
+    }
+
+    #[must_use]
+    pub fn ref_last<'a, U>(&'a self) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+        <&'a <T as Deref>::Target as IntoIterator>::IntoIter:
+            DoubleEndedIterator,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        (**self).into_iter().next_back().unwrap()
+    }
+
+    pub fn ref_minimum<'a, U>(&'a self) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+        U: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().min().unwrap()
+    }
+
+    pub fn ref_maximum<'a, U>(&'a self) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+        U: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().max().unwrap()
+    }
+
+    pub fn ref_min_by<'a, U>(
+        &'a self,
+        f: impl FnMut(&U, &U) -> Ordering,
+    ) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().min_by(f).unwrap()
+    }
+
+    pub fn ref_max_by<'a, U>(
+        &'a self,
+        f: impl FnMut(&U, &U) -> Ordering,
+    ) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().max_by(f).unwrap()
+    }
+
+    pub fn ref_min_by_key<'a, U, V>(
+        &'a self,
+        f: impl FnMut(&U) -> V,
+    ) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+        V: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().min_by_key(f).unwrap()
+    }
+
+    pub fn ref_max_by_key<'a, U, V>(
+        &'a self,
+        f: impl FnMut(&U) -> V,
+    ) -> U
+    where
+        &'a <T as Deref>::Target: IntoIterator<Item = U>,
+        V: Ord,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        self.ref_iter().max_by_key(f).unwrap()
     }
 }

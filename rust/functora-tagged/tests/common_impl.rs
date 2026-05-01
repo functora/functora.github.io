@@ -654,3 +654,84 @@ fn test_non_empty_into_preserves_nonempty() {
     assert_eq!(result.length(), 1);
     assert_eq!(result.first(), &42);
 }
+
+//
+// singleton
+//
+
+#[test]
+fn test_singleton_vec() {
+    let xs: NeVec = Tagged::singleton(42);
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), &42);
+    assert_eq!(xs.last(), &42);
+}
+
+#[test]
+fn test_singleton_vec_string() {
+    let xs: Tagged<Vec<String>, D, FNonEmpty> =
+        Tagged::singleton("hello".to_string());
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), "hello");
+}
+
+#[test]
+fn test_singleton_hashset() {
+    let xs: Tagged<HashSet<i32>, D, FNonEmpty> =
+        Tagged::singleton(99);
+    assert_eq!(xs.length(), 1);
+    assert!(xs.contains(&99));
+}
+
+#[test]
+fn test_singleton_btreeset() {
+    let xs: Tagged<BTreeSet<i32>, D, FNonEmpty> =
+        Tagged::singleton(7);
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), &7);
+}
+
+#[test]
+fn test_singleton_vecdeque() {
+    let xs: Tagged<VecDeque<i32>, D, FNonEmpty> =
+        Tagged::singleton(55);
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), &55);
+}
+
+#[test]
+fn test_singleton_hashmap() {
+    let xs: Tagged<
+        HashMap<i32, &'static str>,
+        D,
+        FNonEmpty,
+    > = Tagged::singleton((1, "one"));
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.get(&1), Some(&"one"));
+}
+
+#[test]
+fn test_singleton_btreemap() {
+    let xs: Tagged<
+        BTreeMap<i32, &'static str>,
+        D,
+        FNonEmpty,
+    > = Tagged::singleton((1, "one"));
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first().0, &1);
+}
+
+#[test]
+fn test_singleton_string() {
+    let xs: Tagged<String, D, FNonEmpty> =
+        Tagged::singleton('z');
+    assert_eq!(xs.length(), 1);
+    assert_eq!(&*xs, "z");
+}
+
+#[test]
+fn test_singleton_nonempty_type() {
+    let xs: NonEmpty<Vec<i32>> = NonEmpty::singleton(10);
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), &10);
+}

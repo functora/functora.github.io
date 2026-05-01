@@ -130,6 +130,19 @@ where
 //
 
 impl<T, D> Tagged<T, D, FNonEmpty> {
+    #[must_use]
+    pub fn singleton<U>(item: U) -> Self
+    where
+        T: Debug + HasLength + FromIterator<U>,
+    {
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        std::iter::once(item)
+            .collect::<T>()
+            .pipe(Tagged::new)
+            .unwrap()
+    }
+
     pub fn iter<'a, U>(&'a self) -> impl Iterator<Item = U>
     where
         &'a T: IntoIterator<Item = U>,

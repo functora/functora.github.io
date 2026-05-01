@@ -183,12 +183,32 @@ These methods return a new `Tagged<..., FNonEmpty>` value. Since they take owner
 | `rev()`      | Reverse elements              | Count remains same   |
 | `sort()`     | Sort elements                 | Count remains same   |
 | `dedup()`    | Remove consecutive duplicates | At least one remains |
-| `via_into()` | Convert via `From` trait       | Count remains same   |
+| `via_into()` | Convert via `From` trait      | Count remains same   |
 | `via_iter()` | Convert via iterator          | At least one remains |
 
 **`via_into()`** uses the standard `From` trait to convert between types (e.g., `Vec<T>` → `Vec<T>` identity conversion). This preserves the non-empty invariant because `From` implementations for collections typically preserve length.
 
 **`via_iter()`** uses `.into_iter().collect()` internally, which is more flexible and works for conversions between types that don't have a direct `From` implementation (e.g., `Vec<(K, V)>` → `HashMap<K, V>`, `Vec<T>` → `BTreeSet<T>`). Since at least one element is guaranteed to exist in a non-empty collection, the result is guaranteed to be non-empty.
+
+#### 3. Reference Types (`NonEmpty<&[T]>`, `NonEmpty<&str>`)
+
+`NonEmpty<T>` supports immutable reference types with zero allocation. For example, `NonEmpty::<&[i32]>::new(&vec)` validates a borrowed slice without cloning. When `T: Deref` and `&Target: IntoIterator` (e.g. `T = &[i32]`, `&[i32]: IntoIterator<Item = &i32>`), the following methods are available:
+
+| Tagged Method       | Returns               | Stdlib Analogue                           |
+| ------------------- | --------------------- | ----------------------------------------- |
+| `ref_first()`       | `&T`                  | `xs.first()` -> `Option<&T>`              |
+| `ref_last()`        | `&T`                  | `xs.last()` -> `Option<&T>`               |
+| `ref_iter()`        | `Iterator<Item = &T>` | `xs.iter()`                               |
+| `ref_minimum()`     | `&T`                  | `xs.iter().min()` -> `Option<&T>`         |
+| `ref_maximum()`     | `&T`                  | `xs.iter().max()` -> `Option<&T>`         |
+| `ref_min_by(f)`     | `&T`                  | `xs.iter().min_by(f)` -> `Option<&T>`     |
+| `ref_max_by(f)`     | `&T`                  | `xs.iter().max_by(f)` -> `Option<&T>`     |
+| `ref_min_by_key(f)` | `&T`                  | `xs.iter().min_by_key(f)` -> `Option<&T>` |
+| `ref_max_by_key(f)` | `&T`                  | `xs.iter().max_by_key(f)` -> `Option<&T>` |
+
+For `NonEmpty<&str>`, use `Deref` methods directly (`.chars()`, `.bytes()`) since `&str` does not implement `IntoIterator`.
+
+Self-consuming methods (`map`, `reduce`, `rev`, `sort`, `dedup`, `via_into`, `via_iter`) require owned data and are not available for reference types.
 
 #### Example
 
@@ -212,6 +232,14 @@ fn main() -> Result<(), Box<dyn Error>> {
   // 3. Infallible access: no Options, no unwraps!
   assert_eq!(sorted_upper.first(), "ALICE");
   assert_eq!(sorted_upper.last(), "BOB");
+
+  // 4. Reference types: zero-allocation NonEmpty
+  let vec = vec![10, 20, 30];
+  let xs = NonEmpty::<&[i32]>::new(&vec).unwrap();
+  assert_eq!(xs.ref_first(), &10);
+  assert_eq!(xs.ref_last(), &30);
+  assert_eq!(xs.ref_minimum(), &10);
+  assert_eq!(xs.ref_maximum(), &30);
 
   Ok(())
 }

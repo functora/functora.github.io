@@ -332,8 +332,10 @@
       }
       // mkDoom {
         tag = "ashes-2";
+        gfx = "";
         total = "${../bak/doom/ashes151/Resources/AshesSAMenu.pk3} ${../bak/doom/ashes151/Resources/lightmodepatch.pk3} ${../bak/doom/ashes151/Resources/AshesAfterglow1_16.pk3} ${../bak/doom/ashes-mods/Sprite-Fixes.pk3} ${../bak/doom/ashes-mods/ashesafterglow_buildmovev54.pk3} ${../bak/doom/ashes-mods/Ashes_AG_cutscene_update.pk3} ${../bak/doom/ashes-mods/ashes_nightvisor.pk3} ${../bak/doom/ashes-mods/AshesVoxelPickups-Ep2.pk3} ${../bak/doom/ashes-mods/ashes-wpn-tracers.pk3} ${../bak/doom/ashes-mods/Dan_Ashes_Afterglow_After_Effects.pk3}";
         liquid = "";
+        lights = "";
         relite = "";
         nashgore = ../bak/doom/nashgore.pk3;
       }

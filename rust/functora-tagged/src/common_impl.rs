@@ -143,6 +143,21 @@ impl<T, D> Tagged<T, D, FNonEmpty> {
             .unwrap()
     }
 
+    #[must_use]
+    pub fn extend<U>(
+        self,
+        iter: impl IntoIterator<Item = U>,
+    ) -> Self
+    where
+        T: Debug + HasLength + Extend<U>,
+    {
+        let mut rep = self.untag();
+        rep.extend(iter);
+        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::missing_panics_doc)]
+        rep.pipe(Tagged::new).unwrap()
+    }
+
     pub fn iter<'a, U>(&'a self) -> impl Iterator<Item = U>
     where
         &'a T: IntoIterator<Item = U>,

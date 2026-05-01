@@ -735,3 +735,98 @@ fn test_singleton_nonempty_type() {
     assert_eq!(xs.length(), 1);
     assert_eq!(xs.first(), &10);
 }
+
+// extend
+
+#[test]
+fn test_extend_vec() {
+    let xs = NeVec::singleton(1).extend([2, 3]);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(xs.first(), &1);
+    assert_eq!(xs.last(), &3);
+}
+
+#[test]
+fn test_extend_vec_empty_iter() {
+    let xs = NeVec::singleton(42).extend::<i32>([]);
+    assert_eq!(xs.length(), 1);
+    assert_eq!(xs.first(), &42);
+}
+
+#[test]
+fn test_extend_vec_string() {
+    let xs: Tagged<Vec<String>, D, FNonEmpty> =
+        Tagged::<Vec<String>, D, FNonEmpty>::singleton(
+            "a".to_string(),
+        )
+        .extend(["b".to_string(), "c".to_string()]);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(xs.first(), "a");
+    assert_eq!(xs.last(), "c");
+}
+
+#[test]
+fn test_extend_hashset() {
+    let xs: Tagged<HashSet<i32>, D, FNonEmpty> =
+        Tagged::<HashSet<i32>, D, FNonEmpty>::singleton(1)
+            .extend([2, 3]);
+    assert_eq!(xs.length(), 3);
+    assert!(xs.contains(&1));
+    assert!(xs.contains(&2));
+    assert!(xs.contains(&3));
+}
+
+#[test]
+fn test_extend_btreeset() {
+    let xs: Tagged<BTreeSet<i32>, D, FNonEmpty> =
+        Tagged::<BTreeSet<i32>, D, FNonEmpty>::singleton(1)
+            .extend([3, 2]);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(xs.first(), &1);
+    assert_eq!(xs.last(), &3);
+}
+
+#[test]
+fn test_extend_vecdeque() {
+    let xs: Tagged<VecDeque<i32>, D, FNonEmpty> =
+        Tagged::<VecDeque<i32>, D, FNonEmpty>::singleton(1)
+            .extend([2, 3]);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(xs.first(), &1);
+    assert_eq!(xs.last(), &3);
+}
+
+#[test]
+fn test_extend_hashmap() {
+    let xs: Tagged<HashMap<i32, &'static str>, D, FNonEmpty> =
+        Tagged::<HashMap<i32, &'static str>, D, FNonEmpty>::singleton((1, "one")).extend([(2, "two"), (3, "three")]);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(xs.get(&1), Some(&"one"));
+    assert_eq!(xs.get(&2), Some(&"two"));
+}
+
+#[test]
+fn test_extend_btreemap() {
+    let xs: Tagged<BTreeMap<i32, &'static str>, D, FNonEmpty> =
+        Tagged::<BTreeMap<i32, &'static str>, D, FNonEmpty>::singleton((1, "one")).extend([(2, "two")]);
+    assert_eq!(xs.length(), 2);
+    assert_eq!(xs.first().0, &1);
+}
+
+#[test]
+fn test_extend_string() {
+    let xs: Tagged<String, D, FNonEmpty> =
+        Tagged::<String, D, FNonEmpty>::singleton('a')
+            .extend(['b', 'c']);
+    assert_eq!(xs.length(), 3);
+    assert_eq!(&*xs, "abc");
+}
+
+#[test]
+fn test_extend_chained() {
+    let xs =
+        NeVec::singleton(1).extend([2, 3]).extend([4, 5]);
+    assert_eq!(xs.length(), 5);
+    assert_eq!(xs.first(), &1);
+    assert_eq!(xs.last(), &5);
+}

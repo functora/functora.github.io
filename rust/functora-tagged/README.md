@@ -175,11 +175,12 @@ Standard library methods often return `Option<T>` for potentially empty collecti
 
 #### 2. Construction
 
-| Method         | Returns | Description                              |
-| -------------- | ------- | ---------------------------------------- |
-| `singleton(x)` | `Self`  | Create from a single element, infallibly |
+| Method         | Returns | Description                                  |
+| -------------- | ------- | -------------------------------------------- |
+| `singleton(x)` | `Self`  | Create from a single element, infallibly     |
+| `extend(iter)` | `Self`  | Append elements from an iterator, infallibly |
 
-Since a single element always satisfies the non-empty invariant, `singleton` returns `Self` directly (not a `Result`), making it the simplest way to construct a non-empty collection.
+Since a single element always satisfies the non-empty invariant, `singleton` returns `Self` directly (not a `Result`), making it the simplest way to construct a non-empty collection. Similarly, `extend` is infallible because extending a non-empty collection always produces a non-empty result.
 
 #### 3. Invariant Preservation
 
@@ -233,6 +234,11 @@ fn main() -> Result<(), Box<dyn Error>> {
   // 0. Construction: singleton is infallible
   let one = Names::singleton("Eve".to_string());
   assert_eq!(one.first(), "Eve");
+
+  // extend is also infallible, and chains naturally
+  let more = one.extend(["Frank".to_string(), "Grace".to_string()]);
+  assert_eq!(more.first(), "Eve");
+  assert_eq!(more.last(), "Grace");
 
   // 1. Invariant Preservation: map returns a refined collection
   // It consumes 'names' to avoid cloning the Strings

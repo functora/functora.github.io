@@ -173,7 +173,15 @@ Standard library methods often return `Option<T>` for potentially empty collecti
 | `maximum()`   | `&T`    | `xs.iter().max()` -> `Option<&T>`    |
 | `reduce(f)`   | `T`     | `xs.iter().reduce(f)` -> `Option<T>` |
 
-#### 2. Invariant Preservation
+#### 2. Construction
+
+| Method         | Returns | Description                              |
+| -------------- | ------- | ---------------------------------------- |
+| `singleton(x)` | `Self`  | Create from a single element, infallibly |
+
+Since a single element always satisfies the non-empty invariant, `singleton` returns `Self` directly (not a `Result`), making it the simplest way to construct a non-empty collection.
+
+#### 3. Invariant Preservation
 
 These methods return a new `Tagged<..., FNonEmpty>` value. Since they take ownership of `self`, they can leverage `into_iter()` to perform transformations without cloning individual elements. This makes them highly efficient for complex or large underlying data.
 
@@ -190,7 +198,7 @@ These methods return a new `Tagged<..., FNonEmpty>` value. Since they take owner
 
 **`via_iter()`** uses `.into_iter().collect()` internally, which is more flexible and works for conversions between types that don't have a direct `From` implementation (e.g., `Vec<(K, V)>` → `HashMap<K, V>`, `Vec<T>` → `BTreeSet<T>`). Since at least one element is guaranteed to exist in a non-empty collection, the result is guaranteed to be non-empty.
 
-#### 3. Reference Types (`NonEmpty<&[T]>`, `NonEmpty<&str>`)
+#### 4. Reference Types (`NonEmpty<&[T]>`, `NonEmpty<&str>`)
 
 `NonEmpty<T>` supports immutable reference types with zero allocation. For example, `NonEmpty::<&[i32]>::new(&vec)` validates a borrowed slice without cloning. When `T: Deref` and `&Target: IntoIterator` (e.g. `T = &[i32]`, `&[i32]: IntoIterator<Item = &i32>`), the following methods are available:
 
@@ -221,6 +229,10 @@ fn main() -> Result<(), Box<dyn Error>> {
   pub type Names = Tagged<Vec<String>, DNames, FNonEmpty>;
 
   let names = Names::new(vec!["Alice".to_string(), "Bob".to_string()])?;
+
+  // 0. Construction: singleton is infallible
+  let one = Names::singleton("Eve".to_string());
+  assert_eq!(one.first(), "Eve");
 
   // 1. Invariant Preservation: map returns a refined collection
   // It consumes 'names' to avoid cloning the Strings

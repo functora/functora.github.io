@@ -1,7 +1,7 @@
 use crate::error::*;
 use aes_gcm::{
-    Aes256Gcm,
     aead::{Aead, KeyInit},
+    Aes256Gcm,
 };
 use chacha20poly1305::ChaCha20Poly1305;
 use hkdf::Hkdf;

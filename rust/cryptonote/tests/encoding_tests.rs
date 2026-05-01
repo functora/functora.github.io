@@ -1,7 +1,7 @@
-use cryptonote::crypto::{CipherType, encrypt_symmetric};
+use cryptonote::crypto::{encrypt_symmetric, CipherType};
 use cryptonote::encoding::{
-    NoteData, build_url, decode_note, encode_note,
-    generate_qr_code,
+    build_url, decode_note, encode_note, generate_qr_code,
+    NoteData,
 };
 
 #[test]

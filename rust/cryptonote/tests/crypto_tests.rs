@@ -1,6 +1,6 @@
 use cryptonote::crypto::{
-    CipherType, decrypt_symmetric, derive_key,
-    encrypt_symmetric,
+    decrypt_symmetric, derive_key, encrypt_symmetric,
+    CipherType,
 };
 
 const SALT_SIZE: usize = 32;

@@ -12,7 +12,7 @@ pub use dioxus_free_icons::icons::fa_solid_icons::{
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;
-pub use enum_iterator::{Sequence, next_cycle};
+pub use enum_iterator::{next_cycle, Sequence};
 pub use functora::*;
 pub use serde::de::DeserializeOwned;
 pub use serde::{Deserialize, Serialize};

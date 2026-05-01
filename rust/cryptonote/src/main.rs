@@ -40,7 +40,7 @@ fn App() -> Element {
     #[cfg(target_arch = "wasm32")]
     let cfg = {
         use dioxus_sdk::storage::{
-            LocalStorage, use_synced_storage,
+            use_synced_storage, LocalStorage,
         };
         use_synced_storage::<LocalStorage, AppCfg>(
             APP_STORAGE_KEY.to_string(),

@@ -1,4 +1,4 @@
-use crate::i18n::{Language, detect_browser_language};
+use crate::i18n::{detect_browser_language, Language};
 use crate::js::Theme;
 use crate::prelude::*;
 pub mod mobile;

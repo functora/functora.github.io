@@ -1,9 +1,9 @@
 use crate::crypto::*;
 use crate::error::*;
 use base64::{
-    Engine, engine::general_purpose::URL_SAFE_NO_PAD,
+    engine::general_purpose::URL_SAFE_NO_PAD, Engine,
 };
-use qrcode::{QrCode, render::svg};
+use qrcode::{render::svg, QrCode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

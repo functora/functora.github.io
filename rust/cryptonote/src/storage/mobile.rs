@@ -2,10 +2,10 @@ use derive_more::Display;
 use dioxus::{logger::tracing, prelude::*};
 use serde::de::DeserializeOwned;
 use serde_json::{
-    Value, from_str, from_value, to_string_pretty, to_value,
+    from_str, from_value, to_string_pretty, to_value, Value,
 };
 use std::{
-    fs::{OpenOptions, read_to_string, write},
+    fs::{read_to_string, write, OpenOptions},
     path::{Path, PathBuf},
     sync::OnceLock,
 };
@@ -159,8 +159,8 @@ pub fn use_storage<
 
 #[cfg(target_os = "android")]
 pub fn files_dir() -> Result<PathBuf, StorageError> {
-    use jni::JNIEnv;
     use jni::objects::{JObject, JString};
+    use jni::JNIEnv;
     use std::sync::mpsc::channel;
 
     let (tx, rx) = channel();

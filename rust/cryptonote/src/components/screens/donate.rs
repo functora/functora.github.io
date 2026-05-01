@@ -1,5 +1,5 @@
 use crate::*;
-use qrcode::{QrCode, render::svg};
+use qrcode::{render::svg, QrCode};
 
 const BTC_ADDRESS: &str =
     "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q";

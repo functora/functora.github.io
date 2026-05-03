@@ -28,8 +28,10 @@
       (writeShellApplication {
         name = "notify-user";
         text = ''
-          ${mpv}/bin/mpv \
-            "${sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga"
+          for _ in $(seq 3); do
+            ${mpv}/bin/mpv \
+              "${sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga"
+          done
         '';
       })
     ];

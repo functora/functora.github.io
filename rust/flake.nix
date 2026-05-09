@@ -260,6 +260,7 @@
               (mkWeb "cryptonote")
               (mkApk "cryptonote")
               # tools
+              pkgs.chromium
               pkgs.qutebrowser
               (opencode-nix.packages.${system}.default)
               (pkgs.writeShellApplication {

@@ -5,6 +5,7 @@ use base64::{
 };
 use qrcode::{render::svg, QrCode};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NoteData {
@@ -34,8 +35,37 @@ pub fn build_url(
     encode_note(note).map(|encoded| {
         let separator =
             if base_url.contains('?') { "&" } else { "?" };
-        format!("{}{}note={}", base_url, separator, encoded)
+        format!(
+            "{}{}note={}",
+            base_url,
+            separator,
+            urlencoding::encode(&encoded)
+        )
     })
+}
+
+pub fn extract_note_param(
+    url: &str,
+) -> Result<String, AppError> {
+    url.split('?')
+        .nth(1)
+        .ok_or(AppError::NoNoteParam)
+        .and_then(|query| {
+            query
+                .split('&')
+                .find_map(|param| {
+                    let mut parts = param.splitn(2, '=');
+                    match (parts.next(), parts.next()) {
+                        (Some("note"), Some(value)) => {
+                            Some(urlencoding::decode(value))
+                        }
+                        _ => None,
+                    }
+                })
+                .ok_or(AppError::NoNoteParam)
+        })?
+        .map(Cow::into_owned)
+        .map_err(Into::into)
 }
 
 pub fn generate_qr_code(

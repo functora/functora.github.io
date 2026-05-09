@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use crate::*;
+use hkdf::InvalidLength;
 use qrcode::types::QrError;
 use sha2::digest;
 use std::string::FromUtf8Error;
@@ -7,6 +8,7 @@ use std::string::FromUtf8Error;
 #[derive(Debug, Display)]
 pub enum AppError {
     Cipher(digest::InvalidLength),
+    KeyDerive(InvalidLength),
     Getrandom(getrandom::Error),
     Base64(base64::DecodeError),
     Json(serde_json::Error),
@@ -27,6 +29,7 @@ impl AppError {
     ) -> String {
         let msg = match self {
             AppError::Cipher(_) => t.cipher_error,
+            AppError::KeyDerive(_) => t.cipher_error,
             AppError::Getrandom(_) => t.getrandom_error,
             AppError::Base64(_) => t.base64_error,
             AppError::Json(_) => t.json_error,
@@ -34,7 +37,6 @@ impl AppError {
             AppError::Qr(_) => t.qr_error,
             AppError::Encrypt => t.encrypt_error,
             AppError::Decrypt => t.decrypt_error,
-
             AppError::PasswordRequired => {
                 t.password_required
             }
@@ -53,6 +55,12 @@ impl std::error::Error for AppError {}
 impl From<digest::InvalidLength> for AppError {
     fn from(e: digest::InvalidLength) -> Self {
         AppError::Cipher(e)
+    }
+}
+
+impl From<InvalidLength> for AppError {
+    fn from(e: InvalidLength) -> Self {
+        AppError::KeyDerive(e)
     }
 }
 

@@ -37,22 +37,21 @@ pub fn derive_key(
     password: &str,
     salt: &[u8],
     cipher: CipherType,
-) -> Vec<u8> {
+) -> Result<Vec<u8>, AppError> {
     let key_len = match cipher {
         CipherType::ChaCha20Poly1305 => 32,
         CipherType::Aes256Gcm => 32,
     };
-    let hk = Hkdf::<Sha256>::new(
-        Some(salt),
-        password.as_bytes(),
-    );
-    (0..key_len)
-        .scan(vec![0u8; key_len], |key, _| {
-            hk.expand(b"cryptonote-key", key).ok()?;
-            Some(key.clone())
-        })
-        .last()
-        .unwrap_or_else(|| vec![0u8; key_len])
+    let mut key = vec![0u8; key_len];
+    Hkdf::<Sha256>::new(Some(salt), password.as_bytes())
+        .expand(b"cryptonote-key", &mut key)?;
+    Ok(key)
+}
+
+fn random_vec(n: usize) -> Vec<u8> {
+    let mut v = vec![0u8; n];
+    getrandom::getrandom(&mut v).ok();
+    v
 }
 
 pub fn encrypt_symmetric(
@@ -60,11 +59,9 @@ pub fn encrypt_symmetric(
     password: &str,
     cipher: CipherType,
 ) -> Result<EncryptedData, AppError> {
-    let mut salt = vec![0u8; SALT_SIZE];
-    getrandom::getrandom(&mut salt)?;
-    let key = derive_key(password, &salt, cipher);
-    let mut nonce = vec![0u8; NONCE_SIZE];
-    getrandom::getrandom(&mut nonce)?;
+    let salt = random_vec(SALT_SIZE);
+    let key = derive_key(password, &salt, cipher)?;
+    let nonce = random_vec(NONCE_SIZE);
 
     let ciphertext = match cipher {
         CipherType::ChaCha20Poly1305 => {
@@ -98,11 +95,10 @@ pub fn decrypt_symmetric(
     data: &EncryptedData,
     password: &str,
 ) -> Result<Vec<u8>, AppError> {
-    let cipher = data.cipher;
-    let salt = &data.salt;
-    let key = derive_key(password, salt, cipher);
+    let key =
+        derive_key(password, &data.salt, data.cipher)?;
 
-    match cipher {
+    match data.cipher {
         CipherType::ChaCha20Poly1305 => {
             let cipher =
                 ChaCha20Poly1305::new_from_slice(&key)?;

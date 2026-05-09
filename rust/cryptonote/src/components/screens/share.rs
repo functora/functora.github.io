@@ -128,7 +128,7 @@ pub fn Share() -> Element {
                         }
                     }
                 }
-            } else if !message.read().is_none() {
+            } else if message.read().is_some() {
                 Dock { message }
             } else {
                 p { "{t.loading}" }

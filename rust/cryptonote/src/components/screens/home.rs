@@ -24,13 +24,11 @@ pub fn Home() -> Element {
         }
 
         match extract_note_param(&url) {
-            Some(note) => {
+            Ok(note) => {
                 nav.push(Screen::View.to_route(Some(note)));
             }
-            None => {
-                message.set(Some(UiMessage::Error(
-                    AppError::NoNoteParam,
-                )));
+            Err(e) => {
+                message.set(Some(UiMessage::Error(e)));
             }
         }
     };
@@ -219,18 +217,4 @@ pub fn Home() -> Element {
             }
         }
     }
-}
-
-fn extract_note_param(url: &str) -> Option<String> {
-    url.split('?').nth(1).and_then(|query| {
-        query.split('&').find_map(|param| {
-            let mut parts = param.split('=');
-            match (parts.next(), parts.next()) {
-                (Some("note"), Some(value)) => {
-                    Some(value.to_string())
-                }
-                _ => None,
-            }
-        })
-    })
 }

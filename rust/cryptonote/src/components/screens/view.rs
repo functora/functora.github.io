@@ -27,11 +27,8 @@ pub fn View(note: Option<String>) -> Element {
                         NoteData::PlainText(text) => {
                             note_content
                                 .set(Some(text.clone()));
-                            ctx.set(AppCtx {
-                                content: text,
-                                cipher: None,
-                                ..Default::default()
-                            });
+                            ctx.write().content = text;
+                            ctx.write().cipher = None;
                         }
                     },
                     Err(e) => message
@@ -67,13 +64,10 @@ pub fn View(note: Option<String>) -> Element {
                             note_content
                                 .set(Some(text.clone()));
                             is_encrypted.set(false);
-
-                            ctx.set(AppCtx {
-                                content: text,
-                                password: pwd,
-                                cipher: Some(enc.cipher),
-                                ..Default::default()
-                            });
+                            ctx.write().content = text;
+                            ctx.write().password = pwd;
+                            ctx.write().cipher =
+                                Some(enc.cipher);
                         }
                         Err(e) => message.set(Some(
                             UiMessage::Error(

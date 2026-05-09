@@ -136,11 +136,26 @@ pub fn View(note: Option<String>) -> Element {
                         }
                         Button {
                             icon: FaPenToSquare,
-                            primary: true,
                             onclick: move |_| {
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.edit_note}"
+                        }
+                        Button {
+                            icon: FaCopy,
+                            primary: true,
+                            onclick: move |_| {
+                                let content = content.clone();
+                                spawn(async move {
+                                    match js_write_clipboard(content).await {
+                                        Ok(()) => message.set(Some(UiMessage::Copied)),
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
+                                        }
+                                    }
+                                });
+                            },
+                            "{t.copy_button}"
                         }
                     }
                 }

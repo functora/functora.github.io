@@ -21,3 +21,59 @@ input[type="radio"] + label,
 input[type="checkbox"] + label {
   cursor: pointer;
 }
+
+.qr-scanner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.qr-scanner-container {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.qr-scanner-container h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.qr-video {
+  width: 100%;
+  height: auto;
+  background: #000;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.qr-scanner-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .qr-scanner-overlay {
+    padding: 0.5rem;
+  }
+  .qr-scanner-container {
+    padding: 1rem;
+  }
+}

@@ -11,6 +11,7 @@ pub fn Home() -> Element {
         use_signal(|| Option::<UiMessage>::None);
 
     let mut url_input = use_signal(String::new);
+    let mut qr_scanner_open = use_signal(|| false);
 
     let open_url = move |_| {
         message.set(None);
@@ -205,6 +206,11 @@ pub fn Home() -> Element {
 
                     Dock { message,
                         Button {
+                            icon: FaQrcode,
+                            onclick: move |_| qr_scanner_open.set(true),
+                            "{t.scan_qr_button}"
+                        }
+                        Button {
                             icon: FaTrash,
                             onclick: move |_| {
                                 message.set(None);
@@ -218,6 +224,25 @@ pub fn Home() -> Element {
                             onclick: open_url,
                             "{t.open_button}"
                         }
+                    }
+                }
+
+                if qr_scanner_open() {
+                    QrScanner {
+                        on_scan: Callback::new(move |url: String| {
+                            qr_scanner_open.set(false);
+                            match extract_note_param(&url) {
+                                Ok(note) => {
+                                    nav.push(Screen::View.to_route(Some(note)));
+                                }
+                                Err(e) => {
+                                    message.set(Some(UiMessage::Error(e)));
+                                }
+                            }
+                        }),
+                        on_close: Callback::new(move |_| {
+                            qr_scanner_open.set(false);
+                        }),
                     }
                 }
             }

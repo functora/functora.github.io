@@ -37,6 +37,13 @@ dioxus-free-icons = { version = "0.10.0", features = [
 ] }
 dioxus-sdk = { version = "0.7.0", features = ["storage"] }
 tap = "1.0.1"
+rxing = { version = "0.9.0", default-features = false, features = [
+  "wasm_support",
+  "encoding_rs",
+  "decoders",
+  "qrcode",
+] }
+gloo-timers = { version = "0.3", features = ["futures"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"

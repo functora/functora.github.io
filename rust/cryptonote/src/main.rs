@@ -7,6 +7,7 @@ mod i18n;
 mod js;
 mod markdown;
 mod prelude;
+mod qr_decode;
 mod storage;
 
 pub use components::*;
@@ -18,6 +19,7 @@ pub use i18n::*;
 pub use js::*;
 pub use markdown::*;
 pub use prelude::*;
+pub use qr_decode::*;
 pub use storage::*;
 
 const FAVICON_ICO: Asset =

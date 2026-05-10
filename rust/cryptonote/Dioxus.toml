@@ -25,3 +25,6 @@ script = []
 publisher = "Functora"
 identifier = "com.functora.cryptonote"
 icon = ["assets/favicon/android-chrome-512x512.png"]
+
+[permissions]
+camera = { description = "Scan QR codes" }

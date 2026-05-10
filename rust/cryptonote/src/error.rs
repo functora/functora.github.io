@@ -20,6 +20,9 @@ pub enum AppError {
     NoNoteInUrl,
     NoNoteParam,
     JsWriteClipboard(EvalError),
+    CameraNotAvailable,
+    CameraPermissionDenied,
+    QrDecode,
 }
 
 impl AppError {
@@ -45,6 +48,13 @@ impl AppError {
             AppError::JsWriteClipboard(_) => {
                 t.clipboard_write_error
             }
+            AppError::CameraNotAvailable => {
+                t.qr_camera_not_available
+            }
+            AppError::CameraPermissionDenied => {
+                t.qr_permission_denied
+            }
+            AppError::QrDecode => t.qr_error,
         };
         format!("{}: {}", msg, self)
     }

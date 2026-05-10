@@ -42,14 +42,24 @@ pub fn View(note: Option<String>) -> Element {
                         .set(Some(UiMessage::Error(e))),
                 }
             } else {
+                let content = ctx.read().content.clone();
+                if content.is_empty() {
+                    message.set(Some(UiMessage::Error(
+                        AppError::NoNoteInUrl,
+                    )));
+                } else {
+                    note_content.set(Some(content));
+                }
+            }
+        } else {
+            let content = ctx.read().content.clone();
+            if content.is_empty() {
                 message.set(Some(UiMessage::Error(
                     AppError::NoNoteInUrl,
                 )));
+            } else {
+                note_content.set(Some(content));
             }
-        } else {
-            message.set(Some(UiMessage::Error(
-                AppError::NoNoteInUrl,
-            )));
         }
     });
 

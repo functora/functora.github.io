@@ -2,6 +2,7 @@ use crate::*;
 
 #[component]
 pub fn Share() -> Element {
+    let nav = use_app_nav();
     let cfg = use_context::<Signal<AppCfg>>();
     let ctx = use_context::<Signal<AppCtx>>();
     let t = get_translations(cfg.read().language);
@@ -110,6 +111,13 @@ pub fn Share() -> Element {
                     }
 
                     Dock { message,
+                        Button {
+                            icon: FaEye,
+                            onclick: move |_| {
+                                nav.push(Screen::View.to_route(None));
+                            },
+                            "{t.view_button}"
+                        }
                         Button {
                             icon: FaCopy,
                             primary: true,

@@ -6,13 +6,13 @@ pub use dioxus_free_icons::icons::fa_brands_icons::{
     FaAndroid, FaGithub, FaGoogle, FaGooglePlay,
 };
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaCopy, FaDownload, FaFolderOpen, FaHeart,
-    FaLock, FaLockOpen, FaPenToSquare, FaShareNodes,
-    FaSquarePlus, FaTrash, FaUser,
+    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen,
+    FaHeart, FaLock, FaLockOpen, FaPenToSquare,
+    FaShareNodes, FaSquarePlus, FaTrash, FaUser,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;
-pub use enum_iterator::{next_cycle, Sequence};
+pub use enum_iterator::{Sequence, next_cycle};
 pub use functora::*;
 pub use serde::de::DeserializeOwned;
 pub use serde::{Deserialize, Serialize};

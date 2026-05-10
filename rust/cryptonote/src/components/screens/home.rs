@@ -120,7 +120,6 @@ pub fn Home() -> Element {
                     }
                     br {}
 
-
                     input {
                         r#type: "radio",
                         checked: ctx.read().cipher.is_none(),
@@ -177,6 +176,13 @@ pub fn Home() -> Element {
                                 ctx.set(AppCtx::default());
                             },
                             "{t.create_new_note}"
+                        }
+                        Button {
+                            icon: FaEye,
+                            onclick: move |_| {
+                                nav.push(Screen::View.to_route(None));
+                            },
+                            "{t.view_button}"
                         }
                         Button {
                             icon: FaShareNodes,

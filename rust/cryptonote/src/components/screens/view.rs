@@ -14,6 +14,13 @@ pub fn View(note: Option<String>) -> Element {
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
     let mut is_encrypted = use_signal(|| false);
+    let rendered = use_memo(move || {
+        note_content
+            .read()
+            .as_ref()
+            .map(String::as_str)
+            .map(render_markdown)
+    });
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -122,7 +129,7 @@ pub fn View(note: Option<String>) -> Element {
             section {
                 fieldset {
                     article {
-                        Pre { "{content}" }
+                        div { dangerous_inner_html: "{rendered().unwrap_or_default()}" }
                     }
 
                     Dock { message,

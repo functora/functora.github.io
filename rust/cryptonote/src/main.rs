@@ -5,6 +5,7 @@ mod error;
 mod hooks;
 mod i18n;
 mod js;
+mod markdown;
 mod prelude;
 mod storage;
 
@@ -15,6 +16,7 @@ pub use error::*;
 pub use hooks::*;
 pub use i18n::*;
 pub use js::*;
+pub use markdown::*;
 pub use prelude::*;
 pub use storage::*;
 

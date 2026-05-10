@@ -4,7 +4,7 @@ Cryptonote is a cross-platform, fully offline application for creating, storing,
 
 With Cryptonote, you can:
 
-- Write a short plain-text note
+- Write a note in Markdown or HTML
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code

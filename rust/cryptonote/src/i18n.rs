@@ -113,7 +113,7 @@ pub fn get_translations(lang: Language) -> Translations {
     match lang {
         Language::English => Translations {
             note: "Note",
-            note_placeholder: "Enter your note here...",
+            note_placeholder: "Enter your note here (Markdown/HTML supported)...",
             mode: "Mode",
             no_encryption: "No encryption (plaintext)",
             password_encryption: "Password encryption",
@@ -221,6 +221,7 @@ If you have any questions regarding privacy while using the Application, or have
 
 Features:
 - Write plain-text notes
+- Support for Markdown and HTML
 - Encrypt with strong algorithms (AES-GCM, ChaCha20-Poly1305) or leave unencrypted
 - Share via URL or QR code
 
@@ -251,7 +252,7 @@ Secure, private, offline - your notes remain yours."#,
         },
         Language::Spanish => Translations {
             note: "Nota",
-            note_placeholder: "Escribe tu nota aquí...",
+            note_placeholder: "Escribe tu nota aquí (Markdown/HTML soportado)...",
             mode: "Modo",
             no_encryption: "Sin cifrado (texto plano)",
             password_encryption: "Cifrado con contraseña",
@@ -359,6 +360,7 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
 
 Características:
 - Escriba notas de texto plano
+- Soporte para Markdown y HTML
 - Cifre con algoritmos fuertes (AES-GCM, ChaCha20-Poly1305) o déjelas sin cifrar
 - Comparta vía URL o código QR
 
@@ -389,7 +391,7 @@ Seguro, privado, offline - sus notas son solo suyas."#,
         },
         Language::Russian => Translations {
             note: "Заметка",
-            note_placeholder: "Введите вашу заметку здесь...",
+            note_placeholder: "Введите вашу заметку здесь (Markdown/HTML поддерживается)...",
             mode: "Режим",
             no_encryption: "Без шифрования (открытый текст)",
             password_encryption: "Шифрование паролем",
@@ -497,6 +499,7 @@ Seguro, privado, offline - sus notas son solo suyas."#,
 
 Возможности:
 - Пишите текстовые заметки
+- Поддержка Markdown и HTML
 - Шифруйте надежными алгоритмами (AES-GCM, ChaCha20-Poly1305) или оставляйте открытыми
 - Делитесь через URL или QR-код
 

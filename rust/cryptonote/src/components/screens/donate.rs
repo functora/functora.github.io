@@ -62,7 +62,6 @@ pub fn Donate() -> Element {
                     div { dangerous_inner_html: "{qr}" }
                 }
 
-
                 textarea {
                     readonly: true,
                     rows: "2",

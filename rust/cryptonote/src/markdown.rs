@@ -1,5 +1,5 @@
 use ammonia::clean;
-use pulldown_cmark::{Options, Parser, html};
+use pulldown_cmark::{html, Options, Parser};
 use tap::Pipe;
 
 pub fn render_markdown(content: &str) -> String {

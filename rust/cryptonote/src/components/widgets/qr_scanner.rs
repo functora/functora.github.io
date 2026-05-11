@@ -12,8 +12,9 @@ mod imp {
         on_scan: EventHandler<String>,
         on_close: EventHandler<()>,
     ) -> Element {
-        let cfg = use_context::<Signal<AppCfg>>();
-        let t = get_translations(cfg.read().language);
+        let t = get_translations(
+            use_context::<Signal<AppCfg>>().read().language,
+        );
         let mut message =
             use_signal(|| Option::<UiMessage>::None);
         let mut scanning = use_signal(|| true);
@@ -76,31 +77,21 @@ mod imp {
         });
 
         rsx! {
-            div {
-                class: "qr-scanner-overlay",
-                div {
-                    class: "qr-scanner-container",
-                    h3 { "{t.qr_scanner_title}" }
-                    video {
-                        id: "qr-video",
-                        autoplay: true,
-                        playsinline: true,
-                        class: "qr-video",
-                    }
-                    canvas { id: "qr-canvas", style: "display:none" }
-                    if message.read().is_some() {
-                        Message { message }
-                    }
-                    div {
-                        class: "qr-scanner-actions",
-                        Button {
-                            icon: FaArrowLeft,
-                            onclick: move |_| {
-                                scanning.set(false);
-                                on_close.call(());
-                            },
-                            "{t.back_button}"
-                        }
+            section {
+                h3 { "{t.qr_scanner_title}" }
+                video { id: "qr-video", autoplay: true, playsinline: true }
+                canvas { id: "qr-canvas", style: "display:none" }
+                if message.read().is_some() {
+                    Message { message }
+                }
+                p {
+                    Button {
+                        icon: FaArrowLeft,
+                        onclick: move |_| {
+                            scanning.set(false);
+                            on_close.call(());
+                        },
+                        "{t.back_button}"
                     }
                 }
             }
@@ -121,23 +112,19 @@ mod imp {
         on_scan: EventHandler<String>,
         on_close: EventHandler<()>,
     ) -> Element {
-        let cfg = use_context::<Signal<AppCfg>>();
-        let t = get_translations(cfg.read().language);
+        let t = get_translations(
+            use_context::<Signal<AppCfg>>().read().language,
+        );
 
         rsx! {
-            div {
-                class: "qr-scanner-overlay",
-                div {
-                    class: "qr-scanner-container",
-                    h3 { "{t.qr_scanner_title}" }
-                    p { "{t.qr_camera_not_available}" }
-                    div {
-                        class: "qr-scanner-actions",
-                        Button {
-                            icon: FaArrowLeft,
-                            onclick: move |_| on_close.call(()),
-                            "{t.back_button}"
-                        }
+            section {
+                h3 { "{t.qr_scanner_title}" }
+                p { "{t.qr_camera_not_available}" }
+                p {
+                    Button {
+                        icon: FaArrowLeft,
+                        onclick: move |_| on_close.call(()),
+                        "{t.back_button}"
                     }
                 }
             }

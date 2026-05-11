@@ -11,7 +11,6 @@ pub fn Home() -> Element {
         use_signal(|| Option::<UiMessage>::None);
 
     let mut url_input = use_signal(String::new);
-    let mut qr_scanner_open = use_signal(|| false);
 
     let open_url = move |_| {
         message.set(None);
@@ -88,6 +87,24 @@ pub fn Home() -> Element {
                     },
                     Icon { icon: FaFolderOpen }
                     "{t.action_open}"
+                }
+                br {}
+
+                input {
+                    r#type: "radio",
+                    checked: action == ActionMode::Scan,
+                    onchange: move |_| {
+                        message.set(None);
+                        ctx.write().action = ActionMode::Scan;
+                    },
+                }
+                label {
+                    onclick: move |_| {
+                        message.set(None);
+                        ctx.write().action = ActionMode::Scan;
+                    },
+                    Icon { icon: FaQrcode }
+                    "{t.action_scan}"
                 }
                 br {}
                 br {}
@@ -206,11 +223,6 @@ pub fn Home() -> Element {
 
                     Dock { message,
                         Button {
-                            icon: FaQrcode,
-                            onclick: move |_| qr_scanner_open.set(true),
-                            "{t.scan_qr_button}"
-                        }
-                        Button {
                             icon: FaTrash,
                             onclick: move |_| {
                                 message.set(None);
@@ -227,10 +239,9 @@ pub fn Home() -> Element {
                     }
                 }
 
-                if qr_scanner_open() {
+                if action == ActionMode::Scan {
                     QrScanner {
                         on_scan: Callback::new(move |url: String| {
-                            qr_scanner_open.set(false);
                             match extract_note_param(&url) {
                                 Ok(note) => {
                                     nav.push(Screen::View.to_route(Some(note)));
@@ -241,7 +252,7 @@ pub fn Home() -> Element {
                             }
                         }),
                         on_close: Callback::new(move |_| {
-                            qr_scanner_open.set(false);
+                            ctx.write().action = ActionMode::Create;
                         }),
                     }
                 }

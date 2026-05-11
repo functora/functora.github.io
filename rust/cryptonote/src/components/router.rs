@@ -17,6 +17,7 @@ pub enum Screen {
 pub enum ActionMode {
     Create,
     Open,
+    Scan,
 }
 
 impl Display for Screen {

@@ -1,4 +1,8 @@
-#[cfg(all(feature = "web", target_arch = "wasm32"))]
+#[cfg(any(
+    all(feature = "web", target_arch = "wasm32"),
+    target_os = "android",
+    target_os = "ios"
+))]
 mod imp {
     use crate::qr_decode::decode_qr_rgba;
     use crate::*;
@@ -104,7 +108,11 @@ mod imp {
     }
 }
 
-#[cfg(not(all(feature = "web", target_arch = "wasm32")))]
+#[cfg(not(any(
+    all(feature = "web", target_arch = "wasm32"),
+    target_os = "android",
+    target_os = "ios"
+)))]
 mod imp {
     use crate::*;
 

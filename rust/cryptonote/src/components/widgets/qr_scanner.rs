@@ -6,7 +6,6 @@
 mod imp {
     use crate::qr_decode::decode_qr_rgba;
     use crate::*;
-    use gloo_timers::future::TimeoutFuture;
 
     #[component]
     pub fn QrScanner(
@@ -45,17 +44,15 @@ mod imp {
                     )));
                     return;
                 }
-                TimeoutFuture::new(500).await;
+                js_sleep(500).await.ok();
                 while scanning() && !found() {
                     match js_capture_frame().await {
-                        Ok(rgba) => {
-                            let video =
-                                crate::js::js_video_dimensions()
-                                    .await
-                                    .unwrap_or((1280, 720));
+                        Ok(frame) => {
                             if let Some(text) =
                                 decode_qr_rgba(
-                                    &rgba, video.0, video.1,
+                                    &frame.data,
+                                    frame.width,
+                                    frame.height,
                                 )
                             {
                                 found.set(true);
@@ -65,7 +62,7 @@ mod imp {
                         }
                         Err(_) => {}
                     }
-                    TimeoutFuture::new(33).await;
+                    js_sleep(200).await.ok();
                 }
                 js_stop_camera().await.ok();
             });
@@ -79,8 +76,10 @@ mod imp {
         });
 
         rsx! {
-            div { class: "qr-scanner-overlay",
-                div { class: "qr-scanner-container",
+            div {
+                class: "qr-scanner-overlay",
+                div {
+                    class: "qr-scanner-container",
                     h3 { "{t.qr_scanner_title}" }
                     video {
                         id: "qr-video",
@@ -92,7 +91,8 @@ mod imp {
                     if message.read().is_some() {
                         Message { message }
                     }
-                    div { class: "qr-scanner-actions",
+                    div {
+                        class: "qr-scanner-actions",
                         Button {
                             icon: FaArrowLeft,
                             onclick: move |_| {
@@ -125,11 +125,14 @@ mod imp {
         let t = get_translations(cfg.read().language);
 
         rsx! {
-            div { class: "qr-scanner-overlay",
-                div { class: "qr-scanner-container",
+            div {
+                class: "qr-scanner-overlay",
+                div {
+                    class: "qr-scanner-container",
                     h3 { "{t.qr_scanner_title}" }
                     p { "{t.qr_camera_not_available}" }
-                    div { class: "qr-scanner-actions",
+                    div {
+                        class: "qr-scanner-actions",
                         Button {
                             icon: FaArrowLeft,
                             onclick: move |_| on_close.call(()),

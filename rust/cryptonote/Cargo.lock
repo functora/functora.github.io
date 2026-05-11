@@ -781,7 +781,6 @@ dependencies = [
  "enum-iterator",
  "functora",
  "getrandom 0.2.16",
- "gloo-timers",
  "hkdf",
  "jni",
  "pulldown-cmark",

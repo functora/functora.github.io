@@ -251,9 +251,6 @@ pub fn Home() -> Element {
                                 }
                             }
                         }),
-                        on_close: Callback::new(move |_| {
-                            ctx.write().action = ActionMode::Create;
-                        }),
                     }
                 }
             }

@@ -67,9 +67,7 @@ pub async fn js_start_camera() -> Result<(), EvalError> {
         r#"function(arg){
         const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-        facingMode: "environment",
-        width: { ideal: 640 },
-        height: { ideal: 480 }
+        facingMode: "environment"
         }
         });
         const video = document.getElementById("qr-video");
@@ -100,8 +98,8 @@ pub async fn js_capture_frame(
         throw new Error("Video or canvas not found");
         }
         const ctx = canvas.getContext("2d");
-        const w = video.videoWidth || 640;
-        const h = video.videoHeight || 480;
+        const w = video.videoWidth;
+        const h = video.videoHeight;
         canvas.width = w;
         canvas.height = h;
         ctx.drawImage(video, 0, 0);

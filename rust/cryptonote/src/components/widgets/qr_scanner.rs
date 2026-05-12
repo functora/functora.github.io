@@ -1,6 +1,8 @@
 use crate::qr_decode::decode_qr_rgba;
 use crate::*;
 
+const FPS_DELAY: u64 = 33;
+
 #[component]
 pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
     let t = get_translations(
@@ -36,7 +38,7 @@ pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
                 )));
                 return;
             }
-            js_sleep(500).await.ok();
+            js_sleep(FPS_DELAY).await.ok();
             while scanning() && !found() {
                 if let Ok(frame) = js_capture_frame().await
                 {
@@ -50,7 +52,7 @@ pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
                         on_scan.call(text);
                     }
                 }
-                js_sleep(200).await.ok();
+                js_sleep(FPS_DELAY).await.ok();
             }
             js_stop_camera().await.ok();
         });
@@ -70,15 +72,6 @@ pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
             canvas { id: "qr-canvas", style: "display:none" }
             if message.read().is_some() {
                 Message { message }
-            }
-            p {
-                Button {
-                    icon: FaArrowLeft,
-                    onclick: move |_| {
-                        scanning.set(false);
-                    },
-                    "{t.back_button}"
-                }
             }
         }
     }

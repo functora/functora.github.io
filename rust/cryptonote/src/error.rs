@@ -1,19 +1,18 @@
 use crate::prelude::*;
 use crate::*;
 use hkdf::InvalidLength;
-use qrcode::types::QrError;
 use sha2::digest;
 use std::string::FromUtf8Error;
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, Error)]
 pub enum AppError {
-    Cipher(digest::InvalidLength),
+    Cipher(#[from] digest::InvalidLength),
     KeyDerive(InvalidLength),
     Getrandom(getrandom::Error),
-    Base64(base64::DecodeError),
-    Json(serde_json::Error),
-    Utf8(FromUtf8Error),
-    Qr(QrError),
+    Base64(#[from] base64::DecodeError),
+    Json(#[from] serde_json::Error),
+    Utf8(#[from] FromUtf8Error),
+    Qr(#[from] rxing::Exceptions),
     Encrypt,
     Decrypt,
     PasswordRequired,
@@ -60,14 +59,6 @@ impl AppError {
     }
 }
 
-impl std::error::Error for AppError {}
-
-impl From<digest::InvalidLength> for AppError {
-    fn from(e: digest::InvalidLength) -> Self {
-        AppError::Cipher(e)
-    }
-}
-
 impl From<InvalidLength> for AppError {
     fn from(e: InvalidLength) -> Self {
         AppError::KeyDerive(e)
@@ -77,29 +68,5 @@ impl From<InvalidLength> for AppError {
 impl From<getrandom::Error> for AppError {
     fn from(e: getrandom::Error) -> Self {
         AppError::Getrandom(e)
-    }
-}
-
-impl From<base64::DecodeError> for AppError {
-    fn from(e: base64::DecodeError) -> Self {
-        AppError::Base64(e)
-    }
-}
-
-impl From<serde_json::Error> for AppError {
-    fn from(e: serde_json::Error) -> Self {
-        AppError::Json(e)
-    }
-}
-
-impl From<FromUtf8Error> for AppError {
-    fn from(e: FromUtf8Error) -> Self {
-        AppError::Utf8(e)
-    }
-}
-
-impl From<QrError> for AppError {
-    fn from(e: QrError) -> Self {
-        AppError::Qr(e)
     }
 }

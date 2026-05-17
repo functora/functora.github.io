@@ -18,6 +18,7 @@ pub use serde::de::DeserializeOwned;
 pub use serde::{Deserialize, Serialize};
 pub use std::fmt::Display;
 pub use std::str::FromStr;
+pub use thiserror::Error;
 pub mod dioxus_elements {
     pub use elements::*;
     pub mod elements {

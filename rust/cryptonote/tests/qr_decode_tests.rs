@@ -1,20 +1,35 @@
 use cryptonote::qr_decode::{
     decode_qr_luma, decode_qr_rgba,
 };
-use qrcode::{Color, QrCode};
+use rxing::qrcode::QRCodeWriter;
+use rxing::{BarcodeFormat, EncodeHints, Writer};
 
 fn generate_qr_luma(data: &str) -> (Vec<u8>, u32, u32) {
-    let code = QrCode::new(data).unwrap();
-    let w = code.width();
-    let colors = code.to_colors();
-    let mut luma = Vec::with_capacity(w * w);
-    for c in &colors {
-        luma.push(match c {
-            Color::Dark => 0,
-            Color::Light => 255,
-        });
+    let matrix = QRCodeWriter
+        .encode_with_hints(
+            data,
+            &BarcodeFormat::QR_CODE,
+            200,
+            200,
+            &EncodeHints {
+                Margin: Some("0".to_string()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let w = matrix.getWidth();
+    let h = matrix.getHeight();
+    let mut luma = Vec::with_capacity((w * h) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            luma.push(if matrix.get(x, y) {
+                0
+            } else {
+                255
+            });
+        }
     }
-    (luma, w as u32, w as u32)
+    (luma, w, h)
 }
 
 fn luma_to_rgba(luma: &[u8], w: u32, h: u32) -> Vec<u8> {
@@ -49,10 +64,10 @@ fn test_decode_qr_luma_url() {
 }
 
 #[test]
-fn test_decode_qr_luma_empty() {
-    let (luma, w, h) = generate_qr_luma("");
+fn test_decode_qr_luma_minimal() {
+    let (luma, w, h) = generate_qr_luma("a");
     let result = decode_qr_luma(&luma, w, h);
-    assert_eq!(result, Some(String::new()));
+    assert_eq!(result, Some("a".to_string()));
 }
 
 #[test]

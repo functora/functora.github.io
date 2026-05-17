@@ -1,8 +1,16 @@
 use rxing::common::HybridBinarizer;
 use rxing::qrcode::QRCodeReader;
 use rxing::{
-    BinaryBitmap, ImmutableReader, Luma8LuminanceSource,
+    BinaryBitmap, DecodeHints, ImmutableReader,
+    Luma8LuminanceSource,
 };
+
+fn decode_hints() -> DecodeHints {
+    DecodeHints {
+        TryHarder: Some(true),
+        ..Default::default()
+    }
+}
 
 pub fn decode_qr_rgba(
     rgba: &[u8],
@@ -24,11 +32,12 @@ pub fn decode_qr_rgba(
         })
         .collect();
     QRCodeReader::new()
-        .immutable_decode(&mut BinaryBitmap::new(
-            HybridBinarizer::new(
+        .immutable_decode_with_hints(
+            &mut BinaryBitmap::new(HybridBinarizer::new(
                 Luma8LuminanceSource::new(luma, w, h),
-            ),
-        ))
+            )),
+            &decode_hints(),
+        )
         .ok()
         .map(|r| r.getText().to_owned())
 }
@@ -39,15 +48,16 @@ pub fn decode_qr_luma(
     h: u32,
 ) -> Option<String> {
     QRCodeReader::new()
-        .immutable_decode(&mut BinaryBitmap::new(
-            HybridBinarizer::new(
+        .immutable_decode_with_hints(
+            &mut BinaryBitmap::new(HybridBinarizer::new(
                 Luma8LuminanceSource::new(
                     luma.to_vec(),
                     w,
                     h,
                 ),
-            ),
-        ))
+            )),
+            &decode_hints(),
+        )
         .ok()
         .map(|r| r.getText().to_owned())
 }

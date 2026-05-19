@@ -224,22 +224,24 @@ If you have any questions regarding privacy while using the Application, or have
             source_code_button: "Source code",
             author_button: "Author",
             donate_button: "Donate",
-            about_text: r#"Cryptonote is a cross-platform, offline app for creating and sharing encrypted notes. It runs serverless on your device or browser - no internet needed.
+            about_text: r#"Cryptonote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
 
-Features:
-- Write plain-text notes
-- Support for Markdown and HTML
-- Encrypt with strong algorithms (AES-GCM, ChaCha20-Poly1305) or leave unencrypted
-- Share via URL or QR code
+With Cryptonote, you can:
 
-Content (encrypted or plain) is embedded in the URL, making sharing as simple as sending a link.
+- Write a note in Markdown or HTML
+- Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
+- Or leave it unencrypted
+- Share the note instantly via a URL or a scannable QR code
 
-Security:
-- Strong key derivation (HKDF) uses your password directly
-- Authenticated encryption ensures integrity
-- No data leaves your device unless explicitly shared
+All content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code.
 
-Secure, private, offline - your notes remain yours."#,
+Cryptonote follows modern cryptographic best practices:
+
+- Strong key derivation with HKDF, allowing users to supply just a password (which is used directly as the initial keying material)
+- Authenticated encryption for confidentiality, integrity, and authenticity
+- No data ever leaves your device unless you explicitly choose to share it
+
+Secure, private, and truly offline - your notes remain yours alone."#,
             back_button: "Back",
             clipboard_write_error: "Failed to copy to clipboard",
             open_url_label: "URL",
@@ -369,22 +371,24 @@ Si tienes alguna pregunta sobre la privacidad al usar la Aplicación, o tienes p
             source_code_button: "Código fuente",
             author_button: "Autor",
             donate_button: "Donar",
-            about_text: r#"Cryptonote es una app multiplataforma y offline para crear y compartir notas cifradas. Funciona sin servidores en su dispositivo o navegador - no requiere internet.
+            about_text: r#"Cryptonote es una aplicación multiplataforma y completamente offline para crear, almacenar y compartir notas cifradas. Es completamente sin servidores y se ejecuta completamente en su dispositivo o navegador web - no se requiere conexión a internet ni servicios externos.
 
-Características:
-- Escriba notas de texto plano
-- Soporte para Markdown y HTML
-- Cifre con algoritmos fuertes (AES-GCM, ChaCha20-Poly1305) o déjelas sin cifrar
-- Comparta vía URL o código QR
+Con Cryptonote, puedes:
 
-El contenido (cifrado o no) se incrusta en la URL - compartir es tan simple como enviar un enlace.
+- Escribir una nota en Markdown o HTML
+- Opcionalmente cifrarla usando algoritmos fuertes y bien establecidos (p. ej., AES-GCM o ChaCha20-Poly1305)
+- O dejarla sin cifrar
+- Compartir la nota instantáneamente a través de una URL o un código QR escaneable
 
-Seguridad:
-- Derivación de claves fuerte (HKDF) usando su contraseña
-- Cifrado autenticado para integridad
-- Los datos no salen de su dispositivo salvo que decida compartirlos
+Todo el contenido - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR.
 
-Seguro, privado, offline - sus notas son solo suyas."#,
+Cryptonote sigue las mejores prácticas criptográficas modernas:
+
+- Derivación de claves fuerte con HKDF, permitiendo a los usuarios proporcionar solo una contraseña (que se usa directamente como material inicial de claves)
+- Cifrado autenticado para confidencialidad, integridad y autenticidad
+- Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
+
+Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#,
             back_button: "Atrás",
             clipboard_write_error: "No se pudo copiar al portapapeles",
             open_url_label: "URL",
@@ -514,22 +518,24 @@ Seguro, privado, offline - sus notas son solo suyas."#,
             source_code_button: "Исходный код",
             author_button: "Автор",
             donate_button: "Пожертвовать",
-            about_text: r#"Cryptonote - кроссплатформенное, автономное приложение для создания и обмена зашифрованными заметками. Работает без серверов на вашем устройстве или в браузере - интернет не нужен.
+            about_text: r#"Cryptonote — кроссплатформенное, полностью автономное приложение для создания, хранения и обмена зашифрованными заметками. Оно полностью бессерверное и работает целиком на вашем устройстве или в веб-браузере — подключение к интернету или внешние сервисы не требуются.
 
-Возможности:
-- Пишите текстовые заметки
-- Поддержка Markdown и HTML
-- Шифруйте надежными алгоритмами (AES-GCM, ChaCha20-Poly1305) или оставляйте открытыми
-- Делитесь через URL или QR-код
+С Cryptonote вы можете:
 
-Контент (шифрованный или нет) встроен в URL - обмен прост, как отправка ссылки.
+- Написать заметку в Markdown или HTML
+- Опционально зашифровать её с помощью надёжных, широко применяемых алгоритмов (например, AES-GCM или ChaCha20-Poly1305)
+- Или оставить без шифрования
+- Мгновенно поделиться заметкой через URL или сканируемый QR-код
 
-Безопасность:
-- Надежная деривация ключей (HKDF) напрямую из пароля
-- Аутентифицированное шифрование гарантирует целостность
-- Данные не покидают устройство, пока вы сами не поделитесь ими
+Всё содержимое — будь то зашифрованный текст или открытый — встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода.
 
-Безопасно, приватно, автономно - ваши заметки принадлежат только вам."#,
+Cryptonote следует современным криптографическим практикам:
+
+- Надёжная деривация ключей с помощью HKDF позволяет пользователям использовать только пароль (который применяется напрямую как исходный ключевой материал)
+- Аутентифицированное шифрование обеспечивает конфиденциальность, целостность и подлинность
+- Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
+
+Безопасно, приватно и по-настоящему автономно — ваши заметки остаются только вашими."#,
             back_button: "Назад",
             clipboard_write_error: "Не удалось скопировать в буфер обмена",
             open_url_label: "URL",

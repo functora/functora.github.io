@@ -1,16 +1,11 @@
 use crate::*;
-use qrcode::{render::svg, QrCode};
 
 const BTC_ADDRESS: &str =
     "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q";
 const XMR_ADDRESS: &str = "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
 
 fn generate_crypto_qr(address: &str) -> Option<String> {
-    QrCode::new(address).ok().map(|code| {
-        code.render::<svg::Color>()
-            .min_dimensions(200, 200)
-            .build()
-    })
+    generate_qr_code(address).ok()
 }
 
 fn onclick(

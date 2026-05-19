@@ -7,6 +7,7 @@ pub mod i18n;
 pub mod js;
 pub mod markdown;
 pub mod prelude;
+pub mod qr_decode;
 pub mod storage;
 
 pub use components::*;
@@ -18,4 +19,5 @@ pub use i18n::*;
 pub use js::*;
 pub use markdown::*;
 pub use prelude::*;
+pub use qr_decode::*;
 pub use storage::*;

@@ -10,10 +10,12 @@ pub fn Dock(
     let t = get_translations(cfg.read().language);
 
     rsx! {
-        p { "txt": "r",
-            if let Some(message) = message {
+        if let Some(message) = message {
+            p { "txt": "r",
                 Message { message }
             }
+        }
+        div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",
             if nav.has_navigated() {
                 Button {
                     icon: FaArrowLeft,

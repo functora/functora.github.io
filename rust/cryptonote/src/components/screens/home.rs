@@ -89,6 +89,24 @@ pub fn Home() -> Element {
                     "{t.action_open}"
                 }
                 br {}
+
+                input {
+                    r#type: "radio",
+                    checked: action == ActionMode::Scan,
+                    onchange: move |_| {
+                        message.set(None);
+                        ctx.write().action = ActionMode::Scan;
+                    },
+                }
+                label {
+                    onclick: move |_| {
+                        message.set(None);
+                        ctx.write().action = ActionMode::Scan;
+                    },
+                    Icon { icon: FaQrcode }
+                    "{t.action_scan}"
+                }
+                br {}
                 br {}
 
                 if action == ActionMode::Create {
@@ -218,6 +236,21 @@ pub fn Home() -> Element {
                             onclick: open_url,
                             "{t.open_button}"
                         }
+                    }
+                }
+
+                if action == ActionMode::Scan {
+                    QrScanner {
+                        on_scan: Callback::new(move |url: String| {
+                            match extract_note_param(&url) {
+                                Ok(note) => {
+                                    nav.push(Screen::View.to_route(Some(note)));
+                                }
+                                Err(e) => {
+                                    message.set(Some(UiMessage::Error(e)));
+                                }
+                            }
+                        }),
                     }
                 }
             }

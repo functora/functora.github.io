@@ -67,11 +67,11 @@ pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
 
     rsx! {
         section {
-            h3 { "{t.qr_scanner_title}" }
-            video { id: "qr-video", autoplay: true, playsinline: true }
-            canvas { id: "qr-canvas", style: "display:none" }
             if message.read().is_some() {
                 Message { message }
+            } else {
+                video { id: "qr-video", autoplay: true, playsinline: true }
+                canvas { id: "qr-canvas", style: "display:none" }
             }
         }
     }

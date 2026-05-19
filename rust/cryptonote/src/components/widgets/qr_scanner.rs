@@ -5,9 +5,6 @@ const FPS_DELAY: u64 = 33;
 
 #[component]
 pub fn QrScanner(on_scan: EventHandler<String>) -> Element {
-    let t = get_translations(
-        use_context::<Signal<AppCfg>>().read().language,
-    );
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
     let mut scanning = use_signal(|| true);

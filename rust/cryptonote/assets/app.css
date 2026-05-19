@@ -19,11 +19,10 @@ button {
 
 input[type="radio"] + label,
 input[type="checkbox"] + label {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 video {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
+  width: 100%;
+  height: auto;
 }

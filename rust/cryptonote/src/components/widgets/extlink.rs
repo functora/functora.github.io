@@ -1,5 +1,9 @@
 use crate::*;
 
+fn bool_attr(val: bool) -> Option<&'static str> {
+    val.then_some("")
+}
+
 #[component]
 pub fn ExtLink(
     href: String,
@@ -12,8 +16,8 @@ pub fn ExtLink(
     rsx! {
         a {
             href,
-            "btn": if button { Some("") } else { None },
-            "primary": if primary { Some("") } else { None },
+            "btn": bool_attr(button),
+            "primary": bool_attr(primary),
             target: "_blank",
             rel: "noopener noreferrer",
             ..attributes,

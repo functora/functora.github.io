@@ -8,6 +8,7 @@ use rxing::{BarcodeFormat, EncodeHints, Writer};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::fmt::Write;
+use tap::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NoteData {
@@ -19,15 +20,15 @@ pub fn encode_note(
     note: &NoteData,
 ) -> Result<String, AppError> {
     serde_json::to_vec(note)
-        .map(|bytes| URL_SAFE_NO_PAD.encode(bytes))
-        .map_err(Into::into)
+        .map(|bytes| URL_SAFE_NO_PAD.encode(bytes))?
+        .pipe(Ok)
 }
 
 pub fn decode_note(
     encoded: &str,
 ) -> Result<NoteData, AppError> {
     let bytes = URL_SAFE_NO_PAD.decode(encoded)?;
-    serde_json::from_slice(&bytes).map_err(Into::into)
+    serde_json::from_slice::<NoteData>(&bytes)?.pipe(Ok)
 }
 
 pub fn build_url(
@@ -66,8 +67,8 @@ pub fn extract_note_param(
                 })
                 .ok_or(AppError::NoNoteParam)
         })?
-        .map(Cow::into_owned)
-        .map_err(Into::into)
+        .map(Cow::into_owned)?
+        .pipe(Ok)
 }
 
 const QR_SVG_SIZE: i32 = 200;
@@ -113,6 +114,6 @@ pub fn generate_qr_code(
             QR_SVG_SIZE,
             &hints,
         )
-        .map(|matrix| bitmatrix_to_svg(&matrix))
-        .map_err(Into::into)
+        .map(|matrix| bitmatrix_to_svg(&matrix))?
+        .pipe(Ok)
 }

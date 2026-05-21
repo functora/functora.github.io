@@ -1,5 +1,9 @@
 use crate::*;
 
+fn bool_attr(val: bool) -> Option<&'static str> {
+    val.then_some("")
+}
+
 #[component]
 pub fn NavLink(
     route: Route,
@@ -14,8 +18,8 @@ pub fn NavLink(
     rsx! {
         a {
             href: "#",
-            "btn": if button { Some("") } else { None },
-            "primary": if primary { Some("") } else { None },
+            "btn": bool_attr(button),
+            "primary": bool_attr(primary),
             onclick: move |evt| {
                 evt.prevent_default();
                 if let Some(f) = &onclick {

@@ -4,7 +4,7 @@ use crate::*;
 pub fn Layout() -> Element {
     let mut cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     use_effect(move || {
         let theme = cfg.read().theme;

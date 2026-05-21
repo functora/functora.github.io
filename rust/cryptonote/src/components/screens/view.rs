@@ -3,9 +3,8 @@ use crate::*;
 #[component]
 pub fn View(note: Option<String>) -> Element {
     let nav = use_app_nav();
-    let cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut encrypted_data =
@@ -41,25 +40,16 @@ pub fn View(note: Option<String>) -> Element {
                     Err(e) => message
                         .set(Some(UiMessage::Error(e))),
                 }
-            } else {
-                let content = ctx.read().content.clone();
-                if content.is_empty() {
-                    message.set(Some(UiMessage::Error(
-                        AppError::NoNoteInUrl,
-                    )));
-                } else {
-                    note_content.set(Some(content));
-                }
+                return;
             }
+        }
+        let content = ctx.read().content.clone();
+        if content.is_empty() {
+            message.set(Some(UiMessage::Error(
+                AppError::NoNoteInUrl,
+            )));
         } else {
-            let content = ctx.read().content.clone();
-            if content.is_empty() {
-                message.set(Some(UiMessage::Error(
-                    AppError::NoNoteInUrl,
-                )));
-            } else {
-                note_content.set(Some(content));
-            }
+            note_content.set(Some(content));
         }
     });
 
@@ -162,15 +152,7 @@ pub fn View(note: Option<String>) -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                let content = content.clone();
-                                spawn(async move {
-                                    match js_write_clipboard(content).await {
-                                        Ok(()) => message.set(Some(UiMessage::Copied)),
-                                        Err(e) => {
-                                            message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
-                                        }
-                                    }
-                                });
+                                write_clipboard_to(content.clone(), message);
                             },
                             "{t.copy_button}"
                         }

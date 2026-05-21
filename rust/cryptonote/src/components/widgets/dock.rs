@@ -6,8 +6,7 @@ pub fn Dock(
     message: Option<Signal<Option<UiMessage>>>,
 ) -> Element {
     let nav = use_app_nav();
-    let cfg = use_context::<Signal<AppCfg>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     rsx! {
         if let Some(message) = message {

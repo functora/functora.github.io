@@ -3,9 +3,8 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let nav = use_app_nav();
-    let cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -47,6 +46,16 @@ pub fn Home() -> Element {
         }
     };
 
+    let set_action = move |mode: ActionMode| {
+        message.set(None);
+        ctx.write().action = mode;
+    };
+
+    let reset_ctx = move |_| {
+        message.set(None);
+        ctx.set(AppCtx::default());
+    };
+
     let action = ctx.read().action;
 
     rsx! {
@@ -54,59 +63,31 @@ pub fn Home() -> Element {
             fieldset {
                 label { "{t.action_label}" }
 
-                input {
-                    r#type: "radio",
-                    checked: action == ActionMode::Create,
-                    onchange: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Create;
-                    },
+                {
+                    rsx! {
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Create,
+                            icon: FaSquarePlus,
+                            label: t.action_create,
+                            on_change: set_action,
+                        }
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Open,
+                            icon: FaFolderOpen,
+                            label: t.action_open,
+                            on_change: set_action,
+                        }
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Scan,
+                            icon: FaQrcode,
+                            label: t.action_scan,
+                            on_change: set_action,
+                        }
+                    }
                 }
-                label {
-                    onclick: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Create;
-                    },
-                    Icon { icon: FaSquarePlus }
-                    "{t.action_create}"
-                }
-                br {}
-
-                input {
-                    r#type: "radio",
-                    checked: action == ActionMode::Open,
-                    onchange: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Open;
-                    },
-                }
-                label {
-                    onclick: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Open;
-                    },
-                    Icon { icon: FaFolderOpen }
-                    "{t.action_open}"
-                }
-                br {}
-
-                input {
-                    r#type: "radio",
-                    checked: action == ActionMode::Scan,
-                    onchange: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Scan;
-                    },
-                }
-                label {
-                    onclick: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Scan;
-                    },
-                    Icon { icon: FaQrcode }
-                    "{t.action_scan}"
-                }
-                br {}
                 br {}
 
                 if action == ActionMode::Create {
@@ -187,14 +168,7 @@ pub fn Home() -> Element {
                     br {}
 
                     Dock { message,
-                        Button {
-                            icon: FaTrash,
-                            onclick: move |_| {
-                                message.set(None);
-                                ctx.set(AppCtx::default());
-                            },
-                            "{t.create_new_note}"
-                        }
+                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
                             icon: FaEye,
                             onclick: move |_| {
@@ -222,14 +196,7 @@ pub fn Home() -> Element {
                     br {}
 
                     Dock { message,
-                        Button {
-                            icon: FaTrash,
-                            onclick: move |_| {
-                                message.set(None);
-                                ctx.set(AppCtx::default());
-                            },
-                            "{t.create_new_note}"
-                        }
+                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
                             icon: FaFolderOpen,
                             primary: true,
@@ -255,5 +222,29 @@ pub fn Home() -> Element {
                 }
             }
         }
+    }
+}
+
+#[component]
+fn ActionRadio<
+    T: IconShape + Clone + PartialEq + 'static,
+>(
+    action: ActionMode,
+    mode: ActionMode,
+    icon: T,
+    label: &'static str,
+    on_change: EventHandler<ActionMode>,
+) -> Element {
+    rsx! {
+        input {
+            r#type: "radio",
+            checked: action == mode,
+            onchange: move |_| on_change.call(mode),
+        }
+        label { onclick: move |_| on_change.call(mode),
+            Icon { icon }
+            "{label}"
+        }
+        br {}
     }
 }

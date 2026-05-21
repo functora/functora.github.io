@@ -18,7 +18,7 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    JsWriteClipboard(EvalError),
+    JsWriteClipboard(#[from] EvalError),
     CameraNotAvailable,
     CameraPermissionDenied,
     QrDecode,
@@ -30,8 +30,8 @@ impl AppError {
         t: &i18n::Translations,
     ) -> String {
         let msg = match self {
-            AppError::Cipher(_) => t.cipher_error,
-            AppError::KeyDerive(_) => t.cipher_error,
+            AppError::Cipher(_)
+            | AppError::KeyDerive(_) => t.cipher_error,
             AppError::Getrandom(_) => t.getrandom_error,
             AppError::Base64(_) => t.base64_error,
             AppError::Json(_) => t.json_error,

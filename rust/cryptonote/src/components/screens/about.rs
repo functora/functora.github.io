@@ -2,8 +2,7 @@ use crate::*;
 
 #[component]
 pub fn About() -> Element {
-    let cfg = use_context::<Signal<AppCfg>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
     rsx! {
         Breadcrumb { title: t.about_title.to_string() }
         section {

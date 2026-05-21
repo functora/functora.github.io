@@ -1,26 +1,4 @@
-mod components;
-mod crypto;
-mod encoding;
-mod error;
-mod hooks;
-mod i18n;
-mod js;
-mod markdown;
-mod prelude;
-mod qr_decode;
-mod storage;
-
-pub use components::*;
-pub use crypto::*;
-pub use encoding::*;
-pub use error::*;
-pub use hooks::*;
-pub use i18n::*;
-pub use js::*;
-pub use markdown::*;
-pub use prelude::*;
-pub use qr_decode::*;
-pub use storage::*;
+use cryptonote::*;
 
 const FAVICON_ICO: Asset =
     asset!("/assets/favicon/favicon.ico");

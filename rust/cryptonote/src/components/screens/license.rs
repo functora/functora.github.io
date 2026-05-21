@@ -2,8 +2,7 @@ use crate::*;
 
 #[component]
 pub fn License() -> Element {
-    let cfg = use_context::<Signal<AppCfg>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     rsx! {
         Breadcrumb { title: t.terms_of_service_title.to_string() }

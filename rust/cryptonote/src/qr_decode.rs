@@ -31,15 +31,7 @@ pub fn decode_qr_rgba(
             }
         })
         .collect();
-    QRCodeReader::new()
-        .immutable_decode_with_hints(
-            &mut BinaryBitmap::new(HybridBinarizer::new(
-                Luma8LuminanceSource::new(luma, w, h),
-            )),
-            &decode_hints(),
-        )
-        .ok()
-        .map(|r| r.getText().to_owned())
+    decode_qr_luma(&luma, w, h)
 }
 
 pub fn decode_qr_luma(

@@ -20,7 +20,7 @@ pub enum ActionMode {
     Scan,
 }
 
-impl Display for Screen {
+impl std::fmt::Display for Screen {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,

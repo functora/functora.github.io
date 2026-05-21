@@ -1,5 +1,19 @@
-use crate::prelude::*;
-use either::*;
+use crate::*;
+use crate::{AppError, UiMessage};
+
+pub fn write_clipboard_to(
+    val: String,
+    mut message: Signal<Option<UiMessage>>,
+) {
+    spawn(async move {
+        match js_write_clipboard(val).await {
+            Ok(()) => message.set(Some(UiMessage::Copied)),
+            Err(e) => message.set(Some(UiMessage::Error(
+                AppError::JsWriteClipboard(e),
+            ))),
+        }
+    });
+}
 
 #[derive(
     Copy,

@@ -3,9 +3,8 @@ use crate::*;
 #[component]
 pub fn Share() -> Element {
     let nav = use_app_nav();
-    let cfg = use_context::<Signal<AppCfg>>();
     let ctx = use_context::<Signal<AppCtx>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
@@ -98,15 +97,7 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            let url_val = url();
-                            spawn(async move {
-                                match js_write_clipboard(url_val).await {
-                                    Ok(()) => message.set(Some(UiMessage::Copied)),
-                                    Err(e) => {
-                                        message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
-                                    }
-                                }
-                            });
+                            write_clipboard_to(url(), message);
                         },
                     }
 
@@ -122,15 +113,7 @@ pub fn Share() -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                let url_val = url();
-                                spawn(async move {
-                                    match js_write_clipboard(url_val).await {
-                                        Ok(()) => message.set(Some(UiMessage::Copied)),
-                                        Err(e) => {
-                                            message.set(Some(UiMessage::Error(AppError::JsWriteClipboard(e))))
-                                        }
-                                    }
-                                });
+                                write_clipboard_to(url(), message);
                             },
                             "{t.copy_button}"
                         }

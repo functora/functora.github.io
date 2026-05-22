@@ -53,7 +53,10 @@ pub fn Home() -> Element {
 
     let reset_ctx = move |_| {
         message.set(None);
+        let action = ctx.read().action;
         ctx.set(AppCtx::default());
+        ctx.write().action = action;
+        url_input.set(String::new());
     };
 
     let action = ctx.read().action;

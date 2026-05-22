@@ -3,9 +3,8 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let nav = use_app_nav();
-    let cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     let mut message =
         use_signal(|| Option::<UiMessage>::None);
@@ -47,6 +46,19 @@ pub fn Home() -> Element {
         }
     };
 
+    let set_action = move |mode: ActionMode| {
+        message.set(None);
+        ctx.write().action = mode;
+    };
+
+    let reset_ctx = move |_| {
+        message.set(None);
+        let action = ctx.read().action;
+        ctx.set(AppCtx::default());
+        ctx.write().action = action;
+        url_input.set(String::new());
+    };
+
     let action = ctx.read().action;
 
     rsx! {
@@ -54,56 +66,35 @@ pub fn Home() -> Element {
             fieldset {
                 label { "{t.action_label}" }
 
-                input {
-                    r#type: "radio",
-                    checked: action == ActionMode::Create,
-                    onchange: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Create;
-                    },
+                {
+                    rsx! {
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Create,
+                            icon: FaSquarePlus,
+                            label: t.action_create,
+                            on_change: set_action,
+                        }
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Open,
+                            icon: FaFolderOpen,
+                            label: t.action_open,
+                            on_change: set_action,
+                        }
+                        ActionRadio {
+                            action,
+                            mode: ActionMode::Scan,
+                            icon: FaQrcode,
+                            label: t.action_scan,
+                            on_change: set_action,
+                        }
+                    }
                 }
-                label {
-                    onclick: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Create;
-                    },
-                    Icon { icon: FaSquarePlus }
-                    "{t.action_create}"
-                }
-                br {}
-
-                input {
-                    r#type: "radio",
-                    checked: action == ActionMode::Open,
-                    onchange: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Open;
-                    },
-                }
-                label {
-                    onclick: move |_| {
-                        message.set(None);
-                        ctx.write().action = ActionMode::Open;
-                    },
-                    Icon { icon: FaFolderOpen }
-                    "{t.action_open}"
-                }
-                br {}
                 br {}
 
                 if action == ActionMode::Create {
-                    label { "{t.note}" }
-                    textarea {
-                        placeholder: "{t.note_placeholder}",
-                        rows: "8",
-                        value: "{ctx.read().content.clone()}",
-                        oninput: move |evt| {
-                            ctx.write().content = evt.value();
-                        },
-                    }
-
                     label { "{t.mode}" }
-
                     input {
                         r#type: "radio",
                         checked: ctx.read().cipher.is_some(),
@@ -168,14 +159,31 @@ pub fn Home() -> Element {
                     }
                     br {}
 
+                    label { "{t.note}" }
+                    textarea {
+                        placeholder: "{t.note_placeholder}",
+                        rows: "8",
+                        value: "{ctx.read().content.clone()}",
+                        oninput: move |evt| {
+                            ctx.write().content = evt.value();
+                        },
+                    }
+
                     Dock { message,
+                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
-                            icon: FaTrash,
+                            icon: FaPaste,
                             onclick: move |_| {
-                                message.set(None);
-                                ctx.set(AppCtx::default());
+                                spawn(async move {
+                                    match js_read_clipboard().await {
+                                        Ok(text) => ctx.write().content = text,
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
+                                        }
+                                    }
+                                });
                             },
-                            "{t.create_new_note}"
+                            "{t.paste_button}"
                         }
                         Button {
                             icon: FaEye,
@@ -204,13 +212,20 @@ pub fn Home() -> Element {
                     br {}
 
                     Dock { message,
+                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
-                            icon: FaTrash,
+                            icon: FaPaste,
                             onclick: move |_| {
-                                message.set(None);
-                                ctx.set(AppCtx::default());
+                                spawn(async move {
+                                    match js_read_clipboard().await {
+                                        Ok(text) => url_input.set(text),
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
+                                        }
+                                    }
+                                });
                             },
-                            "{t.create_new_note}"
+                            "{t.paste_button}"
                         }
                         Button {
                             icon: FaFolderOpen,
@@ -220,7 +235,46 @@ pub fn Home() -> Element {
                         }
                     }
                 }
+
+                if action == ActionMode::Scan {
+                    QrScanner {
+                        on_scan: Callback::new(move |url: String| {
+                            match extract_note_param(&url) {
+                                Ok(note) => {
+                                    nav.push(Screen::View.to_route(Some(note)));
+                                }
+                                Err(e) => {
+                                    message.set(Some(UiMessage::Error(e)));
+                                }
+                            }
+                        }),
+                    }
+                }
             }
         }
+    }
+}
+
+#[component]
+fn ActionRadio<
+    T: IconShape + Clone + PartialEq + 'static,
+>(
+    action: ActionMode,
+    mode: ActionMode,
+    icon: T,
+    label: &'static str,
+    on_change: EventHandler<ActionMode>,
+) -> Element {
+    rsx! {
+        input {
+            r#type: "radio",
+            checked: action == mode,
+            onchange: move |_| on_change.call(mode),
+        }
+        label { onclick: move |_| on_change.call(mode),
+            Icon { icon }
+            "{label}"
+        }
+        br {}
     }
 }

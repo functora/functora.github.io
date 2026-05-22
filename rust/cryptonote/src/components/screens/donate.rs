@@ -1,43 +1,16 @@
 use crate::*;
-use qrcode::{render::svg, QrCode};
 
 const BTC_ADDRESS: &str =
     "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q";
 const XMR_ADDRESS: &str = "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
 
 fn generate_crypto_qr(address: &str) -> Option<String> {
-    QrCode::new(address).ok().map(|code| {
-        code.render::<svg::Color>()
-            .min_dimensions(200, 200)
-            .build()
-    })
-}
-
-fn onclick(
-    addr: &'static str,
-    mut message: Signal<Option<UiMessage>>,
-) -> impl FnMut(Event<MouseData>) {
-    move |_: Event<MouseData>| {
-        spawn(async move {
-            match js_write_clipboard(addr.to_string()).await
-            {
-                Ok(()) => {
-                    message.set(Some(UiMessage::Copied))
-                }
-                Err(e) => {
-                    message.set(Some(UiMessage::Error(
-                        AppError::JsWriteClipboard(e),
-                    )))
-                }
-            }
-        });
-    }
+    generate_qr_code(address).ok()
 }
 
 #[component]
 pub fn Donate() -> Element {
-    let cfg = use_context::<Signal<AppCfg>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
 
     let btc_message =
         use_signal(|| Option::<UiMessage>::None);
@@ -66,14 +39,18 @@ pub fn Donate() -> Element {
                     readonly: true,
                     rows: "2",
                     value: "{BTC_ADDRESS}",
-                    onclick: onclick(BTC_ADDRESS, btc_message),
+                    onclick: move |_| {
+                        write_clipboard(BTC_ADDRESS.to_string(), btc_message);
+                    },
                 }
 
                 Dock { message: btc_message,
                     Button {
-                        icon: FaPenToSquare,
+                        icon: FaCopy,
                         primary: true,
-                        onclick: onclick(BTC_ADDRESS, btc_message),
+                        onclick: move |_| {
+                            write_clipboard(BTC_ADDRESS.to_string(), btc_message);
+                        },
                         "{t.copy_button}"
                     }
                 }
@@ -92,14 +69,18 @@ pub fn Donate() -> Element {
                     readonly: true,
                     rows: "2",
                     value: "{XMR_ADDRESS}",
-                    onclick: onclick(XMR_ADDRESS, xmr_message),
+                    onclick: move |_| {
+                        write_clipboard(XMR_ADDRESS.to_string(), xmr_message);
+                    },
                 }
 
                 Dock { message: xmr_message,
                     Button {
-                        icon: FaPenToSquare,
+                        icon: FaCopy,
                         primary: true,
-                        onclick: onclick(XMR_ADDRESS, xmr_message),
+                        onclick: move |_| {
+                            write_clipboard(XMR_ADDRESS.to_string(), xmr_message);
+                        },
                         "{t.copy_button}"
                     }
                 }

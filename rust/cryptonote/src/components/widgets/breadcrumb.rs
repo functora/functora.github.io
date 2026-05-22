@@ -7,8 +7,7 @@ pub struct BreadcrumbProps {
 
 #[component]
 pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
-    let cfg = use_context::<Signal<AppCfg>>();
-    let t = get_translations(cfg.read().language);
+    let t = use_translations();
     rsx! {
         card { font_size: "larger",
             NavLink { route: Screen::Home.to_route(None), "{t.home}" }

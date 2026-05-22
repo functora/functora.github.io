@@ -10,6 +10,7 @@ use sha2::Sha256;
 
 const NONCE_SIZE: usize = 12;
 const SALT_SIZE: usize = 32;
+pub const KEY_SIZE: usize = 32;
 
 #[derive(
     Debug,
@@ -36,13 +37,9 @@ pub struct EncryptedData {
 pub fn derive_key(
     password: &str,
     salt: &[u8],
-    cipher: CipherType,
+    _: CipherType,
 ) -> Result<Vec<u8>, AppError> {
-    let key_len = match cipher {
-        CipherType::ChaCha20Poly1305 => 32,
-        CipherType::Aes256Gcm => 32,
-    };
-    let mut key = vec![0u8; key_len];
+    let mut key = vec![0u8; KEY_SIZE];
     Hkdf::<Sha256>::new(Some(salt), password.as_bytes())
         .expand(b"cryptonote-key", &mut key)?;
     Ok(key)
@@ -65,21 +62,20 @@ pub fn encrypt_symmetric(
 
     let ciphertext = match cipher {
         CipherType::ChaCha20Poly1305 => {
-            let cipher =
-                ChaCha20Poly1305::new_from_slice(&key)?;
-            let nonce_array =
-                chacha20poly1305::Nonce::from_slice(&nonce);
-            cipher
-                .encrypt(nonce_array, plaintext)
-                .map_err(|_| AppError::Encrypt)?
+            let c = ChaCha20Poly1305::new_from_slice(&key)?;
+            c.encrypt(
+                chacha20poly1305::Nonce::from_slice(&nonce),
+                plaintext,
+            )
+            .map_err(|_| AppError::Encrypt)?
         }
         CipherType::Aes256Gcm => {
-            let cipher = Aes256Gcm::new_from_slice(&key)?;
-            let nonce_array =
-                aes_gcm::Nonce::from_slice(&nonce);
-            cipher
-                .encrypt(nonce_array, plaintext)
-                .map_err(|_| AppError::Encrypt)?
+            let c = Aes256Gcm::new_from_slice(&key)?;
+            c.encrypt(
+                aes_gcm::Nonce::from_slice(&nonce),
+                plaintext,
+            )
+            .map_err(|_| AppError::Encrypt)?
         }
     };
 
@@ -100,29 +96,22 @@ pub fn decrypt_symmetric(
 
     match data.cipher {
         CipherType::ChaCha20Poly1305 => {
-            let cipher =
-                ChaCha20Poly1305::new_from_slice(&key)?;
-            let nonce_array =
+            let c = ChaCha20Poly1305::new_from_slice(&key)?;
+            c.decrypt(
                 chacha20poly1305::Nonce::from_slice(
                     &data.nonce,
-                );
-            cipher
-                .decrypt(
-                    nonce_array,
-                    data.ciphertext.as_ref(),
-                )
-                .map_err(|_| AppError::Decrypt)
+                ),
+                data.ciphertext.as_ref(),
+            )
+            .map_err(|_| AppError::Decrypt)
         }
         CipherType::Aes256Gcm => {
-            let cipher = Aes256Gcm::new_from_slice(&key)?;
-            let nonce_array =
-                aes_gcm::Nonce::from_slice(&data.nonce);
-            cipher
-                .decrypt(
-                    nonce_array,
-                    data.ciphertext.as_ref(),
-                )
-                .map_err(|_| AppError::Decrypt)
+            let c = Aes256Gcm::new_from_slice(&key)?;
+            c.decrypt(
+                aes_gcm::Nonce::from_slice(&data.nonce),
+                data.ciphertext.as_ref(),
+            )
+            .map_err(|_| AppError::Decrypt)
         }
     }
 }

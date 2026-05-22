@@ -1,5 +1,4 @@
 pub use derive_more::Display;
-pub use dioxus::core::SpawnIfAsync;
 pub use dioxus::document::EvalError;
 pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::{
@@ -7,8 +6,8 @@ pub use dioxus_free_icons::icons::fa_brands_icons::{
 };
 pub use dioxus_free_icons::icons::fa_solid_icons::{
     FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen,
-    FaHeart, FaLock, FaLockOpen, FaPenToSquare,
-    FaShareNodes, FaSquarePlus, FaTrash, FaUser,
+    FaHeart, FaLock, FaLockOpen, FaPaste, FaPenToSquare,
+    FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;
@@ -16,8 +15,8 @@ pub use enum_iterator::{next_cycle, Sequence};
 pub use functora::*;
 pub use serde::de::DeserializeOwned;
 pub use serde::{Deserialize, Serialize};
-pub use std::fmt::Display;
 pub use std::str::FromStr;
+pub use thiserror::Error;
 pub mod dioxus_elements {
     pub use elements::*;
     pub mod elements {

@@ -3,9 +3,12 @@ use crate::error::*;
 use base64::{
     engine::general_purpose::URL_SAFE_NO_PAD, Engine,
 };
-use qrcode::{render::svg, QrCode};
+use rxing::qrcode::QRCodeWriter;
+use rxing::{BarcodeFormat, EncodeHints, Writer};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::fmt::Write;
+use tap::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NoteData {
@@ -17,15 +20,15 @@ pub fn encode_note(
     note: &NoteData,
 ) -> Result<String, AppError> {
     serde_json::to_vec(note)
-        .map(|bytes| URL_SAFE_NO_PAD.encode(bytes))
-        .map_err(Into::into)
+        .map(|bytes| URL_SAFE_NO_PAD.encode(bytes))?
+        .pipe(Ok)
 }
 
 pub fn decode_note(
     encoded: &str,
 ) -> Result<NoteData, AppError> {
     let bytes = URL_SAFE_NO_PAD.decode(encoded)?;
-    serde_json::from_slice(&bytes).map_err(Into::into)
+    serde_json::from_slice::<NoteData>(&bytes)?.pipe(Ok)
 }
 
 pub fn build_url(
@@ -64,16 +67,53 @@ pub fn extract_note_param(
                 })
                 .ok_or(AppError::NoNoteParam)
         })?
-        .map(Cow::into_owned)
-        .map_err(Into::into)
+        .map(Cow::into_owned)?
+        .pipe(Ok)
+}
+
+const QR_SVG_SIZE: i32 = 200;
+const QR_SVG_QUIET_ZONE: i32 = 2;
+
+fn bitmatrix_to_svg(
+    matrix: &rxing::common::BitMatrix,
+) -> String {
+    let w = matrix.getWidth();
+    let h = matrix.getHeight();
+    let mut svg =
+        String::with_capacity(256 + (w * h * 2) as usize);
+    write!(
+        svg,
+        r##"<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {} {}" shape-rendering="crispEdges"><path d=""##,
+        w, h,
+    )
+    .ok();
+    for y in 0..h {
+        for x in 0..w {
+            if matrix.get(x, y) {
+                write!(svg, "M{} {} h1 v1 h-1 z ", x, y)
+                    .ok();
+            }
+        }
+    }
+    write!(svg, r##"" fill="#000000"/></svg>"##).ok();
+    svg
 }
 
 pub fn generate_qr_code(
     url: &str,
 ) -> Result<String, AppError> {
-    Ok(QrCode::new(url).map(|code| {
-        code.render::<svg::Color>()
-            .min_dimensions(200, 200)
-            .build()
-    })?)
+    let hints = EncodeHints {
+        Margin: Some(QR_SVG_QUIET_ZONE.to_string()),
+        ..Default::default()
+    };
+    QRCodeWriter
+        .encode_with_hints(
+            url,
+            &BarcodeFormat::QR_CODE,
+            QR_SVG_SIZE,
+            QR_SVG_SIZE,
+            &hints,
+        )
+        .map(|matrix| bitmatrix_to_svg(&matrix))?
+        .pipe(Ok)
 }

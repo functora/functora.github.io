@@ -2,3 +2,6 @@
 .static {
   position: static;
 }
+.flex-wrap {
+  flex-wrap: wrap;
+}

@@ -1,9 +1,7 @@
 use cryptonote::crypto::{
     decrypt_symmetric, derive_key, encrypt_symmetric,
-    CipherType,
+    CipherType, KEY_SIZE,
 };
-
-const SALT_SIZE: usize = 32;
 
 #[test]
 fn test_symmetric_chacha20_roundtrip() {
@@ -51,7 +49,7 @@ fn test_symmetric_wrong_password() {
 #[test]
 fn test_key_derivation_consistency() {
     let password = "test";
-    let salt = vec![1u8; SALT_SIZE];
+    let salt = vec![1u8; KEY_SIZE];
     let key1 = derive_key(
         password,
         &salt,
@@ -70,7 +68,7 @@ fn test_key_derivation_consistency() {
 #[test]
 fn test_derive_key_different_ciphers_same_password() {
     let password = "test_password";
-    let salt = vec![42u8; SALT_SIZE];
+    let salt = vec![42u8; KEY_SIZE];
     let key_chacha = derive_key(
         password,
         &salt,
@@ -86,8 +84,8 @@ fn test_derive_key_different_ciphers_same_password() {
 #[test]
 fn test_derive_key_different_salts() {
     let password = "test_password";
-    let salt1 = vec![1u8; SALT_SIZE];
-    let salt2 = vec![2u8; SALT_SIZE];
+    let salt1 = vec![1u8; KEY_SIZE];
+    let salt2 = vec![2u8; KEY_SIZE];
     let key1 = derive_key(
         password,
         &salt1,
@@ -105,7 +103,7 @@ fn test_derive_key_different_salts() {
 
 #[test]
 fn test_derive_key_empty_password() {
-    let salt = vec![1u8; SALT_SIZE];
+    let salt = vec![1u8; KEY_SIZE];
     let key =
         derive_key("", &salt, CipherType::ChaCha20Poly1305);
     assert!(key.is_ok());

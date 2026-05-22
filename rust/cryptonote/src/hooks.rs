@@ -1,5 +1,7 @@
 use crate::components::*;
+use crate::i18n::{get_translations, Translations};
 use crate::prelude::*;
+use crate::AppCfg;
 use dioxus_router::Navigator;
 
 #[derive(Clone, Copy)]
@@ -39,4 +41,10 @@ pub fn use_app_nav() -> AppNav {
     let nav = use_navigator();
     let idx = use_context::<Signal<u32>>();
     AppNav { nav, idx }
+}
+
+pub fn use_translations() -> Translations {
+    get_translations(
+        use_context::<Signal<AppCfg>>().read().language,
+    )
 }

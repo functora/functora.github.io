@@ -46,7 +46,7 @@ pub fn Donate() -> Element {
 
                 Dock { message: btc_message,
                     Button {
-                        icon: FaPenToSquare,
+                        icon: FaCopy,
                         primary: true,
                         onclick: move |_| {
                             write_clipboard(BTC_ADDRESS.to_string(), btc_message);
@@ -76,7 +76,7 @@ pub fn Donate() -> Element {
 
                 Dock { message: xmr_message,
                     Button {
-                        icon: FaPenToSquare,
+                        icon: FaCopy,
                         primary: true,
                         onclick: move |_| {
                             write_clipboard(XMR_ADDRESS.to_string(), xmr_message);

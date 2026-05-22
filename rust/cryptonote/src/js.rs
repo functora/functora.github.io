@@ -1,7 +1,7 @@
 use crate::*;
 use crate::{AppError, UiMessage};
 
-pub fn write_clipboard_to(
+pub fn write_clipboard(
     val: String,
     mut message: Signal<Option<UiMessage>>,
 ) {
@@ -13,6 +13,17 @@ pub fn write_clipboard_to(
             ))),
         }
     });
+}
+
+pub async fn js_read_clipboard() -> Result<String, EvalError>
+{
+    js_fun(
+        (),
+        r#"function(arg){
+        return await window.navigator.clipboard.readText();
+        }"#,
+    )
+    .await
 }
 
 #[derive(

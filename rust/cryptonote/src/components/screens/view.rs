@@ -116,6 +116,20 @@ pub fn View(note: Option<String>) -> Element {
 
                     Dock { message,
                         Button {
+                            icon: FaPaste,
+                            onclick: move |_| {
+                                spawn(async move {
+                                    match js_read_clipboard().await {
+                                        Ok(text) => password_input.set(text),
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
+                                        }
+                                    }
+                                });
+                            },
+                            "{t.paste_button}"
+                        }
+                        Button {
                             icon: FaLockOpen,
                             primary: true,
                             onclick: move |_| decrypt_note(),
@@ -152,7 +166,7 @@ pub fn View(note: Option<String>) -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard_to(content.clone(), message);
+                                write_clipboard(content.clone(), message);
                             },
                             "{t.copy_button}"
                         }

@@ -97,7 +97,7 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            write_clipboard_to(url(), message);
+                            write_clipboard(url(), message);
                         },
                     }
 
@@ -113,7 +113,7 @@ pub fn Share() -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard_to(url(), message);
+                                write_clipboard(url(), message);
                             },
                             "{t.copy_button}"
                         }

@@ -40,7 +40,7 @@ pub fn Donate() -> Element {
                     rows: "2",
                     value: "{BTC_ADDRESS}",
                     onclick: move |_| {
-                        write_clipboard_to(BTC_ADDRESS.to_string(), btc_message);
+                        write_clipboard(BTC_ADDRESS.to_string(), btc_message);
                     },
                 }
 
@@ -49,7 +49,7 @@ pub fn Donate() -> Element {
                         icon: FaPenToSquare,
                         primary: true,
                         onclick: move |_| {
-                            write_clipboard_to(BTC_ADDRESS.to_string(), btc_message);
+                            write_clipboard(BTC_ADDRESS.to_string(), btc_message);
                         },
                         "{t.copy_button}"
                     }
@@ -70,7 +70,7 @@ pub fn Donate() -> Element {
                     rows: "2",
                     value: "{XMR_ADDRESS}",
                     onclick: move |_| {
-                        write_clipboard_to(XMR_ADDRESS.to_string(), xmr_message);
+                        write_clipboard(XMR_ADDRESS.to_string(), xmr_message);
                     },
                 }
 
@@ -79,7 +79,7 @@ pub fn Donate() -> Element {
                         icon: FaPenToSquare,
                         primary: true,
                         onclick: move |_| {
-                            write_clipboard_to(XMR_ADDRESS.to_string(), xmr_message);
+                            write_clipboard(XMR_ADDRESS.to_string(), xmr_message);
                         },
                         "{t.copy_button}"
                     }

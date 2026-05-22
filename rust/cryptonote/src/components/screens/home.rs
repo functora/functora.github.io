@@ -91,18 +91,7 @@ pub fn Home() -> Element {
                 br {}
 
                 if action == ActionMode::Create {
-                    label { "{t.note}" }
-                    textarea {
-                        placeholder: "{t.note_placeholder}",
-                        rows: "8",
-                        value: "{ctx.read().content.clone()}",
-                        oninput: move |evt| {
-                            ctx.write().content = evt.value();
-                        },
-                    }
-
                     label { "{t.mode}" }
-
                     input {
                         r#type: "radio",
                         checked: ctx.read().cipher.is_some(),
@@ -167,8 +156,32 @@ pub fn Home() -> Element {
                     }
                     br {}
 
+                    label { "{t.note}" }
+                    textarea {
+                        placeholder: "{t.note_placeholder}",
+                        rows: "8",
+                        value: "{ctx.read().content.clone()}",
+                        oninput: move |evt| {
+                            ctx.write().content = evt.value();
+                        },
+                    }
+
                     Dock { message,
                         Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
+                        Button {
+                            icon: FaPaste,
+                            onclick: move |_| {
+                                spawn(async move {
+                                    match js_read_clipboard().await {
+                                        Ok(text) => ctx.write().content = text,
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
+                                        }
+                                    }
+                                });
+                            },
+                            "{t.paste_button}"
+                        }
                         Button {
                             icon: FaEye,
                             onclick: move |_| {
@@ -197,6 +210,20 @@ pub fn Home() -> Element {
 
                     Dock { message,
                         Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
+                        Button {
+                            icon: FaPaste,
+                            onclick: move |_| {
+                                spawn(async move {
+                                    match js_read_clipboard().await {
+                                        Ok(text) => url_input.set(text),
+                                        Err(e) => {
+                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
+                                        }
+                                    }
+                                });
+                            },
+                            "{t.paste_button}"
+                        }
                         Button {
                             icon: FaFolderOpen,
                             primary: true,

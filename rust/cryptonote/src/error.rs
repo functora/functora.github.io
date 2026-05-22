@@ -18,7 +18,8 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    JsWriteClipboard(#[from] EvalError),
+    JsWriteClipboard(EvalError),
+    JsReadClipboard(EvalError),
     CameraNotAvailable,
     CameraPermissionDenied,
     QrDecode,
@@ -46,6 +47,9 @@ impl AppError {
             AppError::NoNoteParam => t.no_note_param,
             AppError::JsWriteClipboard(_) => {
                 t.clipboard_write_error
+            }
+            AppError::JsReadClipboard(_) => {
+                t.clipboard_read_error
             }
             AppError::CameraNotAvailable => {
                 t.qr_camera_not_available

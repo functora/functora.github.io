@@ -158,6 +158,7 @@ pub fn View(note: Option<String>) -> Element {
                         Button {
                             icon: FaPenToSquare,
                             onclick: move |_| {
+                                ctx.write().action = ActionMode::Create;
                                 nav.push(Screen::Home.to_route(None));
                             },
                             "{t.edit_note}"

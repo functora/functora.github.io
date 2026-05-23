@@ -69,11 +69,29 @@
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
         mkAab = app: let
           mkCmd = target: ''
+            android-icons
+            RES="./target/dx/${app}/release/android/app/app/src/main/res"
+            rm -f "$RES"/mipmap-*/ic_launcher.webp \
+              "$RES"/mipmap-*/ic_launcher.png \
+              "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
+              "$RES"/drawable/ic_launcher_background.xml \
+              "$RES"/drawable/ic_launcher_background.png \
+              "$RES"/drawable-v24/ic_launcher_foreground.xml \
+              "$RES"/drawable-v24/ic_launcher_foreground.png
             dx bundle --release --android --debug-symbols=false --target "${target}"
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
             GRADLE="./target/dx/${app}/release/android/app/app/build.gradle.kts"
             sed -i "s/versionCode = 1/versionCode = $VC/" "$GRADLE"
+            rm -f "$RES"/mipmap-*/ic_launcher.webp \
+              "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
+              "$RES"/drawable/ic_launcher_background.xml \
+              "$RES"/drawable-v24/ic_launcher_foreground.xml
+            cp assets/favicon/mipmap-mdpi.png "$RES/mipmap-mdpi/ic_launcher.png"
+            cp assets/favicon/mipmap-hdpi.png "$RES/mipmap-hdpi/ic_launcher.png"
+            cp assets/favicon/mipmap-xhdpi.png "$RES/mipmap-xhdpi/ic_launcher.png"
+            cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
+            cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
@@ -156,13 +174,11 @@
             INPUT="assets/favicon/android-chrome-512x512.png"
             DIR="assets/favicon"
 
-            magick "$INPUT" -resize 48x48   "$DIR/mipmap-mdpi.png"
-            magick "$INPUT" -resize 72x72   "$DIR/mipmap-hdpi.png"
-            magick "$INPUT" -resize 96x96   "$DIR/mipmap-xhdpi.png"
+            magick "$INPUT" -resize 48x48 "$DIR/mipmap-mdpi.png"
+            magick "$INPUT" -resize 72x72 "$DIR/mipmap-hdpi.png"
+            magick "$INPUT" -resize 96x96 "$DIR/mipmap-xhdpi.png"
             magick "$INPUT" -resize 144x144 "$DIR/mipmap-xxhdpi.png"
             magick "$INPUT" -resize 192x192 "$DIR/mipmap-xxxhdpi.png"
-            magick "$INPUT" -resize 432x432 "$DIR/android-foreground.png"
-            magick -size 432x432 xc:#1E1E2E "$DIR/android-background.png"
           '';
         };
         mkApk = app:

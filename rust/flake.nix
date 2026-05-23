@@ -70,6 +70,15 @@
         mkAab = app: let
           mkCmd = target: ''
             dx bundle --release --android --debug-symbols=false --target "${target}"
+            VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+            VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
+            GRADLE="./target/dx/${app}/release/android/app/app/build.gradle.kts"
+            sed -i "s/versionCode = 1/versionCode = $VC/" "$GRADLE"
+            export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
+            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2"
+            (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
+            OUT="./target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
+            cp "$OUT/app-release.aab" "$OUT/Cryptonote-${target}.aab"
             echo "Aab ${app} release success for ${target}!"
           '';
         in
@@ -78,6 +87,7 @@
               target:
                 pkgs.writeShellApplication {
                   name = "release-aab-${app}-${target}";
+                  runtimeInputs = with pkgs; [coreutils gnugrep gnused jdk];
                   text = ''
                     (
                       cd "${app}"
@@ -92,6 +102,7 @@
             (
               pkgs.writeShellApplication {
                 name = "release-aab-${app}-all";
+                runtimeInputs = with pkgs; [coreutils gnugrep gnused jdk];
                 text = ''
                   (
                     cd "${app}"
@@ -104,7 +115,7 @@
         mkWeb = app:
           pkgs.writeShellApplication rec {
             name = "release-web-${app}";
-            runtimeInputs = [pkgs.coreutils pkgs.gnugrep pkgs.gnused];
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused];
             text = ''
               (
                 cd "${app}"

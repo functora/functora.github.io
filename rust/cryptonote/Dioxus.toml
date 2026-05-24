@@ -28,3 +28,7 @@ icon = ["assets/favicon/android-chrome-512x512.png"]
 
 [permissions]
 camera = { description = "Scan QR codes" }
+
+[android]
+target_sdk = 35
+compile_sdk = 35

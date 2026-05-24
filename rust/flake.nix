@@ -59,8 +59,8 @@
             doCheck = false;
           };
         android-sdk-args = {
-          platformVersions = ["33" "34"];
-          buildToolsVersions = ["33.0.2" "34.0.0"];
+platformVersions = ["33" "34" "35"];
+    buildToolsVersions = ["33.0.2" "34.0.0" "35.0.0"];
           abiVersions = ["armeabi-v7a" "arm64-v8a" "x86" "x86_64"];
           systemImageTypes = ["default" "google_apis_playstore"];
           includeNDK = true;
@@ -93,7 +93,7 @@
             cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
-            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2"
+            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
             OUT="./target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/Cryptonote-${target}.aab"
@@ -191,7 +191,7 @@
               IFS= read -r -s -p "Keystore password: " KS_PASS
               echo
 
-              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2";
+              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2";
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
               export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
 
@@ -231,7 +231,7 @@
           ANDROID_SDK_ROOT = ANDROID_HOME;
           NDK_HOME = "${ANDROID_HOME}/ndk-bundle";
           ANDROID_NDK_HOME = NDK_HOME;
-          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/33.0.2/aapt2";
+          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2";
           CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android28-clang";
           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
           CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";

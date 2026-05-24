@@ -23,8 +23,10 @@ pub fn Donate() -> Element {
     rsx! {
         Breadcrumb { title: t.donate_title.to_string() }
         section {
-            h3 { "{t.donate_greeting}" }
-            article { font_size: "larger", "{t.donate_intro}" }
+            fieldset {
+                h3 { "{t.donate_greeting}" }
+                article { font_size: "larger", "{t.donate_intro}" }
+            }
 
             br {}
 

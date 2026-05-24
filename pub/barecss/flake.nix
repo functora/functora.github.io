@@ -2,18 +2,20 @@
   description = "Functora Dev Shell";
 
   inputs = {
-    unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    stable.url = "github:nixos/nixpkgs?ref=nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
+    opencode-nix.url = "github:dominicnunez/opencode-nix";
   };
 
   outputs = {
     self,
-    unstable,
+    stable,
     flake-utils,
+    opencode-nix,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = unstable.legacyPackages.${system};
+        pkgs = stable.legacyPackages.${system};
         release-barecss = pkgs.writeShellApplication {
           name = "release-barecss";
           text = ''
@@ -24,22 +26,15 @@
         shell = {
           packages = with pkgs; [
             djlint
-            clean-css-cli
             lessc
+            clean-css-cli
             release-barecss
+            opencode-nix.packages.${system}.default
+            chromium
           ];
         };
       in {
         devShells.default = pkgs.mkShell shell;
-        devShells.unfree = pkgs.mkShell (shell
-          // {
-            packages =
-              shell.packages
-              ++ [
-                pkgs.qutebrowser
-                pkgs.antigravity
-              ];
-          });
       }
     );
 }

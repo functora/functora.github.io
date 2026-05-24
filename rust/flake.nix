@@ -59,8 +59,8 @@
             doCheck = false;
           };
         android-sdk-args = {
-platformVersions = ["33" "34" "35"];
-    buildToolsVersions = ["33.0.2" "34.0.0" "35.0.0"];
+          platformVersions = ["34" "35"];
+          buildToolsVersions = ["34.0.0" "35.0.0"];
           abiVersions = ["armeabi-v7a" "arm64-v8a" "x86" "x86_64"];
           systemImageTypes = ["default" "google_apis_playstore"];
           includeNDK = true;
@@ -270,6 +270,7 @@ platformVersions = ["33" "34" "35"];
               file
               gcc
               # android
+              aapt
               llvmPackages.lld
               llvmPackages.clang-unwrapped
               android-sdk

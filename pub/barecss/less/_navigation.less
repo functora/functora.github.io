@@ -208,6 +208,7 @@ nav@{x} {
 			left: 0;
 			right: 0;
 			bottom: 0;
+			z-index: 12;
 
 			&:before,
 			&:after {
@@ -233,6 +234,7 @@ nav@{x} {
 				box-shadow: @box-shadow;
 				overflow-x: visible;
 				overflow-y: auto;
+				z-index: 12;
 
 				li {
 					display: block;
@@ -245,6 +247,15 @@ nav@{x} {
 				}
 			}
 
+			// overlay to catch clicks when sidebar is open
+
+			&:has(>input:checked)::before {
+				content: "";
+				position: fixed;
+				inset: 0;
+				z-index: 11;
+			}
+
 			input {
 				&:checked {
 
@@ -252,6 +263,11 @@ nav@{x} {
 
 					~ul {
 						transform: none;
+						pointer-events: none;
+
+						a {
+							pointer-events: auto;
+						}
 					}
 
 					// hides the hamburger and shows the cross when the input is checked

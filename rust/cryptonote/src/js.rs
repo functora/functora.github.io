@@ -112,8 +112,8 @@ pub struct FrameData {
     pub height: u32,
 }
 
-pub async fn js_capture_frame(
-) -> Result<FrameData, EvalError> {
+pub async fn js_capture_frame()
+-> Result<FrameData, EvalError> {
     js_fun(
         (),
         r#"function(arg){

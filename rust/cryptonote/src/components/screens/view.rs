@@ -143,7 +143,11 @@ pub fn View(note: Option<String>) -> Element {
             section {
                 fieldset {
                     article {
-                        div { dangerous_inner_html: "{rendered().unwrap_or_default()}" }
+                        div {
+                            overflow_wrap: "anywhere",
+                            word_break: "break-word",
+                            dangerous_inner_html: "{rendered().unwrap_or_default()}",
+                        }
                     }
 
                     Dock { message,

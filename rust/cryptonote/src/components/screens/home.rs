@@ -172,6 +172,13 @@ pub fn Home() -> Element {
                     Dock { message,
                         Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
+                            icon: FaEye,
+                            onclick: move |_| {
+                                nav.push(Screen::View.to_route(None));
+                            },
+                            "{t.view_button}"
+                        }
+                        Button {
                             icon: FaPaste,
                             onclick: move |_| {
                                 spawn(async move {
@@ -184,13 +191,6 @@ pub fn Home() -> Element {
                                 });
                             },
                             "{t.paste_button}"
-                        }
-                        Button {
-                            icon: FaEye,
-                            onclick: move |_| {
-                                nav.push(Screen::View.to_route(None));
-                            },
-                            "{t.view_button}"
                         }
                         Button {
                             icon: FaShareNodes,

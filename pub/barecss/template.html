@@ -1,85 +1,342 @@
-<!doctype HTML>
-
-<!-- head -->
-
+<!doctype html>
 <html lang="en">
-<head>
-	<title>Template | BareCSS</title>
-	
-	<!-- meta -->
-	<meta charset=utf-8>
-	<meta name="description" content="BareCSS template file">
-	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-	
-	<!-- css -->
-	
-	<link href="css/bare.min.css" rel="stylesheet">
-</head>
+  <head>
+    <title>Template | BareCSS</title>
+    <meta charset="utf-8" />
+    <meta name="description" content="BareCSS — all components" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <link href="css/bare.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- ====== NAVIGATION ====== -->
+    <nav>
+      <label>
+        <input type="checkbox" />
+        <header>
+          <a href="#"><img src="img/your-logo.svg" alt="" />BareCSS</a>
+        </header>
+        <ul>
+          <li><a href="#typography">Typography</a></li>
+          <li><a href="#buttons">Buttons</a></li>
+          <li>
+            <a>Dropdown</a>
+            <menu>
+              <menuitem><a href="#forms">Forms</a></menuitem>
+              <menuitem><a href="#grid">Grid</a></menuitem>
+              <menuitem><a href="#cards">Cards</a></menuitem>
+            </menu>
+          </li>
+          <li><a href="#misc">Misc</a></li>
+        </ul>
+      </label>
+    </nav>
 
-<!-- body -->
+    <!-- ====== TYPOGRAPHY ====== -->
+    <section id="typography" mt->
+      <h1>Heading h1</h1>
+      <h2>Heading h2</h2>
+      <h3>Heading h3</h3>
+      <h4>Heading h4</h4>
+      <h5>Heading h5</h5>
+      <h6>Heading h6</h6>
 
-<body>
-	
-<!-- nav -->
+      <p>
+        Paragraph with an <a href="#">anchor link</a> — hover to see the
+        underline effect. Lorem ipsum dolor sit amet, consectetur adipisicing
+        elit.
+      </p>
+      <p>
+        Another paragraph. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
 
-<nav><!-- use fx attribute for fixed positioning -->
-	<label>
-		<input type="checkbox">
-		<header>
-			<a href="http://www.barecss.com"><img src="img/your-logo.svg">Site name</a>
-		</header>
-		
-		<ul>
-			<li><a href="#one">Menu item</a></li>
-			<li><a href="#two">Menu item</a></li>
-			<li>
-				<a>Drop down</a>
-				<menu>
-					<menuitem><a href="#three">Menu item</a></menuitem>
-					<menuitem><a href="#four">Menu item</a></menuitem>
-					<menuitem><a href="#five">Menu item</a></menuitem>
-				</menu>
-			</li>
-		</ul>
-	</label>
-</nav>
+      <blockquote>A blockquote element with a left border accent.</blockquote>
 
-<!-- standard section for content -->
+      <p><code>Inline code fragment</code> inside a paragraph.</p>
+      <pre><code>// Code block inside &lt;pre&gt;
+fn main() {
+	println!("hello from barecss");
+}</code></pre>
 
-<section mt->
-	<h1>Standard content</h1>
-	
-	<p>Paragraph one lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.</p>
-	
-	<p>Paragraph two exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint.</p>
-</section>
+      <ul>
+        <li>Unordered list item one</li>
+        <li>
+          Unordered list item two
+          <ul>
+            <li>Nested item (circle)</li>
+          </ul>
+        </li>
+      </ul>
+      <ol>
+        <li>Ordered list item one</li>
+        <li>
+          Ordered list item two
+          <ol>
+            <li>Nested item (lower-alpha)</li>
+          </ol>
+        </li>
+      </ol>
+    </section>
 
-<!-- section with grid -->
+    <!-- ====== BUTTONS ====== -->
+    <section id="buttons">
+      <h2>Buttons</h2>
+      <p>
+        <button>Normal button</button>
+        <button primary>Primary button</button>
+        <button round>Round button</button>
+        <button disabled>Disabled</button>
+        <a btn href="#">Link as button</a>
+        <a btn primary href="#">Primary link btn</a>
+      </p>
+      <p>
+        <button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v8M8 12h8" />
+          </svg>
+          With icon
+        </button>
+        <button primary>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Save
+        </button>
+      </p>
+    </section>
 
-<section>
-	<h2>Section with grid</h2>
-	
-	<grid>
-		<div col="1/3">
-			<h3>1/3 grid</h3>
-			
-			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-		</div>
-		
-		<div col="1/3">
-			<h3>1/3 grid</h3>
-			
-			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-		</div>
-		
-		<div col="1/3">
-			<h3>1/3 grid</h3>
-			
-			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-		</div>
-	</grid>
-</section>
+    <!-- ====== CARDS ====== -->
+    <section id="cards">
+      <h2>Cards</h2>
+      <grid>
+        <div col="1/2">
+          <card>
+            <h3>Card title</h3>
+            <p>
+              Content inside a <code>&lt;card&gt;</code> element with a subtle
+              shadow.
+            </p>
+          </card>
+        </div>
+        <div col="1/2">
+          <card>
+            <h3>Another card</h3>
+            <p>Cards stack vertically and collapse to full-width on mobile.</p>
+            <hr />
+            <tag>demo</tag>
+            <tag primary>barecss</tag>
+          </card>
+        </div>
+      </grid>
+    </section>
 
-</body>
+    <!-- ====== GRID ====== -->
+    <section id="grid">
+      <h2>Grid</h2>
+      <grid>
+        <div col="1/3">
+          <card
+            ><h3>1/3</h3>
+            <p>First column</p></card
+          >
+        </div>
+        <div col="1/3">
+          <card
+            ><h3>1/3</h3>
+            <p>Second column</p></card
+          >
+        </div>
+        <div col="1/3">
+          <card
+            ><h3>1/3</h3>
+            <p>Third column</p></card
+          >
+        </div>
+      </grid>
+      <grid>
+        <div col="1/2">
+          <card
+            ><h3>1/2</h3>
+            <p>Left</p></card
+          >
+        </div>
+        <div col="1/2">
+          <card
+            ><h3>1/2</h3>
+            <p>Right</p></card
+          >
+        </div>
+      </grid>
+      <grid>
+        <div col="1/4">
+          <card><p>1/4</p></card>
+        </div>
+        <div col="3/4">
+          <card><p>3/4</p></card>
+        </div>
+      </grid>
+    </section>
 
+    <!-- ====== FORMS ====== -->
+    <section id="forms">
+      <h2>Forms</h2>
+      <form>
+        <label for="name"
+          >Name
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </label>
+        <input id="name" type="text" placeholder="Your name" />
+
+        <label for="bio">Bio</label>
+        <textarea id="bio" placeholder="Tell us about yourself"></textarea>
+
+        <label for="lang">Language</label>
+        <select id="lang">
+          <option>Rust</option>
+          <option>TypeScript</option>
+          <option>Python</option>
+        </select>
+
+        <fieldset>
+          <legend>Preferences</legend>
+          <input type="radio" name="radio" id="r1" /><label for="r1"
+            >Option A</label
+          >
+          <input type="radio" name="radio" id="r2" checked /><label for="r2"
+            >Option B</label
+          >
+          <input type="checkbox" id="c1" /><label for="c1">Check me</label>
+          <input type="checkbox" id="c2" checked /><label for="c2"
+            >Already checked</label
+          >
+          <br />
+          <br />
+          <button type="submit" primary>Submit</button>
+          <button type="reset">Reset</button>
+        </fieldset>
+      </form>
+    </section>
+
+    <!-- ====== TABLE ====== -->
+    <section id="table">
+      <h2>Table</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Alice</td>
+            <td>Developer</td>
+            <td>Active</td>
+          </tr>
+          <tr>
+            <td>Bob</td>
+            <td>Designer</td>
+            <td>Away</td>
+          </tr>
+          <tr>
+            <td>Carol</td>
+            <td>Manager</td>
+            <td>Active</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ====== MISC ====== -->
+    <section id="misc">
+      <h2>Tooltips</h2>
+      <p>
+        <span tt="Hello from barecss">Hover me (tooltip)</span> —
+        <button disabled dtt="This button is disabled">
+          Disabled with tooltip
+        </button>
+        —
+        <a att href="https://barecss.com">Anchor tooltip</a>
+      </p>
+
+      <h2>Tags</h2>
+      <p>
+        <tag>default</tag>
+        <tag primary>primary</tag>
+        <tag round>rounded</tag>
+      </p>
+
+      <h2>Video</h2>
+      <video
+        controls
+        poster="https://via.placeholder.com/640x360/679/fff?text=Video+placeholder"
+      >
+        <source
+          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          type="video/mp4"
+        />
+      </video>
+
+      <h2>Utility attributes</h2>
+      <p>
+        <code>[full]</code>:
+        <span
+          full
+          style="background: var(--grey-ultralight); display: inline-block"
+          >full-width element</span
+        >
+      </p>
+      <p>
+        Font families: <span serif>serif</span> · <span sans>sans</span> ·
+        <span mono>mono</span>
+      </p>
+      <p>
+        Font sizes: <span fs="xl">xl</span> <span fs="l">l</span>
+        <span fs="m">m</span> <span fs="s">s</span> <span fs="xs">xs</span>
+      </p>
+      <p>
+        Text align: <span txt="l">left</span> <span txt="c">center</span>
+        <span txt="r">right</span>
+      </p>
+      <p>Margins: <code>mt=2</code> <code>mb=4</code> etc.</p>
+    </section>
+
+    <!-- ====== FOOTER ====== -->
+    <footer>
+      <p>BareCSS — all components demo</p>
+    </footer>
+  </body>
 </html>

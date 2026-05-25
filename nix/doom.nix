@@ -340,6 +340,15 @@
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {
+        tag = "ashes-3";
+        gfx = "";
+        total = "${../bak/doom/ashes151/Resources/AshesSAMenu.pk3} ${../bak/doom/ashes151/Resources/lightmodepatch.pk3} ${../bak/doom/ashes151/Resources/AshesHardReset_105.pk3} ${../bak/doom/ashes-mods/ashes_flashlight_hitcharge-v2.pk3} ${../bak/doom/ashes-mods/asheshardreset_buildmovev54.pk3} ${../bak/doom/ashes-mods/Ashes_HR_ATHM_mod.pk3} ${../bak/doom/ashes-mods/Ashes_HR_cutscene_update.pk3} ${../bak/doom/ashes-mods/ashes_nightvisor.pk3} ${../bak/doom/ashes-mods/ashes-wpn-tracers.pk3} ${../bak/doom/ashes-mods/Dan_Ashes_Hard_Reset_After_Effects.pk3} ${../bak/doom/ashes-mods/Sprite-Fixes.pk3}";
+        liquid = "";
+        lights = "";
+        relite = "";
+        nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
         tag = "infinite";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;

@@ -10,6 +10,9 @@ const APPLE_TOUCH_ICON: Asset =
     asset!("/assets/favicon/apple-touch-icon.png");
 const WEB_MANIFEST: Asset =
     asset!("/assets/favicon/site.webmanifest");
+const NO_CSS_MINIFY: AssetOptions = AssetOptions::css()
+    .with_minify(false)
+    .into_asset_options();
 
 fn main() {
     dioxus::launch(App);
@@ -22,7 +25,7 @@ fn App() -> Element {
     #[cfg(target_arch = "wasm32")]
     let cfg = {
         use dioxus_sdk::storage::{
-            use_synced_storage, LocalStorage,
+            LocalStorage, use_synced_storage,
         };
         use_synced_storage::<LocalStorage, AppCfg>(
             APP_STORAGE_KEY.to_string(),
@@ -66,7 +69,10 @@ fn App() -> Element {
             href: APPLE_TOUCH_ICON,
         }
         document::Link { rel: "manifest", href: WEB_MANIFEST }
-        document::Link { rel: "stylesheet", href: asset!("/assets/bare.min.css") }
+        document::Link {
+            rel: "stylesheet",
+            href: asset!("/assets/bare.min.css", NO_CSS_MINIFY),
+        }
         document::Link { rel: "stylesheet", href: asset!("/assets/app.css") }
         Router::<Route> {}
     }

@@ -31,6 +31,7 @@
             release-barecss
             opencode-nix.packages.${system}.default
             chromium
+            cloudflared
           ];
         };
       in {

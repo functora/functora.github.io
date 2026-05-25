@@ -11,6 +11,19 @@ const APPLE_TOUCH_ICON: Asset =
 const WEB_MANIFEST: Asset =
     asset!("/assets/favicon/site.webmanifest");
 
+const MOBILE_NAV: &str = "
+@media (max-width:50rem) {
+  nav:not([class]){position:fixed;padding:0;top:0;left:0;right:0}
+  nav:not([class]) label{height:4.4rem}
+  nav:not([class]) label>ul{margin:0;list-style:none;position:fixed;top:4.4rem;right:0;bottom:0;padding:0;transform:translate3d(100%,0,0);border-top:1px solid var(--primary);text-align:left;background:var(--surface);box-shadow:0 1px 4px 0 rgba(0,0,0,.2);overflow-x:visible;overflow-y:auto;z-index:12}
+  nav:not([class]) label>ul li{display:block;border-top:1px solid var(--grey-light);font-size:1.6rem}
+  nav:not([class]) label>ul a{padding:1rem 6rem 1rem 2rem;border:none}
+  nav:not([class]) label input:checked~ul{transform:none;pointer-events:none}
+  nav:not([class]) label input:checked~ul a{pointer-events:auto}
+  body{padding-top:4.4rem}
+}
+";
+
 fn main() {
     dioxus::launch(App);
 }
@@ -68,6 +81,7 @@ fn App() -> Element {
         document::Link { rel: "manifest", href: WEB_MANIFEST }
         document::Link { rel: "stylesheet", href: asset!("/assets/bare.min.css") }
         document::Link { rel: "stylesheet", href: asset!("/assets/app.css") }
+        document::Style { {MOBILE_NAV} }
         Router::<Route> {}
     }
 }

@@ -96,7 +96,8 @@
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
             OUT="./target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
-            cp "$OUT/app-release.aab" "$OUT/Cryptonote-${target}.aab"
+            cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
+            mv "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
             echo "Aab ${app} release success for ${target}!"
           '';
         in

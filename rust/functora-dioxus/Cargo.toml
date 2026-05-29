@@ -1,6 +1,66 @@
 [package]
 name = "functora-dioxus"
+license = "MIT"
 version = "0.1.0"
 edition = "2024"
+keywords = ["dioxus", "ui", "web", "utility"]
+categories = ["web-programming", "rust-patterns"]
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-dioxus"
+documentation = "https://docs.rs/functora-dioxus"
+description = "Reusable Dioxus components, JS interop, storage, and utilities."
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 
 [dependencies]
+dioxus = { version = "=0.7.2", features = ["html", "router"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+derive_more = { version = "2.1.0", features = ["display"] }
+either = { version = "1.15.0", features = ["serde"] }
+tracing = "0.1.43"
+functora = "0.1.1"
+tap = "1.0.1"
+dioxus-free-icons = { version = "0.10.0", features = [
+  "font-awesome-brands",
+  "font-awesome-solid",
+] }
+rxing = { version = "0.9.0", default-features = false, features = [
+  "wasm_support",
+  "encoding_rs",
+  "decoders",
+  "qrcode",
+], optional = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21.1"
+
+[features]
+default = ["qr"]
+qr = ["dep:rxing"]
+
+[dev-dependencies]
+dioxus-free-icons = { version = "0.10.0", features = [
+  "font-awesome-brands",
+  "font-awesome-solid",
+] }
+rxing = { version = "0.9.0", default-features = false, features = [
+  "wasm_support",
+  "encoding_rs",
+  "decoders",
+  "qrcode",
+] }
+tempfile = "3.19.0"

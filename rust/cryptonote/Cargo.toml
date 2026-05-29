@@ -30,6 +30,7 @@ thiserror = "2.0.18"
 tracing = "0.1.43"
 enum-iterator = "2.3.0"
 functora = "0.1.1"
+functora-dioxus = { path = "../functora-dioxus", features = ["qr"] }
 pulldown-cmark = "0.13"
 ammonia = "4.1"
 dioxus-free-icons = { version = "0.10.0", features = [

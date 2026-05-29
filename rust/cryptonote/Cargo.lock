@@ -768,6 +768,7 @@ dependencies = [
  "either",
  "enum-iterator",
  "functora",
+ "functora-dioxus",
  "getrandom 0.2.16",
  "hkdf",
  "jni",
@@ -1906,6 +1907,23 @@ name = "functora"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fea53a2c5e0f48e6485cfdf0ee76dd7bdf5992c3748f4b0597ebcbee92913c9"
+
+[[package]]
+name = "functora-dioxus"
+version = "0.1.0"
+dependencies = [
+ "derive_more 2.1.0",
+ "dioxus",
+ "dioxus-free-icons",
+ "either",
+ "functora",
+ "jni",
+ "rxing",
+ "serde",
+ "serde_json",
+ "tap",
+ "tracing",
+]
 
 [[package]]
 name = "futf"

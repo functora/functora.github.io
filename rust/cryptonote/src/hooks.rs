@@ -1,13 +1,19 @@
 use crate::components::*;
 use crate::i18n::{get_translations, Translations};
 use crate::prelude::*;
-use crate::AppCfg;
+use crate::storage::AppCfg;
 use dioxus_router::Navigator;
 
 #[derive(Clone, Copy)]
 pub struct AppNav {
     nav: Navigator,
     idx: Signal<u32>,
+}
+
+impl PartialEq for AppNav {
+    fn eq(&self, other: &Self) -> bool {
+        self.idx == other.idx
+    }
 }
 
 impl AppNav {
@@ -34,6 +40,21 @@ impl AppNav {
 
     pub fn has_navigated(self) -> bool {
         (self.idx)() > 0
+    }
+}
+
+impl functora_dioxus::traits::NavCtx for AppNav {
+    fn push_route(&mut self, _href: String) {
+        self.idx.set((self.idx)().saturating_add(1));
+    }
+
+    fn can_go_back(&self) -> bool {
+        (self.idx)() > 0
+    }
+
+    fn go_back(&mut self) {
+        let next = (self.idx)().saturating_sub(1);
+        self.idx.set(next);
     }
 }
 

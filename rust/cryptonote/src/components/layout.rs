@@ -9,7 +9,10 @@ pub fn Layout() -> Element {
     use_effect(move || {
         let theme = cfg.read().theme;
         spawn(async move {
-            if let Err(e) = js_set_theme(&theme).await {
+            if let Err(e) =
+                functora_dioxus::js::js_set_theme(&theme)
+                    .await
+            {
                 tracing::error!(
                     "Set theme error: {:#?}",
                     e
@@ -23,42 +26,29 @@ pub fn Layout() -> Element {
             label {
                 input { r#type: "checkbox" }
                 header {
-                    NavLink {
-                        route: Screen::Home.to_route(None),
-                        onclick: move |_| ctx.set(AppCtx::default()),
-                        "🔐 Cryptonote"
-                    }
+                    NavLink { route: Screen::Home.to_route(None), onclick: move |_| ctx.set(AppCtx::default()), "🔐 Cryptonote" }
                 }
-
                 ul {
                     li {
-                        a { onclick: move |_| cfg.write().language = Language::English,
-                            "🇬🇧 English"
-                        }
+                        a { onclick: move |_| cfg.write().language = Language::English, "🇬🇧 English" }
                     }
                     li {
-                        a { onclick: move |_| cfg.write().language = Language::Spanish,
-                            "🇪🇸 Español"
-                        }
+                        a { onclick: move |_| cfg.write().language = Language::Spanish, "🇪🇸 Español" }
                     }
                     li {
-                        a { onclick: move |_| cfg.write().language = Language::Russian,
-                            "🇷🇺 Русский"
-                        }
+                        a { onclick: move |_| cfg.write().language = Language::Russian, "🇷🇺 Русский" }
                     }
                     li {
                         a {
                             onclick: move |_| {
                                 cfg.with_mut(|x| {
-                                    x.theme = next_cycle(&x.theme);
+                                    x.theme = x.theme.next();
                                 });
                             },
-                            {
-                                match cfg.read().theme {
-                                    Theme::Light => "🌝 ",
-                                    Theme::Dark => "🌚 ",
-                                }
-                            }
+                            {match cfg.read().theme {
+                                Theme::Light => "🌝 ",
+                                Theme::Dark => "🌚 ",
+                            }}
                             {t.theme}
                         }
                     }

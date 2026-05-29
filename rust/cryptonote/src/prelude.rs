@@ -30,6 +30,8 @@ pub mod dioxus_elements {
     }
 }
 
+pub use functora_dioxus::js::Theme;
+
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_STORAGE_KEY: &str = concat!(
     "cryptonote-",

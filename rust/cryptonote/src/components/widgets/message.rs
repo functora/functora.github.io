@@ -5,21 +5,27 @@ pub enum UiMessage {
     Error(AppError),
 }
 
+impl UiMessage {
+    pub fn to_text(&self, t: &Translations) -> String {
+        match self {
+            UiMessage::Copied => t.copied.to_string(),
+            UiMessage::Error(e) => e.localized(t),
+        }
+    }
+}
+
 #[component]
 pub fn Message(
     message: Signal<Option<UiMessage>>,
 ) -> Element {
     let t = use_translations();
+    let text =
+        message.with(|m| m.as_ref().map(|m| m.to_text(&t)));
 
-    let text = match &*message.read() {
-        Some(UiMessage::Copied) => t.copied.to_string(),
-        Some(UiMessage::Error(e)) => e.localized(&t),
-        None => return rsx! {},
-    };
-
-    rsx! {
-        Pre {
-            Quote { "{text}" }
-        }
+    match text {
+        Some(text) => rsx! {
+            Pre { Quote { "{text}" } }
+        },
+        None => rsx! {},
     }
 }

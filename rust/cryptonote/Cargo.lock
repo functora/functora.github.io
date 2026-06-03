@@ -1922,6 +1922,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tap",
+ "thiserror 2.0.18",
  "tracing",
 ]
 

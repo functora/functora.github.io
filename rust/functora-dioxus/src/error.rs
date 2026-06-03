@@ -1,76 +1,49 @@
-use std::fmt;
+use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum Error {
-    IO(String),
-    JNI(String),
-    Json(String),
-    Env(std::env::VarError),
-    Channel(String),
-    JS(String),
+    #[error("IO error: {0}")]
+    IO(#[source] Arc<std::io::Error>),
+    #[cfg(target_os = "android")]
+    #[error("JNI error: {0}")]
+    JNI(#[source] Arc<jni::errors::Error>),
+    #[error("JSON error: {0}")]
+    Json(#[source] Arc<serde_json::Error>),
+    #[error("Environment error: {0}")]
+    Env(#[from] std::env::VarError),
+    #[error("Channel error: {0}")]
+    Channel(#[from] std::sync::mpsc::RecvError),
+    #[error("JS error: {0}")]
+    JS(#[source] Arc<dioxus::document::EvalError>),
+    #[error("Camera not available: {0}")]
     CameraNotAvailable(String),
+    #[error("Camera permission denied: {0}")]
     CameraPermissionDenied(String),
+    #[error("Not a JSON object: {0}")]
     NotJsonObject(String),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::IO(msg) => write!(f, "IO error: {msg}"),
-            Error::JNI(msg) => write!(f, "JNI error: {msg}"),
-            Error::Json(msg) => write!(f, "JSON error: {msg}"),
-            Error::Env(err) => write!(f, "Environment error: {err}"),
-            Error::Channel(msg) => write!(f, "Channel error: {msg}"),
-            Error::JS(msg) => write!(f, "JS error: {msg}"),
-            Error::CameraNotAvailable(msg) => write!(f, "Camera not available: {msg}"),
-            Error::CameraPermissionDenied(msg) => write!(f, "Camera permission denied: {msg}"),
-            Error::NotJsonObject(msg) => write!(f, "Not a JSON object: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Env(err) => Some(err),
-            _ => None,
-        }
-    }
 }
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Error::IO(e.to_string())
+        Error::IO(Arc::new(e))
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(e: serde_json::Error) -> Self {
-        Error::Json(e.to_string())
-    }
-}
-
-impl From<std::env::VarError> for Error {
-    fn from(e: std::env::VarError) -> Self {
-        Error::Env(e)
-    }
-}
-
-impl From<std::sync::mpsc::RecvError> for Error {
-    fn from(e: std::sync::mpsc::RecvError) -> Self {
-        Error::Channel(e.to_string())
+        Error::Json(Arc::new(e))
     }
 }
 
 impl From<dioxus::document::EvalError> for Error {
     fn from(e: dioxus::document::EvalError) -> Self {
-        Error::JS(e.to_string())
+        Error::JS(Arc::new(e))
     }
 }
 
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for Error {
     fn from(e: jni::errors::Error) -> Self {
-        Error::JNI(e.to_string())
+        Error::JNI(Arc::new(e))
     }
 }

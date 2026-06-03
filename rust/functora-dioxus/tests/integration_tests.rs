@@ -1,4 +1,5 @@
 use functora_dioxus::{Error as FdError, NavCtx, Theme, decode_qr_rgba};
+use std::sync::Arc;
 
 #[test]
 fn decode_qr_rgba_returns_none_for_zero_dimensions() {
@@ -33,7 +34,10 @@ fn decode_qr_rgba_handles_transparent_pixels() {
 
 #[test]
 fn error_display() {
-    let err = FdError::IO("file not found".to_string());
+    let err = FdError::IO(Arc::new(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "file not found",
+    )));
     let display = format!("{err}");
     assert!(display.contains("file not found"));
 }
@@ -124,13 +128,19 @@ fn test_error_impl_std_error() {
 }
 
 #[test]
+fn test_error_source_chain() {
+    use std::error::Error;
+    let err = FdError::IO(Arc::new(std::io::Error::new(std::io::ErrorKind::NotFound, "test")));
+    assert!(err.source().is_some());
+}
+
+#[test]
 fn test_error_display_all_variants() {
-    let variants = vec![
-        FdError::IO("io".to_string()),
-        FdError::JNI("jni".to_string()),
-        FdError::Json("json".to_string()),
+    let variants: Vec<FdError> = vec![
+        FdError::IO(Arc::new(std::io::Error::new(std::io::ErrorKind::Other, "io"))),
+        FdError::Json(Arc::new(serde_json::from_str::<serde_json::Value>("x").unwrap_err())),
         FdError::Env(std::env::VarError::NotPresent),
-        FdError::Channel(std::sync::mpsc::RecvError.to_string()),
+        FdError::Channel(std::sync::mpsc::RecvError),
         FdError::NotJsonObject("not object".to_string()),
     ];
     for v in variants {

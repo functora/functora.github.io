@@ -97,9 +97,9 @@ pub async fn js_read_clipboard() -> Result<String, Error> {
                 let s = JString::from(text_obj);
                 Ok(env.get_string(&s).map(String::from)?)
             })();
-            _ = tx.send(res.map_err(|e| Error::JS(e.to_string())));
+            _ = tx.send(res.map_err(Error::from));
         });
-        rx.recv().map_err(|e| Error::JS(e.to_string()))?
+        rx.recv()?
     }
     #[cfg(not(target_os = "android"))]
     {
@@ -156,9 +156,9 @@ pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
                 )?;
                 Ok(())
             })();
-            _ = tx.send(res.map_err(|e| Error::JS(e.to_string())));
+            _ = tx.send(res.map_err(Error::from));
         });
-        rx.recv().map_err(|e| Error::JS(e.to_string()))?
+        rx.recv()?
     }
     #[cfg(not(target_os = "android"))]
     {
@@ -276,10 +276,10 @@ pub async fn js_fun<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'st
 
     let mut eval = dioxus::document::eval(code);
 
-    eval.send(arg).map_err(|e| Error::JS(e.to_string()))?;
+    eval.send(arg).map_err(Error::from)?;
     match eval.recv::<Either<String, B>>().await {
         Ok(Either::Right(rhs)) => Ok(rhs),
-        Ok(Either::Left(lhs)) => Err(Error::JS(lhs)),
-        Err(e) => Err(Error::JS(e.to_string())),
+        Ok(Either::Left(lhs)) => Err(Error::from(dioxus::document::EvalError::InvalidJs(lhs))),
+        Err(e) => Err(Error::from(e)),
     }
 }

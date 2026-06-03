@@ -6,11 +6,16 @@ use dioxus::prelude::*;
 const FPS_DELAY: u64 = 33;
 
 fn cam_err(e: &Error) -> Error {
-    let msg = e.to_string();
-    if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
-        Error::CameraPermissionDenied(msg)
-    } else {
-        Error::CameraNotAvailable(msg)
+    match e {
+        Error::JS(eval_err) => {
+            let msg = eval_err.to_string();
+            if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
+                Error::CameraPermissionDenied(msg)
+            } else {
+                Error::CameraNotAvailable(msg)
+            }
+        }
+        other => Error::CameraNotAvailable(other.to_string()),
     }
 }
 

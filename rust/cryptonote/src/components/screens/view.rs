@@ -91,102 +91,102 @@ pub fn View(note: Option<String>) -> Element {
     };
 
     rsx! {
-        if is_encrypted() {
-            Breadcrumb { title: t.encrypted_note.to_string() }
-            section {
-                fieldset {
-                    Pre {
-                        Quote { "{t.encrypted_note_desc}" }
+            if is_encrypted() {
+                Breadcrumb { title: t.encrypted_note.to_string() }
+                section {
+                    fieldset {
+                        Pre {
+                            Quote { "{t.encrypted_note_desc}" }
+                        }
+
+                        label { "{t.password}" }
+                        input {
+                            r#type: "password",
+                            placeholder: "{t.password_placeholder}",
+                            value: "{password_input}",
+                            oninput: move |evt| password_input.set(evt.value()),
+                            onkeydown: move |evt| {
+                                if evt.key() == Key::Enter {
+                                    decrypt_note()
+                                }
+                            },
+                        }
+
+                        br {}
+
+                        Dock { message,
+                            Button {
+                                icon: FaPaste,
+                                onclick: move |_| {
+                                    spawn(async move {
+                                        match js_read_clipboard().await {
+                                            Ok(text) => password_input.set(text),
+    Err(e) => {
+                        message.set(Some(UiMessage::Error(e.into())))
                     }
-
-                    label { "{t.password}" }
-                    input {
-                        r#type: "password",
-                        placeholder: "{t.password_placeholder}",
-                        value: "{password_input}",
-                        oninput: move |evt| password_input.set(evt.value()),
-                        onkeydown: move |evt| {
-                            if evt.key() == Key::Enter {
-                                decrypt_note()
-                            }
-                        },
-                    }
-
-                    br {}
-
-                    Dock { message,
-                        Button {
-                            icon: FaPaste,
-                            onclick: move |_| {
-                                spawn(async move {
-                                    match js_read_clipboard().await {
-                                        Ok(text) => password_input.set(text),
-                                        Err(e) => {
-                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
                                         }
-                                    }
-                                });
-                            },
-                            "{t.paste_button}"
-                        }
-                        Button {
-                            icon: FaLockOpen,
-                            primary: true,
-                            onclick: move |_| decrypt_note(),
-                            "{t.decrypt_button}"
+                                    });
+                                },
+                                "{t.paste_button}"
+                            }
+                            Button {
+                                icon: FaLockOpen,
+                                primary: true,
+                                onclick: move |_| decrypt_note(),
+                                "{t.decrypt_button}"
+                            }
                         }
                     }
                 }
-            }
-        } else if let Some(content) = note_content() {
-            Breadcrumb { title: t.your_note_title.to_string() }
-            section {
-                fieldset {
-                    article {
-                        div {
-                            overflow_wrap: "anywhere",
-                            word_break: "break-word",
-                            dangerous_inner_html: "{rendered().unwrap_or_default()}",
+            } else if let Some(content) = note_content() {
+                Breadcrumb { title: t.your_note_title.to_string() }
+                section {
+                    fieldset {
+                        article {
+                            div {
+                                overflow_wrap: "anywhere",
+                                word_break: "break-word",
+                                dangerous_inner_html: "{rendered().unwrap_or_default()}",
+                            }
                         }
-                    }
 
-                    Dock { message,
-                        Button {
-                            icon: FaTrash,
-                            onclick: move |_| {
-                                ctx.set(AppCtx::default());
-                                nav.push(Screen::Home.to_route(None));
-                            },
-                            "{t.create_new_note}"
-                        }
-                        Button {
-                            icon: FaPenToSquare,
-                            onclick: move |_| {
-                                ctx.write().action = ActionMode::Create;
-                                nav.push(Screen::Home.to_route(None));
-                            },
-                            "{t.edit_note}"
-                        }
-                        Button {
-                            icon: FaCopy,
-                            primary: true,
-                            onclick: move |_| {
-                                write_clipboard(content.clone(), message);
-                            },
-                            "{t.copy_button}"
+                        Dock { message,
+                            Button {
+                                icon: FaTrash,
+                                onclick: move |_| {
+                                    ctx.set(AppCtx::default());
+                                    nav.push(Screen::Home.to_route(None));
+                                },
+                                "{t.create_new_note}"
+                            }
+                            Button {
+                                icon: FaPenToSquare,
+                                onclick: move |_| {
+                                    ctx.write().action = ActionMode::Create;
+                                    nav.push(Screen::Home.to_route(None));
+                                },
+                                "{t.edit_note}"
+                            }
+                            Button {
+                                icon: FaCopy,
+                                primary: true,
+                                onclick: move |_| {
+                                    write_clipboard(content.clone(), message);
+                                },
+                                "{t.copy_button}"
+                            }
                         }
                     }
                 }
-            }
-        } else if message.read().is_some() {
-            Breadcrumb { title: t.error_title.to_string() }
-            section {
-                Dock { message }
-            }
-        } else {
-            section {
-                p { "{t.loading}" }
+            } else if message.read().is_some() {
+                Breadcrumb { title: t.error_title.to_string() }
+                section {
+                    Dock { message }
+                }
+            } else {
+                section {
+                    p { "{t.loading}" }
+                }
             }
         }
-    }
 }

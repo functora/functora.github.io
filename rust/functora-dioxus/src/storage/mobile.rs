@@ -1,3 +1,4 @@
+use crate::error::Error;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, from_str, from_value, to_string_pretty, to_value};
@@ -5,51 +6,8 @@ use std::fs::{OpenOptions, read_to_string, write};
 use std::path::Path;
 use tap::Pipe;
 
-#[derive(Debug, Clone, derive_more::Display)]
-pub enum StorageError {
-    Io(String),
-    Jni(String),
-    Json(String),
-    Env(std::env::VarError),
-    Recv(std::sync::mpsc::RecvError),
-    Custom(String),
-}
-
-impl std::error::Error for StorageError {}
-
-impl From<std::io::Error> for StorageError {
-    fn from(e: std::io::Error) -> Self {
-        Self::Io(e.to_string())
-    }
-}
-
 #[cfg(target_os = "android")]
-impl From<jni::errors::Error> for StorageError {
-    fn from(e: jni::errors::Error) -> Self {
-        Self::Jni(e.to_string())
-    }
-}
-
-impl From<serde_json::Error> for StorageError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::Json(e.to_string())
-    }
-}
-
-impl From<std::env::VarError> for StorageError {
-    fn from(e: std::env::VarError) -> Self {
-        Self::Env(e)
-    }
-}
-
-impl From<std::sync::mpsc::RecvError> for StorageError {
-    fn from(e: std::sync::mpsc::RecvError) -> Self {
-        Self::Recv(e)
-    }
-}
-
-#[cfg(target_os = "android")]
-pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
+pub fn files_dir() -> Result<std::path::PathBuf, Error> {
     use jni::JNIEnv;
     use jni::objects::{JObject, JString};
     use std::sync::mpsc::channel;
@@ -64,7 +22,7 @@ pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
             .map(JString::from)
             .and_then(|s| env.get_string(&s).map(String::from))
             .map(std::path::PathBuf::from)
-            .map_err(|e| StorageError::from(e));
+            .map_err(Error::from);
 
         match result {
             Ok(path) => {
@@ -72,7 +30,7 @@ pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
                     .unwrap_or_else(|e| tracing::error!("Storage channel error: {}", e));
             }
             Err(e) => {
-                tx.send(Err(StorageError::from(e)))
+                tx.send(Err(e))
                     .unwrap_or_else(|e| tracing::error!("Storage channel error: {}", e));
             }
         }
@@ -82,18 +40,18 @@ pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
 }
 
 #[cfg(target_os = "ios")]
-pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
+pub fn files_dir() -> Result<std::path::PathBuf, Error> {
     std::env::var("HOME")
         .map(|path| std::path::PathBuf::from(path).join("Documents"))
-        .map_err(StorageError::from)
+        .map_err(Error::from)
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub fn files_dir() -> Result<std::path::PathBuf, StorageError> {
-    std::env::current_dir().map_err(StorageError::from)
+pub fn files_dir() -> Result<std::path::PathBuf, Error> {
+    std::env::current_dir().map_err(Error::from)
 }
 
-fn ensure_file(p: &Path) -> Result<(), StorageError> {
+fn ensure_file(p: &Path) -> Result<(), Error> {
     let empty = OpenOptions::new()
         .read(true)
         .write(true)
@@ -103,34 +61,34 @@ fn ensure_file(p: &Path) -> Result<(), StorageError> {
         .and_then(|f| f.metadata())
         .is_ok_and(|meta| meta.len() == 0);
     if empty {
-        write(p, b"{}").map_err(StorageError::from)
+        write(p, b"{}").map_err(Error::from)
     } else {
         Ok(())
     }
 }
 
-pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), StorageError> {
+pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let p = path.as_ref();
     let content = read_to_string(p)?;
     let mut json: Value = from_str(&content)?;
     let obj = json
         .as_object_mut()
-        .ok_or_else(|| StorageError::Custom("Storage JSON is not an object".to_string()))?;
+        .ok_or_else(|| Error::NotJsonObject("Storage JSON is not an object".to_string()))?;
     _ = obj.insert(key.to_string(), to_value(val)?);
     let s = to_string_pretty(&json)?;
-    write(p, s).map_err(StorageError::from)
+    write(p, s).map_err(Error::from)
 }
 
 pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize, F: FnOnce() -> T>(
     path: P,
     key: &str,
     init: F,
-) -> Result<T, StorageError> {
+) -> Result<T, Error> {
     let p = path.as_ref();
     let content = read_to_string(p)?;
     let json: Value = from_str(&content)?;
     if let Some(val) = json.get(key) {
-        from_value(val.clone()).map_err(StorageError::from)
+        from_value(val.clone()).map_err(Error::from)
     } else {
         let val = init();
         update_key(p, key, &val)?;
@@ -141,7 +99,7 @@ pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize,
 pub fn use_storage<T: Serialize + DeserializeOwned + Clone + 'static>(
     key: &'static str,
     init: impl FnOnce() -> T,
-) -> Result<dioxus::prelude::Signal<T>, StorageError> {
+) -> Result<dioxus::prelude::Signal<T>, Error> {
     use dioxus::prelude::ReadableExt;
     let path = files_dir()?.join("storage.json");
     ensure_file(&path)?;
@@ -157,40 +115,40 @@ pub fn use_storage<T: Serialize + DeserializeOwned + Clone + 'static>(
     Ok(signal)
 }
 
-pub fn load_file<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Result<T, StorageError> {
-    from_str(&read_to_string(path)?).map_err(StorageError::from)
+pub fn load_file<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Result<T, Error> {
+    from_str(&read_to_string(path)?).map_err(Error::from)
 }
 
-pub fn save_file<P: AsRef<Path>, T: Serialize>(path: P, val: &T) -> Result<(), StorageError> {
+pub fn save_file<P: AsRef<Path>, T: Serialize>(path: P, val: &T) -> Result<(), Error> {
     to_string_pretty(val)
-        .map_err(StorageError::from)
-        .and_then(|s| write(path, s).map_err(StorageError::from))
+        .map_err(Error::from)
+        .and_then(|s| write(path, s).map_err(Error::from))
 }
 
-pub fn read_json_object<P: AsRef<Path>>(path: P) -> Result<Value, StorageError> {
-    from_str(&read_to_string(path)?).map_err(StorageError::from)
+pub fn read_json_object<P: AsRef<Path>>(path: P) -> Result<Value, Error> {
+    from_str(&read_to_string(path)?).map_err(Error::from)
 }
 
-pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), StorageError> {
+pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Error> {
     to_string_pretty(&json)
-        .map_err(StorageError::from)
-        .and_then(|s| write(path, s).map_err(StorageError::from))
+        .map_err(Error::from)
+        .and_then(|s| write(path, s).map_err(Error::from))
 }
 
-pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, StorageError> {
+pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
     let json = read_json_object(path)?;
     json.as_object()
-        .ok_or_else(|| StorageError::Custom("Not a JSON object".to_string()))?
+        .ok_or_else(|| Error::NotJsonObject("Not a JSON object".to_string()))?
         .get(key)
         .cloned()
         .pipe(Ok)
 }
 
-pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), StorageError> {
+pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let mut json = read_json_object(&path)?;
     _ = json
         .as_object_mut()
-        .ok_or_else(|| StorageError::Custom("Not a JSON object".to_string()))?
-        .insert(key.to_string(), to_value(val).map_err(StorageError::from)?);
+        .ok_or_else(|| Error::NotJsonObject("Not a JSON object".to_string()))?
+        .insert(key.to_string(), to_value(val).map_err(Error::from)?);
     write_json_object(path, &json)
 }

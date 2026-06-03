@@ -1,5 +1,6 @@
 use crate::i18n;
 use crate::prelude::*;
+use functora_dioxus::Error as FdError;
 use hkdf::InvalidLength;
 use sha2::digest;
 use std::string::FromUtf8Error;
@@ -18,11 +19,7 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    JsWriteClipboard(EvalError),
-    JsReadClipboard(EvalError),
-    CameraNotAvailable,
-    CameraPermissionDenied,
-    QrDecode,
+    Fd(#[from] FdError),
 }
 
 impl AppError {
@@ -45,19 +42,13 @@ impl AppError {
             }
             AppError::NoNoteInUrl => t.no_note_in_url,
             AppError::NoNoteParam => t.no_note_param,
-            AppError::JsWriteClipboard(_) => {
-                t.clipboard_write_error
-            }
-            AppError::JsReadClipboard(_) => {
-                t.clipboard_read_error
-            }
-            AppError::CameraNotAvailable => {
-                t.qr_camera_not_available
-            }
-            AppError::CameraPermissionDenied => {
-                t.qr_permission_denied
-            }
-            AppError::QrDecode => t.qr_error,
+            AppError::Fd(FdError::CameraNotAvailable(
+                _,
+            )) => t.qr_camera_not_available,
+            AppError::Fd(
+                FdError::CameraPermissionDenied(_),
+            ) => t.qr_permission_denied,
+            AppError::Fd(_) => t.clipboard_read_error,
         };
         format!("{}: {}", msg, self)
     }

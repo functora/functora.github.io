@@ -1,4 +1,4 @@
-use dioxus::document::EvalError;
+use crate::error::Error;
 use either::Either;
 use serde::{Deserialize, Serialize};
 
@@ -31,7 +31,7 @@ impl Theme {
     }
 }
 
-pub async fn js_set_theme(theme: &Theme) -> Result<(), EvalError> {
+pub async fn js_set_theme(theme: &Theme) -> Result<(), Error> {
     js_fun(
         theme.to_js_value(),
         r#"function(arg){
@@ -46,7 +46,7 @@ pub async fn js_set_theme(theme: &Theme) -> Result<(), EvalError> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn js_read_clipboard() -> Result<String, EvalError> {
+pub async fn js_read_clipboard() -> Result<String, Error> {
     js_fun(
         (),
         r"function(arg){
@@ -57,7 +57,7 @@ pub async fn js_read_clipboard() -> Result<String, EvalError> {
 }
 
 #[cfg(target_os = "android")]
-pub async fn js_read_clipboard() -> Result<String, EvalError> {
+pub async fn js_read_clipboard() -> Result<String, Error> {
     #[cfg(target_os = "android")]
     {
         use std::sync::mpsc::channel;
@@ -97,9 +97,9 @@ pub async fn js_read_clipboard() -> Result<String, EvalError> {
                 let s = JString::from(text_obj);
                 Ok(env.get_string(&s).map(String::from)?)
             })();
-            _ = tx.send(res.map_err(|e| EvalError::InvalidJs(e.to_string())));
+            _ = tx.send(res.map_err(|e| Error::JS(e.to_string())));
         });
-        rx.recv().map_err(|e| EvalError::InvalidJs(e.to_string()))?
+        rx.recv().map_err(|e| Error::JS(e.to_string()))?
     }
     #[cfg(not(target_os = "android"))]
     {
@@ -108,7 +108,7 @@ pub async fn js_read_clipboard() -> Result<String, EvalError> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn js_write_clipboard(msg: String) -> Result<(), EvalError> {
+pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
     js_fun(
         msg,
         r"function(arg){
@@ -120,7 +120,7 @@ pub async fn js_write_clipboard(msg: String) -> Result<(), EvalError> {
 }
 
 #[cfg(target_os = "android")]
-pub async fn js_write_clipboard(msg: String) -> Result<(), EvalError> {
+pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
     #[cfg(target_os = "android")]
     {
         use std::sync::mpsc::channel;
@@ -156,9 +156,9 @@ pub async fn js_write_clipboard(msg: String) -> Result<(), EvalError> {
                 )?;
                 Ok(())
             })();
-            _ = tx.send(res.map_err(|e| EvalError::InvalidJs(e.to_string())));
+            _ = tx.send(res.map_err(|e| Error::JS(e.to_string())));
         });
-        rx.recv().map_err(|e| EvalError::InvalidJs(e.to_string()))?
+        rx.recv().map_err(|e| Error::JS(e.to_string()))?
     }
     #[cfg(not(target_os = "android"))]
     {
@@ -173,7 +173,7 @@ pub struct FrameData {
     pub height: u32,
 }
 
-pub async fn js_check_camera() -> Result<(), EvalError> {
+pub async fn js_check_camera() -> Result<(), Error> {
     js_fun(
         (),
         r#"function(arg){
@@ -186,7 +186,7 @@ pub async fn js_check_camera() -> Result<(), EvalError> {
     .await
 }
 
-pub async fn js_start_camera() -> Result<(), EvalError> {
+pub async fn js_start_camera() -> Result<(), Error> {
     js_fun(
         (),
         r#"function(arg){
@@ -205,7 +205,7 @@ pub async fn js_start_camera() -> Result<(), EvalError> {
     .await
 }
 
-pub async fn js_capture_frame() -> Result<FrameData, EvalError> {
+pub async fn js_capture_frame() -> Result<FrameData, Error> {
     js_fun(
         (),
         r#"function(arg){
@@ -231,7 +231,7 @@ pub async fn js_capture_frame() -> Result<FrameData, EvalError> {
     .await
 }
 
-pub async fn js_stop_camera() -> Result<(), EvalError> {
+pub async fn js_stop_camera() -> Result<(), Error> {
     js_fun(
         (),
         r#"function(arg){
@@ -248,7 +248,7 @@ pub async fn js_stop_camera() -> Result<(), EvalError> {
 }
 
 #[allow(clippy::needless_raw_string_hashes)]
-pub async fn js_sleep(millis: u64) -> Result<(), EvalError> {
+pub async fn js_sleep(millis: u64) -> Result<(), Error> {
     js_fun(
         millis,
         r#"function(arg){
@@ -261,7 +261,7 @@ pub async fn js_sleep(millis: u64) -> Result<(), EvalError> {
 pub async fn js_fun<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
     arg: A,
     fun: &'static str,
-) -> Result<B, EvalError> {
+) -> Result<B, Error> {
     let code = &format!(
         r#"
         let arg = await dioxus.recv();
@@ -276,11 +276,10 @@ pub async fn js_fun<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'st
 
     let mut eval = dioxus::document::eval(code);
 
-    match eval.send(arg) {
-        Ok(()) => eval.recv::<Either<String, B>>().await.and_then(|res| match res {
-            Either::Right(rhs) => Ok(rhs),
-            Either::Left(lhs) => Err(EvalError::InvalidJs(lhs)),
-        }),
-        Err(e) => Err(e),
+    eval.send(arg).map_err(|e| Error::JS(e.to_string()))?;
+    match eval.recv::<Either<String, B>>().await {
+        Ok(Either::Right(rhs)) => Ok(rhs),
+        Ok(Either::Left(lhs)) => Err(Error::JS(lhs)),
+        Err(e) => Err(Error::JS(e.to_string())),
     }
 }

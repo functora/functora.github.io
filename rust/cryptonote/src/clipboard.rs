@@ -1,7 +1,6 @@
 use functora_dioxus::js::js_write_clipboard;
 
 use crate::components::widgets::UiMessage;
-use crate::error::AppError;
 use dioxus::prelude::*;
 
 pub fn write_clipboard(
@@ -11,9 +10,8 @@ pub fn write_clipboard(
     spawn(async move {
         match js_write_clipboard(val).await {
             Ok(()) => message.set(Some(UiMessage::Copied)),
-            Err(e) => message.set(Some(UiMessage::Error(
-                AppError::JsWriteClipboard(e),
-            ))),
+            Err(e) => message
+                .set(Some(UiMessage::Error(e.into()))),
         }
     });
 }

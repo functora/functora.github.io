@@ -1,11 +1,13 @@
 #![allow(clippy::must_use_candidate)]
 
+pub mod error;
 pub mod js;
 pub mod qr;
 pub mod storage;
 pub mod traits;
 pub mod widgets;
 
+pub use error::*;
 pub use js::*;
 pub use qr::*;
 pub use storage::*;

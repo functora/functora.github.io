@@ -1,5 +1,6 @@
+use functora_dioxus::Error;
 use functora_dioxus::storage::mobile::{
-    StorageError, find_or_init_key, get_json_value, read_json_object, set_json_value, update_key,
+    find_or_init_key, get_json_value, read_json_object, set_json_value, update_key,
 };
 use std::fs::{read_to_string, write};
 use tempfile::TempDir;
@@ -45,7 +46,7 @@ fn update_key_creates_file_if_not_exists() {
     let path = dir.path().join("new_storage.json");
     let result = update_key(&path, "key", &"val");
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), StorageError::Io(_)));
+    assert!(matches!(result.unwrap_err(), Error::IO(_)));
 }
 
 #[test]
@@ -60,7 +61,7 @@ fn update_key_returns_error_for_non_object_json() {
     let (_dir, path) = temp_file(r#"[]"#);
     let result = update_key(&path, "key", &"val");
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), StorageError::Custom(_)));
+    assert!(matches!(result.unwrap_err(), Error::NotJsonObject(_)));
 }
 
 #[test]

@@ -1,5 +1,4 @@
 pub use derive_more::Display;
-pub use dioxus::document::EvalError;
 pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::{
     FaAndroid, FaGithub, FaGoogle, FaGooglePlay,

@@ -1,4 +1,4 @@
-use functora_dioxus::{NavCtx, js::Theme, qr::decode_qr_rgba, storage::mobile::StorageError, widgets::QrMessage};
+use functora_dioxus::{Error as FdError, NavCtx, Theme, decode_qr_rgba};
 
 #[test]
 fn decode_qr_rgba_returns_none_for_zero_dimensions() {
@@ -32,40 +32,40 @@ fn decode_qr_rgba_handles_transparent_pixels() {
 }
 
 #[test]
-fn storage_error_display() {
-    let err = StorageError::Io("file not found".to_string());
+fn error_display() {
+    let err = FdError::IO("file not found".to_string());
     let display = format!("{err}");
     assert!(display.contains("file not found"));
 }
 
 #[test]
-fn storage_error_io_from_io_error() {
+fn error_io_from_io_error() {
     let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "test");
-    let err: StorageError = io_err.into();
-    assert!(matches!(err, StorageError::Io(_)));
+    let err: FdError = io_err.into();
+    assert!(matches!(err, FdError::IO(_)));
 }
 
 #[test]
-fn storage_error_json_from_json_error() {
+fn error_json_from_json_error() {
     let json_err = serde_json::from_str::<serde_json::Value>("invalid").unwrap_err();
-    let err: StorageError = json_err.into();
-    assert!(matches!(err, StorageError::Json(_)));
+    let err: FdError = json_err.into();
+    assert!(matches!(err, FdError::Json(_)));
 }
 
 #[test]
-fn storage_error_env_from_env_var_error() {
+fn error_env_from_env_var_error() {
     let env_err = std::env::VarError::NotPresent;
-    let err: StorageError = env_err.into();
-    assert!(matches!(err, StorageError::Env(_)));
+    let err: FdError = env_err.into();
+    assert!(matches!(err, FdError::Env(_)));
 }
 
 #[test]
-fn storage_error_recv_from_recv_error() {
+fn error_recv_from_recv_error() {
     let (tx, rx) = std::sync::mpsc::channel::<()>();
     drop(tx);
     let recv_err = rx.recv().unwrap_err();
-    let err: StorageError = recv_err.into();
-    assert!(matches!(err, StorageError::Recv(_)));
+    let err: FdError = recv_err.into();
+    assert!(matches!(err, FdError::Channel(_)));
 }
 
 #[test]
@@ -87,11 +87,15 @@ fn theme_js_value() {
 }
 
 #[test]
-fn qr_message_text() {
-    let msg = QrMessage::CameraNotAvailable("test".to_string());
-    assert!(msg.text().contains("test"));
-    let msg = QrMessage::CameraPermissionDenied("denied".to_string());
-    assert!(msg.text().contains("denied"));
+fn error_camera_not_available() {
+    let err = FdError::CameraNotAvailable("test".to_string());
+    assert!(err.to_string().contains("test"));
+}
+
+#[test]
+fn error_camera_permission_denied() {
+    let err = FdError::CameraPermissionDenied("denied".to_string());
+    assert!(err.to_string().contains("denied"));
 }
 
 #[derive(Clone, PartialEq)]
@@ -113,21 +117,21 @@ fn test_nav_ctx_trait() {
 }
 
 #[test]
-fn test_storage_error_impl_std_error() {
+fn test_error_impl_std_error() {
     use std::error::Error;
-    let err = StorageError::Custom("test".to_string());
+    let err = FdError::NotJsonObject("test".to_string());
     assert!(err.source().is_none());
 }
 
 #[test]
-fn test_storage_error_display_all_variants() {
+fn test_error_display_all_variants() {
     let variants = vec![
-        StorageError::Io("io".to_string()),
-        StorageError::Jni("jni".to_string()),
-        StorageError::Json("json".to_string()),
-        StorageError::Env(std::env::VarError::NotPresent),
-        StorageError::Recv(std::sync::mpsc::RecvError),
-        StorageError::Custom("custom".to_string()),
+        FdError::IO("io".to_string()),
+        FdError::JNI("jni".to_string()),
+        FdError::Json("json".to_string()),
+        FdError::Env(std::env::VarError::NotPresent),
+        FdError::Channel(std::sync::mpsc::RecvError.to_string()),
+        FdError::NotJsonObject("not object".to_string()),
     ];
     for v in variants {
         let _ = format!("{v}");

@@ -1,7 +1,5 @@
 use crate::*;
-use functora_dioxus::widgets::{
-    QrMessage, QrScanner as BaseQrScanner,
-};
+use functora_dioxus::widgets::QrScanner as BaseQrScanner;
 
 #[component]
 pub fn QrScanner(
@@ -12,17 +10,9 @@ pub fn QrScanner(
 ) -> Element {
     let mut message = message;
 
-    let on_error = move |err: QrMessage| {
+    let on_error = move |err: functora_dioxus::Error| {
         if let Some(ref mut msg) = message {
-            let app_err = match err {
-                QrMessage::CameraNotAvailable(_) => {
-                    AppError::CameraNotAvailable
-                }
-                QrMessage::CameraPermissionDenied(_) => {
-                    AppError::CameraPermissionDenied
-                }
-            };
-            msg.set(Some(UiMessage::Error(app_err)));
+            msg.set(Some(UiMessage::Error(err.into())));
         }
     };
 

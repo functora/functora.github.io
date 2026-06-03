@@ -5,6 +5,7 @@ pub fn Layout() -> Element {
     let mut cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let t = use_translations();
+    let nav_ctx = use_context::<Signal<AppNav>>();
 
     use_effect(move || {
         let theme = cfg.read().theme;
@@ -26,7 +27,12 @@ pub fn Layout() -> Element {
             label {
                 input { r#type: "checkbox" }
                 header {
-                    NavLink { route: Screen::Home.to_route(None), onclick: move |_| ctx.set(AppCtx::default()), "🔐 Cryptonote" }
+                    NavLink {
+                        nav_ctx,
+                        href: Screen::Home.to_route(None).to_string(),
+                        onclick: move |_| ctx.set(AppCtx::default()),
+                        "🔐 Cryptonote"
+                    }
                 }
                 ul {
                     li {
@@ -53,7 +59,7 @@ pub fn Layout() -> Element {
                         }
                     }
                     li {
-                        NavLink { route: Screen::About.to_route(None), "❓{t.about_title}" }
+                        NavLink { nav_ctx, href: Screen::About.to_route(None).to_string(), "❓{t.about_title}" }
                     }
                 }
             }
@@ -70,15 +76,15 @@ pub fn Layout() -> Element {
             " "
             {t.by_continuing}
             " "
-            NavLink { route: Screen::License.to_route(None), "{t.terms_of_service}" }
+            NavLink { nav_ctx, href: Screen::License.to_route(None).to_string(), "{t.terms_of_service}" }
             " "
             {t.you_agree}
             " "
-            NavLink { route: Screen::Privacy.to_route(None), "{t.privacy_policy_and}" }
+            NavLink { nav_ctx, href: Screen::Privacy.to_route(None).to_string(), "{t.privacy_policy_and}" }
             ". "
             {t.please}
             " "
-            NavLink { route: Screen::Donate.to_route(None), "{t.donate_link}" }
+            NavLink { nav_ctx, href: Screen::Donate.to_route(None).to_string(), "{t.donate_link}" }
             ". "
             {t.version_label}
             " "

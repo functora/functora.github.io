@@ -44,17 +44,25 @@ impl AppNav {
 }
 
 impl functora_dioxus::traits::NavCtx for AppNav {
-    fn push_route(&mut self, _href: String) {
-        self.idx.set((self.idx)().saturating_add(1));
+    fn push_route(&mut self, href: String) {
+        if let Ok(route) = href.parse::<Route>() {
+            self.idx.set((self.idx)().saturating_add(1));
+            self.nav.push(route);
+        }
     }
 
     fn can_go_back(&self) -> bool {
-        (self.idx)() > 0
+        self.nav.can_go_back()
     }
 
     fn go_back(&mut self) {
-        let next = (self.idx)().saturating_sub(1);
-        self.idx.set(next);
+        if self.nav.can_go_back() {
+            let next = (self.idx)().saturating_sub(1);
+            self.idx.set(next);
+            self.nav.go_back();
+        } else {
+            self.idx.set(0);
+        }
     }
 }
 

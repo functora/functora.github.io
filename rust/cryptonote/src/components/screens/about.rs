@@ -3,6 +3,7 @@ use crate::*;
 #[component]
 pub fn About() -> Element {
     let t = use_translations();
+    let nav_ctx = use_context::<Signal<AppNav>>();
     rsx! {
         Breadcrumb { title: t.about_title.to_string() }
         section {
@@ -40,7 +41,8 @@ pub fn About() -> Element {
                     "{t.author_button}"
                 }
                 NavLink {
-                    route: Screen::Donate.to_route(None),
+                    nav_ctx,
+                    href: Screen::Donate.to_route(None).to_string(),
                     button: true,
                     primary: true,
                     Icon { icon: FaHeart }

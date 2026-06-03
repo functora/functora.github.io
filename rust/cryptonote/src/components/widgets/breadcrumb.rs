@@ -1,17 +1,15 @@
 use crate::*;
 
-#[derive(Props, Clone, PartialEq)]
-pub struct BreadcrumbProps {
-    title: String,
-}
-
 #[component]
-pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
+pub fn Breadcrumb(title: String) -> Element {
     let t = use_translations();
+    let nav_ctx = use_context::<Signal<AppNav>>();
     rsx! {
-        card { font_size: "larger",
-            NavLink { route: Screen::Home.to_route(None), "{t.home}" }
-            " ❭ {props.title}"
+        functora_dioxus::widgets::Breadcrumb {
+            title,
+            home_label: t.home.to_string(),
+            home_href: Screen::Home.to_route(None).to_string(),
+            nav_ctx,
         }
     }
 }

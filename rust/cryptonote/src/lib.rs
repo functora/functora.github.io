@@ -34,7 +34,8 @@ pub mod storage {
         pub use functora_dioxus::storage::mobile::*;
     }
 
-    use crate::i18n::{detect_browser_language, Language};
+    use functora_dioxus::i18n::detect_browser_language;
+    use functora_dioxus::i18n::Language;
     use functora_dioxus::js::Theme;
     use serde::{Deserialize, Serialize};
 

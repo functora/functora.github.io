@@ -5,7 +5,9 @@ pub fn Layout() -> Element {
     let mut cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let t = use_translations();
-    let nav_ctx = use_context::<Signal<AppNav>>();
+    let app_nav = use_app_nav();
+    let nav_ctx =
+        use_context_provider(|| Signal::new(app_nav));
 
     use_effect(move || {
         let theme = cfg.read().theme;
@@ -35,14 +37,13 @@ pub fn Layout() -> Element {
                     }
                 }
                 ul {
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::English, "🇬🇧 English" }
-                    }
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::Spanish, "🇪🇸 Español" }
-                    }
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::Russian, "🇷🇺 Русский" }
+                    for lang in SUPPORTED_LANGUAGES {
+                        li {
+                            a {
+                                onclick: move |_| cfg.write().language = *lang,
+                                "{language_label(*lang)}"
+                            }
+                        }
                     }
                     li {
                         a {

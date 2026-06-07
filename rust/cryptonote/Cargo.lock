@@ -777,7 +777,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sys-locale",
  "tap",
  "thiserror 2.0.18",
  "tracing",
@@ -1917,13 +1916,16 @@ dependencies = [
  "dioxus-free-icons",
  "either",
  "functora",
+ "isolang",
  "jni",
  "rxing",
  "serde",
  "serde_json",
+ "sys-locale",
  "tap",
  "thiserror 2.0.18",
  "tracing",
+ "web-sys",
 ]
 
 [[package]]
@@ -2813,6 +2815,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f867b9d1d896b67beb18518eda36fdb77a32ea590de864f1325b294a6d14397"
 dependencies = [
  "memchr",
+ "serde",
+]
+
+[[package]]
+name = "isolang"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe50d48c77760c55188549098b9a7f6e37ae980c586a24693d6b01c3b2010c3c"
+dependencies = [
+ "phf 0.11.3",
  "serde",
 ]
 

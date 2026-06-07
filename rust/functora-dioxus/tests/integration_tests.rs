@@ -1,4 +1,6 @@
-use functora_dioxus::{Error as FdError, NavCtx, Theme, decode_qr_rgba};
+use functora_dioxus::{
+    Error as FdError, Language, NavCtx, Theme, decode_qr_rgba, detect_browser_language, language_from_code,
+};
 use std::sync::Arc;
 
 #[test]
@@ -157,4 +159,36 @@ fn test_files_dir_not_fails_on_non_android_ios() {
         let path = result.unwrap();
         assert!(path.exists());
     }
+}
+
+#[test]
+fn language_from_code_known_639_1() {
+    assert_eq!(language_from_code("en"), Language::Eng);
+    assert_eq!(language_from_code("es"), Language::Spa);
+    assert_eq!(language_from_code("ru"), Language::Rus);
+}
+
+#[test]
+fn language_from_code_strips_locale_region() {
+    assert_eq!(language_from_code("en-US"), Language::Eng);
+    assert_eq!(language_from_code("es-MX"), Language::Spa);
+    assert_eq!(language_from_code("ru-RU"), Language::Rus);
+}
+
+#[test]
+fn language_from_code_uppercase_known() {
+    assert_eq!(language_from_code("EN"), Language::Eng);
+    assert_eq!(language_from_code("ES"), Language::Spa);
+}
+
+#[test]
+fn language_from_code_unknown_returns_default() {
+    assert_eq!(language_from_code("zz"), Language::default());
+    assert_eq!(language_from_code(""), Language::default());
+    assert_eq!(language_from_code("xx-YY"), Language::default());
+}
+
+#[test]
+fn detect_browser_language_does_not_panic() {
+    let _ = detect_browser_language();
 }

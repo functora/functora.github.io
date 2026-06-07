@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn Share() -> Element {
-    let mut nav = use_app_nav();
+    let mut nav = use_nav_signal::<Route>();
     let ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
 

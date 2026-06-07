@@ -30,6 +30,7 @@ pub mod dioxus_elements {
 }
 
 pub use functora_dioxus::js::Theme;
+pub use functora_dioxus::{use_nav, use_nav_signal};
 
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_STORAGE_KEY: &str = concat!(
@@ -39,7 +40,8 @@ pub const APP_STORAGE_KEY: &str = concat!(
 );
 pub const BETA_TEST_URL: &str =
     "https://groups.google.com/g/functora";
-pub const GOOGLE_PLAY_URL: &str = "https://play.google.com/store/apps/details?id=com.functora.cryptonote";
+pub const GOOGLE_PLAY_URL: &str =
+    "https://play.google.com/store/apps/details?id=com.functora.cryptonote";
 pub const APK_URL: &str = concat!(
     "https://github.com/functora/functora.github.io/releases/tag/cryptonote-v",
     env!("CARGO_PKG_VERSION")
@@ -50,4 +52,5 @@ pub const WEB_APP_URL: &str = concat!(
 );
 pub const FUNCTORA_URL: &str =
     "https://functora.github.io/";
-pub const SOURCE_CODE_URL: &str = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote";
+pub const SOURCE_CODE_URL: &str =
+    "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote";

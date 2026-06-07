@@ -1,6 +1,5 @@
 use crate::messages::*;
 use crate::*;
-use functora_dioxus::use_nav;
 
 #[component]
 pub fn Layout() -> Element {

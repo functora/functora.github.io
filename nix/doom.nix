@@ -358,6 +358,14 @@
         nashgore = ../bak/doom/nashgore.pk3;
       }
       // mkDoom {
+        tag = "venturos";
+        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
+        total = ../bak/doom/Venturous_1.7.0b.pk3;
+        liquid = ltp701;
+        nashgore = ../bak/doom/nashgore.pk3;
+        movement = ../bak/doom/ZMovement_3.2.1.pk3;
+      }
+      // mkDoom {
         tag = "infinite";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/DOOM_Infinite_098_PP2_H2.pk3;

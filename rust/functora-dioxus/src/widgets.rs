@@ -8,6 +8,7 @@ pub mod pre;
 pub mod qr_scanner;
 pub mod quote;
 
+pub use breadcrumb::*;
 pub use button::*;
 pub use dock::*;
 pub use extlink::*;

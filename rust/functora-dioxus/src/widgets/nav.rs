@@ -6,28 +6,6 @@ fn bool_attr(val: bool) -> Option<&'static str> {
 }
 
 #[component]
-pub fn Breadcrumb<N: NavCtx + PartialEq>(
-    title: String,
-    home_label: String,
-    home_href: String,
-    nav_ctx: Signal<N>,
-) -> Element {
-    rsx! {
-        div { font_size: "larger",
-            a {
-                href: "#",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav_ctx.write().push_route(home_href.clone());
-                },
-                "{home_label}"
-            }
-            " ❭ {title}"
-        }
-    }
-}
-
-#[component]
 pub fn NavLink<N: NavCtx + PartialEq>(
     href: String,
     children: Element,

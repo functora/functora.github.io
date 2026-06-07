@@ -1,3 +1,4 @@
+use crate::dioxus_elements;
 use crate::traits::NavCtx;
 use dioxus::prelude::*;
 
@@ -9,7 +10,7 @@ pub fn Breadcrumb<N: NavCtx + PartialEq>(
     nav_ctx: Signal<N>,
 ) -> Element {
     rsx! {
-        div { font_size: "larger",
+        card { font_size: "larger",
             a {
                 href: "#",
                 onclick: move |evt| {

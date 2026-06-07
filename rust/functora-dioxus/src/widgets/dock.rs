@@ -1,15 +1,17 @@
+use crate::i18n::{I18N, Language};
 use crate::traits::NavCtx;
 use crate::widgets::message::Message;
 use dioxus::prelude::ReadableExt;
 use dioxus::prelude::*;
 
 #[component]
-pub fn Dock<N: NavCtx + PartialEq>(
+pub fn Dock<N: NavCtx + PartialEq, T: I18N + Clone + PartialEq + 'static>(
     children: Element,
     message: Option<Signal<Option<String>>>,
     nav_ctx: Signal<N>,
-    back_button_text: String,
+    back_button_text: T,
     back_button_icon: Option<Element>,
+    lang: Language,
 ) -> Element {
     let has_navigated = nav_ctx.with(super::super::traits::NavCtx::can_go_back);
 
@@ -26,7 +28,7 @@ pub fn Dock<N: NavCtx + PartialEq>(
                         nav_ctx.write().go_back();
                     },
                     {back_button_icon}
-                    {back_button_text}
+                    {back_button_text.render(lang)}
                 }
             }
             {children}

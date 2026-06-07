@@ -23,3 +23,5 @@ pub fn detect_browser_language() -> Language {
         .as_deref()
         .map_or_else(Language::default, language_from_code)
 }
+
+include!(concat!(env!("OUT_DIR"), "/i18n_trait.rs"));

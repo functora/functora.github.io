@@ -1,3 +1,4 @@
+use crate::messages::MsgTermsOfServiceTitle;
 use crate::*;
 
 #[component]
@@ -5,7 +6,7 @@ pub fn License() -> Element {
     let t = use_translations();
 
     rsx! {
-        Breadcrumb { title: t.terms_of_service_title.to_string() }
+        Breadcrumb { title: MsgTermsOfServiceTitle }
         section {
             Pre { "{t.license_text}" }
             Dock {}

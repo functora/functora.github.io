@@ -9,7 +9,7 @@ pub fn Dock<N: NavCtx + PartialEq, T: I18N + Clone + PartialEq + 'static>(
     children: Element,
     message: Option<Signal<Option<String>>>,
     nav_ctx: Signal<N>,
-    back_button_text: T,
+    back_button_i18n: T,
     back_button_icon: Option<Element>,
     lang: Language,
 ) -> Element {
@@ -28,7 +28,7 @@ pub fn Dock<N: NavCtx + PartialEq, T: I18N + Clone + PartialEq + 'static>(
                         nav_ctx.write().go_back();
                     },
                     {back_button_icon}
-                    {back_button_text.render(lang)}
+                    {back_button_i18n.render(lang)}
                 }
             }
             {children}

@@ -6,6 +6,7 @@ pub mod error;
 pub mod hooks;
 pub mod i18n;
 pub mod markdown;
+pub mod messages;
 pub mod prelude;
 
 pub use components::*;

@@ -1,3 +1,4 @@
+use crate::messages::MsgShareTitle;
 use crate::*;
 
 #[component]
@@ -84,7 +85,7 @@ pub fn Share() -> Element {
     });
 
     rsx! {
-        Breadcrumb { title: t.share_title.to_string() }
+        Breadcrumb { title: MsgShareTitle }
         section {
 
             if !url().is_empty() {

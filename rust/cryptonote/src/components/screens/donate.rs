@@ -1,3 +1,4 @@
+use crate::messages::MsgDonateTitle;
 use crate::*;
 
 const BTC_ADDRESS: &str =
@@ -21,7 +22,7 @@ pub fn Donate() -> Element {
     let xmr_qr = generate_crypto_qr(XMR_ADDRESS);
 
     rsx! {
-        Breadcrumb { title: t.donate_title.to_string() }
+        Breadcrumb { title: MsgDonateTitle }
         section {
             fieldset {
                 h3 { "{t.donate_greeting}" }

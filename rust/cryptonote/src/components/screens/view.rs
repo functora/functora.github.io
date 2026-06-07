@@ -1,3 +1,6 @@
+use crate::messages::{
+    MsgEncryptedNote, MsgErrorTitle, MsgYourNoteTitle,
+};
 use crate::*;
 
 #[component]
@@ -92,7 +95,7 @@ pub fn View(note: Option<String>) -> Element {
 
     rsx! {
             if is_encrypted() {
-                Breadcrumb { title: t.encrypted_note.to_string() }
+                Breadcrumb { title: MsgEncryptedNote }
                 section {
                     fieldset {
                         Pre {
@@ -139,7 +142,7 @@ pub fn View(note: Option<String>) -> Element {
                     }
                 }
             } else if let Some(content) = note_content() {
-                Breadcrumb { title: t.your_note_title.to_string() }
+                Breadcrumb { title: MsgYourNoteTitle }
                 section {
                     fieldset {
                         article {
@@ -179,7 +182,7 @@ pub fn View(note: Option<String>) -> Element {
                     }
                 }
             } else if message.read().is_some() {
-                Breadcrumb { title: t.error_title.to_string() }
+                Breadcrumb { title: MsgErrorTitle }
                 section {
                     Dock { message }
                 }

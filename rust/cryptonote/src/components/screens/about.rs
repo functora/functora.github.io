@@ -1,3 +1,4 @@
+use crate::messages::MsgAboutTitle;
 use crate::*;
 
 #[component]
@@ -5,7 +6,7 @@ pub fn About() -> Element {
     let t = use_translations();
     let nav_ctx = use_context::<Signal<AppNav>>();
     rsx! {
-        Breadcrumb { title: t.about_title.to_string() }
+        Breadcrumb { title: MsgAboutTitle }
         section {
             Pre { "{t.about_text}" }
             br {}

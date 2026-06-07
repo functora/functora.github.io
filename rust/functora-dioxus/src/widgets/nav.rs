@@ -1,4 +1,4 @@
-use crate::traits::NavCtx;
+use crate::nav::Nav;
 use dioxus::prelude::*;
 
 fn bool_attr(val: bool) -> Option<&'static str> {
@@ -6,13 +6,13 @@ fn bool_attr(val: bool) -> Option<&'static str> {
 }
 
 #[component]
-pub fn NavLink<N: NavCtx + PartialEq>(
+pub fn NavLink<R: Routable + Default + PartialEq + 'static>(
     href: String,
     children: Element,
     onclick: Option<EventHandler<MouseEvent>>,
     #[props(default)] button: bool,
     #[props(default)] primary: bool,
-    nav_ctx: Signal<N>,
+    nav: Signal<Nav<R>>,
     #[props(extends = a, extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
@@ -25,7 +25,7 @@ pub fn NavLink<N: NavCtx + PartialEq>(
                 if let Some(f) = &onclick {
                     f.call(evt);
                 }
-                nav_ctx.write().push_route(href.clone());
+                nav.write().push_route(&href);
             },
             ..attributes,
             {children}

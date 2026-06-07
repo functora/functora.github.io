@@ -1,6 +1,4 @@
-use functora_dioxus::{
-    Error as FdError, Language, NavCtx, Theme, decode_qr_rgba, detect_browser_language, language_from_code,
-};
+use functora_dioxus::{Error as FdError, Language, Theme, decode_qr_rgba, detect_browser_language, language_from_code};
 use std::sync::Arc;
 
 #[test]
@@ -102,24 +100,6 @@ fn error_camera_not_available() {
 fn error_camera_permission_denied() {
     let err = FdError::CameraPermissionDenied("denied".to_string());
     assert!(err.to_string().contains("denied"));
-}
-
-#[derive(Clone, PartialEq)]
-struct TestNav;
-impl NavCtx for TestNav {
-    fn push_route(&mut self, _href: String) {}
-    fn can_go_back(&self) -> bool {
-        false
-    }
-    fn go_back(&mut self) {}
-}
-
-#[test]
-fn test_nav_ctx_trait() {
-    let mut nav = TestNav;
-    nav.push_route("/test".to_string());
-    assert!(!nav.can_go_back());
-    nav.go_back();
 }
 
 #[test]

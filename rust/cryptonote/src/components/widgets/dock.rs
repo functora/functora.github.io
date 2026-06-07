@@ -6,7 +6,7 @@ pub fn Dock(
     children: Element,
     message: Option<Signal<Option<UiMessage>>>,
 ) -> Element {
-    let nav = use_app_nav();
+    let mut nav = use_app_nav();
     let lang = use_lang();
 
     rsx! {
@@ -16,11 +16,11 @@ pub fn Dock(
             }
         }
         div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",
-            if nav.has_navigated() {
+            if nav.with(|n| n.has_navigated()) {
                 Button {
                     icon: FaArrowLeft,
                     onclick: move |_| {
-                        nav.go_back();
+                        nav.write().go_back();
                     },
                     "{MsgBack.render(lang)}"
                 }

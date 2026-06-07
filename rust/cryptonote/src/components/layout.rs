@@ -1,14 +1,15 @@
 use crate::messages::*;
 use crate::*;
+use functora_dioxus::use_nav;
 
 #[component]
 pub fn Layout() -> Element {
     let mut cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
-    let app_nav = use_app_nav();
-    let nav_ctx =
-        use_context_provider(|| Signal::new(app_nav));
+    let nav = use_nav::<Route>();
+    let nav_signal =
+        use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
         let theme = cfg.read().theme;
@@ -31,7 +32,7 @@ pub fn Layout() -> Element {
                 input { r#type: "checkbox" }
                 header {
                     NavLink {
-                        nav_ctx,
+                        nav: nav_signal,
                         href: Screen::Home.to_route(None).to_string(),
                         onclick: move |_| ctx.set(AppCtx::default()),
                         "🔐 Cryptonote"
@@ -61,7 +62,7 @@ pub fn Layout() -> Element {
                         }
                     }
                     li {
-                        NavLink { nav_ctx, href: Screen::About.to_route(None).to_string(), "❓{MsgAboutTitle.render(lang)}" }
+                        NavLink { nav: nav_signal, href: Screen::About.to_route(None).to_string(), "❓{MsgAboutTitle.render(lang)}" }
                     }
                 }
             }
@@ -78,15 +79,15 @@ pub fn Layout() -> Element {
             " "
             {MsgByContinuing.render(lang)}
             " "
-            NavLink { nav_ctx, href: Screen::License.to_route(None).to_string(), "{MsgTermsOfService.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::License.to_route(None).to_string(), "{MsgTermsOfService.render(lang)}" }
             " "
             {MsgYouAgree.render(lang)}
             " "
-            NavLink { nav_ctx, href: Screen::Privacy.to_route(None).to_string(), "{MsgPrivacyPolicyAnd.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::Privacy.to_route(None).to_string(), "{MsgPrivacyPolicyAnd.render(lang)}" }
             ". "
             {MsgPlease.render(lang)}
             " "
-            NavLink { nav_ctx, href: Screen::Donate.to_route(None).to_string(), "{MsgDonateLink.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::Donate.to_route(None).to_string(), "{MsgDonateLink.render(lang)}" }
             ". "
             {MsgVersionLabel.render(lang)}
             " "

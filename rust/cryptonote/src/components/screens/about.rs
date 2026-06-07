@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn About() -> Element {
     let lang = use_lang();
-    let nav_ctx = use_context::<Signal<AppNav>>();
+    let nav = use_app_nav();
     rsx! {
         Breadcrumb { title: MsgAboutTitle }
         section {
@@ -42,7 +42,7 @@ pub fn About() -> Element {
                     "{MsgAuthorButton.render(lang)}"
                 }
                 NavLink {
-                    nav_ctx,
+                    nav,
                     href: Screen::Donate.to_route(None).to_string(),
                     button: true,
                     primary: true,

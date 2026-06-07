@@ -1,19 +1,19 @@
 use crate::i18n::{I18N, Language};
-use crate::traits::NavCtx;
+use crate::nav::Nav;
 use crate::widgets::message::Message;
-use dioxus::prelude::ReadableExt;
 use dioxus::prelude::*;
 
+#[allow(clippy::redundant_closure_for_method_calls)]
 #[component]
-pub fn Dock<N: NavCtx + PartialEq, T: I18N + Clone + PartialEq + 'static>(
+pub fn Dock<R: 'static, T: I18N + Clone + PartialEq + 'static>(
     children: Element,
     message: Option<Signal<Option<String>>>,
-    nav_ctx: Signal<N>,
+    nav: Signal<Nav<R>>,
     back_button_i18n: T,
     back_button_icon: Option<Element>,
     lang: Language,
 ) -> Element {
-    let has_navigated = nav_ctx.with(super::super::traits::NavCtx::can_go_back);
+    let has_navigated = nav.with(|nav| nav.can_go_back());
 
     rsx! {
         if let Some(message) = message {
@@ -25,7 +25,7 @@ pub fn Dock<N: NavCtx + PartialEq, T: I18N + Clone + PartialEq + 'static>(
             if has_navigated {
                 button {
                     onclick: move |_| {
-                        nav_ctx.write().go_back();
+                        nav.write().go_back();
                     },
                     {back_button_icon}
                     {back_button_i18n.render(lang)}

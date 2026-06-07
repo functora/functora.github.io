@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn Home() -> Element {
-    let nav = use_app_nav();
+    let mut nav = use_app_nav();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
 
@@ -25,7 +25,9 @@ pub fn Home() -> Element {
 
         match extract_note_param(&url) {
             Ok(note) => {
-                nav.push(Screen::View.to_route(Some(note)));
+                nav.write().push(
+                    Screen::View.to_route(Some(note)),
+                );
             }
             Err(e) => {
                 message.set(Some(UiMessage::Error(e)));
@@ -43,7 +45,7 @@ pub fn Home() -> Element {
                 AppError::PasswordRequired,
             )));
         } else {
-            nav.push(Screen::Share.to_route(None));
+            nav.write().push(Screen::Share.to_route(None));
         }
     };
 
@@ -175,7 +177,7 @@ pub fn Home() -> Element {
                             Button {
                                 icon: FaEye,
                                 onclick: move |_| {
-                                    nav.push(Screen::View.to_route(None));
+                                    nav.write().push(Screen::View.to_route(None));
                                 },
                                 "{MsgViewButton.render(lang)}"
                             }
@@ -242,7 +244,7 @@ pub fn Home() -> Element {
                             on_scan: Callback::new(move |url: String| {
                                 match extract_note_param(&url) {
                                     Ok(note) => {
-                                        nav.push(Screen::View.to_route(Some(note)));
+                                        nav.write().push(Screen::View.to_route(Some(note)));
                                     }
                                     Err(e) => {
                                         message.set(Some(UiMessage::Error(e)));

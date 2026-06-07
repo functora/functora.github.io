@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn Share() -> Element {
-    let nav = use_app_nav();
+    let mut nav = use_app_nav();
     let ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
 
@@ -106,7 +106,7 @@ pub fn Share() -> Element {
                         Button {
                             icon: FaEye,
                             onclick: move |_| {
-                                nav.push(Screen::View.to_route(None));
+                                nav.write().push(Screen::View.to_route(None));
                             },
                             "{MsgViewButton.render(lang)}"
                         }

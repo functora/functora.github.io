@@ -93,6 +93,15 @@ pub enum Route {
         Root { screen: Screen, note: Option<String> },
 }
 
+impl Default for Route {
+    fn default() -> Self {
+        Self::Root {
+            screen: Screen::default(),
+            note: None,
+        }
+    }
+}
+
 #[component]
 fn Root(screen: Screen, note: Option<String>) -> Element {
     match screen {

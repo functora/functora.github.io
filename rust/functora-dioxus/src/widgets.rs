@@ -18,4 +18,4 @@ pub use pre::*;
 pub use qr_scanner::*;
 pub use quote::*;
 
-pub use crate::traits::*;
+pub use crate::nav::*;

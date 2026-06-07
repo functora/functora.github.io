@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
-    let nav = use_app_nav();
+    let mut nav = use_app_nav();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
     let mut note_content =
@@ -156,7 +156,7 @@ pub fn View(note: Option<String>) -> Element {
                                 icon: FaTrash,
                                 onclick: move |_| {
                                     ctx.set(AppCtx::default());
-                                    nav.push(Screen::Home.to_route(None));
+                                    nav.write().push(Screen::Home.to_route(None));
                                 },
                                 "{MsgCreateNewNote.render(lang)}"
                             }
@@ -164,7 +164,7 @@ pub fn View(note: Option<String>) -> Element {
                                 icon: FaPenToSquare,
                                 onclick: move |_| {
                                     ctx.write().action = ActionMode::Create;
-                                    nav.push(Screen::Home.to_route(None));
+                                    nav.write().push(Screen::Home.to_route(None));
                                 },
                                 "{MsgEditNote.render(lang)}"
                             }

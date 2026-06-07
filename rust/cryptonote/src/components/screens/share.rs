@@ -1,11 +1,11 @@
-use crate::messages::MsgShareTitle;
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn Share() -> Element {
     let nav = use_app_nav();
     let ctx = use_context::<Signal<AppCtx>>();
-    let t = use_translations();
+    let lang = use_lang();
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
@@ -108,7 +108,7 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 nav.push(Screen::View.to_route(None));
                             },
-                            "{t.view_button}"
+                            "{MsgViewButton.render(lang)}"
                         }
                         Button {
                             icon: FaCopy,
@@ -116,14 +116,14 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 write_clipboard(url(), message);
                             },
-                            "{t.copy_button}"
+                            "{MsgCopyButton.render(lang)}"
                         }
                     }
                 }
             } else if message.read().is_some() {
                 Dock { message }
             } else {
-                p { "{t.loading}" }
+                p { "{MsgLoading.render(lang)}" }
             }
         }
     }

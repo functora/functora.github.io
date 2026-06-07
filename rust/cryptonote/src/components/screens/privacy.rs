@@ -1,14 +1,14 @@
-use crate::messages::MsgPrivacyPolicyTitle;
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn Privacy() -> Element {
-    let t = use_translations();
+    let lang = use_lang();
 
     rsx! {
         Breadcrumb { title: MsgPrivacyPolicyTitle }
         section {
-            Pre { "{t.privacy_text}" }
+            Pre { "{MsgPrivacyText.render(lang)}" }
             Dock {}
         }
     }

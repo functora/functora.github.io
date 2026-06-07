@@ -1,4 +1,4 @@
-use crate::messages::MsgDonateTitle;
+use crate::messages::*;
 use crate::*;
 
 const BTC_ADDRESS: &str =
@@ -11,7 +11,7 @@ fn generate_crypto_qr(address: &str) -> Option<String> {
 
 #[component]
 pub fn Donate() -> Element {
-    let t = use_translations();
+    let lang = use_lang();
 
     let btc_message =
         use_signal(|| Option::<UiMessage>::None);
@@ -25,8 +25,8 @@ pub fn Donate() -> Element {
         Breadcrumb { title: MsgDonateTitle }
         section {
             fieldset {
-                h3 { "{t.donate_greeting}" }
-                article { font_size: "larger", "{t.donate_intro}" }
+                h3 { "{MsgDonateGreeting.render(lang)}" }
+                article { font_size: "larger", "{MsgDonateIntro.render(lang)}" }
             }
 
             br {}
@@ -54,7 +54,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(BTC_ADDRESS.to_string(), btc_message);
                         },
-                        "{t.copy_button}"
+                        "{MsgCopyButton.render(lang)}"
                     }
                 }
             }
@@ -84,7 +84,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(XMR_ADDRESS.to_string(), xmr_message);
                         },
-                        "{t.copy_button}"
+                        "{MsgCopyButton.render(lang)}"
                     }
                 }
             }

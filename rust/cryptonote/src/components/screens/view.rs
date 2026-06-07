@@ -1,13 +1,11 @@
-use crate::messages::{
-    MsgEncryptedNote, MsgErrorTitle, MsgYourNoteTitle,
-};
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
     let nav = use_app_nav();
     let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = use_translations();
+    let lang = use_lang();
     let mut note_content =
         use_signal(|| Option::<String>::None);
     let mut encrypted_data =
@@ -99,13 +97,13 @@ pub fn View(note: Option<String>) -> Element {
                 section {
                     fieldset {
                         Pre {
-                            Quote { "{t.encrypted_note_desc}" }
+                            Quote { "{MsgEncryptedNoteDesc.render(lang)}" }
                         }
 
-                        label { "{t.password}" }
+                        label { "{MsgPassword.render(lang)}" }
                         input {
                             r#type: "password",
-                            placeholder: "{t.password_placeholder}",
+                            placeholder: "{MsgPasswordPlaceholder.render(lang)}",
                             value: "{password_input}",
                             oninput: move |evt| password_input.set(evt.value()),
                             onkeydown: move |evt| {
@@ -130,13 +128,13 @@ pub fn View(note: Option<String>) -> Element {
                                         }
                                     });
                                 },
-                                "{t.paste_button}"
+                                "{MsgPasteButton.render(lang)}"
                             }
                             Button {
                                 icon: FaLockOpen,
                                 primary: true,
                                 onclick: move |_| decrypt_note(),
-                                "{t.decrypt_button}"
+                                "{MsgDecryptButton.render(lang)}"
                             }
                         }
                     }
@@ -160,7 +158,7 @@ pub fn View(note: Option<String>) -> Element {
                                     ctx.set(AppCtx::default());
                                     nav.push(Screen::Home.to_route(None));
                                 },
-                                "{t.create_new_note}"
+                                "{MsgCreateNewNote.render(lang)}"
                             }
                             Button {
                                 icon: FaPenToSquare,
@@ -168,7 +166,7 @@ pub fn View(note: Option<String>) -> Element {
                                     ctx.write().action = ActionMode::Create;
                                     nav.push(Screen::Home.to_route(None));
                                 },
-                                "{t.edit_note}"
+                                "{MsgEditNote.render(lang)}"
                             }
                             Button {
                                 icon: FaCopy,
@@ -176,7 +174,7 @@ pub fn View(note: Option<String>) -> Element {
                                 onclick: move |_| {
                                     write_clipboard(content.clone(), message);
                                 },
-                                "{t.copy_button}"
+                                "{MsgCopyButton.render(lang)}"
                             }
                         }
                     }
@@ -188,7 +186,7 @@ pub fn View(note: Option<String>) -> Element {
                 }
             } else {
                 section {
-                    p { "{t.loading}" }
+                    p { "{MsgLoading.render(lang)}" }
                 }
             }
         }

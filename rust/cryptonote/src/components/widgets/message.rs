@@ -1,4 +1,6 @@
+use crate::messages::*;
 use crate::*;
+use functora_dioxus::i18n::I18N;
 
 pub enum UiMessage {
     Copied,
@@ -6,10 +8,10 @@ pub enum UiMessage {
 }
 
 impl UiMessage {
-    pub fn to_text(&self, t: &Translations) -> String {
+    pub fn to_text(&self, lang: Language) -> String {
         match self {
-            UiMessage::Copied => t.copied.to_string(),
-            UiMessage::Error(e) => e.localized(t),
+            UiMessage::Copied => MsgCopied.render(lang),
+            UiMessage::Error(e) => e.localized(lang),
         }
     }
 }
@@ -18,9 +20,9 @@ impl UiMessage {
 pub fn Message(
     message: Signal<Option<UiMessage>>,
 ) -> Element {
-    let t = use_translations();
-    let text =
-        message.with(|m| m.as_ref().map(|m| m.to_text(&t)));
+    let lang = use_lang();
+    let text = message
+        .with(|m| m.as_ref().map(|m| m.to_text(lang)));
 
     match text {
         Some(text) => rsx! {

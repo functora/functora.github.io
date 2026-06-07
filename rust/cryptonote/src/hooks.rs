@@ -1,5 +1,5 @@
 use crate::components::*;
-use crate::i18n::{get_translations, Translations};
+use crate::i18n::Language;
 use crate::prelude::*;
 use crate::storage::AppCfg;
 use dioxus_router::Navigator;
@@ -60,8 +60,6 @@ impl functora_dioxus::traits::NavCtx for AppNav {
             let next = (self.idx)().saturating_sub(1);
             self.idx.set(next);
             self.nav.go_back();
-        } else {
-            self.idx.set(0);
         }
     }
 }
@@ -72,8 +70,6 @@ pub fn use_app_nav() -> AppNav {
     AppNav { nav, idx }
 }
 
-pub fn use_translations() -> Translations {
-    get_translations(
-        use_context::<Signal<AppCfg>>().read().language,
-    )
+pub fn use_lang() -> Language {
+    use_context::<Signal<AppCfg>>().read().language
 }

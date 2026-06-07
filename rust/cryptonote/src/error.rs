@@ -1,5 +1,7 @@
-use crate::i18n;
+use crate::messages::*;
 use crate::prelude::*;
+use functora_dioxus::i18n::Language;
+use functora_dioxus::i18n::I18N;
 use functora_dioxus::Error as FdError;
 use hkdf::InvalidLength;
 use sha2::digest;
@@ -23,32 +25,47 @@ pub enum AppError {
 }
 
 impl AppError {
-    pub fn localized(
-        &self,
-        t: &i18n::Translations,
-    ) -> String {
+    pub fn localized(&self, lang: Language) -> String {
         let msg = match self {
             AppError::Cipher(_)
-            | AppError::KeyDerive(_) => t.cipher_error,
-            AppError::Getrandom(_) => t.getrandom_error,
-            AppError::Base64(_) => t.base64_error,
-            AppError::Json(_) => t.json_error,
-            AppError::Utf8(_) => t.invalid_utf8,
-            AppError::Qr(_) => t.qr_error,
-            AppError::Encrypt => t.encrypt_error,
-            AppError::Decrypt => t.decrypt_error,
-            AppError::PasswordRequired => {
-                t.password_required
+            | AppError::KeyDerive(_) => {
+                MsgCipherError.render(lang)
             }
-            AppError::NoNoteInUrl => t.no_note_in_url,
-            AppError::NoNoteParam => t.no_note_param,
+            AppError::Getrandom(_) => {
+                MsgGetrandomError.render(lang)
+            }
+            AppError::Base64(_) => {
+                MsgBase64Error.render(lang)
+            }
+            AppError::Json(_) => MsgJsonError.render(lang),
+            AppError::Utf8(_) => {
+                MsgInvalidUtf8.render(lang)
+            }
+            AppError::Qr(_) => MsgQrError.render(lang),
+            AppError::Encrypt => {
+                MsgEncryptError.render(lang)
+            }
+            AppError::Decrypt => {
+                MsgDecryptError.render(lang)
+            }
+            AppError::PasswordRequired => {
+                MsgPasswordRequired.render(lang)
+            }
+            AppError::NoNoteInUrl => {
+                MsgNoNoteInUrl.render(lang)
+            }
+            AppError::NoNoteParam => {
+                MsgNoNoteParam.render(lang)
+            }
             AppError::Fd(FdError::CameraNotAvailable(
                 _,
-            )) => t.qr_camera_not_available,
+            )) => MsgQrCameraNotAvailable.render(lang),
             AppError::Fd(
                 FdError::CameraPermissionDenied(_),
-            ) => t.qr_permission_denied,
-            AppError::Fd(_) => t.clipboard_read_error,
+            ) => MsgQrPermissionDenied.render(lang),
+            AppError::Fd(_) => {
+                MsgClipboardReadError.render(lang)
+            }
         };
         format!("{}: {}", msg, self)
     }

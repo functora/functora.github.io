@@ -1,14 +1,14 @@
-use crate::messages::MsgTermsOfServiceTitle;
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn License() -> Element {
-    let t = use_translations();
+    let lang = use_lang();
 
     rsx! {
         Breadcrumb { title: MsgTermsOfServiceTitle }
         section {
-            Pre { "{t.license_text}" }
+            Pre { "{MsgLicenseText.render(lang)}" }
             Dock {}
         }
     }

@@ -1,3 +1,4 @@
+use crate::messages::*;
 use crate::*;
 
 #[component]
@@ -6,7 +7,7 @@ pub fn Dock(
     message: Option<Signal<Option<UiMessage>>>,
 ) -> Element {
     let nav = use_app_nav();
-    let t = use_translations();
+    let lang = use_lang();
 
     rsx! {
         if let Some(message) = message {
@@ -21,7 +22,7 @@ pub fn Dock(
                     onclick: move |_| {
                         nav.go_back();
                     },
-                    "{t.back_button}"
+                    "{MsgBack.render(lang)}"
                 }
             }
             {children}

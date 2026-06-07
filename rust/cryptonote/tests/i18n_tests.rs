@@ -1,6 +1,6 @@
+use cryptonote::messages::*;
 use cryptonote::{
-    get_translations, language_label, Language,
-    SUPPORTED_LANGUAGES,
+    language_label, Language, I18N, SUPPORTED_LANGUAGES,
 };
 
 #[test]
@@ -27,50 +27,77 @@ fn unknown_language_label_falls_back() {
 }
 
 #[test]
-fn get_translations_english_basic_fields() {
-    let t = get_translations(Language::Eng);
-    assert_eq!(t.note, "Note");
-    assert_eq!(t.generate_button, "Share");
-    assert_eq!(t.back_button, "Back");
-    assert_eq!(t.theme, "Theme");
-}
-
-#[test]
-fn get_translations_spanish_basic_fields() {
-    let t = get_translations(Language::Spa);
-    assert_eq!(t.note, "Nota");
-    assert_eq!(t.generate_button, "Compartir");
-    assert_eq!(t.back_button, "Atrás");
-    assert_eq!(t.theme, "Tema");
-}
-
-#[test]
-fn get_translations_russian_basic_fields() {
-    let t = get_translations(Language::Rus);
-    assert_eq!(t.note, "Заметка");
-    assert_eq!(t.generate_button, "Поделиться");
-    assert_eq!(t.back_button, "Назад");
-    assert_eq!(t.theme, "Тема");
-}
-
-#[test]
-fn get_translations_unsupported_falls_back_to_english() {
-    let eng = get_translations(Language::Eng);
-    let fallback = get_translations(Language::default());
-    assert_eq!(fallback.note, eng.note);
+fn i18n_english_basic_messages() {
+    assert_eq!(MsgNote.render(Language::Eng), "Note");
     assert_eq!(
-        fallback.generate_button,
-        eng.generate_button
+        MsgGenerateButton.render(Language::Eng),
+        "Share"
+    );
+    assert_eq!(MsgBack.render(Language::Eng), "Back");
+    assert_eq!(MsgTheme.render(Language::Eng), "Theme");
+}
+
+#[test]
+fn i18n_spanish_basic_messages() {
+    assert_eq!(MsgNote.render(Language::Spa), "Nota");
+    assert_eq!(
+        MsgGenerateButton.render(Language::Spa),
+        "Compartir"
+    );
+    assert_eq!(MsgBack.render(Language::Spa), "Atrás");
+    assert_eq!(MsgTheme.render(Language::Spa), "Tema");
+}
+
+#[test]
+fn i18n_russian_basic_messages() {
+    assert_eq!(MsgNote.render(Language::Rus), "Заметка");
+    assert_eq!(
+        MsgGenerateButton.render(Language::Rus),
+        "Поделиться"
+    );
+    assert_eq!(MsgBack.render(Language::Rus), "Назад");
+    assert_eq!(MsgTheme.render(Language::Rus), "Тема");
+}
+
+#[test]
+fn i18n_unsupported_falls_back_to_english() {
+    let unsupported = Language::Fra;
+    assert_eq!(
+        MsgNote.render(unsupported),
+        MsgNote.render(Language::Eng)
+    );
+    assert_eq!(
+        MsgGenerateButton.render(unsupported),
+        MsgGenerateButton.render(Language::Eng)
     );
 }
 
 #[test]
-fn get_translations_all_locales_have_consistent_field_count(
-) {
-    let t_en = get_translations(Language::Eng);
-    let t_es = get_translations(Language::Spa);
-    let t_ru = get_translations(Language::Rus);
-    assert!(t_en.license_text.contains("Copyright"));
-    assert!(t_es.license_text.contains("Copyright"));
-    assert!(t_ru.license_text.contains("Copyright"));
+fn i18n_all_messages_have_translations() {
+    assert!(MsgLicenseText
+        .render(Language::Eng)
+        .contains("Copyright"));
+    assert!(MsgLicenseText
+        .render(Language::Spa)
+        .contains("Copyright"));
+    assert!(MsgLicenseText
+        .render(Language::Rus)
+        .contains("Copyright"));
+}
+
+#[test]
+fn i18n_all_supported_languages_render_differently() {
+    let eng = MsgNote.render(Language::Eng);
+    let spa = MsgNote.render(Language::Spa);
+    let rus = MsgNote.render(Language::Rus);
+    assert_ne!(eng, spa);
+    assert_ne!(eng, rus);
+    assert_ne!(spa, rus);
+}
+
+#[test]
+fn i18n_render_dispatches_correct_language() {
+    assert_eq!(MsgHome.render(Language::Eng), "Home");
+    assert_eq!(MsgHome.render(Language::Spa), "Inicio");
+    assert_eq!(MsgHome.render(Language::Rus), "Главная");
 }

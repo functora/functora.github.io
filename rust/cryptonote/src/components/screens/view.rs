@@ -11,8 +11,7 @@ pub fn View(note: Option<String>) -> Element {
     let mut encrypted_data =
         use_signal(|| Option::<EncryptedData>::None);
     let mut password_input = use_signal(String::new);
-    let mut message =
-        use_signal(|| Option::<UiMessage>::None);
+    let mut message = use_signal(|| Option::<String>::None);
     let mut is_encrypted = use_signal(|| false);
     let rendered = use_memo(move || {
         note_content
@@ -38,17 +37,18 @@ pub fn View(note: Option<String>) -> Element {
                             ctx.write().cipher = None;
                         }
                     },
-                    Err(e) => message
-                        .set(Some(UiMessage::Error(e))),
+                    Err(e) => {
+                        message.set(Some(e.render(lang)))
+                    }
                 }
                 return;
             }
         }
         let content = ctx.read().content.clone();
         if content.is_empty() {
-            message.set(Some(UiMessage::Error(
-                AppError::NoNoteInUrl,
-            )));
+            message.set(Some(
+                AppError::NoNoteInUrl.render(lang),
+            ));
         } else {
             note_content.set(Some(content));
         }
@@ -59,9 +59,9 @@ pub fn View(note: Option<String>) -> Element {
         if let Some(enc) = encrypted_data.read().as_ref() {
             let pwd = password_input.read().clone();
             if pwd.is_empty() {
-                message.set(Some(UiMessage::Error(
-                    AppError::PasswordRequired,
-                )));
+                message.set(Some(
+                    AppError::PasswordRequired.render(lang),
+                ));
                 return;
             }
 
@@ -78,15 +78,11 @@ pub fn View(note: Option<String>) -> Element {
                                 Some(enc.cipher);
                         }
                         Err(e) => message.set(Some(
-                            UiMessage::Error(
-                                AppError::Utf8(e),
-                            ),
+                            AppError::Utf8(e).render(lang),
                         )),
                     }
                 }
-                Err(e) => {
-                    message.set(Some(UiMessage::Error(e)))
-                }
+                Err(e) => message.set(Some(e.render(lang))),
             }
         }
     };
@@ -123,7 +119,7 @@ pub fn View(note: Option<String>) -> Element {
                                         match js_read_clipboard().await {
                                             Ok(text) => password_input.set(text),
     Err(e) => {
-                        message.set(Some(UiMessage::Error(e.into())))
+                        message.set(Some(AppError::Fd(e).render(lang)))
                     }
                                         }
                                     });
@@ -172,7 +168,7 @@ pub fn View(note: Option<String>) -> Element {
                                 icon: FaCopy,
                                 primary: true,
                                 onclick: move |_| {
-                                    write_clipboard(content.clone(), message);
+                                    write_clipboard(content.clone(), message, lang);
                                 },
                                 "{MsgCopyButton.render(lang)}"
                             }

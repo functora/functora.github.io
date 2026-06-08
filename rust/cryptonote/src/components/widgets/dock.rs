@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn Dock(
     children: Element,
-    message: Option<Signal<Option<UiMessage>>>,
+    message: Option<Signal<Option<String>>>,
 ) -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();

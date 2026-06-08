@@ -9,68 +9,68 @@ pub fn Share() -> Element {
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
-    let mut message =
-        use_signal(|| Option::<UiMessage>::None);
+    let mut message = use_signal(|| Option::<String>::None);
 
     use_effect(move || {
-        let res = (|| {
-            let ctx = ctx.read();
+        let res: Result<(String, String), AppError> =
+            (|| {
+                let ctx = ctx.read();
 
-            let note_data = ctx.cipher.map_or_else(
-                || {
-                    Ok(NoteData::PlainText(
-                        ctx.content.clone(),
-                    ))
-                },
-                |cipher| {
-                    if ctx.password.is_empty() {
-                        Err(AppError::PasswordRequired)
-                    } else {
-                        encrypt_symmetric(
-                            ctx.content.as_bytes(),
-                            &ctx.password,
-                            cipher,
-                        )
-                        .map(NoteData::CipherText)
-                    }
-                },
-            )?;
-
-            let origin = {
-                #[cfg(target_arch = "wasm32")]
-                {
-                    web_sys::window().and_then(|w| {
-                        let loc = w.location();
-                        let protocol =
-                            loc.protocol().ok()?;
-                        let host = loc.host().ok()?;
-                        let pathname =
-                            loc.pathname().ok()?;
-                        let path =
-                            pathname.trim_end_matches('/');
-                        Some(format!(
-                            "{}//{}{}",
-                            protocol, host, path
+                let note_data = ctx.cipher.map_or_else(
+                    || {
+                        Ok(NoteData::PlainText(
+                            ctx.content.clone(),
                         ))
-                    })
-                }
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    Some(WEB_APP_URL)
-                }
-            }
-            .ok_or(AppError::NoNoteInUrl)?;
+                    },
+                    |cipher| {
+                        if ctx.password.is_empty() {
+                            Err(AppError::PasswordRequired)
+                        } else {
+                            encrypt_symmetric(
+                                ctx.content.as_bytes(),
+                                &ctx.password,
+                                cipher,
+                            )
+                            .map(NoteData::CipherText)
+                        }
+                    },
+                )?;
 
-            let view_url = format!(
-                "{}/?screen={}",
-                origin,
-                Screen::View
-            );
-            let url = build_url(&view_url, &note_data)?;
-            let qr = generate_qr_code(&url)?;
+                let origin = {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        web_sys::window().and_then(|w| {
+                            let loc = w.location();
+                            let protocol =
+                                loc.protocol().ok()?;
+                            let host = loc.host().ok()?;
+                            let pathname =
+                                loc.pathname().ok()?;
+                            let path = pathname
+                                .trim_end_matches('/');
+                            Some(format!(
+                                "{}//{}{}",
+                                protocol, host, path
+                            ))
+                        })
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        Some(WEB_APP_URL)
+                    }
+                }
+                .ok_or(AppError::NoNoteInUrl)?;
 
-            Ok((url, qr))
-        })();
+                let view_url = format!(
+                    "{}/?screen={}",
+                    origin,
+                    Screen::View
+                );
+                let url = build_url(&view_url, &note_data)?;
+                let qr = generate_qr_code(&url)?;
+
+                Ok((url, qr))
+            })();
 
         match res {
             Ok((u, q)) => {
@@ -79,7 +79,7 @@ pub fn Share() -> Element {
                 message.set(None);
             }
             Err(e) => {
-                message.set(Some(UiMessage::Error(e)));
+                message.set(Some(e.render(lang)));
             }
         }
     });
@@ -98,7 +98,7 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            write_clipboard(url(), message);
+                            write_clipboard(url(), message, lang);
                         },
                     }
 
@@ -114,7 +114,7 @@ pub fn Share() -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard(url(), message);
+                                write_clipboard(url(), message, lang);
                             },
                             "{MsgCopyButton.render(lang)}"
                         }

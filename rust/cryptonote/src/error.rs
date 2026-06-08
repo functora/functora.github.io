@@ -1,6 +1,5 @@
 use crate::messages::*;
 use crate::prelude::*;
-use functora_dioxus::i18n::Language;
 use functora_dioxus::i18n::I18N;
 use functora_dioxus::Error as FdError;
 use hkdf::InvalidLength;
@@ -24,50 +23,113 @@ pub enum AppError {
     Fd(#[from] FdError),
 }
 
-impl AppError {
-    pub fn localized(&self, lang: Language) -> String {
+impl I18N for AppError {
+    fn render_eng(&self) -> String {
         let msg = match self {
-            AppError::Cipher(_)
-            | AppError::KeyDerive(_) => {
-                MsgCipherError.render(lang)
+            Self::Cipher(_) | Self::KeyDerive(_) => {
+                MsgCipherError.render_eng()
             }
-            AppError::Getrandom(_) => {
-                MsgGetrandomError.render(lang)
+            Self::Getrandom(_) => {
+                MsgGetrandomError.render_eng()
             }
-            AppError::Base64(_) => {
-                MsgBase64Error.render(lang)
+            Self::Base64(_) => MsgBase64Error.render_eng(),
+            Self::Json(_) => MsgJsonError.render_eng(),
+            Self::Utf8(_) => MsgInvalidUtf8.render_eng(),
+            Self::Qr(_) => MsgQrError.render_eng(),
+            Self::Encrypt => MsgEncryptError.render_eng(),
+            Self::Decrypt => MsgDecryptError.render_eng(),
+            Self::PasswordRequired => {
+                MsgPasswordRequired.render_eng()
             }
-            AppError::Json(_) => MsgJsonError.render(lang),
-            AppError::Utf8(_) => {
-                MsgInvalidUtf8.render(lang)
+            Self::NoNoteInUrl => {
+                MsgNoNoteInUrl.render_eng()
             }
-            AppError::Qr(_) => MsgQrError.render(lang),
-            AppError::Encrypt => {
-                MsgEncryptError.render(lang)
+            Self::NoNoteParam => {
+                MsgNoNoteParam.render_eng()
             }
-            AppError::Decrypt => {
-                MsgDecryptError.render(lang)
+            Self::Fd(FdError::CameraNotAvailable(_)) => {
+                MsgQrCameraNotAvailable.render_eng()
             }
-            AppError::PasswordRequired => {
-                MsgPasswordRequired.render(lang)
-            }
-            AppError::NoNoteInUrl => {
-                MsgNoNoteInUrl.render(lang)
-            }
-            AppError::NoNoteParam => {
-                MsgNoNoteParam.render(lang)
-            }
-            AppError::Fd(FdError::CameraNotAvailable(
+            Self::Fd(FdError::CameraPermissionDenied(
                 _,
-            )) => MsgQrCameraNotAvailable.render(lang),
-            AppError::Fd(
-                FdError::CameraPermissionDenied(_),
-            ) => MsgQrPermissionDenied.render(lang),
-            AppError::Fd(_) => {
-                MsgClipboardReadError.render(lang)
+            )) => MsgQrPermissionDenied.render_eng(),
+            Self::Fd(_) => {
+                MsgClipboardReadError.render_eng()
             }
         };
-        format!("{}: {}", msg, self)
+        format!("{msg}: {self}")
+    }
+
+    fn render_spa(&self) -> String {
+        let msg = match self {
+            Self::Cipher(_) | Self::KeyDerive(_) => {
+                MsgCipherError.render_spa()
+            }
+            Self::Getrandom(_) => {
+                MsgGetrandomError.render_spa()
+            }
+            Self::Base64(_) => MsgBase64Error.render_spa(),
+            Self::Json(_) => MsgJsonError.render_spa(),
+            Self::Utf8(_) => MsgInvalidUtf8.render_spa(),
+            Self::Qr(_) => MsgQrError.render_spa(),
+            Self::Encrypt => MsgEncryptError.render_spa(),
+            Self::Decrypt => MsgDecryptError.render_spa(),
+            Self::PasswordRequired => {
+                MsgPasswordRequired.render_spa()
+            }
+            Self::NoNoteInUrl => {
+                MsgNoNoteInUrl.render_spa()
+            }
+            Self::NoNoteParam => {
+                MsgNoNoteParam.render_spa()
+            }
+            Self::Fd(FdError::CameraNotAvailable(_)) => {
+                MsgQrCameraNotAvailable.render_spa()
+            }
+            Self::Fd(FdError::CameraPermissionDenied(
+                _,
+            )) => MsgQrPermissionDenied.render_spa(),
+            Self::Fd(_) => {
+                MsgClipboardReadError.render_spa()
+            }
+        };
+        format!("{msg}: {self}")
+    }
+
+    fn render_rus(&self) -> String {
+        let msg = match self {
+            Self::Cipher(_) | Self::KeyDerive(_) => {
+                MsgCipherError.render_rus()
+            }
+            Self::Getrandom(_) => {
+                MsgGetrandomError.render_rus()
+            }
+            Self::Base64(_) => MsgBase64Error.render_rus(),
+            Self::Json(_) => MsgJsonError.render_rus(),
+            Self::Utf8(_) => MsgInvalidUtf8.render_rus(),
+            Self::Qr(_) => MsgQrError.render_rus(),
+            Self::Encrypt => MsgEncryptError.render_rus(),
+            Self::Decrypt => MsgDecryptError.render_rus(),
+            Self::PasswordRequired => {
+                MsgPasswordRequired.render_rus()
+            }
+            Self::NoNoteInUrl => {
+                MsgNoNoteInUrl.render_rus()
+            }
+            Self::NoNoteParam => {
+                MsgNoNoteParam.render_rus()
+            }
+            Self::Fd(FdError::CameraNotAvailable(_)) => {
+                MsgQrCameraNotAvailable.render_rus()
+            }
+            Self::Fd(FdError::CameraPermissionDenied(
+                _,
+            )) => MsgQrPermissionDenied.render_rus(),
+            Self::Fd(_) => {
+                MsgClipboardReadError.render_rus()
+            }
+        };
+        format!("{msg}: {self}")
     }
 }
 

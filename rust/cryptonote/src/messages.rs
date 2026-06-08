@@ -1,5 +1,12 @@
 use functora_dioxus::i18n::I18N;
 
+pub use functora_dioxus::{
+    MsgBack, MsgClipboardReadError, MsgClipboardWriteError,
+    MsgCopied, MsgCopyButton, MsgErrorTitle, MsgHome,
+    MsgLoading, MsgPassword, MsgPasswordPlaceholder,
+    MsgPasswordRequired, MsgPasteButton,
+};
+
 macro_rules! msg {
     ($name:ident, $eng:expr, $spa:expr, $rus:expr) => {
         #[derive(Clone, PartialEq)]
@@ -35,13 +42,6 @@ msg!(
     "Шифрование паролем"
 );
 msg!(MsgCipher, "Cipher", "Cifrado", "Шифр");
-msg!(MsgPassword, "Password", "Clave", "Пароль");
-msg!(
-    MsgPasswordPlaceholder,
-    "Enter password",
-    "Ingresa contraseña",
-    "Введите пароль"
-);
 msg!(MsgGenerateButton, "Share", "Compartir", "Поделиться");
 msg!(MsgShareTitle, "Share", "Compartir", "Поделиться");
 msg!(MsgEncryptedNote, "Encrypted", "Cifrado", "Шифр");
@@ -53,79 +53,9 @@ msg!(
     "Расшифровать"
 );
 msg!(MsgYourNoteTitle, "Note", "Nota", "Заметка");
-msg!(MsgErrorTitle, "Error", "Error", "Ошибка");
-msg!(
-    MsgLoading,
-    "Loading...",
-    "Cargando...",
-    "Загрузка..."
-);
 msg!(MsgCreateNewNote, "Reset", "Reiniciar", "Сброс");
 msg!(MsgEditNote, "Edit", "Editar", "Правка");
 msg!(MsgViewButton, "View", "Ver", "Смотреть");
-msg!(
-    MsgPasswordRequired,
-    "Password is required for encryption",
-    "Se requiere contraseña para el cifrado",
-    "Для шифрования требуется пароль"
-);
-msg!(
-    MsgNoNoteInUrl,
-    "No note found in URL",
-    "No se encontró nota en la URL",
-    "Заметка не найдена в URL"
-);
-msg!(
-    MsgInvalidUtf8,
-    "Decrypted data is not valid UTF-8",
-    "Los datos descifrados no son UTF-8 válidos",
-    "Расшифрованные данные не являются допустимым UTF-8"
-);
-msg!(
-    MsgCipherError,
-    "Cipher initialization error",
-    "Error de inicialización de cifrado",
-    "Ошибка инициализации шифра"
-);
-msg!(
-    MsgGetrandomError,
-    "Random number generation error",
-    "Error de generación de números aleatorios",
-    "Ошибка генерации случайных чисел"
-);
-msg!(
-    MsgBase64Error,
-    "Base64 decoding error",
-    "Error de decodificación Base64",
-    "Ошибка декодирования Base64"
-);
-msg!(
-    MsgJsonError,
-    "JSON parsing error",
-    "Error de análisis JSON",
-    "Ошибка разбора JSON"
-);
-msg!(
-    MsgQrError,
-    "QR code generation error",
-    "Error de generación de código QR",
-    "Ошибка генерации QR-кода"
-);
-msg!(
-    MsgEncryptError,
-    "Encryption failed",
-    "Falló el cifrado",
-    "Ошибка шифрования"
-);
-msg!(
-    MsgDecryptError,
-    "Decryption failed",
-    "Falló el descifrado",
-    "Ошибка расшифровки"
-);
-msg!(MsgHome, "Home", "Inicio", "Главная");
-msg!(MsgCopied, "Copied!", "¡Copiado!", "Скопировано!");
-msg!(MsgCopyButton, "Copy", "Copiar", "Копировать");
 msg!(MsgCopyright, "©", "©", "©");
 msg!(
     MsgAllRightsReserved,
@@ -224,20 +154,6 @@ msg!(
 );
 msg!(MsgAuthorButton, "Author", "Autor", "Автор");
 msg!(MsgDonateButton, "Donate", "Donar", "Пожертвовать");
-msg!(MsgBack, "Back", "Atrás", "Назад");
-msg!(
-    MsgClipboardWriteError,
-    "Failed to copy to clipboard",
-    "No se pudo copiar al portapapeles",
-    "Не удалось скопировать в буфер обмена"
-);
-msg!(
-    MsgClipboardReadError,
-    "Failed to read from clipboard",
-    "No se pudo leer del portapapeles",
-    "Не удалось прочитать из буфера обмена"
-);
-msg!(MsgPasteButton, "Paste", "Pegar", "Вставить");
 msg!(MsgOpenUrlLabel, "URL", "URL", "URL");
 msg!(
     MsgOpenUrlPlaceholder,
@@ -304,6 +220,61 @@ msg!(
     "Camera permission was denied",
     "Se denegó el permiso de cámara",
     "Разрешение на камеру отклонено"
+);
+
+msg!(
+    MsgCipherError,
+    "Cipher initialization error",
+    "Error de inicialización de cifrado",
+    "Ошибка инициализации шифра"
+);
+msg!(
+    MsgGetrandomError,
+    "Random number generation error",
+    "Error de generación de números aleatorios",
+    "Ошибка генерации случайных чисел"
+);
+msg!(
+    MsgBase64Error,
+    "Base64 decoding error",
+    "Error de decodificación Base64",
+    "Ошибка декодирования Base64"
+);
+msg!(
+    MsgJsonError,
+    "JSON parsing error",
+    "Error de análisis JSON",
+    "Ошибка разбора JSON"
+);
+msg!(
+    MsgQrError,
+    "QR code generation error",
+    "Error de generación de código QR",
+    "Ошибка генерации QR-кода"
+);
+msg!(
+    MsgEncryptError,
+    "Encryption failed",
+    "Falló el cifrado",
+    "Ошибка шифрования"
+);
+msg!(
+    MsgDecryptError,
+    "Decryption failed",
+    "Falló el descifrado",
+    "Ошибка расшифровки"
+);
+msg!(
+    MsgInvalidUtf8,
+    "Decrypted data is not valid UTF-8",
+    "Los datos descifrados no son UTF-8 válidos",
+    "Расшифрованные данные не являются допустимым UTF-8"
+);
+msg!(
+    MsgNoNoteInUrl,
+    "No note found in URL",
+    "No se encontró nota en la URL",
+    "Заметка не найдена в URL"
 );
 
 msg!(

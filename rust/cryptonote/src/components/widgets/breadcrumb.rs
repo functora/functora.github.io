@@ -6,7 +6,7 @@ use crate::*;
 pub fn Breadcrumb<T: I18N + Clone + PartialEq + 'static>(
     title: T,
 ) -> Element {
-    let nav = use_nav_signal::<Route>();
+    let nav = use_context::<Signal<Nav<Route>>>();
     let lang =
         use_context::<Signal<AppCfg>>().read().language;
     rsx! {

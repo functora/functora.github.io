@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
-    let mut nav = use_nav_signal::<Route>();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
     let mut note_content =

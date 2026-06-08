@@ -74,7 +74,3 @@ impl<R: Routable + Default + PartialEq> Nav<R> {
 pub fn use_nav<R: Routable>() -> Nav<R> {
     Nav::new(use_navigator(), use_context::<Signal<u32>>())
 }
-
-pub fn use_nav_signal<R: Routable + Default + PartialEq>() -> Signal<Nav<R>> {
-    use_context::<Signal<Nav<R>>>()
-}

@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn About() -> Element {
     let lang = use_lang();
-    let nav = use_nav_signal::<Route>();
+    let nav = use_context::<Signal<Nav<Route>>>();
     rsx! {
         Breadcrumb { title: MsgAboutTitle }
         section {

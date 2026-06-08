@@ -6,7 +6,7 @@ pub fn Dock(
     children: Element,
     message: Option<Signal<Option<UiMessage>>>,
 ) -> Element {
-    let mut nav = use_nav_signal::<Route>();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();
 
     rsx! {

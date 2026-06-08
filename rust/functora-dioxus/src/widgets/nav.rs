@@ -1,9 +1,6 @@
 use crate::nav::Nav;
+use crate::widgets::bool_attr;
 use dioxus::prelude::*;
-
-fn bool_attr(val: bool) -> Option<&'static str> {
-    val.then_some("")
-}
 
 #[component]
 pub fn NavLink<R: Routable + Default + PartialEq + 'static>(

@@ -1,3 +1,7 @@
+pub(crate) fn bool_attr(val: bool) -> Option<&'static str> {
+    val.then_some("")
+}
+
 pub mod breadcrumb;
 pub mod button;
 pub mod dock;

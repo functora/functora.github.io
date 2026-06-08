@@ -1,8 +1,5 @@
+use crate::widgets::bool_attr;
 use dioxus::prelude::*;
-
-fn bool_attr(val: bool) -> Option<&'static str> {
-    val.then_some("")
-}
 
 #[component]
 pub fn ExtLink(

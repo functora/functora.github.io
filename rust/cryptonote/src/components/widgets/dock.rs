@@ -22,7 +22,7 @@ pub fn Dock(
                     onclick: move |_| {
                         nav.write().go_back();
                     },
-                    "{MsgBack.render(lang)}"
+                    "{Msg::Back.render(lang)}"
                 }
             }
             {children}

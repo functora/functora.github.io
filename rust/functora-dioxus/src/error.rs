@@ -52,50 +52,14 @@ impl From<jni::errors::Error> for Error {
 
 impl I18N for Error {
     fn render_eng(&self) -> String {
-        let msg = match self {
-            Self::IO(_) => MsgClipboardReadError.render_eng(),
-            Self::Json(_) => MsgClipboardReadError.render_eng(),
-            Self::Env(_) => MsgClipboardReadError.render_eng(),
-            Self::Channel(_) => MsgClipboardReadError.render_eng(),
-            Self::JS(_) => MsgClipboardReadError.render_eng(),
-            Self::CameraNotAvailable(_) => MsgClipboardReadError.render_eng(),
-            Self::CameraPermissionDenied(_) => MsgClipboardReadError.render_eng(),
-            Self::NotJsonObject(_) => MsgClipboardReadError.render_eng(),
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => MsgClipboardReadError.render_eng(),
-        };
-        format!("{msg}: {self}")
+        format!("{}: {self}", Msg::ClipboardReadError.render_eng())
     }
 
     fn render_spa(&self) -> String {
-        let msg = match self {
-            Self::IO(_) => MsgClipboardReadError.render_spa(),
-            Self::Json(_) => MsgClipboardReadError.render_spa(),
-            Self::Env(_) => MsgClipboardReadError.render_spa(),
-            Self::Channel(_) => MsgClipboardReadError.render_spa(),
-            Self::JS(_) => MsgClipboardReadError.render_spa(),
-            Self::CameraNotAvailable(_) => MsgClipboardReadError.render_spa(),
-            Self::CameraPermissionDenied(_) => MsgClipboardReadError.render_spa(),
-            Self::NotJsonObject(_) => MsgClipboardReadError.render_spa(),
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => MsgClipboardReadError.render_spa(),
-        };
-        format!("{msg}: {self}")
+        format!("{}: {self}", Msg::ClipboardReadError.render_spa())
     }
 
     fn render_rus(&self) -> String {
-        let msg = match self {
-            Self::IO(_) => MsgClipboardReadError.render_rus(),
-            Self::Json(_) => MsgClipboardReadError.render_rus(),
-            Self::Env(_) => MsgClipboardReadError.render_rus(),
-            Self::Channel(_) => MsgClipboardReadError.render_rus(),
-            Self::JS(_) => MsgClipboardReadError.render_rus(),
-            Self::CameraNotAvailable(_) => MsgClipboardReadError.render_rus(),
-            Self::CameraPermissionDenied(_) => MsgClipboardReadError.render_rus(),
-            Self::NotJsonObject(_) => MsgClipboardReadError.render_rus(),
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => MsgClipboardReadError.render_rus(),
-        };
-        format!("{msg}: {self}")
+        format!("{}: {self}", Msg::ClipboardReadError.render_rus())
     }
 }

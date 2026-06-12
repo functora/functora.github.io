@@ -6,9 +6,9 @@ pub fn License() -> Element {
     let lang = use_lang();
 
     rsx! {
-        Breadcrumb { title: MsgTermsOfServiceTitle }
+        Breadcrumb { title: Msg::TermsOfServiceTitle }
         section {
-            Pre { "{MsgLicenseText.render(lang)}" }
+            Pre { "{Msg::LicenseText.render(lang)}" }
             Dock {}
         }
     }

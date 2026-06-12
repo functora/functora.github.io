@@ -66,7 +66,7 @@ pub fn Home() -> Element {
     rsx! {
             section {
                 fieldset {
-                    label { "{MsgActionLabel.render(lang)}" }
+                    label { "{Msg::ActionLabel.render(lang)}" }
 
                     {
                         rsx! {
@@ -74,21 +74,21 @@ pub fn Home() -> Element {
                                 action,
                                 mode: ActionMode::Create,
                                 icon: FaSquarePlus,
-                                label: MsgActionCreate.render(lang),
+                                label: Msg::ActionCreate.render(lang),
                                 on_change: set_action,
                             }
                             ActionRadio {
                                 action,
                                 mode: ActionMode::Open,
                                 icon: FaFolderOpen,
-                                label: MsgActionOpen.render(lang),
+                                label: Msg::ActionOpen.render(lang),
                                 on_change: set_action,
                             }
                             ActionRadio {
                                 action,
                                 mode: ActionMode::Scan,
                                 icon: FaQrcode,
-                                label: MsgActionScan.render(lang),
+                                label: Msg::ActionScan.render(lang),
                                 on_change: set_action,
                             }
                         }
@@ -96,7 +96,7 @@ pub fn Home() -> Element {
                     br {}
 
                     if action == ActionMode::Create {
-                        label { "{MsgMode.render(lang)}" }
+                        label { "{Msg::Mode.render(lang)}" }
                         input {
                             r#type: "radio",
                             checked: ctx.read().cipher.is_some(),
@@ -109,7 +109,7 @@ pub fn Home() -> Element {
                                 ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
                             },
                             Icon { icon: FaLock }
-                            "{MsgPasswordEncryption.render(lang)}"
+                            "{Msg::PasswordEncryption.render(lang)}"
                         }
                         br {}
 
@@ -120,13 +120,13 @@ pub fn Home() -> Element {
                         }
                         label { onclick: move |_| ctx.write().cipher = None,
                             Icon { icon: FaLockOpen }
-                            "{MsgNoEncryption.render(lang)}"
+                            "{Msg::NoEncryption.render(lang)}"
                         }
                         br {}
 
                         if let Some(cipher) = ctx.read().cipher {
                             br {}
-                            label { "{MsgCipher.render(lang)}" }
+                            label { "{Msg::Cipher.render(lang)}" }
 
                             select {
                                 value: match cipher {
@@ -144,10 +144,10 @@ pub fn Home() -> Element {
                                 option { value: "chacha20", "ChaCha20-Poly1305" }
                             }
 
-                            label { "{MsgPassword.render(lang)}" }
+                            label { "{Msg::Password.render(lang)}" }
                             input {
                                 r#type: "password",
-                                placeholder: "{MsgPasswordPlaceholder.render(lang)}",
+                                placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
                                 value: "{ctx.read().password}",
                                 oninput: move |evt| {
                                     ctx.write().password = evt.value();
@@ -161,9 +161,9 @@ pub fn Home() -> Element {
                         }
                         br {}
 
-                        label { "{MsgNote.render(lang)}" }
+                        label { "{Msg::Note.render(lang)}" }
                         textarea {
-                            placeholder: "{MsgNotePlaceholder.render(lang)}",
+                            placeholder: "{Msg::NotePlaceholder.render(lang)}",
                             rows: "8",
                             value: "{ctx.read().content.clone()}",
                             oninput: move |evt| {
@@ -172,13 +172,13 @@ pub fn Home() -> Element {
                         }
 
                         Dock { message,
-                            Button { icon: FaTrash, onclick: reset_ctx, "{MsgCreateNewNote.render(lang)}" }
+                            Button { icon: FaTrash, onclick: reset_ctx, "{Msg::CreateNewNote.render(lang)}" }
                             Button {
                                 icon: FaEye,
                                 onclick: move |_| {
                                     nav.write().push(Screen::View.to_route(None));
                                 },
-                                "{MsgViewButton.render(lang)}"
+                                "{Msg::ViewButton.render(lang)}"
                             }
                             Button {
                                 icon: FaPaste,
@@ -192,21 +192,21 @@ pub fn Home() -> Element {
                                         }
                                     });
                                 },
-                                "{MsgPasteButton.render(lang)}"
+                                "{Msg::PasteButton.render(lang)}"
                             }
                             Button {
                                 icon: FaShareNodes,
                                 primary: true,
                                 onclick: move |_| generate_note(),
-                                "{MsgGenerateButton.render(lang)}"
+                                "{Msg::GenerateButton.render(lang)}"
                             }
                         }
                     }
 
                     if action == ActionMode::Open {
-                        label { "{MsgOpenUrlLabel.render(lang)}" }
+                        label { "{Msg::OpenUrlLabel.render(lang)}" }
                         textarea {
-                            placeholder: "{MsgOpenUrlPlaceholder.render(lang)}",
+                            placeholder: "{Msg::OpenUrlPlaceholder.render(lang)}",
                             rows: "6",
                             value: "{url_input}",
                             oninput: move |evt| url_input.set(evt.value()),
@@ -214,7 +214,7 @@ pub fn Home() -> Element {
                         br {}
 
                         Dock { message,
-                            Button { icon: FaTrash, onclick: reset_ctx, "{MsgCreateNewNote.render(lang)}" }
+                            Button { icon: FaTrash, onclick: reset_ctx, "{Msg::CreateNewNote.render(lang)}" }
                             Button {
                                 icon: FaPaste,
                                 onclick: move |_| {
@@ -227,13 +227,13 @@ pub fn Home() -> Element {
                                         }
                                     });
                                 },
-                                "{MsgPasteButton.render(lang)}"
+                                "{Msg::PasteButton.render(lang)}"
                             }
                             Button {
                                 icon: FaFolderOpen,
                                 primary: true,
                                 onclick: open_url,
-                                "{MsgOpenButton.render(lang)}"
+                                "{Msg::OpenButton.render(lang)}"
                             }
                         }
                     }

@@ -1,4 +1,3 @@
-pub mod clipboard;
 pub mod components;
 pub mod crypto;
 pub mod encoding;
@@ -18,11 +17,8 @@ pub use i18n::*;
 pub use markdown::*;
 pub use prelude::*;
 
-pub mod js {
-    pub use crate::clipboard::*;
-    pub use functora_dioxus::js::*;
-}
-pub use js::*;
+pub use functora_dioxus::clipboard::write_clipboard;
+pub use functora_dioxus::js::*;
 
 pub mod qr_decode {
     pub use functora_dioxus::qr::*;

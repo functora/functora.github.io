@@ -27,34 +27,36 @@ impl I18N for AppError {
     fn render_eng(&self) -> String {
         let msg = match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
-                MsgCipherError.render_eng()
+                Msg::CipherError.render_eng()
             }
             Self::Getrandom(_) => {
-                MsgGetrandomError.render_eng()
+                Msg::GetrandomError.render_eng()
             }
-            Self::Base64(_) => MsgBase64Error.render_eng(),
-            Self::Json(_) => MsgJsonError.render_eng(),
-            Self::Utf8(_) => MsgInvalidUtf8.render_eng(),
-            Self::Qr(_) => MsgQrError.render_eng(),
-            Self::Encrypt => MsgEncryptError.render_eng(),
-            Self::Decrypt => MsgDecryptError.render_eng(),
+            Self::Base64(_) => {
+                Msg::Base64Error.render_eng()
+            }
+            Self::Json(_) => Msg::JsonError.render_eng(),
+            Self::Utf8(_) => Msg::InvalidUtf8.render_eng(),
+            Self::Qr(_) => Msg::QrError.render_eng(),
+            Self::Encrypt => Msg::EncryptError.render_eng(),
+            Self::Decrypt => Msg::DecryptError.render_eng(),
             Self::PasswordRequired => {
-                MsgPasswordRequired.render_eng()
+                Msg::PasswordRequired.render_eng()
             }
             Self::NoNoteInUrl => {
-                MsgNoNoteInUrl.render_eng()
+                Msg::NoNoteInUrl.render_eng()
             }
             Self::NoNoteParam => {
-                MsgNoNoteParam.render_eng()
+                Msg::NoNoteParam.render_eng()
             }
             Self::Fd(FdError::CameraNotAvailable(_)) => {
-                MsgQrCameraNotAvailable.render_eng()
+                Msg::QrCameraNotAvailable.render_eng()
             }
             Self::Fd(FdError::CameraPermissionDenied(
                 _,
-            )) => MsgQrPermissionDenied.render_eng(),
+            )) => Msg::QrPermissionDenied.render_eng(),
             Self::Fd(_) => {
-                MsgClipboardReadError.render_eng()
+                Msg::ClipboardReadError.render_eng()
             }
         };
         format!("{msg}: {self}")
@@ -63,34 +65,36 @@ impl I18N for AppError {
     fn render_spa(&self) -> String {
         let msg = match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
-                MsgCipherError.render_spa()
+                Msg::CipherError.render_spa()
             }
             Self::Getrandom(_) => {
-                MsgGetrandomError.render_spa()
+                Msg::GetrandomError.render_spa()
             }
-            Self::Base64(_) => MsgBase64Error.render_spa(),
-            Self::Json(_) => MsgJsonError.render_spa(),
-            Self::Utf8(_) => MsgInvalidUtf8.render_spa(),
-            Self::Qr(_) => MsgQrError.render_spa(),
-            Self::Encrypt => MsgEncryptError.render_spa(),
-            Self::Decrypt => MsgDecryptError.render_spa(),
+            Self::Base64(_) => {
+                Msg::Base64Error.render_spa()
+            }
+            Self::Json(_) => Msg::JsonError.render_spa(),
+            Self::Utf8(_) => Msg::InvalidUtf8.render_spa(),
+            Self::Qr(_) => Msg::QrError.render_spa(),
+            Self::Encrypt => Msg::EncryptError.render_spa(),
+            Self::Decrypt => Msg::DecryptError.render_spa(),
             Self::PasswordRequired => {
-                MsgPasswordRequired.render_spa()
+                Msg::PasswordRequired.render_spa()
             }
             Self::NoNoteInUrl => {
-                MsgNoNoteInUrl.render_spa()
+                Msg::NoNoteInUrl.render_spa()
             }
             Self::NoNoteParam => {
-                MsgNoNoteParam.render_spa()
+                Msg::NoNoteParam.render_spa()
             }
             Self::Fd(FdError::CameraNotAvailable(_)) => {
-                MsgQrCameraNotAvailable.render_spa()
+                Msg::QrCameraNotAvailable.render_spa()
             }
             Self::Fd(FdError::CameraPermissionDenied(
                 _,
-            )) => MsgQrPermissionDenied.render_spa(),
+            )) => Msg::QrPermissionDenied.render_spa(),
             Self::Fd(_) => {
-                MsgClipboardReadError.render_spa()
+                Msg::ClipboardReadError.render_spa()
             }
         };
         format!("{msg}: {self}")
@@ -99,34 +103,36 @@ impl I18N for AppError {
     fn render_rus(&self) -> String {
         let msg = match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
-                MsgCipherError.render_rus()
+                Msg::CipherError.render_rus()
             }
             Self::Getrandom(_) => {
-                MsgGetrandomError.render_rus()
+                Msg::GetrandomError.render_rus()
             }
-            Self::Base64(_) => MsgBase64Error.render_rus(),
-            Self::Json(_) => MsgJsonError.render_rus(),
-            Self::Utf8(_) => MsgInvalidUtf8.render_rus(),
-            Self::Qr(_) => MsgQrError.render_rus(),
-            Self::Encrypt => MsgEncryptError.render_rus(),
-            Self::Decrypt => MsgDecryptError.render_rus(),
+            Self::Base64(_) => {
+                Msg::Base64Error.render_rus()
+            }
+            Self::Json(_) => Msg::JsonError.render_rus(),
+            Self::Utf8(_) => Msg::InvalidUtf8.render_rus(),
+            Self::Qr(_) => Msg::QrError.render_rus(),
+            Self::Encrypt => Msg::EncryptError.render_rus(),
+            Self::Decrypt => Msg::DecryptError.render_rus(),
             Self::PasswordRequired => {
-                MsgPasswordRequired.render_rus()
+                Msg::PasswordRequired.render_rus()
             }
             Self::NoNoteInUrl => {
-                MsgNoNoteInUrl.render_rus()
+                Msg::NoNoteInUrl.render_rus()
             }
             Self::NoNoteParam => {
-                MsgNoNoteParam.render_rus()
+                Msg::NoNoteParam.render_rus()
             }
             Self::Fd(FdError::CameraNotAvailable(_)) => {
-                MsgQrCameraNotAvailable.render_rus()
+                Msg::QrCameraNotAvailable.render_rus()
             }
             Self::Fd(FdError::CameraPermissionDenied(
                 _,
-            )) => MsgQrPermissionDenied.render_rus(),
+            )) => Msg::QrPermissionDenied.render_rus(),
             Self::Fd(_) => {
-                MsgClipboardReadError.render_rus()
+                Msg::ClipboardReadError.render_rus()
             }
         };
         format!("{msg}: {self}")

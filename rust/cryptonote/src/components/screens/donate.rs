@@ -20,11 +20,11 @@ pub fn Donate() -> Element {
     let xmr_qr = generate_crypto_qr(XMR_ADDRESS);
 
     rsx! {
-        Breadcrumb { title: MsgDonateTitle }
+        Breadcrumb { title: Msg::DonateTitle }
         section {
             fieldset {
-                h3 { "{MsgDonateGreeting.render(lang)}" }
-                article { font_size: "larger", "{MsgDonateIntro.render(lang)}" }
+                h3 { "{Msg::DonateGreeting.render(lang)}" }
+                article { font_size: "larger", "{Msg::DonateIntro.render(lang)}" }
             }
 
             br {}
@@ -52,7 +52,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(BTC_ADDRESS.to_string(), btc_message, lang);
                         },
-                        "{MsgCopyButton.render(lang)}"
+                        "{Msg::CopyButton.render(lang)}"
                     }
                 }
             }
@@ -82,7 +82,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(XMR_ADDRESS.to_string(), xmr_message, lang);
                         },
-                        "{MsgCopyButton.render(lang)}"
+                        "{Msg::CopyButton.render(lang)}"
                     }
                 }
             }

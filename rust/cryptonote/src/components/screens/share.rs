@@ -85,7 +85,7 @@ pub fn Share() -> Element {
     });
 
     rsx! {
-        Breadcrumb { title: MsgShareTitle }
+        Breadcrumb { title: Msg::ShareTitle }
         section {
 
             if !url().is_empty() {
@@ -108,7 +108,7 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 nav.write().push(Screen::View.to_route(None));
                             },
-                            "{MsgViewButton.render(lang)}"
+                            "{Msg::ViewButton.render(lang)}"
                         }
                         Button {
                             icon: FaCopy,
@@ -116,14 +116,14 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 write_clipboard(url(), message, lang);
                             },
-                            "{MsgCopyButton.render(lang)}"
+                            "{Msg::CopyButton.render(lang)}"
                         }
                     }
                 }
             } else if message.read().is_some() {
                 Dock { message }
             } else {
-                p { "{MsgLoading.render(lang)}" }
+                p { "{Msg::Loading.render(lang)}" }
             }
         }
     }

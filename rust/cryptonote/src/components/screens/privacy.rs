@@ -6,9 +6,9 @@ pub fn Privacy() -> Element {
     let lang = use_lang();
 
     rsx! {
-        Breadcrumb { title: MsgPrivacyPolicyTitle }
+        Breadcrumb { title: Msg::PrivacyPolicyTitle }
         section {
-            Pre { "{MsgPrivacyText.render(lang)}" }
+            Pre { "{Msg::PrivacyText.render(lang)}" }
             Dock {}
         }
     }

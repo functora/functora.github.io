@@ -1,10 +1,10 @@
 use crate::i18n::{I18N, Language};
 use crate::js::js_write_clipboard;
-use crate::messages::*;
+use crate::messages::Msg;
 use dioxus::prelude::*;
 
 pub fn write_clipboard(val: String, message: Signal<Option<String>>, lang: Language) {
-    write_clipboard_with(val, message, lang, MsgCopied, move |e| e.render(lang));
+    write_clipboard_with(val, message, lang, Msg::Copied, move |e| e.render(lang));
 }
 
 pub fn write_clipboard_with<S: I18N + 'static>(

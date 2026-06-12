@@ -57,11 +57,11 @@ pub fn Layout() -> Element {
                                 Theme::Light => "🌝 ",
                                 Theme::Dark => "🌚 ",
                             }}
-                            {MsgTheme.render(lang)}
+                            {Msg::Theme.render(lang)}
                         }
                     }
                     li {
-                        NavLink { nav: nav_signal, href: Screen::About.to_route(None).to_string(), "❓{MsgAboutTitle.render(lang)}" }
+                        NavLink { nav: nav_signal, href: Screen::About.to_route(None).to_string(), "❓{Msg::AboutTitle.render(lang)}" }
                     }
                 }
             }
@@ -70,25 +70,25 @@ pub fn Layout() -> Element {
         Outlet::<Route> {}
 
         p { "txt": "c",
-            {MsgCopyright.render(lang)}
+            {Msg::Copyright.render(lang)}
             " 2025 "
             ExtLink { href: FUNCTORA_URL, "Functora" }
             ". "
-            {MsgAllRightsReserved.render(lang)}
+            {Msg::AllRightsReserved.render(lang)}
             " "
-            {MsgByContinuing.render(lang)}
+            {Msg::ByContinuing.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::License.to_route(None).to_string(), "{MsgTermsOfService.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::License.to_route(None).to_string(), "{Msg::TermsOfService.render(lang)}" }
             " "
-            {MsgYouAgree.render(lang)}
+            {Msg::YouAgree.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::Privacy.to_route(None).to_string(), "{MsgPrivacyPolicyAnd.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::Privacy.to_route(None).to_string(), "{Msg::PrivacyPolicyAnd.render(lang)}" }
             ". "
-            {MsgPlease.render(lang)}
+            {Msg::Please.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::Donate.to_route(None).to_string(), "{MsgDonateLink.render(lang)}" }
+            NavLink { nav: nav_signal, href: Screen::Donate.to_route(None).to_string(), "{Msg::DonateLink.render(lang)}" }
             ". "
-            {MsgVersionLabel.render(lang)}
+            {Msg::VersionLabel.render(lang)}
             " "
             {APP_VERSION}
             "."

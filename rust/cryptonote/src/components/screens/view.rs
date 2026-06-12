@@ -89,17 +89,17 @@ pub fn View(note: Option<String>) -> Element {
 
     rsx! {
             if is_encrypted() {
-                Breadcrumb { title: MsgEncryptedNote }
+                Breadcrumb { title: Msg::EncryptedNote }
                 section {
                     fieldset {
                         Pre {
-                            Quote { "{MsgEncryptedNoteDesc.render(lang)}" }
+                            Quote { "{Msg::EncryptedNoteDesc.render(lang)}" }
                         }
 
-                        label { "{MsgPassword.render(lang)}" }
+                        label { "{Msg::Password.render(lang)}" }
                         input {
                             r#type: "password",
-                            placeholder: "{MsgPasswordPlaceholder.render(lang)}",
+                            placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
                             value: "{password_input}",
                             oninput: move |evt| password_input.set(evt.value()),
                             onkeydown: move |evt| {
@@ -124,19 +124,19 @@ pub fn View(note: Option<String>) -> Element {
                                         }
                                     });
                                 },
-                                "{MsgPasteButton.render(lang)}"
+                                "{Msg::PasteButton.render(lang)}"
                             }
                             Button {
                                 icon: FaLockOpen,
                                 primary: true,
                                 onclick: move |_| decrypt_note(),
-                                "{MsgDecryptButton.render(lang)}"
+                                "{Msg::DecryptButton.render(lang)}"
                             }
                         }
                     }
                 }
             } else if let Some(content) = note_content() {
-                Breadcrumb { title: MsgYourNoteTitle }
+                Breadcrumb { title: Msg::YourNoteTitle }
                 section {
                     fieldset {
                         article {
@@ -154,7 +154,7 @@ pub fn View(note: Option<String>) -> Element {
                                     ctx.set(AppCtx::default());
                                     nav.write().push(Screen::Home.to_route(None));
                                 },
-                                "{MsgCreateNewNote.render(lang)}"
+                                "{Msg::CreateNewNote.render(lang)}"
                             }
                             Button {
                                 icon: FaPenToSquare,
@@ -162,7 +162,7 @@ pub fn View(note: Option<String>) -> Element {
                                     ctx.write().action = ActionMode::Create;
                                     nav.write().push(Screen::Home.to_route(None));
                                 },
-                                "{MsgEditNote.render(lang)}"
+                                "{Msg::EditNote.render(lang)}"
                             }
                             Button {
                                 icon: FaCopy,
@@ -170,19 +170,19 @@ pub fn View(note: Option<String>) -> Element {
                                 onclick: move |_| {
                                     write_clipboard(content.clone(), message, lang);
                                 },
-                                "{MsgCopyButton.render(lang)}"
+                                "{Msg::CopyButton.render(lang)}"
                             }
                         }
                     }
                 }
             } else if message.read().is_some() {
-                Breadcrumb { title: MsgErrorTitle }
+                Breadcrumb { title: Msg::ErrorTitle }
                 section {
                     Dock { message }
                 }
             } else {
                 section {
-                    p { "{MsgLoading.render(lang)}" }
+                    p { "{Msg::Loading.render(lang)}" }
                 }
             }
         }

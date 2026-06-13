@@ -191,7 +191,7 @@ pub fn Home() -> Element {
                                         }
                                     });
                                 },
-                                "{Msg::PasteButton.render(lang)}"
+                                "{Msg::Paste.render(lang)}"
                             }
                             Button {
                                 icon: FaShareNodes,
@@ -226,7 +226,7 @@ pub fn Home() -> Element {
                                         }
                                     });
                                 },
-                                "{Msg::PasteButton.render(lang)}"
+                                "{Msg::Paste.render(lang)}"
                             }
                             Button {
                                 icon: FaFolderOpen,

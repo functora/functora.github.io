@@ -117,7 +117,7 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                             },
-                            "{Msg::CopyButton.render(lang)}"
+                            "{Msg::Copy.render(lang)}"
                         }
                     }
                 }

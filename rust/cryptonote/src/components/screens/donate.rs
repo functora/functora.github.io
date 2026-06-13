@@ -52,7 +52,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(BTC_ADDRESS.to_string(), btc_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                         },
-                        "{Msg::CopyButton.render(lang)}"
+                        "{Msg::Copy.render(lang)}"
                     }
                 }
             }
@@ -82,7 +82,7 @@ pub fn Donate() -> Element {
                         onclick: move |_| {
                             write_clipboard(XMR_ADDRESS.to_string(), xmr_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                         },
-                        "{Msg::CopyButton.render(lang)}"
+                        "{Msg::Copy.render(lang)}"
                     }
                 }
             }

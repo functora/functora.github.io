@@ -126,7 +126,7 @@ pub fn View(note: Option<String>) -> Element {
                                         }
                                     });
                                 },
-                                "{Msg::PasteButton.render(lang)}"
+                                "{Msg::Paste.render(lang)}"
                             }
                             Button {
                                 icon: FaLockOpen,
@@ -172,7 +172,7 @@ pub fn View(note: Option<String>) -> Element {
                                 onclick: move |_| {
                                     write_clipboard(content.clone(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                                 },
-                                "{Msg::CopyButton.render(lang)}"
+                                "{Msg::Copy.render(lang)}"
                             }
                         }
                     }

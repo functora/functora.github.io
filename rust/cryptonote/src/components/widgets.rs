@@ -7,5 +7,5 @@ pub use dock::*;
 pub use qr_scanner::*;
 
 pub use functora_dioxus::widgets::{
-    Button, ExtLink, Message, NavLink, Pre, Quote,
+    Banner, Button, ExtLink, NavLink, Pre, Quote,
 };

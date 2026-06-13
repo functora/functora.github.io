@@ -52,14 +52,50 @@ impl From<jni::errors::Error> for Error {
 
 impl I18N for Error {
     fn render_eng(&self) -> String {
-        format!("{}: {self}", Msg::ClipboardReadError.render_eng())
+        match self {
+            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
+            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
+            Self::JS(_) => Msg::ClipboardReadError,
+            Self::IO(_) => Msg::ErrorTitle,
+            Self::Json(_) => Msg::ErrorTitle,
+            Self::Env(_) => Msg::ErrorTitle,
+            Self::Channel(_) => Msg::ErrorTitle,
+            Self::NotJsonObject(_) => Msg::ErrorTitle,
+            #[cfg(target_os = "android")]
+            Self::JNI(_) => Msg::ErrorTitle,
+        }
+        .render_eng()
     }
 
     fn render_spa(&self) -> String {
-        format!("{}: {self}", Msg::ClipboardReadError.render_spa())
+        match self {
+            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
+            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
+            Self::JS(_) => Msg::ClipboardReadError,
+            Self::IO(_) => Msg::ErrorTitle,
+            Self::Json(_) => Msg::ErrorTitle,
+            Self::Env(_) => Msg::ErrorTitle,
+            Self::Channel(_) => Msg::ErrorTitle,
+            Self::NotJsonObject(_) => Msg::ErrorTitle,
+            #[cfg(target_os = "android")]
+            Self::JNI(_) => Msg::ErrorTitle,
+        }
+        .render_spa()
     }
 
     fn render_rus(&self) -> String {
-        format!("{}: {self}", Msg::ClipboardReadError.render_rus())
+        match self {
+            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
+            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
+            Self::JS(_) => Msg::ClipboardReadError,
+            Self::IO(_) => Msg::ErrorTitle,
+            Self::Json(_) => Msg::ErrorTitle,
+            Self::Env(_) => Msg::ErrorTitle,
+            Self::Channel(_) => Msg::ErrorTitle,
+            Self::NotJsonObject(_) => Msg::ErrorTitle,
+            #[cfg(target_os = "android")]
+            Self::JNI(_) => Msg::ErrorTitle,
+        }
+        .render_rus()
     }
 }

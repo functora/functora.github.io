@@ -25,7 +25,7 @@ pub enum AppError {
 
 impl I18N for AppError {
     fn render_eng(&self) -> String {
-        let msg = match self {
+        match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
                 Msg::CipherError.render_eng()
             }
@@ -49,21 +49,12 @@ impl I18N for AppError {
             Self::NoNoteParam => {
                 Msg::NoNoteParam.render_eng()
             }
-            Self::Fd(FdError::CameraNotAvailable(_)) => {
-                Msg::QrCameraNotAvailable.render_eng()
-            }
-            Self::Fd(FdError::CameraPermissionDenied(
-                _,
-            )) => Msg::QrPermissionDenied.render_eng(),
-            Self::Fd(_) => {
-                Msg::ClipboardReadError.render_eng()
-            }
-        };
-        format!("{msg}: {self}")
+            Self::Fd(e) => e.render_eng(),
+        }
     }
 
     fn render_spa(&self) -> String {
-        let msg = match self {
+        match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
                 Msg::CipherError.render_spa()
             }
@@ -87,21 +78,12 @@ impl I18N for AppError {
             Self::NoNoteParam => {
                 Msg::NoNoteParam.render_spa()
             }
-            Self::Fd(FdError::CameraNotAvailable(_)) => {
-                Msg::QrCameraNotAvailable.render_spa()
-            }
-            Self::Fd(FdError::CameraPermissionDenied(
-                _,
-            )) => Msg::QrPermissionDenied.render_spa(),
-            Self::Fd(_) => {
-                Msg::ClipboardReadError.render_spa()
-            }
-        };
-        format!("{msg}: {self}")
+            Self::Fd(e) => e.render_spa(),
+        }
     }
 
     fn render_rus(&self) -> String {
-        let msg = match self {
+        match self {
             Self::Cipher(_) | Self::KeyDerive(_) => {
                 Msg::CipherError.render_rus()
             }
@@ -125,17 +107,8 @@ impl I18N for AppError {
             Self::NoNoteParam => {
                 Msg::NoNoteParam.render_rus()
             }
-            Self::Fd(FdError::CameraNotAvailable(_)) => {
-                Msg::QrCameraNotAvailable.render_rus()
-            }
-            Self::Fd(FdError::CameraPermissionDenied(
-                _,
-            )) => Msg::QrPermissionDenied.render_rus(),
-            Self::Fd(_) => {
-                Msg::ClipboardReadError.render_rus()
-            }
-        };
-        format!("{msg}: {self}")
+            Self::Fd(e) => e.render_rus(),
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
-use crate::widgets::message::Message;
+use crate::widgets::banner::Banner;
 use dioxus::prelude::*;
 
 #[allow(clippy::redundant_closure_for_method_calls)]
@@ -18,7 +18,7 @@ pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
     rsx! {
         if let Some(message) = message {
             p { "txt": "r",
-                Message { message, lang }
+                Banner { message, lang }
             }
         }
         div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",

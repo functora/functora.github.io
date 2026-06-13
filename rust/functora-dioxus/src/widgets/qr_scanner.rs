@@ -1,6 +1,8 @@
 use crate::error::Error;
+use crate::i18n::Language;
 use crate::js::{js_capture_frame, js_check_camera, js_sleep, js_start_camera, js_stop_camera};
 use crate::qr::decode_qr_rgba;
+use crate::widgets::banner::Banner;
 use dioxus::prelude::*;
 
 const FPS_DELAY: u64 = 33;
@@ -20,17 +22,21 @@ fn cam_err(e: &Error) -> Error {
 }
 
 #[component]
-pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Error>>) -> Element {
+pub fn QrScanner(
+    on_scan: EventHandler<String>,
+    on_error: Option<EventHandler<Error>>,
+    #[props(default)] lang: Language,
+) -> Element {
     let mut scanning = use_signal(|| true);
     let mut found = use_signal(|| false);
-    let mut error_msg = use_signal(String::new);
+    let mut error = use_signal(|| Option::<Error>::None);
 
     #[allow(unused_must_use, unused_results)]
     use_effect(move || {
         spawn(async move {
             if let Err(e) = js_check_camera().await {
                 let msg = cam_err(&e);
-                error_msg.set(msg.to_string());
+                error.set(Some(msg.clone()));
                 if let Some(callback) = &on_error {
                     callback.call(msg);
                 }
@@ -38,7 +44,7 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
             }
             if let Err(e) = js_start_camera().await {
                 let msg = cam_err(&e);
-                error_msg.set(msg.to_string());
+                error.set(Some(msg.clone()));
                 if let Some(callback) = &on_error {
                     callback.call(msg);
                 }
@@ -69,11 +75,8 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
 
     rsx! {
         section {
-            if !error_msg.read().is_empty() {
-                p { "txt": "r",
-                    code { "{error_msg}" }
-                }
-            } else {
+            Banner { message: error, lang }
+            if error.read().is_none() {
                 video { id: "qr-video", autoplay: true, playsinline: true }
                 canvas { id: "qr-canvas", style: "display:none" }
             }

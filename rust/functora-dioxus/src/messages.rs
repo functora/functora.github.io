@@ -12,6 +12,8 @@ pub enum Msg {
     PasswordRequired,
     ClipboardWriteError,
     ClipboardReadError,
+    CameraNotAvailable,
+    CameraPermissionDenied,
     Back,
     Home,
 }
@@ -29,6 +31,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Password is required for encryption",
             Self::ClipboardWriteError => "Failed to copy to clipboard",
             Self::ClipboardReadError => "Failed to read from clipboard",
+            Self::CameraNotAvailable => "Camera is not available",
+            Self::CameraPermissionDenied => "Camera permission was denied",
             Self::Back => "Back",
             Self::Home => "Home",
         }
@@ -47,6 +51,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Se requiere contraseña para el cifrado",
             Self::ClipboardWriteError => "No se pudo copiar al portapapeles",
             Self::ClipboardReadError => "No se pudo leer del portapapeles",
+            Self::CameraNotAvailable => "La cámara no está disponible",
+            Self::CameraPermissionDenied => "Permiso de cámara denegado",
             Self::Back => "Atrás",
             Self::Home => "Inicio",
         }
@@ -65,6 +71,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Для шифрования требуется пароль",
             Self::ClipboardWriteError => "Не удалось скопировать в буфер обмена",
             Self::ClipboardReadError => "Не удалось прочитать из буфера обмена",
+            Self::CameraNotAvailable => "Камера недоступна",
+            Self::CameraPermissionDenied => "Разрешение на камеру отклонено",
             Self::Back => "Назад",
             Self::Home => "Главная",
         }

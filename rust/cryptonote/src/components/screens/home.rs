@@ -7,7 +7,7 @@ pub fn Home() -> Element {
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
 
-    let mut message = use_signal(|| Option::<String>::None);
+    let mut message = use_signal(|| Option::<Msg>::None);
 
     let mut url_input = use_signal(String::new);
 
@@ -16,9 +16,9 @@ pub fn Home() -> Element {
         let url = url_input.read().trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(
+            message.set(Some(Msg::Error(
                 AppError::NoNoteInUrl.render(lang),
-            ));
+            )));
             return;
         }
 
@@ -29,7 +29,8 @@ pub fn Home() -> Element {
                 );
             }
             Err(e) => {
-                message.set(Some(e.render(lang)));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     };
@@ -40,9 +41,7 @@ pub fn Home() -> Element {
         if ctx.read().cipher.is_some()
             && ctx.read().password.is_empty()
         {
-            message.set(Some(
-                AppError::PasswordRequired.render(lang),
-            ));
+            message.set(Some(Msg::PasswordRequired));
         } else {
             nav.write().push(Screen::Share.to_route(None));
         }
@@ -187,7 +186,7 @@ pub fn Home() -> Element {
                                         match js_read_clipboard().await {
                                             Ok(text) => ctx.write().content = text,
     Err(e) => {
-                        message.set(Some(AppError::Fd(e).render(lang)))
+                        message.set(Some(Msg::Error(AppError::Fd(e).render(lang))))
                     }
                                         }
                                     });
@@ -222,7 +221,7 @@ pub fn Home() -> Element {
                                         match js_read_clipboard().await {
                                             Ok(text) => url_input.set(text),
     Err(e) => {
-                        message.set(Some(AppError::Fd(e).render(lang)))
+                        message.set(Some(Msg::Error(AppError::Fd(e).render(lang))))
                     }
                                         }
                                     });
@@ -247,7 +246,7 @@ pub fn Home() -> Element {
                                         nav.write().push(Screen::View.to_route(Some(note)));
                                     }
                                     Err(e) => {
-                                        message.set(Some(e.render(lang)));
+                                        message.set(Some(Msg::Error(e.render(lang))));
                                     }
                                 }
                             }),

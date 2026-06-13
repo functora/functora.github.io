@@ -13,8 +13,8 @@ fn generate_crypto_qr(address: &str) -> Option<String> {
 pub fn Donate() -> Element {
     let lang = use_lang();
 
-    let btc_message = use_signal(|| Option::<String>::None);
-    let xmr_message = use_signal(|| Option::<String>::None);
+    let btc_message = use_signal(|| Option::<Msg>::None);
+    let xmr_message = use_signal(|| Option::<Msg>::None);
 
     let btc_qr = generate_crypto_qr(BTC_ADDRESS);
     let xmr_qr = generate_crypto_qr(XMR_ADDRESS);
@@ -41,7 +41,7 @@ pub fn Donate() -> Element {
                     rows: "2",
                     value: "{BTC_ADDRESS}",
                     onclick: move |_| {
-                        write_clipboard(BTC_ADDRESS.to_string(), btc_message, lang);
+                        write_clipboard(BTC_ADDRESS.to_string(), btc_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                     },
                 }
 
@@ -50,7 +50,7 @@ pub fn Donate() -> Element {
                         icon: FaCopy,
                         primary: true,
                         onclick: move |_| {
-                            write_clipboard(BTC_ADDRESS.to_string(), btc_message, lang);
+                            write_clipboard(BTC_ADDRESS.to_string(), btc_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                         },
                         "{Msg::CopyButton.render(lang)}"
                     }
@@ -71,7 +71,7 @@ pub fn Donate() -> Element {
                     rows: "2",
                     value: "{XMR_ADDRESS}",
                     onclick: move |_| {
-                        write_clipboard(XMR_ADDRESS.to_string(), xmr_message, lang);
+                        write_clipboard(XMR_ADDRESS.to_string(), xmr_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                     },
                 }
 
@@ -80,7 +80,7 @@ pub fn Donate() -> Element {
                         icon: FaCopy,
                         primary: true,
                         onclick: move |_| {
-                            write_clipboard(XMR_ADDRESS.to_string(), xmr_message, lang);
+                            write_clipboard(XMR_ADDRESS.to_string(), xmr_message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                         },
                         "{Msg::CopyButton.render(lang)}"
                     }

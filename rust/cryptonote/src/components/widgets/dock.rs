@@ -4,28 +4,19 @@ use crate::*;
 #[component]
 pub fn Dock(
     children: Element,
-    message: Option<Signal<Option<String>>>,
+    message: Option<Signal<Option<Msg>>>,
 ) -> Element {
-    let mut nav = use_context::<Signal<Nav<Route>>>();
+    let nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();
 
     rsx! {
-        if let Some(message) = message {
-            p { "txt": "r",
-                Message { message }
-            }
-        }
-        div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",
-            if nav.with(|n| n.has_navigated()) {
-                Button {
-                    icon: FaArrowLeft,
-                    onclick: move |_| {
-                        nav.write().go_back();
-                    },
-                    "{Msg::Back.render(lang)}"
-                }
-            }
-            {children}
+        functora_dioxus::widgets::Dock {
+            children,
+            message,
+            nav,
+            back_button_i18n: Msg::Back,
+            back_button_icon: Some(rsx! { Icon { icon: FaArrowLeft } }),
+            lang,
         }
     }
 }

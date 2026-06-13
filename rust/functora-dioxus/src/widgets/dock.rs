@@ -5,20 +5,20 @@ use dioxus::prelude::*;
 
 #[allow(clippy::redundant_closure_for_method_calls)]
 #[component]
-pub fn Dock<R: 'static, T: I18N + Clone + PartialEq + 'static>(
+pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
     children: Element,
-    message: Option<Signal<Option<String>>>,
+    message: Option<Signal<Option<M>>>,
     nav: Signal<Nav<R>>,
-    back_button_i18n: T,
+    back_button_i18n: M,
     back_button_icon: Option<Element>,
     lang: Language,
 ) -> Element {
-    let has_navigated = nav.with(|nav| nav.can_go_back());
+    let has_navigated = nav.with(|nav| nav.has_navigated());
 
     rsx! {
         if let Some(message) = message {
             p { "txt": "r",
-                Message { message }
+                Message { message, lang }
             }
         }
         div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",

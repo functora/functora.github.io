@@ -84,6 +84,7 @@ pub enum Msg {
     PrivacyText,
     AboutText,
     DonateIntro,
+    Error(String),
 }
 
 impl I18N for Msg {
@@ -234,6 +235,7 @@ Cryptonote follows modern cryptographic best practices:
 
 Secure, private, and truly offline - your notes remain yours alone."#,
             Self::DonateIntro => "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
+            Self::Error(s) => s.as_str(),
         }
         .to_string()
     }
@@ -385,6 +387,7 @@ Cryptonote sigue las mejores prácticas criptográficas modernas:
 
 Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#,
             Self::DonateIntro => "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
+            Self::Error(s) => s.as_str(),
         }
         .to_string()
     }
@@ -536,6 +539,7 @@ Cryptonote следует современным криптографическ�
 
 Безопасно, приватно и по-настоящему автономно — ваши заметки остаются только вашими."#,
             Self::DonateIntro => "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
+            Self::Error(s) => s.as_str(),
         }
         .to_string()
     }

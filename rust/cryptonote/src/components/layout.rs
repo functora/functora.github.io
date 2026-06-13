@@ -6,7 +6,8 @@ pub fn Layout() -> Element {
     let mut cfg = use_context::<Signal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
-    let nav = use_nav::<Route>();
+    let idx = use_signal(|| 0u32);
+    let nav = use_nav::<Route>(idx);
     let nav_signal =
         use_context_provider(|| Signal::new(nav));
 

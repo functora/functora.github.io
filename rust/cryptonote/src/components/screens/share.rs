@@ -9,7 +9,7 @@ pub fn Share() -> Element {
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
-    let mut message = use_signal(|| Option::<String>::None);
+    let mut message = use_signal(|| Option::<Msg>::None);
 
     use_effect(move || {
         let res: Result<(String, String), AppError> =
@@ -79,7 +79,8 @@ pub fn Share() -> Element {
                 message.set(None);
             }
             Err(e) => {
-                message.set(Some(e.render(lang)));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     });
@@ -98,7 +99,7 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            write_clipboard(url(), message, lang);
+                            write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                         },
                     }
 
@@ -114,7 +115,7 @@ pub fn Share() -> Element {
                             icon: FaCopy,
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard(url(), message, lang);
+                                write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                             },
                             "{Msg::CopyButton.render(lang)}"
                         }

@@ -1,7 +1,7 @@
-use crate::i18n::Language;
-use crate::prelude::*;
-use crate::storage::AppCfg;
+use crate::*;
 
 pub fn use_lang() -> Language {
-    use_context::<Signal<AppCfg>>().read().language
+    use_context::<PersistentSignal<AppCfg>>()
+        .read()
+        .language
 }

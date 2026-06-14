@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut cfg = use_context::<Signal<AppCfg>>();
+    let mut cfg = use_context::<PersistentSignal<AppCfg>>();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
@@ -43,8 +43,7 @@ pub fn Layout() -> Element {
                         li {
                             a {
                                 onclick: move |_| {
-                                    cfg.write().language = *lang;
-                                    persist_cfg(&cfg);
+                                    cfg.with_mut(|x| x.language = *lang);
                                 },
                                 "{language_label(*lang)}"
                             }
@@ -56,7 +55,6 @@ pub fn Layout() -> Element {
                                 cfg.with_mut(|x| {
                                     x.theme = x.theme.next();
                                 });
-                                persist_cfg(&cfg);
                             },
                             {match cfg.read().theme {
                                 Theme::Light => "🌝 ",

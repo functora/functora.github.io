@@ -362,6 +362,7 @@
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/Venturous_1.7.0b.pk3;
         liquid = ltp701;
+        relite = "";
         nashgore = ../bak/doom/nashgore.pk3;
         movement = ../bak/doom/ZMovement_3.2.1.pk3;
       }

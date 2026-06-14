@@ -58,8 +58,11 @@ fn ensure_file(p: &Path) -> Result<(), Error> {
         .create(true)
         .truncate(false)
         .open(p)
-        .and_then(|f| f.metadata())
-        .is_ok_and(|meta| meta.len() == 0);
+        .map_err(Error::from)?
+        .metadata()
+        .map_err(Error::from)?
+        .len()
+        == 0;
     if empty {
         write(p, b"{}").map_err(Error::from)
     } else {
@@ -96,23 +99,13 @@ pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize,
     }
 }
 
-pub fn use_storage<T: Serialize + DeserializeOwned + Clone + 'static>(
+pub fn use_storage<T: Serialize + DeserializeOwned + Clone + PartialEq + 'static>(
     key: &'static str,
     init: impl FnOnce() -> T,
 ) -> Result<dioxus::prelude::Signal<T>, Error> {
-    use dioxus::prelude::ReadableExt;
     let path = files_dir()?.join("storage.json");
     ensure_file(&path)?;
-    let signal = dioxus::prelude::Signal::new(find_or_init_key(&path, key, init)?);
-    let path_clone = path.clone();
-    #[allow(unused_must_use, unused_results)]
-    dioxus::prelude::use_effect(move || {
-        let val = signal.with(std::clone::Clone::clone);
-        if let Err(e) = update_key(&path_clone, key, &val) {
-            tracing::error!("Storage update error: {}", e);
-        }
-    });
-    Ok(signal)
+    Ok(dioxus::prelude::Signal::new(find_or_init_key(&path, key, init)?))
 }
 
 pub fn load_file<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Result<T, Error> {

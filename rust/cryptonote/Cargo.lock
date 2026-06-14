@@ -1914,6 +1914,7 @@ dependencies = [
  "derive_more 2.1.0",
  "dioxus",
  "dioxus-free-icons",
+ "dioxus-sdk",
  "either",
  "functora",
  "isolang",

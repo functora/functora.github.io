@@ -42,7 +42,10 @@ pub fn Layout() -> Element {
                     for lang in SUPPORTED_LANGUAGES {
                         li {
                             a {
-                                onclick: move |_| cfg.write().language = *lang,
+                                onclick: move |_| {
+                                    cfg.write().language = *lang;
+                                    persist_cfg(&cfg);
+                                },
                                 "{language_label(*lang)}"
                             }
                         }
@@ -53,6 +56,7 @@ pub fn Layout() -> Element {
                                 cfg.with_mut(|x| {
                                     x.theme = x.theme.next();
                                 });
+                                persist_cfg(&cfg);
                             },
                             {match cfg.read().theme {
                                 Theme::Light => "🌝 ",

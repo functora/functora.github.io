@@ -53,3 +53,18 @@ pub mod storage {
         }
     }
 }
+
+pub fn persist_cfg(cfg: &Signal<AppCfg>) {
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Ok(path) = storage::mobile::files_dir()
+        .map(|p| p.join("storage.json"))
+    {
+        if let Err(e) = storage::mobile::update_key(
+            &path,
+            APP_STORAGE_KEY,
+            &*cfg.read(),
+        ) {
+            tracing::error!("Storage persist error: {}", e);
+        }
+    }
+}

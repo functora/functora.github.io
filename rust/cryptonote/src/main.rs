@@ -22,14 +22,14 @@ fn main() {
 fn App() -> Element {
     let nav: Signal<u32> = use_signal(|| 0);
     let ctx = use_signal(AppCtx::default);
-    let cfg = use_storage(
+    let prs = use_storage(
         APP_STORAGE_KEY,
         PersistentState::<()>::default,
     );
 
     use_context_provider(|| nav);
     use_context_provider(|| ctx);
-    use_context_provider(|| cfg);
+    use_context_provider(|| prs);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut cfg = use_context::<
+    let mut prs = use_context::<
         PersistentSignal<PersistentState<()>>,
     >();
     let mut ctx = use_context::<Signal<AppCtx>>();
@@ -14,7 +14,7 @@ pub fn Layout() -> Element {
         use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
-        let theme = cfg.read().theme;
+        let theme = prs.read().theme;
         spawn(async move {
             if let Err(e) =
                 functora_dioxus::js::js_set_theme(&theme)
@@ -45,7 +45,7 @@ pub fn Layout() -> Element {
                         li {
                             a {
                                 onclick: move |_| {
-                                    cfg.with_mut(|x| x.language = *lang);
+                                    prs.with_mut(|x| x.language = *lang);
                                 },
                                 "{language_label(*lang)}"
                             }
@@ -54,11 +54,11 @@ pub fn Layout() -> Element {
                     li {
                         a {
                             onclick: move |_| {
-                                cfg.with_mut(|x| {
+                                prs.with_mut(|x| {
                                     x.theme = x.theme.next();
                                 });
                             },
-                            {match cfg.read().theme {
+                            {match prs.read().theme {
                                 Theme::Light => "🌝 ",
                                 Theme::Dark => "🌚 ",
                             }}

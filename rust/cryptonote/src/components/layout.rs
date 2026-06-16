@@ -3,7 +3,9 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut cfg = use_context::<PersistentSignal<AppCfg>>();
+    let mut cfg = use_context::<
+        PersistentSignal<PersistentState<()>>,
+    >();
     let mut ctx = use_context::<Signal<AppCtx>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);

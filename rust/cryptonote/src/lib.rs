@@ -27,33 +27,7 @@ pub use qr_decode::*;
 
 pub use storage::*;
 pub mod storage {
-    pub mod mobile {
-        pub use functora_dioxus::storage::mobile::*;
-    }
-
     pub use functora_dioxus::storage::{
-        use_storage, PersistentSignal,
+        use_storage, PersistentSignal, PersistentState,
     };
-
-    use functora_dioxus::i18n::detect_browser_language;
-    use functora_dioxus::i18n::Language;
-    use functora_dioxus::js::Theme;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(
-        Serialize, Deserialize, Clone, Debug, PartialEq,
-    )]
-    pub struct AppCfg {
-        pub theme: Theme,
-        pub language: Language,
-    }
-
-    impl Default for AppCfg {
-        fn default() -> Self {
-            Self {
-                theme: Theme::Light,
-                language: detect_browser_language(),
-            }
-        }
-    }
 }

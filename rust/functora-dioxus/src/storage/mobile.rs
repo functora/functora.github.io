@@ -108,16 +108,6 @@ pub fn use_storage<T: Serialize + DeserializeOwned + Clone + PartialEq + 'static
     Ok(dioxus::prelude::Signal::new(find_or_init_key(&path, key, init)?))
 }
 
-pub fn load_file<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Result<T, Error> {
-    from_str(&read_to_string(path)?).map_err(Error::from)
-}
-
-pub fn save_file<P: AsRef<Path>, T: Serialize>(path: P, val: &T) -> Result<(), Error> {
-    to_string_pretty(val)
-        .map_err(Error::from)
-        .and_then(|s| write(path, s).map_err(Error::from))
-}
-
 pub fn read_json_object<P: AsRef<Path>>(path: P) -> Result<Value, Error> {
     from_str(&read_to_string(path)?).map_err(Error::from)
 }

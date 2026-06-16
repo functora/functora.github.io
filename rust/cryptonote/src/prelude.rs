@@ -30,6 +30,7 @@ pub mod dioxus_elements {
 }
 
 pub use functora_dioxus::js::Theme;
+pub use functora_dioxus::storage::PersistentState;
 pub use functora_dioxus::{use_nav, Nav};
 
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");

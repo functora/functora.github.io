@@ -1,7 +1,7 @@
 use crate::*;
 
 pub fn use_lang() -> Language {
-    use_context::<PersistentSignal<AppCfg>>()
+    use_context::<PersistentSignal<PersistentState<()>>>()
         .read()
         .language
 }

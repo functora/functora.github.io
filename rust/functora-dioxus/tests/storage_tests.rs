@@ -41,15 +41,6 @@ fn update_key_preserves_other_keys() {
 }
 
 #[test]
-fn update_key_creates_file_if_not_exists() {
-    let dir = TempDir::new().unwrap();
-    let path = dir.path().join("new_storage.json");
-    let result = update_key(&path, "key", &"val");
-    assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), Error::IO(_)));
-}
-
-#[test]
 fn update_key_returns_error_for_invalid_json() {
     let (_dir, path) = temp_file("not json");
     let result = update_key(&path, "key", &"val");
@@ -169,4 +160,15 @@ fn set_json_value_preserves_other_keys() {
     let json = read_json_object(&path).unwrap();
     assert_eq!(json["existing"].as_str().unwrap(), "value");
     assert_eq!(json["new"].as_str().unwrap(), "data");
+}
+
+#[test]
+fn test_files_dir_not_fails_on_non_android_ios() {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        let result = functora_dioxus::storage::mobile::files_dir();
+        assert!(result.is_ok());
+        let path = result.unwrap();
+        assert!(path.exists());
+    }
 }

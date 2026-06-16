@@ -131,17 +131,6 @@ fn test_error_display_all_variants() {
 }
 
 #[test]
-fn test_files_dir_not_fails_on_non_android_ios() {
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        let result = functora_dioxus::storage::mobile::files_dir();
-        assert!(result.is_ok());
-        let path = result.unwrap();
-        assert!(path.exists());
-    }
-}
-
-#[test]
 fn language_from_code_known_639_1() {
     assert_eq!(language_from_code("en"), Language::Eng);
     assert_eq!(language_from_code("es"), Language::Spa);

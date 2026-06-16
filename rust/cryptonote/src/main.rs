@@ -22,7 +22,10 @@ fn main() {
 fn App() -> Element {
     let nav: Signal<u32> = use_signal(|| 0);
     let ctx = use_signal(AppCtx::default);
-    let cfg = use_storage(APP_STORAGE_KEY, AppCfg::default);
+    let cfg = use_storage(
+        APP_STORAGE_KEY,
+        PersistentState::<()>::default,
+    );
 
     use_context_provider(|| nav);
     use_context_provider(|| ctx);

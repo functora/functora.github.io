@@ -1,9 +1,29 @@
 pub mod mobile;
 
+use crate::i18n::Language;
+use crate::js::Theme;
 use dioxus::core::Subscribers;
 use dioxus::prelude::*;
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct PersistentState<T> {
+    #[serde(flatten)]
+    pub data: T,
+    pub theme: Theme,
+    pub language: Language,
+}
+
+impl<T: Default> Default for PersistentState<T> {
+    fn default() -> Self {
+        Self {
+            data: T::default(),
+            theme: Theme::Light,
+            language: crate::i18n::detect_browser_language(),
+        }
+    }
+}
 
 /// A signal wrapper that automatically persists its value to storage
 /// on every mutation. Works identically on all platforms:

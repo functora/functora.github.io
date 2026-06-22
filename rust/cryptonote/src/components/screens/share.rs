@@ -98,24 +98,24 @@ pub fn Share() -> Element {
                     textarea {
                         readonly: true,
                         value: "{url}",
+                    onclick: move |_| {
+                        write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
+                    },
+                }
+
+                Dock { message,
+                    Button {
+                        icon: FaEye,
+                        onclick: move |_| {
+                            nav.write().push(Screen::View.to_route(None));
+                        },
+                        "{Msg::ViewButton.render(lang)}"
+                    }
+                    Button {
+                        icon: FaCopy,
+                        primary: true,
                         onclick: move |_| {
                             write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
-                        },
-                    }
-
-                    Dock { message,
-                        Button {
-                            icon: FaEye,
-                            onclick: move |_| {
-                                nav.write().push(Screen::View.to_route(None));
-                            },
-                            "{Msg::ViewButton.render(lang)}"
-                        }
-                        Button {
-                            icon: FaCopy,
-                            primary: true,
-                            onclick: move |_| {
-                                write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                             },
                             "{Msg::Copy.render(lang)}"
                         }

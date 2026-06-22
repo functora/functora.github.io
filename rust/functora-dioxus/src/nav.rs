@@ -5,7 +5,7 @@ use dioxus::router::Navigator;
 #[derive(Clone, Copy)]
 pub struct Nav<R> {
     navigator: Navigator,
-    idx: Signal<u32>,
+    idx: WriteSignal<u32>,
     _phantom: PhantomData<R>,
 }
 
@@ -16,7 +16,7 @@ impl<R> PartialEq for Nav<R> {
 }
 
 impl<R> Nav<R> {
-    pub fn new(navigator: Navigator, idx: Signal<u32>) -> Self {
+    pub fn new(navigator: Navigator, idx: WriteSignal<u32>) -> Self {
         Self {
             navigator,
             idx,
@@ -71,6 +71,6 @@ impl<R: Routable + Default + PartialEq> Nav<R> {
     }
 }
 
-pub fn use_nav<R: Routable>(idx: Signal<u32>) -> Nav<R> {
+pub fn use_nav<R: Routable>(idx: WriteSignal<u32>) -> Nav<R> {
     Nav::new(use_navigator(), idx)
 }

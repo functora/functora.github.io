@@ -20,7 +20,7 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let nav: Signal<u32> = use_signal(|| 0);
+    let nav: WriteSignal<u32> = use_signal(|| 0u32).into();
     let ctx = use_signal(AppCtx::default);
     let prs = use_storage(
         APP_STORAGE_KEY,

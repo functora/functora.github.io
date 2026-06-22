@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 pub fn write_clipboard<S: I18N + 'static>(
     val: String,
-    mut message: Signal<Option<S>>,
+    mut message: impl Writable<Target = Option<S>> + 'static,
     success: S,
     map_error: impl FnOnce(crate::Error) -> S + 'static,
 ) {

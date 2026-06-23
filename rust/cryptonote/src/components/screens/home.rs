@@ -4,16 +4,15 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut ctx = use_context::<Signal<AppCtx>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
 
     let mut message = use_signal(|| Option::<Msg>::None);
 
-    let mut url_input = use_signal(String::new);
-
     let open_url = move |_| {
         message.set(None);
-        let url = url_input.read().trim().to_string();
+        let url = tst.home().url_input().cloned();
+        let url = url.trim().to_string();
 
         if url.is_empty() {
             message.set(Some(Msg::Error(
@@ -38,8 +37,8 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if ctx.read().cipher.is_some()
-            && ctx.read().password.is_empty()
+        if tst.cipher().is_some()
+            && tst.password().cloned().is_empty()
         {
             message.set(Some(Msg::PasswordRequired));
         } else {
@@ -49,18 +48,17 @@ pub fn Home() -> Element {
 
     let set_action = move |mode: ActionMode| {
         message.set(None);
-        ctx.write().action = mode;
+        tst.action().set(mode);
     };
 
     let reset_ctx = move |_| {
         message.set(None);
-        let action = ctx.read().action;
-        ctx.set(AppCtx::default());
-        ctx.write().action = action;
-        url_input.set(String::new());
+        let action = tst.action().cloned();
+        tst.set(TemporaryState::default());
+        tst.action().set(action);
     };
 
-    let action = ctx.read().action;
+    let action = tst.action().cloned();
 
     rsx! {
             section {
@@ -98,14 +96,14 @@ pub fn Home() -> Element {
                         label { "{Msg::Mode.render(lang)}" }
                         input {
                             r#type: "radio",
-                            checked: ctx.read().cipher.is_some(),
+                            checked: tst.cipher().is_some(),
                             onchange: move |_| {
-                                ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
+                                tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
                             },
                         }
                         label {
                             onclick: move |_| {
-                                ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
+                                tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
                             },
                             Icon { icon: FaLock }
                             "{Msg::PasswordEncryption.render(lang)}"
@@ -114,21 +112,21 @@ pub fn Home() -> Element {
 
                         input {
                             r#type: "radio",
-                            checked: ctx.read().cipher.is_none(),
-                            onchange: move |_| ctx.write().cipher = None,
+                            checked: tst.cipher().is_none(),
+                            onchange: move |_| tst.cipher().set(None),
                         }
-                        label { onclick: move |_| ctx.write().cipher = None,
+                        label { onclick: move |_| tst.cipher().set(None),
                             Icon { icon: FaLockOpen }
                             "{Msg::NoEncryption.render(lang)}"
                         }
                         br {}
 
-                        if let Some(cipher) = ctx.read().cipher {
+                        if let Some(cipher) = tst.cipher().transpose() {
                             br {}
                             label { "{Msg::Cipher.render(lang)}" }
 
                             select {
-                                value: match cipher {
+                                value: match *cipher.read() {
                                     CipherType::ChaCha20Poly1305 => "chacha20",
                                     CipherType::Aes256Gcm => "aes",
                                 },
@@ -137,7 +135,7 @@ pub fn Home() -> Element {
                                         "aes" => CipherType::Aes256Gcm,
                                         _ => CipherType::ChaCha20Poly1305,
                                     };
-                                    ctx.write().cipher = Some(new_cipher);
+                                    tst.cipher().set(Some(new_cipher));
                                 },
                                 option { value: "aes", "AES-256-GCM" }
                                 option { value: "chacha20", "ChaCha20-Poly1305" }
@@ -147,9 +145,9 @@ pub fn Home() -> Element {
                             input {
                                 r#type: "password",
                                 placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
-                                value: "{ctx.read().password}",
+                                value: "{tst.password()}",
                                 oninput: move |evt| {
-                                    ctx.write().password = evt.value();
+                                    tst.password().set(evt.value());
                                 },
                                 onkeydown: move |evt| {
                                     if evt.key() == Key::Enter {
@@ -164,9 +162,9 @@ pub fn Home() -> Element {
                         textarea {
                             placeholder: "{Msg::NotePlaceholder.render(lang)}",
                             rows: "8",
-                            value: "{ctx.read().content.clone()}",
+                            value: "{tst.content()}",
                             oninput: move |evt| {
-                                ctx.write().content = evt.value();
+                                tst.content().set(evt.value());
                             },
                         }
 
@@ -184,7 +182,7 @@ pub fn Home() -> Element {
                                 onclick: move |_| {
                                     spawn(async move {
                                         match js_read_clipboard().await {
-                                            Ok(text) => ctx.write().content = text,
+                                            Ok(text) => tst.content().set(text),
     Err(e) => {
                         message.set(Some(Msg::Error(AppError::Fd(e).render(lang))))
                     }
@@ -207,8 +205,8 @@ pub fn Home() -> Element {
                         textarea {
                             placeholder: "{Msg::OpenUrlPlaceholder.render(lang)}",
                             rows: "6",
-                            value: "{url_input}",
-                            oninput: move |evt| url_input.set(evt.value()),
+                            value: "{tst.home().url_input()}",
+                            oninput: move |evt| tst.home().url_input().set(evt.value()),
                         }
                         br {}
 
@@ -219,7 +217,7 @@ pub fn Home() -> Element {
                                 onclick: move |_| {
                                     spawn(async move {
                                         match js_read_clipboard().await {
-                                            Ok(text) => url_input.set(text),
+                                            Ok(text) => tst.home().url_input().set(text),
     Err(e) => {
                         message.set(Some(Msg::Error(AppError::Fd(e).render(lang))))
                     }

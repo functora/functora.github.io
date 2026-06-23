@@ -20,16 +20,14 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let nav: WriteSignal<u32> = use_signal(|| 0u32).into();
-    let ctx = use_signal(AppCtx::default);
-    let prs = use_storage(
+    let tst = use_store(TemporaryState::default);
+    let pst = use_storage(
         APP_STORAGE_KEY,
         PersistentState::<()>::default,
     );
 
-    use_context_provider(|| nav);
-    use_context_provider(|| ctx);
-    use_context_provider(|| prs);
+    use_context_provider(|| tst);
+    use_context_provider(|| pst);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

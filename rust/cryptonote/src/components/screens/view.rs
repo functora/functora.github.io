@@ -4,20 +4,14 @@ use crate::*;
 #[component]
 pub fn View(note: Option<String>) -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut ctx = use_context::<Signal<AppCtx>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-    let mut note_content =
-        use_signal(|| Option::<String>::None);
-    let mut encrypted_data =
-        use_signal(|| Option::<EncryptedData>::None);
-    let mut password_input = use_signal(String::new);
     let mut message = use_signal(|| Option::<Msg>::None);
-    let mut is_encrypted = use_signal(|| false);
     let rendered = use_memo(move || {
-        note_content
-            .read()
-            .as_ref()
-            .map(String::as_str)
+        tst.view()
+            .note_content()
+            .cloned()
+            .as_deref()
             .map(render_markdown)
     });
 
@@ -27,14 +21,19 @@ pub fn View(note: Option<String>) -> Element {
                 match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
-                            is_encrypted.set(true);
-                            encrypted_data.set(Some(enc));
+                            tst.view()
+                                .is_encrypted()
+                                .set(true);
+                            tst.view()
+                                .encrypted_data()
+                                .set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            note_content
+                            tst.view()
+                                .note_content()
                                 .set(Some(text.clone()));
-                            ctx.write().content = text;
-                            ctx.write().cipher = None;
+                            tst.content().set(text);
+                            tst.cipher().set(None);
                         }
                     },
                     Err(e) => message.set(Some(
@@ -44,36 +43,40 @@ pub fn View(note: Option<String>) -> Element {
                 return;
             }
         }
-        let content = ctx.read().content.clone();
+        let content = tst.content().cloned();
         if content.is_empty() {
             message.set(Some(Msg::Error(
                 AppError::NoNoteInUrl.render(lang),
             )));
         } else {
-            note_content.set(Some(content));
+            tst.view().note_content().set(Some(content));
         }
     });
 
     let mut decrypt_note = move || {
         message.set(None);
-        if let Some(enc) = encrypted_data.read().as_ref() {
-            let pwd = password_input.read().clone();
+        let enc_data = tst.view().encrypted_data().cloned();
+        if let Some(enc) = enc_data {
+            let pwd = tst.view().password_input().cloned();
             if pwd.is_empty() {
                 message.set(Some(Msg::PasswordRequired));
                 return;
             }
 
-            match decrypt_symmetric(enc, &pwd) {
+            match decrypt_symmetric(&enc, &pwd) {
                 Ok(plaintext) => {
                     match String::from_utf8(plaintext) {
                         Ok(text) => {
-                            note_content
+                            tst.view()
+                                .note_content()
                                 .set(Some(text.clone()));
-                            is_encrypted.set(false);
-                            ctx.write().content = text;
-                            ctx.write().password = pwd;
-                            ctx.write().cipher =
-                                Some(enc.cipher);
+                            tst.view()
+                                .is_encrypted()
+                                .set(false);
+                            tst.content().set(text);
+                            tst.password().set(pwd);
+                            tst.cipher()
+                                .set(Some(enc.cipher));
                         }
                         Err(e) => {
                             message.set(Some(Msg::Error(
@@ -90,7 +93,7 @@ pub fn View(note: Option<String>) -> Element {
     };
 
     rsx! {
-            if is_encrypted() {
+            if tst.view().is_encrypted().cloned() {
                 Breadcrumb { title: Msg::EncryptedNote }
                 section {
                     fieldset {
@@ -102,8 +105,8 @@ pub fn View(note: Option<String>) -> Element {
                         input {
                             r#type: "password",
                             placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
-                            value: "{password_input}",
-                            oninput: move |evt| password_input.set(evt.value()),
+                            value: "{tst.view().password_input()}",
+                            oninput: move |evt| tst.view().password_input().set(evt.value()),
                             onkeydown: move |evt| {
                                 if evt.key() == Key::Enter {
                                     decrypt_note()
@@ -119,7 +122,7 @@ pub fn View(note: Option<String>) -> Element {
                                 onclick: move |_| {
                                     spawn(async move {
                                         match js_read_clipboard().await {
-                                            Ok(text) => password_input.set(text),
+                                            Ok(text) => tst.view().password_input().set(text),
     Err(e) => {
                         message.set(Some(Msg::Error(AppError::Fd(e).render(lang))))
                     }
@@ -137,7 +140,7 @@ pub fn View(note: Option<String>) -> Element {
                         }
                     }
                 }
-            } else if let Some(content) = note_content() {
+            } else if let Some(content) = tst.view().note_content().cloned() {
                 Breadcrumb { title: Msg::YourNoteTitle }
                 section {
                     fieldset {
@@ -153,7 +156,7 @@ pub fn View(note: Option<String>) -> Element {
                             Button {
                                 icon: FaTrash,
                                 onclick: move |_| {
-                                    ctx.set(AppCtx::default());
+                                    tst.set(TemporaryState::default());
                                     nav.write().push(Screen::Home.to_route(None));
                                 },
                                 "{Msg::CreateNewNote.render(lang)}"
@@ -161,7 +164,7 @@ pub fn View(note: Option<String>) -> Element {
                             Button {
                                 icon: FaPenToSquare,
                                 onclick: move |_| {
-                                    ctx.write().action = ActionMode::Create;
+                                    tst.action().set(ActionMode::Create);
                                     nav.write().push(Screen::Home.to_route(None));
                                 },
                                 "{Msg::EditNote.render(lang)}"

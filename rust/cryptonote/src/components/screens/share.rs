@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn Share() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let ctx = use_context::<Signal<AppCtx>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
 
     let mut url = use_signal(String::new);
@@ -12,29 +12,29 @@ pub fn Share() -> Element {
     let mut message = use_signal(|| Option::<Msg>::None);
 
     use_effect(move || {
+        let content = tst.content().cloned();
+        let password = tst.password().cloned();
+        let cipher = tst.cipher().cloned();
+
         let res: Result<(String, String), AppError> =
             (|| {
-                let ctx = ctx.read();
-
-                let note_data = ctx.cipher.map_or_else(
-                    || {
-                        Ok(NoteData::PlainText(
-                            ctx.content.clone(),
-                        ))
-                    },
-                    |cipher| {
-                        if ctx.password.is_empty() {
-                            Err(AppError::PasswordRequired)
-                        } else {
-                            encrypt_symmetric(
-                                ctx.content.as_bytes(),
-                                &ctx.password,
-                                cipher,
-                            )
-                            .map(NoteData::CipherText)
+                let note_data = match cipher {
+                    Some(cipher) => {
+                        if password.is_empty() {
+                            return Err(
+                                AppError::PasswordRequired,
+                            );
                         }
-                    },
-                )?;
+                        NoteData::CipherText(
+                            encrypt_symmetric(
+                                content.as_bytes(),
+                                &password,
+                                cipher,
+                            )?,
+                        )
+                    }
+                    None => NoteData::PlainText(content),
+                };
 
                 let origin = {
                     #[cfg(target_arch = "wasm32")]
@@ -66,10 +66,10 @@ pub fn Share() -> Element {
                     origin,
                     Screen::View
                 );
-                let url = build_url(&view_url, &note_data)?;
-                let qr = generate_qr_code(&url)?;
+                let u = build_url(&view_url, &note_data)?;
+                let q = generate_qr_code(&u)?;
 
-                Ok((url, qr))
+                Ok((u, q))
             })();
 
         match res {
@@ -88,7 +88,6 @@ pub fn Share() -> Element {
     rsx! {
         Breadcrumb { title: Msg::ShareTitle }
         section {
-
             if !url().is_empty() {
                 fieldset {
                     if !qr_code().is_empty() {
@@ -98,24 +97,24 @@ pub fn Share() -> Element {
                     textarea {
                         readonly: true,
                         value: "{url}",
-                    onclick: move |_| {
-                        write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
-                    },
-                }
-
-                Dock { message,
-                    Button {
-                        icon: FaEye,
-                        onclick: move |_| {
-                            nav.write().push(Screen::View.to_route(None));
-                        },
-                        "{Msg::ViewButton.render(lang)}"
-                    }
-                    Button {
-                        icon: FaCopy,
-                        primary: true,
                         onclick: move |_| {
                             write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
+                        },
+                    }
+
+                    Dock { message,
+                        Button {
+                            icon: FaEye,
+                            onclick: move |_| {
+                                nav.write().push(Screen::View.to_route(None));
+                            },
+                            "{Msg::ViewButton.render(lang)}"
+                        }
+                        Button {
+                            icon: FaCopy,
+                            primary: true,
+                            onclick: move |_| {
+                                write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
                             },
                             "{Msg::Copy.render(lang)}"
                         }

@@ -3,10 +3,10 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut prs = use_context::<
+    let mut pst = use_context::<
         PersistentSignal<PersistentState<()>>,
     >();
-    let mut ctx = use_context::<Signal<AppCtx>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
     let nav = use_nav::<Route>(idx.into());
@@ -14,7 +14,7 @@ pub fn Layout() -> Element {
         use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
-        let theme = prs.read().theme;
+        let theme = pst.read().theme;
         spawn(async move {
             if let Err(e) =
                 functora_dioxus::js::js_set_theme(&theme)
@@ -33,19 +33,19 @@ pub fn Layout() -> Element {
             label {
                 input { r#type: "checkbox" }
                 header {
-                    NavLink {
-                        nav: nav_signal,
-                        href: Screen::Home.to_route(None).to_string(),
-                        onclick: move |_| ctx.set(AppCtx::default()),
-                        "🔐 Cryptonote"
-                    }
+                        NavLink {
+                            nav: nav_signal,
+                            href: Screen::Home.to_route(None).to_string(),
+                            onclick: move |_| tst.set(TemporaryState::default()),
+                            "🔐 Cryptonote"
+                        }
                 }
                 ul {
                     for lang in SUPPORTED_LANGUAGES {
                         li {
                             a {
                                 onclick: move |_| {
-                                    prs.with_mut(|x| x.language = *lang);
+                                    pst.with_mut(|x| x.language = *lang);
                                 },
                                 "{language_label(*lang)}"
                             }
@@ -54,11 +54,11 @@ pub fn Layout() -> Element {
                     li {
                         a {
                             onclick: move |_| {
-                                prs.with_mut(|x| {
+                                pst.with_mut(|x| {
                                     x.theme = x.theme.next();
                                 });
                             },
-                            {match prs.read().theme {
+                            {match pst.read().theme {
                                 Theme::Light => "🌝 ",
                                 Theme::Dark => "🌚 ",
                             }}

@@ -66,21 +66,38 @@ impl Screen {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct AppCtx {
+#[derive(Store, Default)]
+pub struct HomeState {
+    pub url_input: String,
+}
+
+#[derive(Store, Default)]
+pub struct ViewState {
+    pub note_content: Option<String>,
+    pub encrypted_data: Option<EncryptedData>,
+    pub password_input: String,
+    pub is_encrypted: bool,
+}
+
+#[derive(Store)]
+pub struct TemporaryState {
     pub action: ActionMode,
     pub content: String,
     pub password: String,
     pub cipher: Option<CipherType>,
+    pub home: HomeState,
+    pub view: ViewState,
 }
 
-impl Default for AppCtx {
+impl Default for TemporaryState {
     fn default() -> Self {
         Self {
             action: ActionMode::Create,
             content: String::new(),
             password: String::new(),
             cipher: Some(CipherType::Aes256Gcm),
+            home: HomeState::default(),
+            view: ViewState::default(),
         }
     }
 }

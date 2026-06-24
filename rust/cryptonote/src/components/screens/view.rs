@@ -8,9 +8,7 @@ pub fn View(note: Option<String>) -> Element {
     let lang = use_lang();
     let mut message = use_signal(|| Option::<Msg>::None);
     let rendered = use_memo(move || {
-        tst.view()
-            .note_content()
-            .cloned()
+        tst.view().note_content()()
             .as_deref()
             .map(render_markdown)
     });
@@ -43,7 +41,7 @@ pub fn View(note: Option<String>) -> Element {
                 return;
             }
         }
-        let content = tst.content().cloned();
+        let content = tst.content()();
         if content.is_empty() {
             message.set(Some(Msg::Error(
                 AppError::NoNoteInUrl.render(lang),
@@ -55,9 +53,9 @@ pub fn View(note: Option<String>) -> Element {
 
     let mut decrypt_note = move || {
         message.set(None);
-        let enc_data = tst.view().encrypted_data().cloned();
+        let enc_data = tst.view().encrypted_data()();
         if let Some(enc) = enc_data {
-            let pwd = tst.view().password_input().cloned();
+            let pwd = tst.view().password_input()();
             if pwd.is_empty() {
                 message.set(Some(Msg::PasswordRequired));
                 return;
@@ -93,7 +91,7 @@ pub fn View(note: Option<String>) -> Element {
     };
 
     rsx! {
-            if tst.view().is_encrypted().cloned() {
+            if tst.view().is_encrypted()() {
                 Breadcrumb { title: Msg::EncryptedNote }
                 section {
                     fieldset {
@@ -140,7 +138,7 @@ pub fn View(note: Option<String>) -> Element {
                         }
                     }
                 }
-            } else if let Some(content) = tst.view().note_content().cloned() {
+            } else if let Some(content) = tst.view().note_content()() {
                 Breadcrumb { title: Msg::YourNoteTitle }
                 section {
                     fieldset {

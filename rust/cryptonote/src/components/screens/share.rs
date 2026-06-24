@@ -12,9 +12,9 @@ pub fn Share() -> Element {
     let mut message = use_signal(|| Option::<Msg>::None);
 
     use_effect(move || {
-        let content = tst.content().cloned();
-        let password = tst.password().cloned();
-        let cipher = tst.cipher().cloned();
+        let content = tst.content()();
+        let password = tst.password()();
+        let cipher = tst.cipher()();
 
         let res: Result<(String, String), AppError> =
             (|| {

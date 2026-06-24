@@ -11,7 +11,7 @@ pub fn Home() -> Element {
 
     let open_url = move |_| {
         message.set(None);
-        let url = tst.home().url_input().cloned();
+        let url = tst.home().url_input()();
         let url = url.trim().to_string();
 
         if url.is_empty() {
@@ -38,7 +38,7 @@ pub fn Home() -> Element {
         message.set(None);
 
         if tst.cipher().is_some()
-            && tst.password().cloned().is_empty()
+            && tst.password()().is_empty()
         {
             message.set(Some(Msg::PasswordRequired));
         } else {
@@ -53,12 +53,12 @@ pub fn Home() -> Element {
 
     let reset_ctx = move |_| {
         message.set(None);
-        let action = tst.action().cloned();
+        let action = tst.action()();
         tst.set(TemporaryState::default());
         tst.action().set(action);
     };
 
-    let action = tst.action().cloned();
+    let action = tst.action()();
 
     rsx! {
             section {

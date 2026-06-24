@@ -8,8 +8,7 @@ pub fn Breadcrumb<T: I18N + Clone + PartialEq + 'static>(
     let nav = use_context::<Signal<Nav<Route>>>();
     let lang =
         use_context::<PersistentSignal<PersistentState>>()
-            .language()
-            .cloned();
+            .language()();
     rsx! {
         functora_dioxus::widgets::Breadcrumb {
             title,

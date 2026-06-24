@@ -13,7 +13,7 @@ pub fn Layout() -> Element {
         use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
-        let theme = pst.theme().cloned();
+        let theme = pst.theme()();
         spawn(async move {
             if let Err(e) =
                 functora_dioxus::js::js_set_theme(&theme)
@@ -56,7 +56,7 @@ pub fn Layout() -> Element {
                                 pst.theme().with_mut(|t| *t = t.next());
                             },
                             {
-                                match pst.theme().cloned() {
+                                match pst.theme()() {
                                     Theme::Light => "🌝 ",
                                     Theme::Dark => "🌚 ",
                                 }

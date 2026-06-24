@@ -1,15 +1,15 @@
-use crate::i18n::{Language, I18N};
-use crate::nav::Nav;
 use crate::Msg;
+use crate::i18n::{I18N, Language};
+use crate::nav::Nav;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 use dioxus_free_icons::Icon;
 use dioxus_free_icons::IconShape;
+use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 
 #[component]
 pub fn GenDock<
     R: 'static,
-    M: I18N + Clone + PartialEq + 'static,
+    M: I18N + Clone + 'static,
     B: I18N + Clone + PartialEq + 'static,
     I: IconShape + Clone + PartialEq + 'static,
 >(
@@ -34,9 +34,7 @@ pub fn GenDock<
                     onclick: move |_| {
                         nav.write().go_back();
                     },
-                    {back_button_icon.map(|icon| rsx! {
-                        Icon { icon }
-                    })}
+                    {back_button_icon.map(|icon| rsx! { Icon { icon } })}
                     {back_button_i18n.map(|i18n| rsx! {
                         " "
                         {i18n.render(lang)}
@@ -49,7 +47,7 @@ pub fn GenDock<
 }
 
 #[component]
-pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
+pub fn Dock<R: 'static, M: I18N + Clone + 'static>(
     children: Element,
     nav: Signal<Nav<R>>,
     #[props(default)] message: Option<Signal<Option<M>>>,

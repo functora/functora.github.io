@@ -2,7 +2,6 @@ use crate::error::Error;
 use crate::i18n::Language;
 use crate::js::{js_capture_frame, js_check_camera, js_sleep, js_start_camera, js_stop_camera};
 use crate::qr::decode_qr_rgba;
-use crate::widgets::banner::Banner;
 use dioxus::prelude::*;
 
 const FPS_DELAY: u64 = 33;
@@ -75,7 +74,7 @@ pub fn QrScanner(
 
     rsx! {
         section {
-            Banner { message: error, lang }
+            crate::widgets::Banner { message: error, lang }
             if error.read().is_none() {
                 video { id: "qr-video", autoplay: true, playsinline: true }
                 canvas { id: "qr-canvas", style: "display:none" }

@@ -9,13 +9,14 @@ use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 #[component]
 pub fn GenDock<
     R: 'static,
-    M: I18N + Clone + 'static,
+    M: I18N + 'static,
     B: I18N + Clone + PartialEq + 'static,
     I: IconShape + Clone + PartialEq + 'static,
+    S: Readable<Target = Option<M>> + Clone + PartialEq + 'static,
 >(
     children: Element,
     nav: Signal<Nav<R>>,
-    #[props(default)] message: Option<Signal<Option<M>>>,
+    #[props(default)] message: Option<S>,
     #[props(default)] back_button_i18n: Option<B>,
     #[props(default)] back_button_icon: Option<I>,
     #[props(default)] lang: Language,
@@ -34,7 +35,9 @@ pub fn GenDock<
                     onclick: move |_| {
                         nav.write().go_back();
                     },
-                    {back_button_icon.map(|icon| rsx! { Icon { icon } })}
+                    {back_button_icon.map(|icon| rsx! {
+                        Icon { icon }
+                    })}
                     {back_button_i18n.map(|i18n| rsx! {
                         " "
                         {i18n.render(lang)}

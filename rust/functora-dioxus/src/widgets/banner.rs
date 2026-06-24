@@ -4,7 +4,11 @@ use crate::widgets::quote::Quote;
 use dioxus::prelude::*;
 
 #[component]
-pub fn Banner<M: I18N + Clone + 'static>(message: Signal<Option<M>>, lang: Language) -> Element {
+pub fn Banner<S, M>(message: S, lang: Language) -> Element
+where
+    S: Readable<Target = Option<M>> + Clone + PartialEq + 'static,
+    M: I18N + 'static,
+{
     message.with(|m| match m {
         Some(msg) => rsx! {
             Pre {

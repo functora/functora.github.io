@@ -23,7 +23,7 @@ fn App() -> Element {
     let tst = use_store(TemporaryState::default);
     let pst = use_storage(
         APP_STORAGE_KEY,
-        PersistentState::<()>::default,
+        PersistentState::default,
     );
 
     use_context_provider(|| tst);

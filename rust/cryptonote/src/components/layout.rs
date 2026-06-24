@@ -3,9 +3,8 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut pst = use_context::<
-        PersistentSignal<PersistentState<()>>,
-    >();
+    let pst =
+        use_context::<PersistentSignal<PersistentState>>();
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
@@ -14,7 +13,7 @@ pub fn Layout() -> Element {
         use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
-        let theme = pst.read().theme;
+        let theme = pst.theme().cloned();
         spawn(async move {
             if let Err(e) =
                 functora_dioxus::js::js_set_theme(&theme)
@@ -33,19 +32,19 @@ pub fn Layout() -> Element {
             label {
                 input { r#type: "checkbox" }
                 header {
-                        NavLink {
-                            nav: nav_signal,
-                            href: Screen::Home.to_route(None).to_string(),
-                            onclick: move |_| tst.set(TemporaryState::default()),
-                            "🔐 Cryptonote"
-                        }
+                    NavLink {
+                        nav: nav_signal,
+                        href: Screen::Home.to_route(None).to_string(),
+                        onclick: move |_| tst.set(TemporaryState::default()),
+                        "🔐 Cryptonote"
+                    }
                 }
                 ul {
                     for lang in SUPPORTED_LANGUAGES {
                         li {
                             a {
                                 onclick: move |_| {
-                                    pst.with_mut(|x| x.language = *lang);
+                                    pst.language().set(*lang);
                                 },
                                 "{language_label(*lang)}"
                             }
@@ -54,19 +53,23 @@ pub fn Layout() -> Element {
                     li {
                         a {
                             onclick: move |_| {
-                                pst.with_mut(|x| {
-                                    x.theme = x.theme.next();
-                                });
+                                pst.theme().with_mut(|t| *t = t.next());
                             },
-                            {match pst.read().theme {
-                                Theme::Light => "🌝 ",
-                                Theme::Dark => "🌚 ",
-                            }}
+                            {
+                                match pst.theme().cloned() {
+                                    Theme::Light => "🌝 ",
+                                    Theme::Dark => "🌚 ",
+                                }
+                            }
                             {Msg::Theme.render(lang)}
                         }
                     }
                     li {
-                        NavLink { nav: nav_signal, href: Screen::About.to_route(None).to_string(), "❓{Msg::AboutTitle.render(lang)}" }
+                        NavLink {
+                            nav: nav_signal,
+                            href: Screen::About.to_route(None).to_string(),
+                            "❓{Msg::AboutTitle.render(lang)}"
+                        }
                     }
                 }
             }
@@ -83,15 +86,27 @@ pub fn Layout() -> Element {
             " "
             {Msg::ByContinuing.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::License.to_route(None).to_string(), "{Msg::TermsOfService.render(lang)}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::License.to_route(None).to_string(),
+                "{Msg::TermsOfService.render(lang)}"
+            }
             " "
             {Msg::YouAgree.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::Privacy.to_route(None).to_string(), "{Msg::PrivacyPolicyAnd.render(lang)}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::Privacy.to_route(None).to_string(),
+                "{Msg::PrivacyPolicyAnd.render(lang)}"
+            }
             ". "
             {Msg::Please.render(lang)}
             " "
-            NavLink { nav: nav_signal, href: Screen::Donate.to_route(None).to_string(), "{Msg::DonateLink.render(lang)}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::Donate.to_route(None).to_string(),
+                "{Msg::DonateLink.render(lang)}"
+            }
             ". "
             {Msg::VersionLabel.render(lang)}
             " "

@@ -6,11 +6,10 @@ pub fn Breadcrumb<T: I18N + Clone + PartialEq + 'static>(
     title: T,
 ) -> Element {
     let nav = use_context::<Signal<Nav<Route>>>();
-    let lang = use_context::<
-        PersistentSignal<PersistentState<()>>,
-    >()
-    .read()
-    .language;
+    let lang =
+        use_context::<PersistentSignal<PersistentState>>()
+            .language()
+            .cloned();
     rsx! {
         functora_dioxus::widgets::Breadcrumb {
             title,

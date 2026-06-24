@@ -1,103 +1,108 @@
 pub mod mobile;
 
-use crate::i18n::Language;
-use crate::js::Theme;
 use dioxus::core::Subscribers;
 use dioxus::prelude::*;
+use serde::Serialize;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct PersistentState<T> {
-    #[serde(flatten)]
-    pub data: T,
-    pub theme: Theme,
-    pub language: Language,
-}
-
-impl<T: Default> Default for PersistentState<T> {
-    fn default() -> Self {
-        Self {
-            data: T::default(),
-            theme: Theme::Light,
-            language: crate::i18n::detect_browser_language(),
-        }
-    }
-}
-
-/// A signal wrapper that automatically persists its value to storage
-/// on every mutation. Works identically on all platforms:
-/// - **wasm**: Delegates to `dioxus-sdk` localStorage (persistence handled by SDK)
-/// - **mobile/desktop**: Persists to filesystem JSON via `update_key`
-///
-/// On wasm, the persist is a no-op since `dioxus-sdk` handles it.
-/// On mobile/desktop, every `with_mut` or `set` call writes to disk.
-pub struct PersistentSignal<T> {
-    signal: Signal<T>,
+pub struct PersistentSignal<T: 'static> {
+    store: Store<T>,
     key: &'static str,
 }
 
-impl<T> PersistentSignal<T> {
-    pub fn new(signal: Signal<T>, key: &'static str) -> Self {
-        Self { signal, key }
+impl<T: 'static> PersistentSignal<T> {
+    pub fn new(store: Store<T>, key: &'static str) -> Self {
+        Self { store, key }
     }
 }
 
-impl<T> Clone for PersistentSignal<T> {
+impl<T: 'static> Clone for PersistentSignal<T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<T> Copy for PersistentSignal<T> {}
+impl<T: 'static> Copy for PersistentSignal<T> {}
 
 impl<T: 'static> PartialEq for PersistentSignal<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.signal == other.signal && self.key == other.key
+        self.store == other.store && self.key == other.key
     }
 }
 
 impl<T: 'static> Eq for PersistentSignal<T> {}
+
+impl<T: 'static> Deref for PersistentSignal<T> {
+    type Target = Store<T>;
+    fn deref(&self) -> &Self::Target {
+        &self.store
+    }
+}
 
 impl<T: 'static> Readable for PersistentSignal<T> {
     type Target = T;
     type Storage = UnsyncStorage;
 
     fn try_read_unchecked(&self) -> Result<ReadableRef<'static, Self>, BorrowError> {
-        self.signal.try_read_unchecked()
+        self.store.try_read_unchecked()
     }
 
     fn try_peek_unchecked(&self) -> Result<ReadableRef<'static, Self>, BorrowError> {
-        self.signal.try_peek_unchecked()
+        self.store.try_peek_unchecked()
     }
 
     fn subscribers(&self) -> Subscribers {
-        self.signal.subscribers()
+        self.store.subscribers()
     }
 }
 
 impl<T: Serialize + 'static> PersistentSignal<T> {
     pub fn with_mut<O>(&mut self, f: impl FnOnce(&mut T) -> O) -> O {
-        let result = self.signal.with_mut(f);
+        let result = self.store.with_mut(f);
         self.persist();
         result
     }
 
     pub fn set(&mut self, value: T) {
-        self.signal.set(value);
+        self.store.set(value);
         self.persist();
     }
 
     fn persist(&self) {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            use dioxus::prelude::ReadableExt;
-            persist_value(self.key, &*self.signal.read());
-        }
+        persist_value(self.key, &*self.store.read());
     }
 }
 
-fn persist_value<T: Serialize>(key: &str, value: &T) {
+pub fn load_state<T: DeserializeOwned>(key: &str) -> Option<T> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        web_sys::window()
+            .and_then(|w| w.local_storage().ok()?)
+            .and_then(|s| s.get_item(key).ok()?)
+            .and_then(|v| serde_json::from_str(&v).ok())
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        mobile::files_dir().ok().and_then(|p| {
+            let json = mobile::read_json_object(p.join("storage.json")).ok()?;
+            let value = json.get(key)?;
+            serde_json::from_value(value.clone()).ok()
+        })
+    }
+}
+
+pub fn persist_value<T: Serialize>(key: &str, value: &T) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(storage)) = window.local_storage() {
+                if let Ok(json) = serde_json::to_string(value) {
+                    let _ = storage.set_item(key, &json);
+                }
+            }
+        }
+    }
     #[cfg(not(target_arch = "wasm32"))]
     {
         if let Ok(path) = mobile::files_dir().map(|p| p.join("storage.json"))
@@ -114,19 +119,15 @@ pub fn use_storage<
     key: &'static str,
     init: impl FnOnce() -> T,
 ) -> PersistentSignal<T> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        let signal =
-            dioxus_sdk::storage::use_synced_storage::<dioxus_sdk::storage::LocalStorage, T>(key.to_string(), init);
-        PersistentSignal::new(signal, key)
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let default = init();
-        let signal = mobile::use_storage(key, || default.clone()).unwrap_or_else(|e| {
-            tracing::error!("Storage init error: {}", e);
-            Signal::new(default)
+    let store = use_store(move || load_state(key).unwrap_or_else(init));
+    let signal = PersistentSignal::new(store, key);
+
+    let _ = use_effect(move || {
+        let value = signal();
+        let _ = spawn(async move {
+            persist_value(key, &value);
         });
-        PersistentSignal::new(signal, key)
-    }
+    });
+
+    signal
 }

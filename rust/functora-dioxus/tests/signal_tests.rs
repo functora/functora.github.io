@@ -87,8 +87,8 @@ fn read_signal_callable() {
 #[test]
 fn persistent_signal_readable_trait() {
     let mut dom = VirtualDom::new(|| {
-        let signal: Signal<u32> = Signal::new(123);
-        let ps = PersistentSignal::new(signal, "test_readable");
+        let store: Store<u32> = use_store(|| 123u32);
+        let ps = PersistentSignal::new(store, "test_readable");
         let val: u32 = *ps.read();
         assert_eq!(val, 123);
 

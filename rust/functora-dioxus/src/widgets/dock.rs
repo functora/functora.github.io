@@ -1,24 +1,25 @@
+use crate::Msg;
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
-use crate::widgets::banner::Banner;
 use dioxus::prelude::*;
+use dioxus_free_icons::Icon;
+use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 
-#[allow(clippy::redundant_closure_for_method_calls)]
 #[component]
-pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
+pub fn GenDock<R: 'static, M: I18N + Clone + PartialEq + 'static, B: I18N + Clone + PartialEq + 'static>(
     children: Element,
-    message: Option<Signal<Option<M>>>,
     nav: Signal<Nav<R>>,
-    back_button_i18n: M,
-    back_button_icon: Option<Element>,
-    lang: Language,
+    #[props(default)] message: Option<Signal<Option<M>>>,
+    #[props(default)] back_button_i18n: Option<B>,
+    #[props(default = Some(rsx! { Icon { icon: FaArrowLeft } }))] back_button_icon: Option<Element>,
+    #[props(default)] lang: Language,
 ) -> Element {
-    let has_navigated = nav.with(|nav| nav.has_navigated());
+    let has_navigated = nav.with(Nav::has_navigated);
 
     rsx! {
         if let Some(message) = message {
             p { "txt": "r",
-                Banner { message, lang }
+                crate::widgets::Banner { message, lang }
             }
         }
         div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",
@@ -28,10 +29,32 @@ pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
                         nav.write().go_back();
                     },
                     {back_button_icon}
-                    {back_button_i18n.render(lang)}
+                    {back_button_i18n.map(|i18n| rsx! {
+                        " "
+                        {i18n.render(lang)}
+                    })}
                 }
             }
             {children}
         }
     }
+}
+
+#[component]
+pub fn Dock<R: 'static, M: I18N + Clone + PartialEq + 'static>(
+    children: Element,
+    nav: Signal<Nav<R>>,
+    #[props(default)] message: Option<Signal<Option<M>>>,
+    #[props(default = Some(Msg::Back))] back_button_i18n: Option<Msg>,
+    #[props(default = Some(rsx! { Icon { icon: FaArrowLeft } }))] back_button_icon: Option<Element>,
+    #[props(default)] lang: Language,
+) -> Element {
+    GenDock(GenDockProps {
+        children,
+        nav,
+        message,
+        back_button_i18n,
+        back_button_icon,
+        lang,
+    })
 }

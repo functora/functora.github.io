@@ -12,22 +12,11 @@ pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;
 pub use enum_iterator::{next_cycle, Sequence};
 pub use functora::*;
+pub use functora_dioxus::dioxus_elements;
 pub use serde::de::DeserializeOwned;
 pub use serde::{Deserialize, Serialize};
 pub use std::str::FromStr;
 pub use thiserror::Error;
-pub mod dioxus_elements {
-    pub use elements::*;
-    pub mod elements {
-        pub use dioxus::prelude::dioxus_elements::*;
-        pub mod card {
-            pub use dioxus::prelude::dioxus_elements::elements::template::*;
-            pub const TAG_NAME: &str = "card";
-            pub const NAME_SPACE: Option<&'static str> =
-                None;
-        }
-    }
-}
 
 pub use functora_dioxus::js::Theme;
 pub use functora_dioxus::storage::{

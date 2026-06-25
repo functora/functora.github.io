@@ -50,52 +50,29 @@ impl From<jni::errors::Error> for Error {
     }
 }
 
-impl I18N for Error {
-    fn render_eng(&self) -> String {
+impl Error {
+    fn msg_variant(&self) -> Msg {
         match self {
             Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
             Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
             Self::JS(_) => Msg::ClipboardReadError,
-            Self::IO(_) => Msg::ErrorTitle,
-            Self::Json(_) => Msg::ErrorTitle,
-            Self::Env(_) => Msg::ErrorTitle,
-            Self::Channel(_) => Msg::ErrorTitle,
-            Self::NotJsonObject(_) => Msg::ErrorTitle,
+            Self::IO(_) | Self::Json(_) | Self::Env(_) | Self::Channel(_) | Self::NotJsonObject(_) => Msg::ErrorTitle,
             #[cfg(target_os = "android")]
             Self::JNI(_) => Msg::ErrorTitle,
         }
-        .render_eng()
+    }
+}
+
+impl I18N for Error {
+    fn render_eng(&self) -> String {
+        self.msg_variant().render_eng()
     }
 
     fn render_spa(&self) -> String {
-        match self {
-            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
-            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
-            Self::JS(_) => Msg::ClipboardReadError,
-            Self::IO(_) => Msg::ErrorTitle,
-            Self::Json(_) => Msg::ErrorTitle,
-            Self::Env(_) => Msg::ErrorTitle,
-            Self::Channel(_) => Msg::ErrorTitle,
-            Self::NotJsonObject(_) => Msg::ErrorTitle,
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => Msg::ErrorTitle,
-        }
-        .render_spa()
+        self.msg_variant().render_spa()
     }
 
     fn render_rus(&self) -> String {
-        match self {
-            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
-            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
-            Self::JS(_) => Msg::ClipboardReadError,
-            Self::IO(_) => Msg::ErrorTitle,
-            Self::Json(_) => Msg::ErrorTitle,
-            Self::Env(_) => Msg::ErrorTitle,
-            Self::Channel(_) => Msg::ErrorTitle,
-            Self::NotJsonObject(_) => Msg::ErrorTitle,
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => Msg::ErrorTitle,
-        }
-        .render_rus()
+        self.msg_variant().render_rus()
     }
 }

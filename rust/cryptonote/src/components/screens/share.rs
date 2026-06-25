@@ -9,7 +9,7 @@ pub fn Share() -> Element {
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
-    let mut message = use_signal(|| Option::<Msg>::None);
+    let mut message = use_message();
 
     use_effect(move || {
         let content = tst.content()();

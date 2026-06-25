@@ -57,54 +57,53 @@ pub async fn js_read_clipboard() -> Result<String, Error> {
 }
 
 #[cfg(target_os = "android")]
+fn jni_dispatch<T: Send + 'static>(
+    f: impl FnOnce(&mut jni::JNIEnv, &jni::objects::JObject) -> Result<T, jni::errors::Error> + Send + 'static,
+) -> Result<T, Error> {
+    use std::sync::mpsc::channel;
+    let (tx, rx) = channel();
+    dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
+        _ = tx.send(f(env, activity).map_err(Error::from));
+    });
+    rx.recv()?
+}
+
+#[cfg(target_os = "android")]
 pub async fn js_read_clipboard() -> Result<String, Error> {
-    #[cfg(target_os = "android")]
-    {
-        use std::sync::mpsc::channel;
-        let (tx, rx) = channel();
-        dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
-            use jni::objects::JString;
-            let res = (|| -> Result<String, jni::errors::Error> {
-                let svc_name: JString = env.new_string("clipboard")?;
-                let clipboard_svc = env
-                    .call_method(
-                        activity,
-                        "getSystemService",
-                        "(Ljava/lang/String;)Ljava/lang/Object;",
-                        &[(&svc_name).into()],
-                    )?
-                    .l()?;
-                let clipboard = env.new_global_ref(clipboard_svc)?;
-                let clip = env
-                    .call_method(
-                        clipboard.as_obj(),
-                        "getPrimaryClip",
-                        "()Landroid/content/ClipData;",
-                        &[],
-                    )?
-                    .l()?;
-                let item = env
-                    .call_method(
-                        &clip,
-                        "getItemAt",
-                        "(I)Landroid/content/ClipData$Item;",
-                        &[jni::objects::JValue::Int(0)],
-                    )?
-                    .l()?;
-                let text_obj = env
-                    .call_method(&item, "getText", "()Ljava/lang/CharSequence;", &[])?
-                    .l()?;
-                let s = JString::from(text_obj);
-                Ok(env.get_string(&s).map(String::from)?)
-            })();
-            _ = tx.send(res.map_err(Error::from));
-        });
-        rx.recv()?
-    }
-    #[cfg(not(target_os = "android"))]
-    {
-        unreachable!()
-    }
+    jni_dispatch(|env, activity| {
+        use jni::objects::JString;
+        let svc_name: JString = env.new_string("clipboard")?;
+        let clipboard_svc = env
+            .call_method(
+                activity,
+                "getSystemService",
+                "(Ljava/lang/String;)Ljava/lang/Object;",
+                &[(&svc_name).into()],
+            )?
+            .l()?;
+        let clipboard = env.new_global_ref(clipboard_svc)?;
+        let clip = env
+            .call_method(
+                clipboard.as_obj(),
+                "getPrimaryClip",
+                "()Landroid/content/ClipData;",
+                &[],
+            )?
+            .l()?;
+        let item = env
+            .call_method(
+                &clip,
+                "getItemAt",
+                "(I)Landroid/content/ClipData$Item;",
+                &[jni::objects::JValue::Int(0)],
+            )?
+            .l()?;
+        let text_obj = env
+            .call_method(&item, "getText", "()Ljava/lang/CharSequence;", &[])?
+            .l()?;
+        let s = JString::from(text_obj);
+        Ok(env.get_string(&s).map(String::from)?)
+    })
 }
 
 #[cfg(not(target_os = "android"))]
@@ -121,49 +120,36 @@ pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
 
 #[cfg(target_os = "android")]
 pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
-    #[cfg(target_os = "android")]
-    {
-        use std::sync::mpsc::channel;
-        let (tx, rx) = channel();
-        dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
-            use jni::objects::JString;
-            let res = (|| -> Result<(), jni::errors::Error> {
-                let label: JString = env.new_string("Cryptonote")?;
-                let text: JString = env.new_string(&msg)?;
-                let svc_name: JString = env.new_string("clipboard")?;
-                let clipboard_svc = env
-                    .call_method(
-                        activity,
-                        "getSystemService",
-                        "(Ljava/lang/String;)Ljava/lang/Object;",
-                        &[(&svc_name).into()],
-                    )?
-                    .l()?;
-                let clipboard = env.new_global_ref(clipboard_svc)?;
-                let clip_data = env
-                    .call_static_method(
-                        "android/content/ClipData",
-                        "newPlainText",
-                        "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Landroid/content/ClipData;",
-                        &[(&label).into(), (&text).into()],
-                    )?
-                    .l()?;
-                env.call_method(
-                    clipboard.as_obj(),
-                    "setPrimaryClip",
-                    "(Landroid/content/ClipData;)V",
-                    &[(&clip_data).into()],
-                )?;
-                Ok(())
-            })();
-            _ = tx.send(res.map_err(Error::from));
-        });
-        rx.recv()?
-    }
-    #[cfg(not(target_os = "android"))]
-    {
-        unreachable!()
-    }
+    jni_dispatch(move |env, activity| {
+        use jni::objects::JString;
+        let label: JString = env.new_string("Cryptonote")?;
+        let text: JString = env.new_string(&msg)?;
+        let svc_name: JString = env.new_string("clipboard")?;
+        let clipboard_svc = env
+            .call_method(
+                activity,
+                "getSystemService",
+                "(Ljava/lang/String;)Ljava/lang/Object;",
+                &[(&svc_name).into()],
+            )?
+            .l()?;
+        let clipboard = env.new_global_ref(clipboard_svc)?;
+        let clip_data = env
+            .call_static_method(
+                "android/content/ClipData",
+                "newPlainText",
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Landroid/content/ClipData;",
+                &[(&label).into(), (&text).into()],
+            )?
+            .l()?;
+        env.call_method(
+            clipboard.as_obj(),
+            "setPrimaryClip",
+            "(Landroid/content/ClipData;)V",
+            &[(&clip_data).into()],
+        )?;
+        Ok(())
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

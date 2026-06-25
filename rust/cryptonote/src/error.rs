@@ -23,91 +23,55 @@ pub enum AppError {
     Fd(#[from] FdError),
 }
 
+impl AppError {
+    fn msg_variant(&self) -> Option<Msg> {
+        Some(match self {
+            Self::Cipher(_) | Self::KeyDerive(_) => {
+                Msg::CipherError
+            }
+            Self::Getrandom(_) => Msg::GetrandomError,
+            Self::Base64(_) => Msg::Base64Error,
+            Self::Json(_) => Msg::JsonError,
+            Self::Utf8(_) => Msg::InvalidUtf8,
+            Self::Qr(_) => Msg::QrError,
+            Self::Encrypt => Msg::EncryptError,
+            Self::Decrypt => Msg::DecryptError,
+            Self::PasswordRequired => Msg::PasswordRequired,
+            Self::NoNoteInUrl => Msg::NoNoteInUrl,
+            Self::NoNoteParam => Msg::NoNoteParam,
+            Self::Fd(_) => return None,
+        })
+    }
+}
+
 impl I18N for AppError {
     fn render_eng(&self) -> String {
         match self {
-            Self::Cipher(_) | Self::KeyDerive(_) => {
-                Msg::CipherError.render_eng()
-            }
-            Self::Getrandom(_) => {
-                Msg::GetrandomError.render_eng()
-            }
-            Self::Base64(_) => {
-                Msg::Base64Error.render_eng()
-            }
-            Self::Json(_) => Msg::JsonError.render_eng(),
-            Self::Utf8(_) => Msg::InvalidUtf8.render_eng(),
-            Self::Qr(_) => Msg::QrError.render_eng(),
-            Self::Encrypt => Msg::EncryptError.render_eng(),
-            Self::Decrypt => Msg::DecryptError.render_eng(),
-            Self::PasswordRequired => {
-                Msg::PasswordRequired.render_eng()
-            }
-            Self::NoNoteInUrl => {
-                Msg::NoNoteInUrl.render_eng()
-            }
-            Self::NoNoteParam => {
-                Msg::NoNoteParam.render_eng()
-            }
             Self::Fd(e) => e.render_eng(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_eng())
+                .unwrap_or_default(),
         }
     }
 
     fn render_spa(&self) -> String {
         match self {
-            Self::Cipher(_) | Self::KeyDerive(_) => {
-                Msg::CipherError.render_spa()
-            }
-            Self::Getrandom(_) => {
-                Msg::GetrandomError.render_spa()
-            }
-            Self::Base64(_) => {
-                Msg::Base64Error.render_spa()
-            }
-            Self::Json(_) => Msg::JsonError.render_spa(),
-            Self::Utf8(_) => Msg::InvalidUtf8.render_spa(),
-            Self::Qr(_) => Msg::QrError.render_spa(),
-            Self::Encrypt => Msg::EncryptError.render_spa(),
-            Self::Decrypt => Msg::DecryptError.render_spa(),
-            Self::PasswordRequired => {
-                Msg::PasswordRequired.render_spa()
-            }
-            Self::NoNoteInUrl => {
-                Msg::NoNoteInUrl.render_spa()
-            }
-            Self::NoNoteParam => {
-                Msg::NoNoteParam.render_spa()
-            }
             Self::Fd(e) => e.render_spa(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_spa())
+                .unwrap_or_default(),
         }
     }
 
     fn render_rus(&self) -> String {
         match self {
-            Self::Cipher(_) | Self::KeyDerive(_) => {
-                Msg::CipherError.render_rus()
-            }
-            Self::Getrandom(_) => {
-                Msg::GetrandomError.render_rus()
-            }
-            Self::Base64(_) => {
-                Msg::Base64Error.render_rus()
-            }
-            Self::Json(_) => Msg::JsonError.render_rus(),
-            Self::Utf8(_) => Msg::InvalidUtf8.render_rus(),
-            Self::Qr(_) => Msg::QrError.render_rus(),
-            Self::Encrypt => Msg::EncryptError.render_rus(),
-            Self::Decrypt => Msg::DecryptError.render_rus(),
-            Self::PasswordRequired => {
-                Msg::PasswordRequired.render_rus()
-            }
-            Self::NoNoteInUrl => {
-                Msg::NoNoteInUrl.render_rus()
-            }
-            Self::NoNoteParam => {
-                Msg::NoNoteParam.render_rus()
-            }
             Self::Fd(e) => e.render_rus(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_rus())
+                .unwrap_or_default(),
         }
     }
 }

@@ -6,37 +6,32 @@ use std::fs::{OpenOptions, read_to_string, write};
 use std::path::Path;
 use tap::Pipe;
 
+const NOT_JSON_OBJECT: &str = "Not a JSON object";
+
+#[cfg(target_os = "android")]
+fn jni_dispatch<T: Send + 'static>(
+    f: impl FnOnce(&mut jni::JNIEnv, &jni::objects::JObject) -> Result<T, jni::errors::Error> + Send + 'static,
+) -> Result<T, Error> {
+    use std::sync::mpsc::channel;
+    let (tx, rx) = channel();
+    dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
+        _ = tx.send(f(env, activity).map_err(Error::from));
+    });
+    rx.recv()?
+}
+
 #[cfg(target_os = "android")]
 pub fn files_dir() -> Result<std::path::PathBuf, Error> {
-    use jni::JNIEnv;
-    use jni::objects::{JObject, JString};
-    use std::sync::mpsc::channel;
-
-    let (tx, rx) = channel();
-    dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
-        let result = env
-            .call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
+    use jni::objects::JString;
+    jni_dispatch(|env, activity| {
+        env.call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
             .and_then(|v| v.l())
             .and_then(|f| env.call_method(f, "getAbsolutePath", "()Ljava/lang/String;", &[]))
             .and_then(|v| v.l())
             .map(JString::from)
             .and_then(|s| env.get_string(&s).map(String::from))
             .map(std::path::PathBuf::from)
-            .map_err(Error::from);
-
-        match result {
-            Ok(path) => {
-                tx.send(Ok(path))
-                    .unwrap_or_else(|e| tracing::error!("Storage channel error: {}", e));
-            }
-            Err(e) => {
-                tx.send(Err(e))
-                    .unwrap_or_else(|e| tracing::error!("Storage channel error: {}", e));
-            }
-        }
-    });
-
-    rx.recv()?
+    })
 }
 
 #[cfg(target_os = "ios")]
@@ -76,7 +71,7 @@ pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> R
     let mut json: Value = from_str(&content)?;
     let obj = json
         .as_object_mut()
-        .ok_or_else(|| Error::NotJsonObject("Storage JSON is not an object".to_string()))?;
+        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?;
     _ = obj.insert(key.to_string(), to_value(val)?);
     let s = to_string_pretty(&json)?;
     write(p, s).map_err(Error::from)
@@ -121,7 +116,7 @@ pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Er
 pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
     let json = read_json_object(path)?;
     json.as_object()
-        .ok_or_else(|| Error::NotJsonObject("Not a JSON object".to_string()))?
+        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?
         .get(key)
         .cloned()
         .pipe(Ok)
@@ -131,7 +126,7 @@ pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) 
     let mut json = read_json_object(&path)?;
     _ = json
         .as_object_mut()
-        .ok_or_else(|| Error::NotJsonObject("Not a JSON object".to_string()))?
+        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?
         .insert(key.to_string(), to_value(val).map_err(Error::from)?);
     write_json_object(path, &json)
 }

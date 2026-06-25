@@ -16,7 +16,7 @@ pub fn Layout() -> Element {
         let theme = pst.theme()();
         spawn(async move {
             if let Err(e) =
-                functora_dioxus::js::js_set_theme(&theme)
+                functora_dioxus::ffi::set_theme(&theme)
                     .await
             {
                 tracing::error!(

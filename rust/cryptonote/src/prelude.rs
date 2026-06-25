@@ -18,7 +18,7 @@ pub use serde::{Deserialize, Serialize};
 pub use std::str::FromStr;
 pub use thiserror::Error;
 
-pub use functora_dioxus::js::Theme;
+pub use functora_dioxus::ffi::Theme;
 pub use functora_dioxus::storage::{
     use_storage, PersistentSignal,
 };

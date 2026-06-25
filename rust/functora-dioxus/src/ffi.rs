@@ -31,8 +31,8 @@ impl Theme {
     }
 }
 
-pub async fn js_set_theme(theme: &Theme) -> Result<(), Error> {
-    js_fun(
+pub async fn set_theme(theme: &Theme) -> Result<(), Error> {
+    eval(
         theme.to_js_value(),
         r#"function(arg){
         await window
@@ -46,8 +46,8 @@ pub async fn js_set_theme(theme: &Theme) -> Result<(), Error> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn js_read_clipboard() -> Result<String, Error> {
-    js_fun(
+pub async fn read_clipboard() -> Result<String, Error> {
+    eval(
         (),
         r"function(arg){
         return await window.navigator.clipboard.readText();
@@ -69,7 +69,7 @@ fn jni_dispatch<T: Send + 'static>(
 }
 
 #[cfg(target_os = "android")]
-pub async fn js_read_clipboard() -> Result<String, Error> {
+pub async fn read_clipboard() -> Result<String, Error> {
     jni_dispatch(|env, activity| {
         use jni::objects::JString;
         let svc_name: JString = env.new_string("clipboard")?;
@@ -107,8 +107,8 @@ pub async fn js_read_clipboard() -> Result<String, Error> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
-    js_fun(
+pub(crate) async fn clipboard_write(msg: String) -> Result<(), Error> {
+    eval(
         msg,
         r"function(arg){
         await window.navigator.clipboard.writeText(arg);
@@ -119,7 +119,7 @@ pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
 }
 
 #[cfg(target_os = "android")]
-pub async fn js_write_clipboard(msg: String) -> Result<(), Error> {
+pub(crate) async fn clipboard_write(msg: String) -> Result<(), Error> {
     jni_dispatch(move |env, activity| {
         use jni::objects::JString;
         let label: JString = env.new_string("Cryptonote")?;
@@ -159,8 +159,8 @@ pub struct FrameData {
     pub height: u32,
 }
 
-pub async fn js_check_camera() -> Result<(), Error> {
-    js_fun(
+pub async fn check_camera() -> Result<(), Error> {
+    eval(
         (),
         r#"function(arg){
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -172,8 +172,8 @@ pub async fn js_check_camera() -> Result<(), Error> {
     .await
 }
 
-pub async fn js_start_camera() -> Result<(), Error> {
-    js_fun(
+pub async fn start_camera() -> Result<(), Error> {
+    eval(
         (),
         r#"function(arg){
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -191,8 +191,8 @@ pub async fn js_start_camera() -> Result<(), Error> {
     .await
 }
 
-pub async fn js_capture_frame() -> Result<FrameData, Error> {
-    js_fun(
+pub async fn capture_frame() -> Result<FrameData, Error> {
+    eval(
         (),
         r#"function(arg){
         const video = document.getElementById("qr-video");
@@ -217,8 +217,8 @@ pub async fn js_capture_frame() -> Result<FrameData, Error> {
     .await
 }
 
-pub async fn js_stop_camera() -> Result<(), Error> {
-    js_fun(
+pub async fn stop_camera() -> Result<(), Error> {
+    eval(
         (),
         r#"function(arg){
         const video = document.getElementById("qr-video");
@@ -234,8 +234,8 @@ pub async fn js_stop_camera() -> Result<(), Error> {
 }
 
 #[allow(clippy::needless_raw_string_hashes)]
-pub async fn js_sleep(millis: u64) -> Result<(), Error> {
-    js_fun(
+pub async fn sleep(millis: u64) -> Result<(), Error> {
+    eval(
         millis,
         r#"function(arg){
         return new Promise(resolve => setTimeout(resolve, arg));
@@ -244,7 +244,7 @@ pub async fn js_sleep(millis: u64) -> Result<(), Error> {
     .await
 }
 
-pub async fn js_fun<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
+async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
     arg: A,
     fun: &'static str,
 ) -> Result<B, Error> {

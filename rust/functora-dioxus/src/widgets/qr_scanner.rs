@@ -1,6 +1,6 @@
 use crate::error::Error;
+use crate::ffi::{capture_frame, check_camera, sleep, start_camera, stop_camera};
 use crate::i18n::Language;
-use crate::js::{js_capture_frame, js_check_camera, js_sleep, js_start_camera, js_stop_camera};
 use crate::qr::decode_qr_rgba;
 use dioxus::prelude::*;
 
@@ -33,7 +33,7 @@ pub fn QrScanner(
     #[allow(unused_must_use, unused_results)]
     use_effect(move || {
         spawn(async move {
-            if let Err(e) = js_check_camera().await {
+            if let Err(e) = check_camera().await {
                 let msg = cam_err(&e);
                 error.set(Some(msg.clone()));
                 if let Some(callback) = &on_error {
@@ -41,7 +41,7 @@ pub fn QrScanner(
                 }
                 return;
             }
-            if let Err(e) = js_start_camera().await {
+            if let Err(e) = start_camera().await {
                 let msg = cam_err(&e);
                 error.set(Some(msg.clone()));
                 if let Some(callback) = &on_error {
@@ -49,18 +49,18 @@ pub fn QrScanner(
                 }
                 return;
             }
-            _ = js_sleep(FPS_DELAY).await;
+            _ = sleep(FPS_DELAY).await;
             while scanning() && !found() {
-                if let Ok(frame) = js_capture_frame().await
+                if let Ok(frame) = capture_frame().await
                     && let Some(text) = decode_qr_rgba(&frame.data, frame.width, frame.height)
                 {
                     found.set(true);
                     scanning.set(false);
                     on_scan.call(text);
                 }
-                _ = js_sleep(FPS_DELAY).await;
+                _ = sleep(FPS_DELAY).await;
             }
-            _ = js_stop_camera().await;
+            _ = stop_camera().await;
         });
     });
 
@@ -68,7 +68,7 @@ pub fn QrScanner(
         scanning.set(false);
         #[allow(unused_must_use, unused_results)]
         spawn(async move {
-            _ = js_stop_camera().await;
+            _ = stop_camera().await;
         });
     });
 

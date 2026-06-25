@@ -16,7 +16,7 @@ pub fn paste_clipboard(
     lang: Language,
 ) {
     spawn(async move {
-        match js_read_clipboard().await {
+        match read_clipboard().await {
             Ok(text) => on_paste(text),
             Err(e) => message.set(Some(Msg::Error(
                 AppError::Fd(e).render(lang),

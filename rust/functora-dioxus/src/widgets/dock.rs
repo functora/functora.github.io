@@ -51,10 +51,15 @@ pub fn GenDock<
 }
 
 #[component]
-pub fn Dock<R: 'static, M: I18N + Clone + 'static>(
+pub fn Dock<
+    R: 'static,
+    M: I18N + Clone + 'static,
+    N: Writable<Target = Nav<R>> + Clone + PartialEq + 'static,
+    S: Readable<Target = Option<M>> + Clone + PartialEq + 'static,
+>(
     children: Element,
-    nav: Signal<Nav<R>>,
-    #[props(default)] message: Option<Signal<Option<M>>>,
+    nav: N,
+    #[props(default)] message: Option<S>,
     #[props(default = Some(Msg::Back))] back_button_i18n: Option<Msg>,
     #[props(default = Some(FaArrowLeft))] back_button_icon: Option<FaArrowLeft>,
     #[props(default)] lang: Language,

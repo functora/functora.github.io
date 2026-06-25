@@ -8,11 +8,12 @@ pub fn Breadcrumb<
     R: Routable + Clone + Default + PartialEq + 'static,
     T: I18N + Clone + PartialEq + 'static,
     U: I18N + Clone + PartialEq + 'static,
+    N: Writable<Target = Nav<R>> + Clone + PartialEq + 'static,
 >(
     title: T,
     home_label: U,
     home_route: R,
-    nav: Signal<Nav<R>>,
+    nav: N,
     lang: Language,
 ) -> Element {
     rsx! {

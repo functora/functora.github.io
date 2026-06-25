@@ -12,10 +12,11 @@ pub fn GenDock<
     M: I18N + 'static,
     B: I18N + Clone + PartialEq + 'static,
     I: IconShape + Clone + PartialEq + 'static,
+    N: Writable<Target = Nav<R>> + Clone + PartialEq + 'static,
     S: Readable<Target = Option<M>> + Clone + PartialEq + 'static,
 >(
     children: Element,
-    nav: Signal<Nav<R>>,
+    nav: N,
     #[props(default)] message: Option<S>,
     #[props(default)] back_button_i18n: Option<B>,
     #[props(default)] back_button_icon: Option<I>,

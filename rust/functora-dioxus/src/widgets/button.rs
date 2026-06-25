@@ -1,13 +1,16 @@
+use crate::i18n::{Language, I18N};
 use dioxus::prelude::*;
-use dioxus_free_icons::Icon;
+use dioxus_free_icons::{Icon, IconShape};
 
 #[component]
-pub fn Button<T: dioxus_free_icons::IconShape + Clone + PartialEq + 'static>(
-    #[props(default)] icon: Option<T>,
+pub fn Button<T: IconShape + Clone + PartialEq + 'static, U: I18N + Clone + PartialEq + 'static>(
     children: Element,
     onclick: Option<EventHandler<MouseEvent>>,
-    #[props(default)] primary: bool,
     #[props(extends = button, extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(!optional)] icon: Option<T>,
+    #[props(!optional)] i18n: Option<U>,
+    #[props(default)] lang: Language,
+    #[props(default)] primary: bool,
 ) -> Element {
     rsx! {
         button {
@@ -18,7 +21,13 @@ pub fn Button<T: dioxus_free_icons::IconShape + Clone + PartialEq + 'static>(
             },
             "primary": if primary { Some("") } else { None },
             ..attributes,
-            {icon.map(|i| rsx! { Icon { icon: i } })}
+            {icon.map(|i| rsx! {
+                Icon { icon: i }
+                " "
+            })}
+            {i18n.map(|i| rsx! {
+                {i.render(lang)}
+            })}
             {children}
         }
     }

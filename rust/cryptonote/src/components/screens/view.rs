@@ -7,11 +7,7 @@ pub fn View(note: Option<String>) -> Element {
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
-    let rendered = use_memo(move || {
-        tst.view().note_content()()
-            .as_deref()
-            .map(render_markdown)
-    });
+    let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -19,33 +15,23 @@ pub fn View(note: Option<String>) -> Element {
                 match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
-                            tst.view()
-                                .is_encrypted()
-                                .set(true);
-                            tst.view()
-                                .encrypted_data()
-                                .set(Some(enc));
+                            tst.view().is_encrypted().set(true);
+                            tst.view().encrypted_data().set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            tst.view()
-                                .note_content()
-                                .set(Some(text.clone()));
+                            tst.view().note_content().set(Some(text.clone()));
                             tst.content().set(text);
                             tst.cipher().set(None);
                         }
                     },
-                    Err(e) => message.set(Some(
-                        Msg::Error(e.render(lang)),
-                    )),
+                    Err(e) => message.set(Some(Msg::Error(e.render(lang)))),
                 }
                 return;
             }
         }
         let content = tst.content()();
         if content.is_empty() {
-            message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl.render(lang),
-            )));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.render(lang))));
         } else {
             tst.view().note_content().set(Some(content));
         }
@@ -62,30 +48,17 @@ pub fn View(note: Option<String>) -> Element {
             }
 
             match decrypt_symmetric(&enc, &pwd) {
-                Ok(plaintext) => {
-                    match String::from_utf8(plaintext) {
-                        Ok(text) => {
-                            tst.view()
-                                .note_content()
-                                .set(Some(text.clone()));
-                            tst.view()
-                                .is_encrypted()
-                                .set(false);
-                            tst.content().set(text);
-                            tst.password().set(pwd);
-                            tst.cipher()
-                                .set(Some(enc.cipher));
-                        }
-                        Err(e) => {
-                            message.set(Some(Msg::Error(
-                                AppError::Utf8(e)
-                                    .render(lang),
-                            )))
-                        }
+                Ok(plaintext) => match String::from_utf8(plaintext) {
+                    Ok(text) => {
+                        tst.view().note_content().set(Some(text.clone()));
+                        tst.view().is_encrypted().set(false);
+                        tst.content().set(text);
+                        tst.password().set(pwd);
+                        tst.cipher().set(Some(enc.cipher));
                     }
-                }
-                Err(e) => message
-                    .set(Some(Msg::Error(e.render(lang)))),
+                    Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e).render(lang)))),
+                },
+                Err(e) => message.set(Some(Msg::Error(e.render(lang)))),
             }
         }
     };
@@ -116,7 +89,7 @@ pub fn View(note: Option<String>) -> Element {
 
                     Dock { message,
                         Button {
-                            icon: FaPaste,
+                            icon: Some(FaPaste),
                             onclick: move |_| {
                                 paste_clipboard(
                                     move |text| tst.view().password_input().set(text),
@@ -124,13 +97,15 @@ pub fn View(note: Option<String>) -> Element {
                                     lang,
                                 );
                             },
-                            "{Msg::Paste.render(lang)}"
+                            i18n: Some(Msg::Paste),
+                            lang,
                         }
                         Button {
-                            icon: FaLockOpen,
+                            icon: Some(FaLockOpen),
                             primary: true,
                             onclick: move |_| decrypt_note(),
-                            "{Msg::DecryptButton.render(lang)}"
+                            i18n: Some(Msg::DecryptButton),
+                            lang,
                         }
                     }
                 }
@@ -149,28 +124,36 @@ pub fn View(note: Option<String>) -> Element {
 
                     Dock { message,
                         Button {
-                            icon: FaTrash,
+                            icon: Some(FaTrash),
                             onclick: move |_| {
                                 tst.set(TemporaryState::default());
                                 nav.write().push(Screen::Home.to_route(None));
                             },
-                            "{Msg::CreateNewNote.render(lang)}"
+                            i18n: Some(Msg::CreateNewNote),
+                            lang,
                         }
                         Button {
-                            icon: FaPenToSquare,
+                            icon: Some(FaPenToSquare),
                             onclick: move |_| {
                                 tst.action().set(ActionMode::Create);
                                 nav.write().push(Screen::Home.to_route(None));
                             },
-                            "{Msg::EditNote.render(lang)}"
+                            i18n: Some(Msg::EditNote),
+                            lang,
                         }
                         Button {
-                            icon: FaCopy,
+                            icon: Some(FaCopy),
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard(content.clone(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
+                                write_clipboard(
+                                    content.clone(),
+                                    message,
+                                    Msg::Copied,
+                                    |_e| Msg::ClipboardWriteError,
+                                );
                             },
-                            "{Msg::Copy.render(lang)}"
+                            i18n: Some(Msg::Copy),
+                            lang,
                         }
                     }
                 }

@@ -15,21 +15,16 @@ pub fn Home() -> Element {
         let url = url.trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl.render(lang),
-            )));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.render(lang))));
             return;
         }
 
         match extract_note_param(&url) {
             Ok(note) => {
-                nav.write().push(
-                    Screen::View.to_route(Some(note)),
-                );
+                nav.write().push(Screen::View.to_route(Some(note)));
             }
             Err(e) => {
-                message
-                    .set(Some(Msg::Error(e.render(lang))));
+                message.set(Some(Msg::Error(e.render(lang))));
             }
         }
     };
@@ -37,9 +32,7 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if tst.cipher().is_some()
-            && tst.password()().is_empty()
-        {
+        if tst.cipher().is_some() && tst.password()().is_empty() {
             message.set(Some(Msg::PasswordRequired));
         } else {
             nav.write().push(Screen::Share.to_route(None));
@@ -169,30 +162,34 @@ pub fn Home() -> Element {
                     }
 
                     Dock { message,
-                        Button { icon: FaTrash, onclick: reset_ctx, "{Msg::CreateNewNote.render(lang)}" }
                         Button {
-                            icon: FaEye,
+                            icon: Some(FaTrash),
+                            onclick: reset_ctx,
+                            i18n: Some(Msg::CreateNewNote),
+                            lang,
+                        }
+                        Button {
+                            icon: Some(FaEye),
                             onclick: move |_| {
                                 nav.write().push(Screen::View.to_route(None));
                             },
-                            "{Msg::ViewButton.render(lang)}"
+                            i18n: Some(Msg::ViewButton),
+                            lang,
                         }
                         Button {
-                            icon: FaPaste,
+                            icon: Some(FaPaste),
                             onclick: move |_| {
-                                paste_clipboard(
-                                    move |text| tst.content().set(text),
-                                    message,
-                                    lang,
-                                );
+                                paste_clipboard(move |text| tst.content().set(text), message, lang);
                             },
-                            "{Msg::Paste.render(lang)}"
+                            i18n: Some(Msg::Paste),
+                            lang,
                         }
                         Button {
-                            icon: FaShareNodes,
+                            icon: Some(FaShareNodes),
                             primary: true,
                             onclick: move |_| generate_note(),
-                            "{Msg::GenerateButton.render(lang)}"
+                            i18n: Some(Msg::GenerateButton),
+                            lang,
                         }
                     }
                 }
@@ -208,23 +205,26 @@ pub fn Home() -> Element {
                     br {}
 
                     Dock { message,
-                        Button { icon: FaTrash, onclick: reset_ctx, "{Msg::CreateNewNote.render(lang)}" }
                         Button {
-                            icon: FaPaste,
-                            onclick: move |_| {
-                                paste_clipboard(
-                                    move |text| tst.home().url_input().set(text),
-                                    message,
-                                    lang,
-                                );
-                            },
-                            "{Msg::Paste.render(lang)}"
+                            icon: Some(FaTrash),
+                            onclick: reset_ctx,
+                            i18n: Some(Msg::CreateNewNote),
+                            lang,
                         }
                         Button {
-                            icon: FaFolderOpen,
+                            icon: Some(FaPaste),
+                            onclick: move |_| {
+                                paste_clipboard(move |text| tst.home().url_input().set(text), message, lang);
+                            },
+                            i18n: Some(Msg::Paste),
+                            lang,
+                        }
+                        Button {
+                            icon: Some(FaFolderOpen),
                             primary: true,
                             onclick: open_url,
-                            "{Msg::OpenButton.render(lang)}"
+                            i18n: Some(Msg::OpenButton),
+                            lang,
                         }
                     }
                 }
@@ -250,9 +250,7 @@ pub fn Home() -> Element {
 }
 
 #[component]
-fn ActionRadio<
-    T: IconShape + Clone + PartialEq + 'static,
->(
+fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
     action: ActionMode,
     mode: ActionMode,
     icon: T,

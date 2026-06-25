@@ -8,7 +8,7 @@ pub fn Layout() -> Element {
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
-    let nav = use_nav::<Route>(idx.into());
+    let nav = use_nav::<Route, _>(idx.into());
     let nav_signal =
         use_context_provider(|| Signal::new(nav));
 

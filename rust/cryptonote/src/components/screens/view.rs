@@ -7,7 +7,11 @@ pub fn View(note: Option<String>) -> Element {
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
-    let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
+    let rendered = use_memo(move || {
+        tst.view().note_content()()
+            .as_deref()
+            .map(render_markdown)
+    });
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -15,23 +19,33 @@ pub fn View(note: Option<String>) -> Element {
                 match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
-                            tst.view().is_encrypted().set(true);
-                            tst.view().encrypted_data().set(Some(enc));
+                            tst.view()
+                                .is_encrypted()
+                                .set(true);
+                            tst.view()
+                                .encrypted_data()
+                                .set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            tst.view().note_content().set(Some(text.clone()));
+                            tst.view()
+                                .note_content()
+                                .set(Some(text.clone()));
                             tst.content().set(text);
                             tst.cipher().set(None);
                         }
                     },
-                    Err(e) => message.set(Some(Msg::Error(e.render(lang)))),
+                    Err(e) => message.set(Some(
+                        Msg::Error(e.render(lang)),
+                    )),
                 }
                 return;
             }
         }
         let content = tst.content()();
         if content.is_empty() {
-            message.set(Some(Msg::Error(AppError::NoNoteInUrl.render(lang))));
+            message.set(Some(Msg::Error(
+                AppError::NoNoteInUrl.render(lang),
+            )));
         } else {
             tst.view().note_content().set(Some(content));
         }
@@ -48,17 +62,30 @@ pub fn View(note: Option<String>) -> Element {
             }
 
             match decrypt_symmetric(&enc, &pwd) {
-                Ok(plaintext) => match String::from_utf8(plaintext) {
-                    Ok(text) => {
-                        tst.view().note_content().set(Some(text.clone()));
-                        tst.view().is_encrypted().set(false);
-                        tst.content().set(text);
-                        tst.password().set(pwd);
-                        tst.cipher().set(Some(enc.cipher));
+                Ok(plaintext) => {
+                    match String::from_utf8(plaintext) {
+                        Ok(text) => {
+                            tst.view()
+                                .note_content()
+                                .set(Some(text.clone()));
+                            tst.view()
+                                .is_encrypted()
+                                .set(false);
+                            tst.content().set(text);
+                            tst.password().set(pwd);
+                            tst.cipher()
+                                .set(Some(enc.cipher));
+                        }
+                        Err(e) => {
+                            message.set(Some(Msg::Error(
+                                AppError::Utf8(e)
+                                    .render(lang),
+                            )))
+                        }
                     }
-                    Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e).render(lang)))),
-                },
-                Err(e) => message.set(Some(Msg::Error(e.render(lang)))),
+                }
+                Err(e) => message
+                    .set(Some(Msg::Error(e.render(lang)))),
             }
         }
     };

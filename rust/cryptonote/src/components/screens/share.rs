@@ -16,42 +16,61 @@ pub fn Share() -> Element {
         let password = tst.password()();
         let cipher = tst.cipher()();
 
-        let res: Result<(String, String), AppError> = (|| {
-            let note_data = match cipher {
-                Some(cipher) => {
-                    if password.is_empty() {
-                        return Err(AppError::PasswordRequired);
+        let res: Result<(String, String), AppError> =
+            (|| {
+                let note_data = match cipher {
+                    Some(cipher) => {
+                        if password.is_empty() {
+                            return Err(
+                                AppError::PasswordRequired,
+                            );
+                        }
+                        NoteData::CipherText(
+                            encrypt_symmetric(
+                                content.as_bytes(),
+                                &password,
+                                cipher,
+                            )?,
+                        )
                     }
-                    NoteData::CipherText(encrypt_symmetric(content.as_bytes(), &password, cipher)?)
-                }
-                None => NoteData::PlainText(content),
-            };
+                    None => NoteData::PlainText(content),
+                };
 
-            let origin = {
-                #[cfg(target_arch = "wasm32")]
-                {
-                    web_sys::window().and_then(|w| {
-                        let loc = w.location();
-                        let protocol = loc.protocol().ok()?;
-                        let host = loc.host().ok()?;
-                        let pathname = loc.pathname().ok()?;
-                        let path = pathname.trim_end_matches('/');
-                        Some(format!("{}//{}{}", protocol, host, path))
-                    })
+                let origin = {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        web_sys::window().and_then(|w| {
+                            let loc = w.location();
+                            let protocol =
+                                loc.protocol().ok()?;
+                            let host = loc.host().ok()?;
+                            let pathname =
+                                loc.pathname().ok()?;
+                            let path = pathname
+                                .trim_end_matches('/');
+                            Some(format!(
+                                "{}//{}{}",
+                                protocol, host, path
+                            ))
+                        })
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        Some(WEB_APP_URL)
+                    }
                 }
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    Some(WEB_APP_URL)
-                }
-            }
-            .ok_or(AppError::NoNoteInUrl)?;
+                .ok_or(AppError::NoNoteInUrl)?;
 
-            let view_url = format!("{}/?screen={}", origin, Screen::View);
-            let u = build_url(&view_url, &note_data)?;
-            let q = generate_qr_code(&u)?;
+                let view_url = format!(
+                    "{}/?screen={}",
+                    origin,
+                    Screen::View
+                );
+                let u = build_url(&view_url, &note_data)?;
+                let q = generate_qr_code(&u)?;
 
-            Ok((u, q))
-        })();
+                Ok((u, q))
+            })();
 
         match res {
             Ok((u, q)) => {
@@ -60,7 +79,8 @@ pub fn Share() -> Element {
                 message.set(None);
             }
             Err(e) => {
-                message.set(Some(Msg::Error(e.render(lang))));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     });

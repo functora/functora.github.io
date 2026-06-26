@@ -7,7 +7,7 @@ use functora_dioxus::widgets::QrScanner as BaseQrScanner;
 pub fn QrScanner(
     on_scan: EventHandler<String>,
     #[props(default)] message: Option<Signal<Option<Msg>>>,
-    #[props(default)] lang: Language,
+    lang: Language,
 ) -> Element {
     let on_error = move |err: functora_dioxus::Error| {
         if let Some(ref mut msg) = message {
@@ -21,6 +21,7 @@ pub fn QrScanner(
         BaseQrScanner {
             on_scan,
             on_error: Callback::new(on_error),
+            lang,
         }
     }
 }

@@ -6,10 +6,10 @@ use dioxus_free_icons::{Icon, IconShape};
 pub fn Button<T: IconShape + Clone + PartialEq + 'static, U: I18N + Clone + PartialEq + 'static>(
     children: Element,
     onclick: Option<EventHandler<MouseEvent>>,
+    lang: Language,
     #[props(extends = button, extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(!optional)] icon: Option<T>,
     #[props(!optional)] i18n: Option<U>,
-    #[props(default)] lang: Language,
     #[props(default)] primary: bool,
 ) -> Element {
     rsx! {

@@ -1,10 +1,10 @@
-use crate::i18n::{Language, I18N};
+use crate::Msg;
+use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
 use crate::widgets::Button;
-use crate::Msg;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 use dioxus_free_icons::IconShape;
+use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 
 #[component]
 pub fn GenDock<
@@ -20,7 +20,7 @@ pub fn GenDock<
     #[props(default)] message: Option<S>,
     #[props(default)] back_button_i18n: Option<B>,
     #[props(default)] back_button_icon: Option<I>,
-    #[props(default)] lang: Language,
+    lang: Language,
 ) -> Element {
     let has_navigated = nav.with(Nav::has_navigated);
 
@@ -58,7 +58,7 @@ pub fn Dock<
     #[props(default)] message: Option<S>,
     #[props(default = Some(Msg::Back))] back_button_i18n: Option<Msg>,
     #[props(default = Some(FaArrowLeft))] back_button_icon: Option<FaArrowLeft>,
-    #[props(default)] lang: Language,
+    lang: Language,
 ) -> Element {
     GenDock(GenDockProps {
         children,

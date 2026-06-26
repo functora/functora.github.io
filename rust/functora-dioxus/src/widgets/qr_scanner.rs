@@ -21,11 +21,7 @@ fn cam_err(e: &Error) -> Error {
 }
 
 #[component]
-pub fn QrScanner(
-    on_scan: EventHandler<String>,
-    on_error: Option<EventHandler<Error>>,
-    #[props(default)] lang: Language,
-) -> Element {
+pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Error>>, lang: Language) -> Element {
     let mut scanning = use_signal(|| true);
     let mut found = use_signal(|| false);
     let mut error = use_signal(|| Option::<Error>::None);

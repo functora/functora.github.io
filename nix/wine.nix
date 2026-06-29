@@ -8,7 +8,6 @@ import ./bubble.nix {
     busybox
     alacritty
     wine
-    (wine.override {wineBuild = "wine64";})
   ];
   home = "wine";
   mkOverlay = sloth: [

@@ -1,4 +1,4 @@
-use crate::i18n::{Language, I18N};
+use crate::i18n::{I18N, Language};
 use dioxus::prelude::*;
 use dioxus_free_icons::{Icon, IconShape};
 

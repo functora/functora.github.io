@@ -1,7 +1,7 @@
 use crate::Msg;
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
-use crate::widgets::Button;
+use crate::widgets::{Align, Button, Par};
 use dioxus::prelude::*;
 use dioxus_free_icons::IconShape;
 use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
@@ -26,7 +26,7 @@ pub fn GenDock<
 
     rsx! {
         if let Some(message) = message {
-            p { "txt": "r",
+            Par { align: Align::Right,
                 crate::widgets::Banner { message, lang }
             }
         }

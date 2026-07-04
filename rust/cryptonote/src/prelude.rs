@@ -22,7 +22,7 @@ pub use functora_dioxus::ffi::Theme;
 pub use functora_dioxus::storage::{
     use_storage, PersistentSignal,
 };
-pub use functora_dioxus::{use_nav, Nav};
+pub use functora_dioxus::{use_nav, Align, Nav, Par};
 
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_STORAGE_KEY: &str = concat!(

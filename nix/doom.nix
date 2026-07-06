@@ -94,7 +94,7 @@
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
     movement ? "",
-    flashlight ? "${duhd}/12 Flashlight++.pk3",
+    flashlight ? "'${duhd}/12 Flashlight++.pk3'",
     lastweapon ? ../bak/doom/fast-swap.pk3,
     cblood ? ../bak/doom/cblood.pk3,
   }: {
@@ -186,6 +186,11 @@
       // mkDoom {
         tag = "scorched-heritage";
         mod = ../bak/doom/ScorchedHeritage.wad;
+      }
+      // mkDoom {
+        tag = "dpwh";
+        mod = ../bak/doom/dpwh.wad;
+        relite = "";
       }
       // mkDoom {
         tag = "slum-alley";
@@ -356,6 +361,24 @@
         lights = "";
         relite = "";
         nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
+        tag = "ashes-5";
+        gfx = "";
+        total = "${../bak/doom/ashes151/Resources/AshesSAMenu.pk3} ${../bak/doom/ashes151/Resources/lightmodepatch.pk3} ${../bak/doom/ashes151/Resources/AshesAfterglow1_16.pk3} ${../bak/doom/ashes-mods/AshesNomad.pk3} ${../bak/doom/ashes-mods/Sprite-Fixes.pk3} ${../bak/doom/ashes-mods/ashesafterglow_buildmovev54.pk3} ${../bak/doom/ashes-mods/Ashes_AG_cutscene_update.pk3} ${../bak/doom/ashes-mods/ashes_nightvisor.pk3} ${../bak/doom/ashes-mods/AshesVoxelPickups-Ep2.pk3} ${../bak/doom/ashes-mods/ashes-wpn-tracers.pk3} ${../bak/doom/ashes-mods/Dan_Ashes_Afterglow_After_Effects.pk3}";
+        liquid = "";
+        lights = "";
+        relite = "";
+        nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
+        tag = "venturos";
+        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
+        total = ../bak/doom/Venturous_1.7.0b.pk3;
+        liquid = ltp701;
+        relite = "";
+        nashgore = ../bak/doom/nashgore.pk3;
+        movement = ../bak/doom/ZMovement_3.2.1.pk3;
       }
       // mkDoom {
         tag = "infinite";

@@ -53,6 +53,7 @@
             bind.ro = [
               [(toString passwd) "/etc/passwd"]
               [(toString asound) "/etc/asound.conf"]
+              ["${pkgs.mesa_i686}" "/run/opengl-driver-32"]
             ];
             bind.rw =
               if home == null

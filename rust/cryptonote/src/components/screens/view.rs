@@ -57,7 +57,9 @@ pub fn View(note: Option<String>) -> Element {
         if let Some(enc) = enc_data {
             let pwd = tst.view().password_input()();
             if pwd.is_empty() {
-                message.set(Some(Msg::PasswordRequired));
+                message.set(Some(Msg::Base(
+                    BaseMsg::PasswordRequired,
+                )));
                 return;
             }
 
@@ -99,10 +101,10 @@ pub fn View(note: Option<String>) -> Element {
                         Quote { "{Msg::EncryptedNoteDesc.render(lang)}" }
                     }
 
-                    label { "{Msg::Password.render(lang)}" }
+                    label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                     input {
                         r#type: "password",
-                        placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
+                        placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
                         value: "{tst.view().password_input()}",
                         oninput: move |evt| tst.view().password_input().set(evt.value()),
                         onkeydown: move |evt| {
@@ -124,7 +126,7 @@ pub fn View(note: Option<String>) -> Element {
                                     lang,
                                 );
                             },
-                            i18n: Some(Msg::Paste),
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
                             lang,
                         }
                         Button {
@@ -175,24 +177,22 @@ pub fn View(note: Option<String>) -> Element {
                                 write_clipboard(
                                     content.clone(),
                                     message,
-                                    Msg::Copied,
-                                    |_e| Msg::ClipboardWriteError,
                                 );
                             },
-                            i18n: Some(Msg::Copy),
+                            i18n: Some(Msg::Base(BaseMsg::Copy)),
                             lang,
                         }
                     }
                 }
             }
         } else if message.read().is_some() {
-            Breadcrumb { title: Msg::ErrorTitle }
+            Breadcrumb { title: Msg::Base(BaseMsg::ErrorTitle) }
             section {
                 Dock { message }
             }
         } else {
             section {
-                p { "{Msg::Loading.render(lang)}" }
+                p { "{Msg::Base(BaseMsg::Loading).render(lang)}" }
             }
         }
     }

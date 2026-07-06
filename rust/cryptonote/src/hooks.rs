@@ -24,3 +24,15 @@ pub fn paste_clipboard(
         }
     });
 }
+
+pub fn write_clipboard(
+    val: String,
+    message: Signal<Option<Msg>>,
+) {
+    functora_dioxus::clipboard::write_clipboard(
+        val,
+        message,
+        Msg::Base(BaseMsg::Copied),
+        |_e| Msg::Base(BaseMsg::ClipboardWriteError),
+    );
+}

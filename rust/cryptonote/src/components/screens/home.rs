@@ -40,7 +40,9 @@ pub fn Home() -> Element {
         if tst.cipher().is_some()
             && tst.password()().is_empty()
         {
-            message.set(Some(Msg::PasswordRequired));
+            message.set(Some(Msg::Base(
+                BaseMsg::PasswordRequired,
+            )));
         } else {
             nav.write().push(Screen::Share.to_route(None));
         }
@@ -141,10 +143,10 @@ pub fn Home() -> Element {
                             option { value: "chacha20", "ChaCha20-Poly1305" }
                         }
 
-                        label { "{Msg::Password.render(lang)}" }
+                        label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                         input {
                             r#type: "password",
-                            placeholder: "{Msg::PasswordPlaceholder.render(lang)}",
+                            placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
                             value: "{tst.password()}",
                             oninput: move |evt| {
                                 tst.password().set(evt.value());
@@ -188,7 +190,7 @@ pub fn Home() -> Element {
                             onclick: move |_| {
                                 paste_clipboard(move |text| tst.content().set(text), message, lang);
                             },
-                            i18n: Some(Msg::Paste),
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
                             lang,
                         }
                         Button {
@@ -223,7 +225,7 @@ pub fn Home() -> Element {
                             onclick: move |_| {
                                 paste_clipboard(move |text| tst.home().url_input().set(text), message, lang);
                             },
-                            i18n: Some(Msg::Paste),
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
                             lang,
                         }
                         Button {

@@ -1,18 +1,9 @@
 use functora_dioxus::i18n::I18N;
+use functora_dioxus::Msg as BaseMsg;
 
 #[derive(Clone, PartialEq)]
 pub enum Msg {
-    Copied,
-    Password,
-    PasswordPlaceholder,
-    Paste,
-    Copy,
-    Loading,
-    ErrorTitle,
-    PasswordRequired,
-    ClipboardWriteError,
-    Back,
-    Home,
+    Base(BaseMsg),
     Note,
     NotePlaceholder,
     Mode,
@@ -85,17 +76,7 @@ pub enum Msg {
 impl I18N for Msg {
     fn render_eng(&self) -> String {
         match self {
-            Self::Copied => "Copied!",
-            Self::Password => "Password",
-            Self::PasswordPlaceholder => "Enter password",
-            Self::Paste => "Paste",
-            Self::Copy => "Copy",
-            Self::Loading => "Loading...",
-            Self::ErrorTitle => "Error",
-            Self::PasswordRequired => "Password is required for encryption",
-            Self::ClipboardWriteError => "Failed to copy to clipboard",
-            Self::Back => "Back",
-            Self::Home => "Home",
+            Self::Base(m) => return m.render_eng(),
             Self::Note => "Note",
             Self::NotePlaceholder => "Enter your note here (Markdown/HTML supported)...",
             Self::Mode => "Mode",
@@ -234,17 +215,7 @@ Secure, private, and truly offline - your notes remain yours alone."#,
 
     fn render_spa(&self) -> String {
         match self {
-            Self::Copied => "¡Copiado!",
-            Self::Password => "Contraseña",
-            Self::PasswordPlaceholder => "Ingresa contraseña",
-            Self::Paste => "Pegar",
-            Self::Copy => "Copiar",
-            Self::Loading => "Cargando...",
-            Self::ErrorTitle => "Error",
-            Self::PasswordRequired => "Se requiere contraseña para el cifrado",
-            Self::ClipboardWriteError => "No se pudo copiar al portapapeles",
-            Self::Back => "Atrás",
-            Self::Home => "Inicio",
+            Self::Base(m) => return m.render_spa(),
             Self::Note => "Nota",
             Self::NotePlaceholder => "Escribe tu nota aquí (Markdown/HTML soportado)...",
             Self::Mode => "Modo",
@@ -383,17 +354,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 
     fn render_rus(&self) -> String {
         match self {
-            Self::Copied => "Скопировано!",
-            Self::Password => "Пароль",
-            Self::PasswordPlaceholder => "Введите пароль",
-            Self::Paste => "Вставить",
-            Self::Copy => "Копировать",
-            Self::Loading => "Загрузка...",
-            Self::ErrorTitle => "Ошибка",
-            Self::PasswordRequired => "Для шифрования требуется пароль",
-            Self::ClipboardWriteError => "Не удалось скопировать в буфер обмена",
-            Self::Back => "Назад",
-            Self::Home => "Главная",
+            Self::Base(m) => return m.render_rus(),
             Self::Note => "Заметка",
             Self::NotePlaceholder => "Введите вашу заметку здесь (Markdown/HTML поддерживается)...",
             Self::Mode => "Режим",
@@ -462,7 +423,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 
 Указанное выше уведомление об авторских правах и данное уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
 
-ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТООЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ."#,
+ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ."#,
             Self::PrivacyText => r#"Политика конфиденциальности
 
 Эта политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному Functora (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».

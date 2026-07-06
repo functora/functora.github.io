@@ -30,8 +30,6 @@ fn CryptoDonateBlock(
                     write_clipboard(
                         address.to_string(),
                         message,
-                        Msg::Copied,
-                        |_e| Msg::ClipboardWriteError,
                     );
                 },
             }
@@ -44,11 +42,9 @@ fn CryptoDonateBlock(
                         write_clipboard(
                             address.to_string(),
                             message,
-                            Msg::Copied,
-                            |_e| Msg::ClipboardWriteError,
                         );
                     },
-                    i18n: Some(Msg::Copy),
+                    i18n: Some(Msg::Base(BaseMsg::Copy)),
                     lang,
                 }
             }

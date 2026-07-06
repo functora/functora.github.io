@@ -1,3 +1,4 @@
+use crate::widgets::overflow_style;
 use dioxus::prelude::*;
 
 #[component]
@@ -7,6 +8,6 @@ pub fn Pre(
     #[props(extends = pre, extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
-        pre { white_space: if overflow { None } else { Some("pre-wrap") }, ..attributes, {children} }
+        pre { white_space: overflow_style(overflow), ..attributes, {children} }
     }
 }

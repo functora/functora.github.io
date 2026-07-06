@@ -19,7 +19,6 @@ pub use markdown::*;
 pub use prelude::*;
 pub use storage::*;
 
-pub use functora_dioxus::clipboard::write_clipboard;
 pub use functora_dioxus::ffi::*;
 
 pub mod qr_decode {

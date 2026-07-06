@@ -98,7 +98,7 @@ pub fn Share() -> Element {
                         readonly: true,
                         value: "{url}",
                         onclick: move |_| {
-                            write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
+                            write_clipboard(url(), message);
                         },
                     }
 
@@ -115,9 +115,9 @@ pub fn Share() -> Element {
                             icon: Some(FaCopy),
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard(url(), message, Msg::Copied, |_e| Msg::ClipboardWriteError);
+                                write_clipboard(url(), message);
                             },
-                            i18n: Some(Msg::Copy),
+                            i18n: Some(Msg::Base(BaseMsg::Copy)),
                             lang,
                         }
                     }
@@ -125,7 +125,7 @@ pub fn Share() -> Element {
             } else if message.read().is_some() {
                 Dock { message }
             } else {
-                p { "{Msg::Loading.render(lang)}" }
+                p { "{Msg::Base(BaseMsg::Loading).render(lang)}" }
             }
         }
     }

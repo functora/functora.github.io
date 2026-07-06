@@ -1,4 +1,4 @@
-use crate::messages::*;
+use crate::messages::Msg;
 use crate::*;
 
 #[component]
@@ -15,7 +15,9 @@ pub fn Dock(
             message,
             nav,
             lang,
-            back_button_i18n: Some(Msg::Back),
+            back_button_i18n: Some(Msg::Base(
+                BaseMsg::Back,
+            )),
             back_button_icon: Some(FaArrowLeft),
         },
     )

@@ -2,6 +2,7 @@ use crate::messages::*;
 use crate::prelude::*;
 use functora_dioxus::i18n::I18N;
 use functora_dioxus::Error as FdError;
+use functora_dioxus::Msg as BaseMsg;
 use hkdf::InvalidLength;
 use sha2::digest;
 use std::string::FromUtf8Error;
@@ -36,7 +37,9 @@ impl AppError {
             Self::Qr(_) => Msg::QrError,
             Self::Encrypt => Msg::EncryptError,
             Self::Decrypt => Msg::DecryptError,
-            Self::PasswordRequired => Msg::PasswordRequired,
+            Self::PasswordRequired => {
+                Msg::Base(BaseMsg::PasswordRequired)
+            }
             Self::NoNoteInUrl => Msg::NoNoteInUrl,
             Self::NoNoteParam => Msg::NoNoteParam,
             Self::Fd(_) => return None,

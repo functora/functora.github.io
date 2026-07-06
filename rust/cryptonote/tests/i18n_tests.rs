@@ -2,6 +2,7 @@ use cryptonote::messages::*;
 use cryptonote::{
     language_label, Language, I18N, SUPPORTED_LANGUAGES,
 };
+use functora_dioxus::Msg as BaseMsg;
 
 #[test]
 fn supported_languages_contains_known() {
@@ -33,7 +34,10 @@ fn i18n_english_basic_messages() {
         Msg::GenerateButton.render(Language::Eng),
         "Share"
     );
-    assert_eq!(Msg::Back.render(Language::Eng), "Back");
+    assert_eq!(
+        Msg::Base(BaseMsg::Back).render(Language::Eng),
+        "Back"
+    );
     assert_eq!(Msg::Theme.render(Language::Eng), "Theme");
 }
 
@@ -44,7 +48,10 @@ fn i18n_spanish_basic_messages() {
         Msg::GenerateButton.render(Language::Spa),
         "Compartir"
     );
-    assert_eq!(Msg::Back.render(Language::Spa), "Atrás");
+    assert_eq!(
+        Msg::Base(BaseMsg::Back).render(Language::Spa),
+        "Atrás"
+    );
     assert_eq!(Msg::Theme.render(Language::Spa), "Tema");
 }
 
@@ -55,7 +62,10 @@ fn i18n_russian_basic_messages() {
         Msg::GenerateButton.render(Language::Rus),
         "Поделиться"
     );
-    assert_eq!(Msg::Back.render(Language::Rus), "Назад");
+    assert_eq!(
+        Msg::Base(BaseMsg::Back).render(Language::Rus),
+        "Назад"
+    );
     assert_eq!(Msg::Theme.render(Language::Rus), "Тема");
 }
 
@@ -97,7 +107,16 @@ fn i18n_all_supported_languages_render_differently() {
 
 #[test]
 fn i18n_render_dispatches_correct_language() {
-    assert_eq!(Msg::Home.render(Language::Eng), "Home");
-    assert_eq!(Msg::Home.render(Language::Spa), "Inicio");
-    assert_eq!(Msg::Home.render(Language::Rus), "Главная");
+    assert_eq!(
+        Msg::Base(BaseMsg::Home).render(Language::Eng),
+        "Home"
+    );
+    assert_eq!(
+        Msg::Base(BaseMsg::Home).render(Language::Spa),
+        "Inicio"
+    );
+    assert_eq!(
+        Msg::Base(BaseMsg::Home).render(Language::Rus),
+        "Главная"
+    );
 }

@@ -10,7 +10,7 @@ pub fn Breadcrumb<T: I18N + Clone + PartialEq + 'static>(
     rsx! {
         functora_dioxus::widgets::Breadcrumb {
             title,
-            home_label: Msg::Home,
+            home_label: Msg::Base(BaseMsg::Home),
             home_route: Screen::Home.to_route(None),
             nav,
             lang,

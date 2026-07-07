@@ -1,8 +1,5 @@
-use crate::*;
-
-fn bool_attr(val: bool) -> Option<&'static str> {
-    val.then_some("")
-}
+use crate::widgets::bool_attr;
+use dioxus::prelude::*;
 
 #[component]
 pub fn ExtLink(
@@ -10,8 +7,7 @@ pub fn ExtLink(
     children: Element,
     #[props(default)] button: bool,
     #[props(default)] primary: bool,
-    #[props(extends = a, extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = a, extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         a {

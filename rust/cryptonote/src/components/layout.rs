@@ -1,15 +1,24 @@
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let mut cfg = use_context::<Signal<AppCfg>>();
-    let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = use_translations();
+    let pst =
+        use_context::<PersistentSignal<PersistentState>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
+    let lang = use_lang();
+    let idx = use_signal(|| 0u32);
+    let nav = use_nav::<Route, _>(idx.into());
+    let nav_signal =
+        use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
-        let theme = cfg.read().theme;
+        let theme = pst.theme()();
         spawn(async move {
-            if let Err(e) = js_set_theme(&theme).await {
+            if let Err(e) =
+                functora_dioxus::ffi::set_theme(&theme)
+                    .await
+            {
                 tracing::error!(
                     "Set theme error: {:#?}",
                     e
@@ -24,46 +33,43 @@ pub fn Layout() -> Element {
                 input { r#type: "checkbox" }
                 header {
                     NavLink {
-                        route: Screen::Home.to_route(None),
-                        onclick: move |_| ctx.set(AppCtx::default()),
+                        nav: nav_signal,
+                        href: Screen::Home.to_route(None).to_string(),
+                        onclick: move |_| tst.set(TemporaryState::default()),
                         "🔐 Cryptonote"
                     }
                 }
-
                 ul {
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::English,
-                            "🇬🇧 English"
-                        }
-                    }
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::Spanish,
-                            "🇪🇸 Español"
-                        }
-                    }
-                    li {
-                        a { onclick: move |_| cfg.write().language = Language::Russian,
-                            "🇷🇺 Русский"
+                    for lang in SUPPORTED_LANGUAGES {
+                        li {
+                            a {
+                                onclick: move |_| {
+                                    pst.language().set(*lang);
+                                },
+                                "{language_label(*lang)}"
+                            }
                         }
                     }
                     li {
                         a {
                             onclick: move |_| {
-                                cfg.with_mut(|x| {
-                                    x.theme = next_cycle(&x.theme);
-                                });
+                                pst.theme().with_mut(|t| *t = t.next());
                             },
                             {
-                                match cfg.read().theme {
+                                match pst.theme()() {
                                     Theme::Light => "🌝 ",
                                     Theme::Dark => "🌚 ",
                                 }
                             }
-                            {t.theme}
+                            {Msg::Theme.render(lang)}
                         }
                     }
                     li {
-                        NavLink { route: Screen::About.to_route(None), "❓{t.about_title}" }
+                        NavLink {
+                            nav: nav_signal,
+                            href: Screen::About.to_route(None).to_string(),
+                            "❓{Msg::AboutTitle.render(lang)}"
+                        }
                     }
                 }
             }
@@ -71,26 +77,38 @@ pub fn Layout() -> Element {
 
         Outlet::<Route> {}
 
-        p { "txt": "c",
-            {t.copyright}
+        Par { align: Align::Center,
+            {Msg::Copyright.render(lang)}
             " 2025 "
             ExtLink { href: FUNCTORA_URL, "Functora" }
             ". "
-            {t.all_rights_reserved}
+            {Msg::AllRightsReserved.render(lang)}
             " "
-            {t.by_continuing}
+            {Msg::ByContinuing.render(lang)}
             " "
-            NavLink { route: Screen::License.to_route(None), "{t.terms_of_service}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::License.to_route(None).to_string(),
+                "{Msg::TermsOfService.render(lang)}"
+            }
             " "
-            {t.you_agree}
+            {Msg::YouAgree.render(lang)}
             " "
-            NavLink { route: Screen::Privacy.to_route(None), "{t.privacy_policy_and}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::Privacy.to_route(None).to_string(),
+                "{Msg::PrivacyPolicyAnd.render(lang)}"
+            }
             ". "
-            {t.please}
+            {Msg::Please.render(lang)}
             " "
-            NavLink { route: Screen::Donate.to_route(None), "{t.donate_link}" }
+            NavLink {
+                nav: nav_signal,
+                href: Screen::Donate.to_route(None).to_string(),
+                "{Msg::DonateLink.render(lang)}"
+            }
             ". "
-            {t.version_label}
+            {Msg::VersionLabel.render(lang)}
             " "
             {APP_VERSION}
             "."

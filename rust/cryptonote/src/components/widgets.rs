@@ -1,19 +1,13 @@
 mod breadcrumb;
-mod button;
 mod dock;
-mod extlink;
-mod message;
-mod navlink;
-mod pre;
 mod qr_scanner;
-mod quote;
+mod static_page;
 
 pub use breadcrumb::*;
-pub use button::*;
 pub use dock::*;
-pub use extlink::*;
-pub use message::*;
-pub use navlink::*;
-pub use pre::*;
 pub use qr_scanner::*;
-pub use quote::*;
+pub use static_page::*;
+
+pub use functora_dioxus::widgets::{
+    Banner, Button, ExtLink, NavLink, Pre, Quote,
+};

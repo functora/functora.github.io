@@ -1,33 +1,35 @@
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn Home() -> Element {
-    let nav = use_app_nav();
-    let mut ctx = use_context::<Signal<AppCtx>>();
-    let t = use_translations();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
+    let lang = use_lang();
 
-    let mut message =
-        use_signal(|| Option::<UiMessage>::None);
-
-    let mut url_input = use_signal(String::new);
+    let mut message = use_message();
 
     let open_url = move |_| {
         message.set(None);
-        let url = url_input.read().trim().to_string();
+        let url = tst.home().url_input()();
+        let url = url.trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(UiMessage::Error(
-                AppError::NoNoteInUrl,
+            message.set(Some(Msg::Error(
+                AppError::NoNoteInUrl.render(lang),
             )));
             return;
         }
 
         match extract_note_param(&url) {
             Ok(note) => {
-                nav.push(Screen::View.to_route(Some(note)));
+                nav.write().push(
+                    Screen::View.to_route(Some(note)),
+                );
             }
             Err(e) => {
-                message.set(Some(UiMessage::Error(e)));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     };
@@ -35,36 +37,35 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if ctx.read().cipher.is_some()
-            && ctx.read().password.is_empty()
+        if tst.cipher().is_some()
+            && tst.password()().is_empty()
         {
-            message.set(Some(UiMessage::Error(
-                AppError::PasswordRequired,
+            message.set(Some(Msg::Base(
+                BaseMsg::PasswordRequired,
             )));
         } else {
-            nav.push(Screen::Share.to_route(None));
+            nav.write().push(Screen::Share.to_route(None));
         }
     };
 
     let set_action = move |mode: ActionMode| {
         message.set(None);
-        ctx.write().action = mode;
+        tst.action().set(mode);
     };
 
     let reset_ctx = move |_| {
         message.set(None);
-        let action = ctx.read().action;
-        ctx.set(AppCtx::default());
-        ctx.write().action = action;
-        url_input.set(String::new());
+        let action = tst.action()();
+        tst.set(TemporaryState::default());
+        tst.action().set(action);
     };
 
-    let action = ctx.read().action;
+    let action = tst.action()();
 
     rsx! {
         section {
             fieldset {
-                label { "{t.action_label}" }
+                label { "{Msg::ActionLabel.render(lang)}" }
 
                 {
                     rsx! {
@@ -72,21 +73,21 @@ pub fn Home() -> Element {
                             action,
                             mode: ActionMode::Create,
                             icon: FaSquarePlus,
-                            label: t.action_create,
+                            label: Msg::ActionCreate.render(lang),
                             on_change: set_action,
                         }
                         ActionRadio {
                             action,
                             mode: ActionMode::Open,
                             icon: FaFolderOpen,
-                            label: t.action_open,
+                            label: Msg::ActionOpen.render(lang),
                             on_change: set_action,
                         }
                         ActionRadio {
                             action,
                             mode: ActionMode::Scan,
                             icon: FaQrcode,
-                            label: t.action_scan,
+                            label: Msg::ActionScan.render(lang),
                             on_change: set_action,
                         }
                     }
@@ -94,40 +95,40 @@ pub fn Home() -> Element {
                 br {}
 
                 if action == ActionMode::Create {
-                    label { "{t.mode}" }
+                    label { "{Msg::Mode.render(lang)}" }
                     input {
                         r#type: "radio",
-                        checked: ctx.read().cipher.is_some(),
+                        checked: tst.cipher().is_some(),
                         onchange: move |_| {
-                            ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
+                            tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
                         },
                     }
                     label {
                         onclick: move |_| {
-                            ctx.write().cipher = Some(CipherType::ChaCha20Poly1305);
+                            tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
                         },
                         Icon { icon: FaLock }
-                        "{t.password_encryption}"
+                        "{Msg::PasswordEncryption.render(lang)}"
                     }
                     br {}
 
                     input {
                         r#type: "radio",
-                        checked: ctx.read().cipher.is_none(),
-                        onchange: move |_| ctx.write().cipher = None,
+                        checked: tst.cipher().is_none(),
+                        onchange: move |_| tst.cipher().set(None),
                     }
-                    label { onclick: move |_| ctx.write().cipher = None,
+                    label { onclick: move |_| tst.cipher().set(None),
                         Icon { icon: FaLockOpen }
-                        "{t.no_encryption}"
+                        "{Msg::NoEncryption.render(lang)}"
                     }
                     br {}
 
-                    if let Some(cipher) = ctx.read().cipher {
+                    if let Some(cipher) = tst.cipher().transpose() {
                         br {}
-                        label { "{t.cipher}" }
+                        label { "{Msg::Cipher.render(lang)}" }
 
                         select {
-                            value: match cipher {
+                            value: match *cipher.read() {
                                 CipherType::ChaCha20Poly1305 => "chacha20",
                                 CipherType::Aes256Gcm => "aes",
                             },
@@ -136,19 +137,19 @@ pub fn Home() -> Element {
                                     "aes" => CipherType::Aes256Gcm,
                                     _ => CipherType::ChaCha20Poly1305,
                                 };
-                                ctx.write().cipher = Some(new_cipher);
+                                tst.cipher().set(Some(new_cipher));
                             },
                             option { value: "aes", "AES-256-GCM" }
                             option { value: "chacha20", "ChaCha20-Poly1305" }
                         }
 
-                        label { "{t.password}" }
+                        label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                         input {
                             r#type: "password",
-                            placeholder: "{t.password_placeholder}",
-                            value: "{ctx.read().password}",
+                            placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
+                            value: "{tst.password()}",
                             oninput: move |evt| {
-                                ctx.write().password = evt.value();
+                                tst.password().set(evt.value());
                             },
                             onkeydown: move |evt| {
                                 if evt.key() == Key::Enter {
@@ -159,92 +160,94 @@ pub fn Home() -> Element {
                     }
                     br {}
 
-                    label { "{t.note}" }
+                    label { "{Msg::Note.render(lang)}" }
                     textarea {
-                        placeholder: "{t.note_placeholder}",
+                        placeholder: "{Msg::NotePlaceholder.render(lang)}",
                         rows: "8",
-                        value: "{ctx.read().content.clone()}",
+                        value: "{tst.content()}",
                         oninput: move |evt| {
-                            ctx.write().content = evt.value();
+                            tst.content().set(evt.value());
                         },
                     }
 
                     Dock { message,
-                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
-                            icon: FaEye,
-                            onclick: move |_| {
-                                nav.push(Screen::View.to_route(None));
-                            },
-                            "{t.view_button}"
+                            icon: Some(FaTrash),
+                            onclick: reset_ctx,
+                            i18n: Some(Msg::CreateNewNote),
+                            lang,
                         }
                         Button {
-                            icon: FaPaste,
+                            icon: Some(FaEye),
                             onclick: move |_| {
-                                spawn(async move {
-                                    match js_read_clipboard().await {
-                                        Ok(text) => ctx.write().content = text,
-                                        Err(e) => {
-                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
-                                        }
-                                    }
-                                });
+                                nav.write().push(Screen::View.to_route(None));
                             },
-                            "{t.paste_button}"
+                            i18n: Some(Msg::ViewButton),
+                            lang,
                         }
                         Button {
-                            icon: FaShareNodes,
+                            icon: Some(FaPaste),
+                            onclick: move |_| {
+                                paste_clipboard(move |text| tst.content().set(text), message, lang);
+                            },
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
+                            lang,
+                        }
+                        Button {
+                            icon: Some(FaShareNodes),
                             primary: true,
                             onclick: move |_| generate_note(),
-                            "{t.generate_button}"
+                            i18n: Some(Msg::GenerateButton),
+                            lang,
                         }
                     }
                 }
 
                 if action == ActionMode::Open {
-                    label { "{t.open_url_label}" }
+                    label { "{Msg::OpenUrlLabel.render(lang)}" }
                     textarea {
-                        placeholder: "{t.open_url_placeholder}",
+                        placeholder: "{Msg::OpenUrlPlaceholder.render(lang)}",
                         rows: "6",
-                        value: "{url_input}",
-                        oninput: move |evt| url_input.set(evt.value()),
+                        value: "{tst.home().url_input()}",
+                        oninput: move |evt| tst.home().url_input().set(evt.value()),
                     }
                     br {}
 
                     Dock { message,
-                        Button { icon: FaTrash, onclick: reset_ctx, "{t.create_new_note}" }
                         Button {
-                            icon: FaPaste,
-                            onclick: move |_| {
-                                spawn(async move {
-                                    match js_read_clipboard().await {
-                                        Ok(text) => url_input.set(text),
-                                        Err(e) => {
-                                            message.set(Some(UiMessage::Error(AppError::JsReadClipboard(e))))
-                                        }
-                                    }
-                                });
-                            },
-                            "{t.paste_button}"
+                            icon: Some(FaTrash),
+                            onclick: reset_ctx,
+                            i18n: Some(Msg::CreateNewNote),
+                            lang,
                         }
                         Button {
-                            icon: FaFolderOpen,
+                            icon: Some(FaPaste),
+                            onclick: move |_| {
+                                paste_clipboard(move |text| tst.home().url_input().set(text), message, lang);
+                            },
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
+                            lang,
+                        }
+                        Button {
+                            icon: Some(FaFolderOpen),
                             primary: true,
                             onclick: open_url,
-                            "{t.open_button}"
+                            i18n: Some(Msg::OpenButton),
+                            lang,
                         }
                     }
                 }
 
                 if action == ActionMode::Scan {
                     QrScanner {
+                        lang,
                         on_scan: Callback::new(move |url: String| {
                             match extract_note_param(&url) {
                                 Ok(note) => {
-                                    nav.push(Screen::View.to_route(Some(note)));
+                                    nav.write().push(Screen::View.to_route(Some(note)));
                                 }
                                 Err(e) => {
-                                    message.set(Some(UiMessage::Error(e)));
+                                    message.set(Some(Msg::Error(e.render(lang))));
                                 }
                             }
                         }),
@@ -262,7 +265,7 @@ fn ActionRadio<
     action: ActionMode,
     mode: ActionMode,
     icon: T,
-    label: &'static str,
+    label: String,
     on_change: EventHandler<ActionMode>,
 ) -> Element {
     rsx! {

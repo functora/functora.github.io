@@ -1,5 +1,8 @@
+use crate::messages::*;
 use crate::prelude::*;
-use crate::*;
+use functora_dioxus::i18n::I18N;
+use functora_dioxus::Error as FdError;
+use functora_dioxus::Msg as BaseMsg;
 use hkdf::InvalidLength;
 use sha2::digest;
 use std::string::FromUtf8Error;
@@ -18,48 +21,61 @@ pub enum AppError {
     PasswordRequired,
     NoNoteInUrl,
     NoNoteParam,
-    JsWriteClipboard(EvalError),
-    JsReadClipboard(EvalError),
-    CameraNotAvailable,
-    CameraPermissionDenied,
-    QrDecode,
+    Fd(#[from] FdError),
 }
 
 impl AppError {
-    pub fn localized(
-        &self,
-        t: &i18n::Translations,
-    ) -> String {
-        let msg = match self {
-            AppError::Cipher(_)
-            | AppError::KeyDerive(_) => t.cipher_error,
-            AppError::Getrandom(_) => t.getrandom_error,
-            AppError::Base64(_) => t.base64_error,
-            AppError::Json(_) => t.json_error,
-            AppError::Utf8(_) => t.invalid_utf8,
-            AppError::Qr(_) => t.qr_error,
-            AppError::Encrypt => t.encrypt_error,
-            AppError::Decrypt => t.decrypt_error,
-            AppError::PasswordRequired => {
-                t.password_required
+    fn msg_variant(&self) -> Option<Msg> {
+        Some(match self {
+            Self::Cipher(_) | Self::KeyDerive(_) => {
+                Msg::CipherError
             }
-            AppError::NoNoteInUrl => t.no_note_in_url,
-            AppError::NoNoteParam => t.no_note_param,
-            AppError::JsWriteClipboard(_) => {
-                t.clipboard_write_error
+            Self::Getrandom(_) => Msg::GetrandomError,
+            Self::Base64(_) => Msg::Base64Error,
+            Self::Json(_) => Msg::JsonError,
+            Self::Utf8(_) => Msg::InvalidUtf8,
+            Self::Qr(_) => Msg::QrError,
+            Self::Encrypt => Msg::EncryptError,
+            Self::Decrypt => Msg::DecryptError,
+            Self::PasswordRequired => {
+                Msg::Base(BaseMsg::PasswordRequired)
             }
-            AppError::JsReadClipboard(_) => {
-                t.clipboard_read_error
-            }
-            AppError::CameraNotAvailable => {
-                t.qr_camera_not_available
-            }
-            AppError::CameraPermissionDenied => {
-                t.qr_permission_denied
-            }
-            AppError::QrDecode => t.qr_error,
-        };
-        format!("{}: {}", msg, self)
+            Self::NoNoteInUrl => Msg::NoNoteInUrl,
+            Self::NoNoteParam => Msg::NoNoteParam,
+            Self::Fd(_) => return None,
+        })
+    }
+}
+
+impl I18N for AppError {
+    fn render_eng(&self) -> String {
+        match self {
+            Self::Fd(e) => e.render_eng(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_eng())
+                .unwrap_or_default(),
+        }
+    }
+
+    fn render_spa(&self) -> String {
+        match self {
+            Self::Fd(e) => e.render_spa(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_spa())
+                .unwrap_or_default(),
+        }
+    }
+
+    fn render_rus(&self) -> String {
+        match self {
+            Self::Fd(e) => e.render_rus(),
+            _ => self
+                .msg_variant()
+                .map(|m| m.render_rus())
+                .unwrap_or_default(),
+        }
     }
 }
 

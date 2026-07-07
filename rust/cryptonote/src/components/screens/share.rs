@@ -1,75 +1,76 @@
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn Share() -> Element {
-    let nav = use_app_nav();
-    let ctx = use_context::<Signal<AppCtx>>();
-    let t = use_translations();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
+    let tst = use_context::<Store<TemporaryState>>();
+    let lang = use_lang();
 
     let mut url = use_signal(String::new);
     let mut qr_code = use_signal(String::new);
-    let mut message =
-        use_signal(|| Option::<UiMessage>::None);
+    let mut message = use_message();
 
     use_effect(move || {
-        let res = (|| {
-            let ctx = ctx.read();
+        let content = tst.content()();
+        let password = tst.password()();
+        let cipher = tst.cipher()();
 
-            let note_data = ctx.cipher.map_or_else(
-                || {
-                    Ok(NoteData::PlainText(
-                        ctx.content.clone(),
-                    ))
-                },
-                |cipher| {
-                    if ctx.password.is_empty() {
-                        Err(AppError::PasswordRequired)
-                    } else {
-                        encrypt_symmetric(
-                            ctx.content.as_bytes(),
-                            &ctx.password,
-                            cipher,
+        let res: Result<(String, String), AppError> =
+            (|| {
+                let note_data = match cipher {
+                    Some(cipher) => {
+                        if password.is_empty() {
+                            return Err(
+                                AppError::PasswordRequired,
+                            );
+                        }
+                        NoteData::CipherText(
+                            encrypt_symmetric(
+                                content.as_bytes(),
+                                &password,
+                                cipher,
+                            )?,
                         )
-                        .map(NoteData::CipherText)
                     }
-                },
-            )?;
+                    None => NoteData::PlainText(content),
+                };
 
-            let origin = {
-                #[cfg(target_arch = "wasm32")]
-                {
-                    web_sys::window().and_then(|w| {
-                        let loc = w.location();
-                        let protocol =
-                            loc.protocol().ok()?;
-                        let host = loc.host().ok()?;
-                        let pathname =
-                            loc.pathname().ok()?;
-                        let path =
-                            pathname.trim_end_matches('/');
-                        Some(format!(
-                            "{}//{}{}",
-                            protocol, host, path
-                        ))
-                    })
+                let origin = {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        web_sys::window().and_then(|w| {
+                            let loc = w.location();
+                            let protocol =
+                                loc.protocol().ok()?;
+                            let host = loc.host().ok()?;
+                            let pathname =
+                                loc.pathname().ok()?;
+                            let path = pathname
+                                .trim_end_matches('/');
+                            Some(format!(
+                                "{}//{}{}",
+                                protocol, host, path
+                            ))
+                        })
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        Some(WEB_APP_URL)
+                    }
                 }
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    Some(WEB_APP_URL)
-                }
-            }
-            .ok_or(AppError::NoNoteInUrl)?;
+                .ok_or(AppError::NoNoteInUrl)?;
 
-            let view_url = format!(
-                "{}/?screen={}",
-                origin,
-                Screen::View
-            );
-            let url = build_url(&view_url, &note_data)?;
-            let qr = generate_qr_code(&url)?;
+                let view_url = format!(
+                    "{}/?screen={}",
+                    origin,
+                    Screen::View
+                );
+                let u = build_url(&view_url, &note_data)?;
+                let q = generate_qr_code(&u)?;
 
-            Ok((url, qr))
-        })();
+                Ok((u, q))
+            })();
 
         match res {
             Ok((u, q)) => {
@@ -78,15 +79,15 @@ pub fn Share() -> Element {
                 message.set(None);
             }
             Err(e) => {
-                message.set(Some(UiMessage::Error(e)));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     });
 
     rsx! {
-        Breadcrumb { title: t.share_title.to_string() }
+        Breadcrumb { title: Msg::ShareTitle }
         section {
-
             if !url().is_empty() {
                 fieldset {
                     if !qr_code().is_empty() {
@@ -103,26 +104,28 @@ pub fn Share() -> Element {
 
                     Dock { message,
                         Button {
-                            icon: FaEye,
+                            icon: Some(FaEye),
                             onclick: move |_| {
-                                nav.push(Screen::View.to_route(None));
+                                nav.write().push(Screen::View.to_route(None));
                             },
-                            "{t.view_button}"
+                            i18n: Some(Msg::ViewButton),
+                            lang,
                         }
                         Button {
-                            icon: FaCopy,
+                            icon: Some(FaCopy),
                             primary: true,
                             onclick: move |_| {
                                 write_clipboard(url(), message);
                             },
-                            "{t.copy_button}"
+                            i18n: Some(Msg::Base(BaseMsg::Copy)),
+                            lang,
                         }
                     }
                 }
             } else if message.read().is_some() {
                 Dock { message }
             } else {
-                p { "{t.loading}" }
+                p { "{Msg::Base(BaseMsg::Loading).render(lang)}" }
             }
         }
     }

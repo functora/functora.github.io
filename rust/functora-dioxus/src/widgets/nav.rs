@@ -1,20 +1,20 @@
-use crate::*;
-
-fn bool_attr(val: bool) -> Option<&'static str> {
-    val.then_some("")
-}
+use crate::nav::Nav;
+use crate::widgets::bool_attr;
+use dioxus::prelude::*;
 
 #[component]
-pub fn NavLink(
-    route: Route,
-    onclick: Option<EventHandler<MouseEvent>>,
+pub fn NavLink<
+    R: Routable + Default + PartialEq + 'static,
+    N: Writable<Target = Nav<R>> + Clone + PartialEq + 'static,
+>(
+    href: String,
     children: Element,
+    onclick: Option<EventHandler<MouseEvent>>,
     #[props(default)] button: bool,
     #[props(default)] primary: bool,
-    #[props(extends = a, extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    nav: N,
+    #[props(extends = a, extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
-    let nav = use_app_nav();
     rsx! {
         a {
             href: "#",
@@ -25,7 +25,7 @@ pub fn NavLink(
                 if let Some(f) = &onclick {
                     f.call(evt);
                 }
-                nav.push(route.clone());
+                nav.write().push_route(&href);
             },
             ..attributes,
             {children}

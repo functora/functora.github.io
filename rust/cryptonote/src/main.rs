@@ -20,34 +20,14 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let nav: Signal<u32> = use_signal(|| 0);
-    let ctx = use_signal(AppCtx::default);
-    #[cfg(target_arch = "wasm32")]
-    let cfg = {
-        use dioxus_sdk::storage::{
-            use_synced_storage, LocalStorage,
-        };
-        use_synced_storage::<LocalStorage, AppCfg>(
-            APP_STORAGE_KEY.to_string(),
-            AppCfg::default,
-        )
-    };
-    #[cfg(not(target_arch = "wasm32"))]
-    let cfg = {
-        use storage::mobile::use_storage;
-        use_storage(APP_STORAGE_KEY, AppCfg::default)
-            .unwrap_or_else(|e| {
-                tracing::error!(
-                    "Storage init error: {}",
-                    e
-                );
-                use_signal(AppCfg::default)
-            })
-    };
+    let tst = use_store(TemporaryState::default);
+    let pst = use_storage(
+        APP_STORAGE_KEY,
+        PersistentState::default,
+    );
 
-    use_context_provider(|| nav);
-    use_context_provider(|| ctx);
-    use_context_provider(|| cfg);
+    use_context_provider(|| tst);
+    use_context_provider(|| pst);
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }

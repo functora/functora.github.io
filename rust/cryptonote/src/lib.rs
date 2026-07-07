@@ -4,10 +4,9 @@ pub mod encoding;
 pub mod error;
 pub mod hooks;
 pub mod i18n;
-pub mod js;
 pub mod markdown;
+pub mod messages;
 pub mod prelude;
-pub mod qr_decode;
 pub mod storage;
 
 pub use components::*;
@@ -16,8 +15,13 @@ pub use encoding::*;
 pub use error::*;
 pub use hooks::*;
 pub use i18n::*;
-pub use js::*;
 pub use markdown::*;
 pub use prelude::*;
-pub use qr_decode::*;
 pub use storage::*;
+
+pub use functora_dioxus::ffi::*;
+
+pub mod qr_decode {
+    pub use functora_dioxus::qr::*;
+}
+pub use qr_decode::*;

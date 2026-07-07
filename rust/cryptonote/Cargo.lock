@@ -768,6 +768,7 @@ dependencies = [
  "either",
  "enum-iterator",
  "functora",
+ "functora-dioxus",
  "getrandom 0.2.16",
  "hkdf",
  "jni",
@@ -776,7 +777,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sys-locale",
  "tap",
  "thiserror 2.0.18",
  "tracing",
@@ -1908,6 +1908,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fea53a2c5e0f48e6485cfdf0ee76dd7bdf5992c3748f4b0597ebcbee92913c9"
 
 [[package]]
+name = "functora-dioxus"
+version = "0.1.0"
+dependencies = [
+ "derive_more 2.1.0",
+ "dioxus",
+ "dioxus-free-icons",
+ "either",
+ "functora",
+ "isolang",
+ "jni",
+ "rxing",
+ "serde",
+ "serde_json",
+ "sys-locale",
+ "tap",
+ "thiserror 2.0.18",
+ "tracing",
+ "web-sys",
+]
+
+[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2794,6 +2815,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f867b9d1d896b67beb18518eda36fdb77a32ea590de864f1325b294a6d14397"
 dependencies = [
  "memchr",
+ "serde",
+]
+
+[[package]]
+name = "isolang"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe50d48c77760c55188549098b9a7f6e37ae980c586a24693d6b01c3b2010c3c"
+dependencies = [
+ "phf 0.11.3",
  "serde",
 ]
 

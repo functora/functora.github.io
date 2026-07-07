@@ -2,8 +2,7 @@
   description = "Rust Dev Shell";
 
   inputs = {
-    stable.url = "github:nixos/nixpkgs?ref=nixos-25.11";
-    unstable.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    stable.url = "github:nixos/nixpkgs?ref=nixos-26.05";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
     opencode-nix.url = "github:dominicnunez/opencode-nix";
@@ -12,7 +11,6 @@
   outputs = {
     self,
     stable,
-    unstable,
     rust-overlay,
     flake-utils,
     opencode-nix,
@@ -23,9 +21,6 @@
           inherit system;
           overlays = [rust-overlay.overlays.default];
           config.android_sdk.accept_license = true;
-        };
-        unst = import unstable {
-          inherit system;
         };
         mobile-targets = [
           "i686-linux-android"

@@ -1,50 +1,53 @@
+use crate::messages::*;
 use crate::*;
 
 #[component]
 pub fn About() -> Element {
-    let t = use_translations();
+    let lang = use_lang();
+    let nav = use_context::<Signal<Nav<Route>>>();
     rsx! {
-        Breadcrumb { title: t.about_title.to_string() }
+        Breadcrumb { title: Msg::AboutTitle }
         section {
-            Pre { "{t.about_text}" }
+            Pre { "{Msg::AboutText.render(lang)}" }
             br {}
             br {}
             p {
-                "{t.about_android_beta_1} "
-                ExtLink { href: BETA_TEST_URL, "{t.about_android_beta_link_1}" }
-                " {t.about_android_beta_2} "
-                ExtLink { href: GOOGLE_PLAY_URL, "{t.about_android_beta_link_2}" }
-                "{t.about_android_beta_3} "
-                ExtLink { href: APK_URL, "{t.about_android_beta_link_3}" }
-                " {t.about_android_beta_4}"
+                "{Msg::AboutAndroidBeta1.render(lang)} "
+                ExtLink { href: BETA_TEST_URL, "{Msg::AboutAndroidBetaLink1.render(lang)}" }
+                " {Msg::AboutAndroidBeta2.render(lang)} "
+                ExtLink { href: GOOGLE_PLAY_URL, "{Msg::AboutAndroidBetaLink2.render(lang)}" }
+                "{Msg::AboutAndroidBeta3.render(lang)} "
+                ExtLink { href: APK_URL, "{Msg::AboutAndroidBetaLink3.render(lang)}" }
+                " {Msg::AboutAndroidBeta4.render(lang)}"
             }
             Dock {
                 ExtLink { href: BETA_TEST_URL, button: true, primary: true,
                     Icon { icon: FaGoogle }
-                    "{t.join_testing_button}"
+                    "{Msg::JoinTestingButton.render(lang)}"
                 }
                 ExtLink { href: GOOGLE_PLAY_URL, button: true, primary: true,
                     Icon { icon: FaGooglePlay }
-                    "{t.google_play_button}"
+                    "{Msg::GooglePlayButton.render(lang)}"
                 }
                 ExtLink { href: APK_URL, button: true, primary: true,
                     Icon { icon: FaAndroid }
-                    "{t.download_apk_button}"
+                    "{Msg::DownloadApkButton.render(lang)}"
                 }
                 ExtLink { href: SOURCE_CODE_URL, button: true, primary: true,
                     Icon { icon: FaGithub }
-                    "{t.source_code_button}"
+                    "{Msg::SourceCodeButton.render(lang)}"
                 }
                 ExtLink { href: FUNCTORA_URL, button: true, primary: true,
                     Icon { icon: FaUser }
-                    "{t.author_button}"
+                    "{Msg::AuthorButton.render(lang)}"
                 }
                 NavLink {
-                    route: Screen::Donate.to_route(None),
+                    nav,
+                    href: Screen::Donate.to_route(None).to_string(),
                     button: true,
                     primary: true,
                     Icon { icon: FaHeart }
-                    "{t.donate_button}"
+                    "{Msg::DonateButton.render(lang)}"
                 }
             }
         }

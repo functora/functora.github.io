@@ -15,21 +15,16 @@ pub fn Home() -> Element {
         let url = url.trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl.render(lang),
-            )));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.render(lang))));
             return;
         }
 
         match extract_note_param(&url) {
             Ok(note) => {
-                nav.write().push(
-                    Screen::View.to_route(Some(note)),
-                );
+                nav.write().push(Screen::View.to_route(Some(note)));
             }
             Err(e) => {
-                message
-                    .set(Some(Msg::Error(e.render(lang))));
+                message.set(Some(Msg::Error(e.render(lang))));
             }
         }
     };
@@ -37,12 +32,8 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if tst.cipher().is_some()
-            && tst.password()().is_empty()
-        {
-            message.set(Some(Msg::Base(
-                BaseMsg::PasswordRequired,
-            )));
+        if tst.cipher().is_some() && tst.password()().is_empty() {
+            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
             nav.write().push(Screen::Share.to_route(None));
         }
@@ -96,53 +87,30 @@ pub fn Home() -> Element {
 
                 if action == ActionMode::Create {
                     label { "{Msg::Mode.render(lang)}" }
-                    input {
-                        r#type: "radio",
-                        checked: tst.cipher().is_some(),
-                        onchange: move |_| {
-                            tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
-                        },
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: None,
+                        icon: FaLockOpen,
+                        label: Msg::NoEncryption.render(lang),
+                        on_change: move |_| tst.cipher().set(None),
                     }
-                    label {
-                        onclick: move |_| {
-                            tst.cipher().set(Some(CipherType::ChaCha20Poly1305));
-                        },
-                        Icon { icon: FaLock }
-                        "{Msg::PasswordEncryption.render(lang)}"
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: Some(CipherType::Aes256Gcm),
+                        icon: FaLock,
+                        label: format!("AES-256-GCM {}", Msg::EncryptionSuffix.render(lang)),
+                        on_change: move |_| tst.cipher().set(Some(CipherType::Aes256Gcm)),
                     }
-                    br {}
-
-                    input {
-                        r#type: "radio",
-                        checked: tst.cipher().is_none(),
-                        onchange: move |_| tst.cipher().set(None),
-                    }
-                    label { onclick: move |_| tst.cipher().set(None),
-                        Icon { icon: FaLockOpen }
-                        "{Msg::NoEncryption.render(lang)}"
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: Some(CipherType::ChaCha20Poly1305),
+                        icon: FaLock,
+                        label: format!("ChaCha20-Poly1305 {}", Msg::EncryptionSuffix.render(lang)),
+                        on_change: move |_| tst.cipher().set(Some(CipherType::ChaCha20Poly1305)),
                     }
                     br {}
 
-                    if let Some(cipher) = tst.cipher().transpose() {
-                        br {}
-                        label { "{Msg::Cipher.render(lang)}" }
-
-                        select {
-                            value: match *cipher.read() {
-                                CipherType::ChaCha20Poly1305 => "chacha20",
-                                CipherType::Aes256Gcm => "aes",
-                            },
-                            onchange: move |evt| {
-                                let new_cipher = match evt.value().as_str() {
-                                    "aes" => CipherType::Aes256Gcm,
-                                    _ => CipherType::ChaCha20Poly1305,
-                                };
-                                tst.cipher().set(Some(new_cipher));
-                            },
-                            option { value: "aes", "AES-256-GCM" }
-                            option { value: "chacha20", "ChaCha20-Poly1305" }
-                        }
-
+                    if tst.cipher().is_some() {
                         label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                         input {
                             r#type: "password",
@@ -157,8 +125,8 @@ pub fn Home() -> Element {
                                 }
                             },
                         }
+                        br {}
                     }
-                    br {}
 
                     label { "{Msg::Note.render(lang)}" }
                     textarea {
@@ -259,9 +227,7 @@ pub fn Home() -> Element {
 }
 
 #[component]
-fn ActionRadio<
-    T: IconShape + Clone + PartialEq + 'static,
->(
+fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
     action: ActionMode,
     mode: ActionMode,
     icon: T,
@@ -275,6 +241,28 @@ fn ActionRadio<
             onchange: move |_| on_change.call(mode),
         }
         label { onclick: move |_| on_change.call(mode),
+            Icon { icon }
+            "{label}"
+        }
+        br {}
+    }
+}
+
+#[component]
+fn CipherRadio<T: IconShape + Clone + PartialEq + 'static>(
+    cipher: Option<CipherType>,
+    value: Option<CipherType>,
+    icon: T,
+    label: String,
+    on_change: EventHandler<()>,
+) -> Element {
+    rsx! {
+        input {
+            r#type: "radio",
+            checked: cipher == value,
+            onchange: move |_| on_change.call(()),
+        }
+        label { onclick: move |_| on_change.call(()),
             Icon { icon }
             "{label}"
         }

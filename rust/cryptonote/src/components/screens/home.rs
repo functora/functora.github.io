@@ -67,6 +67,7 @@ pub fn Home() -> Element {
                             label: Msg::ActionCreate.render(lang),
                             on_change: set_action,
                         }
+                        br {}
                         ActionRadio {
                             action,
                             mode: ActionMode::Open,
@@ -74,6 +75,7 @@ pub fn Home() -> Element {
                             label: Msg::ActionOpen.render(lang),
                             on_change: set_action,
                         }
+                        br {}
                         ActionRadio {
                             action,
                             mode: ActionMode::Scan,
@@ -83,7 +85,6 @@ pub fn Home() -> Element {
                         }
                     }
                 }
-                br {}
 
                 if action == ActionMode::Create {
                     label { "{Msg::Mode.render(lang)}" }
@@ -94,6 +95,7 @@ pub fn Home() -> Element {
                         label: Msg::NoEncryption.render(lang),
                         on_change: move |_| tst.cipher().set(None),
                     }
+                    br {}
                     CipherRadio {
                         cipher: tst.cipher()(),
                         value: Some(CipherType::Aes256Gcm),
@@ -101,6 +103,7 @@ pub fn Home() -> Element {
                         label: format!("AES-256-GCM {}", Msg::EncryptionSuffix.render(lang)),
                         on_change: move |_| tst.cipher().set(Some(CipherType::Aes256Gcm)),
                     }
+                    br {}
                     CipherRadio {
                         cipher: tst.cipher()(),
                         value: Some(CipherType::ChaCha20Poly1305),
@@ -108,7 +111,6 @@ pub fn Home() -> Element {
                         label: format!("ChaCha20-Poly1305 {}", Msg::EncryptionSuffix.render(lang)),
                         on_change: move |_| tst.cipher().set(Some(CipherType::ChaCha20Poly1305)),
                     }
-                    br {}
 
                     if tst.cipher().is_some() {
                         label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
@@ -125,7 +127,6 @@ pub fn Home() -> Element {
                                 }
                             },
                         }
-                        br {}
                     }
 
                     label { "{Msg::Note.render(lang)}" }
@@ -179,7 +180,6 @@ pub fn Home() -> Element {
                         value: "{tst.home().url_input()}",
                         oninput: move |evt| tst.home().url_input().set(evt.value()),
                     }
-                    br {}
 
                     Dock { message,
                         Button {
@@ -244,7 +244,6 @@ fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
             Icon { icon }
             "{label}"
         }
-        br {}
     }
 }
 
@@ -266,6 +265,5 @@ fn CipherRadio<T: IconShape + Clone + PartialEq + 'static>(
             Icon { icon }
             "{label}"
         }
-        br {}
     }
 }

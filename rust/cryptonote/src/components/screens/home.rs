@@ -55,55 +55,60 @@ pub fn Home() -> Element {
 
     rsx! {
         section {
-            label { "{Msg::ActionLabel.render(lang)}" }
-            ActionRadio {
-                action,
-                mode: ActionMode::Create,
-                icon: FaSquarePlus,
-                label: Msg::ActionCreate.render(lang),
-                on_change: set_action,
-            }
-            br {}
-            ActionRadio {
-                action,
-                mode: ActionMode::Open,
-                icon: FaFolderOpen,
-                label: Msg::ActionOpen.render(lang),
-                on_change: set_action,
-            }
-            br {}
-            ActionRadio {
-                action,
-                mode: ActionMode::Scan,
-                icon: FaQrcode,
-                label: Msg::ActionScan.render(lang),
-                on_change: set_action,
+            fieldset {
+                legend { "{Msg::ActionLabel.render(lang)}" }
+                ActionRadio {
+                    action,
+                    mode: ActionMode::Create,
+                    icon: FaSquarePlus,
+                    label: Msg::ActionCreate.render(lang),
+                    on_change: set_action,
+                }
+                br {}
+                ActionRadio {
+                    action,
+                    mode: ActionMode::Open,
+                    icon: FaFolderOpen,
+                    label: Msg::ActionOpen.render(lang),
+                    on_change: set_action,
+                }
+                br {}
+                ActionRadio {
+                    action,
+                    mode: ActionMode::Scan,
+                    icon: FaQrcode,
+                    label: Msg::ActionScan.render(lang),
+                    on_change: set_action,
+                }
+
             }
 
             if action == ActionMode::Create {
-                label { "{Msg::Mode.render(lang)}" }
-                CipherRadio {
-                    cipher: tst.cipher()(),
-                    value: None,
-                    icon: FaLockOpen,
-                    label: Msg::NoEncryption.render(lang),
-                    on_change: move |_| tst.cipher().set(None),
-                }
-                br {}
-                CipherRadio {
-                    cipher: tst.cipher()(),
-                    value: Some(CipherType::Aes256Gcm),
-                    icon: FaLock,
-                    label: format!("AES-256-GCM {}", Msg::EncryptionSuffix.render(lang)),
-                    on_change: move |_| tst.cipher().set(Some(CipherType::Aes256Gcm)),
-                }
-                br {}
-                CipherRadio {
-                    cipher: tst.cipher()(),
-                    value: Some(CipherType::ChaCha20Poly1305),
-                    icon: FaLock,
-                    label: format!("ChaCha20-Poly1305 {}", Msg::EncryptionSuffix.render(lang)),
-                    on_change: move |_| tst.cipher().set(Some(CipherType::ChaCha20Poly1305)),
+                fieldset {
+                    legend { "{Msg::Mode.render(lang)}" }
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: None,
+                        icon: FaLockOpen,
+                        label: Msg::NoEncryption.render(lang),
+                        on_change: move |_| tst.cipher().set(None),
+                    }
+                    br {}
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: Some(CipherType::Aes256Gcm),
+                        icon: FaLock,
+                        label: format!("AES-256-GCM {}", Msg::EncryptionSuffix.render(lang)),
+                        on_change: move |_| tst.cipher().set(Some(CipherType::Aes256Gcm)),
+                    }
+                    br {}
+                    CipherRadio {
+                        cipher: tst.cipher()(),
+                        value: Some(CipherType::ChaCha20Poly1305),
+                        icon: FaLock,
+                        label: format!("ChaCha20-Poly1305 {}", Msg::EncryptionSuffix.render(lang)),
+                        on_change: move |_| tst.cipher().set(Some(CipherType::ChaCha20Poly1305)),
+                    }
                 }
 
                 if tst.cipher().is_some() {

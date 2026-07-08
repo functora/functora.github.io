@@ -4,9 +4,6 @@ use crate::*;
 #[component]
 pub fn Privacy() -> Element {
     rsx! {
-        StaticPage {
-            title: Msg::PrivacyPolicyTitle,
-            content: Msg::PrivacyText,
-        }
+        StaticPage { title: Msg::PrivacyPolicyTitle, content: Msg::PrivacyText }
     }
 }

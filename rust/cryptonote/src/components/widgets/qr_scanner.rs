@@ -18,10 +18,6 @@ pub fn QrScanner(
     };
 
     rsx! {
-        BaseQrScanner {
-            on_scan,
-            on_error: Callback::new(on_error),
-            lang,
-        }
+        BaseQrScanner { on_scan, on_error: Callback::new(on_error), lang }
     }
 }

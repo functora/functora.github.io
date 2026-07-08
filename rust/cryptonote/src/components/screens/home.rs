@@ -15,16 +15,21 @@ pub fn Home() -> Element {
         let url = url.trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(Msg::Error(AppError::NoNoteInUrl.render(lang))));
+            message.set(Some(Msg::Error(
+                AppError::NoNoteInUrl.render(lang),
+            )));
             return;
         }
 
         match extract_note_param(&url) {
             Ok(note) => {
-                nav.write().push(Screen::View.to_route(Some(note)));
+                nav.write().push(
+                    Screen::View.to_route(Some(note)),
+                );
             }
             Err(e) => {
-                message.set(Some(Msg::Error(e.render(lang))));
+                message
+                    .set(Some(Msg::Error(e.render(lang))));
             }
         }
     };
@@ -32,8 +37,12 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if tst.cipher().is_some() && tst.password()().is_empty() {
-            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
+        if tst.cipher().is_some()
+            && tst.password()().is_empty()
+        {
+            message.set(Some(Msg::Base(
+                BaseMsg::PasswordRequired,
+            )));
         } else {
             nav.write().push(Screen::Share.to_route(None));
         }
@@ -225,7 +234,9 @@ pub fn Home() -> Element {
 }
 
 #[component]
-fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
+fn ActionRadio<
+    T: IconShape + Clone + PartialEq + 'static,
+>(
     action: ActionMode,
     mode: ActionMode,
     icon: T,
@@ -246,7 +257,9 @@ fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
 }
 
 #[component]
-fn CipherRadio<T: IconShape + Clone + PartialEq + 'static>(
+fn CipherRadio<
+    T: IconShape + Clone + PartialEq + 'static,
+>(
     cipher: Option<CipherType>,
     value: Option<CipherType>,
     icon: T,

@@ -9,8 +9,6 @@ pub fn About() -> Element {
         Breadcrumb { title: Msg::AboutTitle }
         section {
             Pre { "{Msg::AboutText.render(lang)}" }
-            br {}
-            br {}
             p {
                 "{Msg::AboutAndroidBeta1.render(lang)} "
                 ExtLink { href: BETA_TEST_URL, "{Msg::AboutAndroidBetaLink1.render(lang)}" }

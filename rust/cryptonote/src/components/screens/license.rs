@@ -4,9 +4,6 @@ use crate::*;
 #[component]
 pub fn License() -> Element {
     rsx! {
-        StaticPage {
-            title: Msg::TermsOfServiceTitle,
-            content: Msg::LicenseText,
-        }
+        StaticPage { title: Msg::TermsOfServiceTitle, content: Msg::LicenseText }
     }
 }

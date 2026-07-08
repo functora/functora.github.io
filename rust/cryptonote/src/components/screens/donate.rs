@@ -15,7 +15,7 @@ fn CryptoDonateBlock(
     let message = use_message();
 
     rsx! {
-        fieldset {
+        section {
             h3 { "{label}" }
 
             if let Some(qr) = qr {
@@ -27,10 +27,7 @@ fn CryptoDonateBlock(
                 rows: "2",
                 value: "{address}",
                 onclick: move |_| {
-                    write_clipboard(
-                        address.to_string(),
-                        message,
-                    );
+                    write_clipboard(address.to_string(), message);
                 },
             }
 
@@ -39,10 +36,7 @@ fn CryptoDonateBlock(
                     icon: Some(FaCopy),
                     primary: true,
                     onclick: move |_| {
-                        write_clipboard(
-                            address.to_string(),
-                            message,
-                        );
+                        write_clipboard(address.to_string(), message);
                     },
                     i18n: Some(Msg::Base(BaseMsg::Copy)),
                     lang,
@@ -59,26 +53,22 @@ pub fn Donate() -> Element {
     rsx! {
         Breadcrumb { title: Msg::DonateTitle }
         section {
-            fieldset {
-                h3 { "{Msg::DonateGreeting.render(lang)}" }
-                article { font_size: "larger", "{Msg::DonateIntro.render(lang)}" }
+            card { font_size: "larger",
+                h2 { "{Msg::DonateGreeting.render(lang)}" }
+                article { "{Msg::DonateIntro.render(lang)}" }
             }
+        }
 
-            br {}
+        CryptoDonateBlock {
+            label: "BTC - Bitcoin",
+            address: BTC_ADDRESS,
+            qr: generate_qr_code(BTC_ADDRESS).ok(),
+        }
 
-            CryptoDonateBlock {
-                label: "BTC - Bitcoin",
-                address: BTC_ADDRESS,
-                qr: generate_qr_code(BTC_ADDRESS).ok(),
-            }
-
-            br {}
-
-            CryptoDonateBlock {
-                label: "XMR - Monero",
-                address: XMR_ADDRESS,
-                qr: generate_qr_code(XMR_ADDRESS).ok(),
-            }
+        CryptoDonateBlock {
+            label: "XMR - Monero",
+            address: XMR_ADDRESS,
+            qr: generate_qr_code(XMR_ADDRESS).ok(),
         }
     }
 }

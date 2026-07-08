@@ -15,7 +15,7 @@ pub fn StaticPage(title: Msg, content: Msg) -> Element {
             lang,
             children: rsx! {
                 Dock {}
-            }
+            },
         }
     }
 }

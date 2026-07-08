@@ -96,92 +96,83 @@ pub fn View(note: Option<String>) -> Element {
         if tst.view().is_encrypted()() {
             Breadcrumb { title: Msg::EncryptedNote }
             section {
-                fieldset {
-                    Pre {
-                        Quote { "{Msg::EncryptedNoteDesc.render(lang)}" }
-                    }
+                Pre {
+                    Quote { "{Msg::EncryptedNoteDesc.render(lang)}" }
+                }
 
-                    label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
-                    input {
-                        r#type: "password",
-                        placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
-                        value: "{tst.view().password_input()}",
-                        oninput: move |evt| tst.view().password_input().set(evt.value()),
-                        onkeydown: move |evt| {
-                            if evt.key() == Key::Enter {
-                                decrypt_note()
-                            }
+                label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
+                input {
+                    r#type: "password",
+                    placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
+                    value: "{tst.view().password_input()}",
+                    oninput: move |evt| tst.view().password_input().set(evt.value()),
+                    onkeydown: move |evt| {
+                        if evt.key() == Key::Enter {
+                            decrypt_note()
+                        }
+                    },
+                }
+
+                Dock { message,
+                    Button {
+                        icon: Some(FaPaste),
+                        onclick: move |_| {
+                            paste_clipboard(
+                                move |text| tst.view().password_input().set(text),
+                                message,
+                                lang,
+                            );
                         },
+                        i18n: Some(Msg::Base(BaseMsg::Paste)),
+                        lang,
                     }
-
-                    br {}
-
-                    Dock { message,
-                        Button {
-                            icon: Some(FaPaste),
-                            onclick: move |_| {
-                                paste_clipboard(
-                                    move |text| tst.view().password_input().set(text),
-                                    message,
-                                    lang,
-                                );
-                            },
-                            i18n: Some(Msg::Base(BaseMsg::Paste)),
-                            lang,
-                        }
-                        Button {
-                            icon: Some(FaLockOpen),
-                            primary: true,
-                            onclick: move |_| decrypt_note(),
-                            i18n: Some(Msg::DecryptButton),
-                            lang,
-                        }
+                    Button {
+                        icon: Some(FaLockOpen),
+                        primary: true,
+                        onclick: move |_| decrypt_note(),
+                        i18n: Some(Msg::DecryptButton),
+                        lang,
                     }
                 }
             }
         } else if let Some(content) = tst.view().note_content()() {
             Breadcrumb { title: Msg::YourNoteTitle }
             section {
-                fieldset {
-                    article {
-                        div {
-                            overflow_wrap: "anywhere",
-                            word_break: "break-word",
-                            dangerous_inner_html: "{rendered().unwrap_or_default()}",
-                        }
+                article {
+                    div {
+                        overflow_wrap: "anywhere",
+                        word_break: "break-word",
+                        dangerous_inner_html: "{rendered().unwrap_or_default()}",
                     }
+                }
 
-                    Dock { message,
-                        Button {
-                            icon: Some(FaTrash),
-                            onclick: move |_| {
-                                tst.set(TemporaryState::default());
-                                nav.write().push(Screen::Home.to_route(None));
-                            },
-                            i18n: Some(Msg::CreateNewNote),
-                            lang,
-                        }
-                        Button {
-                            icon: Some(FaPenToSquare),
-                            onclick: move |_| {
-                                tst.action().set(ActionMode::Create);
-                                nav.write().push(Screen::Home.to_route(None));
-                            },
-                            i18n: Some(Msg::EditNote),
-                            lang,
-                        }
-                        Button {
-                            icon: Some(FaCopy),
-                            primary: true,
-                            onclick: move |_| {
-                                write_clipboard(
-                                    content.clone(),
-                                    message,
-                                );
-                            },
-                            i18n: Some(Msg::Base(BaseMsg::Copy)),
-                            lang,
-                        }
+                Dock { message,
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: move |_| {
+                            tst.set(TemporaryState::default());
+                            nav.write().push(Screen::Home.to_route(None));
+                        },
+                        i18n: Some(Msg::CreateNewNote),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaPenToSquare),
+                        onclick: move |_| {
+                            tst.action().set(ActionMode::Create);
+                            nav.write().push(Screen::Home.to_route(None));
+                        },
+                        i18n: Some(Msg::EditNote),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaCopy),
+                        primary: true,
+                        onclick: move |_| {
+                            write_clipboard(content.clone(), message);
+                        },
+                        i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
                     }
                 }
             }

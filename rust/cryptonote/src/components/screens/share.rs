@@ -89,37 +89,35 @@ pub fn Share() -> Element {
         Breadcrumb { title: Msg::ShareTitle }
         section {
             if !url().is_empty() {
-                fieldset {
-                    if !qr_code().is_empty() {
-                        div { dangerous_inner_html: "{qr_code}" }
-                    }
+                if !qr_code().is_empty() {
+                    div { dangerous_inner_html: "{qr_code}" }
+                }
 
-                    textarea {
-                        readonly: true,
-                        value: "{url}",
+                textarea {
+                    readonly: true,
+                    value: "{url}",
+                    onclick: move |_| {
+                        write_clipboard(url(), message);
+                    },
+                }
+
+                Dock { message,
+                    Button {
+                        icon: Some(FaEye),
+                        onclick: move |_| {
+                            nav.write().push(Screen::View.to_route(None));
+                        },
+                        i18n: Some(Msg::ViewButton),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaCopy),
+                        primary: true,
                         onclick: move |_| {
                             write_clipboard(url(), message);
                         },
-                    }
-
-                    Dock { message,
-                        Button {
-                            icon: Some(FaEye),
-                            onclick: move |_| {
-                                nav.write().push(Screen::View.to_route(None));
-                            },
-                            i18n: Some(Msg::ViewButton),
-                            lang,
-                        }
-                        Button {
-                            icon: Some(FaCopy),
-                            primary: true,
-                            onclick: move |_| {
-                                write_clipboard(url(), message);
-                            },
-                            i18n: Some(Msg::Base(BaseMsg::Copy)),
-                            lang,
-                        }
+                        i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
                     }
                 }
             } else if message.read().is_some() {

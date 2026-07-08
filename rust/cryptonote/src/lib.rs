@@ -19,8 +19,6 @@ pub use markdown::*;
 pub use prelude::*;
 pub use storage::*;
 
-pub use functora_dioxus::ffi::*;
-
 pub mod qr_decode {
     pub use functora_dioxus::qr::*;
 }

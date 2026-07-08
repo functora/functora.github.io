@@ -10,13 +10,13 @@ pub fn use_message() -> Signal<Option<Msg>> {
     use_signal(|| None)
 }
 
-pub fn paste_clipboard(
+pub fn read_clipboard(
     on_paste: impl FnOnce(String) + 'static,
     mut message: Signal<Option<Msg>>,
     lang: Language,
 ) {
     spawn(async move {
-        match read_clipboard().await {
+        match functora_dioxus::ffi::read_clipboard().await {
             Ok(text) => on_paste(text),
             Err(e) => message.set(Some(Msg::Error(
                 AppError::Fd(e).render(lang),
@@ -29,7 +29,7 @@ pub fn write_clipboard(
     val: String,
     message: Signal<Option<Msg>>,
 ) {
-    functora_dioxus::clipboard::write_clipboard(
+    functora_dioxus::ffi::write_clipboard(
         val,
         message,
         Msg::Base(BaseMsg::Copied),

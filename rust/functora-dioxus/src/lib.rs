@@ -1,6 +1,5 @@
 #![allow(clippy::must_use_candidate)]
 
-pub mod clipboard;
 pub mod dioxus_elements;
 pub mod error;
 pub mod ffi;
@@ -11,7 +10,6 @@ pub mod qr;
 pub mod storage;
 pub mod widgets;
 
-pub use clipboard::*;
 pub use error::*;
 pub use ffi::*;
 pub use i18n::*;

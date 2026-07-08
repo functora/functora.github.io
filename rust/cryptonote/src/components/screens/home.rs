@@ -165,7 +165,7 @@ pub fn Home() -> Element {
                     Button {
                         icon: Some(FaPaste),
                         onclick: move |_| {
-                            paste_clipboard(move |text| tst.content().set(text), message, lang);
+                            read_clipboard(move |text| tst.content().set(text), message, lang);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
@@ -199,7 +199,7 @@ pub fn Home() -> Element {
                     Button {
                         icon: Some(FaPaste),
                         onclick: move |_| {
-                            paste_clipboard(move |text| tst.home().url_input().set(text), message, lang);
+                            read_clipboard(move |text| tst.home().url_input().set(text), message, lang);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,

@@ -1,4 +1,6 @@
 use crate::error::Error;
+use crate::i18n::I18N;
+use dioxus::prelude::*;
 use either::Either;
 use serde::{Deserialize, Serialize};
 
@@ -107,7 +109,7 @@ pub async fn read_clipboard() -> Result<String, Error> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub(crate) async fn clipboard_write(msg: String) -> Result<(), Error> {
+pub async fn clipboard_write(msg: String) -> Result<(), Error> {
     eval(
         msg,
         r"function(arg){
@@ -119,7 +121,7 @@ pub(crate) async fn clipboard_write(msg: String) -> Result<(), Error> {
 }
 
 #[cfg(target_os = "android")]
-pub(crate) async fn clipboard_write(msg: String) -> Result<(), Error> {
+pub async fn clipboard_write(msg: String) -> Result<(), Error> {
     jni_dispatch(move |env, activity| {
         use jni::objects::JString;
         let label: JString = env.new_string("Cryptonote")?;
@@ -242,6 +244,20 @@ pub async fn sleep(millis: u64) -> Result<(), Error> {
         }"#,
     )
     .await
+}
+
+pub fn write_clipboard<S: I18N + 'static>(
+    val: String,
+    mut message: impl Writable<Target = Option<S>> + 'static,
+    success: S,
+    map_error: impl FnOnce(crate::Error) -> S + 'static,
+) {
+    let _ = spawn(async move {
+        match clipboard_write(val).await {
+            Ok(()) => message.set(Some(success)),
+            Err(e) => message.set(Some(map_error(e))),
+        }
+    });
 }
 
 async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(

@@ -117,7 +117,7 @@ pub fn View(note: Option<String>) -> Element {
                     Button {
                         icon: Some(FaPaste),
                         onclick: move |_| {
-                            paste_clipboard(
+                            read_clipboard(
                                 move |text| tst.view().password_input().set(text),
                                 message,
                                 lang,

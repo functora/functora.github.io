@@ -34,7 +34,7 @@ pub fn write_clipboard(
         Msg::Base(BaseMsg::Copied),
         |e| {
             Msg::Base(BaseMsg::ClipboardWriteError(
-                format!("{e}"),
+                e.to_string(),
             ))
         },
     );

@@ -34,7 +34,7 @@ fn decode_qr_rgba_handles_transparent_pixels() {
 #[test]
 fn error_display() {
     let err: FdError = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found").into();
-    let display = format!("{err}");
+    let display = err.to_string();
     assert!(display.contains("file not found"));
 }
 
@@ -122,7 +122,7 @@ fn test_error_display_all_variants() {
         FdError::NotJsonObject("not object".to_string()),
     ];
     for v in variants {
-        let _ = format!("{v}");
+        let _ = v.to_string();
     }
 }
 

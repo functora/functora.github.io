@@ -78,9 +78,7 @@ pub fn Share() -> Element {
                 qr_code.set(q);
                 message.set(None);
             }
-            Err(e) => {
-                message.set(Some(Msg::Error(e)));
-            }
+            Err(e) => message.set(Some(Msg::Error(e))),
         }
     });
 

@@ -22,14 +22,10 @@ pub fn Home() -> Element {
         }
 
         match extract_note_param(&url) {
-            Ok(note) => {
-                nav.write().push(
-                    Screen::View.to_route(Some(note)),
-                );
-            }
-            Err(e) => {
-                message.set(Some(Msg::Error(e)));
-            }
+            Ok(note) => nav
+                .write()
+                .push(Screen::View.to_route(Some(note))),
+            Err(e) => message.set(Some(Msg::Error(e))),
         }
     };
 
@@ -218,12 +214,8 @@ pub fn Home() -> Element {
                     lang,
                     on_scan: Callback::new(move |url: String| {
                         match extract_note_param(&url) {
-                            Ok(note) => {
-                                nav.write().push(Screen::View.to_route(Some(note)));
-                            }
-                            Err(e) => {
-                                message.set(Some(Msg::Error(e)));
-                            }
+                            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
+                            Err(e) => message.set(Some(Msg::Error(e))),
                         }
                     }),
                 }

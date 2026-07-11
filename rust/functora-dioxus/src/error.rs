@@ -1,22 +1,20 @@
 use crate::i18n::I18N;
-use crate::messages::*;
-use std::sync::Arc;
 
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum Error {
     #[error("IO error: {0}")]
-    IO(#[source] Arc<std::io::Error>),
+    IO(String),
     #[cfg(target_os = "android")]
     #[error("JNI error: {0}")]
-    JNI(#[source] Arc<jni::errors::Error>),
+    JNI(String),
     #[error("JSON error: {0}")]
-    Json(#[source] Arc<serde_json::Error>),
+    Json(String),
     #[error("Environment error: {0}")]
     Env(#[from] std::env::VarError),
     #[error("Channel error: {0}")]
     Channel(#[from] std::sync::mpsc::RecvError),
     #[error("JS error: {0}")]
-    JS(#[source] Arc<dioxus::document::EvalError>),
+    JS(String),
     #[error("Camera not available: {0}")]
     CameraNotAvailable(String),
     #[error("Camera permission denied: {0}")]
@@ -27,52 +25,72 @@ pub enum Error {
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Error::IO(Arc::new(e))
+        Error::IO(e.to_string())
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(e: serde_json::Error) -> Self {
-        Error::Json(Arc::new(e))
+        Error::Json(e.to_string())
     }
 }
 
 impl From<dioxus::document::EvalError> for Error {
     fn from(e: dioxus::document::EvalError) -> Self {
-        Error::JS(Arc::new(e))
+        Error::JS(e.to_string())
     }
 }
 
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for Error {
     fn from(e: jni::errors::Error) -> Self {
-        Error::JNI(Arc::new(e))
-    }
-}
-
-impl Error {
-    fn msg_variant(&self) -> Msg {
-        match self {
-            Self::CameraNotAvailable(_) => Msg::CameraNotAvailable,
-            Self::CameraPermissionDenied(_) => Msg::CameraPermissionDenied,
-            Self::JS(_) => Msg::ClipboardReadError,
-            Self::IO(_) | Self::Json(_) | Self::Env(_) | Self::Channel(_) | Self::NotJsonObject(_) => Msg::ErrorTitle,
-            #[cfg(target_os = "android")]
-            Self::JNI(_) => Msg::ErrorTitle,
-        }
+        Error::JNI(e.to_string())
     }
 }
 
 impl I18N for Error {
     fn render_eng(&self) -> String {
-        self.msg_variant().render_eng()
+        match self {
+            Self::IO(e) => format!("Error: {e}"),
+            Self::Json(e) => format!("Error: {e}"),
+            Self::Env(e) => format!("Error: {e}"),
+            Self::Channel(e) => format!("Error: {e}"),
+            Self::JS(e) => format!("Failed to read from clipboard: {e}"),
+            Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
+            Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
+            Self::NotJsonObject(e) => format!("Error: {e}"),
+            #[cfg(target_os = "android")]
+            Self::JNI(e) => format!("Error: {e}"),
+        }
     }
 
     fn render_spa(&self) -> String {
-        self.msg_variant().render_spa()
+        match self {
+            Self::IO(e) => format!("Error: {e}"),
+            Self::Json(e) => format!("Error: {e}"),
+            Self::Env(e) => format!("Error: {e}"),
+            Self::Channel(e) => format!("Error: {e}"),
+            Self::JS(e) => format!("No se pudo leer del portapapeles: {e}"),
+            Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
+            Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
+            Self::NotJsonObject(e) => format!("Error: {e}"),
+            #[cfg(target_os = "android")]
+            Self::JNI(e) => format!("Error: {e}"),
+        }
     }
 
     fn render_rus(&self) -> String {
-        self.msg_variant().render_rus()
+        match self {
+            Self::IO(e) => format!("Ошибка: {e}"),
+            Self::Json(e) => format!("Ошибка: {e}"),
+            Self::Env(e) => format!("Ошибка: {e}"),
+            Self::Channel(e) => format!("Ошибка: {e}"),
+            Self::JS(e) => format!("Не удалось прочитать из буфера обмена: {e}"),
+            Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
+            Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
+            Self::NotJsonObject(e) => format!("Ошибка: {e}"),
+            #[cfg(target_os = "android")]
+            Self::JNI(e) => format!("Ошибка: {e}"),
+        }
     }
 }

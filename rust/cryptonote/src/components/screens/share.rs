@@ -79,8 +79,7 @@ pub fn Share() -> Element {
                 message.set(None);
             }
             Err(e) => {
-                message
-                    .set(Some(Msg::Error(e.render(lang))));
+                message.set(Some(Msg::Error(e)));
             }
         }
     });

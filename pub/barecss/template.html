@@ -16,7 +16,7 @@
       <label>
         <input type="checkbox" />
         <header>
-          <a href="#"><img src="img/your-logo.svg" alt="" />BareCSS</a>
+          <a href="#">BareCSS</a>
         </header>
         <ul>
           <li><a href="#typography">Typography</a></li>
@@ -25,7 +25,6 @@
             <a>Dropdown</a>
             <menu>
               <menuitem><a href="#forms">Forms</a></menuitem>
-              <menuitem><a href="#grid">Grid</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
             </menu>
           </li>
@@ -129,73 +128,17 @@ fn main() {
     <!-- ====== CARDS ====== -->
     <section id="cards">
       <h2>Cards</h2>
-      <grid>
-        <div col="1/2">
-          <card>
-            <h3>Card title</h3>
-            <p>
-              Content inside a <code>&lt;card&gt;</code> element with a subtle
-              shadow.
-            </p>
-          </card>
-        </div>
-        <div col="1/2">
-          <card>
-            <h3>Another card</h3>
-            <p>Cards stack vertically and collapse to full-width on mobile.</p>
-            <hr />
-            <tag>demo</tag>
-            <tag primary>barecss</tag>
-          </card>
-        </div>
-      </grid>
-    </section>
-
-    <!-- ====== GRID ====== -->
-    <section id="grid">
-      <h2>Grid</h2>
-      <grid>
-        <div col="1/3">
-          <card
-            ><h3>1/3</h3>
-            <p>First column</p></card
-          >
-        </div>
-        <div col="1/3">
-          <card
-            ><h3>1/3</h3>
-            <p>Second column</p></card
-          >
-        </div>
-        <div col="1/3">
-          <card
-            ><h3>1/3</h3>
-            <p>Third column</p></card
-          >
-        </div>
-      </grid>
-      <grid>
-        <div col="1/2">
-          <card
-            ><h3>1/2</h3>
-            <p>Left</p></card
-          >
-        </div>
-        <div col="1/2">
-          <card
-            ><h3>1/2</h3>
-            <p>Right</p></card
-          >
-        </div>
-      </grid>
-      <grid>
-        <div col="1/4">
-          <card><p>1/4</p></card>
-        </div>
-        <div col="3/4">
-          <card><p>3/4</p></card>
-        </div>
-      </grid>
+      <card>
+        <h3>Card title</h3>
+        <p>Content inside a <code>&lt;card&gt;</code> element with a subtle shadow.</p>
+      </card>
+      <card>
+        <h3>Another card</h3>
+        <p>Cards stack vertically and collapse to full-width on mobile.</p>
+        <hr />
+        <tag>demo</tag>
+        <tag primary>barecss</tag>
+      </card>
     </section>
 
     <!-- ====== FORMS ====== -->
@@ -241,10 +184,10 @@ fn main() {
           <input type="checkbox" id="c2" checked /><label for="c2"
             >Already checked</label
           >
-          <br />
-          <br />
-          <button type="submit" primary>Submit</button>
-          <button type="reset">Reset</button>
+          <p mt="2">
+            <button type="submit" primary>Submit</button>
+            <button type="reset">Reset</button>
+          </p>
         </fieldset>
       </form>
     </section>
@@ -313,11 +256,7 @@ fn main() {
       <h2>Utility attributes</h2>
       <p>
         <code>[full]</code>:
-        <span
-          full
-          style="background: var(--grey-ultralight); display: inline-block"
-          >full-width element</span
-        >
+        <span full>full-width element</span>
       </p>
       <p>
         Font families: <span serif>serif</span> · <span sans>sans</span> ·

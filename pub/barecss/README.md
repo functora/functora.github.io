@@ -37,7 +37,6 @@ BareCSS/
 	├── _card.less
 	├── _code.less
 	├── _footer.less
-	├── _grid.less
 	├── _input.less
 	├── _layout.less
 	├── _list.less

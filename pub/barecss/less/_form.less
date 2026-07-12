@@ -97,11 +97,11 @@ label@{n}, label@{x} {
 	// text fields
 
 input:not([type=radio]):not([type=checkbox]):not([type=button]) {
-	&@{n}, &@{x} { .mx-input }
+	&@{n}, &@{x} { .mx-input() }
 }
 
 textarea@{n}, textarea@{x} {
-	.mx-input;
+	.mx-input();
 
 	min-height: 8rem;
 }

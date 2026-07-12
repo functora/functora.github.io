@@ -12,8 +12,8 @@
         "apiKey": "https://github.com/smanx/free-api"
       },
       "models": {
-        "minimaxai/minimax-m2.7": {
-          "name": "1) minimaxai/minimax-m2.7"
+        "minimaxai/minimax-m3": {
+          "name": "1) minimaxai/minimax-m3"
         },
         "multi-model": {
           "name": "2) multi-model"
@@ -30,8 +30,8 @@
         "deepseek-ai/deepseek-v4-flash": {
           "name": "6) deepseek-ai/deepseek-v4-flash"
         },
-        "z-ai/glm-5.1": {
-          "name": "7) z-ai/glm-5.1"
+        "z-ai/glm-5.2": {
+          "name": "7) z-ai/glm-5.2"
         },
         "grok-4.20-fast": {
           "name": "8) grok-4.20-fast"

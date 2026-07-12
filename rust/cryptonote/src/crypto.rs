@@ -45,10 +45,10 @@ pub fn derive_key(
     Ok(key)
 }
 
-fn random_vec(n: usize) -> Vec<u8> {
+fn random_vec(n: usize) -> Result<Vec<u8>, AppError> {
     let mut v = vec![0u8; n];
-    getrandom::getrandom(&mut v).ok();
-    v
+    getrandom::getrandom(&mut v)?;
+    Ok(v)
 }
 
 pub fn encrypt_symmetric(
@@ -56,9 +56,9 @@ pub fn encrypt_symmetric(
     password: &str,
     cipher: CipherType,
 ) -> Result<EncryptedData, AppError> {
-    let salt = random_vec(SALT_SIZE);
+    let salt = random_vec(SALT_SIZE)?;
     let key = derive_key(password, &salt, cipher)?;
-    let nonce = random_vec(NONCE_SIZE);
+    let nonce = random_vec(NONCE_SIZE)?;
 
     let ciphertext = match cipher {
         CipherType::ChaCha20Poly1305 => {
@@ -67,7 +67,7 @@ pub fn encrypt_symmetric(
                 chacha20poly1305::Nonce::from_slice(&nonce),
                 plaintext,
             )
-            .map_err(|_| AppError::Encrypt)?
+            .map_err(|e| AppError::Encrypt(e.to_string()))?
         }
         CipherType::Aes256Gcm => {
             let c = Aes256Gcm::new_from_slice(&key)?;
@@ -75,7 +75,7 @@ pub fn encrypt_symmetric(
                 aes_gcm::Nonce::from_slice(&nonce),
                 plaintext,
             )
-            .map_err(|_| AppError::Encrypt)?
+            .map_err(|e| AppError::Encrypt(e.to_string()))?
         }
     };
 
@@ -103,7 +103,7 @@ pub fn decrypt_symmetric(
                 ),
                 data.ciphertext.as_ref(),
             )
-            .map_err(|_| AppError::Decrypt)
+            .map_err(|e| AppError::Decrypt(e.to_string()))
         }
         CipherType::Aes256Gcm => {
             let c = Aes256Gcm::new_from_slice(&key)?;
@@ -111,7 +111,7 @@ pub fn decrypt_symmetric(
                 aes_gcm::Nonce::from_slice(&data.nonce),
                 data.ciphertext.as_ref(),
             )
-            .map_err(|_| AppError::Decrypt)
+            .map_err(|e| AppError::Decrypt(e.to_string()))
         }
     }
 }

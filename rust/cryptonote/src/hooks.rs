@@ -1,3 +1,4 @@
+use crate::error::AppError;
 use crate::messages::Msg;
 use crate::*;
 
@@ -13,14 +14,12 @@ pub fn use_message() -> Signal<Option<Msg>> {
 pub fn read_clipboard(
     on_paste: impl FnOnce(String) + 'static,
     mut message: Signal<Option<Msg>>,
-    lang: Language,
 ) {
     spawn(async move {
         match functora_dioxus::ffi::read_clipboard().await {
             Ok(text) => on_paste(text),
-            Err(e) => message.set(Some(Msg::Error(
-                AppError::Fd(e).render(lang),
-            ))),
+            Err(e) => message
+                .set(Some(Msg::Error(AppError::Fd(e)))),
         }
     });
 }
@@ -33,6 +32,10 @@ pub fn write_clipboard(
         val,
         message,
         Msg::Base(BaseMsg::Copied),
-        |_e| Msg::Base(BaseMsg::ClipboardWriteError),
+        |e| {
+            Msg::Base(BaseMsg::ClipboardWriteError(
+                e.to_string(),
+            ))
+        },
     );
 }

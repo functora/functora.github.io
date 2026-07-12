@@ -34,9 +34,9 @@ pub fn View(note: Option<String>) -> Element {
                             tst.cipher().set(None);
                         }
                     },
-                    Err(e) => message.set(Some(
-                        Msg::Error(e.render(lang)),
-                    )),
+                    Err(e) => {
+                        message.set(Some(Msg::Error(e)))
+                    }
                 }
                 return;
             }
@@ -44,7 +44,7 @@ pub fn View(note: Option<String>) -> Element {
         let content = tst.content()();
         if content.is_empty() {
             message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl.render(lang),
+                AppError::NoNoteInUrl,
             )));
         } else {
             tst.view().note_content().set(Some(content));
@@ -78,16 +78,12 @@ pub fn View(note: Option<String>) -> Element {
                             tst.cipher()
                                 .set(Some(enc.cipher));
                         }
-                        Err(e) => {
-                            message.set(Some(Msg::Error(
-                                AppError::Utf8(e)
-                                    .render(lang),
-                            )))
-                        }
+                        Err(e) => message.set(Some(
+                            Msg::Error(AppError::Utf8(e)),
+                        )),
                     }
                 }
-                Err(e) => message
-                    .set(Some(Msg::Error(e.render(lang)))),
+                Err(e) => message.set(Some(Msg::Error(e))),
             }
         }
     };
@@ -120,7 +116,6 @@ pub fn View(note: Option<String>) -> Element {
                             read_clipboard(
                                 move |text| tst.view().password_input().set(text),
                                 message,
-                                lang,
                             );
                         },
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
@@ -177,7 +172,7 @@ pub fn View(note: Option<String>) -> Element {
                 }
             }
         } else if message.read().is_some() {
-            Breadcrumb { title: Msg::Base(BaseMsg::ErrorTitle) }
+            Breadcrumb { title: Msg::Base(BaseMsg::ErrorTitleLabel) }
             section {
                 Dock { message }
             }

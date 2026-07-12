@@ -16,21 +16,16 @@ pub fn Home() -> Element {
 
         if url.is_empty() {
             message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl.render(lang),
+                AppError::NoNoteInUrl,
             )));
             return;
         }
 
         match extract_note_param(&url) {
-            Ok(note) => {
-                nav.write().push(
-                    Screen::View.to_route(Some(note)),
-                );
-            }
-            Err(e) => {
-                message
-                    .set(Some(Msg::Error(e.render(lang))));
-            }
+            Ok(note) => nav
+                .write()
+                .push(Screen::View.to_route(Some(note))),
+            Err(e) => message.set(Some(Msg::Error(e))),
         }
     };
 
@@ -165,7 +160,7 @@ pub fn Home() -> Element {
                     Button {
                         icon: Some(FaPaste),
                         onclick: move |_| {
-                            read_clipboard(move |text| tst.content().set(text), message, lang);
+                            read_clipboard(move |text| tst.content().set(text), message);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
@@ -199,7 +194,7 @@ pub fn Home() -> Element {
                     Button {
                         icon: Some(FaPaste),
                         onclick: move |_| {
-                            read_clipboard(move |text| tst.home().url_input().set(text), message, lang);
+                            read_clipboard(move |text| tst.home().url_input().set(text), message);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
@@ -219,12 +214,8 @@ pub fn Home() -> Element {
                     lang,
                     on_scan: Callback::new(move |url: String| {
                         match extract_note_param(&url) {
-                            Ok(note) => {
-                                nav.write().push(Screen::View.to_route(Some(note)));
-                            }
-                            Err(e) => {
-                                message.set(Some(Msg::Error(e.render(lang))));
-                            }
+                            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
+                            Err(e) => message.set(Some(Msg::Error(e))),
                         }
                     }),
                 }

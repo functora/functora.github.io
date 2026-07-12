@@ -8,12 +8,11 @@ const FPS_DELAY: u64 = 33;
 
 fn cam_err(e: &Error) -> Error {
     match e {
-        Error::JS(eval_err) => {
-            let msg = eval_err.to_string();
+        Error::JS(msg) => {
             if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
-                Error::CameraPermissionDenied(msg)
+                Error::CameraPermissionDenied(msg.clone())
             } else {
-                Error::CameraNotAvailable(msg)
+                Error::CameraNotAvailable(msg.clone())
             }
         }
         other => Error::CameraNotAvailable(other.to_string()),

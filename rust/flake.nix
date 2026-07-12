@@ -290,7 +290,7 @@
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
-                  ${cargo}/bin/cargo fmt "$@" \
+                  ${cargo}/bin/cargo fmt "$@" && dx fmt "$@" \
                     && ${cargo}/bin/cargo clippy --all-features "$@" -- -D warnings \
                     && ${cargo}/bin/cargo test --all-features "$@" \
                     && echo "==> All good!"

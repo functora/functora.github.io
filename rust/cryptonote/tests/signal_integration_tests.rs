@@ -16,10 +16,8 @@ fn nav_write_signal_conversion() {
 #[test]
 fn write_clipboard_message_conversion() {
     let mut dom = VirtualDom::new(|| {
-        let signal: Signal<Option<String>> =
-            Signal::new(None);
-        let write: WriteSignal<Option<String>> =
-            signal.into();
+        let signal: Signal<Option<String>> = Signal::new(None);
+        let write: WriteSignal<Option<String>> = signal.into();
         assert!(write().is_none());
 
         rsx! { "" }

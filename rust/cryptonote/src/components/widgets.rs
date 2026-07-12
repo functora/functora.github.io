@@ -8,6 +8,4 @@ pub use dock::*;
 pub use qr_scanner::*;
 pub use static_page::*;
 
-pub use functora_dioxus::widgets::{
-    Banner, Button, ExtLink, NavLink, Pre, Quote,
-};
+pub use functora_dioxus::widgets::{Banner, Button, ExtLink, NavLink, Pre, Quote};

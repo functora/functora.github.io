@@ -12,15 +12,7 @@ const NONCE_SIZE: usize = 12;
 const SALT_SIZE: usize = 32;
 pub const KEY_SIZE: usize = 32;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CipherType {
     ChaCha20Poly1305,
     Aes256Gcm,
@@ -34,14 +26,9 @@ pub struct EncryptedData {
     pub salt: Vec<u8>,
 }
 
-pub fn derive_key(
-    password: &str,
-    salt: &[u8],
-    _: CipherType,
-) -> Result<Vec<u8>, AppError> {
+pub fn derive_key(password: &str, salt: &[u8], _: CipherType) -> Result<Vec<u8>, AppError> {
     let mut key = vec![0u8; KEY_SIZE];
-    Hkdf::<Sha256>::new(Some(salt), password.as_bytes())
-        .expand(b"cryptonote-key", &mut key)?;
+    Hkdf::<Sha256>::new(Some(salt), password.as_bytes()).expand(b"cryptonote-key", &mut key)?;
     Ok(key)
 }
 
@@ -51,11 +38,7 @@ fn random_vec(n: usize) -> Result<Vec<u8>, AppError> {
     Ok(v)
 }
 
-pub fn encrypt_symmetric(
-    plaintext: &[u8],
-    password: &str,
-    cipher: CipherType,
-) -> Result<EncryptedData, AppError> {
+pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -> Result<EncryptedData, AppError> {
     let salt = random_vec(SALT_SIZE)?;
     let key = derive_key(password, &salt, cipher)?;
     let nonce = random_vec(NONCE_SIZE)?;
@@ -63,19 +46,13 @@ pub fn encrypt_symmetric(
     let ciphertext = match cipher {
         CipherType::ChaCha20Poly1305 => {
             let c = ChaCha20Poly1305::new_from_slice(&key)?;
-            c.encrypt(
-                chacha20poly1305::Nonce::from_slice(&nonce),
-                plaintext,
-            )
-            .map_err(|e| AppError::Encrypt(e.to_string()))?
+            c.encrypt(chacha20poly1305::Nonce::from_slice(&nonce), plaintext)
+                .map_err(|e| AppError::Encrypt(e.to_string()))?
         }
         CipherType::Aes256Gcm => {
             let c = Aes256Gcm::new_from_slice(&key)?;
-            c.encrypt(
-                aes_gcm::Nonce::from_slice(&nonce),
-                plaintext,
-            )
-            .map_err(|e| AppError::Encrypt(e.to_string()))?
+            c.encrypt(aes_gcm::Nonce::from_slice(&nonce), plaintext)
+                .map_err(|e| AppError::Encrypt(e.to_string()))?
         }
     };
 
@@ -87,31 +64,22 @@ pub fn encrypt_symmetric(
     })
 }
 
-pub fn decrypt_symmetric(
-    data: &EncryptedData,
-    password: &str,
-) -> Result<Vec<u8>, AppError> {
-    let key =
-        derive_key(password, &data.salt, data.cipher)?;
+pub fn decrypt_symmetric(data: &EncryptedData, password: &str) -> Result<Vec<u8>, AppError> {
+    let key = derive_key(password, &data.salt, data.cipher)?;
 
     match data.cipher {
         CipherType::ChaCha20Poly1305 => {
             let c = ChaCha20Poly1305::new_from_slice(&key)?;
             c.decrypt(
-                chacha20poly1305::Nonce::from_slice(
-                    &data.nonce,
-                ),
+                chacha20poly1305::Nonce::from_slice(&data.nonce),
                 data.ciphertext.as_ref(),
             )
             .map_err(|e| AppError::Decrypt(e.to_string()))
         }
         CipherType::Aes256Gcm => {
             let c = Aes256Gcm::new_from_slice(&key)?;
-            c.decrypt(
-                aes_gcm::Nonce::from_slice(&data.nonce),
-                data.ciphertext.as_ref(),
-            )
-            .map_err(|e| AppError::Decrypt(e.to_string()))
+            c.decrypt(aes_gcm::Nonce::from_slice(&data.nonce), data.ciphertext.as_ref())
+                .map_err(|e| AppError::Decrypt(e.to_string()))
         }
     }
 }

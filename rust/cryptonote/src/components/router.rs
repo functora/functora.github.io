@@ -21,10 +21,7 @@ pub enum ActionMode {
 }
 
 impl std::fmt::Display for Screen {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Self::Home => "home",
             Self::View => "view",
@@ -55,10 +52,7 @@ impl FromStr for Screen {
 }
 
 impl Screen {
-    pub(crate) fn to_route(
-        &self,
-        note: Option<String>,
-    ) -> Route {
+    pub(crate) fn to_route(&self, note: Option<String>) -> Route {
         Route::Root {
             screen: self.clone(),
             note,

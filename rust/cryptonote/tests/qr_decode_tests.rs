@@ -1,6 +1,4 @@
-use cryptonote::qr_decode::{
-    decode_qr_luma, decode_qr_rgba,
-};
+use cryptonote::qr_decode::{decode_qr_luma, decode_qr_rgba};
 use rxing::qrcode::QRCodeWriter;
 use rxing::{BarcodeFormat, EncodeHints, Writer};
 
@@ -22,11 +20,7 @@ fn generate_qr_luma(data: &str) -> (Vec<u8>, u32, u32) {
     let mut luma = Vec::with_capacity((w * h) as usize);
     for y in 0..h {
         for x in 0..w {
-            luma.push(if matrix.get(x, y) {
-                0
-            } else {
-                255
-            });
+            luma.push(if matrix.get(x, y) { 0 } else { 255 });
         }
     }
     (luma, w, h)
@@ -80,9 +74,7 @@ fn test_decode_qr_rgba_all_opaque() {
 
 #[test]
 fn test_decode_qr_luma_noise_returns_none() {
-    let noise: Vec<u8> = (0..10000)
-        .map(|i| ((i * 7919) % 256) as u8)
-        .collect();
+    let noise: Vec<u8> = (0..10000).map(|i| ((i * 7919) % 256) as u8).collect();
     let result = decode_qr_luma(&noise, 100, 100);
     assert_eq!(result, None);
 }

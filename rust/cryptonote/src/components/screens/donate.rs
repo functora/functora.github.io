@@ -1,16 +1,12 @@
 use crate::messages::*;
 use crate::*;
 
-const BTC_ADDRESS: &str =
-    "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q";
-const XMR_ADDRESS: &str = "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
+const BTC_ADDRESS: &str = "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q";
+const XMR_ADDRESS: &str =
+    "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
 
 #[component]
-fn CryptoDonateBlock(
-    label: &'static str,
-    address: &'static str,
-    qr: Option<String>,
-) -> Element {
+fn CryptoDonateBlock(label: &'static str, address: &'static str, qr: Option<String>) -> Element {
     let lang = use_lang();
     let message = use_message();
 

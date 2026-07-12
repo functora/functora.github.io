@@ -28,10 +28,6 @@ pub fn Par(
     #[props(extends = p, extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
-        p {
-            "txt": align.map(Align::as_str),
-            ..attributes,
-            {children}
-        }
+        p { "txt": align.map(Align::as_str), ..attributes, {children} }
     }
 }

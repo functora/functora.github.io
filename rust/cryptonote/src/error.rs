@@ -23,43 +23,18 @@ pub enum AppError {
 impl I18N for AppError {
     fn render_eng(&self) -> String {
         match self {
-            Self::Cipher(e) => {
-                format!("Cipher initialization error: {e}")
-            }
-            Self::KeyDerive(e) => {
-                format!("Key derivation error: {e}")
-            }
-            Self::Getrandom(e) => format!(
-                "Random number generation error: {e}"
-            ),
-            Self::Base64(e) => {
-                format!("Base64 decoding error: {e}")
-            }
-            Self::Json(e) => {
-                format!("JSON parsing error: {e}")
-            }
-            Self::Utf8(e) => format!(
-                "Decrypted data is not valid UTF-8: {e}"
-            ),
-            Self::Qr(e) => {
-                format!("QR code generation error: {e}")
-            }
-            Self::Encrypt(e) => {
-                format!("Encryption failed: {e}")
-            }
-            Self::Decrypt(e) => {
-                format!("Decryption failed: {e}")
-            }
-            Self::PasswordRequired => {
-                "Password is required".into()
-            }
-            Self::NoNoteInUrl => {
-                "No note found in URL".into()
-            }
-            Self::NoNoteParam => {
-                "URL does not contain a note parameter"
-                    .into()
-            }
+            Self::Cipher(e) => format!("Cipher initialization error: {e}"),
+            Self::KeyDerive(e) => format!("Key derivation error: {e}"),
+            Self::Getrandom(e) => format!("Random number generation error: {e}"),
+            Self::Base64(e) => format!("Base64 decoding error: {e}"),
+            Self::Json(e) => format!("JSON parsing error: {e}"),
+            Self::Utf8(e) => format!("Decrypted data is not valid UTF-8: {e}"),
+            Self::Qr(e) => format!("QR code generation error: {e}"),
+            Self::Encrypt(e) => format!("Encryption failed: {e}"),
+            Self::Decrypt(e) => format!("Decryption failed: {e}"),
+            Self::PasswordRequired => "Password is required".into(),
+            Self::NoNoteInUrl => "No note found in URL".into(),
+            Self::NoNoteParam => "URL does not contain a note parameter".into(),
             Self::Fd(e) => e.render_eng(),
         }
     }

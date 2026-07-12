@@ -19,7 +19,13 @@ pub fn GenStaticPage<
     children: Element,
 ) -> Element {
     rsx! {
-        Breadcrumb { title, home_label, home_route, nav, lang }
+        Breadcrumb {
+            title,
+            home_label,
+            home_route,
+            nav,
+            lang,
+        }
         section {
             Pre { "{content.render(lang)}" }
             {children}

@@ -1,18 +1,11 @@
 use cryptonote::*;
 
-const FAVICON_ICO: Asset =
-    asset!("/assets/favicon/favicon.ico");
-const FAVICON_16: Asset =
-    asset!("/assets/favicon/favicon-16x16.png");
-const FAVICON_32: Asset =
-    asset!("/assets/favicon/favicon-32x32.png");
-const APPLE_TOUCH_ICON: Asset =
-    asset!("/assets/favicon/apple-touch-icon.png");
-const WEB_MANIFEST: Asset =
-    asset!("/assets/favicon/site.webmanifest");
-const NO_CSS_MINIFY: AssetOptions = AssetOptions::css()
-    .with_minify(false)
-    .into_asset_options();
+const FAVICON_ICO: Asset = asset!("/assets/favicon/favicon.ico");
+const FAVICON_16: Asset = asset!("/assets/favicon/favicon-16x16.png");
+const FAVICON_32: Asset = asset!("/assets/favicon/favicon-32x32.png");
+const APPLE_TOUCH_ICON: Asset = asset!("/assets/favicon/apple-touch-icon.png");
+const WEB_MANIFEST: Asset = asset!("/assets/favicon/site.webmanifest");
+const NO_CSS_MINIFY: AssetOptions = AssetOptions::css().with_minify(false).into_asset_options();
 
 fn main() {
     dioxus::launch(App);
@@ -21,10 +14,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     let tst = use_store(TemporaryState::default);
-    let pst = use_storage(
-        APP_STORAGE_KEY,
-        PersistentState::default,
-    );
+    let pst = use_storage(APP_STORAGE_KEY, PersistentState::default);
 
     use_context_provider(|| tst);
     use_context_provider(|| pst);

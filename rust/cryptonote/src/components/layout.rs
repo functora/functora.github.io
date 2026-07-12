@@ -3,26 +3,18 @@ use crate::*;
 
 #[component]
 pub fn Layout() -> Element {
-    let pst =
-        use_context::<PersistentSignal<PersistentState>>();
+    let pst = use_context::<PersistentSignal<PersistentState>>();
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
     let nav = use_nav::<Route, _>(idx.into());
-    let nav_signal =
-        use_context_provider(|| Signal::new(nav));
+    let nav_signal = use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
         let theme = pst.theme()();
         spawn(async move {
-            if let Err(e) =
-                functora_dioxus::ffi::set_theme(&theme)
-                    .await
-            {
-                tracing::error!(
-                    "Set theme error: {:#?}",
-                    e
-                );
+            if let Err(e) = functora_dioxus::ffi::set_theme(&theme).await {
+                tracing::error!("Set theme error: {:#?}", e);
             }
         });
     });

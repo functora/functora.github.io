@@ -7,11 +7,7 @@ pub fn View(note: Option<String>) -> Element {
     let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
-    let rendered = use_memo(move || {
-        tst.view().note_content()()
-            .as_deref()
-            .map(render_markdown)
-    });
+    let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -19,33 +15,23 @@ pub fn View(note: Option<String>) -> Element {
                 match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
-                            tst.view()
-                                .is_encrypted()
-                                .set(true);
-                            tst.view()
-                                .encrypted_data()
-                                .set(Some(enc));
+                            tst.view().is_encrypted().set(true);
+                            tst.view().encrypted_data().set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            tst.view()
-                                .note_content()
-                                .set(Some(text.clone()));
+                            tst.view().note_content().set(Some(text.clone()));
                             tst.content().set(text);
                             tst.cipher().set(None);
                         }
                     },
-                    Err(e) => {
-                        message.set(Some(Msg::Error(e)))
-                    }
+                    Err(e) => message.set(Some(Msg::Error(e))),
                 }
                 return;
             }
         }
         let content = tst.content()();
         if content.is_empty() {
-            message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl,
-            )));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
         } else {
             tst.view().note_content().set(Some(content));
         }
@@ -57,32 +43,21 @@ pub fn View(note: Option<String>) -> Element {
         if let Some(enc) = enc_data {
             let pwd = tst.view().password_input()();
             if pwd.is_empty() {
-                message.set(Some(Msg::Base(
-                    BaseMsg::PasswordRequired,
-                )));
+                message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
                 return;
             }
 
             match decrypt_symmetric(&enc, &pwd) {
-                Ok(plaintext) => {
-                    match String::from_utf8(plaintext) {
-                        Ok(text) => {
-                            tst.view()
-                                .note_content()
-                                .set(Some(text.clone()));
-                            tst.view()
-                                .is_encrypted()
-                                .set(false);
-                            tst.content().set(text);
-                            tst.password().set(pwd);
-                            tst.cipher()
-                                .set(Some(enc.cipher));
-                        }
-                        Err(e) => message.set(Some(
-                            Msg::Error(AppError::Utf8(e)),
-                        )),
+                Ok(plaintext) => match String::from_utf8(plaintext) {
+                    Ok(text) => {
+                        tst.view().note_content().set(Some(text.clone()));
+                        tst.view().is_encrypted().set(false);
+                        tst.content().set(text);
+                        tst.password().set(pwd);
+                        tst.cipher().set(Some(enc.cipher));
                     }
-                }
+                    Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e)))),
+                },
                 Err(e) => message.set(Some(Msg::Error(e))),
             }
         }
@@ -112,12 +87,7 @@ pub fn View(note: Option<String>) -> Element {
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| {
-                            read_clipboard(
-                                move |text| tst.view().password_input().set(text),
-                                message,
-                            );
-                        },
+                        onclick: move |_| read_clipboard(move |text| tst.view().password_input().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -163,9 +133,7 @@ pub fn View(note: Option<String>) -> Element {
                     Button {
                         icon: Some(FaCopy),
                         primary: true,
-                        onclick: move |_| {
-                            write_clipboard(content.clone(), message);
-                        },
+                        onclick: move |_| write_clipboard(content.clone(), message),
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
                         lang,
                     }

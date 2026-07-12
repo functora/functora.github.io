@@ -15,16 +15,12 @@ pub fn Home() -> Element {
         let url = url.trim().to_string();
 
         if url.is_empty() {
-            message.set(Some(Msg::Error(
-                AppError::NoNoteInUrl,
-            )));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
             return;
         }
 
         match extract_note_param(&url) {
-            Ok(note) => nav
-                .write()
-                .push(Screen::View.to_route(Some(note))),
+            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
             Err(e) => message.set(Some(Msg::Error(e))),
         }
     };
@@ -32,12 +28,8 @@ pub fn Home() -> Element {
     let mut generate_note = move || {
         message.set(None);
 
-        if tst.cipher().is_some()
-            && tst.password()().is_empty()
-        {
-            message.set(Some(Msg::Base(
-                BaseMsg::PasswordRequired,
-            )));
+        if tst.cipher().is_some() && tst.password()().is_empty() {
+            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
             nav.write().push(Screen::Share.to_route(None));
         }
@@ -151,17 +143,13 @@ pub fn Home() -> Element {
                     }
                     Button {
                         icon: Some(FaEye),
-                        onclick: move |_| {
-                            nav.write().push(Screen::View.to_route(None));
-                        },
+                        onclick: move |_| nav.write().push(Screen::View.to_route(None)),
                         i18n: Some(Msg::ViewButton),
                         lang,
                     }
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| {
-                            read_clipboard(move |text| tst.content().set(text), message);
-                        },
+                        onclick: move |_| read_clipboard(move |text| tst.content().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -193,9 +181,7 @@ pub fn Home() -> Element {
                     }
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| {
-                            read_clipboard(move |text| tst.home().url_input().set(text), message);
-                        },
+                        onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -225,9 +211,7 @@ pub fn Home() -> Element {
 }
 
 #[component]
-fn ActionRadio<
-    T: IconShape + Clone + PartialEq + 'static,
->(
+fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
     action: ActionMode,
     mode: ActionMode,
     icon: T,
@@ -248,9 +232,7 @@ fn ActionRadio<
 }
 
 #[component]
-fn CipherRadio<
-    T: IconShape + Clone + PartialEq + 'static,
->(
+fn CipherRadio<T: IconShape + Clone + PartialEq + 'static>(
     cipher: Option<CipherType>,
     value: Option<CipherType>,
     icon: T,

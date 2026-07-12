@@ -51,46 +51,46 @@ impl From<jni::errors::Error> for Error {
 impl I18N for Error {
     fn render_eng(&self) -> String {
         match self {
-            Self::IO(e) => format!("Error: {e}"),
-            Self::Json(e) => format!("Error: {e}"),
-            Self::Env(e) => format!("Error: {e}"),
-            Self::Channel(e) => format!("Error: {e}"),
-            Self::JS(e) => format!("Failed to read from clipboard: {e}"),
+            Self::IO(e) => format!("IO error: {e}"),
+            Self::Json(e) => format!("JSON parsing error: {e}"),
+            Self::Env(e) => format!("Environment variable error: {e}"),
+            Self::Channel(e) => format!("Channel receive error: {e}"),
+            Self::JS(e) => format!("JavaScript evaluation error: {e}"),
             Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
-            Self::NotJsonObject(e) => format!("Error: {e}"),
+            Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
             #[cfg(target_os = "android")]
-            Self::JNI(e) => format!("Error: {e}"),
+            Self::JNI(e) => format!("JNI error: {e}"),
         }
     }
 
     fn render_spa(&self) -> String {
         match self {
-            Self::IO(e) => format!("Error: {e}"),
-            Self::Json(e) => format!("Error: {e}"),
-            Self::Env(e) => format!("Error: {e}"),
-            Self::Channel(e) => format!("Error: {e}"),
-            Self::JS(e) => format!("No se pudo leer del portapapeles: {e}"),
+            Self::IO(e) => format!("Error de E/S: {e}"),
+            Self::Json(e) => format!("Error de análisis JSON: {e}"),
+            Self::Env(e) => format!("Error de variable de entorno: {e}"),
+            Self::Channel(e) => format!("Error de recepción en canal: {e}"),
+            Self::JS(e) => format!("Error de evaluación JavaScript: {e}"),
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
-            Self::NotJsonObject(e) => format!("Error: {e}"),
+            Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
             #[cfg(target_os = "android")]
-            Self::JNI(e) => format!("Error: {e}"),
+            Self::JNI(e) => format!("Error JNI: {e}"),
         }
     }
 
     fn render_rus(&self) -> String {
         match self {
-            Self::IO(e) => format!("Ошибка: {e}"),
-            Self::Json(e) => format!("Ошибка: {e}"),
-            Self::Env(e) => format!("Ошибка: {e}"),
-            Self::Channel(e) => format!("Ошибка: {e}"),
-            Self::JS(e) => format!("Не удалось прочитать из буфера обмена: {e}"),
+            Self::IO(e) => format!("Ошибка ввода-вывода: {e}"),
+            Self::Json(e) => format!("Ошибка разбора JSON: {e}"),
+            Self::Env(e) => format!("Ошибка переменной окружения: {e}"),
+            Self::Channel(e) => format!("Ошибка получения из канала: {e}"),
+            Self::JS(e) => format!("Ошибка выполнения JavaScript: {e}"),
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
-            Self::NotJsonObject(e) => format!("Ошибка: {e}"),
+            Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
             #[cfg(target_os = "android")]
-            Self::JNI(e) => format!("Ошибка: {e}"),
+            Self::JNI(e) => format!("Ошибка JNI: {e}"),
         }
     }
 }

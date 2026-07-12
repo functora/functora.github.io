@@ -108,44 +108,15 @@
     --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23ffffff' d='M18 32.34L9.66 24l-2.83 2.83L18 38l24-24-2.83-2.83z'/%3E%3C/svg%3E");
 }
 
-/* Media query for system dark mode, gated by :not([data-theme="light"]) */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-        --bg-color: #222;
-        --surface: #333;
-        --nav-bg: rgba(34, 34, 34, 0.95);
-
-        --primary: #89b;
-        --primary-hover: #9ac;
-        --primary-contrast: #fff;
-
-        --black: hsl(var(--hue), var(--sat), 80%);
-        --grey-ultralight: hsl(var(--hue), var(--sat), 10%);
-        --grey-light: hsl(var(--hue), var(--sat), 30%);
-        --grey-mid: hsl(var(--hue), var(--sat), 50%);
-        --grey-dark: hsl(var(--hue), var(--sat), 60%);
-        --grey-ultradark: hsl(var(--hue), var(--sat), 90%);
-
-        --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M14.83 16.42L24 25.59l9.17-9.17L36 19.25l-12 12-12-12z'/%3E%3C/svg%3E");
-        --icon-hamburger: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M6 36h36v-4H6v4zm0-10h36v-4H6v4zm0-14v4h36v-4H6z'/%3E%3C/svg%3E");
-        --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z'/%3E%3C/svg%3E");
-        --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23ffffff' d='M18 32.34L9.66 24l-2.83 2.83L18 38l24-24-2.83-2.83z'/%3E%3C/svg%3E");
-    }
-}
-
-/* Forced dark theme */
-[data-theme="dark"] {
+.dark-theme() {
     --bg-color: #222;
     --surface: #333;
-    /* Slightly lighter than bg */
     --nav-bg: rgba(34, 34, 34, 0.95);
 
     --primary: #89b;
     --primary-hover: #9ac;
-    /* Lighten for dark mode? */
     --primary-contrast: #fff;
 
-    /* Invert grayscale lightness */
     --black: hsl(var(--hue), var(--sat), 80%);
     --grey-ultralight: hsl(var(--hue), var(--sat), 10%);
     --grey-light: hsl(var(--hue), var(--sat), 30%);
@@ -153,11 +124,23 @@
     --grey-dark: hsl(var(--hue), var(--sat), 60%);
     --grey-ultradark: hsl(var(--hue), var(--sat), 90%);
 
-    /* Icons - using #e5e5e5 (approx 90% white) for visibility */
     --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M14.83 16.42L24 25.59l9.17-9.17L36 19.25l-12 12-12-12z'/%3E%3C/svg%3E");
     --icon-hamburger: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M6 36h36v-4H6v4zm0-10h36v-4H6v4zm0-14v4h36v-4H6z'/%3E%3C/svg%3E");
     --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23e5e5e5' d='M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z'/%3E%3C/svg%3E");
     --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23ffffff' d='M18 32.34L9.66 24l-2.83 2.83L18 38l24-24-2.83-2.83z'/%3E%3C/svg%3E");
+}
+
+/* System dark mode, gated by :not([data-theme="light"]) and :not(:has(#data-theme-light:checked)) */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not(:has(#data-theme-light:checked)) {
+        .dark-theme();
+    }
+}
+
+/* Forced dark theme */
+[data-theme="dark"],
+html:has(#data-theme-dark:checked) {
+    .dark-theme();
 }
 
 /* Repaint triggers for buggy browsers */
@@ -184,16 +167,22 @@
 html {
 
     &[data-theme="dark"] body,
-    &[data-theme="dark"] nav {
+    &[data-theme="dark"] nav,
+    &:has(#data-theme-dark:checked) body,
+    &:has(#data-theme-dark:checked) nav {
         animation: theme-switch-repaint-dark 0.11s;
     }
 
     &[data-theme="light"] body,
-    &[data-theme="light"] nav {
+    &[data-theme="light"] nav,
+    &:has(#data-theme-light:checked) body,
+    &:has(#data-theme-light:checked) nav {
         animation: theme-switch-repaint-light 0.11s;
     }
 }
 
-html[data-theme] {
+html[data-theme],
+html:has(#data-theme-light:checked),
+html:has(#data-theme-dark:checked) {
     will-change: color, background-color, border-color;
 }

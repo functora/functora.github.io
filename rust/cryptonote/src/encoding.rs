@@ -61,8 +61,8 @@ fn bitmatrix_to_svg(matrix: &rxing::common::BitMatrix) -> String {
     let mut svg = String::with_capacity(256 + (w * h * 2) as usize);
     write!(
         svg,
-        r##"<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {} {}" shape-rendering="crispEdges"><path d=""##,
-        w, h,
+        r##"<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {} {}" shape-rendering="crispEdges"><rect width="{}" height="{}" fill="#ffffff"/><path d=""##,
+        w, h, w, h,
     )
     .ok();
     for y in 0..h {

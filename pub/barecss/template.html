@@ -24,11 +24,14 @@
           <li>
             <a>Dropdown</a>
             <menu>
-              <menuitem><a href="#forms">Forms</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
+              <menuitem><a href="#forms">Forms</a></menuitem>
             </menu>
           </li>
-          <li><a href="#misc">Misc</a></li>
+          <li><a href="#tooltips">Tooltips</a></li>
+          <li><a href="#tags">Tags</a></li>
+          <li><a href="#video">Video</a></li>
+          <li><a href="#utility">Utility</a></li>
         </ul>
       </label>
     </nav>
@@ -223,8 +226,8 @@ fn main() {
       </table>
     </section>
 
-    <!-- ====== MISC ====== -->
-    <section id="misc">
+    <!-- ====== TOOLTIPS ====== -->
+    <section id="tooltips">
       <h2>Tooltips</h2>
       <p>
         <span tt="Hello from barecss">Hover me (tooltip)</span> —
@@ -234,14 +237,20 @@ fn main() {
         —
         <a att href="https://barecss.com">Anchor tooltip</a>
       </p>
+    </section>
 
+    <!-- ====== TAGS ====== -->
+    <section id="tags">
       <h2>Tags</h2>
       <p>
         <tag>default</tag>
         <tag primary>primary</tag>
         <tag round>rounded</tag>
       </p>
+    </section>
 
+    <!-- ====== VIDEO ====== -->
+    <section id="video">
       <h2>Video</h2>
       <video
         controls
@@ -252,24 +261,36 @@ fn main() {
           type="video/mp4"
         />
       </video>
+    </section>
 
+    <!-- ====== UTILITY ATTRIBUTES ====== -->
+    <section id="utility">
       <h2>Utility attributes</h2>
-      <p>
-        <code>[full]</code>:
-        <span full>full-width element</span>
-      </p>
-      <p>
-        Font families: <span serif>serif</span> · <span sans>sans</span> ·
-        <span mono>mono</span>
-      </p>
-      <p>
-        Font sizes: <span fs="xl">xl</span> <span fs="l">l</span>
-        <span fs="m">m</span> <span fs="s">s</span> <span fs="xs">xs</span>
-      </p>
-      <p>
-        Text align: <span txt="l">left</span> <span txt="c">center</span>
-        <span txt="r">right</span>
-      </p>
+
+      <h5>[full]</h5>
+      <p><button full>The <code>[full]</code> attribute sets <code>width: 100%</code> on any element.</button></p>
+
+      <h5>[hidden]</h5>
+      <p>The element below has <code>[hidden]</code> and is not visible:</p>
+      <p hidden>You cannot see this text.</p>
+
+      <h5>Font families</h5>
+      <p serif>Serif font — <code>[serif]</code></p>
+      <p sans>Sans-serif font — <code>[sans]</code></p>
+      <p mono>Monospace font — <code>[mono]</code></p>
+
+      <h5>Font sizes</h5>
+      <p fs="xl">Extra large — <code>[fs="xl"]</code></p>
+      <p fs="l">Large — <code>[fs="l"]</code></p>
+      <p fs="m">Medium — <code>[fs="m"]</code></p>
+      <p fs="s">Small — <code>[fs="s"]</code></p>
+      <p fs="xs">Extra small — <code>[fs="xs"]</code></p>
+
+      <h5>Text alignment</h5>
+      <p txt="l">Left aligned — <code>[txt="l"]</code></p>
+      <p txt="c">Center aligned — <code>[txt="c"]</code></p>
+      <p txt="r">Right aligned — <code>[txt="r"]</code></p>
+      <p txt="j">Justified — <code>[txt="j"]</code>. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
     </section>
 
     <!-- ====== FOOTER ====== -->

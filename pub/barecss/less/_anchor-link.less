@@ -3,26 +3,24 @@
 /*	anchor link
 ----------------------------------------------------------------------*/
 
-a@{n}:not([btn]), a@{x}:not([btn]) {
+a@{n}:not([btn]):not(nav a), a@{x}:not([btn]):not(nav a) {
 	color: inherit;
 	text-decoration: none;
 	display: inline-block;
 	z-index: 1;
-	
-	p &:not([btn]) {
-		&:before {
-			content: "";
-			display: inline-block;
-			width: 100%;
-			height: 100%;
-			background: @secondary;
-			position: absolute;
-			opacity: 0.5;
-			transform: scale3d(1,0.1,1);
-			transform-origin: bottom;
-			z-index: -1;
-		}
-		
-		&:hover:before { transform: none }
+
+	&:before {
+		content: "";
+		display: inline-block;
+		width: 100%;
+		height: 100%;
+		background: @secondary;
+		position: absolute;
+		opacity: 0.5;
+		transform: scale3d(1,0.1,1);
+		transform-origin: bottom;
+		z-index: -1;
 	}
+
+	&:hover:before { transform: none }
 }

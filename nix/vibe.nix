@@ -96,7 +96,10 @@
         builtins.filter pkgs.lib.attrsets.isDerivation (
           builtins.attrValues pkgs.nerd-fonts
         )
-        ++ [pkgs.dejavu_fonts];
+        ++ [
+          pkgs.dejavu_fonts
+          pkgs.noto-fonts-color-emoji
+        ];
       pasta.enable = true;
       locale.enable = true;
       etc.sslCertificates.enable = true;

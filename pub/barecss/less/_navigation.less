@@ -183,7 +183,8 @@ nav@{x} {
 
 	// theme toggle
 
-	ul label[for="theme-toggle"] {
+	ul label[for="data-theme-dark"],
+	ul label[for="data-theme-light"] {
 		text-decoration: none;
 		text-transform: none;
 		padding: 0.8rem 2rem 0.4rem;
@@ -200,11 +201,13 @@ nav@{x} {
 	}
 }
 
-html:has(#theme-toggle:checked) nav ul label[for="theme-toggle"]::before {
+html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before,
+html:has(#data-theme-light:not(:checked)) nav ul label[for="data-theme-light"]::before {
 	content: "🌚\00a0"
 }
 
-html:has(#theme-toggle:not(:checked)) nav ul label[for="theme-toggle"]::before {
+html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::before,
+html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before {
 	content: "🌝\00a0"
 }
 
@@ -272,7 +275,8 @@ html:has(#theme-toggle:not(:checked)) nav ul label[for="theme-toggle"]::before {
 					border: none;
 				}
 
-				label[for="theme-toggle"] {
+				label[for="data-theme-dark"],
+				label[for="data-theme-light"] {
 					padding: 1rem 6rem 1rem 2rem;
 					border: none;
 				}
@@ -280,14 +284,14 @@ html:has(#theme-toggle:not(:checked)) nav ul label[for="theme-toggle"]::before {
 
 			// overlay to catch clicks when sidebar is open
 
-			&:has(>input:checked:not(#theme-toggle))::before {
+			&:has(>input:checked:not(#data-theme-dark):not(#data-theme-light))::before {
 				content: "";
 				position: fixed;
 				inset: 0;
 				z-index: 11;
 			}
 
-		input:not(#theme-toggle) {
+		input:not(#data-theme-dark):not(#data-theme-light) {
 			&:checked {
 
 				// shows the nav when input is checked
@@ -297,7 +301,8 @@ html:has(#theme-toggle:not(:checked)) nav ul label[for="theme-toggle"]::before {
 					pointer-events: none;
 
 					a,
-					label[for="theme-toggle"] {
+					label[for="data-theme-dark"],
+					label[for="data-theme-light"] {
 						pointer-events: auto;
 					}
 				}

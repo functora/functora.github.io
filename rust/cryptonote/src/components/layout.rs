@@ -43,6 +43,13 @@ pub fn Layout() -> Element {
                         }
                     }
                     li {
+                        NavLink {
+                            nav: nav_signal,
+                            href: Screen::About.to_route(None).to_string(),
+                            "❓{Msg::AboutTitle.render(lang)}"
+                        }
+                    }
+                    li {
                         a {
                             onclick: move |_| {
                                 pst.theme().with_mut(|t| *t = t.next());
@@ -56,56 +63,49 @@ pub fn Layout() -> Element {
                             {Msg::Theme.render(lang)}
                         }
                     }
-                    li {
-                        NavLink {
-                            nav: nav_signal,
-                            href: Screen::About.to_route(None).to_string(),
-                            "❓{Msg::AboutTitle.render(lang)}"
-                        }
-                    }
                 }
             }
         }
 
         Outlet::<Route> {}
 
-        Par { "fs": "xs", align: Align::Center,
-            {Msg::Copyright.render(lang)}
-            " 2025 "
-            ExtLink { href: FUNCTORA_URL, "Functora" }
-            ". "
-            {Msg::AllRightsReserved.render(lang)}
-            " "
-            {Msg::ByContinuing.render(lang)}
-            " "
-            NavLink {
-                nav: nav_signal,
-                href: Screen::License.to_route(None).to_string(),
-                "{Msg::TermsOfService.render(lang)}"
+        footer {
+            p {
+                {Msg::Copyright.render(lang)}
+                " 2025 "
+                ExtLink { href: FUNCTORA_URL, "Functora" }
+                ". "
+                {Msg::AllRightsReserved.render(lang)}
+                " "
+                {Msg::ByContinuing.render(lang)}
+                " "
+                NavLink {
+                    nav: nav_signal,
+                    href: Screen::License.to_route(None).to_string(),
+                    "{Msg::TermsOfService.render(lang)}"
+                }
+                " "
+                {Msg::YouAgree.render(lang)}
+                " "
+                NavLink {
+                    nav: nav_signal,
+                    href: Screen::Privacy.to_route(None).to_string(),
+                    "{Msg::PrivacyPolicyAnd.render(lang)}"
+                }
+                ". "
+                {Msg::Please.render(lang)}
+                " "
+                NavLink {
+                    nav: nav_signal,
+                    href: Screen::Donate.to_route(None).to_string(),
+                    "{Msg::DonateLink.render(lang)}"
+                }
+                ". "
+                {Msg::VersionLabel.render(lang)}
+                " "
+                {APP_VERSION}
+                "."
             }
-            " "
-            {Msg::YouAgree.render(lang)}
-            " "
-            NavLink {
-                nav: nav_signal,
-                href: Screen::Privacy.to_route(None).to_string(),
-                "{Msg::PrivacyPolicyAnd.render(lang)}"
-            }
-            ". "
-            {Msg::Please.render(lang)}
-            " "
-            NavLink {
-                nav: nav_signal,
-                href: Screen::Donate.to_route(None).to_string(),
-                "{Msg::DonateLink.render(lang)}"
-            }
-            ". "
-            {Msg::VersionLabel.render(lang)}
-            " "
-            {APP_VERSION}
-            "."
         }
-
-        br {}
     }
 }

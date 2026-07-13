@@ -1,10 +1,10 @@
-use crate::Msg;
-use crate::i18n::{I18N, Language};
+use crate::i18n::{Language, I18N};
 use crate::nav::Nav;
 use crate::widgets::{Align, Button, Par};
+use crate::Msg;
 use dioxus::prelude::*;
-use dioxus_free_icons::IconShape;
 use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
+use dioxus_free_icons::IconShape;
 
 #[component]
 pub fn GenDock<
@@ -30,7 +30,7 @@ pub fn GenDock<
                 crate::widgets::Banner { message, lang }
             }
         }
-        div { style: "display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;",
+        footer {
             if has_navigated {
                 Button {
                     icon: back_button_icon,

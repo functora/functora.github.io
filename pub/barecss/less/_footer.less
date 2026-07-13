@@ -7,9 +7,16 @@ footer {
   width: 100%;
   max-width: @width;
   margin: auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
-  padding-bottom: 2rem;
   text-align: center;
-  font-size: @fs-xs;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &:not(section &) {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 2rem;
+    font-size: @fs-xs;
+  }
 }

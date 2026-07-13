@@ -69,7 +69,7 @@ pub fn Layout() -> Element {
 
         Outlet::<Route> {}
 
-        Par { align: Align::Center,
+        Par { "fs": "xs", align: Align::Center,
             {Msg::Copyright.render(lang)}
             " 2025 "
             ExtLink { href: FUNCTORA_URL, "Functora" }

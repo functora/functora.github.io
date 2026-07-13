@@ -31,6 +31,7 @@ export default async () => {
       if (event.type === "session.updated" && sessionID) {
         const parent = event?.properties?.info?.parentID
         if (parent) mainSessions.delete(sessionID)
+        else mainSessions.add(sessionID)
       }
 
       if (isIdleEvent(event) && sessionID && mainSessions.has(sessionID)) {

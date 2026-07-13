@@ -15,11 +15,11 @@
     <nav>
       <label>
         <input type="checkbox" />
+        <input type="checkbox" id="theme-toggle" />
         <header>
           <a href="#">BareCSS</a>
         </header>
         <ul>
-          <li><a href="#theme">Theme</a></li>
           <li><a href="#typography">Typography</a></li>
           <li><a href="#buttons">Buttons</a></li>
           <li>
@@ -34,21 +34,10 @@
               <menuitem><a href="#utility">Utility</a></menuitem>
             </menu>
           </li>
+          <li><label for="theme-toggle">Theme</label></li>
         </ul>
       </label>
     </nav>
-
-    <!-- ====== THEME ====== -->
-    <section id="theme">
-      <h2>Theme</h2>
-      <p>BareCSS supports system dark mode via <code>prefers-color-scheme</code>, manual override via <code>data-theme</code> attribute, or checkbox-based toggle via <code>#data-theme-light:checked</code> / <code>#data-theme-dark:checked</code>.</p>
-      <input type="radio" name="theme" id="theme-system" checked />
-      <label for="theme-system">System</label>
-      <input type="radio" name="theme" id="data-theme-light" />
-      <label for="data-theme-light">Light</label>
-      <input type="radio" name="theme" id="data-theme-dark" />
-      <label for="data-theme-dark">Dark</label>
-    </section>
 
     <!-- ====== TYPOGRAPHY ====== -->
     <section id="typography">
@@ -147,7 +136,10 @@ fn main() {
       <h2>Cards</h2>
       <card>
         <h3>Card title</h3>
-        <p>Content inside a <code>&lt;card&gt;</code> element with a subtle shadow.</p>
+        <p>
+          Content inside a <code>&lt;card&gt;</code> element with a subtle
+          shadow.
+        </p>
       </card>
       <card>
         <h3>Another card</h3>
@@ -282,7 +274,12 @@ fn main() {
       <h2>Utility attributes</h2>
 
       <h5>[full]</h5>
-      <p><button full>The <code>[full]</code> attribute sets <code>width: 100%</code> on any element.</button></p>
+      <p>
+        <button full>
+          The <code>[full]</code> attribute sets <code>width: 100%</code> on any
+          element.
+        </button>
+      </p>
 
       <h5>[hidden]</h5>
       <p>The element below has <code>[hidden]</code> and is not visible:</p>
@@ -304,7 +301,11 @@ fn main() {
       <p txt="l">Left aligned — <code>[txt="l"]</code></p>
       <p txt="c">Center aligned — <code>[txt="c"]</code></p>
       <p txt="r">Right aligned — <code>[txt="r"]</code></p>
-      <p txt="j">Justified — <code>[txt="j"]</code>. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+      <p txt="j">
+        Justified — <code>[txt="j"]</code>. Lorem ipsum dolor sit amet,
+        consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
+        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
     </section>
 
     <!-- ====== FOOTER ====== -->

@@ -130,16 +130,17 @@
     --icon-done: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%23ffffff' d='M18 32.34L9.66 24l-2.83 2.83L18 38l24-24-2.83-2.83z'/%3E%3C/svg%3E");
 }
 
-/* System dark mode, gated by :not([data-theme="light"]) and :not(:has(#data-theme-light:checked)) */
+/* System dark mode, gated so manual overrides win */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]):not(:has(#data-theme-light:checked)) {
+    :root:not([data-theme="light"]):not(:has(#data-theme-light:checked)):not(:has(#theme-toggle:not(:checked))) {
         .dark-theme();
     }
 }
 
 /* Forced dark theme */
 [data-theme="dark"],
-html:has(#data-theme-dark:checked) {
+html:has(#data-theme-dark:checked),
+html:has(#theme-toggle:checked) {
     .dark-theme();
 }
 
@@ -169,20 +170,26 @@ html {
     &[data-theme="dark"] body,
     &[data-theme="dark"] nav,
     &:has(#data-theme-dark:checked) body,
-    &:has(#data-theme-dark:checked) nav {
+    &:has(#data-theme-dark:checked) nav,
+    &:has(#theme-toggle:checked) body,
+    &:has(#theme-toggle:checked) nav {
         animation: theme-switch-repaint-dark 0.11s;
     }
 
     &[data-theme="light"] body,
     &[data-theme="light"] nav,
     &:has(#data-theme-light:checked) body,
-    &:has(#data-theme-light:checked) nav {
+    &:has(#data-theme-light:checked) nav,
+    &:has(#theme-toggle:not(:checked)) body,
+    &:has(#theme-toggle:not(:checked)) nav {
         animation: theme-switch-repaint-light 0.11s;
     }
 }
 
 html[data-theme],
 html:has(#data-theme-light:checked),
-html:has(#data-theme-dark:checked) {
+html:has(#data-theme-dark:checked),
+html:has(#theme-toggle:checked),
+html:has(#theme-toggle:not(:checked)) {
     will-change: color, background-color, border-color;
 }

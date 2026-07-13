@@ -180,6 +180,32 @@ nav@{x} {
 			}
 		}
 	}
+
+	// theme toggle
+
+	ul label[for="theme-toggle"] {
+		text-decoration: none;
+		text-transform: none;
+		padding: 0.8rem 2rem 0.4rem;
+		border-bottom: 4px solid transparent;
+		display: block;
+		cursor: pointer;
+		font-weight: 300;
+		font-size: inherit;
+
+		&:hover {
+			color: @primary;
+			border-color: @primary;
+		}
+	}
+}
+
+html:has(#theme-toggle:checked) nav ul label[for="theme-toggle"]::before {
+	content: "🌚\00a0"
+}
+
+html:has(#theme-toggle:not(:checked)) nav ul label[for="theme-toggle"]::before {
+	content: "🌝\00a0"
 }
 
 // mobile view
@@ -245,56 +271,52 @@ nav@{x} {
 					padding: 1rem 6rem 1rem 2rem;
 					border: none;
 				}
+
+				label[for="theme-toggle"] {
+					padding: 1rem 6rem 1rem 2rem;
+					border: none;
+				}
 			}
 
 			// overlay to catch clicks when sidebar is open
 
-			&:has(>input:checked)::before {
+			&:has(>input:checked:not(#theme-toggle))::before {
 				content: "";
 				position: fixed;
 				inset: 0;
 				z-index: 11;
 			}
 
-			input {
-				&:checked {
+		input:not(#theme-toggle) {
+			&:checked {
 
-					// shows the nav when input is checked
+				// shows the nav when input is checked
 
-					~ul {
+				~ul {
+					transform: none;
+					pointer-events: none;
+
+					a,
+					label[for="theme-toggle"] {
+						pointer-events: auto;
+					}
+				}
+
+				// hides the hamburger and shows the cross when the input is checked
+
+				~header {
+					&:before {
+						transform: rotate(-180deg);
+						opacity: 0;
+					}
+
+					&:after {
 						transform: none;
-						pointer-events: none;
-
-						a {
-							pointer-events: auto;
-						}
-					}
-
-					// hides the hamburger and shows the cross when the input is checked
-
-					~header {
-						&:before {
-							transform: rotate(-180deg);
-							opacity: 0;
-						}
-
-						&:after {
-							transform: none;
-							opacity: 1;
-						}
+						opacity: 1;
 					}
 				}
 			}
-
-			menu {
-				menuitem {
-					border-color: @grey-light;
-				}
-
-				a {
-					padding-left: 4rem;
-				}
-			}
+		}
 		}
 	}
 }

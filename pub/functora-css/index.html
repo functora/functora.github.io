@@ -9,6 +9,11 @@
       content="width=device-width, initial-scale=1, user-scalable=no"
     />
     <link href="css/functora.min.css" rel="stylesheet" />
+    <style>
+      pre {
+        white-space: pre-wrap;
+      }
+    </style>
   </head>
   <body>
     <!-- ====== NAVIGATION ====== -->
@@ -22,19 +27,18 @@
         <ul>
           <li><label for="data-theme-dark">Theme</label></li>
           <li><a href="#themes">Themes</a></li>
+          <li><a href="#navigation">Navigation</a></li>
           <li><a href="#typography">Typography</a></li>
+          <li><a href="#blockquotes">Blockquotes</a></li>
+          <li><a href="#code">Code</a></li>
+          <li><a href="#lists">Lists</a></li>
           <li><a href="#buttons">Buttons</a></li>
-          <li>
-            <a>More</a>
-            <menu>
-              <menuitem><a href="#cards">Cards</a></menuitem>
-              <menuitem><a href="#forms">Forms</a></menuitem>
-              <menuitem><a href="#table">Table</a></menuitem>
-              <menuitem><a href="#tooltips">Tooltips</a></menuitem>
-              <menuitem><a href="#tags">Tags</a></menuitem>
-              <menuitem><a href="#utility">Utility</a></menuitem>
-            </menu>
-          </li>
+          <li><a href="#tags">Tags</a></li>
+          <li><a href="#tooltips">Tooltips</a></li>
+          <li><a href="#forms">Forms</a></li>
+          <li><a href="#tables">Tables</a></li>
+          <li><a href="#cards">Cards</a></li>
+          <li><a href="#utility">Utility</a></li>
         </ul>
       </label>
     </nav>
@@ -95,12 +99,12 @@
         <code>&lt;label&gt;</code> elements with the corresponding
         <code>for</code> attributes as visible toggle buttons. The navbar
         contains two hidden checkboxes - one for the mobile menu toggle and one
-        for the theme toggle.
+        for the theme toggle. Their order matters for CSS sibling selectors:
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" /&gt;
-    &lt;input type="checkbox" id="data-theme-dark" /&gt;
+    &lt;input type="checkbox" /&gt;           &lt;!-- navbar toggle --&gt;
+    &lt;input type="checkbox" id="data-theme-dark" /&gt;  &lt;!-- theme toggle --&gt;
     &lt;header&gt;...&lt;/header&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;label for="data-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
@@ -114,15 +118,84 @@
       </p>
     </section>
 
+    <!-- ====== NAVIGATION ====== -->
+    <section id="navigation">
+      <h2>Navigation</h2>
+      <p>
+        The responsive navbar uses a checkbox-based toggle for mobile menus
+        without any JavaScript. The structure requires a specific order of
+        elements inside a <code>&lt;nav&gt;</code> tag for the CSS selectors to
+        work correctly.
+      </p>
+
+      <h4>Structure</h4>
+      <p>
+        The navbar must follow this exact structure: a
+        <code>&lt;label&gt;</code> wrapping two hidden checkboxes (mobile menu
+        toggle and theme toggle), a <code>&lt;header&gt;</code> for the
+        brand/logo, and a <code>&lt;ul&gt;</code> for navigation links. Dropdown
+        menus use a nested <code>&lt;menu&gt;</code> element inside a list item.
+      </p>
+      <pre><code>&lt;nav&gt;
+  &lt;label&gt;
+    &lt;input type="checkbox" /&gt;
+    &lt;input type="checkbox" id="data-theme-dark" /&gt;
+    &lt;header&gt;&lt;a href="#"&gt;Site name&lt;/a&gt;&lt;/header&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;
+        &lt;a&gt;Dropdown&lt;/a&gt;
+        &lt;menu&gt;
+          &lt;menuitem&gt;&lt;a href="#two"&gt;Item one&lt;/a&gt;&lt;/menuitem&gt;
+          &lt;menuitem&gt;&lt;a href="#three"&gt;Item two&lt;/a&gt;&lt;/menuitem&gt;
+        &lt;/menu&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/label&gt;
+&lt;/nav&gt;</code></pre>
+
+      <h4>Mobile behavior</h4>
+      <p>
+        On mobile viewports the navigation links are hidden by default. Tapping
+        the header area (or the hamburger icon) toggles the first checkbox,
+        which reveals the menu via pure CSS. The theme toggle remains
+        independent and does not affect the menu state.
+      </p>
+    </section>
+
     <!-- ====== TYPOGRAPHY ====== -->
     <section id="typography">
+      <h2>Typography</h2>
+      <p>
+        functora-css styles standard HTML typography elements without requiring
+        classes. Font sizes use <code>rem</code> units so the entire scale can
+        be adjusted by changing the root font size.
+      </p>
+
+      <h4>Headings</h4>
+      <p>
+        All six heading levels are supported with consistent margins and
+        padding. Headings inherit the default browser font family and are styled
+        with appropriate sizes.
+      </p>
       <h1>Heading h1</h1>
       <h2>Heading h2</h2>
       <h3>Heading h3</h3>
       <h4>Heading h4</h4>
       <h5>Heading h5</h5>
       <h6>Heading h6</h6>
+      <pre><code>&lt;h1&gt;Heading h1&lt;/h1&gt;
+&lt;h2&gt;Heading h2&lt;/h2&gt;
+&lt;h3&gt;Heading h3&lt;/h3&gt;
+&lt;h4&gt;Heading h4&lt;/h4&gt;
+&lt;h5&gt;Heading h5&lt;/h5&gt;
+&lt;h6&gt;Heading h6&lt;/h6&gt;</code></pre>
 
+      <h4>Paragraphs</h4>
+      <p>
+        Paragraphs have consistent line height and margin spacing. They work
+        well at any content width and collapse gracefully on mobile.
+      </p>
       <p>
         Paragraph with an <a href="#">anchor link</a> - hover to see the
         underline effect. Lorem ipsum dolor sit amet, consectetur adipisicing
@@ -132,45 +205,190 @@
         Another paragraph. Duis aute irure dolor in reprehenderit in voluptate
         velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
+      <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Another paragraph.&lt;/p&gt;</code></pre>
 
-      <blockquote>A blockquote element with a left border accent.</blockquote>
+      <h4>Anchor links</h4>
+      <p>
+        Anchor links are styled with a subtle underline on hover. The color
+        inherits from the primary theme color.
+      </p>
+      <p>
+        <a href="#">Default anchor</a> -
+        <a href="#" primary>Primary anchor</a>
+      </p>
+      <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;
+&lt;a href="#" primary&gt;Primary anchor&lt;/a&gt;</code></pre>
 
-      <p><code>Inline code fragment</code> inside a paragraph.</p>
-      <pre><code>// Code block inside &lt;pre&gt;
-fn main() {
-	println!("hello from functora-css");
+      <h4>Emphasis and inline elements</h4>
+      <p>
+        Standard inline elements like <strong>bold</strong>, <em>italic</em>,
+        <mark>highlighted</mark>, <small>small</small>, <del>deleted</del>, and
+        <abbr title="abbreviation">abbreviations</abbr>
+        are all styled appropriately.
+      </p>
+      <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
+&lt;em&gt;italic&lt;/em&gt;
+&lt;mark&gt;highlighted&lt;/mark&gt;
+&lt;small&gt;small&lt;/small&gt;
+&lt;del&gt;deleted&lt;/del&gt;
+&lt;abbr title="abbreviation"&gt;abbreviations&lt;/abbr&gt;</code></pre>
+    </section>
+
+    <!-- ====== BLOCKQUOTES ====== -->
+    <section id="blockquotes">
+      <h2>Blockquotes</h2>
+      <p>
+        Blockquotes are styled with a left border accent and subtle background.
+        They support attribution via a <code>&lt;cite&gt;</code> element at the
+        end.
+      </p>
+      <blockquote>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
+        urna sed urna ultricies ac tempor dui sagittis.
+      </blockquote>
+      <pre><code>&lt;blockquote&gt;
+  Quote goes here.
+&lt;/blockquote&gt;</code></pre>
+
+      <h4>With attribution</h4>
+      <blockquote>
+        <p>The best way to predict the future is to invent it.</p>
+        <cite>- Alan Kay</cite>
+      </blockquote>
+      <pre><code>&lt;blockquote&gt;
+  &lt;p&gt;The best way to predict the future is to invent it.&lt;/p&gt;
+  &lt;cite&gt;- Alan Kay&lt;/cite&gt;
+&lt;/blockquote&gt;</code></pre>
+    </section>
+
+    <!-- ====== CODE ====== -->
+    <section id="code">
+      <h2>Code</h2>
+      <p>
+        Inline code and code blocks are styled with a distinct background and
+        monospace font. The <code>&lt;pre&gt;</code> element preserves
+        whitespace and line breaks.
+      </p>
+
+      <h4>Inline code</h4>
+      <p>
+        Use <code>&lt;code&gt;</code> for inline code fragments within a
+        paragraph.
+      </p>
+      <p>
+        The function returns a <code>Result&lt;String, Error&gt;</code> type.
+      </p>
+      <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
+
+      <h4>Code block</h4>
+      <p>
+        Wrap code in <code>&lt;pre&gt;&lt;code&gt;</code> for multi-line blocks.
+        Whitespace and indentation are preserved.
+      </p>
+      <pre><code>fn main() {
+    println!("hello from functora-css");
 }</code></pre>
+      <pre><code>&lt;pre&gt;&lt;code&gt;
+fn main() {
+    println!("hello from functora-css");
+}
+&lt;/code&gt;&lt;/pre&gt;</code></pre>
+    </section>
 
+    <!-- ====== LISTS ====== -->
+    <section id="lists">
+      <h2>Lists</h2>
+      <p>
+        Both ordered and unordered lists are styled with appropriate markers.
+        Nested lists use different marker styles to show hierarchy.
+      </p>
+
+      <h4>Unordered list</h4>
       <ul>
         <li>Unordered list item one</li>
+        <li>Unordered list item two</li>
         <li>
-          Unordered list item two
+          Unordered list item three
           <ul>
+            <li>Nested item (circle)</li>
             <li>Nested item (circle)</li>
           </ul>
         </li>
       </ul>
+      <pre><code>&lt;ul&gt;
+  &lt;li&gt;Item one&lt;/li&gt;
+  &lt;li&gt;Item two&lt;/li&gt;
+  &lt;li&gt;
+    Item three
+    &lt;ul&gt;
+      &lt;li&gt;Nested item&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+
+      <h4>Ordered list</h4>
       <ol>
         <li>Ordered list item one</li>
+        <li>Ordered list item two</li>
         <li>
-          Ordered list item two
+          Ordered list item three
           <ol>
+            <li>Nested item (lower-alpha)</li>
             <li>Nested item (lower-alpha)</li>
           </ol>
         </li>
       </ol>
+      <pre><code>&lt;ol&gt;
+  &lt;li&gt;Item one&lt;/li&gt;
+  &lt;li&gt;Item two&lt;/li&gt;
+  &lt;li&gt;
+    Item three
+    &lt;ol&gt;
+      &lt;li&gt;Nested item&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;</code></pre>
     </section>
 
     <!-- ====== BUTTONS ====== -->
     <section id="buttons">
       <h2>Buttons</h2>
       <p>
-        <button>Normal button</button>
-        <button primary>Primary button</button>
-        <button round>Round button</button>
+        Buttons are styled using native HTML elements. No classes are needed -
+        use the <code>primary</code> attribute for primary buttons,
+        <code>round</code> for rounded corners, and <code>disabled</code> for
+        disabled state.
+      </p>
+
+      <h4>Standard buttons</h4>
+      <p>
+        <button>Default</button>
+        <button primary>Primary</button>
+        <button round>Round</button>
         <button disabled>Disabled</button>
-        <a btn href="#">Link as button</a>
-        <a btn primary href="#">Primary link btn</a>
+      </p>
+      <pre><code>&lt;button&gt;Default&lt;/button&gt;
+&lt;button primary&gt;Primary&lt;/button&gt;
+&lt;button round&gt;Round&lt;/button&gt;
+&lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
+
+      <h4>Anchor as button</h4>
+      <p>
+        Use the <code>btn</code> attribute on an anchor element to style it as a
+        button. Combine with <code>primary</code> for primary styling.
+      </p>
+      <p>
+        <a btn href="#">Link button</a>
+        <a btn primary href="#">Primary link</a>
+      </p>
+      <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
+&lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
+
+      <h4>Buttons with icons</h4>
+      <p>
+        Buttons can contain inline SVG icons. Place the SVG before the text
+        content.
       </p>
       <p>
         <button>
@@ -204,30 +422,165 @@ fn main() {
           Save
         </button>
       </p>
+      <pre><code>&lt;button&gt;
+  &lt;svg ...&gt;...&lt;/svg&gt;
+  With icon
+&lt;/button&gt;
+&lt;button primary&gt;
+  &lt;svg ...&gt;...&lt;/svg&gt;
+  Save
+&lt;/button&gt;</code></pre>
+
+      <h4>Full width</h4>
+      <p>
+        Use the <code>full</code> attribute to make a button span 100% width.
+      </p>
+      <p>
+        <button full>Full width button</button>
+      </p>
+      <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
+
+      <h4>Submit and reset</h4>
+      <p>
+        <code>&lt;input type="submit"&gt;</code> and
+        <code>&lt;input type="reset"&gt;</code> are automatically styled as
+        buttons within forms.
+      </p>
+      <pre><code>&lt;input type="submit" value="Submit" /&gt;
+&lt;input type="reset" value="Reset" /&gt;</code></pre>
     </section>
 
-    <!-- ====== CARDS ====== -->
-    <section id="cards">
-      <h2>Cards</h2>
-      <card>
-        <h3>Card title</h3>
-        <p>
-          Content inside a <code>&lt;card&gt;</code> element with a subtle
-          shadow.
-        </p>
-      </card>
-      <card>
-        <h3>Another card</h3>
-        <p>Cards stack vertically and collapse to full-width on mobile.</p>
-        <hr />
-        <tag>demo</tag>
-        <tag primary>functora-css</tag>
-      </card>
+    <!-- ====== TAGS ====== -->
+    <section id="tags">
+      <h2>Tags</h2>
+      <p>
+        Tags use the <code>&lt;tag&gt;</code> element. They are useful for
+        labels, statuses, and categories. Use the <code>primary</code> attribute
+        for primary styling and <code>round</code> for pill-shaped tags.
+      </p>
+      <p>
+        <tag>default</tag>
+        <tag primary>primary</tag>
+        <tag round>rounded</tag>
+        <tag primary round>primary rounded</tag>
+      </p>
+      <pre><code>&lt;tag&gt;default&lt;/tag&gt;
+&lt;tag primary&gt;primary&lt;/tag&gt;
+&lt;tag round&gt;rounded&lt;/tag&gt;
+&lt;tag primary round&gt;primary rounded&lt;/tag&gt;</code></pre>
+    </section>
+
+    <!-- ====== TOOLTIPS ====== -->
+    <section id="tooltips">
+      <h2>Tooltips</h2>
+      <p>
+        functora-css provides pure CSS tooltips with no JavaScript. Use the
+        <code>tt</code> attribute on most elements to show a tooltip on hover.
+        Tooltips use <code>::before</code> and <code>::after</code> pseudo
+        elements, so they work on any element that supports them.
+      </p>
+
+      <h4>Basic tooltip</h4>
+      <p>
+        <span tt="Hello from functora-css">Hover me (tooltip)</span>
+      </p>
+      <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me&lt;/span&gt;</code></pre>
+
+      <h4>Tooltip on buttons</h4>
+      <p>
+        <button tt="This is a normal button">Hover button</button>
+        <button primary tt="Primary button tooltip">Primary</button>
+      </p>
+      <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
+&lt;button primary tt="Primary button tooltip"&gt;Primary&lt;/button&gt;</code></pre>
+
+      <h4>Disabled button tooltip</h4>
+      <p>
+        Use the <code>dtt</code> attribute to show a tooltip when a button is
+        disabled. This is useful for explaining why a button is inactive.
+      </p>
+      <p>
+        <button disabled dtt="This button is disabled">
+          Disabled with tooltip
+        </button>
+      </p>
+      <pre><code>&lt;button disabled dtt="This button is disabled"&gt;
+  Disabled with tooltip
+&lt;/button&gt;</code></pre>
+
+      <h4>Anchor link tooltip</h4>
+      <p>
+        Use the <code>att</code> attribute on an anchor to show its
+        <code>href</code> as a tooltip on hover.
+      </p>
+      <p>
+        <a att href="https://functora.github.io/functora-css.html"
+          >Anchor tooltip</a
+        >
+      </p>
+      <pre><code>&lt;a att href="https://example.com"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
     </section>
 
     <!-- ====== FORMS ====== -->
     <section id="forms">
       <h2>Forms</h2>
+      <p>
+        Form elements are styled with a clean, minimal look. Labels should be
+        placed directly before their corresponding inputs. Text inputs and
+        textareas default to 100% width.
+      </p>
+
+      <h4>Text inputs</h4>
+      <p>
+        Text inputs have a subtle border that highlights on focus. Place the
+        <code>&lt;label&gt;</code> directly before the input.
+      </p>
+      <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
+&lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
+
+      <h4>Textarea</h4>
+      <p>
+        Textareas auto-resize vertically and have the same styling as text
+        inputs.
+      </p>
+      <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
+&lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
+
+      <h4>Select</h4>
+      <p>Select dropdowns are styled to match other form elements.</p>
+      <pre><code>&lt;label for="lang"&gt;Language&lt;/label&gt;
+&lt;select id="lang"&gt;
+  &lt;option&gt;Rust&lt;/option&gt;
+  &lt;option&gt;TypeScript&lt;/option&gt;
+  &lt;option&gt;Python&lt;/option&gt;
+&lt;/select&gt;</code></pre>
+
+      <h4>Radio and checkbox</h4>
+      <p>
+        Radio buttons and checkboxes are styled with custom indicators. Place
+        the <code>&lt;label&gt;</code> directly after the input.
+      </p>
+      <pre><code>&lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
+&lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
+&lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
+&lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
+
+      <h4>Fieldset</h4>
+      <p>
+        Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
+        group related form controls.
+      </p>
+      <pre><code>&lt;fieldset&gt;
+  &lt;legend&gt;Preferences&lt;/legend&gt;
+  &lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
+  &lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
+  &lt;p&gt;
+    &lt;button type="submit" primary&gt;Submit&lt;/button&gt;
+    &lt;button type="reset"&gt;Reset&lt;/button&gt;
+  &lt;/p&gt;
+&lt;/fieldset&gt;</code></pre>
+
+      <h4>Full example</h4>
       <form>
         <label for="name"
           >Name
@@ -276,9 +629,15 @@ fn main() {
       </form>
     </section>
 
-    <!-- ====== TABLE ====== -->
-    <section id="table">
-      <h2>Table</h2>
+    <!-- ====== TABLES ====== -->
+    <section id="tables">
+      <h2>Tables</h2>
+      <p>
+        Tables use standard HTML structure with <code>&lt;thead&gt;</code>,
+        <code>&lt;tbody&gt;</code>, <code>&lt;tr&gt;</code>,
+        <code>&lt;th&gt;</code>, and <code>&lt;td&gt;</code> elements. Rows
+        highlight on hover.
+      </p>
       <table>
         <thead>
           <tr>
@@ -305,62 +664,108 @@ fn main() {
           </tr>
         </tbody>
       </table>
+      <pre><code>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Name&lt;/th&gt;
+      &lt;th&gt;Role&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Alice&lt;/td&gt;
+      &lt;td&gt;Developer&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
     </section>
 
-    <!-- ====== TOOLTIPS ====== -->
-    <section id="tooltips">
-      <h2>Tooltips</h2>
+    <!-- ====== CARDS ====== -->
+    <section id="cards">
+      <h2>Cards</h2>
       <p>
-        <span tt="Hello from functora-css">Hover me (tooltip)</span> -
-        <button disabled dtt="This button is disabled">
-          Disabled with tooltip
-        </button>
-        -
-        <a att href="https://functora.github.io/functora-css.html"
-          >Anchor tooltip</a
-        >
+        Cards use the <code>&lt;card&gt;</code> element. They have a subtle
+        shadow and stack vertically on mobile. Cards work well inside a grid
+        layout for multi-column arrangements.
       </p>
-    </section>
-
-    <!-- ====== TAGS ====== -->
-    <section id="tags">
-      <h2>Tags</h2>
-      <p>
-        <tag>default</tag>
-        <tag primary>primary</tag>
-        <tag round>rounded</tag>
-      </p>
+      <card>
+        <h3>Card title</h3>
+        <p>
+          Content inside a <code>&lt;card&gt;</code> element with a subtle
+          shadow.
+        </p>
+      </card>
+      <card>
+        <h3>Another card</h3>
+        <p>Cards stack vertically and collapse to full-width on mobile.</p>
+        <hr />
+        <tag>demo</tag>
+        <tag primary>functora-css</tag>
+      </card>
+      <pre><code>&lt;card&gt;
+  &lt;h3&gt;Card title&lt;/h3&gt;
+  &lt;p&gt;Card content goes here.&lt;/p&gt;
+&lt;/card&gt;</code></pre>
     </section>
 
     <!-- ====== UTILITY ATTRIBUTES ====== -->
     <section id="utility">
       <h2>Utility attributes</h2>
-
-      <h5>[full]</h5>
       <p>
-        <button full>
-          The <code>[full]</code> attribute sets <code>width: 100%</code> on any
-          element.
-        </button>
+        functora-css provides several utility attributes for quick styling
+        without classes. These can be applied to any HTML element.
       </p>
 
-      <h5>[hidden]</h5>
-      <p>The element below has <code>[hidden]</code> and is not visible:</p>
-      <p hidden>You cannot see this text.</p>
+      <h4>[full]</h4>
+      <p>Sets <code>width: 100%</code> on the element.</p>
+      <p>
+        <button full>Full width button</button>
+      </p>
+      <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
 
-      <h5>Font families</h5>
+      <h4>[hidden]</h4>
+      <p>
+        Hides the element from the page. The element below has
+        <code>[hidden]</code> and is not visible:
+      </p>
+      <p hidden>You cannot see this text.</p>
+      <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
+
+      <h4>Font families</h4>
+      <p>
+        Override the default font family with <code>[serif]</code>,
+        <code>[sans]</code>, or <code>[mono]</code>.
+      </p>
       <p serif>Serif font - <code>[serif]</code></p>
       <p sans>Sans-serif font - <code>[sans]</code></p>
       <p mono>Monospace font - <code>[mono]</code></p>
+      <pre><code>&lt;p serif&gt;Serif font&lt;/p&gt;
+&lt;p sans&gt;Sans-serif font&lt;/p&gt;
+&lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
 
-      <h5>Font sizes</h5>
+      <h4>Font sizes</h4>
+      <p>
+        Adjust font size with the <code>[fs]</code> attribute. Available values:
+        <code>xs</code>, <code>s</code>, <code>m</code>, <code>l</code>,
+        <code>xl</code>.
+      </p>
       <p fs="xl">Extra large - <code>[fs="xl"]</code></p>
       <p fs="l">Large - <code>[fs="l"]</code></p>
       <p fs="m">Medium - <code>[fs="m"]</code></p>
       <p fs="s">Small - <code>[fs="s"]</code></p>
       <p fs="xs">Extra small - <code>[fs="xs"]</code></p>
+      <pre><code>&lt;p fs="xl"&gt;Extra large&lt;/p&gt;
+&lt;p fs="l"&gt;Large&lt;/p&gt;
+&lt;p fs="m"&gt;Medium&lt;/p&gt;
+&lt;p fs="s"&gt;Small&lt;/p&gt;
+&lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
 
-      <h5>Text alignment</h5>
+      <h4>Text alignment</h4>
+      <p>
+        Align text with the <code>[txt]</code> attribute. Available values:
+        <code>l</code> (left), <code>c</code> (center), <code>r</code> (right),
+        <code>j</code> (justify).
+      </p>
       <p txt="l">Left aligned - <code>[txt="l"]</code></p>
       <p txt="c">Center aligned - <code>[txt="c"]</code></p>
       <p txt="r">Right aligned - <code>[txt="r"]</code></p>
@@ -369,6 +774,10 @@ fn main() {
         consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
         voluptate velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
+      <pre><code>&lt;p txt="l"&gt;Left aligned&lt;/p&gt;
+&lt;p txt="c"&gt;Center aligned&lt;/p&gt;
+&lt;p txt="r"&gt;Right aligned&lt;/p&gt;
+&lt;p txt="j"&gt;Justified text&lt;/p&gt;</code></pre>
     </section>
 
     <!-- ====== FOOTER ====== -->

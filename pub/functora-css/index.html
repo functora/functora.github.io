@@ -3,7 +3,7 @@
   <head>
     <title>Template | functora-css</title>
     <meta charset="utf-8" />
-    <meta name="description" content="functora-css — all components" />
+    <meta name="description" content="functora-css - all components" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, user-scalable=no"
@@ -20,6 +20,8 @@
           <a href="#">functora-css</a>
         </header>
         <ul>
+          <li><label for="data-theme-dark">Theme</label></li>
+          <li><a href="#themes">Themes</a></li>
           <li><a href="#typography">Typography</a></li>
           <li><a href="#buttons">Buttons</a></li>
           <li>
@@ -33,10 +35,84 @@
               <menuitem><a href="#utility">Utility</a></menuitem>
             </menu>
           </li>
-          <li><label for="data-theme-dark">Theme</label></li>
         </ul>
       </label>
     </nav>
+
+    <!-- ====== INTRODUCTION ====== -->
+    <section id="intro">
+      <h1>functora-css</h1>
+      <p>
+        A classless, dependency-free, configuration-free, JS-free, mobile-first,
+        responsive, lightweight, semantic pure CSS framework with light and dark
+        themes and a collapsible navbar.
+      </p>
+    </section>
+
+    <!-- ====== THEMES ====== -->
+    <section id="themes">
+      <h2>Themes</h2>
+      <p>
+        functora-css supports light and dark themes via the
+        <code>data-theme</code> attribute on the
+        <code>&lt;html&gt;</code> element. There are two complementary
+        mechanisms for applying it:
+      </p>
+
+      <h4>Attribute</h4>
+      <p>
+        Set <code>data-theme="light"</code> or
+        <code>data-theme="dark"</code> directly on <code>&lt;html&gt;</code> to
+        lock the page to a single theme. This is useful when no runtime theme
+        switching is needed - for example in static pages that always use one
+        theme, or in applications where the attribute value is stored and
+        managed externally (localStorage, database, server-side rendering,
+        etc.).
+      </p>
+
+      <h4>Checkbox</h4>
+      <p>
+        functora-css provides two built-in checkbox IDs that toggle the theme
+        with pure CSS - no JavaScript required. The user chooses which checkbox
+        to use depending on which theme should be the default (unchecked state).
+      </p>
+
+      <p>
+        <strong><code>id="data-theme-dark"</code></strong> - default is light.
+        When unchecked the page renders in light theme; when checked it switches
+        to dark.
+      </p>
+
+      <p>
+        <strong><code>id="data-theme-light"</code></strong> - default is dark.
+        When unchecked the page renders in dark theme; when checked it switches
+        to light.
+      </p>
+
+      <p>
+        The intended usage is to place both checkboxes inside the
+        <code>&lt;nav&gt;</code> element (hidden via CSS) and use
+        <code>&lt;label&gt;</code> elements with the corresponding
+        <code>for</code> attributes as visible toggle buttons. The navbar
+        contains two hidden checkboxes - one for the mobile menu toggle and one
+        for the theme toggle.
+      </p>
+      <pre><code>&lt;nav&gt;
+  &lt;label&gt;
+    &lt;input type="checkbox" /&gt;
+    &lt;input type="checkbox" id="data-theme-dark" /&gt;
+    &lt;header&gt;...&lt;/header&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;label for="data-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/label&gt;
+&lt;/nav&gt;</code></pre>
+      <p>
+        The <strong>Theme</strong> link in the navigation bar above works this
+        way - clicking it toggles the hidden <code>data-theme-dark</code>
+        checkbox and switches between light and dark without any JavaScript.
+      </p>
+    </section>
 
     <!-- ====== TYPOGRAPHY ====== -->
     <section id="typography">
@@ -48,7 +124,7 @@
       <h6>Heading h6</h6>
 
       <p>
-        Paragraph with an <a href="#">anchor link</a> — hover to see the
+        Paragraph with an <a href="#">anchor link</a> - hover to see the
         underline effect. Lorem ipsum dolor sit amet, consectetur adipisicing
         elit.
       </p>
@@ -235,12 +311,14 @@ fn main() {
     <section id="tooltips">
       <h2>Tooltips</h2>
       <p>
-        <span tt="Hello from functora-css">Hover me (tooltip)</span> —
+        <span tt="Hello from functora-css">Hover me (tooltip)</span> -
         <button disabled dtt="This button is disabled">
           Disabled with tooltip
         </button>
-        —
-        <a att href="https://functora.github.io/functora-css.html">Anchor tooltip</a>
+        -
+        <a att href="https://functora.github.io/functora-css.html"
+          >Anchor tooltip</a
+        >
       </p>
     </section>
 
@@ -271,23 +349,23 @@ fn main() {
       <p hidden>You cannot see this text.</p>
 
       <h5>Font families</h5>
-      <p serif>Serif font — <code>[serif]</code></p>
-      <p sans>Sans-serif font — <code>[sans]</code></p>
-      <p mono>Monospace font — <code>[mono]</code></p>
+      <p serif>Serif font - <code>[serif]</code></p>
+      <p sans>Sans-serif font - <code>[sans]</code></p>
+      <p mono>Monospace font - <code>[mono]</code></p>
 
       <h5>Font sizes</h5>
-      <p fs="xl">Extra large — <code>[fs="xl"]</code></p>
-      <p fs="l">Large — <code>[fs="l"]</code></p>
-      <p fs="m">Medium — <code>[fs="m"]</code></p>
-      <p fs="s">Small — <code>[fs="s"]</code></p>
-      <p fs="xs">Extra small — <code>[fs="xs"]</code></p>
+      <p fs="xl">Extra large - <code>[fs="xl"]</code></p>
+      <p fs="l">Large - <code>[fs="l"]</code></p>
+      <p fs="m">Medium - <code>[fs="m"]</code></p>
+      <p fs="s">Small - <code>[fs="s"]</code></p>
+      <p fs="xs">Extra small - <code>[fs="xs"]</code></p>
 
       <h5>Text alignment</h5>
-      <p txt="l">Left aligned — <code>[txt="l"]</code></p>
-      <p txt="c">Center aligned — <code>[txt="c"]</code></p>
-      <p txt="r">Right aligned — <code>[txt="r"]</code></p>
+      <p txt="l">Left aligned - <code>[txt="l"]</code></p>
+      <p txt="c">Center aligned - <code>[txt="c"]</code></p>
+      <p txt="r">Right aligned - <code>[txt="r"]</code></p>
       <p txt="j">
-        Justified — <code>[txt="j"]</code>. Lorem ipsum dolor sit amet,
+        Justified - <code>[txt="j"]</code>. Lorem ipsum dolor sit amet,
         consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
         voluptate velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
@@ -295,7 +373,7 @@ fn main() {
 
     <!-- ====== FOOTER ====== -->
     <footer>
-      <p>functora-css — all components demo</p>
+      <p>functora-css - all components demo</p>
     </footer>
   </body>
 </html>

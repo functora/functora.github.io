@@ -1,6 +1,6 @@
 # [functora-css](https://functora.github.io/functora-css.html)
 
-A classless, dependency-free, configuration-free, JS-free, mobile-first, responsive, lightweight, semantic pure CSS framework.
+A classless, dependency-free, configuration-free, JS-free, mobile-first, responsive, lightweight, semantic pure CSS framework with light and dark themes and a collapsible navbar.
 
 Go to [functora.github.io/functora-css.html](https://functora.github.io/functora-css.html) for examples and documentation.
 

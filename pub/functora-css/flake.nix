@@ -16,11 +16,11 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = stable.legacyPackages.${system};
-        release-barecss = pkgs.writeShellApplication {
-          name = "release-barecss";
+        release-functora-css = pkgs.writeShellApplication {
+          name = "release-functora-css";
           text = ''
-            ${pkgs.lessc}/bin/lessc ./less/bare.less \
-              | ${pkgs.clean-css-cli}/bin/cleancss > ./css/bare.min.css
+            ${pkgs.lessc}/bin/lessc ./less/functora.less \
+              | ${pkgs.clean-css-cli}/bin/cleancss > ./css/functora.min.css
           '';
         };
         shell = {
@@ -28,7 +28,7 @@
             djlint
             lessc
             clean-css-cli
-            release-barecss
+            release-functora-css
             opencode-nix.packages.${system}.default
             chromium
             cloudflared

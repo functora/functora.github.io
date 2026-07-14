@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------*/
 
 
-// bare class (default is no class and 'xx')
+// default class (no class and 'xx')
 // Why xx? It's short and easy to search.
 
 @n: ~":not([class])";
@@ -92,7 +92,7 @@
     --grey-dark: hsl(var(--hue), var(--sat), 50%);
     --grey-ultradark: hsl(var(--hue), var(--sat), 30%);
 
-    /* Background for body - strictly strictly speaking barecss applies color to body, but usually white/transparent.
+    /* Background for body - strictly speaking functora-css applies color to body, but usually white/transparent.
        We might need a --bg variable if body background isn't defined elsewhere.
        _reset.less defines body { color: @black; ... } but no background-color.
        Browsers default to white. We should explicit it for dark mode.

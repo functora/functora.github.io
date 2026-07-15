@@ -19,20 +19,25 @@
           <a href="#">functora-css</a>
         </header>
         <ul>
-          <li><label for="data-theme-dark">Theme</label></li>
-          <li><a href="#themes">Themes</a></li>
+          <li><a href="#appearance">Appearance</a></li>
           <li><a href="#navigation">Navigation</a></li>
-          <li><a href="#typography">Typography</a></li>
-          <li><a href="#blockquotes">Blockquotes</a></li>
-          <li><a href="#code">Code</a></li>
-          <li><a href="#lists">Lists</a></li>
-          <li><a href="#buttons">Buttons</a></li>
-          <li><a href="#tags">Tags</a></li>
-          <li><a href="#tooltips">Tooltips</a></li>
-          <li><a href="#forms">Forms</a></li>
-          <li><a href="#tables">Tables</a></li>
-          <li><a href="#cards">Cards</a></li>
-          <li><a href="#utility">Utility</a></li>
+          <li>
+            <a>More</a>
+            <menu>
+              <menuitem><a href="#buttons">Buttons</a></menuitem>
+              <menuitem><a href="#forms">Forms</a></menuitem>
+              <menuitem><a href="#typography">Typography</a></menuitem>
+              <menuitem><a href="#blockquotes">Blockquotes</a></menuitem>
+              <menuitem><a href="#code">Code</a></menuitem>
+              <menuitem><a href="#lists">Lists</a></menuitem>
+              <menuitem><a href="#tables">Tables</a></menuitem>
+              <menuitem><a href="#tags">Tags</a></menuitem>
+              <menuitem><a href="#tooltips">Tooltips</a></menuitem>
+              <menuitem><a href="#cards">Cards</a></menuitem>
+              <menuitem><a href="#utility">Utility</a></menuitem>
+            </menu>
+          </li>
+          <li><label for="data-theme-dark">Theme</label></li>
         </ul>
       </label>
     </nav>
@@ -44,10 +49,14 @@
         responsive, lightweight, semantic pure CSS framework with light and dark
         themes and a collapsible navbar.
       </p>
+      <p>
+        This page is built entirely with semantic HTML elements and styled
+        exclusively by functora-css - no extra styles, no JavaScript.
+      </p>
     </section>
 
-    <section id="themes">
-      <h2>Themes</h2>
+    <section id="appearance">
+      <h2>Appearance</h2>
       <p>
         functora-css supports light and dark themes via the
         <code>data-theme</code> attribute on the
@@ -86,12 +95,12 @@
       </p>
 
       <p>
-        The intended usage is to place both checkboxes inside the
-        <code>&lt;nav&gt;</code> element (hidden via CSS) and use
-        <code>&lt;label&gt;</code> elements with the corresponding
-        <code>for</code> attributes as visible toggle buttons. The navbar
-        contains two hidden checkboxes - one for the mobile menu toggle and one
-        for the theme toggle. Their order matters for CSS sibling selectors:
+        Place the chosen checkbox inside the <code>&lt;nav&gt;</code> element
+        (hidden via CSS) and use a <code>&lt;label&gt;</code> element with the
+        corresponding <code>for</code> attribute as the visible toggle button.
+        The navbar contains two hidden checkboxes - one for the mobile menu
+        toggle and one for the theme toggle. Their order matters for CSS sibling
+        selectors:
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
@@ -104,7 +113,7 @@
   &lt;/label&gt;
 &lt;/nav&gt;</code></pre>
       <p>
-        The <strong>Theme</strong> link in the navigation bar above works this
+        The <strong>Theme</strong> button in the navigation bar above works this
         way - clicking it toggles the hidden <code>data-theme-dark</code>
         checkbox and switches between light and dark without any JavaScript.
       </p>
@@ -152,6 +161,206 @@
         which reveals the menu via pure CSS. The theme toggle remains
         independent and does not affect the menu state.
       </p>
+    </section>
+
+    <section id="buttons">
+      <h2>Buttons</h2>
+      <p>
+        Buttons are styled using native HTML elements. No classes are needed -
+        use the <code>primary</code> attribute for primary buttons,
+        <code>round</code> for rounded corners, and <code>disabled</code> for
+        disabled state.
+      </p>
+
+      <h4>Standard buttons</h4>
+      <p>
+        <button>Default</button>
+        <button primary>Primary</button>
+        <button round>Round</button>
+        <button disabled>Disabled</button>
+      </p>
+      <pre><code>&lt;button&gt;Default&lt;/button&gt;
+&lt;button primary&gt;Primary&lt;/button&gt;
+&lt;button round&gt;Round&lt;/button&gt;
+&lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
+
+      <h4>Anchor as button</h4>
+      <p>
+        Use the <code>btn</code> attribute on an anchor element to style it as a
+        button. Combine with <code>primary</code> for primary styling.
+      </p>
+      <p>
+        <a btn href="#">Link button</a>
+        <a btn primary href="#">Primary link</a>
+      </p>
+      <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
+&lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
+
+      <h4>Buttons with icons</h4>
+      <p>
+        Buttons can contain inline SVG icons. Place the SVG before the text
+        content.
+      </p>
+      <p>
+        <button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v8M8 12h8" />
+          </svg>
+          With icon
+        </button>
+        <button primary>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Save
+        </button>
+      </p>
+      <pre><code>&lt;button&gt;
+  &lt;svg ...&gt;...&lt;/svg&gt;
+  With icon
+&lt;/button&gt;
+&lt;button primary&gt;
+  &lt;svg ...&gt;...&lt;/svg&gt;
+  Save
+&lt;/button&gt;</code></pre>
+
+      <h4>Submit and reset</h4>
+      <p>
+        <code>&lt;input type="submit"&gt;</code> and
+        <code>&lt;input type="reset"&gt;</code> are automatically styled as
+        buttons within forms.
+      </p>
+      <pre><code>&lt;input type="submit" value="Submit" /&gt;
+&lt;input type="reset" value="Reset" /&gt;</code></pre>
+    </section>
+
+    <section id="forms">
+      <h2>Forms</h2>
+      <p>
+        Form elements are styled with a clean, minimal look. Labels should be
+        placed directly before their corresponding inputs. Text inputs and
+        textareas default to 100% width.
+      </p>
+
+      <h4>Text inputs</h4>
+      <p>
+        Text inputs have a subtle border that highlights on focus. Place the
+        <code>&lt;label&gt;</code> directly before the input.
+      </p>
+      <label for="demo-name">Name</label>
+      <input id="demo-name" type="text" placeholder="Your name" />
+      <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
+&lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
+
+      <h4>Textarea</h4>
+      <p>
+        Textareas auto-resize vertically and have the same styling as text
+        inputs.
+      </p>
+      <label for="demo-bio">Bio</label>
+      <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
+      <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
+&lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
+
+      <h4>Select</h4>
+      <p>Select dropdowns are styled to match other form elements.</p>
+      <label for="demo-lang">Language</label>
+      <select id="demo-lang">
+        <option>Rust</option>
+        <option>TypeScript</option>
+        <option>Python</option>
+      </select>
+      <pre><code>&lt;label for="lang"&gt;Language&lt;/label&gt;
+&lt;select id="lang"&gt;
+  &lt;option&gt;Rust&lt;/option&gt;
+  &lt;option&gt;TypeScript&lt;/option&gt;
+  &lt;option&gt;Python&lt;/option&gt;
+&lt;/select&gt;</code></pre>
+
+      <h4>Radio and checkbox</h4>
+      <p>
+        Radio buttons and checkboxes are styled with custom indicators. Place
+        the <code>&lt;label&gt;</code> directly after the input.
+      </p>
+      <input type="radio" name="demo-radio" id="demo-r1" /><label for="demo-r1"
+        >Option A</label
+      >
+      <input
+        type="radio"
+        name="demo-radio"
+        id="demo-r2"
+        checked
+      /><label for="demo-r2">Option B</label>
+      <input type="checkbox" id="demo-c1" /><label for="demo-c1"
+        >Check me</label
+      >
+      <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
+        >Already checked</label
+      >
+      <pre><code>&lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
+&lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
+&lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
+&lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
+
+      <h4>Fieldset</h4>
+      <p>
+        Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
+        group related form controls.
+      </p>
+      <fieldset>
+        <legend>Preferences</legend>
+        <input
+          type="radio"
+          name="demo-fieldset-radio"
+          id="demo-fr1"
+        /><label for="demo-fr1">Option A</label>
+        <input
+          type="radio"
+          name="demo-fieldset-radio"
+          id="demo-fr2"
+          checked
+        /><label for="demo-fr2">Option B</label>
+        <br />
+        <input type="checkbox" id="demo-fc1" /><label for="demo-fc1"
+          >Check me</label
+        >
+        <input type="checkbox" id="demo-fc2" checked /><label for="demo-fc2"
+          >Already checked</label
+        >
+        <p>
+          <button type="button" primary>Submit</button>
+          <button type="button">Reset</button>
+        </p>
+      </fieldset>
+      <pre><code>&lt;fieldset&gt;
+  &lt;legend&gt;Preferences&lt;/legend&gt;
+  &lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
+  &lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
+  &lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
+  &lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;
+  &lt;p&gt;
+    &lt;button type="submit" primary&gt;Submit&lt;/button&gt;
+    &lt;button type="reset"&gt;Reset&lt;/button&gt;
+  &lt;/p&gt;
+&lt;/fieldset&gt;</code></pre>
     </section>
 
     <section id="typography">
@@ -338,93 +547,54 @@ fn main() {
 &lt;/ol&gt;</code></pre>
     </section>
 
-    <section id="buttons">
-      <h2>Buttons</h2>
+    <section id="tables">
+      <h2>Tables</h2>
       <p>
-        Buttons are styled using native HTML elements. No classes are needed -
-        use the <code>primary</code> attribute for primary buttons,
-        <code>round</code> for rounded corners, and <code>disabled</code> for
-        disabled state.
+        Tables use standard HTML structure with <code>&lt;thead&gt;</code>,
+        <code>&lt;tbody&gt;</code>, <code>&lt;tr&gt;</code>,
+        <code>&lt;th&gt;</code>, and <code>&lt;td&gt;</code> elements. Rows
+        highlight on hover.
       </p>
-
-      <h4>Standard buttons</h4>
-      <p>
-        <button>Default</button>
-        <button primary>Primary</button>
-        <button round>Round</button>
-        <button disabled>Disabled</button>
-      </p>
-      <pre><code>&lt;button&gt;Default&lt;/button&gt;
-&lt;button primary&gt;Primary&lt;/button&gt;
-&lt;button round&gt;Round&lt;/button&gt;
-&lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
-
-      <h4>Anchor as button</h4>
-      <p>
-        Use the <code>btn</code> attribute on an anchor element to style it as a
-        button. Combine with <code>primary</code> for primary styling.
-      </p>
-      <p>
-        <a btn href="#">Link button</a>
-        <a btn primary href="#">Primary link</a>
-      </p>
-      <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
-&lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
-
-      <h4>Buttons with icons</h4>
-      <p>
-        Buttons can contain inline SVG icons. Place the SVG before the text
-        content.
-      </p>
-      <p>
-        <button>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 8v8M8 12h8" />
-          </svg>
-          With icon
-        </button>
-        <button primary>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          Save
-        </button>
-      </p>
-      <pre><code>&lt;button&gt;
-  &lt;svg ...&gt;...&lt;/svg&gt;
-  With icon
-&lt;/button&gt;
-&lt;button primary&gt;
-  &lt;svg ...&gt;...&lt;/svg&gt;
-  Save
-&lt;/button&gt;</code></pre>
-
-      <h4>Submit and reset</h4>
-      <p>
-        <code>&lt;input type="submit"&gt;</code> and
-        <code>&lt;input type="reset"&gt;</code> are automatically styled as
-        buttons within forms.
-      </p>
-      <pre><code>&lt;input type="submit" value="Submit" /&gt;
-&lt;input type="reset" value="Reset" /&gt;</code></pre>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Alice</td>
+            <td>Developer</td>
+            <td>Active</td>
+          </tr>
+          <tr>
+            <td>Bob</td>
+            <td>Designer</td>
+            <td>Away</td>
+          </tr>
+          <tr>
+            <td>Carol</td>
+            <td>Manager</td>
+            <td>Active</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Name&lt;/th&gt;
+      &lt;th&gt;Role&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Alice&lt;/td&gt;
+      &lt;td&gt;Developer&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
     </section>
 
     <section id="tags">
@@ -494,163 +664,6 @@ fn main() {
         >
       </p>
       <pre><code>&lt;a att href="https://example.com"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
-    </section>
-
-    <section id="forms">
-      <h2>Forms</h2>
-      <p>
-        Form elements are styled with a clean, minimal look. Labels should be
-        placed directly before their corresponding inputs. Text inputs and
-        textareas default to 100% width.
-      </p>
-
-      <h4>Text inputs</h4>
-      <p>
-        Text inputs have a subtle border that highlights on focus. Place the
-        <code>&lt;label&gt;</code> directly before the input.
-      </p>
-      <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
-&lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
-
-      <h4>Textarea</h4>
-      <p>
-        Textareas auto-resize vertically and have the same styling as text
-        inputs.
-      </p>
-      <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
-&lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
-
-      <h4>Select</h4>
-      <p>Select dropdowns are styled to match other form elements.</p>
-      <pre><code>&lt;label for="lang"&gt;Language&lt;/label&gt;
-&lt;select id="lang"&gt;
-  &lt;option&gt;Rust&lt;/option&gt;
-  &lt;option&gt;TypeScript&lt;/option&gt;
-  &lt;option&gt;Python&lt;/option&gt;
-&lt;/select&gt;</code></pre>
-
-      <h4>Radio and checkbox</h4>
-      <p>
-        Radio buttons and checkboxes are styled with custom indicators. Place
-        the <code>&lt;label&gt;</code> directly after the input.
-      </p>
-      <pre><code>&lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-&lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-&lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
-&lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
-
-      <h4>Fieldset</h4>
-      <p>
-        Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
-        group related form controls.
-      </p>
-      <pre><code>&lt;fieldset&gt;
-  &lt;legend&gt;Preferences&lt;/legend&gt;
-  &lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-  &lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-  &lt;p&gt;
-    &lt;button type="submit" primary&gt;Submit&lt;/button&gt;
-    &lt;button type="reset"&gt;Reset&lt;/button&gt;
-  &lt;/p&gt;
-&lt;/fieldset&gt;</code></pre>
-
-      <h4>Full example</h4>
-      <form>
-        <label for="name"
-          >Name
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </label>
-        <input id="name" type="text" placeholder="Your name" />
-
-        <label for="bio">Bio</label>
-        <textarea id="bio" placeholder="Tell us about yourself"></textarea>
-
-        <label for="lang">Language</label>
-        <select id="lang">
-          <option>Rust</option>
-          <option>TypeScript</option>
-          <option>Python</option>
-        </select>
-
-        <fieldset>
-          <legend>Preferences</legend>
-          <input type="radio" name="radio" id="r1" /><label for="r1"
-            >Option A</label
-          >
-          <input type="radio" name="radio" id="r2" checked /><label for="r2"
-            >Option B</label
-          >
-          <input type="checkbox" id="c1" /><label for="c1">Check me</label>
-          <input type="checkbox" id="c2" checked /><label for="c2"
-            >Already checked</label
-          >
-          <p>
-            <button type="submit" primary>Submit</button>
-            <button type="reset">Reset</button>
-          </p>
-        </fieldset>
-      </form>
-    </section>
-
-    <section id="tables">
-      <h2>Tables</h2>
-      <p>
-        Tables use standard HTML structure with <code>&lt;thead&gt;</code>,
-        <code>&lt;tbody&gt;</code>, <code>&lt;tr&gt;</code>,
-        <code>&lt;th&gt;</code>, and <code>&lt;td&gt;</code> elements. Rows
-        highlight on hover.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Alice</td>
-            <td>Developer</td>
-            <td>Active</td>
-          </tr>
-          <tr>
-            <td>Bob</td>
-            <td>Designer</td>
-            <td>Away</td>
-          </tr>
-          <tr>
-            <td>Carol</td>
-            <td>Manager</td>
-            <td>Active</td>
-          </tr>
-        </tbody>
-      </table>
-      <pre><code>&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Name&lt;/th&gt;
-      &lt;th&gt;Role&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Alice&lt;/td&gt;
-      &lt;td&gt;Developer&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;</code></pre>
     </section>
 
     <section id="cards">

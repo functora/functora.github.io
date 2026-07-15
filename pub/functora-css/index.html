@@ -242,14 +242,12 @@
   Save
 &lt;/button&gt;</code></pre>
 
-      <h4>Submit and reset</h4>
+      <h4>Submit button</h4>
       <p>
-        <code>&lt;input type="submit"&gt;</code> and
-        <code>&lt;input type="reset"&gt;</code> are automatically styled as
-        buttons within forms.
+        <code>&lt;input type="submit"&gt;</code> is automatically styled as a
+        button within forms.
       </p>
-      <pre><code>&lt;input type="submit" value="Submit" /&gt;
-&lt;input type="reset" value="Reset" /&gt;</code></pre>
+      <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
     </section>
 
     <section id="forms">
@@ -303,12 +301,10 @@
       <input type="radio" name="demo-radio" id="demo-r1" /><label for="demo-r1"
         >Option A</label
       >
-      <input
-        type="radio"
-        name="demo-radio"
-        id="demo-r2"
-        checked
-      /><label for="demo-r2">Option B</label>
+      <input type="radio" name="demo-radio" id="demo-r2" checked /><label
+        for="demo-r2"
+        >Option B</label
+      >
       <input type="checkbox" id="demo-c1" /><label for="demo-c1"
         >Check me</label
       >
@@ -327,11 +323,10 @@
       </p>
       <fieldset>
         <legend>Preferences</legend>
-        <input
-          type="radio"
-          name="demo-fieldset-radio"
-          id="demo-fr1"
-        /><label for="demo-fr1">Option A</label>
+        <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
+          for="demo-fr1"
+          >Option A</label
+        >
         <input
           type="radio"
           name="demo-fieldset-radio"
@@ -413,11 +408,9 @@
         inherits from the primary theme color.
       </p>
       <p>
-        <a href="#">Default anchor</a> -
-        <a href="#" primary>Primary anchor</a>
+        <a href="#">Default anchor</a>
       </p>
-      <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;
-&lt;a href="#" primary&gt;Primary anchor&lt;/a&gt;</code></pre>
+      <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
       <h4>Emphasis and inline elements</h4>
       <p>
@@ -432,6 +425,16 @@
 &lt;small&gt;small&lt;/small&gt;
 &lt;del&gt;deleted&lt;/del&gt;
 &lt;abbr title="abbreviation"&gt;abbreviations&lt;/abbr&gt;</code></pre>
+
+      <h4>Sections</h4>
+      <p>
+        The <code>&lt;section&gt;</code> element provides centered content with
+        padding and a max-width. It works as a container for page sections.
+      </p>
+      <pre><code>&lt;section&gt;
+  &lt;h2&gt;Section title&lt;/h2&gt;
+  &lt;p&gt;Section content goes here.&lt;/p&gt;
+&lt;/section&gt;</code></pre>
     </section>
 
     <section id="blockquotes">
@@ -601,19 +604,14 @@ fn main() {
       <h2>Tags</h2>
       <p>
         Tags use the <code>&lt;tag&gt;</code> element. They are useful for
-        labels, statuses, and categories. Use the <code>primary</code> attribute
-        for primary styling and <code>round</code> for pill-shaped tags.
+        labels, statuses, and categories.
       </p>
       <p>
         <tag>default</tag>
         <tag primary>primary</tag>
-        <tag round>rounded</tag>
-        <tag primary round>primary rounded</tag>
       </p>
       <pre><code>&lt;tag&gt;default&lt;/tag&gt;
-&lt;tag primary&gt;primary&lt;/tag&gt;
-&lt;tag round&gt;rounded&lt;/tag&gt;
-&lt;tag primary round&gt;primary rounded&lt;/tag&gt;</code></pre>
+&lt;tag primary&gt;primary&lt;/tag&gt;</code></pre>
     </section>
 
     <section id="tooltips">
@@ -685,7 +683,7 @@ fn main() {
         <p>Cards stack vertically and collapse to full-width on mobile.</p>
         <hr />
         <tag>demo</tag>
-        <tag primary>functora-css</tag>
+        <tag>functora-css</tag>
       </card>
       <pre><code>&lt;card&gt;
   &lt;h3&gt;Card title&lt;/h3&gt;

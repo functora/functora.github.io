@@ -14,7 +14,7 @@
     <nav>
       <label>
         <input type="checkbox" id="nav-open" />
-        <input type="checkbox" id="data-theme-dark" />
+        <input type="checkbox" id="data-theme-dark" checked />
         <header id="nav-close">
           <a href="#">functora-css</a>
           <a href="#nav-open"></a>
@@ -60,10 +60,18 @@
     <section id="appearance">
       <h2>Appearance</h2>
       <p>
-        functora-css supports light and dark themes via the
-        <code>data-theme</code> attribute on the
-        <code>&lt;html&gt;</code> element. There are two complementary
-        mechanisms for applying it:
+        functora-css supports light and dark themes. You can switch themes using
+        a <code>data-theme</code> attribute on <code>&lt;html&gt;</code>, a
+        checkbox in your nav bar, or let it follow your system settings
+        automatically. These three mechanisms work together:
+      </p>
+
+      <h4>System dark mode</h4>
+      <p>
+        When no theme override is present, functora-css automatically follows
+        your operating system's dark mode setting. Switching your OS to dark
+        mode switches the page to dark theme. Any manual override (attribute or
+        checkbox) takes precedence.
       </p>
 
       <h4>Attribute</h4>
@@ -80,34 +88,33 @@
       <h4>Checkbox</h4>
       <p>
         functora-css provides two built-in checkbox IDs that toggle the theme
-        with pure CSS - no JavaScript required. The user chooses which checkbox
-        to use depending on which theme should be the default (unchecked state).
+        with pure CSS - no JavaScript required. The default theme is controlled
+        by the HTML <code>checked</code> attribute - present means that theme is
+        active by default, absent means the opposite. This is the same mechanism
+        used in the navigation bar above.
       </p>
 
       <p>
-        <strong><code>id="data-theme-dark"</code></strong> - default is light.
-        When unchecked the page renders in light theme; when checked it switches
-        to dark.
+        <strong><code>id="data-theme-dark"</code></strong> - add
+        <code>checked</code> for a dark default, omit for light.
       </p>
 
       <p>
-        <strong><code>id="data-theme-light"</code></strong> - default is dark.
-        When unchecked the page renders in dark theme; when checked it switches
-        to light.
+        <strong><code>id="data-theme-light"</code></strong> - add
+        <code>checked</code> for a light default, omit for dark.
       </p>
 
       <p>
         Place the chosen checkbox inside the <code>&lt;nav&gt;</code> element
         (hidden via CSS) and use a <code>&lt;label&gt;</code> element with the
         corresponding <code>for</code> attribute as the visible toggle button.
-        The navbar contains two hidden checkboxes - one for the mobile menu
-        toggle and one for the theme toggle. Their order matters for CSS sibling
-        selectors:
+        The navbar contains two hidden inputs - one for the mobile menu toggle
+        and one for the theme toggle. They must appear in this order:
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" /&gt;
-    &lt;input type="checkbox" id="data-theme-dark" /&gt;
+    &lt;input type="checkbox" id="nav-open" /&gt;
+    &lt;input type="checkbox" id="data-theme-dark" checked /&gt;
     &lt;header&gt;...&lt;/header&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;label for="data-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
@@ -117,32 +124,40 @@
       <p>
         The <strong>Theme</strong> button in the navigation bar above works this
         way - clicking it toggles the hidden <code>data-theme-dark</code>
-        checkbox and switches between light and dark without any JavaScript.
+        checkbox and switches between light and dark without any JavaScript. The
+        label automatically shows a moon (🌚) when dark theme is active or a sun
+        (🌝) when light theme is active.
       </p>
     </section>
 
     <section id="navigation">
       <h2>Navigation</h2>
       <p>
-        The responsive navbar uses a checkbox-based toggle for mobile menus
-        without any JavaScript. The structure requires a specific order of
-        elements inside a <code>&lt;nav&gt;</code> tag for the CSS selectors to
-        work correctly.
+        The responsive navbar uses a pure CSS toggle for mobile menus without
+        any JavaScript. The structure requires a specific order of elements
+        inside a <code>&lt;nav&gt;</code> tag.
       </p>
 
       <h4>Structure</h4>
       <p>
         The navbar must follow this exact structure: a
-        <code>&lt;label&gt;</code> wrapping two hidden checkboxes (mobile menu
-        toggle and theme toggle), a <code>&lt;header&gt;</code> for the
-        brand/logo, and a <code>&lt;ul&gt;</code> for navigation links. Dropdown
-        menus use a nested <code>&lt;menu&gt;</code> element inside a list item.
+        <code>&lt;label&gt;</code> wrapping two hidden checkbox inputs, a
+        <code>&lt;header&gt;</code> for the brand/logo with a toggle link (<code
+          >&lt;a href="#nav-open"&gt;</code
+        >), a full-screen overlay link (<code>&lt;a href="#nav-close"&gt;</code
+        >) that closes the menu, and a <code>&lt;ul&gt;</code> for navigation
+        links. Dropdown menus use a nested <code>&lt;menu&gt;</code> element
+        inside a list item.
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" /&gt;
-    &lt;input type="checkbox" id="data-theme-dark" /&gt;
-    &lt;header&gt;&lt;a href="#"&gt;Site name&lt;/a&gt;&lt;/header&gt;
+    &lt;input type="checkbox" id="nav-open" /&gt;
+    &lt;input type="checkbox" id="data-theme-dark" checked /&gt;
+    &lt;header id="nav-close"&gt;
+      &lt;a href="#"&gt;Site name&lt;/a&gt;
+      &lt;a href="#nav-open"&gt;&lt;/a&gt;
+    &lt;/header&gt;
+    &lt;a href="#nav-close"&gt;&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;
@@ -158,11 +173,35 @@
 
       <h4>Mobile behavior</h4>
       <p>
-        On mobile viewports the navigation links are hidden by default. Tapping
-        the header area (or the hamburger icon) toggles the first checkbox,
-        which reveals the menu via pure CSS. The theme toggle remains
-        independent and does not affect the menu state.
+        On mobile viewports the navigation links are hidden off-screen. Tapping
+        the header area (or the hamburger icon) slides the menu in from the
+        right. A full-screen overlay appears behind the menu; tapping it closes
+        the menu. The theme toggle remains independent and does not affect the
+        menu state. The header shows a hamburger icon by default and changes to
+        a close icon when the menu is open.
       </p>
+
+      <h4>Fixed positioning</h4>
+      <p>
+        Add the <code>fx</code> attribute (<code>&lt;nav fx&gt;</code>) to fix
+        the navbar to the top of the viewport. On mobile the navbar is always
+        fixed; the <code>fx</code> attribute applies fixed positioning on larger
+        screens as well.
+      </p>
+      <pre><code>&lt;nav fx&gt;
+  &lt;label&gt;
+    &lt;input type="checkbox" id="nav-open" /&gt;
+    &lt;input type="checkbox" id="data-theme-dark" checked /&gt;
+    &lt;header id="nav-close"&gt;
+      &lt;a href="#"&gt;Site name&lt;/a&gt;
+      &lt;a href="#nav-open"&gt;&lt;/a&gt;
+    &lt;/header&gt;
+    &lt;a href="#nav-close"&gt;&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/label&gt;
+&lt;/nav&gt;</code></pre>
     </section>
 
     <section id="buttons">

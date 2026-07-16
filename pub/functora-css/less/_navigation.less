@@ -166,21 +166,28 @@ nav@{x} {
 
 		a {
 			color: inherit;
-			position: absolute;
-			left: 2rem;
-			top: 1rem;
-			bottom: 1rem;
 			cursor: pointer;
-			z-index: 2;
 			font-size: @fs-l;
 			text-decoration: none;
 
-			img {
-				height: 2rem;
-				vertical-align: middle;
-				top: -1px;
-				margin-right: 1rem;
+			&[href="#"] {
+				position: absolute;
+				left: 2rem;
+				top: 1rem;
+				bottom: 1rem;
+				z-index: 2;
+
+				img {
+					height: 2rem;
+					vertical-align: middle;
+					top: -1px;
+					margin-right: 1rem;
+				}
 			}
+		}
+
+		#nav-hamburger {
+			display: none;
 		}
 	}
 
@@ -202,6 +209,7 @@ nav@{x} {
 			border-color: @primary;
 		}
 	}
+
 }
 
 html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before,
@@ -246,6 +254,23 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 			&:after {
 				display: block
 			}
+
+			a[href="#"] {
+				left: 2rem;
+				top: 1rem;
+				bottom: 1rem;
+				z-index: 15;
+			}
+
+			#nav-hamburger {
+				display: block;
+				position: absolute;
+				top: 0;
+				right: 1rem;
+				width: 4.4rem;
+				height: 4.4rem;
+				z-index: 16;
+			}
 		}
 
 		label {
@@ -285,44 +310,48 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 				}
 			}
 
-			// overlay to catch clicks when sidebar is open
+		// #nav-close: hidden by default
 
-			&:has(>input:checked:not(#data-theme-dark):not(#data-theme-light))::before {
-				content: "";
-				position: fixed;
-				inset: 0;
-				z-index: 11;
+		#nav-close {
+			display: none;
+		}
+
+		// when menu is open: show sidebar, swap icons, show overlay
+
+		#nav-menu:target ~ ul {
+			transform: none;
+			pointer-events: none;
+
+			a,
+			label[for="data-theme-dark"],
+			label[for="data-theme-light"] {
+				pointer-events: auto;
+			}
+		}
+
+		#nav-menu:target ~ #nav-close {
+			display: block;
+			position: fixed;
+			inset: 0;
+			z-index: 11;
+			cursor: default;
+		}
+
+		#nav-menu:target ~ header {
+			pointer-events: none;
+
+			* {
+				pointer-events: none;
 			}
 
-		input:not(#data-theme-dark):not(#data-theme-light) {
-			&:checked {
+			&:before {
+				transform: rotate(-180deg);
+				opacity: 0;
+			}
 
-				// shows the nav when input is checked
-
-				~ul {
-					transform: none;
-					pointer-events: none;
-
-					a,
-					label[for="data-theme-dark"],
-					label[for="data-theme-light"] {
-						pointer-events: auto;
-					}
-				}
-
-				// hides the hamburger and shows the cross when the input is checked
-
-				~header {
-					&:before {
-						transform: rotate(-180deg);
-						opacity: 0;
-					}
-
-					&:after {
-						transform: none;
-						opacity: 1;
-					}
-				}
+			&:after {
+				transform: none;
+				opacity: 1;
 			}
 		}
 		}

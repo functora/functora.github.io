@@ -97,14 +97,14 @@
 
 /* System dark mode, gated so manual overrides win */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme-dark]):not(:has(#data-theme-dark)) {
+    :root:not([functora-theme-dark]):not(:has(#functora-theme-dark)) {
         .dark-theme();
     }
 }
 
 /* Forced dark theme: attribute or checked checkbox */
-[data-theme-dark],
-html:has(#data-theme-dark:checked) {
+[functora-theme-dark],
+html:has(#functora-theme-dark:checked) {
     .dark-theme();
 }
 
@@ -131,22 +131,22 @@ html:has(#data-theme-dark:checked) {
 
 html {
 
-    &[data-theme-dark] body,
-    &[data-theme-dark] nav,
-    &:has(#data-theme-dark:checked) body,
-    &:has(#data-theme-dark:checked) nav {
+    &[functora-theme-dark] body,
+    &[functora-theme-dark] nav,
+    &:has(#functora-theme-dark:checked) body,
+    &:has(#functora-theme-dark:checked) nav {
         animation: theme-switch-repaint-dark 0.11s;
     }
 
-    &:not([data-theme-dark]) body,
-    &:not([data-theme-dark]) nav,
-    &:has(#data-theme-dark:not(:checked)) body,
-    &:has(#data-theme-dark:not(:checked)) nav {
+    &:not([functora-theme-dark]) body,
+    &:not([functora-theme-dark]) nav,
+    &:has(#functora-theme-dark:not(:checked)) body,
+    &:has(#functora-theme-dark:not(:checked)) nav {
         animation: theme-switch-repaint-light 0.11s;
     }
 }
 
-html[data-theme-dark],
-html:has(#data-theme-dark) {
+html[functora-theme-dark],
+html:has(#functora-theme-dark) {
     will-change: color, background-color, border-color;
 }

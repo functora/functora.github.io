@@ -175,12 +175,12 @@ nav@{x} {
 			}
 		}
 
-		a[href="#nav-open"] {
+		a[href="#functora-nav-open"] {
 			display: none;
 		}
 	}
 
-	ul label[for="data-theme-dark"] {
+	ul label[for="functora-theme-dark"] {
 		text-decoration: none;
 		text-transform: none;
 		padding: 0.8rem 2rem 0.4rem;
@@ -198,11 +198,11 @@ nav@{x} {
 
 }
 
-html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before {
+html:has(#functora-theme-dark:checked) nav ul label[for="functora-theme-dark"]::before {
 	content: "🌚\00a0"
 }
 
-html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::before {
+html:has(#functora-theme-dark:not(:checked)) nav ul label[for="functora-theme-dark"]::before {
 	content: "🌝\00a0"
 }
 
@@ -244,7 +244,7 @@ html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::be
 				z-index: 15;
 			}
 
-			a[href="#nav-open"] {
+			a[href="#functora-nav-open"] {
 				display: block;
 				position: absolute;
 				top: 0;
@@ -283,27 +283,27 @@ html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::be
 					border: none;
 				}
 
-				label[for="data-theme-dark"] {
+				label[for="functora-theme-dark"] {
 					padding: 1rem 6rem 1rem 2rem;
 					border: none;
 				}
 			}
 
-		a[href="#nav-close"] {
+		a[href="#functora-nav-close"] {
 			display: none;
 		}
 
-		#nav-open:target ~ ul {
+		#functora-nav-open:target ~ ul {
 			transform: none;
 			pointer-events: none;
 
 			a,
-			label[for="data-theme-dark"] {
+			label[for="functora-theme-dark"] {
 				pointer-events: auto;
 			}
 		}
 
-		#nav-open:target ~ a[href="#nav-close"] {
+		#functora-nav-open:target ~ a[href="#functora-nav-close"] {
 			display: block;
 			position: fixed;
 			inset: 0;
@@ -311,7 +311,7 @@ html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::be
 			cursor: default;
 		}
 
-		#nav-open:target ~ header {
+		#functora-nav-open:target ~ header {
 			pointer-events: none;
 
 			* {

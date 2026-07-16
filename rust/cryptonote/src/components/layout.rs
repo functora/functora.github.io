@@ -22,15 +22,17 @@ pub fn Layout() -> Element {
     rsx! {
         nav {
             label {
-                input { r#type: "checkbox" }
-                header {
+                input { r#type: "checkbox", id: "functora-nav-open" }
+                header { id: "functora-nav-close",
                     NavLink {
                         nav: nav_signal,
                         href: Screen::Home.to_route(None).to_string(),
                         onclick: move |_| tst.set(TemporaryState::default()),
                         "🔐 Cryptonote"
                     }
+                    a { href: "#functora-nav-open" }
                 }
+                a { href: "#functora-nav-close" }
                 ul {
                     for lang in SUPPORTED_LANGUAGES {
                         li {

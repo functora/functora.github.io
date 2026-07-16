@@ -37,10 +37,11 @@ pub async fn set_theme(theme: &Theme) -> Result<(), Error> {
     eval(
         theme.to_js_value(),
         r#"function(arg){
-        await window
-        .document
-        .documentElement
-        .setAttribute("data-theme", arg);
+        if (arg === "dark") {
+            await window.document.documentElement.setAttribute("functora-theme-dark", "");
+        } else {
+            await window.document.documentElement.removeAttribute("functora-theme-dark");
+        }
         return null;
         }"#,
     )

@@ -1,10 +1,10 @@
-use crate::i18n::{Language, I18N};
+use crate::Msg;
+use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
 use crate::widgets::{Align, Button, Par};
-use crate::Msg;
 use dioxus::prelude::*;
-use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 use dioxus_free_icons::IconShape;
+use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
 
 #[component]
 pub fn GenDock<

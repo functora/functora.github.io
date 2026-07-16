@@ -3,12 +3,7 @@
 /*	inputs
 ----------------------------------------------------------------------*/
 
-
-	// buttons
-
 button {
-
-	// normal button styling
 
 	&@{n}, &@{x} {
 		cursor: pointer;
@@ -36,8 +31,6 @@ button {
 		}
 	}
 
-	// primary button styling
-
 	&.primary {
 		border-color: darken(@primary, 6%);
 		background: @primary;
@@ -51,8 +44,6 @@ button {
 		@media (max-width: @mobile) { width: 100% }
 	}
 
-	// disabled button styling
-
 	&:disabled,
 	&.disabled {
 		border-color: @grey-light;
@@ -61,8 +52,6 @@ button {
 		cursor: default;
 	}
 }
-
-	// labels
 
 label@{n}, label@{x} {
 	display: inline-block;
@@ -93,8 +82,6 @@ label@{n}, label@{x} {
 		outline: 0;
 	}
 }
-
-	// text fields
 
 input:not([type=radio]):not([type=checkbox]):not([type=button]) {
 	&@{n}, &@{x} { .mx-input() }
@@ -131,9 +118,6 @@ select@{n}, select@{x} {
 		outline: 0;
 	}
 }
-
-
-	// radio and checkboxes
 
 input {
 	&[type=radio],

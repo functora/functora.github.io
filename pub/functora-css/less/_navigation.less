@@ -25,8 +25,6 @@ nav@{x} {
 		z-index: 11;
 	}
 
-	// contains everything in the nav
-
 	label {
 		max-width: @width;
 		margin: auto;
@@ -36,8 +34,6 @@ nav@{x} {
 			display: none
 		}
 	}
-
-	// where the main navigation items live
 
 	ul {
 		padding: 0 2rem;
@@ -71,8 +67,6 @@ nav@{x} {
 			cursor: pointer;
 			font-weight: 300;
 
-			// sets drop down menu styling
-
 			@media (min-width: (@mobile + .1)) {
 				&:not(:only-child) {
 					background-image: var(--icon-chevron);
@@ -89,8 +83,6 @@ nav@{x} {
 			}
 		}
 	}
-
-	// drop down menu
 
 	menu {
 		padding: 0;
@@ -134,9 +126,6 @@ nav@{x} {
 			}
 		}
 	}
-
-	// where the title/logo lives in the nav bar
-	// contains the hamburger menu in mobile view
 
 	header {
 
@@ -191,8 +180,6 @@ nav@{x} {
 		}
 	}
 
-	// theme toggle
-
 	ul label[for="data-theme-dark"],
 	ul label[for="data-theme-light"] {
 		text-decoration: none;
@@ -222,11 +209,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 	content: "🌝\00a0"
 }
 
-// mobile view
-
 @media (max-width: @mobile) {
-
-	// clears the top of the page for the fixed nav
 
 	html {
 		scroll-padding-top: 4.4rem;
@@ -235,8 +218,6 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 	body {
 		padding-top: 4.4rem;
 	}
-
-	// keeps the nav fixed
 
 	nav@{n},
 	nav@{x} {
@@ -280,8 +261,6 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 		label {
 			height: 4.4rem;
 
-			// hides the nav off screen
-
 			>ul {
 				position: fixed;
 				top: 4.4rem;
@@ -314,13 +293,9 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 				}
 			}
 
-		// #nav-close: hidden by default
-
 		a[href="#nav-close"] {
 			display: none;
 		}
-
-		// when menu is open: show sidebar, swap icons, show overlay
 
 		#nav-open:target ~ ul {
 			transform: none;

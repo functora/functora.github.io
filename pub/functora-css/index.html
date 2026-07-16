@@ -14,7 +14,7 @@
     <nav>
       <label>
         <input type="checkbox" id="nav-open" />
-        <input type="checkbox" id="data-theme-dark" checked />
+        <input type="checkbox" id="data-theme-dark" />
         <header id="nav-close">
           <a href="#">functora-css</a>
           <a href="#nav-open"></a>
@@ -61,8 +61,8 @@
       <h2>Appearance</h2>
       <p>
         functora-css supports light and dark themes. You can switch themes using
-        a <code>data-theme</code> attribute on <code>&lt;html&gt;</code>, a
-        checkbox in your nav bar, or let it follow your system settings
+        the <code>data-theme-dark</code> attribute on <code>&lt;html&gt;</code>,
+        a checkbox in your nav bar, or let it follow your system settings
         automatically. These three mechanisms work together:
       </p>
 
@@ -76,32 +76,26 @@
 
       <h4>Attribute</h4>
       <p>
-        Set <code>data-theme="light"</code> or
-        <code>data-theme="dark"</code> directly on <code>&lt;html&gt;</code> to
-        lock the page to a single theme. This is useful when no runtime theme
-        switching is needed - for example in static pages that always use one
-        theme, or in applications where the attribute value is stored and
-        managed externally (localStorage, database, server-side rendering,
-        etc.).
+        Add <code>data-theme-dark</code> to <code>&lt;html&gt;</code> to lock
+        the page to dark theme. Omit it for light theme. This is useful when no
+        runtime theme switching is needed - for example in static pages that
+        always use one theme, or in applications where the theme is managed
+        externally (localStorage, database, server-side rendering, etc.).
       </p>
+      <pre><code>&lt;html data-theme-dark&gt;</code></pre>
 
       <h4>Checkbox</h4>
       <p>
-        functora-css provides two built-in checkbox IDs that toggle the theme
-        with pure CSS - no JavaScript required. The default theme is controlled
-        by the HTML <code>checked</code> attribute - present means that theme is
-        active by default, absent means the opposite. This is the same mechanism
-        used in the navigation bar above.
+        functora-css provides a built-in checkbox ID that toggles the theme with
+        pure CSS - no JavaScript required. The default theme is controlled by
+        the HTML <code>checked</code> attribute - add it for a dark default,
+        omit for light. This is the same mechanism used in the navigation bar
+        above.
       </p>
 
       <p>
         <strong><code>id="data-theme-dark"</code></strong> - add
         <code>checked</code> for a dark default, omit for light.
-      </p>
-
-      <p>
-        <strong><code>id="data-theme-light"</code></strong> - add
-        <code>checked</code> for a light default, omit for dark.
       </p>
 
       <p>

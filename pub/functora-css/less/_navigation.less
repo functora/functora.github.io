@@ -180,8 +180,7 @@ nav@{x} {
 		}
 	}
 
-	ul label[for="data-theme-dark"],
-	ul label[for="data-theme-light"] {
+	ul label[for="data-theme-dark"] {
 		text-decoration: none;
 		text-transform: none;
 		padding: 0.8rem 2rem 0.4rem;
@@ -199,13 +198,11 @@ nav@{x} {
 
 }
 
-html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before,
-html:has(#data-theme-light:not(:checked)) nav ul label[for="data-theme-light"]::before {
+html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before {
 	content: "🌚\00a0"
 }
 
-html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::before,
-html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before {
+html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::before {
 	content: "🌝\00a0"
 }
 
@@ -286,8 +283,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 					border: none;
 				}
 
-				label[for="data-theme-dark"],
-				label[for="data-theme-light"] {
+				label[for="data-theme-dark"] {
 					padding: 1rem 6rem 1rem 2rem;
 					border: none;
 				}
@@ -302,8 +298,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 			pointer-events: none;
 
 			a,
-			label[for="data-theme-dark"],
-			label[for="data-theme-light"] {
+			label[for="data-theme-dark"] {
 				pointer-events: auto;
 			}
 		}

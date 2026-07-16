@@ -97,15 +97,14 @@
 
 /* System dark mode, gated so manual overrides win */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]):not(:has(#data-theme-light)):not(:has(#data-theme-dark)) {
+    :root:not([data-theme-dark]):not(:has(#data-theme-dark)) {
         .dark-theme();
     }
 }
 
-/* Forced dark theme: attribute, dark checked, or light unchecked */
-[data-theme="dark"],
-html:has(#data-theme-dark:checked),
-html:has(#data-theme-light:not(:checked)) {
+/* Forced dark theme: attribute or checked checkbox */
+[data-theme-dark],
+html:has(#data-theme-dark:checked) {
     .dark-theme();
 }
 
@@ -132,27 +131,22 @@ html:has(#data-theme-light:not(:checked)) {
 
 html {
 
-    &[data-theme="dark"] body,
-    &[data-theme="dark"] nav,
+    &[data-theme-dark] body,
+    &[data-theme-dark] nav,
     &:has(#data-theme-dark:checked) body,
-    &:has(#data-theme-dark:checked) nav,
-    &:has(#data-theme-light:not(:checked)) body,
-    &:has(#data-theme-light:not(:checked)) nav {
+    &:has(#data-theme-dark:checked) nav {
         animation: theme-switch-repaint-dark 0.11s;
     }
 
-    &[data-theme="light"] body,
-    &[data-theme="light"] nav,
-    &:has(#data-theme-light:checked) body,
-    &:has(#data-theme-light:checked) nav,
+    &:not([data-theme-dark]) body,
+    &:not([data-theme-dark]) nav,
     &:has(#data-theme-dark:not(:checked)) body,
     &:has(#data-theme-dark:not(:checked)) nav {
         animation: theme-switch-repaint-light 0.11s;
     }
 }
 
-html[data-theme],
-html:has(#data-theme-light),
+html[data-theme-dark],
 html:has(#data-theme-dark) {
     will-change: color, background-color, border-color;
 }

@@ -186,7 +186,7 @@ nav@{x} {
 			}
 		}
 
-		#nav-hamburger {
+		a[href="#nav-open"] {
 			display: none;
 		}
 	}
@@ -262,7 +262,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 				z-index: 15;
 			}
 
-			#nav-hamburger {
+			a[href="#nav-open"] {
 				display: block;
 				position: absolute;
 				top: 0;
@@ -312,13 +312,13 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 
 		// #nav-close: hidden by default
 
-		#nav-close {
+		a[href="#nav-close"] {
 			display: none;
 		}
 
 		// when menu is open: show sidebar, swap icons, show overlay
 
-		#nav-menu:target ~ ul {
+		#nav-open:target ~ ul {
 			transform: none;
 			pointer-events: none;
 
@@ -329,7 +329,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 			}
 		}
 
-		#nav-menu:target ~ #nav-close {
+		#nav-open:target ~ a[href="#nav-close"] {
 			display: block;
 			position: fixed;
 			inset: 0;
@@ -337,7 +337,7 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 			cursor: default;
 		}
 
-		#nav-menu:target ~ header {
+		#nav-open:target ~ header {
 			pointer-events: none;
 
 			* {

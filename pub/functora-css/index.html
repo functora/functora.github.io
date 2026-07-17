@@ -60,144 +60,151 @@
     <section id="appearance">
       <h2>Appearance</h2>
       <p>
-        functora-css supports light and dark themes. You can switch themes using
-        the <code>functora-theme-dark</code> attribute on
-        <code>&lt;html&gt;</code>, a checkbox in your nav bar, or let it follow
-        your system settings automatically. These three mechanisms work
-        together:
+        functora-css supports light and dark themes with pure CSS - no
+        JavaScript required. Three independent mechanisms work together: system
+        preference, an HTML attribute, and a hidden checkbox. Each is suited to
+        a different use case.
       </p>
 
-      <h4>System dark mode</h4>
+      <h4>1. Automatic - follow system preference</h4>
       <p>
-        When no theme override is present, functora-css automatically follows
-        your operating system's dark mode setting. Switching your OS to dark
-        mode switches the page to dark theme. Any manual override (attribute or
-        checkbox) takes precedence.
+        <strong>When to use:</strong> Simple content pages, blogs, documentation
+        - anywhere you want the theme to match the user's OS setting with zero
+        markup or configuration.
       </p>
+      <p>
+        No special markup is needed. The framework reads
+        <code>prefers-color-scheme</code> automatically:
+      </p>
+      <pre><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;link href="functora.min.css" rel="stylesheet" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Automatic theme&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
 
-      <h4>Attribute</h4>
+      <h4>2. Static - attribute lock</h4>
       <p>
-        Add <code>functora-theme-dark</code> to <code>&lt;html&gt;</code> to
-        lock the page to dark theme. Omit it for light theme. This is useful
-        when no runtime theme switching is needed - for example in static pages
-        that always use one theme, or in applications where the theme is managed
-        externally (localStorage, database, server-side rendering, etc.).
+        <strong>When to use:</strong> Pages that must always appear in a
+        specific theme - for example, a dark-only documentation site, a
+        server-rendered page whose theme comes from a database or URL parameter,
+        or a preview page shown in a particular mode.
       </p>
-      <pre><code>&lt;html functora-theme-dark&gt;</code></pre>
+      <p>
+        Add <code>functora-theme-dark</code> to <code>&lt;html&gt;</code>. The
+        page ignores the system preference:
+      </p>
+      <pre><code>&lt;html functora-theme-dark&gt;
+&lt;!-- This page is always dark, regardless of OS settings --&gt;</code></pre>
 
-      <h4>Checkbox</h4>
+      <h4>3. Interactive - checkbox toggle</h4>
       <p>
-        functora-css provides a built-in checkbox ID that toggles the theme with
-        pure CSS - no JavaScript required. The default theme is controlled by
-        the HTML <code>checked</code> attribute - add it for a dark default,
-        omit for light. This is the same mechanism used in the navigation bar
-        above.
+        <strong>When to use:</strong> Apps, dashboards, user-facing pages where
+        visitors should be able to switch themes at runtime. No JavaScript
+        needed.
       </p>
+      <p>
+        Place a hidden
+        <code>&lt;input type="checkbox" id="functora-theme-dark"&gt;</code>
+        inside <code>&lt;nav&gt;</code> and pair it with any visible
+        <code>&lt;label for="functora-theme-dark"&gt;</code>. The label
+        automatically shows 🌚 when dark is active or 🌝 when light is active.
+      </p>
+      <p><strong>Dark by default</strong> - add <code>checked</code>:</p>
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
+&lt;!-- ... --&gt;
+&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
+      <p><strong>Light by default</strong> - omit <code>checked</code>:</p>
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
+&lt;!-- ... --&gt;
+&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
+      <p>The checkbox can live in two places:</p>
+      <ul>
+        <li>
+          <strong>Inside the navbar</strong> - placed after
+          <code>input#functora-nav-open</code>, before <code>header</code>. The
+          label goes inside <code>&lt;ul&gt;</code>
+          as a nav item. This is the most common setup.
+        </li>
+        <li>
+          <strong>Standalone (no navbar)</strong> - the checkbox can be placed
+          anywhere in the document with any visible <code>&lt;label&gt;</code>,
+          even on pages without a navbar.
+        </li>
+      </ul>
 
+      <h4>4. Combined - server-side + interactive</h4>
       <p>
-        <strong><code>id="functora-theme-dark"</code></strong> - add
-        <code>checked</code> for a dark default, omit for light.
+        <strong>When to use:</strong> Applications that render themes on the
+        server (from a user profile, database, or session) while still letting
+        users toggle interactively on the client.
       </p>
-
       <p>
-        Place the chosen checkbox inside the <code>&lt;nav&gt;</code> element
-        (hidden via CSS) and use a <code>&lt;label&gt;</code> element with the
-        corresponding <code>for</code> attribute as the visible toggle button.
-        The navbar contains two hidden inputs - one for the mobile menu toggle
-        and one for the theme toggle. They must appear in this order:
+        Set the <code>functora-theme-dark</code> attribute on
+        <code>&lt;html&gt;</code> for the initial server-side value. Add the
+        hidden checkbox for client-side overrides. The checkbox takes precedence
+        when checked:
       </p>
-      <pre><code>&lt;nav&gt;
+      <pre><code>&lt;html functora-theme-dark&gt;
+&lt;!-- ... --&gt;
+&lt;nav&gt;
   &lt;label&gt;
     &lt;input type="checkbox" id="functora-nav-open" /&gt;
-    &lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
-    &lt;header&gt;...&lt;/header&gt;
+    &lt;input type="checkbox" id="functora-theme-dark" /&gt;
+    &lt;header id="functora-nav-close"&gt;
+      &lt;a href="#"&gt;App&lt;/a&gt;
+      &lt;a href="#functora-nav-open"&gt;&lt;/a&gt;
+    &lt;/header&gt;
+    &lt;a href="#functora-nav-close"&gt;&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
 &lt;/nav&gt;</code></pre>
-      <p>
-        The <strong>Theme</strong> button in the navigation bar above works this
-        way - clicking it toggles the hidden <code>functora-theme-dark</code>
-        checkbox and switches between light and dark without any JavaScript. The
-        label automatically shows a moon (🌚) when dark theme is active or a sun
-        (🌝) when light theme is active.
-      </p>
     </section>
 
     <section id="navigation">
       <h2>Navigation</h2>
       <p>
-        The responsive navbar uses a pure CSS toggle for mobile menus without
-        any JavaScript. The structure requires a specific order of elements
-        inside a <code>&lt;nav&gt;</code> tag.
-      </p>
-
-      <h4>Structure</h4>
-      <p>
-        The navbar must follow this exact structure: a
-        <code>&lt;label&gt;</code> wrapping two hidden checkbox inputs, a
-        <code>&lt;header&gt;</code> for the brand/logo with a toggle link (<code
-          >&lt;a href="#functora-nav-open"&gt;</code
-        >), a full-screen overlay link (<code
-          >&lt;a href="#functora-nav-close"&gt;</code
-        >) that closes the menu, and a <code>&lt;ul&gt;</code> for navigation
-        links. Dropdown menus use a nested <code>&lt;menu&gt;</code> element
-        inside a list item.
-      </p>
-      <pre><code>&lt;nav&gt;
-  &lt;label&gt;
-    &lt;input type="checkbox" id="functora-nav-open" /&gt;
-    &lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
-    &lt;header id="functora-nav-close"&gt;
-      &lt;a href="#"&gt;Site name&lt;/a&gt;
-      &lt;a href="#functora-nav-open"&gt;&lt;/a&gt;
-    &lt;/header&gt;
-    &lt;a href="#functora-nav-close"&gt;&lt;/a&gt;
-    &lt;ul&gt;
-      &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
-      &lt;li&gt;
-        &lt;a&gt;Dropdown&lt;/a&gt;
-        &lt;menu&gt;
-          &lt;menuitem&gt;&lt;a href="#two"&gt;Item one&lt;/a&gt;&lt;/menuitem&gt;
-          &lt;menuitem&gt;&lt;a href="#three"&gt;Item two&lt;/a&gt;&lt;/menuitem&gt;
-        &lt;/menu&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/label&gt;
-&lt;/nav&gt;</code></pre>
-
-      <h4>Mobile behavior</h4>
-      <p>
-        On mobile viewports the navigation links are hidden off-screen. Tapping
-        the header area (or the hamburger icon) slides the menu in from the
-        right. A full-screen overlay appears behind the menu; tapping it closes
-        the menu. The theme toggle remains independent and does not affect the
-        menu state. The header shows a hamburger icon by default and changes to
-        a close icon when the menu is open.
-      </p>
-
-      <h4>Fixed positioning</h4>
-      <p>
-        Add the <code>fx</code> attribute (<code>&lt;nav fx&gt;</code>) to fix
-        the navbar to the top of the viewport. On mobile the navbar is always
-        fixed; the <code>fx</code> attribute applies fixed positioning on larger
-        screens as well.
+        Pure CSS responsive navbar - no JavaScript. The complete structure with
+        all optional features:
       </p>
       <pre><code>&lt;nav fx&gt;
   &lt;label&gt;
     &lt;input type="checkbox" id="functora-nav-open" /&gt;
-    &lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
+    &lt;input type="checkbox" id="functora-theme-dark" /&gt;
     &lt;header id="functora-nav-close"&gt;
-      &lt;a href="#"&gt;Site name&lt;/a&gt;
+      &lt;a href="#"&gt;Site&lt;/a&gt;
       &lt;a href="#functora-nav-open"&gt;&lt;/a&gt;
     &lt;/header&gt;
     &lt;a href="#functora-nav-close"&gt;&lt;/a&gt;
     &lt;ul&gt;
-      &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;
+        &lt;a&gt;Dropdown&lt;/a&gt;
+        &lt;menu&gt;
+          &lt;menuitem&gt;&lt;a href="/a"&gt;Item&lt;/a&gt;&lt;/menuitem&gt;
+        &lt;/menu&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
 &lt;/nav&gt;</code></pre>
+      <p>
+        <strong>Variations:</strong> Omit <code>#functora-theme-dark</code> and
+        its label to remove the theme toggle. Drop <code>&lt;menu&gt;</code> to
+        remove dropdowns. Omit <code>fx</code> for a non-fixed navbar. Use a
+        standalone <code>#functora-theme-dark</code> checkbox (outside
+        <code>&lt;nav&gt;</code>) if you want theme switching without a navbar.
+      </p>
+      <p>
+        On mobile, the menu slides in from the right via the hidden checkbox.
+        The overlay <code>&lt;a href="#functora-nav-close"&gt;</code> closes it.
+        Theme toggle is independent of menu state.
+      </p>
     </section>
 
     <section id="buttons">

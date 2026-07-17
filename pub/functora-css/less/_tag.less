@@ -13,4 +13,10 @@ tag {
 	color: @primary;
 	padding: 0.2rem 1.2rem;
 	margin: 0 0.5rem 0.5rem 0;
+
+	&[primary] {
+		background: @primary;
+		color: @primary--;
+		border-color: @primary-hover;
+	}
 }

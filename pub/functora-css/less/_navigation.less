@@ -159,7 +159,7 @@ nav@{x} {
 			font-size: @fs-l;
 			text-decoration: none;
 
-			&[href="#"] {
+			&:first-child {
 				position: absolute;
 				left: 2rem;
 				top: 1rem;
@@ -237,7 +237,7 @@ html:has(#functora-theme-dark:not(:checked)) nav ul label[for="functora-theme-da
 				display: block
 			}
 
-			a[href="#"] {
+			a:first-child {
 				left: 2rem;
 				top: 1rem;
 				bottom: 1rem;

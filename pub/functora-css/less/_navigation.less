@@ -30,7 +30,7 @@ nav@{x} {
 		margin: auto;
 		display: block;
 
-		>input {
+		>#functora-nav-toggle {
 			display: none
 		}
 	}
@@ -175,7 +175,7 @@ nav@{x} {
 			}
 		}
 
-		a[href="#functora-nav-open"] {
+		#functora-nav-open {
 			display: none;
 		}
 	}
@@ -252,7 +252,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 				z-index: 15;
 			}
 
-			a[href="#functora-nav-open"] {
+			#functora-nav-open {
 				display: block;
 				position: absolute;
 				top: 0;
@@ -297,11 +297,11 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 				}
 			}
 
-		a[href="#functora-nav-close"] {
+		#functora-nav-close {
 			display: none;
 		}
 
-		#functora-nav-open:target ~ ul {
+		#functora-nav-toggle:checked ~ ul {
 			transform: none;
 			pointer-events: none;
 
@@ -311,7 +311,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 			}
 		}
 
-		#functora-nav-open:target ~ a[href="#functora-nav-close"] {
+		#functora-nav-toggle:checked ~ #functora-nav-close {
 			display: block;
 			position: fixed;
 			inset: 0;
@@ -319,7 +319,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 			cursor: default;
 		}
 
-		#functora-nav-open:target ~ header {
+		#functora-nav-toggle:checked ~ header {
 			pointer-events: none;
 
 			* {

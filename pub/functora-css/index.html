@@ -136,7 +136,7 @@
       <ul>
         <li>
           <strong>Inside the navbar</strong> - placed after
-          <code>input#functora-nav-open</code>, before <code>header</code>. The
+           <code>input#functora-nav-toggle</code>, before <code>header</code>. The
           label goes inside <code>&lt;ul&gt;</code>
           as a nav item. This is the most common setup.
         </li>
@@ -163,13 +163,13 @@
 &lt;!-- ... --&gt;
 &lt;nav&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" id="functora-nav-open" /&gt;
+    &lt;input type="checkbox" id="functora-nav-toggle" /&gt;
     &lt;input type="checkbox" id="functora-theme-dark" /&gt;
-    &lt;header id="functora-nav-close"&gt;
+    &lt;header&gt;
       &lt;a href="#"&gt;App&lt;/a&gt;
-      &lt;a href="#functora-nav-open"&gt;&lt;/a&gt;
+      &lt;span id="functora-nav-open"&gt;&lt;/span&gt;
     &lt;/header&gt;
-    &lt;a href="#functora-nav-close"&gt;&lt;/a&gt;
+    &lt;span id="functora-nav-close"&gt;&lt;/span&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
@@ -185,13 +185,13 @@
       </p>
       <pre><code>&lt;nav fx&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" id="functora-nav-open" /&gt;
+    &lt;input type="checkbox" id="functora-nav-toggle" /&gt;
     &lt;input type="checkbox" id="functora-theme-dark" /&gt;
-    &lt;header id="functora-nav-close"&gt;
+    &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
-      &lt;a href="#functora-nav-open"&gt;&lt;/a&gt;
+      &lt;span id="functora-nav-open"&gt;&lt;/span&gt;
     &lt;/header&gt;
-    &lt;a href="#functora-nav-close"&gt;&lt;/a&gt;
+    &lt;span id="functora-nav-close"&gt;&lt;/span&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;
@@ -213,7 +213,7 @@
       </p>
       <p>
         On mobile, the menu slides in from the right via the hidden checkbox.
-        The overlay <code>&lt;a href="#functora-nav-close"&gt;</code> closes it.
+        The overlay <code>&lt;span id="functora-nav-close"&gt;</code> closes it.
         Theme toggle is independent of menu state.
       </p>
     </section>

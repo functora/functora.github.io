@@ -206,6 +206,14 @@ html:has(#functora-theme-dark:not(:checked)) nav ul label[for="functora-theme-da
 	content: "🌝\00a0"
 }
 
+html:has(nav@{n}[fx], nav@{x}[fx]) {
+	scroll-padding-top: 4.4rem;
+}
+
+body:has(nav@{n}[fx], nav@{x}[fx]) {
+	padding-top: 4.4rem;
+}
+
 @media (max-width: @mobile) {
 
 	html {

@@ -14,7 +14,7 @@
     <nav>
       <label>
         <input type="checkbox" id="functora-nav-open" />
-        <input type="checkbox" id="functora-theme-dark" checked />
+        <input type="checkbox" id="functora-theme-dark" />
         <header id="functora-nav-close">
           <a href="#">functora-css</a>
           <a href="#functora-nav-open"></a>
@@ -61,9 +61,10 @@
       <h2>Appearance</h2>
       <p>
         functora-css supports light and dark themes. You can switch themes using
-        the <code>functora-theme-dark</code> attribute on <code>&lt;html&gt;</code>,
-        a checkbox in your nav bar, or let it follow your system settings
-        automatically. These three mechanisms work together:
+        the <code>functora-theme-dark</code> attribute on
+        <code>&lt;html&gt;</code>, a checkbox in your nav bar, or let it follow
+        your system settings automatically. These three mechanisms work
+        together:
       </p>
 
       <h4>System dark mode</h4>
@@ -76,10 +77,10 @@
 
       <h4>Attribute</h4>
       <p>
-        Add <code>functora-theme-dark</code> to <code>&lt;html&gt;</code> to lock
-        the page to dark theme. Omit it for light theme. This is useful when no
-        runtime theme switching is needed - for example in static pages that
-        always use one theme, or in applications where the theme is managed
+        Add <code>functora-theme-dark</code> to <code>&lt;html&gt;</code> to
+        lock the page to dark theme. Omit it for light theme. This is useful
+        when no runtime theme switching is needed - for example in static pages
+        that always use one theme, or in applications where the theme is managed
         externally (localStorage, database, server-side rendering, etc.).
       </p>
       <pre><code>&lt;html functora-theme-dark&gt;</code></pre>
@@ -138,7 +139,8 @@
         <code>&lt;label&gt;</code> wrapping two hidden checkbox inputs, a
         <code>&lt;header&gt;</code> for the brand/logo with a toggle link (<code
           >&lt;a href="#functora-nav-open"&gt;</code
-        >), a full-screen overlay link (<code>&lt;a href="#functora-nav-close"&gt;</code
+        >), a full-screen overlay link (<code
+          >&lt;a href="#functora-nav-close"&gt;</code
         >) that closes the menu, and a <code>&lt;ul&gt;</code> for navigation
         links. Dropdown menus use a nested <code>&lt;menu&gt;</code> element
         inside a list item.

@@ -14,20 +14,28 @@
     <link href="css/functora.min.css" rel="stylesheet" />
   </head>
   <body>
-    <nav>
+    <nav aria-label="Navbar">
       <label>
-        <input type="checkbox" id="functora-nav-open" />
-        <input type="checkbox" id="functora-theme-dark" />
+        <input
+          type="checkbox"
+          id="functora-nav-open"
+          aria-label="Toggle navigation"
+        />
+        <input
+          type="checkbox"
+          id="functora-theme-dark"
+          aria-label="Toggle dark theme"
+        />
         <header id="functora-nav-close">
           <a href="#">functora-css</a>
-          <a href="#functora-nav-open"></a>
+          <a href="#functora-nav-open" aria-label="Open navigation"></a>
         </header>
-        <a href="#functora-nav-close"></a>
+        <a href="#functora-nav-close" aria-label="Close navigation"></a>
         <ul>
           <li><a href="#appearance">Appearance</a></li>
           <li><a href="#navigation">Navigation</a></li>
           <li>
-            <a>More</a>
+            <a href="#buttons">More</a>
             <menu>
               <menuitem><a href="#buttons">Buttons</a></menuitem>
               <menuitem><a href="#forms">Forms</a></menuitem>
@@ -69,7 +77,7 @@
         a different use case.
       </p>
 
-      <h4>1. Automatic - follow system preference</h4>
+      <h3>1. Automatic - follow system preference</h3>
       <p>
         <strong>When to use:</strong> Simple content pages, blogs, documentation
         - anywhere you want the theme to match the user's OS setting with zero
@@ -89,7 +97,7 @@
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
 
-      <h4>2. Static - attribute lock</h4>
+      <h3>2. Static - attribute lock</h3>
       <p>
         <strong>When to use:</strong> Pages that must always appear in a
         specific theme - for example, a dark-only documentation site, a
@@ -103,7 +111,7 @@
       <pre><code>&lt;html functora-theme-dark&gt;
 &lt;!-- This page is always dark, regardless of OS settings --&gt;</code></pre>
 
-      <h4>3. Interactive - checkbox toggle</h4>
+      <h3>3. Interactive - checkbox toggle</h3>
       <p>
         <strong>When to use:</strong> Apps, dashboards, user-facing pages where
         visitors should be able to switch themes at runtime. No JavaScript
@@ -139,7 +147,7 @@
         </li>
       </ul>
 
-      <h4>4. Combined - server-side + interactive</h4>
+      <h3>4. Combined - server-side + interactive</h3>
       <p>
         <strong>When to use:</strong> Applications that render themes on the
         server (from a user profile, database, or session) while still letting
@@ -219,7 +227,7 @@
         disabled state.
       </p>
 
-      <h4>Standard buttons</h4>
+      <h3>Standard buttons</h3>
       <p>
         <button>Default</button>
         <button primary>Primary</button>
@@ -231,7 +239,7 @@
 &lt;button round&gt;Round&lt;/button&gt;
 &lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
 
-      <h4>Anchor as button</h4>
+      <h3>Anchor as button</h3>
       <p>
         Use the <code>btn</code> attribute on an anchor element to style it as a
         button. Combine with <code>primary</code> for primary styling.
@@ -243,7 +251,7 @@
       <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
 &lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
 
-      <h4>Buttons with icons</h4>
+      <h3>Buttons with icons</h3>
       <p>
         Buttons can contain inline SVG icons. Place the SVG before the text
         content.
@@ -251,6 +259,7 @@
       <p>
         <button>
           <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             width="16"
             height="16"
@@ -266,6 +275,7 @@
         </button>
         <button primary>
           <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             width="16"
             height="16"
@@ -289,7 +299,7 @@
   Save
 &lt;/button&gt;</code></pre>
 
-      <h4>Submit button</h4>
+      <h3>Submit button</h3>
       <p>
         <code>&lt;input type="submit"&gt;</code> is automatically styled as a
         button within forms.
@@ -305,7 +315,7 @@
         textareas default to 100% width.
       </p>
 
-      <h4>Text inputs</h4>
+      <h3>Text inputs</h3>
       <p>
         Text inputs have a subtle border that highlights on focus. Place the
         <code>&lt;label&gt;</code> directly before the input.
@@ -315,7 +325,7 @@
       <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
 &lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
 
-      <h4>Textarea</h4>
+      <h3>Textarea</h3>
       <p>
         Textareas auto-resize vertically and have the same styling as text
         inputs.
@@ -325,7 +335,7 @@
       <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
 &lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
 
-      <h4>Select</h4>
+      <h3>Select</h3>
       <p>Select dropdowns are styled to match other form elements.</p>
       <label for="demo-lang">Language</label>
       <select id="demo-lang">
@@ -340,7 +350,7 @@
   &lt;option&gt;Python&lt;/option&gt;
 &lt;/select&gt;</code></pre>
 
-      <h4>Radio and checkbox</h4>
+      <h3>Radio and checkbox</h3>
       <p>
         Radio buttons and checkboxes are styled with custom indicators. Place
         the <code>&lt;label&gt;</code> directly after the input.
@@ -363,7 +373,7 @@
 &lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
 &lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
 
-      <h4>Fieldset</h4>
+      <h3>Fieldset</h3>
       <p>
         Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
         group related form controls.
@@ -413,7 +423,7 @@
         be adjusted by changing the root font size.
       </p>
 
-      <h4>Headings</h4>
+      <h3>Headings</h3>
       <p>
         All six heading levels are supported with consistent margins and
         padding. Headings inherit the default browser font family and are styled
@@ -432,7 +442,7 @@
 &lt;h5&gt;Heading h5&lt;/h5&gt;
 &lt;h6&gt;Heading h6&lt;/h6&gt;</code></pre>
 
-      <h4>Paragraphs</h4>
+      <h3>Paragraphs</h3>
       <p>
         Paragraphs have consistent line height and margin spacing. They work
         well at any content width and collapse gracefully on mobile.
@@ -449,7 +459,7 @@
       <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Another paragraph.&lt;/p&gt;</code></pre>
 
-      <h4>Anchor links</h4>
+      <h3>Anchor links</h3>
       <p>
         Anchor links have a highlight effect that expands from the bottom on
         hover. The highlight uses the secondary theme color.
@@ -459,11 +469,11 @@
       </p>
       <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
-      <h4>Emphasis and inline elements</h4>
+      <h3>Emphasis and inline elements</h3>
       <p>
         Standard inline elements like <strong>bold</strong>, <em>italic</em>,
         <mark>highlighted</mark>, <small>small</small>, <del>deleted</del>, and
-        <abbr title="abbreviation">abbreviations</abbr>.
+        <abbr title="abbreviation">abbreviations</abbr> are available.
       </p>
       <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
 &lt;em&gt;italic&lt;/em&gt;
@@ -472,7 +482,7 @@
 &lt;del&gt;deleted&lt;/del&gt;
 &lt;abbr title="abbreviation"&gt;abbreviations&lt;/abbr&gt;</code></pre>
 
-      <h4>Sections</h4>
+      <h3>Sections</h3>
       <p>
         The <code>&lt;section&gt;</code> element provides centered content with
         padding and a max-width. It works as a container for page sections.
@@ -498,7 +508,7 @@
   Quote goes here.
 &lt;/blockquote&gt;</code></pre>
 
-      <h4>With attribution</h4>
+      <h3>With attribution</h3>
       <blockquote>
         <p>The best way to predict the future is to invent it.</p>
         <cite>- Alan Kay</cite>
@@ -517,7 +527,7 @@
         whitespace and line breaks.
       </p>
 
-      <h4>Inline code</h4>
+      <h3>Inline code</h3>
       <p>
         Use <code>&lt;code&gt;</code> for inline code fragments within a
         paragraph.
@@ -527,7 +537,7 @@
       </p>
       <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
 
-      <h4>Code block</h4>
+      <h3>Code block</h3>
       <p>
         Wrap code in <code>&lt;pre&gt;&lt;code&gt;</code> for multi-line blocks.
         Whitespace and indentation are preserved.
@@ -549,7 +559,7 @@ fn main() {
         Nested lists use different marker styles to show hierarchy.
       </p>
 
-      <h4>Unordered list</h4>
+      <h3>Unordered list</h3>
       <ul>
         <li>Unordered list item one</li>
         <li>Unordered list item two</li>
@@ -572,7 +582,7 @@ fn main() {
   &lt;/li&gt;
 &lt;/ul&gt;</code></pre>
 
-      <h4>Ordered list</h4>
+      <h3>Ordered list</h3>
       <ol>
         <li>Ordered list item one</li>
         <li>Ordered list item two</li>
@@ -669,13 +679,13 @@ fn main() {
         elements, so they work on any element that supports them.
       </p>
 
-      <h4>Basic tooltip</h4>
+      <h3>Basic tooltip</h3>
       <p>
         <span tt="Hello from functora-css">Hover me (tooltip)</span>
       </p>
       <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me&lt;/span&gt;</code></pre>
 
-      <h4>Tooltip on buttons</h4>
+      <h3>Tooltip on buttons</h3>
       <p>
         <button tt="This is a normal button">Hover button</button>
         <button primary tt="Primary button tooltip">Primary</button>
@@ -683,7 +693,7 @@ fn main() {
       <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
 &lt;button primary tt="Primary button tooltip"&gt;Primary&lt;/button&gt;</code></pre>
 
-      <h4>Disabled button tooltip</h4>
+      <h3>Disabled button tooltip</h3>
       <p>
         Use the <code>dtt</code> attribute to show a tooltip when a button is
         disabled. This is useful for explaining why a button is inactive.
@@ -697,7 +707,7 @@ fn main() {
   Disabled with tooltip
 &lt;/button&gt;</code></pre>
 
-      <h4>Anchor link tooltip</h4>
+      <h3>Anchor link tooltip</h3>
       <p>
         Use the <code>att</code> attribute on an anchor to show its
         <code>href</code> as a tooltip on hover.
@@ -744,14 +754,14 @@ fn main() {
         without classes. These can be applied to any HTML element.
       </p>
 
-      <h4>[full]</h4>
+      <h3>[full]</h3>
       <p>Sets <code>width: 100%</code> on the element.</p>
       <p>
         <button full>Full width button</button>
       </p>
       <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
 
-      <h4>[hidden]</h4>
+      <h3>[hidden]</h3>
       <p>
         Hides the element from the page. The element below has
         <code>[hidden]</code> and is not visible:
@@ -759,7 +769,7 @@ fn main() {
       <p hidden>You cannot see this text.</p>
       <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
 
-      <h4>Font families</h4>
+      <h3>Font families</h3>
       <p>
         Override the default font family with <code>[serif]</code>,
         <code>[sans]</code>, or <code>[mono]</code>.
@@ -771,7 +781,7 @@ fn main() {
 &lt;p sans&gt;Sans-serif font&lt;/p&gt;
 &lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
 
-      <h4>Font sizes</h4>
+      <h3>Font sizes</h3>
       <p>
         Adjust font size with the <code>[fs]</code> attribute. Available values:
         <code>xs</code>, <code>s</code>, <code>m</code>, <code>l</code>,
@@ -788,7 +798,7 @@ fn main() {
 &lt;p fs="s"&gt;Small&lt;/p&gt;
 &lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
 
-      <h4>Text alignment</h4>
+      <h3>Text alignment</h3>
       <p>
         Align text with the <code>[txt]</code> attribute. Available values:
         <code>l</code> (left), <code>c</code> (center), <code>r</code> (right),

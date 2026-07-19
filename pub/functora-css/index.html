@@ -16,13 +16,20 @@
   <body>
     <nav id="functora-nav-menu" aria-label="Navbar">
       <label>
-        <input type="checkbox" id="functora-nav-toggle" />
         <input type="checkbox" id="functora-theme-dark" />
         <header>
           <a href="#">functora-css</a>
-          <span id="functora-nav-open" aria-label="Open navigation"></span>
+          <a
+            href="#functora-nav-menu"
+            id="functora-nav-open"
+            aria-label="Open navigation"
+          ></a>
         </header>
-        <span id="functora-nav-close" aria-label="Close navigation"></span>
+        <a
+          href="#functora-nav-close"
+          id="functora-nav-close"
+          aria-label="Close navigation"
+        ></a>
         <ul>
           <li><a href="#appearance">Appearance</a></li>
           <li><a href="#navigation">Navigation</a></li>
@@ -127,8 +134,8 @@
       <p>The checkbox can live in two places:</p>
       <ul>
         <li>
-          <strong>Inside the navbar</strong> - placed before <code>header</code>. The
-          label goes inside <code>&lt;ul&gt;</code>
+          <strong>Inside the navbar</strong> - placed before
+          <code>header</code>. The label goes inside <code>&lt;ul&gt;</code>
           as a nav item. This is the most common setup.
         </li>
         <li>
@@ -161,7 +168,7 @@
   &lt;ul&gt;
     &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
   &lt;/ul&gt;
-  &lt;a href="#" id="functora-nav-close"&gt;&lt;/a&gt;
+  &lt;a href="#functora-nav-close" id="functora-nav-close"&gt;&lt;/a&gt;
 &lt;/nav&gt;</code></pre>
     </section>
 
@@ -187,7 +194,7 @@
     &lt;/li&gt;
     &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
   &lt;/ul&gt;
-  &lt;a href="#" id="functora-nav-close"&gt;&lt;/a&gt;
+  &lt;a href="#functora-nav-close" id="functora-nav-close"&gt;&lt;/a&gt;
 &lt;/nav&gt;</code></pre>
       <p>
         <strong>Variations:</strong> Omit <code>#functora-theme-dark</code> and
@@ -196,11 +203,32 @@
         standalone <code>#functora-theme-dark</code> checkbox (outside
         <code>&lt;nav&gt;</code>) if you want theme switching without a navbar.
       </p>
-      <p>
-        On mobile, the menu slides in from the right via the hidden checkbox.
-        The overlay <code>&lt;a href="#" id="functora-nav-close"&gt;</code> closes it.
-        Theme toggle is independent of menu state.
-      </p>
+      <p>Two expand-collapse mechanisms are supported, both pure CSS:</p>
+      <ul>
+        <li>
+          <strong>Anchor-based (shown above):</strong> The nav has
+          <code>id="functora-nav-menu"</code>.
+          <code
+            >&lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;</code
+          >
+          toggles the menu via the <code>:target</code> pseudo-class. The
+          overlay
+          <code
+            >&lt;a href="#functora-nav-close" id="functora-nav-close"&gt;</code
+          >
+          closes it. Best for static or multi-page sites.
+        </li>
+        <li>
+          <strong>Checkbox-based:</strong> Add a hidden
+          <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
+          and wrap the nav content in a <code>&lt;label&gt;</code>. The menu
+          toggles via the <code>:checked</code> pseudo-class. Use
+          <code>id="functora-nav-close"</code> on a
+          <code>&lt;span&gt;</code> for the overlay. Best for single-page apps
+          where hash-based navigation is unreliable.
+        </li>
+      </ul>
+      <p>Theme toggle is independent of menu state.</p>
     </section>
 
     <section id="buttons">

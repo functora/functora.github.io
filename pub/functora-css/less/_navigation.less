@@ -350,4 +350,40 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 		}
 		}
 	}
+
+	#functora-nav-menu:target ul {
+		transform: none;
+		pointer-events: none;
+
+		a,
+		label[for="functora-theme-dark"] {
+			pointer-events: auto;
+		}
+	}
+
+	#functora-nav-menu:target #functora-nav-close {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 11;
+		cursor: default;
+	}
+
+	#functora-nav-menu:target header {
+		pointer-events: none;
+
+		* {
+			pointer-events: none;
+		}
+
+		&:before {
+			transform: rotate(-180deg);
+			opacity: 0;
+		}
+
+		&:after {
+			transform: none;
+			opacity: 1;
+		}
+	}
 }

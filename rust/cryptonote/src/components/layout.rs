@@ -11,6 +11,11 @@ pub fn Layout() -> Element {
     let nav_signal = use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
+        let _ = idx();
+        let _ = document::eval("window.scrollTo(0, 0)");
+    });
+
+    use_effect(move || {
         let theme = pst.theme()();
         spawn(async move {
             if let Err(e) = functora_dioxus::ffi::set_theme(&theme).await {

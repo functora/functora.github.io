@@ -16,7 +16,6 @@
   <body>
     <nav id="functora-nav-menu" aria-label="Navbar">
       <label>
-        <input type="checkbox" id="functora-theme-dark" />
         <header>
           <a href="#">functora-css</a>
           <a
@@ -52,6 +51,7 @@
           <li><label for="functora-theme-dark">Theme</label></li>
         </ul>
       </label>
+      <input type="checkbox" id="functora-theme-dark" hidden />
     </nav>
 
     <section id="intro">
@@ -124,11 +124,11 @@
         automatically shows 🌚 when dark is active or 🌝 when light is active.
       </p>
       <p><strong>Dark by default</strong> - add <code>checked</code>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked hidden /&gt;
 &lt;!-- ... --&gt;
 &lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
       <p><strong>Light by default</strong> - omit <code>checked</code>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
 &lt;!-- ... --&gt;
 &lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
       <p>The checkbox can live in two places:</p>
@@ -160,7 +160,7 @@
       <pre><code>&lt;html functora-theme-dark&gt;
 &lt;!-- ... --&gt;
 &lt;nav id="functora-nav-menu"&gt;
-  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
   &lt;header&gt;
     &lt;a href="#"&gt;App&lt;/a&gt;
     &lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;&lt;/a&gt;
@@ -179,7 +179,7 @@
         all optional features:
       </p>
       <pre><code>&lt;nav fx id="functora-nav-menu"&gt;
-  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
   &lt;header&gt;
     &lt;a href="#"&gt;Site&lt;/a&gt;
     &lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;&lt;/a&gt;

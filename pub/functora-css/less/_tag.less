@@ -10,7 +10,13 @@ tag {
 	border-bottom: 1px solid @grey-light;
 	border-radius: 1.5rem;
 	background: @grey-ultralight;
-	color: @primary;
+	color: @black;
 	padding: 0.2rem 1.2rem;
 	margin: 0 0.5rem 0.5rem 0;
+
+	&[primary] {
+		background: @primary;
+		color: @primary--;
+		border-color: @primary-hover;
+	}
 }

@@ -67,6 +67,7 @@ fn ensure_file(p: &Path) -> Result<(), Error> {
 
 pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let p = path.as_ref();
+    ensure_file(p)?;
     let content = read_to_string(p)?;
     let mut json: Value = from_str(&content)?;
     let obj = json

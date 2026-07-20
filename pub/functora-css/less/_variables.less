@@ -1,23 +1,12 @@
 /*	variables
 ----------------------------------------------------------------------*/
 
-
-// default class (no class and 'xx')
-// Why xx? It's short and easy to search.
-
 @n: ~":not([class])";
 @x: ~"[xx]";
-
-
-// font families
-// currently uses browser defaults
 
 @serif: serif;
 @sans-serif: sans-serif;
 @monospace: monospace;
-
-
-// font sizes
 
 @fs-xs: 1.1rem;
 @fs-s: 1.2rem;
@@ -25,23 +14,12 @@
 @fs-l: 1.6rem;
 @fs-xl: 2.4rem;
 
-
-// set your brand colour
-
-// brand colour
-
 @primary: var(--primary);
-@primary--: var(--primary-contrast); // contrasting colour to the primary colour
-
+@primary--: var(--primary-contrast);
 @secondary: var(--secondary);
-
-// set overall temperature with hue and intensity with saturation
 
 @hue: 200;
 @sat: 10%;
-
-
-// blacks and greys inherit colour temperature of hue and saturation
 
 @black: var(--black);
 
@@ -51,21 +29,12 @@
 @grey-dark: var(--grey-dark);
 @grey-ultradark: var(--grey-ultradark);
 
-
-// transparent overlays to darken or lighten background colour
-
 @dark: rgba(0, 0, 0, 0.5);
 @darken: rgba(0, 0, 0, 0.1);
 @light: rgba(255, 255, 255, 0.5);
 @lighten: rgba(255, 255, 255, 0.1);
 
-
-// shadows
-
 @box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.2);
-
-
-// widths
 
 @width: 90rem;
 @mobile: 50rem;
@@ -77,11 +46,9 @@
 :root {
     --primary: #679;
     --primary-hover: #556688;
-    /* Approx darken(primary, 6%) */
     --primary-contrast: #fff;
     --secondary: #fd0;
 
-    /* Base HSL values for calculations if needed, but for now strict mapping */
     --hue: 200;
     --sat: 10%;
 
@@ -92,18 +59,12 @@
     --grey-dark: hsl(var(--hue), var(--sat), 50%);
     --grey-ultradark: hsl(var(--hue), var(--sat), 30%);
 
-    /* Background for body - strictly speaking functora-css applies color to body, but usually white/transparent.
-       We might need a --bg variable if body background isn't defined elsewhere.
-       _reset.less defines body { color: @black; ... } but no background-color.
-       Browsers default to white. We should explicit it for dark mode.
-    */
     --bg-color: #fff;
     --surface: #fff;
     --nav-bg: rgba(255, 255, 255, 0.95);
     --fg-color: var(--black);
     --tooltip-bg: var(--grey-ultradark);
     --tooltip-fg: var(--primary-contrast);
-    /* Icons */
     --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M14.83 16.42L24 25.59l9.17-9.17L36 19.25l-12 12-12-12z'/%3E%3C/svg%3E");
     --icon-hamburger: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='%232e3538' d='M6 36h36v-4H6v4zm0-10h36v-4H6v4zm0-14v4h36v-4H6z'/%3E%3C/svg%3E");
     --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z'/%3E%3C/svg%3E");
@@ -136,62 +97,37 @@
 
 /* System dark mode, gated so manual overrides win */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]):not(:has(#data-theme-light)):not(:has(#data-theme-dark)) {
+    :root:not([functora-theme-dark]):not(:has(#functora-theme-dark)) {
         .dark-theme();
     }
 }
 
-/* Forced dark theme: attribute, dark checked, or light unchecked */
-[data-theme="dark"],
-html:has(#data-theme-dark:checked),
-html:has(#data-theme-light:not(:checked)) {
+/* Forced dark theme: attribute or checked checkbox */
+[functora-theme-dark],
+html:has(#functora-theme-dark:checked) {
     .dark-theme();
 }
 
-/* Repaint triggers for buggy browsers */
-@keyframes theme-switch-repaint-dark {
-    from {
-        transform: translateZ(0.1px);
-    }
-
-    to {
-        transform: translateZ(0);
-    }
-}
-
-@keyframes theme-switch-repaint-light {
-    from {
-        transform: translateZ(0.1px);
-    }
-
-    to {
-        transform: translateZ(0);
-    }
+/* Repaint trigger for buggy browsers */
+@keyframes theme-switch-repaint {
+    from { transform: translateZ(0.1px) }
+    to { transform: translateZ(0) }
 }
 
 html {
-
-    &[data-theme="dark"] body,
-    &[data-theme="dark"] nav,
-    &:has(#data-theme-dark:checked) body,
-    &:has(#data-theme-dark:checked) nav,
-    &:has(#data-theme-light:not(:checked)) body,
-    &:has(#data-theme-light:not(:checked)) nav {
-        animation: theme-switch-repaint-dark 0.11s;
-    }
-
-    &[data-theme="light"] body,
-    &[data-theme="light"] nav,
-    &:has(#data-theme-light:checked) body,
-    &:has(#data-theme-light:checked) nav,
-    &:has(#data-theme-dark:not(:checked)) body,
-    &:has(#data-theme-dark:not(:checked)) nav {
-        animation: theme-switch-repaint-light 0.11s;
+    &[functora-theme-dark] body,
+    &[functora-theme-dark] nav,
+    &:not([functora-theme-dark]) body,
+    &:not([functora-theme-dark]) nav,
+    &:has(#functora-theme-dark:checked) body,
+    &:has(#functora-theme-dark:checked) nav,
+    &:has(#functora-theme-dark:not(:checked)) body,
+    &:has(#functora-theme-dark:not(:checked)) nav {
+        animation: theme-switch-repaint 0.11s;
     }
 }
 
-html[data-theme],
-html:has(#data-theme-light),
-html:has(#data-theme-dark) {
+html[functora-theme-dark],
+html:has(#functora-theme-dark) {
     will-change: color, background-color, border-color;
 }

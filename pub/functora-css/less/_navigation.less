@@ -4,6 +4,35 @@
 ----------------------------------------------------------------------*/
 
 
+#functora-theme-dark {
+	display: none
+}
+
+.theme-emoji() {
+	opacity: 1;
+	position: static;
+	z-index: auto;
+	width: auto;
+	height: auto;
+	background: none;
+	transform: none;
+}
+
+.nav-item() {
+	text-decoration: none;
+	text-transform: none;
+	padding: 0.8rem 2rem 0.4rem;
+	border-bottom: 4px solid transparent;
+	display: block;
+	cursor: pointer;
+	font-weight: 300;
+
+	&:hover {
+		color: @primary;
+		border-color: @primary;
+	}
+}
+
 nav@{n},
 nav@{x} {
 	background: @surface;
@@ -21,23 +50,19 @@ nav@{x} {
 		position: fixed;
 		top: 0;
 		left: 0;
-		right: 0;
+		width: 100vw;
 		z-index: 11;
 	}
-
-	// contains everything in the nav
 
 	label {
 		max-width: @width;
 		margin: auto;
 		display: block;
 
-		>input {
+		>#functora-nav-toggle {
 			display: none
 		}
 	}
-
-	// where the main navigation items live
 
 	ul {
 		padding: 0 2rem;
@@ -63,15 +88,7 @@ nav@{x} {
 
 		a {
 			color: inherit;
-			text-decoration: none;
-			text-transform: none;
-			padding: 0.8rem 2rem 0.4rem;
-			border-bottom: 4px solid transparent;
-			display: block;
-			cursor: pointer;
-			font-weight: 300;
-
-			// sets drop down menu styling
+			.nav-item();
 
 			@media (min-width: (@mobile + .1)) {
 				&:not(:only-child) {
@@ -82,15 +99,8 @@ nav@{x} {
 					padding-right: 3rem;
 				}
 			}
-
-			&:hover {
-				color: @primary;
-				border-color: @primary;
-			}
 		}
 	}
-
-	// drop down menu
 
 	menu {
 		padding: 0;
@@ -135,9 +145,6 @@ nav@{x} {
 		}
 	}
 
-	// where the title/logo lives in the nav bar
-	// contains the hamburger menu in mobile view
-
 	header {
 
 		&:before,
@@ -166,65 +173,65 @@ nav@{x} {
 
 		a {
 			color: inherit;
-			position: absolute;
-			left: 2rem;
-			top: 1rem;
-			bottom: 1rem;
 			cursor: pointer;
-			z-index: 2;
 			font-size: @fs-l;
 			text-decoration: none;
 
-			img {
-				height: 2rem;
-				vertical-align: middle;
-				top: -1px;
-				margin-right: 1rem;
+			&:first-child {
+				position: absolute;
+				left: 2rem;
+				top: 1rem;
+				bottom: 1rem;
+				z-index: 2;
+
+				img {
+					height: 2rem;
+					vertical-align: middle;
+					top: -1px;
+					margin-right: 1rem;
+				}
 			}
 		}
-	}
 
-	// theme toggle
-
-	ul label[for="data-theme-dark"],
-	ul label[for="data-theme-light"] {
-		text-decoration: none;
-		text-transform: none;
-		padding: 0.8rem 2rem 0.4rem;
-		border-bottom: 4px solid transparent;
-		display: block;
-		cursor: pointer;
-		font-weight: 300;
-		font-size: inherit;
-
-		&:hover {
-			color: @primary;
-			border-color: @primary;
+		#functora-nav-open {
+			display: none;
 		}
 	}
+
+	ul label[for="functora-theme-dark"] {
+		.nav-item();
+		font-size: inherit;
+	}
+
 }
 
-html:has(#data-theme-dark:checked) nav ul label[for="data-theme-dark"]::before,
-html:has(#data-theme-light:not(:checked)) nav ul label[for="data-theme-light"]::before {
-	content: "🌚\00a0"
+html:has(#functora-theme-dark:checked) label[for="functora-theme-dark"]::before {
+	content: "🌚\00a0";
+	.theme-emoji();
 }
 
-html:has(#data-theme-dark:not(:checked)) nav ul label[for="data-theme-dark"]::before,
-html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before {
-	content: "🌝\00a0"
+html:has(#functora-theme-dark:not(:checked)) label[for="functora-theme-dark"]::before {
+	content: "🌝\00a0";
+	.theme-emoji();
 }
 
-// mobile view
+html:has(nav@{n}[fx], nav@{x}[fx]) {
+	scroll-padding-top: 4.4rem;
+}
+
+body:has(nav@{n}[fx], nav@{x}[fx]) {
+	padding-top: 4.4rem;
+}
 
 @media (max-width: @mobile) {
 
-	// clears the top of the page for the fixed nav
+	html {
+		scroll-padding-top: 4.4rem;
+	}
 
 	body {
 		padding-top: 4.4rem;
 	}
-
-	// keeps the nav fixed
 
 	nav@{n},
 	nav@{x} {
@@ -246,12 +253,27 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 			&:after {
 				display: block
 			}
+
+			a:first-child {
+				left: 2rem;
+				top: 1rem;
+				bottom: 1rem;
+				z-index: 15;
+			}
+
+			#functora-nav-open {
+				display: block;
+				position: absolute;
+				top: 0;
+				right: 1rem;
+				width: 4.4rem;
+				height: 4.4rem;
+				z-index: 16;
+			}
 		}
 
 		label {
 			height: 4.4rem;
-
-			// hides the nav off screen
 
 			>ul {
 				position: fixed;
@@ -278,53 +300,81 @@ html:has(#data-theme-light:checked) nav ul label[for="data-theme-light"]::before
 					border: none;
 				}
 
-				label[for="data-theme-dark"],
-				label[for="data-theme-light"] {
+				label[for="functora-theme-dark"] {
 					padding: 1rem 6rem 1rem 2rem;
 					border: none;
 				}
 			}
 
-			// overlay to catch clicks when sidebar is open
+		#functora-nav-collapse {
+			display: none;
+		}
 
-			&:has(>input:checked:not(#data-theme-dark):not(#data-theme-light))::before {
-				content: "";
-				position: fixed;
-				inset: 0;
-				z-index: 11;
-			}
+		#functora-nav-toggle:checked ~ ul {
+			transform: none;
+			pointer-events: none;
 
-		input:not(#data-theme-dark):not(#data-theme-light) {
-			&:checked {
-
-				// shows the nav when input is checked
-
-				~ul {
-					transform: none;
-					pointer-events: none;
-
-					a,
-					label[for="data-theme-dark"],
-					label[for="data-theme-light"] {
-						pointer-events: auto;
-					}
-				}
-
-				// hides the hamburger and shows the cross when the input is checked
-
-				~header {
-					&:before {
-						transform: rotate(-180deg);
-						opacity: 0;
-					}
-
-					&:after {
-						transform: none;
-						opacity: 1;
-					}
-				}
+			a,
+			label[for="functora-theme-dark"] {
+				pointer-events: auto;
 			}
 		}
+
+		#functora-nav-toggle:checked ~ #functora-nav-collapse {
+			display: block;
+			position: fixed;
+			inset: 0;
+			z-index: 11;
+			cursor: default;
+		}
+
+		#functora-nav-toggle:checked ~ header {
+			&:before {
+				transform: rotate(-180deg);
+				opacity: 0;
+			}
+
+			&:after {
+				transform: none;
+				opacity: 1;
+			}
+		}
+		}
+	}
+
+	#functora-nav-expand:target ul {
+		transform: none;
+		pointer-events: none;
+
+		a,
+		label[for="functora-theme-dark"] {
+			pointer-events: auto;
+		}
+	}
+
+	#functora-nav-expand:target #functora-nav-collapse {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 11;
+		cursor: default;
+	}
+
+	#functora-nav-expand:target header {
+		pointer-events: none;
+
+		* {
+			pointer-events: none;
+		}
+
+		&:before {
+			transform: rotate(-180deg);
+			opacity: 0;
+		}
+
+		&:after {
+			transform: none;
+			opacity: 1;
 		}
 	}
 }

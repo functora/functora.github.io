@@ -41,7 +41,7 @@ fn App() -> Element {
         document::Link { rel: "manifest", href: WEB_MANIFEST }
         document::Link {
             rel: "stylesheet",
-            href: asset!("/assets/bare.min.css", NO_CSS_MINIFY),
+            href: asset!("/assets/functora.min.css", NO_CSS_MINIFY),
         }
         document::Link { rel: "stylesheet", href: asset!("/assets/app.css") }
         Router::<Route> {}

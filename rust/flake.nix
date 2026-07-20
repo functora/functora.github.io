@@ -248,6 +248,8 @@
               # web
               binaryen
               wasm-bindgen-cli-0_2_106
+              lessc
+              clean-css-cli
               # linux
               pkg-config
               webkitgtk_4_1
@@ -285,6 +287,7 @@
               (mkApk "cryptonote")
               # tools
               pkgs.chromium
+              pkgs.qutebrowser
               pkgs.cloudflared
               (opencode-nix.packages.${system}.default)
               (pkgs.writeShellApplication {

@@ -11,6 +11,11 @@ pub fn Layout() -> Element {
     let nav_signal = use_context_provider(|| Signal::new(nav));
 
     use_effect(move || {
+        let _ = idx();
+        let _ = document::eval("window.scrollTo(0, 0)");
+    });
+
+    use_effect(move || {
         let theme = pst.theme()();
         spawn(async move {
             if let Err(e) = functora_dioxus::ffi::set_theme(&theme).await {
@@ -22,7 +27,7 @@ pub fn Layout() -> Element {
     rsx! {
         nav {
             label {
-                input { r#type: "checkbox" }
+                input { r#type: "checkbox", id: "functora-nav-toggle" }
                 header {
                     NavLink {
                         nav: nav_signal,
@@ -30,7 +35,9 @@ pub fn Layout() -> Element {
                         onclick: move |_| tst.set(TemporaryState::default()),
                         "🔐 Cryptonote"
                     }
+                    span { id: "functora-nav-open" }
                 }
+                span { id: "functora-nav-collapse" }
                 ul {
                     for lang in SUPPORTED_LANGUAGES {
                         li {

@@ -1,28 +1,51 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>functora-css</title>
     <meta charset="utf-8" />
-    <meta name="description" content="functora-css - all components" />
+    <title>functora-css</title>
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=no"
+      name="description"
+      content="functora-css - a pure, classless, semantic CSS framework"
     />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="theme-color"
+      content="#fff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#222"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="manifest" href="site.webmanifest" />
     <link href="css/functora.min.css" rel="stylesheet" />
   </head>
   <body>
-    <nav>
+    <nav fx id="functora-nav-expand" aria-label="Navbar">
       <label>
-        <input type="checkbox" />
-        <input type="checkbox" id="data-theme-dark" />
         <header>
           <a href="#">functora-css</a>
+          <a
+            href="#functora-nav-expand"
+            id="functora-nav-open"
+            aria-label="Open navigation"
+          ></a>
         </header>
+        <a
+          href="#functora-nav-collapse"
+          id="functora-nav-collapse"
+          aria-label="Close navigation"
+        ></a>
         <ul>
           <li><a href="#appearance">Appearance</a></li>
           <li><a href="#navigation">Navigation</a></li>
           <li>
-            <a>More</a>
+            <a href="#buttons">More</a>
             <menu>
               <menuitem><a href="#buttons">Buttons</a></menuitem>
               <menuitem><a href="#forms">Forms</a></menuitem>
@@ -30,210 +53,263 @@
               <menuitem><a href="#blockquotes">Blockquotes</a></menuitem>
               <menuitem><a href="#code">Code</a></menuitem>
               <menuitem><a href="#lists">Lists</a></menuitem>
+              <menuitem><a href="#media">Media</a></menuitem>
               <menuitem><a href="#tables">Tables</a></menuitem>
               <menuitem><a href="#tags">Tags</a></menuitem>
               <menuitem><a href="#tooltips">Tooltips</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
               <menuitem><a href="#utility">Utility</a></menuitem>
+              <menuitem><a href="#footer">Footer</a></menuitem>
             </menu>
           </li>
-          <li><label for="data-theme-dark">Theme</label></li>
+          <li><label for="functora-theme-dark">Theme</label></li>
         </ul>
       </label>
+      <input type="checkbox" id="functora-theme-dark" />
     </nav>
 
-    <section id="intro">
-      <h1>functora-css</h1>
-      <p>
-        A classless, dependency-free, configuration-free, JS-free, mobile-first,
-        responsive, lightweight, semantic pure CSS framework with light and dark
-        themes and a collapsible navbar.
-      </p>
-      <p>
-        This page is built entirely with semantic HTML elements and styled
-        exclusively by functora-css - no extra styles, no JavaScript.
-      </p>
-    </section>
+    <main>
+      <section id="intro">
+        <h1>functora-css</h1>
+        <p>
+          A classless, JS-free, dependency-free, configuration-free,
+          mobile-first, responsive, lightweight, semantic, pure CSS framework
+          with light and dark themes and a collapsible navbar.
+        </p>
+        <p>
+          This page is built entirely with semantic HTML elements and styled
+          exclusively by functora-css - no extra styles, no JavaScript.
+        </p>
+        <p>
+          The framework source code is available on
+          <a
+            href="https://github.com/functora/functora.github.io/tree/master/pub/functora-css"
+            >github.com/functora/functora.github.io/tree/master/pub/functora-css</a
+          >.
+        </p>
+        <p>
+          The framework minified bundle is available at
+          <a href="https://functora.github.io/css/functora.min.css"
+            >functora.github.io/css/functora.min.css</a
+          >.
+        </p>
+      </section>
 
-    <section id="appearance">
-      <h2>Appearance</h2>
-      <p>
-        functora-css supports light and dark themes via the
-        <code>data-theme</code> attribute on the
-        <code>&lt;html&gt;</code> element. There are two complementary
-        mechanisms for applying it:
-      </p>
+      <section id="appearance">
+        <h2>Appearance</h2>
+        <p>
+          You can switch between light and dark themes using three mechanisms:
+          system preference, HTML attribute, or checkbox.
+        </p>
 
-      <h4>Attribute</h4>
-      <p>
-        Set <code>data-theme="light"</code> or
-        <code>data-theme="dark"</code> directly on <code>&lt;html&gt;</code> to
-        lock the page to a single theme. This is useful when no runtime theme
-        switching is needed - for example in static pages that always use one
-        theme, or in applications where the attribute value is stored and
-        managed externally (localStorage, database, server-side rendering,
-        etc.).
-      </p>
+        <h3>1. Automatic</h3>
+        <p>
+          No additional markup is needed. The theme automatically matches the OS
+          preference.
+        </p>
+        <pre><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;link href="functora.min.css" rel="stylesheet" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Automatic theme&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
 
-      <h4>Checkbox</h4>
-      <p>
-        functora-css provides two built-in checkbox IDs that toggle the theme
-        with pure CSS - no JavaScript required. The user chooses which checkbox
-        to use depending on which theme should be the default (unchecked state).
-      </p>
+        <h3>2. Attribute</h3>
+        <p>
+          Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to
+          override system preference. Use this when the preference is stored
+          server-side or in localStorage.
+        </p>
+        <pre><code>&lt;html functora-theme-dark&gt;
+  &lt;!-- content --&gt;
+&lt;/html&gt;</code></pre>
 
-      <p>
-        <strong><code>id="data-theme-dark"</code></strong> - default is light.
-        When unchecked the page renders in light theme; when checked it switches
-        to dark.
-      </p>
+        <h3>3. Checkbox</h3>
+        <p>
+          Place a hidden checkbox and a visible label anywhere on the page. No
+          JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
+        </p>
 
-      <p>
-        <strong><code>id="data-theme-light"</code></strong> - default is dark.
-        When unchecked the page renders in dark theme; when checked it switches
-        to light.
-      </p>
-
-      <p>
-        Place the chosen checkbox inside the <code>&lt;nav&gt;</code> element
-        (hidden via CSS) and use a <code>&lt;label&gt;</code> element with the
-        corresponding <code>for</code> attribute as the visible toggle button.
-        The navbar contains two hidden checkboxes - one for the mobile menu
-        toggle and one for the theme toggle. Their order matters for CSS sibling
-        selectors:
-      </p>
-      <pre><code>&lt;nav&gt;
+        <p>
+          <strong>Inside the navbar</strong> - place the checkbox as the last
+          child of <code>&lt;nav&gt;</code> and the label inside
+          <code>&lt;ul&gt;</code> as a nav item:
+        </p>
+        <pre><code>&lt;nav&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" /&gt;
-    &lt;input type="checkbox" id="data-theme-dark" /&gt;
-    &lt;header&gt;...&lt;/header&gt;
+    &lt;header&gt;
+      &lt;a href="#"&gt;Site&lt;/a&gt;
+    &lt;/header&gt;
     &lt;ul&gt;
-      &lt;li&gt;&lt;label for="data-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
-      <p>
-        The <strong>Theme</strong> button in the navigation bar above works this
-        way - clicking it toggles the hidden <code>data-theme-dark</code>
-        checkbox and switches between light and dark without any JavaScript.
-      </p>
-    </section>
 
-    <section id="navigation">
-      <h2>Navigation</h2>
-      <p>
-        The responsive navbar uses a checkbox-based toggle for mobile menus
-        without any JavaScript. The structure requires a specific order of
-        elements inside a <code>&lt;nav&gt;</code> tag for the CSS selectors to
-        work correctly.
-      </p>
+        <p>
+          <strong>Standalone (no navbar)</strong> - place the checkbox and label
+          anywhere in the document:
+        </p>
+        <label btn for="functora-theme-dark">Theme</label>
+        <p>Add <code>checked</code> for <strong>dark by default</strong>:</p>
+        <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
+&lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
+        <p>Omit <code>checked</code> for <strong>light by default</strong>:</p>
+        <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
+&lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
+      </section>
 
-      <h4>Structure</h4>
-      <p>
-        The navbar must follow this exact structure: a
-        <code>&lt;label&gt;</code> wrapping two hidden checkboxes (mobile menu
-        toggle and theme toggle), a <code>&lt;header&gt;</code> for the
-        brand/logo, and a <code>&lt;ul&gt;</code> for navigation links. Dropdown
-        menus use a nested <code>&lt;menu&gt;</code> element inside a list item.
-      </p>
-      <pre><code>&lt;nav&gt;
+      <section id="navigation">
+        <h2>Navigation</h2>
+        <p>
+          The navbar is pure CSS and responsive - no JavaScript required. Two
+          expand-collapse mechanisms are available, so you can choose the one
+          that fits your use case.
+        </p>
+
+        <h3>1. Anchor</h3>
+        <p>
+          Add <code>id="functora-nav-expand"</code> to the nav.
+          <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
+          <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. The
+          menu auto-closes when clicking any nav link. No JavaScript required.
+          Best for static JS-free sites.
+        </p>
+        <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
   &lt;label&gt;
-    &lt;input type="checkbox" /&gt;
-    &lt;input type="checkbox" id="data-theme-dark" /&gt;
-    &lt;header&gt;&lt;a href="#"&gt;Site name&lt;/a&gt;&lt;/header&gt;
+    &lt;header&gt;
+      &lt;a href="#"&gt;Site&lt;/a&gt;
+      &lt;a href="#functora-nav-expand" id="functora-nav-open"&gt;&lt;/a&gt;
+    &lt;/header&gt;
+    &lt;a href="#functora-nav-collapse" id="functora-nav-collapse"&gt;&lt;/a&gt;
     &lt;ul&gt;
-      &lt;li&gt;&lt;a href="#one"&gt;Link&lt;/a&gt;&lt;/li&gt;
-      &lt;li&gt;
-        &lt;a&gt;Dropdown&lt;/a&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a&gt;Dropdown&lt;/a&gt;
         &lt;menu&gt;
-          &lt;menuitem&gt;&lt;a href="#two"&gt;Item one&lt;/a&gt;&lt;/menuitem&gt;
-          &lt;menuitem&gt;&lt;a href="#three"&gt;Item two&lt;/a&gt;&lt;/menuitem&gt;
+          &lt;menuitem&gt;&lt;a href="/a"&gt;Item&lt;/a&gt;&lt;/menuitem&gt;
         &lt;/menu&gt;
       &lt;/li&gt;
+      &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
-      <h4>Mobile behavior</h4>
-      <p>
-        On mobile viewports the navigation links are hidden by default. Tapping
-        the header area (or the hamburger icon) toggles the first checkbox,
-        which reveals the menu via pure CSS. The theme toggle remains
-        independent and does not affect the menu state.
-      </p>
-    </section>
+        <h3>2. Checkbox</h3>
+        <p>
+          Add
+          <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
+          inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for
+          the close overlay to avoid hash conflicts with client-side routers.
+          The menu does not auto-close when a link is clicked. Best for SPAs and
+          stateful sites using JavaScript.
+        </p>
+        <pre><code>&lt;nav aria-label="Navbar"&gt;
+  &lt;label&gt;
+    &lt;input type="checkbox" id="functora-nav-toggle" /&gt;
+    &lt;header&gt;
+      &lt;a href="#"&gt;App&lt;/a&gt;
+      &lt;span id="functora-nav-open"&gt;&lt;/span&gt;
+    &lt;/header&gt;
+    &lt;span id="functora-nav-collapse"&gt;&lt;/span&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/label&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
+&lt;/nav&gt;</code></pre>
 
-    <section id="buttons">
-      <h2>Buttons</h2>
-      <p>
-        Buttons are styled using native HTML elements. No classes are needed -
-        use the <code>primary</code> attribute for primary buttons,
-        <code>round</code> for rounded corners, and <code>disabled</code> for
-        disabled state.
-      </p>
+        <h3>Fixed navbar</h3>
+        <p>
+          Add the <code>fx</code> attribute to fix the navbar to the top of the
+          viewport.
+        </p>
+        <pre><code>&lt;nav fx&gt;
+  &lt;!-- content --&gt;
+&lt;/nav&gt;</code></pre>
 
-      <h4>Standard buttons</h4>
-      <p>
-        <button>Default</button>
-        <button primary>Primary</button>
-        <button round>Round</button>
-        <button disabled>Disabled</button>
-      </p>
-      <pre><code>&lt;button&gt;Default&lt;/button&gt;
+        <h3>Dropdown menus</h3>
+        <p>
+          Nest a <code>&lt;menu&gt;</code> inside a <code>&lt;li&gt;</code>. The
+          menu appears on hover (desktop) or as part of the mobile drawer.
+        </p>
+        <pre><code>&lt;li&gt;
+  &lt;a&gt;Dropdown&lt;/a&gt;
+  &lt;menu&gt;
+    &lt;menuitem&gt;&lt;a href="/a"&gt;Item A&lt;/a&gt;&lt;/menuitem&gt;
+    &lt;menuitem&gt;&lt;a href="/b"&gt;Item B&lt;/a&gt;&lt;/menuitem&gt;
+  &lt;/menu&gt;
+&lt;/li&gt;</code></pre>
+      </section>
+
+      <section id="buttons">
+        <h2>Buttons</h2>
+
+        <h3>Standard buttons</h3>
+        <p>
+          <button>Default</button>
+          <button primary>Primary</button>
+          <button round>Round</button>
+          <button disabled>Disabled</button>
+        </p>
+        <pre><code>&lt;button&gt;Default&lt;/button&gt;
 &lt;button primary&gt;Primary&lt;/button&gt;
 &lt;button round&gt;Round&lt;/button&gt;
 &lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
 
-      <h4>Anchor as button</h4>
-      <p>
-        Use the <code>btn</code> attribute on an anchor element to style it as a
-        button. Combine with <code>primary</code> for primary styling.
-      </p>
-      <p>
-        <a btn href="#">Link button</a>
-        <a btn primary href="#">Primary link</a>
-      </p>
-      <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
+        <h3>Anchor as button</h3>
+        <p>
+          <a btn href="#">Link button</a>
+          <a btn primary href="#">Primary link</a>
+        </p>
+        <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
 &lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
 
-      <h4>Buttons with icons</h4>
-      <p>
-        Buttons can contain inline SVG icons. Place the SVG before the text
-        content.
-      </p>
-      <p>
-        <button>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 8v8M8 12h8" />
-          </svg>
-          With icon
-        </button>
-        <button primary>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          Save
-        </button>
-      </p>
-      <pre><code>&lt;button&gt;
+        <h3>Submit button</h3>
+        <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
+
+        <h3>Buttons with icons</h3>
+        <p>
+          <button>
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+            With icon
+          </button>
+          <button primary>
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            Save
+          </button>
+        </p>
+        <pre><code>&lt;button&gt;
   &lt;svg ...&gt;...&lt;/svg&gt;
   With icon
 &lt;/button&gt;
@@ -241,527 +317,463 @@
   &lt;svg ...&gt;...&lt;/svg&gt;
   Save
 &lt;/button&gt;</code></pre>
+      </section>
 
-      <h4>Submit button</h4>
-      <p>
-        <code>&lt;input type="submit"&gt;</code> is automatically styled as a
-        button within forms.
-      </p>
-      <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
-    </section>
+      <section id="forms">
+        <h2>Forms</h2>
 
-    <section id="forms">
-      <h2>Forms</h2>
-      <p>
-        Form elements are styled with a clean, minimal look. Labels should be
-        placed directly before their corresponding inputs. Text inputs and
-        textareas default to 100% width.
-      </p>
+        <h3>Text inputs</h3>
+        <label for="demo-name">Name</label>
+        <input id="demo-name" type="text" placeholder="Your name" />
+        <pre><code>&lt;label for="demo-name"&gt;Name&lt;/label&gt;
+&lt;input id="demo-name" type="text" placeholder="Your name" /&gt;</code></pre>
 
-      <h4>Text inputs</h4>
-      <p>
-        Text inputs have a subtle border that highlights on focus. Place the
-        <code>&lt;label&gt;</code> directly before the input.
-      </p>
-      <label for="demo-name">Name</label>
-      <input id="demo-name" type="text" placeholder="Your name" />
-      <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
-&lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
+        <h3>Textarea</h3>
+        <label for="demo-bio">Bio</label>
+        <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
+        <pre><code>&lt;label for="demo-bio"&gt;Bio&lt;/label&gt;
+&lt;textarea id="demo-bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
 
-      <h4>Textarea</h4>
-      <p>
-        Textareas auto-resize vertically and have the same styling as text
-        inputs.
-      </p>
-      <label for="demo-bio">Bio</label>
-      <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
-      <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
-&lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
-
-      <h4>Select</h4>
-      <p>Select dropdowns are styled to match other form elements.</p>
-      <label for="demo-lang">Language</label>
-      <select id="demo-lang">
-        <option>Rust</option>
-        <option>TypeScript</option>
-        <option>Python</option>
-      </select>
-      <pre><code>&lt;label for="lang"&gt;Language&lt;/label&gt;
-&lt;select id="lang"&gt;
+        <h3>Select</h3>
+        <label for="demo-lang">Language</label>
+        <select id="demo-lang">
+          <option>Rust</option>
+          <option>TypeScript</option>
+          <option>Python</option>
+        </select>
+        <pre><code>&lt;label for="demo-lang"&gt;Language&lt;/label&gt;
+&lt;select id="demo-lang"&gt;
   &lt;option&gt;Rust&lt;/option&gt;
   &lt;option&gt;TypeScript&lt;/option&gt;
   &lt;option&gt;Python&lt;/option&gt;
 &lt;/select&gt;</code></pre>
 
-      <h4>Radio and checkbox</h4>
-      <p>
-        Radio buttons and checkboxes are styled with custom indicators. Place
-        the <code>&lt;label&gt;</code> directly after the input.
-      </p>
-      <input type="radio" name="demo-radio" id="demo-r1" /><label for="demo-r1"
-        >Option A</label
-      >
-      <input type="radio" name="demo-radio" id="demo-r2" checked /><label
-        for="demo-r2"
-        >Option B</label
-      >
-      <input type="checkbox" id="demo-c1" /><label for="demo-c1"
-        >Check me</label
-      >
-      <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
-        >Already checked</label
-      >
-      <pre><code>&lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-&lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-&lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
-&lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
-
-      <h4>Fieldset</h4>
-      <p>
-        Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
-        group related form controls.
-      </p>
-      <fieldset>
-        <legend>Preferences</legend>
-        <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
-          for="demo-fr1"
+        <h3>Radio and checkbox</h3>
+        <input type="radio" name="demo-radio" id="demo-r1" /><label
+          for="demo-r1"
           >Option A</label
         >
-        <input
-          type="radio"
-          name="demo-fieldset-radio"
-          id="demo-fr2"
-          checked
-        /><label for="demo-fr2">Option B</label>
+        <input type="radio" name="demo-radio" id="demo-r2" checked /><label
+          for="demo-r2"
+          >Option B</label
+        >
         <br />
-        <input type="checkbox" id="demo-fc1" /><label for="demo-fc1"
+        <input type="checkbox" id="demo-c1" /><label for="demo-c1"
           >Check me</label
         >
-        <input type="checkbox" id="demo-fc2" checked /><label for="demo-fc2"
+        <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
           >Already checked</label
         >
-        <p>
-          <button type="submit" primary>Submit</button>
-          <button type="reset">Reset</button>
-        </p>
-      </fieldset>
-      <pre><code>&lt;fieldset&gt;
+        <pre><code>&lt;input type="radio" name="demo-radio" id="demo-r1" /&gt;&lt;label for="demo-r1"&gt;Option A&lt;/label&gt;
+&lt;input type="radio" name="demo-radio" id="demo-r2" checked /&gt;&lt;label for="demo-r2"&gt;Option B&lt;/label&gt;
+&lt;br /&gt;
+&lt;input type="checkbox" id="demo-c1" /&gt;&lt;label for="demo-c1"&gt;Check me&lt;/label&gt;
+&lt;input type="checkbox" id="demo-c2" checked /&gt;&lt;label for="demo-c2"&gt;Already checked&lt;/label&gt;</code></pre>
+
+        <h3>Fieldset</h3>
+        <fieldset>
+          <legend>Preferences</legend>
+          <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
+            for="demo-fr1"
+            >Option A</label
+          >
+          <input
+            type="radio"
+            name="demo-fieldset-radio"
+            id="demo-fr2"
+            checked
+          /><label for="demo-fr2">Option B</label>
+          <br />
+          <input type="checkbox" id="demo-fc1" /><label for="demo-fc1"
+            >Check me</label
+          >
+          <input type="checkbox" id="demo-fc2" checked /><label for="demo-fc2"
+            >Already checked</label
+          >
+          <p>
+            <button type="submit" primary>Submit</button>
+            <button type="reset">Reset</button>
+          </p>
+        </fieldset>
+        <pre><code>&lt;fieldset&gt;
   &lt;legend&gt;Preferences&lt;/legend&gt;
-  &lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-  &lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-  &lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
-  &lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;
+  &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr1" /&gt;&lt;label for="demo-fr1"&gt;Option A&lt;/label&gt;
+  &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr2" checked /&gt;&lt;label for="demo-fr2"&gt;Option B&lt;/label&gt;
+  &lt;br /&gt;
+  &lt;input type="checkbox" id="demo-fc1" /&gt;&lt;label for="demo-fc1"&gt;Check me&lt;/label&gt;
+  &lt;input type="checkbox" id="demo-fc2" checked /&gt;&lt;label for="demo-fc2"&gt;Already checked&lt;/label&gt;
   &lt;p&gt;
     &lt;button type="submit" primary&gt;Submit&lt;/button&gt;
     &lt;button type="reset"&gt;Reset&lt;/button&gt;
   &lt;/p&gt;
 &lt;/fieldset&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="typography">
-      <h2>Typography</h2>
-      <p>
-        functora-css styles standard HTML typography elements without requiring
-        classes. Font sizes use <code>rem</code> units so the entire scale can
-        be adjusted by changing the root font size.
-      </p>
+      <section id="typography">
+        <h2>Typography</h2>
 
-      <h4>Headings</h4>
-      <p>
-        All six heading levels are supported with consistent margins and
-        padding. Headings inherit the default browser font family and are styled
-        with appropriate sizes.
-      </p>
-      <h1>Heading h1</h1>
-      <h2>Heading h2</h2>
-      <h3>Heading h3</h3>
-      <h4>Heading h4</h4>
-      <h5>Heading h5</h5>
-      <h6>Heading h6</h6>
-      <pre><code>&lt;h1&gt;Heading h1&lt;/h1&gt;
+        <h3>Headings</h3>
+        <h1>Heading h1</h1>
+        <h2>Heading h2</h2>
+        <h3>Heading h3</h3>
+        <h4>Heading h4</h4>
+        <h5>Heading h5</h5>
+        <h6>Heading h6</h6>
+        <pre><code>&lt;h1&gt;Heading h1&lt;/h1&gt;
 &lt;h2&gt;Heading h2&lt;/h2&gt;
 &lt;h3&gt;Heading h3&lt;/h3&gt;
 &lt;h4&gt;Heading h4&lt;/h4&gt;
 &lt;h5&gt;Heading h5&lt;/h5&gt;
 &lt;h6&gt;Heading h6&lt;/h6&gt;</code></pre>
 
-      <h4>Paragraphs</h4>
-      <p>
-        Paragraphs have consistent line height and margin spacing. They work
-        well at any content width and collapse gracefully on mobile.
-      </p>
-      <p>
-        Paragraph with an <a href="#">anchor link</a> - hover to see the
-        underline effect. Lorem ipsum dolor sit amet, consectetur adipisicing
-        elit.
-      </p>
-      <p>
-        Another paragraph. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur.
-      </p>
-      <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
+        <h3>Paragraphs</h3>
+        <p>Paragraph with an <a href="#">anchor link</a>.</p>
+        <p>Another paragraph.</p>
+        <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Another paragraph.&lt;/p&gt;</code></pre>
 
-      <h4>Anchor links</h4>
-      <p>
-        Anchor links have a highlight effect that expands from the bottom on
-        hover. The highlight uses the secondary theme color.
-      </p>
-      <p>
-        <a href="#">Default anchor</a>
-      </p>
-      <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
+        <h3>Anchor links</h3>
+        <p>
+          <a href="#">Default anchor</a>
+        </p>
+        <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
-      <h4>Emphasis and inline elements</h4>
-      <p>
-        Standard inline elements like <strong>bold</strong>, <em>italic</em>,
-        <mark>highlighted</mark>, <small>small</small>, <del>deleted</del>, and
-        <abbr title="abbreviation">abbreviations</abbr>
-        are all styled appropriately.
-      </p>
-      <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
+        <h3>Emphasis and inline elements</h3>
+        <p>
+          <strong>bold</strong> <em>italic</em> <mark>highlighted</mark>
+          <small>small</small> <del>deleted</del>
+          <abbr title="abbreviation">abbr</abbr>
+        </p>
+        <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
 &lt;em&gt;italic&lt;/em&gt;
 &lt;mark&gt;highlighted&lt;/mark&gt;
 &lt;small&gt;small&lt;/small&gt;
 &lt;del&gt;deleted&lt;/del&gt;
-&lt;abbr title="abbreviation"&gt;abbreviations&lt;/abbr&gt;</code></pre>
+&lt;abbr title="abbreviation"&gt;abbr&lt;/abbr&gt;</code></pre>
 
-      <h4>Sections</h4>
-      <p>
-        The <code>&lt;section&gt;</code> element provides centered content with
-        padding and a max-width. It works as a container for page sections.
-      </p>
-      <pre><code>&lt;section&gt;
+        <h3>Horizontal rule</h3>
+        <hr />
+        <pre><code>&lt;hr /&gt;</code></pre>
+
+        <h3>Sections</h3>
+        <pre><code>&lt;section&gt;
   &lt;h2&gt;Section title&lt;/h2&gt;
   &lt;p&gt;Section content goes here.&lt;/p&gt;
 &lt;/section&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="blockquotes">
-      <h2>Blockquotes</h2>
-      <p>
-        Blockquotes are styled with a left border accent and subtle background.
-        They support attribution via a <code>&lt;cite&gt;</code> element at the
-        end.
-      </p>
-      <blockquote>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
-        urna sed urna ultricies ac tempor dui sagittis.
-      </blockquote>
-      <pre><code>&lt;blockquote&gt;
-  Quote goes here.
+      <section id="media">
+        <h2>Media</h2>
+        <pre><code>&lt;img src="photo.jpg" alt="description" /&gt;
+&lt;video src="video.mp4" controls&gt;&lt;/video&gt;</code></pre>
+      </section>
+
+      <section id="blockquotes">
+        <h2>Blockquotes</h2>
+        <blockquote>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus
+          luctus urna sed urna ultricies ac tempor dui sagittis.
+        </blockquote>
+        <pre><code>&lt;blockquote&gt;
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
+  urna sed urna ultricies ac tempor dui sagittis.
 &lt;/blockquote&gt;</code></pre>
 
-      <h4>With attribution</h4>
-      <blockquote>
-        <p>The best way to predict the future is to invent it.</p>
-        <cite>- Alan Kay</cite>
-      </blockquote>
-      <pre><code>&lt;blockquote&gt;
+        <h3>With attribution</h3>
+        <blockquote>
+          <p>The best way to predict the future is to invent it.</p>
+          <cite>- Alan Kay</cite>
+        </blockquote>
+        <pre><code>&lt;blockquote&gt;
   &lt;p&gt;The best way to predict the future is to invent it.&lt;/p&gt;
   &lt;cite&gt;- Alan Kay&lt;/cite&gt;
 &lt;/blockquote&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="code">
-      <h2>Code</h2>
-      <p>
-        Inline code and code blocks are styled with a distinct background and
-        monospace font. The <code>&lt;pre&gt;</code> element preserves
-        whitespace and line breaks.
-      </p>
+      <section id="code">
+        <h2>Code</h2>
 
-      <h4>Inline code</h4>
-      <p>
-        Use <code>&lt;code&gt;</code> for inline code fragments within a
-        paragraph.
-      </p>
-      <p>
-        The function returns a <code>Result&lt;String, Error&gt;</code> type.
-      </p>
-      <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
+        <h3>Inline code</h3>
+        <p>
+          The function returns a <code>Result&lt;String, Error&gt;</code> type.
+        </p>
+        <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
 
-      <h4>Code block</h4>
-      <p>
-        Wrap code in <code>&lt;pre&gt;&lt;code&gt;</code> for multi-line blocks.
-        Whitespace and indentation are preserved.
-      </p>
-      <pre><code>fn main() {
+        <h3>Code block</h3>
+        <pre><code>fn main() {
     println!("hello from functora-css");
 }</code></pre>
-      <pre><code>&lt;pre&gt;&lt;code&gt;
+        <pre><code>&lt;pre&gt;&lt;code&gt;
 fn main() {
     println!("hello from functora-css");
 }
 &lt;/code&gt;&lt;/pre&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="lists">
-      <h2>Lists</h2>
-      <p>
-        Both ordered and unordered lists are styled with appropriate markers.
-        Nested lists use different marker styles to show hierarchy.
-      </p>
+      <section id="lists">
+        <h2>Lists</h2>
 
-      <h4>Unordered list</h4>
-      <ul>
-        <li>Unordered list item one</li>
-        <li>Unordered list item two</li>
-        <li>
-          Unordered list item three
-          <ul>
-            <li>Nested item (circle)</li>
-            <li>Nested item (circle)</li>
-          </ul>
-        </li>
-      </ul>
-      <pre><code>&lt;ul&gt;
-  &lt;li&gt;Item one&lt;/li&gt;
-  &lt;li&gt;Item two&lt;/li&gt;
+        <h3>Unordered list</h3>
+        <ul>
+          <li>Unordered list item one</li>
+          <li>Unordered list item two</li>
+          <li>
+            Unordered list item three
+            <ul>
+              <li>Nested item (circle)</li>
+              <li>Nested item (circle)</li>
+            </ul>
+          </li>
+        </ul>
+        <pre><code>&lt;ul&gt;
+  &lt;li&gt;Unordered list item one&lt;/li&gt;
+  &lt;li&gt;Unordered list item two&lt;/li&gt;
   &lt;li&gt;
-    Item three
+    Unordered list item three
     &lt;ul&gt;
-      &lt;li&gt;Nested item&lt;/li&gt;
+      &lt;li&gt;Nested item (circle)&lt;/li&gt;
+      &lt;li&gt;Nested item (circle)&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
 &lt;/ul&gt;</code></pre>
 
-      <h4>Ordered list</h4>
-      <ol>
-        <li>Ordered list item one</li>
-        <li>Ordered list item two</li>
-        <li>
-          Ordered list item three
-          <ol>
-            <li>Nested item (lower-alpha)</li>
-            <li>Nested item (lower-alpha)</li>
-          </ol>
-        </li>
-      </ol>
-      <pre><code>&lt;ol&gt;
-  &lt;li&gt;Item one&lt;/li&gt;
-  &lt;li&gt;Item two&lt;/li&gt;
+        <h3>Ordered list</h3>
+        <ol>
+          <li>Ordered list item one</li>
+          <li>Ordered list item two</li>
+          <li>
+            Ordered list item three
+            <ol>
+              <li>Nested item (lower-alpha)</li>
+              <li>Nested item (lower-alpha)</li>
+            </ol>
+          </li>
+        </ol>
+        <pre><code>&lt;ol&gt;
+  &lt;li&gt;Ordered list item one&lt;/li&gt;
+  &lt;li&gt;Ordered list item two&lt;/li&gt;
   &lt;li&gt;
-    Item three
+    Ordered list item three
     &lt;ol&gt;
-      &lt;li&gt;Nested item&lt;/li&gt;
+      &lt;li&gt;Nested item (lower-alpha)&lt;/li&gt;
+      &lt;li&gt;Nested item (lower-alpha)&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
 &lt;/ol&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tables">
-      <h2>Tables</h2>
-      <p>
-        Tables use standard HTML structure with <code>&lt;thead&gt;</code>,
-        <code>&lt;tbody&gt;</code>, <code>&lt;tr&gt;</code>,
-        <code>&lt;th&gt;</code>, and <code>&lt;td&gt;</code> elements. Rows
-        highlight on hover.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Alice</td>
-            <td>Developer</td>
-            <td>Active</td>
-          </tr>
-          <tr>
-            <td>Bob</td>
-            <td>Designer</td>
-            <td>Away</td>
-          </tr>
-          <tr>
-            <td>Carol</td>
-            <td>Manager</td>
-            <td>Active</td>
-          </tr>
-        </tbody>
-      </table>
-      <pre><code>&lt;table&gt;
+      <section id="tables">
+        <h2>Tables</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alice</td>
+              <td>Developer</td>
+              <td>Active</td>
+            </tr>
+            <tr>
+              <td>Bob</td>
+              <td>Designer</td>
+              <td>Away</td>
+            </tr>
+            <tr>
+              <td>Carol</td>
+              <td>Manager</td>
+              <td>Active</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre><code>&lt;table&gt;
   &lt;thead&gt;
     &lt;tr&gt;
       &lt;th&gt;Name&lt;/th&gt;
       &lt;th&gt;Role&lt;/th&gt;
+      &lt;th&gt;Status&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
       &lt;td&gt;Alice&lt;/td&gt;
       &lt;td&gt;Developer&lt;/td&gt;
+      &lt;td&gt;Active&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Bob&lt;/td&gt;
+      &lt;td&gt;Designer&lt;/td&gt;
+      &lt;td&gt;Away&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Carol&lt;/td&gt;
+      &lt;td&gt;Manager&lt;/td&gt;
+      &lt;td&gt;Active&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tags">
-      <h2>Tags</h2>
-      <p>
-        Tags use the <code>&lt;tag&gt;</code> element. They are useful for
-        labels, statuses, and categories.
-      </p>
-      <p>
-        <tag>default</tag>
-        <tag primary>primary</tag>
-      </p>
-      <pre><code>&lt;tag&gt;default&lt;/tag&gt;
+      <section id="tags">
+        <h2>Tags</h2>
+        <p>
+          <tag>default</tag>
+          <tag primary>primary</tag>
+        </p>
+        <pre><code>&lt;tag&gt;default&lt;/tag&gt;
 &lt;tag primary&gt;primary&lt;/tag&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tooltips">
-      <h2>Tooltips</h2>
-      <p>
-        functora-css provides pure CSS tooltips with no JavaScript. Use the
-        <code>tt</code> attribute on most elements to show a tooltip on hover.
-        Tooltips use <code>::before</code> and <code>::after</code> pseudo
-        elements, so they work on any element that supports them.
-      </p>
+      <section id="tooltips">
+        <h2>Tooltips</h2>
 
-      <h4>Basic tooltip</h4>
-      <p>
-        <span tt="Hello from functora-css">Hover me (tooltip)</span>
-      </p>
-      <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me&lt;/span&gt;</code></pre>
+        <h3>Basic tooltip</h3>
+        <p>
+          <span tt="Hello from functora-css">Hover me (tooltip)</span>
+        </p>
+        <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me (tooltip)&lt;/span&gt;</code></pre>
 
-      <h4>Tooltip on buttons</h4>
-      <p>
-        <button tt="This is a normal button">Hover button</button>
-        <button primary tt="Primary button tooltip">Primary</button>
-      </p>
-      <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
+        <h3>Tooltip on buttons</h3>
+        <p>
+          <button tt="This is a normal button">Hover button</button>
+          <button primary tt="Primary button tooltip">Primary</button>
+        </p>
+        <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
 &lt;button primary tt="Primary button tooltip"&gt;Primary&lt;/button&gt;</code></pre>
 
-      <h4>Disabled button tooltip</h4>
-      <p>
-        Use the <code>dtt</code> attribute to show a tooltip when a button is
-        disabled. This is useful for explaining why a button is inactive.
-      </p>
-      <p>
-        <button disabled dtt="This button is disabled">
-          Disabled with tooltip
-        </button>
-      </p>
-      <pre><code>&lt;button disabled dtt="This button is disabled"&gt;
+        <h3>Disabled button tooltip</h3>
+        <p>
+          <button disabled dtt="This button is disabled">
+            Disabled with tooltip
+          </button>
+        </p>
+        <pre><code>&lt;button disabled dtt="This button is disabled"&gt;
   Disabled with tooltip
 &lt;/button&gt;</code></pre>
 
-      <h4>Anchor link tooltip</h4>
-      <p>
-        Use the <code>att</code> attribute on an anchor to show its
-        <code>href</code> as a tooltip on hover.
-      </p>
-      <p>
-        <a att href="https://functora.github.io/functora-css.html"
-          >Anchor tooltip</a
-        >
-      </p>
-      <pre><code>&lt;a att href="https://example.com"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
-    </section>
-
-    <section id="cards">
-      <h2>Cards</h2>
-      <p>
-        Cards use the <code>&lt;card&gt;</code> element. They have a subtle
-        shadow and stack vertically on mobile. Cards work well inside a grid
-        layout for multi-column arrangements.
-      </p>
-      <card>
-        <h3>Card title</h3>
+        <h3>Anchor link tooltip</h3>
         <p>
-          Content inside a <code>&lt;card&gt;</code> element with a subtle
-          shadow.
+          <a att href="https://functora.github.io/functora-css.html"
+            >Anchor tooltip</a
+          >
         </p>
-      </card>
-      <card>
-        <h3>Another card</h3>
-        <p>Cards stack vertically and collapse to full-width on mobile.</p>
-        <hr />
-        <tag>demo</tag>
-        <tag>functora-css</tag>
-      </card>
-      <pre><code>&lt;card&gt;
+        <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
+      </section>
+
+      <section id="cards">
+        <h2>Cards</h2>
+        <card>
+          <h3>Card title</h3>
+          <p>
+            Content inside a <code>&lt;card&gt;</code> element with a subtle
+            shadow.
+          </p>
+        </card>
+        <card>
+          <h3>Another card</h3>
+          <p>Cards stack vertically and collapse to full-width on mobile.</p>
+          <hr />
+          <tag>demo</tag>
+          <tag>functora-css</tag>
+        </card>
+        <pre><code>&lt;card&gt;
   &lt;h3&gt;Card title&lt;/h3&gt;
-  &lt;p&gt;Card content goes here.&lt;/p&gt;
+  &lt;p&gt;Content inside a &lt;card&gt; element with a subtle shadow.&lt;/p&gt;
+&lt;/card&gt;
+&lt;card&gt;
+  &lt;h3&gt;Another card&lt;/h3&gt;
+  &lt;p&gt;Cards stack vertically and collapse to full-width on mobile.&lt;/p&gt;
+  &lt;hr /&gt;
+  &lt;tag&gt;demo&lt;/tag&gt;
+  &lt;tag&gt;functora-css&lt;/tag&gt;
 &lt;/card&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="utility">
-      <h2>Utility</h2>
-      <p>
-        functora-css provides several utility attributes for quick styling
-        without classes. These can be applied to any HTML element.
-      </p>
+      <section id="utility">
+        <h2>Utility</h2>
 
-      <h4>[full]</h4>
-      <p>Sets <code>width: 100%</code> on the element.</p>
-      <p>
-        <button full>Full width button</button>
-      </p>
-      <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
+        <h3>Bypass class exclusion</h3>
+        <pre><code>&lt;p class="my-component" xx&gt;
+  &lt;!-- styled by both functora-css and .my-component --&gt;
+&lt;/p&gt;</code></pre>
 
-      <h4>[hidden]</h4>
-      <p>
-        Hides the element from the page. The element below has
-        <code>[hidden]</code> and is not visible:
-      </p>
-      <p hidden>You cannot see this text.</p>
-      <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
+        <h3>Full width</h3>
+        <p>
+          <button full>Full width button</button>
+        </p>
+        <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
 
-      <h4>Font families</h4>
-      <p>
-        Override the default font family with <code>[serif]</code>,
-        <code>[sans]</code>, or <code>[mono]</code>.
-      </p>
-      <p serif>Serif font - <code>[serif]</code></p>
-      <p sans>Sans-serif font - <code>[sans]</code></p>
-      <p mono>Monospace font - <code>[mono]</code></p>
-      <pre><code>&lt;p serif&gt;Serif font&lt;/p&gt;
-&lt;p sans&gt;Sans-serif font&lt;/p&gt;
-&lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
+        <h3>Full width on mobile</h3>
+        <p>
+          <button m-full>Full on mobile</button>
+        </p>
+        <pre><code>&lt;button m-full&gt;Full on mobile&lt;/button&gt;</code></pre>
 
-      <h4>Font sizes</h4>
-      <p>
-        Adjust font size with the <code>[fs]</code> attribute. Available values:
-        <code>xs</code>, <code>s</code>, <code>m</code>, <code>l</code>,
-        <code>xl</code>.
-      </p>
-      <p fs="xl">Extra large - <code>[fs="xl"]</code></p>
-      <p fs="l">Large - <code>[fs="l"]</code></p>
-      <p fs="m">Medium - <code>[fs="m"]</code></p>
-      <p fs="s">Small - <code>[fs="s"]</code></p>
-      <p fs="xs">Extra small - <code>[fs="xs"]</code></p>
-      <pre><code>&lt;p fs="xl"&gt;Extra large&lt;/p&gt;
-&lt;p fs="l"&gt;Large&lt;/p&gt;
-&lt;p fs="m"&gt;Medium&lt;/p&gt;
-&lt;p fs="s"&gt;Small&lt;/p&gt;
-&lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
+        <h3>Hide element</h3>
+        <p hidden>You cannot see this text.</p>
+        <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
 
-      <h4>Text alignment</h4>
-      <p>
-        Align text with the <code>[txt]</code> attribute. Available values:
-        <code>l</code> (left), <code>c</code> (center), <code>r</code> (right),
-        <code>j</code> (justify).
-      </p>
-      <p txt="l">Left aligned - <code>[txt="l"]</code></p>
-      <p txt="c">Center aligned - <code>[txt="c"]</code></p>
-      <p txt="r">Right aligned - <code>[txt="r"]</code></p>
-      <p txt="j">
-        Justified - <code>[txt="j"]</code>. Lorem ipsum dolor sit amet,
-        consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
-        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-      </p>
-      <pre><code>&lt;p txt="l"&gt;Left aligned&lt;/p&gt;
-&lt;p txt="c"&gt;Center aligned&lt;/p&gt;
-&lt;p txt="r"&gt;Right aligned&lt;/p&gt;
-&lt;p txt="j"&gt;Justified text&lt;/p&gt;</code></pre>
-    </section>
+        <h3>Font families</h3>
+        <p serif>Serif font - <code>serif</code></p>
+        <p sans>Sans-serif font - <code>sans</code></p>
+        <p mono>Monospace font - <code>mono</code></p>
+        <pre><code>&lt;p serif&gt;Serif font - &lt;code&gt;serif&lt;/code&gt;&lt;/p&gt;
+&lt;p sans&gt;Sans-serif font - &lt;code&gt;sans&lt;/code&gt;&lt;/p&gt;
+&lt;p mono&gt;Monospace font - &lt;code&gt;mono&lt;/code&gt;&lt;/p&gt;</code></pre>
 
+        <h3>Font sizes</h3>
+        <p fs="xl">Extra large - <code>fs="xl"</code></p>
+        <p fs="l">Large - <code>fs="l"</code></p>
+        <p fs="m">Medium - <code>fs="m"</code></p>
+        <p fs="s">Small - <code>fs="s"</code></p>
+        <p fs="xs">Extra small - <code>fs="xs"</code></p>
+        <pre><code>&lt;p fs="xl"&gt;Extra large - &lt;code&gt;fs="xl"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="l"&gt;Large - &lt;code&gt;fs="l"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="m"&gt;Medium - &lt;code&gt;fs="m"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="s"&gt;Small - &lt;code&gt;fs="s"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="xs"&gt;Extra small - &lt;code&gt;fs="xs"&lt;/code&gt;&lt;/p&gt;</code></pre>
+
+        <h3>Padding top</h3>
+        <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
+        <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &lt;code&gt;pt="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+
+        <h3>Padding bottom</h3>
+        <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
+        <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &lt;code&gt;pb="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+
+        <h3>Padding all sides</h3>
+        <p pa="2">All padding 2rem - <code>pa="2"</code></p>
+        <pre><code>&lt;p pa="2"&gt;All padding 2rem - &lt;code&gt;pa="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+
+        <h3>Text alignment</h3>
+        <p txt="l">Left aligned - <code>txt="l"</code></p>
+        <p txt="c">Center aligned - <code>txt="c"</code></p>
+        <p txt="r">Right aligned - <code>txt="r"</code></p>
+        <p txt="j">
+          Justified - <code>txt="j"</code>. Lorem ipsum dolor sit amet,
+          consectetur adipisicing elit. Duis aute irure dolor in reprehenderit
+          in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        </p>
+        <pre><code>&lt;p txt="l"&gt;Left aligned - &lt;code&gt;txt="l"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="c"&gt;Center aligned - &lt;code&gt;txt="c"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="r"&gt;Right aligned - &lt;code&gt;txt="r"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="j"&gt;Justified - &lt;code&gt;txt="j"&lt;/code&gt;. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.&lt;/p&gt;</code></pre>
+      </section>
+
+      <section id="footer">
+        <h2>Footer</h2>
+        <pre><code>&lt;footer&gt;
+  &lt;p&gt;
+    © 2026
+    &lt;a href="https://functora.github.io/"&gt;Functora&lt;/a&gt;. All rights reserved.
+  &lt;/p&gt;
+&lt;/footer&gt;</code></pre>
+      </section>
+    </main>
     <footer>
       <p>
         © 2026

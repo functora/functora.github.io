@@ -15,19 +15,19 @@
     <link href="css/functora.min.css" rel="stylesheet" />
   </head>
   <body>
-    <nav fx id="functora-nav-menu" aria-label="Navbar">
+    <nav fx id="functora-nav-expand" aria-label="Navbar">
       <label>
         <header>
           <a href="#">functora-css</a>
           <a
-            href="#functora-nav-menu"
+            href="#functora-nav-expand"
             id="functora-nav-open"
             aria-label="Open navigation"
           ></a>
         </header>
         <a
-          href="#functora-nav-close"
-          id="functora-nav-close"
+          href="#functora-nav-collapse"
+          id="functora-nav-collapse"
           aria-label="Close navigation"
         ></a>
         <ul>
@@ -121,9 +121,9 @@
   &lt;label&gt;
     &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
-      &lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;&lt;/a&gt;
+      &lt;a href="#functora-nav-expand" id="functora-nav-open"&gt;&lt;/a&gt;
     &lt;/header&gt;
-    &lt;a href="#functora-nav-close" id="functora-nav-close"&gt;&lt;/a&gt;
+    &lt;a href="#functora-nav-collapse" id="functora-nav-collapse"&gt;&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
@@ -155,22 +155,22 @@
       <h3>1. Anchor</h3>
       <p>
         Uses the <code>:target</code> pseudo-class. Add
-        <code>id="functora-nav-menu"</code> to the nav.
-        <code>&lt;a href="#functora-nav-menu"&gt;</code> opens the menu,
-        <code>&lt;a href="#functora-nav-close"&gt;</code> closes it. Clicking
+        <code>id="functora-nav-expand"</code> to the nav.
+        <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
+        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. Clicking
         any anchor link inside the menu automatically closes the navbar because
-        the URL hash changes away from <code>#functora-nav-menu</code>. This
+        the URL hash changes away from <code>#functora-nav-expand</code>. This
         auto-close behavior is unique to the anchor-based approach - no
         JavaScript required. Best for static JS-free sites where navigation uses
         hash links.
       </p>
-      <pre><code>&lt;nav id="functora-nav-menu" aria-label="Navbar"&gt;
+      <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
   &lt;label&gt;
     &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
-      &lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;&lt;/a&gt;
+      &lt;a href="#functora-nav-expand" id="functora-nav-open"&gt;&lt;/a&gt;
     &lt;/header&gt;
-    &lt;a href="#functora-nav-close" id="functora-nav-close"&gt;&lt;/a&gt;
+    &lt;a href="#functora-nav-collapse" id="functora-nav-collapse"&gt;&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;a&gt;Dropdown&lt;/a&gt;
@@ -204,7 +204,7 @@
       &lt;a href="#"&gt;App&lt;/a&gt;
       &lt;span id="functora-nav-open"&gt;&lt;/span&gt;
     &lt;/header&gt;
-    &lt;span id="functora-nav-close"&gt;&lt;/span&gt;
+    &lt;span id="functora-nav-collapse"&gt;&lt;/span&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
@@ -667,7 +667,7 @@ fn main() {
       </card>
       <pre><code>&lt;card&gt;
   &lt;h3&gt;Card title&lt;/h3&gt;
-  &lt;p&gt;Content inside a &amp;lt;card&amp;gt; element with a subtle shadow.&lt;/p&gt;
+  &lt;p&gt;Content inside a &lt;card&gt; element with a subtle shadow.&lt;/p&gt;
 &lt;/card&gt;
 &lt;card&gt;
   &lt;h3&gt;Another card&lt;/h3&gt;
@@ -706,9 +706,9 @@ fn main() {
       <p serif>Serif font - <code>serif</code></p>
       <p sans>Sans-serif font - <code>sans</code></p>
       <p mono>Monospace font - <code>mono</code></p>
-      <pre><code>&lt;p serif&gt;Serif font - &amp;lt;code&amp;gt;serif&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p sans&gt;Sans-serif font - &amp;lt;code&amp;gt;sans&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p mono&gt;Monospace font - &amp;lt;code&amp;gt;mono&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p serif&gt;Serif font - &lt;code&gt;serif&lt;/code&gt;&lt;/p&gt;
+&lt;p sans&gt;Sans-serif font - &lt;code&gt;sans&lt;/code&gt;&lt;/p&gt;
+&lt;p mono&gt;Monospace font - &lt;code&gt;mono&lt;/code&gt;&lt;/p&gt;</code></pre>
 
       <h3>Font sizes</h3>
       <p fs="xl">Extra large - <code>fs="xl"</code></p>
@@ -716,23 +716,23 @@ fn main() {
       <p fs="m">Medium - <code>fs="m"</code></p>
       <p fs="s">Small - <code>fs="s"</code></p>
       <p fs="xs">Extra small - <code>fs="xs"</code></p>
-      <pre><code>&lt;p fs="xl"&gt;Extra large - &amp;lt;code&amp;gt;fs="xl"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p fs="l"&gt;Large - &amp;lt;code&amp;gt;fs="l"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p fs="m"&gt;Medium - &amp;lt;code&amp;gt;fs="m"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p fs="s"&gt;Small - &amp;lt;code&amp;gt;fs="s"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p fs="xs"&gt;Extra small - &amp;lt;code&amp;gt;fs="xs"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p fs="xl"&gt;Extra large - &lt;code&gt;fs="xl"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="l"&gt;Large - &lt;code&gt;fs="l"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="m"&gt;Medium - &lt;code&gt;fs="m"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="s"&gt;Small - &lt;code&gt;fs="s"&lt;/code&gt;&lt;/p&gt;
+&lt;p fs="xs"&gt;Extra small - &lt;code&gt;fs="xs"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding top</h3>
       <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
-      <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &amp;lt;code&amp;gt;pt="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &lt;code&gt;pt="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding bottom</h3>
       <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
-      <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &amp;lt;code&amp;gt;pb="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &lt;code&gt;pb="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding all sides</h3>
       <p pa="2">All padding 2rem - <code>pa="2"</code></p>
-      <pre><code>&lt;p pa="2"&gt;All padding 2rem - &amp;lt;code&amp;gt;pa="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pa="2"&gt;All padding 2rem - &lt;code&gt;pa="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
       <h3>Text alignment</h3>
       <p txt="l">Left aligned - <code>txt="l"</code></p>
@@ -743,10 +743,10 @@ fn main() {
         consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
         voluptate velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
-      <pre><code>&lt;p txt="l"&gt;Left aligned - &amp;lt;code&amp;gt;txt="l"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p txt="c"&gt;Center aligned - &amp;lt;code&amp;gt;txt="c"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p txt="r"&gt;Right aligned - &amp;lt;code&amp;gt;txt="r"&amp;lt;/code&amp;gt;&lt;/p&gt;
-&lt;p txt="j"&gt;Justified - &amp;lt;code&amp;gt;txt="j"&amp;lt;/code&amp;gt;. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p txt="l"&gt;Left aligned - &lt;code&gt;txt="l"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="c"&gt;Center aligned - &lt;code&gt;txt="c"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="r"&gt;Right aligned - &lt;code&gt;txt="r"&lt;/code&gt;&lt;/p&gt;
+&lt;p txt="j"&gt;Justified - &lt;code&gt;txt="j"&lt;/code&gt;. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.&lt;/p&gt;</code></pre>
     </section>
 
     <section id="footer">

@@ -272,7 +272,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 			}
 		}
 
-		>#functora-nav-close {
+		>#functora-nav-collapse {
 			display: none;
 		}
 
@@ -310,7 +310,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 				}
 			}
 
-		#functora-nav-close {
+		#functora-nav-collapse {
 			display: none;
 		}
 
@@ -324,7 +324,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 			}
 		}
 
-		#functora-nav-toggle:checked ~ #functora-nav-close {
+		#functora-nav-toggle:checked ~ #functora-nav-collapse {
 			display: block;
 			position: fixed;
 			inset: 0;
@@ -346,7 +346,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 		}
 	}
 
-	#functora-nav-menu:target ul {
+	#functora-nav-expand:target ul {
 		transform: none;
 		pointer-events: none;
 
@@ -356,7 +356,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 		}
 	}
 
-	#functora-nav-menu:target #functora-nav-close {
+	#functora-nav-expand:target #functora-nav-collapse {
 		display: block;
 		position: fixed;
 		inset: 0;
@@ -364,7 +364,7 @@ body:has(nav@{n}[fx], nav@{x}[fx]) {
 		cursor: default;
 	}
 
-	#functora-nav-menu:target header {
+	#functora-nav-expand:target header {
 		pointer-events: none;
 
 		* {

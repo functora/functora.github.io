@@ -712,7 +712,7 @@ fn main() {
         <code>::before</code> and <code>::after</code> pseudo-elements.
       </p>
 
-      <h3>Basic tooltip (<code>tt</code>)</h3>
+      <h3>Basic tooltip</h3>
       <p>
         <span tt="Hello from functora-css">Hover me (tooltip)</span>
       </p>
@@ -726,7 +726,7 @@ fn main() {
       <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
 &lt;button primary tt="Primary button tooltip"&gt;Primary&lt;/button&gt;</code></pre>
 
-      <h3>Disabled button tooltip (<code>dtt</code>)</h3>
+      <h3>Disabled button tooltip</h3>
       <p>
         Use the <code>dtt</code> attribute to show a tooltip when a button is
         disabled. This is useful for explaining why a button is inactive.
@@ -740,7 +740,7 @@ fn main() {
   Disabled with tooltip
 &lt;/button&gt;</code></pre>
 
-      <h3>Anchor link tooltip (<code>att</code>)</h3>
+      <h3>Anchor link tooltip</h3>
       <p>
         Use the <code>att</code> attribute on an anchor to show its
         <code>href</code> as a tooltip on hover.
@@ -787,7 +787,7 @@ fn main() {
         without classes. These can be applied to any HTML element.
       </p>
 
-      <h3><code>xx</code> - bypass class exclusion</h3>
+      <h3>Bypass class exclusion</h3>
       <p>
         By default, functora-css only styles elements without a
         <code>class</code> attribute (using <code>:not([class])</code>). Add
@@ -799,26 +799,26 @@ fn main() {
   &lt;!-- styled by both functora-css and .my-component --&gt;
 &lt;/div&gt;</code></pre>
 
-      <h3><code>full</code> - full width</h3>
-      <p>Sets <code>width: 100%</code> on the element.</p>
+      <h3>Full width</h3>
+      <p>Sets <code>width: 100%</code> on the element. Add <code>full</code> to any element.</p>
       <p>
         <button full>Full width button</button>
       </p>
       <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
 
-      <h3><code>m-full</code> - full width on mobile</h3>
+      <h3>Full width on mobile</h3>
       <p>
-        Sets <code>width: 100%</code> at mobile viewport sizes only. The element
-        retains its natural size on desktop.
+        Sets <code>width: 100%</code> at mobile viewport sizes only. Add <code>m-full</code> to any
+        element. The element retains its natural size on desktop.
       </p>
       <p>
         <button m-full>Full on mobile</button>
       </p>
       <pre><code>&lt;button m-full&gt;Full on mobile&lt;/button&gt;</code></pre>
 
-      <h3><code>hidden</code> - hide element</h3>
+      <h3>Hide element</h3>
       <p>
-        Hides the element from the page. The element below has
+        Hides the element from the page. Add <code>hidden</code> to hide any element. The element below has
         <code>hidden</code> and is not visible:
       </p>
       <p hidden>You cannot see this text.</p>
@@ -836,7 +836,7 @@ fn main() {
 &lt;p sans&gt;Sans-serif font&lt;/p&gt;
 &lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
 
-      <h3>Font sizes (<code>fs</code>)</h3>
+      <h3>Font sizes</h3>
       <p>
         Adjust font size with the <code>fs</code> attribute. Available values:
         <code>xs</code>, <code>s</code>, <code>m</code>, <code>l</code>,
@@ -853,7 +853,7 @@ fn main() {
 &lt;p fs="s"&gt;Small&lt;/p&gt;
 &lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
 
-      <h3>Padding top (<code>pt</code>)</h3>
+      <h3>Padding top</h3>
       <p>
         Add top padding with the <code>pt</code> attribute. Available values:
         <code>0</code>, <code>2</code> (2rem), <code>4</code> (4rem),
@@ -863,7 +863,7 @@ fn main() {
       <pre><code>&lt;p pt="2"&gt;Top padding 2rem&lt;/p&gt;
 &lt;p pt="4"&gt;Top padding 4rem&lt;/p&gt;</code></pre>
 
-      <h3>Padding bottom (<code>pb</code>)</h3>
+      <h3>Padding bottom</h3>
       <p>
         Add bottom padding with the <code>pb</code> attribute. Same values as
         <code>pt</code>.
@@ -871,7 +871,7 @@ fn main() {
       <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
       <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem&lt;/p&gt;</code></pre>
 
-      <h3>Padding all sides (<code>pa</code>)</h3>
+      <h3>Padding all sides</h3>
       <p>
         Add padding on all sides with the <code>pa</code> attribute. Available
         values: <code>0</code>, <code>2</code> (2rem).
@@ -879,7 +879,7 @@ fn main() {
       <p pa="2">All padding 2rem - <code>pa="2"</code></p>
       <pre><code>&lt;p pa="2"&gt;All padding 2rem&lt;/p&gt;</code></pre>
 
-      <h3>Text alignment (<code>txt</code>)</h3>
+      <h3>Text alignment</h3>
       <p>
         Align text with the <code>txt</code> attribute. Available values:
         <code>l</code> (left), <code>c</code> (center), <code>r</code> (right),

@@ -21,4 +21,5 @@ cabal.sandbox.config
 *.keter
 *~
 \#*
+.envrc
 docs/

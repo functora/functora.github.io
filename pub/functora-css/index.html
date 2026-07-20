@@ -49,7 +49,7 @@
           <li><label for="functora-theme-dark">Theme</label></li>
         </ul>
       </label>
-      <input type="checkbox" id="functora-theme-dark" hidden />
+      <input type="checkbox" id="functora-theme-dark" />
     </nav>
 
     <section id="intro">
@@ -125,7 +125,7 @@
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
-  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
       <p>
@@ -134,10 +134,10 @@
       </p>
       <label btn for="functora-theme-dark">Theme</label>
       <p>Add <code>checked</code> for <strong>dark by default</strong>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked hidden /&gt;
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
 &lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
       <p>Omit <code>checked</code> for <strong>light by default</strong>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
+      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
     </section>
 
@@ -153,8 +153,12 @@
         Uses the <code>:target</code> pseudo-class. Add
         <code>id="functora-nav-menu"</code> to the nav.
         <code>&lt;a href="#functora-nav-menu"&gt;</code> opens the menu,
-        <code>&lt;a href="#functora-nav-close"&gt;</code> closes it. Best for
-        multi-page sites and static pages where hash navigation is reliable.
+        <code>&lt;a href="#functora-nav-close"&gt;</code> closes it. Clicking
+        any anchor link inside the menu automatically closes the navbar because
+        the URL hash changes away from <code>#functora-nav-menu</code>. This
+        auto-close behavior is unique to the anchor-based approach - no
+        JavaScript required. Best for static JS-free sites where navigation uses
+        hash links.
       </p>
       <pre><code>&lt;nav id="functora-nav-menu" aria-label="Navbar"&gt;
   &lt;label&gt;
@@ -173,7 +177,7 @@
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
-  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
       <h3>Checkbox-based (SPAs and stateful sites)</h3>
@@ -182,7 +186,12 @@
         <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
         inside the <code>&lt;label&gt;</code> wrapper. The close overlay is a
         <code>&lt;span&gt;</code> (not an <code>&lt;a&gt;</code>), avoiding hash
-        conflicts with client-side routers. Best for single-page apps.
+        conflicts with client-side routers. Note that clicking a nav link does
+        not close the menu automatically - the user must tap the close overlay.
+        If automatic collapse is desired, uncheck
+        <code>#functora-nav-toggle</code> via JavaScript. Best for SPAs and
+        stateful websites where JavaScript is already present and hash-based
+        routing would clash with anchor nav.
       </p>
       <pre><code>&lt;nav aria-label="Navbar"&gt;
   &lt;label&gt;
@@ -197,15 +206,13 @@
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/label&gt;
-  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
       <h3>Fixed navbar</h3>
       <p>
         Add the <code>fx</code> attribute to fix the navbar to the top of the
-        viewport. Add <code>scroll-padding-top</code> to
-        <code>&lt;html&gt;</code>
-        if using anchor links (handled automatically by the framework).
+        viewport.
       </p>
       <pre><code>&lt;nav fx&gt;
   &lt;!-- content --&gt;

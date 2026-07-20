@@ -79,13 +79,9 @@
 
       <h3>1. Automatic - follow system preference</h3>
       <p>
-        <strong>When to use:</strong> Simple content pages, blogs, documentation
-        - anywhere you want the theme to match the user's OS setting with zero
-        markup or configuration.
-      </p>
-      <p>
         No special markup is needed. The framework reads
-        <code>prefers-color-scheme</code> automatically:
+        <code>prefers-color-scheme</code> automatically. Best for blogs,
+        documentation, and any page where matching the OS theme is sufficient.
       </p>
       <pre><code>&lt;!doctype html&gt;
 &lt;html lang="en"&gt;
@@ -97,71 +93,41 @@
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
 
-      <h3>2. Static - attribute lock</h3>
+      <h3>2. Stateful - attribute (websites, apps)</h3>
       <p>
-        <strong>When to use:</strong> Pages that must always appear in a
-        specific theme - for example, a dark-only documentation site, a
-        server-rendered page whose theme comes from a database or URL parameter,
-        or a preview page shown in a particular mode.
-      </p>
-      <p>
-        Add <code>functora-theme-dark</code> to <code>&lt;html&gt;</code>. The
-        page ignores the system preference:
+        For websites and applications that store the user's preference in a
+        database, session, or localStorage. Set
+        <code>functora-theme-dark</code> on <code>&lt;html&gt;</code>
+        server-side or via JavaScript. The attribute overrides the system
+        preference:
       </p>
       <pre><code>&lt;html functora-theme-dark&gt;
-&lt;!-- This page is always dark, regardless of OS settings --&gt;</code></pre>
+&lt;!-- your app manages this attribute from stored preference --&gt;</code></pre>
 
-      <h3>3. Interactive - checkbox toggle</h3>
+      <h3>3. Stateless - checkbox (static JS-free pages)</h3>
       <p>
-        <strong>When to use:</strong> Apps, dashboards, user-facing pages where
-        visitors should be able to switch themes at runtime. No JavaScript
-        needed.
-      </p>
-      <p>
-        Place a hidden
-        <code>&lt;input type="checkbox" id="functora-theme-dark"&gt;</code>
-        inside <code>&lt;nav&gt;</code> and pair it with any visible
-        <code>&lt;label for="functora-theme-dark"&gt;</code>. The label
-        automatically shows 🌚 when dark is active or 🌝 when light is active.
+        Place a hidden checkbox and a visible label anywhere on the page. The
+        toggle is pure CSS and persists only for the current page view. No
+        JavaScript, no storage needed. The label shows 🌚 or 🌝 automatically.
       </p>
       <p><strong>Dark by default</strong> - add <code>checked</code>:</p>
       <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked hidden /&gt;
-&lt;!-- ... --&gt;
 &lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
       <p><strong>Light by default</strong> - omit <code>checked</code>:</p>
       <pre><code>&lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
-&lt;!-- ... --&gt;
 &lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
       <p>The checkbox can live in two places:</p>
       <ul>
         <li>
           <strong>Inside the navbar</strong> - placed before
           <code>header</code>. The label goes inside <code>&lt;ul&gt;</code>
-          as a nav item. This is the most common setup.
+          as a nav item.
         </li>
         <li>
-          <strong>Standalone (no navbar)</strong> - the checkbox can be placed
-          anywhere in the document with any visible <code>&lt;label&gt;</code>,
-          even on pages without a navbar.
+          <strong>Standalone (no navbar)</strong> - anywhere in the document
+          with any visible <code>&lt;label&gt;</code>.
         </li>
       </ul>
-
-      <h3>4. Combined - server-side + interactive</h3>
-      <p>
-        <strong>When to use:</strong> Applications that render themes on the
-        server (from a user profile, database, or session) while still letting
-        users toggle interactively on the client.
-      </p>
-      <p>
-        Set the <code>functora-theme-dark</code> attribute on
-        <code>&lt;html&gt;</code> for the initial server-side value. Add the
-        hidden checkbox for client-side overrides. The checkbox takes precedence
-        when checked:
-      </p>
-      <pre><code>&lt;html functora-theme-dark&gt;
-&lt;!-- checkbox overrides when checked --&gt;
-&lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
-&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
     </section>
 
     <section id="navigation">

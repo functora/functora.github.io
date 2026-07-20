@@ -107,24 +107,38 @@
         toggle is pure CSS and persists only for the current page view. No
         JavaScript, no storage needed. The label shows 🌚 or 🌝 automatically.
       </p>
-      <p><strong>Dark by default</strong> - add <code>checked</code>:</p>
+
+      <p>
+        <strong>Inside the navbar</strong> - as shown on this page. The checkbox
+        is the last child of <code>&lt;nav&gt;</code>. The label sits inside
+        <code>&lt;ul&gt;</code> as a nav item:
+      </p>
+      <pre><code>&lt;nav&gt;
+  &lt;label&gt;
+    &lt;header&gt;
+      &lt;a href="#"&gt;Site&lt;/a&gt;
+      &lt;a href="#functora-nav-menu" id="functora-nav-open"&gt;&lt;/a&gt;
+    &lt;/header&gt;
+    &lt;a href="#functora-nav-close" id="functora-nav-close"&gt;&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/label&gt;
+  &lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
+&lt;/nav&gt;</code></pre>
+
+      <p>
+        <strong>Standalone (no navbar)</strong> - place the pair anywhere in the
+        document:
+      </p>
+      <label btn for="functora-theme-dark">Theme</label>
+      <p>Add <code>checked</code> for <strong>dark by default</strong>:</p>
       <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked hidden /&gt;
-&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
-      <p><strong>Light by default</strong> - omit <code>checked</code>:</p>
+&lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
+      <p>Omit <code>checked</code> for <strong>light by default</strong>:</p>
       <pre><code>&lt;input type="checkbox" id="functora-theme-dark" hidden /&gt;
-&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
-      <p>The checkbox can live in two places:</p>
-      <ul>
-        <li>
-          <strong>Inside the navbar</strong> - placed before
-          <code>header</code>. The label goes inside <code>&lt;ul&gt;</code>
-          as a nav item.
-        </li>
-        <li>
-          <strong>Standalone (no navbar)</strong> - anywhere in the document
-          with any visible <code>&lt;label&gt;</code>.
-        </li>
-      </ul>
+&lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
     </section>
 
     <section id="navigation">

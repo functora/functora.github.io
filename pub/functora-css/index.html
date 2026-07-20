@@ -1,13 +1,24 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>functora-css</title>
     <meta charset="utf-8" />
+    <title>functora-css</title>
     <meta
       name="description"
       content="functora-css - pure classless semantic CSS framework"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="theme-color"
+      content="#fff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#222"
+      media="(prefers-color-scheme: dark)"
+    />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
@@ -57,29 +68,30 @@
       <input type="checkbox" id="functora-theme-dark" />
     </nav>
 
-    <section id="intro">
-      <h1>functora-css</h1>
-      <p>
-        A classless, JS-free, dependency-free, configuration-free, mobile-first,
-        responsive, lightweight, semantic, pure CSS framework with light and
-        dark themes and a collapsible navbar.
-      </p>
-      <p>
-        This page is built entirely with semantic HTML elements and styled
-        exclusively by functora-css - no extra styles, no JavaScript.
-      </p>
-    </section>
+    <main>
+      <section id="intro">
+        <h1>functora-css</h1>
+        <p>
+          A classless, JS-free, dependency-free, configuration-free,
+          mobile-first, responsive, lightweight, semantic, pure CSS framework
+          with light and dark themes and a collapsible navbar.
+        </p>
+        <p>
+          This page is built entirely with semantic HTML elements and styled
+          exclusively by functora-css - no extra styles, no JavaScript.
+        </p>
+      </section>
 
-    <section id="appearance">
-      <h2>Appearance</h2>
-      <p>
-        Three mechanisms for light/dark themes: system preference, HTML
-        attribute, or checkbox.
-      </p>
+      <section id="appearance">
+        <h2>Appearance</h2>
+        <p>
+          Three mechanisms for light/dark themes: system preference, HTML
+          attribute, or checkbox.
+        </p>
 
-      <h3>1. Automatic</h3>
-      <p>No markup needed. Automatically matches the OS theme.</p>
-      <pre><code>&lt;!doctype html&gt;
+        <h3>1. Automatic</h3>
+        <p>No markup needed. Automatically matches the OS theme.</p>
+        <pre><code>&lt;!doctype html&gt;
 &lt;html lang="en"&gt;
   &lt;head&gt;
     &lt;link href="functora.min.css" rel="stylesheet" /&gt;
@@ -89,28 +101,28 @@
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
 
-      <h3>2. Attribute</h3>
-      <p>
-        Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to
-        override system preference. Use when preference is stored server-side or
-        in localStorage.
-      </p>
-      <pre><code>&lt;html functora-theme-dark&gt;
+        <h3>2. Attribute</h3>
+        <p>
+          Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to
+          override system preference. Use when preference is stored server-side
+          or in localStorage.
+        </p>
+        <pre><code>&lt;html functora-theme-dark&gt;
   &lt;!-- content --&gt;
 &lt;/html&gt;</code></pre>
 
-      <h3>3. Checkbox</h3>
-      <p>
-        Place a hidden checkbox and a visible label anywhere on the page. No
-        JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
-      </p>
+        <h3>3. Checkbox</h3>
+        <p>
+          Place a hidden checkbox and a visible label anywhere on the page. No
+          JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
+        </p>
 
-      <p>
-        <strong>Inside the navbar</strong> — checkbox as last child of
-        <code>&lt;nav&gt;</code>, label inside <code>&lt;ul&gt;</code> as a nav
-        item:
-      </p>
-      <pre><code>&lt;nav&gt;
+        <p>
+          <strong>Inside the navbar</strong> — checkbox as last child of
+          <code>&lt;nav&gt;</code>, label inside <code>&lt;ul&gt;</code> as a
+          nav item:
+        </p>
+        <pre><code>&lt;nav&gt;
   &lt;label&gt;
     &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
@@ -123,35 +135,35 @@
   &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
-      <p>
-        <strong>Standalone (no navbar)</strong> - place the pair anywhere in the
-        document:
-      </p>
-      <label btn for="functora-theme-dark">Theme</label>
-      <p>Add <code>checked</code> for <strong>dark by default</strong>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
+        <p>
+          <strong>Standalone (no navbar)</strong> - place the pair anywhere in
+          the document:
+        </p>
+        <label btn for="functora-theme-dark">Theme</label>
+        <p>Add <code>checked</code> for <strong>dark by default</strong>:</p>
+        <pre><code>&lt;input type="checkbox" id="functora-theme-dark" checked /&gt;
 &lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
-      <p>Omit <code>checked</code> for <strong>light by default</strong>:</p>
-      <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
+        <p>Omit <code>checked</code> for <strong>light by default</strong>:</p>
+        <pre><code>&lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;label btn for="functora-theme-dark"&gt;Theme&lt;/label&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="navigation">
-      <h2>Navigation</h2>
-      <p>
-        Pure CSS responsive navbar - no JavaScript. Two expand-collapse
-        mechanisms are available. Choose based on your use case.
-      </p>
+      <section id="navigation">
+        <h2>Navigation</h2>
+        <p>
+          Pure CSS responsive navbar - no JavaScript. Two expand-collapse
+          mechanisms are available. Choose based on your use case.
+        </p>
 
-      <h3>1. Anchor</h3>
-      <p>
-        Add <code>id="functora-nav-expand"</code> to the nav.
-        <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
-        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. The menu
-        auto-closes when clicking any nav link. No JavaScript required. Best for
-        static JS-free sites.
-      </p>
-      <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
+        <h3>1. Anchor</h3>
+        <p>
+          Add <code>id="functora-nav-expand"</code> to the nav.
+          <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
+          <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. The
+          menu auto-closes when clicking any nav link. No JavaScript required.
+          Best for static JS-free sites.
+        </p>
+        <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
   &lt;label&gt;
     &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
@@ -171,16 +183,16 @@
   &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
-      <h3>2. Checkbox</h3>
-      <p>
-        Add
-        <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
-        inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for the
-        close overlay to avoid hash conflicts with client-side routers. The menu
-        does not auto-close on link click. Best for SPAs and stateful sites
-        using JavaScript.
-      </p>
-      <pre><code>&lt;nav aria-label="Navbar"&gt;
+        <h3>2. Checkbox</h3>
+        <p>
+          Add
+          <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
+          inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for
+          the close overlay to avoid hash conflicts with client-side routers.
+          The menu does not auto-close on link click. Best for SPAs and stateful
+          sites using JavaScript.
+        </p>
+        <pre><code>&lt;nav aria-label="Navbar"&gt;
   &lt;label&gt;
     &lt;input type="checkbox" id="functora-nav-toggle" /&gt;
     &lt;header&gt;
@@ -196,91 +208,91 @@
   &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
-      <h3>Fixed navbar</h3>
-      <p>
-        Add the <code>fx</code> attribute to fix the navbar to the top of the
-        viewport.
-      </p>
-      <pre><code>&lt;nav fx&gt;
+        <h3>Fixed navbar</h3>
+        <p>
+          Add the <code>fx</code> attribute to fix the navbar to the top of the
+          viewport.
+        </p>
+        <pre><code>&lt;nav fx&gt;
   &lt;!-- content --&gt;
 &lt;/nav&gt;</code></pre>
 
-      <h3>Dropdown menus</h3>
-      <p>
-        Nest a <code>&lt;menu&gt;</code> inside a <code>&lt;li&gt;</code>. The
-        menu appears on hover (desktop) or as part of the mobile drawer.
-      </p>
-      <pre><code>&lt;li&gt;
+        <h3>Dropdown menus</h3>
+        <p>
+          Nest a <code>&lt;menu&gt;</code> inside a <code>&lt;li&gt;</code>. The
+          menu appears on hover (desktop) or as part of the mobile drawer.
+        </p>
+        <pre><code>&lt;li&gt;
   &lt;a&gt;Dropdown&lt;/a&gt;
   &lt;menu&gt;
     &lt;menuitem&gt;&lt;a href="/a"&gt;Item A&lt;/a&gt;&lt;/menuitem&gt;
     &lt;menuitem&gt;&lt;a href="/b"&gt;Item B&lt;/a&gt;&lt;/menuitem&gt;
   &lt;/menu&gt;
 &lt;/li&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="buttons">
-      <h2>Buttons</h2>
+      <section id="buttons">
+        <h2>Buttons</h2>
 
-      <h3>Standard buttons</h3>
-      <p>
-        <button>Default</button>
-        <button primary>Primary</button>
-        <button round>Round</button>
-        <button disabled>Disabled</button>
-      </p>
-      <pre><code>&lt;button&gt;Default&lt;/button&gt;
+        <h3>Standard buttons</h3>
+        <p>
+          <button>Default</button>
+          <button primary>Primary</button>
+          <button round>Round</button>
+          <button disabled>Disabled</button>
+        </p>
+        <pre><code>&lt;button&gt;Default&lt;/button&gt;
 &lt;button primary&gt;Primary&lt;/button&gt;
 &lt;button round&gt;Round&lt;/button&gt;
 &lt;button disabled&gt;Disabled&lt;/button&gt;</code></pre>
 
-      <h3>Anchor as button</h3>
-      <p>
-        <a btn href="#">Link button</a>
-        <a btn primary href="#">Primary link</a>
-      </p>
-      <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
+        <h3>Anchor as button</h3>
+        <p>
+          <a btn href="#">Link button</a>
+          <a btn primary href="#">Primary link</a>
+        </p>
+        <pre><code>&lt;a btn href="#"&gt;Link button&lt;/a&gt;
 &lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
 
-      <h3>Submit button</h3>
-      <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
+        <h3>Submit button</h3>
+        <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
 
-      <h3>Buttons with icons</h3>
-      <p>
-        <button>
-          <svg
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 8v8M8 12h8" />
-          </svg>
-          With icon
-        </button>
-        <button primary>
-          <svg
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          Save
-        </button>
-      </p>
-      <pre><code>&lt;button&gt;
+        <h3>Buttons with icons</h3>
+        <p>
+          <button>
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+            With icon
+          </button>
+          <button primary>
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            Save
+          </button>
+        </p>
+        <pre><code>&lt;button&gt;
   &lt;svg ...&gt;...&lt;/svg&gt;
   With icon
 &lt;/button&gt;
@@ -288,84 +300,85 @@
   &lt;svg ...&gt;...&lt;/svg&gt;
   Save
 &lt;/button&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="forms">
-      <h2>Forms</h2>
+      <section id="forms">
+        <h2>Forms</h2>
 
-      <h3>Text inputs</h3>
-      <label for="demo-name">Name</label>
-      <input id="demo-name" type="text" placeholder="Your name" />
-      <pre><code>&lt;label for="demo-name"&gt;Name&lt;/label&gt;
+        <h3>Text inputs</h3>
+        <label for="demo-name">Name</label>
+        <input id="demo-name" type="text" placeholder="Your name" />
+        <pre><code>&lt;label for="demo-name"&gt;Name&lt;/label&gt;
 &lt;input id="demo-name" type="text" placeholder="Your name" /&gt;</code></pre>
 
-      <h3>Textarea</h3>
-      <label for="demo-bio">Bio</label>
-      <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
-      <pre><code>&lt;label for="demo-bio"&gt;Bio&lt;/label&gt;
+        <h3>Textarea</h3>
+        <label for="demo-bio">Bio</label>
+        <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
+        <pre><code>&lt;label for="demo-bio"&gt;Bio&lt;/label&gt;
 &lt;textarea id="demo-bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
 
-      <h3>Select</h3>
-      <label for="demo-lang">Language</label>
-      <select id="demo-lang">
-        <option>Rust</option>
-        <option>TypeScript</option>
-        <option>Python</option>
-      </select>
-      <pre><code>&lt;label for="demo-lang"&gt;Language&lt;/label&gt;
+        <h3>Select</h3>
+        <label for="demo-lang">Language</label>
+        <select id="demo-lang">
+          <option>Rust</option>
+          <option>TypeScript</option>
+          <option>Python</option>
+        </select>
+        <pre><code>&lt;label for="demo-lang"&gt;Language&lt;/label&gt;
 &lt;select id="demo-lang"&gt;
   &lt;option&gt;Rust&lt;/option&gt;
   &lt;option&gt;TypeScript&lt;/option&gt;
   &lt;option&gt;Python&lt;/option&gt;
 &lt;/select&gt;</code></pre>
 
-      <h3>Radio and checkbox</h3>
-      <input type="radio" name="demo-radio" id="demo-r1" /><label for="demo-r1"
-        >Option A</label
-      >
-      <input type="radio" name="demo-radio" id="demo-r2" checked /><label
-        for="demo-r2"
-        >Option B</label
-      >
-      <br />
-      <input type="checkbox" id="demo-c1" /><label for="demo-c1"
-        >Check me</label
-      >
-      <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
-        >Already checked</label
-      >
-      <pre><code>&lt;input type="radio" name="demo-radio" id="demo-r1" /&gt;&lt;label for="demo-r1"&gt;Option A&lt;/label&gt;
+        <h3>Radio and checkbox</h3>
+        <input type="radio" name="demo-radio" id="demo-r1" /><label
+          for="demo-r1"
+          >Option A</label
+        >
+        <input type="radio" name="demo-radio" id="demo-r2" checked /><label
+          for="demo-r2"
+          >Option B</label
+        >
+        <br />
+        <input type="checkbox" id="demo-c1" /><label for="demo-c1"
+          >Check me</label
+        >
+        <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
+          >Already checked</label
+        >
+        <pre><code>&lt;input type="radio" name="demo-radio" id="demo-r1" /&gt;&lt;label for="demo-r1"&gt;Option A&lt;/label&gt;
 &lt;input type="radio" name="demo-radio" id="demo-r2" checked /&gt;&lt;label for="demo-r2"&gt;Option B&lt;/label&gt;
 &lt;br /&gt;
 &lt;input type="checkbox" id="demo-c1" /&gt;&lt;label for="demo-c1"&gt;Check me&lt;/label&gt;
 &lt;input type="checkbox" id="demo-c2" checked /&gt;&lt;label for="demo-c2"&gt;Already checked&lt;/label&gt;</code></pre>
 
-      <h3>Fieldset</h3>
-      <fieldset>
-        <legend>Preferences</legend>
-        <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
-          for="demo-fr1"
-          >Option A</label
-        >
-        <input
-          type="radio"
-          name="demo-fieldset-radio"
-          id="demo-fr2"
-          checked
-        /><label for="demo-fr2">Option B</label>
-        <br />
-        <input type="checkbox" id="demo-fc1" /><label for="demo-fc1"
-          >Check me</label
-        >
-        <input type="checkbox" id="demo-fc2" checked /><label for="demo-fc2"
-          >Already checked</label
-        >
-        <p>
-          <button type="submit" primary>Submit</button>
-          <button type="reset">Reset</button>
-        </p>
-      </fieldset>
-      <pre><code>&lt;fieldset&gt;
+        <h3>Fieldset</h3>
+        <fieldset>
+          <legend>Preferences</legend>
+          <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
+            for="demo-fr1"
+            >Option A</label
+          >
+          <input
+            type="radio"
+            name="demo-fieldset-radio"
+            id="demo-fr2"
+            checked
+          /><label for="demo-fr2">Option B</label>
+          <br />
+          <input type="checkbox" id="demo-fc1" /><label for="demo-fc1"
+            >Check me</label
+          >
+          <input type="checkbox" id="demo-fc2" checked /><label for="demo-fc2"
+            >Already checked</label
+          >
+          <p>
+            <button type="submit" primary>Submit</button>
+            <button type="reset">Reset</button>
+          </p>
+        </fieldset>
+        <pre><code>&lt;fieldset&gt;
   &lt;legend&gt;Preferences&lt;/legend&gt;
   &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr1" /&gt;&lt;label for="demo-fr1"&gt;Option A&lt;/label&gt;
   &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr2" checked /&gt;&lt;label for="demo-fr2"&gt;Option B&lt;/label&gt;
@@ -377,125 +390,125 @@
     &lt;button type="reset"&gt;Reset&lt;/button&gt;
   &lt;/p&gt;
 &lt;/fieldset&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="typography">
-      <h2>Typography</h2>
+      <section id="typography">
+        <h2>Typography</h2>
 
-      <h3>Headings</h3>
-      <h1>Heading h1</h1>
-      <h2>Heading h2</h2>
-      <h3>Heading h3</h3>
-      <h4>Heading h4</h4>
-      <h5>Heading h5</h5>
-      <h6>Heading h6</h6>
-      <pre><code>&lt;h1&gt;Heading h1&lt;/h1&gt;
+        <h3>Headings</h3>
+        <h1>Heading h1</h1>
+        <h2>Heading h2</h2>
+        <h3>Heading h3</h3>
+        <h4>Heading h4</h4>
+        <h5>Heading h5</h5>
+        <h6>Heading h6</h6>
+        <pre><code>&lt;h1&gt;Heading h1&lt;/h1&gt;
 &lt;h2&gt;Heading h2&lt;/h2&gt;
 &lt;h3&gt;Heading h3&lt;/h3&gt;
 &lt;h4&gt;Heading h4&lt;/h4&gt;
 &lt;h5&gt;Heading h5&lt;/h5&gt;
 &lt;h6&gt;Heading h6&lt;/h6&gt;</code></pre>
 
-      <h3>Paragraphs</h3>
-      <p>Paragraph with an <a href="#">anchor link</a>.</p>
-      <p>Another paragraph.</p>
-      <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
+        <h3>Paragraphs</h3>
+        <p>Paragraph with an <a href="#">anchor link</a>.</p>
+        <p>Another paragraph.</p>
+        <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Another paragraph.&lt;/p&gt;</code></pre>
 
-      <h3>Anchor links</h3>
-      <p>
-        <a href="#">Default anchor</a>
-      </p>
-      <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
+        <h3>Anchor links</h3>
+        <p>
+          <a href="#">Default anchor</a>
+        </p>
+        <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
-      <h3>Emphasis and inline elements</h3>
-      <p>
-        <strong>bold</strong> <em>italic</em> <mark>highlighted</mark>
-        <small>small</small> <del>deleted</del>
-        <abbr title="abbreviation">abbr</abbr>
-      </p>
-      <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
+        <h3>Emphasis and inline elements</h3>
+        <p>
+          <strong>bold</strong> <em>italic</em> <mark>highlighted</mark>
+          <small>small</small> <del>deleted</del>
+          <abbr title="abbreviation">abbr</abbr>
+        </p>
+        <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
 &lt;em&gt;italic&lt;/em&gt;
 &lt;mark&gt;highlighted&lt;/mark&gt;
 &lt;small&gt;small&lt;/small&gt;
 &lt;del&gt;deleted&lt;/del&gt;
 &lt;abbr title="abbreviation"&gt;abbr&lt;/abbr&gt;</code></pre>
 
-      <h3>Horizontal rule</h3>
-      <hr />
-      <pre><code>&lt;hr /&gt;</code></pre>
+        <h3>Horizontal rule</h3>
+        <hr />
+        <pre><code>&lt;hr /&gt;</code></pre>
 
-      <h3>Sections</h3>
-      <pre><code>&lt;section&gt;
+        <h3>Sections</h3>
+        <pre><code>&lt;section&gt;
   &lt;h2&gt;Section title&lt;/h2&gt;
   &lt;p&gt;Section content goes here.&lt;/p&gt;
 &lt;/section&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="media">
-      <h2>Media</h2>
-      <pre><code>&lt;img src="photo.jpg" alt="description" /&gt;
+      <section id="media">
+        <h2>Media</h2>
+        <pre><code>&lt;img src="photo.jpg" alt="description" /&gt;
 &lt;video src="video.mp4" controls&gt;&lt;/video&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="blockquotes">
-      <h2>Blockquotes</h2>
-      <blockquote>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
-        urna sed urna ultricies ac tempor dui sagittis.
-      </blockquote>
-      <pre><code>&lt;blockquote&gt;
+      <section id="blockquotes">
+        <h2>Blockquotes</h2>
+        <blockquote>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus
+          luctus urna sed urna ultricies ac tempor dui sagittis.
+        </blockquote>
+        <pre><code>&lt;blockquote&gt;
   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
   urna sed urna ultricies ac tempor dui sagittis.
 &lt;/blockquote&gt;</code></pre>
 
-      <h3>With attribution</h3>
-      <blockquote>
-        <p>The best way to predict the future is to invent it.</p>
-        <cite>- Alan Kay</cite>
-      </blockquote>
-      <pre><code>&lt;blockquote&gt;
+        <h3>With attribution</h3>
+        <blockquote>
+          <p>The best way to predict the future is to invent it.</p>
+          <cite>- Alan Kay</cite>
+        </blockquote>
+        <pre><code>&lt;blockquote&gt;
   &lt;p&gt;The best way to predict the future is to invent it.&lt;/p&gt;
   &lt;cite&gt;- Alan Kay&lt;/cite&gt;
 &lt;/blockquote&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="code">
-      <h2>Code</h2>
+      <section id="code">
+        <h2>Code</h2>
 
-      <h3>Inline code</h3>
-      <p>
-        The function returns a <code>Result&lt;String, Error&gt;</code> type.
-      </p>
-      <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
+        <h3>Inline code</h3>
+        <p>
+          The function returns a <code>Result&lt;String, Error&gt;</code> type.
+        </p>
+        <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
 
-      <h3>Code block</h3>
-      <pre><code>fn main() {
+        <h3>Code block</h3>
+        <pre><code>fn main() {
     println!("hello from functora-css");
 }</code></pre>
-      <pre><code>&lt;pre&gt;&lt;code&gt;
+        <pre><code>&lt;pre&gt;&lt;code&gt;
 fn main() {
     println!("hello from functora-css");
 }
 &lt;/code&gt;&lt;/pre&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="lists">
-      <h2>Lists</h2>
+      <section id="lists">
+        <h2>Lists</h2>
 
-      <h3>Unordered list</h3>
-      <ul>
-        <li>Unordered list item one</li>
-        <li>Unordered list item two</li>
-        <li>
-          Unordered list item three
-          <ul>
-            <li>Nested item (circle)</li>
-            <li>Nested item (circle)</li>
-          </ul>
-        </li>
-      </ul>
-      <pre><code>&lt;ul&gt;
+        <h3>Unordered list</h3>
+        <ul>
+          <li>Unordered list item one</li>
+          <li>Unordered list item two</li>
+          <li>
+            Unordered list item three
+            <ul>
+              <li>Nested item (circle)</li>
+              <li>Nested item (circle)</li>
+            </ul>
+          </li>
+        </ul>
+        <pre><code>&lt;ul&gt;
   &lt;li&gt;Unordered list item one&lt;/li&gt;
   &lt;li&gt;Unordered list item two&lt;/li&gt;
   &lt;li&gt;
@@ -507,19 +520,19 @@ fn main() {
   &lt;/li&gt;
 &lt;/ul&gt;</code></pre>
 
-      <h3>Ordered list</h3>
-      <ol>
-        <li>Ordered list item one</li>
-        <li>Ordered list item two</li>
-        <li>
-          Ordered list item three
-          <ol>
-            <li>Nested item (lower-alpha)</li>
-            <li>Nested item (lower-alpha)</li>
-          </ol>
-        </li>
-      </ol>
-      <pre><code>&lt;ol&gt;
+        <h3>Ordered list</h3>
+        <ol>
+          <li>Ordered list item one</li>
+          <li>Ordered list item two</li>
+          <li>
+            Ordered list item three
+            <ol>
+              <li>Nested item (lower-alpha)</li>
+              <li>Nested item (lower-alpha)</li>
+            </ol>
+          </li>
+        </ol>
+        <pre><code>&lt;ol&gt;
   &lt;li&gt;Ordered list item one&lt;/li&gt;
   &lt;li&gt;Ordered list item two&lt;/li&gt;
   &lt;li&gt;
@@ -530,37 +543,37 @@ fn main() {
     &lt;/ol&gt;
   &lt;/li&gt;
 &lt;/ol&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tables">
-      <h2>Tables</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Alice</td>
-            <td>Developer</td>
-            <td>Active</td>
-          </tr>
-          <tr>
-            <td>Bob</td>
-            <td>Designer</td>
-            <td>Away</td>
-          </tr>
-          <tr>
-            <td>Carol</td>
-            <td>Manager</td>
-            <td>Active</td>
-          </tr>
-        </tbody>
-      </table>
-      <pre><code>&lt;table&gt;
+      <section id="tables">
+        <h2>Tables</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alice</td>
+              <td>Developer</td>
+              <td>Active</td>
+            </tr>
+            <tr>
+              <td>Bob</td>
+              <td>Designer</td>
+              <td>Away</td>
+            </tr>
+            <tr>
+              <td>Carol</td>
+              <td>Manager</td>
+              <td>Active</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre><code>&lt;table&gt;
   &lt;thead&gt;
     &lt;tr&gt;
       &lt;th&gt;Name&lt;/th&gt;
@@ -586,71 +599,71 @@ fn main() {
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tags">
-      <h2>Tags</h2>
-      <p>
-        <tag>default</tag>
-        <tag primary>primary</tag>
-      </p>
-      <pre><code>&lt;tag&gt;default&lt;/tag&gt;
+      <section id="tags">
+        <h2>Tags</h2>
+        <p>
+          <tag>default</tag>
+          <tag primary>primary</tag>
+        </p>
+        <pre><code>&lt;tag&gt;default&lt;/tag&gt;
 &lt;tag primary&gt;primary&lt;/tag&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="tooltips">
-      <h2>Tooltips</h2>
+      <section id="tooltips">
+        <h2>Tooltips</h2>
 
-      <h3>Basic tooltip</h3>
-      <p>
-        <span tt="Hello from functora-css">Hover me (tooltip)</span>
-      </p>
-      <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me (tooltip)&lt;/span&gt;</code></pre>
+        <h3>Basic tooltip</h3>
+        <p>
+          <span tt="Hello from functora-css">Hover me (tooltip)</span>
+        </p>
+        <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me (tooltip)&lt;/span&gt;</code></pre>
 
-      <h3>Tooltip on buttons</h3>
-      <p>
-        <button tt="This is a normal button">Hover button</button>
-        <button primary tt="Primary button tooltip">Primary</button>
-      </p>
-      <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
+        <h3>Tooltip on buttons</h3>
+        <p>
+          <button tt="This is a normal button">Hover button</button>
+          <button primary tt="Primary button tooltip">Primary</button>
+        </p>
+        <pre><code>&lt;button tt="This is a normal button"&gt;Hover button&lt;/button&gt;
 &lt;button primary tt="Primary button tooltip"&gt;Primary&lt;/button&gt;</code></pre>
 
-      <h3>Disabled button tooltip</h3>
-      <p>
-        <button disabled dtt="This button is disabled">
-          Disabled with tooltip
-        </button>
-      </p>
-      <pre><code>&lt;button disabled dtt="This button is disabled"&gt;
+        <h3>Disabled button tooltip</h3>
+        <p>
+          <button disabled dtt="This button is disabled">
+            Disabled with tooltip
+          </button>
+        </p>
+        <pre><code>&lt;button disabled dtt="This button is disabled"&gt;
   Disabled with tooltip
 &lt;/button&gt;</code></pre>
 
-      <h3>Anchor link tooltip</h3>
-      <p>
-        <a att href="https://functora.github.io/functora-css.html"
-          >Anchor tooltip</a
-        >
-      </p>
-      <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
-    </section>
-
-    <section id="cards">
-      <h2>Cards</h2>
-      <card>
-        <h3>Card title</h3>
+        <h3>Anchor link tooltip</h3>
         <p>
-          Content inside a <code>&lt;card&gt;</code> element with a subtle
-          shadow.
+          <a att href="https://functora.github.io/functora-css.html"
+            >Anchor tooltip</a
+          >
         </p>
-      </card>
-      <card>
-        <h3>Another card</h3>
-        <p>Cards stack vertically and collapse to full-width on mobile.</p>
-        <hr />
-        <tag>demo</tag>
-        <tag>functora-css</tag>
-      </card>
-      <pre><code>&lt;card&gt;
+        <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
+      </section>
+
+      <section id="cards">
+        <h2>Cards</h2>
+        <card>
+          <h3>Card title</h3>
+          <p>
+            Content inside a <code>&lt;card&gt;</code> element with a subtle
+            shadow.
+          </p>
+        </card>
+        <card>
+          <h3>Another card</h3>
+          <p>Cards stack vertically and collapse to full-width on mobile.</p>
+          <hr />
+          <tag>demo</tag>
+          <tag>functora-css</tag>
+        </card>
+        <pre><code>&lt;card&gt;
   &lt;h3&gt;Card title&lt;/h3&gt;
   &lt;p&gt;Content inside a &lt;card&gt; element with a subtle shadow.&lt;/p&gt;
 &lt;/card&gt;
@@ -661,89 +674,89 @@ fn main() {
   &lt;tag&gt;demo&lt;/tag&gt;
   &lt;tag&gt;functora-css&lt;/tag&gt;
 &lt;/card&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="utility">
-      <h2>Utility</h2>
+      <section id="utility">
+        <h2>Utility</h2>
 
-      <h3>Bypass class exclusion</h3>
-      <pre><code>&lt;p class="my-component" xx&gt;
+        <h3>Bypass class exclusion</h3>
+        <pre><code>&lt;p class="my-component" xx&gt;
   &lt;!-- styled by both functora-css and .my-component --&gt;
 &lt;/p&gt;</code></pre>
 
-      <h3>Full width</h3>
-      <p>
-        <button full>Full width button</button>
-      </p>
-      <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
+        <h3>Full width</h3>
+        <p>
+          <button full>Full width button</button>
+        </p>
+        <pre><code>&lt;button full&gt;Full width button&lt;/button&gt;</code></pre>
 
-      <h3>Full width on mobile</h3>
-      <p>
-        <button m-full>Full on mobile</button>
-      </p>
-      <pre><code>&lt;button m-full&gt;Full on mobile&lt;/button&gt;</code></pre>
+        <h3>Full width on mobile</h3>
+        <p>
+          <button m-full>Full on mobile</button>
+        </p>
+        <pre><code>&lt;button m-full&gt;Full on mobile&lt;/button&gt;</code></pre>
 
-      <h3>Hide element</h3>
-      <p hidden>You cannot see this text.</p>
-      <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
+        <h3>Hide element</h3>
+        <p hidden>You cannot see this text.</p>
+        <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
 
-      <h3>Font families</h3>
-      <p serif>Serif font - <code>serif</code></p>
-      <p sans>Sans-serif font - <code>sans</code></p>
-      <p mono>Monospace font - <code>mono</code></p>
-      <pre><code>&lt;p serif&gt;Serif font - &lt;code&gt;serif&lt;/code&gt;&lt;/p&gt;
+        <h3>Font families</h3>
+        <p serif>Serif font - <code>serif</code></p>
+        <p sans>Sans-serif font - <code>sans</code></p>
+        <p mono>Monospace font - <code>mono</code></p>
+        <pre><code>&lt;p serif&gt;Serif font - &lt;code&gt;serif&lt;/code&gt;&lt;/p&gt;
 &lt;p sans&gt;Sans-serif font - &lt;code&gt;sans&lt;/code&gt;&lt;/p&gt;
 &lt;p mono&gt;Monospace font - &lt;code&gt;mono&lt;/code&gt;&lt;/p&gt;</code></pre>
 
-      <h3>Font sizes</h3>
-      <p fs="xl">Extra large - <code>fs="xl"</code></p>
-      <p fs="l">Large - <code>fs="l"</code></p>
-      <p fs="m">Medium - <code>fs="m"</code></p>
-      <p fs="s">Small - <code>fs="s"</code></p>
-      <p fs="xs">Extra small - <code>fs="xs"</code></p>
-      <pre><code>&lt;p fs="xl"&gt;Extra large - &lt;code&gt;fs="xl"&lt;/code&gt;&lt;/p&gt;
+        <h3>Font sizes</h3>
+        <p fs="xl">Extra large - <code>fs="xl"</code></p>
+        <p fs="l">Large - <code>fs="l"</code></p>
+        <p fs="m">Medium - <code>fs="m"</code></p>
+        <p fs="s">Small - <code>fs="s"</code></p>
+        <p fs="xs">Extra small - <code>fs="xs"</code></p>
+        <pre><code>&lt;p fs="xl"&gt;Extra large - &lt;code&gt;fs="xl"&lt;/code&gt;&lt;/p&gt;
 &lt;p fs="l"&gt;Large - &lt;code&gt;fs="l"&lt;/code&gt;&lt;/p&gt;
 &lt;p fs="m"&gt;Medium - &lt;code&gt;fs="m"&lt;/code&gt;&lt;/p&gt;
 &lt;p fs="s"&gt;Small - &lt;code&gt;fs="s"&lt;/code&gt;&lt;/p&gt;
 &lt;p fs="xs"&gt;Extra small - &lt;code&gt;fs="xs"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
-      <h3>Padding top</h3>
-      <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
-      <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &lt;code&gt;pt="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+        <h3>Padding top</h3>
+        <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
+        <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &lt;code&gt;pt="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
-      <h3>Padding bottom</h3>
-      <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
-      <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &lt;code&gt;pb="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+        <h3>Padding bottom</h3>
+        <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
+        <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &lt;code&gt;pb="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
-      <h3>Padding all sides</h3>
-      <p pa="2">All padding 2rem - <code>pa="2"</code></p>
-      <pre><code>&lt;p pa="2"&gt;All padding 2rem - &lt;code&gt;pa="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
+        <h3>Padding all sides</h3>
+        <p pa="2">All padding 2rem - <code>pa="2"</code></p>
+        <pre><code>&lt;p pa="2"&gt;All padding 2rem - &lt;code&gt;pa="2"&lt;/code&gt;&lt;/p&gt;</code></pre>
 
-      <h3>Text alignment</h3>
-      <p txt="l">Left aligned - <code>txt="l"</code></p>
-      <p txt="c">Center aligned - <code>txt="c"</code></p>
-      <p txt="r">Right aligned - <code>txt="r"</code></p>
-      <p txt="j">
-        Justified - <code>txt="j"</code>. Lorem ipsum dolor sit amet,
-        consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
-        voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-      </p>
-      <pre><code>&lt;p txt="l"&gt;Left aligned - &lt;code&gt;txt="l"&lt;/code&gt;&lt;/p&gt;
+        <h3>Text alignment</h3>
+        <p txt="l">Left aligned - <code>txt="l"</code></p>
+        <p txt="c">Center aligned - <code>txt="c"</code></p>
+        <p txt="r">Right aligned - <code>txt="r"</code></p>
+        <p txt="j">
+          Justified - <code>txt="j"</code>. Lorem ipsum dolor sit amet,
+          consectetur adipisicing elit. Duis aute irure dolor in reprehenderit
+          in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        </p>
+        <pre><code>&lt;p txt="l"&gt;Left aligned - &lt;code&gt;txt="l"&lt;/code&gt;&lt;/p&gt;
 &lt;p txt="c"&gt;Center aligned - &lt;code&gt;txt="c"&lt;/code&gt;&lt;/p&gt;
 &lt;p txt="r"&gt;Right aligned - &lt;code&gt;txt="r"&lt;/code&gt;&lt;/p&gt;
 &lt;p txt="j"&gt;Justified - &lt;code&gt;txt="j"&lt;/code&gt;. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.&lt;/p&gt;</code></pre>
-    </section>
+      </section>
 
-    <section id="footer">
-      <h2>Footer</h2>
-      <pre><code>&lt;footer&gt;
+      <section id="footer">
+        <h2>Footer</h2>
+        <pre><code>&lt;footer&gt;
   &lt;p&gt;
     © 2026
     &lt;a href="https://functora.github.io/"&gt;Functora&lt;/a&gt;. All rights reserved.
   &lt;/p&gt;
 &lt;/footer&gt;</code></pre>
-    </section>
-
+      </section>
+    </main>
     <footer>
       <p>
         © 2026

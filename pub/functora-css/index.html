@@ -71,19 +71,10 @@
 
     <section id="appearance">
       <h2>Appearance</h2>
-      <p>
-        functora-css supports light and dark themes with pure CSS - no
-        JavaScript required. Three independent mechanisms work together: system
-        preference, an HTML attribute, and a hidden checkbox. Each is suited to
-        a different use case.
-      </p>
+      <p>Three mechanisms for light/dark themes: system preference, HTML attribute, or checkbox.</p>
 
       <h3>1. Automatic</h3>
-      <p>
-        No special markup is needed. The framework reads
-        <code>prefers-color-scheme</code> automatically. Best for blogs,
-        documentation, and any page where matching the OS theme is sufficient.
-      </p>
+      <p>No markup needed. Automatically matches the OS theme.</p>
       <pre><code>&lt;!doctype html&gt;
 &lt;html lang="en"&gt;
   &lt;head&gt;
@@ -96,34 +87,27 @@
 
       <h3>2. Attribute</h3>
       <p>
-        For websites and applications that store the user's preference in a
-        database, session, or localStorage. Set
-        <code>functora-theme-dark</code> on <code>&lt;html&gt;</code>
-        server-side or via JavaScript. The attribute overrides the system
-        preference:
+        Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to override
+        system preference. Use when preference is stored server-side or in localStorage.
       </p>
       <pre><code>&lt;html functora-theme-dark&gt;
 &lt;!-- your app manages this attribute from stored preference --&gt;</code></pre>
 
       <h3>3. Checkbox</h3>
       <p>
-        Place a hidden checkbox and a visible label anywhere on the page. The
-        toggle is pure CSS and persists only for the current page view. No
-        JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
+        Place a hidden checkbox and a visible label anywhere on the page.
+        No JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
       </p>
 
       <p>
-        <strong>Inside the navbar</strong> - as shown on this page. The checkbox
-        is the last child of <code>&lt;nav&gt;</code>. The label sits inside
-        <code>&lt;ul&gt;</code> as a nav item:
+        <strong>Inside the navbar</strong> — checkbox as last child of <code>&lt;nav&gt;</code>,
+        label inside <code>&lt;ul&gt;</code> as a nav item:
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
     &lt;header&gt;
       &lt;a href="#"&gt;Site&lt;/a&gt;
-      &lt;a href="#functora-nav-expand" id="functora-nav-open"&gt;&lt;/a&gt;
     &lt;/header&gt;
-    &lt;a href="#functora-nav-collapse" id="functora-nav-collapse"&gt;&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;label for="functora-theme-dark"&gt;Theme&lt;/label&gt;&lt;/li&gt;
@@ -154,15 +138,11 @@
 
       <h3>1. Anchor</h3>
       <p>
-        Uses the <code>:target</code> pseudo-class. Add
-        <code>id="functora-nav-expand"</code> to the nav.
+        Add <code>id="functora-nav-expand"</code> to the nav.
         <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
-        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. Clicking
-        any anchor link inside the menu automatically closes the navbar because
-        the URL hash changes away from <code>#functora-nav-expand</code>. This
-        auto-close behavior is unique to the anchor-based approach - no
-        JavaScript required. Best for static JS-free sites where navigation uses
-        hash links.
+        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it.
+        The menu auto-closes when clicking any nav link. No JavaScript required.
+        Best for static JS-free sites.
       </p>
       <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
   &lt;label&gt;
@@ -186,16 +166,10 @@
 
       <h3>2. Checkbox</h3>
       <p>
-        Uses the <code>:checked</code> pseudo-class. Add a hidden
-        <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
-        inside the <code>&lt;label&gt;</code> wrapper. The close overlay is a
-        <code>&lt;span&gt;</code> (not an <code>&lt;a&gt;</code>), avoiding hash
-        conflicts with client-side routers. Note that clicking a nav link does
-        not close the menu automatically - the user must tap the close overlay.
-        If automatic collapse is desired, uncheck
-        <code>#functora-nav-toggle</code> via JavaScript. Best for SPAs and
-        stateful websites where JavaScript is already present and hash-based
-        routing would clash with anchor nav.
+        Add <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
+        inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for the close
+        overlay to avoid hash conflicts with client-side routers. The menu does not
+        auto-close on link click. Best for SPAs and stateful sites using JavaScript.
       </p>
       <pre><code>&lt;nav aria-label="Navbar"&gt;
   &lt;label&gt;

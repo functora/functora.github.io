@@ -37,7 +37,7 @@ pub fn Layout() -> Element {
                     }
                     span { id: "functora-nav-open" }
                 }
-                span { id: "functora-nav-close" }
+                span { id: "functora-nav-collapse" }
                 ul {
                     for lang in SUPPORTED_LANGUAGES {
                         li {

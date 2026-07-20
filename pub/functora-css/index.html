@@ -91,7 +91,8 @@
         system preference. Use when preference is stored server-side or in localStorage.
       </p>
       <pre><code>&lt;html functora-theme-dark&gt;
-&lt;!-- your app manages this attribute from stored preference --&gt;</code></pre>
+  &lt;!-- content --&gt;
+&lt;/html&gt;</code></pre>
 
       <h3>3. Checkbox</h3>
       <p>
@@ -658,9 +659,9 @@ fn main() {
       <h2>Utility</h2>
 
       <h3>Bypass class exclusion</h3>
-      <pre><code>&lt;div class="my-component" xx&gt;
+      <pre><code>&lt;p class="my-component" xx&gt;
   &lt;!-- styled by both functora-css and .my-component --&gt;
-&lt;/div&gt;</code></pre>
+&lt;/p&gt;</code></pre>
 
       <h3>Full width</h3>
       <p>
@@ -728,7 +729,10 @@ fn main() {
     <section id="footer">
       <h2>Footer</h2>
       <pre><code>&lt;footer&gt;
-  &lt;p&gt;© 2026 Your Name.&lt;/p&gt;
+  &lt;p&gt;
+    © 2026
+    &lt;a href="https://functora.github.io/"&gt;Functora&lt;/a&gt;. All rights reserved.
+  &lt;/p&gt;
 &lt;/footer&gt;</code></pre>
     </section>
 

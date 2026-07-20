@@ -7,14 +7,11 @@
       name="description"
       content="functora-css - pure classless semantic CSS framework"
     />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="css/functora.min.css" rel="stylesheet" />
   </head>
   <body>
-    <nav id="functora-nav-menu" aria-label="Navbar">
+    <nav fx id="functora-nav-menu" aria-label="Navbar">
       <label>
         <header>
           <a href="#">functora-css</a>
@@ -170,8 +167,8 @@
         Uses the <code>:checked</code> pseudo-class. Add a hidden
         <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
         inside the <code>&lt;label&gt;</code> wrapper. The close overlay is a
-        <code>&lt;span&gt;</code> (not an <code>&lt;a&gt;</code>), avoiding
-        hash conflicts with client-side routers. Best for single-page apps.
+        <code>&lt;span&gt;</code> (not an <code>&lt;a&gt;</code>), avoiding hash
+        conflicts with client-side routers. Best for single-page apps.
       </p>
       <pre><code>&lt;nav aria-label="Navbar"&gt;
   &lt;label&gt;
@@ -192,7 +189,8 @@
       <h3>Fixed navbar</h3>
       <p>
         Add the <code>fx</code> attribute to fix the navbar to the top of the
-        viewport. Add <code>scroll-padding-top</code> to <code>&lt;html&gt;</code>
+        viewport. Add <code>scroll-padding-top</code> to
+        <code>&lt;html&gt;</code>
         if using anchor links (handled automatically by the framework).
       </p>
       <pre><code>&lt;nav fx&gt;
@@ -201,9 +199,8 @@
 
       <h3>Dropdown menus</h3>
       <p>
-        Nest a <code>&lt;menu&gt;</code> inside a
-        <code>&lt;li&gt;</code>. The menu appears on hover
-        (desktop) or as part of the mobile drawer.
+        Nest a <code>&lt;menu&gt;</code> inside a <code>&lt;li&gt;</code>. The
+        menu appears on hover (desktop) or as part of the mobile drawer.
       </p>
       <pre><code>&lt;li&gt;
   &lt;a&gt;Dropdown&lt;/a&gt;
@@ -884,8 +881,8 @@ fn main() {
     <section id="footer">
       <h2>Footer</h2>
       <p>
-        The <code>&lt;footer&gt;</code> element is styled with centered,
-        wrapped content and a small font size. Place it after all sections.
+        The <code>&lt;footer&gt;</code> element is styled with centered, wrapped
+        content and a small font size. Place it after all sections.
       </p>
       <pre><code>&lt;footer&gt;
   &lt;p&gt;© 2026 Your Name.&lt;/p&gt;

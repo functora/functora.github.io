@@ -287,6 +287,7 @@
               (mkApk "cryptonote")
               # tools
               pkgs.chromium
+              pkgs.qutebrowser
               pkgs.cloudflared
               (opencode-nix.packages.${system}.default)
               (pkgs.writeShellApplication {

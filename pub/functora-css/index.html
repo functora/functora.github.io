@@ -48,6 +48,7 @@
               <menuitem><a href="#tooltips">Tooltips</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
               <menuitem><a href="#utility">Utility</a></menuitem>
+              <menuitem><a href="#footer">Footer</a></menuitem>
             </menu>
           </li>
           <li><label for="functora-theme-dark">Theme</label></li>
@@ -71,7 +72,10 @@
 
     <section id="appearance">
       <h2>Appearance</h2>
-      <p>Three mechanisms for light/dark themes: system preference, HTML attribute, or checkbox.</p>
+      <p>
+        Three mechanisms for light/dark themes: system preference, HTML
+        attribute, or checkbox.
+      </p>
 
       <h3>1. Automatic</h3>
       <p>No markup needed. Automatically matches the OS theme.</p>
@@ -87,8 +91,9 @@
 
       <h3>2. Attribute</h3>
       <p>
-        Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to override
-        system preference. Use when preference is stored server-side or in localStorage.
+        Set <code>functora-theme-dark</code> on <code>&lt;html&gt;</code> to
+        override system preference. Use when preference is stored server-side or
+        in localStorage.
       </p>
       <pre><code>&lt;html functora-theme-dark&gt;
   &lt;!-- content --&gt;
@@ -96,13 +101,14 @@
 
       <h3>3. Checkbox</h3>
       <p>
-        Place a hidden checkbox and a visible label anywhere on the page.
-        No JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
+        Place a hidden checkbox and a visible label anywhere on the page. No
+        JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
       </p>
 
       <p>
-        <strong>Inside the navbar</strong> — checkbox as last child of <code>&lt;nav&gt;</code>,
-        label inside <code>&lt;ul&gt;</code> as a nav item:
+        <strong>Inside the navbar</strong> — checkbox as last child of
+        <code>&lt;nav&gt;</code>, label inside <code>&lt;ul&gt;</code> as a nav
+        item:
       </p>
       <pre><code>&lt;nav&gt;
   &lt;label&gt;
@@ -141,9 +147,9 @@
       <p>
         Add <code>id="functora-nav-expand"</code> to the nav.
         <code>&lt;a href="#functora-nav-expand"&gt;</code> opens the menu,
-        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it.
-        The menu auto-closes when clicking any nav link. No JavaScript required.
-        Best for static JS-free sites.
+        <code>&lt;a href="#functora-nav-collapse"&gt;</code> closes it. The menu
+        auto-closes when clicking any nav link. No JavaScript required. Best for
+        static JS-free sites.
       </p>
       <pre><code>&lt;nav id="functora-nav-expand" aria-label="Navbar"&gt;
   &lt;label&gt;
@@ -167,10 +173,12 @@
 
       <h3>2. Checkbox</h3>
       <p>
-        Add <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
-        inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for the close
-        overlay to avoid hash conflicts with client-side routers. The menu does not
-        auto-close on link click. Best for SPAs and stateful sites using JavaScript.
+        Add
+        <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
+        inside <code>&lt;label&gt;</code>. Use <code>&lt;span&gt;</code> for the
+        close overlay to avoid hash conflicts with client-side routers. The menu
+        does not auto-close on link click. Best for SPAs and stateful sites
+        using JavaScript.
       </p>
       <pre><code>&lt;nav aria-label="Navbar"&gt;
   &lt;label&gt;

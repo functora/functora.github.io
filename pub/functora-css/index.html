@@ -74,7 +74,7 @@
         a different use case.
       </p>
 
-      <h3>1. Automatic - follow system preference</h3>
+      <h3>1. Automatic</h3>
       <p>
         No special markup is needed. The framework reads
         <code>prefers-color-scheme</code> automatically. Best for blogs,
@@ -90,7 +90,7 @@
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
 
-      <h3>2. Stateful - attribute (websites, apps)</h3>
+      <h3>2. Stateful attribute</h3>
       <p>
         For websites and applications that store the user's preference in a
         database, session, or localStorage. Set
@@ -101,11 +101,11 @@
       <pre><code>&lt;html functora-theme-dark&gt;
 &lt;!-- your app manages this attribute from stored preference --&gt;</code></pre>
 
-      <h3>3. Stateless - checkbox (static JS-free pages)</h3>
+      <h3>3. Stateless checkbox</h3>
       <p>
         Place a hidden checkbox and a visible label anywhere on the page. The
         toggle is pure CSS and persists only for the current page view. No
-        JavaScript, no storage needed. The label shows 🌚 or 🌝 automatically.
+        JavaScript, no storage needed. The label shows 🌝 or 🌚 automatically.
       </p>
 
       <p>
@@ -148,7 +148,7 @@
         mechanisms are available. Choose based on your use case.
       </p>
 
-      <h3>Anchor-based (static pages)</h3>
+      <h3>Anchor-based</h3>
       <p>
         Uses the <code>:target</code> pseudo-class. Add
         <code>id="functora-nav-menu"</code> to the nav.
@@ -180,7 +180,7 @@
   &lt;input type="checkbox" id="functora-theme-dark" /&gt;
 &lt;/nav&gt;</code></pre>
 
-      <h3>Checkbox-based (SPAs and stateful sites)</h3>
+      <h3>Checkbox-based</h3>
       <p>
         Uses the <code>:checked</code> pseudo-class. Add a hidden
         <code>&lt;input type="checkbox" id="functora-nav-toggle"&gt;</code>
@@ -311,13 +311,13 @@
       <input id="demo-name" type="text" placeholder="Your name" />
       <pre><code>&lt;label for="demo-name"&gt;Name&lt;/label&gt;
 &lt;input id="demo-name" type="text" placeholder="Your name" /&gt;</code></pre>
- 
+
       <h3>Textarea</h3>
       <label for="demo-bio">Bio</label>
       <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
       <pre><code>&lt;label for="demo-bio"&gt;Bio&lt;/label&gt;
 &lt;textarea id="demo-bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
- 
+
       <h3>Select</h3>
       <label for="demo-lang">Language</label>
       <select id="demo-lang">
@@ -420,7 +420,11 @@
       <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
       <h3>Emphasis and inline elements</h3>
-      <p><strong>bold</strong> <em>italic</em> <mark>highlighted</mark> <small>small</small> <del>deleted</del> <abbr title="abbreviation">abbr</abbr></p>
+      <p>
+        <strong>bold</strong> <em>italic</em> <mark>highlighted</mark>
+        <small>small</small> <del>deleted</del>
+        <abbr title="abbreviation">abbr</abbr>
+      </p>
       <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
 &lt;em&gt;italic&lt;/em&gt;
 &lt;mark&gt;highlighted&lt;/mark&gt;

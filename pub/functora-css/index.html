@@ -309,15 +309,15 @@
       <h3>Text inputs</h3>
       <label for="demo-name">Name</label>
       <input id="demo-name" type="text" placeholder="Your name" />
-      <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
-&lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
-
+      <pre><code>&lt;label for="demo-name"&gt;Name&lt;/label&gt;
+&lt;input id="demo-name" type="text" placeholder="Your name" /&gt;</code></pre>
+ 
       <h3>Textarea</h3>
       <label for="demo-bio">Bio</label>
       <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
-      <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
-&lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
-
+      <pre><code>&lt;label for="demo-bio"&gt;Bio&lt;/label&gt;
+&lt;textarea id="demo-bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
+ 
       <h3>Select</h3>
       <label for="demo-lang">Language</label>
       <select id="demo-lang">
@@ -325,8 +325,8 @@
         <option>TypeScript</option>
         <option>Python</option>
       </select>
-      <pre><code>&lt;label for="lang"&gt;Language&lt;/label&gt;
-&lt;select id="lang"&gt;
+      <pre><code>&lt;label for="demo-lang"&gt;Language&lt;/label&gt;
+&lt;select id="demo-lang"&gt;
   &lt;option&gt;Rust&lt;/option&gt;
   &lt;option&gt;TypeScript&lt;/option&gt;
   &lt;option&gt;Python&lt;/option&gt;
@@ -346,10 +346,10 @@
       <input type="checkbox" id="demo-c2" checked /><label for="demo-c2"
         >Already checked</label
       >
-      <pre><code>&lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-&lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-&lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
-&lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
+      <pre><code>&lt;input type="radio" name="demo-radio" id="demo-r1" /&gt;&lt;label for="demo-r1"&gt;Option A&lt;/label&gt;
+&lt;input type="radio" name="demo-radio" id="demo-r2" checked /&gt;&lt;label for="demo-r2"&gt;Option B&lt;/label&gt;
+&lt;input type="checkbox" id="demo-c1" /&gt;&lt;label for="demo-c1"&gt;Check me&lt;/label&gt;
+&lt;input type="checkbox" id="demo-c2" checked /&gt;&lt;label for="demo-c2"&gt;Already checked&lt;/label&gt;</code></pre>
 
       <h3>Fieldset</h3>
       <fieldset>
@@ -378,10 +378,11 @@
       </fieldset>
       <pre><code>&lt;fieldset&gt;
   &lt;legend&gt;Preferences&lt;/legend&gt;
-  &lt;input type="radio" name="radio" id="r1" /&gt;&lt;label for="r1"&gt;Option A&lt;/label&gt;
-  &lt;input type="radio" name="radio" id="r2" checked /&gt;&lt;label for="r2"&gt;Option B&lt;/label&gt;
-  &lt;input type="checkbox" id="c1" /&gt;&lt;label for="c1"&gt;Check me&lt;/label&gt;
-  &lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;
+  &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr1" /&gt;&lt;label for="demo-fr1"&gt;Option A&lt;/label&gt;
+  &lt;input type="radio" name="demo-fieldset-radio" id="demo-fr2" checked /&gt;&lt;label for="demo-fr2"&gt;Option B&lt;/label&gt;
+  &lt;br /&gt;
+  &lt;input type="checkbox" id="demo-fc1" /&gt;&lt;label for="demo-fc1"&gt;Check me&lt;/label&gt;
+  &lt;input type="checkbox" id="demo-fc2" checked /&gt;&lt;label for="demo-fc2"&gt;Already checked&lt;/label&gt;
   &lt;p&gt;
     &lt;button type="submit" primary&gt;Submit&lt;/button&gt;
     &lt;button type="reset"&gt;Reset&lt;/button&gt;
@@ -451,7 +452,8 @@
         urna sed urna ultricies ac tempor dui sagittis.
       </blockquote>
       <pre><code>&lt;blockquote&gt;
-  Quote goes here.
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
+  urna sed urna ultricies ac tempor dui sagittis.
 &lt;/blockquote&gt;</code></pre>
 
       <h3>With attribution</h3>
@@ -501,12 +503,13 @@ fn main() {
         </li>
       </ul>
       <pre><code>&lt;ul&gt;
-  &lt;li&gt;Item one&lt;/li&gt;
-  &lt;li&gt;Item two&lt;/li&gt;
+  &lt;li&gt;Unordered list item one&lt;/li&gt;
+  &lt;li&gt;Unordered list item two&lt;/li&gt;
   &lt;li&gt;
-    Item three
+    Unordered list item three
     &lt;ul&gt;
-      &lt;li&gt;Nested item&lt;/li&gt;
+      &lt;li&gt;Nested item (circle)&lt;/li&gt;
+      &lt;li&gt;Nested item (circle)&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
 &lt;/ul&gt;</code></pre>
@@ -524,12 +527,13 @@ fn main() {
         </li>
       </ol>
       <pre><code>&lt;ol&gt;
-  &lt;li&gt;Item one&lt;/li&gt;
-  &lt;li&gt;Item two&lt;/li&gt;
+  &lt;li&gt;Ordered list item one&lt;/li&gt;
+  &lt;li&gt;Ordered list item two&lt;/li&gt;
   &lt;li&gt;
-    Item three
+    Ordered list item three
     &lt;ol&gt;
-      &lt;li&gt;Nested item&lt;/li&gt;
+      &lt;li&gt;Nested item (lower-alpha)&lt;/li&gt;
+      &lt;li&gt;Nested item (lower-alpha)&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
 &lt;/ol&gt;</code></pre>
@@ -568,12 +572,24 @@ fn main() {
     &lt;tr&gt;
       &lt;th&gt;Name&lt;/th&gt;
       &lt;th&gt;Role&lt;/th&gt;
+      &lt;th&gt;Status&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
       &lt;td&gt;Alice&lt;/td&gt;
       &lt;td&gt;Developer&lt;/td&gt;
+      &lt;td&gt;Active&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Bob&lt;/td&gt;
+      &lt;td&gt;Designer&lt;/td&gt;
+      &lt;td&gt;Away&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Carol&lt;/td&gt;
+      &lt;td&gt;Manager&lt;/td&gt;
+      &lt;td&gt;Active&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;</code></pre>
@@ -596,7 +612,7 @@ fn main() {
       <p>
         <span tt="Hello from functora-css">Hover me (tooltip)</span>
       </p>
-      <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me&lt;/span&gt;</code></pre>
+      <pre><code>&lt;span tt="Hello from functora-css"&gt;Hover me (tooltip)&lt;/span&gt;</code></pre>
 
       <h3>Tooltip on buttons</h3>
       <p>
@@ -622,7 +638,7 @@ fn main() {
           >Anchor tooltip</a
         >
       </p>
-      <pre><code>&lt;a att href="https://example.com"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
+      <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
     </section>
 
     <section id="cards">
@@ -643,7 +659,14 @@ fn main() {
       </card>
       <pre><code>&lt;card&gt;
   &lt;h3&gt;Card title&lt;/h3&gt;
-  &lt;p&gt;Card content goes here.&lt;/p&gt;
+  &lt;p&gt;Content inside a &amp;lt;card&amp;gt; element with a subtle shadow.&lt;/p&gt;
+&lt;/card&gt;
+&lt;card&gt;
+  &lt;h3&gt;Another card&lt;/h3&gt;
+  &lt;p&gt;Cards stack vertically and collapse to full-width on mobile.&lt;/p&gt;
+  &lt;hr /&gt;
+  &lt;tag&gt;demo&lt;/tag&gt;
+  &lt;tag&gt;functora-css&lt;/tag&gt;
 &lt;/card&gt;</code></pre>
     </section>
 
@@ -675,9 +698,9 @@ fn main() {
       <p serif>Serif font - <code>serif</code></p>
       <p sans>Sans-serif font - <code>sans</code></p>
       <p mono>Monospace font - <code>mono</code></p>
-      <pre><code>&lt;p serif&gt;Serif font&lt;/p&gt;
-&lt;p sans&gt;Sans-serif font&lt;/p&gt;
-&lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p serif&gt;Serif font - &amp;lt;code&amp;gt;serif&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p sans&gt;Sans-serif font - &amp;lt;code&amp;gt;sans&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p mono&gt;Monospace font - &amp;lt;code&amp;gt;mono&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
 
       <h3>Font sizes</h3>
       <p fs="xl">Extra large - <code>fs="xl"</code></p>
@@ -685,24 +708,23 @@ fn main() {
       <p fs="m">Medium - <code>fs="m"</code></p>
       <p fs="s">Small - <code>fs="s"</code></p>
       <p fs="xs">Extra small - <code>fs="xs"</code></p>
-      <pre><code>&lt;p fs="xl"&gt;Extra large&lt;/p&gt;
-&lt;p fs="l"&gt;Large&lt;/p&gt;
-&lt;p fs="m"&gt;Medium&lt;/p&gt;
-&lt;p fs="s"&gt;Small&lt;/p&gt;
-&lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p fs="xl"&gt;Extra large - &amp;lt;code&amp;gt;fs="xl"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p fs="l"&gt;Large - &amp;lt;code&amp;gt;fs="l"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p fs="m"&gt;Medium - &amp;lt;code&amp;gt;fs="m"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p fs="s"&gt;Small - &amp;lt;code&amp;gt;fs="s"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p fs="xs"&gt;Extra small - &amp;lt;code&amp;gt;fs="xs"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding top</h3>
       <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
-      <pre><code>&lt;p pt="2"&gt;Top padding 2rem&lt;/p&gt;
-&lt;p pt="4"&gt;Top padding 4rem&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pt="2"&gt;Top padding 2rem - &amp;lt;code&amp;gt;pt="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding bottom</h3>
       <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
-      <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem - &amp;lt;code&amp;gt;pb="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
 
       <h3>Padding all sides</h3>
       <p pa="2">All padding 2rem - <code>pa="2"</code></p>
-      <pre><code>&lt;p pa="2"&gt;All padding 2rem&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p pa="2"&gt;All padding 2rem - &amp;lt;code&amp;gt;pa="2"&amp;lt;/code&amp;gt;&lt;/p&gt;</code></pre>
 
       <h3>Text alignment</h3>
       <p txt="l">Left aligned - <code>txt="l"</code></p>
@@ -713,10 +735,10 @@ fn main() {
         consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in
         voluptate velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
-      <pre><code>&lt;p txt="l"&gt;Left aligned&lt;/p&gt;
-&lt;p txt="c"&gt;Center aligned&lt;/p&gt;
-&lt;p txt="r"&gt;Right aligned&lt;/p&gt;
-&lt;p txt="j"&gt;Justified text&lt;/p&gt;</code></pre>
+      <pre><code>&lt;p txt="l"&gt;Left aligned - &amp;lt;code&amp;gt;txt="l"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p txt="c"&gt;Center aligned - &amp;lt;code&amp;gt;txt="c"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p txt="r"&gt;Right aligned - &amp;lt;code&amp;gt;txt="r"&amp;lt;/code&amp;gt;&lt;/p&gt;
+&lt;p txt="j"&gt;Justified - &amp;lt;code&amp;gt;txt="j"&amp;lt;/code&amp;gt;. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.&lt;/p&gt;</code></pre>
     </section>
 
     <section id="footer">

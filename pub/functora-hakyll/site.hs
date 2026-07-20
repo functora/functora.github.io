@@ -10,6 +10,10 @@ import System.FilePath
 
 main :: IO ()
 main = withUtf8 . hakyllWith cfg $ do
+  create ["css/functora.min.css"] $ do
+    route idRoute
+    compile $
+      makeItem =<< unsafeCompiler (readFile "../functora-css/css/functora.min.css")
   match "css/*" $ do
     route idRoute
     compile compressCssCompiler
@@ -28,6 +32,10 @@ main = withUtf8 . hakyllWith cfg $ do
   match "eval.html" $ do
     route idRoute
     compile copyFileCompiler
+  create ["functora-css.html"] $ do
+    route idRoute
+    compile $
+      makeItem =<< unsafeCompiler (readFile "../functora-css/index.html")
   match "index.html" $
     newIndex Informal
   match "index.html" . version "formal" $

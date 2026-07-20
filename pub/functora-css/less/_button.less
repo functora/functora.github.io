@@ -26,19 +26,6 @@ button@{n}, button@{x}, input[type=submit], [btn] {
 	-webkit-appearance: none;
 	appearance: none;
 
-	&:before {
-		content: "";
-		position: absolute;
-		z-index: -1;
-		opacity: 0;
-		width: 100%;
-		height: 100%;
-		left: 0;
-		top: 0;
-		transform: scale3d(1.2, 1.2, 1.2);
-		background: @primary;
-	}
-
 	&:not(:disabled):hover {
 		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 		background: @grey-ultralight;

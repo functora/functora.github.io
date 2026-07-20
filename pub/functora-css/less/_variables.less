@@ -108,41 +108,22 @@ html:has(#functora-theme-dark:checked) {
     .dark-theme();
 }
 
-/* Repaint triggers for buggy browsers */
-@keyframes theme-switch-repaint-dark {
-    from {
-        transform: translateZ(0.1px);
-    }
-
-    to {
-        transform: translateZ(0);
-    }
-}
-
-@keyframes theme-switch-repaint-light {
-    from {
-        transform: translateZ(0.1px);
-    }
-
-    to {
-        transform: translateZ(0);
-    }
+/* Repaint trigger for buggy browsers */
+@keyframes theme-switch-repaint {
+    from { transform: translateZ(0.1px) }
+    to { transform: translateZ(0) }
 }
 
 html {
-
     &[functora-theme-dark] body,
     &[functora-theme-dark] nav,
-    &:has(#functora-theme-dark:checked) body,
-    &:has(#functora-theme-dark:checked) nav {
-        animation: theme-switch-repaint-dark 0.11s;
-    }
-
     &:not([functora-theme-dark]) body,
     &:not([functora-theme-dark]) nav,
+    &:has(#functora-theme-dark:checked) body,
+    &:has(#functora-theme-dark:checked) nav,
     &:has(#functora-theme-dark:not(:checked)) body,
     &:has(#functora-theme-dark:not(:checked)) nav {
-        animation: theme-switch-repaint-light 0.11s;
+        animation: theme-switch-repaint 0.11s;
     }
 }
 

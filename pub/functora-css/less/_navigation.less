@@ -8,6 +8,31 @@
 	display: none
 }
 
+.theme-emoji() {
+	opacity: 1;
+	position: static;
+	z-index: auto;
+	width: auto;
+	height: auto;
+	background: none;
+	transform: none;
+}
+
+.nav-item() {
+	text-decoration: none;
+	text-transform: none;
+	padding: 0.8rem 2rem 0.4rem;
+	border-bottom: 4px solid transparent;
+	display: block;
+	cursor: pointer;
+	font-weight: 300;
+
+	&:hover {
+		color: @primary;
+		border-color: @primary;
+	}
+}
+
 nav@{n},
 nav@{x} {
 	background: @surface;
@@ -63,13 +88,7 @@ nav@{x} {
 
 		a {
 			color: inherit;
-			text-decoration: none;
-			text-transform: none;
-			padding: 0.8rem 2rem 0.4rem;
-			border-bottom: 4px solid transparent;
-			display: block;
-			cursor: pointer;
-			font-weight: 300;
+			.nav-item();
 
 			@media (min-width: (@mobile + .1)) {
 				&:not(:only-child) {
@@ -79,11 +98,6 @@ nav@{x} {
 					background-size: 2rem;
 					padding-right: 3rem;
 				}
-			}
-
-			&:hover {
-				color: @primary;
-				border-color: @primary;
 			}
 		}
 	}
@@ -185,43 +199,20 @@ nav@{x} {
 	}
 
 	ul label[for="functora-theme-dark"] {
-		text-decoration: none;
-		text-transform: none;
-		padding: 0.8rem 2rem 0.4rem;
-		border-bottom: 4px solid transparent;
-		display: block;
-		cursor: pointer;
-		font-weight: 300;
+		.nav-item();
 		font-size: inherit;
-
-		&:hover {
-			color: @primary;
-			border-color: @primary;
-		}
 	}
 
 }
 
 html:has(#functora-theme-dark:checked) label[for="functora-theme-dark"]::before {
 	content: "🌚\00a0";
-	opacity: 1;
-	position: static;
-	z-index: auto;
-	width: auto;
-	height: auto;
-	background: none;
-	transform: none;
+	.theme-emoji();
 }
 
 html:has(#functora-theme-dark:not(:checked)) label[for="functora-theme-dark"]::before {
 	content: "🌝\00a0";
-	opacity: 1;
-	position: static;
-	z-index: auto;
-	width: auto;
-	height: auto;
-	background: none;
-	transform: none;
+	.theme-emoji();
 }
 
 html:has(nav@{n}[fx], nav@{x}[fx]) {

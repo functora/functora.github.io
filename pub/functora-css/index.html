@@ -234,12 +234,6 @@
 
     <section id="buttons">
       <h2>Buttons</h2>
-      <p>
-        Buttons are styled using native HTML elements. No classes are needed -
-        use the <code>primary</code> attribute for primary buttons,
-        <code>round</code> for rounded corners, and <code>disabled</code> for
-        disabled state.
-      </p>
 
       <h3>Standard buttons</h3>
       <p>
@@ -255,10 +249,6 @@
 
       <h3>Anchor as button</h3>
       <p>
-        Use the <code>btn</code> attribute on an anchor element to style it as a
-        button. Combine with <code>primary</code> for primary styling.
-      </p>
-      <p>
         <a btn href="#">Link button</a>
         <a btn primary href="#">Primary link</a>
       </p>
@@ -266,18 +256,9 @@
 &lt;a btn primary href="#"&gt;Primary link&lt;/a&gt;</code></pre>
 
       <h3>Submit button</h3>
-      <p>
-        <code>&lt;input type="submit"&gt;</code> is automatically styled as a
-        button within forms.
-      </p>
       <pre><code>&lt;input type="submit" value="Submit" /&gt;</code></pre>
 
       <h3>Buttons with icons</h3>
-      <p>
-        Buttons can contain inline SVG icons. Place the SVG before the text
-        content. Buttons use <code>inline-flex</code> with a <code>gap</code>
-        for automatic spacing.
-      </p>
       <p>
         <button>
           <svg
@@ -324,34 +305,20 @@
 
     <section id="forms">
       <h2>Forms</h2>
-      <p>
-        Form elements are styled with a clean, minimal look. Labels should be
-        placed directly before their corresponding inputs. Text inputs and
-        textareas default to 100% width.
-      </p>
 
       <h3>Text inputs</h3>
-      <p>
-        Text inputs have a subtle border that highlights on focus. Place the
-        <code>&lt;label&gt;</code> directly before the input.
-      </p>
       <label for="demo-name">Name</label>
       <input id="demo-name" type="text" placeholder="Your name" />
       <pre><code>&lt;label for="name"&gt;Name&lt;/label&gt;
 &lt;input id="name" type="text" placeholder="Your name" /&gt;</code></pre>
 
       <h3>Textarea</h3>
-      <p>
-        Textareas auto-resize vertically and have the same styling as text
-        inputs.
-      </p>
       <label for="demo-bio">Bio</label>
       <textarea id="demo-bio" placeholder="Tell us about yourself"></textarea>
       <pre><code>&lt;label for="bio"&gt;Bio&lt;/label&gt;
 &lt;textarea id="bio" placeholder="Tell us about yourself"&gt;&lt;/textarea&gt;</code></pre>
 
       <h3>Select</h3>
-      <p>Select dropdowns are styled to match other form elements.</p>
       <label for="demo-lang">Language</label>
       <select id="demo-lang">
         <option>Rust</option>
@@ -366,10 +333,6 @@
 &lt;/select&gt;</code></pre>
 
       <h3>Radio and checkbox</h3>
-      <p>
-        Radio buttons and checkboxes are styled with custom indicators. Place
-        the <code>&lt;label&gt;</code> directly after the input.
-      </p>
       <input type="radio" name="demo-radio" id="demo-r1" /><label for="demo-r1"
         >Option A</label
       >
@@ -389,10 +352,6 @@
 &lt;input type="checkbox" id="c2" checked /&gt;&lt;label for="c2"&gt;Already checked&lt;/label&gt;</code></pre>
 
       <h3>Fieldset</h3>
-      <p>
-        Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to
-        group related form controls.
-      </p>
       <fieldset>
         <legend>Preferences</legend>
         <input type="radio" name="demo-fieldset-radio" id="demo-fr1" /><label
@@ -432,17 +391,8 @@
 
     <section id="typography">
       <h2>Typography</h2>
-      <p>
-        functora-css styles standard HTML typography elements without requiring
-        classes. The <code>&lt;section&gt;</code> element provides centered
-        content with padding and a max-width of 90rem.
-      </p>
 
       <h3>Headings</h3>
-      <p>
-        All six heading levels are supported with consistent margins and
-        letter-spacing.
-      </p>
       <h1>Heading h1</h1>
       <h2>Heading h2</h2>
       <h3>Heading h3</h3>
@@ -457,39 +407,19 @@
 &lt;h6&gt;Heading h6&lt;/h6&gt;</code></pre>
 
       <h3>Paragraphs</h3>
-      <p>
-        Paragraphs have consistent line height and margin spacing. They work
-        well at any content width and collapse gracefully on mobile.
-      </p>
-      <p>
-        Paragraph with an <a href="#">anchor link</a> - hover to see the
-        underline effect. Lorem ipsum dolor sit amet, consectetur adipisicing
-        elit.
-      </p>
-      <p>
-        Another paragraph. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur.
-      </p>
+      <p>Paragraph with an <a href="#">anchor link</a>.</p>
+      <p>Another paragraph.</p>
       <pre><code>&lt;p&gt;Paragraph with an &lt;a href="#"&gt;anchor link&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Another paragraph.&lt;/p&gt;</code></pre>
 
       <h3>Anchor links</h3>
-      <p>
-        Anchor links have a highlight effect that expands from the bottom on
-        hover. The highlight uses the secondary theme color. Buttons and nav
-        links are excluded.
-      </p>
       <p>
         <a href="#">Default anchor</a>
       </p>
       <pre><code>&lt;a href="#"&gt;Default anchor&lt;/a&gt;</code></pre>
 
       <h3>Emphasis and inline elements</h3>
-      <p>
-        Standard inline elements like <strong>bold</strong>, <em>italic</em>,
-        <mark>highlighted</mark>, <small>small</small>, <del>deleted</del>, and
-        <abbr title="abbreviation">abbreviations</abbr> are available.
-      </p>
+      <p><strong>bold</strong> <em>italic</em> <mark>highlighted</mark> <small>small</small> <del>deleted</del> <abbr title="abbreviation">abbr</abbr></p>
       <pre><code>&lt;strong&gt;bold&lt;/strong&gt;
 &lt;em&gt;italic&lt;/em&gt;
 &lt;mark&gt;highlighted&lt;/mark&gt;
@@ -498,19 +428,10 @@
 &lt;abbr title="abbreviation"&gt;abbr&lt;/abbr&gt;</code></pre>
 
       <h3>Horizontal rule</h3>
-      <p>
-        The <code>&lt;hr&gt;</code> element provides a visual separator with
-        full width and a light gray color.
-      </p>
       <hr />
       <pre><code>&lt;hr /&gt;</code></pre>
 
       <h3>Sections</h3>
-      <p>
-        The <code>&lt;section&gt;</code> element provides centered content with
-        padding and a max-width of 90rem. It works as a container for page
-        sections.
-      </p>
       <pre><code>&lt;section&gt;
   &lt;h2&gt;Section title&lt;/h2&gt;
   &lt;p&gt;Section content goes here.&lt;/p&gt;
@@ -519,20 +440,12 @@
 
     <section id="media">
       <h2>Media</h2>
-      <p>
-        Images are responsive by default. They scale down to fit their container
-        while maintaining aspect ratio. Videos are full-width.
-      </p>
       <pre><code>&lt;img src="photo.jpg" alt="description" /&gt;
 &lt;video src="video.mp4" controls&gt;&lt;/video&gt;</code></pre>
     </section>
 
     <section id="blockquotes">
       <h2>Blockquotes</h2>
-      <p>
-        Blockquotes are styled with a left border accent. They support
-        attribution via a <code>&lt;cite&gt;</code> element at the end.
-      </p>
       <blockquote>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus
         urna sed urna ultricies ac tempor dui sagittis.
@@ -554,27 +467,14 @@
 
     <section id="code">
       <h2>Code</h2>
-      <p>
-        Inline code and code blocks are styled with a distinct background and
-        monospace font. The <code>&lt;pre&gt;</code> element preserves
-        whitespace and line breaks with <code>pre-wrap</code>.
-      </p>
 
       <h3>Inline code</h3>
-      <p>
-        Use <code>&lt;code&gt;</code> for inline code fragments within a
-        paragraph.
-      </p>
       <p>
         The function returns a <code>Result&lt;String, Error&gt;</code> type.
       </p>
       <pre><code>&lt;p&gt;The function returns a &lt;code&gt;Result&lt;String, Error&gt;&lt;/code&gt; type.&lt;/p&gt;</code></pre>
 
       <h3>Code block</h3>
-      <p>
-        Wrap code in <code>&lt;pre&gt;&lt;code&gt;</code> for multi-line blocks.
-        Long lines wrap automatically.
-      </p>
       <pre><code>fn main() {
     println!("hello from functora-css");
 }</code></pre>
@@ -587,10 +487,6 @@ fn main() {
 
     <section id="lists">
       <h2>Lists</h2>
-      <p>
-        Both ordered and unordered lists are styled with appropriate markers.
-        Nested lists use different marker styles to show hierarchy.
-      </p>
 
       <h3>Unordered list</h3>
       <ul>
@@ -641,12 +537,6 @@ fn main() {
 
     <section id="tables">
       <h2>Tables</h2>
-      <p>
-        Tables use standard HTML structure with <code>&lt;thead&gt;</code>,
-        <code>&lt;tbody&gt;</code>, <code>&lt;tr&gt;</code>,
-        <code>&lt;th&gt;</code>, and <code>&lt;td&gt;</code> elements. Rows
-        highlight on hover.
-      </p>
       <table>
         <thead>
           <tr>
@@ -692,11 +582,6 @@ fn main() {
     <section id="tags">
       <h2>Tags</h2>
       <p>
-        Tags use the <code>&lt;tag&gt;</code> element. They are useful for
-        labels, statuses, and categories. Add <code>primary</code> for the
-        primary style.
-      </p>
-      <p>
         <tag>default</tag>
         <tag primary>primary</tag>
       </p>
@@ -706,11 +591,6 @@ fn main() {
 
     <section id="tooltips">
       <h2>Tooltips</h2>
-      <p>
-        functora-css provides pure CSS tooltips with no JavaScript. Three
-        attribute-based variants are available. Tooltips use
-        <code>::before</code> and <code>::after</code> pseudo-elements.
-      </p>
 
       <h3>Basic tooltip</h3>
       <p>
@@ -728,10 +608,6 @@ fn main() {
 
       <h3>Disabled button tooltip</h3>
       <p>
-        Use the <code>dtt</code> attribute to show a tooltip when a button is
-        disabled. This is useful for explaining why a button is inactive.
-      </p>
-      <p>
         <button disabled dtt="This button is disabled">
           Disabled with tooltip
         </button>
@@ -742,10 +618,6 @@ fn main() {
 
       <h3>Anchor link tooltip</h3>
       <p>
-        Use the <code>att</code> attribute on an anchor to show its
-        <code>href</code> as a tooltip on hover.
-      </p>
-      <p>
         <a att href="https://functora.github.io/functora-css.html"
           >Anchor tooltip</a
         >
@@ -755,11 +627,6 @@ fn main() {
 
     <section id="cards">
       <h2>Cards</h2>
-      <p>
-        Cards use the <code>&lt;card&gt;</code> element. They have a subtle
-        shadow and stack vertically on mobile. Images inside cards can use
-        negative margins to bleed to the edges.
-      </p>
       <card>
         <h3>Card title</h3>
         <p>
@@ -782,25 +649,13 @@ fn main() {
 
     <section id="utility">
       <h2>Utility</h2>
-      <p>
-        functora-css provides several utility attributes for quick styling
-        without classes. These can be applied to any HTML element.
-      </p>
 
       <h3>Bypass class exclusion</h3>
-      <p>
-        By default, functora-css only styles elements without a
-        <code>class</code> attribute (using <code>:not([class])</code>). Add
-        <code>xx</code> to an element with a class to restore functora-css
-        styling. This is useful when integrating with other frameworks or
-        component libraries.
-      </p>
       <pre><code>&lt;div class="my-component" xx&gt;
   &lt;!-- styled by both functora-css and .my-component --&gt;
 &lt;/div&gt;</code></pre>
 
       <h3>Full width</h3>
-      <p>Sets <code>width: 100%</code> on the element. Add <code>full</code> to any element.</p>
       <p>
         <button full>Full width button</button>
       </p>
@@ -808,27 +663,15 @@ fn main() {
 
       <h3>Full width on mobile</h3>
       <p>
-        Sets <code>width: 100%</code> at mobile viewport sizes only. Add <code>m-full</code> to any
-        element. The element retains its natural size on desktop.
-      </p>
-      <p>
         <button m-full>Full on mobile</button>
       </p>
       <pre><code>&lt;button m-full&gt;Full on mobile&lt;/button&gt;</code></pre>
 
       <h3>Hide element</h3>
-      <p>
-        Hides the element from the page. Add <code>hidden</code> to hide any element. The element below has
-        <code>hidden</code> and is not visible:
-      </p>
       <p hidden>You cannot see this text.</p>
       <pre><code>&lt;p hidden&gt;You cannot see this text.&lt;/p&gt;</code></pre>
 
       <h3>Font families</h3>
-      <p>
-        Override the default font family with <code>serif</code>,
-        <code>sans</code>, or <code>mono</code>.
-      </p>
       <p serif>Serif font - <code>serif</code></p>
       <p sans>Sans-serif font - <code>sans</code></p>
       <p mono>Monospace font - <code>mono</code></p>
@@ -837,11 +680,6 @@ fn main() {
 &lt;p mono&gt;Monospace font&lt;/p&gt;</code></pre>
 
       <h3>Font sizes</h3>
-      <p>
-        Adjust font size with the <code>fs</code> attribute. Available values:
-        <code>xs</code>, <code>s</code>, <code>m</code>, <code>l</code>,
-        <code>xl</code>.
-      </p>
       <p fs="xl">Extra large - <code>fs="xl"</code></p>
       <p fs="l">Large - <code>fs="l"</code></p>
       <p fs="m">Medium - <code>fs="m"</code></p>
@@ -854,37 +692,19 @@ fn main() {
 &lt;p fs="xs"&gt;Extra small&lt;/p&gt;</code></pre>
 
       <h3>Padding top</h3>
-      <p>
-        Add top padding with the <code>pt</code> attribute. Available values:
-        <code>0</code>, <code>2</code> (2rem), <code>4</code> (4rem),
-        <code>8</code> (8rem).
-      </p>
       <p pt="2">Top padding 2rem - <code>pt="2"</code></p>
       <pre><code>&lt;p pt="2"&gt;Top padding 2rem&lt;/p&gt;
 &lt;p pt="4"&gt;Top padding 4rem&lt;/p&gt;</code></pre>
 
       <h3>Padding bottom</h3>
-      <p>
-        Add bottom padding with the <code>pb</code> attribute. Same values as
-        <code>pt</code>.
-      </p>
       <p pb="2">Bottom padding 2rem - <code>pb="2"</code></p>
       <pre><code>&lt;p pb="2"&gt;Bottom padding 2rem&lt;/p&gt;</code></pre>
 
       <h3>Padding all sides</h3>
-      <p>
-        Add padding on all sides with the <code>pa</code> attribute. Available
-        values: <code>0</code>, <code>2</code> (2rem).
-      </p>
       <p pa="2">All padding 2rem - <code>pa="2"</code></p>
       <pre><code>&lt;p pa="2"&gt;All padding 2rem&lt;/p&gt;</code></pre>
 
       <h3>Text alignment</h3>
-      <p>
-        Align text with the <code>txt</code> attribute. Available values:
-        <code>l</code> (left), <code>c</code> (center), <code>r</code> (right),
-        <code>j</code> (justify).
-      </p>
       <p txt="l">Left aligned - <code>txt="l"</code></p>
       <p txt="c">Center aligned - <code>txt="c"</code></p>
       <p txt="r">Right aligned - <code>txt="r"</code></p>
@@ -901,10 +721,6 @@ fn main() {
 
     <section id="footer">
       <h2>Footer</h2>
-      <p>
-        The <code>&lt;footer&gt;</code> element is styled with centered, wrapped
-        content and a small font size. Place it after all sections.
-      </p>
       <pre><code>&lt;footer&gt;
   &lt;p&gt;© 2026 Your Name.&lt;/p&gt;
 &lt;/footer&gt;</code></pre>

@@ -195,6 +195,7 @@
                 [ -f "$AAB" ] || continue
 
                 NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
+                [[ "$NAME" != *-signed ]] || continue
                 SIG="$DIR/$NAME-signed.aab"
                 APK="$DIR/$NAME.apk"
                 TMP="$DIR/$NAME.apks"

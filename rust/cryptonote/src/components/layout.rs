@@ -32,7 +32,10 @@ pub fn Layout() -> Element {
                     NavLink {
                         nav: nav_signal,
                         href: Screen::Home.to_route(None).to_string(),
-                        onclick: move |_| tst.set(TemporaryState::default()),
+                        onclick: move |_| {
+                            collapse_nav();
+                            tst.set(TemporaryState::default());
+                        },
                         "🔐 Cryptonote"
                     }
                     span { id: "functora-nav-open" }
@@ -42,7 +45,9 @@ pub fn Layout() -> Element {
                     for lang in SUPPORTED_LANGUAGES {
                         li {
                             a {
-                                onclick: move |_| {
+                                onclick: move |evt| {
+                                    evt.prevent_default();
+                                    collapse_nav();
                                     pst.language().set(*lang);
                                 },
                                 "{language_label(*lang)}"
@@ -53,18 +58,21 @@ pub fn Layout() -> Element {
                         NavLink {
                             nav: nav_signal,
                             href: Screen::About.to_route(None).to_string(),
+                            onclick: move |_| collapse_nav(),
                             "❓{Msg::AboutTitle.render(lang)}"
                         }
                     }
                     li {
                         a {
-                            onclick: move |_| {
+                            onclick: move |evt| {
+                                evt.prevent_default();
+                                collapse_nav();
                                 pst.theme().with_mut(|t| *t = t.next());
                             },
                             {
                                 match pst.theme()() {
-                                    Theme::Light => "🌝 ",
-                                    Theme::Dark => "🌚 ",
+                                    Theme::Light => "☀️ ",
+                                    Theme::Dark => "🌙 ",
                                 }
                             }
                             {Msg::Theme.render(lang)}
@@ -115,4 +123,8 @@ pub fn Layout() -> Element {
             }
         }
     }
+}
+
+fn collapse_nav() {
+    _ = document::eval("document.getElementById('functora-nav-toggle').checked = false");
 }

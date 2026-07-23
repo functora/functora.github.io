@@ -1916,6 +1916,7 @@ dependencies = [
  "dioxus-free-icons",
  "either",
  "functora",
+ "functora-tagged",
  "isolang",
  "jni",
  "rxing",
@@ -1926,6 +1927,17 @@ dependencies = [
  "thiserror 2.0.18",
  "tracing",
  "web-sys",
+]
+
+[[package]]
+name = "functora-tagged"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eaf423df2bebe513d08ba7ad96288f63777eb6e6ead2aa560db0b92e30d261e1"
+dependencies = [
+ "derive_more 2.1.0",
+ "num-traits",
+ "tap",
 ]
 
 [[package]]

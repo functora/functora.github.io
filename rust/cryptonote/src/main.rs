@@ -13,37 +13,19 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let tst = use_store(TemporaryState::default);
-    let pst = use_storage(APP_STORAGE_KEY, PersistentState::default);
-
-    use_context_provider(|| tst);
-    use_context_provider(|| pst);
-
-    rsx! {
-        document::Link { rel: "icon", r#type: "image/x-icon", href: FAVICON_ICO }
-        document::Link {
-            rel: "icon",
-            r#type: "image/png",
-            sizes: "16x16",
-            href: FAVICON_16,
-        }
-        document::Link {
-            rel: "icon",
-            r#type: "image/png",
-            sizes: "32x32",
-            href: FAVICON_32,
-        }
-        document::Link {
-            rel: "apple-touch-icon",
-            sizes: "180x180",
-            href: APPLE_TOUCH_ICON,
-        }
-        document::Link { rel: "manifest", href: WEB_MANIFEST }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/functora.min.css", NO_CSS_MINIFY),
-        }
-        document::Link { rel: "stylesheet", href: asset!("/assets/app.css") }
-        Router::<Route> {}
-    }
+    functora_dioxus::app::App::<TemporaryState, PersistentState, Route>(
+        AppName::new("Cryptonote").infallible(),
+        AppStorage::new(APP_STORAGE_KEY).infallible(),
+        AppAssets {
+            favicon_ico: FAVICON_ICO,
+            favicon_16: FAVICON_16,
+            favicon_32: FAVICON_32,
+            apple_touch_icon: APPLE_TOUCH_ICON,
+            manifest: WEB_MANIFEST,
+            css: vec![
+                asset!("/assets/functora.min.css", NO_CSS_MINIFY),
+                asset!("/assets/app.css"),
+            ],
+        },
+    )
 }

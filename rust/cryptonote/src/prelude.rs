@@ -19,6 +19,7 @@ pub use functora_dioxus::ffi::Theme;
 pub use functora_dioxus::storage::{use_storage, PersistentSignal};
 pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Align, Nav, Par};
+pub use functora_dioxus::{AppAssets, AppName, AppStorage, InfallibleInto};
 
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_STORAGE_KEY: &str = concat!("cryptonote-", env!("CARGO_PKG_VERSION"), "-cfg");

@@ -2,8 +2,8 @@ pub use derive_more::Display;
 pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaste, FaPenToSquare,
-    FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser,
+    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaste,
+    FaPenToSquare, FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;
@@ -25,7 +25,10 @@ pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_ID: &str = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION"));
 pub const BETA_TEST_URL: &str = "https://groups.google.com/g/functora";
-pub const GOOGLE_PLAY_URL: &str = "https://play.google.com/store/apps/details?id=com.functora.cryptonote";
+pub const GOOGLE_PLAY_URL: &str = concat!(
+    "https://play.google.com/store/apps/details?id=com.functora.",
+    env!("CARGO_PKG_NAME")
+);
 pub const APK_URL: &str = concat!(
     "https://github.com/functora/functora.github.io/releases/tag/",
     env!("CARGO_PKG_NAME"),
@@ -39,4 +42,7 @@ pub const WEB_APP_URL: &str = concat!(
     env!("CARGO_PKG_VERSION")
 );
 pub const FUNCTORA_URL: &str = "https://functora.github.io/";
-pub const SOURCE_CODE_URL: &str = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote";
+pub const SOURCE_CODE_URL: &str = concat!(
+    "https://github.com/functora/functora.github.io/tree/master/rust/",
+    env!("CARGO_PKG_NAME")
+);

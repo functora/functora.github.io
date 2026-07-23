@@ -19,16 +19,24 @@ pub use functora_dioxus::ffi::Theme;
 pub use functora_dioxus::storage::{use_storage, PersistentSignal};
 pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Align, Nav, Par};
-pub use functora_dioxus::{AppAssets, AppName, AppStorage, InfallibleInto};
+pub use functora_dioxus::{AppAssets, AppId, AppName, InfallibleInto};
 
+pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const APP_STORAGE_KEY: &str = concat!("cryptonote-", env!("CARGO_PKG_VERSION"), "-cfg");
+pub const APP_ID: &str = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION"));
 pub const BETA_TEST_URL: &str = "https://groups.google.com/g/functora";
 pub const GOOGLE_PLAY_URL: &str = "https://play.google.com/store/apps/details?id=com.functora.cryptonote";
 pub const APK_URL: &str = concat!(
-    "https://github.com/functora/functora.github.io/releases/tag/cryptonote-v",
+    "https://github.com/functora/functora.github.io/releases/tag/",
+    env!("CARGO_PKG_NAME"),
+    "-v",
     env!("CARGO_PKG_VERSION")
 );
-pub const WEB_APP_URL: &str = concat!("https://functora.github.io/apps/cryptonote/", env!("CARGO_PKG_VERSION"));
+pub const WEB_APP_URL: &str = concat!(
+    "https://functora.github.io/apps/",
+    env!("CARGO_PKG_NAME"),
+    "/",
+    env!("CARGO_PKG_VERSION")
+);
 pub const FUNCTORA_URL: &str = "https://functora.github.io/";
 pub const SOURCE_CODE_URL: &str = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote";

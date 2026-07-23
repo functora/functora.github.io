@@ -2,14 +2,14 @@ use crate::storage::use_storage;
 use dioxus::prelude::*;
 pub use functora_tagged::InfallibleInto;
 use functora_tagged::{FCrude, Tagged};
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 pub enum DAppName {}
 pub type AppName = Tagged<&'static str, DAppName, FCrude>;
 
-pub enum DAppStorage {}
-pub type AppStorage = Tagged<&'static str, DAppStorage, FCrude>;
+pub enum DAppId {}
+pub type AppId = Tagged<&'static str, DAppId, FCrude>;
 
 pub struct AppAssets {
     pub icon_ico: Asset,
@@ -45,14 +45,14 @@ fn manifest(name: &str, icon_192_png: &Asset, icon_512_png: &Asset) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn App<T, P, R>(name: AppName, storage: AppStorage, assets: AppAssets) -> Element
+pub fn App<T, P, R>(id: AppId, name: AppName, assets: AppAssets) -> Element
 where
     T: Default + 'static,
     P: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + Default + 'static,
     R: Routable + Default + PartialEq + 'static,
 {
     let tst = use_store(T::default);
-    let pst = use_storage(*storage, P::default);
+    let pst = use_storage(*id, P::default);
     let _ = use_context_provider(|| tst);
     let _ = use_context_provider(|| pst);
 

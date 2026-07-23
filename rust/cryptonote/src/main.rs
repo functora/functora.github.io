@@ -15,8 +15,8 @@ fn main() {
 #[component]
 fn App() -> Element {
     functora_dioxus::app::App::<TemporaryState, PersistentState, Route>(
-        AppName::new("Cryptonote").infallible(),
-        AppStorage::new(APP_STORAGE_KEY).infallible(),
+        AppId::new(APP_ID).infallible(),
+        AppName::new(APP_NAME).infallible(),
         AppAssets {
             icon_ico: FAVICON_ICO,
             icon_16_png: FAVICON_16,

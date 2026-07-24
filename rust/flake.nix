@@ -78,6 +78,10 @@
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
             GRADLE="./target/dx/${app}/release/android/app/app/build.gradle.kts"
             sed -i "s/versionCode = 1/versionCode = $VC/" "$GRADLE"
+            KOTLIN="./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt"
+            if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt ]; then
+              cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt "$KOTLIN"
+            fi
             rm -f "$RES"/mipmap-*/ic_launcher.webp \
               "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
               "$RES"/drawable/ic_launcher_background.xml \
@@ -87,6 +91,8 @@
             cp assets/favicon/mipmap-xhdpi.png "$RES/mipmap-xhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
+            MANIFEST="./target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
+            sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/cryptonote/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
@@ -175,6 +181,40 @@
             magick "$INPUT" -resize 96x96 "$DIR/mipmap-xhdpi.png"
             magick "$INPUT" -resize 144x144 "$DIR/mipmap-xxhdpi.png"
             magick "$INPUT" -resize 192x192 "$DIR/mipmap-xxxhdpi.png"
+          '';
+        };
+        release-assetlinks-json = pkgs.writeShellApplication {
+          name = "release-assetlinks-json";
+          runtimeInputs = with pkgs; [coreutils gnugrep gnused jdk];
+          text = ''
+            KEYSTORE="$HOME/keys/app-key.jks"
+            DIR="''${1:-../pub/functora-hakyll}"
+
+            if [ ! -f "$KEYSTORE" ]; then
+              echo "Keystore not found at $KEYSTORE. Run android-keygen first."
+              exit 1
+            fi
+            IFS= read -r -s -p "Keystore password: " KS_PASS
+            echo
+            FP="$(keytool -list -v -keystore "$KEYSTORE" -alias app-key -storepass "$KS_PASS" 2>/dev/null | grep "SHA256:" | awk '{print $NF}')"
+            if [ -z "$FP" ]; then
+              echo "Failed to extract SHA256 fingerprint"
+              exit 1
+            fi
+            mkdir -p "$DIR/.well-known"
+            cat > "$DIR/.well-known/assetlinks.json" <<EOF
+      [
+        {
+          "relation": ["delegate_permission/common.handle_all_urls"],
+          "target": {
+            "namespace": "android_app",
+            "package_name": "com.functora.cryptonote",
+            "sha256_cert_fingerprints": ["$FP"]
+          }
+        }
+      ]
+      EOF
+            echo "Wrote $DIR/.well-known/assetlinks.json"
           '';
         };
         mkApk = app:
@@ -277,6 +317,7 @@
               jdk
               android-icons
               android-keygen
+              release-assetlinks-json
               # fonts
               noto-fonts
               noto-fonts-cjk-sans

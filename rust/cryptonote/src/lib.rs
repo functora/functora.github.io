@@ -1,5 +1,6 @@
 pub mod components;
 pub mod crypto;
+pub mod deep_link;
 pub mod encoding;
 pub mod error;
 pub mod hooks;
@@ -11,6 +12,7 @@ pub mod storage;
 
 pub use components::*;
 pub use crypto::*;
+pub use deep_link::*;
 pub use encoding::*;
 pub use error::*;
 pub use hooks::*;

@@ -36,6 +36,9 @@ main = withUtf8 . hakyllWith cfg $ do
   match ".well-known/**" $ do
     route idRoute
     compile copyFileCompiler
+  match ".nojekyll" $ do
+    route idRoute
+    compile copyFileCompiler
   create ["functora-css.html"] $ do
     route idRoute
     compile $
@@ -187,7 +190,7 @@ cfg :: Configuration
 cfg =
   defaultConfiguration
     { destinationDirectory = "docs"
-    , ignoreFile = \f -> f /= ".well-known" && "." `isPrefixOf` takeFileName f
+    , ignoreFile = \f -> not (f `elem` [".well-known", ".nojekyll"]) && "." `isPrefixOf` takeFileName f
     }
 
 makePairs :: [a] -> [(a, a)]

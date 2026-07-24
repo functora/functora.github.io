@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad (forM_, replicateM)
+import Data.List (isPrefixOf)
 import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.String (fromString)
@@ -186,6 +187,7 @@ cfg :: Configuration
 cfg =
   defaultConfiguration
     { destinationDirectory = "docs"
+    , ignoreFile = \f -> f /= ".well-known" && "." `isPrefixOf` takeFileName f
     }
 
 makePairs :: [a] -> [(a, a)]

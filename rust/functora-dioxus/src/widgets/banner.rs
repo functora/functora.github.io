@@ -1,7 +1,6 @@
 use crate::i18n::{I18N, Language};
 use crate::widgets::par::Align;
 use crate::widgets::pre::Pre;
-use crate::widgets::quote::Quote;
 use dioxus::prelude::*;
 
 #[component]
@@ -13,7 +12,7 @@ where
     message.with(|m| match m {
         Some(msg) => rsx! {
             Pre { align,
-                Quote { "{msg.render(lang)}" }
+                code { "{msg.render(lang)}" }
             }
         },
         None => rsx! {},

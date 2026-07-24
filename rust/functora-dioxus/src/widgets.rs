@@ -11,7 +11,6 @@ pub mod nav;
 pub mod par;
 pub mod pre;
 pub mod qr_scanner;
-pub mod quote;
 pub mod static_page;
 
 pub use banner::*;
@@ -23,7 +22,6 @@ pub use nav::*;
 pub use par::*;
 pub use pre::*;
 pub use qr_scanner::*;
-pub use quote::*;
 pub use static_page::*;
 
 pub use crate::nav::*;

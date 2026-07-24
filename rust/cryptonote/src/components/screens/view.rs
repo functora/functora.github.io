@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn View(note: Option<String>) -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let tst = use_context::<Store<TemporaryState>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
     let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
@@ -68,7 +68,7 @@ pub fn View(note: Option<String>) -> Element {
             Breadcrumb { title: Msg::EncryptedNote }
             section {
                 Pre {
-                    Quote { "{Msg::EncryptedNoteDesc.render(lang)}" }
+                    code { "{Msg::EncryptedNoteDesc.render(lang)}" }
                 }
 
                 label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
@@ -115,6 +115,7 @@ pub fn View(note: Option<String>) -> Element {
                     Button {
                         icon: Some(FaTrash),
                         onclick: move |_| {
+                            tst.set(TemporaryState::default());
                             tst.action().set(ActionMode::Create);
                             tst.content().set(String::new());
                             tst.password().set(String::new());

@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let tst = use_context::<Store<TemporaryState>>();
+    let mut tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
 
     let mut message = use_message();
@@ -42,6 +42,7 @@ pub fn Home() -> Element {
 
     let reset_ctx = move |_| {
         message.set(None);
+        tst.set(TemporaryState::default());
         tst.action().set(ActionMode::Create);
         tst.content().set(String::new());
         tst.password().set(String::new());

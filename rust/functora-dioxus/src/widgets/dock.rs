@@ -20,6 +20,7 @@ pub fn GenDock<
     #[props(default)] message: Option<S>,
     #[props(default)] back_button_i18n: Option<B>,
     #[props(default)] back_button_icon: Option<I>,
+    #[props(default)] back_button_hide: bool,
     lang: Language,
 ) -> Element {
     let has_navigated = nav.with(Nav::has_navigated);
@@ -29,7 +30,7 @@ pub fn GenDock<
             crate::widgets::Banner { message, lang, align: Some(Align::Right) }
         }
         footer {
-            if has_navigated {
+            if has_navigated && !back_button_hide {
                 Button {
                     icon: back_button_icon,
                     onclick: move |_| {
@@ -56,6 +57,7 @@ pub fn Dock<
     #[props(default)] message: Option<S>,
     #[props(default = Some(Msg::Back))] back_button_i18n: Option<Msg>,
     #[props(default = Some(FaArrowLeft))] back_button_icon: Option<FaArrowLeft>,
+    #[props(default)] back_button_hide: bool,
     lang: Language,
 ) -> Element {
     GenDock(GenDockProps {
@@ -64,6 +66,7 @@ pub fn Dock<
         message,
         back_button_i18n,
         back_button_icon,
+        back_button_hide,
         lang,
     })
 }

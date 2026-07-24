@@ -6,7 +6,12 @@ const XMR_ADDRESS: &str =
     "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG";
 
 #[component]
-fn CryptoDonateBlock(label: &'static str, address: &'static str, qr: Option<String>) -> Element {
+fn CryptoDonateBlock(
+    label: &'static str,
+    address: &'static str,
+    qr: Option<String>,
+    #[props(default)] back_button_hide: bool,
+) -> Element {
     let lang = use_lang();
     let message = use_message();
 
@@ -27,7 +32,7 @@ fn CryptoDonateBlock(label: &'static str, address: &'static str, qr: Option<Stri
                 },
             }
 
-            Dock { message,
+            Dock { message, back_button_hide,
                 Button {
                     icon: Some(FaCopy),
                     primary: true,
@@ -59,6 +64,7 @@ pub fn Donate() -> Element {
             label: "BTC - Bitcoin",
             address: BTC_ADDRESS,
             qr: generate_qr_code(BTC_ADDRESS).ok(),
+            back_button_hide: true,
         }
 
         CryptoDonateBlock {

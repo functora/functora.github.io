@@ -113,20 +113,6 @@ pub fn View(note: Option<String>) -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaTrash),
-                        onclick: move |_| {
-                            tst.set(TemporaryState::default());
-                            tst.action().set(ActionMode::Create);
-                            tst.content().set(String::new());
-                            tst.password().set(String::new());
-                            tst.cipher().set(Some(CipherType::Aes256Gcm));
-                            tst.home().url_input().set(String::new());
-                            nav.write().push(Screen::Home.to_route(None));
-                        },
-                        i18n: Some(Msg::CreateNewNote),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaPenToSquare),
                         onclick: move |_| {
                             tst.action().set(ActionMode::Create);
@@ -140,6 +126,20 @@ pub fn View(note: Option<String>) -> Element {
                         primary: true,
                         onclick: move |_| write_clipboard(content.clone(), message),
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: move |_| {
+                            tst.set(TemporaryState::default());
+                            tst.action().set(ActionMode::Create);
+                            tst.content().set(String::new());
+                            tst.password().set(String::new());
+                            tst.cipher().set(Some(CipherType::Aes256Gcm));
+                            tst.home().url_input().set(String::new());
+                            nav.write().push(Screen::Home.to_route(None));
+                        },
+                        i18n: Some(Msg::CreateNewNote),
                         lang,
                     }
                 }

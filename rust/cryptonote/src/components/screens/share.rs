@@ -81,20 +81,20 @@ pub fn Share() -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaEye),
-                        onclick: move |_| {
-                            nav.write().push(Screen::View.to_route(None));
-                        },
-                        i18n: Some(Msg::ViewButton),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaCopy),
                         primary: true,
                         onclick: move |_| {
                             write_clipboard(url(), message);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaEye),
+                        onclick: move |_| {
+                            nav.write().push(Screen::View.to_route(None));
+                        },
+                        i18n: Some(Msg::ViewButton),
                         lang,
                     }
                 }

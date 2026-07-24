@@ -1,5 +1,5 @@
 use crate::dioxus_elements;
-use crate::i18n::{Language, I18N};
+use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
 use dioxus::prelude::*;
 

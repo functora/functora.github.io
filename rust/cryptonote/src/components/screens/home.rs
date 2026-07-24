@@ -139,18 +139,6 @@ pub fn Home() -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaTrash),
-                        onclick: reset_ctx,
-                        i18n: Some(Msg::CreateNewNote),
-                        lang,
-                    }
-                    Button {
-                        icon: Some(FaEye),
-                        onclick: move |_| nav.write().push(Screen::View.to_route(None)),
-                        i18n: Some(Msg::ViewButton),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaPaste),
                         onclick: move |_| read_clipboard(move |text| tst.content().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
@@ -161,6 +149,18 @@ pub fn Home() -> Element {
                         primary: true,
                         onclick: move |_| generate_note(),
                         i18n: Some(Msg::GenerateButton),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaEye),
+                        onclick: move |_| nav.write().push(Screen::View.to_route(None)),
+                        i18n: Some(Msg::ViewButton),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: reset_ctx,
+                        i18n: Some(Msg::CreateNewNote),
                         lang,
                     }
                 }
@@ -177,12 +177,6 @@ pub fn Home() -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaTrash),
-                        onclick: reset_ctx,
-                        i18n: Some(Msg::CreateNewNote),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaPaste),
                         onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
@@ -193,6 +187,12 @@ pub fn Home() -> Element {
                         primary: true,
                         onclick: open_url,
                         i18n: Some(Msg::OpenButton),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: reset_ctx,
+                        i18n: Some(Msg::CreateNewNote),
                         lang,
                     }
                 }

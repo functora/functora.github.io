@@ -8,15 +8,17 @@ pub fn About() -> Element {
     rsx! {
         Breadcrumb { title: Msg::AboutTitle }
         section {
-            Pre { "{Msg::AboutText.render(lang)}" }
-            p {
-                "{Msg::AboutAndroidBeta1.render(lang)} "
-                ExtLink { href: BETA_TEST_URL, "{Msg::AboutAndroidBetaLink1.render(lang)}" }
-                " {Msg::AboutAndroidBeta2.render(lang)} "
-                ExtLink { href: GOOGLE_PLAY_URL, "{Msg::AboutAndroidBetaLink2.render(lang)}" }
-                "{Msg::AboutAndroidBeta3.render(lang)} "
-                ExtLink { href: APK_URL, "{Msg::AboutAndroidBetaLink3.render(lang)}" }
-                " {Msg::AboutAndroidBeta4.render(lang)}"
+            p { "{Msg::AboutText.render(lang)}" }
+            Pre {
+                code {
+                    "{Msg::AboutAndroidBeta1.render(lang)} "
+                    ExtLink { href: BETA_TEST_URL, "{Msg::AboutAndroidBetaLink1.render(lang)}" }
+                    " {Msg::AboutAndroidBeta2.render(lang)} "
+                    ExtLink { href: GOOGLE_PLAY_URL, "{Msg::AboutAndroidBetaLink2.render(lang)}" }
+                    "{Msg::AboutAndroidBeta3.render(lang)} "
+                    ExtLink { href: APK_URL, "{Msg::AboutAndroidBetaLink3.render(lang)}" }
+                    " {Msg::AboutAndroidBeta4.render(lang)}"
+                }
             }
             Dock {
                 ExtLink { href: BETA_TEST_URL, button: true, primary: true,

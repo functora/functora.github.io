@@ -1,6 +1,6 @@
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
-use crate::widgets::{Breadcrumb, Pre};
+use crate::widgets::Breadcrumb;
 use dioxus::prelude::*;
 
 #[component]
@@ -27,7 +27,7 @@ pub fn GenStaticPage<
             lang,
         }
         section {
-            Pre { "{content.render(lang)}" }
+            p { "{content.render(lang)}" }
             {children}
         }
     }

@@ -92,7 +92,7 @@
             cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
             MANIFEST="./target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
-            sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/cryptonote/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
+            sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/${app}/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
@@ -189,6 +189,12 @@
           text = ''
             KEYSTORE="$HOME/keys/app-key.jks"
             DIR="''${1:-../pub/functora-hakyll}"
+            shift 2>/dev/null || true
+
+            APPS=("$@")
+            if [ ''${#APPS[@]} -eq 0 ]; then
+              APPS=(cryptonote)
+            fi
 
             if [ ! -f "$KEYSTORE" ]; then
               echo "Keystore not found at $KEYSTORE. Run android-keygen first."
@@ -202,18 +208,14 @@
               exit 1
             fi
             mkdir -p "$DIR/.well-known"
-            cat > "$DIR/.well-known/assetlinks.json" <<EOF
-      [
-        {
-          "relation": ["delegate_permission/common.handle_all_urls"],
-          "target": {
-            "namespace": "android_app",
-            "package_name": "com.functora.cryptonote",
-            "sha256_cert_fingerprints": ["$FP"]
-          }
-        }
-      ]
-      EOF
+            {
+              printf '[\n'
+              for i in "''${!APPS[@]}"; do
+                [ "$i" -gt 0 ] && printf ',\n'
+                printf '  {\n    "relation": ["delegate_permission/common.handle_all_urls"],\n    "target": {\n      "namespace": "android_app",\n      "package_name": "com.functora.%s",\n      "sha256_cert_fingerprints": ["%s"]\n    }\n  }\n' "''${APPS[$i]}" "$FP"
+              done
+              printf ']\n'
+            } > "$DIR/.well-known/assetlinks.json"
             echo "Wrote $DIR/.well-known/assetlinks.json"
           '';
         };

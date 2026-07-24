@@ -1,7 +1,7 @@
 use crate::Msg;
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
-use crate::widgets::{Align, Button, Par};
+use crate::widgets::{Align, Button};
 use dioxus::prelude::*;
 use dioxus_free_icons::IconShape;
 use dioxus_free_icons::icons::fa_solid_icons::FaArrowLeft;
@@ -25,10 +25,8 @@ pub fn GenDock<
     let has_navigated = nav.with(Nav::has_navigated);
 
     rsx! {
-        if let Some(message) = message {
-            Par { align: Align::Right,
-                crate::widgets::Banner { message, lang }
-            }
+        if let Some(message) = message.filter(|m| m.with(Option::is_some)) {
+            crate::widgets::Banner { message, lang, align: Some(Align::Right) }
         }
         footer {
             if has_navigated {

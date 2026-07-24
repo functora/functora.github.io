@@ -32,6 +32,9 @@ main = withUtf8 . hakyllWith cfg $ do
   match "eval.html" $ do
     route idRoute
     compile copyFileCompiler
+  match ".well-known/**" $ do
+    route idRoute
+    compile copyFileCompiler
   create ["functora-css.html"] $ do
     route idRoute
     compile $

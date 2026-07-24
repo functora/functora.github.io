@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.functora.cryptonote",
+      "sha256_cert_fingerprints": ["42:E8:7D:3F:DB:1C:22:17:23:91:D7:48:42:6D:F0:AC:9A:E6:9C:A6:4A:2E:29:1F:1A:F3:41:EB:F3:08:12:4E"]
+    }
+  }
+]

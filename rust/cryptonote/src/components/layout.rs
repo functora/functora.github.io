@@ -8,7 +8,23 @@ pub fn Layout() -> Element {
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
     let nav = use_nav::<Route, _>(idx.into());
+    let dl_nav = nav.clone();
     let nav_signal = use_context_provider(|| Signal::new(nav));
+
+    {
+        let nav = dl_nav;
+        use_effect(move || {
+            let mut nav = nav.clone();
+            spawn(async move {
+                if let Some(route) = crate::deep_link::check_intent()
+                    .await
+                    .and_then(|url| crate::deep_link::url_to_route(&url))
+                {
+                    nav.push_route(&route);
+                }
+            });
+        });
+    }
 
     use_effect(move || {
         let _ = idx();

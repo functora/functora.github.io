@@ -2,10 +2,6 @@ pub(crate) fn bool_attr(val: bool) -> Option<&'static str> {
     val.then_some("")
 }
 
-pub(crate) fn overflow_style(overflow: bool) -> Option<&'static str> {
-    (!overflow).then_some("pre-wrap")
-}
-
 pub mod banner;
 pub mod breadcrumb;
 pub mod button;

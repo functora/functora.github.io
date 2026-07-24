@@ -103,12 +103,10 @@ pub fn View(note: Option<String>) -> Element {
         } else if let Some(content) = tst.view().note_content()() {
             Breadcrumb { title: Msg::YourNoteTitle }
             section {
-                article {
-                    div {
-                        overflow_wrap: "anywhere",
-                        word_break: "break-word",
-                        dangerous_inner_html: "{rendered().unwrap_or_default()}",
-                    }
+                card {
+                    overflow_wrap: "anywhere",
+                    word_break: "break-word",
+                    dangerous_inner_html: "{rendered().unwrap_or_default()}",
                 }
 
                 Dock { message,

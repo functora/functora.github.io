@@ -1,24 +1,29 @@
 package dev.dioxus.main
 
 import android.content.Intent
-import android.net.Uri
-import android.webkit.WebView
+import android.os.Bundle
 
 typealias BuildConfig = com.functora.cryptonote.BuildConfig
 
 class MainActivity : WryActivity() {
-    private var deepLinkWebView: WebView? = null
-
-    override fun onWebViewCreate(webView: WebView) {
-        deepLinkWebView = webView
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        handleDeepLinkIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        handleDeepLinkIntent(intent)
+    }
+
+    private fun handleDeepLinkIntent(intent: Intent) {
         if (intent.action == Intent.ACTION_VIEW) {
-            val url = intent.data?.toString() ?: return
-            val query = Uri.parse(url).encodedQuery ?: return
-            deepLinkWebView?.loadUrl("file:///android_asset/index.html?$query")
+            intent.data?.toString()?.let { handleDeepLink(it) }
         }
+    }
+
+    companion object {
+        @JvmStatic
+        private external fun handleDeepLink(url: String)
     }
 }

@@ -1,5 +1,5 @@
 use crate::dioxus_elements;
-use crate::i18n::{I18N, Language};
+use crate::i18n::{Language, I18N};
 use crate::nav::Nav;
 use dioxus::prelude::*;
 
@@ -17,16 +17,18 @@ pub fn Breadcrumb<
     lang: Language,
 ) -> Element {
     rsx! {
-        card { font_size: "larger",
-            a {
-                href: "#",
-                onclick: move |evt| {
-                    evt.prevent_default();
-                    nav.write().push(home_route.clone());
-                },
-                "{home_label.render(lang)}"
+        card { font_size: "larger", padding: 0,
+            section {
+                a {
+                    href: "#",
+                    onclick: move |evt| {
+                        evt.prevent_default();
+                        nav.write().push(home_route.clone());
+                    },
+                    "{home_label.render(lang)}"
+                }
+                " ❭ {title.render(lang)}"
             }
-            " ❭ {title.render(lang)}"
         }
     }
 }

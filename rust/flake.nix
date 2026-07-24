@@ -212,7 +212,7 @@
               printf '[\n'
               for i in "''${!APPS[@]}"; do
                 [ "$i" -gt 0 ] && printf ',\n'
-                printf '  {\n    "relation": ["delegate_permission/common.handle_all_urls"],\n    "target": {\n      "namespace": "android_app",\n      "package_name": "com.functora.%s",\n      "sha256_cert_fingerprints": ["%s"]\n    }\n  }\n' "''${APPS[$i]}" "$FP"
+                printf '  {\n    "relation": ["delegate_permission/common.handle_all_urls"],\n    "target": {\n      "namespace": "android_app",\n      "package_name": "com.functora.%s",\n      "sha256_cert_fingerprints": ["%s", "6F:FA:9F:54:93:B0:CA:76:D5:0E:0A:5B:41:84:3A:7B:6E:F4:25:8B:AB:8C:23:13:98:76:D9:E8:AC:06:F6:2D"]\n    }\n  }\n' "''${APPS[$i]}" "$FP"
               done
               printf ']\n'
             } > "$DIR/.well-known/assetlinks.json"

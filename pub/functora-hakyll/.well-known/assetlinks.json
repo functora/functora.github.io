@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.functora.cryptonote",
-      "sha256_cert_fingerprints": ["42:E8:7D:3F:DB:1C:22:17:23:91:D7:48:42:6D:F0:AC:9A:E6:9C:A6:4A:2E:29:1F:1A:F3:41:EB:F3:08:12:4E"]
+      "sha256_cert_fingerprints": ["42:E8:7D:3F:DB:1C:22:17:23:91:D7:48:42:6D:F0:AC:9A:E6:9C:A6:4A:2E:29:1F:1A:F3:41:EB:F3:08:12:4E", "6F:FA:9F:54:93:B0:CA:76:D5:0E:0A:5B:41:84:3A:7B:6E:F4:25:8B:AB:8C:23:13:98:76:D9:E8:AC:06:F6:2D"]
     }
   }
 ]

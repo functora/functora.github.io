@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn View(note: Option<String>) -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut tst = use_context::<Store<TemporaryState>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
     let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
@@ -115,7 +115,11 @@ pub fn View(note: Option<String>) -> Element {
                     Button {
                         icon: Some(FaTrash),
                         onclick: move |_| {
-                            tst.set(TemporaryState::default());
+                            tst.action().set(ActionMode::Create);
+                            tst.content().set(String::new());
+                            tst.password().set(String::new());
+                            tst.cipher().set(Some(CipherType::Aes256Gcm));
+                            tst.home().url_input().set(String::new());
                             nav.write().push(Screen::Home.to_route(None));
                         },
                         i18n: Some(Msg::CreateNewNote),

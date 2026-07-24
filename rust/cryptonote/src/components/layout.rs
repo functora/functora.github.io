@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn Layout() -> Element {
     let pst = use_context::<PersistentSignal<PersistentState>>();
-    let mut tst = use_context::<Store<TemporaryState>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
     let nav = use_nav::<Route, _>(idx.into());
@@ -50,7 +50,11 @@ pub fn Layout() -> Element {
                         href: Screen::Home.to_route(None).to_string(),
                         onclick: move |_| {
                             collapse_nav();
-                            tst.set(TemporaryState::default());
+                            tst.action().set(ActionMode::Create);
+                            tst.content().set(String::new());
+                            tst.password().set(String::new());
+                            tst.cipher().set(Some(CipherType::Aes256Gcm));
+                            tst.home().url_input().set(String::new());
                         },
                         "🔐 Cryptonote"
                     }

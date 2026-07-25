@@ -21,7 +21,7 @@ pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Align, Nav, Par};
 pub use functora_dioxus::{AppAssets, AppId, AppName, InfallibleInto};
 
-pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
+pub const APP_NAME: &str = "Cryptonote";
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_ID: &str = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION"));
 pub const BETA_TEST_URL: &str = "https://groups.google.com/g/functora";

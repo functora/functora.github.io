@@ -5,11 +5,11 @@ use functora_tagged::{FCrude, Tagged};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-pub enum DAppName {}
-pub type AppName = Tagged<&'static str, DAppName, FCrude>;
-
 pub enum DAppId {}
 pub type AppId = Tagged<&'static str, DAppId, FCrude>;
+
+pub enum DAppName {}
+pub type AppName = Tagged<&'static str, DAppName, FCrude>;
 
 pub struct AppAssets {
     pub icon_ico: Asset,

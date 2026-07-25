@@ -97,7 +97,7 @@
 
 /* System dark mode, gated so manual overrides win */
 @media (prefers-color-scheme: dark) {
-    :root:not([functora-theme-dark]):not(:has(#functora-theme-dark)) {
+    :root:not([functora-theme-dark]):not([functora-theme-light]):not(:has(#functora-theme-dark)) {
         .dark-theme();
     }
 }
@@ -106,6 +106,11 @@
 [functora-theme-dark],
 html:has(#functora-theme-dark:checked) {
     .dark-theme();
+}
+
+/* Forced light theme: attribute */
+[functora-theme-light] {
+    color-scheme: light;
 }
 
 /* Repaint trigger for buggy browsers */
@@ -117,8 +122,10 @@ html:has(#functora-theme-dark:checked) {
 html {
     &[functora-theme-dark] body,
     &[functora-theme-dark] nav,
-    &:not([functora-theme-dark]) body,
-    &:not([functora-theme-dark]) nav,
+    &[functora-theme-light] body,
+    &[functora-theme-light] nav,
+    &:not([functora-theme-dark]):not([functora-theme-light]) body,
+    &:not([functora-theme-dark]):not([functora-theme-light]) nav,
     &:has(#functora-theme-dark:checked) body,
     &:has(#functora-theme-dark:checked) nav,
     &:has(#functora-theme-dark:not(:checked)) body,
@@ -128,6 +135,7 @@ html {
 }
 
 html[functora-theme-dark],
+html[functora-theme-light],
 html:has(#functora-theme-dark) {
     will-change: color, background-color, border-color;
 }

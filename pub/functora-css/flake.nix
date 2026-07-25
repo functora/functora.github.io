@@ -32,7 +32,7 @@
         tunnel-functora-css = pkgs.writeShellApplication {
           name = "tunnel-functora-css";
           text = ''
-            ${pkgs.cloudflared}/bin/cloudflared tunnel --protocol http2 --url http://localhost:8000
+            ${pkgs.cloudflared}/bin/cloudflared tunnel --protocol http2 --edge-ip-version 4 --url http://localhost:8000
           '';
         };
         shell = {

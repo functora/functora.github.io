@@ -155,6 +155,37 @@
               )
             '';
           };
+        srWeb = app:
+          pkgs.writeShellApplication {
+            name = "serve-web-${app}";
+            runtimeInputs = with pkgs; [python3];
+            text = ''
+                  (
+                    cd "${app}"
+                    VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                    dx bundle --release --web --debug-symbols=false
+                    python3 <<PYEOF
+              import http.server, socketserver, os
+              PORT = 8000
+              BASE = "/apps/${app}/$VSN"
+              ROOT = os.path.abspath("./target/dx/${app}/release/web/public")
+
+              class Handler(http.server.SimpleHTTPRequestHandler):
+                  def __init__(self, *a, **k):
+                      super().__init__(*a, directory=ROOT, **k)
+                  def do_GET(self):
+                      if self.path.startswith(BASE):
+                          self.path = self.path[len(BASE):] or "/"
+                      else:
+                          self.send_error(404)
+                          return
+                      super().do_GET()
+
+              socketserver.TCPServer(("", PORT), Handler).serve_forever()
+              PYEOF
+                  )
+            '';
+          };
         android-keygen = pkgs.writeShellApplication {
           name = "android-keygen";
           text = ''
@@ -328,6 +359,7 @@
               dejavu_fonts
               # apps
               (mkWeb "cryptonote")
+              (srWeb "cryptonote")
               (mkApk "cryptonote")
               # tools
               pkgs.chromium
@@ -348,6 +380,12 @@
                 text = ''
                   cargo tarpaulin --all-features --engine llvm "$@" \
                     && echo "==> Coverage done!"
+                '';
+              })
+              (pkgs.writeShellApplication {
+                name = "tunnel-8000";
+                text = ''
+                  ${pkgs.cloudflared}/bin/cloudflared tunnel --protocol http2 --edge-ip-version 4 --url http://localhost:8000
                 '';
               })
             ]

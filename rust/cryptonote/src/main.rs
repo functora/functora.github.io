@@ -6,7 +6,6 @@ const FAVICON_32: Asset = asset!("/assets/favicon/favicon-32x32.png");
 const APPLE_TOUCH_ICON: Asset = asset!("/assets/favicon/apple-touch-icon.png");
 const ICON_192: Asset = asset!("/assets/favicon/android-chrome-192x192.png");
 const ICON_512: Asset = asset!("/assets/favicon/android-chrome-512x512.png");
-const NO_CSS_MINIFY: AssetOptions = AssetOptions::css().with_minify(false).into_asset_options();
 
 fn main() {
     dioxus::launch(App);
@@ -24,10 +23,7 @@ fn App() -> Element {
             apple_touch_icon_png: APPLE_TOUCH_ICON,
             icon_192_png: ICON_192,
             icon_512_png: ICON_512,
-            css: vec![
-                asset!("/assets/functora.min.css", NO_CSS_MINIFY),
-                asset!("/assets/app.css"),
-            ],
+            css: AppAssets::default().css,
         },
     )
 }

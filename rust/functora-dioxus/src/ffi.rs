@@ -37,10 +37,13 @@ pub async fn set_theme(theme: &Theme) -> Result<(), Error> {
     eval(
         theme.to_js_value(),
         r#"function(arg){
+        const el = window.document.documentElement;
         if (arg === "dark") {
-            await window.document.documentElement.setAttribute("functora-theme-dark", "");
+            el.removeAttribute("functora-theme-light");
+            el.setAttribute("functora-theme-dark", "");
         } else {
-            await window.document.documentElement.removeAttribute("functora-theme-dark");
+            el.removeAttribute("functora-theme-dark");
+            el.setAttribute("functora-theme-light", "");
         }
         return null;
         }"#,

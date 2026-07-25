@@ -148,7 +148,7 @@ pub fn Home() -> Element {
                         icon: Some(FaShareNodes),
                         primary: true,
                         onclick: move |_| generate_note(),
-                        i18n: Some(Msg::GenerateButton),
+                        i18n: Some(Msg::Share),
                         lang,
                     }
                     Button {

@@ -101,7 +101,7 @@ pub fn View(note: Option<String>) -> Element {
                 }
             }
         } else if let Some(content) = tst.view().note_content()() {
-            Breadcrumb { title: Msg::YourNoteTitle }
+            Breadcrumb { title: Msg::Note }
             section {
                 card {
                     overflow_wrap: "anywhere",

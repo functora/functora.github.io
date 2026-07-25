@@ -239,6 +239,27 @@ pub async fn stop_camera() -> Result<(), Error> {
     .await
 }
 
+#[derive(Serialize)]
+pub struct ShareData {
+    pub title: String,
+    pub text: String,
+    pub url: String,
+}
+
+pub async fn web_share(data: ShareData) -> Result<(), Error> {
+    eval(
+        data,
+        r"function(arg){
+        return navigator.share({
+            title: arg.title,
+            text: arg.text,
+            url: arg.url
+        });
+        }",
+    )
+    .await
+}
+
 #[allow(clippy::needless_raw_string_hashes)]
 pub async fn sleep(millis: u64) -> Result<(), Error> {
     eval(

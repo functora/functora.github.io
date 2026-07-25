@@ -52,7 +52,7 @@ pub fn Donate() -> Element {
     let lang = use_lang();
 
     rsx! {
-        Breadcrumb { title: Msg::DonateTitle }
+        Breadcrumb { title: Msg::Donate }
         section {
             card { font_size: "larger",
                 h2 { "{Msg::DonateGreeting.render(lang)}" }

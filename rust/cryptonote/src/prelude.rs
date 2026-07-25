@@ -15,7 +15,7 @@ pub use serde::{Deserialize, Serialize};
 pub use std::str::FromStr;
 pub use thiserror::Error;
 
-pub use functora_dioxus::ffi::Theme;
+pub use functora_dioxus::ffi::{web_share, ShareData, Theme};
 pub use functora_dioxus::storage::{use_storage, PersistentSignal};
 pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Align, Nav, Par};

@@ -47,7 +47,7 @@ pub fn About() -> Element {
                     button: true,
                     primary: true,
                     Icon { icon: FaHeart }
-                    "{Msg::DonateButton.render(lang)}"
+                    "{Msg::Donate.render(lang)}"
                 }
             }
         }

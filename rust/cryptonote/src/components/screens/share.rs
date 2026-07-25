@@ -64,7 +64,7 @@ pub fn Share() -> Element {
     });
 
     rsx! {
-        Breadcrumb { title: Msg::ShareTitle }
+        Breadcrumb { title: Msg::Share }
         section {
             if !url().is_empty() {
                 if !qr_code().is_empty() {
@@ -87,6 +87,28 @@ pub fn Share() -> Element {
                             write_clipboard(url(), message);
                         },
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaShareNodes),
+                        primary: true,
+                        onclick: move |_| {
+                            let u = url();
+                            let mut msg = message;
+                            let text = Msg::SharedNoteText.render(lang);
+                            spawn(async move {
+                                let data = ShareData {
+                                    title: "Cryptonote".into(),
+                                    text,
+                                    url: u,
+                                };
+                                match web_share(data).await {
+                                    Ok(()) => msg.set(Some(Msg::Base(BaseMsg::Copied))),
+                                    Err(e) => msg.set(Some(Msg::Error(AppError::Fd(e)))),
+                                }
+                            });
+                        },
+                        i18n: Some(Msg::Share),
                         lang,
                     }
                     Button {

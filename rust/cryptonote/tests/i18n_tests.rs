@@ -25,7 +25,7 @@ fn unknown_language_label_falls_back() {
 #[test]
 fn i18n_english_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Eng), "Note");
-    assert_eq!(Msg::GenerateButton.render(Language::Eng), "Share");
+    assert_eq!(Msg::Share.render(Language::Eng), "Share");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Eng), "Back");
     assert_eq!(Msg::Theme.render(Language::Eng), "Theme");
 }
@@ -33,7 +33,7 @@ fn i18n_english_basic_messages() {
 #[test]
 fn i18n_spanish_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Spa), "Nota");
-    assert_eq!(Msg::GenerateButton.render(Language::Spa), "Compartir");
+    assert_eq!(Msg::Share.render(Language::Spa), "Compartir");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Spa), "Atrás");
     assert_eq!(Msg::Theme.render(Language::Spa), "Tema");
 }
@@ -41,7 +41,7 @@ fn i18n_spanish_basic_messages() {
 #[test]
 fn i18n_russian_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Rus), "Заметка");
-    assert_eq!(Msg::GenerateButton.render(Language::Rus), "Поделиться");
+    assert_eq!(Msg::Share.render(Language::Rus), "Поделиться");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Rus), "Назад");
     assert_eq!(Msg::Theme.render(Language::Rus), "Тема");
 }
@@ -50,10 +50,7 @@ fn i18n_russian_basic_messages() {
 fn i18n_unsupported_falls_back_to_english() {
     let unsupported = Language::Fra;
     assert_eq!(Msg::Note.render(unsupported), Msg::Note.render(Language::Eng));
-    assert_eq!(
-        Msg::GenerateButton.render(unsupported),
-        Msg::GenerateButton.render(Language::Eng)
-    );
+    assert_eq!(Msg::Share.render(unsupported), Msg::Share.render(Language::Eng));
 }
 
 #[test]

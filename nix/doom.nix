@@ -222,15 +222,6 @@
         tag = "viaje";
         mod = ../bak/doom/VIAJE.wad;
       }
-      // mkDoom {
-        tag = "hellbnd";
-        mod = ../bak/doom/Hellbnd.wad;
-      }
-      // mkDoom {
-        tag = "c17";
-        total = ../bak/doom/DTB_C17.pk3;
-        relite = "";
-      }
       // mkDoom64 {
         tag = "hellfire";
         mod = ../bak/doom/HellFireCollectionV1-6.pk3;
@@ -258,20 +249,6 @@
       // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "city-assault";
-        mod = ../bak/doom/city-assault.wad;
-      }
-      // mkDoom {
-        tag = "slime";
-        mod = ../bak/doom/SLIMECTY.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "ihni";
-        total = ../bak/doom/ihni-1.04.pk3;
         relite = "";
       }
       // mkDoom {
@@ -311,13 +288,6 @@
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
         total = ../bak/doom/Space_Cats_Saga_1.41.wad;
         relite = ../bak/doom/relite_0.5a.pk3;
-        liquid = ltp701;
-        nashgore = ../bak/doom/nashgore.pk3;
-      }
-      // mkDoom {
-        tag = "bloom";
-        mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
-        total = ../bak/doom/bloom/Bloom.pk3;
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;
       }

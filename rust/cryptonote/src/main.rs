@@ -1,12 +1,5 @@
 use cryptonote::*;
 
-const FAVICON_ICO: Asset = asset!("/assets/favicon/favicon.ico");
-const FAVICON_16: Asset = asset!("/assets/favicon/favicon-16x16.png");
-const FAVICON_32: Asset = asset!("/assets/favicon/favicon-32x32.png");
-const APPLE_TOUCH_ICON: Asset = asset!("/assets/favicon/apple-touch-icon.png");
-const ICON_192: Asset = asset!("/assets/favicon/android-chrome-192x192.png");
-const ICON_512: Asset = asset!("/assets/favicon/android-chrome-512x512.png");
-
 fn main() {
     dioxus::launch(App);
 }
@@ -17,12 +10,12 @@ fn App() -> Element {
         AppId::new(APP_ID).infallible(),
         AppName::new(APP_NAME).infallible(),
         AppAssets {
-            icon_ico: FAVICON_ICO,
-            icon_16_png: FAVICON_16,
-            icon_32_png: FAVICON_32,
-            apple_touch_icon_png: APPLE_TOUCH_ICON,
-            icon_192_png: ICON_192,
-            icon_512_png: ICON_512,
+            icon_ico: asset!("/assets/favicon/favicon.ico"),
+            icon_16_png: asset!("/assets/favicon/favicon-16x16.png"),
+            icon_32_png: asset!("/assets/favicon/favicon-32x32.png"),
+            apple_touch_icon_png: asset!("/assets/favicon/apple-touch-icon.png"),
+            icon_192_png: asset!("/assets/favicon/android-chrome-192x192.png"),
+            icon_512_png: asset!("/assets/favicon/android-chrome-512x512.png"),
             css: AppAssets::default().css,
         },
     )

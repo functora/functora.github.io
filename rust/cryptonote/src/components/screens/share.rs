@@ -103,7 +103,7 @@ pub fn Share() -> Element {
                                     url: u,
                                 };
                                 match web_share(data).await {
-                                    Ok(()) => msg.set(Some(Msg::Base(BaseMsg::Copied))),
+                                    Ok(()) => msg.set(Some(Msg::Sent)),
                                     Err(e) => msg.set(Some(Msg::Error(AppError::Fd(e)))),
                                 }
                             });

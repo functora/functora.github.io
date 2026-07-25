@@ -23,15 +23,28 @@
               | ${pkgs.clean-css-cli}/bin/cleancss > ./css/functora.min.css
           '';
         };
+        serve-functora-css = pkgs.writeShellApplication {
+          name = "serve-functora-css";
+          text = ''
+            ${pkgs.python3}/bin/python3 -m http.server 8000
+          '';
+        };
+        tunnel-functora-css = pkgs.writeShellApplication {
+          name = "tunnel-functora-css";
+          text = ''
+            ${pkgs.cloudflared}/bin/cloudflared tunnel --protocol http2 --url http://localhost:8000
+          '';
+        };
         shell = {
           packages = with pkgs; [
             djlint
             lessc
             clean-css-cli
+            serve-functora-css
+            tunnel-functora-css
             release-functora-css
             opencode-nix.packages.${system}.default
             chromium
-            cloudflared
           ];
         };
       in {

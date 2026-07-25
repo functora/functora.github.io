@@ -18,12 +18,12 @@
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
       (
         if config.services.functora.blockHosts
-        # then [
-        #   #
-        #   # TODO : some blocked hosts
-        #   #
-        # ]
-        then ["err.ee" "delfi.ee" "postimees.ee" "server4.beyondallreason.info"]
+        then [
+          "err.ee"
+          "delfi.ee"
+          "postimees.ee"
+          "server4.beyondallreason.info"
+        ]
         else []
       ));
   # bash script to let dbus know about important env variables and

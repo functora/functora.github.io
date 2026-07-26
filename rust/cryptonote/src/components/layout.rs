@@ -8,21 +8,18 @@ pub fn Layout() -> Element {
     let lang = use_lang();
     let idx = use_signal(|| 0u32);
     let nav = use_nav::<Route, _>(idx.into());
-    let dl_nav = nav.clone();
+    let mut dl_nav = nav.clone();
     let nav_signal = use_context_provider(|| Signal::new(nav));
 
     use_hook(|| {
         crate::deep_link::set_schedule_update(dioxus::core::schedule_update());
     });
 
-    {
-        let mut nav = dl_nav;
-        dioxus::core::use_after_render(move || {
-            if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
-                nav.push_route(&route);
-            }
-        });
-    }
+    dioxus::core::use_after_render(move || {
+        if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
+            dl_nav.push_route(&route);
+        }
+    });
 
     use_effect(move || {
         let _ = idx();

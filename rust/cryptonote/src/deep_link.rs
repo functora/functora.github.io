@@ -1,12 +1,23 @@
 #[cfg(target_os = "android")]
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 use std::sync::Mutex;
 
 static PENDING_URL: Mutex<Option<String>> = Mutex::new(None);
+static SCHEDULE_UPDATE: Mutex<Option<Arc<dyn Fn() + Send + Sync>>> = Mutex::new(None);
 
 pub fn store_url(url: String) {
     if let Ok(mut guard) = PENDING_URL.lock() {
         *guard = Some(url);
+    }
+    if let Some(update) = SCHEDULE_UPDATE.lock().ok().and_then(|guard| guard.as_ref().cloned()) {
+        update();
+    }
+}
+
+pub fn set_schedule_update(f: Arc<dyn Fn() + Send + Sync>) {
+    if let Ok(mut guard) = SCHEDULE_UPDATE.lock() {
+        *guard = Some(f);
     }
 }
 

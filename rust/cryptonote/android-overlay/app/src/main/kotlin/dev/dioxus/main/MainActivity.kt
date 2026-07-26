@@ -12,8 +12,11 @@ class MainActivity : WryActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        handleDeepLinkIntent(intent)
+        if (intent.action == Intent.ACTION_VIEW) {
+            handleDeepLinkIntent(intent)
+        } else {
+            super.onNewIntent(intent)
+        }
     }
 
     private fun handleDeepLinkIntent(intent: Intent) {

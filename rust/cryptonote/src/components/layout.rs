@@ -11,9 +11,13 @@ pub fn Layout() -> Element {
     let dl_nav = nav.clone();
     let nav_signal = use_context_provider(|| Signal::new(nav));
 
+    use_hook(|| {
+        crate::deep_link::set_schedule_update(dioxus::core::schedule_update());
+    });
+
     {
         let nav = dl_nav;
-        use_effect(move || {
+        dioxus::core::use_after_render(move || {
             let mut nav = nav.clone();
             spawn(async move {
                 if let Some(route) = crate::deep_link::check_intent()

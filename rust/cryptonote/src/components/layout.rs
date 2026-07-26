@@ -16,17 +16,11 @@ pub fn Layout() -> Element {
     });
 
     {
-        let nav = dl_nav;
+        let mut nav = dl_nav;
         dioxus::core::use_after_render(move || {
-            let mut nav = nav.clone();
-            spawn(async move {
-                if let Some(route) = crate::deep_link::check_intent()
-                    .await
-                    .and_then(|url| crate::deep_link::url_to_route(&url))
-                {
-                    nav.push_route(&route);
-                }
-            });
+            if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
+                nav.push_route(&route);
+            }
         });
     }
 

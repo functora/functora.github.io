@@ -111,19 +111,19 @@ pub fn View(note: Option<String>) -> Element {
 
                 Dock { message,
                     Button {
+                        icon: Some(FaCopy),
+                        primary: true,
+                        onclick: move |_| write_clipboard(content.clone(), message),
+                        i18n: Some(Msg::Base(BaseMsg::Copy)),
+                        lang,
+                    }
+                    Button {
                         icon: Some(FaPenToSquare),
                         onclick: move |_| {
                             tst.action().set(ActionMode::Create);
                             nav.write().push(Screen::Home.to_route(None));
                         },
                         i18n: Some(Msg::EditNote),
-                        lang,
-                    }
-                    Button {
-                        icon: Some(FaCopy),
-                        primary: true,
-                        onclick: move |_| write_clipboard(content.clone(), message),
-                        i18n: Some(Msg::Base(BaseMsg::Copy)),
                         lang,
                     }
                     Button {

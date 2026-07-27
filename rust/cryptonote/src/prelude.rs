@@ -2,7 +2,7 @@ pub use derive_more::Display;
 pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaste, FaPenToSquare,
+    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaste, FaPenToSquare, FaPrint,
     FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
@@ -15,7 +15,7 @@ pub use serde::{Deserialize, Serialize};
 pub use std::str::FromStr;
 pub use thiserror::Error;
 
-pub use functora_dioxus::ffi::{web_share, ShareData, Theme};
+pub use functora_dioxus::ffi::{print_page, web_share, ShareData, Theme};
 pub use functora_dioxus::storage::{use_storage, PersistentSignal};
 pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Align, Nav, Par};

@@ -112,6 +112,20 @@ pub fn Share() -> Element {
                         lang,
                     }
                     Button {
+                        icon: Some(FaPrint),
+                        primary: true,
+                        onclick: move |_| {
+                            let mut msg = message;
+                            spawn(async move {
+                                if let Err(e) = print_page().await {
+                                    msg.set(Some(Msg::Error(AppError::Fd(e))));
+                                }
+                            });
+                        },
+                        i18n: Some(Msg::Print),
+                        lang,
+                    }
+                    Button {
                         icon: Some(FaEye),
                         onclick: move |_| {
                             nav.write().push(Screen::View.to_route(None));

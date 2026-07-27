@@ -324,13 +324,81 @@ pub async fn web_share(data: ShareData) -> Result<(), Error> {
     })
 }
 
-#[allow(clippy::needless_raw_string_hashes)]
+#[cfg(not(target_os = "android"))]
+pub async fn print_page() -> Result<(), Error> {
+    eval(
+        (),
+        r"function(arg){
+        window.print();
+        return null;
+        }",
+    )
+    .await
+}
+
+#[cfg(target_os = "android")]
+pub async fn print_page() -> Result<(), Error> {
+    use std::sync::mpsc::channel;
+    let (tx, rx) = channel();
+    dioxus::mobile::wry::prelude::dispatch(
+        move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, webview: &jni::objects::JObject| {
+            let res = (|| -> Result<(), jni::errors::Error> {
+                if webview.as_raw().is_null() {
+                    return Err(jni::errors::Error::NullPtr("webview is null"));
+                }
+                let svc_name = env.new_string("print")?;
+                let print_manager = env
+                    .call_method(
+                        activity,
+                        "getSystemService",
+                        "(Ljava/lang/String;)Ljava/lang/Object;",
+                        &[(&svc_name).into()],
+                    )?
+                    .l()?;
+                if print_manager.as_raw().is_null() {
+                    return Err(jni::errors::Error::NullPtr("PrintManager not available"));
+                }
+                let job_name = env.new_string("Cryptonote")?;
+                let print_adapter = env
+                    .call_method(
+                        webview,
+                        "createPrintDocumentAdapter",
+                        "(Ljava/lang/String;)Landroid/print/PrintDocumentAdapter;",
+                        &[(&job_name).into()],
+                    )?
+                    .l()?;
+                if print_adapter.as_raw().is_null() {
+                    return Err(jni::errors::Error::NullPtr("PrintDocumentAdapter not available"));
+                }
+                let builder_class = env.find_class("android/print/PrintAttributes$Builder")?;
+                let builder = env.new_object(builder_class, "()V", &[])?;
+                let print_attributes = env
+                    .call_method(builder, "build", "()Landroid/print/PrintAttributes;", &[])?
+                    .l()?;
+                env.call_method(
+                    &print_manager,
+                    "print",
+                    "(Ljava/lang/String;Landroid/print/PrintDocumentAdapter;Landroid/print/PrintAttributes;)Landroid/print/PrintJob;",
+                    &[(&job_name).into(), (&print_adapter).into(), (&print_attributes).into()],
+                )?;
+                Ok(())
+            })();
+            if let Err(ref _msg) = res {
+                _ = env.exception_describe();
+            }
+            _ = env.exception_clear();
+            _ = tx.send(res.map_err(Error::from));
+        },
+    );
+    rx.recv()?
+}
+
 pub async fn sleep(millis: u64) -> Result<(), Error> {
     eval(
         millis,
-        r#"function(arg){
+        r"function(arg){
         return new Promise(resolve => setTimeout(resolve, arg));
-        }"#,
+        }",
     )
     .await
 }

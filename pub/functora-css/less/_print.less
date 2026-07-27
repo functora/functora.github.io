@@ -1,0 +1,46 @@
+@import (reference) "_variables";
+
+/*	print
+----------------------------------------------------------------------*/
+
+@media print {
+
+	@page {
+		margin: 2cm;
+	}
+
+	html {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	button@{n},
+	button@{x},
+	input[type=submit],
+	[btn] {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	svg {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	nav@{n},
+	nav@{x} {
+		position: static !important;
+	}
+
+	body {
+		padding-top: 0 !important;
+	}
+
+	html {
+		scroll-padding-top: 0 !important;
+	}
+
+	a {
+		text-decoration: underline;
+	}
+}

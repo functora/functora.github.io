@@ -65,3 +65,26 @@ button@{n}, button@{x}, input[type=submit], [btn] {
 		cursor: default;
 	}
 }
+
+[btn] input[type=file] {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
+}
+
+label@{n}[btn],
+label@{x}[btn] {
+	display: inline-flex;
+	width: auto;
+}
+
+label@{n}[btn] svg,
+label@{x}[btn] svg {
+	vertical-align: middle;
+	margin-right: 0;
+}

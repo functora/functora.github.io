@@ -37,6 +37,21 @@ pub fn View(note: Option<String>) -> Element {
         }
     });
 
+    let edit = move |_| {
+        tst.action().set(ActionMode::Create);
+        nav.write().push(Screen::Home.to_route(None));
+    };
+
+    let reset = move |_| {
+        tst.set(TemporaryState::default());
+        tst.action().set(ActionMode::Create);
+        tst.content().set(String::new());
+        tst.password().set(String::new());
+        tst.cipher().set(Some(CipherType::Aes256Gcm));
+        tst.home().url_input().set(String::new());
+        nav.write().push(Screen::Home.to_route(None));
+    };
+
     let mut decrypt_note = move || {
         message.set(None);
         let enc_data = tst.view().encrypted_data()();
@@ -98,29 +113,6 @@ pub fn View(note: Option<String>) -> Element {
                         i18n: Some(Msg::DecryptButton),
                         lang,
                     }
-                    Button {
-                        icon: Some(FaPenToSquare),
-                        onclick: move |_| {
-                            tst.action().set(ActionMode::Create);
-                            nav.write().push(Screen::Home.to_route(None));
-                        },
-                        i18n: Some(Msg::EditNote),
-                        lang,
-                    }
-                    Button {
-                        icon: Some(FaTrash),
-                        onclick: move |_| {
-                            tst.set(TemporaryState::default());
-                            tst.action().set(ActionMode::Create);
-                            tst.content().set(String::new());
-                            tst.password().set(String::new());
-                            tst.cipher().set(Some(CipherType::Aes256Gcm));
-                            tst.home().url_input().set(String::new());
-                            nav.write().push(Screen::Home.to_route(None));
-                        },
-                        i18n: Some(Msg::CreateNewNote),
-                        lang,
-                    }
                 }
             }
         } else if let Some(content) = tst.view().note_content()() {
@@ -156,24 +148,13 @@ pub fn View(note: Option<String>) -> Element {
                     }
                     Button {
                         icon: Some(FaPenToSquare),
-                        onclick: move |_| {
-                            tst.action().set(ActionMode::Create);
-                            nav.write().push(Screen::Home.to_route(None));
-                        },
+                        onclick: edit,
                         i18n: Some(Msg::EditNote),
                         lang,
                     }
                     Button {
                         icon: Some(FaTrash),
-                        onclick: move |_| {
-                            tst.set(TemporaryState::default());
-                            tst.action().set(ActionMode::Create);
-                            tst.content().set(String::new());
-                            tst.password().set(String::new());
-                            tst.cipher().set(Some(CipherType::Aes256Gcm));
-                            tst.home().url_input().set(String::new());
-                            nav.write().push(Screen::Home.to_route(None));
-                        },
+                        onclick: reset,
                         i18n: Some(Msg::CreateNewNote),
                         lang,
                     }

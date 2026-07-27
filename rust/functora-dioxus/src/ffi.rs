@@ -375,7 +375,7 @@ pub async fn print_page() -> Result<(), Error> {
                 let print_attributes = env
                     .call_method(builder, "build", "()Landroid/print/PrintAttributes;", &[])?
                     .l()?;
-                env.call_method(
+                let _ = env.call_method(
                     &print_manager,
                     "print",
                     "(Ljava/lang/String;Landroid/print/PrintDocumentAdapter;Landroid/print/PrintAttributes;)Landroid/print/PrintJob;",

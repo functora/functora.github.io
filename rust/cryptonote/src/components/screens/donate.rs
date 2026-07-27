@@ -53,12 +53,7 @@ pub fn Donate() -> Element {
 
     rsx! {
         Breadcrumb { title: Msg::Donate }
-        section {
-            card { font_size: "larger",
-                h2 { "{Msg::DonateGreeting.render(lang)}" }
-                article { "{Msg::DonateIntro.render(lang)}" }
-            }
-        }
+        section { "fs": "l", "{Msg::DonateGreeting.render(lang)} {Msg::DonateIntro.render(lang)}" }
 
         CryptoDonateBlock {
             label: "BTC - Bitcoin",

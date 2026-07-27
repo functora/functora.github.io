@@ -3,7 +3,7 @@ pub use dioxus::prelude::*;
 pub use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
 pub use dioxus_free_icons::icons::fa_solid_icons::{
     FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaste, FaPenToSquare, FaPrint,
-    FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser,
+    FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser, FaXmark,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use either::*;

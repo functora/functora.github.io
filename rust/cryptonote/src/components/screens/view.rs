@@ -98,6 +98,12 @@ pub fn View(note: Option<String>) -> Element {
                         i18n: Some(Msg::DecryptButton),
                         lang,
                     }
+                    Button {
+                        icon: Some(FaXmark),
+                        onclick: move |_| tst.view().password_input().set(String::new()),
+                        i18n: Some(Msg::Clear),
+                        lang,
+                    }
                 }
             }
         } else if let Some(content) = tst.view().note_content()() {

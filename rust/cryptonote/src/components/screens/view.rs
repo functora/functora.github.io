@@ -118,6 +118,20 @@ pub fn View(note: Option<String>) -> Element {
                         lang,
                     }
                     Button {
+                        icon: Some(FaPrint),
+                        primary: true,
+                        onclick: move |_| {
+                            let mut msg = message;
+                            spawn(async move {
+                                if let Err(e) = print_page().await {
+                                    msg.set(Some(Msg::Error(AppError::Fd(e))));
+                                }
+                            });
+                        },
+                        i18n: Some(Msg::Print),
+                        lang,
+                    }
+                    Button {
                         icon: Some(FaPenToSquare),
                         onclick: move |_| {
                             tst.action().set(ActionMode::Create);

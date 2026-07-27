@@ -133,6 +133,18 @@ pub fn Share() -> Element {
                         i18n: Some(Msg::ViewButton),
                         lang,
                     }
+                    Button {
+                        icon: Some(FaPenToSquare),
+                        onclick: edit_handler(tst, nav),
+                        i18n: Some(Msg::EditNote),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: reset_handler(tst, nav),
+                        i18n: Some(Msg::CreateNewNote),
+                        lang,
+                    }
                 }
             } else if message.read().is_some() {
                 Dock { message }

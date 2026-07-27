@@ -3,8 +3,8 @@ use crate::*;
 
 #[component]
 pub fn View(note: Option<String>) -> Element {
-    let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut tst = use_context::<Store<TemporaryState>>();
+    let nav = use_context::<Signal<Nav<Route>>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
     let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
@@ -36,21 +36,6 @@ pub fn View(note: Option<String>) -> Element {
             tst.view().note_content().set(Some(content));
         }
     });
-
-    let edit = move |_| {
-        tst.action().set(ActionMode::Create);
-        nav.write().push(Screen::Home.to_route(None));
-    };
-
-    let reset = move |_| {
-        tst.set(TemporaryState::default());
-        tst.action().set(ActionMode::Create);
-        tst.content().set(String::new());
-        tst.password().set(String::new());
-        tst.cipher().set(Some(CipherType::Aes256Gcm));
-        tst.home().url_input().set(String::new());
-        nav.write().push(Screen::Home.to_route(None));
-    };
 
     let mut decrypt_note = move || {
         message.set(None);
@@ -148,13 +133,13 @@ pub fn View(note: Option<String>) -> Element {
                     }
                     Button {
                         icon: Some(FaPenToSquare),
-                        onclick: edit,
+                        onclick: edit_handler(tst, nav),
                         i18n: Some(Msg::EditNote),
                         lang,
                     }
                     Button {
                         icon: Some(FaTrash),
-                        onclick: reset,
+                        onclick: reset_handler(tst, nav),
                         i18n: Some(Msg::CreateNewNote),
                         lang,
                     }

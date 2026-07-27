@@ -36,7 +36,7 @@ pub fn Layout() -> Element {
     });
 
     rsx! {
-        nav {
+        nav { "fx": "",
             label {
                 input { r#type: "checkbox", id: "functora-nav-toggle" }
                 header {

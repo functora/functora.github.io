@@ -4,30 +4,28 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut tst = use_context::<Store<TemporaryState>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-
     let mut message = use_message();
+
+    let mut navigate_to_url = move |url: &str| match extract_note_param(url) {
+        Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
+        Err(e) => message.set(Some(Msg::Error(e))),
+    };
 
     let open_url = move |_| {
         message.set(None);
         let url = tst.home().url_input()();
         let url = url.trim().to_string();
-
         if url.is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
             return;
         }
-
-        match extract_note_param(&url) {
-            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
-            Err(e) => message.set(Some(Msg::Error(e))),
-        }
+        navigate_to_url(&url);
     };
 
     let mut generate_note = move || {
         message.set(None);
-
         if tst.cipher().is_some() && tst.password()().is_empty() {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
@@ -42,15 +40,92 @@ pub fn Home() -> Element {
 
     let reset_ctx = move |_| {
         message.set(None);
-        tst.set(TemporaryState::default());
-        tst.action().set(ActionMode::Create);
-        tst.content().set(String::new());
-        tst.password().set(String::new());
-        tst.cipher().set(Some(CipherType::Aes256Gcm));
-        tst.home().url_input().set(String::new());
+        reset_temporary_state(tst);
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let on_archive_file = move |evt: dioxus::prelude::FormEvent| {
+        spawn({
+            let files = evt.files();
+            async move {
+                let file = match files.into_iter().next() {
+                    Some(f) => f,
+                    None => return,
+                };
+                let bytes = match file.read_bytes().await {
+                    Ok(b) => b.to_vec(),
+                    Err(_) => return,
+                };
+                match read_archive_metadata(&bytes) {
+                    Ok(meta) => {
+                        tst.archive_bytes().set(Some(bytes));
+                        tst.archive_meta().set(Some(meta));
+                        tst.view().is_encrypted().set(true);
+                        tst.extracted_files().set(Vec::new());
+                        tst.view().password_input().set(String::new());
+                    }
+                    Err(e) => message.set(Some(Msg::Error(e))),
+                }
+            }
+        });
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let picker = rsx! {
+        label { "btn": true,
+            input {
+                r#type: "file",
+                accept: ".cryptonote",
+                onchange: on_archive_file,
+            }
+            Icon { icon: FaPaperclip }
+            " {Msg::OpenArchive.render(lang)}"
+        }
+    };
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let picker = rsx! {
+        button {
+            "btn": true,
+            onclick: move |_| open_archive_file_native(tst, message),
+            Icon { icon: FaPaperclip }
+            " {Msg::OpenArchive.render(lang)}"
+        }
+    };
+
+    let mut decrypt_archive = move || {
+        let bytes = tst.archive_bytes()().unwrap_or_default();
+        if bytes.is_empty() {
+            return;
+        }
+        let password = tst.view().password_input()();
+        if password.is_empty() {
+            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
+            return;
+        }
+        spawn(async move {
+            match extract_archive_package(&bytes, &password) {
+                Ok(files) => {
+                    tst.extracted_files().set(files);
+                    tst.view().is_encrypted().set(false);
+                }
+                Err(e) => message.set(Some(Msg::Error(e))),
+            }
+        });
+    };
+
+    let download_all = move || {
+        let files = tst.extracted_files()();
+        if let Ok(zip) = create_zip(&files) {
+            download_package(zip, "extracted_files.zip");
+        }
     };
 
     let action = tst.action()();
+    let has_archive = tst.archive_meta()().is_some();
+    let encrypted = tst.view().is_encrypted()();
+    let meta = tst.archive_meta()();
+    let files = tst.extracted_files()();
 
     rsx! {
         section {
@@ -79,7 +154,6 @@ pub fn Home() -> Element {
                     label: Msg::ActionScan.render(lang),
                     on_change: set_action,
                 }
-
             }
 
             if action == ActionMode::Create {
@@ -116,13 +190,9 @@ pub fn Home() -> Element {
                         r#type: "password",
                         placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
                         value: "{tst.password()}",
-                        oninput: move |evt| {
-                            tst.password().set(evt.value());
-                        },
+                        oninput: move |evt| tst.password().set(evt.value()),
                         onkeydown: move |evt| {
-                            if evt.key() == Key::Enter {
-                                generate_note()
-                            }
+                            if evt.key() == Key::Enter { generate_note() }
                         },
                     }
                 }
@@ -132,10 +202,10 @@ pub fn Home() -> Element {
                     placeholder: "{Msg::NotePlaceholder.render(lang)}",
                     rows: "8",
                     value: "{tst.content()}",
-                    oninput: move |evt| {
-                        tst.content().set(evt.value());
-                    },
+                    oninput: move |evt| tst.content().set(evt.value()),
                 }
+
+                AttachmentUploader { tst, lang }
 
                 Dock { message,
                     Button {
@@ -175,19 +245,85 @@ pub fn Home() -> Element {
                     oninput: move |evt| tst.home().url_input().set(evt.value()),
                 }
 
-                Dock { message,
-                    Button {
-                        icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
-                        i18n: Some(Msg::Base(BaseMsg::Paste)),
-                        lang,
+                fieldset {
+                    legend { "{Msg::OpenArchive.render(lang)}" }
+                    {picker}
+                    if has_archive && encrypted {
+                        p { "{Msg::EncryptedNoteDesc.render(lang)}" }
+                        if let Some(ref m) = meta {
+                            p {
+                                strong { "{Msg::EncryptedNote.render(lang)}: " }
+                                "{m.cipher}"
+                            }
+                        }
+                        label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
+                        input {
+                            r#type: "password",
+                            placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
+                            value: "{tst.view().password_input()}",
+                            oninput: move |evt| tst.view().password_input().set(evt.value()),
+                            onkeydown: move |evt| {
+                                if evt.key() == Key::Enter { decrypt_archive() }
+                            },
+                        }
                     }
-                    Button {
-                        icon: Some(FaFolderOpen),
-                        primary: true,
-                        onclick: open_url,
-                        i18n: Some(Msg::OpenButton),
-                        lang,
+
+                    if !encrypted {
+                        p { "{Msg::ArchiveDecrypted.render(lang)}" }
+                        for f in &files {
+                            div { key: "{f.name}",
+                                if f.name == "_note.txt" {
+                                    p { "{Msg::ExtractedNote.render(lang)}:" }
+                                    Pre {
+                                        code { "{String::from_utf8_lossy(&f.data)}" }
+                                    }
+                                } else {
+                                    "{f.name} ({format_size(f.data.len() as u64)}) "
+                                    button {
+                                        onclick: {
+                                            let data = f.data.clone();
+                                            let name = f.name.clone();
+                                            move |_| download_package(data.clone(), &name)
+                                        },
+                                        Icon { icon: FaDownload }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Dock { message,
+                    if !encrypted {
+                        Button {
+                            icon: Some(FaDownload),
+                            primary: true,
+                            onclick: move |_| download_all(),
+                            i18n: Some(Msg::DownloadAll),
+                            lang,
+                        }
+                    } else if has_archive {
+                        Button {
+                            icon: Some(FaLockOpen),
+                            primary: true,
+                            onclick: move |_| decrypt_archive(),
+                            i18n: Some(Msg::DecryptButton),
+                            lang,
+                        }
+                    } else {
+                        Button {
+                            icon: Some(FaPaste),
+                            onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
+                            i18n: Some(Msg::Base(BaseMsg::Paste)),
+                            lang,
+                        }
+                        Button {
+                            icon: Some(FaFolderOpen),
+                            primary: true,
+                            onclick: open_url,
+                            i18n: Some(Msg::OpenButton),
+                            lang,
+                        }
                     }
                     Button {
                         icon: Some(FaTrash),
@@ -201,12 +337,7 @@ pub fn Home() -> Element {
             if action == ActionMode::Scan {
                 QrScanner {
                     lang,
-                    on_scan: Callback::new(move |url: String| {
-                        match extract_note_param(&url) {
-                            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
-                            Err(e) => message.set(Some(Msg::Error(e))),
-                        }
-                    }),
+                    on_scan: Callback::new(move |url: String| navigate_to_url(&url)),
                 }
             }
         }

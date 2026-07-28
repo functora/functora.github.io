@@ -1,8 +1,10 @@
+mod attachment_uploader;
 mod breadcrumb;
 mod dock;
 mod qr_scanner;
 mod static_page;
 
+pub use attachment_uploader::*;
 pub use breadcrumb::*;
 pub use dock::*;
 pub use qr_scanner::*;

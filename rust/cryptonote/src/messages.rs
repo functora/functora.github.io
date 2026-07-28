@@ -62,6 +62,13 @@ pub enum Msg {
     DonateIntro,
     Print,
     Clear,
+    AttachFiles,
+    RemoveFile,
+    ArchiveDownloaded,
+    OpenArchive,
+    DownloadAll,
+    ArchiveDecrypted,
+    ExtractedNote,
 }
 
 impl I18N for Msg {
@@ -113,7 +120,7 @@ impl I18N for Msg {
             Self::Please => "Please",
             Self::ActionLabel => "Action",
             Self::ActionCreate => "Create new note",
-            Self::ActionOpen => "Open note URL",
+            Self::ActionOpen => "Open note",
             Self::ActionScan => "Scan note QR",
             Self::Theme => "Theme",
             Self::ScanQrButton => "Scan",
@@ -190,6 +197,13 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::DonateIntro => "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
             Self::Print => "Print",
             Self::Clear => "Clear",
+            Self::AttachFiles => "Attach files",
+            Self::RemoveFile => "Remove",
+            Self::ArchiveDownloaded => "Archive package downloaded. Share the file with your recipient.",
+            Self::OpenArchive => "Open archive file",
+            Self::DownloadAll => "Download all",
+            Self::ArchiveDecrypted => "Archive decrypted successfully.",
+            Self::ExtractedNote => "Note",
         }
         .to_string()
     }
@@ -242,7 +256,7 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::Please => "Por favor",
             Self::ActionLabel => "Acción",
             Self::ActionCreate => "Crear nueva nota",
-            Self::ActionOpen => "Abrir URL de nota",
+            Self::ActionOpen => "Abrir nota",
             Self::ActionScan => "Escanear QR de nota",
             Self::Theme => "Tema",
             Self::ScanQrButton => "Escanear",
@@ -319,6 +333,13 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::DonateIntro => "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
             Self::Print => "Imprimir",
             Self::Clear => "Borrar",
+            Self::AttachFiles => "Adjuntar archivos",
+            Self::RemoveFile => "Eliminar",
+            Self::ArchiveDownloaded => "Paquete de archivo descargado. Comparte el archivo con tu destinatario.",
+            Self::OpenArchive => "Abrir archivo",
+            Self::DownloadAll => "Descargar todo",
+            Self::ArchiveDecrypted => "Archivo descifrado correctamente.",
+            Self::ExtractedNote => "Nota",
         }
         .to_string()
     }
@@ -371,7 +392,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::Please => "Пожалуйста",
             Self::ActionLabel => "Действие",
             Self::ActionCreate => "Создать новую заметку",
-            Self::ActionOpen => "Открыть URL заметки",
+            Self::ActionOpen => "Открыть заметку",
             Self::ActionScan => "Сканировать QR заметки",
             Self::Theme => "Тема",
             Self::ScanQrButton => "Сканировать",
@@ -448,6 +469,13 @@ Cryptonote следует современным криптографическ�
             Self::DonateIntro => "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
             Self::Print => "Печать",
             Self::Clear => "Очистить",
+            Self::AttachFiles => "Прикрепить файлы",
+            Self::RemoveFile => "Удалить",
+            Self::ArchiveDownloaded => "Пакет архива загружен. Поделитесь файлом с получателем.",
+            Self::OpenArchive => "Открыть архив",
+            Self::DownloadAll => "Скачать всё",
+            Self::ArchiveDecrypted => "Архив успешно расшифрован.",
+            Self::ExtractedNote => "Заметка",
         }
         .to_string()
     }

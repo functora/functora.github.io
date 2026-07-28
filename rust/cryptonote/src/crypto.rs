@@ -1,4 +1,5 @@
 use crate::error::*;
+use crate::prelude::Display;
 use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm,
@@ -12,7 +13,7 @@ const NONCE_SIZE: usize = 12;
 const SALT_SIZE: usize = 32;
 pub const KEY_SIZE: usize = 32;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Display)]
 pub enum CipherType {
     ChaCha20Poly1305,
     Aes256Gcm,

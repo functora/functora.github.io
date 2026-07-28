@@ -1,3 +1,4 @@
+pub mod archive;
 pub mod components;
 pub mod crypto;
 pub mod deep_link;
@@ -10,6 +11,7 @@ pub mod messages;
 pub mod prelude;
 pub mod storage;
 
+pub use archive::*;
 pub use components::*;
 pub use crypto::*;
 pub use deep_link::*;

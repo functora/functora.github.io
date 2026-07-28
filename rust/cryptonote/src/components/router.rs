@@ -79,8 +79,12 @@ pub struct TemporaryState {
     pub content: String,
     pub password: String,
     pub cipher: Option<CipherType>,
+    pub attachments: Vec<Attachment>,
     pub home: HomeState,
     pub view: ViewState,
+    pub archive_bytes: Option<Vec<u8>>,
+    pub archive_meta: Option<ArchiveMetadata>,
+    pub extracted_files: Vec<Attachment>,
 }
 
 impl Default for TemporaryState {
@@ -90,8 +94,12 @@ impl Default for TemporaryState {
             content: String::new(),
             password: String::new(),
             cipher: Some(CipherType::Aes256Gcm),
+            attachments: Vec::new(),
             home: HomeState::default(),
             view: ViewState::default(),
+            archive_bytes: None,
+            archive_meta: None,
+            extracted_files: Vec::new(),
         }
     }
 }

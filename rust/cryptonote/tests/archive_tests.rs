@@ -1,4 +1,4 @@
-use cryptonote::archive::{create_archive_package, extract_archive_package, read_archive_metadata, Attachment};
+use cryptonote::archive::{create_archive_package, extract_archive_package, Attachment};
 use cryptonote::crypto::CipherType;
 
 #[test]
@@ -16,12 +16,6 @@ fn test_archive_roundtrip_chacha20() {
     ];
     let pkg = create_archive_package(note, &attachments, "password", CipherType::ChaCha20Poly1305)
         .expect("Package creation failed");
-
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files.len(), 3);
-    assert_eq!(meta.files[0].name, "_note.txt");
-    assert_eq!(meta.files[1].name, "hello.txt");
-    assert_eq!(meta.files[2].name, "data.bin");
 
     let files = extract_archive_package(&pkg, "password").expect("Package extraction failed");
     assert_eq!(files.len(), 3);
@@ -42,10 +36,6 @@ fn test_archive_roundtrip_aes() {
     }];
     let pkg = create_archive_package(note, &attachments, "strong_pw", CipherType::Aes256Gcm)
         .expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files.len(), 2);
-    assert_eq!(meta.files[0].name, "_note.txt");
-
     let files = extract_archive_package(&pkg, "strong_pw").expect("Package extraction failed");
     assert_eq!(files.len(), 2);
     assert_eq!(String::from_utf8(files[0].data.clone()).unwrap(), "AES note");
@@ -56,9 +46,6 @@ fn test_archive_roundtrip_aes() {
 fn test_archive_no_attachments() {
     let pkg = create_archive_package("Just a note", &[], "pw", CipherType::ChaCha20Poly1305)
         .expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files.len(), 1);
-    assert_eq!(meta.files[0].name, "_note.txt");
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
     assert_eq!(files.len(), 1);
     assert_eq!(String::from_utf8(files[0].data.clone()).unwrap(), "Just a note");
@@ -75,8 +62,6 @@ fn test_archive_wrong_password() {
 #[test]
 fn test_archive_empty_note() {
     let pkg = create_archive_package("", &[], "pw", CipherType::Aes256Gcm).expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files[0].size, 0);
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
     assert_eq!(String::from_utf8(files[0].data.clone()).unwrap(), "");
 }
@@ -89,8 +74,6 @@ fn test_archive_unicode_filenames() {
     }];
     let pkg = create_archive_package("note", &attachments, "pw", CipherType::ChaCha20Poly1305)
         .expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files[1].name, "привет.txt");
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
     let f = files.iter().find(|f| f.name == "привет.txt").unwrap();
     assert_eq!(f.data, b"hello");
@@ -106,8 +89,6 @@ fn test_archive_multiple_attachments() {
         .collect();
     let pkg =
         create_archive_package("multi", &attachments, "pw", CipherType::Aes256Gcm).expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files.len(), 11);
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
     assert_eq!(files.len(), 11);
     for i in 0..10 {
@@ -128,11 +109,6 @@ fn test_metadata_readable_without_password() {
         CipherType::ChaCha20Poly1305,
     )
     .expect("Package creation failed");
-    let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
-    assert_eq!(meta.files[0].name, "_note.txt");
-    assert_eq!(meta.files[0].size, 11);
-    assert_eq!(meta.files[1].name, "confidential.doc");
-    assert_eq!(meta.files[1].size, 999);
     assert!(extract_archive_package(&pkg, "hunter2").is_ok());
     assert!(extract_archive_package(&pkg, "wrong").is_err());
 }
@@ -253,43 +229,19 @@ fn encrypted_data_serde_roundtrip() {
 }
 
 #[test]
-fn file_entry_serde_roundtrip() {
-    use cryptonote::archive::FileEntry;
-    let fe = FileEntry {
-        name: "file.txt".into(),
-        size: 42,
-    };
-    let json = serde_json::to_string(&fe).unwrap();
-    let back: FileEntry = serde_json::from_str(&json).unwrap();
-    assert_eq!(fe.name, back.name);
-    assert_eq!(fe.size, back.size);
-}
-
-#[test]
 fn archive_metadata_serde_roundtrip() {
-    use cryptonote::archive::{ArchiveMetadata, FileEntry};
+    use cryptonote::archive::ArchiveMetadata;
     use cryptonote::crypto::CipherType;
     let meta = ArchiveMetadata {
         cipher: CipherType::ChaCha20Poly1305,
         nonce: vec![10; 12],
         salt: vec![20; 32],
-        files: vec![
-            FileEntry {
-                name: "a.txt".into(),
-                size: 5,
-            },
-            FileEntry {
-                name: "b.bin".into(),
-                size: 100,
-            },
-        ],
     };
     let json = serde_json::to_string(&meta).unwrap();
     let back: ArchiveMetadata = serde_json::from_str(&json).unwrap();
     assert_eq!(meta.cipher, back.cipher);
     assert_eq!(meta.nonce, back.nonce);
     assert_eq!(meta.salt, back.salt);
-    assert_eq!(meta.files, back.files);
 }
 
 #[test]

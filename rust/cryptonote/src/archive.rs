@@ -6,17 +6,10 @@ use tap::prelude::*;
 use zip::CompressionMethod;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct FileEntry {
-    pub name: String,
-    pub size: u64,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArchiveMetadata {
     pub cipher: CipherType,
     pub nonce: Vec<u8>,
     pub salt: Vec<u8>,
-    pub files: Vec<FileEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -30,18 +23,6 @@ const PAYLOAD_ENTRY: &str = "_payload";
 
 fn opts(method: CompressionMethod) -> zip::write::FileOptions<'static, ()> {
     zip::write::FileOptions::default().compression_method(method)
-}
-
-fn collect_files(note: &str, attachments: &[Attachment]) -> Vec<FileEntry> {
-    std::iter::once(FileEntry {
-        name: "_note.txt".into(),
-        size: note.len() as u64,
-    })
-    .chain(attachments.iter().map(|a| FileEntry {
-        name: a.name.clone(),
-        size: a.data.len() as u64,
-    }))
-    .collect()
 }
 
 pub fn create_zip(files: &[Attachment]) -> Result<Vec<u8>, AppError> {
@@ -79,12 +60,10 @@ pub fn create_archive_package(
 ) -> Result<Vec<u8>, AppError> {
     let inner = create_inner_zip(note, attachments)?;
     let encrypted = encrypt_symmetric(&inner, password, cipher)?;
-    let files = collect_files(note, attachments);
     let meta = ArchiveMetadata {
         cipher: encrypted.cipher,
         nonce: encrypted.nonce,
         salt: encrypted.salt,
-        files,
     };
     let meta_json = serde_json::to_vec(&meta)?;
     let mut pkg = Vec::new();

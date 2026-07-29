@@ -2,3 +2,6 @@
 .static {
   position: static;
 }
+.italic {
+  font-style: italic;
+}

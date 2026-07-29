@@ -63,7 +63,7 @@ pub async fn read_clipboard() -> Result<String, Error> {
 }
 
 #[cfg(target_os = "android")]
-fn jni_dispatch<T: Send + 'static>(
+pub(crate) fn jni_dispatch<T: Send + 'static>(
     f: impl FnOnce(&mut jni::JNIEnv, &jni::objects::JObject) -> Result<T, jni::errors::Error> + Send + 'static,
 ) -> Result<T, Error> {
     use std::sync::mpsc::channel;

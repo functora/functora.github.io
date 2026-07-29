@@ -21,9 +21,7 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
 
     #[cfg(not(target_arch = "wasm32"))]
     let picker = rsx! {
-        button {
-            "btn": true,
-            onclick: move |_| handle_file_input_native(tst),
+        button { "btn": true, onclick: move |_| handle_file_input_native(tst),
             Icon { icon: FaPaperclip }
             " {Msg::AttachFiles.render(lang)}"
         }

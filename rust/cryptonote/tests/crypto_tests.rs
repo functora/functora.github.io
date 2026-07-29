@@ -89,3 +89,61 @@ fn test_different_nonces_for_same_input() {
     assert_ne!(encrypted1.nonce, encrypted2.nonce);
     assert_ne!(encrypted1.ciphertext, encrypted2.ciphertext);
 }
+
+#[test]
+fn test_derive_key_32_bytes() {
+    let salt = vec![1u8; 32];
+    let key = derive_key("password", &salt, CipherType::Aes256Gcm).expect("Key derivation failed");
+    assert_eq!(key.len(), 32);
+}
+
+#[test]
+fn test_derive_key_long_password() {
+    let long_pw = "a".repeat(100);
+    let salt = vec![1u8; 32];
+    let key = derive_key(&long_pw, &salt, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
+    assert_eq!(key.len(), 32);
+}
+
+#[test]
+fn test_encrypt_decrypt_with_long_password() {
+    let long_pw = "x".repeat(128);
+    let plaintext = b"test data with long password";
+    let encrypted = encrypt_symmetric(plaintext, &long_pw, CipherType::Aes256Gcm).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, &long_pw).expect("Decryption failed");
+    assert_eq!(plaintext.to_vec(), decrypted);
+}
+
+#[test]
+fn test_decrypt_tampered_ciphertext_fails() {
+    let plaintext = b"original data";
+    let mut encrypted = encrypt_symmetric(plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    encrypted.ciphertext[0] ^= 0xFF;
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_decrypt_tampered_nonce_fails() {
+    let plaintext = b"data";
+    let mut encrypted = encrypt_symmetric(plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    encrypted.nonce[0] ^= 0xFF;
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_encrypt_empty_password() {
+    let plaintext = b"data with no password";
+    let encrypted = encrypt_symmetric(plaintext, "", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, "").expect("Decryption failed");
+    assert_eq!(plaintext.to_vec(), decrypted);
+}
+
+#[test]
+fn test_encrypt_decrypt_large_plaintext_chacha() {
+    let plaintext = vec![7u8; 5000];
+    let encrypted = encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, "pw").expect("Decryption failed");
+    assert_eq!(plaintext, decrypted);
+}

@@ -192,7 +192,9 @@ pub fn Home() -> Element {
                         value: "{tst.password()}",
                         oninput: move |evt| tst.password().set(evt.value()),
                         onkeydown: move |evt| {
-                            if evt.key() == Key::Enter { generate_note() }
+                            if evt.key() == Key::Enter {
+                                generate_note()
+                            }
                         },
                     }
                 }
@@ -263,7 +265,9 @@ pub fn Home() -> Element {
                             value: "{tst.view().password_input()}",
                             oninput: move |evt| tst.view().password_input().set(evt.value()),
                             onkeydown: move |evt| {
-                                if evt.key() == Key::Enter { decrypt_archive() }
+                                if evt.key() == Key::Enter {
+                                    decrypt_archive()
+                                }
                             },
                         }
                     }

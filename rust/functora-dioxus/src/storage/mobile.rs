@@ -1,4 +1,6 @@
 use crate::error::Error;
+#[cfg(target_os = "android")]
+use crate::ffi::jni_dispatch;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, from_str, from_value, to_string_pretty, to_value};
@@ -6,18 +8,8 @@ use std::fs::{OpenOptions, read_to_string, write};
 use std::path::Path;
 use tap::Pipe;
 
-const NOT_JSON_OBJECT: &str = "Not a JSON object";
-
-#[cfg(target_os = "android")]
-fn jni_dispatch<T: Send + 'static>(
-    f: impl FnOnce(&mut jni::JNIEnv, &jni::objects::JObject) -> Result<T, jni::errors::Error> + Send + 'static,
-) -> Result<T, Error> {
-    use std::sync::mpsc::channel;
-    let (tx, rx) = channel();
-    dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
-        _ = tx.send(f(env, activity).map_err(Error::from));
-    });
-    rx.recv()?
+fn not_json_err() -> Error {
+    Error::NotJsonObject("Not a JSON object".into())
 }
 
 #[cfg(target_os = "android")]
@@ -70,9 +62,7 @@ pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> R
     ensure_file(p)?;
     let content = read_to_string(p)?;
     let mut json: Value = from_str(&content)?;
-    let obj = json
-        .as_object_mut()
-        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?;
+    let obj = json.as_object_mut().ok_or_else(not_json_err)?;
     _ = obj.insert(key.to_string(), to_value(val)?);
     let s = to_string_pretty(&json)?;
     write(p, s).map_err(Error::from)
@@ -116,18 +106,14 @@ pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Er
 
 pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
     let json = read_json_object(path)?;
-    json.as_object()
-        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?
-        .get(key)
-        .cloned()
-        .pipe(Ok)
+    json.as_object().ok_or_else(not_json_err)?.get(key).cloned().pipe(Ok)
 }
 
 pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let mut json = read_json_object(&path)?;
     _ = json
         .as_object_mut()
-        .ok_or_else(|| Error::NotJsonObject(NOT_JSON_OBJECT.to_string()))?
+        .ok_or_else(not_json_err)?
         .insert(key.to_string(), to_value(val).map_err(Error::from)?);
     write_json_object(path, &json)
 }

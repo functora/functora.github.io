@@ -191,3 +191,60 @@ fn test_empty_note_param() {
     let result = extract_note_param(url).expect("Extraction failed");
     assert_eq!(result, "");
 }
+
+#[test]
+fn test_note_data_serde_plaintext() {
+    let note = NoteData::PlainText("hello".into());
+    let json = serde_json::to_string(&note).unwrap();
+    let back: NoteData = serde_json::from_str(&json).unwrap();
+    match back {
+        NoteData::PlainText(t) => assert_eq!(t, "hello"),
+        _ => panic!("wrong variant"),
+    }
+}
+
+#[test]
+fn test_note_data_serde_ciphertext() {
+    let ed = cryptonote::crypto::EncryptedData {
+        cipher: cryptonote::crypto::CipherType::Aes256Gcm,
+        nonce: vec![1; 12],
+        ciphertext: vec![2; 16],
+        salt: vec![3; 32],
+    };
+    let note = NoteData::CipherText(ed);
+    let json = serde_json::to_string(&note).unwrap();
+    let back: NoteData = serde_json::from_str(&json).unwrap();
+    match back {
+        NoteData::CipherText(e) => assert_eq!(e.ciphertext, vec![2; 16]),
+        _ => panic!("wrong variant"),
+    }
+}
+
+#[test]
+fn test_extract_note_param_multiple_note_params_takes_first() {
+    let url = "https://example.com/?note=first&note=second";
+    let result = extract_note_param(url).expect("Extraction failed");
+    assert_eq!(result, "first");
+}
+
+#[test]
+fn test_extract_note_param_with_fragment() {
+    let url = "https://example.com/?note=abc#section";
+    let result = extract_note_param(url).expect("Extraction failed");
+    assert_eq!(result, "abc#section");
+}
+
+#[test]
+fn test_generate_qr_code_svg_structure() {
+    let svg = cryptonote::encoding::generate_qr_code("https://test.com").expect("QR gen failed");
+    assert!(svg.starts_with("<svg"));
+    assert!(svg.ends_with("</svg>\n") || svg.ends_with("</svg>"));
+    assert!(svg.contains("viewBox"));
+}
+
+#[test]
+fn test_generate_qr_code_long_url() {
+    let long = "https://example.com/?screen=view&note=abc123def456ghi789jkl012";
+    let svg = cryptonote::encoding::generate_qr_code(long).expect("QR gen failed");
+    assert!(svg.contains("<svg"));
+}

@@ -8,6 +8,8 @@ pub fn View(note: Option<String>) -> Element {
     let lang = use_lang();
     let mut message = use_message();
     let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
+    let extracted = tst.extracted_files()();
+    let has_attachments = extracted.iter().any(|f| f.name != "_note.txt");
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -39,6 +41,13 @@ pub fn View(note: Option<String>) -> Element {
             tst.view().note_content().set(Some(content));
         }
     });
+
+    let download_all = move || {
+        let files = tst.extracted_files()();
+        if let Ok(zip) = create_zip(&files) {
+            download_package(zip, "extracted_files.zip");
+        }
+    };
 
     let mut decrypt_note = move || {
         message.set(None);
@@ -132,6 +141,22 @@ pub fn View(note: Option<String>) -> Element {
                     dangerous_inner_html: "{rendered().unwrap_or_default()}",
                 }
 
+                for f in &extracted {
+                    if f.name != "_note.txt" {
+                        div { key: "{f.name}",
+                            "{f.name} ({format_size(f.data.len() as u64)}) "
+                            button {
+                                onclick: {
+                                    let name = f.name.clone();
+                                    let data = f.data.clone();
+                                    move |_| download_package(data.clone(), &name)
+                                },
+                                Icon { icon: FaDownload }
+                            }
+                        }
+                    }
+                }
+
                 Dock { message,
                     Button {
                         icon: Some(FaCopy),
@@ -140,19 +165,14 @@ pub fn View(note: Option<String>) -> Element {
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
                         lang,
                     }
-                    Button {
-                        icon: Some(FaPrint),
-                        primary: true,
-                        onclick: move |_| {
-                            let mut msg = message;
-                            spawn(async move {
-                                if let Err(e) = print_page().await {
-                                    msg.set(Some(Msg::Error(AppError::Fd(e))));
-                                }
-                            });
-                        },
-                        i18n: Some(Msg::Print),
-                        lang,
+                    if has_attachments {
+                        Button {
+                            icon: Some(FaDownload),
+                            primary: true,
+                            onclick: move |_| download_all(),
+                            i18n: Some(Msg::DownloadAll),
+                            lang,
+                        }
                     }
                     Button {
                         icon: Some(FaPenToSquare),

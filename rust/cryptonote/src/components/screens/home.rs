@@ -63,6 +63,7 @@ pub fn Home() -> Element {
                         tst.view().is_encrypted().set(true);
                         tst.extracted_files().set(Vec::new());
                         tst.view().password_input().set(String::new());
+                        nav.write().push(Screen::View.to_route(None));
                     }
                     Err(e) => message.set(Some(Msg::Error(e))),
                 }
@@ -72,7 +73,7 @@ pub fn Home() -> Element {
 
     #[cfg(target_arch = "wasm32")]
     let picker = rsx! {
-        label { "btn": true,
+        label { "btn": true, "primary": "",
             input {
                 r#type: "file",
                 accept: ".cryptonote",
@@ -86,46 +87,14 @@ pub fn Home() -> Element {
     #[cfg(not(target_arch = "wasm32"))]
     let picker = rsx! {
         button {
-            "btn": true,
-            onclick: move |_| open_archive_file_native(tst, message),
+            "btn": true, "primary": "",
+            onclick: move |_| open_archive_file_native(tst, message, nav),
             Icon { icon: FaPaperclip }
             " {Msg::OpenArchive.render(lang)}"
         }
     };
 
-    let mut decrypt_archive = move || {
-        let bytes = tst.archive_bytes()().unwrap_or_default();
-        if bytes.is_empty() {
-            return;
-        }
-        let password = tst.view().password_input()();
-        if password.is_empty() {
-            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
-            return;
-        }
-        spawn(async move {
-            match extract_archive_package(&bytes, &password) {
-                Ok(files) => {
-                    tst.extracted_files().set(files);
-                    tst.view().is_encrypted().set(false);
-                }
-                Err(e) => message.set(Some(Msg::Error(e))),
-            }
-        });
-    };
-
-    let download_all = move || {
-        let files = tst.extracted_files()();
-        if let Ok(zip) = create_zip(&files) {
-            download_package(zip, "extracted_files.zip");
-        }
-    };
-
     let action = tst.action()();
-    let has_archive = tst.archive_meta()().is_some();
-    let encrypted = tst.view().is_encrypted()();
-    let meta = tst.archive_meta()();
-    let files = tst.extracted_files()();
 
     rsx! {
         section {
@@ -247,88 +216,21 @@ pub fn Home() -> Element {
                     oninput: move |evt| tst.home().url_input().set(evt.value()),
                 }
 
-                fieldset {
-                    legend { "{Msg::OpenArchive.render(lang)}" }
-                    {picker}
-                    if has_archive && encrypted {
-                        p { "{Msg::EncryptedNoteDesc.render(lang)}" }
-                        if let Some(ref m) = meta {
-                            p {
-                                strong { "{Msg::EncryptedNote.render(lang)}: " }
-                                "{m.cipher}"
-                            }
-                        }
-                        label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
-                        input {
-                            r#type: "password",
-                            placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
-                            value: "{tst.view().password_input()}",
-                            oninput: move |evt| tst.view().password_input().set(evt.value()),
-                            onkeydown: move |evt| {
-                                if evt.key() == Key::Enter {
-                                    decrypt_archive()
-                                }
-                            },
-                        }
-                    }
-
-                    if !encrypted {
-                        p { "{Msg::ArchiveDecrypted.render(lang)}" }
-                        for f in &files {
-                            div { key: "{f.name}",
-                                if f.name == "_note.txt" {
-                                    p { "{Msg::ExtractedNote.render(lang)}:" }
-                                    Pre {
-                                        code { "{String::from_utf8_lossy(&f.data)}" }
-                                    }
-                                } else {
-                                    "{f.name} ({format_size(f.data.len() as u64)}) "
-                                    button {
-                                        onclick: {
-                                            let data = f.data.clone();
-                                            let name = f.name.clone();
-                                            move |_| download_package(data.clone(), &name)
-                                        },
-                                        Icon { icon: FaDownload }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 Dock { message,
-                    if !encrypted {
-                        Button {
-                            icon: Some(FaDownload),
-                            primary: true,
-                            onclick: move |_| download_all(),
-                            i18n: Some(Msg::DownloadAll),
-                            lang,
-                        }
-                    } else if has_archive {
-                        Button {
-                            icon: Some(FaLockOpen),
-                            primary: true,
-                            onclick: move |_| decrypt_archive(),
-                            i18n: Some(Msg::DecryptButton),
-                            lang,
-                        }
-                    } else {
-                        Button {
-                            icon: Some(FaPaste),
-                            onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
-                            i18n: Some(Msg::Base(BaseMsg::Paste)),
-                            lang,
-                        }
-                        Button {
-                            icon: Some(FaFolderOpen),
-                            primary: true,
-                            onclick: open_url,
-                            i18n: Some(Msg::OpenButton),
-                            lang,
-                        }
+                    Button {
+                        icon: Some(FaPaste),
+                        onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
+                        i18n: Some(Msg::Base(BaseMsg::Paste)),
+                        lang,
                     }
+                    Button {
+                        icon: Some(FaFolderOpen),
+                        primary: true,
+                        onclick: open_url,
+                        i18n: Some(Msg::OpenButton),
+                        lang,
+                    }
+                    {picker}
                     Button {
                         icon: Some(FaTrash),
                         onclick: reset_ctx,

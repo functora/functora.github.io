@@ -90,7 +90,11 @@ pub fn handle_file_input_native(tst: Store<TemporaryState>) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_archive_file_native(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
+pub fn open_archive_file_native(
+    tst: Store<TemporaryState>,
+    mut message: Signal<Option<Msg>>,
+    mut nav: Signal<Nav<Route>>,
+) {
     spawn(async move {
         let files = pick_files_via_eval(false).await;
         let (_, bytes) = match files.into_iter().next() {
@@ -104,6 +108,7 @@ pub fn open_archive_file_native(tst: Store<TemporaryState>, mut message: Signal<
                 tst.view().is_encrypted().set(true);
                 tst.extracted_files().set(Vec::new());
                 tst.view().password_input().set(String::new());
+                nav.write().push(Screen::View.to_route(None));
             }
             Err(e) => message.set(Some(Msg::Error(e))),
         }

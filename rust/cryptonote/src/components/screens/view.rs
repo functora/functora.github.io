@@ -29,6 +29,9 @@ pub fn View(note: Option<String>) -> Element {
                 return;
             }
         }
+        if tst.archive_meta()().is_some() {
+            return;
+        }
         let content = tst.content()();
         if content.is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
@@ -39,14 +42,14 @@ pub fn View(note: Option<String>) -> Element {
 
     let mut decrypt_note = move || {
         message.set(None);
+        let pwd = tst.view().password_input()();
+        if pwd.is_empty() {
+            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
+            return;
+        }
+
         let enc_data = tst.view().encrypted_data()();
         if let Some(enc) = enc_data {
-            let pwd = tst.view().password_input()();
-            if pwd.is_empty() {
-                message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
-                return;
-            }
-
             match decrypt_symmetric(&enc, &pwd) {
                 Ok(plaintext) => match String::from_utf8(plaintext) {
                     Ok(text) => {
@@ -58,6 +61,20 @@ pub fn View(note: Option<String>) -> Element {
                     }
                     Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e)))),
                 },
+                Err(e) => message.set(Some(Msg::Error(e))),
+            }
+        } else if let Some(bytes) = tst.archive_bytes()() {
+            match extract_archive_package(&bytes, &pwd) {
+                Ok(files) => {
+                    if let Some(note_file) = files.iter().find(|f| f.name == "_note.txt") {
+                        if let Ok(text) = String::from_utf8(note_file.data.clone()) {
+                            tst.view().note_content().set(Some(text.clone()));
+                            tst.content().set(text);
+                        }
+                    }
+                    tst.extracted_files().set(files);
+                    tst.view().is_encrypted().set(false);
+                }
                 Err(e) => message.set(Some(Msg::Error(e))),
             }
         }

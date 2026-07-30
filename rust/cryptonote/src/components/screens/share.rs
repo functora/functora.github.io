@@ -158,8 +158,8 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 let bytes = pkg_bytes();
                                 if !bytes.is_empty() {
-                                    match download_package(bytes, "cryptonote_archive.cryptonote") {
-                                        Ok(()) => message.set(Some(Msg::Sent)),
+                                    match download_package(bytes, "archive.cryptonote") {
+                                        Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
                                         Err(e) => {
                                             message
                                                 .set(

@@ -19,11 +19,11 @@ fn test_archive_roundtrip_chacha20() {
 
     let files = extract_archive_package(&pkg, "password").expect("Package extraction failed");
     assert_eq!(files.len(), 3);
-    let note_file = files.iter().find(|f| f.name == "_note.txt").unwrap();
+    let note_file = files.iter().find(|f| f.name == "note.txt").unwrap();
     assert_eq!(String::from_utf8(note_file.data.clone()).unwrap(), note);
-    let hello = files.iter().find(|f| f.name == "hello.txt").unwrap();
+    let hello = files.iter().find(|f| f.name == "attachments/hello.txt").unwrap();
     assert_eq!(hello.data, b"Hello, World!");
-    let data = files.iter().find(|f| f.name == "data.bin").unwrap();
+    let data = files.iter().find(|f| f.name == "attachments/data.bin").unwrap();
     assert_eq!(data.data, vec![1, 2, 3, 4, 5]);
 }
 
@@ -75,7 +75,7 @@ fn test_archive_unicode_filenames() {
     let pkg = create_archive_package("note", &attachments, "pw", CipherType::ChaCha20Poly1305)
         .expect("Package creation failed");
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
-    let f = files.iter().find(|f| f.name == "привет.txt").unwrap();
+    let f = files.iter().find(|f| f.name == "attachments/привет.txt").unwrap();
     assert_eq!(f.data, b"hello");
 }
 
@@ -92,7 +92,7 @@ fn test_archive_multiple_attachments() {
     let files = extract_archive_package(&pkg, "pw").expect("Package extraction failed");
     assert_eq!(files.len(), 11);
     for i in 0..10 {
-        let f = files.iter().find(|f| f.name == format!("file_{}.bin", i)).unwrap();
+        let f = files.iter().find(|f| f.name == format!("attachments/file_{}.bin", i)).unwrap();
         assert_eq!(f.data, vec![i as u8; 100]);
     }
 }

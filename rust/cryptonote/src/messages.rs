@@ -70,6 +70,7 @@ pub enum Msg {
     Attachments,
     ArchiveDecrypted,
     ExtractedNote,
+    Downloaded(String),
 }
 
 impl I18N for Msg {
@@ -206,6 +207,7 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::Attachments => "Attachments",
             Self::ArchiveDecrypted => "Archive decrypted successfully.",
             Self::ExtractedNote => "Note",
+            Self::Downloaded(loc) => return format!("Downloaded: {loc}"),
         }
         .to_string()
     }
@@ -343,6 +345,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::Attachments => "Adjuntos",
             Self::ArchiveDecrypted => "Archivo descifrado correctamente.",
             Self::ExtractedNote => "Nota",
+            Self::Downloaded(loc) => return format!("Descargado: {loc}"),
         }
         .to_string()
     }
@@ -480,6 +483,7 @@ Cryptonote следует современным криптографическ�
             Self::Attachments => "Вложения",
             Self::ArchiveDecrypted => "Архив успешно расшифрован.",
             Self::ExtractedNote => "Заметка",
+            Self::Downloaded(loc) => return format!("Скачано: {loc}"),
         }
         .to_string()
     }

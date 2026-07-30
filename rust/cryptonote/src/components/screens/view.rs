@@ -9,7 +9,7 @@ pub fn View(note: Option<String>) -> Element {
     let mut message = use_message();
     let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
     let extracted = tst.extracted_files()();
-    let has_attachments = extracted.iter().any(|f| f.name != "_note.txt");
+    let has_attachments = extracted.iter().any(|f| f.name != "note.txt");
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -45,12 +45,9 @@ pub fn View(note: Option<String>) -> Element {
     let mut download_all = move || {
         let files = tst.extracted_files()();
         if let Ok(zip) = create_zip(&files) {
-            if let Err(e) = download_package(zip, "extracted_files.zip") {
-                message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                    e,
-                )))));
-            } else {
-                message.set(Some(Msg::Sent));
+            match download_package(zip, "cryptonote-unlocked.zip") {
+                Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
             }
         }
     };
@@ -81,7 +78,7 @@ pub fn View(note: Option<String>) -> Element {
         } else if let Some(bytes) = tst.archive_bytes()() {
             match extract_archive_package(&bytes, &pwd) {
                 Ok(files) => {
-                    if let Some(note_file) = files.iter().find(|f| f.name == "_note.txt") {
+                    if let Some(note_file) = files.iter().find(|f| f.name == "note.txt") {
                         if let Ok(text) = String::from_utf8(note_file.data.clone()) {
                             tst.view().note_content().set(Some(text.clone()));
                             tst.content().set(text);
@@ -148,15 +145,18 @@ pub fn View(note: Option<String>) -> Element {
                 }
 
                 for f in &extracted {
-                    if f.name != "_note.txt" {
+                    if f.name != "note.txt" {
                         div { key: "{f.name}",
-                            "{f.name} ({format_size(f.data.len() as u64)}) "
+                            {format!("{} ({}) ", f.name.strip_prefix("attachments/").unwrap_or(&f.name), format_size(f.data.len() as u64))}
                             button {
                                 onclick: {
-                                    let name = f.name.clone();
                                     let data = f.data.clone();
+                                    let name = f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string();
                                     move |_| {
-                                        let _ = download_package(data.clone(), &name);
+                                        match download_package(data.clone(), &name) {
+                                            Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                                            Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
+                                        }
                                     }
                                 },
                                 Icon { icon: FaDownload }

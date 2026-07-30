@@ -196,24 +196,24 @@ async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, A
 }
 
 #[cfg(not(target_os = "android"))]
-pub fn download_package(data: Vec<u8>, filename: &str) -> Result<(), String> {
+pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
     let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
     let script = format!(
         r#"const a=document.createElement('a');a.href="data:application/octet-stream;base64,{b64}";a.download='{filename}';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),1000);"#,
     );
     dioxus::document::eval(&script);
-    Ok(())
+    Ok(filename.to_string())
 }
 
 #[cfg(target_os = "android")]
-pub fn download_package(data: Vec<u8>, filename: &str) -> Result<(), String> {
-    use jni::objects::JObject;
+pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
+    use jni::objects::{JObject, JString};
     use jni::JNIEnv;
     use std::sync::mpsc::channel;
     let (tx, rx) = channel();
     let filename = filename.to_string();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
-        let res = (|| -> Result<(), jni::errors::Error> {
+        let res = (|| -> Result<String, jni::errors::Error> {
             let resolver = env
                 .call_method(
                     activity,
@@ -265,7 +265,10 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<(), String> {
             let ba = env.byte_array_from_slice(&data)?;
             env.call_method(&os, "write", "([B)V", &[(&ba).into()])?;
             env.call_method(&os, "close", "()V", &[])?;
-            Ok(())
+            let uri_string = env
+                .call_method(&uri, "toString", "()Ljava/lang/String;", &[])?
+                .l()?;
+            env.get_string(&JString::from(uri_string)).map(String::from)
         })();
         if let Err(ref e) = res {
             tracing::error!("MediaStore JNI error: {e}");

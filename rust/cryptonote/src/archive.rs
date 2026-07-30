@@ -18,8 +18,8 @@ pub struct Attachment {
     pub data: Vec<u8>,
 }
 
-const METADATA_ENTRY: &str = "_metadata.json";
-const PAYLOAD_ENTRY: &str = "_payload";
+const METADATA_ENTRY: &str = "metadata.json";
+const PAYLOAD_ENTRY: &str = "payload.cpt";
 
 fn opts(method: CompressionMethod) -> zip::write::FileOptions<'static, ()> {
     zip::write::FileOptions::default().compression_method(method)
@@ -41,15 +41,17 @@ pub fn create_zip(files: &[Attachment]) -> Result<Vec<u8>, AppError> {
 }
 
 fn create_inner_zip(note: &str, attachments: &[Attachment]) -> Result<Vec<u8>, AppError> {
-    create_zip(
-        &[Attachment {
-            name: "_note.txt".into(),
-            data: note.as_bytes().to_vec(),
-        }]
-        .into_iter()
-        .chain(attachments.iter().cloned())
-        .collect::<Vec<_>>(),
-    )
+    let mut files = vec![Attachment {
+        name: "note.txt".into(),
+        data: note.as_bytes().to_vec(),
+    }];
+    for att in attachments {
+        files.push(Attachment {
+            name: format!("attachments/{}", att.name),
+            data: att.data.clone(),
+        });
+    }
+    create_zip(&files)
 }
 
 pub fn create_archive_package(

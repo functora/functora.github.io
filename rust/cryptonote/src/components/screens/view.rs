@@ -39,6 +39,15 @@ pub fn View(note: Option<String>) -> Element {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
         } else {
             tst.view().note_content().set(Some(content));
+            let atts = tst.attachments()();
+            if !atts.is_empty() {
+                tst.extracted_files().set(
+                    atts.into_iter().map(|a| Attachment {
+                        name: format!("attachments/{}", a.name),
+                        data: a.data,
+                    }).collect(),
+                );
+            }
         }
     });
 

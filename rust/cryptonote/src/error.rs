@@ -18,7 +18,7 @@ pub enum AppError {
     Archive(String),
     NoNoteInUrl,
     NoNoteParam,
-    Fd(#[from] functora_dioxus::Error),
+    FunctoraDioxus(#[from] functora_dioxus::Error),
 }
 
 impl I18N for AppError {
@@ -37,7 +37,7 @@ impl I18N for AppError {
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::NoNoteInUrl => "No note found in URL".into(),
             Self::NoNoteParam => "URL does not contain a note parameter".into(),
-            Self::Fd(e) => e.render_eng(),
+            Self::FunctoraDioxus(e) => e.render_eng(),
         }
     }
 
@@ -56,7 +56,7 @@ impl I18N for AppError {
             Self::Archive(e) => format!("Error de archivo: {e}"),
             Self::NoNoteInUrl => "No se encontró nota en la URL".into(),
             Self::NoNoteParam => "La URL no contiene un parámetro de nota".into(),
-            Self::Fd(e) => e.render_spa(),
+            Self::FunctoraDioxus(e) => e.render_spa(),
         }
     }
 
@@ -75,7 +75,7 @@ impl I18N for AppError {
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::NoNoteInUrl => "Заметка не найдена в URL".into(),
             Self::NoNoteParam => "URL не содержит параметр заметки".into(),
-            Self::Fd(e) => e.render_rus(),
+            Self::FunctoraDioxus(e) => e.render_rus(),
         }
     }
 }

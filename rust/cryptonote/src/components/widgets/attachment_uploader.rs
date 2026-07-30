@@ -10,8 +10,7 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
         return rsx! {};
     }
     rsx! {
-        fieldset {
-            margin_bottom: "1rem",
+        fieldset { margin_bottom: "1rem",
             legend { "{Msg::Attachments.render(lang)}" }
             ul {
                 for (i, att) in attachments.iter().enumerate() {

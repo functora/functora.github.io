@@ -194,7 +194,7 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::Clear,
         Msg::AttachFiles,
         Msg::RemoveFile,
-        Msg::ArchiveDownloaded,
+        Msg::ArchiveReady,
         Msg::OpenArchive,
         Msg::DownloadAll,
         Msg::ArchiveDecrypted,
@@ -279,8 +279,7 @@ fn app_error_cipher_getrandom_base64_json_utf8_eng() {
 
 #[test]
 fn app_error_fd_delegation_eng() {
-    use functora_dioxus::Error as FdError;
-    let err = AppError::Fd(FdError::IO("io".into()));
+    let err = AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into()));
     assert!(!err.render_eng().is_empty());
     assert!(err.render_eng().contains("io"));
 }
@@ -309,7 +308,7 @@ fn app_error_i18n_render_spa_all_variants() {
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
-        AppError::Fd(functora_dioxus::Error::IO("io".into())),
+        AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into())),
     ];
     for v in &variants {
         let spa = v.render_spa();
@@ -335,7 +334,7 @@ fn app_error_i18n_render_rus_all_variants() {
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
-        AppError::Fd(functora_dioxus::Error::IO("io".into())),
+        AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into())),
     ];
     for v in &variants {
         let rus = v.render_rus();

@@ -16,7 +16,7 @@ pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Sign
     spawn(async move {
         match functora_dioxus::ffi::read_clipboard().await {
             Ok(text) => on_paste(text),
-            Err(e) => message.set(Some(Msg::Error(AppError::Fd(e)))),
+            Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
         }
     });
 }
@@ -47,7 +47,11 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
     }
 }
 
-pub fn handle_file_input(evt: dioxus::prelude::FormEvent, tst: Store<TemporaryState>) {
+pub fn handle_file_input(
+    evt: dioxus::prelude::FormEvent,
+    tst: Store<TemporaryState>,
+    mut message: Signal<Option<Msg>>,
+) {
     #[cfg(target_arch = "wasm32")]
     use dioxus::web::WebEventExt;
     #[cfg(target_arch = "wasm32")]
@@ -61,16 +65,23 @@ pub fn handle_file_input(evt: dioxus::prelude::FormEvent, tst: Store<TemporarySt
         .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok());
     spawn(async move {
         let mut current = tst.attachments()();
+        let mut errors = Vec::new();
         for f in files {
             let name = f.name();
-            if let Ok(bytes) = f.read_bytes().await {
-                current.push(Attachment {
+            match f.read_bytes().await {
+                Ok(bytes) => current.push(Attachment {
                     name,
                     data: bytes.to_vec(),
-                });
+                }),
+                Err(e) => errors.push(format!("{name}: {e}")),
             }
         }
         tst.attachments().set(current);
+        if let Some(first) = errors.into_iter().next() {
+            message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                first,
+            )))));
+        }
         #[cfg(target_arch = "wasm32")]
         if let Some(input) = input {
             input.set_value("");
@@ -79,13 +90,18 @@ pub fn handle_file_input(evt: dioxus::prelude::FormEvent, tst: Store<TemporarySt
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn handle_file_input_native(tst: Store<TemporaryState>) {
+pub fn handle_file_input_native(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
     spawn(async move {
-        let mut current = tst.attachments()();
-        for (name, data) in pick_files_via_eval(true).await {
-            current.push(Attachment { name, data });
+        match pick_files_via_eval(true).await {
+            Ok(files) => {
+                let mut current = tst.attachments()();
+                for (name, data) in files {
+                    current.push(Attachment { name, data });
+                }
+                tst.attachments().set(current);
+            }
+            Err(e) => message.set(Some(Msg::Error(e))),
         }
-        tst.attachments().set(current);
     });
 }
 
@@ -96,7 +112,13 @@ pub fn open_archive_file_native(
     mut nav: Signal<Nav<Route>>,
 ) {
     spawn(async move {
-        let files = pick_files_via_eval(false).await;
+        let files = match pick_files_via_eval(false).await {
+            Ok(f) => f,
+            Err(e) => {
+                message.set(Some(Msg::Error(e)));
+                return;
+            }
+        };
         let (_, bytes) = match files.into_iter().next() {
             Some(f) => f,
             None => return,
@@ -116,7 +138,7 @@ pub fn open_archive_file_native(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn pick_files_via_eval(multiple: bool) -> Vec<(String, Vec<u8>)> {
+async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, AppError> {
     use base64::engine::general_purpose::STANDARD as BASE64;
 
     let multiple_str = if multiple { "true" } else { "false" };
@@ -159,26 +181,32 @@ async fn pick_files_via_eval(multiple: bool) -> Vec<(String, Vec<u8>)> {
     }
 
     let mut eval = dioxus::document::eval(&code);
-    match eval.recv::<Vec<FileResult>>().await {
-        Ok(files) => files
-            .into_iter()
-            .filter_map(|f| BASE64.decode(&f.data).ok().map(|bytes| (f.name, bytes)))
-            .collect(),
-        Err(_) => Vec::new(),
+    let results = eval
+        .recv::<Vec<FileResult>>()
+        .await
+        .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JS(e.to_string())))?;
+    let mut files = Vec::with_capacity(results.len());
+    for f in results {
+        match BASE64.decode(&f.data) {
+            Ok(bytes) => files.push((f.name, bytes)),
+            Err(e) => tracing::warn!("File decode error for {}: {e}", f.name),
+        }
     }
+    Ok(files)
 }
 
 #[cfg(not(target_os = "android"))]
-pub fn download_package(data: Vec<u8>, filename: &str) {
+pub fn download_package(data: Vec<u8>, filename: &str) -> Result<(), String> {
     let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
     let script = format!(
         r#"const a=document.createElement('a');a.href="data:application/octet-stream;base64,{b64}";a.download='{filename}';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),1000);"#,
     );
-    let _ = dioxus::document::eval(&script);
+    dioxus::document::eval(&script);
+    Ok(())
 }
 
 #[cfg(target_os = "android")]
-pub fn download_package(data: Vec<u8>, filename: &str) {
+pub fn download_package(data: Vec<u8>, filename: &str) -> Result<(), String> {
     use jni::objects::JObject;
     use jni::JNIEnv;
     use std::sync::mpsc::channel;
@@ -246,11 +274,9 @@ pub fn download_package(data: Vec<u8>, filename: &str) {
         let _ = env.exception_clear();
         let _ = tx.send(res);
     });
-    match rx.recv() {
-        Ok(Ok(())) => tracing::info!("Saved to Downloads"),
-        Ok(Err(e)) => tracing::error!("save failed: {e}"),
-        Err(e) => tracing::error!("channel error: {e:?}"),
-    }
+    rx.recv()
+        .map_err(|e| format!("channel error: {e}"))
+        .and_then(|r| r.map_err(|e| format!("JNI error: {e}")))
 }
 
 pub fn remove_attachment(tst: Store<TemporaryState>, index: usize) {

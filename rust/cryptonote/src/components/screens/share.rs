@@ -83,19 +83,7 @@ pub fn Share() -> Element {
         Breadcrumb { title: Msg::Share }
         section {
             if pkg_ready() {
-                p { "{Msg::ArchiveDownloaded.render(lang)}" }
-                Button {
-                    icon: Some(FaDownload),
-                    primary: true,
-                    onclick: move |_| {
-                        let bytes = pkg_bytes();
-                        if !bytes.is_empty() {
-                            download_package(bytes, "cryptonote_archive.cryptonote");
-                        }
-                    },
-                    i18n: Some(Msg::DownloadAll),
-                    lang,
-                }
+                p { "{Msg::ArchiveReady.render(lang)}" }
             } else if !url().is_empty() {
                 if !qr_code().is_empty() {
                     div { dangerous_inner_html: "{qr_code}" }
@@ -133,7 +121,7 @@ pub fn Share() -> Element {
                                 let mut msg = message;
                                 spawn(async move {
                                     if let Err(e) = print_page().await {
-                                        msg.set(Some(Msg::Error(AppError::Fd(e))));
+                                        msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
                                     }
                                 });
                             },
@@ -155,7 +143,7 @@ pub fn Share() -> Element {
                                     };
                                     match web_share(data).await {
                                         Ok(()) => msg.set(Some(Msg::Sent)),
-                                        Err(e) => msg.set(Some(Msg::Error(AppError::Fd(e)))),
+                                        Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
                                     }
                                 });
                             },
@@ -170,7 +158,19 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 let bytes = pkg_bytes();
                                 if !bytes.is_empty() {
-                                    download_package(bytes, "cryptonote_archive.cryptonote");
+                                    match download_package(bytes, "cryptonote_archive.cryptonote") {
+                                        Ok(()) => message.set(Some(Msg::Sent)),
+                                        Err(e) => {
+                                            message
+                                                .set(
+                                                    Some(
+                                                        Msg::Error(
+                                                            AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                                        ),
+                                                    ),
+                                                )
+                                        }
+                                    }
                                 }
                             },
                             i18n: Some(Msg::DownloadAll),

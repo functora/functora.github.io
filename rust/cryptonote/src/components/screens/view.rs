@@ -42,10 +42,16 @@ pub fn View(note: Option<String>) -> Element {
         }
     });
 
-    let download_all = move || {
+    let mut download_all = move || {
         let files = tst.extracted_files()();
         if let Ok(zip) = create_zip(&files) {
-            download_package(zip, "extracted_files.zip");
+            if let Err(e) = download_package(zip, "extracted_files.zip") {
+                message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                    e,
+                )))));
+            } else {
+                message.set(Some(Msg::Sent));
+            }
         }
     };
 
@@ -149,7 +155,9 @@ pub fn View(note: Option<String>) -> Element {
                                 onclick: {
                                     let name = f.name.clone();
                                     let data = f.data.clone();
-                                    move |_| download_package(data.clone(), &name)
+                                    move |_| {
+                                        let _ = download_package(data.clone(), &name);
+                                    }
                                 },
                                 Icon { icon: FaDownload }
                             }

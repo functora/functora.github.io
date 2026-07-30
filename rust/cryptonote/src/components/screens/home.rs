@@ -54,7 +54,12 @@ pub fn Home() -> Element {
                 };
                 let bytes = match file.read_bytes().await {
                     Ok(b) => b.to_vec(),
-                    Err(_) => return,
+                    Err(e) => {
+                        message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                            e.to_string(),
+                        )))));
+                        return;
+                    }
                 };
                 match read_archive_metadata(&bytes) {
                     Ok(meta) => {
@@ -101,7 +106,7 @@ pub fn Home() -> Element {
             input {
                 r#type: "file",
                 multiple: true,
-                onchange: move |evt| handle_file_input(evt, tst),
+                onchange: move |evt| handle_file_input(evt, tst, message),
             }
             Icon { icon: FaPaperclip }
             " {Msg::AttachFiles.render(lang)}"
@@ -110,7 +115,9 @@ pub fn Home() -> Element {
 
     #[cfg(not(target_arch = "wasm32"))]
     let attach_picker = rsx! {
-        button { "btn": true, onclick: move |_| handle_file_input_native(tst),
+        button {
+            "btn": true,
+            onclick: move |_| handle_file_input_native(tst, message),
             Icon { icon: FaPaperclip }
             " {Msg::AttachFiles.render(lang)}"
         }

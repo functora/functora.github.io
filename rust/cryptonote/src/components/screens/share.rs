@@ -36,7 +36,11 @@ pub fn Share() -> Element {
                         if password.is_empty() {
                             return Err(AppError::PasswordRequired);
                         }
-                        NoteData::CipherText(encrypt_symmetric(content.as_bytes(), &password, cipher)?)
+                        NoteData::CipherText(encrypt_symmetric(
+                            content.as_bytes(),
+                            &password,
+                            cipher,
+                        )?)
                     }
                     None => NoteData::PlainText(content),
                 };
@@ -83,7 +87,7 @@ pub fn Share() -> Element {
         Breadcrumb { title: Msg::Share }
         section {
             if pkg_ready() {
-                p { "{Msg::ArchiveReady.render(lang)}" }
+                p { "fs": "l", "{Msg::ArchiveReady.render(lang)}" }
             } else if !url().is_empty() {
                 if !qr_code().is_empty() {
                     div { dangerous_inner_html: "{qr_code}" }

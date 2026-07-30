@@ -10,17 +10,23 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
         return rsx! {};
     }
     rsx! {
-        fieldset { margin_bottom: "1rem",
-            legend { "{Msg::Attachments.render(lang)}" }
-            ul {
+        table {
+            thead {
+                tr {
+                    th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                }
+            }
+            tbody {
                 for (i, att) in attachments.iter().enumerate() {
-                    li { key: "{i}",
-                        Icon { icon: FaFile }
-                        " {att.name} ({format_size(att.data.len() as u64)}) "
-                        button {
-                            onclick: move |_| remove_attachment(tst, i),
-                            aria_label: "{Msg::RemoveFile.render(lang)}",
-                            Icon { icon: FaXmark }
+                    tr { key: "{i}",
+                        td { " {att.name}" }
+                        td { "txt": "r", "{format_size(att.data.len() as u64)}" }
+                        td {
+                            button {
+                                onclick: move |_| remove_attachment(tst, i),
+                                aria_label: "{Msg::RemoveFile.render(lang)}",
+                                Icon { icon: FaXmark }
+                            }
                         }
                     }
                 }

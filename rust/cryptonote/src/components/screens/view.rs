@@ -144,22 +144,29 @@ pub fn View(note: Option<String>) -> Element {
                     dangerous_inner_html: "{rendered().unwrap_or_default()}",
                 }
 
-                for f in &extracted {
-                    if f.name != "note.txt" {
-                        div { key: "{f.name}",
-                            {format!("{} ({}) ", f.name.strip_prefix("attachments/").unwrap_or(&f.name), format_size(f.data.len() as u64))}
-                            button {
-                                onclick: {
-                                    let data = f.data.clone();
-                                    let name = f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string();
-                                    move |_| {
-                                        match download_package(data.clone(), &name) {
-                                            Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                            Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
+                table {
+                    tbody {
+                        for f in &extracted {
+                            if f.name != "note.txt" {
+                                tr { key: "{f.name}",
+                                    td { {f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string()} }
+                                    td { "txt": "r", "{format_size(f.data.len() as u64)}" }
+                                    td {
+                                        button {
+                                            onclick: {
+                                                let data = f.data.clone();
+                                                let name = f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string();
+                                                move |_| {
+                                                    match download_package(data.clone(), &name) {
+                                                        Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                                                        Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
+                                                    }
+                                                }
+                                            },
+                                            Icon { icon: FaDownload }
                                         }
                                     }
-                                },
-                                Icon { icon: FaDownload }
+                                }
                             }
                         }
                     }

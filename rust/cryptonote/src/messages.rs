@@ -67,6 +67,7 @@ pub enum Msg {
     ArchiveDownloaded,
     OpenArchive,
     DownloadAll,
+    Attachments,
     ArchiveDecrypted,
     ExtractedNote,
 }
@@ -202,6 +203,7 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::ArchiveDownloaded => "Archive package downloaded. Share the file with your recipient.",
             Self::OpenArchive => "Open archive",
             Self::DownloadAll => "Download all",
+            Self::Attachments => "Attachments",
             Self::ArchiveDecrypted => "Archive decrypted successfully.",
             Self::ExtractedNote => "Note",
         }
@@ -338,6 +340,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::ArchiveDownloaded => "Paquete de archivo descargado. Comparte el archivo con tu destinatario.",
             Self::OpenArchive => "Abrir archivo",
             Self::DownloadAll => "Descargar todo",
+            Self::Attachments => "Adjuntos",
             Self::ArchiveDecrypted => "Archivo descifrado correctamente.",
             Self::ExtractedNote => "Nota",
         }
@@ -474,6 +477,7 @@ Cryptonote следует современным криптографическ�
             Self::ArchiveDownloaded => "Пакет архива загружен. Поделитесь файлом с получателем.",
             Self::OpenArchive => "Открыть архив",
             Self::DownloadAll => "Скачать всё",
+            Self::Attachments => "Вложения",
             Self::ArchiveDecrypted => "Архив успешно расшифрован.",
             Self::ExtractedNote => "Заметка",
         }

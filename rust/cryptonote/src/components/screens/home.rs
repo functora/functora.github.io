@@ -87,10 +87,32 @@ pub fn Home() -> Element {
     #[cfg(not(target_arch = "wasm32"))]
     let picker = rsx! {
         button {
-            "btn": true, "primary": "",
+            "btn": true,
+            "primary": "",
             onclick: move |_| open_archive_file_native(tst, message, nav),
             Icon { icon: FaPaperclip }
             " {Msg::OpenArchive.render(lang)}"
+        }
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let attach_picker = rsx! {
+        label { "btn": true,
+            input {
+                r#type: "file",
+                multiple: true,
+                onchange: move |evt| handle_file_input(evt, tst),
+            }
+            Icon { icon: FaPaperclip }
+            " {Msg::AttachFiles.render(lang)}"
+        }
+    };
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let attach_picker = rsx! {
+        button { "btn": true, onclick: move |_| handle_file_input_native(tst),
+            Icon { icon: FaPaperclip }
+            " {Msg::AttachFiles.render(lang)}"
         }
     };
 
@@ -177,7 +199,6 @@ pub fn Home() -> Element {
                 }
 
                 AttachmentUploader { tst, lang }
-
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
@@ -192,6 +213,7 @@ pub fn Home() -> Element {
                         i18n: Some(Msg::Share),
                         lang,
                     }
+                    {attach_picker}
                     Button {
                         icon: Some(FaEye),
                         onclick: move |_| nav.write().push(Screen::View.to_route(None)),

@@ -61,13 +61,8 @@ pub fn Home() -> Element {
                         return;
                     }
                 };
-                match read_archive_metadata(&bytes) {
-                    Ok(_) => {
-                        tst.encrypted_archive()
-                            .set(Some(EncryptedArchive::new(bytes).infallible()));
-                        tst.password().set(String::new());
-                        nav.write().push(Screen::View.to_route(None));
-                    }
+                match open_archive(bytes, tst, nav) {
+                    Ok(()) => {}
                     Err(e) => message.set(Some(Msg::Error(e))),
                 }
             }

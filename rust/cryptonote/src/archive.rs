@@ -7,7 +7,7 @@ use zip::CompressionMethod;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArchiveMetadata {
-    pub cipher: CipherType,
+    pub cipher: Option<CipherType>,
     pub nonce: Vec<u8>,
     pub salt: Vec<u8>,
 }
@@ -58,14 +58,29 @@ pub fn create_archive_package(
     note: &str,
     attachments: &[Attachment],
     password: &str,
-    cipher: CipherType,
+    cipher: Option<CipherType>,
 ) -> Result<Vec<u8>, AppError> {
     let inner = create_inner_zip(note, attachments)?;
-    let encrypted = encrypt_symmetric(&inner, password, cipher)?;
-    let meta = ArchiveMetadata {
-        cipher: encrypted.cipher,
-        nonce: encrypted.nonce,
-        salt: encrypted.salt,
+    let (payload, meta) = match cipher {
+        Some(cipher) => {
+            let encrypted = encrypt_symmetric(&inner, password, cipher)?;
+            (
+                encrypted.ciphertext,
+                ArchiveMetadata {
+                    cipher: Some(encrypted.cipher),
+                    nonce: encrypted.nonce,
+                    salt: encrypted.salt,
+                },
+            )
+        }
+        None => (
+            inner,
+            ArchiveMetadata {
+                cipher: None,
+                nonce: Vec::new(),
+                salt: Vec::new(),
+            },
+        ),
     };
     let meta_json = serde_json::to_vec(&meta)?;
     let mut pkg = Vec::new();
@@ -78,8 +93,7 @@ pub fn create_archive_package(
             .map_err(|e| AppError::Archive(e.to_string()))?;
         zip.start_file(PAYLOAD_ENTRY, stored)
             .map_err(|e| AppError::Archive(e.to_string()))?;
-        zip.write_all(&encrypted.ciphertext)
-            .map_err(|e| AppError::Archive(e.to_string()))?;
+        zip.write_all(&payload).map_err(|e| AppError::Archive(e.to_string()))?;
         zip.finish().map_err(|e| AppError::Archive(e.to_string()))?;
     }
     Ok(pkg)
@@ -102,7 +116,7 @@ pub fn extract_archive_package(package: &[u8], password: &str) -> Result<(String
     let mut archive =
         zip::ZipArchive::new(std::io::Cursor::new(package)).map_err(|e| AppError::Archive(e.to_string()))?;
     let mut meta_json = Vec::new();
-    let mut ciphertext = Vec::new();
+    let mut payload = Vec::new();
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| AppError::Archive(e.to_string()))?;
         match file.name() {
@@ -111,24 +125,26 @@ pub fn extract_archive_package(package: &[u8], password: &str) -> Result<(String
                     .map_err(|e| AppError::Archive(e.to_string()))?;
             }
             PAYLOAD_ENTRY => {
-                file.read_to_end(&mut ciphertext)
+                file.read_to_end(&mut payload)
                     .map_err(|e| AppError::Archive(e.to_string()))?;
             }
             _ => {}
         }
     }
     let meta: ArchiveMetadata = serde_json::from_slice(&meta_json)?;
-    let decrypted = decrypt_symmetric(
-        &EncryptedNote {
-            cipher: meta.cipher,
-            nonce: meta.nonce,
-            ciphertext,
-            salt: meta.salt,
-        },
-        password,
-    )?;
-    let mut inner =
-        zip::ZipArchive::new(std::io::Cursor::new(decrypted)).map_err(|e| AppError::Archive(e.to_string()))?;
+    let inner = match meta.cipher {
+        Some(cipher) => decrypt_symmetric(
+            &EncryptedNote {
+                cipher,
+                nonce: meta.nonce,
+                ciphertext: payload,
+                salt: meta.salt,
+            },
+            password,
+        )?,
+        None => payload,
+    };
+    let mut inner = zip::ZipArchive::new(std::io::Cursor::new(inner)).map_err(|e| AppError::Archive(e.to_string()))?;
     let mut note = String::new();
     let mut files = Vec::new();
     for i in 0..inner.len() {

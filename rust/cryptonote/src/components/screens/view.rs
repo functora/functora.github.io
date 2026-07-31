@@ -135,39 +135,41 @@ pub fn View(note: Option<String>) -> Element {
                     dangerous_inner_html: "{rendered()}",
                 }
 
-                table {
-                    thead {
-                        tr {
-                            th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                if has_attachments {
+                    table {
+                        thead {
+                            tr {
+                                th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                            }
                         }
-                    }
-                    tbody {
-                        for f in &atts {
-                            tr { key: "{f.name}",
-                                td { "{f.name}" }
-                                td { "txt": "r", "{format_size(f.data.len() as u64)}" }
-                                td {
-                                    button {
-                                        onclick: {
-                                            let data = f.data.clone();
-                                            let name = f.name.clone();
-                                            move |_| {
-                                                match download_package(data.clone(), &name) {
-                                                    Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                                    Err(e) => {
-                                                        message
-                                                            .set(
-                                                                Some(
-                                                                    Msg::Error(
-                                                                        AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                        tbody {
+                            for f in &atts {
+                                tr { key: "{f.name}",
+                                    td { "{f.name}" }
+                                    td { "txt": "r", "{format_size(f.data.len() as u64)}" }
+                                    td {
+                                        button {
+                                            onclick: {
+                                                let data = f.data.clone();
+                                                let name = f.name.clone();
+                                                move |_| {
+                                                    match download_package(data.clone(), &name) {
+                                                        Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                                                        Err(e) => {
+                                                            message
+                                                                .set(
+                                                                    Some(
+                                                                        Msg::Error(
+                                                                            AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                                                        ),
                                                                     ),
-                                                                ),
-                                                            )
+                                                                )
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        },
-                                        Icon { icon: FaDownload }
+                                            },
+                                            Icon { icon: FaDownload }
+                                        }
                                     }
                                 }
                             }

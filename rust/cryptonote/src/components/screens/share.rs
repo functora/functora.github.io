@@ -23,8 +23,7 @@ pub fn Share() -> Element {
 
         let res: Result<(String, String, bool), AppError> = (|| {
             if has_atts {
-                let cipher = cipher.ok_or(AppError::PasswordRequired)?;
-                if password.is_empty() {
+                if cipher.is_some() && password.is_empty() {
                     return Err(AppError::PasswordRequired);
                 }
                 let pkg = create_archive_package(&content, &atts, &password, cipher)?;

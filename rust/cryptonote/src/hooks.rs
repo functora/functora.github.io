@@ -122,11 +122,7 @@ pub fn handle_file_input_native(tst: Store<TemporaryState>, mut message: Signal<
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_archive_file_native(
-    tst: Store<TemporaryState>,
-    mut message: Signal<Option<Msg>>,
-    mut nav: Signal<Nav<Route>>,
-) {
+pub fn open_archive_file_native(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
     spawn(async move {
         let files = match pick_files_via_eval(false).await {
             Ok(f) => f,
@@ -139,16 +135,28 @@ pub fn open_archive_file_native(
             Some(f) => f,
             None => return,
         };
-        match read_archive_metadata(&bytes) {
-            Ok(_) => {
-                tst.encrypted_archive()
-                    .set(Some(EncryptedArchive::new(bytes).infallible()));
-                tst.password().set(String::new());
-                nav.write().push(Screen::View.to_route(None));
-            }
-            Err(e) => message.set(Some(Msg::Error(e))),
+        if let Err(e) = open_archive(bytes, tst, nav) {
+            message.set(Some(Msg::Error(e)));
         }
     });
+}
+
+pub fn open_archive(bytes: Vec<u8>, tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> Result<(), AppError> {
+    let meta = read_archive_metadata(&bytes)?;
+    match meta.cipher {
+        Some(_) => {
+            tst.encrypted_archive()
+                .set(Some(EncryptedArchive::new(bytes).infallible()));
+            tst.password().set(String::new());
+        }
+        None => {
+            let (text, files) = extract_archive_package(&bytes, "")?;
+            tst.note().set(text);
+            tst.attachments().set(files);
+        }
+    }
+    nav.write().push(Screen::View.to_route(None));
+    Ok(())
 }
 
 #[cfg(not(target_arch = "wasm32"))]

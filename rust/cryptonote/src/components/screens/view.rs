@@ -136,6 +136,11 @@ pub fn View(note: Option<String>) -> Element {
                 }
 
                 table {
+                    thead {
+                        tr {
+                            th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                        }
+                    }
                     tbody {
                         for f in &atts {
                             tr { key: "{f.name}",

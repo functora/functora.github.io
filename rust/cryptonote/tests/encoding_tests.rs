@@ -210,6 +210,7 @@ fn test_note_data_serde_ciphertext() {
         nonce: vec![1; 12],
         ciphertext: vec![2; 16],
         salt: vec![3; 32],
+        kdf: cryptonote::crypto::Kdf::Argon2id,
     };
     let note = NoteData::CipherText(ed);
     let json = serde_json::to_string(&note).unwrap();

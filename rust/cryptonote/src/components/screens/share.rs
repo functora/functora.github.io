@@ -6,85 +6,22 @@ pub fn Share() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-
-    let mut url = use_signal(String::new);
-    let mut qr_code = use_signal(String::new);
-    let mut pkg_ready = use_signal(|| false);
-    let mut pkg_bytes = use_signal(Vec::<u8>::new);
     let mut message = use_message();
 
-    use_effect(move || {
-        let content = tst.note()();
-        let password = tst.password()();
-        let cipher = tst.cipher()();
-        let atts = tst.attachments()();
-
-        let has_atts = !atts.is_empty();
-
-        let res: Result<(String, String, bool), AppError> = (|| {
-            if has_atts {
-                if cipher.is_some() && password.is_empty() {
-                    return Err(AppError::PasswordRequired);
-                }
-                let pkg = create_archive_package(&content, &atts, &password, cipher)?;
-                pkg_bytes.set(pkg);
-                Ok((String::new(), String::new(), true))
-            } else {
-                let note_data = match cipher {
-                    Some(cipher) => {
-                        if password.is_empty() {
-                            return Err(AppError::PasswordRequired);
-                        }
-                        NoteData::CipherText(encrypt_symmetric(content.as_bytes(), &password, cipher)?)
-                    }
-                    None => NoteData::PlainText(content),
-                };
-
-                let origin = {
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        web_sys::window().and_then(|w| {
-                            let loc = w.location();
-                            let protocol = loc.protocol().ok()?;
-                            let host = loc.host().ok()?;
-                            let pathname = loc.pathname().ok()?;
-                            let path = pathname.trim_end_matches('/');
-                            Some(format!("{}//{}{}", protocol, host, path))
-                        })
-                    }
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        Some(WEB_APP_URL)
-                    }
-                }
-                .ok_or(AppError::NoNoteInUrl)?;
-
-                let view_url = format!("{}/?screen={}", origin, Screen::View);
-                let u = build_url(&view_url, &note_data)?;
-                let q = generate_qr_code(&u)?;
-
-                Ok((u, q, false))
-            }
-        })();
-
-        match res {
-            Ok((u, q, pkg)) => {
-                url.set(u);
-                qr_code.set(q);
-                pkg_ready.set(pkg);
-                message.set(None);
-            }
-            Err(e) => message.set(Some(Msg::Error(e))),
-        }
-    });
+    let external = tst.external()();
+    let pkg_ready = matches!(external, External::Archive(_));
+    let (url, qr_code) = match external {
+        External::Note(n) => (n.url, n.qr),
+        _ => Default::default(),
+    };
 
     rsx! {
         Breadcrumb { title: Msg::Share }
         section {
-            if pkg_ready() {
+            if pkg_ready {
                 p { "fs": "l", "txt": "c", "{Msg::ArchiveReady.render(lang)}" }
-            } else if !url().is_empty() {
-                if !qr_code().is_empty() {
+            } else if !url.is_empty() {
+                if !qr_code.is_empty() {
                     div { dangerous_inner_html: "{qr_code}" }
                 }
 
@@ -92,7 +29,7 @@ pub fn Share() -> Element {
                     readonly: true,
                     value: "{url}",
                     onclick: move |_| {
-                        write_clipboard(url(), message);
+                        write_clipboard(tst.external()().note_url(), message);
                     },
                 }
             } else if message.read().is_some() {
@@ -101,14 +38,14 @@ pub fn Share() -> Element {
                 p { "{Msg::Base(BaseMsg::Loading).render(lang)}" }
             }
 
-            if pkg_ready() || !url().is_empty() {
+            if pkg_ready || !url.is_empty() {
                 Dock { message,
-                    if !url().is_empty() {
+                    if !url.is_empty() {
                         Button {
                             icon: Some(FaCopy),
                             primary: true,
                             onclick: move |_| {
-                                write_clipboard(url(), message);
+                                write_clipboard(tst.external()().note_url(), message);
                             },
                             i18n: Some(Msg::Base(BaseMsg::Copy)),
                             lang,
@@ -131,7 +68,7 @@ pub fn Share() -> Element {
                             icon: Some(FaShareNodes),
                             primary: true,
                             onclick: move |_| {
-                                let u = url();
+                                let u = tst.external()().note_url();
                                 let mut msg = message;
                                 let text = Msg::SharedNoteText.render(lang);
                                 spawn(async move {
@@ -150,12 +87,12 @@ pub fn Share() -> Element {
                             lang,
                         }
                     }
-                    if pkg_ready() {
+                    if pkg_ready {
                         Button {
                             icon: Some(FaDownload),
                             primary: true,
                             onclick: move |_| {
-                                let bytes = pkg_bytes();
+                                let bytes = tst.external()().archive_bytes();
                                 if !bytes.is_empty() {
                                     match download_package(bytes, "archive.cryptonote") {
                                         Ok(loc) => message.set(Some(Msg::Downloaded(loc))),

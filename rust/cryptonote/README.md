@@ -13,7 +13,7 @@ All content - whether ciphertext or plaintext - is embedded directly in the URL 
 
 Cryptonote follows modern cryptographic best practices:
 
-- Strong key derivation with HKDF, allowing users to supply just a password (which is used directly as the initial keying material)
+- Strong password-based key derivation with Argon2id
 - Authenticated encryption for confidentiality, integrity, and authenticity
 - No data ever leaves your device unless you explicitly choose to share it
 

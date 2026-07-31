@@ -1,5 +1,6 @@
 use cryptonote::archive::{create_archive_package, extract_archive_package, Attachment};
 use cryptonote::crypto::CipherType;
+use std::io::Read;
 
 #[test]
 fn test_archive_roundtrip_chacha20() {
@@ -85,12 +86,14 @@ fn archive_metadata_serde_roundtrip() {
     use cryptonote::crypto::CipherType;
     let meta = ArchiveMetadata {
         cipher: Some(CipherType::ChaCha20Poly1305),
+        kdf: cryptonote::crypto::Kdf::Argon2id,
         nonce: vec![10; 12],
         salt: vec![20; 32],
     };
     let json = serde_json::to_string(&meta).unwrap();
     let back: ArchiveMetadata = serde_json::from_str(&json).unwrap();
     assert_eq!(meta.cipher, back.cipher);
+    assert_eq!(meta.kdf, back.kdf);
     assert_eq!(meta.nonce, back.nonce);
     assert_eq!(meta.salt, back.salt);
 }
@@ -171,14 +174,60 @@ fn test_plaintext_archive_metadata_is_none() {
     let pkg = create_archive_package("plain", &[], "", None).expect("Package creation failed");
     let meta = cryptonote::archive::read_archive_metadata(&pkg).expect("Metadata read failed");
     assert_eq!(meta.cipher, None);
+    assert_eq!(meta.kdf, cryptonote::crypto::Kdf::Argon2id);
     assert!(meta.nonce.is_empty());
     assert!(meta.salt.is_empty());
 }
 
 #[test]
-fn archive_metadata_old_format_parses_as_some() {
+fn archive_metadata_old_format_rejected_without_kdf() {
     let json = r#"{"cipher":"Aes256Gcm","nonce":[1,2,3],"salt":[4,5,6]}"#;
-    let meta: cryptonote::archive::ArchiveMetadata = serde_json::from_str(json).expect("Old format parse failed");
-    assert_eq!(meta.cipher, Some(CipherType::Aes256Gcm));
-    assert_eq!(meta.nonce, vec![1, 2, 3]);
+    let result: Result<cryptonote::archive::ArchiveMetadata, _> = serde_json::from_str(json);
+    assert!(result.is_err());
+}
+
+#[test]
+fn archive_wrong_nonce_length_returns_error() {
+    use cryptonote::archive::*;
+    use cryptonote::crypto::CipherType;
+    let mut pkg =
+        create_archive_package("note", &[], "pw", Some(CipherType::ChaCha20Poly1305)).expect("Package creation failed");
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&pkg)).expect("Read archive failed");
+    let mut meta_json = Vec::new();
+    archive
+        .by_name("metadata.json")
+        .expect("Meta missing")
+        .read_to_end(&mut meta_json)
+        .unwrap();
+    let meta: cryptonote::archive::ArchiveMetadata = serde_json::from_slice(&meta_json).unwrap();
+    let mut tampered = meta.clone();
+    tampered.nonce = vec![1, 2, 3];
+    let meta_json = serde_json::to_vec(&tampered).unwrap();
+    pkg = rebuild_package(&pkg, &meta_json);
+    let result = extract_archive_package(&pkg, "pw");
+    assert!(matches!(result, Err(cryptonote::AppError::InvalidFormat(_))));
+}
+
+fn rebuild_package(pkg: &[u8], new_meta: &[u8]) -> Vec<u8> {
+    use std::io::Write;
+    use zip::write::FileOptions;
+    use zip::CompressionMethod;
+    let mut out = Vec::new();
+    {
+        let mut writer = zip::ZipWriter::new(std::io::Cursor::new(&mut out));
+        let stored = FileOptions::<'static, ()>::default().compression_method(CompressionMethod::Stored);
+        writer.start_file("metadata.json", stored).unwrap();
+        writer.write_all(new_meta).unwrap();
+        let mut archive = zip::ZipArchive::new(std::io::Cursor::new(pkg)).unwrap();
+        let mut payload = Vec::new();
+        archive
+            .by_name("payload.cpt")
+            .unwrap()
+            .read_to_end(&mut payload)
+            .unwrap();
+        writer.start_file("payload.cpt", stored).unwrap();
+        writer.write_all(&payload).unwrap();
+        writer.finish().unwrap();
+    }
+    out
 }

@@ -15,6 +15,7 @@ pub enum AppError {
     Encrypt(String),
     Decrypt(String),
     PasswordRequired,
+    InvalidFormat(String),
     Archive(String),
     NoNoteInUrl,
     NoNoteParam,
@@ -34,6 +35,7 @@ impl I18N for AppError {
             Self::Encrypt(e) => format!("Encryption failed: {e}"),
             Self::Decrypt(e) => format!("Decryption failed: {e}"),
             Self::PasswordRequired => "Password is required".into(),
+            Self::InvalidFormat(e) => format!("Invalid encrypted payload format: {e}"),
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::NoNoteInUrl => "No note found in URL".into(),
             Self::NoNoteParam => "URL does not contain a note parameter".into(),
@@ -53,6 +55,7 @@ impl I18N for AppError {
             Self::Encrypt(e) => format!("Falló el cifrado: {e}"),
             Self::Decrypt(e) => format!("Falló el descifrado: {e}"),
             Self::PasswordRequired => "Se requiere contraseña".into(),
+            Self::InvalidFormat(e) => format!("Formato de carga útil cifrada no válido: {e}"),
             Self::Archive(e) => format!("Error de archivo: {e}"),
             Self::NoNoteInUrl => "No se encontró nota en la URL".into(),
             Self::NoNoteParam => "La URL no contiene un parámetro de nota".into(),
@@ -72,6 +75,7 @@ impl I18N for AppError {
             Self::Encrypt(e) => format!("Ошибка шифрования: {e}"),
             Self::Decrypt(e) => format!("Ошибка расшифровки: {e}"),
             Self::PasswordRequired => "Требуется пароль".into(),
+            Self::InvalidFormat(e) => format!("Неверный формат зашифрованных данных: {e}"),
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::NoNoteInUrl => "Заметка не найдена в URL".into(),
             Self::NoNoteParam => "URL не содержит параметр заметки".into(),
@@ -80,8 +84,8 @@ impl I18N for AppError {
     }
 }
 
-impl From<hkdf::InvalidLength> for AppError {
-    fn from(e: hkdf::InvalidLength) -> Self {
+impl From<argon2::Error> for AppError {
+    fn from(e: argon2::Error) -> Self {
         AppError::KeyDerive(e.to_string())
     }
 }

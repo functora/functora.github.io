@@ -6,7 +6,6 @@ pub use dioxus_free_icons::icons::fa_solid_icons::{
     FaPenToSquare, FaPrint, FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser, FaXmark,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
-pub use either::*;
 pub use enum_iterator::{next_cycle, Sequence};
 pub use functora::*;
 pub use functora_dioxus::dioxus_elements;

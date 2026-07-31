@@ -9,7 +9,7 @@ pub fn Home() -> Element {
     let mut message = use_message();
 
     let mut navigate_to_url = move |url: &str| match extract_note_param(url) {
-        Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
+        Ok(note) => nav.write().push(Screen::Open.to_route(Some(note))),
         Err(e) => message.set(Some(Msg::Error(e))),
     };
 
@@ -29,7 +29,10 @@ pub fn Home() -> Element {
         if tst.cipher().is_some() && tst.password()().is_empty() {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
-            nav.write().push(Screen::Share.to_route(None));
+            match generate_share(tst) {
+                Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                Err(e) => message.set(Some(Msg::Error(e))),
+            }
         }
     };
 
@@ -179,6 +182,7 @@ pub fn Home() -> Element {
                     label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                     input {
                         r#type: "password",
+                        autocomplete: "off",
                         placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
                         value: "{tst.password()}",
                         oninput: move |evt| tst.password().set(evt.value()),

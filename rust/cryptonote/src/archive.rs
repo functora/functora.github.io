@@ -8,6 +8,7 @@ use zip::CompressionMethod;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArchiveMetadata {
     pub cipher: Option<CipherType>,
+    pub kdf: Kdf,
     pub nonce: Vec<u8>,
     pub salt: Vec<u8>,
 }
@@ -68,6 +69,7 @@ pub fn create_archive_package(
                 encrypted.ciphertext,
                 ArchiveMetadata {
                     cipher: Some(encrypted.cipher),
+                    kdf: Kdf::Argon2id,
                     nonce: encrypted.nonce,
                     salt: encrypted.salt,
                 },
@@ -77,6 +79,7 @@ pub fn create_archive_package(
             inner,
             ArchiveMetadata {
                 cipher: None,
+                kdf: Kdf::Argon2id,
                 nonce: Vec::new(),
                 salt: Vec::new(),
             },
@@ -139,6 +142,7 @@ pub fn extract_archive_package(package: &[u8], password: &str) -> Result<(String
                 nonce: meta.nonce,
                 ciphertext: payload,
                 salt: meta.salt,
+                kdf: meta.kdf,
             },
             password,
         )?,

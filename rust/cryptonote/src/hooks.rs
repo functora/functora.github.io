@@ -42,15 +42,13 @@ pub fn edit_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> 
 pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.set(TemporaryState::default());
     tst.note().set(String::new());
-    tst.note().set(String::new());
     tst.password().set(String::new());
     tst.cipher().set(Some(CipherType::Aes256Gcm));
     tst.attachments().set(Vec::new());
     tst.screen().set(Screen::default());
     tst.action().set(ActionMode::Create);
     tst.url_input().set(String::new());
-    tst.encrypted_note().set(None);
-    tst.encrypted_archive().set(None);
+    tst.external().set(External::Nothing);
 }
 
 pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> impl FnMut(MouseEvent) + 'static {
@@ -141,21 +139,75 @@ pub fn open_archive_file_native(tst: Store<TemporaryState>, mut message: Signal<
     });
 }
 
+pub fn build_external(
+    note: &str,
+    password: &str,
+    cipher: Option<CipherType>,
+    atts: &[Attachment],
+) -> Result<External, AppError> {
+    if atts.is_empty() {
+        let note_data = match cipher {
+            Some(cipher) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cipher)?),
+            None => NoteData::PlainText(note.to_string()),
+        };
+        let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
+        let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
+        let qr = generate_qr_code(&u)?;
+        Ok(External::Note(ExternalNote {
+            data: note_data,
+            url: u,
+            qr,
+        }))
+    } else {
+        let pkg = create_archive_package(note, atts, password, cipher)?;
+        Ok(External::Archive(ExternalArchive::new(pkg).infallible()))
+    }
+}
+
+pub fn generate_share(tst: Store<TemporaryState>) -> Result<(), AppError> {
+    tst.external().set(build_external(
+        &tst.note()(),
+        &tst.password()(),
+        tst.cipher()(),
+        &tst.attachments()(),
+    )?);
+    Ok(())
+}
+
+fn app_origin() -> Option<String> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        web_sys::window().and_then(|w| {
+            let loc = w.location();
+            let protocol = loc.protocol().ok()?;
+            let host = loc.host().ok()?;
+            let pathname = loc.pathname().ok()?;
+            let path = pathname.trim_end_matches('/');
+            Some(format!("{}//{}{}", protocol, host, path))
+        })
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        Some(WEB_APP_URL.to_string())
+    }
+}
+
 pub fn open_archive(bytes: Vec<u8>, tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> Result<(), AppError> {
     let meta = read_archive_metadata(&bytes)?;
     match meta.cipher {
         Some(_) => {
-            tst.encrypted_archive()
-                .set(Some(EncryptedArchive::new(bytes).infallible()));
+            tst.external()
+                .set(External::Archive(ExternalArchive::new(bytes).infallible()));
             tst.password().set(String::new());
         }
         None => {
             let (text, files) = extract_archive_package(&bytes, "")?;
             tst.note().set(text);
             tst.attachments().set(files);
+            tst.external().set(External::Nothing);
         }
     }
-    nav.write().push(Screen::View.to_route(None));
+    nav.write().push(Screen::Open.to_route(None));
     Ok(())
 }
 
@@ -219,12 +271,20 @@ async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, A
 
 #[cfg(not(target_os = "android"))]
 pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
-    let script = format!(
-        r#"const a=document.createElement('a');a.href="data:application/octet-stream;base64,{b64}";a.download='{filename}';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),1000);"#,
-    );
-    dioxus::document::eval(&script);
+    dioxus::document::eval(&download_script(&data, filename)?);
     Ok(filename.to_string())
+}
+
+pub fn download_script(data: &[u8], filename: &str) -> Result<String, String> {
+    let b64 = base64::engine::general_purpose::STANDARD.encode(data);
+    let name = serde_json::to_string(filename)
+        .map_err(|e| e.to_string())?
+        .replace('<', "\\u003c")
+        .replace('>', "\\u003e")
+        .replace('\'', "\\u0027");
+    Ok(format!(
+        r#"const a=document.createElement('a');a.href="data:application/octet-stream;base64,{b64}";a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),1000);"#,
+    ))
 }
 
 #[cfg(target_os = "android")]

@@ -118,10 +118,19 @@ fn app_error_i18n_archive_contains_detail() {
 }
 
 #[test]
-fn app_error_from_hkdf() {
-    use hkdf::InvalidLength;
-    let err: AppError = InvalidLength.into();
-    assert!(matches!(err, AppError::KeyDerive(_)));
+fn app_error_i18n_invalid_format_contains_detail() {
+    let err = AppError::InvalidFormat("nonce".into());
+    assert!(err.render_eng().contains("nonce"));
+    assert!(err.render_spa().contains("nonce"));
+    assert!(err.render_rus().contains("nonce"));
+}
+
+#[test]
+fn app_error_i18n_key_derive_contains_detail() {
+    let err = AppError::KeyDerive("kdf".into());
+    assert!(err.render_eng().contains("kdf"));
+    assert!(err.render_spa().contains("kdf"));
+    assert!(err.render_rus().contains("kdf"));
 }
 
 #[test]
@@ -264,8 +273,7 @@ fn language_label_rus() {
 
 #[test]
 fn app_error_cipher_getrandom_base64_json_utf8_eng() {
-    use hkdf::InvalidLength;
-    let cipher: AppError = InvalidLength.into();
+    let cipher: AppError = AppError::KeyDerive("cipher".into());
     assert!(!cipher.render_eng().is_empty());
     let getrandom: AppError = getrandom::Error::UNSUPPORTED.into();
     assert!(!getrandom.render_eng().is_empty());
@@ -293,9 +301,7 @@ fn app_error_from_serde_json() {
 
 #[test]
 fn app_error_i18n_render_spa_all_variants() {
-    use hkdf::InvalidLength;
     let variants: Vec<AppError> = vec![
-        InvalidLength.into(),
         AppError::KeyDerive("kdf".into()),
         getrandom::Error::UNSUPPORTED.into(),
         base64::DecodeError::InvalidLength(1).into(),
@@ -305,6 +311,7 @@ fn app_error_i18n_render_spa_all_variants() {
         AppError::Encrypt("e".into()),
         AppError::Decrypt("d".into()),
         AppError::PasswordRequired,
+        AppError::InvalidFormat("f".into()),
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
@@ -319,9 +326,7 @@ fn app_error_i18n_render_spa_all_variants() {
 
 #[test]
 fn app_error_i18n_render_rus_all_variants() {
-    use hkdf::InvalidLength;
     let variants: Vec<AppError> = vec![
-        InvalidLength.into(),
         AppError::KeyDerive("kdf".into()),
         getrandom::Error::UNSUPPORTED.into(),
         base64::DecodeError::InvalidLength(1).into(),
@@ -331,6 +336,7 @@ fn app_error_i18n_render_rus_all_variants() {
         AppError::Encrypt("e".into()),
         AppError::Decrypt("d".into()),
         AppError::PasswordRequired,
+        AppError::InvalidFormat("f".into()),
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,

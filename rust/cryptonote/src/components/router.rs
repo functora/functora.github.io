@@ -5,6 +5,7 @@ use crate::*;
 pub enum Screen {
     #[default]
     Home,
+    Open,
     View,
     Share,
     About,
@@ -24,6 +25,7 @@ impl std::fmt::Display for Screen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Self::Home => "home",
+            Self::Open => "open",
             Self::View => "view",
             Self::Share => "share",
             Self::About => "about",
@@ -40,6 +42,7 @@ impl FromStr for Screen {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "home" => Ok(Self::Home),
+            "open" => Ok(Self::Open),
             "view" => Ok(Self::View),
             "share" => Ok(Self::Share),
             "about" => Ok(Self::About),
@@ -60,6 +63,37 @@ impl Screen {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ExternalNote {
+    pub data: NoteData,
+    pub url: String,
+    pub qr: String,
+}
+
+#[derive(Debug, Clone, Default)]
+pub enum External {
+    #[default]
+    Nothing,
+    Note(ExternalNote),
+    Archive(ExternalArchive),
+}
+
+impl External {
+    pub(crate) fn note_url(self) -> String {
+        match self {
+            Self::Note(n) => n.url,
+            _ => String::new(),
+        }
+    }
+
+    pub(crate) fn archive_bytes(self) -> Vec<u8> {
+        match self {
+            Self::Archive(a) => a.untag(),
+            _ => Vec::new(),
+        }
+    }
+}
+
 #[derive(Store)]
 pub struct TemporaryState {
     pub note: String,
@@ -69,8 +103,7 @@ pub struct TemporaryState {
     pub screen: Screen,
     pub action: ActionMode,
     pub url_input: String,
-    pub encrypted_note: Option<EncryptedNote>,
-    pub encrypted_archive: Option<EncryptedArchive>,
+    pub external: External,
 }
 
 impl Default for TemporaryState {
@@ -83,8 +116,7 @@ impl Default for TemporaryState {
             screen: Screen::default(),
             action: ActionMode::Create,
             url_input: String::new(),
-            encrypted_note: None,
-            encrypted_archive: None,
+            external: External::Nothing,
         }
     }
 }
@@ -112,8 +144,11 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
         Screen::Home => rsx! {
             Home {}
         },
+        Screen::Open => rsx! {
+            Open { note }
+        },
         Screen::View => rsx! {
-            View { note }
+            View {}
         },
         Screen::Share => rsx! {
             Share {}

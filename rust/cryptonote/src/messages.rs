@@ -191,7 +191,7 @@ All content - whether ciphertext or plaintext - is embedded directly in the URL 
 
 Cryptonote follows modern cryptographic best practices:
 
-- Strong key derivation with HKDF, allowing users to supply just a password (which is used directly as the initial keying material)
+- Strong password-based key derivation with Argon2id
 - Authenticated encryption for confidentiality, integrity, and authenticity
 - No data ever leaves your device unless you explicitly choose to share it
 
@@ -329,7 +329,7 @@ Todo el contenido - ya sea texto cifrado o plano - se incrusta directamente en l
 
 Cryptonote sigue las mejores prácticas criptográficas modernas:
 
-- Derivación de claves fuerte con HKDF, permitiendo a los usuarios proporcionar solo una contraseña (que se usa directamente como material inicial de claves)
+- Derivación de claves robusta basada en contraseña con Argon2id
 - Cifrado autenticado para confidencialidad, integridad y autenticidad
 - Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
 
@@ -467,7 +467,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 
 Cryptonote следует современным криптографическим практикам:
 
-- Надёжная деривация ключей с помощью HKDF позволяет пользователям использовать только пароль (который применяется напрямую как исходный ключевой материал)
+- Надёжная деривация ключей из пароля на основе Argon2id
 - Аутентифицированное шифрование обеспечивает конфиденциальность, целостность и подлинность
 - Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 

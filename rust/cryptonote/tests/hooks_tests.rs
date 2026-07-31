@@ -1,5 +1,43 @@
 use cryptonote::archive::Attachment;
-use cryptonote::{add_attachment, format_size};
+use cryptonote::components::*;
+use cryptonote::{add_attachment, build_external, format_size, CipherType, NoteData};
+
+#[test]
+fn build_external_plaintext_builds_url_and_qr() {
+    let external = build_external("hello world", "", None, &[]).unwrap();
+    let External::Note(n) = external else {
+        panic!("Expected a note artifact");
+    };
+    assert!(matches!(n.data, NoteData::PlainText(_)));
+    assert!(n.url.contains("note="));
+    assert!(n.url.contains("screen=open"));
+    assert!(!n.qr.is_empty());
+}
+
+#[test]
+fn build_external_encrypted_note_builds_url() {
+    let external = build_external("secret", "pw", Some(CipherType::Aes256Gcm), &[]).unwrap();
+    let External::Note(n) = external else {
+        panic!("Expected a note artifact");
+    };
+    assert!(matches!(n.data, NoteData::CipherText(_)));
+    assert!(n.url.contains("note="));
+}
+
+#[test]
+fn build_external_archive_builds_pkg() {
+    let external = build_external(
+        "note",
+        "pw",
+        Some(CipherType::Aes256Gcm),
+        &[Attachment {
+            name: "a.bin".into(),
+            data: vec![1, 2, 3],
+        }],
+    )
+    .unwrap();
+    assert!(matches!(external, External::Archive(_)));
+}
 
 #[test]
 fn add_attachment_unique_name() {
@@ -128,4 +166,35 @@ fn large_size() {
 #[test]
 fn precision_half_mb() {
     assert_eq!(format_size(1572864), "1.5 MB");
+}
+
+#[test]
+fn download_script_plain_filename() {
+    let script = cryptonote::download_script(b"data", "archive.cryptonote").unwrap();
+    assert!(script.contains(r#"a.download="archive.cryptonote";"#));
+    assert!(script.contains("data:application/octet-stream;base64,"));
+}
+
+#[test]
+fn download_script_escapes_quote_and_backslash() {
+    let script = cryptonote::download_script(b"x", "a\";alert(1);//").unwrap();
+    assert!(!script.contains(r#"a.download="a";alert"#));
+    assert!(script.contains(r#"a.download="a\";alert(1);//";"#));
+}
+
+#[test]
+fn download_script_escapes_single_quote_and_html() {
+    let script = cryptonote::download_script(b"x", "b'</script><img onerror=alert(2)>").unwrap();
+    assert!(!script.contains("</script>"));
+    assert!(!script.contains("<img"));
+    assert!(script.contains(r"\u003c"));
+    assert!(script.contains(r"\u003e"));
+    assert!(script.contains(r"\u0027"));
+}
+
+#[test]
+fn download_script_escapes_newline() {
+    let script = cryptonote::download_script(b"x", "line1\nline2").unwrap();
+    assert!(!script.contains("\n"));
+    assert!(script.contains(r"line1\nline2"));
 }

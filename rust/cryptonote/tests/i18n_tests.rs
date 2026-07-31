@@ -206,6 +206,8 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::ArchiveReady,
         Msg::OpenArchive,
         Msg::DownloadAll,
+        Msg::FileName,
+        Msg::FileSize,
         Msg::ArchiveDecrypted,
         Msg::ExtractedNote,
     ];

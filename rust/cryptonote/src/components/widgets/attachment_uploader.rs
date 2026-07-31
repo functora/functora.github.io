@@ -13,14 +13,16 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
         table {
             thead {
                 tr {
-                    th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                    th { "{Msg::FileName.render(lang)}" }
+                    th { "{Msg::FileSize.render(lang)}" }
+                    th {}
                 }
             }
             tbody {
                 for (i, att) in attachments.iter().enumerate() {
                     tr { key: "{i}",
                         td { " {att.name}" }
-                        td { "txt": "r", "{format_size(att.data.len() as u64)}" }
+                        td { "{format_size(att.data.len() as u64)}" }
                         td {
                             button {
                                 onclick: move |_| remove_attachment(tst, i),

@@ -35,14 +35,16 @@ pub fn NoteDisplay() -> Element {
                 table {
                     thead {
                         tr {
-                            th { colspan: "3", "{Msg::Attachments.render(lang)}" }
+                            th { "{Msg::FileName.render(lang)}" }
+                            th { "{Msg::FileSize.render(lang)}" }
+                            th {}
                         }
                     }
                     tbody {
                         for f in &atts {
                             tr { key: "{f.name}",
                                 td { "{f.name}" }
-                                td { "txt": "r", "{format_size(f.data.len() as u64)}" }
+                                td { "{format_size(f.data.len() as u64)}" }
                                 td {
                                     button {
                                         onclick: {

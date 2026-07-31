@@ -98,7 +98,7 @@ pub fn Home() -> Element {
 
     #[cfg(target_arch = "wasm32")]
     let attach_picker = rsx! {
-        label { "btn": true,
+        label { "btn": true, "primary": "",
             input {
                 r#type: "file",
                 multiple: true,
@@ -113,6 +113,7 @@ pub fn Home() -> Element {
     let attach_picker = rsx! {
         button {
             "btn": true,
+            "primary": "",
             onclick: move |_| handle_file_input_native(tst, message),
             Icon { icon: FaPaperclip }
             " {Msg::AttachFiles.render(lang)}"

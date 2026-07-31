@@ -181,8 +181,9 @@ With Cryptonote, you can:
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code
+- Attach files to your note and pack everything into a secure offline archive (.cryptonote)
 
-All content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code.
+Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you download and share separately.
 
 Cryptonote follows modern cryptographic best practices:
 
@@ -316,8 +317,9 @@ Con Cryptonote, puedes:
 - Opcionalmente cifrarla usando algoritmos fuertes y bien establecidos (p. ej., AES-GCM o ChaCha20-Poly1305)
 - O dejarla sin cifrar
 - Compartir la nota instantáneamente a través de una URL o un código QR escaneable
+- Adjuntar archivos a tu nota y empaquetarlo todo en un archivo offline seguro (.cryptonote)
 
-Todo el contenido - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR.
+El contenido de la nota - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR. Las notas con archivos adjuntos se empaquetan en un archivo que descargas y compartes por separado.
 
 Cryptonote sigue las mejores prácticas criptográficas modernas:
 
@@ -451,8 +453,9 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 - Опционально зашифровать её с помощью надёжных, широко применяемых алгоритмов (например, AES-GCM или ChaCha20-Poly1305)
 - Или оставить без шифрования
 - Мгновенно поделиться заметкой через URL или сканируемый QR-код
+- Прикрепить файлы к заметке и упаковать всё в защищённый автономный архив (.cryptonote)
 
-Всё содержимое - будь то зашифрованный текст или открытый - встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода.
+Содержимое заметки - будь то зашифрованный текст или открытый - встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода. Заметки с вложениями упаковываются в архивный файл, который вы скачиваете и отправляете отдельно.
 
 Cryptonote следует современным криптографическим практикам:
 

@@ -8,8 +8,9 @@ With Cryptonote, you can:
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code
+- Attach files to your note and pack everything into a secure offline archive (.cryptonote)
 
-All content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code.
+Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you download and share separately.
 
 Cryptonote follows modern cryptographic best practices:
 

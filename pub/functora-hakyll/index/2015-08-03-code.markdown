@@ -5,7 +5,7 @@ color: black
 fontawesome: "fab fa-git-alt"
 ---
 
-- [cryptonote](https://functora.github.io/apps/cryptonote) - A serverless, cross-platform app that allows users to create encrypted or plain-text notes directly on their device or browser. It uses strong authenticated encryption (AES-GCM or ChaCha20-Poly1305) with HKDF key derivation, embeds content in shareable URLs or QR codes, and ensures no data leaves the device unless explicitly shared. The source code is available on [github](https://github.com/functora/functora.github.io/tree/master/rust/cryptonote).
+- [cryptonote](https://functora.github.io/apps/cryptonote) - A serverless, cross-platform app that allows users to create encrypted or plain-text notes directly on their device or browser. It uses strong authenticated encryption (AES-GCM or ChaCha20-Poly1305) with Argon2id key derivation, embeds note content in shareable URLs or QR codes, packs attachments into offline archives, and ensures no data leaves the device unless explicitly shared. The source code is available on [github](https://github.com/functora/functora.github.io/tree/master/rust/cryptonote).
 - [functora-css](/functora-css.html) - A classless, JS-free, dependency-free, configuration-free, mobile-first, responsive, lightweight, semantic, pure CSS framework with light and dark themes and a collapsible navbar.
 - [functora-tagged](https://crates.io/crates/functora-tagged) - Lightweight, macro-free newtypes with refinement and derived traits.
 - [functora-cfg](https://crates.io/crates/functora-cfg) - A Rust library that merges configuration values from multiple sources into a single typed value.

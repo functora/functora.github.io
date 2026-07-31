@@ -1,4 +1,78 @@
-use cryptonote::format_size;
+use cryptonote::archive::Attachment;
+use cryptonote::{add_attachment, format_size};
+
+#[test]
+fn add_attachment_unique_name() {
+    let mut atts = Vec::new();
+    add_attachment(
+        &mut atts,
+        Attachment {
+            name: "a.txt".into(),
+            data: b"one".to_vec(),
+        },
+    );
+    add_attachment(
+        &mut atts,
+        Attachment {
+            name: "b.txt".into(),
+            data: b"two".to_vec(),
+        },
+    );
+    assert_eq!(atts.len(), 2);
+    assert_eq!(atts[0].name, "a.txt");
+    assert_eq!(atts[1].name, "b.txt");
+}
+
+#[test]
+fn add_attachment_duplicate_name_replaces() {
+    let mut atts = vec![Attachment {
+        name: "a.txt".into(),
+        data: b"old".to_vec(),
+    }];
+    add_attachment(
+        &mut atts,
+        Attachment {
+            name: "a.txt".into(),
+            data: b"new".to_vec(),
+        },
+    );
+    assert_eq!(atts.len(), 1);
+    assert_eq!(atts[0].name, "a.txt");
+    assert_eq!(atts[0].data, b"new");
+}
+
+#[test]
+fn add_attachment_duplicate_name_mixed_order() {
+    let mut atts = vec![
+        Attachment {
+            name: "a.txt".into(),
+            data: b"one".to_vec(),
+        },
+        Attachment {
+            name: "b.txt".into(),
+            data: b"two".to_vec(),
+        },
+    ];
+    add_attachment(
+        &mut atts,
+        Attachment {
+            name: "a.txt".into(),
+            data: b"one-replaced".to_vec(),
+        },
+    );
+    add_attachment(
+        &mut atts,
+        Attachment {
+            name: "b.txt".into(),
+            data: b"two-replaced".to_vec(),
+        },
+    );
+    assert_eq!(atts.len(), 2);
+    assert_eq!(atts[0].name, "a.txt");
+    assert_eq!(atts[0].data, b"one-replaced");
+    assert_eq!(atts[1].name, "b.txt");
+    assert_eq!(atts[1].data, b"two-replaced");
+}
 
 #[test]
 fn zero_bytes() {

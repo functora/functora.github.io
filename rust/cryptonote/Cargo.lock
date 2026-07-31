@@ -778,6 +778,7 @@ dependencies = [
  "enum-iterator",
  "functora",
  "functora-dioxus",
+ "functora-tagged",
  "getrandom 0.2.16",
  "hkdf",
  "jni",

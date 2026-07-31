@@ -5,6 +5,7 @@ use aes_gcm::{
     Aes256Gcm,
 };
 use chacha20poly1305::ChaCha20Poly1305;
+use functora_tagged::{FCrude, Tagged};
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
@@ -20,12 +21,16 @@ pub enum CipherType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EncryptedData {
+pub struct EncryptedNote {
     pub cipher: CipherType,
     pub nonce: Vec<u8>,
     pub ciphertext: Vec<u8>,
     pub salt: Vec<u8>,
 }
+
+pub enum DEncryptedArchive {}
+
+pub type EncryptedArchive = Tagged<Vec<u8>, DEncryptedArchive, FCrude>;
 
 pub fn derive_key(password: &str, salt: &[u8], _: CipherType) -> Result<Vec<u8>, AppError> {
     let mut key = vec![0u8; KEY_SIZE];
@@ -39,7 +44,7 @@ fn random_vec(n: usize) -> Result<Vec<u8>, AppError> {
     Ok(v)
 }
 
-pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -> Result<EncryptedData, AppError> {
+pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -> Result<EncryptedNote, AppError> {
     let salt = random_vec(SALT_SIZE)?;
     let key = derive_key(password, &salt, cipher)?;
     let nonce = random_vec(NONCE_SIZE)?;
@@ -57,7 +62,7 @@ pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -
         }
     };
 
-    Ok(EncryptedData {
+    Ok(EncryptedNote {
         cipher,
         nonce,
         ciphertext,
@@ -65,7 +70,7 @@ pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -
     })
 }
 
-pub fn decrypt_symmetric(data: &EncryptedData, password: &str) -> Result<Vec<u8>, AppError> {
+pub fn decrypt_symmetric(data: &EncryptedNote, password: &str) -> Result<Vec<u8>, AppError> {
     let key = derive_key(password, &data.salt, data.cipher)?;
 
     match data.cipher {

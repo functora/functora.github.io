@@ -15,7 +15,7 @@ pub fn Home() -> Element {
 
     let open_url = move |_| {
         message.set(None);
-        let url = tst.home().url_input()();
+        let url = tst.url_input()();
         let url = url.trim().to_string();
         if url.is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
@@ -62,12 +62,10 @@ pub fn Home() -> Element {
                     }
                 };
                 match read_archive_metadata(&bytes) {
-                    Ok(meta) => {
-                        tst.archive_bytes().set(Some(bytes));
-                        tst.archive_meta().set(Some(meta));
-                        tst.view().is_encrypted().set(true);
-                        tst.extracted_files().set(Vec::new());
-                        tst.view().password_input().set(String::new());
+                    Ok(_) => {
+                        tst.encrypted_archive()
+                            .set(Some(EncryptedArchive::new(bytes).infallible()));
+                        tst.password().set(String::new());
                         nav.write().push(Screen::View.to_route(None));
                     }
                     Err(e) => message.set(Some(Msg::Error(e))),
@@ -201,15 +199,15 @@ pub fn Home() -> Element {
                 textarea {
                     placeholder: "{Msg::NotePlaceholder.render(lang)}",
                     rows: "8",
-                    value: "{tst.content()}",
-                    oninput: move |evt| tst.content().set(evt.value()),
+                    value: "{tst.note()}",
+                    oninput: move |evt| tst.note().set(evt.value()),
                 }
 
                 AttachmentUploader { tst, lang }
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.content().set(text), message),
+                        onclick: move |_| read_clipboard(move |text| tst.note().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -241,14 +239,14 @@ pub fn Home() -> Element {
                 textarea {
                     placeholder: "{Msg::OpenUrlPlaceholder.render(lang)}",
                     rows: "6",
-                    value: "{tst.home().url_input()}",
-                    oninput: move |evt| tst.home().url_input().set(evt.value()),
+                    value: "{tst.url_input()}",
+                    oninput: move |evt| tst.url_input().set(evt.value()),
                 }
 
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
+                        onclick: move |_| read_clipboard(move |text| tst.url_input().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }

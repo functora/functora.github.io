@@ -36,7 +36,6 @@ pub fn edit_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> 
 
 pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.set(TemporaryState::default());
-    // WORKAROUND: Root Store writes don't always propagate to child-lens subscribers. Force it.
     tst.action().set(ActionMode::Create);
 }
 
@@ -69,10 +68,13 @@ pub fn handle_file_input(
         for f in files {
             let name = f.name();
             match f.read_bytes().await {
-                Ok(bytes) => current.push(Attachment {
-                    name,
-                    data: bytes.to_vec(),
-                }),
+                Ok(bytes) => add_attachment(
+                    &mut current,
+                    Attachment {
+                        name,
+                        data: bytes.to_vec(),
+                    },
+                ),
                 Err(e) => errors.push(format!("{name}: {e}")),
             }
         }
@@ -96,7 +98,7 @@ pub fn handle_file_input_native(tst: Store<TemporaryState>, mut message: Signal<
             Ok(files) => {
                 let mut current = tst.attachments()();
                 for (name, data) in files {
-                    current.push(Attachment { name, data });
+                    add_attachment(&mut current, Attachment { name, data });
                 }
                 tst.attachments().set(current);
             }
@@ -124,12 +126,10 @@ pub fn open_archive_file_native(
             None => return,
         };
         match read_archive_metadata(&bytes) {
-            Ok(meta) => {
-                tst.archive_bytes().set(Some(bytes));
-                tst.archive_meta().set(Some(meta));
-                tst.view().is_encrypted().set(true);
-                tst.extracted_files().set(Vec::new());
-                tst.view().password_input().set(String::new());
+            Ok(_) => {
+                tst.encrypted_archive()
+                    .set(Some(EncryptedArchive::new(bytes).infallible()));
+                tst.password().set(String::new());
                 nav.write().push(Screen::View.to_route(None));
             }
             Err(e) => message.set(Some(Msg::Error(e))),
@@ -265,9 +265,7 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
             let ba = env.byte_array_from_slice(&data)?;
             env.call_method(&os, "write", "([B)V", &[(&ba).into()])?;
             env.call_method(&os, "close", "()V", &[])?;
-            let uri_string = env
-                .call_method(&uri, "toString", "()Ljava/lang/String;", &[])?
-                .l()?;
+            let uri_string = env.call_method(&uri, "toString", "()Ljava/lang/String;", &[])?.l()?;
             env.get_string(&JString::from(uri_string)).map(String::from)
         })();
         if let Err(ref e) = res {
@@ -280,6 +278,11 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
     rx.recv()
         .map_err(|e| format!("channel error: {e}"))
         .and_then(|r| r.map_err(|e| format!("JNI error: {e}")))
+}
+
+pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {
+    current.retain(|f| f.name != att.name);
+    current.push(att);
 }
 
 pub fn remove_attachment(tst: Store<TemporaryState>, index: usize) {

@@ -60,46 +60,31 @@ impl Screen {
     }
 }
 
-#[derive(Store, Default)]
-pub struct HomeState {
-    pub url_input: String,
-}
-
-#[derive(Store, Default)]
-pub struct ViewState {
-    pub note_content: Option<String>,
-    pub encrypted_data: Option<EncryptedData>,
-    pub password_input: String,
-    pub is_encrypted: bool,
-}
-
 #[derive(Store)]
 pub struct TemporaryState {
-    pub action: ActionMode,
-    pub content: String,
+    pub note: String,
     pub password: String,
     pub cipher: Option<CipherType>,
     pub attachments: Vec<Attachment>,
-    pub home: HomeState,
-    pub view: ViewState,
-    pub archive_bytes: Option<Vec<u8>>,
-    pub archive_meta: Option<ArchiveMetadata>,
-    pub extracted_files: Vec<Attachment>,
+    pub screen: Screen,
+    pub action: ActionMode,
+    pub url_input: String,
+    pub encrypted_note: Option<EncryptedNote>,
+    pub encrypted_archive: Option<EncryptedArchive>,
 }
 
 impl Default for TemporaryState {
     fn default() -> Self {
         Self {
-            action: ActionMode::Create,
-            content: String::new(),
+            note: String::new(),
             password: String::new(),
             cipher: Some(CipherType::Aes256Gcm),
             attachments: Vec::new(),
-            home: HomeState::default(),
-            view: ViewState::default(),
-            archive_bytes: None,
-            archive_meta: None,
-            extracted_files: Vec::new(),
+            screen: Screen::default(),
+            action: ActionMode::Create,
+            url_input: String::new(),
+            encrypted_note: None,
+            encrypted_archive: None,
         }
     }
 }

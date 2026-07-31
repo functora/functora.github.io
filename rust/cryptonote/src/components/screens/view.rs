@@ -7,9 +7,10 @@ pub fn View(note: Option<String>) -> Element {
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
-    let rendered = use_memo(move || tst.view().note_content()().as_deref().map(render_markdown));
-    let extracted = tst.extracted_files()();
-    let has_attachments = extracted.iter().any(|f| f.name != "note.txt");
+    let rendered = use_memo(move || render_markdown(&tst.note()()));
+    let atts = tst.attachments()();
+    let has_attachments = !atts.is_empty();
+    let is_encrypted = tst.encrypted_note()().is_some() || tst.encrypted_archive()().is_some();
 
     use_effect(move || {
         if let Some(n) = &note {
@@ -17,12 +18,10 @@ pub fn View(note: Option<String>) -> Element {
                 match encoding::decode_note(n) {
                     Ok(note_data) => match note_data {
                         NoteData::CipherText(enc) => {
-                            tst.view().is_encrypted().set(true);
-                            tst.view().encrypted_data().set(Some(enc));
+                            tst.encrypted_note().set(Some(enc));
                         }
                         NoteData::PlainText(text) => {
-                            tst.view().note_content().set(Some(text.clone()));
-                            tst.content().set(text);
+                            tst.note().set(text);
                             tst.cipher().set(None);
                         }
                     },
@@ -31,70 +30,53 @@ pub fn View(note: Option<String>) -> Element {
                 return;
             }
         }
-        if tst.archive_meta()().is_some() {
+        if tst.encrypted_archive()().is_some() {
             return;
         }
-        let content = tst.content()();
-        if content.is_empty() {
+        if tst.note()().is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
-        } else {
-            tst.view().note_content().set(Some(content));
-            let atts = tst.attachments()();
-            if !atts.is_empty() {
-                tst.extracted_files().set(
-                    atts.into_iter().map(|a| Attachment {
-                        name: format!("attachments/{}", a.name),
-                        data: a.data,
-                    }).collect(),
-                );
-            }
         }
     });
 
     let mut download_all = move || {
-        let files = tst.extracted_files()();
+        let files = tst.attachments()();
         if let Ok(zip) = create_zip(&files) {
             match download_package(zip, "cryptonote-unlocked.zip") {
                 Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
+                Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                    e,
+                ))))),
             }
         }
     };
 
     let mut decrypt_note = move || {
         message.set(None);
-        let pwd = tst.view().password_input()();
+        let pwd = tst.password()();
         if pwd.is_empty() {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
             return;
         }
-
-        let enc_data = tst.view().encrypted_data()();
+        let enc_data = tst.encrypted_note()();
         if let Some(enc) = enc_data {
             match decrypt_symmetric(&enc, &pwd) {
                 Ok(plaintext) => match String::from_utf8(plaintext) {
                     Ok(text) => {
-                        tst.view().note_content().set(Some(text.clone()));
-                        tst.view().is_encrypted().set(false);
-                        tst.content().set(text);
+                        tst.note().set(text);
                         tst.password().set(pwd);
                         tst.cipher().set(Some(enc.cipher));
+                        tst.encrypted_note().set(None);
                     }
                     Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e)))),
                 },
                 Err(e) => message.set(Some(Msg::Error(e))),
             }
-        } else if let Some(bytes) = tst.archive_bytes()() {
-            match extract_archive_package(&bytes, &pwd) {
-                Ok(files) => {
-                    if let Some(note_file) = files.iter().find(|f| f.name == "note.txt") {
-                        if let Ok(text) = String::from_utf8(note_file.data.clone()) {
-                            tst.view().note_content().set(Some(text.clone()));
-                            tst.content().set(text);
-                        }
-                    }
-                    tst.extracted_files().set(files);
-                    tst.view().is_encrypted().set(false);
+        } else if let Some(archive) = tst.encrypted_archive()() {
+            match extract_archive_package(&archive, &pwd) {
+                Ok((text, files)) => {
+                    tst.note().set(text);
+                    tst.attachments().set(files);
+                    tst.encrypted_archive().set(None);
                 }
                 Err(e) => message.set(Some(Msg::Error(e))),
             }
@@ -102,7 +84,7 @@ pub fn View(note: Option<String>) -> Element {
     };
 
     rsx! {
-        if tst.view().is_encrypted()() {
+        if is_encrypted {
             Breadcrumb { title: Msg::EncryptedNote }
             section {
                 Pre {
@@ -113,8 +95,8 @@ pub fn View(note: Option<String>) -> Element {
                 input {
                     r#type: "password",
                     placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
-                    value: "{tst.view().password_input()}",
-                    oninput: move |evt| tst.view().password_input().set(evt.value()),
+                    value: "{tst.password()}",
+                    oninput: move |evt| tst.password().set(evt.value()),
                     onkeydown: move |evt| {
                         if evt.key() == Key::Enter {
                             decrypt_note()
@@ -125,7 +107,7 @@ pub fn View(note: Option<String>) -> Element {
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.view().password_input().set(text), message),
+                        onclick: move |_| read_clipboard(move |text| tst.password().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -138,42 +120,49 @@ pub fn View(note: Option<String>) -> Element {
                     }
                     Button {
                         icon: Some(FaXmark),
-                        onclick: move |_| tst.view().password_input().set(String::new()),
+                        onclick: move |_| tst.password().set(String::new()),
                         i18n: Some(Msg::Clear),
                         lang,
                     }
                 }
             }
-        } else if let Some(content) = tst.view().note_content()() {
+        } else {
             Breadcrumb { title: Msg::Note }
             section {
                 card {
                     overflow_wrap: "anywhere",
                     word_break: "break-word",
-                    dangerous_inner_html: "{rendered().unwrap_or_default()}",
+                    dangerous_inner_html: "{rendered()}",
                 }
 
                 table {
                     tbody {
-                        for f in &extracted {
-                            if f.name != "note.txt" {
-                                tr { key: "{f.name}",
-                                    td { {f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string()} }
-                                    td { "txt": "r", "{format_size(f.data.len() as u64)}" }
-                                    td {
-                                        button {
-                                            onclick: {
-                                                let data = f.data.clone();
-                                                let name = f.name.strip_prefix("attachments/").unwrap_or(&f.name).to_string();
-                                                move |_| {
-                                                    match download_package(data.clone(), &name) {
-                                                        Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                                        Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(e))))),
+                        for f in &atts {
+                            tr { key: "{f.name}",
+                                td { "{f.name}" }
+                                td { "txt": "r", "{format_size(f.data.len() as u64)}" }
+                                td {
+                                    button {
+                                        onclick: {
+                                            let data = f.data.clone();
+                                            let name = f.name.clone();
+                                            move |_| {
+                                                match download_package(data.clone(), &name) {
+                                                    Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                                                    Err(e) => {
+                                                        message
+                                                            .set(
+                                                                Some(
+                                                                    Msg::Error(
+                                                                        AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                                                    ),
+                                                                ),
+                                                            )
                                                     }
                                                 }
-                                            },
-                                            Icon { icon: FaDownload }
-                                        }
+                                            }
+                                        },
+                                        Icon { icon: FaDownload }
                                     }
                                 }
                             }
@@ -185,7 +174,7 @@ pub fn View(note: Option<String>) -> Element {
                     Button {
                         icon: Some(FaCopy),
                         primary: true,
-                        onclick: move |_| write_clipboard(content.clone(), message),
+                        onclick: move |_| write_clipboard(tst.note()(), message),
                         i18n: Some(Msg::Base(BaseMsg::Copy)),
                         lang,
                     }
@@ -211,15 +200,6 @@ pub fn View(note: Option<String>) -> Element {
                         lang,
                     }
                 }
-            }
-        } else if message.read().is_some() {
-            Breadcrumb { title: Msg::Base(BaseMsg::ErrorTitleLabel) }
-            section {
-                Dock { message }
-            }
-        } else {
-            section {
-                p { "{Msg::Base(BaseMsg::Loading).render(lang)}" }
             }
         }
     }

@@ -11,7 +11,7 @@ use tap::prelude::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NoteData {
     PlainText(String),
-    CipherText(EncryptedData),
+    CipherText(EncryptedNote),
 }
 
 pub fn encode_note(note: &NoteData) -> Result<String, AppError> {

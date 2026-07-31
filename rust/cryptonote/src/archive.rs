@@ -98,7 +98,7 @@ pub fn read_archive_metadata(package: &[u8]) -> Result<ArchiveMetadata, AppError
     serde_json::from_slice::<ArchiveMetadata>(&meta_json)?.pipe(Ok)
 }
 
-pub fn extract_archive_package(package: &[u8], password: &str) -> Result<Vec<Attachment>, AppError> {
+pub fn extract_archive_package(package: &[u8], password: &str) -> Result<(String, Vec<Attachment>), AppError> {
     let mut archive =
         zip::ZipArchive::new(std::io::Cursor::new(package)).map_err(|e| AppError::Archive(e.to_string()))?;
     let mut meta_json = Vec::new();
@@ -119,7 +119,7 @@ pub fn extract_archive_package(package: &[u8], password: &str) -> Result<Vec<Att
     }
     let meta: ArchiveMetadata = serde_json::from_slice(&meta_json)?;
     let decrypted = decrypt_symmetric(
-        &EncryptedData {
+        &EncryptedNote {
             cipher: meta.cipher,
             nonce: meta.nonce,
             ciphertext,
@@ -129,14 +129,20 @@ pub fn extract_archive_package(package: &[u8], password: &str) -> Result<Vec<Att
     )?;
     let mut inner =
         zip::ZipArchive::new(std::io::Cursor::new(decrypted)).map_err(|e| AppError::Archive(e.to_string()))?;
-    (0..inner.len())
-        .map(|i| {
-            let mut file = inner.by_index(i).map_err(|e| AppError::Archive(e.to_string()))?;
-            let name = file.name().to_string();
-            let mut data = Vec::new();
-            file.read_to_end(&mut data)
-                .map_err(|e| AppError::Archive(e.to_string()))?;
-            Ok(Attachment { name, data })
-        })
-        .collect()
+    let mut note = String::new();
+    let mut files = Vec::new();
+    for i in 0..inner.len() {
+        let mut file = inner.by_index(i).map_err(|e| AppError::Archive(e.to_string()))?;
+        let mut data = Vec::new();
+        file.read_to_end(&mut data)
+            .map_err(|e| AppError::Archive(e.to_string()))?;
+        let name = file.name().to_string();
+        if name == "note.txt" {
+            note = String::from_utf8(data).map_err(AppError::Utf8)?;
+        } else {
+            let clean = name.strip_prefix("attachments/").unwrap_or(&name).to_string();
+            files.push(Attachment { name: clean, data });
+        }
+    }
+    Ok((note, files))
 }

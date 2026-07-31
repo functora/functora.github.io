@@ -205,7 +205,7 @@ fn test_note_data_serde_plaintext() {
 
 #[test]
 fn test_note_data_serde_ciphertext() {
-    let ed = cryptonote::crypto::EncryptedData {
+    let ed = cryptonote::crypto::EncryptedNote {
         cipher: cryptonote::crypto::CipherType::Aes256Gcm,
         nonce: vec![1; 12],
         ciphertext: vec![2; 16],

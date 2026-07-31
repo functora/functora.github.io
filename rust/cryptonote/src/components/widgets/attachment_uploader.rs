@@ -23,7 +23,7 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
                     tr { key: "{i}",
                         td { " {att.name}" }
                         td { "{format_size(att.data.len() as u64)}" }
-                        td {
+                        td { "txt": "r",
                             button {
                                 onclick: move |_| remove_attachment(tst, i),
                                 aria_label: "{Msg::RemoveFile.render(lang)}",

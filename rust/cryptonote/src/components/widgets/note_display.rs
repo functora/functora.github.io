@@ -45,7 +45,7 @@ pub fn NoteDisplay() -> Element {
                             tr { key: "{f.name}",
                                 td { "{f.name}" }
                                 td { "{format_size(f.data.len() as u64)}" }
-                                td {
+                                td { "txt": "r",
                                     button {
                                         onclick: {
                                             let data = f.data.clone();

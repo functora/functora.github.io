@@ -4,6 +4,7 @@ use crate::*;
 #[component]
 pub fn Open(note: Option<String>) -> Element {
     let tst = use_context::<Store<TemporaryState>>();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();
     let mut message = use_message();
     let external = tst.external()();
@@ -61,6 +62,7 @@ pub fn Open(note: Option<String>) -> Element {
                                 tst.password().set(pwd);
                                 tst.cipher().set(Some(enc.cipher));
                                 tst.external().set(External::Nothing);
+                                nav.write().push(Screen::View.to_route(None));
                             }
                             Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e)))),
                         },
@@ -73,6 +75,7 @@ pub fn Open(note: Option<String>) -> Element {
                     tst.note().set(text);
                     tst.attachments().set(files);
                     tst.external().set(External::Nothing);
+                    nav.write().push(Screen::View.to_route(None));
                 }
                 Err(e) => message.set(Some(Msg::Error(e))),
             },

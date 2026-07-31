@@ -40,6 +40,27 @@ fn build_external_archive_builds_pkg() {
 }
 
 #[test]
+fn build_external_with_attachments_builds_archive_with_files() {
+    let atts = vec![
+        Attachment {
+            name: "photo.jpg".into(),
+            data: vec![1, 2, 3],
+        },
+        Attachment {
+            name: "data.bin".into(),
+            data: vec![9, 9, 9],
+        },
+    ];
+    let external = build_external("note with files", "pw", Some(CipherType::ChaCha20Poly1305), &atts).unwrap();
+    let External::Archive(a) = external else {
+        panic!("Expected an archive artifact");
+    };
+    let (text, files) = extract_archive_package(&a.untag(), "pw").unwrap();
+    assert_eq!(text, "note with files");
+    assert_eq!(files, atts);
+}
+
+#[test]
 fn build_external_oversized_note_falls_back_to_archive() {
     let note = "x".repeat(20_000);
     let external = build_external(&note, "", None, &[]).unwrap();

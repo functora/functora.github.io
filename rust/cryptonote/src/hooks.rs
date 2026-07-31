@@ -158,15 +158,20 @@ pub fn build_external(
                 url: u,
                 qr,
             })),
-            Err(_) => create_archive(note, password, cipher),
+            Err(_) => create_archive(note, password, cipher, atts),
         }
     } else {
-        create_archive(note, password, cipher)
+        create_archive(note, password, cipher, atts)
     }
 }
 
-fn create_archive(note: &str, password: &str, cipher: Option<CipherType>) -> Result<External, AppError> {
-    let pkg = create_archive_package(note, &[], password, cipher)?;
+fn create_archive(
+    note: &str,
+    password: &str,
+    cipher: Option<CipherType>,
+    atts: &[Attachment],
+) -> Result<External, AppError> {
+    let pkg = create_archive_package(note, atts, password, cipher)?;
     Ok(External::Archive(ExternalArchive::new(pkg).infallible()))
 }
 
@@ -200,20 +205,22 @@ fn app_origin() -> Option<String> {
 
 pub fn open_archive(bytes: Vec<u8>, tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> Result<(), AppError> {
     let meta = read_archive_metadata(&bytes)?;
-    match meta.cipher {
+    let screen = match meta.cipher {
         Some(_) => {
             tst.external()
                 .set(External::Archive(ExternalArchive::new(bytes).infallible()));
             tst.password().set(String::new());
+            Screen::Open
         }
         None => {
             let (text, files) = extract_archive_package(&bytes, "")?;
             tst.note().set(text);
             tst.attachments().set(files);
             tst.external().set(External::Nothing);
+            Screen::View
         }
-    }
-    nav.write().push(Screen::Open.to_route(None));
+    };
+    nav.write().push(screen.to_route(None));
     Ok(())
 }
 
@@ -295,13 +302,14 @@ pub fn download_script(data: &[u8], filename: &str) -> Result<String, String> {
 
 #[cfg(target_os = "android")]
 pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
-    use jni::objects::{JObject, JString};
+    use jni::objects::JObject;
     use jni::JNIEnv;
     use std::sync::mpsc::channel;
     let (tx, rx) = channel();
     let filename = filename.to_string();
+    let name = filename.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
-        let res = (|| -> Result<String, jni::errors::Error> {
+        let res = (|| -> Result<(), jni::errors::Error> {
             let resolver = env
                 .call_method(
                     activity,
@@ -312,7 +320,7 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
                 .l()?;
             let cv = env.new_object("android/content/ContentValues", "()V", &[])?;
             let nk = env.new_string("_display_name")?;
-            let jn = env.new_string(&filename)?;
+            let jn = env.new_string(&name)?;
             env.call_method(
                 &cv,
                 "put",
@@ -353,8 +361,7 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
             let ba = env.byte_array_from_slice(&data)?;
             env.call_method(&os, "write", "([B)V", &[(&ba).into()])?;
             env.call_method(&os, "close", "()V", &[])?;
-            let uri_string = env.call_method(&uri, "toString", "()Ljava/lang/String;", &[])?.l()?;
-            env.get_string(&JString::from(uri_string)).map(String::from)
+            Ok(())
         })();
         if let Err(ref e) = res {
             tracing::error!("MediaStore JNI error: {e}");
@@ -365,7 +372,7 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
     });
     rx.recv()
         .map_err(|e| format!("channel error: {e}"))
-        .and_then(|r| r.map_err(|e| format!("JNI error: {e}")))
+        .and_then(|r| r.map(|_| filename).map_err(|e| format!("JNI error: {e}")))
 }
 
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {

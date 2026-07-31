@@ -1,6 +1,6 @@
 use cryptonote::archive::Attachment;
 use cryptonote::components::*;
-use cryptonote::{add_attachment, build_external, format_size, CipherType, NoteData};
+use cryptonote::{add_attachment, build_external, extract_archive_package, format_size, CipherType, NoteData};
 
 #[test]
 fn build_external_plaintext_builds_url_and_qr() {
@@ -37,6 +37,18 @@ fn build_external_archive_builds_pkg() {
     )
     .unwrap();
     assert!(matches!(external, External::Archive(_)));
+}
+
+#[test]
+fn build_external_oversized_note_falls_back_to_archive() {
+    let note = "x".repeat(20_000);
+    let external = build_external(&note, "", None, &[]).unwrap();
+    let External::Archive(a) = external else {
+        panic!("Expected an archive fallback");
+    };
+    let (text, files) = extract_archive_package(&a.untag(), "").unwrap();
+    assert_eq!(text, note);
+    assert!(files.is_empty());
 }
 
 #[test]

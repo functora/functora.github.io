@@ -152,16 +152,22 @@ pub fn build_external(
         };
         let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
         let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
-        let qr = generate_qr_code(&u)?;
-        Ok(External::Note(ExternalNote {
-            data: note_data,
-            url: u,
-            qr,
-        }))
+        match generate_qr_code(&u) {
+            Ok(qr) => Ok(External::Note(ExternalNote {
+                data: note_data,
+                url: u,
+                qr,
+            })),
+            Err(_) => create_archive(note, password, cipher),
+        }
     } else {
-        let pkg = create_archive_package(note, atts, password, cipher)?;
-        Ok(External::Archive(ExternalArchive::new(pkg).infallible()))
+        create_archive(note, password, cipher)
     }
+}
+
+fn create_archive(note: &str, password: &str, cipher: Option<CipherType>) -> Result<External, AppError> {
+    let pkg = create_archive_package(note, &[], password, cipher)?;
+    Ok(External::Archive(ExternalArchive::new(pkg).infallible()))
 }
 
 pub fn generate_share(tst: Store<TemporaryState>) -> Result<(), AppError> {

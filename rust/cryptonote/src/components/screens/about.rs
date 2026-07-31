@@ -5,10 +5,11 @@ use crate::*;
 pub fn About() -> Element {
     let lang = use_lang();
     let nav = use_context::<Signal<Nav<Route>>>();
+    let rendered = use_memo(move || render_markdown(&Msg::AboutText.render(lang)));
     rsx! {
         Breadcrumb { title: Msg::AboutTitle }
         section {
-            p { "{Msg::AboutText.render(lang)}" }
+            p { dangerous_inner_html: "{rendered()}" }
             Pre {
                 code {
                     "{Msg::AboutAndroidBeta1.render(lang)} "

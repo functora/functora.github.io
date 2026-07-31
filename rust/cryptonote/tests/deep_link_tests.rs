@@ -1,4 +1,11 @@
 use cryptonote::{set_schedule_update, store_url, take_url, url_to_route};
+use std::sync::{Arc, Mutex, MutexGuard};
+
+static STATE_LOCK: Mutex<()> = Mutex::new(());
+
+fn lock_state() -> MutexGuard<'static, ()> {
+    STATE_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 #[test]
 fn url_to_route_with_query_returns_formatted() {
@@ -38,6 +45,7 @@ fn url_to_route_only_hash() {
 
 #[test]
 fn store_and_take_url_roundtrip() {
+    let _guard = lock_state();
     store_url("https://test.com/?note=xyz".into());
     let taken = take_url();
     assert_eq!(taken, Some("https://test.com/?note=xyz".to_string()));
@@ -46,12 +54,14 @@ fn store_and_take_url_roundtrip() {
 
 #[test]
 fn take_url_empty_when_nothing_stored() {
+    let _guard = lock_state();
     let _ = take_url();
     assert_eq!(take_url(), None);
 }
 
 #[test]
 fn store_url_overwrites_previous() {
+    let _guard = lock_state();
     store_url("first".into());
     store_url("second".into());
     assert_eq!(take_url(), Some("second".to_string()));
@@ -60,7 +70,7 @@ fn store_url_overwrites_previous() {
 #[test]
 fn store_url_triggers_scheduled_update() {
     use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
+    let _guard = lock_state();
     let _ = take_url();
     let called = Arc::new(AtomicBool::new(false));
     let c = called.clone();

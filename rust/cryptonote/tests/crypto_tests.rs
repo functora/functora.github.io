@@ -1,4 +1,4 @@
-use cryptonote::crypto::{decrypt_symmetric, derive_key, encrypt_symmetric, CipherType, KEY_SIZE};
+use cryptonote::crypto::{decrypt_symmetric, derive_key, encrypt_symmetric, CipherType, EncryptedNote, Kdf, KEY_SIZE};
 
 #[test]
 fn test_symmetric_chacha20_roundtrip() {
@@ -30,18 +30,9 @@ fn test_symmetric_wrong_password() {
 fn test_key_derivation_consistency() {
     let password = "test";
     let salt = vec![1u8; KEY_SIZE];
-    let key1 = derive_key(password, &salt, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
-    let key2 = derive_key(password, &salt, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
+    let key1 = derive_key(password, &salt, Kdf::Argon2id).expect("Key derivation failed");
+    let key2 = derive_key(password, &salt, Kdf::Argon2id).expect("Key derivation failed");
     assert_eq!(key1, key2);
-}
-
-#[test]
-fn test_derive_key_different_ciphers_same_password() {
-    let password = "test_password";
-    let salt = vec![42u8; KEY_SIZE];
-    let key_chacha = derive_key(password, &salt, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
-    let key_aes = derive_key(password, &salt, CipherType::Aes256Gcm).expect("Key derivation failed");
-    assert_eq!(key_chacha, key_aes);
 }
 
 #[test]
@@ -49,15 +40,15 @@ fn test_derive_key_different_salts() {
     let password = "test_password";
     let salt1 = vec![1u8; KEY_SIZE];
     let salt2 = vec![2u8; KEY_SIZE];
-    let key1 = derive_key(password, &salt1, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
-    let key2 = derive_key(password, &salt2, CipherType::ChaCha20Poly1305).expect("Key derivation failed");
+    let key1 = derive_key(password, &salt1, Kdf::Argon2id).expect("Key derivation failed");
+    let key2 = derive_key(password, &salt2, Kdf::Argon2id).expect("Key derivation failed");
     assert_ne!(key1, key2);
 }
 
 #[test]
 fn test_derive_key_empty_password() {
     let salt = vec![1u8; KEY_SIZE];
-    let key = derive_key("", &salt, CipherType::ChaCha20Poly1305);
+    let key = derive_key("", &salt, Kdf::Argon2id);
     assert!(key.is_ok());
     assert_eq!(key.unwrap().len(), 32);
 }
@@ -88,4 +79,117 @@ fn test_different_nonces_for_same_input() {
     let encrypted2 = encrypt_symmetric(plaintext, password, CipherType::ChaCha20Poly1305).expect("Encryption failed");
     assert_ne!(encrypted1.nonce, encrypted2.nonce);
     assert_ne!(encrypted1.ciphertext, encrypted2.ciphertext);
+}
+
+#[test]
+fn test_derive_key_32_bytes() {
+    let salt = vec![1u8; 32];
+    let key = derive_key("password", &salt, Kdf::Argon2id).expect("Key derivation failed");
+    assert_eq!(key.len(), 32);
+}
+
+#[test]
+fn test_derive_key_long_password() {
+    let long_pw = "a".repeat(100);
+    let salt = vec![1u8; 32];
+    let key = derive_key(&long_pw, &salt, Kdf::Argon2id).expect("Key derivation failed");
+    assert_eq!(key.len(), 32);
+}
+
+#[test]
+fn test_encrypt_decrypt_with_long_password() {
+    let long_pw = "x".repeat(128);
+    let plaintext = b"test data with long password";
+    let encrypted = encrypt_symmetric(plaintext, &long_pw, CipherType::Aes256Gcm).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, &long_pw).expect("Decryption failed");
+    assert_eq!(plaintext.to_vec(), decrypted);
+}
+
+#[test]
+fn test_decrypt_tampered_ciphertext_fails() {
+    let plaintext = b"original data";
+    let mut encrypted = encrypt_symmetric(plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    encrypted.ciphertext[0] ^= 0xFF;
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_decrypt_tampered_nonce_fails() {
+    let plaintext = b"data";
+    let mut encrypted = encrypt_symmetric(plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    encrypted.nonce[0] ^= 0xFF;
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_decrypt_wrong_nonce_length_returns_error() {
+    let mut encrypted = encrypt_symmetric(b"data", "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    encrypted.nonce.truncate(5);
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(matches!(result, Err(cryptonote::AppError::InvalidFormat(_))));
+}
+
+#[test]
+fn test_decrypt_wrong_salt_length_returns_error() {
+    let mut encrypted = encrypt_symmetric(b"data", "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    encrypted.salt.clear();
+    let result = decrypt_symmetric(&encrypted, "pw");
+    assert!(matches!(result, Err(cryptonote::AppError::InvalidFormat(_))));
+}
+
+#[test]
+fn test_encrypt_empty_password() {
+    let plaintext = b"data with no password";
+    let encrypted = encrypt_symmetric(plaintext, "", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, "").expect("Decryption failed");
+    assert_eq!(plaintext.to_vec(), decrypted);
+}
+
+#[test]
+fn test_encrypt_decrypt_large_plaintext_chacha() {
+    let plaintext = vec![7u8; 5000];
+    let encrypted = encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let decrypted = decrypt_symmetric(&encrypted, "pw").expect("Decryption failed");
+    assert_eq!(plaintext, decrypted);
+}
+
+#[test]
+fn test_new_notes_use_argon2id() {
+    let encrypted = encrypt_symmetric(b"data", "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    assert_eq!(encrypted.kdf, Kdf::Argon2id);
+}
+
+#[test]
+fn test_decrypt_tampered_cipher_fails() {
+    let encrypted = encrypt_symmetric(b"data", "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let mut tampered = encrypted.clone();
+    tampered.cipher = CipherType::Aes256Gcm;
+    assert!(decrypt_symmetric(&tampered, "pw").is_err());
+}
+
+#[test]
+fn test_ciphertext_contains_no_plaintext() {
+    let plaintext = b"top-secret-plaintext-marker";
+    let encrypted = encrypt_symmetric(plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    assert!(!encrypted.ciphertext.windows(plaintext.len()).any(|w| w == plaintext));
+}
+
+#[test]
+fn test_metadata_contains_no_password_or_key() {
+    let encrypted =
+        encrypt_symmetric(b"data", "super-secret-password", CipherType::Aes256Gcm).expect("Encryption failed");
+    let json = serde_json::to_string(&encrypted).expect("Serialize failed");
+    assert!(!json.contains("super-secret-password"));
+    assert_eq!(encrypted.kdf, Kdf::Argon2id);
+    assert_eq!(encrypted.salt.len(), 32);
+    assert_eq!(encrypted.nonce.len(), 12);
+}
+
+#[test]
+fn test_old_metadata_json_rejected_without_kdf() {
+    let json = r#"{"cipher":"Aes256Gcm","nonce":[1,2,3],"ciphertext":[4,5,6],"salt":[7,8,9]}"#;
+    let result: Result<EncryptedNote, _> = serde_json::from_str(json);
+    assert!(result.is_err());
 }

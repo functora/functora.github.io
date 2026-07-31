@@ -54,14 +54,21 @@ pub enum Msg {
     ActionOpen,
     ActionScan,
     Theme,
-    ScanQrButton,
-    QrScannerTitle,
     LicenseText,
     PrivacyText,
     AboutText,
     DonateIntro,
     Print,
     Clear,
+    AttachFiles,
+    RemoveFile,
+    ArchiveReady,
+    OpenArchive,
+    Download,
+    DownloadAll,
+    FileName,
+    FileSize,
+    Downloaded(String),
 }
 
 impl I18N for Msg {
@@ -107,17 +114,15 @@ impl I18N for Msg {
             Self::Donate => "Donate",
             Self::OpenUrlLabel => "URL",
             Self::OpenUrlPlaceholder => "Paste shared note URL here...",
-            Self::OpenButton => "Open",
+            Self::OpenButton => "Open URL",
             Self::DonateGreeting => "Hello, User!",
             Self::DonateLink => "Donate",
             Self::Please => "Please",
             Self::ActionLabel => "Action",
-            Self::ActionCreate => "Create new note",
-            Self::ActionOpen => "Open note URL",
-            Self::ActionScan => "Scan note QR",
+            Self::ActionCreate => "Create note",
+            Self::ActionOpen => "Open note",
+            Self::ActionScan => "Scan note",
             Self::Theme => "Theme",
-            Self::ScanQrButton => "Scan",
-            Self::QrScannerTitle => "Scan QR Code",
             Self::Error(e) => return e.render_eng(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
@@ -177,12 +182,13 @@ With Cryptonote, you can:
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code
+- Attach files to your note and pack everything into a secure offline archive (.cryptonote)
 
-All content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code.
+Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you download and share separately.
 
 Cryptonote follows modern cryptographic best practices:
 
-- Strong key derivation with HKDF, allowing users to supply just a password (which is used directly as the initial keying material)
+- Strong password-based key derivation with Argon2id
 - Authenticated encryption for confidentiality, integrity, and authenticity
 - No data ever leaves your device unless you explicitly choose to share it
 
@@ -190,6 +196,15 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::DonateIntro => "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
             Self::Print => "Print",
             Self::Clear => "Clear",
+            Self::AttachFiles => "Attach files",
+            Self::RemoveFile => "Remove",
+            Self::ArchiveReady => "Cryptonote archive ready. Press Download to save and share with your recipient.",
+            Self::OpenArchive => "Open archive",
+            Self::Download => "Download",
+            Self::DownloadAll => "Download all",
+            Self::FileName => "Name",
+            Self::FileSize => "Size",
+            Self::Downloaded(loc) => return format!("Downloaded: {loc}"),
         }
         .to_string()
     }
@@ -236,17 +251,15 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::Donate => "Donar",
             Self::OpenUrlLabel => "URL",
             Self::OpenUrlPlaceholder => "Pega la URL de la nota compartida aquí...",
-            Self::OpenButton => "Abrir",
+            Self::OpenButton => "Abrir URL",
             Self::DonateGreeting => "¡Hola, Usuario!",
             Self::DonateLink => "Donar",
             Self::Please => "Por favor",
             Self::ActionLabel => "Acción",
-            Self::ActionCreate => "Crear nueva nota",
-            Self::ActionOpen => "Abrir URL de nota",
-            Self::ActionScan => "Escanear QR de nota",
+            Self::ActionCreate => "Crear nota",
+            Self::ActionOpen => "Abrir nota",
+            Self::ActionScan => "Escanear nota",
             Self::Theme => "Tema",
-            Self::ScanQrButton => "Escanear",
-            Self::QrScannerTitle => "Escanear código QR",
             Self::Error(e) => return e.render_spa(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
@@ -306,12 +319,13 @@ Con Cryptonote, puedes:
 - Opcionalmente cifrarla usando algoritmos fuertes y bien establecidos (p. ej., AES-GCM o ChaCha20-Poly1305)
 - O dejarla sin cifrar
 - Compartir la nota instantáneamente a través de una URL o un código QR escaneable
+- Adjuntar archivos a tu nota y empaquetarlo todo en un archivo offline seguro (.cryptonote)
 
-Todo el contenido - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR.
+El contenido de la nota - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR. Las notas con archivos adjuntos se empaquetan en un archivo que descargas y compartes por separado.
 
 Cryptonote sigue las mejores prácticas criptográficas modernas:
 
-- Derivación de claves fuerte con HKDF, permitiendo a los usuarios proporcionar solo una contraseña (que se usa directamente como material inicial de claves)
+- Derivación de claves robusta basada en contraseña con Argon2id
 - Cifrado autenticado para confidencialidad, integridad y autenticidad
 - Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
 
@@ -319,6 +333,15 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::DonateIntro => "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
             Self::Print => "Imprimir",
             Self::Clear => "Borrar",
+            Self::AttachFiles => "Adjuntar archivos",
+            Self::RemoveFile => "Eliminar",
+            Self::ArchiveReady => "Archivo Cryptonote listo. Presiona Descargar para guardar y compartir con tu destinatario.",
+            Self::OpenArchive => "Abrir archivo",
+            Self::Download => "Descargar",
+            Self::DownloadAll => "Descargar todo",
+            Self::FileName => "Nombre",
+            Self::FileSize => "Tamaño",
+            Self::Downloaded(loc) => return format!("Descargado: {loc}"),
         }
         .to_string()
     }
@@ -365,21 +388,19 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::Donate => "Пожертвовать",
             Self::OpenUrlLabel => "URL",
             Self::OpenUrlPlaceholder => "Вставьте URL заметки здесь...",
-            Self::OpenButton => "Открыть",
+            Self::OpenButton => "Открыть URL",
             Self::DonateGreeting => "Здравствуйте, пользователь!",
             Self::DonateLink => "сделайте пожертвование",
             Self::Please => "Пожалуйста",
             Self::ActionLabel => "Действие",
-            Self::ActionCreate => "Создать новую заметку",
-            Self::ActionOpen => "Открыть URL заметки",
-            Self::ActionScan => "Сканировать QR заметки",
+            Self::ActionCreate => "Создать заметку",
+            Self::ActionOpen => "Открыть заметку",
+            Self::ActionScan => "Сканировать заметку",
             Self::Theme => "Тема",
-            Self::ScanQrButton => "Сканировать",
-            Self::QrScannerTitle => "Сканирование QR-кода",
             Self::Error(e) => return e.render_rus(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
-Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее — «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
+Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее - «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
 
 Указанное выше уведомление об авторских правах и данное уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
 
@@ -427,7 +448,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 Свяжитесь с нами
 
 Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@proton.me."#,
-            Self::AboutText => r#"Cryptonote — кроссплатформенное, полностью автономное приложение для создания, хранения и обмена зашифрованными заметками. Оно полностью бессерверное и работает целиком на вашем устройстве или в веб-браузере — подключение к интернету или внешние сервисы не требуются.
+            Self::AboutText => r#"Cryptonote - кроссплатформенное, полностью автономное приложение для создания, хранения и обмена зашифрованными заметками. Оно полностью бессерверное и работает целиком на вашем устройстве или в веб-браузере - подключение к интернету или внешние сервисы не требуются.
 
 С Cryptonote, вы можете:
 
@@ -435,19 +456,29 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 - Опционально зашифровать её с помощью надёжных, широко применяемых алгоритмов (например, AES-GCM или ChaCha20-Poly1305)
 - Или оставить без шифрования
 - Мгновенно поделиться заметкой через URL или сканируемый QR-код
+- Прикрепить файлы к заметке и упаковать всё в защищённый автономный архив (.cryptonote)
 
-Всё содержимое — будь то зашифрованный текст или открытый — встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода.
+Содержимое заметки - будь то зашифрованный текст или открытый - встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода. Заметки с вложениями упаковываются в архивный файл, который вы скачиваете и отправляете отдельно.
 
 Cryptonote следует современным криптографическим практикам:
 
-- Надёжная деривация ключей с помощью HKDF позволяет пользователям использовать только пароль (который применяется напрямую как исходный ключевой материал)
+- Надёжная деривация ключей из пароля на основе Argon2id
 - Аутентифицированное шифрование обеспечивает конфиденциальность, целостность и подлинность
 - Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 
-Безопасно, приватно и по-настоящему автономно — ваши заметки остаются только вашими."#,
+Безопасно, приватно и по-настоящему автономно - ваши заметки остаются только вашими."#,
             Self::DonateIntro => "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
             Self::Print => "Печать",
             Self::Clear => "Очистить",
+            Self::AttachFiles => "Прикрепить файлы",
+            Self::RemoveFile => "Удалить",
+            Self::ArchiveReady => "Архив Cryptonote готов. Нажмите Скачать, чтобы сохранить и поделиться с получателем.",
+            Self::OpenArchive => "Открыть архив",
+            Self::Download => "Скачать",
+            Self::DownloadAll => "Скачать всё",
+            Self::FileName => "Имя",
+            Self::FileSize => "Размер",
+            Self::Downloaded(loc) => return format!("Скачано: {loc}"),
         }
         .to_string()
     }

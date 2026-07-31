@@ -11,7 +11,7 @@ pub fn QrScanner(
 ) -> Element {
     let on_error = move |err: functora_dioxus::Error| {
         if let Some(ref mut msg) = message {
-            msg.set(Some(Msg::Error(AppError::Fd(err))));
+            msg.set(Some(Msg::Error(AppError::FunctoraDioxus(err))));
         }
     };
 

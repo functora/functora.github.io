@@ -4,34 +4,35 @@ use crate::*;
 #[component]
 pub fn Home() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
-    let mut tst = use_context::<Store<TemporaryState>>();
+    let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-
     let mut message = use_message();
+
+    let mut navigate_to_url = move |url: &str| match extract_note_param(url) {
+        Ok(note) => nav.write().push(Screen::Open.to_route(Some(note))),
+        Err(e) => message.set(Some(Msg::Error(e))),
+    };
 
     let open_url = move |_| {
         message.set(None);
-        let url = tst.home().url_input()();
+        let url = tst.url_input()();
         let url = url.trim().to_string();
-
         if url.is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
             return;
         }
-
-        match extract_note_param(&url) {
-            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
-            Err(e) => message.set(Some(Msg::Error(e))),
-        }
+        navigate_to_url(&url);
     };
 
     let mut generate_note = move || {
         message.set(None);
-
         if tst.cipher().is_some() && tst.password()().is_empty() {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
-            nav.write().push(Screen::Share.to_route(None));
+            match generate_share(tst) {
+                Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                Err(e) => message.set(Some(Msg::Error(e))),
+            }
         }
     };
 
@@ -42,12 +43,81 @@ pub fn Home() -> Element {
 
     let reset_ctx = move |_| {
         message.set(None);
-        tst.set(TemporaryState::default());
-        tst.action().set(ActionMode::Create);
-        tst.content().set(String::new());
-        tst.password().set(String::new());
-        tst.cipher().set(Some(CipherType::Aes256Gcm));
-        tst.home().url_input().set(String::new());
+        reset_temporary_state(tst);
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let on_archive_file = move |evt: dioxus::prelude::FormEvent| {
+        spawn({
+            let files = evt.files();
+            async move {
+                let file = match files.into_iter().next() {
+                    Some(f) => f,
+                    None => return,
+                };
+                let bytes = match file.read_bytes().await {
+                    Ok(b) => b.to_vec(),
+                    Err(e) => {
+                        message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                            e.to_string(),
+                        )))));
+                        return;
+                    }
+                };
+                match open_archive(bytes, tst, nav) {
+                    Ok(()) => {}
+                    Err(e) => message.set(Some(Msg::Error(e))),
+                }
+            }
+        });
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let picker = rsx! {
+        label { "btn": true, "primary": "",
+            input {
+                r#type: "file",
+                accept: ".cryptonote",
+                onchange: on_archive_file,
+            }
+            Icon { icon: FaPaperclip }
+            " {Msg::OpenArchive.render(lang)}"
+        }
+    };
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let picker = rsx! {
+        button {
+            "btn": true,
+            "primary": "",
+            onclick: move |_| open_archive_file_native(tst, message, nav),
+            Icon { icon: FaPaperclip }
+            " {Msg::OpenArchive.render(lang)}"
+        }
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let attach_picker = rsx! {
+        label { "btn": true, "primary": "",
+            input {
+                r#type: "file",
+                multiple: true,
+                onchange: move |evt| handle_file_input(evt, tst, message),
+            }
+            Icon { icon: FaPaperclip }
+            " {Msg::AttachFiles.render(lang)}"
+        }
+    };
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let attach_picker = rsx! {
+        button {
+            "btn": true,
+            "primary": "",
+            onclick: move |_| handle_file_input_native(tst, message),
+            Icon { icon: FaPaperclip }
+            " {Msg::AttachFiles.render(lang)}"
+        }
     };
 
     let action = tst.action()();
@@ -79,7 +149,6 @@ pub fn Home() -> Element {
                     label: Msg::ActionScan.render(lang),
                     on_change: set_action,
                 }
-
             }
 
             if action == ActionMode::Create {
@@ -114,11 +183,10 @@ pub fn Home() -> Element {
                     label { "{Msg::Base(BaseMsg::Password).render(lang)}" }
                     input {
                         r#type: "password",
+                        autocomplete: "off",
                         placeholder: "{Msg::Base(BaseMsg::PasswordPlaceholder).render(lang)}",
                         value: "{tst.password()}",
-                        oninput: move |evt| {
-                            tst.password().set(evt.value());
-                        },
+                        oninput: move |evt| tst.password().set(evt.value()),
                         onkeydown: move |evt| {
                             if evt.key() == Key::Enter {
                                 generate_note()
@@ -131,16 +199,15 @@ pub fn Home() -> Element {
                 textarea {
                     placeholder: "{Msg::NotePlaceholder.render(lang)}",
                     rows: "8",
-                    value: "{tst.content()}",
-                    oninput: move |evt| {
-                        tst.content().set(evt.value());
-                    },
+                    value: "{tst.note()}",
+                    oninput: move |evt| tst.note().set(evt.value()),
                 }
 
+                AttachmentUploader { tst, lang }
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.content().set(text), message),
+                        onclick: move |_| read_clipboard(move |text| tst.note().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -151,6 +218,7 @@ pub fn Home() -> Element {
                         i18n: Some(Msg::Share),
                         lang,
                     }
+                    {attach_picker}
                     Button {
                         icon: Some(FaEye),
                         onclick: move |_| nav.write().push(Screen::View.to_route(None)),
@@ -171,14 +239,14 @@ pub fn Home() -> Element {
                 textarea {
                     placeholder: "{Msg::OpenUrlPlaceholder.render(lang)}",
                     rows: "6",
-                    value: "{tst.home().url_input()}",
-                    oninput: move |evt| tst.home().url_input().set(evt.value()),
+                    value: "{tst.url_input()}",
+                    oninput: move |evt| tst.url_input().set(evt.value()),
                 }
 
                 Dock { message,
                     Button {
                         icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.home().url_input().set(text), message),
+                        onclick: move |_| read_clipboard(move |text| tst.url_input().set(text), message),
                         i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
@@ -189,6 +257,7 @@ pub fn Home() -> Element {
                         i18n: Some(Msg::OpenButton),
                         lang,
                     }
+                    {picker}
                     Button {
                         icon: Some(FaTrash),
                         onclick: reset_ctx,
@@ -201,12 +270,7 @@ pub fn Home() -> Element {
             if action == ActionMode::Scan {
                 QrScanner {
                     lang,
-                    on_scan: Callback::new(move |url: String| {
-                        match extract_note_param(&url) {
-                            Ok(note) => nav.write().push(Screen::View.to_route(Some(note))),
-                            Err(e) => message.set(Some(Msg::Error(e))),
-                        }
-                    }),
+                    on_scan: Callback::new(move |url: String| navigate_to_url(&url)),
                 }
             }
         }

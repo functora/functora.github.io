@@ -45,8 +45,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Password is required for encryption",
             Self::ClipboardWriteError(e) => return format!("Failed to copy to clipboard: {e}"),
             Self::ClipboardReadError(e) => return format!("Failed to read from clipboard: {e}"),
-            Self::CameraNotAvailable(e) => return format!("Camera is not available: {e}"),
-            Self::CameraPermissionDenied(e) => return format!("Camera permission was denied: {e}"),
+            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_eng(),
+            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_eng(),
             Self::Back => "Back",
             Self::Home => "Home",
         }
@@ -71,8 +71,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Se requiere contraseña para el cifrado",
             Self::ClipboardWriteError(e) => return format!("No se pudo copiar al portapapeles: {e}"),
             Self::ClipboardReadError(e) => return format!("No se pudo leer del portapapeles: {e}"),
-            Self::CameraNotAvailable(e) => return format!("La cámara no está disponible: {e}"),
-            Self::CameraPermissionDenied(e) => return format!("Permiso de cámara denegado: {e}"),
+            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_spa(),
+            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_spa(),
             Self::Back => "Atrás",
             Self::Home => "Inicio",
         }
@@ -97,8 +97,8 @@ impl I18N for Msg {
             Self::PasswordRequired => "Для шифрования требуется пароль",
             Self::ClipboardWriteError(e) => return format!("Не удалось скопировать в буфер обмена: {e}"),
             Self::ClipboardReadError(e) => return format!("Не удалось прочитать из буфера обмена: {e}"),
-            Self::CameraNotAvailable(e) => return format!("Камера недоступна: {e}"),
-            Self::CameraPermissionDenied(e) => return format!("Разрешение на камеру отклонено: {e}"),
+            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_rus(),
+            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_rus(),
             Self::Back => "Назад",
             Self::Home => "Главная",
         }

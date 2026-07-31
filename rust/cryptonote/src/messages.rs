@@ -54,8 +54,6 @@ pub enum Msg {
     ActionOpen,
     ActionScan,
     Theme,
-    ScanQrButton,
-    QrScannerTitle,
     LicenseText,
     PrivacyText,
     AboutText,
@@ -69,8 +67,6 @@ pub enum Msg {
     DownloadAll,
     FileName,
     FileSize,
-    ArchiveDecrypted,
-    ExtractedNote,
     Downloaded(String),
 }
 
@@ -126,8 +122,6 @@ impl I18N for Msg {
             Self::ActionOpen => "Open note",
             Self::ActionScan => "Scan note QR",
             Self::Theme => "Theme",
-            Self::ScanQrButton => "Scan",
-            Self::QrScannerTitle => "Scan QR Code",
             Self::Error(e) => return e.render_eng(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
@@ -207,8 +201,6 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::DownloadAll => "Download all",
             Self::FileName => "Name",
             Self::FileSize => "Size",
-            Self::ArchiveDecrypted => "Archive decrypted successfully.",
-            Self::ExtractedNote => "Note",
             Self::Downloaded(loc) => return format!("Downloaded: {loc}"),
         }
         .to_string()
@@ -265,8 +257,6 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::ActionOpen => "Abrir nota",
             Self::ActionScan => "Escanear QR de nota",
             Self::Theme => "Tema",
-            Self::ScanQrButton => "Escanear",
-            Self::QrScannerTitle => "Escanear código QR",
             Self::Error(e) => return e.render_spa(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
@@ -346,8 +336,6 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::DownloadAll => "Descargar todo",
             Self::FileName => "Nombre",
             Self::FileSize => "Tamaño",
-            Self::ArchiveDecrypted => "Archivo descifrado correctamente.",
-            Self::ExtractedNote => "Nota",
             Self::Downloaded(loc) => return format!("Descargado: {loc}"),
         }
         .to_string()
@@ -404,8 +392,6 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::ActionOpen => "Открыть заметку",
             Self::ActionScan => "Сканировать QR заметки",
             Self::Theme => "Тема",
-            Self::ScanQrButton => "Сканировать",
-            Self::QrScannerTitle => "Сканирование QR-кода",
             Self::Error(e) => return e.render_rus(),
             Self::LicenseText => r#"Copyright (c) 2025 Functora
 
@@ -485,8 +471,6 @@ Cryptonote следует современным криптографическ�
             Self::DownloadAll => "Скачать всё",
             Self::FileName => "Имя",
             Self::FileSize => "Размер",
-            Self::ArchiveDecrypted => "Архив успешно расшифрован.",
-            Self::ExtractedNote => "Заметка",
             Self::Downloaded(loc) => return format!("Скачано: {loc}"),
         }
         .to_string()

@@ -197,8 +197,6 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::ActionOpen,
         Msg::ActionScan,
         Msg::Theme,
-        Msg::ScanQrButton,
-        Msg::QrScannerTitle,
         Msg::Print,
         Msg::Clear,
         Msg::AttachFiles,
@@ -208,8 +206,6 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::DownloadAll,
         Msg::FileName,
         Msg::FileSize,
-        Msg::ArchiveDecrypted,
-        Msg::ExtractedNote,
     ];
     for variant in &variants {
         let eng = variant.render(Language::Eng);

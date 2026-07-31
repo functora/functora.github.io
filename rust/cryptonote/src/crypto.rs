@@ -15,7 +15,7 @@ const SALT_SIZE: usize = 32;
 pub const KEY_SIZE: usize = 32;
 const AAD_PREFIX: &[u8] = b"cryptonote.v1";
 const ARGON2_M_COST_KIB: u32 = 65536;
-const ARGON2_T_COST: u32 = 2;
+const ARGON2_T_COST: u32 = 3;
 const ARGON2_P_COST: u32 = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Display)]

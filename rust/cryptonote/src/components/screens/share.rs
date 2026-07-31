@@ -109,7 +109,7 @@ pub fn Share() -> Element {
                                     }
                                 }
                             },
-                            i18n: Some(Msg::DownloadAll),
+                            i18n: Some(Msg::Download),
                             lang,
                         }
                     }

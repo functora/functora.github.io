@@ -230,58 +230,85 @@ pub fn open_archive(bytes: Vec<u8>, tst: Store<TemporaryState>, mut nav: Signal<
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, AppError> {
-    use base64::engine::general_purpose::STANDARD as BASE64;
-
-    let multiple_str = if multiple { "true" } else { "false" };
-    let code = format!(
+pub fn pick_script(multiple: bool) -> String {
+    format!(
         r#"
         (async function() {{
+            const CHUNK = 2 * 1024 * 1024;
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = {multiple};
             input.style.display = 'none';
             document.body.appendChild(input);
+            const toBase64 = (uint8) => {{
+                let bin = '';
+                for (let i = 0; i < uint8.length; i += 0x8000) {{
+                    bin += String.fromCharCode.apply(null, uint8.subarray(i, i + 0x8000));
+                }}
+                return btoa(bin);
+            }};
+            const done = () => dioxus.send({{ t: 'done' }});
             try {{
-                const files = await new Promise((resolve, reject) => {{
+                const files = await new Promise((resolve) => {{
                     const timer = setTimeout(() => {{ input.remove(); resolve([]); }}, 120000);
                     input.addEventListener('change', () => {{
                         clearTimeout(timer);
-                        Promise.all(Array.from(input.files).map(f => new Promise(r => {{
-                            const reader = new FileReader();
-                            reader.onload = () => r({{ name: f.name, data: reader.result.split(',')[1] }});
-                            reader.onerror = () => r(null);
-                            reader.readAsDataURL(f);
-                        }}))).then(r => {{ input.remove(); resolve(r.filter(x => x)); }});
+                        resolve(Array.from(input.files));
                     }}, {{ once: true }});
                     input.click();
                 }});
-                dioxus.send(files);
+                for (const f of files) {{
+                    dioxus.send({{ t: 'begin', name: f.name }});
+                    for (let off = 0; off < f.size; off += CHUNK) {{
+                        const buf = await f.slice(off, Math.min(off + CHUNK, f.size)).arrayBuffer();
+                        dioxus.send({{ t: 'chunk', data: toBase64(new Uint8Array(buf)) }});
+                    }}
+                }}
+                input.remove();
+                done();
             }} catch(e) {{
                 input.remove();
-                dioxus.send([]);
+                done();
             }}
         }})()
         "#,
-        multiple = multiple_str
-    );
+        multiple = if multiple { "true" } else { "false" }
+    )
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, AppError> {
+    use base64::engine::general_purpose::STANDARD as BASE64;
 
     #[derive(Deserialize)]
-    struct FileResult {
-        name: String,
-        data: String,
+    #[serde(tag = "t", rename_all = "lowercase")]
+    enum PickMsg {
+        Begin { name: String },
+        Chunk { data: String },
+        Done,
     }
 
-    let mut eval = dioxus::document::eval(&code);
-    let results = eval
-        .recv::<Vec<FileResult>>()
-        .await
-        .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JS(e.to_string())))?;
-    let mut files = Vec::with_capacity(results.len());
-    for f in results {
-        match BASE64.decode(&f.data) {
-            Ok(bytes) => files.push((f.name, bytes)),
-            Err(e) => tracing::warn!("File decode error for {}: {e}", f.name),
+    let mut eval = dioxus::document::eval(&pick_script(multiple));
+    let mut files: Vec<(String, Vec<u8>)> = Vec::new();
+    loop {
+        let msg = eval
+            .recv::<PickMsg>()
+            .await
+            .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JS(e.to_string())))?;
+        match msg {
+            PickMsg::Begin { name } => files.push((name, Vec::new())),
+            PickMsg::Chunk { data } => {
+                if let Some((_, buf)) = files.last_mut() {
+                    match BASE64.decode(&data) {
+                        Ok(bytes) => buf.extend(bytes),
+                        Err(e) => {
+                            tracing::warn!("File decode error: {e}");
+                            files.pop();
+                        }
+                    }
+                }
+            }
+            PickMsg::Done => break,
         }
     }
     Ok(files)

@@ -239,3 +239,22 @@ fn download_script_escapes_newline() {
     assert!(!script.contains("\n"));
     assert!(script.contains(r"line1\nline2"));
 }
+
+#[test]
+fn pick_script_chunked_protocol() {
+    let script = cryptonote::pick_script(true);
+    assert!(script.contains("t: 'begin'"));
+    assert!(script.contains("t: 'chunk'"));
+    assert!(script.contains("t: 'done'"));
+    assert!(script.contains("f.slice("));
+    assert!(script.contains("arrayBuffer()"));
+    assert!(script.contains("2 * 1024 * 1024"));
+    assert!(!script.contains("readAsDataURL"));
+    assert!(!script.contains("FileReader"));
+}
+
+#[test]
+fn pick_script_multiple_flag() {
+    assert!(cryptonote::pick_script(true).contains("input.multiple = true"));
+    assert!(cryptonote::pick_script(false).contains("input.multiple = false"));
+}

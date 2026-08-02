@@ -53,15 +53,16 @@ pub fn Layout() -> Element {
                 }
                 span { id: "functora-nav-collapse" }
                 ul {
-                    for lang in SUPPORTED_LANGUAGES {
+                    for lang in SUPPORTED_LANGUAGES.iter().copied() {
                         li {
                             a {
                                 onclick: move |evt| {
                                     evt.prevent_default();
                                     collapse_nav();
-                                    pst.language().set(*lang);
+                                    pst.language().set(lang);
                                 },
-                                "{language_label(*lang)}"
+                                span { "{Msg::LanguageFlag(lang).render(lang)}" }
+                                "{Msg::LanguageName(lang).render(lang)}"
                             }
                         }
                     }
@@ -70,7 +71,8 @@ pub fn Layout() -> Element {
                             nav: nav_signal,
                             href: Screen::About.to_route(None).to_string(),
                             onclick: move |_| collapse_nav(),
-                            "❓{Msg::AboutTitle.render(lang)}"
+                            Icon { icon: FaAndroid }
+                            "{Msg::Application.render(lang)}"
                         }
                     }
                     li {
@@ -80,10 +82,10 @@ pub fn Layout() -> Element {
                                 collapse_nav();
                                 pst.theme().with_mut(|t| *t = t.next());
                             },
-                            {
+                            span {
                                 match pst.theme()() {
-                                    Theme::Light => "☀️ ",
-                                    Theme::Dark => "🌙 ",
+                                    Theme::Light => "☀️",
+                                    Theme::Dark => "🌙",
                                 }
                             }
                             {Msg::Theme.render(lang)}

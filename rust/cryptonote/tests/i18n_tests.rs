@@ -1,5 +1,5 @@
 use cryptonote::messages::*;
-use cryptonote::{language_label, AppError, Language, I18N, SUPPORTED_LANGUAGES};
+use cryptonote::{AppError, Language, I18N, SUPPORTED_LANGUAGES};
 use functora_dioxus::Msg as BaseMsg;
 
 #[test]
@@ -10,16 +10,18 @@ fn supported_languages_contains_known() {
 }
 
 #[test]
-fn supported_languages_matches_labels() {
-    SUPPORTED_LANGUAGES
-        .iter()
-        .for_each(|lang| assert_ne!(language_label(*lang), "🌐 Unknown"));
+fn supported_languages_have_flags_and_names() {
+    SUPPORTED_LANGUAGES.iter().copied().for_each(|lang| {
+        assert_ne!(Msg::LanguageFlag(lang).render(Language::Eng), "🌐");
+        assert!(!Msg::LanguageName(lang).render(Language::Eng).is_empty());
+    });
 }
 
 #[test]
-fn unknown_language_label_falls_back() {
-    assert_eq!(language_label(Language::default()), "🌐 Unknown");
-    assert_eq!(language_label(Language::Fra), "🌐 Unknown");
+fn unknown_language_falls_back() {
+    assert_eq!(Msg::LanguageFlag(Language::default()).render(Language::Eng), "🌐");
+    assert_eq!(Msg::LanguageFlag(Language::Fra).render(Language::Eng), "🌐");
+    assert_eq!(Msg::LanguageName(Language::default()).render(Language::Eng), "Unknown");
 }
 
 #[test]
@@ -179,7 +181,7 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::PrivacyPolicyAnd,
         Msg::PrivacyPolicyTitle,
         Msg::VersionLabel,
-        Msg::AboutTitle,
+        Msg::Application,
         Msg::JoinTestingButton,
         Msg::GooglePlayButton,
         Msg::DownloadApkButton,
@@ -255,18 +257,21 @@ fn supported_languages_length() {
 }
 
 #[test]
-fn language_label_eng() {
-    assert!(language_label(Language::Eng).contains("English"));
+fn language_flag_eng() {
+    assert_eq!(Msg::LanguageFlag(Language::Eng).render(Language::Eng), "🇬🇧");
+    assert_eq!(Msg::LanguageName(Language::Eng).render(Language::Eng), "English");
 }
 
 #[test]
-fn language_label_spa() {
-    assert!(language_label(Language::Spa).contains("Español"));
+fn language_flag_spa() {
+    assert_eq!(Msg::LanguageFlag(Language::Spa).render(Language::Spa), "🇪🇸");
+    assert_eq!(Msg::LanguageName(Language::Spa).render(Language::Spa), "Español");
 }
 
 #[test]
-fn language_label_rus() {
-    assert!(language_label(Language::Rus).contains("Русский"));
+fn language_flag_rus() {
+    assert_eq!(Msg::LanguageFlag(Language::Rus).render(Language::Rus), "🇷🇺");
+    assert_eq!(Msg::LanguageName(Language::Rus).render(Language::Rus), "Русский");
 }
 
 #[test]

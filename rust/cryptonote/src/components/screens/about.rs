@@ -7,7 +7,7 @@ pub fn About() -> Element {
     let nav = use_context::<Signal<Nav<Route>>>();
     let rendered = use_message_markdown(Msg::AboutText);
     rsx! {
-        Breadcrumb { title: Msg::AboutTitle }
+        Breadcrumb { title: Msg::Application }
         section {
             p { dangerous_inner_html: "{rendered()}" }
             Pre {

@@ -41,28 +41,25 @@ pub fn NoteDisplay() -> Element {
                         }
                     }
                     tbody {
-                        for f in &atts {
+                        for (i, f) in atts.iter().enumerate() {
                             tr { key: "{f.name}",
                                 td { "{f.name}" }
                                 td { "{format_size(f.data.len() as u64)}" }
                                 td { "txt": "r",
                                     button {
-                                        onclick: {
-                                            let data = f.data.clone();
-                                            let name = f.name.clone();
-                                            move |_| {
-                                                match download_package(data.clone(), &name) {
-                                                    Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                                    Err(e) => {
-                                                        message
-                                                            .set(
-                                                                Some(
-                                                                    Msg::Error(
-                                                                        AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
-                                                                    ),
+                                        onclick: move |_| {
+                                            let att = tst.attachments()()[i].clone();
+                                            match download_package(att.data, &att.name) {
+                                                Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
+                                                Err(e) => {
+                                                    message
+                                                        .set(
+                                                            Some(
+                                                                Msg::Error(
+                                                                    AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
                                                                 ),
-                                                            )
-                                                    }
+                                                            ),
+                                                        )
                                                 }
                                             }
                                         },

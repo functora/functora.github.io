@@ -289,19 +289,20 @@ async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, A
 
 #[cfg(not(target_os = "android"))]
 pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
-    dioxus::document::eval(&download_script(&data, filename)?);
+    let eval = dioxus::document::eval(&download_script(filename)?);
+    let b64 = base64::engine::general_purpose::STANDARD.encode(data);
+    eval.send(b64).map_err(|e| e.to_string())?;
     Ok(filename.to_string())
 }
 
-pub fn download_script(data: &[u8], filename: &str) -> Result<String, String> {
-    let b64 = base64::engine::general_purpose::STANDARD.encode(data);
+pub fn download_script(filename: &str) -> Result<String, String> {
     let name = serde_json::to_string(filename)
         .map_err(|e| e.to_string())?
         .replace('<', "\\u003c")
         .replace('>', "\\u003e")
         .replace('\'', "\\u0027");
     Ok(format!(
-        r#"const a=document.createElement('a');a.href="data:application/octet-stream;base64,{b64}";a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),1000);"#,
+        r#"(async function(){{const b64=await dioxus.recv();const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);const url=URL.createObjectURL(new Blob([bytes],{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()"#,
     ))
 }
 

@@ -90,6 +90,12 @@ nav@{x} {
 			color: inherit;
 			.nav-item();
 
+			span,
+			svg {
+				margin-right: 0.8rem;
+				vertical-align: middle;
+			}
+
 			@media (min-width: (@mobile + .1)) {
 				&:not(:only-child) {
 					background-image: var(--icon-chevron);

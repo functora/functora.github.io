@@ -36,8 +36,7 @@ pub fn NoteDisplay() -> Element {
                     thead {
                         tr {
                             th { "{Msg::FileName.render(lang)}" }
-                            th { "{Msg::FileSize.render(lang)}" }
-                            th {}
+                            th { colspan: 2, "{Msg::FileSize.render(lang)}" }
                         }
                     }
                     tbody {

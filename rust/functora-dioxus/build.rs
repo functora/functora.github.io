@@ -35,6 +35,9 @@ fn main() {
                      {dispatch}\
                  }}\n\
              }}\n\
+             fn render_markdown(&self, lang: Language) -> String {{\n\
+                 crate::markdown::render_markdown(&self.render(lang))\n\
+             }}\n\
          }}\n"
     );
 

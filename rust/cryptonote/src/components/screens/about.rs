@@ -5,7 +5,7 @@ use crate::*;
 pub fn About() -> Element {
     let lang = use_lang();
     let nav = use_context::<Signal<Nav<Route>>>();
-    let rendered = use_memo(move || render_markdown(&Msg::AboutText.render(lang)));
+    let rendered = use_message_markdown(Msg::AboutText);
     rsx! {
         Breadcrumb { title: Msg::AboutTitle }
         section {

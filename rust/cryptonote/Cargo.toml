@@ -27,8 +27,6 @@ tracing = "0.1.43"
 functora = "0.1.1"
 functora-dioxus = { path = "../functora-dioxus", features = ["qr"] }
 functora-tagged = "0.2.7"
-pulldown-cmark = "0.13"
-ammonia = "4.1"
 dioxus-free-icons = { version = "0.10.0", features = [
   "font-awesome-brands",
   "font-awesome-solid",

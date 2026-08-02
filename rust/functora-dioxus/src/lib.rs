@@ -5,6 +5,7 @@ pub mod dioxus_elements;
 pub mod error;
 pub mod ffi;
 pub mod i18n;
+pub mod markdown;
 pub mod messages;
 pub mod nav;
 pub mod qr;

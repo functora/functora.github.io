@@ -1,0 +1,87 @@
+@import (reference) "_variables";
+
+/*	progress bar — semantic group containing a <progress>
+----------------------------------------------------------------------*/
+
+fieldset:has(progress) {
+	position: fixed;
+	left: 50%;
+	bottom: 1rem;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	z-index: 100;
+	margin: 0;
+	padding: 0.6rem 1rem;
+	background: @surface;
+	border: 1px solid @primary;
+	border-radius: 0.4rem;
+	box-shadow: 0 0 0.6rem rgba(0, 0, 0, 0.35);
+
+	label, output {
+		color: @primary;
+		font-size: @fs-s;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	label {
+		text-transform: uppercase;
+	}
+
+	progress {
+		width: 12rem;
+	}
+
+	output {
+		min-width: 3.5ch;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+progress[value] {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	border: none;
+	height: 0.7rem;
+	border-radius: 0.35rem;
+	background: @grey-light;
+
+	&::-webkit-progress-bar {
+		background: @grey-light;
+		border-radius: 0.35rem;
+	}
+
+	&::-webkit-progress-value {
+		background: @primary;
+		border-radius: 0.35rem;
+		transition: width 0.15s ease;
+	}
+
+	&::-moz-progress-bar {
+		background: @primary;
+		border-radius: 0.35rem;
+	}
+}
+
+@media (max-width: @mobile) {
+	fieldset:has(progress) {
+		width: calc(100% - 2rem);
+		min-inline-size: 0;
+
+		label {
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		progress {
+			flex: 1 1 40%;
+			width: auto;
+			min-width: 3rem;
+		}
+	}
+}

@@ -57,6 +57,7 @@
               <menuitem><a href="#tables">Tables</a></menuitem>
               <menuitem><a href="#tags">Tags</a></menuitem>
               <menuitem><a href="#tooltips">Tooltips</a></menuitem>
+              <menuitem><a href="#progress">Progress</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
               <menuitem><a href="#utility">Utility</a></menuitem>
               <menuitem><a href="#footer">Footer</a></menuitem>
@@ -717,6 +718,33 @@ fn main() {
           >
         </p>
         <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
+      </section>
+
+      <section id="progress">
+        <h2>Progress</h2>
+
+        <p>
+          Style a bare <code>&lt;progress&gt;</code> element with the
+          <code>value</code> attribute set.
+        </p>
+        <progress max="100" value="64">64%</progress>
+        <pre><code>&lt;progress max="100" value="64"&gt;64%&lt;/progress&gt;</code></pre>
+
+        <p>
+          Wrap <code>&lt;label&gt;</code>, <code>&lt;progress&gt;</code> and
+          <code>&lt;output&gt;</code> in a <code>&lt;fieldset&gt;</code> to get
+          a fixed bottom progress bar with a stage label and percentage.
+        </p>
+        <fieldset aria-live="polite" role="status">
+          <label>Zipping files...</label>
+          <progress max="100" value="64"></progress>
+          <output>64%</output>
+        </fieldset>
+        <pre><code>&lt;fieldset aria-live="polite" role="status"&gt;
+  &lt;label&gt;Zipping files...&lt;/label&gt;
+  &lt;progress max="100" value="64"&gt;&lt;/progress&gt;
+  &lt;output&gt;64%&lt;/output&gt;
+&lt;/fieldset&gt;</code></pre>
       </section>
 
       <section id="cards">

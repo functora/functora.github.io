@@ -123,12 +123,12 @@ pub fn Home() -> Element {
                     option {
                         value: "Aes256Gcm",
                         selected: tst.cipher()() == Some(CipherType::Aes256Gcm),
-                        "🔒 AES-256-GCM {Msg::EncryptionSuffix.render(lang)}"
+                        "🔐 AES-256-GCM {Msg::EncryptionSuffix.render(lang)}"
                     }
                     option {
                         value: "ChaCha20Poly1305",
                         selected: tst.cipher()() == Some(CipherType::ChaCha20Poly1305),
-                        "🔒 ChaCha20-Poly1305 {Msg::EncryptionSuffix.render(lang)}"
+                        "🔐 ChaCha20-Poly1305 {Msg::EncryptionSuffix.render(lang)}"
                     }
                 }
 

@@ -6,21 +6,37 @@ pub fn NoteDisplay() -> Element {
     let nav = use_context::<Signal<Nav<Route>>>();
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-    let mut message = use_message();
+    let message = use_message();
     let rendered = use_memo(move || render_markdown(&tst.note()()));
     let atts = tst.attachments()();
     let has_attachments = !atts.is_empty();
 
-    let mut download_all = move || {
+    let download_all = move || {
         let files = tst.attachments()();
-        if let Ok(zip) = create_zip(&files) {
-            match download_package(zip, "cryptonote-unlocked.zip") {
-                Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                    e,
-                ))))),
+        let progress = tst.progress();
+        let message = message;
+        spawn(async move {
+            let mut progress = progress;
+            let mut message = message;
+            match create_zip_async(&files, progress).await {
+                Ok(zip) => match download_package(zip, "cryptonote-unlocked.zip", progress).await {
+                    Ok(loc) => {
+                        progress.set(None);
+                        message.set(Some(Msg::Downloaded(loc)));
+                    }
+                    Err(e) => {
+                        progress.set(None);
+                        message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                            e,
+                        )))));
+                    }
+                },
+                Err(e) => {
+                    progress.set(None);
+                    message.set(Some(Msg::Error(e)));
+                }
             }
-        }
+        });
     };
 
     rsx! {
@@ -48,19 +64,29 @@ pub fn NoteDisplay() -> Element {
                                     button {
                                         onclick: move |_| {
                                             let att = tst.attachments()()[i].clone();
-                                            match download_package(att.data, &att.name) {
-                                                Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                                Err(e) => {
-                                                    message
-                                                        .set(
-                                                            Some(
-                                                                Msg::Error(
-                                                                    AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                            let progress = tst.progress();
+                                            let message = message;
+                                            spawn(async move {
+                                                let mut progress = progress;
+                                                let mut message = message;
+                                                match download_package(att.data, &att.name, progress).await {
+                                                    Ok(loc) => {
+                                                        progress.set(None);
+                                                        message.set(Some(Msg::Downloaded(loc)));
+                                                    }
+                                                    Err(e) => {
+                                                        progress.set(None);
+                                                        message
+                                                            .set(
+                                                                Some(
+                                                                    Msg::Error(
+                                                                        AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                                                    ),
                                                                 ),
-                                                            ),
-                                                        )
+                                                            );
+                                                    }
                                                 }
-                                            }
+                                            });
                                         },
                                         Icon { icon: FaDownload }
                                     }

@@ -1,75 +1,115 @@
 use cryptonote::archive::Attachment;
 use cryptonote::components::*;
-use cryptonote::{add_attachment, build_external, extract_archive_package, format_size, CipherType, NoteData};
+use cryptonote::{add_attachment, build_external, extract_archive_package_async, format_size, CipherType, NoteData};
+
+mod common;
 
 #[test]
 fn build_external_plaintext_builds_url_and_qr() {
-    let external = build_external("hello world", "", None, &[]).unwrap();
-    let External::Note(n) = external else {
-        panic!("Expected a note artifact");
-    };
-    assert!(matches!(n.data, NoteData::PlainText(_)));
-    assert!(n.url.contains("note="));
-    assert!(n.url.contains("screen=open"));
-    assert!(!n.qr.is_empty());
+    common::with_runtime(|| {
+        common::block_on(async {
+            let external = build_external("hello world", "", None, &[], common::progress())
+                .await
+                .unwrap();
+            let External::Note(n) = external else {
+                panic!("Expected a note artifact");
+            };
+            assert!(matches!(n.data, NoteData::PlainText(_)));
+            assert!(n.url.contains("note="));
+            assert!(n.url.contains("screen=open"));
+            assert!(!n.qr.is_empty());
+        })
+    });
 }
 
 #[test]
 fn build_external_encrypted_note_builds_url() {
-    let external = build_external("secret", "pw", Some(CipherType::Aes256Gcm), &[]).unwrap();
-    let External::Note(n) = external else {
-        panic!("Expected a note artifact");
-    };
-    assert!(matches!(n.data, NoteData::CipherText(_)));
-    assert!(n.url.contains("note="));
+    common::with_runtime(|| {
+        common::block_on(async {
+            let external = build_external("secret", "pw", Some(CipherType::Aes256Gcm), &[], common::progress())
+                .await
+                .unwrap();
+            let External::Note(n) = external else {
+                panic!("Expected a note artifact");
+            };
+            assert!(matches!(n.data, NoteData::CipherText(_)));
+            assert!(n.url.contains("note="));
+        })
+    });
 }
 
 #[test]
 fn build_external_archive_builds_pkg() {
-    let external = build_external(
-        "note",
-        "pw",
-        Some(CipherType::Aes256Gcm),
-        &[Attachment {
-            name: "a.bin".into(),
-            data: vec![1, 2, 3],
-        }],
-    )
-    .unwrap();
-    assert!(matches!(external, External::Archive(_)));
+    common::with_runtime(|| {
+        common::block_on(async {
+            let external = build_external(
+                "note",
+                "pw",
+                Some(CipherType::Aes256Gcm),
+                &[Attachment {
+                    name: "a.bin".into(),
+                    data: vec![1, 2, 3],
+                }],
+                common::progress(),
+            )
+            .await
+            .unwrap();
+            assert!(matches!(external, External::Archive(_)));
+        })
+    });
 }
 
 #[test]
 fn build_external_with_attachments_builds_archive_with_files() {
-    let atts = vec![
-        Attachment {
-            name: "photo.jpg".into(),
-            data: vec![1, 2, 3],
-        },
-        Attachment {
-            name: "data.bin".into(),
-            data: vec![9, 9, 9],
-        },
-    ];
-    let external = build_external("note with files", "pw", Some(CipherType::ChaCha20Poly1305), &atts).unwrap();
-    let External::Archive(a) = external else {
-        panic!("Expected an archive artifact");
-    };
-    let (text, files) = extract_archive_package(&a.untag(), "pw").unwrap();
-    assert_eq!(text, "note with files");
-    assert_eq!(files, atts);
+    common::with_runtime(|| {
+        common::block_on(async {
+            let atts = vec![
+                Attachment {
+                    name: "photo.jpg".into(),
+                    data: vec![1, 2, 3],
+                },
+                Attachment {
+                    name: "data.bin".into(),
+                    data: vec![9, 9, 9],
+                },
+            ];
+            let external = build_external(
+                "note with files",
+                "pw",
+                Some(CipherType::ChaCha20Poly1305),
+                &atts,
+                common::progress(),
+            )
+            .await
+            .unwrap();
+            let External::Archive(a) = external else {
+                panic!("Expected an archive artifact");
+            };
+            let (text, files) = extract_archive_package_async(&a.untag(), "pw", common::progress())
+                .await
+                .unwrap();
+            assert_eq!(text, "note with files");
+            assert_eq!(files, atts);
+        })
+    });
 }
 
 #[test]
 fn build_external_oversized_note_falls_back_to_archive() {
-    let note = "x".repeat(20_000);
-    let external = build_external(&note, "", None, &[]).unwrap();
-    let External::Archive(a) = external else {
-        panic!("Expected an archive fallback");
-    };
-    let (text, files) = extract_archive_package(&a.untag(), "").unwrap();
-    assert_eq!(text, note);
-    assert!(files.is_empty());
+    common::with_runtime(|| {
+        common::block_on(async {
+            let note = "x".repeat(20_000);
+            let external = build_external(&note, "", None, &[], common::progress()).await.unwrap();
+            let External::Archive(a) = external else {
+                panic!("Expected an archive fallback");
+            };
+            let (text, files) = extract_archive_package_async(&a.untag(), "", common::progress())
+                .await
+                .unwrap();
+            assert_eq!(text, note);
+            assert!(files.is_empty());
+        })
+    });
 }
 
 #[test]
@@ -241,9 +281,10 @@ fn download_script_escapes_newline() {
 }
 
 #[test]
-fn pick_script_chunked_protocol() {
+fn pick_script_chunked_protocol_with_size() {
     let script = cryptonote::pick_script(true);
     assert!(script.contains("t: 'begin'"));
+    assert!(script.contains("size: f.size"));
     assert!(script.contains("t: 'chunk'"));
     assert!(script.contains("t: 'done'"));
     assert!(script.contains("f.slice("));

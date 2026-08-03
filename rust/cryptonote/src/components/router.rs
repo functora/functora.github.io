@@ -104,6 +104,7 @@ pub struct TemporaryState {
     pub action: ActionMode,
     pub url_input: String,
     pub external: External,
+    pub progress: Option<Job>,
 }
 
 impl Default for TemporaryState {
@@ -117,6 +118,7 @@ impl Default for TemporaryState {
             action: ActionMode::Create,
             url_input: String::new(),
             external: External::Nothing,
+            progress: None,
         }
     }
 }

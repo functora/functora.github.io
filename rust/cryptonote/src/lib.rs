@@ -9,7 +9,9 @@ pub mod i18n;
 pub mod markdown;
 pub mod messages;
 pub mod prelude;
+pub mod progress;
 pub mod storage;
+pub mod worker;
 
 pub use archive::*;
 pub use components::*;
@@ -21,7 +23,9 @@ pub use hooks::*;
 pub use i18n::*;
 pub use markdown::*;
 pub use prelude::*;
+pub use progress::*;
 pub use storage::*;
+pub use worker::*;
 
 pub mod qr_decode {
     pub use functora_dioxus::qr::*;

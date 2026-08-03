@@ -54,6 +54,7 @@ pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.action().set(ActionMode::Create);
     tst.url_input().set(String::new());
     tst.external().set(External::Nothing);
+    tst.progress().set(None);
 }
 
 pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> impl FnMut(MouseEvent) + 'static {
@@ -63,130 +64,146 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
     }
 }
 
-pub fn handle_file_input(
-    evt: dioxus::prelude::FormEvent,
-    tst: Store<TemporaryState>,
-    mut message: Signal<Option<Msg>>,
-) {
-    #[cfg(target_arch = "wasm32")]
-    use dioxus::web::WebEventExt;
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen::JsCast;
-    let files = evt.files();
-    #[cfg(target_arch = "wasm32")]
-    let input = evt
-        .data()
-        .as_web_event()
-        .target()
-        .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok());
+pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
     spawn(async move {
-        let mut current = tst.attachments()();
-        let mut errors = Vec::new();
-        for f in files {
-            let name = f.name();
-            match f.read_bytes().await {
-                Ok(bytes) => add_attachment(
-                    &mut current,
-                    Attachment {
-                        name,
-                        data: bytes.to_vec(),
-                    },
-                ),
-                Err(e) => errors.push(format!("{name}: {e}")),
-            }
-        }
-        tst.attachments().set(current);
-        if let Some(first) = errors.into_iter().next() {
-            message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                first,
-            )))));
-        }
-        #[cfg(target_arch = "wasm32")]
-        if let Some(input) = input {
-            input.set_value("");
-        }
-    });
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn handle_file_input_native(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
-    spawn(async move {
-        match pick_files_via_eval(true).await {
+        match pick_files_via_eval(true, tst.progress()).await {
             Ok(files) => {
                 let mut current = tst.attachments()();
                 for (name, data) in files {
                     add_attachment(&mut current, Attachment { name, data });
                 }
                 tst.attachments().set(current);
+                clear_progress(tst.progress());
             }
-            Err(e) => message.set(Some(Msg::Error(e))),
+            Err(e) => {
+                message.set(Some(Msg::Error(e)));
+                clear_progress(tst.progress());
+            }
         }
     });
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub fn open_archive_file_native(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
+pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
     spawn(async move {
-        let files = match pick_files_via_eval(false).await {
+        let mut message = message;
+        let files = match pick_files_via_eval(false, tst.progress()).await {
             Ok(f) => f,
             Err(e) => {
+                tst.progress().set(None);
                 message.set(Some(Msg::Error(e)));
                 return;
             }
         };
         let (_, bytes) = match files.into_iter().next() {
             Some(f) => f,
-            None => return,
+            None => {
+                tst.progress().set(None);
+                return;
+            }
         };
-        if let Err(e) = open_archive(bytes, tst, nav) {
+        if let Err(e) = open_archive_async(bytes, tst, nav).await {
             message.set(Some(Msg::Error(e)));
         }
     });
 }
 
-pub fn build_external(
+pub async fn open_archive_async(
+    bytes: Vec<u8>,
+    tst: Store<TemporaryState>,
+    mut nav: Signal<Nav<Route>>,
+) -> Result<(), AppError> {
+    let meta = read_archive_metadata(&bytes)?;
+    let screen = match meta.cipher {
+        Some(_) => {
+            tst.external()
+                .set(External::Archive(ExternalArchive::new(bytes).infallible()));
+            tst.password().set(String::new());
+            clear_progress(tst.progress());
+            Screen::Open
+        }
+        None => {
+            let (text, files) = extract_archive_package_async(&bytes, "", tst.progress()).await?;
+            clear_progress(tst.progress());
+            tst.note().set(text);
+            tst.attachments().set(files);
+            tst.external().set(External::Nothing);
+            Screen::View
+        }
+    };
+    nav.write().push(screen.to_route(None));
+    Ok(())
+}
+
+async fn build_note(
     note: &str,
     password: &str,
     cipher: Option<CipherType>,
-    atts: &[Attachment],
+    report: &mut Reporter,
 ) -> Result<External, AppError> {
-    if atts.is_empty() {
-        let note_data = match cipher {
-            Some(cipher) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cipher)?),
-            None => NoteData::PlainText(note.to_string()),
-        };
-        let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
-        let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
-        match generate_qr_code(&u) {
-            Ok(qr) => Ok(External::Note(ExternalNote {
-                data: note_data,
-                url: u,
-                qr,
-            })),
-            Err(_) => create_archive(note, password, cipher, atts),
-        }
-    } else {
-        create_archive(note, password, cipher, atts)
+    report(Job {
+        stage: Stage::Encrypt,
+        done: 0,
+        total: 1,
+        name: None,
+    });
+    let note_data = match cipher {
+        Some(cipher) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cipher)?),
+        None => NoteData::PlainText(note.to_string()),
+    };
+    let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
+    let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
+    match generate_qr_code(&u) {
+        Ok(qr) => Ok(External::Note(ExternalNote {
+            data: note_data,
+            url: u,
+            qr,
+        })),
+        Err(_) => crate::archive::create_archive_package(note, &[], password, cipher, report)
+            .await
+            .map(|p| External::Archive(ExternalArchive::new(p).infallible())),
     }
 }
 
-fn create_archive(
+pub async fn build_external<P>(
     note: &str,
     password: &str,
     cipher: Option<CipherType>,
     atts: &[Attachment],
-) -> Result<External, AppError> {
-    let pkg = create_archive_package(note, atts, password, cipher)?;
-    Ok(External::Archive(ExternalArchive::new(pkg).infallible()))
+    progress: P,
+) -> Result<External, AppError>
+where
+    P: Writable<Target = Option<Job>> + 'static,
+{
+    let note = note.to_string();
+    let password = password.to_string();
+    let atts = atts.to_vec();
+    crate::worker::run(
+        (note, password, cipher, atts),
+        progress,
+        |(note, password, cipher, atts), mut report| async move {
+            if atts.is_empty() {
+                build_note(&note, &password, cipher, &mut report).await
+            } else {
+                create_archive_package(&note, &atts, &password, cipher, &mut report)
+                    .await
+                    .map(|p| External::Archive(ExternalArchive::new(p).infallible()))
+            }
+        },
+    )
+    .await
 }
 
-pub fn generate_share(tst: Store<TemporaryState>) -> Result<(), AppError> {
-    tst.external().set(build_external(
+pub async fn generate_share_async(tst: Store<TemporaryState>) -> Result<(), AppError> {
+    let external = build_external(
         &tst.note()(),
         &tst.password()(),
         tst.cipher()(),
         &tst.attachments()(),
-    )?);
+        tst.progress(),
+    )
+    .await?;
+    tst.external().set(external);
+    clear_progress(tst.progress());
     Ok(())
 }
 
@@ -208,28 +225,6 @@ fn app_origin() -> Option<String> {
     }
 }
 
-pub fn open_archive(bytes: Vec<u8>, tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> Result<(), AppError> {
-    let meta = read_archive_metadata(&bytes)?;
-    let screen = match meta.cipher {
-        Some(_) => {
-            tst.external()
-                .set(External::Archive(ExternalArchive::new(bytes).infallible()));
-            tst.password().set(String::new());
-            Screen::Open
-        }
-        None => {
-            let (text, files) = extract_archive_package(&bytes, "")?;
-            tst.note().set(text);
-            tst.attachments().set(files);
-            tst.external().set(External::Nothing);
-            Screen::View
-        }
-    };
-    nav.write().push(screen.to_route(None));
-    Ok(())
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 pub fn pick_script(multiple: bool) -> String {
     format!(
         r#"
@@ -258,7 +253,7 @@ pub fn pick_script(multiple: bool) -> String {
                     input.click();
                 }});
                 for (const f of files) {{
-                    dioxus.send({{ t: 'begin', name: f.name }});
+                    dioxus.send({{ t: 'begin', name: f.name, size: f.size }});
                     for (let off = 0; off < f.size; off += CHUNK) {{
                         const buf = await f.slice(off, Math.min(off + CHUNK, f.size)).arrayBuffer();
                         dioxus.send({{ t: 'chunk', data: toBase64(new Uint8Array(buf)) }});
@@ -276,31 +271,42 @@ pub fn pick_script(multiple: bool) -> String {
     )
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, AppError> {
+async fn pick_files_via_eval<P>(multiple: bool, progress: P) -> Result<Vec<(String, Vec<u8>)>, AppError>
+where
+    P: Writable<Target = Option<Job>> + Copy + 'static,
+{
     use base64::engine::general_purpose::STANDARD as BASE64;
 
     #[derive(Deserialize)]
     #[serde(tag = "t", rename_all = "lowercase")]
     enum PickMsg {
-        Begin { name: String },
+        Begin { name: String, size: u64 },
         Chunk { data: String },
         Done,
     }
 
     let mut eval = dioxus::document::eval(&pick_script(multiple));
     let mut files: Vec<(String, Vec<u8>)> = Vec::new();
+    let mut done = 0u64;
+    let mut total = 0u64;
     loop {
         let msg = eval
             .recv::<PickMsg>()
             .await
             .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JS(e.to_string())))?;
         match msg {
-            PickMsg::Begin { name } => files.push((name, Vec::new())),
+            PickMsg::Begin { name, size } => {
+                total += size;
+                files.push((name, Vec::new()));
+                done = files.iter().map(|(_, b)| b.len() as u64).sum();
+            }
             PickMsg::Chunk { data } => {
                 if let Some((_, buf)) = files.last_mut() {
                     match BASE64.decode(&data) {
-                        Ok(bytes) => buf.extend(bytes),
+                        Ok(bytes) => {
+                            done += bytes.len() as u64;
+                            buf.extend(bytes);
+                        }
                         Err(e) => {
                             tracing::warn!("File decode error: {e}");
                             files.pop();
@@ -310,15 +316,45 @@ async fn pick_files_via_eval(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, A
             }
             PickMsg::Done => break,
         }
+        match files.last() {
+            Some((name, _)) => report_progress_named(progress, Stage::Attach, done, total, name).await,
+            None => report_progress(progress, Stage::Attach, done, total).await,
+        }
     }
     Ok(files)
 }
 
 #[cfg(not(target_os = "android"))]
-pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
+#[derive(Serialize)]
+struct DownloadMsg {
+    t: &'static str,
+    data: String,
+}
+
+#[cfg(not(target_os = "android"))]
+pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, String>
+where
+    P: Writable<Target = Option<Job>> + Copy + 'static,
+{
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    const SEND_CHUNK: usize = 3 * 1024 * 1024;
     let eval = dioxus::document::eval(&download_script(filename)?);
-    let b64 = base64::engine::general_purpose::STANDARD.encode(data);
-    eval.send(b64).map_err(|e| e.to_string())?;
+    let total = data.len() as u64;
+    let mut done = 0u64;
+    for chunk in data.chunks(SEND_CHUNK) {
+        eval.send(DownloadMsg {
+            t: "chunk",
+            data: BASE64.encode(chunk),
+        })
+        .map_err(|e| e.to_string())?;
+        done += chunk.len() as u64;
+        report_progress(progress, Stage::Download, done, total).await;
+    }
+    eval.send(DownloadMsg {
+        t: "done",
+        data: String::new(),
+    })
+    .map_err(|e| e.to_string())?;
     Ok(filename.to_string())
 }
 
@@ -329,75 +365,114 @@ pub fn download_script(filename: &str) -> Result<String, String> {
         .replace('>', "\\u003e")
         .replace('\'', "\\u0027");
     Ok(format!(
-        r#"(async function(){{const b64=await dioxus.recv();const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);const url=URL.createObjectURL(new Blob([bytes],{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()"#,
+        r#"(async function(){{const parts=[];for(;;){{const m=await dioxus.recv();if(m&&m.t==='done')break;const bin=atob(m.data);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);parts.push(bytes)}}const url=URL.createObjectURL(new Blob(parts,{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()"#,
     ))
 }
 
 #[cfg(target_os = "android")]
-pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String> {
-    use jni::objects::JObject;
-    use jni::JNIEnv;
-    use std::sync::mpsc::channel;
-    let (tx, rx) = channel();
+pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, String>
+where
+    P: Writable<Target = Option<Job>> + Copy + 'static,
+{
     let filename = filename.to_string();
     let name = filename.clone();
+    crate::worker::run(
+        (data, name, filename),
+        progress,
+        |(data, name, filename), mut report| async move {
+            download_android(&data, name, filename, &mut report)
+                .await
+                .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JNI(e)))
+        },
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[cfg(target_os = "android")]
+async fn download_android(
+    data: &[u8],
+    name: String,
+    filename: String,
+    report: &mut Reporter,
+) -> Result<String, String> {
+    use jni::objects::{GlobalRef, JObject};
+    use jni::JNIEnv;
+    use std::sync::mpsc::channel;
+    use std::sync::{Arc, Mutex};
+    const WRITE_CHUNK: usize = 4 * 1024 * 1024;
+    let total = data.len() as u64;
+    report(Job {
+        stage: Stage::Download,
+        done: 0,
+        total,
+        name: None,
+    });
+    let stream: Arc<Mutex<Option<GlobalRef>>> = Arc::new(Mutex::new(None));
+    let (tx, rx) = channel();
+    let open = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
         let res = (|| -> Result<(), jni::errors::Error> {
-            let resolver = env
-                .call_method(
-                    activity,
-                    "getContentResolver",
-                    "()Landroid/content/ContentResolver;",
-                    &[],
-                )?
-                .l()?;
-            let cv = env.new_object("android/content/ContentValues", "()V", &[])?;
-            let nk = env.new_string("_display_name")?;
-            let jn = env.new_string(&name)?;
-            env.call_method(
-                &cv,
-                "put",
-                "(Ljava/lang/String;Ljava/lang/String;)V",
-                &[(&nk).into(), (&jn).into()],
-            )?;
-            let mk = env.new_string("mime_type")?;
-            let mv = env.new_string("application/octet-stream")?;
-            env.call_method(
-                &cv,
-                "put",
-                "(Ljava/lang/String;Ljava/lang/String;)V",
-                &[(&mk).into(), (&mv).into()],
-            )?;
-            let base_uri = env
-                .get_static_field(
-                    "android/provider/MediaStore$Downloads",
-                    "EXTERNAL_CONTENT_URI",
-                    "Landroid/net/Uri;",
-                )?
-                .l()?;
-            let uri = env
-                .call_method(
-                    &resolver,
-                    "insert",
-                    "(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;",
-                    &[(&base_uri).into(), (&cv).into()],
-                )?
-                .l()?;
-            let os = env
-                .call_method(
-                    &resolver,
-                    "openOutputStream",
-                    "(Landroid/net/Uri;)Ljava/io/OutputStream;",
-                    &[(&uri).into()],
-                )?
-                .l()?;
-            let ba = env.byte_array_from_slice(&data)?;
-            env.call_method(&os, "write", "([B)V", &[(&ba).into()])?;
-            env.call_method(&os, "close", "()V", &[])?;
+            let os = open_stream(env, activity, &name)?;
+            let os = env.new_global_ref(os)?;
+            if let Ok(mut slot) = open.lock() {
+                *slot = Some(os);
+            }
             Ok(())
         })();
-        if let Err(ref e) = res {
-            tracing::error!("MediaStore JNI error: {e}");
+        if let Err(ref error) = res {
+            tracing::error!("MediaStore JNI open error: {error}");
+            let _ = env.exception_describe();
+        }
+        let _ = env.exception_clear();
+        let _ = tx.send(res);
+    });
+    rx.recv()
+        .map_err(|e| format!("channel error: {e}"))?
+        .map_err(|e| format!("JNI open error: {e}"))?;
+    let mut done = 0u64;
+    for chunk in data.chunks(WRITE_CHUNK) {
+        let (tx, rx) = channel();
+        let stream = stream.clone();
+        let size = chunk.len() as u64;
+        let chunk = chunk.to_vec();
+        dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
+            let res = (|| -> Result<(), jni::errors::Error> {
+                let guard = stream.lock().map_err(|_| jni::errors::Error::JavaException)?;
+                let os = guard.as_ref().cloned().ok_or(jni::errors::Error::JavaException)?;
+                let ba = env.byte_array_from_slice(&chunk)?;
+                env.call_method(&os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
+                Ok(())
+            })();
+            if let Err(ref error) = res {
+                tracing::error!("MediaStore JNI write error: {error}");
+                let _ = env.exception_describe();
+            }
+            let _ = env.exception_clear();
+            let _ = tx.send(res);
+        });
+        rx.recv()
+            .map_err(|e| format!("channel error: {e}"))?
+            .map_err(|e| format!("JNI write error: {e}"))?;
+        done += size;
+        report(Job {
+            stage: Stage::Download,
+            done,
+            total,
+            name: None,
+        });
+    }
+    let (tx, rx) = channel();
+    let stream = stream.clone();
+    dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
+        let res = (|| -> Result<(), jni::errors::Error> {
+            if let Some(os) = stream.lock().map_err(|_| jni::errors::Error::JavaException)?.take() {
+                env.call_method(&os.as_obj(), "close", "()V", &[])?;
+            }
+            Ok(())
+        })();
+        if let Err(ref error) = res {
+            tracing::error!("MediaStore JNI close error: {error}");
             let _ = env.exception_describe();
         }
         let _ = env.exception_clear();
@@ -405,7 +480,62 @@ pub fn download_package(data: Vec<u8>, filename: &str) -> Result<String, String>
     });
     rx.recv()
         .map_err(|e| format!("channel error: {e}"))
-        .and_then(|r| r.map(|_| filename).map_err(|e| format!("JNI error: {e}")))
+        .and_then(|r| r.map(|_| filename.to_string()).map_err(|e| format!("JNI error: {e}")))
+}
+
+#[cfg(target_os = "android")]
+fn open_stream<'local>(
+    env: &mut jni::JNIEnv<'local>,
+    activity: &jni::objects::JObject,
+    name: &str,
+) -> Result<jni::objects::JObject<'local>, jni::errors::Error> {
+    let resolver = env
+        .call_method(
+            activity,
+            "getContentResolver",
+            "()Landroid/content/ContentResolver;",
+            &[],
+        )?
+        .l()?;
+    let cv = env.new_object("android/content/ContentValues", "()V", &[])?;
+    let nk = env.new_string("_display_name")?;
+    let jn = env.new_string(name)?;
+    env.call_method(
+        &cv,
+        "put",
+        "(Ljava/lang/String;Ljava/lang/String;)V",
+        &[(&nk).into(), (&jn).into()],
+    )?;
+    let mk = env.new_string("mime_type")?;
+    let mv = env.new_string("application/octet-stream")?;
+    env.call_method(
+        &cv,
+        "put",
+        "(Ljava/lang/String;Ljava/lang/String;)V",
+        &[(&mk).into(), (&mv).into()],
+    )?;
+    let base_uri = env
+        .get_static_field(
+            "android/provider/MediaStore$Downloads",
+            "EXTERNAL_CONTENT_URI",
+            "Landroid/net/Uri;",
+        )?
+        .l()?;
+    let uri = env
+        .call_method(
+            &resolver,
+            "insert",
+            "(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;",
+            &[(&base_uri).into(), (&cv).into()],
+        )?
+        .l()?;
+    env.call_method(
+        &resolver,
+        "openOutputStream",
+        "(Landroid/net/Uri;)Ljava/io/OutputStream;",
+        &[(&uri).into()],
+    )?
+    .l()
 }
 
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {

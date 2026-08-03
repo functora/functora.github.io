@@ -42,6 +42,12 @@ rxing = { version = "0.9.0", default-features = false, features = [
   "qrcode",
 ] }
 
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+dioxus = { version = "=0.7.2", features = ["html", "router"] }
+dioxus-core = "=0.7.2"
+dioxus-signals = "=0.7.2"
+
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"
 

@@ -29,10 +29,19 @@ pub fn Home() -> Element {
         if tst.cipher().is_some() && tst.password()().is_empty() {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
         } else {
-            match generate_share(tst) {
-                Ok(()) => nav.write().push(Screen::Share.to_route(None)),
-                Err(e) => message.set(Some(Msg::Error(e))),
-            }
+            let nav = nav;
+            let message = message;
+            spawn(async move {
+                let mut nav = nav;
+                let mut message = message;
+                match generate_share_async(tst).await {
+                    Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                    Err(e) => {
+                        tst.progress().set(None);
+                        message.set(Some(Msg::Error(e)));
+                    }
+                }
+            });
         }
     };
 
@@ -46,75 +55,21 @@ pub fn Home() -> Element {
         reset_temporary_state(tst);
     };
 
-    #[cfg(target_arch = "wasm32")]
-    let on_archive_file = move |evt: dioxus::prelude::FormEvent| {
-        spawn({
-            let files = evt.files();
-            async move {
-                let file = match files.into_iter().next() {
-                    Some(f) => f,
-                    None => return,
-                };
-                let bytes = match file.read_bytes().await {
-                    Ok(b) => b.to_vec(),
-                    Err(e) => {
-                        message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                            e.to_string(),
-                        )))));
-                        return;
-                    }
-                };
-                match open_archive(bytes, tst, nav) {
-                    Ok(()) => {}
-                    Err(e) => message.set(Some(Msg::Error(e))),
-                }
-            }
-        });
-    };
-
-    #[cfg(target_arch = "wasm32")]
     let picker = rsx! {
-        label { "btn": true, "primary": "",
-            input {
-                r#type: "file",
-                accept: ".cryptonote",
-                onchange: on_archive_file,
-            }
+        button {
+            "btn": true,
+            "primary": true,
+            onclick: move |_| open_archive_file(tst, message, nav),
             Icon { icon: FaPaperclip }
             " {Msg::OpenArchive.render(lang)}"
         }
     };
 
-    #[cfg(not(target_arch = "wasm32"))]
-    let picker = rsx! {
-        button {
-            "btn": true,
-            "primary": "",
-            onclick: move |_| open_archive_file_native(tst, message, nav),
-            Icon { icon: FaPaperclip }
-            " {Msg::OpenArchive.render(lang)}"
-        }
-    };
-
-    #[cfg(target_arch = "wasm32")]
-    let attach_picker = rsx! {
-        label { "btn": true, "primary": "",
-            input {
-                r#type: "file",
-                multiple: true,
-                onchange: move |evt| handle_file_input(evt, tst, message),
-            }
-            Icon { icon: FaPaperclip }
-            " {Msg::AttachFiles.render(lang)}"
-        }
-    };
-
-    #[cfg(not(target_arch = "wasm32"))]
     let attach_picker = rsx! {
         button {
             "btn": true,
-            "primary": "",
-            onclick: move |_| handle_file_input_native(tst, message),
+            "primary": true,
+            onclick: move |_| attach_files(tst, message),
             Icon { icon: FaPaperclip }
             " {Msg::AttachFiles.render(lang)}"
         }

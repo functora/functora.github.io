@@ -6,7 +6,7 @@ pub fn Share() -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-    let mut message = use_message();
+    let message = use_message();
 
     let external = tst.external()();
     let pkg_ready = matches!(external, External::Archive(_));
@@ -94,19 +94,29 @@ pub fn Share() -> Element {
                             onclick: move |_| {
                                 let bytes = tst.external()().archive_bytes();
                                 if !bytes.is_empty() {
-                                    match download_package(bytes, "archive.cryptonote") {
-                                        Ok(loc) => message.set(Some(Msg::Downloaded(loc))),
-                                        Err(e) => {
-                                            message
-                                                .set(
-                                                    Some(
-                                                        Msg::Error(
-                                                            AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                    let progress = tst.progress();
+                                    let message = message;
+                                    spawn(async move {
+                                        let mut progress = progress;
+                                        let mut message = message;
+                                        match download_package(bytes, "archive.cryptonote", progress).await {
+                                            Ok(loc) => {
+                                                progress.set(None);
+                                                message.set(Some(Msg::Downloaded(loc)));
+                                            }
+                                            Err(e) => {
+                                                progress.set(None);
+                                                message
+                                                    .set(
+                                                        Some(
+                                                            Msg::Error(
+                                                                AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
+                                                            ),
                                                         ),
-                                                    ),
-                                                )
+                                                    );
+                                            }
                                         }
-                                    }
+                                    });
                                 }
                             },
                             i18n: Some(Msg::Download),

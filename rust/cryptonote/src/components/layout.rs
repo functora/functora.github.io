@@ -135,6 +135,8 @@ pub fn Layout() -> Element {
                 "."
             }
         }
+
+        ProgressBar {}
     }
 }
 

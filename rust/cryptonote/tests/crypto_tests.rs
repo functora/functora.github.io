@@ -1,4 +1,7 @@
-use cryptonote::crypto::{decrypt_symmetric, derive_key, encrypt_symmetric, CipherType, EncryptedNote, Kdf, KEY_SIZE};
+use cryptonote::crypto::{
+    decrypt_symmetric, derive_key, encrypt_symmetric, stream_decrypt_symmetric, stream_encrypt_symmetric, CipherType,
+    EncryptedNote, Kdf, KEY_SIZE,
+};
 
 #[test]
 fn test_symmetric_chacha20_roundtrip() {
@@ -192,4 +195,86 @@ fn test_old_metadata_json_rejected_without_kdf() {
     let json = r#"{"cipher":"Aes256Gcm","nonce":[1,2,3],"ciphertext":[4,5,6],"salt":[7,8,9]}"#;
     let result: Result<EncryptedNote, _> = serde_json::from_str(json);
     assert!(result.is_err());
+}
+
+const STREAM_CHUNK: usize = 64 * 1024;
+const STREAM_TAG: usize = 16;
+
+fn stream_roundtrip(size: usize, cipher: CipherType) {
+    let plaintext: Vec<u8> = (0..size).map(|i| (i % 251) as u8).collect();
+    let encrypted = stream_encrypt_symmetric(&plaintext, "pw", cipher).expect("Stream encryption failed");
+    assert_eq!(
+        encrypted.ciphertext.len(),
+        size + plaintext.len().div_ceil(STREAM_CHUNK) * STREAM_TAG
+    );
+    let decrypted = stream_decrypt_symmetric(&encrypted, "pw").expect("Stream decryption failed");
+    assert_eq!(plaintext, decrypted);
+}
+
+#[test]
+fn test_stream_empty_roundtrip() {
+    for cipher in [CipherType::Aes256Gcm, CipherType::ChaCha20Poly1305] {
+        stream_roundtrip(0, cipher);
+    }
+}
+
+#[test]
+fn test_stream_exact_chunk_roundtrip() {
+    for cipher in [CipherType::Aes256Gcm, CipherType::ChaCha20Poly1305] {
+        stream_roundtrip(STREAM_CHUNK, cipher);
+    }
+}
+
+#[test]
+fn test_stream_chunk_plus_one_roundtrip() {
+    for cipher in [CipherType::Aes256Gcm, CipherType::ChaCha20Poly1305] {
+        stream_roundtrip(STREAM_CHUNK + 1, cipher);
+    }
+}
+
+#[test]
+fn test_stream_multi_chunk_roundtrip() {
+    for cipher in [CipherType::Aes256Gcm, CipherType::ChaCha20Poly1305] {
+        stream_roundtrip(STREAM_CHUNK * 3 + 42, cipher);
+    }
+}
+
+#[test]
+fn test_stream_wrong_password() {
+    let plaintext = b"stream data across chunks!".repeat(4);
+    let encrypted = stream_encrypt_symmetric(&plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    assert!(stream_decrypt_symmetric(&encrypted, "nope").is_err());
+}
+
+#[test]
+fn test_stream_tampered_chunk_fails() {
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8).map(|i| i as u8).collect();
+    let encrypted =
+        stream_encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let mut tampered = encrypted.clone();
+    let last = tampered.ciphertext.len() - 1;
+    tampered.ciphertext[last] ^= 0xff;
+    assert!(stream_decrypt_symmetric(&tampered, "pw").is_err());
+}
+
+#[test]
+fn test_stream_truncated_chunk_fails() {
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8).map(|i| i as u8).collect();
+    let encrypted = stream_encrypt_symmetric(&plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
+    let mut truncated = encrypted.clone();
+    truncated.ciphertext = truncated.ciphertext[..truncated.ciphertext.len() - STREAM_TAG].to_vec();
+    assert!(stream_decrypt_symmetric(&truncated, "pw").is_err());
+}
+
+#[test]
+fn test_stream_reordered_chunks_fail() {
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2).map(|i| i as u8).collect();
+    let encrypted =
+        stream_encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
+    let a = encrypted.ciphertext[..STREAM_CHUNK + STREAM_TAG].to_vec();
+    let b = encrypted.ciphertext[STREAM_CHUNK + STREAM_TAG..].to_vec();
+    let mut reordered = encrypted.clone();
+    reordered.ciphertext = b.into_iter().chain(a).collect();
+    let result = stream_decrypt_symmetric(&reordered, "pw");
+    assert!(result.is_err() || result.unwrap() != plaintext);
 }

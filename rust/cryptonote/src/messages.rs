@@ -72,6 +72,12 @@ pub enum Msg {
     FileName,
     FileSize,
     Downloaded(String),
+    StageAttach,
+    StageZip,
+    StageEncrypt,
+    StageDecrypt,
+    StageUnzip,
+    StageDownload,
 }
 
 impl I18N for Msg {
@@ -216,6 +222,12 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::FileName => "Name",
             Self::FileSize => "Size",
             Self::Downloaded(loc) => return format!("Downloaded: {loc}"),
+            Self::StageAttach => "Attaching files...",
+            Self::StageZip => "Zipping files...",
+            Self::StageEncrypt => "Encrypting...",
+            Self::StageDecrypt => "Decrypting...",
+            Self::StageUnzip => "Unzipping...",
+            Self::StageDownload => "Downloading...",
         }
         .to_string()
     }
@@ -361,6 +373,12 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::FileName => "Nombre",
             Self::FileSize => "Tamaño",
             Self::Downloaded(loc) => return format!("Descargado: {loc}"),
+            Self::StageAttach => "Adjuntando archivos...",
+            Self::StageZip => "Comprimiendo archivos...",
+            Self::StageEncrypt => "Cifrando...",
+            Self::StageDecrypt => "Descifrando...",
+            Self::StageUnzip => "Descomprimiendo...",
+            Self::StageDownload => "Descargando...",
         }
         .to_string()
     }
@@ -506,6 +524,12 @@ Cryptonote следует современным криптографическ�
             Self::FileName => "Имя",
             Self::FileSize => "Размер",
             Self::Downloaded(loc) => return format!("Скачано: {loc}"),
+            Self::StageAttach => "Прикрепление файлов...",
+            Self::StageZip => "Архивация файлов...",
+            Self::StageEncrypt => "Шифрование...",
+            Self::StageDecrypt => "Расшифровка...",
+            Self::StageUnzip => "Распаковка...",
+            Self::StageDownload => "Скачивание...",
         }
         .to_string()
     }

@@ -1,13 +1,15 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use cryptonote::archive::create_archive_package;
+use cryptonote::archive::create_archive_package_async;
 use cryptonote::crypto::CipherType;
 use cryptonote::storage::PersistentState;
 use cryptonote::{
     Attachment, External, ExternalArchive, InfallibleInto, Language, PersistentSignal, PersistentStateStoreExt, Route,
     Store, TemporaryState, TemporaryStateStoreExt, Theme,
 };
+
+mod common;
 use dioxus::history::History;
 use dioxus::history::MemoryHistory;
 use dioxus::prelude::*;
@@ -114,12 +116,15 @@ fn open_shows_note_and_attachments_after_decrypt_state() {
 
 #[test]
 fn open_shows_decrypt_form_for_encrypted_archive() {
-    let archive = create_archive_package(
-        "secret",
-        &[attachment("data.bin")],
-        "pw",
-        Some(CipherType::ChaCha20Poly1305),
-    )
+    let archive = common::with_runtime(|| {
+        common::block_on(create_archive_package_async(
+            "secret",
+            &[attachment("data.bin")],
+            "pw",
+            Some(CipherType::ChaCha20Poly1305),
+            common::progress(),
+        ))
+    })
     .unwrap();
     let edits = mount("/?screen=open", "", vec![], Some(archive));
     assert!(edits.contains("Decrypt"), "decrypt button not rendered: {edits}");

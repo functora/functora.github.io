@@ -4,7 +4,7 @@ use crate::*;
 #[component]
 pub fn Open(note: Option<String>) -> Element {
     let tst = use_context::<Store<TemporaryState>>();
-    let mut nav = use_context::<Signal<Nav<Route>>>();
+    let nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();
     let mut message = use_message();
     let external = tst.external()();
@@ -55,30 +55,69 @@ pub fn Open(note: Option<String>) -> Element {
         match tst.external()() {
             External::Note(p) => {
                 if let NoteData::CipherText(enc) = p.data {
-                    match decrypt_symmetric(&enc, &pwd) {
-                        Ok(plaintext) => match String::from_utf8(plaintext) {
-                            Ok(text) => {
-                                tst.note().set(text);
-                                tst.password().set(pwd);
-                                tst.cipher().set(Some(enc.cipher));
-                                tst.external().set(External::Nothing);
-                                nav.write().push(Screen::View.to_route(None));
+                    let cipher = enc.cipher;
+                    let nav = nav;
+                    spawn(async move {
+                        let mut nav = nav;
+                        let mut message = message;
+                        match crate::worker::run(
+                            (enc, pwd.clone()),
+                            tst.progress(),
+                            |(enc, pwd), mut report| async move {
+                                report(Job {
+                                    stage: Stage::Decrypt,
+                                    done: 0,
+                                    total: 1,
+                                    name: None,
+                                });
+                                decrypt_symmetric(&enc, &pwd)
+                            },
+                        )
+                        .await
+                        {
+                            Ok(plaintext) => match String::from_utf8(plaintext) {
+                                Ok(text) => {
+                                    tst.progress().set(None);
+                                    tst.note().set(text);
+                                    tst.password().set(pwd);
+                                    tst.cipher().set(Some(cipher));
+                                    tst.external().set(External::Nothing);
+                                    nav.write().push(Screen::View.to_route(None));
+                                }
+                                Err(e) => {
+                                    tst.progress().set(None);
+                                    message.set(Some(Msg::Error(AppError::Utf8(e))));
+                                }
+                            },
+                            Err(e) => {
+                                tst.progress().set(None);
+                                message.set(Some(Msg::Error(e)));
                             }
-                            Err(e) => message.set(Some(Msg::Error(AppError::Utf8(e)))),
-                        },
-                        Err(e) => message.set(Some(Msg::Error(e))),
-                    }
+                        }
+                    });
                 }
             }
-            External::Archive(archive) => match extract_archive_package(&archive, &pwd) {
-                Ok((text, files)) => {
-                    tst.note().set(text);
-                    tst.attachments().set(files);
-                    tst.external().set(External::Nothing);
-                    nav.write().push(Screen::View.to_route(None));
-                }
-                Err(e) => message.set(Some(Msg::Error(e))),
-            },
+            External::Archive(archive) => {
+                let pwd = pwd.clone();
+                let nav = nav;
+                spawn(async move {
+                    let mut nav = nav;
+                    let mut message = message;
+                    match extract_archive_package_async(&archive, &pwd, tst.progress()).await {
+                        Ok((text, files)) => {
+                            clear_progress(tst.progress());
+                            tst.note().set(text);
+                            tst.attachments().set(files);
+                            tst.external().set(External::Nothing);
+                            nav.write().push(Screen::View.to_route(None));
+                        }
+                        Err(e) => {
+                            clear_progress(tst.progress());
+                            message.set(Some(Msg::Error(e)));
+                        }
+                    }
+                });
+            }
             External::Nothing => {}
         }
     };

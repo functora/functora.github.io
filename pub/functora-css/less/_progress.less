@@ -1,44 +1,76 @@
 @import (reference) "_variables";
 
-/*	progress bar — semantic group containing a <progress>
+/*	progress bar — blocking overlay with a centered card containing a <progress>
 ----------------------------------------------------------------------*/
+
+#functora-progress {
+	display: none;
+}
 
 fieldset:has(progress) {
 	position: fixed;
-	left: 50%;
-	bottom: 1rem;
-	transform: translateX(-50%);
+	inset: 0;
+	z-index: 1000;
 	display: flex;
 	align-items: center;
-	gap: 0.8rem;
-	z-index: 100;
+	justify-content: center;
 	margin: 0;
-	padding: 0.6rem 1rem;
-	background: @surface;
-	border: 1px solid @primary;
-	border-radius: 0.4rem;
-	box-shadow: 0 0 0.6rem rgba(0, 0, 0, 0.35);
+	padding: 0;
+	border: none;
+	background: rgba(0, 0, 0, 0.45);
+	touch-action: none;
 
-	label, output {
-		color: @primary;
-		font-size: @fs-s;
-		font-weight: 700;
-		white-space: nowrap;
+	label[for="functora-progress"] {
+		position: absolute;
+		inset: 0;
+		cursor: pointer;
 	}
 
-	label {
-		text-transform: uppercase;
-	}
+	card {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 1rem;
+		width: min(36rem, calc(100% - 4rem));
+		margin: 0;
 
-	progress {
-		width: 12rem;
-	}
+		label,
+		small {
+			grid-column: 1 / -1;
+		}
 
-	output {
-		min-width: 3.5ch;
-		text-align: right;
-		font-variant-numeric: tabular-nums;
+		label {
+			color: @primary;
+			font-weight: 700;
+			text-transform: uppercase;
+		}
+
+		small {
+			color: @grey-dark;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		progress {
+			width: 100%;
+			align-self: center;
+		}
+
+		output {
+			align-self: center;
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+			font-weight: 700;
+		}
 	}
+}
+
+html:has(#functora-progress:not(:checked)) fieldset:has(progress) {
+	display: none;
+}
+
+html:has(progress[value]):not(:has(#functora-progress:not(:checked))) {
+	overflow: hidden;
 }
 
 progress[value] {
@@ -64,24 +96,5 @@ progress[value] {
 	&::-moz-progress-bar {
 		background: @primary;
 		border-radius: 0.35rem;
-	}
-}
-
-@media (max-width: @mobile) {
-	fieldset:has(progress) {
-		width: calc(100% - 2rem);
-		min-inline-size: 0;
-
-		label {
-			min-width: 0;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-
-		progress {
-			flex: 1 1 40%;
-			width: auto;
-			min-width: 3rem;
-		}
 	}
 }

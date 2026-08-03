@@ -731,19 +731,33 @@ fn main() {
         <pre><code>&lt;progress max="100" value="64"&gt;64%&lt;/progress&gt;</code></pre>
 
         <p>
-          Wrap <code>&lt;label&gt;</code>, <code>&lt;progress&gt;</code> and
+          Wrap an operation <code>&lt;label&gt;</code>, a file
+          <code>&lt;small&gt;</code>, the <code>&lt;progress&gt;</code> and an
           <code>&lt;output&gt;</code> in a <code>&lt;fieldset&gt;</code> to get
-          a fixed bottom progress bar with a stage label and percentage.
+          a blocking overlay with a centered card. The overlay covers the whole
+          viewport, so nothing else can be clicked while a job runs.
         </p>
+        <label btn for="functora-progress">Show progress overlay</label>
+        <input type="checkbox" id="functora-progress" />
         <fieldset aria-live="polite" role="status">
-          <label>Zipping files...</label>
-          <progress max="100" value="64"></progress>
-          <output>64%</output>
+          <label for="functora-progress" aria-label="Dismiss"></label>
+          <card>
+            <label>Zipping files</label>
+            <small>vacation.mp4</small>
+            <progress max="100" value="64"></progress>
+            <output>64%</output>
+          </card>
         </fieldset>
-        <pre><code>&lt;fieldset aria-live="polite" role="status"&gt;
-  &lt;label&gt;Zipping files...&lt;/label&gt;
-  &lt;progress max="100" value="64"&gt;&lt;/progress&gt;
-  &lt;output&gt;64%&lt;/output&gt;
+        <pre><code>&lt;label btn for="functora-progress"&gt;Show progress overlay&lt;/label&gt;
+&lt;input type="checkbox" id="functora-progress" /&gt;
+&lt;fieldset aria-live="polite" role="status"&gt;
+  &lt;label for="functora-progress" aria-label="Dismiss"&gt;&lt;/label&gt;
+  &lt;card&gt;
+    &lt;label&gt;Zipping files&lt;/label&gt;
+    &lt;small&gt;vacation.mp4&lt;/small&gt;
+    &lt;progress max="100" value="64"&gt;&lt;/progress&gt;
+    &lt;output&gt;64%&lt;/output&gt;
+  &lt;/card&gt;
 &lt;/fieldset&gt;</code></pre>
       </section>
 

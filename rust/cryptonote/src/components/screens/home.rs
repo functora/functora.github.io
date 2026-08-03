@@ -107,30 +107,28 @@ pub fn Home() -> Element {
             }
 
             if action == ActionMode::Create {
-                fieldset {
-                    legend { "{Msg::Mode.render(lang)}" }
-                    CipherRadio {
-                        cipher: tst.cipher()(),
-                        value: None,
-                        icon: FaLockOpen,
-                        label: Msg::NoEncryption.render(lang),
-                        on_change: move |_| tst.cipher().set(None),
+                label { "{Msg::Mode.render(lang)}" }
+                select {
+                    onchange: move |evt| {
+                        let cipher = match evt.value().as_str() {
+                            "Aes256Gcm" => Some(CipherType::Aes256Gcm),
+                            "ChaCha20Poly1305" => Some(CipherType::ChaCha20Poly1305),
+                            _ => None,
+                        };
+                        tst.cipher().set(cipher);
+                    },
+                    option { value: "", selected: tst.cipher().is_none(),
+                        "🗒️ {Msg::NoEncryption.render(lang)}"
                     }
-                    br {}
-                    CipherRadio {
-                        cipher: tst.cipher()(),
-                        value: Some(CipherType::Aes256Gcm),
-                        icon: FaLock,
-                        label: format!("AES-256-GCM {}", Msg::EncryptionSuffix.render(lang)),
-                        on_change: move |_| tst.cipher().set(Some(CipherType::Aes256Gcm)),
+                    option {
+                        value: "Aes256Gcm",
+                        selected: tst.cipher()() == Some(CipherType::Aes256Gcm),
+                        "🔒 AES-256-GCM {Msg::EncryptionSuffix.render(lang)}"
                     }
-                    br {}
-                    CipherRadio {
-                        cipher: tst.cipher()(),
-                        value: Some(CipherType::ChaCha20Poly1305),
-                        icon: FaLock,
-                        label: format!("ChaCha20-Poly1305 {}", Msg::EncryptionSuffix.render(lang)),
-                        on_change: move |_| tst.cipher().set(Some(CipherType::ChaCha20Poly1305)),
+                    option {
+                        value: "ChaCha20Poly1305",
+                        selected: tst.cipher()() == Some(CipherType::ChaCha20Poly1305),
+                        "🔒 ChaCha20-Poly1305 {Msg::EncryptionSuffix.render(lang)}"
                     }
                 }
 
@@ -247,27 +245,6 @@ fn ActionRadio<T: IconShape + Clone + PartialEq + 'static>(
             onchange: move |_| on_change.call(mode),
         }
         label { onclick: move |_| on_change.call(mode),
-            Icon { icon }
-            "{label}"
-        }
-    }
-}
-
-#[component]
-fn CipherRadio<T: IconShape + Clone + PartialEq + 'static>(
-    cipher: Option<CipherType>,
-    value: Option<CipherType>,
-    icon: T,
-    label: String,
-    on_change: EventHandler<()>,
-) -> Element {
-    rsx! {
-        input {
-            r#type: "radio",
-            checked: cipher == value,
-            onchange: move |_| on_change.call(()),
-        }
-        label { onclick: move |_| on_change.call(()),
             Icon { icon }
             "{label}"
         }

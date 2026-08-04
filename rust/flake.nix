@@ -73,6 +73,7 @@
               "$RES"/drawable/ic_launcher_background.png \
               "$RES"/drawable-v24/ic_launcher_foreground.xml \
               "$RES"/drawable-v24/ic_launcher_foreground.png
+            rm -f ./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
             dx bundle --release --android --debug-symbols=false --target "${target}"
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
@@ -81,6 +82,10 @@
             KOTLIN="./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt"
             if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt ]; then
               cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt "$KOTLIN"
+            fi
+            if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt ]; then
+              cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt \
+                ./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
             fi
             rm -f "$RES"/mipmap-*/ic_launcher.webp \
               "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
@@ -93,6 +98,8 @@
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
             MANIFEST="./target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
             sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/${app}/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
+            sed -i 's|android:name="dev.dioxus.main.MainActivity"|android:name="dev.dioxus.main.MainActivity" android:launchMode="singleInstance"|' "$MANIFEST"
+            sed -i 's|</activity>|</activity>\n    <activity android:name="dev.dioxus.main.ProxyActivity" android:exported="true" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="application/octet-stream" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="*/*" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.SEND" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:mimeType="application/octet-stream" />\n      </intent-filter>\n    </activity>|' "$MANIFEST"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)

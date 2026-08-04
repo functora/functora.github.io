@@ -10,12 +10,22 @@ pub fn Layout() -> Element {
     let nav = use_nav::<Route, _>(idx.into());
     let mut dl_nav = nav.clone();
     let nav_signal = use_context_provider(|| Signal::new(nav));
+    let message = use_message();
 
     use_hook(|| {
         crate::deep_link::set_schedule_update(dioxus::core::schedule_update());
     });
 
     dioxus::core::use_after_render(move || {
+        if let Some(bytes) = crate::deep_link::take_archive() {
+            let mut message = message;
+            spawn(async move {
+                if let Err(e) = crate::hooks::open_archive_async(bytes, tst, nav_signal).await {
+                    message.set(Some(Msg::Error(e)));
+                }
+            });
+            return;
+        }
         if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
             dl_nav.push_route(&route);
         }

@@ -1,4 +1,4 @@
-use cryptonote::{set_schedule_update, store_url, take_url, url_to_route};
+use cryptonote::{set_schedule_update, store_archive, store_url, take_archive, take_url, url_to_route};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 static STATE_LOCK: Mutex<()> = Mutex::new(());
@@ -80,6 +80,54 @@ fn store_url_triggers_scheduled_update() {
     store_url("trigger".into());
     assert!(called.load(Ordering::SeqCst));
     let _ = take_url();
+    // clean up: replace with no-op
+    set_schedule_update(Arc::new(|| {}));
+}
+
+#[test]
+fn store_and_take_archive_roundtrip() {
+    let _guard = lock_state();
+    store_archive(vec![1, 2, 3]);
+    let taken = take_archive();
+    assert_eq!(taken, Some(vec![1, 2, 3]));
+    assert_eq!(take_archive(), None);
+}
+
+#[test]
+fn store_archive_empty_bytes() {
+    let _guard = lock_state();
+    store_archive(Vec::new());
+    assert_eq!(take_archive(), Some(Vec::new()));
+}
+
+#[test]
+fn take_archive_empty_when_nothing_stored() {
+    let _guard = lock_state();
+    let _ = take_archive();
+    assert_eq!(take_archive(), None);
+}
+
+#[test]
+fn store_archive_overwrites_previous() {
+    let _guard = lock_state();
+    store_archive(vec![1]);
+    store_archive(vec![2, 3]);
+    assert_eq!(take_archive(), Some(vec![2, 3]));
+}
+
+#[test]
+fn store_archive_triggers_scheduled_update() {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let _guard = lock_state();
+    let _ = take_archive();
+    let called = Arc::new(AtomicBool::new(false));
+    let c = called.clone();
+    set_schedule_update(Arc::new(move || {
+        c.store(true, Ordering::SeqCst);
+    }));
+    store_archive(vec![4, 5, 6]);
+    assert!(called.load(Ordering::SeqCst));
+    let _ = take_archive();
     // clean up: replace with no-op
     set_schedule_update(Arc::new(|| {}));
 }

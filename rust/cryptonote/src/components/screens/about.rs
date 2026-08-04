@@ -2,17 +2,23 @@ use crate::messages::*;
 use crate::*;
 
 #[component]
-pub fn About() -> Element {
+pub fn About(note: Option<String>) -> Element {
     let lang = use_lang();
     let nav = use_context::<Signal<Nav<Route>>>();
     let message = use_message();
     let rendered = use_message_markdown(Msg::AboutText);
     let qr = use_memo(|| generate_qr_code(SHARE_APP_URL).ok());
+    use_effect(move || {
+        if note.as_deref() == Some(SHARE_APP_ID) {
+            let script = format!("document.getElementById('{SHARE_APP_ID}')?.scrollIntoView({{behavior: 'smooth'}})");
+            _ = document::eval(&script);
+        }
+    });
     rsx! {
         Breadcrumb { title: Msg::Application }
         section {
             p { dangerous_inner_html: "{rendered()}" }
-            Pre {
+            Pre { id: SHARE_APP_ID,
                 code {
                     "{Msg::AboutAndroidBeta1.render(lang)} "
                     ExtLink { href: BETA_TEST_URL, "{Msg::AboutAndroidBetaLink1.render(lang)}" }

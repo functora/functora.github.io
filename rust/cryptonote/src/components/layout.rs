@@ -121,12 +121,18 @@ pub fn Layout() -> Element {
                     "{Msg::PrivacyPolicyAnd.render(lang)}"
                 }
                 ". "
-                {Msg::Please.render(lang)}
-                " "
                 NavLink {
                     nav: nav_signal,
                     href: Screen::Donate.to_route(None).to_string(),
                     "{Msg::DonateLink.render(lang)}"
+                }
+                " "
+                {Msg::And.render(lang)}
+                " "
+                NavLink {
+                    nav: nav_signal,
+                    href: Screen::About.to_route(Some(SHARE_APP_ID.into())).to_string(),
+                    "{Msg::FooterShareAppLink.render(lang)}"
                 }
                 ". "
                 {Msg::VersionLabel.render(lang)}

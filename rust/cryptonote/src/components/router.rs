@@ -156,7 +156,7 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
             Share {}
         },
         Screen::About => rsx! {
-            About {}
+            About { note }
         },
         Screen::Donate => rsx! {
             Donate {}

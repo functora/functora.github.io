@@ -38,6 +38,7 @@ pub const WEB_APP_URL: &str = concat!(
     "/",
     env!("CARGO_PKG_VERSION")
 );
+pub const SHARE_APP_URL: &str = concat!("https://functora.github.io/apps/", env!("CARGO_PKG_NAME"));
 pub const FUNCTORA_URL: &str = "https://functora.github.io/";
 pub const SOURCE_CODE_URL: &str = concat!(
     "https://github.com/functora/functora.github.io/tree/master/rust/",

@@ -5,7 +5,9 @@ use crate::*;
 pub fn About() -> Element {
     let lang = use_lang();
     let nav = use_context::<Signal<Nav<Route>>>();
+    let message = use_message();
     let rendered = use_message_markdown(Msg::AboutText);
+    let qr = use_memo(|| generate_qr_code(SHARE_APP_URL).ok());
     rsx! {
         Breadcrumb { title: Msg::Application }
         section {
@@ -21,24 +23,60 @@ pub fn About() -> Element {
                     " {Msg::AboutAndroidBeta4.render(lang)}"
                 }
             }
-            Dock {
-                ExtLink { href: BETA_TEST_URL, button: true, primary: true,
+            if let Some(qr) = qr() {
+                div { dangerous_inner_html: "{qr}" }
+            }
+            Dock { message,
+                Button {
+                    icon: Some(FaCopy),
+                    primary: true,
+                    onclick: move |_| {
+                        write_clipboard(
+                            format!("{}\n{}", Msg::ShareAppDesc.render(lang), SHARE_APP_URL),
+                            message,
+                        );
+                    },
+                    i18n: Some(Msg::CopyAppLink),
+                    lang,
+                }
+                Button {
+                    icon: Some(FaShareNodes),
+                    primary: true,
+                    onclick: move |_| {
+                        let mut msg = message;
+                        let text = Msg::ShareAppDesc.render(lang);
+                        spawn(async move {
+                            let data = ShareData {
+                                title: "Cryptonote".into(),
+                                text,
+                                url: SHARE_APP_URL.into(),
+                            };
+                            match web_share(data).await {
+                                Ok(()) => msg.set(Some(Msg::Sent)),
+                                Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
+                            }
+                        });
+                    },
+                    i18n: Some(Msg::ShareAppLink),
+                    lang,
+                }
+                ExtLink { href: BETA_TEST_URL, button: true,
                     Icon { icon: FaGoogle }
                     "{Msg::JoinTestingButton.render(lang)}"
                 }
-                ExtLink { href: GOOGLE_PLAY_URL, button: true, primary: true,
+                ExtLink { href: GOOGLE_PLAY_URL, button: true,
                     Icon { icon: FaGooglePlay }
                     "{Msg::GooglePlayButton.render(lang)}"
                 }
-                ExtLink { href: APK_URL, button: true, primary: true,
+                ExtLink { href: APK_URL, button: true,
                     Icon { icon: FaAndroid }
                     "{Msg::DownloadApkButton.render(lang)}"
                 }
-                ExtLink { href: SOURCE_CODE_URL, button: true, primary: true,
+                ExtLink { href: SOURCE_CODE_URL, button: true,
                     Icon { icon: FaGithub }
                     "{Msg::SourceCodeButton.render(lang)}"
                 }
-                ExtLink { href: FUNCTORA_URL, button: true, primary: true,
+                ExtLink { href: FUNCTORA_URL, button: true,
                     Icon { icon: FaUser }
                     "{Msg::AuthorButton.render(lang)}"
                 }
@@ -46,7 +84,6 @@ pub fn About() -> Element {
                     nav,
                     href: Screen::Donate.to_route(None).to_string(),
                     button: true,
-                    primary: true,
                     Icon { icon: FaHeart }
                     "{Msg::Donate.render(lang)}"
                 }

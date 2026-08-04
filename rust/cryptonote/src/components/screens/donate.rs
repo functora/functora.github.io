@@ -50,6 +50,8 @@ fn CryptoDonateBlock(
 #[component]
 pub fn Donate() -> Element {
     let lang = use_lang();
+    let btc_qr = use_memo(|| generate_qr_code(BTC_ADDRESS).ok());
+    let xmr_qr = use_memo(|| generate_qr_code(XMR_ADDRESS).ok());
 
     rsx! {
         Breadcrumb { title: Msg::Donate }
@@ -58,14 +60,10 @@ pub fn Donate() -> Element {
         CryptoDonateBlock {
             label: "BTC - Bitcoin",
             address: BTC_ADDRESS,
-            qr: generate_qr_code(BTC_ADDRESS).ok(),
+            qr: btc_qr(),
             back_button_hide: true,
         }
 
-        CryptoDonateBlock {
-            label: "XMR - Monero",
-            address: XMR_ADDRESS,
-            qr: generate_qr_code(XMR_ADDRESS).ok(),
-        }
+        CryptoDonateBlock { label: "XMR - Monero", address: XMR_ADDRESS, qr: xmr_qr() }
     }
 }

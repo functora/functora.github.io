@@ -508,7 +508,7 @@ fn open_stream<'local>(
         &[(&nk).into(), (&jn).into()],
     )?;
     let mk = env.new_string("mime_type")?;
-    let mv = env.new_string("application/octet-stream")?;
+    let mv = mime_for(env, name)?;
     env.call_method(
         &cv,
         "put",
@@ -537,6 +537,36 @@ fn open_stream<'local>(
         &[(&uri).into()],
     )?
     .l()
+}
+
+#[cfg(target_os = "android")]
+fn mime_for<'local>(
+    env: &mut jni::JNIEnv<'local>,
+    name: &str,
+) -> Result<jni::objects::JString<'local>, jni::errors::Error> {
+    let ext = name.rsplit_once('.').map(|(_, e)| e.to_lowercase()).unwrap_or_default();
+    let mtm = env
+        .call_static_method(
+            "android/webkit/MimeTypeMap",
+            "getSingleton",
+            "()Landroid/webkit/MimeTypeMap;",
+            &[],
+        )?
+        .l()?;
+    let jext = env.new_string(&ext)?;
+    let jmime = env
+        .call_method(
+            &mtm,
+            "getMimeTypeFromExtension",
+            "(Ljava/lang/String;)Ljava/lang/String;",
+            &[(&jext).into()],
+        )?
+        .l()?;
+    if jmime.as_raw().is_null() {
+        env.new_string("application/octet-stream")
+    } else {
+        Ok(jmime.into())
+    }
 }
 
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {

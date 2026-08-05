@@ -32,6 +32,10 @@ pub fn write_clipboard(val: String, message: Signal<Option<Msg>>) {
     });
 }
 
+pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
+    (cipher.is_some() && password.is_empty()).then_some(Msg::Base(BaseMsg::PasswordRequired))
+}
+
 pub fn edit_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> impl FnMut(MouseEvent) + 'static {
     move |_| {
         tst.action().set(ActionMode::Create);

@@ -1,8 +1,26 @@
 use cryptonote::archive::{ArchiveSource, Attachment};
 use cryptonote::components::*;
-use cryptonote::{add_attachment, build_external, extract_archive_package_async, format_size, CipherType, NoteData};
+use cryptonote::{
+    add_attachment, build_external, extract_archive_package_async, format_size, share_error, CipherType, NoteData,
+};
 
 mod common;
+
+#[test]
+fn share_error_requires_password_when_cipher_selected() {
+    let error = share_error(Some(CipherType::Aes256Gcm), "");
+    assert!(error.is_some(), "encrypted note without password must be blocked");
+}
+
+#[test]
+fn share_error_allows_password_when_cipher_selected() {
+    assert!(share_error(Some(CipherType::ChaCha20Poly1305), "pw").is_none());
+}
+
+#[test]
+fn share_error_allows_plaintext_without_password() {
+    assert!(share_error(None, "").is_none());
+}
 
 #[test]
 fn build_external_plaintext_builds_url_and_qr() {

@@ -26,8 +26,8 @@ pub fn Home() -> Element {
 
     let mut generate_note = move || {
         message.set(None);
-        if tst.cipher().is_some() && tst.password()().is_empty() {
-            message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
+        if let Some(msg) = share_error(tst.cipher()(), &tst.password()()) {
+            message.set(Some(msg));
         } else {
             let nav = nav;
             let message = message;

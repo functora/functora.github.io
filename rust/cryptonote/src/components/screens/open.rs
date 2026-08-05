@@ -165,6 +165,12 @@ pub fn Open(note: Option<String>) -> Element {
                         i18n: Some(Msg::Clear),
                         lang,
                     }
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: reset_handler(tst, nav),
+                        i18n: Some(Msg::CreateNewNote),
+                        lang,
+                    }
                 }
             }
         } else {

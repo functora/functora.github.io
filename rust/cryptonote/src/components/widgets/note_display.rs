@@ -6,7 +6,7 @@ pub fn NoteDisplay() -> Element {
     let nav = use_context::<Signal<Nav<Route>>>();
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
-    let message = use_message();
+    let mut message = use_message();
     let rendered = use_memo(move || render_markdown(&tst.note()()));
     let atts = tst.attachments()();
     let has_attachments = !atts.is_empty();
@@ -35,6 +35,31 @@ pub fn NoteDisplay() -> Element {
                     progress.set(None);
                     message.set(Some(Msg::Error(e)));
                 }
+            }
+        });
+    };
+
+    let share_note = move |_| {
+        message.set(None);
+        if let Some(msg) = share_error(tst.cipher()(), &tst.password()()) {
+            message.set(Some(msg));
+            return;
+        }
+        let nav = nav;
+        let message = message;
+        spawn(async move {
+            let mut nav = nav;
+            let mut message = message;
+            if matches!(tst.external()(), External::Nothing) {
+                match generate_share_async(tst).await {
+                    Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                    Err(e) => {
+                        tst.progress().set(None);
+                        message.set(Some(Msg::Error(e)));
+                    }
+                }
+            } else {
+                nav.write().push(Screen::Share.to_route(None));
             }
         });
     };
@@ -103,6 +128,13 @@ pub fn NoteDisplay() -> Element {
                     primary: true,
                     onclick: move |_| write_clipboard(tst.note()(), message),
                     i18n: Some(Msg::Base(BaseMsg::Copy)),
+                    lang,
+                }
+                Button {
+                    icon: Some(FaShareNodes),
+                    primary: true,
+                    onclick: share_note,
+                    i18n: Some(Msg::Share),
                     lang,
                 }
                 if has_attachments {

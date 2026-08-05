@@ -156,6 +156,16 @@ fn msg_i18n_share_variants() {
 }
 
 #[test]
+fn msg_i18n_footer_share_variants() {
+    assert_eq!(Msg::FooterShareWord.render(Language::Eng), "Share");
+    assert_eq!(Msg::FooterShareWord.render(Language::Spa), "Compartir");
+    assert_eq!(Msg::FooterShareWord.render(Language::Rus), "Поделитесь");
+    assert_eq!(Msg::FooterAppWord.render(Language::Eng), "app");
+    assert_eq!(Msg::FooterAppWord.render(Language::Spa), "la app");
+    assert_eq!(Msg::FooterAppWord.render(Language::Rus), "приложением");
+}
+
+#[test]
 fn msg_i18n_all_basic_variants_render_non_empty() {
     let variants: Vec<Msg> = vec![
         Msg::Note,
@@ -194,7 +204,8 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::DonateGreeting,
         Msg::DonateLink,
         Msg::And,
-        Msg::FooterShareAppLink,
+        Msg::FooterShareWord,
+        Msg::FooterAppWord,
         Msg::ActionLabel,
         Msg::ActionCreate,
         Msg::ActionOpen,

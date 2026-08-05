@@ -142,8 +142,9 @@ pub fn Layout() -> Element {
                 NavLink {
                     nav: nav_signal,
                     href: Screen::About.to_route(Some(SHARE_APP_ID.into())).to_string(),
-                    "{Msg::FooterShareAppLink.render(lang)}"
+                    "{Msg::FooterShareWord.render(lang)}"
                 }
+                " {Msg::FooterAppWord.render(lang)}"
                 ". "
                 {Msg::VersionLabel.render(lang)}
                 " "

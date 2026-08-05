@@ -147,16 +147,16 @@ pub fn Open(note: Option<String>) -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.password().set(text), message),
-                        i18n: Some(Msg::Base(BaseMsg::Paste)),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaLockOpen),
                         primary: true,
                         onclick: move |_| decrypt_note(),
                         i18n: Some(Msg::DecryptButton),
+                        lang,
+                    }
+                    Button {
+                        icon: Some(FaPaste),
+                        onclick: move |_| read_clipboard(move |text| tst.password().set(text), message),
+                        i18n: Some(Msg::Base(BaseMsg::Paste)),
                         lang,
                     }
                     Button {

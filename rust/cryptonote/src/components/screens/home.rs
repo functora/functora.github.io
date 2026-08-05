@@ -159,12 +159,6 @@ pub fn Home() -> Element {
                 AttachmentUploader { tst, lang }
                 Dock { message,
                     Button {
-                        icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.note().set(text), message),
-                        i18n: Some(Msg::Base(BaseMsg::Paste)),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaShareNodes),
                         primary: true,
                         onclick: move |_| generate_note(),
@@ -172,6 +166,12 @@ pub fn Home() -> Element {
                         lang,
                     }
                     {attach_picker}
+                    Button {
+                        icon: Some(FaPaste),
+                        onclick: move |_| read_clipboard(move |text| tst.note().set(text), message),
+                        i18n: Some(Msg::Base(BaseMsg::Paste)),
+                        lang,
+                    }
                     Button {
                         icon: Some(FaEye),
                         onclick: move |_| nav.write().push(Screen::View.to_route(None)),
@@ -198,12 +198,6 @@ pub fn Home() -> Element {
 
                 Dock { message,
                     Button {
-                        icon: Some(FaPaste),
-                        onclick: move |_| read_clipboard(move |text| tst.url_input().set(text), message),
-                        i18n: Some(Msg::Base(BaseMsg::Paste)),
-                        lang,
-                    }
-                    Button {
                         icon: Some(FaFolderOpen),
                         primary: true,
                         onclick: open_url,
@@ -211,6 +205,12 @@ pub fn Home() -> Element {
                         lang,
                     }
                     {picker}
+                    Button {
+                        icon: Some(FaPaste),
+                        onclick: move |_| read_clipboard(move |text| tst.url_input().set(text), message),
+                        i18n: Some(Msg::Base(BaseMsg::Paste)),
+                        lang,
+                    }
                     Button {
                         icon: Some(FaTrash),
                         onclick: reset_ctx,

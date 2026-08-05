@@ -1,7 +1,6 @@
 package dev.dioxus.main
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 
 typealias BuildConfig = com.functora.cryptonote.BuildConfig
@@ -24,29 +23,18 @@ class MainActivity : WryActivity() {
     }
 
     private fun handleDeepLinkIntent(intent: Intent) {
-        intent.getByteArrayExtra(BYTES)?.let(::handleDeepLinkFile)
-        when (intent.action) {
-            Intent.ACTION_VIEW -> intent.data?.let { data ->
+        intent.getStringExtra(FILE_PATH)?.let(::handleDeepLinkFile)
+        if (intent.action == Intent.ACTION_VIEW) {
+            intent.data?.let { data ->
                 if (data.scheme == "https") {
                     handleDeepLink(data.toString())
-                } else {
-                    readUriBytes(data)?.let { handleDeepLinkFile(it) }
                 }
-            }
-            Intent.ACTION_SEND -> {
-                @Suppress("DEPRECATION")
-                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                readUriBytes(uri)?.let { handleDeepLinkFile(it) }
             }
         }
     }
 
-    private fun readUriBytes(uri: Uri?): ByteArray? = runCatching {
-        uri?.let { contentResolver.openInputStream(it)?.use { stream -> stream.readBytes() } }
-    }.getOrNull()
-
     companion object {
-        const val BYTES = "bytes"
+        const val FILE_PATH = "file_path"
 
         @Volatile
         private var webViewInitialized = false
@@ -55,6 +43,6 @@ class MainActivity : WryActivity() {
         private external fun handleDeepLink(url: String)
 
         @JvmStatic
-        private external fun handleDeepLinkFile(bytes: ByteArray)
+        private external fun handleDeepLinkFile(path: String)
     }
 }

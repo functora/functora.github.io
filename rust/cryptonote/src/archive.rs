@@ -5,7 +5,8 @@ use crate::worker;
 use crate::worker::Reporter;
 use dioxus::prelude::Writable;
 use serde::{Deserialize, Serialize};
-use std::io::{Read, Write};
+use std::fs::File;
+use std::io::{Read, Seek, Write};
 use tap::prelude::*;
 use zip::CompressionMethod;
 
@@ -21,6 +22,34 @@ pub struct ArchiveMetadata {
 pub struct Attachment {
     pub name: String,
     pub data: Vec<u8>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ArchiveSource {
+    Bytes(Vec<u8>),
+    Path(std::path::PathBuf),
+}
+
+trait SeekableRead: Read + Seek {}
+
+impl<T: Read + Seek> SeekableRead for T {}
+
+impl ArchiveSource {
+    fn open(&self) -> Result<Box<dyn SeekableRead + '_>, AppError> {
+        match self {
+            Self::Bytes(bytes) => Ok(Box::new(std::io::Cursor::new(bytes.as_slice()))),
+            Self::Path(path) => File::open(path)
+                .map(|file| Box::new(file) as Box<dyn SeekableRead>)
+                .map_err(|e| AppError::Archive(e.to_string())),
+        }
+    }
+
+    pub fn into_bytes(self) -> Result<Vec<u8>, AppError> {
+        match self {
+            Self::Bytes(bytes) => Ok(bytes),
+            Self::Path(path) => std::fs::read(path).map_err(|e| AppError::Archive(e.to_string())),
+        }
+    }
 }
 
 const METADATA_ENTRY: &str = "metadata.json";
@@ -236,9 +265,8 @@ async fn package(
     }
 }
 
-pub fn read_archive_metadata(package: &[u8]) -> Result<ArchiveMetadata, AppError> {
-    let mut archive =
-        zip::ZipArchive::new(std::io::Cursor::new(package)).map_err(|e| AppError::Archive(e.to_string()))?;
+pub fn read_archive_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, AppError> {
+    let mut archive = zip::ZipArchive::new(source.open()?).map_err(|e| AppError::Archive(e.to_string()))?;
     let mut meta_file = archive
         .by_name(METADATA_ENTRY)
         .map_err(|e| AppError::Archive(e.to_string()))?;
@@ -250,33 +278,27 @@ pub fn read_archive_metadata(package: &[u8]) -> Result<ArchiveMetadata, AppError
 }
 
 pub async fn extract_archive_package_async<P>(
-    package: &[u8],
+    source: ArchiveSource,
     password: &str,
     progress: P,
 ) -> Result<(String, Vec<Attachment>), AppError>
 where
     P: Writable<Target = Option<Job>> + 'static,
 {
-    let package = package.to_vec();
     let password = password.to_string();
-    worker::run(
-        (package, password),
-        progress,
-        |(package, password), mut report| async move {
-            let (meta, payload) = read_package(&package)?;
-            let inner = match meta.cipher {
-                Some(cipher) => unseal(&meta, &payload, &password, cipher, &mut report).await?,
-                None => payload,
-            };
-            unzip_inner(inner, &mut report).await
-        },
-    )
+    worker::run(source, progress, |source, mut report| async move {
+        let (meta, payload) = read_package(&source)?;
+        let inner = match meta.cipher {
+            Some(cipher) => unseal(&meta, payload, &password, cipher, &mut report).await?,
+            None => payload,
+        };
+        unzip_inner(inner, &mut report).await
+    })
     .await
 }
 
-fn read_package(package: &[u8]) -> Result<(ArchiveMetadata, Vec<u8>), AppError> {
-    let mut archive =
-        zip::ZipArchive::new(std::io::Cursor::new(package)).map_err(|e| AppError::Archive(e.to_string()))?;
+fn read_package(source: &ArchiveSource) -> Result<(ArchiveMetadata, Vec<u8>), AppError> {
+    let mut archive = zip::ZipArchive::new(source.open()?).map_err(|e| AppError::Archive(e.to_string()))?;
     let mut meta_json = Vec::new();
     let mut payload = Vec::new();
     for i in 0..archive.len() {
@@ -287,6 +309,7 @@ fn read_package(package: &[u8]) -> Result<(ArchiveMetadata, Vec<u8>), AppError> 
                     .map_err(|e| AppError::Archive(e.to_string()))?;
             }
             PAYLOAD_ENTRY => {
+                payload = Vec::with_capacity(file.size() as usize);
                 file.read_to_end(&mut payload)
                     .map_err(|e| AppError::Archive(e.to_string()))?;
             }
@@ -299,29 +322,33 @@ fn read_package(package: &[u8]) -> Result<(ArchiveMetadata, Vec<u8>), AppError> 
 
 async fn unseal(
     meta: &ArchiveMetadata,
-    payload: &[u8],
+    payload: Vec<u8>,
     password: &str,
     cipher: CipherType,
     report: &mut Reporter,
 ) -> Result<Vec<u8>, AppError> {
     let parts = StreamParts::recover(password, cipher, &meta.salt, &meta.nonce)?;
-    let mut inner = Vec::with_capacity(payload.len());
+    let mut inner = payload;
     let mut offset = 0usize;
+    let mut write = 0usize;
     let mut position = 0u32;
-    while offset < payload.len() {
-        let end = (offset + STREAM_CHUNK + STREAM_TAG).min(payload.len());
-        let last = end == payload.len();
-        inner.extend(parts.decrypt_chunk(position, last, &payload[offset..end])?);
+    while offset < inner.len() {
+        let end = (offset + STREAM_CHUNK + STREAM_TAG).min(inner.len());
+        let last = end == inner.len();
+        let plain = parts.decrypt_chunk(position, last, &inner[offset..end])?;
+        inner[write..write + plain.len()].copy_from_slice(&plain);
         offset = end;
+        write += plain.len();
         position += 1;
         report(Job {
             stage: Stage::Decrypt,
             done: offset as u64,
-            total: payload.len() as u64,
+            total: inner.len() as u64,
             name: None,
         });
         yield_to_paint().await;
     }
+    inner.truncate(write);
     Ok(inner)
 }
 
@@ -339,7 +366,7 @@ async fn unzip_inner(inner: Vec<u8>, report: &mut Reporter) -> Result<(String, V
             let mut file = archive.by_index(i).map_err(|e| AppError::Archive(e.to_string()))?;
             let name = file.name().to_string();
             let size = file.size();
-            let mut data = Vec::new();
+            let mut data = Vec::with_capacity(size as usize);
             file.read_to_end(&mut data)
                 .map_err(|e| AppError::Archive(e.to_string()))?;
             (name, size, data)

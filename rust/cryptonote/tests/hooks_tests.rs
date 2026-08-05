@@ -1,4 +1,4 @@
-use cryptonote::archive::Attachment;
+use cryptonote::archive::{ArchiveSource, Attachment};
 use cryptonote::components::*;
 use cryptonote::{add_attachment, build_external, extract_archive_package_async, format_size, CipherType, NoteData};
 
@@ -85,9 +85,10 @@ fn build_external_with_attachments_builds_archive_with_files() {
             let External::Archive(a) = external else {
                 panic!("Expected an archive artifact");
             };
-            let (text, files) = extract_archive_package_async(&a.untag(), "pw", common::progress())
-                .await
-                .unwrap();
+            let (text, files) =
+                extract_archive_package_async(ArchiveSource::Bytes(a.untag()), "pw", common::progress())
+                    .await
+                    .unwrap();
             assert_eq!(text, "note with files");
             assert_eq!(files, atts);
         })
@@ -103,7 +104,7 @@ fn build_external_oversized_note_falls_back_to_archive() {
             let External::Archive(a) = external else {
                 panic!("Expected an archive fallback");
             };
-            let (text, files) = extract_archive_package_async(&a.untag(), "", common::progress())
+            let (text, files) = extract_archive_package_async(ArchiveSource::Bytes(a.untag()), "", common::progress())
                 .await
                 .unwrap();
             assert_eq!(text, note);

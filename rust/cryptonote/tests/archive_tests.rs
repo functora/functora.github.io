@@ -1,5 +1,6 @@
 use cryptonote::archive::{
-    create_archive_package_async, extract_archive_package_async, read_archive_metadata, ArchiveMetadata, Attachment,
+    create_archive_package_async, extract_archive_package_async, read_archive_metadata, ArchiveMetadata, ArchiveSource,
+    Attachment,
 };
 use cryptonote::crypto::{CipherType, Kdf};
 use cryptonote::progress::Stage;
@@ -16,7 +17,7 @@ async fn roundtrip(
 ) -> Result<(String, Vec<Attachment>), AppError> {
     let progress = common::progress();
     let pkg = create_archive_package_async(note, attachments, password, cipher, progress).await?;
-    extract_archive_package_async(&pkg, password, progress).await
+    extract_archive_package_async(ArchiveSource::Bytes(pkg), password, progress).await
 }
 
 #[test]
@@ -86,9 +87,11 @@ fn test_archive_wrong_password() {
             let pkg = create_archive_package_async("secret", &[], "correct_pw", Some(CipherType::Aes256Gcm), progress)
                 .await
                 .unwrap();
-            assert!(extract_archive_package_async(&pkg, "wrong_pw", common::progress())
-                .await
-                .is_err());
+            assert!(
+                extract_archive_package_async(ArchiveSource::Bytes(pkg), "wrong_pw", common::progress())
+                    .await
+                    .is_err()
+            );
         })
     });
 }
@@ -167,9 +170,10 @@ fn extract_archive_ignores_extra_entries() {
                 zip.write_all(b"extra content").expect("Extra write failed");
                 zip.finish().expect("Finish failed");
             }
-            let (text, files) = extract_archive_package_async(&augmented, "pw", common::progress())
-                .await
-                .expect("extract failed");
+            let (text, files) =
+                extract_archive_package_async(ArchiveSource::Bytes(augmented), "pw", common::progress())
+                    .await
+                    .expect("extract failed");
             assert_eq!(text, note);
             assert!(files.is_empty());
         })
@@ -220,7 +224,7 @@ fn test_plaintext_archive_metadata_is_none() {
             let pkg = create_archive_package_async("plain", &[], "", None, progress)
                 .await
                 .unwrap();
-            let meta = read_archive_metadata(&pkg).expect("Metadata read failed");
+            let meta = read_archive_metadata(&ArchiveSource::Bytes(pkg)).expect("Metadata read failed");
             assert_eq!(meta.cipher, None);
             assert_eq!(meta.kdf, Kdf::Argon2id);
             assert!(meta.nonce.is_empty());
@@ -256,7 +260,7 @@ fn archive_wrong_nonce_length_returns_error() {
             tampered.nonce = vec![1, 2, 3];
             let meta_json = serde_json::to_vec(&tampered).unwrap();
             pkg = rebuild_package(&pkg, &meta_json);
-            let result = extract_archive_package_async(&pkg, "pw", common::progress()).await;
+            let result = extract_archive_package_async(ArchiveSource::Bytes(pkg), "pw", common::progress()).await;
             assert!(matches!(result, Err(AppError::InvalidFormat(_))));
         })
     });
@@ -352,9 +356,11 @@ fn test_v2_archive_wrong_password_fails() {
             )
             .await
             .expect("encrypt failed");
-            assert!(extract_archive_package_async(&pkg, "bad", common::progress())
-                .await
-                .is_err());
+            assert!(
+                extract_archive_package_async(ArchiveSource::Bytes(pkg), "bad", common::progress())
+                    .await
+                    .is_err()
+            );
         })
     });
 }
@@ -414,6 +420,90 @@ fn test_archive_zip_progress_advances_to_total() {
             pkg.expect("archive build failed");
             assert_eq!(zipped, total);
             assert_eq!(name.as_deref(), Some("big.bin"));
+        })
+    });
+}
+
+fn temp_path(pkg: &[u8]) -> std::path::PathBuf {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    static COUNTER: AtomicUsize = AtomicUsize::new(0);
+    let path = std::env::temp_dir().join(format!(
+        "cryptonote-test-{}-{}.cryptonote",
+        std::process::id(),
+        COUNTER.fetch_add(1, Ordering::Relaxed)
+    ));
+    std::fs::File::create(&path)
+        .expect("create failed")
+        .write_all(pkg)
+        .expect("write failed");
+    path
+}
+
+#[test]
+fn archive_path_source_extracts_encrypted() {
+    common::with_runtime(|| {
+        common::block_on(async {
+            let progress = common::progress();
+            let pkg = create_archive_package_async(
+                "path note",
+                &[Attachment {
+                    name: "a.txt".into(),
+                    data: b"path data".to_vec(),
+                }],
+                "pw",
+                Some(CipherType::Aes256Gcm),
+                progress,
+            )
+            .await
+            .unwrap();
+            let path = temp_path(&pkg);
+            let meta = read_archive_metadata(&ArchiveSource::Path(path.clone())).expect("metadata");
+            assert_eq!(meta.cipher, Some(CipherType::Aes256Gcm));
+            let (text, files) =
+                extract_archive_package_async(ArchiveSource::Path(path.clone()), "pw", common::progress())
+                    .await
+                    .expect("extract");
+            assert_eq!(text, "path note");
+            assert_eq!(files[0].name, "a.txt");
+            assert_eq!(files[0].data, b"path data");
+            assert_eq!(ArchiveSource::Path(path.clone()).into_bytes().unwrap(), pkg);
+            std::fs::remove_file(path).ok();
+        })
+    });
+}
+
+#[test]
+fn archive_path_source_extracts_plaintext() {
+    common::with_runtime(|| {
+        common::block_on(async {
+            let progress = common::progress();
+            let pkg = create_archive_package_async("plain path", &[], "", None, progress)
+                .await
+                .unwrap();
+            let path = temp_path(&pkg);
+            let (text, files) =
+                extract_archive_package_async(ArchiveSource::Path(path.clone()), "", common::progress())
+                    .await
+                    .expect("extract");
+            assert_eq!(text, "plain path");
+            assert!(files.is_empty());
+            std::fs::remove_file(path).ok();
+        })
+    });
+}
+
+#[test]
+fn archive_path_source_missing_file_errors() {
+    common::with_runtime(|| {
+        common::block_on(async {
+            let path = std::env::temp_dir().join("cryptonote-missing.cryptonote");
+            assert!(read_archive_metadata(&ArchiveSource::Path(path.clone())).is_err());
+            assert!(
+                extract_archive_package_async(ArchiveSource::Path(path), "pw", common::progress())
+                    .await
+                    .is_err()
+            );
         })
     });
 }

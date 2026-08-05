@@ -103,7 +103,8 @@ pub fn Open(note: Option<String>) -> Element {
                 spawn(async move {
                     let mut nav = nav;
                     let mut message = message;
-                    match extract_archive_package_async(&archive, &pwd, tst.progress()).await {
+                    let archive = archive.untag();
+                    match extract_archive_package_async(ArchiveSource::Bytes(archive), &pwd, tst.progress()).await {
                         Ok((text, files)) => {
                             clear_progress(tst.progress());
                             tst.note().set(text);

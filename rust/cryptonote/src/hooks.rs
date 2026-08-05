@@ -101,28 +101,29 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
                 return;
             }
         };
-        if let Err(e) = open_archive_async(bytes, tst, nav).await {
+        if let Err(e) = open_archive_async(ArchiveSource::Bytes(bytes), tst, nav).await {
             message.set(Some(Msg::Error(e)));
         }
     });
 }
 
 pub async fn open_archive_async(
-    bytes: Vec<u8>,
+    source: ArchiveSource,
     tst: Store<TemporaryState>,
     mut nav: Signal<Nav<Route>>,
 ) -> Result<(), AppError> {
-    let meta = read_archive_metadata(&bytes)?;
+    let meta = read_archive_metadata(&source)?;
     let screen = match meta.cipher {
         Some(_) => {
-            tst.external()
-                .set(External::Archive(ExternalArchive::new(bytes).infallible()));
+            tst.external().set(External::Archive(
+                ExternalArchive::new(source.into_bytes()?).infallible(),
+            ));
             tst.password().set(String::new());
             clear_progress(tst.progress());
             Screen::Open
         }
         None => {
-            let (text, files) = extract_archive_package_async(&bytes, "", tst.progress()).await?;
+            let (text, files) = extract_archive_package_async(source, "", tst.progress()).await?;
             clear_progress(tst.progress());
             tst.note().set(text);
             tst.attachments().set(files);
@@ -441,7 +442,7 @@ async fn download_android(
                 let guard = stream.lock().map_err(|_| jni::errors::Error::JavaException)?;
                 let os = guard.as_ref().cloned().ok_or(jni::errors::Error::JavaException)?;
                 let ba = env.byte_array_from_slice(&chunk)?;
-                env.call_method(&os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
+                env.call_method(os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
                 Ok(())
             })();
             if let Err(ref error) = res {
@@ -467,7 +468,7 @@ async fn download_android(
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
         let res = (|| -> Result<(), jni::errors::Error> {
             if let Some(os) = stream.lock().map_err(|_| jni::errors::Error::JavaException)?.take() {
-                env.call_method(&os.as_obj(), "close", "()V", &[])?;
+                env.call_method(os.as_obj(), "close", "()V", &[])?;
             }
             Ok(())
         })();

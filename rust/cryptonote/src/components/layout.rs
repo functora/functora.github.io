@@ -17,10 +17,10 @@ pub fn Layout() -> Element {
     });
 
     dioxus::core::use_after_render(move || {
-        if let Some(bytes) = crate::deep_link::take_archive() {
+        if let Some(source) = crate::deep_link::take_archive() {
             let mut message = message;
             spawn(async move {
-                if let Err(e) = crate::hooks::open_archive_async(bytes, tst, nav_signal).await {
+                if let Err(e) = crate::hooks::open_archive_async(source, tst, nav_signal).await {
                     message.set(Some(Msg::Error(e)));
                 }
             });

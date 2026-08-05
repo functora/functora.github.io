@@ -87,6 +87,8 @@
               cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt \
                 ./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
             fi
+            CHROME="./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/RustWebChromeClient.kt"
+            sed -i 's|val intent = fileChooserParams.createIntent()|val intent = fileChooserParams.createIntent().apply { action = Intent.ACTION_OPEN_DOCUMENT }|' "$CHROME"
             rm -f "$RES"/mipmap-*/ic_launcher.webp \
               "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
               "$RES"/drawable/ic_launcher_background.xml \

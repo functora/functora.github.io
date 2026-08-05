@@ -3,6 +3,7 @@ use crate::*;
 
 #[component]
 pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element {
+    let mut nav = use_context::<Signal<Nav<Route>>>();
     let attachments = tst.attachments()();
     let has_attachments = !attachments.is_empty();
 
@@ -20,7 +21,15 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
             tbody {
                 for (i, att) in attachments.iter().enumerate() {
                     tr { key: "{i}",
-                        td { " {att.name}" }
+                        td {
+                            a {
+                                onclick: move |_| {
+                                    tst.attachment().set(Some(i));
+                                    nav.write().push(Screen::File.to_route(None));
+                                },
+                                "{att.name}"
+                            }
+                        }
                         td { "{format_size(att.data.len() as u64)}" }
                         td { "txt": "r",
                             button {

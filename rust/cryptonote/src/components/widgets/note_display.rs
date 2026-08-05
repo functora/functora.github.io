@@ -3,7 +3,7 @@ use crate::*;
 
 #[component]
 pub fn NoteDisplay() -> Element {
-    let nav = use_context::<Signal<Nav<Route>>>();
+    let mut nav = use_context::<Signal<Nav<Route>>>();
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let mut message = use_message();
@@ -92,35 +92,22 @@ pub fn NoteDisplay() -> Element {
                     tbody {
                         for (i, f) in atts.iter().enumerate() {
                             tr { key: "{f.name}",
-                                td { "{f.name}" }
+                                td {
+                                    a {
+                                        onclick: move |_| {
+                                            tst.attachment().set(Some(i));
+                                            nav.write().push(Screen::File.to_route(None));
+                                        },
+                                        "{f.name}"
+                                    }
+                                }
                                 td { "{format_size(f.data.len() as u64)}" }
                                 td { "txt": "r",
                                     button {
                                         onclick: move |_| {
-                                            let att = tst.attachments()()[i].clone();
-                                            let progress = tst.progress();
-                                            let message = message;
-                                            spawn(async move {
-                                                let mut progress = progress;
-                                                let mut message = message;
-                                                match download_package(att.data, &att.name, progress).await {
-                                                    Ok(loc) => {
-                                                        progress.set(None);
-                                                        message.set(Some(Msg::Downloaded(loc)));
-                                                    }
-                                                    Err(e) => {
-                                                        progress.set(None);
-                                                        message
-                                                            .set(
-                                                                Some(
-                                                                    Msg::Error(
-                                                                        AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
-                                                                    ),
-                                                                ),
-                                                            );
-                                                    }
-                                                }
-                                            });
+                                            if let Some(att) = tst.attachments()().get(i).cloned() {
+                                                download_attachment(att, tst.progress(), message);
+                                            }
                                         },
                                         Icon { icon: FaDownload }
                                     }

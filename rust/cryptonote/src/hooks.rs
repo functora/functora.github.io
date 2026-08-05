@@ -59,6 +59,7 @@ pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.url_input().set(String::new());
     tst.external().set(External::Nothing);
     tst.progress().set(None);
+    tst.attachment().set(None);
 }
 
 pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> impl FnMut(MouseEvent) + 'static {
@@ -582,6 +583,27 @@ pub fn remove_attachment(tst: Store<TemporaryState>, index: usize) {
     let mut atts = tst.attachments()();
     atts.remove(index);
     tst.attachments().set(atts);
+}
+
+pub fn download_attachment<P>(att: Attachment, progress: P, mut message: Signal<Option<Msg>>)
+where
+    P: Writable<Target = Option<Job>> + Copy + 'static,
+{
+    spawn(async move {
+        let mut progress = progress;
+        match download_package(att.data, &att.name, progress).await {
+            Ok(loc) => {
+                progress.set(None);
+                message.set(Some(Msg::Downloaded(loc)));
+            }
+            Err(e) => {
+                progress.set(None);
+                message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                    e,
+                )))));
+            }
+        }
+    });
 }
 
 pub fn format_size(size: u64) -> String {

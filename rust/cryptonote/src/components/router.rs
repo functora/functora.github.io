@@ -12,6 +12,7 @@ pub enum Screen {
     Donate,
     License,
     Privacy,
+    File,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -32,6 +33,7 @@ impl std::fmt::Display for Screen {
             Self::Donate => "donate",
             Self::License => "license",
             Self::Privacy => "privacy",
+            Self::File => "file",
         })
     }
 }
@@ -49,6 +51,7 @@ impl FromStr for Screen {
             "donate" => Ok(Self::Donate),
             "license" => Ok(Self::License),
             "privacy" => Ok(Self::Privacy),
+            "file" => Ok(Self::File),
             _ => Err(format!("Unknown screen '{}'", s)),
         }
     }
@@ -105,6 +108,7 @@ pub struct TemporaryState {
     pub url_input: String,
     pub external: External,
     pub progress: Option<Job>,
+    pub attachment: Option<usize>,
 }
 
 impl Default for TemporaryState {
@@ -119,6 +123,7 @@ impl Default for TemporaryState {
             url_input: String::new(),
             external: External::Nothing,
             progress: None,
+            attachment: None,
         }
     }
 }
@@ -166,6 +171,9 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
         },
         Screen::Privacy => rsx! {
             Privacy {}
+        },
+        Screen::File => rsx! {
+            File {}
         },
     }
 }

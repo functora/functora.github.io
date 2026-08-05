@@ -1,3 +1,4 @@
+mod common;
 use cryptonote::crypto::{decrypt_symmetric, encrypt_symmetric, CipherType};
 use cryptonote::encoding::{build_url, decode_note, encode_note, extract_note_param, generate_qr_code, NoteData};
 
@@ -36,6 +37,7 @@ fn test_encode_decode_plaintext_empty() {
 
 #[test]
 fn test_encode_decode_encrypted() {
+    common::fast_kdf();
     let plaintext = b"Secret message";
     let encrypted = encrypt_symmetric(plaintext, "password", CipherType::ChaCha20Poly1305).expect("Encryption failed");
     let note = NoteData::CipherText(encrypted);
@@ -52,6 +54,7 @@ fn test_encode_decode_encrypted() {
 
 #[test]
 fn test_encode_decode_aes_encrypted() {
+    common::fast_kdf();
     let plaintext = b"AES encrypted message";
     let encrypted = encrypt_symmetric(plaintext, "password", CipherType::Aes256Gcm).expect("Encryption failed");
     let note = NoteData::CipherText(encrypted);
@@ -104,6 +107,7 @@ fn test_build_url_roundtrip() {
 
 #[test]
 fn test_build_url_roundtrip_encrypted() {
+    common::fast_kdf();
     let plaintext = b"Encrypted round trip";
     let encrypted = encrypt_symmetric(plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
     let note = NoteData::CipherText(encrypted);

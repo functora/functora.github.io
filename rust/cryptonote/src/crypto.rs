@@ -193,11 +193,24 @@ pub fn stream_decrypt_symmetric(data: &EncryptedNote, password: &str) -> Result<
     Ok(plaintext)
 }
 
+fn env_cost(name: &str, default: u32) -> u32 {
+    std::env::var(name).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+}
+
+fn kdf_params() -> Result<Params, AppError> {
+    Ok(Params::new(
+        env_cost("CRYPTONOTE_KDF_M_COST_KIB", ARGON2_M_COST_KIB),
+        env_cost("CRYPTONOTE_KDF_T_COST", ARGON2_T_COST),
+        ARGON2_P_COST,
+        Some(KEY_SIZE),
+    )?)
+}
+
 pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, AppError> {
     let mut key = vec![0u8; KEY_SIZE];
     match kdf {
         Kdf::Argon2id => {
-            let params = Params::new(ARGON2_M_COST_KIB, ARGON2_T_COST, ARGON2_P_COST, Some(KEY_SIZE))?;
+            let params = kdf_params()?;
             Argon2::new(Argon2Algo, Argon2V, params).hash_password_into(password.as_bytes(), salt, &mut key)?;
         }
     }

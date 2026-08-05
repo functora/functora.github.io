@@ -68,7 +68,6 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
     });
 
     rsx! {
-        crate::widgets::Banner { message: error, lang }
         if error.read().is_none() {
             video { id: "qr-video", autoplay: true, playsinline: true }
             canvas { id: "qr-canvas", style: "display:none" }

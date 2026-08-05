@@ -223,7 +223,16 @@ pub fn Home() -> Element {
             if action == ActionMode::Scan {
                 QrScanner {
                     lang,
+                    message,
                     on_scan: Callback::new(move |url: String| navigate_to_url(&url)),
+                }
+                Dock { message,
+                    Button {
+                        icon: Some(FaTrash),
+                        onclick: reset_ctx,
+                        i18n: Some(Msg::CreateNewNote),
+                        lang,
+                    }
                 }
             }
         }

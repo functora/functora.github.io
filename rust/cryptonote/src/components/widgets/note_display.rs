@@ -64,6 +64,15 @@ pub fn NoteDisplay() -> Element {
         });
     };
 
+    let print_note = move |_| {
+        let mut msg = message;
+        spawn(async move {
+            if let Err(e) = print_page().await {
+                msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
+            }
+        });
+    };
+
     rsx! {
         section {
             card {
@@ -135,6 +144,13 @@ pub fn NoteDisplay() -> Element {
                     primary: true,
                     onclick: share_note,
                     i18n: Some(Msg::Share),
+                    lang,
+                }
+                Button {
+                    icon: Some(FaPrint),
+                    primary: true,
+                    onclick: print_note,
+                    i18n: Some(Msg::Print),
                     lang,
                 }
                 if has_attachments {

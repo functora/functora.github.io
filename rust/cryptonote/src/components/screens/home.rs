@@ -212,6 +212,12 @@ pub fn Home() -> Element {
                         lang,
                     }
                     Button {
+                        icon: Some(FaXmark),
+                        onclick: move |_| tst.url_input().set(String::new()),
+                        i18n: Some(Msg::Clear),
+                        lang,
+                    }
+                    Button {
                         icon: Some(FaTrash),
                         onclick: reset_ctx,
                         i18n: Some(Msg::CreateNewNote),

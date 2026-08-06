@@ -10,18 +10,14 @@ use std::io::{Read, Seek, Write};
 use tap::prelude::*;
 use zip::CompressionMethod;
 
+pub use functora_dioxus::files::Attachment;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ArchiveMetadata {
     pub cipher: Option<CipherType>,
     pub kdf: Kdf,
     pub nonce: Vec<u8>,
     pub salt: Vec<u8>,
-}
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Attachment {
-    pub name: String,
-    pub data: Vec<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -192,7 +188,7 @@ async fn package_with_encryption(
     cipher: CipherType,
     report: &mut Reporter,
 ) -> Result<Vec<u8>, AppError> {
-    let parts = StreamParts::derive(password, cipher)?;
+    let parts = StreamParts::derive(password, cipher, &aad(cipher, Kdf::Argon2id))?;
     let meta = ArchiveMetadata {
         cipher: Some(cipher),
         kdf: Kdf::Argon2id,
@@ -327,7 +323,7 @@ async fn unseal(
     cipher: CipherType,
     report: &mut Reporter,
 ) -> Result<Vec<u8>, AppError> {
-    let parts = StreamParts::recover(password, cipher, &meta.salt, &meta.nonce)?;
+    let parts = StreamParts::recover(password, cipher, &meta.salt, &meta.nonce, &aad(cipher, meta.kdf))?;
     let mut inner = payload;
     let mut offset = 0usize;
     let mut write = 0usize;

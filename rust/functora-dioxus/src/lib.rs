@@ -1,23 +1,37 @@
 #![allow(clippy::must_use_candidate)]
 
 pub mod app;
+pub mod crypto;
 pub mod dioxus_elements;
+pub mod encoding;
 pub mod error;
 pub mod ffi;
+pub mod files;
+pub mod hooks;
 pub mod i18n;
 pub mod markdown;
 pub mod messages;
 pub mod nav;
+pub mod progress;
 pub mod qr;
+pub mod state;
 pub mod storage;
 pub mod widgets;
+pub mod worker;
 
 pub use app::*;
+pub use crypto::*;
+pub use encoding::*;
 pub use error::*;
 pub use ffi::*;
+pub use files::*;
+pub use hooks::*;
 pub use i18n::*;
 pub use messages::*;
 pub use nav::*;
+pub use progress::*;
 pub use qr::*;
+pub use state::*;
 pub use storage::*;
 pub use widgets::*;
+pub use worker::*;

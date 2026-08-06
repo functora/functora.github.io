@@ -301,7 +301,7 @@ fn download_script_escapes_newline() {
 
 #[test]
 fn pick_script_chunked_protocol_with_size() {
-    let script = cryptonote::pick_script(true);
+    let script = functora_dioxus::files::pick_script(true);
     assert!(script.contains("t: 'begin'"));
     assert!(script.contains("size: f.size"));
     assert!(script.contains("t: 'chunk'"));
@@ -315,6 +315,6 @@ fn pick_script_chunked_protocol_with_size() {
 
 #[test]
 fn pick_script_multiple_flag() {
-    assert!(cryptonote::pick_script(true).contains("input.multiple = true"));
-    assert!(cryptonote::pick_script(false).contains("input.multiple = false"));
+    assert!(functora_dioxus::files::pick_script(true).contains("input.multiple = true"));
+    assert!(functora_dioxus::files::pick_script(false).contains("input.multiple = false"));
 }

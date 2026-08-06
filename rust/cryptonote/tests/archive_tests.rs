@@ -261,7 +261,10 @@ fn archive_wrong_nonce_length_returns_error() {
             let meta_json = serde_json::to_vec(&tampered).unwrap();
             pkg = rebuild_package(&pkg, &meta_json);
             let result = extract_archive_package_async(ArchiveSource::Bytes(pkg), "pw", common::progress()).await;
-            assert!(matches!(result, Err(AppError::InvalidFormat(_))));
+            assert!(matches!(
+                result,
+                Err(AppError::FunctoraDioxus(functora_dioxus::Error::InvalidFormat(_)))
+            ));
         })
     });
 }

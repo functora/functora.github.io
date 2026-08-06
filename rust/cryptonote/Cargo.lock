@@ -793,10 +793,7 @@ dependencies = [
 name = "cryptonote"
 version = "0.1.10"
 dependencies = [
- "aes-gcm",
- "argon2",
  "base64",
- "chacha20poly1305",
  "derive_more 2.1.0",
  "dioxus",
  "dioxus-core",
@@ -816,11 +813,9 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
- "urlencoding",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "zeroize",
  "zip",
 ]
 
@@ -1942,13 +1937,18 @@ checksum = "6fea53a2c5e0f48e6485cfdf0ee76dd7bdf5992c3748f4b0597ebcbee92913c9"
 name = "functora-dioxus"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
  "ammonia",
+ "argon2",
+ "base64",
+ "chacha20poly1305",
  "derive_more 2.1.0",
  "dioxus",
  "dioxus-free-icons",
  "either",
  "functora",
  "functora-tagged",
+ "getrandom 0.2.16",
  "isolang",
  "jni",
  "pulldown-cmark",
@@ -1959,7 +1959,9 @@ dependencies = [
  "tap",
  "thiserror 2.0.18",
  "tracing",
+ "urlencoding",
  "web-sys",
+ "zeroize",
 ]
 
 [[package]]

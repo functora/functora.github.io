@@ -147,7 +147,12 @@ fn test_decrypt_wrong_nonce_length_returns_error() {
     let mut encrypted = encrypt_symmetric(b"data", "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
     encrypted.nonce.truncate(5);
     let result = decrypt_symmetric(&encrypted, "pw");
-    assert!(matches!(result, Err(cryptonote::AppError::InvalidFormat(_))));
+    assert!(matches!(
+        result,
+        Err(cryptonote::AppError::FunctoraDioxus(
+            functora_dioxus::Error::InvalidFormat(_)
+        ))
+    ));
 }
 
 #[test]
@@ -156,7 +161,12 @@ fn test_decrypt_wrong_salt_length_returns_error() {
     let mut encrypted = encrypt_symmetric(b"data", "pw", CipherType::Aes256Gcm).expect("Encryption failed");
     encrypted.salt.clear();
     let result = decrypt_symmetric(&encrypted, "pw");
-    assert!(matches!(result, Err(cryptonote::AppError::InvalidFormat(_))));
+    assert!(matches!(
+        result,
+        Err(cryptonote::AppError::FunctoraDioxus(
+            functora_dioxus::Error::InvalidFormat(_)
+        ))
+    ));
 }
 
 #[test]

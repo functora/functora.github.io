@@ -84,9 +84,9 @@ impl I18N for AppError {
     }
 }
 
-impl From<argon2::Error> for AppError {
-    fn from(e: argon2::Error) -> Self {
-        AppError::KeyDerive(e.to_string())
+impl From<String> for AppError {
+    fn from(e: String) -> Self {
+        AppError::Archive(e)
     }
 }
 

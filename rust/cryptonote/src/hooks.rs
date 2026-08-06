@@ -2,19 +2,11 @@ use crate::error::AppError;
 use crate::messages::Msg;
 use crate::*;
 
-use base64::Engine;
-
-pub fn use_lang() -> Language {
-    use_context::<PersistentSignal<PersistentState>>().language()()
-}
-
-pub fn use_message_markdown<T: I18N + 'static>(msg: T) -> Memo<String> {
-    let pst = use_context::<PersistentSignal<PersistentState>>();
-    use_memo(move || msg.render_markdown(pst.language()()))
-}
+pub use functora_dioxus::files::format_size;
+pub use functora_dioxus::hooks::{use_lang, use_message_markdown};
 
 pub fn use_message() -> Signal<Option<Msg>> {
-    use_signal(|| None)
+    functora_dioxus::hooks::use_message()
 }
 
 pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Signal<Option<Msg>>) {
@@ -71,7 +63,10 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
 
 pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
     spawn(async move {
-        match pick_files_via_eval(true, tst.progress()).await {
+        match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach)
+            .await
+            .map_err(AppError::FunctoraDioxus)
+        {
             Ok(files) => {
                 let mut current = tst.attachments()();
                 for (name, data) in files {
@@ -91,7 +86,10 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
 pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
     spawn(async move {
         let mut message = message;
-        let files = match pick_files_via_eval(false, tst.progress()).await {
+        let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach)
+            .await
+            .map_err(AppError::FunctoraDioxus)
+        {
             Ok(f) => f,
             Err(e) => {
                 tst.progress().set(None);
@@ -231,148 +229,14 @@ fn app_origin() -> Option<String> {
     }
 }
 
-pub fn pick_script(multiple: bool) -> String {
-    format!(
-        r#"
-        (async function() {{
-            const CHUNK = 2 * 1024 * 1024;
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.multiple = {multiple};
-            input.style.display = 'none';
-            document.body.appendChild(input);
-            const toBase64 = (uint8) => {{
-                let bin = '';
-                for (let i = 0; i < uint8.length; i += 0x8000) {{
-                    bin += String.fromCharCode.apply(null, uint8.subarray(i, i + 0x8000));
-                }}
-                return btoa(bin);
-            }};
-            const done = () => dioxus.send({{ t: 'done' }});
-            try {{
-                const files = await new Promise((resolve) => {{
-                    const timer = setTimeout(() => {{ input.remove(); resolve([]); }}, 120000);
-                    input.addEventListener('change', () => {{
-                        clearTimeout(timer);
-                        resolve(Array.from(input.files));
-                    }}, {{ once: true }});
-                    input.click();
-                }});
-                for (const f of files) {{
-                    dioxus.send({{ t: 'begin', name: f.name, size: f.size }});
-                    for (let off = 0; off < f.size; off += CHUNK) {{
-                        const buf = await f.slice(off, Math.min(off + CHUNK, f.size)).arrayBuffer();
-                        dioxus.send({{ t: 'chunk', data: toBase64(new Uint8Array(buf)) }});
-                    }}
-                }}
-                input.remove();
-                done();
-            }} catch(e) {{
-                input.remove();
-                done();
-            }}
-        }})()
-        "#,
-        multiple = if multiple { "true" } else { "false" }
-    )
-}
-
-async fn pick_files_via_eval<P>(multiple: bool, progress: P) -> Result<Vec<(String, Vec<u8>)>, AppError>
-where
-    P: Writable<Target = Option<Job>> + Copy + 'static,
-{
-    use base64::engine::general_purpose::STANDARD as BASE64;
-
-    #[derive(Deserialize)]
-    #[serde(tag = "t", rename_all = "lowercase")]
-    enum PickMsg {
-        Begin { name: String, size: u64 },
-        Chunk { data: String },
-        Done,
-    }
-
-    let mut eval = dioxus::document::eval(&pick_script(multiple));
-    let mut files: Vec<(String, Vec<u8>)> = Vec::new();
-    let mut done = 0u64;
-    let mut total = 0u64;
-    loop {
-        let msg = eval
-            .recv::<PickMsg>()
-            .await
-            .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JS(e.to_string())))?;
-        match msg {
-            PickMsg::Begin { name, size } => {
-                total += size;
-                files.push((name, Vec::new()));
-                done = files.iter().map(|(_, b)| b.len() as u64).sum();
-            }
-            PickMsg::Chunk { data } => {
-                if let Some((_, buf)) = files.last_mut() {
-                    match BASE64.decode(&data) {
-                        Ok(bytes) => {
-                            done += bytes.len() as u64;
-                            buf.extend(bytes);
-                        }
-                        Err(e) => {
-                            tracing::warn!("File decode error: {e}");
-                            files.pop();
-                        }
-                    }
-                }
-            }
-            PickMsg::Done => break,
-        }
-        match files.last() {
-            Some((name, _)) => report_progress_named(progress, Stage::Attach, done, total, name).await,
-            None => report_progress(progress, Stage::Attach, done, total).await,
-        }
-    }
-    Ok(files)
-}
-
-#[cfg(not(target_os = "android"))]
-#[derive(Serialize)]
-struct DownloadMsg {
-    t: &'static str,
-    data: String,
-}
-
 #[cfg(not(target_os = "android"))]
 pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, String>
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
-    use base64::engine::general_purpose::STANDARD as BASE64;
-    const SEND_CHUNK: usize = 3 * 1024 * 1024;
-    let eval = dioxus::document::eval(&download_script(filename)?);
-    let total = data.len() as u64;
-    let mut done = 0u64;
-    for chunk in data.chunks(SEND_CHUNK) {
-        eval.send(DownloadMsg {
-            t: "chunk",
-            data: BASE64.encode(chunk),
-        })
-        .map_err(|e| e.to_string())?;
-        done += chunk.len() as u64;
-        report_progress(progress, Stage::Download, done, total).await;
-    }
-    eval.send(DownloadMsg {
-        t: "done",
-        data: String::new(),
-    })
-    .map_err(|e| e.to_string())?;
-    Ok(filename.to_string())
-}
-
-pub fn download_script(filename: &str) -> Result<String, String> {
-    let name = serde_json::to_string(filename)
-        .map_err(|e| e.to_string())?
-        .replace('<', "\\u003c")
-        .replace('>', "\\u003e")
-        .replace('\'', "\\u0027");
-    Ok(format!(
-        r#"(async function(){{const parts=[];for(;;){{const m=await dioxus.recv();if(m&&m.t==='done')break;const bin=atob(m.data);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);parts.push(bytes)}}const url=URL.createObjectURL(new Blob(parts,{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()"#,
-    ))
+    functora_dioxus::files::download_package(data, filename, progress, Stage::Download)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[cfg(target_os = "android")]
@@ -604,16 +468,4 @@ where
             }
         }
     });
-}
-
-pub fn format_size(size: u64) -> String {
-    const KB: u64 = 1024;
-    const MB: u64 = KB * 1024;
-    if size >= MB {
-        format!("{:.1} MB", size as f64 / MB as f64)
-    } else if size >= KB {
-        format!("{:.1} KB", size as f64 / KB as f64)
-    } else {
-        format!("{} B", size)
-    }
 }

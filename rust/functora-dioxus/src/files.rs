@@ -1,9 +1,12 @@
 use crate::Error;
+#[cfg(not(target_os = "android"))]
 use crate::encoding::download_script;
 use crate::progress::{Job, report_progress, report_progress_named};
 use base64::Engine;
 use dioxus::prelude::Writable;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+#[cfg(not(target_os = "android"))]
+use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Attachment {
@@ -70,6 +73,48 @@ pub fn is_text(mime: &str) -> bool {
             mime,
             "application/json" | "application/xml" | "application/toml" | "application/yaml"
         )
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Preview {
+    Image(String),
+    Video(String),
+    Audio(String),
+    Pdf(String),
+    Markdown(String),
+    Text(String),
+    Download,
+    Missing,
+}
+
+pub fn preview(name: &str, data: &[u8]) -> Preview {
+    let Some(mime) = mime_for(name) else {
+        return Preview::Download;
+    };
+    let url = format!(
+        "data:{mime};base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(data)
+    );
+    if mime.starts_with("image/") {
+        return Preview::Image(url);
+    }
+    if mime.starts_with("video/") {
+        return Preview::Video(url);
+    }
+    if mime.starts_with("audio/") {
+        return Preview::Audio(url);
+    }
+    if mime == "application/pdf" {
+        return Preview::Pdf(url);
+    }
+    if is_text(mime) {
+        return match String::from_utf8(data.to_vec()) {
+            Ok(text) if mime == "text/markdown" => Preview::Markdown(text),
+            Ok(text) => Preview::Text(text),
+            Err(_) => Preview::Download,
+        };
+    }
+    Preview::Download
 }
 
 pub fn pick_script(multiple: bool) -> String {

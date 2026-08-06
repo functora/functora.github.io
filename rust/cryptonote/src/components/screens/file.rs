@@ -1,104 +1,18 @@
 use crate::messages::*;
 use crate::*;
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine;
-
-#[derive(Debug, Clone, PartialEq)]
-enum Preview {
-    Image(String),
-    Video(String),
-    Audio(String),
-    Pdf(String),
-    Markdown(String),
-    Text(String),
-    Download,
-    Missing,
-}
-
-fn mime_for(name: &str) -> Option<&'static str> {
-    let ext = name
-        .rsplit_once('.')
-        .map(|(_, e)| e.to_ascii_lowercase())
-        .unwrap_or_default();
-    match ext.as_str() {
-        "jpg" | "jpeg" => Some("image/jpeg"),
-        "png" => Some("image/png"),
-        "gif" => Some("image/gif"),
-        "webp" => Some("image/webp"),
-        "bmp" => Some("image/bmp"),
-        "svg" => Some("image/svg+xml"),
-        "avif" => Some("image/avif"),
-        "ico" => Some("image/x-icon"),
-        "mp4" => Some("video/mp4"),
-        "webm" => Some("video/webm"),
-        "mov" => Some("video/quicktime"),
-        "ogv" => Some("video/ogg"),
-        "m4v" => Some("video/x-m4v"),
-        "mp3" => Some("audio/mpeg"),
-        "wav" => Some("audio/wav"),
-        "ogg" | "oga" => Some("audio/ogg"),
-        "m4a" => Some("audio/mp4"),
-        "flac" => Some("audio/flac"),
-        "aac" => Some("audio/aac"),
-        "opus" => Some("audio/opus"),
-        "pdf" => Some("application/pdf"),
-        "txt" | "log" => Some("text/plain"),
-        "md" | "markdown" => Some("text/markdown"),
-        "html" | "htm" => Some("text/html"),
-        "css" => Some("text/css"),
-        "csv" => Some("text/csv"),
-        "json" => Some("application/json"),
-        "xml" => Some("application/xml"),
-        "toml" => Some("application/toml"),
-        "yaml" | "yml" => Some("application/yaml"),
-        _ => None,
-    }
-}
-
-fn is_text(mime: &str) -> bool {
-    mime.starts_with("text/")
-        || matches!(
-            mime,
-            "application/json" | "application/xml" | "application/toml" | "application/yaml"
-        )
-}
-
-fn build_preview(tst: Store<TemporaryState>) -> Preview {
-    let Some(att) = tst.attachment()().and_then(|i| tst.attachments()().get(i).cloned()) else {
-        return Preview::Missing;
-    };
-    let Some(mime) = mime_for(&att.name) else {
-        return Preview::Download;
-    };
-    let url = format!("data:{mime};base64,{}", BASE64.encode(&att.data));
-    if mime.starts_with("image/") {
-        return Preview::Image(url);
-    }
-    if mime.starts_with("video/") {
-        return Preview::Video(url);
-    }
-    if mime.starts_with("audio/") {
-        return Preview::Audio(url);
-    }
-    if mime == "application/pdf" {
-        return Preview::Pdf(url);
-    }
-    if is_text(mime) {
-        return match String::from_utf8(att.data) {
-            Ok(text) if mime == "text/markdown" => Preview::Markdown(text),
-            Ok(text) => Preview::Text(text),
-            Err(_) => Preview::Download,
-        };
-    }
-    Preview::Download
-}
+use functora_dioxus::files::Preview;
 
 #[component]
 pub fn File() -> Element {
     let tst = use_context::<Store<TemporaryState>>();
     let lang = use_lang();
     let message = use_message();
-    let preview = use_memo(move || build_preview(tst));
+    let preview = use_memo(move || {
+        tst.attachment()()
+            .and_then(|i| tst.attachments()().get(i).cloned())
+            .map(|att| functora_dioxus::files::preview(&att.name, &att.data))
+            .unwrap_or(functora_dioxus::files::Preview::Missing)
+    });
     let atts = tst.attachments()();
     let idx = tst.attachment()();
     let att = idx.and_then(|i| atts.get(i));

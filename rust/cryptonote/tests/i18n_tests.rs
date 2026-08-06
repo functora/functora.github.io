@@ -86,9 +86,9 @@ fn app_error_i18n_render_eng_non_empty() {
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
         AppError::Archive("zip error".into()),
-        AppError::Encrypt("fail".into()),
-        AppError::Decrypt("fail".into()),
-        AppError::KeyDerive("kdf".into()),
+        AppError::InvalidFormat("nonce".into()),
+        AppError::Json("j".into()),
+        AppError::Utf8(String::from_utf8(vec![0xff]).unwrap_err()),
     ];
     for case in &cases {
         assert!(!case.render_eng().is_empty(), "render_eng empty for {case}");
@@ -128,17 +128,19 @@ fn app_error_i18n_invalid_format_contains_detail() {
 }
 
 #[test]
-fn app_error_i18n_key_derive_contains_detail() {
-    let err = AppError::KeyDerive("kdf".into());
-    assert!(err.render_eng().contains("kdf"));
-    assert!(err.render_spa().contains("kdf"));
-    assert!(err.render_rus().contains("kdf"));
+fn app_error_i18n_json_contains_detail() {
+    let err = AppError::Json("j".into());
+    assert!(err.render_eng().contains("j"));
+    assert!(err.render_spa().contains("j"));
+    assert!(err.render_rus().contains("j"));
 }
 
 #[test]
-fn app_error_from_getrandom() {
-    let err: AppError = getrandom::Error::UNSUPPORTED.into();
-    assert!(matches!(err, AppError::Getrandom(_)));
+fn app_error_i18n_utf8_contains_detail() {
+    let err = AppError::Utf8(String::from_utf8(vec![0xff]).unwrap_err());
+    assert!(err.render_eng().contains("UTF-8"));
+    assert!(err.render_spa().contains("UTF-8"));
+    assert!(err.render_rus().contains("UTF-8"));
 }
 
 #[test]
@@ -287,13 +289,7 @@ fn language_flag_rus() {
 }
 
 #[test]
-fn app_error_cipher_getrandom_base64_json_utf8_eng() {
-    let cipher: AppError = AppError::KeyDerive("cipher".into());
-    assert!(!cipher.render_eng().is_empty());
-    let getrandom: AppError = getrandom::Error::UNSUPPORTED.into();
-    assert!(!getrandom.render_eng().is_empty());
-    let base64: AppError = base64::DecodeError::InvalidLength(1).into();
-    assert!(!base64.render_eng().is_empty());
+fn app_error_json_utf8_eng() {
     let json: AppError = serde_json::from_str::<serde_json::Value>("x").unwrap_err().into();
     assert!(!json.render_eng().is_empty());
     let utf8: AppError = String::from_utf8(vec![0xff]).unwrap_err().into();
@@ -317,14 +313,9 @@ fn app_error_from_serde_json() {
 #[test]
 fn app_error_i18n_render_spa_all_variants() {
     let variants: Vec<AppError> = vec![
-        AppError::KeyDerive("kdf".into()),
-        getrandom::Error::UNSUPPORTED.into(),
-        base64::DecodeError::InvalidLength(1).into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         String::from_utf8(vec![0xff]).unwrap_err().into(),
         cryptonote::AppError::FunctoraDioxus(cryptonote::encoding::generate_qr_code("").unwrap_err()),
-        AppError::Encrypt("e".into()),
-        AppError::Decrypt("d".into()),
         AppError::PasswordRequired,
         AppError::InvalidFormat("f".into()),
         AppError::Archive("a".into()),
@@ -342,14 +333,9 @@ fn app_error_i18n_render_spa_all_variants() {
 #[test]
 fn app_error_i18n_render_rus_all_variants() {
     let variants: Vec<AppError> = vec![
-        AppError::KeyDerive("kdf".into()),
-        getrandom::Error::UNSUPPORTED.into(),
-        base64::DecodeError::InvalidLength(1).into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         String::from_utf8(vec![0xff]).unwrap_err().into(),
         cryptonote::AppError::FunctoraDioxus(cryptonote::encoding::generate_qr_code("").unwrap_err()),
-        AppError::Encrypt("e".into()),
-        AppError::Decrypt("d".into()),
         AppError::PasswordRequired,
         AppError::InvalidFormat("f".into()),
         AppError::Archive("a".into()),

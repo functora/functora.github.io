@@ -38,11 +38,21 @@ pub enum Error {
     CameraPermissionDenied(String),
     #[error("Not a JSON object: {0}")]
     NotJsonObject(String),
+    #[error("Archive error: {0}")]
+    Archive(String),
+    #[error("Background task error: {0}")]
+    Worker(String),
 }
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
         Error::IO(e.to_string())
+    }
+}
+
+impl From<String> for Error {
+    fn from(s: String) -> Self {
+        Error::Worker(s)
     }
 }
 
@@ -91,6 +101,8 @@ impl I18N for Error {
             Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
+            Self::Archive(e) => format!("Archive error: {e}"),
+            Self::Worker(e) => format!("Background task error: {e}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("JNI error: {e}"),
         }
@@ -115,6 +127,8 @@ impl I18N for Error {
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
+            Self::Archive(e) => format!("Error de archivo: {e}"),
+            Self::Worker(e) => format!("Error de tarea en segundo plano: {e}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
         }
@@ -139,6 +153,8 @@ impl I18N for Error {
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
+            Self::Archive(e) => format!("Ошибка архива: {e}"),
+            Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Ошибка JNI: {e}"),
         }

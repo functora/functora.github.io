@@ -80,12 +80,6 @@ pub enum Msg {
     PreviewUnavailable,
     FileNotFound,
     Downloaded(String),
-    StageAttach,
-    StageZip,
-    StageEncrypt,
-    StageDecrypt,
-    StageUnzip,
-    StageDownload,
 }
 
 impl I18N for Msg {
@@ -238,12 +232,6 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::PreviewUnavailable => "Preview is not available for this file type",
             Self::FileNotFound => "File not found",
             Self::Downloaded(loc) => return format!("Downloaded: {loc}"),
-            Self::StageAttach => "Attaching files...",
-            Self::StageZip => "Zipping files...",
-            Self::StageEncrypt => "Encrypting...",
-            Self::StageDecrypt => "Decrypting...",
-            Self::StageUnzip => "Unzipping...",
-            Self::StageDownload => "Downloading...",
         }
         .to_string()
     }
@@ -397,12 +385,6 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::PreviewUnavailable => "La vista previa no está disponible para este tipo de archivo",
             Self::FileNotFound => "Archivo no encontrado",
             Self::Downloaded(loc) => return format!("Descargado: {loc}"),
-            Self::StageAttach => "Adjuntando archivos...",
-            Self::StageZip => "Comprimiendo archivos...",
-            Self::StageEncrypt => "Cifrando...",
-            Self::StageDecrypt => "Descifrando...",
-            Self::StageUnzip => "Descomprimiendo...",
-            Self::StageDownload => "Descargando...",
         }
         .to_string()
     }
@@ -556,12 +538,6 @@ Cryptonote следует современным криптографическ�
             Self::PreviewUnavailable => "Предварительный просмотр недоступен для этого типа файлов",
             Self::FileNotFound => "Файл не найден",
             Self::Downloaded(loc) => return format!("Скачано: {loc}"),
-            Self::StageAttach => "Прикрепление файлов...",
-            Self::StageZip => "Архивация файлов...",
-            Self::StageEncrypt => "Шифрование...",
-            Self::StageDecrypt => "Расшифровка...",
-            Self::StageUnzip => "Распаковка...",
-            Self::StageDownload => "Скачивание...",
         }
         .to_string()
     }

@@ -793,7 +793,6 @@ dependencies = [
 name = "cryptonote"
 version = "0.1.10"
 dependencies = [
- "base64",
  "derive_more 2.1.0",
  "dioxus",
  "dioxus-core",
@@ -803,12 +802,10 @@ dependencies = [
  "functora",
  "functora-dioxus",
  "functora-tagged",
- "getrandom 0.2.16",
  "jni",
  "rxing",
  "serde",
  "serde_json",
- "sha2",
  "tap",
  "thiserror 2.0.18",
  "tokio",
@@ -1962,6 +1959,7 @@ dependencies = [
  "urlencoding",
  "web-sys",
  "zeroize",
+ "zip",
 ]
 
 [[package]]

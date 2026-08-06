@@ -3,6 +3,17 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Stage {
+    #[default]
+    Attach,
+    Zip,
+    Encrypt,
+    Decrypt,
+    Unzip,
+    Download,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Job<S> {
     pub stage: S,

@@ -24,6 +24,7 @@ pub enum Msg {
     CameraPermissionDenied(String),
     Back,
     Home,
+    Stage(crate::progress::Stage),
 }
 
 impl I18N for Msg {
@@ -49,6 +50,17 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_eng(),
             Self::Back => "Back",
             Self::Home => "Home",
+            Self::Stage(s) => {
+                return match s {
+                    crate::progress::Stage::Attach => "Attaching files...",
+                    crate::progress::Stage::Zip => "Zipping files...",
+                    crate::progress::Stage::Encrypt => "Encrypting...",
+                    crate::progress::Stage::Decrypt => "Decrypting...",
+                    crate::progress::Stage::Unzip => "Unzipping...",
+                    crate::progress::Stage::Download => "Downloading...",
+                }
+                .to_string();
+            }
         }
         .to_string()
     }
@@ -75,6 +87,17 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_spa(),
             Self::Back => "Atrás",
             Self::Home => "Inicio",
+            Self::Stage(s) => {
+                return match s {
+                    crate::progress::Stage::Attach => "Adjuntando archivos...",
+                    crate::progress::Stage::Zip => "Comprimiendo archivos...",
+                    crate::progress::Stage::Encrypt => "Cifrando...",
+                    crate::progress::Stage::Decrypt => "Descifrando...",
+                    crate::progress::Stage::Unzip => "Descomprimiendo...",
+                    crate::progress::Stage::Download => "Descargando...",
+                }
+                .to_string();
+            }
         }
         .to_string()
     }
@@ -101,6 +124,17 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_rus(),
             Self::Back => "Назад",
             Self::Home => "Главная",
+            Self::Stage(s) => {
+                return match s {
+                    crate::progress::Stage::Attach => "Прикрепление файлов...",
+                    crate::progress::Stage::Zip => "Архивация файлов...",
+                    crate::progress::Stage::Encrypt => "Шифрование...",
+                    crate::progress::Stage::Decrypt => "Расшифровка...",
+                    crate::progress::Stage::Unzip => "Распаковка...",
+                    crate::progress::Stage::Download => "Скачивание...",
+                }
+                .to_string();
+            }
         }
         .to_string()
     }

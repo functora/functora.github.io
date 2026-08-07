@@ -168,6 +168,7 @@
       * Prefer the infallible, invariant-exploiting operations of refined newtypes (e.g., `FNonEmpty` methods like `first()`, `last()`, `minimum()`, `singleton()`, `extend()`, `map()`) over fallible or `Option`-returning standard-library analogues that require local handling.
       * Use newtype dimensions to distinguish values with identical representations (e.g., `UserId` vs `ProductId`) and prevent accidental misuse.
       * Prefer dimensional types from the `num` module (`Identity`, `Atomic`, `Times`, `Per`) over raw numerics when units are involved, so that mixing units (e.g., adding meters to seconds) is rejected at compile time.
+      * Verify that invariants are actually preserved by property-based testing, not just a handful of hand-picked examples, especially for roundtrip behaviors such as encode-decode, `FromStr`/`Display`, serialize/deserialize, and similar roundtrips.
 
       ### Complexity and Structure
 
@@ -191,6 +192,7 @@
       * Tests must verify observable behavior and public contracts rather than mirror implementation details.
       * Avoid implementation-mirroring tests that assert private structure, incidental call sequences, specific algorithms, or internal implementation details when multiple implementations could satisfy the same behavior.
       * Prefer deterministic tests.
+      * Prefer property-based testing (e.g., `proptest` or `quickcheck`) for invariant-preserving behaviors such as encode-decode roundtrips, using a fixed seed and shrinking so that any failing case is minimal and reproducible.
       * Avoid reliance on timing, arbitrary sleeps, uncontrolled randomness, ambient global state, external services, or machine-specific behavior unless the behavior itself is what is being tested.
       * Do not write tests solely to increase coverage; tests must provide meaningful behavioral guarantees.
       * All tests should be located in the `./tests` directory.

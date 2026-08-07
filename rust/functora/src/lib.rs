@@ -2,6 +2,7 @@
 
 pub use std::ops::ControlFlow;
 
+#[must_use]
 pub const fn id<T>(x: T) -> T {
     x
 }
@@ -89,6 +90,7 @@ where
     x.guard_then(f)
 }
 
+#[must_use]
 pub fn from_control_flow<T>(cf: ControlFlow<T, T>) -> T {
     match cf {
         ControlFlow::Continue(x) | ControlFlow::Break(x) => x,

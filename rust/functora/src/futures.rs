@@ -4,7 +4,7 @@ use std::ops::ControlFlow;
 pub struct ControlStream<S>(S);
 
 impl<S> ControlStream<S> {
-    pub fn new(stream: S) -> ControlStream<S> {
+    pub const fn new(stream: S) -> ControlStream<S> {
         ControlStream(stream)
     }
 

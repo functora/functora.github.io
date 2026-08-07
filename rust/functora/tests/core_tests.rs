@@ -2,6 +2,13 @@ use functora::{Guard, Tweak, Void, from_control_flow, guard, guard_then, id, ok,
 use std::convert::Infallible;
 use std::ops::ControlFlow;
 
+const ID_APPLIED: &str = id("compile-time");
+
+#[test]
+fn const_functions_evaluate_in_const_context() {
+    assert_eq!(ID_APPLIED, "compile-time");
+}
+
 #[test]
 fn id_function() {
     assert_eq!(id("Hello"), "Hello");

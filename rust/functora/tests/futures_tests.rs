@@ -7,11 +7,10 @@ use std::ops::ControlFlow;
 #[tokio::test]
 async fn try_fold_continue_all() {
     let stream = stream::iter(vec![1, 2, 3]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        0,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(0, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(6));
 }
 
@@ -43,11 +42,10 @@ async fn try_fold_break_on_first() {
 #[tokio::test]
 async fn try_fold_empty_stream() {
     let stream = stream::iter(Vec::<i32>::new());
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        42,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(42, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(42));
 }
 
@@ -114,22 +112,20 @@ async fn try_fold_complex_accumulator() {
 #[tokio::test]
 async fn try_fold_infallible_stream() {
     let stream = stream::iter(vec![1, 2, 3, 4, 5]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        0,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(0, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(15));
 }
 
 #[tokio::test]
 async fn try_fold_single_element_continue() {
     let stream = stream::iter(vec![42]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        0,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(0, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(42));
 }
 
@@ -144,33 +140,30 @@ async fn try_fold_single_element_break() {
 #[tokio::test]
 async fn try_fold_zero_initial_accumulator() {
     let stream = stream::iter(vec![1, 2, 3]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        0,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(0, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(6));
 }
 
 #[tokio::test]
 async fn try_fold_non_zero_initial_accumulator() {
     let stream = stream::iter(vec![1, 2, 3]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        10,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(10, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(16));
 }
 
 #[tokio::test]
 async fn try_fold_with_result_returning_ok() {
     let stream = stream::iter(vec![1, 2, 3]);
-    let cs = ControlStream::new::<i32, ()>(stream);
-    let result = cs.try_fold(
-        0,
-        |acc, item| async move { ControlFlow::Continue(acc + item) },
-    );
+    let cs = ControlStream::new(stream);
+    let result = cs.try_fold(0, |acc, item| async move {
+        ControlFlow::<(), _>::Continue(acc + item)
+    });
     assert_eq!(result.await, ControlFlow::Continue(6));
 }
 
@@ -178,10 +171,10 @@ async fn try_fold_with_result_returning_ok() {
 async fn try_fold_preserves_stream_order() {
     let input = vec![1, 2, 3, 4, 5];
     let stream = stream::iter(input.iter().copied());
-    let cs = ControlStream::new::<i32, ()>(stream);
+    let cs = ControlStream::new(stream);
     let result = cs.try_fold(Vec::new(), |mut acc, item| async move {
         acc.push(item);
-        ControlFlow::Continue(acc)
+        ControlFlow::<(), _>::Continue(acc)
     });
     assert_eq!(result.await, ControlFlow::Continue(vec![1, 2, 3, 4, 5]));
 }

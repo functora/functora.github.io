@@ -16,7 +16,7 @@ wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["Event", "HtmlInputElement", "Window"] }
 thiserror = "2.0.18"
 tracing = "0.1.43"
-functora = "0.1.1"
+functora = { path = "../functora" }
 functora-dioxus = { path = "../functora-dioxus", features = ["qr"] }
 functora-tagged = "0.2.7"
 dioxus-free-icons = { version = "0.10.0", features = [

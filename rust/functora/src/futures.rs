@@ -1,17 +1,11 @@
-use futures::{Future, FutureExt, StreamExt, TryStream, TryStreamExt};
-pub use std::ops::ControlFlow;
+use futures::{Future, FutureExt, Stream, StreamExt, TryStreamExt};
+use std::ops::ControlFlow;
 
 pub struct ControlStream<S>(S);
 
 impl<S> ControlStream<S> {
-    #[allow(clippy::type_complexity)]
-    pub fn new<Cont, Halt>(
-        stream: S,
-    ) -> ControlStream<futures::stream::Map<S, fn(Cont) -> Result<Cont, Halt>>>
-    where
-        S: futures::Stream<Item = Cont>,
-    {
-        ControlStream(stream.map(Ok))
+    pub fn new(stream: S) -> ControlStream<S> {
+        ControlStream(stream)
     }
 
     pub fn try_fold<Cont, Halt, Acc, F, Fut>(
@@ -20,7 +14,7 @@ impl<S> ControlStream<S> {
         mut f: F,
     ) -> impl Future<Output = ControlFlow<Halt, Acc>>
     where
-        S: TryStream<Ok = Cont, Error = Halt>,
+        S: Stream<Item = Cont>,
         F: FnMut(Acc, Cont) -> Fut,
         Fut: Future<Output = ControlFlow<Halt, Acc>>,
     {
@@ -30,10 +24,9 @@ impl<S> ControlStream<S> {
                 ControlFlow::Break(halt) => Err(halt),
             })
         };
-        let h = |res| match res {
+        self.0.map(Ok).try_fold(init, g).map(|res| match res {
             Ok(cont) => ControlFlow::Continue(cont),
             Err(halt) => ControlFlow::Break(halt),
-        };
-        self.0.try_fold(init, g).map(h)
+        })
     }
 }

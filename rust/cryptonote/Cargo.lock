@@ -1926,9 +1926,7 @@ dependencies = [
 
 [[package]]
 name = "functora"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fea53a2c5e0f48e6485cfdf0ee76dd7bdf5992c3748f4b0597ebcbee92913c9"
+version = "0.1.10"
 
 [[package]]
 name = "functora-dioxus"

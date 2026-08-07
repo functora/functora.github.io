@@ -2,11 +2,11 @@
 
 pub use std::ops::ControlFlow;
 
-pub fn id<T>(x: T) -> T {
+pub const fn id<T>(x: T) -> T {
     x
 }
 
-pub fn ok<E>() -> Result<(), E> {
+pub const fn ok<E>() -> Result<(), E> {
     Ok(())
 }
 
@@ -33,10 +33,7 @@ impl<T> Tweak for T {
         *self = f(self);
     }
     fn try_tweak<E>(&mut self, f: impl FnOnce(&T) -> Result<Self, E>) -> Result<(), E> {
-        f(self).and_then(|x| {
-            *self = x;
-            ok()
-        })
+        f(self).map(|x| *self = x)
     }
 }
 

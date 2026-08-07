@@ -317,9 +317,7 @@ dependencies = [
 
 [[package]]
 name = "functora"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fdb5b85823e13bf326c3efaadd8b9ecae81da0a02be91c2a7ae0f576ba97347"
+version = "0.1.10"
 
 [[package]]
 name = "functora-cfg"

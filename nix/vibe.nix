@@ -53,6 +53,16 @@
       * Follow the existing architecture, abstractions, naming conventions, APIs, and established project patterns.
       * Examples of good code can be found in the latest versions of the crates `functora-tagged` and `functora`. Study their source code and use a similar style.
 
+      ### Monorepo
+
+      * Take advantage of the git monorepo as the single source of truth for all code: prefer the local monorepo copies of libraries over external releases.
+      * Depend on the local monorepo versions of shared crates (e.g., `functora-tagged`, `functora`) rather than the versions hosted in the crates registry.
+      * First extend and improve the shared library in the monorepo when a reusable generalization, refinement, refinement bug fix, or other widely beneficial capability is genuinely warranted across multiple crates.
+      * Then consume the improved monorepo library from the dependent crates, rather than duplicating the behavior or waiting for a crates.io release.
+      * Do not generalize or refactor libraries speculatively; extend them only with real, concrete, reproducible need as demonstrated by actual use.
+      * If it makes sense to add widely used invariant-preserving behavior to `functora-tagged`, implement it in the monorepo and use the monorepo `functora-tagged` instead of the crates-registry version.
+      * Ensure that any change to a shared library keeps its public contracts stable, or updates all affected callers and tests in the same change.
+
       ### Change Discipline
 
       * Before making changes, understand the existing behavior and identify the smallest appropriate change.

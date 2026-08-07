@@ -482,7 +482,7 @@ in {
         "signal"
         "skype"
         "snapchat"
-        "soundcloud"
+        # "soundcloud"
         "spotify"
         "steam"
         "telegram"

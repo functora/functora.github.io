@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote::archive::{
     create_archive_package_async, extract_archive_package_async, read_archive_metadata, ArchiveMetadata, ArchiveSource,
     Attachment,
@@ -103,8 +104,8 @@ fn test_archive_many_attachments() {
             let note = "Note with many files";
             let attachments: Vec<_> = (0..100)
                 .map(|i| Attachment {
-                    name: format!("file_{}.bin", i),
-                    data: vec![i as u8; 100],
+                    name: format!("file_{i}.bin"),
+                    data: vec![u8::try_from(i).unwrap(); 100],
                 })
                 .collect();
             let (text, files) = roundtrip(note, &attachments, "pw", Some(CipherType::ChaCha20Poly1305))
@@ -113,7 +114,7 @@ fn test_archive_many_attachments() {
             assert_eq!(text, note);
             assert_eq!(files.len(), 100);
             for (i, f) in files.iter().enumerate() {
-                assert_eq!(f.name, format!("file_{}.bin", i));
+                assert_eq!(f.name, format!("file_{i}.bin"));
                 assert_eq!(f.data.len(), 100);
             }
         })
@@ -162,13 +163,13 @@ fn extract_archive_ignores_extra_entries() {
                     let mut entry = reader.by_index(i).expect("Entry read failed");
                     let name = entry.name().to_string();
                     let mut data = Vec::new();
-                    std::io::Read::read_to_end(&mut entry, &mut data).expect("Data read failed");
+                    let _ = std::io::Read::read_to_end(&mut entry, &mut data).expect("Data read failed");
                     zip.start_file(&name, stored).expect("Start file failed");
                     zip.write_all(&data).expect("Write data failed");
                 }
                 zip.start_file("extra.txt", stored).expect("Extra start failed");
                 zip.write_all(b"extra content").expect("Extra write failed");
-                zip.finish().expect("Finish failed");
+                let _ = zip.finish().expect("Finish failed");
             }
             let (text, files) =
                 extract_archive_package_async(ArchiveSource::Bytes(augmented), "pw", common::progress())
@@ -250,7 +251,7 @@ fn archive_wrong_nonce_length_returns_error() {
                 .unwrap();
             let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&pkg)).expect("Read archive failed");
             let mut meta_json = Vec::new();
-            archive
+            let _ = archive
                 .by_name("metadata.json")
                 .expect("Meta missing")
                 .read_to_end(&mut meta_json)
@@ -258,8 +259,8 @@ fn archive_wrong_nonce_length_returns_error() {
             let meta: ArchiveMetadata = serde_json::from_slice(&meta_json).unwrap();
             let mut tampered = meta.clone();
             tampered.nonce = vec![1, 2, 3];
-            let meta_json = serde_json::to_vec(&tampered).unwrap();
-            pkg = rebuild_package(&pkg, &meta_json);
+            let meta_bytes = serde_json::to_vec(&tampered).unwrap();
+            pkg = rebuild_package(&pkg, &meta_bytes);
             let result = extract_archive_package_async(ArchiveSource::Bytes(pkg), "pw", common::progress()).await;
             assert!(matches!(
                 result,
@@ -281,14 +282,14 @@ fn rebuild_package(pkg: &[u8], new_meta: &[u8]) -> Vec<u8> {
         writer.write_all(new_meta).unwrap();
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(pkg)).unwrap();
         let mut payload = Vec::new();
-        archive
+        let _ = archive
             .by_name("payload.cpt")
             .unwrap()
             .read_to_end(&mut payload)
             .unwrap();
         writer.start_file("payload.cpt", stored).unwrap();
         writer.write_all(&payload).unwrap();
-        writer.finish().unwrap();
+        let _ = writer.finish().unwrap();
     }
     out
 }
@@ -297,7 +298,7 @@ async fn v2_roundtrip(cipher: Option<CipherType>) {
     let note = "async archive note";
     let attachments = vec![Attachment {
         name: "big.bin".into(),
-        data: (0..200_000).map(|i| (i % 251) as u8).collect(),
+        data: (0..200_000).map(|i| u8::try_from(i % 251).unwrap()).collect(),
     }];
     let (text, files) = roundtrip(note, &attachments, "pw", cipher).await.unwrap();
     assert_eq!(text, note);
@@ -327,7 +328,7 @@ fn v2_encryption_reports_completed_progress() {
             let progress = common::progress();
             let attachments = vec![Attachment {
                 name: "spread.bin".into(),
-                data: (0..300_000).map(|i| i as u8).collect(),
+                data: (0..300_000).map(|i| u8::try_from(i % 256).unwrap()).collect(),
             }];
             let pkg =
                 create_archive_package_async("n", &attachments, "pw", Some(CipherType::ChaCha20Poly1305), progress)
@@ -372,7 +373,7 @@ fn big_attachment(size: usize) -> Attachment {
     Attachment {
         name: "big.bin".into(),
         data: (0..size)
-            .map(|i| ((i.wrapping_mul(31) % 251).wrapping_add(3)) as u8)
+            .map(|i| u8::try_from((i.wrapping_mul(31) % 251).wrapping_add(3)).unwrap())
             .collect(),
     }
 }
@@ -420,7 +421,7 @@ fn test_archive_zip_progress_advances_to_total() {
                 }
             };
             let (pkg, (zipped, name)) = tokio::join!(create, sample);
-            pkg.expect("archive build failed");
+            let _ = pkg.expect("archive build failed");
             assert_eq!(zipped, total);
             assert_eq!(name.as_deref(), Some("big.bin"));
         })
@@ -471,7 +472,7 @@ fn archive_path_source_extracts_encrypted() {
             assert_eq!(files[0].name, "a.txt");
             assert_eq!(files[0].data, b"path data");
             assert_eq!(ArchiveSource::Path(path.clone()).into_bytes().unwrap(), pkg);
-            std::fs::remove_file(path).ok();
+            drop(std::fs::remove_file(path));
         })
     });
 }
@@ -491,7 +492,7 @@ fn archive_path_source_extracts_plaintext() {
                     .expect("extract");
             assert_eq!(text, "plain path");
             assert!(files.is_empty());
-            std::fs::remove_file(path).ok();
+            drop(std::fs::remove_file(path));
         })
     });
 }

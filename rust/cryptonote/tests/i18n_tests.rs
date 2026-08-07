@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote::messages::*;
 use cryptonote::{AppError, Language, I18N, SUPPORTED_LANGUAGES};
 use functora_dioxus::Msg as BaseMsg;
@@ -130,9 +131,9 @@ fn app_error_i18n_invalid_format_contains_detail() {
 #[test]
 fn app_error_i18n_json_contains_detail() {
     let err = AppError::Json("j".into());
-    assert!(err.render_eng().contains("j"));
-    assert!(err.render_spa().contains("j"));
-    assert!(err.render_rus().contains("j"));
+    assert!(err.render_eng().contains('j'));
+    assert!(err.render_spa().contains('j'));
+    assert!(err.render_rus().contains('j'));
 }
 
 #[test]

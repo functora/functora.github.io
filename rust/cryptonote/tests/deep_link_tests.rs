@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote::archive::ArchiveSource;
 use cryptonote::{set_schedule_update, store_archive, take_archive};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -5,7 +6,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 static STATE_LOCK: Mutex<()> = Mutex::new(());
 
 fn lock_state() -> MutexGuard<'static, ()> {
-    STATE_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    STATE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 #[test]
@@ -68,7 +69,7 @@ fn store_and_take_archive_path_roundtrip() {
     assert_eq!(taken, ArchiveSource::Path(path.clone()));
     assert_eq!(take_archive(), None);
     assert_eq!(taken.into_bytes().unwrap(), b"archive bytes");
-    std::fs::remove_file(path).ok();
+    drop(std::fs::remove_file(path));
 }
 
 #[test]

@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::error::Error;
 use crate::ffi::{capture_frame, check_camera, sleep, start_camera, stop_camera};
 use crate::i18n::Language;

@@ -14,6 +14,7 @@ impl<'a, T, U> Decode<'a, T> for U where
 {
 }
 
+#[must_use]
 pub fn expr<'a>() -> impl Decode<'a, Vec<Expr<'a>>> {
     choice((expr_ast(), expr_raw()))
         .repeated()
@@ -156,6 +157,6 @@ fn token<'a>(
     whitespace().or_not().ignore_then(tok)
 }
 
-fn lexeme<'a>(seq: &'a str) -> impl Decode<'a, &'a str> {
+fn lexeme(seq: &str) -> impl Decode<'_, &str> {
     token(just(seq))
 }

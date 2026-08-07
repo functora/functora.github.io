@@ -18,10 +18,10 @@ pub fn Layout() -> Element {
 
     dioxus::core::use_after_render(move || {
         if let Some(source) = crate::deep_link::take_archive() {
-            let mut message = message;
-            spawn(async move {
+            let mut message_out = message;
+            let _ = spawn(async move {
                 if let Err(e) = crate::hooks::open_archive_async(source, tst, nav_signal).await {
-                    message.set(Some(Msg::Error(e)));
+                    message_out.set(Some(Msg::Error(e)));
                 }
             });
             return;
@@ -31,14 +31,14 @@ pub fn Layout() -> Element {
         }
     });
 
-    use_effect(move || {
+    let _ = use_effect(move || {
         let _ = idx();
         let _ = document::eval("window.scrollTo(0, 0)");
     });
 
-    use_effect(move || {
+    let _ = use_effect(move || {
         let theme = pst.theme()();
-        spawn(async move {
+        let _ = spawn(async move {
             if let Err(e) = functora_dioxus::ffi::set_theme(&theme).await {
                 tracing::error!("Set theme error: {:#?}", e);
             }
@@ -63,16 +63,16 @@ pub fn Layout() -> Element {
                 }
                 span { id: "functora-nav-collapse" }
                 ul {
-                    for lang in SUPPORTED_LANGUAGES.iter().copied() {
+                    for supported_lang in SUPPORTED_LANGUAGES.iter().copied() {
                         li {
                             a {
                                 onclick: move |evt| {
                                     evt.prevent_default();
                                     collapse_nav();
-                                    pst.language().set(lang);
+                                    pst.language().set(supported_lang);
                                 },
-                                span { "{Msg::LanguageFlag(lang).render(lang)}" }
-                                "{Msg::LanguageName(lang).render(lang)}"
+                                span { "{Msg::LanguageFlag(supported_lang).render(supported_lang)}" }
+                                "{Msg::LanguageName(supported_lang).render(supported_lang)}"
                             }
                         }
                     }

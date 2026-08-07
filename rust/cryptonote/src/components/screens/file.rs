@@ -10,8 +10,9 @@ pub fn File() -> Element {
     let preview = use_memo(move || {
         tst.attachment()()
             .and_then(|i| tst.attachments()().get(i).cloned())
-            .map(|att| functora_dioxus::files::preview(&att.name, &att.data))
-            .unwrap_or(functora_dioxus::files::Preview::Missing)
+            .map_or(functora_dioxus::files::Preview::Missing, |att| {
+                functora_dioxus::files::preview(&att.name, &att.data)
+            })
     });
     let atts = tst.attachments()();
     let idx = tst.attachment()();
@@ -20,8 +21,8 @@ pub fn File() -> Element {
     let size = att.map(|a| format_size(a.data.len() as u64)).unwrap_or_default();
 
     let download = move |_| {
-        if let Some(att) = tst.attachment()().and_then(|i| tst.attachments()().get(i).cloned()) {
-            download_attachment(att, tst.progress(), message);
+        if let Some(download_att) = tst.attachment()().and_then(|i| tst.attachments()().get(i).cloned()) {
+            download_attachment(download_att, tst.progress(), message);
         }
     };
 

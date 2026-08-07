@@ -49,17 +49,17 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    let files = files
+    let file_entries = files
         .iter()
         .map(|f| (f.name.clone(), f.data.clone()))
         .collect::<Vec<_>>();
-    run(files, progress, move |files, mut report| async move {
+    run(file_entries, progress, move |entries, mut report| async move {
         let mut buf = Vec::new();
-        let total = files.iter().map(|(_, d)| d.len() as u64).sum::<u64>();
+        let total = entries.iter().map(|(_, d)| d.len() as u64).sum::<u64>();
         let mut done = 0u64;
         {
             let mut zip = zip::ZipWriter::new(Cursor::new(&mut buf));
-            zip_entries(&mut zip, &files, stage, &mut report, &mut done, total).await?;
+            zip_entries(&mut zip, &entries, stage, &mut report, &mut done, total).await?;
             _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
         }
         Ok(buf)
@@ -108,8 +108,8 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    run(inner, progress, move |inner, mut report| async move {
-        unzip_report(inner, stage, &mut report).await
+    run(inner, progress, move |bytes, mut report| async move {
+        unzip_report(bytes, stage, &mut report).await
     })
     .await
 }

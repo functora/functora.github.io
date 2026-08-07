@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::widgets::par::Align;
 use dioxus::prelude::*;
 

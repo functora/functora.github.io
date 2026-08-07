@@ -696,25 +696,6 @@ fn substitute_defaults_nested_tables() {
         memory: String,
     }
 
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
-    let text = r#"
-        [services]
-        [services.default]
-        image = "myapp:latest"
-        replicas = 1
-        cpu = "100m"
-        memory = "128Mi"
-
-        [services.api]
-        replicas = 3
-        cpu = "500m"
-
-        [services.worker]
-        image = "worker:v2"
-    "#;
-    file.write_all(text.as_bytes()).unwrap();
-
     #[derive(
         Eq,
         PartialEq,
@@ -821,6 +802,24 @@ fn substitute_defaults_nested_tables() {
         }
     }
 
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [services]
+        [services.default]
+        image = "myapp:latest"
+        replicas = 1
+        cpu = "100m"
+        memory = "128Mi"
+
+        [services.api]
+        replicas = 3
+        cpu = "500m"
+
+        [services.worker]
+        image = "worker:v2"
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
     let lhs = ServiceCli::<SubService>::new_with_defaults(
         ServiceCli::parse_from([
             "servicecli",
@@ -874,25 +873,6 @@ fn substitute_defaults_array_values() {
         members: Vec<String>,
         permissions: Vec<String>,
     }
-
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
-    let text = r#"
-        [teams]
-        [teams.default]
-        members = ["guest"]
-        permissions = ["read"]
-
-        [teams.admins]
-        name = "Administrators"
-        members = ["alice", "bob"]
-        permissions = ["read", "write", "delete"]
-
-        [teams.developers]
-        name = "Developers"
-        members = ["carol", "dave"]
-    "#;
-    file.write_all(text.as_bytes()).unwrap();
 
     #[derive(
         Eq,
@@ -990,6 +970,24 @@ fn substitute_defaults_array_values() {
         }
     }
 
+    let mut file =
+        NamedTempFile::with_suffix(".toml").unwrap();
+    let text = r#"
+        [teams]
+        [teams.default]
+        members = ["guest"]
+        permissions = ["read"]
+
+        [teams.admins]
+        name = "Administrators"
+        members = ["alice", "bob"]
+        permissions = ["read", "write", "delete"]
+
+        [teams.developers]
+        name = "Developers"
+        members = ["carol", "dave"]
+    "#;
+    file.write_all(text.as_bytes()).unwrap();
     let lhs = TeamCli::<SubTeam>::new_with_defaults(
         TeamCli::parse_from([
             "teamcli",

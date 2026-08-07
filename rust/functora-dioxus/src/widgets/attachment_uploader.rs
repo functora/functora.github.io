@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::files::{Attachment, format_size};
 use dioxus::prelude::*;
 use dioxus_free_icons::Icon;

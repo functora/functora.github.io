@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::shadow_reuse)]
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -45,7 +46,7 @@ fn Harness(
         "cryptonote:test",
     );
     let _ = use_context_provider(move || pst);
-    provide_context(Rc::new(MemoryHistory::with_initial_path(path)) as Rc<dyn History>);
+    let _ = provide_context(Rc::new(MemoryHistory::with_initial_path(path)) as Rc<dyn History>);
     rsx! {
         Router::<Route> {}
     }
@@ -69,7 +70,7 @@ fn mount(
         },
     );
     let edits = dom.rebuild_to_vec();
-    format!("{:?}", edits)
+    format!("{edits:?}")
 }
 
 fn attachment(name: &str) -> Attachment {
@@ -92,7 +93,7 @@ fn AboutHarness() -> Element {
     );
     PST.with(|c| *c.borrow_mut() = Some(*pst));
     let _ = use_context_provider(move || pst);
-    provide_context(Rc::new(MemoryHistory::with_initial_path("/?screen=about")) as Rc<dyn History>);
+    let _ = provide_context(Rc::new(MemoryHistory::with_initial_path("/?screen=about")) as Rc<dyn History>);
     rsx! {
         Router::<Route> {}
     }

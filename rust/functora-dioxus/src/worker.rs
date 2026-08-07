@@ -51,14 +51,14 @@ where
     let (tx, rx) = mpsc::channel();
     let wake_slot: WakeSlot = Arc::new(Mutex::new(None));
     _ = std::thread::spawn({
-        let wake_slot = wake_slot.clone();
+        let wake_slot_thread = wake_slot.clone();
         let send = tx.clone();
         let report_wake = wake_slot.clone();
         let report: Reporter<S> = Box::new(move |job| {
             _ = send.send(WorkerMsg::Job(job));
             wake_once(&report_wake);
         });
-        move || drive(make(arg, report), &tx, &wake_slot)
+        move || drive(make(arg, report), &tx, &wake_slot_thread)
     });
     pump(rx, progress, wake_slot).await
 }
@@ -79,11 +79,11 @@ where
     E: Send + 'static,
     F: Future<Output = Result<O, E>> + Send + 'static,
 {
-    let mut core = Box::pin(core);
+    let mut pinned = Box::pin(core);
     let waker = Waker::from(Arc::new(ThreadWake(std::thread::current())));
     let mut cx = Context::from_waker(&waker);
     loop {
-        match core.as_mut().poll(&mut cx) {
+        match pinned.as_mut().poll(&mut cx) {
             Poll::Ready(result) => {
                 _ = tx.send(WorkerMsg::Done(result));
                 wake_once(wake_slot);

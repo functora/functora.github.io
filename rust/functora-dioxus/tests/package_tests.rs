@@ -184,9 +184,9 @@ fn package_metadata_read() {
             )
             .await
             .expect("package");
-            let meta = read_metadata(&ArchiveSource::Bytes(plain)).expect("metadata");
+            let plain_meta = read_metadata(&ArchiveSource::Bytes(plain)).expect("metadata");
             assert_eq!(
-                meta,
+                plain_meta,
                 ArchiveMetadata {
                     cipher: None,
                     kdf: functora_dioxus::crypto::Kdf::Argon2id,

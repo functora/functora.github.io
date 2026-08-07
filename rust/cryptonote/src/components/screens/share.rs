@@ -57,7 +57,7 @@ pub fn Share() -> Element {
                                 let u = tst.external()().note_url();
                                 let mut msg = message;
                                 let text = Msg::SharedNoteText.render(lang);
-                                spawn(async move {
+                                let _ = spawn(async move {
                                     let data = ShareData {
                                         title: "Cryptonote".into(),
                                         text,
@@ -77,7 +77,7 @@ pub fn Share() -> Element {
                             primary: true,
                             onclick: move |_| {
                                 let mut msg = message;
-                                spawn(async move {
+                                let _ = spawn(async move {
                                     if let Err(e) = print_page().await {
                                         msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
                                     }
@@ -95,18 +95,17 @@ pub fn Share() -> Element {
                                 let bytes = tst.external()().archive_bytes();
                                 if !bytes.is_empty() {
                                     let progress = tst.progress();
-                                    let message = message;
-                                    spawn(async move {
-                                        let mut progress = progress;
-                                        let mut message = message;
-                                        match download_package(bytes, "archive.cryptonote", progress).await {
+                                    let _ = spawn(async move {
+                                        let mut progress_out = progress;
+                                        let mut message_out = message;
+                                        match download_package(bytes, "archive.cryptonote", progress_out).await {
                                             Ok(loc) => {
-                                                progress.set(None);
-                                                message.set(Some(Msg::Downloaded(loc)));
+                                                progress_out.set(None);
+                                                message_out.set(Some(Msg::Downloaded(loc)));
                                             }
                                             Err(e) => {
-                                                progress.set(None);
-                                                message
+                                                progress_out.set(None);
+                                                message_out
                                                     .set(
                                                         Some(
                                                             Msg::Error(

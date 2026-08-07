@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
 use cryptonote::crypto::{decrypt_symmetric, encrypt_symmetric, CipherType};
 use cryptonote::encoding::{build_url, decode_note, encode_note, extract_note_param, generate_qr_code, NoteData};
@@ -9,7 +10,7 @@ fn test_encode_decode_plaintext() {
     let decoded = decode_note(&encoded).expect("Decoding failed");
     match decoded {
         NoteData::PlainText(text) => assert_eq!(text, "Hello, World!"),
-        _ => panic!("Expected PlainText"),
+        NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }
 
@@ -20,7 +21,7 @@ fn test_encode_decode_plaintext_unicode() {
     let decoded = decode_note(&encoded).expect("Decoding failed");
     match decoded {
         NoteData::PlainText(text) => assert_eq!(text, "Привет мир! ¡Hola! こんにちは"),
-        _ => panic!("Expected PlainText"),
+        NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }
 
@@ -31,7 +32,7 @@ fn test_encode_decode_plaintext_empty() {
     let decoded = decode_note(&encoded).expect("Decoding failed");
     match decoded {
         NoteData::PlainText(text) => assert!(text.is_empty()),
-        _ => panic!("Expected PlainText"),
+        NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }
 
@@ -47,7 +48,7 @@ fn test_encode_decode_encrypted() {
     if let NoteData::CipherText(original) = note {
         match decoded {
             NoteData::CipherText(enc_data) => assert_eq!(original.ciphertext, enc_data.ciphertext),
-            _ => panic!("Expected CipherText"),
+            NoteData::PlainText(_) => panic!("Expected a CipherText note"),
         }
     }
 }
@@ -69,7 +70,7 @@ fn test_encode_decode_aes_encrypted() {
                 assert_eq!(original.nonce, enc_data.nonce);
                 assert_eq!(original.salt, enc_data.salt);
             }
-            _ => panic!("Expected CipherText"),
+            NoteData::PlainText(_) => panic!("Expected a CipherText note"),
         }
     }
 }
@@ -101,7 +102,7 @@ fn test_build_url_roundtrip() {
     let decoded = decode_note(&extracted).expect("Decoding failed");
     match decoded {
         NoteData::PlainText(text) => assert_eq!(text, "Round trip test"),
-        _ => panic!("Expected PlainText"),
+        NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }
 
@@ -116,7 +117,7 @@ fn test_build_url_roundtrip_encrypted() {
     let decoded = decode_note(&extracted).expect("Decoding failed");
     let decrypted = match decoded {
         NoteData::CipherText(enc) => decrypt_symmetric(&enc, "pw").expect("Decryption failed"),
-        _ => panic!("Expected CipherText"),
+        NoteData::PlainText(_) => panic!("Expected a CipherText note"),
     };
     assert_eq!(plaintext.to_vec(), decrypted);
 }
@@ -185,7 +186,7 @@ fn test_build_url_and_extract_roundtrip() {
     let decoded = decode_note(&extracted).expect("Decoding failed");
     match decoded {
         NoteData::PlainText(text) => assert_eq!(text, "Test with special chars: +/="),
-        _ => panic!("Expected PlainText"),
+        NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }
 
@@ -203,7 +204,7 @@ fn test_note_data_serde_plaintext() {
     let back: NoteData = serde_json::from_str(&json).unwrap();
     match back {
         NoteData::PlainText(t) => assert_eq!(t, "hello"),
-        _ => panic!("wrong variant"),
+        NoteData::CipherText(_) => panic!("wrong variant"),
     }
 }
 
@@ -221,7 +222,7 @@ fn test_note_data_serde_ciphertext() {
     let back: NoteData = serde_json::from_str(&json).unwrap();
     match back {
         NoteData::CipherText(e) => assert_eq!(e.ciphertext, vec![2; 16]),
-        _ => panic!("wrong variant"),
+        NoteData::PlainText(_) => panic!("wrong variant"),
     }
 }
 

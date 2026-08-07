@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::messages::*;
 use crate::*;
 
@@ -14,7 +15,7 @@ pub fn Open(note: Option<String>) -> Element {
         External::Nothing => false,
     };
 
-    use_effect(move || {
+    let _ = use_effect(move || {
         if let Some(n) = &note {
             if !n.is_empty() {
                 match encoding::decode_note(n) {
@@ -56,21 +57,20 @@ pub fn Open(note: Option<String>) -> Element {
             External::Note(p) => {
                 if let NoteData::CipherText(enc) = p.data {
                     let cipher = enc.cipher;
-                    let nav = nav;
-                    spawn(async move {
-                        let mut nav = nav;
-                        let mut message = message;
+                    let _ = spawn(async move {
+                        let mut nav_out = nav;
+                        let mut message_out = message;
                         match crate::worker::run(
                             (enc, pwd.clone()),
                             tst.progress(),
-                            |(enc, pwd), mut report| async move {
+                            |(enc_in, pwd_in), mut report| async move {
                                 report(Job {
                                     stage: Stage::Decrypt,
                                     done: 0,
                                     total: 1,
                                     name: None,
                                 });
-                                decrypt_symmetric(&enc, &pwd)
+                                decrypt_symmetric(&enc_in, &pwd_in)
                             },
                         )
                         .await
@@ -82,39 +82,38 @@ pub fn Open(note: Option<String>) -> Element {
                                     tst.password().set(pwd);
                                     tst.cipher().set(Some(cipher));
                                     tst.external().set(External::Nothing);
-                                    nav.write().push(Screen::View.to_route(None));
+                                    nav_out.write().push(Screen::View.to_route(None));
                                 }
                                 Err(e) => {
                                     tst.progress().set(None);
-                                    message.set(Some(Msg::Error(AppError::Utf8(e))));
+                                    message_out.set(Some(Msg::Error(AppError::Utf8(e))));
                                 }
                             },
                             Err(e) => {
                                 tst.progress().set(None);
-                                message.set(Some(Msg::Error(e)));
+                                message_out.set(Some(Msg::Error(e)));
                             }
                         }
                     });
                 }
             }
-            External::Archive(archive) => {
-                let pwd = pwd.clone();
-                let nav = nav;
-                spawn(async move {
-                    let mut nav = nav;
-                    let mut message = message;
-                    let archive = archive.untag();
-                    match extract_archive_package_async(ArchiveSource::Bytes(archive), &pwd, tst.progress()).await {
+            External::Archive(src_archive) => {
+                let _ = spawn(async move {
+                    let mut nav_out = nav;
+                    let mut message_out = message;
+                    let archive_bytes = src_archive.untag();
+                    match extract_archive_package_async(ArchiveSource::Bytes(archive_bytes), &pwd, tst.progress()).await
+                    {
                         Ok((text, files)) => {
                             clear_progress(tst.progress());
                             tst.note().set(text);
                             tst.attachments().set(files);
                             tst.external().set(External::Nothing);
-                            nav.write().push(Screen::View.to_route(None));
+                            nav_out.write().push(Screen::View.to_route(None));
                         }
                         Err(e) => {
                             clear_progress(tst.progress());
-                            message.set(Some(Msg::Error(e)));
+                            message_out.set(Some(Msg::Error(e)));
                         }
                     }
                 });

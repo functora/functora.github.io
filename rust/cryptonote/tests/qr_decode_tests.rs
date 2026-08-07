@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote::qr_decode::{decode_qr_luma, decode_qr_rgba};
 use rxing::qrcode::QRCodeWriter;
 use rxing::{BarcodeFormat, EncodeHints, Writer};
@@ -74,7 +75,7 @@ fn test_decode_qr_rgba_all_opaque() {
 
 #[test]
 fn test_decode_qr_luma_noise_returns_none() {
-    let noise: Vec<u8> = (0..10000).map(|i| ((i * 7919) % 256) as u8).collect();
+    let noise: Vec<u8> = (0..10000).map(|i| u8::try_from((i * 7919) % 256).unwrap()).collect();
     let result = decode_qr_luma(&noise, 100, 100);
     assert_eq!(result, None);
 }

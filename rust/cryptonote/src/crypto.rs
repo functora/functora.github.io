@@ -6,6 +6,7 @@ pub use functora_dioxus::crypto::{CipherType, EncryptedNote, Kdf, StreamParts, K
 
 const AAD_PREFIX: &[u8] = b"cryptonote.v1";
 
+#[must_use]
 pub fn aad(cipher: CipherType, kdf: Kdf) -> Vec<u8> {
     functora_dioxus::package::aad(AAD_PREFIX, cipher, kdf)
 }

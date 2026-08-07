@@ -15,8 +15,8 @@ fn id_function() {
     let x = "Hello";
     assert_eq!(id(x), "Hello");
     assert_eq!(id(x), "Hello");
-    let x = "Hello".to_string();
-    assert_eq!(id(x), "Hello");
+    let owned = "Hello".to_string();
+    assert_eq!(id(owned), "Hello");
 }
 
 #[test]
@@ -30,8 +30,8 @@ fn void_function() {
     let x = "Hello";
     assert_eq!(void(x), ());
     assert_eq!(void(x), ());
-    let x = "Hello".to_string();
-    assert_eq!(void(x), ());
+    let owned = "Hello".to_string();
+    assert_eq!(void(owned), ());
 }
 
 #[test]
@@ -40,8 +40,8 @@ fn void_method() {
     let x = "Hello";
     assert_eq!(x.void(), ());
     assert_eq!(x.void(), ());
-    let x = "Hello".to_string();
-    assert_eq!(x.void(), ());
+    let owned = "Hello".to_string();
+    assert_eq!(owned.void(), ());
     assert_eq!(x.void(), ());
 }
 
@@ -55,7 +55,7 @@ fn tweak_method() {
 #[test]
 fn tweak_nested() {
     let mut x = ((("hello".to_string(), 3), 2), 1);
-    x.0.0.0.tweak(|x| x.to_uppercase());
+    x.0.0.0.tweak(|part| part.to_uppercase());
     assert_eq!(x, ((("HELLO".to_string(), 3), 2), 1));
 }
 

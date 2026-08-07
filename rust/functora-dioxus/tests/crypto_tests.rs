@@ -93,13 +93,13 @@ fn decrypt_rejects_bad_nonce_or_salt_sizes() {
     let mut note = encrypt_symmetric(b"data", "pw", CipherType::Aes256Gcm, AAD).expect("encrypt");
     note.nonce.truncate(5);
     assert!(decrypt_symmetric(&note, "pw", AAD).is_err());
-    let note = EncryptedNote {
+    let bad_salt = EncryptedNote {
         nonce: vec![0; 12],
         ciphertext: vec![0; 16],
         salt: vec![0; 3],
         ..encrypt_symmetric(b"data", "pw", CipherType::Aes256Gcm, AAD).expect("encrypt")
     };
-    assert!(decrypt_symmetric(&note, "pw", AAD).is_err());
+    assert!(decrypt_symmetric(&bad_salt, "pw", AAD).is_err());
 }
 
 #[test]

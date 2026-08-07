@@ -5,12 +5,13 @@ use crate::*;
 pub use functora_dioxus::files::format_size;
 pub use functora_dioxus::hooks::{use_lang, use_message_markdown};
 
+#[must_use]
 pub fn use_message() -> Signal<Option<Msg>> {
     functora_dioxus::hooks::use_message()
 }
 
 pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Signal<Option<Msg>>) {
-    spawn(async move {
+    let _ = spawn(async move {
         match functora_dioxus::ffi::read_clipboard().await {
             Ok(text) => on_paste(text),
             Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
@@ -24,6 +25,7 @@ pub fn write_clipboard(val: String, message: Signal<Option<Msg>>) {
     });
 }
 
+#[must_use]
 pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
     (cipher.is_some() && password.is_empty()).then_some(Msg::Base(BaseMsg::PasswordRequired))
 }
@@ -62,7 +64,7 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
 }
 
 pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
-    spawn(async move {
+    let _ = spawn(async move {
         match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach)
             .await
             .map_err(AppError::FunctoraDioxus)
@@ -84,8 +86,8 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
 }
 
 pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
-    spawn(async move {
-        let mut message = message;
+    let _ = spawn(async move {
+        let mut message_out = message;
         let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach)
             .await
             .map_err(AppError::FunctoraDioxus)
@@ -93,19 +95,16 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
             Ok(f) => f,
             Err(e) => {
                 tst.progress().set(None);
-                message.set(Some(Msg::Error(e)));
+                message_out.set(Some(Msg::Error(e)));
                 return;
             }
         };
-        let (_, bytes) = match files.into_iter().next() {
-            Some(f) => f,
-            None => {
-                tst.progress().set(None);
-                return;
-            }
+        let Some((_, bytes)) = files.into_iter().next() else {
+            tst.progress().set(None);
+            return;
         };
         if let Err(e) = open_archive_async(ArchiveSource::Bytes(bytes), tst, nav).await {
-            message.set(Some(Msg::Error(e)));
+            message_out.set(Some(Msg::Error(e)));
         }
     });
 }
@@ -116,23 +115,20 @@ pub async fn open_archive_async(
     mut nav: Signal<Nav<Route>>,
 ) -> Result<(), AppError> {
     let meta = read_archive_metadata(&source)?;
-    let screen = match meta.cipher {
-        Some(_) => {
-            tst.external().set(External::Archive(
-                ExternalArchive::new(source.into_bytes()?).infallible(),
-            ));
-            tst.password().set(String::new());
-            clear_progress(tst.progress());
-            Screen::Open
-        }
-        None => {
-            let (text, files) = extract_archive_package_async(source, "", tst.progress()).await?;
-            clear_progress(tst.progress());
-            tst.note().set(text);
-            tst.attachments().set(files);
-            tst.external().set(External::Nothing);
-            Screen::View
-        }
+    let screen = if meta.cipher.is_some() {
+        tst.external().set(External::Archive(
+            ExternalArchive::new(source.into_bytes()?).infallible(),
+        ));
+        tst.password().set(String::new());
+        clear_progress(tst.progress());
+        Screen::Open
+    } else {
+        let (text, files) = extract_archive_package_async(source, "", tst.progress()).await?;
+        clear_progress(tst.progress());
+        tst.note().set(text);
+        tst.attachments().set(files);
+        tst.external().set(External::Nothing);
+        Screen::View
     };
     nav.write().push(screen.to_route(None));
     Ok(())
@@ -151,7 +147,7 @@ async fn build_note(
         name: None,
     });
     let note_data = match cipher {
-        Some(cipher) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cipher)?),
+        Some(cty) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cty)?),
         None => NoteData::PlainText(note.to_string()),
     };
     let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
@@ -178,17 +174,14 @@ pub async fn build_external<P>(
 where
     P: Writable<Target = Option<Job>> + 'static,
 {
-    let note = note.to_string();
-    let password = password.to_string();
-    let atts = atts.to_vec();
     crate::worker::run(
-        (note, password, cipher, atts),
+        (note.to_string(), password.to_string(), cipher, atts.to_vec()),
         progress,
-        |(note, password, cipher, atts), mut report| async move {
-            if atts.is_empty() {
-                build_note(&note, &password, cipher, &mut report).await
+        |(note_owned, password_owned, cipher_owned, atts_owned), mut report| async move {
+            if atts_owned.is_empty() {
+                build_note(&note_owned, &password_owned, cipher_owned, &mut report).await
             } else {
-                create_archive_package(&note, &atts, &password, cipher, &mut report)
+                create_archive_package(&note_owned, &atts_owned, &password_owned, cipher_owned, &mut report)
                     .await
                     .map(|p| External::Archive(ExternalArchive::new(p).infallible()))
             }
@@ -225,7 +218,7 @@ fn app_origin() -> Option<String> {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        Some(WEB_APP_URL.to_string())
+        (!WEB_APP_URL.is_empty()).then_some(WEB_APP_URL.to_string())
     }
 }
 
@@ -445,7 +438,7 @@ pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {
 
 pub fn remove_attachment(tst: Store<TemporaryState>, index: usize) {
     let mut atts = tst.attachments()();
-    atts.remove(index);
+    let _ = atts.remove(index);
     tst.attachments().set(atts);
 }
 
@@ -453,15 +446,15 @@ pub fn download_attachment<P>(att: Attachment, progress: P, mut message: Signal<
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
-    spawn(async move {
-        let mut progress = progress;
-        match download_package(att.data, &att.name, progress).await {
+    let _ = spawn(async move {
+        let mut progress_out = progress;
+        match download_package(att.data, &att.name, progress_out).await {
             Ok(loc) => {
-                progress.set(None);
+                progress_out.set(None);
                 message.set(Some(Msg::Downloaded(loc)));
             }
             Err(e) => {
-                progress.set(None);
+                progress_out.set(None);
                 message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
                     e,
                 )))));

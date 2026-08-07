@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::i18n::{I18N, Language};
 use crate::nav::Nav;
 use crate::widgets::Breadcrumb;

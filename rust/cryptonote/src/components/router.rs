@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::components::screens::*;
 use crate::*;
 
@@ -52,7 +53,7 @@ impl FromStr for Screen {
             "license" => Ok(Self::License),
             "privacy" => Ok(Self::Privacy),
             "file" => Ok(Self::File),
-            _ => Err(format!("Unknown screen '{}'", s)),
+            _ => Err(format!("Unknown screen '{s}'")),
         }
     }
 }

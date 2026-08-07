@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::messages::Msg;
 use crate::*;
 

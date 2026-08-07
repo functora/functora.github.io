@@ -14,26 +14,25 @@ pub fn NoteDisplay() -> Element {
     let download_all = move || {
         let files = tst.attachments()();
         let progress = tst.progress();
-        let message = message;
-        spawn(async move {
-            let mut progress = progress;
-            let mut message = message;
-            match create_zip_async(&files, progress).await {
-                Ok(zip) => match download_package(zip, "cryptonote-unlocked.zip", progress).await {
+        let _ = spawn(async move {
+            let mut progress_out = progress;
+            let mut message_out = message;
+            match create_zip_async(&files, progress_out).await {
+                Ok(zip) => match download_package(zip, "cryptonote-unlocked.zip", progress_out).await {
                     Ok(loc) => {
-                        progress.set(None);
-                        message.set(Some(Msg::Downloaded(loc)));
+                        progress_out.set(None);
+                        message_out.set(Some(Msg::Downloaded(loc)));
                     }
                     Err(e) => {
-                        progress.set(None);
-                        message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+                        progress_out.set(None);
+                        message_out.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
                             e,
                         )))));
                     }
                 },
                 Err(e) => {
-                    progress.set(None);
-                    message.set(Some(Msg::Error(e)));
+                    progress_out.set(None);
+                    message_out.set(Some(Msg::Error(e)));
                 }
             }
         });
@@ -45,28 +44,26 @@ pub fn NoteDisplay() -> Element {
             message.set(Some(msg));
             return;
         }
-        let nav = nav;
-        let message = message;
-        spawn(async move {
-            let mut nav = nav;
-            let mut message = message;
+        let _ = spawn(async move {
+            let mut nav_out = nav;
+            let mut message_out = message;
             if matches!(tst.external()(), External::Nothing) {
                 match generate_share_async(tst).await {
-                    Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                    Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
                     Err(e) => {
                         tst.progress().set(None);
-                        message.set(Some(Msg::Error(e)));
+                        message_out.set(Some(Msg::Error(e)));
                     }
                 }
             } else {
-                nav.write().push(Screen::Share.to_route(None));
+                nav_out.write().push(Screen::Share.to_route(None));
             }
         });
     };
 
     let print_note = move |_| {
         let mut msg = message;
-        spawn(async move {
+        let _ = spawn(async move {
             if let Err(e) = print_page().await {
                 msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
             }

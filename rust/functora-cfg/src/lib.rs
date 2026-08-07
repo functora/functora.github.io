@@ -266,11 +266,11 @@ fn substitute_defaults_rec(
     def: &HashMap<String, Value>,
 ) {
     if let ValueKind::Table(ref mut kv) = ast.kind {
-        def.iter().for_each(|(k, v)| {
+        for (k, v) in def {
             kv.entry(k.clone())
                 .or_insert_with(|| v.clone())
                 .void()
-        })
+        }
     }
     let next = extract_default(ast);
     match ast.kind {
@@ -283,14 +283,14 @@ fn substitute_defaults_rec(
         | ValueKind::Float(_)
         | ValueKind::String(_) => (),
         ValueKind::Table(ref mut xs) => {
-            xs.iter_mut().for_each(|(_, x)| {
+            for (_, x) in xs.iter_mut() {
                 substitute_defaults_rec(x, &next)
-            })
+            }
         }
         ValueKind::Array(ref mut xs) => {
-            xs.iter_mut().for_each(|x| {
+            for x in xs.iter_mut() {
                 substitute_defaults_rec(x, &next)
-            })
+            }
         }
     }
 }

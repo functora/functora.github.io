@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 

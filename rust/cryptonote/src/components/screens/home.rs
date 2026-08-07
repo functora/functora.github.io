@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::messages::*;
 use crate::*;
 
@@ -15,8 +16,8 @@ pub fn Home() -> Element {
 
     let open_url = move |_| {
         message.set(None);
-        let url = tst.url_input()();
-        let url = url.trim().to_string();
+        let url_input = tst.url_input()();
+        let url = url_input.trim().to_string();
         if url.is_empty() {
             message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
             return;
@@ -29,16 +30,14 @@ pub fn Home() -> Element {
         if let Some(msg) = share_error(tst.cipher()(), &tst.password()()) {
             message.set(Some(msg));
         } else {
-            let nav = nav;
-            let message = message;
-            spawn(async move {
-                let mut nav = nav;
-                let mut message = message;
+            let _ = spawn(async move {
+                let mut nav_out = nav;
+                let mut message_out = message;
                 match generate_share_async(tst).await {
-                    Ok(()) => nav.write().push(Screen::Share.to_route(None)),
+                    Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
                     Err(e) => {
                         tst.progress().set(None);
-                        message.set(Some(Msg::Error(e)));
+                        message_out.set(Some(Msg::Error(e)));
                     }
                 }
             });

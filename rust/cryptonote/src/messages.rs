@@ -91,7 +91,7 @@ impl I18N for Msg {
             Self::Mode => "Mode",
             Self::NoEncryption => "No encryption (plaintext)",
             Self::EncryptionSuffix => "encryption",
-            Self::Share => "Share",
+            Self::Share | Self::FooterShareWord => "Share",
             Self::Sent => "Sent!",
             Self::SharedNoteText => "A note sent via Cryptonote",
             Self::CopyAppLink => "Copy link",
@@ -106,11 +106,9 @@ impl I18N for Msg {
             Self::Copyright => "©",
             Self::AllRightsReserved => "All rights reserved.",
             Self::ByContinuing => "By continuing to use this software, you agree to the",
-            Self::YouAgree => "and",
-            Self::TermsOfService => "Terms of Service",
-            Self::TermsOfServiceTitle => "Terms of Service",
-            Self::PrivacyPolicyAnd => "Privacy Policy",
-            Self::PrivacyPolicyTitle => "Privacy Policy",
+            Self::YouAgree | Self::And => "and",
+            Self::TermsOfService | Self::TermsOfServiceTitle => "Terms of Service",
+            Self::PrivacyPolicyAnd | Self::PrivacyPolicyTitle => "Privacy Policy",
             Self::VersionLabel => "Version",
             Self::Application => "Application",
             Self::LanguageFlag(Language::Eng) => "🇬🇧",
@@ -124,23 +122,19 @@ impl I18N for Msg {
             Self::AboutAndroidBeta1 => "The Android app is in closed beta. To install it, join the",
             Self::AboutAndroidBetaLink1 => "closed beta",
             Self::AboutAndroidBeta2 => "group and then install the app from",
-            Self::AboutAndroidBetaLink2 => "Google Play",
+            Self::AboutAndroidBetaLink2 | Self::GooglePlayButton => "Google Play",
             Self::AboutAndroidBeta3 => ", or download the",
             Self::AboutAndroidBetaLink3 => "APK file",
             Self::AboutAndroidBeta4 => "directly.",
             Self::JoinTestingButton => "Join testing",
-            Self::GooglePlayButton => "Google Play",
             Self::DownloadApkButton => "Download APK",
             Self::SourceCodeButton => "Source code",
             Self::AuthorButton => "Author",
-            Self::Donate => "Donate",
+            Self::Donate | Self::DonateLink => "Donate",
             Self::OpenUrlLabel => "URL",
             Self::OpenUrlPlaceholder => "Paste shared note URL here...",
             Self::OpenButton => "Open URL",
             Self::DonateGreeting => "Hello, User!",
-            Self::DonateLink => "Donate",
-            Self::And => "and",
-            Self::FooterShareWord => "Share",
             Self::FooterAppWord => "app",
             Self::ActionLabel => "Action",
             Self::ActionCreate => "Create note",
@@ -198,7 +192,7 @@ By using the Application, you are consenting to the processing of your informati
 Contact Us
 
 If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at functora@proton.me."#,
-            Self::AboutText => r#"Cryptonote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
+            Self::AboutText => r"Cryptonote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
 
 With Cryptonote, you can:
 
@@ -216,7 +210,7 @@ Cryptonote follows modern cryptographic best practices:
 - Authenticated encryption for confidentiality, integrity, and authenticity
 - No data ever leaves your device unless you explicitly choose to share it
 
-Secure, private, and truly offline - your notes remain yours alone."#,
+Secure, private, and truly offline - your notes remain yours alone.",
             Self::DonateIntro => "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.",
             Self::Print => "Print",
             Self::Clear => "Clear",
@@ -244,7 +238,7 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::Mode => "Modo",
             Self::NoEncryption => "Sin cifrado (texto plano)",
             Self::EncryptionSuffix => "cifrado",
-            Self::Share => "Compartir",
+            Self::Share | Self::FooterShareWord => "Compartir",
             Self::Sent => "¡Enviado!",
             Self::SharedNoteText => "Nota enviada vía Cryptonote",
             Self::CopyAppLink => "Copiar enlace",
@@ -260,10 +254,8 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::AllRightsReserved => "Todos los derechos reservados.",
             Self::ByContinuing => "Al continuar usando este software, aceptas los",
             Self::YouAgree => "y la",
-            Self::TermsOfService => "Términos de Servicio",
-            Self::TermsOfServiceTitle => "Términos de Servicio",
-            Self::PrivacyPolicyAnd => "Política de Privacidad",
-            Self::PrivacyPolicyTitle => "Política de Privacidad",
+            Self::TermsOfService | Self::TermsOfServiceTitle => "Términos de Servicio",
+            Self::PrivacyPolicyAnd | Self::PrivacyPolicyTitle => "Política de Privacidad",
             Self::VersionLabel => "Versión",
             Self::Application => "Aplicación",
             Self::LanguageFlag(Language::Eng) => "🇬🇧",
@@ -277,23 +269,20 @@ Secure, private, and truly offline - your notes remain yours alone."#,
             Self::AboutAndroidBeta1 => "La aplicación de Android está en beta cerrada. Para instalarla, únase al grupo de",
             Self::AboutAndroidBetaLink1 => "beta cerrada",
             Self::AboutAndroidBeta2 => "y luego instale la aplicación desde",
-            Self::AboutAndroidBetaLink2 => "Google Play",
+            Self::AboutAndroidBetaLink2 | Self::GooglePlayButton => "Google Play",
             Self::AboutAndroidBeta3 => ", o descargue el",
             Self::AboutAndroidBetaLink3 => "archivo APK",
             Self::AboutAndroidBeta4 => "directamente.",
             Self::JoinTestingButton => "Unirse a prueba",
-            Self::GooglePlayButton => "Google Play",
             Self::DownloadApkButton => "Descargar APK",
             Self::SourceCodeButton => "Código fuente",
             Self::AuthorButton => "Autor",
-            Self::Donate => "Donar",
+            Self::Donate | Self::DonateLink => "Donar",
             Self::OpenUrlLabel => "URL",
             Self::OpenUrlPlaceholder => "Pega la URL de la nota compartida aquí...",
             Self::OpenButton => "Abrir URL",
             Self::DonateGreeting => "¡Hola, Usuario!",
-            Self::DonateLink => "Donar",
             Self::And => "y",
-            Self::FooterShareWord => "Compartir",
             Self::FooterAppWord => "la app",
             Self::ActionLabel => "Acción",
             Self::ActionCreate => "Crear nota",
@@ -351,7 +340,7 @@ Al usar la Aplicación, das tu consentimiento al procesamiento de tu informació
 Contáctanos
 
 Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preguntas sobre las prácticas, comunícate con el Proveedor de Servicios por correo electrónico a functora@proton.me."#,
-            Self::AboutText => r#"Cryptonote es una aplicación multiplataforma y completamente offline para crear, almacenar y compartir notas cifradas. Es completamente sin servidores y se ejecuta completamente en su dispositivo o navegador web - no se requiere conexión a internet ni servicios externos.
+            Self::AboutText => r"Cryptonote es una aplicación multiplataforma y completamente offline para crear, almacenar y compartir notas cifradas. Es completamente sin servidores y se ejecuta completamente en su dispositivo o navegador web - no se requiere conexión a internet ni servicios externos.
 
 Con Cryptonote, puedes:
 
@@ -369,7 +358,7 @@ Cryptonote sigue las mejores prácticas criptográficas modernas:
 - Cifrado autenticado para confidencialidad, integridad y autenticidad
 - Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
 
-Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#,
+Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.",
             Self::DonateIntro => "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.",
             Self::Print => "Imprimir",
             Self::Clear => "Borrar",
@@ -412,7 +401,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::Copyright => "©",
             Self::AllRightsReserved => "Все права защищены.",
             Self::ByContinuing => "Продолжая использовать это программное обеспечение, вы соглашаетесь с",
-            Self::YouAgree => "и",
+            Self::YouAgree | Self::And => "и",
             Self::TermsOfService => "Условиями обслуживания",
             Self::TermsOfServiceTitle => "Условия обслуживания",
             Self::PrivacyPolicyAnd => "Политикой конфиденциальности",
@@ -430,12 +419,11 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::AboutAndroidBeta1 => "Приложение Android в закрытом бета-тестировании. Чтобы установить его, вступите в группу",
             Self::AboutAndroidBetaLink1 => "бета-тестирования",
             Self::AboutAndroidBeta2 => ", затем установите приложение из",
-            Self::AboutAndroidBetaLink2 => "Google Play",
+            Self::AboutAndroidBetaLink2 | Self::GooglePlayButton => "Google Play",
             Self::AboutAndroidBeta3 => " или скачайте",
             Self::AboutAndroidBetaLink3 => "APK-файл",
             Self::AboutAndroidBeta4 => "напрямую.",
             Self::JoinTestingButton => "Вступить в бета-тест",
-            Self::GooglePlayButton => "Google Play",
             Self::DownloadApkButton => "Скачать APK",
             Self::SourceCodeButton => "Исходный код",
             Self::AuthorButton => "Автор",
@@ -445,7 +433,6 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::OpenButton => "Открыть URL",
             Self::DonateGreeting => "Здравствуйте, пользователь!",
             Self::DonateLink => "Сделайте пожертвование",
-            Self::And => "и",
             Self::FooterShareWord => "Поделитесь",
             Self::FooterAppWord => "приложением",
             Self::ActionLabel => "Действие",
@@ -454,14 +441,14 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
             Self::ActionScan => "Сканировать заметку",
             Self::Theme => "Тема",
             Self::Error(e) => return e.render_rus(),
-            Self::LicenseText => r#"Copyright (c) 2025 Functora
+            Self::LicenseText => r"Copyright (c) 2025 Functora
 
 Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее - «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
 
 Указанное выше уведомление об авторских правах и данное уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
 
-ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ."#,
-            Self::PrivacyText => r#"Политика конфиденциальности
+ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ.",
+            Self::PrivacyText => r"Политика конфиденциальности
 
 Эта политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному Functora (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».
 
@@ -503,8 +490,8 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas."#
 
 Свяжитесь с нами
 
-Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@proton.me."#,
-            Self::AboutText => r#"Cryptonote - кроссплатформенное, полностью автономное приложение для создания, хранения и обмена зашифрованными заметками. Оно полностью бессерверное и работает целиком на вашем устройстве или в веб-браузере - подключение к интернету или внешние сервисы не требуются.
+Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@proton.me.",
+            Self::AboutText => r"Cryptonote - кроссплатформенное, полностью автономное приложение для создания, хранения и обмена зашифрованными заметками. Оно полностью бессерверное и работает целиком на вашем устройстве или в веб-браузере - подключение к интернету или внешние сервисы не требуются.
 
 С Cryptonote, вы можете:
 
@@ -522,7 +509,7 @@ Cryptonote следует современным криптографическ�
 - Аутентифицированное шифрование обеспечивает конфиденциальность, целостность и подлинность
 - Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 
-Безопасно, приватно и по-настоящему автономно - ваши заметки остаются только вашими."#,
+Безопасно, приватно и по-настоящему автономно - ваши заметки остаются только вашими.",
             Self::DonateIntro => "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.",
             Self::Print => "Печать",
             Self::Clear => "Очистить",

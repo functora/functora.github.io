@@ -169,7 +169,7 @@ async fn try_fold_with_result_returning_ok() {
 
 #[tokio::test]
 async fn try_fold_preserves_stream_order() {
-    let input = vec![1, 2, 3, 4, 5];
+    let input = [1, 2, 3, 4, 5];
     let stream = stream::iter(input.iter().copied());
     let cs = ControlStream::new(stream);
     let result = cs.try_fold(Vec::new(), |mut acc, item| async move {

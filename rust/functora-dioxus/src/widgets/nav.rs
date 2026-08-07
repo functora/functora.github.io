@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::nav::Nav;
 use crate::widgets::bool_attr;
 use dioxus::prelude::*;

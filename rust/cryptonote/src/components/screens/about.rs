@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::messages::*;
 use crate::*;
 
@@ -8,7 +9,7 @@ pub fn About(note: Option<String>) -> Element {
     let message = use_message();
     let rendered = use_message_markdown(Msg::AboutText);
     let qr = use_memo(|| generate_qr_code(SHARE_APP_URL).ok());
-    use_effect(move || {
+    let _ = use_effect(move || {
         if note.as_deref() == Some(SHARE_APP_ID) {
             let script = format!("document.getElementById('{SHARE_APP_ID}')?.scrollIntoView({{behavior: 'smooth'}})");
             _ = document::eval(&script);
@@ -29,8 +30,8 @@ pub fn About(note: Option<String>) -> Element {
                     " {Msg::AboutAndroidBeta4.render(lang)}"
                 }
             }
-            if let Some(qr) = qr() {
-                div { dangerous_inner_html: "{qr}" }
+            if let Some(qr_image) = qr() {
+                div { dangerous_inner_html: "{qr_image}" }
             }
             Dock { message,
                 Button {
@@ -51,7 +52,7 @@ pub fn About(note: Option<String>) -> Element {
                     onclick: move |_| {
                         let mut msg = message;
                         let text = Msg::ShareAppDesc.render(lang);
-                        spawn(async move {
+                        let _ = spawn(async move {
                             let data = ShareData {
                                 title: "Cryptonote".into(),
                                 text,

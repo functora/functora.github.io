@@ -11,7 +11,7 @@ fn decode_qr_rgba_returns_none_for_zero_dimensions() {
 fn decode_qr_rgba_returns_none_for_noise_data() {
     let mut data = vec![0u8; 400];
     for (i, b) in data.iter_mut().enumerate() {
-        *b = (i % 256) as u8;
+        *b = u8::try_from(i % 256).unwrap_or_default();
     }
     let result = decode_qr_rgba(&data, 10, 10);
     assert!(result.is_none());
@@ -115,7 +115,7 @@ fn test_error_source_chain() {
 #[test]
 fn test_error_display_all_variants() {
     let variants: Vec<FdError> = vec![
-        std::io::Error::new(std::io::ErrorKind::Other, "io").into(),
+        std::io::Error::other("io").into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         FdError::Env(std::env::VarError::NotPresent),
         FdError::Channel(std::sync::mpsc::RecvError),
@@ -267,7 +267,9 @@ fn decode_qr_luma_zero_width_returns_none() {
 
 #[test]
 fn decode_qr_luma_noise_returns_none() {
-    let noise: Vec<u8> = (0..10000).map(|i| ((i * 7919) % 256) as u8).collect();
+    let noise: Vec<u8> = (0..10000)
+        .map(|i| u8::try_from((i * 7919) % 256).unwrap_or_default())
+        .collect();
     assert!(functora_dioxus::qr::decode_qr_luma(&noise, 100, 100).is_none());
 }
 
@@ -275,7 +277,7 @@ fn decode_qr_luma_noise_returns_none() {
 fn error_i18n_render_eng_non_empty() {
     use functora_dioxus::i18n::I18N;
     let cases: Vec<functora_dioxus::Error> = vec![
-        std::io::Error::new(std::io::ErrorKind::Other, "io").into(),
+        std::io::Error::other("io").into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         functora_dioxus::Error::Env(std::env::VarError::NotPresent),
         functora_dioxus::Error::Channel(std::sync::mpsc::RecvError),
@@ -378,8 +380,8 @@ fn msg_i18n_camera_errors_contain_message() {
     use functora_dioxus::i18n::I18N;
     let msg = Msg::CameraNotAvailable("no device".into());
     assert!(msg.render_eng().contains("no device"));
-    let msg = Msg::CameraPermissionDenied("user denied".into());
-    assert!(msg.render_eng().contains("user denied"));
+    let denied = Msg::CameraPermissionDenied("user denied".into());
+    assert!(denied.render_eng().contains("user denied"));
 }
 
 #[test]
@@ -509,7 +511,7 @@ fn error_i18n_spa_all_variants() {
     use functora_dioxus::Error;
     use functora_dioxus::i18n::I18N;
     let variants: Vec<Error> = vec![
-        std::io::Error::new(std::io::ErrorKind::Other, "io").into(),
+        std::io::Error::other("io").into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),
@@ -530,7 +532,7 @@ fn error_i18n_rus_all_variants() {
     use functora_dioxus::Error;
     use functora_dioxus::i18n::I18N;
     let variants: Vec<Error> = vec![
-        std::io::Error::new(std::io::ErrorKind::Other, "io").into(),
+        std::io::Error::other("io").into(),
         serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),

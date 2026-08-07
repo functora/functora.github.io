@@ -5,15 +5,20 @@ use std::io::{self, Read};
 
 fn main() {
     let mut src = String::new();
-    io::stdin()
-        .read_to_string(&mut src)
-        .expect("Failed to read stdin");
+    if let Err(e) = io::stdin().read_to_string(&mut src) {
+        eprintln!("error reading stdin: {e}");
+        std::process::exit(1);
+    }
     match decode::expr().parse(src.trim()).into_result() {
         Ok(ast) => {
-            encode::expr(&ast).for_each(|x| print!("{}", x))
+            for x in encode::expr(&ast) {
+                print!("{x}")
+            }
         }
         Err(errs) => {
-            errs.into_iter().for_each(|e| println!("{e:?}"))
+            for e in errs {
+                println!("{e:?}")
+            }
         }
-    };
+    }
 }

@@ -90,8 +90,8 @@ where
             href: "data:application/manifest+json,{manifest(*name, &icon_192_png, &icon_512_png)}",
         }
         document::Title { "{name}" }
-        for css in &css {
-            document::Link { rel: "stylesheet", href: *css }
+        for url in &css {
+            document::Link { rel: "stylesheet", href: *url }
         }
         Router::<R> {}
     }

@@ -1,5 +1,4 @@
 use functora_tagged::*;
-use std::ops::Deref;
 
 //
 // Construction & validation
@@ -176,7 +175,7 @@ fn test_nonempty_slice_ref_max_by() {
 #[test]
 fn test_nonempty_slice_ref_min_by_single() {
     let xs = NonEmpty::<&[i32]>::new(&[55][..]).unwrap();
-    assert_eq!(xs.ref_min_by(|a, b| a.cmp(b)), &55);
+    assert_eq!(xs.ref_min_by(std::cmp::Ord::cmp), &55);
 }
 
 //
@@ -334,7 +333,7 @@ fn test_nonempty_slice_ref_large() {
     assert_eq!(xs.ref_minimum(), &0);
     assert_eq!(xs.ref_maximum(), &999);
     let sum: i32 = xs.ref_iter().sum();
-    assert_eq!(sum, 499500);
+    assert_eq!(sum, 499_500);
 }
 
 #[test]
@@ -626,11 +625,11 @@ fn test_nonempty_vec_ref_string_min_by() {
     ];
     let xs = NonEmpty::<&[String]>::new(&vec).unwrap();
     assert_eq!(
-        xs.ref_min_by(|a, b| a.cmp(b)),
+        xs.ref_min_by(std::cmp::Ord::cmp),
         &"aaa".to_string()
     );
     assert_eq!(
-        xs.ref_max_by(|a, b| a.cmp(b)),
+        xs.ref_max_by(std::cmp::Ord::cmp),
         &"zzz".to_string()
     );
 }
@@ -641,7 +640,7 @@ fn test_nonempty_vec_ref_string_iter() {
         vec!["hello".to_string(), "world".to_string()];
     let xs = NonEmpty::<&[String]>::new(&vec).unwrap();
     let total_len: usize =
-        xs.ref_iter().map(|s| s.len()).sum();
+        xs.ref_iter().map(std::string::String::len).sum();
     assert_eq!(total_len, 10);
 }
 
@@ -687,11 +686,11 @@ fn test_nonempty_vec_ref_string_large() {
 fn test_nonempty_slice_ref_impl_deref() {
     let xs =
         NonEmpty::<&[i32]>::new(&[1, 2, 3][..]).unwrap();
-    let _: &[i32] = xs.deref();
+    let _: &[i32] = &xs;
 }
 
 #[test]
 fn test_nonempty_str_ref_impl_deref() {
     let xs = NonEmpty::<&str>::new("hello").unwrap();
-    let _: &str = xs.deref();
+    let _: &str = &xs;
 }

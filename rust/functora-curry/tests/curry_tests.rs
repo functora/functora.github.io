@@ -11,6 +11,7 @@ fn test_owned_owned() {
 
 #[test]
 fn test_ref_ref() {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn add_refs(a: &i32, b: &i32) -> i32 {
         *a + *b
     }
@@ -34,6 +35,7 @@ fn test_mut_mut() {
 
 #[test]
 fn test_mixed_ref_owned() {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn mixed(a: &i32, b: i32) -> i32 {
         *a + b
     }
@@ -44,6 +46,7 @@ fn test_mixed_ref_owned() {
 
 #[test]
 fn test_mixed_owned_ref() {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn mixed(a: i32, b: &i32) -> i32 {
         a + *b
     }
@@ -85,6 +88,7 @@ fn test_complex_types() {
         y: i32,
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn move_point(p: Point, offset: i32) -> Point {
         Point {
             x: p.x + offset,

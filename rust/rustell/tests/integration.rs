@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use rustell::decode;
 use rustell::encode;
 use rustell::*;
@@ -250,10 +251,10 @@ fn raw_code_then_use() {
 
 #[test]
 fn multiple_separate_uses() {
-    let lhs = r#"
+    let lhs = r"
     use std::io;
     use std::fs;
-    "#;
+    ";
     let rhs = vec![
         Expr::Raw("\n    "),
         Expr::Use(ExprUse::Item {
@@ -399,7 +400,7 @@ fn mixed_use_and_raw_cases() {
 
 #[test]
 fn small_mixed_lib() {
-    let lhs = r#"
+    let lhs = r"
     pub mod decode;
     pub mod encode;
     pub use chumsky::prelude::Parser;
@@ -420,7 +421,7 @@ fn small_mixed_lib() {
         },
         Many(Vec<ExprUse<'a>>),
         Glob,
-    }"#;
+    }";
     let rhs = vec![
         Expr::Raw("\n    pub "),
         Expr::Mod("decode"),
@@ -441,7 +442,7 @@ fn small_mixed_lib() {
             })),
         }),
         Expr::Raw(
-            r#"
+            r"
 
     #[derive(Eq, PartialEq, Debug, Clone)]
     pub enum Expr<'a> {
@@ -459,7 +460,7 @@ fn small_mixed_lib() {
         },
         Many(Vec<ExprUse<'a>>),
         Glob,
-    }"#,
+    }",
         ),
     ];
     assert_eq!(decode(lhs), rhs);
@@ -469,16 +470,15 @@ fn small_mixed_lib() {
 
 #[test]
 fn roundtrip_source_files() {
-    get_rust_files("./").into_iter().for_each(|path| {
+    for path in get_rust_files("./") {
         let lhs = std::fs::read_to_string(&path).unwrap();
         let rhs = decode(&lhs);
         assert_eq!(
             decode(&encode(&rhs)),
             rhs,
-            "Roundtrip failed for the file: {}",
-            path
+            "Roundtrip failed for the file: {path}"
         );
-    });
+    }
 }
 
 fn get_rust_files(dir: &str) -> Vec<String> {
@@ -490,7 +490,9 @@ fn get_rust_files(dir: &str) -> Vec<String> {
             if path.is_dir() {
                 get_rust_files(name)
             } else if path.is_file()
-                && name.ends_with(".rs")
+                && path
+                    .extension()
+                    .is_some_and(|e| e == "rs")
             {
                 vec![name.to_string()]
             } else {
@@ -501,10 +503,10 @@ fn get_rust_files(dir: &str) -> Vec<String> {
 }
 
 fn sloppy(src: &str) -> String {
-    src.replace(";", "")
+    src.replace(';', "")
 }
 
-fn decode(src: &str) -> Vec<Expr> {
+fn decode(src: &str) -> Vec<Expr<'_>> {
     decode::expr().parse(src).into_result().unwrap()
 }
 

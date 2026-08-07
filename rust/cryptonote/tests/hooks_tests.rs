@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote::archive::{ArchiveSource, Attachment};
 use cryptonote::components::*;
 use cryptonote::{
@@ -231,17 +232,17 @@ fn fractional_kb() {
 
 #[test]
 fn nearly_one_mb() {
-    assert_eq!(format_size(1048575), "1024.0 KB");
+    assert_eq!(format_size(1_048_575), "1024.0 KB");
 }
 
 #[test]
 fn exactly_one_mb() {
-    assert_eq!(format_size(1048576), "1.0 MB");
+    assert_eq!(format_size(1_048_576), "1.0 MB");
 }
 
 #[test]
 fn fractional_mb() {
-    assert_eq!(format_size(2097152), "2.0 MB");
+    assert_eq!(format_size(2_097_152), "2.0 MB");
 }
 
 #[test]
@@ -257,7 +258,7 @@ fn large_size() {
 
 #[test]
 fn precision_half_mb() {
-    assert_eq!(format_size(1572864), "1.5 MB");
+    assert_eq!(format_size(1_572_864), "1.5 MB");
 }
 
 #[test]
@@ -295,7 +296,7 @@ fn download_script_escapes_single_quote_and_html() {
 #[test]
 fn download_script_escapes_newline() {
     let script = cryptonote::download_script("line1\nline2").unwrap();
-    assert!(!script.contains("\n"));
+    assert!(!script.contains('\n'));
     assert!(script.contains(r"line1\nline2"));
 }
 

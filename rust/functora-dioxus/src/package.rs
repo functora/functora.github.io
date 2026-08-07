@@ -106,7 +106,7 @@ where
         _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
     }
     match cipher {
-        Some(cipher) => package_with_encryption(&inner, password, cipher, prefix, stages, report).await,
+        Some(cipher_sel) => package_with_encryption(&inner, password, cipher_sel, prefix, stages, report).await,
         None => package_plain(&inner, stages, report).await,
     }
 }
@@ -198,12 +198,12 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    let password = password.to_string();
+    let password_owned = password.to_string();
     run(
-        (entries, password, cipher),
+        (entries, password_owned, cipher),
         progress,
-        move |(entries, password, cipher), mut report| async move {
-            package_report(entries, &password, cipher, prefix, stages, &mut report).await
+        move |(entries_owned, password_clone, cipher_sel), mut report| async move {
+            package_report(entries_owned, &password_clone, cipher_sel, prefix, stages, &mut report).await
         },
     )
     .await
@@ -300,11 +300,11 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    let password = password.to_string();
-    run(source, progress, move |source, mut report| async move {
-        let (meta, payload) = read_package(&source)?;
+    let password_owned = password.to_string();
+    run(source, progress, move |source_owned, mut report| async move {
+        let (meta, payload) = read_package(&source_owned)?;
         match meta.cipher {
-            Some(cipher) => unseal_report(&meta, payload, &password, cipher, prefix, stages, &mut report).await,
+            Some(cipher) => unseal_report(&meta, payload, &password_owned, cipher, prefix, stages, &mut report).await,
             None => Ok(payload),
         }
     })

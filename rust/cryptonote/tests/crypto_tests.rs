@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
 use cryptonote::crypto::{
     decrypt_symmetric, derive_key, encrypt_symmetric, stream_decrypt_symmetric, stream_encrypt_symmetric, CipherType,
@@ -235,7 +236,7 @@ const STREAM_CHUNK: usize = 64 * 1024;
 const STREAM_TAG: usize = 16;
 
 fn stream_roundtrip(size: usize, cipher: CipherType) {
-    let plaintext: Vec<u8> = (0..size).map(|i| (i % 251) as u8).collect();
+    let plaintext: Vec<u8> = (0..size).map(|i| u8::try_from(i % 251).unwrap()).collect();
     let encrypted = stream_encrypt_symmetric(&plaintext, "pw", cipher).expect("Stream encryption failed");
     assert_eq!(
         encrypted.ciphertext.len(),
@@ -288,7 +289,9 @@ fn test_stream_wrong_password() {
 #[test]
 fn test_stream_tampered_chunk_fails() {
     common::fast_kdf();
-    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8).map(|i| i as u8).collect();
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8)
+        .map(|i| u8::try_from(i % 256).unwrap())
+        .collect();
     let encrypted =
         stream_encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
     let mut tampered = encrypted.clone();
@@ -300,7 +303,9 @@ fn test_stream_tampered_chunk_fails() {
 #[test]
 fn test_stream_truncated_chunk_fails() {
     common::fast_kdf();
-    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8).map(|i| i as u8).collect();
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2 + 8)
+        .map(|i| u8::try_from(i % 256).unwrap())
+        .collect();
     let encrypted = stream_encrypt_symmetric(&plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
     let mut truncated = encrypted.clone();
     truncated.ciphertext = truncated.ciphertext[..truncated.ciphertext.len() - STREAM_TAG].to_vec();
@@ -310,7 +315,7 @@ fn test_stream_truncated_chunk_fails() {
 #[test]
 fn test_stream_reordered_chunks_fail() {
     common::fast_kdf();
-    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2).map(|i| i as u8).collect();
+    let plaintext: Vec<u8> = (0..STREAM_CHUNK * 2).map(|i| u8::try_from(i % 256).unwrap()).collect();
     let encrypted =
         stream_encrypt_symmetric(&plaintext, "pw", CipherType::ChaCha20Poly1305).expect("Encryption failed");
     let a = encrypted.ciphertext[..STREAM_CHUNK + STREAM_TAG].to_vec();

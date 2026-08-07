@@ -163,7 +163,7 @@
       * Prefer types that guarantee invariant preservation through the type system instead of locally checking invariants in multiple places.
       * Make invalid states unrepresentable by encoding constraints in the type, enforced once at construction and preserved by every operation.
       * Prefer `functora-tagged` newtypes over blind scalar types (`u64`, `String`, `f64`, and similar) to give values precise, invariant-preserving types.
-      * Use refined newtypes such as `Tagged<T, D, F>` with common refineries (`FCrude`, `FPositive`, `FNonNeg`, `FNonEmpty`, `FZeroInclToOneIncl`, ...) so that invariants are checked once and afterwards guaranteed, eliminating repeated checks, `unwrap()`, and `expect()` at call sites.
+      * Use refined newtypes such as `Tagged<T, D, F>` with appropriate refineries (`FCrude`, `FPositive`, `FNonNeg`, `FNonEmpty`, `FZeroInclToOneIncl`, etc.) so that invariants are checked once and subsequently guaranteed, eliminating repeated checks, `unwrap()`, and `expect()` at call sites.
       * Combine multiple refinement rules with a single flat composite refinery rather than nesting `Tagged` types.
       * Prefer the infallible, invariant-exploiting operations of refined newtypes (e.g., `FNonEmpty` methods like `first()`, `last()`, `minimum()`, `singleton()`, `extend()`, `map()`) over fallible or `Option`-returning standard-library analogues that require local handling.
       * Use newtype dimensions to distinguish values with identical representations (e.g., `UserId` vs `ProductId`) and prevent accidental misuse.

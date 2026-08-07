@@ -42,7 +42,6 @@ shadow_unrelated = "warn"
 # relaxed
 similar_names = { level = "allow", priority = 1 }
 too_many_lines = { level = "allow", priority = 1 }
-implicit_hasher = { level = "allow", priority = 1 }
 wildcard_imports = { level = "allow", priority = 1 }
 missing_errors_doc = { level = "allow", priority = 1 }
 semicolon_if_nothing_returned = { level = "allow", priority = 1 }

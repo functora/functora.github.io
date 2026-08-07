@@ -9,22 +9,6 @@ repository = "https://github.com/functora/functora.github.io/tree/master/rust/fu
 documentation = "https://docs.rs/functora-dioxus"
 description = "Reusable Dioxus components, JS interop, storage, and utilities."
 
-[lints.rust]
-unused_results = "warn"
-[lints.clippy]
-pedantic = "warn"
-must_use_unit = "warn"
-ignored_unit_patterns = "warn"
-let_underscore_must_use = "warn"
-map_unwrap_or = "warn"
-unwrap_used = "warn"
-expect_used = "warn"
-similar_names = { level = "allow", priority = 1 }
-too_many_lines = { level = "allow", priority = 1 }
-wildcard_imports = { level = "allow", priority = 1 }
-missing_errors_doc = { level = "allow", priority = 1 }
-semicolon_if_nothing_returned = { level = "allow", priority = 1 }
-
 [dependencies]
 dioxus = { version = "=0.7.2", features = ["html", "router"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -87,4 +71,28 @@ dioxus-core = "=0.7.2"
 dioxus-signals = "=0.7.2"
 
 [build-dependencies]
-isolang = { version = "2.3", default-features = false, features = ["list_languages"] }
+isolang = { version = "2.3", default-features = false, features = [
+  "list_languages",
+] }
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+# strict
+or_fun_call = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+shadow_same = "warn"
+shadow_reuse = "warn"
+shadow_unrelated = "warn"
+# relaxed
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }

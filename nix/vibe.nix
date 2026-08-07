@@ -43,29 +43,171 @@
   agentsMd = pkgs.writeTextFile {
     name = "AGENTS.md";
     text = ''
-      Read the `README.md` file if available.
-      Study the project source code.
-      Write your code in a strictly functional style while ensuring high efficiency.
-      Examples of good code can be found in the latest versions of the crates `functora-tagged` and `functora`, study their source code and use a similar style.
-      Avoid mutable variables (`mut`), imperative constructs (e.g., `for`, `while`, `loop`, or `return`), and instead use functional iterators and control flow with `?` operator.
-      Eliminate redundant closures and variables.
-      Maximize method chaining, always favor chaining and pipelining over temporary one-time variables.
-      Use `?` instead of `.map_err(..)` where possible.
-      Avoid `.clone()`, unnecessary allocations, and extra dependencies.
-      Prefer the standard library exclusively when possible.
-      Use meaningful, context-clear identifiers with a preference for brevity.
-      Do not include comments; the code must be self-explanatory.
-      Do not nest code blocks if possible, avoid nesting brackets like `(.. (..) ..)` or `{.. { .. } ..}`, the code must be as flat as possible, deal with complexity using control flow `?` operator, chaining and piping methods.
-      Always prefer `(.. expr ..).pipe(Ok)` over `Ok(.. expr ..)` unless `(.. expr ..)` is very short and simple.
-      The code must be DRY.
-      The redundant code must be removed.
-      To check Rust code use the command `cargo clippy --all-features`.
-      The code should not have any warnings or errors.
-      To test Rust code use the command `cargo test --all-features`.
-      To get Rust test coverage report use the command `cargo tarpaulin --all-features --engine llvm -o Lcov`, the report is written into `lcov.info` file.
-      Test coverage should be as high as possible.
-      All tests should be located in `./tests` directory.
-      The final step is to format the code with `cargo fmt`.
+      ## Coding Guidelines
+
+      ### Project Understanding
+
+      * Read the `README.md` file if available.
+      * Study the project source code before making changes.
+      * Understand the target module, its dependencies, surrounding code, and nearby tests before modifying it.
+      * Follow the existing architecture, abstractions, naming conventions, APIs, and established project patterns.
+      * Examples of good code can be found in the latest versions of the crates `functora-tagged` and `functora`. Study their source code and use a similar style.
+
+      ### Change Discipline
+
+      * Before making changes, understand the existing behavior and identify the smallest appropriate change.
+      * For bug fixes, **first reproduce the bug with a failing automated test**, then fix the production code. Do not patch production code first and add a test afterward.
+      * Prefer small, local, targeted changes over broad rewrites or unrelated refactoring.
+      * Do not reformat, reorganize, rename, or otherwise modify unrelated files or code.
+      * Preserve existing behavior outside the scope of the requested change.
+      * Do not weaken compiler, linter, formatting, test, logging, security, or other project settings to make a change pass.
+      * Do not disable warnings, suppress lints, reduce test coverage requirements, remove validation, or relax security checks as a workaround.
+      * Do not introduce abstractions unless they remove real duplication, define a real boundary, or provide a clear architectural benefit.
+      * Do not introduce speculative abstractions or generalized frameworks for a single use case.
+      * Do not accidentally change public JSON, API contracts, configuration shapes, serialization formats, module boundaries, or other externally observable behavior.
+      * Treat public interfaces and data formats as stable unless changing them is explicitly required by the task.
+      * When a public contract must change, make the change explicit and update all affected tests and callers.
+
+      ### Functional Style
+
+      * Write code in a **strictly functional style while ensuring high efficiency**.
+      * Avoid mutable variables (`mut`) whenever possible.
+      * Avoid imperative constructs such as `for`, `while`, `loop`, and `return`.
+      * Instead, use functional iterators, combinators, expression-oriented control flow, method chaining, pipelining, and the `?` operator.
+      * Prefer immutable data and explicit data flow.
+      * Eliminate redundant closures and variables.
+      * Eliminate redundant code.
+      * Maximize method chaining. Always favor chaining and pipelining over temporary one-time variables.
+      * Keep code as flat as possible.
+      * Avoid unnecessary nesting of code blocks and nested brackets such as `(.. (..) ..)` or `{.. { .. } ..}`.
+      * Deal with complexity through `?`, chaining, iterators, and piping rather than deeply nested control flow.
+      * Prefer small, focused functions with a single clear responsibility.
+      * Introduce a temporary variable when it materially improves readability, avoids repeated computation, or is required by ownership or lifetime constraints. Do not create one merely to hold a value used once.
+      * Always prefer `(..expr..).pipe(Ok)` over `Ok(..expr..)` unless `(..expr..)` is very short and simple.
+      * Use meaningful, context-clear identifiers with a preference for brevity when the meaning remains unambiguous.
+      * Prefer domain-specific names over generic names such as `data`, `value`, `thing`, `manager`, `helper`, or `utils` when a more precise name is appropriate.
+      * Do not include comments. The code must be self-explanatory through its types, names, structure, and abstractions.
+      * Keep the code DRY.
+      * Remove redundant code rather than preserving duplication.
+      * Do not sacrifice correctness, readability, or efficiency merely to make code shorter or eliminate a variable.
+
+      ### Efficiency and Dependencies
+
+      * Avoid `.clone()` unless cloning is genuinely required by ownership semantics.
+      * Avoid unnecessary allocations, copies, conversions, intermediate collections, and other needless work.
+      * Prefer zero-cost abstractions and efficient iterator-based solutions.
+      * Prefer the standard library exclusively whenever possible.
+      * Avoid extra dependencies.
+      * Introduce a dependency only when it provides substantial value that cannot reasonably be achieved with the standard library or existing dependencies.
+      * Keep dependencies narrow and minimal.
+      * Do not add a dependency merely for convenience when an existing dependency or the standard library provides an appropriate solution.
+
+      ### Error Handling
+
+      * **The code must be panic-free.**
+      * Do not use `panic!`, `unreachable!`, `unimplemented!`, `todo!`, `unwrap()`, `expect()`, or other panic-producing operations in production code unless the operation is provably unreachable and there is no fallible alternative.
+      * Every fallible operation must be explicitly handled.
+      * Never swallow, suppress, ignore, or silently discard errors.
+      * If an error cannot be meaningfully recovered from at the current layer, propagate it explicitly using `Result::Err` and `?`.
+      * Handle errors at the layer that has enough context to recover meaningfully; otherwise propagate them upward.
+      * Use `?` instead of `.map_err(..)` wherever possible.
+      * Do not use `map_err` merely to repackage an error that can be propagated directly with `?`.
+      * Use `map_err` when meaningful typed context must be added and cannot be expressed cleanly otherwise.
+      * Use explicit, domain-specific error enums.
+      * Error enum variants must precisely describe what happened or which operation failed.
+      * Avoid vague variants such as `Error`, `Failure`, `Custom`, `Other`, or `Unknown` when a precise variant is possible.
+      * **Never lose information from an underlying error.**
+      * Error variants must preserve the complete underlying error by wrapping the original error value rather than converting it to a string or replacing it with a generic error.
+      * Never stringify errors for propagation, including patterns such as:
+        `map_err(|e| Error::Something(e.to_string()))`.
+      * Prefer typed variants such as:
+        `Error::Something(e)`.
+      * When additional context is required, store it alongside the underlying error:
+        `Error::Something { context, source }`.
+      * Do not use `Box<dyn Error>`, `String`, or other type-erasing representations merely to avoid defining a precise error enum when the underlying error type is known.
+      * Error conversions must preserve all meaningful information and the strongest useful type information.
+      * Do not catch an error only to rethrow it unchanged. Use `?` directly.
+      * Do not convert between error types unless the conversion is intentional, typed, and preserves all relevant information.
+
+      ### Resource Safety and Concurrency
+
+      * Avoid global mutable state.
+      * Prefer explicit ownership and dependency passing over hidden global state or implicit shared state.
+      * Avoid hidden blocking calls, especially in asynchronous or concurrent code.
+      * Blocking operations must be explicit and execute in an appropriate context.
+      * Avoid unbounded concurrency.
+      * Concurrency must have explicit and appropriate bounds.
+      * Avoid uncontrolled task spawning, unbounded queues, unbounded memory growth, and other forms of resource exhaustion.
+      * Prefer bounded concurrency, backpressure, and explicit resource ownership where applicable.
+      * Ensure resources are released deterministically and safely.
+      * Do not hide expensive I/O, allocation, synchronization, or blocking operations behind innocuous-looking APIs.
+      * Prefer resource-safe designs whose ownership and lifetime behavior is apparent from the types and APIs.
+
+      ### Abstractions and API Design
+
+      * Avoid unnecessary traits.
+      * Traits with only one implementation should normally be avoided unless there is a strong, concrete reason to introduce the abstraction.
+      * A single-implementation trait is justified when it provides a required external API, meaningful generic abstraction, object-safe boundary, associated-type abstraction, compile-time polymorphism, or a well-defined architectural boundary.
+      * Do not introduce traits merely for speculative future implementations, test mocking, or abstraction for its own sake.
+      * Avoid large utility objects that accumulate unrelated responsibilities or become dumping grounds for miscellaneous functionality.
+      * Prefer small, focused types and functions with clear responsibilities.
+      * Avoid large argument lists.
+      * When several arguments form a coherent domain concept, consider representing that concept with an explicit domain-specific type rather than passing many loosely related values.
+      * Do not introduce parameter objects merely to avoid a reasonable number of arguments.
+      * Prefer explicit public API types over vague, overly generic, or type-erased interfaces.
+      * Keep public APIs narrow, predictable, and domain-specific.
+      * Avoid accidental changes to public JSON representations, configuration shapes, serialization formats, module boundaries, or API contracts.
+
+      ### Complexity and Structure
+
+      * Prefer simple, composable expressions over deeply nested control flow.
+      * Use `?` to flatten fallible control flow.
+      * Use method chaining, iterator combinators, and piping to flatten data transformations.
+      * Prefer early error propagation over deeply nested `match` or `if` structures.
+      * Avoid nested blocks whenever a flatter equivalent is clear.
+      * Avoid temporary one-time variables when the expression can be safely and clearly inlined.
+      * Use variables when they improve readability, prevent repeated computation, or are required by ownership or lifetime constraints.
+      * Keep functions small and focused.
+      * Keep types focused and avoid types with excessive responsibilities.
+      * Avoid large utility modules and miscellaneous helper collections.
+      * Prefer explicit domain boundaries over generic catch-all abstractions.
+
+      ### Testing
+
+      * For bug fixes, **first add a regression test that fails against the existing implementation** and demonstrates the bug. Only then modify production code.
+      * Add tests for all new behavior and relevant edge cases.
+      * Test error and failure paths explicitly.
+      * Tests must verify observable behavior and public contracts rather than mirror implementation details.
+      * Avoid implementation-mirroring tests that assert private structure, incidental call sequences, specific algorithms, or internal implementation details when multiple implementations could satisfy the same behavior.
+      * Prefer deterministic tests.
+      * Avoid reliance on timing, arbitrary sleeps, uncontrolled randomness, ambient global state, external services, or machine-specific behavior unless the behavior itself is what is being tested.
+      * Do not write tests solely to increase coverage; tests must provide meaningful behavioral guarantees.
+      * All tests should be located in the `./tests` directory.
+      * Test coverage should be as high as possible, with particular attention to error paths, edge cases, and failure conditions.
+
+      ### Validation
+
+      * To check Rust code, use:
+        `cargo clippy --all-features`
+      * The code should compile successfully and have no warnings or errors.
+      * Do not suppress or disable warnings to make the code pass.
+      * To test Rust code, use:
+        `cargo test --all-features`
+      * To get the Rust test coverage report, use:
+        `cargo tarpaulin --all-features --engine llvm -o Lcov`
+      * The coverage report is written to `lcov.info`.
+      * Do not consider the task complete until the implementation passes the relevant checks.
+      * Do not weaken or bypass any validation to make the implementation pass.
+
+      ### Finalization
+
+      * The final step is always to format the code with:
+        `cargo fmt`
+      * Do not make code changes after the final `cargo fmt` step.
+      * Do not reformat unrelated files merely to satisfy formatting.
+      * Before finishing, verify that only files relevant to the task were changed.
+      * Verify that no unintended public behavior, configuration, API, serialization format, module boundary, or project setting was modified.
+      * The resulting code must be formatted, warning-free, panic-free, resource-safe, and fully tested.
     '';
   };
   codexToml = pkgs.writeTextFile {

@@ -163,9 +163,12 @@
 
       ### Abstractions and API Design
 
+      * **Strongly avoid introducing custom traits unless absolutely necessary.**
+      * Always prefer generics (parametric polymorphism) over ad-hoc (trait) polymorphism for code abstraction and generalization.
+      * Prefer generic functions and types over trait definitions whenever a plain generic parameter suffices; introduce a trait only when it defines a real, well-defined boundary or behavior that generics by themselves cannot express.
       * Avoid unnecessary traits.
       * Traits with only one implementation should normally be avoided unless there is a strong, concrete reason to introduce the abstraction.
-      * A single-implementation trait is justified when it provides a required external API, meaningful generic abstraction, object-safe boundary, associated-type abstraction, compile-time polymorphism, or a well-defined architectural boundary.
+      * A single-implementation trait is justified only when it provides a required external API, meaningful generic abstraction, object-safe boundary, associated-type abstraction, compile-time polymorphism, or a well-defined architectural boundary that cannot be expressed with a plain generic parameter.
       * Do not introduce traits merely for speculative future implementations, test mocking, or abstraction for its own sake.
       * Avoid large utility objects that accumulate unrelated responsibilities or become dumping grounds for miscellaneous functionality.
       * Prefer small, focused types and functions with clear responsibilities.

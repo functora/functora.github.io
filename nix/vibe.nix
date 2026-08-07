@@ -176,6 +176,12 @@
       * Keep public APIs narrow, predictable, and domain-specific.
       * Avoid accidental changes to public JSON representations, configuration shapes, serialization formats, module boundaries, or API contracts.
 
+      ### Macros
+
+      * **Strongly avoid implementing custom macros unless absolutely necessary.** Prefer conventional Rust, plain traits, generics, and derives, which are idiomatic, readable, and debuggable.
+      * Treat macros as a last resort, used only when language expressiveness is genuinely insufficient.
+      * Prefer libraries that deliver the same expressiveness without macros (e.g., `functora-tagged`'s macro-free newtypes and derived traits) over reaching for a macro.
+
       ### Type System and Invariants
 
       * Prefer types that guarantee invariant preservation through the type system instead of locally checking invariants in multiple places.

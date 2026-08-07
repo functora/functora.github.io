@@ -192,6 +192,7 @@
       * **CRITICAL: when modeling data and state, always prefer algebraic data types (ADTs, enums) over flat mega-structures with multiple mutually exclusive fields and boolean or other flags indicating the current state variant.**
       * **If parts or fields of the state are mutually exclusive, it MUST be an enum with separate variants, not a struct with dispatching flags and implicit logic.**
       * **It must NOT be possible to construct invalid state at all; each enum variant SHOULD represent a valid state.**
+      * **This applies to state transitions as well: moving from one variant to another must go through the type system (e.g., a `match` that maps one enum variant to the appropriate valid target variant), never through runtime field toggling or flag mutation that permits transient or invalid intermediate states.**
       * Prefer types that guarantee invariant preservation through the type system instead of locally checking invariants in multiple places.
       * Make invalid states unrepresentable by encoding constraints in the type, enforced once at construction and preserved by every operation.
       * Prefer `functora-tagged` newtypes over blind scalar types (`u64`, `String`, `f64`, and similar) to give values precise, invariant-preserving types.

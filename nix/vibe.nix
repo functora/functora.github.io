@@ -139,8 +139,16 @@
       * Concurrency must have explicit and appropriate bounds.
       * Avoid uncontrolled task spawning, unbounded queues, unbounded memory growth, and other forms of resource exhaustion.
       * Prefer bounded concurrency, backpressure, and explicit resource ownership where applicable.
+      * The code must be strictly free of memory leaks, race conditions, and deadlocks at every level, backend and frontend alike: connections, pools, caches, event listeners, subscriptions, timers, and DOM references included.
+      * Memory must be released deterministically; nothing may persist past its last use, and no object may be retained indirectly through listeners, closures, or caches once it is no longer needed.
+      * Shared state accessed from concurrent or async contexts must be properly synchronized; no data race or torn read may ever be possible.
+      * Locking disciplines must be minimal and uniform so that cycles, reentrancy, double-acquire, and other deadlock sources are impossible by construction.
+      * **There must be no zombie or unmanaged threads.** Every thread, task, or spawned process must have an explicit owner, a bounded and known lifetime, and a deterministic teardown path that runs even when the surrounding operation fails, is cancelled, or its error is ignored.
+      * Threads, tasks, and processes must be cleaned up when their operation ends, fails, or is forgotten; no leftover worker may keep running in the background.
+      * Prevent threads from outliving their owner: joins, cancels, drops, and shutdown hooks must be explicit and reachable on all control-flow paths, including early returns, `?`, and `panic`.
+      * Unbounded or unclaimed work must be detectable: track spawned work so none can be silently abandoned, and fail loudly if cleanup is impossible.
       * Ensure resources are released deterministically and safely.
-      * Do not hide expensive I/O, allocation, synchronization, or blocking operations behind innocuous-looking APIs.
+      * Do not hide internal I/O, allocation, synchronization, or blocking operations behind innocuous-looking APIs.
       * Prefer resource-safe designs whose ownership and lifetime behavior is apparent from the types and APIs.
 
       ### Abstractions and API Design

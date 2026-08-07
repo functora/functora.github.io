@@ -203,6 +203,16 @@
       * Prefer dimensional types from the `num` module (`Identity`, `Atomic`, `Times`, `Per`) over raw numerics when units are involved, so that mixing units (e.g., adding meters to seconds) is rejected at compile time.
       * Verify that invariants are actually preserved by property-based testing, not just a handful of hand-picked examples, especially for roundtrip behaviors such as encode-decode, `FromStr`/`Display`, serialize/deserialize, and similar roundtrips.
 
+      ### Avoid Scalar Blindness and Scalar Overloading
+
+      * **Avoid scalar blindness: never model a value with a blind raw scalar (`String`, `Int`/`u64`, `Bool`, `f64`) when a precise, domain-specific type exists; types must stay meaningful even outside the defining module.**
+      * Wrap same-representation domain concepts in separate newtypes (`Password`, `PasswordSalt`, `PasswordHash`, `UserId` vs `ProductId`) so that accidental swaps become compile-time errors.
+      * **Avoid scalar overloading: never represent a smaller, fixed set of possibilities with a wider, overloaded type.**
+      * Do not use a `String` where a finite enum belongs (e.g. a `String` locale accepting `"fr"`, `"fr-fr"`, `"fr-FR"`, and any other string); use `Locale = En | Fr | Ru | Ee` so invalid values cannot even be represented.
+      * Do not use an `Int`/`u64` or `f64` where a finite enum or unit-denoted type belongs (e.g. a bare integer currency code instead of `Currency = Usd | Eur | Btc`); restrict the domain to what is actually valid.
+      * Avoid boolean blindness: when the meaning of a `Bool` depends on the surrounding field or call site, replace it with a precise two-variant enum (`FilterResult = Discard | Keep`, `TimeKind = WorkingTime | BreakTime`, `Strictness = Strict | NotStrict`); a bare boolean loses its context outside the data model.
+      * When a function takes multiple scalars that denote distinct domain concepts, wrap them in named types instead of passing a positional sequence of same-typed scalars, so the compiler rejects misplaced or meaningless argument combinations.
+
       ### Complexity and Structure
 
       * Prefer simple, composable expressions over deeply nested control flow.

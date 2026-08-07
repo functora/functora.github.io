@@ -103,6 +103,8 @@
 
       ### Efficiency and Dependencies
 
+      * Prefer `const` over non-`const` wherever possible, including `const` functions, values, and bindings, so that computation happens at compile time and immutability is guaranteed.
+      * Prefer `&str` over `String` wherever possible, including for parameters, return values, and data fields, when it does not add a lot of redundant complexity such as awkward lifetimes or generic parameters.
       * Avoid `.clone()` unless cloning is genuinely required by ownership semantics.
       * Avoid unnecessary allocations, copies, conversions, intermediate collections, and other needless work.
       * Prefer zero-cost abstractions and efficient iterator-based solutions.

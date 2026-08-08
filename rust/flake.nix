@@ -385,6 +385,26 @@
                 '';
               })
               (pkgs.writeShellApplication {
+                name = "rust-verify";
+                text = ''
+                  for P in */; do
+                    P="''${P%/}"
+                    (
+                      cd "$P"
+                      ${cargo}/bin/cargo fmt "$@" \
+                        && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
+                        && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
+                        && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
+                        && echo "==> $P: All good!"
+                    ) || {
+                      echo "==> $P: FAILED"
+                      exit 1
+                    }
+                  done
+                  echo "==> All Rust projects verified!"
+                '';
+              })
+              (pkgs.writeShellApplication {
                 name = "coverage";
                 text = ''
                   cargo tarpaulin --all-features --engine llvm "$@" \

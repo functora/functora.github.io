@@ -10,6 +10,16 @@ use std::io::Write;
 use temp_env::with_vars;
 use tempfile::NamedTempFile;
 
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
 #[derive(
     Eq, PartialEq, Debug, Clone, Serialize, Deserialize,
 )]
@@ -145,8 +155,7 @@ impl Cli<IdClap<HashMap<String, CliAccount>>> {
 #[test]
 #[serial]
 fn defaults() {
-    let lhs =
-        Cfg::new(Cli::parse_from(["functora"])).unwrap();
+    let lhs = ok(Cfg::new(Cli::parse_from(["functora"])));
     let rhs = Cfg {
         host: "127.0.0.1".into(),
         port: 8080,
@@ -164,8 +173,7 @@ fn defaults() {
 #[test]
 #[serial]
 fn file_override() {
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         host = "192.168.1.100"
         logs = true
@@ -175,13 +183,12 @@ fn file_override() {
         balance = 101
         tags = ["retro", "story"]
     "#;
-    file.write_all(text.as_bytes()).unwrap();
-    let lhs = Cfg::new(Cli::parse_from([
+    ok(file.write_all(text.as_bytes()));
+    let lhs = ok(Cfg::new(Cli::parse_from([
         "functora",
         "--toml",
         &file.path().to_string_lossy(),
-    ]))
-    .unwrap();
+    ])));
     let rhs = Cfg {
         host: "192.168.1.100".into(),
         port: 8080,
@@ -229,8 +236,7 @@ fn env_override() {
         ],
         || {
             let lhs =
-                Cfg::new(Cli::parse_from(["functora"]))
-                    .unwrap();
+                ok(Cfg::new(Cli::parse_from(["functora"])));
             let rhs = Cfg {
                 host: "10.0.0.1".into(),
                 port: 7070,
@@ -257,7 +263,7 @@ fn env_override() {
 #[test]
 #[serial]
 fn cli_override() {
-    let lhs = Cfg::new(Cli::parse_from([
+    let lhs = ok(Cfg::new(Cli::parse_from([
         "functora",
         "--port",
         "6060",
@@ -272,8 +278,7 @@ fn cli_override() {
         "pure",
         "--tags",
         "geek",
-    ]))
-    .unwrap();
+    ])));
     let rhs = Cfg {
         host: "127.0.0.1".into(),
         port: 6060,
@@ -301,8 +306,7 @@ fn cli_override() {
 #[test]
 #[serial]
 fn layered_override() {
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         host = "192.168.0.10"
         logs = true
@@ -313,7 +317,7 @@ fn layered_override() {
         alias = "File Alice"
         balance = 5
     "#;
-    file.write_all(text.as_bytes()).unwrap();
+    ok(file.write_all(text.as_bytes()));
     with_vars(
         vec![
             ("FUNCTORA__PORT", Some("9090")),
@@ -327,7 +331,7 @@ fn layered_override() {
             ),
         ],
         || {
-            let lhs = Cfg::new(Cli::parse_from([
+            let lhs = ok(Cfg::new(Cli::parse_from([
                 "functora",
                 "--toml",
                 &file.path().to_string_lossy(),
@@ -344,8 +348,7 @@ fn layered_override() {
                 "vip",
                 "--tags",
                 "beta",
-            ]))
-            .unwrap();
+            ])));
 
             let rhs = Cfg {
                 host: "10.10.10.10".into(),
@@ -504,8 +507,7 @@ impl DbCli<SubConnection> {
 #[test]
 #[serial]
 fn substitute_defaults_from_file() {
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         [connections]
         [connections.default]
@@ -521,16 +523,16 @@ fn substitute_defaults_from_file() {
         name = "Replica DB"
         port = 5433
     "#;
-    file.write_all(text.as_bytes()).unwrap();
+    ok(file.write_all(text.as_bytes()));
 
-    let lhs = DbCli::<SubConnection>::new_with_defaults(
-        DbCli::parse_from([
-            "dbcli",
-            "--toml",
-            &file.path().to_string_lossy(),
-        ]),
-    )
-    .unwrap();
+    let lhs =
+        ok(DbCli::<SubConnection>::new_with_defaults(
+            DbCli::parse_from([
+                "dbcli",
+                "--toml",
+                &file.path().to_string_lossy(),
+            ]),
+        ));
 
     let rhs = DatabaseCfg {
         connections: HashMap::from([
@@ -561,8 +563,7 @@ fn substitute_defaults_from_file() {
 #[test]
 #[serial]
 fn substitute_defaults_partial_override() {
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         [connections]
         [connections.default]
@@ -579,16 +580,16 @@ fn substitute_defaults_partial_override() {
         [connections.transactions]
         name = "Transactions"
     "#;
-    file.write_all(text.as_bytes()).unwrap();
+    ok(file.write_all(text.as_bytes()));
 
-    let lhs = DbCli::<SubConnection>::new_with_defaults(
-        DbCli::parse_from([
-            "dbcli",
-            "--toml",
-            &file.path().to_string_lossy(),
-        ]),
-    )
-    .unwrap();
+    let lhs =
+        ok(DbCli::<SubConnection>::new_with_defaults(
+            DbCli::parse_from([
+                "dbcli",
+                "--toml",
+                &file.path().to_string_lossy(),
+            ]),
+        ));
 
     let rhs = DatabaseCfg {
         connections: HashMap::from([
@@ -619,8 +620,7 @@ fn substitute_defaults_partial_override() {
 #[test]
 #[serial]
 fn substitute_defaults_with_cli_override() {
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         [connections]
         [connections.default]
@@ -632,23 +632,23 @@ fn substitute_defaults_with_cli_override() {
         [connections.cache]
         name = "Cache DB"
     "#;
-    file.write_all(text.as_bytes()).unwrap();
+    ok(file.write_all(text.as_bytes()));
 
-    let lhs = DbCli::<SubConnection>::new_with_defaults(
-        DbCli::parse_from([
-            "dbcli",
-            "--toml",
-            &file.path().to_string_lossy(),
-            "sub-connection",
-            "--name",
-            "Session Store",
-            "--host",
-            "redis.local",
-            "--port",
-            "6379",
-        ]),
-    )
-    .unwrap();
+    let lhs =
+        ok(DbCli::<SubConnection>::new_with_defaults(
+            DbCli::parse_from([
+                "dbcli",
+                "--toml",
+                &file.path().to_string_lossy(),
+                "sub-connection",
+                "--name",
+                "Session Store",
+                "--host",
+                "redis.local",
+                "--port",
+                "6379",
+            ]),
+        ));
 
     let rhs = DatabaseCfg {
         connections: HashMap::from([
@@ -802,8 +802,7 @@ fn substitute_defaults_nested_tables() {
         }
     }
 
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         [services]
         [services.default]
@@ -819,15 +818,15 @@ fn substitute_defaults_nested_tables() {
         [services.worker]
         image = "worker:v2"
     "#;
-    file.write_all(text.as_bytes()).unwrap();
-    let lhs = ServiceCli::<SubService>::new_with_defaults(
-        ServiceCli::parse_from([
-            "servicecli",
-            "--toml",
-            &file.path().to_string_lossy(),
-        ]),
-    )
-    .unwrap();
+    ok(file.write_all(text.as_bytes()));
+    let lhs =
+        ok(ServiceCli::<SubService>::new_with_defaults(
+            ServiceCli::parse_from([
+                "servicecli",
+                "--toml",
+                &file.path().to_string_lossy(),
+            ]),
+        ));
 
     let rhs = ServiceCfg {
         services: HashMap::from([
@@ -970,8 +969,7 @@ fn substitute_defaults_array_values() {
         }
     }
 
-    let mut file =
-        NamedTempFile::with_suffix(".toml").unwrap();
+    let mut file = ok(NamedTempFile::with_suffix(".toml"));
     let text = r#"
         [teams]
         [teams.default]
@@ -987,15 +985,14 @@ fn substitute_defaults_array_values() {
         name = "Developers"
         members = ["carol", "dave"]
     "#;
-    file.write_all(text.as_bytes()).unwrap();
-    let lhs = TeamCli::<SubTeam>::new_with_defaults(
+    ok(file.write_all(text.as_bytes()));
+    let lhs = ok(TeamCli::<SubTeam>::new_with_defaults(
         TeamCli::parse_from([
             "teamcli",
             "--toml",
             &file.path().to_string_lossy(),
         ]),
-    )
-    .unwrap();
+    ));
 
     let rhs = TeamCfg {
         teams: HashMap::from([

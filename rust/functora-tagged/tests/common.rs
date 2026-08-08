@@ -1,4 +1,25 @@
 use functora_tagged::*;
+use std::fmt::Debug;
+
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
 
 #[derive(Debug)]
 struct D;
@@ -11,15 +32,12 @@ fn test_vec_i32() {
     let empty: Vec<i32> = vec![];
     let err_result = NonEmptyVec::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty = vec![1, 2, 3];
     let ok_result = NonEmptyVec::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -27,15 +45,12 @@ fn test_vec_str_slice() {
     let empty: Vec<&str> = vec![];
     let err_result = NonEmptyVec::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty = vec!["a", "b", "c"];
     let ok_result = NonEmptyVec::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -43,10 +58,7 @@ fn test_vec_string() {
     let empty: Vec<String> = vec![];
     let err_result = NonEmptyVec::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty = vec![
         "a".to_string(),
@@ -55,7 +67,7 @@ fn test_vec_string() {
     ];
     let ok_result = NonEmptyVec::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -63,17 +75,14 @@ fn test_box_slice_i32() {
     let empty: Box<[i32]> = vec![].into_boxed_slice();
     let err_result = NonEmptyBoxSlice::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty: Box<[i32]> =
         vec![10, 20].into_boxed_slice();
     let ok_result =
         NonEmptyBoxSlice::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -85,15 +94,12 @@ fn test_cow_slice_i32() {
     let empty: Cow<[i32]> = Cow::Borrowed(&[]);
     let err_result = NonEmptyCow::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty: Cow<[i32]> = Cow::Borrowed(&[1, 2, 3]);
     let ok_result = NonEmptyCow::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -103,15 +109,12 @@ fn test_string_collection() {
     let empty = String::new();
     let err_result = NonEmptyString::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let non_empty = String::from("hello");
     let ok_result = NonEmptyString::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -122,16 +125,13 @@ fn test_hash_set() {
     let empty: HashSet<i32> = HashSet::new();
     let err_result = NonEmptySet::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let mut non_empty = HashSet::new();
     let _ = non_empty.insert(1);
     let ok_result = NonEmptySet::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -143,16 +143,13 @@ fn test_vec_deque() {
     let empty: VecDeque<i32> = VecDeque::new();
     let err_result = NonEmptyDeque::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let mut non_empty = VecDeque::new();
     non_empty.push_back(1);
     let ok_result = NonEmptyDeque::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -164,16 +161,13 @@ fn test_linked_list() {
     let empty: LinkedList<i32> = LinkedList::new();
     let err_result = NonEmptyList::new(empty);
     assert!(err_result.is_err());
-    assert_eq!(
-        err_result.unwrap_err(),
-        NonEmptyError(PhantomData)
-    );
+    assert_eq!(err(err_result), NonEmptyError(PhantomData));
 
     let mut non_empty = LinkedList::new();
     non_empty.push_back(1);
     let ok_result = NonEmptyList::new(non_empty.clone());
     assert!(ok_result.is_ok());
-    assert_eq!(*ok_result.unwrap(), non_empty);
+    assert_eq!(*ok(ok_result), non_empty);
 }
 
 #[test]
@@ -374,7 +368,7 @@ fn test_haslength_cstr() {
 fn test_haslength_cstring() {
     use std::ffi::CString;
 
-    let c_string = CString::new("hello").unwrap();
+    let c_string = ok(CString::new("hello"));
     assert_eq!(c_string.length(), 5);
     assert!(!c_string.zero_length());
 }
@@ -403,10 +397,10 @@ fn test_haslength_arc() {
 
 #[test]
 fn test_haslength_tagged() {
-    let xs = NonEmptyVec::new(vec![1, 2, 3]).unwrap();
+    let xs = ok(NonEmptyVec::new(vec![1, 2, 3]));
     assert_eq!(xs.length(), 3);
     assert!(!xs.zero_length());
 
-    let single = NonEmptyVec::new(vec![42]).unwrap();
+    let single = ok(NonEmptyVec::new(vec![42]));
     assert_eq!(single.length(), 1);
 }

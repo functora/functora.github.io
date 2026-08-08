@@ -3,6 +3,26 @@ use functora_tagged::refine::Refine;
 use std::error::Error;
 use std::fmt::Debug;
 
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
+
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 struct TestRefineError;
 
@@ -27,7 +47,7 @@ fn test_refine_my_tag_implementation() {
     let refined_rep = FTest::refine(rep_value.clone());
 
     assert!(refined_rep.is_ok());
-    assert_eq!(refined_rep.unwrap(), rep_value);
+    assert_eq!(ok(refined_rep), rep_value);
 }
 
 enum FStrict {}
@@ -54,14 +74,14 @@ fn test_refine_strict_tag_implementation() {
     let refined_strict =
         FStrict::refine(strict_value.clone());
     assert!(refined_strict.is_ok());
-    assert_eq!(refined_strict.unwrap(), strict_value);
+    assert_eq!(ok(refined_strict), strict_value);
 
     let non_strict_value = String::from("non_strict_value");
     let refined_non_strict =
         FStrict::refine(non_strict_value.clone());
     assert!(refined_non_strict.is_err());
     assert_eq!(
-        refined_non_strict.unwrap_err(),
+        err(refined_non_strict),
         format!(
             "String must start with 'strict_': {non_strict_value}"
         )
@@ -82,5 +102,5 @@ fn test_refine_default_implementation() {
     let refined_rep = FDefault::refine(rep_value.clone());
 
     assert!(refined_rep.is_ok());
-    assert_eq!(refined_rep.unwrap(), rep_value);
+    assert_eq!(ok(refined_rep), rep_value);
 }

@@ -1,4 +1,25 @@
 use functora_dioxus::{Error as FdError, Language, Theme, decode_qr_rgba, detect_browser_language, language_from_code};
+use std::fmt::Debug;
+
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
 
 #[test]
 fn decode_qr_rgba_returns_none_for_zero_dimensions() {
@@ -47,7 +68,7 @@ fn error_io_from_io_error() {
 
 #[test]
 fn error_json_from_json_error() {
-    let json_err = serde_json::from_str::<serde_json::Value>("invalid").unwrap_err();
+    let json_err = err(serde_json::from_str::<serde_json::Value>("invalid"));
     let err: FdError = json_err.into();
     assert!(matches!(err, FdError::Json(_)));
 }
@@ -63,7 +84,7 @@ fn error_env_from_env_var_error() {
 fn error_recv_from_recv_error() {
     let (tx, rx) = std::sync::mpsc::channel::<()>();
     drop(tx);
-    let recv_err = rx.recv().unwrap_err();
+    let recv_err = err(rx.recv());
     let err: FdError = recv_err.into();
     assert!(matches!(err, FdError::Channel(_)));
 }
@@ -116,7 +137,7 @@ fn test_error_source_chain() {
 fn test_error_display_all_variants() {
     let variants: Vec<FdError> = vec![
         std::io::Error::other("io").into(),
-        serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
+        err(serde_json::from_str::<serde_json::Value>("x")).into(),
         FdError::Env(std::env::VarError::NotPresent),
         FdError::Channel(std::sync::mpsc::RecvError),
         FdError::NotJsonObject("not object".to_string()),
@@ -171,8 +192,8 @@ fn align_as_str_all_variants() {
 fn align_serde_roundtrip() {
     use functora_dioxus::Align;
     for variant in &[Align::Left, Align::Center, Align::Right, Align::Justify] {
-        let json = serde_json::to_string(variant).unwrap();
-        let back: Align = serde_json::from_str(&json).unwrap();
+        let json = ok(serde_json::to_string(variant));
+        let back: Align = ok(serde_json::from_str(&json));
         assert_eq!(*variant, back);
     }
 }
@@ -180,18 +201,18 @@ fn align_serde_roundtrip() {
 #[test]
 fn align_serde_lowercase_names() {
     use functora_dioxus::Align;
-    assert_eq!(serde_json::to_string(&Align::Left).unwrap(), "\"left\"");
-    assert_eq!(serde_json::to_string(&Align::Center).unwrap(), "\"center\"");
-    assert_eq!(serde_json::to_string(&Align::Right).unwrap(), "\"right\"");
-    assert_eq!(serde_json::to_string(&Align::Justify).unwrap(), "\"justify\"");
+    assert_eq!(ok(serde_json::to_string(&Align::Left)), "\"left\"");
+    assert_eq!(ok(serde_json::to_string(&Align::Center)), "\"center\"");
+    assert_eq!(ok(serde_json::to_string(&Align::Right)), "\"right\"");
+    assert_eq!(ok(serde_json::to_string(&Align::Justify)), "\"justify\"");
 }
 
 #[test]
 fn theme_serde_roundtrip() {
     use functora_dioxus::Theme;
     for variant in &[Theme::Light, Theme::Dark] {
-        let json = serde_json::to_string(variant).unwrap();
-        let back: Theme = serde_json::from_str(&json).unwrap();
+        let json = ok(serde_json::to_string(variant));
+        let back: Theme = ok(serde_json::from_str(&json));
         assert_eq!(*variant, back);
     }
 }
@@ -204,8 +225,8 @@ fn frame_data_serde_roundtrip() {
         width: 10,
         height: 20,
     };
-    let json = serde_json::to_string(&f).unwrap();
-    let back: FrameData = serde_json::from_str(&json).unwrap();
+    let json = ok(serde_json::to_string(&f));
+    let back: FrameData = ok(serde_json::from_str(&json));
     assert_eq!(f.data, back.data);
     assert_eq!(f.width, back.width);
     assert_eq!(f.height, back.height);
@@ -219,8 +240,8 @@ fn frame_data_serde_empty_data() {
         width: 0,
         height: 0,
     };
-    let json = serde_json::to_string(&f).unwrap();
-    let back: FrameData = serde_json::from_str(&json).unwrap();
+    let json = ok(serde_json::to_string(&f));
+    let back: FrameData = ok(serde_json::from_str(&json));
     assert!(back.data.is_empty());
     assert_eq!(back.width, 0);
 }
@@ -233,7 +254,7 @@ fn share_data_serialize() {
         text: "msg".into(),
         url: "https://e.x".into(),
     };
-    let json = serde_json::to_string(&s).unwrap();
+    let json = ok(serde_json::to_string(&s));
     assert!(json.contains(r#""title":"t""#));
     assert!(json.contains(r#""text":"msg""#));
     assert!(json.contains(r#""url":"https://e.x""#));
@@ -247,7 +268,7 @@ fn share_data_serialize_empty_fields() {
         text: String::new(),
         url: String::new(),
     };
-    let json = serde_json::to_string(&s).unwrap();
+    let json = ok(serde_json::to_string(&s));
     assert!(json.contains(r#""title":"""#));
     assert!(json.contains(r#""text":"""#));
 }
@@ -278,7 +299,7 @@ fn error_i18n_render_eng_non_empty() {
     use functora_dioxus::i18n::I18N;
     let cases: Vec<functora_dioxus::Error> = vec![
         std::io::Error::other("io").into(),
-        serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
+        err(serde_json::from_str::<serde_json::Value>("x")).into(),
         functora_dioxus::Error::Env(std::env::VarError::NotPresent),
         functora_dioxus::Error::Channel(std::sync::mpsc::RecvError),
         functora_dioxus::Error::JS("js error".into()),
@@ -512,7 +533,7 @@ fn error_i18n_spa_all_variants() {
     use functora_dioxus::i18n::I18N;
     let variants: Vec<Error> = vec![
         std::io::Error::other("io").into(),
-        serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
+        err(serde_json::from_str::<serde_json::Value>("x")).into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),
         Error::JS("js".into()),
@@ -533,7 +554,7 @@ fn error_i18n_rus_all_variants() {
     use functora_dioxus::i18n::I18N;
     let variants: Vec<Error> = vec![
         std::io::Error::other("io").into(),
-        serde_json::from_str::<serde_json::Value>("x").unwrap_err().into(),
+        err(serde_json::from_str::<serde_json::Value>("x")).into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),
         Error::JS("js".into()),

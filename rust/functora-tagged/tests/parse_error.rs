@@ -6,6 +6,16 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
+
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 struct MyRefineError;
 
@@ -26,7 +36,7 @@ type TestParseError = ParseError<i32, MyTag, MyTag>;
 
 #[test]
 fn test_parse_error_decode() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error = TestParseError::Decode(
         decode_err.clone(),
         PhantomData,
@@ -78,8 +88,7 @@ fn test_parse_error_refine() {
         parse_error,
         TestParseError::Refine(refine_err, PhantomData)
     );
-    let decode_err_for_neq =
-        "abc".parse::<i32>().unwrap_err();
+    let decode_err_for_neq = err("abc".parse::<i32>());
     assert_ne!(
         parse_error,
         TestParseError::Decode(
@@ -92,8 +101,8 @@ fn test_parse_error_refine() {
 
 #[test]
 fn test_parse_error_eq() {
-    let decode_err1 = "abc".parse::<i32>().unwrap_err();
-    let decode_err2 = "abc".parse::<i32>().unwrap_err();
+    let decode_err1 = err("abc".parse::<i32>());
+    let decode_err2 = err("abc".parse::<i32>());
     let refine_err1 = MyRefineError;
 
     let err_decode1 = TestParseError::Decode(
@@ -121,7 +130,7 @@ fn test_parse_error_eq() {
 
 #[test]
 fn test_parse_error_error_trait() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err.clone(),
         PhantomData,
@@ -159,7 +168,7 @@ fn test_parse_error_error_trait() {
 
 #[test]
 fn test_parse_error_eq_trait() {
-    let decode_err1 = "abc".parse::<i32>().unwrap_err();
+    let decode_err1 = err("abc".parse::<i32>());
     let refine_err1 = MyRefineError;
 
     let err_decode1 = TestParseError::Decode(
@@ -180,7 +189,7 @@ fn test_parse_error_eq_trait() {
 
 #[test]
 fn test_parse_error_clone_variants() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err.clone(),
         PhantomData,
@@ -199,7 +208,7 @@ fn test_parse_error_clone_variants() {
 
 #[test]
 fn test_parse_error_decode_clone_refine_eq() {
-    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let decode_err_orig = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err_orig.clone(),
         PhantomData,
@@ -225,7 +234,7 @@ fn test_parse_error_refine_clone_decode_eq() {
     );
     let cloned_refine = parse_error_refine.clone();
 
-    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let decode_err_orig = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err_orig,
         PhantomData,
@@ -238,7 +247,7 @@ fn test_parse_error_refine_clone_decode_eq() {
 
 #[test]
 fn test_parse_error_debug_formatting() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err.clone(),
         PhantomData,
@@ -261,7 +270,7 @@ fn test_parse_error_debug_formatting() {
 
 #[test]
 fn test_parse_error_display_formatting() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err.clone(),
         PhantomData,
@@ -284,7 +293,7 @@ fn test_parse_error_display_formatting() {
 
 #[test]
 fn test_parse_error_source_method_downcasting() {
-    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let decode_err_orig = err("abc".parse::<i32>());
     let parse_error_decode = TestParseError::Decode(
         decode_err_orig.clone(),
         PhantomData,
@@ -323,7 +332,7 @@ fn test_parse_error_source_method_downcasting() {
 #[test]
 fn test_parse_error_partial_eq_different_variants() {
     let parse_int_err: std::num::ParseIntError =
-        "abc".parse::<i32>().unwrap_err();
+        err("abc".parse::<i32>());
     let parse_error_decode =
         TestParseError::Decode(parse_int_err, PhantomData);
 
@@ -358,7 +367,7 @@ fn test_parse_error_eq_with_different_types() {
     type AnotherParseError =
         ParseError<i32, AnotherTag, AnotherTag>;
 
-    let decode_err1 = "abc".parse::<i32>().unwrap_err();
+    let decode_err1 = err("abc".parse::<i32>());
     let parse_error_decode1 =
         AnotherParseError::Decode(decode_err1, PhantomData);
 
@@ -393,7 +402,7 @@ fn test_parse_error_partial_eq_with_different_types() {
     type YetAnotherParseError =
         ParseError<i32, YetAnotherTag, YetAnotherTag>;
 
-    let decode_err1 = "xyz".parse::<i32>().unwrap_err();
+    let decode_err1 = err("xyz".parse::<i32>());
     let parse_error_decode1 = YetAnotherParseError::Decode(
         decode_err1,
         PhantomData,
@@ -432,7 +441,7 @@ fn test_parse_error_clone_with_different_types() {
     type CloneParseError =
         ParseError<i32, CloneTag, CloneTag>;
 
-    let decode_err_orig = "abc".parse::<i32>().unwrap_err();
+    let decode_err_orig = err("abc".parse::<i32>());
     let parse_error_decode = CloneParseError::Decode(
         decode_err_orig.clone(),
         PhantomData,
@@ -451,7 +460,7 @@ fn test_parse_error_clone_with_different_types() {
 
 #[test]
 fn test_parse_error_impl_error_where_clause() {
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode =
         TestParseError::Decode(decode_err, PhantomData);
     assert!(parse_error_decode.source().is_some());
@@ -486,7 +495,7 @@ fn test_parse_error_impl_error_with_different_types() {
     type DifferentParseError =
         ParseError<i32, DifferentTag, DifferentTag>;
 
-    let decode_err = "abc".parse::<i32>().unwrap_err();
+    let decode_err = err("abc".parse::<i32>());
     let parse_error_decode = DifferentParseError::Decode(
         decode_err,
         PhantomData,

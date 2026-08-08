@@ -10,11 +10,11 @@ fn payload_roundtrip() {
     let payload = Payload {
         note: "hello +/= world".into(),
     };
-    let encoded = encode_payload(&payload).expect("encode");
+    let encoded = encode_payload(&payload).unwrap_or_else(|e| panic!("encode: {e:?}"));
     assert!(!encoded.contains('+'));
     assert!(!encoded.contains('='));
     assert!(!encoded.contains('/'));
-    let decoded: Payload = decode_payload(&encoded).expect("decode");
+    let decoded: Payload = decode_payload(&encoded).unwrap_or_else(|e| panic!("decode: {e:?}"));
     assert_eq!(decoded, payload);
 }
 
@@ -78,7 +78,7 @@ fn extract_query_param_empty_value() {
 
 #[test]
 fn download_script_escapes_special_characters() {
-    let script = functora_dioxus::encoding::download_script("a\"</script>").expect("script");
+    let script = functora_dioxus::encoding::download_script("a\"</script>").unwrap_or_else(|e| panic!("script: {e:?}"));
     assert!(!script.contains("</script>"));
     assert!(script.contains("a.download="));
 }
@@ -86,7 +86,8 @@ fn download_script_escapes_special_characters() {
 #[cfg(feature = "qr")]
 #[test]
 fn generate_qr_code_produces_svg() {
-    let svg = functora_dioxus::encoding::generate_qr_code("https://example.com").expect("qr");
+    let svg =
+        functora_dioxus::encoding::generate_qr_code("https://example.com").unwrap_or_else(|e| panic!("qr: {e:?}"));
     assert!(svg.starts_with("<svg"));
     assert!(svg.contains("viewBox"));
 }

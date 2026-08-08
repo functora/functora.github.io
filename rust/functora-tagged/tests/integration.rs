@@ -8,6 +8,26 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
+
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Debug)]
 pub enum NonEmptyTag {}
 pub type NonEmpty<T> = Tagged<T, NonEmptyTag, NonEmptyTag>;
@@ -96,7 +116,7 @@ impl Refine<String> for UpperTag {
 
 #[test]
 fn test_non_empty_from_str_success() {
-    let ne: NonEmpty<String> = "hello".parse().unwrap();
+    let ne: NonEmpty<String> = ok("hello".parse());
     assert_eq!(ne.rep(), "hello");
 }
 
@@ -108,23 +128,21 @@ fn test_non_empty_from_str_refine_error() {
 
 #[test]
 fn test_user_id_success() {
-    let inner =
-        "user_123".parse::<NonEmpty<String>>().unwrap();
-    let uid = UserId::new(inner).unwrap();
+    let inner = ok("user_123".parse::<NonEmpty<String>>());
+    let uid = ok(UserId::new(inner));
     assert_eq!(uid.rep().rep(), "user_123");
 }
 
 #[test]
 fn test_user_id_refine_failure() {
-    let inner =
-        "invalid".parse::<NonEmpty<String>>().unwrap();
-    let err = UserId::new(inner).unwrap_err();
+    let inner = ok("invalid".parse::<NonEmpty<String>>());
+    let err = err(UserId::new(inner));
     assert_eq!(err, UserIdError);
 }
 
 #[test]
 fn test_user_id_from_str_success() {
-    let uid: UserId = "user_123".parse().unwrap();
+    let uid: UserId = ok("user_123".parse());
     assert_eq!(uid.rep().rep(), "user_123");
 }
 
@@ -136,14 +154,14 @@ fn test_user_id_from_str_refine_failure() {
 
 #[test]
 fn test_email_success() {
-    let email: Email = "a@b.com".parse().unwrap();
+    let email: Email = ok("a@b.com".parse());
     assert_eq!(email.rep().rep(), "a@b.com");
 }
 
 #[test]
 fn test_email_refine_failure() {
-    let inner = "ab".parse::<NonEmpty<String>>().unwrap();
-    let err = Email::new(inner).unwrap_err();
+    let inner = ok("ab".parse::<NonEmpty<String>>());
+    let err = err(Email::new(inner));
     assert_eq!(err, EmailError(2));
 }
 
@@ -155,16 +173,16 @@ fn test_email_from_str_refine_failure() {
 
 #[test]
 fn test_tagged_eq_ord() {
-    let a: NonEmpty<String> = "abc".parse().unwrap();
-    let b: NonEmpty<String> = "abc".parse().unwrap();
-    let c: NonEmpty<String> = "def".parse().unwrap();
+    let a: NonEmpty<String> = ok("abc".parse());
+    let b: NonEmpty<String> = ok("abc".parse());
+    let c: NonEmpty<String> = ok("def".parse());
     assert_eq!(a, b);
     assert!(a < c);
 }
 
 #[test]
 fn test_tagged_clone_debug() {
-    let tagged: NonEmpty<String> = "test".parse().unwrap();
+    let tagged: NonEmpty<String> = ok("test".parse());
     let cloned = tagged.clone();
     assert_eq!(tagged, cloned);
     let dbg = format!("{tagged:?}");
@@ -182,19 +200,17 @@ fn test_upper_string_infallible() {
 #[test]
 fn test_tagged_display() {
     let tagged: NonEmpty<String> =
-        "display_test".parse().unwrap();
+        ok("display_test".parse());
     let display_str = format!("{tagged}");
     assert_eq!(display_str, "display_test");
 }
 
 #[test]
 fn test_tagged_hash() {
-    let tagged1: NonEmpty<String> =
-        "hash_test".parse().unwrap();
-    let tagged2: NonEmpty<String> =
-        "hash_test".parse().unwrap();
+    let tagged1: NonEmpty<String> = ok("hash_test".parse());
+    let tagged2: NonEmpty<String> = ok("hash_test".parse());
     let tagged3: NonEmpty<String> =
-        "another_hash_test".parse().unwrap();
+        ok("another_hash_test".parse());
 
     let mut hasher1 = DefaultHasher::new();
     tagged1.hash(&mut hasher1);
@@ -238,11 +254,11 @@ mod serde_tests {
             user_id: UserId,
         }
         let original = Wrapper {
-            user_id: "user_456".parse().unwrap(),
+            user_id: ok("user_456".parse()),
         };
-        let toml = toml::to_string(&original).unwrap();
+        let toml = ok(toml::to_string(&original));
         let deserialized: Wrapper =
-            toml::from_str(&toml).unwrap();
+            ok(toml::from_str(&toml));
         assert_eq!(original, deserialized);
         assert_eq!(
             deserialized.user_id.rep().rep(),
@@ -257,15 +273,15 @@ mod serde_tests {
             user_id: UserId,
         }
         let toml_invalid = r#"user_id = "bad""#;
-        let err = toml::from_str::<Wrapper>(toml_invalid)
-            .unwrap_err();
+        let err =
+            err(toml::from_str::<Wrapper>(toml_invalid));
         assert!(
             err.to_string().contains("UserIdError"),
             "Unexpected failure: {err}"
         );
         let toml_valid = r#"user_id = "user_123""#;
         let wrapper: Wrapper =
-            toml::from_str(toml_valid).unwrap();
+            ok(toml::from_str(toml_valid));
         assert_eq!(wrapper.user_id.rep().rep(), "user_123");
     }
 
@@ -278,11 +294,11 @@ mod serde_tests {
             email: Email,
         }
         let original = Wrapper {
-            email: "hello@example.com".parse().unwrap(),
+            email: ok("hello@example.com".parse()),
         };
-        let toml = toml::to_string(&original).unwrap();
+        let toml = ok(toml::to_string(&original));
         let deserialized: Wrapper =
-            toml::from_str(&toml).unwrap();
+            ok(toml::from_str(&toml));
         assert_eq!(original, deserialized);
         assert_eq!(
             deserialized.email.rep().rep(),
@@ -333,17 +349,15 @@ mod diesel_integration_tests {
     #[test]
     fn test_diesel_queryable_success() {
         let mut conn = memory_db();
-        let _ = insert_into(users::table)
+        let _ = ok(insert_into(users::table)
             .values((
                 users::id.eq("user_789"),
                 users::email.eq("hello@example.com"),
             ))
-            .execute(&mut conn)
-            .unwrap();
+            .execute(&mut conn));
         let rows: Vec<UserRow> =
-            sql_query("SELECT id, email FROM users")
-                .load(&mut conn)
-                .unwrap();
+            ok(sql_query("SELECT id, email FROM users")
+                .load(&mut conn));
         assert_eq!(rows.len(), 1);
         assert_eq!(
             rows[0].id.clone().rep().rep(),
@@ -358,36 +372,32 @@ mod diesel_integration_tests {
     #[test]
     fn test_diesel_queryable_refine_failure() {
         let mut conn = memory_db();
-        let _ = insert_into(users::table)
+        let _ = ok(insert_into(users::table)
             .values((
                 users::id.eq("bad_id"),
                 users::email.eq("ab"),
             ))
-            .execute(&mut conn)
-            .unwrap();
-        let err = sql_query("SELECT id, email FROM users")
-            .load::<UserRow>(&mut conn)
-            .unwrap_err();
+            .execute(&mut conn));
+        let err =
+            err(sql_query("SELECT id, email FROM users")
+                .load::<UserRow>(&mut conn));
         assert!(err.to_string().contains("UserIdError"));
     }
 
     #[test]
     fn test_diesel_to_sql() {
         let mut conn = memory_db();
-        let uid: UserId = "user_999".parse().unwrap();
-        let email: Email =
-            "test@domain.com".parse().unwrap();
-        let _ = insert_into(users::table)
+        let uid: UserId = ok("user_999".parse());
+        let email: Email = ok("test@domain.com".parse());
+        let _ = ok(insert_into(users::table)
             .values((
                 users::id.eq(&uid),
                 users::email.eq(&email),
             ))
-            .execute(&mut conn)
-            .unwrap();
-        let rows: Vec<(String, String)> = users::table
+            .execute(&mut conn));
+        let rows: Vec<(String, String)> = ok(users::table
             .select((users::id, users::email))
-            .load(&mut conn)
-            .unwrap();
+            .load(&mut conn));
         assert_eq!(rows[0].0, "user_999");
         assert_eq!(rows[0].1, "test@domain.com");
     }

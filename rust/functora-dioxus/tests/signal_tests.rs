@@ -1,6 +1,13 @@
 use dioxus::prelude::*;
 use functora_dioxus::PersistentSignal;
 
+fn some<T>(option: Option<T>) -> T {
+    match option {
+        Some(value) => value,
+        None => panic!("expected Some"),
+    }
+}
+
 #[test]
 fn signal_to_write_signal_conversion() {
     let mut dom = VirtualDom::new(|| {
@@ -116,7 +123,7 @@ fn write_signal_partial_eq() {
 fn read_signal_from_mapped_signal() {
     let mut dom = VirtualDom::new(|| {
         let signal: Signal<Vec<i32>> = Signal::new(vec![10, 20, 30]);
-        let first = signal.map(|v| v.first().unwrap());
+        let first = signal.map(|v| some(v.first()));
         let read: ReadSignal<i32> = first.into();
         assert_eq!(read(), 10);
 

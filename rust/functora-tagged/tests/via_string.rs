@@ -6,6 +6,26 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
+
+fn err<T, E>(result: Result<T, E>) -> E
+where
+    T: Debug,
+{
+    match result {
+        Err(error) => error,
+        Ok(value) => panic!("expected Err, got: {value:?}"),
+    }
+}
+
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 struct TestRefineError;
 
@@ -40,17 +60,14 @@ fn test_via_string_new() {
     let via_string_instance =
         TestViaString::new(rep_value.clone());
     assert!(via_string_instance.is_ok());
-    assert_eq!(
-        via_string_instance.unwrap().rep(),
-        &rep_value
-    );
+    assert_eq!(ok(via_string_instance).rep(), &rep_value);
 
     let invalid_rep_value = String::from("invalid_string");
     let via_string_instance_err =
         TestViaString::new(invalid_rep_value);
     assert!(via_string_instance_err.is_err());
     assert_eq!(
-        via_string_instance_err.unwrap_err(),
+        err(via_string_instance_err),
         TestRefineError
     );
 }
@@ -59,21 +76,21 @@ fn test_via_string_new() {
 fn test_via_string_rep() {
     let rep_value = String::from("valid_rep");
     let via_string_instance =
-        TestViaString::new(rep_value.clone()).unwrap();
+        ok(TestViaString::new(rep_value.clone()));
     assert_eq!(via_string_instance.rep(), &rep_value);
 }
 
 #[test]
 fn test_via_string_eq_partial_eq() {
-    let vs1 =
-        TestViaString::new(String::from("valid_eq_test"))
-            .unwrap();
-    let vs2 =
-        TestViaString::new(String::from("valid_eq_test"))
-            .unwrap();
-    let vs3 =
-        TestViaString::new(String::from("valid_neq_test"))
-            .unwrap();
+    let vs1 = ok(TestViaString::new(String::from(
+        "valid_eq_test",
+    )));
+    let vs2 = ok(TestViaString::new(String::from(
+        "valid_eq_test",
+    )));
+    let vs3 = ok(TestViaString::new(String::from(
+        "valid_neq_test",
+    )));
 
     assert_eq!(vs1, vs2);
     assert_ne!(vs1, vs3);
@@ -82,17 +99,13 @@ fn test_via_string_eq_partial_eq() {
 #[test]
 fn test_via_string_ord_partial_ord() {
     let vs1 =
-        TestViaString::new(String::from("valid_ord_a"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_a")));
     let vs2 =
-        TestViaString::new(String::from("valid_ord_a"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_a")));
     let vs3 =
-        TestViaString::new(String::from("valid_ord_b"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_b")));
     let vs4 =
-        TestViaString::new(String::from("valid_ord_z"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_z")));
 
     assert_eq!(vs1.cmp(&vs2), std::cmp::Ordering::Equal);
     assert_eq!(
@@ -115,10 +128,9 @@ fn test_via_string_ord_partial_ord() {
 
 #[test]
 fn test_via_string_clone() {
-    let vs1 = TestViaString::new(String::from(
+    let vs1 = ok(TestViaString::new(String::from(
         "valid_clone_test",
-    ))
-    .unwrap();
+    )));
     let vs2 = vs1.clone();
 
     assert_eq!(vs1, vs2);
@@ -127,10 +139,9 @@ fn test_via_string_clone() {
 
 #[test]
 fn test_via_string_display() {
-    let vs_instance = TestViaString::new(String::from(
+    let vs_instance = ok(TestViaString::new(String::from(
         "valid_display_test",
-    ))
-    .unwrap();
+    )));
     assert_eq!(
         vs_instance.to_string(),
         "valid_display_test"
@@ -139,16 +150,15 @@ fn test_via_string_display() {
 
 #[test]
 fn test_via_string_hash() {
-    let vs1 =
-        TestViaString::new(String::from("valid_hash_test"))
-            .unwrap();
-    let vs2 =
-        TestViaString::new(String::from("valid_hash_test"))
-            .unwrap();
-    let vs3 = TestViaString::new(String::from(
+    let vs1 = ok(TestViaString::new(String::from(
+        "valid_hash_test",
+    )));
+    let vs2 = ok(TestViaString::new(String::from(
+        "valid_hash_test",
+    )));
+    let vs3 = ok(TestViaString::new(String::from(
         "valid_another_hash_test",
-    ))
-    .unwrap();
+    )));
 
     let mut hasher1 =
         std::collections::hash_map::DefaultHasher::new();
@@ -173,7 +183,7 @@ fn test_via_string_hash() {
 fn test_via_string_deref() {
     let rep_value = String::from("valid_deref_test");
     let vs_instance =
-        TestViaString::new(rep_value.clone()).unwrap();
+        ok(TestViaString::new(rep_value.clone()));
     assert_eq!(*vs_instance, rep_value);
     assert_eq!(vs_instance.len(), rep_value.len());
 }
@@ -181,7 +191,7 @@ fn test_via_string_deref() {
 #[test]
 fn test_via_string_from_str() {
     let s_ok = "valid_from_str";
-    let vs_ok = TestViaString::from_str(s_ok).unwrap();
+    let vs_ok = ok(TestViaString::from_str(s_ok));
     assert_eq!(
         vs_ok.rep(),
         &String::from("valid_from_str")
@@ -192,7 +202,7 @@ fn test_via_string_from_str() {
         TestParseError,
     > = FromStr::from_str(s_refine_err);
     assert!(parse_result_refine.is_err());
-    match parse_result_refine.unwrap_err() {
+    match err(parse_result_refine) {
         TestParseError::Refine(..) => {}
         TestParseError::Decode(..) => {
             panic!("Expected Refine error")
@@ -214,14 +224,13 @@ mod serde_tests {
             via_string_value: TestViaString,
         }
         let original = Wrapper {
-            via_string_value: TestViaString::new(
+            via_string_value: ok(TestViaString::new(
                 "valid_serde_test".to_string(),
-            )
-            .unwrap(),
+            )),
         };
-        let toml = toml::to_string(&original).unwrap();
+        let toml = ok(toml::to_string(&original));
         let deserialized: Wrapper =
-            toml::from_str(&toml).unwrap();
+            ok(toml::from_str(&toml));
         assert_eq!(original, deserialized);
         assert_eq!(
             deserialized.via_string_value.rep(),
@@ -237,8 +246,7 @@ mod serde_tests {
         }
 
         let toml = r#"via_string_value = "invalid_string""#;
-        let err =
-            toml::from_str::<Wrapper>(toml).unwrap_err();
+        let err = err(toml::from_str::<Wrapper>(toml));
         assert!(
             err.to_string().contains("TestRefineError"),
             "Unexpected failure: {err}"
@@ -247,7 +255,7 @@ mod serde_tests {
         let toml_valid =
             r#"via_string_value = "valid_serde_refine""#;
         let wrapper: Wrapper =
-            toml::from_str(toml_valid).unwrap();
+            ok(toml::from_str(toml_valid));
         assert_eq!(
             wrapper.via_string_value.rep(),
             "valid_serde_refine"
@@ -263,14 +271,13 @@ mod serde_tests {
             via_string_value: TestViaString,
         }
         let original = Wrapper {
-            via_string_value: TestViaString::new(
+            via_string_value: ok(TestViaString::new(
                 "valid_serde_test".to_string(),
-            )
-            .unwrap(),
+            )),
         };
-        let toml = toml::to_string(&original).unwrap();
+        let toml = ok(toml::to_string(&original));
         let deserialized: Wrapper =
-            toml::from_str(&toml).unwrap();
+            ok(toml::from_str(&toml));
         assert_eq!(original, deserialized);
     }
 }
@@ -323,22 +330,20 @@ mod via_string_diesel_tests_inline {
     #[test]
     fn test_diesel_via_string_queryable_success() {
         let mut conn = memory_db();
-        let valid_via_string_value = TestViaString::new(
-            "valid_diesel_test".to_string(),
-        )
-        .unwrap();
+        let valid_via_string_value =
+            ok(TestViaString::new(
+                "valid_diesel_test".to_string(),
+            ));
 
-        let _ = insert_into(via_string_values::table)
+        let _ = ok(insert_into(via_string_values::table)
             .values((via_string_values::value
                 .eq(&valid_via_string_value),))
-            .execute(&mut conn)
-            .unwrap();
+            .execute(&mut conn));
 
-        let rows: Vec<ViaStringRow> = sql_query(
+        let rows: Vec<ViaStringRow> = ok(sql_query(
             "SELECT id, value FROM via_string_values",
         )
-        .load(&mut conn)
-        .unwrap();
+        .load(&mut conn));
 
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].value, valid_via_string_value);
@@ -362,11 +367,10 @@ mod via_string_diesel_tests_inline {
             "Insert statement failed unexpectedly"
         );
 
-        let err = sql_query(
+        let err = err(sql_query(
             "SELECT id, value FROM via_string_values",
         )
-        .load::<ViaStringRow>(&mut conn)
-        .unwrap_err();
+        .load::<ViaStringRow>(&mut conn));
 
         let err_msg = err.to_string();
         assert!(
@@ -378,25 +382,22 @@ mod via_string_diesel_tests_inline {
     #[test]
     fn test_diesel_via_string_to_sql() {
         let mut conn = memory_db();
-        let via_string_value = TestViaString::new(
+        let via_string_value = ok(TestViaString::new(
             "valid_to_sql_test".to_string(),
-        )
-        .unwrap();
+        ));
 
-        let _ = insert_into(via_string_values::table)
+        let _ = ok(insert_into(via_string_values::table)
             .values((via_string_values::value
                 .eq(&via_string_value),))
-            .execute(&mut conn)
-            .unwrap();
+            .execute(&mut conn));
 
         let rows: Vec<(i32, String)> =
-            via_string_values::table
+            ok(via_string_values::table
                 .select((
                     via_string_values::id,
                     via_string_values::value,
                 ))
-                .load(&mut conn)
-                .unwrap();
+                .load(&mut conn));
 
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].1, "valid_to_sql_test");
@@ -405,15 +406,15 @@ mod via_string_diesel_tests_inline {
 
 #[test]
 fn test_via_string_eq_partial_eq_explicit() {
-    let vs1 =
-        TestViaString::new(String::from("valid_eq_test"))
-            .unwrap();
-    let vs2 =
-        TestViaString::new(String::from("valid_eq_test"))
-            .unwrap();
-    let vs3 =
-        TestViaString::new(String::from("valid_neq_test"))
-            .unwrap();
+    let vs1 = ok(TestViaString::new(String::from(
+        "valid_eq_test",
+    )));
+    let vs2 = ok(TestViaString::new(String::from(
+        "valid_eq_test",
+    )));
+    let vs3 = ok(TestViaString::new(String::from(
+        "valid_neq_test",
+    )));
 
     assert!(vs1 == vs2);
     assert!(vs1 != vs3);
@@ -424,14 +425,11 @@ fn test_via_string_eq_partial_eq_explicit() {
 #[test]
 fn test_via_string_ord_partial_ord_explicit() {
     let vs1 =
-        TestViaString::new(String::from("valid_ord_a"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_a")));
     let vs2 =
-        TestViaString::new(String::from("valid_ord_a"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_a")));
     let vs3 =
-        TestViaString::new(String::from("valid_ord_b"))
-            .unwrap();
+        ok(TestViaString::new(String::from("valid_ord_b")));
 
     assert_eq!(vs1.cmp(&vs2), std::cmp::Ordering::Equal);
     assert_eq!(
@@ -447,20 +445,18 @@ fn test_via_string_ord_partial_ord_explicit() {
 
 #[test]
 fn test_via_string_clone_explicit() {
-    let vs1 = TestViaString::new(String::from(
+    let vs1 = ok(TestViaString::new(String::from(
         "valid_clone_test",
-    ))
-    .unwrap();
+    )));
     let vs2 = vs1.clone();
     assert_eq!(vs1, vs2);
 }
 
 #[test]
 fn test_via_string_display_explicit() {
-    let vs_instance = TestViaString::new(String::from(
+    let vs_instance = ok(TestViaString::new(String::from(
         "valid_display_test",
-    ))
-    .unwrap();
+    )));
     assert_eq!(
         vs_instance.to_string(),
         "valid_display_test"
@@ -469,12 +465,12 @@ fn test_via_string_display_explicit() {
 
 #[test]
 fn test_via_string_hash_explicit() {
-    let vs1 =
-        TestViaString::new(String::from("valid_hash_test"))
-            .unwrap();
-    let vs2 =
-        TestViaString::new(String::from("valid_hash_test"))
-            .unwrap();
+    let vs1 = ok(TestViaString::new(String::from(
+        "valid_hash_test",
+    )));
+    let vs2 = ok(TestViaString::new(String::from(
+        "valid_hash_test",
+    )));
 
     let mut hasher1 =
         std::collections::hash_map::DefaultHasher::new();
@@ -491,17 +487,16 @@ fn test_via_string_hash_explicit() {
 
 #[test]
 fn test_via_string_deref_explicit() {
-    let vs_instance = TestViaString::new(String::from(
+    let vs_instance = ok(TestViaString::new(String::from(
         "valid_deref_test",
-    ))
-    .unwrap();
+    )));
     assert_eq!(*vs_instance, "valid_deref_test");
 }
 
 #[test]
 fn test_via_string_from_str_explicit() {
     let s_ok = "valid_from_str";
-    let vs_ok = TestViaString::from_str(s_ok).unwrap();
+    let vs_ok = ok(TestViaString::from_str(s_ok));
     assert_eq!(
         vs_ok.rep(),
         &String::from("valid_from_str")
@@ -527,7 +522,7 @@ fn test_via_string_copy() {
 
     type TestViaStringCopy = ViaString<i32, DCopy, FCopy>;
 
-    let vs1 = TestViaStringCopy::new(123).unwrap();
+    let vs1 = ok(TestViaStringCopy::new(123));
     let vs2 = vs1;
     assert_eq!(vs1, vs2);
     assert_eq!(vs1.rep(), vs2.rep());
@@ -536,8 +531,8 @@ fn test_via_string_copy() {
 #[test]
 fn test_haslength_via_string() {
     use functora_tagged::*;
-    let vs = TestViaString::new("valid_hello".to_string())
-        .unwrap();
+    let vs =
+        ok(TestViaString::new("valid_hello".to_string()));
     assert_eq!(vs.length(), "valid_hello".len());
     assert!(!vs.zero_length());
 }

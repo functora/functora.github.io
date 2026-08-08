@@ -3,6 +3,17 @@ use rust_decimal_macros::dec;
 use std::collections::{
     BTreeMap, BTreeSet, HashMap, HashSet, VecDeque,
 };
+use std::fmt::Debug;
+
+fn ok<T, E>(result: Result<T, E>) -> T
+where
+    E: Debug,
+{
+    match result {
+        Ok(value) => value,
+        Err(error) => panic!("expected Ok, got: {error:?}"),
+    }
+}
 
 #[derive(Debug)]
 struct D;
@@ -61,31 +72,31 @@ type NeVec = Tagged<Vec<i32>, D, FNonEmpty>;
 
 #[test]
 fn test_non_empty_first() {
-    let xs = NeVec::new(vec![10, 20, 30]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 20, 30]));
     assert_eq!(xs.first(), &10);
 }
 
 #[test]
 fn test_non_empty_last() {
-    let xs = NeVec::new(vec![10, 20, 30]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 20, 30]));
     assert_eq!(xs.last(), &30);
 }
 
 #[test]
 fn test_non_empty_min_by_key() {
-    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 5, 20]));
     assert_eq!(xs.min_by_key(|&x| x), &5);
 }
 
 #[test]
 fn test_non_empty_max_by_key() {
-    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 5, 20]));
     assert_eq!(xs.max_by_key(|&x| x), &20);
 }
 
 #[test]
 fn test_non_empty_map() {
-    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let xs = ok(NeVec::new(vec![1, 2, 3]));
     let ys: Tagged<Vec<i32>, D, FNonEmpty> =
         xs.map(|x| x * 2);
     assert_eq!(*ys, vec![2, 4, 6]);
@@ -93,42 +104,42 @@ fn test_non_empty_map() {
 
 #[test]
 fn test_non_empty_min_max() {
-    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 5, 20]));
     assert_eq!(xs.minimum(), &5);
     assert_eq!(xs.maximum(), &20);
 }
 
 #[test]
 fn test_non_empty_min_max_by() {
-    let xs = NeVec::new(vec![10, 5, 20]).unwrap();
+    let xs = ok(NeVec::new(vec![10, 5, 20]));
     assert_eq!(xs.min_by(Ord::cmp), &5);
     assert_eq!(xs.max_by(Ord::cmp), &20);
 }
 
 #[test]
 fn test_non_empty_reduce() {
-    let xs = NeVec::new(vec![1, 2, 3, 4]).unwrap();
+    let xs = ok(NeVec::new(vec![1, 2, 3, 4]));
     let sum = xs.reduce(|a, b| a + b);
     assert_eq!(sum, 10);
 }
 
 #[test]
 fn test_non_empty_rev() {
-    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let xs = ok(NeVec::new(vec![1, 2, 3]));
     let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.rev();
     assert_eq!(*ys, vec![3, 2, 1]);
 }
 
 #[test]
 fn test_non_empty_sorted() {
-    let xs = NeVec::new(vec![3, 1, 2]).unwrap();
+    let xs = ok(NeVec::new(vec![3, 1, 2]));
     let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.sort();
     assert_eq!(*ys, vec![1, 2, 3]);
 }
 
 #[test]
 fn test_non_empty_sorted_by_key() {
-    let xs = NeVec::new(vec![1, 2, 3]).unwrap();
+    let xs = ok(NeVec::new(vec![1, 2, 3]));
     let ys: Tagged<Vec<i32>, D, FNonEmpty> =
         xs.sort_by_key(|x| -x);
     assert_eq!(*ys, vec![3, 2, 1]);
@@ -136,7 +147,7 @@ fn test_non_empty_sorted_by_key() {
 
 #[test]
 fn test_non_empty_dedup() {
-    let xs = NeVec::new(vec![1, 1, 2, 2, 3, 1]).unwrap();
+    let xs = ok(NeVec::new(vec![1, 1, 2, 2, 3, 1]));
     let ys: Tagged<Vec<i32>, D, FNonEmpty> = xs.dedup();
     assert_eq!(*ys, vec![1, 2, 3, 1]);
 }
@@ -271,7 +282,7 @@ fn test_non_empty_hashmap_first() {
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
     let _ = map.insert(3, "three");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     let first = xs.first();
     assert!(*first.0 >= 1 && *first.0 <= 3);
 }
@@ -282,7 +293,7 @@ fn test_non_empty_hashmap_minimum() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.minimum().0, 5);
 }
 
@@ -292,7 +303,7 @@ fn test_non_empty_hashmap_maximum() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.maximum().0, 20);
 }
 
@@ -302,7 +313,7 @@ fn test_non_empty_hashmap_min_by() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.min_by(|a, b| a.0.cmp(b.0)).0, 5);
 }
 
@@ -312,7 +323,7 @@ fn test_non_empty_hashmap_max_by() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.max_by(|a, b| a.0.cmp(b.0)).0, 20);
 }
 
@@ -322,7 +333,7 @@ fn test_non_empty_hashmap_min_by_key() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.min_by_key(|x| x.0).0, 5);
 }
 
@@ -332,7 +343,7 @@ fn test_non_empty_hashmap_max_by_key() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     assert_eq!(*xs.max_by_key(|x| x.0).0, 20);
 }
 
@@ -342,7 +353,7 @@ fn test_non_empty_hashmap_reduce() {
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
     let _ = map.insert(3, "three");
-    let xs = NeHashMap::new(map).unwrap();
+    let xs = ok(NeHashMap::new(map));
     let sum = xs.reduce(|acc, x| (acc.0 + x.0, acc.1));
     assert_eq!(sum.0, 6);
 }
@@ -359,7 +370,7 @@ fn test_non_empty_hashset_first() {
     let _ = set.insert(10);
     let _ = set.insert(20);
     let _ = set.insert(30);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     let first = xs.first();
     assert!(*first == 10 || *first == 20 || *first == 30);
 }
@@ -370,7 +381,7 @@ fn test_non_empty_hashset_minimum() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     assert_eq!(xs.minimum(), &5);
 }
 
@@ -380,7 +391,7 @@ fn test_non_empty_hashset_maximum() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     assert_eq!(xs.maximum(), &20);
 }
 
@@ -390,7 +401,7 @@ fn test_non_empty_hashset_min_by() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     assert_eq!(xs.min_by(Ord::cmp), &5);
 }
 
@@ -400,7 +411,7 @@ fn test_non_empty_hashset_max_by() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     assert_eq!(xs.max_by(Ord::cmp), &20);
 }
 
@@ -411,7 +422,7 @@ fn test_non_empty_hashset_reduce() {
     let _ = set.insert(2);
     let _ = set.insert(3);
     let _ = set.insert(4);
-    let xs = NeHashSet::new(set).unwrap();
+    let xs = ok(NeHashSet::new(set));
     let sum = xs.reduce(|a, b| a + b);
     assert_eq!(sum, 10);
 }
@@ -429,7 +440,7 @@ fn test_non_empty_btreenmap_first() {
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
     let _ = map.insert(3, "three");
-    let xs = NeBTreeMap::new(map).unwrap();
+    let xs = ok(NeBTreeMap::new(map));
     assert_eq!(*xs.first().0, 1);
 }
 
@@ -439,7 +450,7 @@ fn test_non_empty_btreenmap_last() {
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
     let _ = map.insert(3, "three");
-    let xs = NeBTreeMap::new(map).unwrap();
+    let xs = ok(NeBTreeMap::new(map));
     assert_eq!(*xs.last().0, 3);
 }
 
@@ -449,7 +460,7 @@ fn test_non_empty_btreenmap_minimum() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeBTreeMap::new(map).unwrap();
+    let xs = ok(NeBTreeMap::new(map));
     assert_eq!(*xs.minimum().0, 5);
 }
 
@@ -459,7 +470,7 @@ fn test_non_empty_btreenmap_maximum() {
     let _ = map.insert(10, "ten");
     let _ = map.insert(5, "five");
     let _ = map.insert(20, "twenty");
-    let xs = NeBTreeMap::new(map).unwrap();
+    let xs = ok(NeBTreeMap::new(map));
     assert_eq!(*xs.maximum().0, 20);
 }
 
@@ -469,7 +480,7 @@ fn test_non_empty_btreenmap_reduce() {
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
     let _ = map.insert(3, "three");
-    let xs = NeBTreeMap::new(map).unwrap();
+    let xs = ok(NeBTreeMap::new(map));
     let sum = xs.reduce(|acc, x| (acc.0 + x.0, acc.1));
     assert_eq!(sum.0, 6);
 }
@@ -486,7 +497,7 @@ fn test_non_empty_btreeset_first() {
     let _ = set.insert(10);
     let _ = set.insert(20);
     let _ = set.insert(30);
-    let xs = NeBTreeSet::new(set).unwrap();
+    let xs = ok(NeBTreeSet::new(set));
     assert_eq!(xs.first(), &10);
 }
 
@@ -496,7 +507,7 @@ fn test_non_empty_btreeset_last() {
     let _ = set.insert(10);
     let _ = set.insert(20);
     let _ = set.insert(30);
-    let xs = NeBTreeSet::new(set).unwrap();
+    let xs = ok(NeBTreeSet::new(set));
     assert_eq!(xs.last(), &30);
 }
 
@@ -506,7 +517,7 @@ fn test_non_empty_btreeset_minimum() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeBTreeSet::new(set).unwrap();
+    let xs = ok(NeBTreeSet::new(set));
     assert_eq!(xs.minimum(), &5);
 }
 
@@ -516,7 +527,7 @@ fn test_non_empty_btreeset_maximum() {
     let _ = set.insert(10);
     let _ = set.insert(5);
     let _ = set.insert(20);
-    let xs = NeBTreeSet::new(set).unwrap();
+    let xs = ok(NeBTreeSet::new(set));
     assert_eq!(xs.maximum(), &20);
 }
 
@@ -527,7 +538,7 @@ fn test_non_empty_btreeset_reduce() {
     let _ = set.insert(2);
     let _ = set.insert(3);
     let _ = set.insert(4);
-    let xs = NeBTreeSet::new(set).unwrap();
+    let xs = ok(NeBTreeSet::new(set));
     let sum = xs.reduce(|a, b| a + b);
     assert_eq!(sum, 10);
 }
@@ -544,7 +555,7 @@ fn test_non_empty_vecdeque_first() {
     dq.push_back(10);
     dq.push_back(20);
     dq.push_back(30);
-    let xs = NeVecDeque::new(dq).unwrap();
+    let xs = ok(NeVecDeque::new(dq));
     assert_eq!(xs.first(), &10);
 }
 
@@ -554,7 +565,7 @@ fn test_non_empty_vecdeque_last() {
     dq.push_back(10);
     dq.push_back(20);
     dq.push_back(30);
-    let xs = NeVecDeque::new(dq).unwrap();
+    let xs = ok(NeVecDeque::new(dq));
     assert_eq!(xs.last(), &30);
 }
 
@@ -564,7 +575,7 @@ fn test_non_empty_vecdeque_minimum() {
     dq.push_back(10);
     dq.push_back(5);
     dq.push_back(20);
-    let xs = NeVecDeque::new(dq).unwrap();
+    let xs = ok(NeVecDeque::new(dq));
     assert_eq!(xs.minimum(), &5);
 }
 
@@ -574,7 +585,7 @@ fn test_non_empty_vecdeque_maximum() {
     dq.push_back(10);
     dq.push_back(5);
     dq.push_back(20);
-    let xs = NeVecDeque::new(dq).unwrap();
+    let xs = ok(NeVecDeque::new(dq));
     assert_eq!(xs.maximum(), &20);
 }
 
@@ -585,7 +596,7 @@ fn test_non_empty_vecdeque_reduce() {
     dq.push_back(2);
     dq.push_back(3);
     dq.push_back(4);
-    let xs = NeVecDeque::new(dq).unwrap();
+    let xs = ok(NeVecDeque::new(dq));
     let sum = xs.reduce(|a, b| a + b);
     assert_eq!(sum, 10);
 }
@@ -596,12 +607,11 @@ fn test_non_empty_vecdeque_reduce() {
 
 #[test]
 fn test_non_empty_convert_vec_to_hashmap() {
-    let pairs = NonEmpty::new(vec![
+    let pairs = ok(NonEmpty::new(vec![
         (1, "one"),
         (2, "two"),
         (3, "three"),
-    ])
-    .unwrap();
+    ]));
     let map: NonEmpty<HashMap<i32, &'static str>> =
         pairs.via_iter();
     assert_eq!(map.length(), 3);
@@ -612,7 +622,7 @@ fn test_non_empty_convert_vec_to_hashmap() {
 
 #[test]
 fn test_non_empty_convert_vec_to_btreeset() {
-    let xs = NonEmpty::new(vec![3, 1, 2]).unwrap();
+    let xs = ok(NonEmpty::new(vec![3, 1, 2]));
     let set: NonEmpty<BTreeSet<i32>> = xs.via_iter();
     assert_eq!(set.length(), 3);
     assert_eq!(set.first(), &1);
@@ -624,7 +634,7 @@ fn test_non_empty_convert_hashmap_to_vec() {
     let mut map = HashMap::new();
     let _ = map.insert(1, "one");
     let _ = map.insert(2, "two");
-    let ne_map = NonEmpty::new(map).unwrap();
+    let ne_map = ok(NonEmpty::new(map));
     let vec: NonEmpty<Vec<(i32, &'static str)>> =
         ne_map.via_iter();
     assert_eq!(vec.length(), 2);
@@ -632,7 +642,7 @@ fn test_non_empty_convert_hashmap_to_vec() {
 
 #[test]
 fn test_non_empty_convert_preserves_nonempty() {
-    let xs = NonEmpty::new(vec![1]).unwrap();
+    let xs = ok(NonEmpty::new(vec![1]));
     let set: NonEmpty<BTreeSet<i32>> = xs.via_iter();
     assert_eq!(set.length(), 1);
     assert!(set.contains(&1));
@@ -640,7 +650,7 @@ fn test_non_empty_convert_preserves_nonempty() {
 
 #[test]
 fn test_non_empty_into_identity() {
-    let xs = NonEmpty::new(vec![1, 2, 3]).unwrap();
+    let xs = ok(NonEmpty::new(vec![1, 2, 3]));
     let result: NonEmpty<Vec<i32>> = xs.via_into();
     assert_eq!(result.length(), 3);
     assert_eq!(result.first(), &1);
@@ -649,7 +659,7 @@ fn test_non_empty_into_identity() {
 
 #[test]
 fn test_non_empty_into_preserves_nonempty() {
-    let xs = NonEmpty::new(vec![42]).unwrap();
+    let xs = ok(NonEmpty::new(vec![42]));
     let result: NonEmpty<Vec<i32>> = xs.via_into();
     assert_eq!(result.length(), 1);
     assert_eq!(result.first(), &42);

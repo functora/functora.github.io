@@ -59,8 +59,12 @@ fn zip_roundtrip_preserves_entries() {
                     data: vec![1, 2, 3],
                 },
             ];
-            let zip = create_zip_async(&files, progress(), Stage::Zip).await.expect("zip");
-            let entries = unzip_async(zip, progress(), Stage::Unzip).await.expect("unzip");
+            let zip = create_zip_async(&files, progress(), Stage::Zip)
+                .await
+                .unwrap_or_else(|e| panic!("zip: {e:?}"));
+            let entries = unzip_async(zip, progress(), Stage::Unzip)
+                .await
+                .unwrap_or_else(|e| panic!("unzip: {e:?}"));
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].0, "a.txt");
             assert_eq!(entries[0].1, b"hello");
@@ -84,8 +88,10 @@ fn zip_roundtrip_large_payload() {
                 Stage::Zip,
             )
             .await
-            .expect("zip");
-            let entries = unzip_async(zip, progress(), Stage::Unzip).await.expect("unzip");
+            .unwrap_or_else(|e| panic!("zip: {e:?}"));
+            let entries = unzip_async(zip, progress(), Stage::Unzip)
+                .await
+                .unwrap_or_else(|e| panic!("unzip: {e:?}"));
             assert_eq!(entries[0].1, big);
         })
     });
@@ -100,8 +106,14 @@ fn zip_progress_reaches_total() {
                 data: vec![0u8; 5 * 1024 * 1024],
             }];
             let progress = progress();
-            let zip = create_zip_async(&files, progress, Stage::Zip).await.expect("zip");
-            let job = progress.try_read().expect("job reported").clone().expect("job present");
+            let zip = create_zip_async(&files, progress, Stage::Zip)
+                .await
+                .unwrap_or_else(|e| panic!("zip: {e:?}"));
+            let job = progress
+                .try_read()
+                .unwrap_or_else(|e| panic!("job reported: {e:?}"))
+                .clone()
+                .unwrap_or_else(|| panic!("job present"));
             assert_eq!(job.done, job.total);
             assert!(job.total > 0);
             assert!(!zip.is_empty());
@@ -127,11 +139,13 @@ fn package_roundtrip_encrypted() {
                 progress(),
             )
             .await
-            .expect("package");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
             let inner = extract_package_async(ArchiveSource::Bytes(pkg), "pw", AAD_PREFIX, stages, progress())
                 .await
-                .expect("extract");
-            let unzipped = unzip_async(inner, progress(), Stage::Unzip).await.expect("unzip");
+                .unwrap_or_else(|e| panic!("extract: {e:?}"));
+            let unzipped = unzip_async(inner, progress(), Stage::Unzip)
+                .await
+                .unwrap_or_else(|e| panic!("unzip: {e:?}"));
             assert_eq!(unzipped, entries);
         })
     });
@@ -145,11 +159,13 @@ fn package_roundtrip_plain() {
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(entries.clone(), "", None, AAD_PREFIX, stages, progress())
                 .await
-                .expect("package");
+                .unwrap_or_else(|e| panic!("package: {e:?}"));
             let inner = extract_package_async(ArchiveSource::Bytes(pkg), "", AAD_PREFIX, stages, progress())
                 .await
-                .expect("extract");
-            let unzipped = unzip_async(inner, progress(), Stage::Unzip).await.expect("unzip");
+                .unwrap_or_else(|e| panic!("extract: {e:?}"));
+            let unzipped = unzip_async(inner, progress(), Stage::Unzip)
+                .await
+                .unwrap_or_else(|e| panic!("unzip: {e:?}"));
             assert_eq!(unzipped, entries);
         })
     });
@@ -169,8 +185,8 @@ fn package_metadata_read() {
                 progress(),
             )
             .await
-            .expect("package");
-            let meta = read_metadata(&ArchiveSource::Bytes(pkg)).expect("metadata");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
+            let meta = read_metadata(&ArchiveSource::Bytes(pkg)).unwrap_or_else(|e| panic!("metadata: {e:?}"));
             assert_eq!(meta.cipher, Some(CipherType::ChaCha20Poly1305));
             assert!(!meta.nonce.is_empty());
             assert!(!meta.salt.is_empty());
@@ -183,8 +199,8 @@ fn package_metadata_read() {
                 progress(),
             )
             .await
-            .expect("package");
-            let plain_meta = read_metadata(&ArchiveSource::Bytes(plain)).expect("metadata");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
+            let plain_meta = read_metadata(&ArchiveSource::Bytes(plain)).unwrap_or_else(|e| panic!("metadata: {e:?}"));
             assert_eq!(
                 plain_meta,
                 ArchiveMetadata {
@@ -212,7 +228,7 @@ fn package_wrong_password_fails() {
                 progress(),
             )
             .await
-            .expect("package");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
             let res = extract_package_async(ArchiveSource::Bytes(pkg), "wrong", AAD_PREFIX, stages, progress()).await;
             assert!(res.is_err());
         })
@@ -233,7 +249,7 @@ fn package_wrong_prefix_fails() {
                 progress(),
             )
             .await
-            .expect("package");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
             let res = extract_package_async(ArchiveSource::Bytes(pkg), "pw", b"other-app.v1", stages, progress()).await;
             assert!(res.is_err());
         })
@@ -254,14 +270,16 @@ fn package_path_roundtrip() {
                 progress(),
             )
             .await
-            .expect("package");
-            let dir = tempfile::tempdir().expect("tempdir");
+            .unwrap_or_else(|e| panic!("package: {e:?}"));
+            let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("tempdir: {e:?}"));
             let path = dir.path().join("test.cryptonote");
-            std::fs::write(&path, &pkg).expect("write");
+            std::fs::write(&path, &pkg).unwrap_or_else(|e| panic!("write: {e:?}"));
             let inner = extract_package_async(ArchiveSource::Path(path), "pw", AAD_PREFIX, stages, progress())
                 .await
-                .expect("extract path");
-            let unzipped = unzip_async(inner, progress(), Stage::Unzip).await.expect("unzip");
+                .unwrap_or_else(|e| panic!("extract path: {e:?}"));
+            let unzipped = unzip_async(inner, progress(), Stage::Unzip)
+                .await
+                .unwrap_or_else(|e| panic!("unzip: {e:?}"));
             assert_eq!(unzipped, vec![("note.txt".to_string(), b"path note".to_vec())]);
         })
     });

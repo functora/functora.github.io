@@ -11,14 +11,13 @@ fn test_owned_owned() {
 
 #[test]
 fn test_ref_ref() {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    fn add_refs(a: &i32, b: &i32) -> i32 {
-        *a + *b
+    fn add_refs(a: &str, b: &str) -> usize {
+        a.len() + b.len()
     }
-    let a = 5;
-    let b = 10;
-    let curried = add_refs.curry::<PiRef<_>>(&a);
-    assert_eq!(curried(&b), 15);
+    let a = "hello";
+    let b = "world";
+    let curried = add_refs.curry::<PiRef<_>>(a);
+    assert_eq!(curried(b), 10);
 }
 
 #[test]
@@ -35,22 +34,20 @@ fn test_mut_mut() {
 
 #[test]
 fn test_mixed_ref_owned() {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    fn mixed(a: &i32, b: i32) -> i32 {
-        *a + b
+    fn mixed(a: &[i32], b: i32) -> i32 {
+        a.iter().sum::<i32>() + b
     }
-    let a = 5;
+    let a = vec![5];
     let curried = mixed.curry::<PiVal<_>>(&a);
     assert_eq!(curried(10), 15);
 }
 
 #[test]
 fn test_mixed_owned_ref() {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    fn mixed(a: i32, b: &i32) -> i32 {
-        a + *b
+    fn mixed(a: i32, b: &[i32]) -> i32 {
+        a + b.iter().sum::<i32>()
     }
-    let b = 10;
+    let b = vec![10];
     let curried = mixed.curry::<PiRef<_>>(5);
     assert_eq!(curried(&b), 15);
 }
@@ -88,17 +85,17 @@ fn test_complex_types() {
         y: i32,
     }
 
-    #[allow(clippy::needless_pass_by_value)]
-    fn move_point(p: Point, offset: i32) -> Point {
+    fn move_point(p: &Point, offset: &Point) -> Point {
         Point {
-            x: p.x + offset,
-            y: p.y + offset,
+            x: p.x + offset.x,
+            y: p.y + offset.y,
         }
     }
 
     let p = Point { x: 1, y: 2 };
-    let curried = move_point.curry::<PiVal<_>>(p);
-    assert_eq!(curried(3), Point { x: 4, y: 5 });
+    let o = Point { x: 3, y: 3 };
+    let curried = move_point.curry::<PiRef<_>>(&p);
+    assert_eq!(curried(&o), Point { x: 4, y: 5 });
 }
 
 #[test]

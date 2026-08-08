@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use rustell::decode;
 use rustell::encode;
 use rustell::*;
@@ -471,7 +470,10 @@ fn small_mixed_lib() {
 #[test]
 fn roundtrip_source_files() {
     for path in get_rust_files("./") {
-        let lhs = std::fs::read_to_string(&path).unwrap();
+        let lhs = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| {
+                panic!("failed to read {path}: {e}")
+            });
         let rhs = decode(&lhs);
         assert_eq!(
             decode(&encode(&rhs)),
@@ -483,10 +485,18 @@ fn roundtrip_source_files() {
 
 fn get_rust_files(dir: &str) -> Vec<String> {
     std::fs::read_dir(dir)
-        .unwrap()
+        .unwrap_or_else(|e| {
+            panic!("failed to read dir {dir}: {e}")
+        })
         .flat_map(|item| {
-            let path = item.unwrap().path();
-            let name = path.to_str().unwrap();
+            let path = item
+                .unwrap_or_else(|e| {
+                    panic!("failed to read entry: {e}")
+                })
+                .path();
+            let Some(name) = path.to_str() else {
+                panic!("non-UTF-8 path {}", path.display())
+            };
             if path.is_dir() {
                 get_rust_files(name)
             } else if path.is_file()
@@ -507,16 +517,14 @@ fn sloppy(src: &str) -> String {
 }
 
 fn decode(src: &str) -> Vec<Expr<'_>> {
-    decode::expr().parse(src).into_result().unwrap()
+    decode::expr().parse(src).into_result().unwrap_or_else(
+        |e| panic!("failed to parse: {e:?}"),
+    )
 }
 
 fn encode(ast: &[Expr]) -> String {
     encode::expr(ast).collect()
 }
-
-//
-// Deterministic property-based round-trip (no external dependencies).
-//
 
 enum Spec {
     Mod(usize),
@@ -593,9 +601,9 @@ fn pick_index(state: &mut u64, len: usize) -> usize {
     if len == 0 {
         0
     } else {
-        usize::try_from(next_u64(state))
-            .expect("rng fits usize")
-            % len
+        usize::try_from(next_u64(state)).unwrap_or_else(
+            |_| panic!("rng value exceeds usize"),
+        ) % len
     }
 }
 
@@ -605,7 +613,7 @@ fn coin(state: &mut u64) -> bool {
 
 fn pick<'a, T>(state: &mut u64, xs: &'a [T]) -> &'a T {
     xs.get(pick_index(state, xs.len()))
-        .expect("non-empty pool")
+        .unwrap_or_else(|| panic!("non-empty pool"))
 }
 
 fn gen_idents(
@@ -777,7 +785,13 @@ fn materialize_expr<'a>(
 }
 
 fn ident_str(idents: &[String], i: usize) -> &str {
-    idents.get(i).expect("ident index in range").as_str()
+    match idents.get(i) {
+        Some(ident) => ident.as_str(),
+        None => panic!(
+            "ident index {i} out of range {}",
+            idents.len()
+        ),
+    }
 }
 
 fn materialize_jump<'a>(

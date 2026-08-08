@@ -337,12 +337,11 @@ mod diesel_integration_tests {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        #[allow(clippy::unwrap_used)]
-        let _ = sql_query(
+        _ = sql_query(
             "CREATE TABLE users (id TEXT NOT NULL, email TEXT NOT NULL);",
         )
         .execute(&mut conn)
-        .unwrap();
+        .unwrap_or_else(|e| panic!("cannot create table: {e}"));
         conn
     }
 

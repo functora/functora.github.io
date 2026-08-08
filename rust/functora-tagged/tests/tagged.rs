@@ -281,12 +281,11 @@ mod tagged_diesel_tests {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        #[allow(clippy::unwrap_used)]
-        let _ = sql_query(
+        _ = sql_query(
             "CREATE TABLE tagged_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value INTEGER NOT NULL);",
         )
         .execute(&mut conn)
-        .unwrap();
+        .unwrap_or_else(|e| panic!("cannot create table: {e}"));
         conn
     }
 

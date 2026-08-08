@@ -19,7 +19,7 @@ derive_more = { version = "2.1.0", features = ["display"] }
 either = { version = "1.15.0", features = ["serde"] }
 tracing = "0.1.43"
 functora = { path = "../functora" }
-functora-tagged = "0.2.7"
+functora-tagged = { path = "../functora-tagged" }
 tap = "1.0.1"
 dioxus-free-icons = { version = "0.10.0", features = [
   "font-awesome-brands",

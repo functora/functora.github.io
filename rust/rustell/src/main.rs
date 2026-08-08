@@ -1,19 +1,17 @@
 use rustell::decode;
 use rustell::encode;
 use rustell::*;
-use std::io::{self, Read};
+use std::io;
 
 fn main() {
-    let mut src = String::new();
-    if let Err(e) = io::stdin().read_to_string(&mut src) {
-        eprintln!("error reading stdin: {e}");
-        std::process::exit(1);
-    }
+    let src = io::read_to_string(io::stdin())
+        .unwrap_or_else(|e| {
+            eprintln!("error reading stdin: {e}");
+            std::process::exit(1);
+        });
     match decode::expr().parse(src.trim()).into_result() {
         Ok(ast) => {
-            for x in encode::expr(&ast) {
-                print!("{x}")
-            }
+            encode::expr(&ast).for_each(|x| print!("{x}"))
         }
         Err(errs) => {
             for e in errs {

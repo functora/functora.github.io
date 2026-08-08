@@ -318,12 +318,11 @@ mod via_string_diesel_tests_inline {
                 .unwrap_or_else(|_| {
                     panic!("cannot create in-memory DB")
                 });
-        #[allow(clippy::unwrap_used)]
-        let _ = sql_query(
+        _ = sql_query(
             "CREATE TABLE via_string_values (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL);",
         )
         .execute(&mut conn)
-        .unwrap();
+        .unwrap_or_else(|e| panic!("cannot create table: {e}"));
         conn
     }
 

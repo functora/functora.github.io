@@ -92,14 +92,13 @@ fn velocity() -> Test {
 
 #[test]
 fn kinetic_energy() -> Test {
-    #[allow(clippy::many_single_char_names)]
-    let (mass, dist, time) = (
+    let (m, d, t) = (
         Kg::new(dec!(2))?,
         Meter::new(dec!(10))?,
         Second::new(dec!(5))?,
     );
-    let vel: Velocity = dist.tdiv(time)?;
-    let energy: Joule = mass.tmul(vel.tmul(vel)?)?;
+    let vel: Velocity = d.tdiv(t)?;
+    let energy: Joule = m.tmul(vel.tmul(vel)?)?;
     assert_eq!(energy.rep(), &dec!(8));
     ok()
 }

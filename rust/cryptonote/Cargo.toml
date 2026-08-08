@@ -22,7 +22,7 @@ thiserror = "2.0.18"
 tracing = "0.1.43"
 functora = { path = "../functora" }
 functora-dioxus = { path = "../functora-dioxus", features = ["qr"] }
-functora-tagged = "0.2.7"
+functora-tagged = { path = "../functora-tagged" }
 dioxus-free-icons = { version = "0.10.0", features = [
   "font-awesome-brands",
   "font-awesome-solid",

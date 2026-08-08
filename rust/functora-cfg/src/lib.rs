@@ -171,9 +171,13 @@ where
         })
     }
     fn augment_args_for_update(
-        _: clap::Command,
+        cmd: clap::Command,
     ) -> clap::Command {
-        unimplemented!()
+        T::augment_args_for_update(cmd).defer(|sub_cmd| {
+            U::augment_subcommands_for_update(
+                sub_cmd.disable_help_subcommand(true),
+            )
+        })
     }
 }
 
@@ -200,9 +204,15 @@ where
     }
     fn update_from_arg_matches(
         &mut self,
-        _: &clap::ArgMatches,
+        matches: &clap::ArgMatches,
     ) -> Result<(), clap::Error> {
-        unimplemented!()
+        self.prev.update_from_arg_matches(matches)?;
+        self.next = if matches.subcommand().is_some() {
+            Some(Box::new(U::from_arg_matches(matches)?))
+        } else {
+            None
+        };
+        Ok(())
     }
 }
 
@@ -228,29 +238,32 @@ impl<T> FromArgMatches for IdClap<T> {
     fn from_arg_matches(
         _: &clap::ArgMatches,
     ) -> Result<Self, clap::Error> {
-        unimplemented!()
+        Err(clap::Error::raw(
+            clap::error::ErrorKind::InvalidSubcommand,
+            "IdClap does not parse command-line arguments",
+        ))
     }
     fn update_from_arg_matches(
         &mut self,
         _: &clap::ArgMatches,
     ) -> Result<(), clap::Error> {
-        unimplemented!()
+        Ok(())
     }
 }
 
 impl<T> Subcommand for IdClap<T> {
     fn augment_subcommands(
-        _: clap::Command,
+        cmd: clap::Command,
     ) -> clap::Command {
-        unimplemented!()
+        cmd
     }
     fn augment_subcommands_for_update(
-        _: clap::Command,
+        cmd: clap::Command,
     ) -> clap::Command {
-        unimplemented!()
+        cmd
     }
     fn has_subcommand(_: &str) -> bool {
-        unimplemented!()
+        false
     }
 }
 

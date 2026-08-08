@@ -1932,11 +1932,13 @@ version = "0.1.10"
 name = "functora-dioxus"
 version = "0.1.0"
 dependencies = [
+ "aead",
  "aes-gcm",
  "ammonia",
  "argon2",
  "base64",
  "chacha20poly1305",
+ "cipher",
  "derive_more 2.1.0",
  "dioxus",
  "dioxus-free-icons",

@@ -1,5 +1,5 @@
 use crate::Error;
-use crate::crypto::{CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts};
+use crate::crypto::{ChunkKind, CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts};
 use crate::progress::{Job, yield_to_paint};
 use crate::worker::{Reporter, run};
 use crate::zip::zip_entries;
@@ -137,8 +137,12 @@ where
         let mut position = 0u32;
         while offset < inner.len() {
             let end = (offset + STREAM_CHUNK).min(inner.len());
-            let last = end == inner.len();
-            let ct = parts.encrypt_chunk(position, last, &inner[offset..end])?;
+            let kind = if end == inner.len() {
+                ChunkKind::Last
+            } else {
+                ChunkKind::NonLast
+            };
+            let ct = parts.encrypt_chunk(position, kind, &inner[offset..end])?;
             zip.write_all(&ct).map_err(|e| Error::Archive(e.to_string()))?;
             offset = end;
             position += 1;
@@ -271,8 +275,12 @@ where
     let mut position = 0u32;
     while offset < inner.len() {
         let end = (offset + STREAM_CHUNK + STREAM_TAG).min(inner.len());
-        let last = end == inner.len();
-        let plain = parts.decrypt_chunk(position, last, &inner[offset..end])?;
+        let kind = if end == inner.len() {
+            ChunkKind::Last
+        } else {
+            ChunkKind::NonLast
+        };
+        let plain = parts.decrypt_chunk(position, kind, &inner[offset..end])?;
         inner[write..write + plain.len()].copy_from_slice(&plain);
         offset = end;
         write += plain.len();

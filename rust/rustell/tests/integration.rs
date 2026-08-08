@@ -513,3 +513,328 @@ fn decode(src: &str) -> Vec<Expr<'_>> {
 fn encode(ast: &[Expr]) -> String {
     encode::expr(ast).collect()
 }
+
+//
+// Deterministic property-based round-trip (no external dependencies).
+//
+
+enum Spec {
+    Mod(usize),
+    Use(UseSpec),
+    Jump(JumpSpec),
+    Block(Vec<Spec>),
+    Raw(&'static str),
+}
+
+enum UseSpec {
+    Item {
+        module: usize,
+        rename: Option<usize>,
+        nested: Option<Box<UseSpec>>,
+    },
+    Many(Vec<UseSpec>),
+    Glob,
+}
+
+enum JumpSpec {
+    Break,
+    Continue,
+    Return(Box<Spec>),
+}
+
+const IDENT_BASE: &[&str] = &[
+    "alpha", "beta", "gamma", "delta", "eps", "zeta",
+    "eta", "theta", "iota", "kappa",
+];
+
+const SAFE_RAWS: &[&str] = &[
+    "x",
+    "y",
+    "z",
+    "let",
+    "let a = 1",
+    "while true",
+    "match",
+    "loop",
+    "for x in y",
+    "if a { b }",
+    "struct",
+    "enum",
+    "impl",
+    "123",
+    "fn",
+    "->",
+    "::",
+    "0x1F",
+    "'k",
+    "|a b|",
+    "&&",
+    "0b1",
+    "a.b",
+    "@",
+    "sep",
+    "_",
+];
+
+fn next_u64(state: &mut u64) -> u64 {
+    let mut x = *state;
+    x ^= x << 13;
+    x ^= x >> 7;
+    x ^= x << 17;
+    *state = x;
+    x
+}
+
+fn pick_mod(state: &mut u64, n: u64) -> u64 {
+    next_u64(state) % n
+}
+
+fn pick_index(state: &mut u64, len: usize) -> usize {
+    if len == 0 {
+        0
+    } else {
+        usize::try_from(next_u64(state))
+            .expect("rng fits usize")
+            % len
+    }
+}
+
+fn coin(state: &mut u64) -> bool {
+    pick_mod(state, 2) == 0
+}
+
+fn pick<'a, T>(state: &mut u64, xs: &'a [T]) -> &'a T {
+    xs.get(pick_index(state, xs.len()))
+        .expect("non-empty pool")
+}
+
+fn gen_idents(
+    state: &mut u64,
+    count: usize,
+) -> Vec<String> {
+    (0..count)
+        .map(|i| format!("{}{i}", pick(state, IDENT_BASE)))
+        .collect()
+}
+
+fn gen_program(
+    state: &mut u64,
+    ident_count: usize,
+) -> Vec<Spec> {
+    (0..=pick_mod(state, 14))
+        .map(|_| gen_expr(state, ident_count, 0))
+        .collect()
+}
+
+fn gen_expr(
+    state: &mut u64,
+    ident_count: usize,
+    depth: u64,
+) -> Spec {
+    if depth >= 5 {
+        return match pick_mod(state, 10) {
+            0..=4 => {
+                Spec::Mod(pick_index(state, ident_count))
+            }
+            _ => Spec::Raw(pick(state, SAFE_RAWS)),
+        };
+    }
+    match pick_mod(state, 100) {
+        0..=44 => Spec::Mod(pick_index(state, ident_count)),
+        45..=64 => {
+            Spec::Use(gen_use(state, ident_count, depth))
+        }
+        65..=74 => {
+            Spec::Jump(gen_jump(state, ident_count, depth))
+        }
+        75..=84 => Spec::Block(gen_block(
+            state,
+            ident_count,
+            depth,
+        )),
+        _ => Spec::Raw(pick(state, SAFE_RAWS)),
+    }
+}
+
+fn gen_use(
+    state: &mut u64,
+    ident_count: usize,
+    depth: u64,
+) -> UseSpec {
+    if depth >= 4 {
+        UseSpec::Item {
+            module: pick_index(state, ident_count),
+            rename: None,
+            nested: None,
+        }
+    } else {
+        match pick_mod(state, 10) {
+            0..=4 => UseSpec::Item {
+                module: pick_index(state, ident_count),
+                rename: coin(state).then(|| {
+                    pick_index(state, ident_count)
+                }),
+                nested: coin(state).then(|| {
+                    Box::new(gen_use(
+                        state,
+                        ident_count,
+                        depth + 1,
+                    ))
+                }),
+            },
+            5..=8 => UseSpec::Many(gen_use_many(
+                state,
+                ident_count,
+            )),
+            _ => UseSpec::Glob,
+        }
+    }
+}
+
+fn gen_use_many(
+    state: &mut u64,
+    ident_count: usize,
+) -> Vec<UseSpec> {
+    (0..=pick_index(state, 3))
+        .map(|_| UseSpec::Item {
+            module: pick_index(state, ident_count),
+            rename: coin(state)
+                .then(|| pick_index(state, ident_count)),
+            nested: None,
+        })
+        .collect()
+}
+
+fn gen_jump(
+    state: &mut u64,
+    ident_count: usize,
+    depth: u64,
+) -> JumpSpec {
+    match pick_mod(state, 10) {
+        0..=3 => JumpSpec::Break,
+        4..=6 => JumpSpec::Continue,
+        _ => JumpSpec::Return(Box::new(gen_return_child(
+            state,
+            ident_count,
+            depth,
+        ))),
+    }
+}
+
+fn gen_return_child(
+    state: &mut u64,
+    ident_count: usize,
+    depth: u64,
+) -> Spec {
+    match pick_mod(state, 10) {
+        0..=4 => Spec::Mod(pick_index(state, ident_count)),
+        5..=8 => {
+            Spec::Use(gen_use(state, ident_count, depth))
+        }
+        _ => {
+            Spec::Jump(gen_jump(state, ident_count, depth))
+        }
+    }
+}
+
+fn gen_block(
+    state: &mut u64,
+    ident_count: usize,
+    depth: u64,
+) -> Vec<Spec> {
+    (0..=pick_index(state, 3))
+        .map(|_| gen_expr(state, ident_count, depth))
+        .collect()
+}
+
+fn materialize<'a>(
+    specs: &[Spec],
+    idents: &'a [String],
+) -> Vec<Expr<'a>> {
+    specs
+        .iter()
+        .map(|s| materialize_expr(s, idents))
+        .collect()
+}
+
+fn materialize_expr<'a>(
+    spec: &Spec,
+    idents: &'a [String],
+) -> Expr<'a> {
+    match spec {
+        Spec::Mod(i) => Expr::Mod(ident_str(idents, *i)),
+        Spec::Use(u) => {
+            Expr::Use(materialize_use(u, idents))
+        }
+        Spec::Jump(j) => {
+            Expr::Jump(materialize_jump(j, idents))
+        }
+        Spec::Block(xs) => {
+            Expr::Block(materialize(xs, idents))
+        }
+        Spec::Raw(s) => Expr::Raw(s),
+    }
+}
+
+fn ident_str(idents: &[String], i: usize) -> &str {
+    idents.get(i).expect("ident index in range").as_str()
+}
+
+fn materialize_jump<'a>(
+    spec: &JumpSpec,
+    idents: &'a [String],
+) -> ExprJump<'a> {
+    match spec {
+        JumpSpec::Break => ExprJump::Break,
+        JumpSpec::Continue => ExprJump::Continue,
+        JumpSpec::Return(x) => ExprJump::Return(Box::new(
+            materialize_expr(x, idents),
+        )),
+    }
+}
+
+fn materialize_use<'a>(
+    spec: &UseSpec,
+    idents: &'a [String],
+) -> ExprUse<'a> {
+    match spec {
+        UseSpec::Item {
+            module,
+            rename,
+            nested,
+        } => ExprUse::Item {
+            module: ident_str(idents, *module),
+            rename: rename.map(|i| ident_str(idents, i)),
+            nested: nested.as_ref().map(|n| {
+                Box::new(materialize_use(n, idents))
+            }),
+        },
+        UseSpec::Many(xs) => ExprUse::Many(
+            xs.iter()
+                .map(|x| materialize_use(x, idents))
+                .collect(),
+        ),
+        UseSpec::Glob => ExprUse::Glob,
+    }
+}
+
+#[test]
+fn roundtrip_is_idempotent() {
+    let seeds = [
+        0x9E37_79B9_7F4A_7C15,
+        0x0FED_CBA9_8765_4321,
+        0xC0FF_EE00_CAFE_F00D,
+        0x1234_5678_9ABC_DEF0,
+    ];
+    for seed in seeds {
+        let mut state = seed;
+        let count = 8 + pick_index(&mut state, 8);
+        let idents = gen_idents(&mut state, count);
+        let specs = gen_program(&mut state, idents.len());
+        let ast = materialize(&specs, &idents);
+        let encoded = encode(&ast);
+        let decoded = decode(&encoded);
+        let reencoded = encode(&decoded);
+        assert_eq!(encoded, reencoded, "seed {seed:#X}");
+    }
+}

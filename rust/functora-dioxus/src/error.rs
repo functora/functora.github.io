@@ -1,4 +1,5 @@
 use crate::i18n::I18N;
+use cipher::InvalidLength;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum Error {
@@ -21,15 +22,15 @@ pub enum Error {
     #[error("JS error: {0}")]
     JS(String),
     #[error("Cipher initialization error: {0}")]
-    Cipher(String),
+    Cipher(InvalidLength),
     #[error("Key derivation error: {0}")]
-    KeyDerive(String),
+    KeyDerive(argon2::Error),
     #[error("Random number generation error: {0}")]
-    Getrandom(String),
+    Getrandom(getrandom::Error),
     #[error("Encryption failed: {0}")]
-    Encrypt(String),
+    Encrypt(aead::Error),
     #[error("Decryption failed: {0}")]
-    Decrypt(String),
+    Decrypt(aead::Error),
     #[error("Invalid encrypted payload format: {0}")]
     InvalidFormat(String),
     #[error("Camera not available: {0}")]

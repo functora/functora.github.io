@@ -136,6 +136,12 @@
 - Keep public APIs narrow, predictable, and domain-specific.
 - Avoid accidental changes to public JSON representations, configuration shapes, serialization formats, module boundaries, or API contracts.
 
+### Plain ASCII Only
+
+- Code, documentation, and content must use only simple ASCII characters. For example, use `-` instead of `—` or `–`, use `"` and `'` instead of curly quotes, use `...` instead of `…`, and use `->` instead of `→`.
+- Use plain ASCII letters: no accented or non-Latin characters; write `1st`, `2nd`, `3rd` instead of superscripts, and `e.g.`, `i.e.`, `etc.` with periods.
+- The only exception is when the user clearly asks to use fancy unicode or emoji.
+
 ### Conversions
 
 - **`From`/`Into`/`TryFrom`/`TryInto` impls must exist only when there is exactly one correct way to convert one type into another.**

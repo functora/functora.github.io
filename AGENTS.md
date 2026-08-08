@@ -196,6 +196,39 @@
 - All tests should be located in the `./tests` directory.
 - Test coverage should be as high as possible, with particular attention to error paths, edge cases, and failure conditions.
 
+### Lint Settings
+
+- Every crate's `Cargo.toml` must keep the following lint configuration exactly:
+
+```toml
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+# strict
+or_fun_call = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+shadow_same = "warn"
+shadow_reuse = "warn"
+shadow_unrelated = "warn"
+# relaxed
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }
+```
+
+- Lint configuration must remain identical across all crates; when changing it, update every crate's `Cargo.toml` in the same change.
+- Do not relax, add, or remove entries workaround-wise to make code pass; code must satisfy these lints as written.
+- Do not override lints through a `clippy.toml` file, `#![allow(..)]` / `#[allow(..)]` attributes, `#[expect(..)]`, or any other in-file or configuration-level suppression to make code pass; per-crate `Cargo.toml` lint configuration is the only permitted place to set lint levels, and it must match the configuration above exactly.
+- The only exception is absolutely necessary third-party macros (e.g., Dioxus's `#[component]` attribute): when such a macro is required, it is acceptable to relax lint rules locally, at that particular place, for macro-related clippy issues only.
+
 ### Validation
 
 - To check Rust code, use:

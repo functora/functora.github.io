@@ -136,6 +136,12 @@
 - Keep public APIs narrow, predictable, and domain-specific.
 - Avoid accidental changes to public JSON representations, configuration shapes, serialization formats, module boundaries, or API contracts.
 
+### Conversions
+
+- **`From`/`Into`/`TryFrom`/`TryInto` impls must exist only when there is exactly one correct way to convert one type into another.**
+- A conversion impl must always be right and always make sense on any input value; for `TryFrom`/`TryInto` it is acceptable for the conversion to fail, but it must never be misleading or lossy in a way that depends on context.
+- When multiple right ways to convert between the types exist, do not provide these impls; use named, explicit conversion functions or methods instead.
+
 ### Macros
 
 - **Strongly avoid implementing custom macros unless absolutely necessary.** Prefer conventional Rust, plain traits, generics, and derives, which are idiomatic, readable, and debuggable.

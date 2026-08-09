@@ -1,5 +1,6 @@
 #![allow(clippy::shadow_reuse)]
-use crate::files::{Attachment, format_size};
+use crate::files::{Attachment, Preview, format_size};
+use crate::widgets::AttachmentPreview;
 use dioxus::prelude::*;
 use dioxus_free_icons::Icon;
 use dioxus_free_icons::icons::fa_solid_icons::FaXmark;
@@ -7,8 +8,7 @@ use dioxus_free_icons::icons::fa_solid_icons::FaXmark;
 #[component]
 pub fn AttachmentUploader(
     attachments: Vec<Attachment>,
-    file_name: String,
-    file_size: String,
+    previews: Vec<Preview>,
     remove_file: String,
     on_open: EventHandler<usize>,
     on_remove: EventHandler<usize>,
@@ -18,19 +18,18 @@ pub fn AttachmentUploader(
     }
     rsx! {
         table {
-            thead {
-                tr {
-                    th { "{file_name}" }
-                    th { colspan: 2, "{file_size}" }
-                }
-            }
             tbody {
-                for (i, att) in attachments.iter().enumerate() {
+                for (i, (att, prev)) in attachments.iter().zip(previews.iter()).enumerate() {
                     tr { key: "{i}",
                         td {
-                            a { onclick: move |_| on_open.call(i), "{att.name}" }
+                            a {
+                                onclick: move |_| on_open.call(i),
+                                "{att.name} ({format_size(att.data.len() as u64)})",
+                            }
                         }
-                        td { "{format_size(att.data.len() as u64)}" }
+                        td {
+                            AttachmentPreview { name: att.name.clone(), preview: prev.clone() }
+                        }
                         td { "txt": "r",
                             button {
                                 onclick: move |_| on_remove.call(i),

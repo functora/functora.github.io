@@ -1,5 +1,6 @@
 use crate::messages::*;
 use crate::*;
+use functora_dioxus::widgets::AttachmentPreview;
 
 #[component]
 pub fn NoteDisplay() -> Element {
@@ -10,6 +11,12 @@ pub fn NoteDisplay() -> Element {
     let rendered = use_memo(move || render_markdown(&tst.note()()));
     let atts = tst.attachments()();
     let has_attachments = !atts.is_empty();
+    let previews = use_memo(move || {
+        tst.attachments()()
+            .iter()
+            .map(|a| functora_dioxus::files::preview(&a.name, &a.data))
+            .collect::<Vec<_>>()
+    });
 
     let download_all = move || {
         let files = tst.attachments()();
@@ -78,14 +85,8 @@ pub fn NoteDisplay() -> Element {
 
             if has_attachments {
                 table {
-                    thead {
-                        tr {
-                            th { "{Msg::FileName.render(lang)}" }
-                            th { colspan: 2, "{Msg::FileSize.render(lang)}" }
-                        }
-                    }
                     tbody {
-                        for (i, f) in atts.iter().enumerate() {
+                        for (i, (f, p)) in atts.iter().zip(previews().iter()).enumerate() {
                             tr { key: "{f.name}",
                                 td {
                                     a {
@@ -93,10 +94,15 @@ pub fn NoteDisplay() -> Element {
                                             tst.attachment().set(Some(i));
                                             nav.write().push(Screen::File.to_route(None));
                                         },
-                                        "{f.name}"
+                                        "{f.name} ({format_size(f.data.len() as u64)})"
                                     }
                                 }
-                                td { "{format_size(f.data.len() as u64)}" }
+                                td {
+                                    AttachmentPreview {
+                                        name: f.name.clone(),
+                                        preview: p.clone(),
+                                    }
+                                }
                                 td { "txt": "r",
                                     button {
                                         onclick: move |_| {

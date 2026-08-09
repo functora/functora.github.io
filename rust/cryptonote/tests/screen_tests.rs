@@ -165,7 +165,7 @@ fn file(name: &str, data: &[u8]) -> Attachment {
 }
 
 fn name_is_clickable(edits: &str, name: &str) -> bool {
-    let text = format!("CreateTextNode {{ value: \"{name}\"");
+    let text = format!("CreateTextNode {{ value: \"{name} (");
     let Some(pos) = edits.find(&text) else {
         return false;
     };

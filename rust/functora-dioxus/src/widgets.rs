@@ -2,6 +2,7 @@ pub(crate) fn bool_attr(val: bool) -> Option<&'static str> {
     val.then_some("")
 }
 
+pub mod attachment_preview;
 pub mod attachment_uploader;
 pub mod banner;
 pub mod breadcrumb;
@@ -15,6 +16,7 @@ pub mod pre;
 pub mod qr_scanner;
 pub mod static_page;
 
+pub use attachment_preview::*;
 pub use attachment_uploader::*;
 pub use banner::*;
 pub use breadcrumb::*;

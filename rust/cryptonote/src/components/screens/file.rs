@@ -45,7 +45,12 @@ pub fn File() -> Element {
                     }
                 },
                 Preview::Audio(url) => rsx! {
-                    audio { controls: true, autoplay: true, r#loop: true, src: "{url}" }
+                    audio {
+                        controls: true,
+                        autoplay: true,
+                        r#loop: true,
+                        src: "{url}",
+                    }
                 },
                 Preview::Pdf(url) => rsx! {
                     iframe { src: "{url}", style: "width: 100%; height: 80vh; border: none;" }

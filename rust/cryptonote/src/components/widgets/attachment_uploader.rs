@@ -1,15 +1,21 @@
 #![allow(clippy::shadow_reuse)]
 use crate::messages::Msg;
 use crate::*;
+use functora_dioxus::files::preview;
 
 #[component]
 pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element {
     let mut nav = use_context::<Signal<Nav<Route>>>();
+    let previews = use_memo(move || {
+        tst.attachments()()
+            .iter()
+            .map(|a| preview(&a.name, &a.data))
+            .collect::<Vec<_>>()
+    });
     rsx! {
         functora_dioxus::widgets::AttachmentUploader {
             attachments: tst.attachments()(),
-            file_name: Msg::FileName.render(lang),
-            file_size: Msg::FileSize.render(lang),
+            previews: previews(),
             remove_file: Msg::RemoveFile.render(lang),
             on_open: move |i| {
                 tst.attachment().set(Some(i));

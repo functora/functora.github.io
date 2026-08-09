@@ -1,4 +1,5 @@
 use crate::Error;
+#[cfg(not(target_arch = "wasm32"))]
 use crate::error::WorkerStopped;
 use crate::progress::Job;
 use dioxus::prelude::{Writable, WritableExt};

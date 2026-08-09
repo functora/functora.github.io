@@ -94,7 +94,7 @@ pub enum Error {
     #[error("JS error: {0}")]
     JS(String),
     #[error("Cipher initialization error: {0}")]
-    Cipher(#[from] cipher::InvalidLength),
+    Cipher(cipher::InvalidLength),
     #[error("Key derivation error: {0}")]
     KeyDerive(#[from] argon2::Error),
     #[error("Random number generation error: {0}")]
@@ -141,6 +141,12 @@ impl From<serde_json::Error> for Error {
 impl From<base64::DecodeError> for Error {
     fn from(e: base64::DecodeError) -> Self {
         Error::Base64(e)
+    }
+}
+
+impl From<cipher::InvalidLength> for Error {
+    fn from(e: cipher::InvalidLength) -> Self {
+        Error::Cipher(e)
     }
 }
 

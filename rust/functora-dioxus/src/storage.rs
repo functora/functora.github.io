@@ -102,7 +102,7 @@ pub fn persist_value<T: Serialize>(key: &str, value: &T) {
             && let Ok(json) = serde_json::to_string(value)
             && let Err(e) = storage.set_item(key, &json)
         {
-            tracing::warn!("Storage persist error: {e}");
+            tracing::warn!("Storage persist error: {e:?}");
         }
     }
     #[cfg(not(target_arch = "wasm32"))]

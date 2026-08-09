@@ -52,6 +52,7 @@
 - Use meaningful, context-clear identifiers with a preference for brevity when the meaning remains unambiguous.
 - Prefer domain-specific names over generic names such as `data`, `value`, `thing`, `manager`, `helper`, or `utils` when a more precise name is appropriate.
 - Do not include comments. The code must be self-explanatory through its types, names, structure, and abstractions.
+- Documentation is the exception: documentation (e.g. doc comments) that already exists in the source code must be preserved, not removed along with other comments. Do not create new documentation unless the user explicitly asks for it.
 - Keep the code DRY.
 - Remove redundant code rather than preserving duplication.
 - Do not sacrifice correctness, readability, or efficiency merely to make code shorter or eliminate a variable.

@@ -29,50 +29,49 @@ pub fn File() -> Element {
     rsx! {
         Breadcrumb { title: Msg::File }
         section {
-            card {
-                h3 { "{name}" }
-                small { "{size}" }
-                match &preview() {
-                    Preview::Image(url) => rsx! {
-                        img { src: "{url}", alt: "{name}" }
-                    },
-                    Preview::Video(url) => rsx! {
-                        video {
-                            controls: true,
-                            autoplay: true,
-                            playsinline: true,
-                            src: "{url}",
-                        }
-                    },
-                    Preview::Audio(url) => rsx! {
-                        audio { controls: true, autoplay: true, src: "{url}" }
-                    },
-                    Preview::Pdf(url) => rsx! {
-                        iframe { src: "{url}", style: "width: 100%; height: 80vh; border: none;" }
-                    },
-                    Preview::Markdown(text) => rsx! {
-                        div {
-                            overflow_wrap: "anywhere",
-                            word_break: "break-word",
-                            dangerous_inner_html: render_markdown(text),
-                        }
-                    },
-                    Preview::Text(text) => rsx! {
-                        Pre {
-                            code { "{text}" }
-                        }
-                    },
-                    Preview::Download => rsx! {
-                        Pre {
-                            code { "{Msg::PreviewUnavailable.render(lang)}" }
-                        }
-                    },
-                    Preview::Missing => rsx! {
-                        Pre {
-                            code { "{Msg::FileNotFound.render(lang)}" }
-                        }
-                    },
-                }
+            h3 { "{name}" }
+            small { "{size}" }
+            match &preview() {
+                Preview::Image(url) => rsx! {
+                    img { src: "{url}", alt: "{name}" }
+                },
+                Preview::Video(url) => rsx! {
+                    video {
+                        controls: true,
+                        autoplay: true,
+                        playsinline: true,
+                        r#loop: true,
+                        src: "{url}",
+                    }
+                },
+                Preview::Audio(url) => rsx! {
+                    audio { controls: true, autoplay: true, r#loop: true, src: "{url}" }
+                },
+                Preview::Pdf(url) => rsx! {
+                    iframe { src: "{url}", style: "width: 100%; height: 80vh; border: none;" }
+                },
+                Preview::Markdown(text) => rsx! {
+                    div {
+                        overflow_wrap: "anywhere",
+                        word_break: "break-word",
+                        dangerous_inner_html: render_markdown(text),
+                    }
+                },
+                Preview::Text(text) => rsx! {
+                    Pre {
+                        code { "{text}" }
+                    }
+                },
+                Preview::Download => rsx! {
+                    Pre {
+                        code { "{Msg::PreviewUnavailable.render(lang)}" }
+                    }
+                },
+                Preview::Missing => rsx! {
+                    Pre {
+                        code { "{Msg::FileNotFound.render(lang)}" }
+                    }
+                },
             }
 
             Dock { message,

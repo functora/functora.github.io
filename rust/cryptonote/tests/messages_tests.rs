@@ -34,19 +34,22 @@ fn app_err(kind: std::io::ErrorKind) -> AppError {
 }
 
 #[test]
-fn error_messages_of_same_kind_are_equal() {
-    assert_eq!(
-        Msg::Error(app_err(std::io::ErrorKind::NotFound).into()),
-        Msg::Error(app_err(std::io::ErrorKind::NotFound).into())
-    );
+fn error_messages_are_equal_only_when_sharing_the_instance() {
+    let a = Msg::Error(app_err(std::io::ErrorKind::NotFound).into());
+    let b = a.clone();
+    assert_eq!(a, b);
+    let c = Msg::Error(app_err(std::io::ErrorKind::NotFound).into());
+    assert_ne!(a, c);
 }
 
 #[test]
-fn error_messages_of_different_kinds_are_unequal() {
-    assert_ne!(
-        Msg::Error(app_err(std::io::ErrorKind::NotFound).into()),
-        Msg::Error(app_err(std::io::ErrorKind::PermissionDenied).into())
-    );
+fn error_messages_compare_by_instance_identity() {
+    let a = Msg::Error(MsgError::from(app_err(std::io::ErrorKind::NotFound)));
+    let b = Msg::Error(MsgError::from(app_err(std::io::ErrorKind::NotFound)));
+    let c = Msg::Error(MsgError::from(app_err(std::io::ErrorKind::InvalidData)));
+    assert_eq!(a.clone(), a);
+    assert_ne!(a, b);
+    assert_ne!(a, c);
 }
 
 #[test]
@@ -67,13 +70,4 @@ fn msg_error_derefs_to_app_error() {
     let msg = MsgError::from(AppError::PasswordRequired);
     assert_eq!(msg.render_eng(), "Password is required");
     assert_eq!(Msg::Error(msg).render_eng(), "Password is required");
-}
-
-#[test]
-fn msg_error_equality_is_value_based() {
-    let a = MsgError::from(app_err(std::io::ErrorKind::NotFound));
-    let b = MsgError::from(app_err(std::io::ErrorKind::NotFound));
-    let c = MsgError::from(app_err(std::io::ErrorKind::InvalidData));
-    assert_eq!(a, b);
-    assert_ne!(a, c);
 }

@@ -1,74 +1,67 @@
 use crate::i18n::I18N;
 use cipher::InvalidLength;
+use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-pub struct IoError(pub std::io::Error);
+pub struct IoError(pub Arc<std::io::Error>);
 
 impl PartialEq for IoError {
     fn eq(&self, other: &Self) -> bool {
-        self.0.kind() == other.0.kind()
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 impl Eq for IoError {}
 
 impl From<std::io::Error> for IoError {
     fn from(e: std::io::Error) -> Self {
-        IoError(e)
+        IoError(Arc::new(e))
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-pub struct JsonError(pub serde_json::Error);
+pub struct JsonError(pub Arc<serde_json::Error>);
 
 impl PartialEq for JsonError {
     fn eq(&self, other: &Self) -> bool {
-        self.0.classify() == other.0.classify()
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 impl Eq for JsonError {}
 
 impl From<serde_json::Error> for JsonError {
     fn from(e: serde_json::Error) -> Self {
-        JsonError(e)
+        JsonError(Arc::new(e))
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-pub struct ZipErr(pub zip::result::ZipError);
+pub struct ZipErr(pub Arc<zip::result::ZipError>);
 
 impl PartialEq for ZipErr {
     fn eq(&self, other: &Self) -> bool {
-        use zip::result::ZipError as Z;
-        match (&self.0, &other.0) {
-            (Z::Io(a), Z::Io(b)) => a.kind() == b.kind(),
-            (Z::InvalidArchive(a) | Z::UnsupportedArchive(a), Z::InvalidArchive(b) | Z::UnsupportedArchive(b)) => {
-                a == b && std::mem::discriminant(&self.0) == std::mem::discriminant(&other.0)
-            }
-            (Z::FileNotFound, Z::FileNotFound) | (Z::InvalidPassword, Z::InvalidPassword) => true,
-            _ => false,
-        }
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 impl Eq for ZipErr {}
 
 impl From<zip::result::ZipError> for ZipErr {
     fn from(e: zip::result::ZipError) -> Self {
-        ZipErr(e)
+        ZipErr(Arc::new(e))
     }
 }
 
 #[cfg(target_os = "android")]
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-pub struct JniError(pub jni::errors::Error);
+pub struct JniError(pub Arc<jni::errors::Error>);
 
 #[cfg(target_os = "android")]
 impl PartialEq for JniError {
     fn eq(&self, other: &Self) -> bool {
-        std::mem::discriminant(&self.0) == std::mem::discriminant(&other.0)
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 #[cfg(target_os = "android")]
@@ -77,7 +70,7 @@ impl Eq for JniError {}
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for JniError {
     fn from(e: jni::errors::Error) -> Self {
-        JniError(e)
+        JniError(Arc::new(e))
     }
 }
 

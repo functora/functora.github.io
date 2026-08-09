@@ -169,7 +169,13 @@
 - When a field or enum variant wraps internals (from the standard library or a third-party crate) that lack an implementation our design needs, the orphan rule prevents impl'ing the trait on the internals directly. Always solve this with a thin newtype over the internals, implementing the missing traits on the newtype.
   - Example: `struct Wrapper(SomeForeignType);` + `impl PartialEq for Wrapper { ... }`.
 - Keep conversion between the internals and the newtype smooth and cheap: `From<inner>` (and `From<newtype>` for the inner where possible), `Deref` to the inner where appropriate, and transparent `Display`/`Error` (`#[error(transparent)]`), so error reporting and `?` propagation stay unchanged.
-- For missing equality in particular, implement judgment equality comparing the semantically meaningful parts of the inner value, never its string representation or raw bytes.
+- For missing equality on foreign internals, prefer an Arc-based identity wrapper over judgment equality: hold the inner in `Arc` and implement `PartialEq`/`Eq` with `Arc::ptr_eq`, giving a one-line impl that can never report two distinct values as equal.
+  - Example: `pub struct IoError(pub Arc<std::io::Error>);` with `fn eq(&self, other: &Self) -> bool { Arc::ptr_eq(&self.0, &other.0) }`, and `From<inner>` wrapping with `Arc::new`.
+  - Identity equality is conservative and therefore safe for memoization and diffing (e.g. dioxus props): equality means the same instance, so skipping a re-render is always correct, and cloned wrappers stay equal because `Arc` clones share the allocation.
+  - It costs one heap allocation per construction and means two distinct instances are never equal even with identical content; the inner must be immutable and instance-stable (no interior mutability); the payload remains accessible through the newtype field.
+- The same Arc wrapper is also the preferred workaround for missing `Clone` on the same internals (e.g. `std::io::Error`, `serde_json::Error`): `Arc<T>` is `Clone` for any `T`, so `#[derive(Clone)]` on the wrapper and its containers works without a hand-written impl.
+  - Sharing-based cloning is required for coherence with identity equality: `x.clone() == x` must hold, which only a shared allocation guarantees; a deep-copying `Clone` (e.g. over `Box<T>`) would break both equality and memoization.
+- When genuine value equality is required by the design (not merely memoization), compare the semantically meaningful parts of the inner value explicitly, never its string representation or raw bytes.
   - Example: compare `std::io::Error` by `io::ErrorKind` rather than by message text.
 
 ### Type System and Invariants

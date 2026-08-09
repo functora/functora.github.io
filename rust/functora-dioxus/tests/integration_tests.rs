@@ -122,7 +122,7 @@ fn error_camera_permission_denied() {
 #[test]
 fn test_error_impl_std_error() {
     use std::error::Error;
-    let err = FdError::NotJsonObject("test".to_string());
+    let err = FdError::NotJsonObject(serde_json::json!("test"));
     assert!(err.source().is_none());
 }
 
@@ -140,7 +140,7 @@ fn test_error_display_all_variants() {
         err(serde_json::from_str::<serde_json::Value>("x")).into(),
         FdError::Env(std::env::VarError::NotPresent),
         FdError::Channel(std::sync::mpsc::RecvError),
-        FdError::NotJsonObject("not object".to_string()),
+        FdError::NotJsonObject(serde_json::json!("not object")),
     ];
     for v in variants {
         let _ = v.to_string();
@@ -302,9 +302,9 @@ fn error_i18n_render_eng_non_empty() {
         err(serde_json::from_str::<serde_json::Value>("x")).into(),
         functora_dioxus::Error::Env(std::env::VarError::NotPresent),
         functora_dioxus::Error::Channel(std::sync::mpsc::RecvError),
-        functora_dioxus::Error::JS("js error".into()),
-        functora_dioxus::Error::CameraNotAvailable("cam".into()),
-        functora_dioxus::Error::CameraPermissionDenied("denied".into()),
+        functora_dioxus::Error::JS("js error".to_string()),
+        functora_dioxus::Error::CameraNotAvailable("cam".to_string()),
+        functora_dioxus::Error::CameraPermissionDenied("denied".to_string()),
         functora_dioxus::Error::NotJsonObject("obj".into()),
     ];
     for case in &cases {
@@ -315,7 +315,7 @@ fn error_i18n_render_eng_non_empty() {
 #[test]
 fn error_i18n_render_spa_different_from_eng() {
     use functora_dioxus::i18n::I18N;
-    let err = functora_dioxus::Error::IO("test".into());
+    let err: functora_dioxus::Error = std::io::Error::other("test").into();
     assert_ne!(err.render_eng(), err.render_spa());
 }
 
@@ -329,7 +329,7 @@ fn error_i18n_render_rus_different_from_eng() {
 #[test]
 fn error_i18n_js_contains_message() {
     use functora_dioxus::i18n::I18N;
-    let err = functora_dioxus::Error::JS("something broke".into());
+    let err = functora_dioxus::Error::JS("something broke".to_string());
     assert!(err.render_eng().contains("something broke"));
 }
 
@@ -536,9 +536,9 @@ fn error_i18n_spa_all_variants() {
         err(serde_json::from_str::<serde_json::Value>("x")).into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),
-        Error::JS("js".into()),
-        Error::CameraNotAvailable("cam".into()),
-        Error::CameraPermissionDenied("denied".into()),
+        Error::JS("js".to_string()),
+        Error::CameraNotAvailable("cam".to_string()),
+        Error::CameraPermissionDenied("denied".to_string()),
         Error::NotJsonObject("obj".into()),
     ];
     for v in &variants {
@@ -557,9 +557,9 @@ fn error_i18n_rus_all_variants() {
         err(serde_json::from_str::<serde_json::Value>("x")).into(),
         Error::Env(std::env::VarError::NotPresent),
         Error::Channel(std::sync::mpsc::RecvError),
-        Error::JS("js".into()),
-        Error::CameraNotAvailable("cam".into()),
-        Error::CameraPermissionDenied("denied".into()),
+        Error::JS("js".to_string()),
+        Error::CameraNotAvailable("cam".to_string()),
+        Error::CameraPermissionDenied("denied".to_string()),
         Error::NotJsonObject("obj".into()),
     ];
     for v in &variants {

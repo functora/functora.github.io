@@ -8,7 +8,7 @@ pub fn View() -> Element {
 
     let _ = use_effect(move || {
         if tst.note()().is_empty() {
-            message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.into())));
         }
     });
 

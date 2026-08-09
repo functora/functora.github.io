@@ -60,7 +60,7 @@ pub fn About(note: Option<String>) -> Element {
                             };
                             match web_share(data).await {
                                 Ok(()) => msg.set(Some(Msg::Sent)),
-                                Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
+                                Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
                             }
                         });
                     },

@@ -14,7 +14,7 @@ pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Sign
     let _ = spawn(async move {
         match functora_dioxus::ffi::read_clipboard().await {
             Ok(text) => on_paste(text),
-            Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
+            Err(e) => message.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
         }
     });
 }
@@ -78,7 +78,7 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
                 clear_progress(tst.progress());
             }
             Err(e) => {
-                message.set(Some(Msg::Error(e)));
+                message.set(Some(Msg::Error(e.into())));
                 clear_progress(tst.progress());
             }
         }
@@ -95,7 +95,7 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
             Ok(f) => f,
             Err(e) => {
                 tst.progress().set(None);
-                message_out.set(Some(Msg::Error(e)));
+                message_out.set(Some(Msg::Error(e.into())));
                 return;
             }
         };
@@ -104,7 +104,7 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
             return;
         };
         if let Err(e) = open_archive_async(ArchiveSource::Bytes(bytes), tst, nav).await {
-            message_out.set(Some(Msg::Error(e)));
+            message_out.set(Some(Msg::Error(e.into())));
         }
     });
 }
@@ -223,17 +223,15 @@ fn app_origin() -> Option<String> {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, String>
+pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
-    functora_dioxus::files::download_package(data, filename, progress, Stage::Download)
-        .await
-        .map_err(|e| e.to_string())
+    functora_dioxus::files::download_package(data, filename, progress, Stage::Download).await
 }
 
 #[cfg(target_os = "android")]
-pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, String>
+pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
@@ -245,11 +243,36 @@ where
         |(data, name, filename), mut report| async move {
             download_android(&data, name, filename, &mut report)
                 .await
-                .map_err(|e| AppError::FunctoraDioxus(functora_dioxus::Error::JNI(e)))
+                .map_err(functora_dioxus::Error::from)
         },
     )
     .await
-    .map_err(|e| e.to_string())
+}
+
+#[cfg(target_os = "android")]
+#[derive(Debug, thiserror::Error)]
+enum MediaStoreError {
+    #[error("MediaStore JNI error: {0}")]
+    Jni(#[from] jni::errors::Error),
+    #[error("MediaStore worker channel closed: {0}")]
+    Channel(#[from] std::sync::mpsc::RecvError),
+    #[error("MediaStore stream lock poisoned")]
+    PoisonedLock,
+    #[error("MediaStore stream was not open")]
+    StreamNotOpen,
+}
+
+#[cfg(target_os = "android")]
+impl From<MediaStoreError> for functora_dioxus::Error {
+    fn from(e: MediaStoreError) -> Self {
+        match e {
+            MediaStoreError::Jni(e) => Self::JNI(e.into()),
+            MediaStoreError::Channel(e) => Self::Channel(e),
+            MediaStoreError::PoisonedLock | MediaStoreError::StreamNotOpen => {
+                Self::Worker(functora_dioxus::error::WorkerStopped)
+            }
+        }
+    }
 }
 
 #[cfg(target_os = "android")]
@@ -258,7 +281,7 @@ async fn download_android(
     name: String,
     filename: String,
     report: &mut Reporter,
-) -> Result<String, String> {
+) -> Result<String, MediaStoreError> {
     use jni::objects::{GlobalRef, JObject};
     use jni::JNIEnv;
     use std::sync::mpsc::channel;
@@ -275,12 +298,11 @@ async fn download_android(
     let (tx, rx) = channel();
     let open = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
-        let res = (|| -> Result<(), jni::errors::Error> {
+        let res = (|| -> Result<(), MediaStoreError> {
             let os = open_stream(env, activity, &name)?;
             let os = env.new_global_ref(os)?;
-            if let Ok(mut slot) = open.lock() {
-                *slot = Some(os);
-            }
+            let mut slot = open.lock().map_err(MediaStoreError::PoisonedLock)?;
+            *slot = Some(os);
             Ok(())
         })();
         if let Err(ref error) = res {
@@ -290,9 +312,7 @@ async fn download_android(
         let _ = env.exception_clear();
         let _ = tx.send(res);
     });
-    rx.recv()
-        .map_err(|e| format!("channel error: {e}"))?
-        .map_err(|e| format!("JNI open error: {e}"))?;
+    rx.recv().map_err(MediaStoreError::Channel)??;
     let mut done = 0u64;
     for chunk in data.chunks(WRITE_CHUNK) {
         let (tx, rx) = channel();
@@ -300,9 +320,9 @@ async fn download_android(
         let size = chunk.len() as u64;
         let chunk = chunk.to_vec();
         dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
-            let res = (|| -> Result<(), jni::errors::Error> {
-                let guard = stream.lock().map_err(|_| jni::errors::Error::JavaException)?;
-                let os = guard.as_ref().cloned().ok_or(jni::errors::Error::JavaException)?;
+            let res = (|| -> Result<(), MediaStoreError> {
+                let guard = stream.lock().map_err(MediaStoreError::PoisonedLock)?;
+                let os = guard.as_ref().cloned().ok_or(MediaStoreError::StreamNotOpen)?;
                 let ba = env.byte_array_from_slice(&chunk)?;
                 env.call_method(os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
                 Ok(())
@@ -314,9 +334,7 @@ async fn download_android(
             let _ = env.exception_clear();
             let _ = tx.send(res);
         });
-        rx.recv()
-            .map_err(|e| format!("channel error: {e}"))?
-            .map_err(|e| format!("JNI write error: {e}"))?;
+        rx.recv().map_err(MediaStoreError::Channel)??;
         done += size;
         report(Job {
             stage: Stage::Download,
@@ -328,8 +346,8 @@ async fn download_android(
     let (tx, rx) = channel();
     let stream = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
-        let res = (|| -> Result<(), jni::errors::Error> {
-            if let Some(os) = stream.lock().map_err(|_| jni::errors::Error::JavaException)?.take() {
+        let res = (|| -> Result<(), MediaStoreError> {
+            if let Some(os) = stream.lock().map_err(MediaStoreError::PoisonedLock)?.take() {
                 env.call_method(os.as_obj(), "close", "()V", &[])?;
             }
             Ok(())
@@ -342,8 +360,8 @@ async fn download_android(
         let _ = tx.send(res);
     });
     rx.recv()
-        .map_err(|e| format!("channel error: {e}"))
-        .and_then(|r| r.map(|_| filename.to_string()).map_err(|e| format!("JNI error: {e}")))
+        .map_err(MediaStoreError::Channel)?
+        .map(|_| filename.to_string())
 }
 
 #[cfg(target_os = "android")]
@@ -455,9 +473,7 @@ where
             }
             Err(e) => {
                 progress_out.set(None);
-                message.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                    e,
-                )))));
+                message.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
             }
         }
     });

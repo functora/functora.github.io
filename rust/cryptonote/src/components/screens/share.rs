@@ -65,7 +65,7 @@ pub fn Share() -> Element {
                                     };
                                     match web_share(data).await {
                                         Ok(()) => msg.set(Some(Msg::Sent)),
-                                        Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e)))),
+                                        Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
                                     }
                                 });
                             },
@@ -79,7 +79,7 @@ pub fn Share() -> Element {
                                 let mut msg = message;
                                 let _ = spawn(async move {
                                     if let Err(e) = print_page().await {
-                                        msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
+                                        msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                                     }
                                 });
                             },
@@ -106,13 +106,7 @@ pub fn Share() -> Element {
                                             Err(e) => {
                                                 progress_out.set(None);
                                                 message_out
-                                                    .set(
-                                                        Some(
-                                                            Msg::Error(
-                                                                AppError::FunctoraDioxus(functora_dioxus::Error::IO(e)),
-                                                            ),
-                                                        ),
-                                                    );
+                                                    .set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                                             }
                                         }
                                     });

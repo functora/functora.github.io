@@ -21,7 +21,7 @@ pub fn Layout() -> Element {
             let mut message_out = message;
             let _ = spawn(async move {
                 if let Err(e) = crate::hooks::open_archive_async(source, tst, nav_signal).await {
-                    message_out.set(Some(Msg::Error(e)));
+                    message_out.set(Some(Msg::Error(e.into())));
                 }
             });
             return;

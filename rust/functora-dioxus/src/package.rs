@@ -7,17 +7,14 @@ use dioxus::prelude::Writable;
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
-use tap::prelude::*;
 use zip::CompressionMethod;
 
 pub const METADATA_ENTRY: &str = "metadata.json";
 pub const PAYLOAD_ENTRY: &str = "payload.cpt";
 
+#[must_use]
 pub fn aad(prefix: &[u8], cipher: CipherType, kdf: Kdf) -> Vec<u8> {
-    let mut aad = prefix.to_vec();
-    aad.push(cipher as u8);
-    aad.push(kdf as u8);
-    aad
+    prefix.iter().chain(&[cipher as u8, kdf as u8]).copied().collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -42,16 +39,14 @@ impl ArchiveSource {
     fn open(&self) -> Result<Box<dyn SeekableRead + '_>, Error> {
         match self {
             Self::Bytes(bytes) => Ok(Box::new(std::io::Cursor::new(bytes.as_slice()))),
-            Self::Path(path) => std::fs::File::open(path)
-                .map(|file| Box::new(file) as Box<dyn SeekableRead>)
-                .map_err(|e| Error::Archive(e.to_string())),
+            Self::Path(path) => Ok(Box::new(std::fs::File::open(path)?)),
         }
     }
 
     pub fn into_bytes(self) -> Result<Vec<u8>, Error> {
         match self {
             Self::Bytes(bytes) => Ok(bytes),
-            Self::Path(path) => std::fs::read(path).map_err(|e| Error::Archive(e.to_string())),
+            Self::Path(path) => Ok(std::fs::read(path)?),
         }
     }
 }
@@ -77,12 +72,9 @@ fn write_package_entries(
     zip: &mut zip::ZipWriter<std::io::Cursor<&mut Vec<u8>>>,
     meta: &ArchiveMetadata,
 ) -> Result<(), Error> {
-    zip.start_file(METADATA_ENTRY, stored_opts())
-        .map_err(|e| Error::Archive(e.to_string()))?;
-    zip.write_all(&serde_json::to_vec(meta)?)
-        .map_err(|e| Error::Archive(e.to_string()))?;
-    zip.start_file(PAYLOAD_ENTRY, stored_opts())
-        .map_err(|e| Error::Archive(e.to_string()))?;
+    zip.start_file(METADATA_ENTRY, stored_opts())?;
+    zip.write_all(&serde_json::to_vec(meta)?)?;
+    zip.start_file(PAYLOAD_ENTRY, stored_opts())?;
     Ok(())
 }
 
@@ -103,7 +95,7 @@ where
         let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut inner));
         let mut done = 0u64;
         zip_entries(&mut zip, &entries, stages.zip, report, &mut done, total).await?;
-        _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
+        let _ = zip.finish()?;
     }
     match cipher {
         Some(cipher_sel) => package_with_encryption(&inner, password, cipher_sel, prefix, stages, report).await,
@@ -143,7 +135,7 @@ where
                 ChunkKind::NonLast
             };
             let ct = parts.encrypt_chunk(position, kind, &inner[offset..end])?;
-            zip.write_all(&ct).map_err(|e| Error::Archive(e.to_string()))?;
+            zip.write_all(&ct)?;
             offset = end;
             position += 1;
             report(Job {
@@ -154,7 +146,7 @@ where
             });
             yield_to_paint().await;
         }
-        _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
+        let _ = zip.finish()?;
     }
     Ok(pkg)
 }
@@ -175,7 +167,7 @@ where
         write_package_entries(&mut zip, &meta)?;
         let mut done = 0u64;
         for chunk in inner.chunks(2 * 1024 * 1024) {
-            zip.write_all(chunk).map_err(|e| Error::Archive(e.to_string()))?;
+            zip.write_all(chunk)?;
             done += chunk.len() as u64;
             report(Job {
                 stage: stages.zip,
@@ -185,7 +177,7 @@ where
             });
             yield_to_paint().await;
         }
-        _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
+        let _ = zip.finish()?;
     }
     Ok(pkg)
 }
@@ -213,40 +205,27 @@ where
     .await
 }
 
+fn read_entry<R: Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, Error> {
+    let mut file = archive.by_name(name)?;
+    let capacity = usize::try_from(file.size()).map_err(|e| Error::Convert {
+        context: "entry size too large",
+        source: e,
+    })?;
+    let mut data = Vec::with_capacity(capacity);
+    let _ = file.read_to_end(&mut data)?;
+    Ok(data)
+}
+
 pub fn read_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, Error> {
-    let mut archive = zip::ZipArchive::new(source.open()?).map_err(|e| Error::Archive(e.to_string()))?;
-    let mut meta_file = archive
-        .by_name(METADATA_ENTRY)
-        .map_err(|e| Error::Archive(e.to_string()))?;
-    let mut meta_json = Vec::new();
-    _ = meta_file
-        .read_to_end(&mut meta_json)
-        .map_err(|e| Error::Archive(e.to_string()))?;
-    serde_json::from_slice::<ArchiveMetadata>(&meta_json)?.pipe(Ok)
+    let mut archive = zip::ZipArchive::new(source.open()?)?;
+    let meta_json = read_entry(&mut archive, METADATA_ENTRY)?;
+    Ok(serde_json::from_slice::<ArchiveMetadata>(&meta_json)?)
 }
 
 fn read_package(source: &ArchiveSource) -> Result<(ArchiveMetadata, Vec<u8>), Error> {
-    let mut archive = zip::ZipArchive::new(source.open()?).map_err(|e| Error::Archive(e.to_string()))?;
-    let mut meta_json = Vec::new();
-    let mut payload = Vec::new();
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i).map_err(|e| Error::Archive(e.to_string()))?;
-        match file.name() {
-            METADATA_ENTRY => {
-                _ = file
-                    .read_to_end(&mut meta_json)
-                    .map_err(|e| Error::Archive(e.to_string()))?;
-            }
-            PAYLOAD_ENTRY => {
-                payload = Vec::with_capacity(usize::try_from(file.size()).unwrap_or_default());
-                _ = file
-                    .read_to_end(&mut payload)
-                    .map_err(|e| Error::Archive(e.to_string()))?;
-            }
-            _ => {}
-        }
-    }
-    let meta: ArchiveMetadata = serde_json::from_slice(&meta_json)?;
+    let mut archive = zip::ZipArchive::new(source.open()?)?;
+    let meta: ArchiveMetadata = serde_json::from_slice(&read_entry(&mut archive, METADATA_ENTRY)?)?;
+    let payload = read_entry(&mut archive, PAYLOAD_ENTRY)?;
     Ok((meta, payload))
 }
 
@@ -269,32 +248,30 @@ where
         &meta.nonce,
         &aad(prefix, cipher, meta.kdf),
     )?;
-    let mut inner = payload;
+    let total = payload.len();
+    let mut out = Vec::with_capacity(payload.len());
     let mut offset = 0usize;
-    let mut write = 0usize;
     let mut position = 0u32;
-    while offset < inner.len() {
-        let end = (offset + STREAM_CHUNK + STREAM_TAG).min(inner.len());
-        let kind = if end == inner.len() {
+    while offset < total {
+        let end = (offset + STREAM_CHUNK + STREAM_TAG).min(total);
+        let kind = if end == total {
             ChunkKind::Last
         } else {
             ChunkKind::NonLast
         };
-        let plain = parts.decrypt_chunk(position, kind, &inner[offset..end])?;
-        inner[write..write + plain.len()].copy_from_slice(&plain);
+        let plain = parts.decrypt_chunk(position, kind, &payload[offset..end])?;
+        out.extend_from_slice(&plain);
         offset = end;
-        write += plain.len();
         position += 1;
         report(Job {
             stage: stages.decrypt,
             done: offset as u64,
-            total: inner.len() as u64,
+            total: total as u64,
             name: None,
         });
         yield_to_paint().await;
     }
-    inner.truncate(write);
-    Ok(inner)
+    Ok(out)
 }
 
 pub async fn extract_package_async<P, S>(

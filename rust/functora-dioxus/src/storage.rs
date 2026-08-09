@@ -12,6 +12,7 @@ pub struct PersistentSignal<T: 'static> {
 }
 
 impl<T: 'static> PersistentSignal<T> {
+    #[must_use]
     pub fn new(store: Store<T>, key: &'static str) -> Self {
         Self { store, key }
     }
@@ -74,6 +75,7 @@ impl<T: Serialize + 'static> PersistentSignal<T> {
     }
 }
 
+#[must_use]
 pub fn load_state<T: DeserializeOwned>(key: &str) -> Option<T> {
     #[cfg(target_arch = "wasm32")]
     {

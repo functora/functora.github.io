@@ -236,7 +236,7 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
 
 #[test]
 fn msg_i18n_error_delegates_to_app_error() {
-    let msg = Msg::Error(AppError::PasswordRequired);
+    let msg = Msg::Error(AppError::PasswordRequired.into());
     assert_eq!(
         msg.render(Language::Eng),
         AppError::PasswordRequired.render(Language::Eng)
@@ -299,7 +299,9 @@ fn app_error_json_utf8_eng() {
 
 #[test]
 fn app_error_fd_delegation_eng() {
-    let err = AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into()));
+    let err = AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+        std::io::Error::other("io".to_string()).into(),
+    ));
     assert!(!err.render_eng().is_empty());
     assert!(err.render_eng().contains("io"));
 }
@@ -322,7 +324,9 @@ fn app_error_i18n_render_spa_all_variants() {
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
-        AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into())),
+        AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+            std::io::Error::other("io".to_string()).into(),
+        )),
     ];
     for v in &variants {
         let spa = v.render_spa();
@@ -342,7 +346,9 @@ fn app_error_i18n_render_rus_all_variants() {
         AppError::Archive("a".into()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
-        AppError::FunctoraDioxus(functora_dioxus::Error::IO("io".into())),
+        AppError::FunctoraDioxus(functora_dioxus::Error::IO(
+            std::io::Error::other("io".to_string()).into(),
+        )),
     ];
     for v in &variants {
         let rus = v.render_rus();
@@ -402,7 +408,7 @@ fn msg_i18n_donate_intro_all_languages() {
 #[test]
 fn msg_i18n_error_delegates_to_app_error_spa() {
     use cryptonote::messages::Msg;
-    let msg = Msg::Error(AppError::PasswordRequired);
+    let msg = Msg::Error(AppError::PasswordRequired.into());
     assert_eq!(
         msg.render(Language::Spa),
         AppError::PasswordRequired.render(Language::Spa)
@@ -412,7 +418,7 @@ fn msg_i18n_error_delegates_to_app_error_spa() {
 #[test]
 fn msg_i18n_error_delegates_to_app_error_rus() {
     use cryptonote::messages::Msg;
-    let msg = Msg::Error(AppError::PasswordRequired);
+    let msg = Msg::Error(AppError::PasswordRequired.into());
     assert_eq!(
         msg.render(Language::Rus),
         AppError::PasswordRequired.render(Language::Rus)

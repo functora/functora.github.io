@@ -2,7 +2,7 @@ use crate::i18n::I18N;
 use std::env::VarError;
 use std::sync::mpsc::RecvError;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
     Copied,
     Password,
@@ -46,8 +46,12 @@ impl I18N for Msg {
             Self::PasswordRequired => "Password is required for encryption",
             Self::ClipboardWriteError(e) => return format!("Failed to copy to clipboard: {e}"),
             Self::ClipboardReadError(e) => return format!("Failed to read from clipboard: {e}"),
-            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_eng(),
-            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_eng(),
+            Self::CameraNotAvailable(e) => {
+                return crate::Error::CameraNotAvailable(e.clone()).render_eng();
+            }
+            Self::CameraPermissionDenied(e) => {
+                return crate::Error::CameraPermissionDenied(e.clone()).render_eng();
+            }
             Self::Back => "Back",
             Self::Home => "Home",
             Self::Stage(s) => {
@@ -83,8 +87,12 @@ impl I18N for Msg {
             Self::PasswordRequired => "Se requiere contraseña para el cifrado",
             Self::ClipboardWriteError(e) => return format!("No se pudo copiar al portapapeles: {e}"),
             Self::ClipboardReadError(e) => return format!("No se pudo leer del portapapeles: {e}"),
-            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_spa(),
-            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_spa(),
+            Self::CameraNotAvailable(e) => {
+                return crate::Error::CameraNotAvailable(e.clone()).render_spa();
+            }
+            Self::CameraPermissionDenied(e) => {
+                return crate::Error::CameraPermissionDenied(e.clone()).render_spa();
+            }
             Self::Back => "Atrás",
             Self::Home => "Inicio",
             Self::Stage(s) => {
@@ -120,8 +128,12 @@ impl I18N for Msg {
             Self::PasswordRequired => "Для шифрования требуется пароль",
             Self::ClipboardWriteError(e) => return format!("Не удалось скопировать в буфер обмена: {e}"),
             Self::ClipboardReadError(e) => return format!("Не удалось прочитать из буфера обмена: {e}"),
-            Self::CameraNotAvailable(e) => return crate::Error::CameraNotAvailable(e.clone()).render_rus(),
-            Self::CameraPermissionDenied(e) => return crate::Error::CameraPermissionDenied(e.clone()).render_rus(),
+            Self::CameraNotAvailable(e) => {
+                return crate::Error::CameraNotAvailable(e.clone()).render_rus();
+            }
+            Self::CameraPermissionDenied(e) => {
+                return crate::Error::CameraPermissionDenied(e.clone()).render_rus();
+            }
             Self::Back => "Назад",
             Self::Home => "Главная",
             Self::Stage(s) => {

@@ -33,7 +33,7 @@ pub fn Open(note: Option<String>) -> Element {
                             tst.external().set(External::Nothing);
                         }
                     },
-                    Err(e) => message.set(Some(Msg::Error(e))),
+                    Err(e) => message.set(Some(Msg::Error(e.into()))),
                 }
                 return;
             }
@@ -42,7 +42,7 @@ pub fn Open(note: Option<String>) -> Element {
             return;
         }
         if tst.note()().is_empty() {
-            message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.into())));
         }
     });
 
@@ -86,12 +86,12 @@ pub fn Open(note: Option<String>) -> Element {
                                 }
                                 Err(e) => {
                                     tst.progress().set(None);
-                                    message_out.set(Some(Msg::Error(AppError::Utf8(e))));
+                                    message_out.set(Some(Msg::Error(AppError::Utf8(e).into())));
                                 }
                             },
                             Err(e) => {
                                 tst.progress().set(None);
-                                message_out.set(Some(Msg::Error(e)));
+                                message_out.set(Some(Msg::Error(e.into())));
                             }
                         }
                     });
@@ -113,7 +113,7 @@ pub fn Open(note: Option<String>) -> Element {
                         }
                         Err(e) => {
                             clear_progress(tst.progress());
-                            message_out.set(Some(Msg::Error(e)));
+                            message_out.set(Some(Msg::Error(e.into())));
                         }
                     }
                 });

@@ -10,6 +10,7 @@ pub use functora::*;
 pub use functora_dioxus::dioxus_elements;
 pub use serde::{Deserialize, Serialize};
 pub use std::str::FromStr;
+pub use std::sync::Arc;
 pub use thiserror::Error;
 
 pub use functora_dioxus::ffi::{print_page, web_share, ShareData, Theme};

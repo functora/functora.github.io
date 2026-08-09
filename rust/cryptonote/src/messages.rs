@@ -1,12 +1,12 @@
-use crate::error::AppError;
+use crate::error::MsgError;
 use functora_dioxus::i18n::Language;
 use functora_dioxus::i18n::I18N;
 use functora_dioxus::Msg as BaseMsg;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Msg {
     Base(BaseMsg),
-    Error(AppError),
+    Error(MsgError),
     Note,
     NotePlaceholder,
     Mode,

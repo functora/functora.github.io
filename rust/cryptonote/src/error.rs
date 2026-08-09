@@ -1,8 +1,26 @@
 use crate::prelude::*;
 use functora_dioxus::i18n::I18N;
 use std::string::FromUtf8Error;
+use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Display, Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MsgError(Arc<AppError>);
+
+impl From<AppError> for MsgError {
+    fn from(e: AppError) -> Self {
+        MsgError(Arc::new(e))
+    }
+}
+
+impl std::ops::Deref for MsgError {
+    type Target = AppError;
+
+    fn deref(&self) -> &AppError {
+        &self.0
+    }
+}
+
+#[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum AppError {
     Json(String),
     Utf8(#[from] FromUtf8Error),

@@ -18,11 +18,13 @@ pub fn decode_payload<T: DeserializeOwned>(encoded: &str) -> Result<T, Error> {
     serde_json::from_slice::<T>(&bytes)?.pipe(Ok)
 }
 
+#[must_use]
 pub fn append_query_param(base_url: &str, name: &str, value: &str) -> String {
     let separator = if base_url.contains('?') { "&" } else { "?" };
     format!("{base_url}{separator}{name}={}", urlencoding::encode(value))
 }
 
+#[must_use]
 pub fn extract_query_param(url: &str, name: &str) -> Option<String> {
     url.split('?')
         .nth(1)?
@@ -73,13 +75,18 @@ fn bitmatrix_to_svg(matrix: &rxing::common::BitMatrix) -> String {
     svg
 }
 
-pub fn download_script(filename: &str) -> Result<String, String> {
-    let name = serde_json::to_string(filename)
-        .map_err(|e| e.to_string())?
+#[must_use]
+pub fn download_script(filename: &str) -> String {
+    let escaped = filename
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+        .replace('\t', "\\t")
+        .replace('\'', "\\u0027")
         .replace('<', "\\u003c")
-        .replace('>', "\\u003e")
-        .replace('\'', "\\u0027");
-    Ok(format!(
-        r"(async function(){{const parts=[];for(;;){{const m=await dioxus.recv();if(m&&m.t==='done')break;const bin=atob(m.data);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);parts.push(bytes)}}const url=URL.createObjectURL(new Blob(parts,{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download={name};a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()",
-    ))
+        .replace('>', "\\u003e");
+    format!(
+        r#"(async function(){{const parts=[];for(;;){{const m=await dioxus.recv();if(m&&m.t==='done')break;const bin=atob(m.data);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);parts.push(bytes)}}const url=URL.createObjectURL(new Blob(parts,{{type:'application/octet-stream'}}));const a=document.createElement('a');a.href=url;a.download="{escaped}";a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{{document.body.removeChild(a);URL.revokeObjectURL(url)}},1000)}})()"#,
+    )
 }

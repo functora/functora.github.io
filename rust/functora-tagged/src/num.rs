@@ -1,3 +1,7 @@
+//! Algebra of `Identity`, `Atomic`, `Times`, and `Per` dimensions:
+//! multiplication (`DMul`) and division (`DDiv`) rules and cancellations,
+//! each documented on its implementation.
+
 use crate::refine::*;
 use crate::tagged::*;
 use derive_more::Display;
@@ -7,10 +11,6 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use tap::prelude::*;
-
-/////////////
-// Algebra //
-/////////////
 
 #[derive(Debug)]
 pub struct Identity<I, F>(PhantomData<(I, F)>);
@@ -77,43 +77,34 @@ where
     }
 }
 
-//////////
-// DMul //
-//////////
-
+/// Dimension multiplication (`DMul`).
 pub trait DMul<R, O> {}
 
-//
-// Identity
-//
-
-// 1 * T = T
+/// Identity.
+/// `1 * T = T`
 impl<I, IF, T> DMul<T, T> for Identity<I, IF> {}
 
-// A * 1 = A
+/// `A * 1 = A`
 impl<A, AF, I, IF> DMul<Identity<I, IF>, Atomic<A, AF>>
     for Atomic<A, AF>
 {
 }
 
-// (L × R) * 1 = L × R
+/// `(L × R) * 1 = L × R`
 impl<L, R, TF1, I, IF>
     DMul<Identity<I, IF>, Times<L, R, TF1>>
     for Times<L, R, TF1>
 {
 }
 
-// (L ÷ R) * 1 = L ÷ R
+/// `(L ÷ R) * 1 = L ÷ R`
 impl<L, R, PF1, I, IF> DMul<Identity<I, IF>, Per<L, R, PF1>>
     for Per<L, R, PF1>
 {
 }
 
-//
-// Atomic (excluding Identity)
-//
-
-// L * R = L ✖ R
+/// Atomic (excluding Identity).
+/// `L * R = L ✖ R`
 impl<L, LF, R, RF, TF3>
     DMul<
         Atomic<R, RF>,
@@ -122,7 +113,7 @@ impl<L, LF, R, RF, TF3>
 {
 }
 
-// A * (L ✖ R) = A ✖ (L ✖ R)
+/// `A * (L ✖ R) = A ✖ (L ✖ R)`
 impl<A, AF, L, R, TF2, TF3>
     DMul<
         Times<L, R, TF2>,
@@ -131,7 +122,7 @@ impl<A, AF, L, R, TF2, TF3>
 {
 }
 
-// A * (L ÷ R) = A ✖ (L ÷ R)
+/// `A * (L ÷ R) = A ✖ (L ÷ R)`
 impl<A, AF, L, R, PF2, TF3>
     DMul<
         Per<L, R, PF2>,
@@ -140,7 +131,7 @@ impl<A, AF, L, R, PF2, TF3>
 {
 }
 
-// (L ✖ R) * A = (L ✖ R) ✖ A
+/// `(L ✖ R) * A = (L ✖ R) ✖ A`
 impl<L, R, TF1, A, AF, TF3>
     DMul<
         Atomic<A, AF>,
@@ -149,7 +140,7 @@ impl<L, R, TF1, A, AF, TF3>
 {
 }
 
-// (L ÷ R) * A = (L ÷ R) ✖ A
+/// `(L ÷ R) * A = (L ÷ R) ✖ A`
 impl<L, R, PF1, A, AF, TF3>
     DMul<
         Atomic<A, AF>,
@@ -158,11 +149,8 @@ impl<L, R, PF1, A, AF, TF3>
 {
 }
 
-//
-// Times (excluding Identity and Atomic)
-//
-
-// (L1 × R1) * (L2 × R2) = (L1 × R1) × (L2 × R2)
+/// Times (excluding Identity and Atomic).
+/// `(L1 × R1) * (L2 × R2) = (L1 × R1) × (L2 × R2)`
 impl<L1, R1, TF1, L2, R2, TF2, TF3>
     DMul<
         Times<L2, R2, TF2>,
@@ -171,7 +159,7 @@ impl<L1, R1, TF1, L2, R2, TF2, TF3>
 {
 }
 
-// (L1 × R1) * (L2 ÷ R2) = (L1 × R1) × (L2 ÷ R2)
+/// `(L1 × R1) * (L2 ÷ R2) = (L1 × R1) × (L2 ÷ R2)`
 impl<L1, R1, TF1, L2, R2, PF2, TF3>
     DMul<
         Per<L2, R2, PF2>,
@@ -180,7 +168,7 @@ impl<L1, R1, TF1, L2, R2, PF2, TF3>
 {
 }
 
-// (L1 ÷ R1) * (L2 × R2) = (L1 ÷ R1) × (L2 × R2)
+/// `(L1 ÷ R1) * (L2 × R2) = (L1 ÷ R1) × (L2 × R2)`
 impl<L1, R1, PF1, L2, R2, TF2, TF3>
     DMul<
         Times<L2, R2, TF2>,
@@ -189,11 +177,8 @@ impl<L1, R1, PF1, L2, R2, TF2, TF3>
 {
 }
 
-//
-// Per (excluding Identity, Atomic and Times)
-//
-
-// (L1 ÷ R1) * (L2 ÷ R2) = (L1 ÷ R1) × (L2 ÷ R2)
+/// Per (excluding Identity, Atomic and Times).
+/// `(L1 ÷ R1) * (L2 ÷ R2) = (L1 ÷ R1) × (L2 ÷ R2)`
 impl<L1, R1, PF1, L2, R2, PF2, TF3>
     DMul<
         Per<L2, R2, PF2>,
@@ -202,30 +187,21 @@ impl<L1, R1, PF1, L2, R2, PF2, TF3>
 {
 }
 
-//
-// Cancellation
-//
-
-// (L ÷ R) * R = L
+/// Cancellation.
+/// `(L ÷ R) * R = L`
 impl<L, R, PF> DMul<R, L> for Per<L, R, PF> {}
 
-// R * (L ÷ R) = L
+/// `R * (L ÷ R) = L`
 impl<L, R, PF> DMul<Per<L, R, PF>, L> for R {}
 
-//////////
-// DDiv //
-//////////
-
+/// Dimension division (`DDiv`).
 pub trait DDiv<R, O> {}
 
-//
-// Identity
-//
-
-// T / 1 = T
+/// Identity.
+/// `T / 1 = T`
 impl<T, I, IF> DDiv<Identity<I, IF>, T> for T {}
 
-// 1 / A = 1 ÷ A
+/// `1 / A = 1 ÷ A`
 impl<I, IF, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
@@ -234,7 +210,7 @@ impl<I, IF, A, AF, PF3>
 {
 }
 
-// 1 / (L ✖ R) = 1 ÷ (L ✖ R)
+/// `1 / (L ✖ R) = 1 ÷ (L ✖ R)`
 impl<I, IF, L, R, TF2, PF3>
     DDiv<
         Times<L, R, TF2>,
@@ -243,7 +219,7 @@ impl<I, IF, L, R, TF2, PF3>
 {
 }
 
-// 1 / (L ÷ R) = 1 ÷ (L ÷ R)
+/// `1 / (L ÷ R) = 1 ÷ (L ÷ R)`
 impl<I, IF, L, R, PF2, PF3>
     DDiv<
         Per<L, R, PF2>,
@@ -252,11 +228,8 @@ impl<I, IF, L, R, PF2, PF3>
 {
 }
 
-//
-// Atomic (excluding Identity)
-//
-
-// L / R = L ÷ R
+/// Atomic (excluding Identity).
+/// `L / R = L ÷ R`
 impl<L, LF, R, RF, PF3>
     DDiv<
         Atomic<R, RF>,
@@ -265,7 +238,7 @@ impl<L, LF, R, RF, PF3>
 {
 }
 
-// A / (L ✖ R) = A ÷ (L ✖ R)
+/// `A / (L ✖ R) = A ÷ (L ✖ R)`
 impl<A, AF, L, R, TF2, PF3>
     DDiv<
         Times<L, R, TF2>,
@@ -274,7 +247,7 @@ impl<A, AF, L, R, TF2, PF3>
 {
 }
 
-// A / (L ÷ R) = A ÷ (L ÷ R)
+/// `A / (L ÷ R) = A ÷ (L ÷ R)`
 impl<A, AF, L, R, PF2, PF3>
     DDiv<
         Per<L, R, PF2>,
@@ -283,7 +256,7 @@ impl<A, AF, L, R, PF2, PF3>
 {
 }
 
-// (L ✖ R) / A = (L ✖ R) ÷ A
+/// `(L ✖ R) / A = (L ✖ R) ÷ A`
 impl<L, R, TF1, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
@@ -292,7 +265,7 @@ impl<L, R, TF1, A, AF, PF3>
 {
 }
 
-// (L ÷ R) / A = (L ÷ R) ÷ A
+/// `(L ÷ R) / A = (L ÷ R) ÷ A`
 impl<L, R, PF1, A, AF, PF3>
     DDiv<
         Atomic<A, AF>,
@@ -301,11 +274,8 @@ impl<L, R, PF1, A, AF, PF3>
 {
 }
 
-//
-// Times (excluding Identity and Atomic)
-//
-
-// (L1 × R1) / (L2 × R2) = (L1 × R1) ÷ (L2 × R2)
+/// Times (excluding Identity and Atomic).
+/// `(L1 × R1) / (L2 × R2) = (L1 × R1) ÷ (L2 × R2)`
 impl<L1, R1, TF1, L2, R2, TF2, PF3>
     DDiv<
         Times<L2, R2, TF2>,
@@ -314,7 +284,7 @@ impl<L1, R1, TF1, L2, R2, TF2, PF3>
 {
 }
 
-// (L1 × R1) / (L2 ÷ R2) = (L1 × R1) ÷ (L2 ÷ R2)
+/// `(L1 × R1) / (L2 ÷ R2) = (L1 × R1) ÷ (L2 ÷ R2)`
 impl<L1, R1, TF1, L2, R2, PF2, PF3>
     DDiv<
         Per<L2, R2, PF2>,
@@ -323,7 +293,7 @@ impl<L1, R1, TF1, L2, R2, PF2, PF3>
 {
 }
 
-// (L1 ÷ R1) / (L2 × R2) = (L1 ÷ R1) ÷ (L2 × R2)
+/// `(L1 ÷ R1) / (L2 × R2) = (L1 ÷ R1) ÷ (L2 × R2)`
 impl<L1, R1, PF1, L2, R2, TF2, PF3>
     DDiv<
         Times<L2, R2, TF2>,
@@ -332,11 +302,8 @@ impl<L1, R1, PF1, L2, R2, TF2, PF3>
 {
 }
 
-//
-// Per (excluding Identity, Atomic and Times)
-//
-
-// (L1 ÷ R1) / (L2 ÷ R2) = (L1 ÷ R1) ÷ (L2 ÷ R2)
+/// Per (excluding Identity, Atomic and Times).
+/// `(L1 ÷ R1) / (L2 ÷ R2) = (L1 ÷ R1) ÷ (L2 ÷ R2)`
 impl<L1, R1, PF1, L2, R2, PF2, PF3>
     DDiv<
         Per<L2, R2, PF2>,
@@ -345,16 +312,13 @@ impl<L1, R1, PF1, L2, R2, PF2, PF3>
 {
 }
 
-//
-// Cancellation
-//
-
-// (L ✖ R) / R = L
-// (L ✖ R) / L = R (overlaps when L = R)
+/// Cancellation.
+/// `(L ✖ R) / R = L`
+/// `(L ✖ R) / L = R (overlaps when L = R)`
 impl<L, R, TF> DDiv<R, L> for Times<L, R, TF> {}
 
-// L / (L ✖ R) = 1 ÷ R
-// R / (L ✖ R) = 1 ÷ L (overlaps when L = R)
+/// `L / (L ✖ R) = 1 ÷ R`
+/// `R / (L ✖ R) = 1 ÷ L (overlaps when L = R)`
 impl<L, LF, R, TF2, I, IF, PF3>
     DDiv<
         Times<Atomic<L, LF>, R, TF2>,
@@ -363,22 +327,19 @@ impl<L, LF, R, TF2, I, IF, PF3>
 {
 }
 
-// L / (L ÷ R) = R
+/// `L / (L ÷ R) = R`
 impl<L, R, PF> DDiv<Per<L, R, PF>, R> for L {}
 
-// (L ÷ R) / L = 1 ÷ R
+/// `(L ÷ R) / L = 1 ÷ R`
 impl<L, LF, R, PF1, I, IF, PF3>
     DDiv<Atomic<L, LF>, Per<Identity<I, IF>, R, PF3>>
     for Per<Atomic<L, LF>, R, PF1>
 {
 }
 
-//////////////
-//  Errors  //
-//////////////
-
 #[derive(Eq, PartialEq, Debug, Display)]
 #[display("{:?}", self)]
+/// Arithmetic errors of the dimension algebra.
 pub enum NumError<L: Debug, R: Debug> {
     Add(L, R),
     Sub(L, R),
@@ -388,10 +349,7 @@ pub enum NumError<L: Debug, R: Debug> {
 
 impl<L: Debug, R: Debug> Error for NumError<L, R> {}
 
-///////////
-//  Add  //
-///////////
-
+/// Addition (`TAdd`).
 pub trait TAdd: Sized + Debug {
     fn tadd<Rhs: Borrow<Self>>(
         &self,
@@ -431,10 +389,7 @@ where
     }
 }
 
-///////////
-//  Sub  //
-///////////
-
+/// Subtraction (`TSub`).
 pub trait TSub: Sized + Debug {
     fn tsub<Rhs: Borrow<Self>>(
         &self,
@@ -474,10 +429,7 @@ where
     }
 }
 
-///////////
-//  Gap  //
-///////////
-
+/// Gap (`TGap`).
 pub trait TGap: Sized + Debug {
     fn tgap<Rhs: Borrow<Self>>(
         &self,
@@ -500,10 +452,7 @@ where
     }
 }
 
-///////////
-//  Mul  //
-///////////
-
+/// Multiplication (`TMul`).
 pub trait TMul<R, O>: Sized + Debug
 where
     R: Debug,
@@ -555,10 +504,7 @@ where
     }
 }
 
-///////////
-//  Div  //
-///////////
-
+/// Division (`TDiv`).
 pub trait TDiv<R, O>: Sized + Debug
 where
     R: Debug,

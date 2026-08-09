@@ -1,6 +1,10 @@
+use crate::Error;
+use crate::error::WorkerStopped;
 use crate::progress::Job;
 use dioxus::prelude::{Writable, WritableExt};
 use std::future::Future;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 #[cfg(not(target_arch = "wasm32"))]
@@ -38,29 +42,54 @@ impl Wake for ThreadWake {
 type WakeSlot = Arc<Mutex<Option<Waker>>>;
 
 #[cfg(not(target_arch = "wasm32"))]
+struct WorkerGuard {
+    handle: Option<std::thread::JoinHandle<()>>,
+    shutdown: Arc<AtomicBool>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for WorkerGuard {
+    fn drop(&mut self) {
+        self.shutdown.store(true, Ordering::Release);
+        if let Some(handle) = self.handle.take() {
+            handle.thread().unpark();
+            _ = handle.join();
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn run<J, O, E, S, F, M, P>(arg: J, progress: P, make: M) -> Result<O, E>
 where
     J: Send + 'static,
     O: Send + 'static,
-    E: From<String> + Send + 'static,
     S: Send + 'static,
+    E: From<Error> + Send + 'static,
     F: Future<Output = Result<O, E>> + Send + 'static,
     M: FnOnce(J, Reporter<S>) -> F + Send + 'static,
     P: Writable<Target = Option<Job<S>>>,
 {
     let (tx, rx) = mpsc::channel();
     let wake_slot: WakeSlot = Arc::new(Mutex::new(None));
-    _ = std::thread::spawn({
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let handle = std::thread::spawn({
         let wake_slot_thread = wake_slot.clone();
         let send = tx.clone();
         let report_wake = wake_slot.clone();
+        let shutdown_thread = shutdown.clone();
         let report: Reporter<S> = Box::new(move |job| {
             _ = send.send(WorkerMsg::Job(job));
             wake_once(&report_wake);
         });
-        move || drive(make(arg, report), &tx, &wake_slot_thread)
+        move || drive(make(arg, report), &tx, &wake_slot_thread, &shutdown_thread)
     });
-    pump(rx, progress, wake_slot).await
+    let guard = WorkerGuard {
+        handle: Some(handle),
+        shutdown,
+    };
+    let result = pump(rx, progress, wake_slot).await;
+    drop(guard);
+    result
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -73,7 +102,7 @@ fn wake_once(slot: &WakeSlot) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn drive<S, O, E, F>(core: F, tx: &Sender<WorkerMsg<S, O, E>>, wake_slot: &WakeSlot)
+fn drive<S, O, E, F>(core: F, tx: &Sender<WorkerMsg<S, O, E>>, wake_slot: &WakeSlot, shutdown: &Arc<AtomicBool>)
 where
     O: Send + 'static,
     E: Send + 'static,
@@ -89,7 +118,12 @@ where
                 wake_once(wake_slot);
                 return;
             }
-            Poll::Pending => std::thread::park(),
+            Poll::Pending => {
+                if shutdown.load(Ordering::Acquire) {
+                    return;
+                }
+                std::thread::park();
+            }
         }
     }
 }
@@ -101,7 +135,7 @@ fn pump<S: 'static, O, E, P>(
     wake_slot: WakeSlot,
 ) -> impl Future<Output = Result<O, E>>
 where
-    E: From<String>,
+    E: From<Error> + Send + 'static,
     P: Writable<Target = Option<Job<S>>>,
 {
     std::future::poll_fn(move |cx| {
@@ -116,7 +150,7 @@ where
                 Ok(WorkerMsg::Done(result)) => return Poll::Ready(result),
                 Err(TryRecvError::Empty) => return Poll::Pending,
                 Err(TryRecvError::Disconnected) => {
-                    return Poll::Ready(Err("Background task stopped unexpectedly".to_string().into()));
+                    return Poll::Ready(Err(Error::Worker(WorkerStopped).into()));
                 }
             }
         }
@@ -128,8 +162,8 @@ pub async fn run<J, O, E, S, F, M, P>(arg: J, mut progress: P, make: M) -> Resul
 where
     J: 'static,
     O: 'static,
-    E: 'static,
     S: 'static,
+    E: From<Error> + 'static,
     F: Future<Output = Result<O, E>> + 'static,
     M: FnOnce(J, Reporter<S>) -> F + 'static,
     P: Writable<Target = Option<Job<S>>> + 'static,

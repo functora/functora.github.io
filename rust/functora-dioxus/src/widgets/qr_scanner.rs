@@ -7,16 +7,25 @@ use dioxus::prelude::*;
 
 const FPS_DELAY: u64 = 33;
 
-fn cam_err(e: &Error) -> Error {
+fn camera_error(e: &Error) -> Error {
     match e {
         Error::JS(msg) => {
-            if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
-                Error::CameraPermissionDenied(msg.clone())
+            let text = msg.clone();
+            if text.contains("Permission") || text.contains("denied") || text.contains("NotAllowed") {
+                Error::CameraPermissionDenied(text)
             } else {
-                Error::CameraNotAvailable(msg.clone())
+                Error::CameraNotAvailable(text)
             }
         }
         other => Error::CameraNotAvailable(other.to_string()),
+    }
+}
+
+fn report_camera_error(e: &Error, error: &mut Signal<Option<Error>>, event: Option<&EventHandler<Error>>) {
+    let message = camera_error(e);
+    error.set(Some(message));
+    if let Some(callback) = event {
+        callback.call(camera_error(e));
     }
 }
 
@@ -26,23 +35,14 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
     let mut found = use_signal(|| false);
     let mut error = use_signal(|| Option::<Error>::None);
 
-    #[allow(unused_must_use, unused_results)]
-    use_effect(move || {
-        spawn(async move {
+    _ = use_effect(move || {
+        let _ = spawn(async move {
             if let Err(e) = check_camera().await {
-                let msg = cam_err(&e);
-                error.set(Some(msg.clone()));
-                if let Some(callback) = &on_error {
-                    callback.call(msg);
-                }
+                report_camera_error(&e, &mut error, on_error.as_ref());
                 return;
             }
             if let Err(e) = start_camera().await {
-                let msg = cam_err(&e);
-                error.set(Some(msg.clone()));
-                if let Some(callback) = &on_error {
-                    callback.call(msg);
-                }
+                report_camera_error(&e, &mut error, on_error.as_ref());
                 return;
             }
             _ = sleep(FPS_DELAY).await;
@@ -62,8 +62,7 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
 
     use_drop(move || {
         scanning.set(false);
-        #[allow(unused_must_use, unused_results)]
-        spawn(async move {
+        let _ = spawn(async move {
             _ = stop_camera().await;
         });
     });

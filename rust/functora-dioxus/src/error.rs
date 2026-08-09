@@ -1,17 +1,97 @@
 use crate::i18n::I18N;
 use cipher::InvalidLength;
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct IoError(pub std::io::Error);
+
+impl PartialEq for IoError {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.kind() == other.0.kind()
+    }
+}
+impl Eq for IoError {}
+
+impl From<std::io::Error> for IoError {
+    fn from(e: std::io::Error) -> Self {
+        IoError(e)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct JsonError(pub serde_json::Error);
+
+impl PartialEq for JsonError {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.classify() == other.0.classify()
+    }
+}
+impl Eq for JsonError {}
+
+impl From<serde_json::Error> for JsonError {
+    fn from(e: serde_json::Error) -> Self {
+        JsonError(e)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct ZipErr(pub zip::result::ZipError);
+
+impl PartialEq for ZipErr {
+    fn eq(&self, other: &Self) -> bool {
+        use zip::result::ZipError as Z;
+        match (&self.0, &other.0) {
+            (Z::Io(a), Z::Io(b)) => a.kind() == b.kind(),
+            (Z::InvalidArchive(a) | Z::UnsupportedArchive(a), Z::InvalidArchive(b) | Z::UnsupportedArchive(b)) => {
+                a == b && std::mem::discriminant(&self.0) == std::mem::discriminant(&other.0)
+            }
+            (Z::FileNotFound, Z::FileNotFound) | (Z::InvalidPassword, Z::InvalidPassword) => true,
+            _ => false,
+        }
+    }
+}
+impl Eq for ZipErr {}
+
+impl From<zip::result::ZipError> for ZipErr {
+    fn from(e: zip::result::ZipError) -> Self {
+        ZipErr(e)
+    }
+}
+
+#[cfg(target_os = "android")]
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct JniError(pub jni::errors::Error);
+
+#[cfg(target_os = "android")]
+impl PartialEq for JniError {
+    fn eq(&self, other: &Self) -> bool {
+        std::mem::discriminant(&self.0) == std::mem::discriminant(&other.0)
+    }
+}
+#[cfg(target_os = "android")]
+impl Eq for JniError {}
+
+#[cfg(target_os = "android")]
+impl From<jni::errors::Error> for JniError {
+    fn from(e: jni::errors::Error) -> Self {
+        JniError(e)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
     #[error("IO error: {0}")]
-    IO(String),
+    IO(IoError),
     #[cfg(target_os = "android")]
     #[error("JNI error: {0}")]
-    JNI(String),
+    JNI(JniError),
     #[error("JSON error: {0}")]
-    Json(String),
+    Json(JsonError),
     #[error("Base64 decoding error: {0}")]
-    Base64(String),
+    Base64(base64::DecodeError),
     #[cfg(feature = "qr")]
     #[error("QR code error: {0}")]
     Qr(#[from] rxing::Exceptions),
@@ -33,39 +113,42 @@ pub enum Error {
     Decrypt(aead::Error),
     #[error("Invalid encrypted payload format: {0}")]
     InvalidFormat(String),
+    #[error("Numeric conversion failed ({context}): {source}")]
+    Convert {
+        context: &'static str,
+        source: std::num::TryFromIntError,
+    },
     #[error("Camera not available: {0}")]
     CameraNotAvailable(String),
     #[error("Camera permission denied: {0}")]
     CameraPermissionDenied(String),
     #[error("Not a JSON object: {0}")]
-    NotJsonObject(String),
+    NotJsonObject(serde_json::Value),
     #[error("Archive error: {0}")]
-    Archive(String),
+    Archive(ZipErr),
     #[error("Background task error: {0}")]
-    Worker(String),
+    Worker(WorkerStopped),
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("Background task stopped unexpectedly")]
+pub struct WorkerStopped;
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Error::IO(e.to_string())
-    }
-}
-
-impl From<String> for Error {
-    fn from(s: String) -> Self {
-        Error::Worker(s)
+        Error::IO(IoError::from(e))
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(e: serde_json::Error) -> Self {
-        Error::Json(e.to_string())
+        Error::Json(JsonError::from(e))
     }
 }
 
 impl From<base64::DecodeError> for Error {
     fn from(e: base64::DecodeError) -> Self {
-        Error::Base64(e.to_string())
+        Error::Base64(e)
     }
 }
 
@@ -78,7 +161,19 @@ impl From<dioxus::document::EvalError> for Error {
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for Error {
     fn from(e: jni::errors::Error) -> Self {
-        Error::JNI(e.to_string())
+        Error::JNI(JniError::from(e))
+    }
+}
+
+impl From<WorkerStopped> for Error {
+    fn from(e: WorkerStopped) -> Self {
+        Error::Worker(e)
+    }
+}
+
+impl From<zip::result::ZipError> for Error {
+    fn from(e: zip::result::ZipError) -> Self {
+        Error::Archive(ZipErr::from(e))
     }
 }
 
@@ -99,6 +194,7 @@ impl I18N for Error {
             Self::Encrypt(e) => format!("Encryption failed: {e}"),
             Self::Decrypt(e) => format!("Decryption failed: {e}"),
             Self::InvalidFormat(e) => format!("Invalid encrypted payload format: {e}"),
+            Self::Convert { context, source } => format!("Numeric conversion failed ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
@@ -125,11 +221,12 @@ impl I18N for Error {
             Self::Encrypt(e) => format!("Falló el cifrado: {e}"),
             Self::Decrypt(e) => format!("Falló el descifrado: {e}"),
             Self::InvalidFormat(e) => format!("Formato de carga útil cifrada no válido: {e}"),
+            Self::Convert { context, source } => format!("Error de conversión numérica ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
             Self::Archive(e) => format!("Error de archivo: {e}"),
-            Self::Worker(e) => format!("Error de tarea en segundo plano: {e}"),
+            Self::Worker(e) => format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
         }
@@ -151,6 +248,7 @@ impl I18N for Error {
             Self::Encrypt(e) => format!("Ошибка шифрования: {e}"),
             Self::Decrypt(e) => format!("Ошибка расшифровки: {e}"),
             Self::InvalidFormat(e) => format!("Неверный формат зашифрованных данных: {e}"),
+            Self::Convert { context, source } => format!("Ошибка численного преобразования ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),

@@ -78,7 +78,7 @@ fn extract_query_param_empty_value() {
 
 #[test]
 fn download_script_escapes_special_characters() {
-    let script = functora_dioxus::encoding::download_script("a\"</script>").unwrap_or_else(|e| panic!("script: {e:?}"));
+    let script = functora_dioxus::encoding::download_script("a\"</script>");
     assert!(!script.contains("</script>"));
     assert!(script.contains("a.download="));
 }

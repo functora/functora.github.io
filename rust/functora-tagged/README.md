@@ -106,10 +106,10 @@ assert_eq!(err.unwrap_err(), CurrencyCodeError);
 - **`FCrude`**: No-op refinery. Used when you only need a distinct type without refinement. `RefineError` is `Infallible`.
 - **`FPositive`**: Ensures the value is strictly greater than zero (`> 0`).
 - **`FNonNeg`**: Ensures the value is non-negative (`>= 0`).
-- **`FZeroExclToOneExcl`**: Ensures the value is in the open interval `(0, 1)` — both endpoints excluded.
-- **`FZeroInclToOneExcl`**: Ensures the value is in the half-open interval `[0, 1)` — zero included, one excluded.
-- **`FZeroExclToOneIncl`**: Ensures the value is in the half-open interval `(0, 1]` — zero excluded, one included.
-- **`FZeroInclToOneIncl`**: Ensures the value is in the closed interval `[0, 1]` — both endpoints included.
+- **`FZeroExclToOneExcl`**: Ensures the value is in the open interval `(0, 1)` - both endpoints excluded.
+- **`FZeroInclToOneExcl`**: Ensures the value is in the half-open interval `[0, 1)` - zero included, one excluded.
+- **`FZeroExclToOneIncl`**: Ensures the value is in the half-open interval `(0, 1]` - zero excluded, one included.
+- **`FZeroInclToOneIncl`**: Ensures the value is in the closed interval `[0, 1]` - both endpoints included.
 - **`FNonEmpty`**: Ensures the value is not empty, i.e. the length is `> 0`.
 
 ```rust

@@ -25,14 +25,12 @@ pub fn NoteDisplay() -> Element {
                     }
                     Err(e) => {
                         progress_out.set(None);
-                        message_out.set(Some(Msg::Error(AppError::FunctoraDioxus(functora_dioxus::Error::IO(
-                            e,
-                        )))));
+                        message_out.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                     }
                 },
                 Err(e) => {
                     progress_out.set(None);
-                    message_out.set(Some(Msg::Error(e)));
+                    message_out.set(Some(Msg::Error(e.into())));
                 }
             }
         });
@@ -52,7 +50,7 @@ pub fn NoteDisplay() -> Element {
                     Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
                     Err(e) => {
                         tst.progress().set(None);
-                        message_out.set(Some(Msg::Error(e)));
+                        message_out.set(Some(Msg::Error(e.into())));
                     }
                 }
             } else {
@@ -65,7 +63,7 @@ pub fn NoteDisplay() -> Element {
         let mut msg = message;
         let _ = spawn(async move {
             if let Err(e) = print_page().await {
-                msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e))));
+                msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
             }
         });
     };

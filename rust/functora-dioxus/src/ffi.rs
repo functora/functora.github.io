@@ -28,6 +28,7 @@ impl Theme {
         }
     }
 
+    #[must_use]
     pub fn to_js_value(&self) -> String {
         self.to_string().to_lowercase()
     }
@@ -435,10 +436,9 @@ async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
 
     let mut eval = dioxus::document::eval(code);
 
-    eval.send(arg).map_err(Error::from)?;
-    match eval.recv::<Either<String, B>>().await {
-        Ok(Either::Right(rhs)) => Ok(rhs),
-        Ok(Either::Left(lhs)) => Err(Error::from(dioxus::document::EvalError::InvalidJs(lhs))),
-        Err(e) => Err(Error::from(e)),
+    eval.send(arg)?;
+    match eval.recv::<Either<String, B>>().await? {
+        Either::Right(rhs) => Ok(rhs),
+        Either::Left(lhs) => Err(Error::from(dioxus::document::EvalError::InvalidJs(lhs))),
     }
 }

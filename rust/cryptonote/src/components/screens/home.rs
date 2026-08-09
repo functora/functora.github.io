@@ -11,7 +11,7 @@ pub fn Home() -> Element {
 
     let mut navigate_to_url = move |url: &str| match extract_note_param(url) {
         Ok(note) => nav.write().push(Screen::Open.to_route(Some(note))),
-        Err(e) => message.set(Some(Msg::Error(e))),
+        Err(e) => message.set(Some(Msg::Error(e.into()))),
     };
 
     let open_url = move |_| {
@@ -19,7 +19,7 @@ pub fn Home() -> Element {
         let url_input = tst.url_input()();
         let url = url_input.trim().to_string();
         if url.is_empty() {
-            message.set(Some(Msg::Error(AppError::NoNoteInUrl)));
+            message.set(Some(Msg::Error(AppError::NoNoteInUrl.into())));
             return;
         }
         navigate_to_url(&url);
@@ -37,7 +37,7 @@ pub fn Home() -> Element {
                     Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
                     Err(e) => {
                         tst.progress().set(None);
-                        message_out.set(Some(Msg::Error(e)));
+                        message_out.set(Some(Msg::Error(e.into())));
                     }
                 }
             });

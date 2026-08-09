@@ -16,7 +16,6 @@ pub fn decode_hints() -> DecodeHints {
 
 #[cfg(feature = "qr")]
 #[must_use]
-#[allow(clippy::cast_possible_truncation)]
 pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
     if w == 0 || h == 0 {
         return None;
@@ -27,7 +26,8 @@ pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
             if px[3] == 0 {
                 0xFF
             } else {
-                ((306 * u64::from(px[0]) + 601 * u64::from(px[1]) + 117 * u64::from(px[2]) + 0x200) >> 10) as u8
+                u8::try_from((306 * u64::from(px[0]) + 601 * u64::from(px[1]) + 117 * u64::from(px[2]) + 0x200) >> 10)
+                    .unwrap_or(u8::MAX)
             }
         })
         .collect();

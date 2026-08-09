@@ -12,6 +12,7 @@ pub enum Align {
 }
 
 impl Align {
+    #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Left => "l",

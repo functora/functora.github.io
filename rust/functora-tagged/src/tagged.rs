@@ -24,6 +24,18 @@ impl<T, D, F> Tagged<T, D, F> {
     }
 }
 
+impl<T, D, U> IntoIterator
+    for Tagged<T, D, crate::common::FNonEmpty>
+where
+    T: IntoIterator<Item = U>,
+{
+    type Item = U;
+    type IntoIter = T::IntoIter;
+    fn into_iter(self) -> Self::IntoIter {
+        self.untag().into_iter()
+    }
+}
+
 impl<T: Eq, D, F> Eq for Tagged<T, D, F> {}
 
 impl<T: PartialEq, D, F> PartialEq for Tagged<T, D, F> {

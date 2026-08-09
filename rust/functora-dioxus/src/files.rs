@@ -14,19 +14,22 @@ pub struct Attachment {
     pub data: Vec<u8>,
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[must_use]
 pub fn format_size(size: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;
-    if size >= MB {
-        format!("{:.1} MB", size as f64 / MB as f64)
+    let (unit, label) = if size >= MB {
+        (MB, "MB")
     } else if size >= KB {
-        format!("{:.1} KB", size as f64 / KB as f64)
+        (KB, "KB")
     } else {
-        format!("{size} B")
-    }
+        return format!("{size} B");
+    };
+    let tenths = (u128::from(size) * 10 + u128::from(unit) / 2) / u128::from(unit);
+    format!("{}.{} {}", tenths / 10, tenths % 10, label)
 }
 
+#[must_use]
 pub fn mime_for(name: &str) -> Option<&'static str> {
     let ext = name
         .rsplit_once('.')
@@ -67,6 +70,7 @@ pub fn mime_for(name: &str) -> Option<&'static str> {
     }
 }
 
+#[must_use]
 pub fn is_text(mime: &str) -> bool {
     mime.starts_with("text/")
         || matches!(
@@ -87,6 +91,7 @@ pub enum Preview {
     Missing,
 }
 
+#[must_use]
 pub fn preview(name: &str, data: &[u8]) -> Preview {
     let Some(mime) = mime_for(name) else {
         return Preview::Download;
@@ -117,6 +122,7 @@ pub fn preview(name: &str, data: &[u8]) -> Preview {
     Preview::Download
 }
 
+#[must_use]
 pub fn pick_script(multiple: bool) -> String {
     format!(
         r"
@@ -183,7 +189,7 @@ where
     let mut done = 0u64;
     let mut total = 0u64;
     loop {
-        let msg = eval.recv::<PickMsg>().await.map_err(Error::from)?;
+        let msg = eval.recv::<PickMsg>().await?;
         match msg {
             PickMsg::Begin { name, size } => {
                 total += size;
@@ -229,22 +235,20 @@ where
 {
     use base64::engine::general_purpose::STANDARD as BASE64;
     const SEND_CHUNK: usize = 3 * 1024 * 1024;
-    let eval = dioxus::document::eval(&download_script(filename).map_err(Error::IO)?);
+    let eval = dioxus::document::eval(&download_script(filename));
     let total = data.len() as u64;
     let mut done = 0u64;
     for chunk in data.chunks(SEND_CHUNK) {
         eval.send(DownloadMsg {
             t: "chunk",
             data: BASE64.encode(chunk),
-        })
-        .map_err(Error::from)?;
+        })?;
         done += chunk.len() as u64;
         report_progress(progress, stage, done, total).await;
     }
     eval.send(DownloadMsg {
         t: "done",
         data: String::new(),
-    })
-    .map_err(Error::from)?;
+    })?;
     Ok(filename.to_string())
 }

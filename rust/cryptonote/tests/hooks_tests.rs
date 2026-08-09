@@ -263,7 +263,7 @@ fn precision_half_mb() {
 
 #[test]
 fn download_script_plain_filename() {
-    let script = cryptonote::download_script("archive.cryptonote").unwrap();
+    let script = cryptonote::download_script("archive.cryptonote");
     assert!(script.contains(r#"a.download="archive.cryptonote";"#));
     assert!(script.contains("dioxus.recv()"));
     assert!(script.contains("URL.createObjectURL"));
@@ -272,20 +272,20 @@ fn download_script_plain_filename() {
 
 #[test]
 fn download_script_has_no_payload_placeholder() {
-    let script = cryptonote::download_script("x.cryptonote").unwrap();
+    let script = cryptonote::download_script("x.cryptonote");
     assert_eq!(script.matches("dioxus.recv()").count(), 1);
 }
 
 #[test]
 fn download_script_escapes_quote_and_backslash() {
-    let script = cryptonote::download_script("a\";alert(1);//").unwrap();
+    let script = cryptonote::download_script("a\";alert(1);//");
     assert!(!script.contains(r#"a.download="a";alert"#));
     assert!(script.contains(r#"a.download="a\";alert(1);//";"#));
 }
 
 #[test]
 fn download_script_escapes_single_quote_and_html() {
-    let script = cryptonote::download_script("b'</script><img onerror=alert(2)>").unwrap();
+    let script = cryptonote::download_script("b'</script><img onerror=alert(2)>");
     assert!(!script.contains("</script>"));
     assert!(!script.contains("<img"));
     assert!(script.contains(r"\u003c"));
@@ -295,7 +295,7 @@ fn download_script_escapes_single_quote_and_html() {
 
 #[test]
 fn download_script_escapes_newline() {
-    let script = cryptonote::download_script("line1\nline2").unwrap();
+    let script = cryptonote::download_script("line1\nline2");
     assert!(!script.contains('\n'));
     assert!(script.contains(r"line1\nline2"));
 }

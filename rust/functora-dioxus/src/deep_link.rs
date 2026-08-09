@@ -26,6 +26,7 @@ pub fn take_url() -> Option<String> {
     PENDING_URL.lock().ok().and_then(|mut guard| guard.take())
 }
 
+#[must_use]
 pub fn url_to_route(url: &str) -> Option<String> {
     url.split('?').nth(1).map(|query| format!("/?{query}"))
 }

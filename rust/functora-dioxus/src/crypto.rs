@@ -38,49 +38,17 @@ pub struct EncryptedNote {
     pub kdf: Kdf,
 }
 
-#[allow(clippy::large_enum_variant)]
-enum AnyCipher {
-    ChaCha(ChaCha20Poly1305),
-    Aes(Aes256Gcm),
-}
-
-impl AnyCipher {
-    fn keyed(cipher: CipherType, key: &[u8]) -> Result<Self, Error> {
-        match cipher {
-            CipherType::ChaCha20Poly1305 => ChaCha20Poly1305::new_from_slice(key)
-                .map(Self::ChaCha)
-                .map_err(Error::Cipher),
-            CipherType::Aes256Gcm => Aes256Gcm::new_from_slice(key).map(Self::Aes).map_err(Error::Cipher),
-        }
-    }
-
-    fn encrypt(&self, nonce: &[u8], aad: &[u8], msg: &[u8]) -> Result<Vec<u8>, Error> {
-        match self {
-            Self::ChaCha(c) => c
-                .encrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg, aad })
-                .map_err(Error::Encrypt),
-            Self::Aes(c) => c
-                .encrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg, aad })
-                .map_err(Error::Encrypt),
-        }
-    }
-
-    fn decrypt(&self, nonce: &[u8], aad: &[u8], ct: &[u8]) -> Result<Vec<u8>, Error> {
-        match self {
-            Self::ChaCha(c) => c
-                .decrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg: ct, aad })
-                .map_err(Error::Decrypt),
-            Self::Aes(c) => c
-                .decrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg: ct, aad })
-                .map_err(Error::Decrypt),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChunkKind {
     NonLast,
     Last,
+}
+
+fn chunk_position(position: usize) -> Result<u32, Error> {
+    u32::try_from(position).map_err(|e| Error::Convert {
+        context: "chunk count exceeds u32 range",
+        source: e,
+    })
 }
 
 fn stream_nonce(base: &[u8], position: u32, kind: ChunkKind) -> [u8; 12] {
@@ -130,22 +98,64 @@ impl StreamParts {
         })
     }
 
+    #[must_use]
     pub fn nonce(&self) -> &[u8] {
         &self.nonce
     }
 
+    #[must_use]
     pub fn salt(&self) -> &[u8] {
         &self.salt
     }
 
     pub fn encrypt_chunk(&self, position: u32, kind: ChunkKind, plaintext: &[u8]) -> Result<Vec<u8>, Error> {
         let nonce = stream_nonce(&self.nonce, position, kind);
-        AnyCipher::keyed(self.cipher, &self.key)?.encrypt(&nonce, &self.aad, plaintext)
+        crypto_fn(
+            self.cipher,
+            CipherKind::Encrypt,
+            &self.key,
+            &nonce,
+            &self.aad,
+            plaintext,
+        )
     }
 
     pub fn decrypt_chunk(&self, position: u32, kind: ChunkKind, chunk: &[u8]) -> Result<Vec<u8>, Error> {
         let nonce = stream_nonce(&self.nonce, position, kind);
-        AnyCipher::keyed(self.cipher, &self.key)?.decrypt(&nonce, &self.aad, chunk)
+        crypto_fn(self.cipher, CipherKind::Decrypt, &self.key, &nonce, &self.aad, chunk)
+    }
+}
+
+enum CipherKind {
+    Encrypt,
+    Decrypt,
+}
+
+fn crypto_fn(
+    cipher: CipherType,
+    kind: CipherKind,
+    key: &[u8],
+    nonce: &[u8],
+    aad: &[u8],
+    data: &[u8],
+) -> Result<Vec<u8>, Error> {
+    match (cipher, kind) {
+        (CipherType::ChaCha20Poly1305, CipherKind::Encrypt) => ChaCha20Poly1305::new_from_slice(key)
+            .map_err(Error::Cipher)?
+            .encrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg: data, aad })
+            .map_err(Error::Encrypt),
+        (CipherType::ChaCha20Poly1305, CipherKind::Decrypt) => ChaCha20Poly1305::new_from_slice(key)
+            .map_err(Error::Cipher)?
+            .decrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg: data, aad })
+            .map_err(Error::Decrypt),
+        (CipherType::Aes256Gcm, CipherKind::Encrypt) => Aes256Gcm::new_from_slice(key)
+            .map_err(Error::Cipher)?
+            .encrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg: data, aad })
+            .map_err(Error::Encrypt),
+        (CipherType::Aes256Gcm, CipherKind::Decrypt) => Aes256Gcm::new_from_slice(key)
+            .map_err(Error::Cipher)?
+            .decrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg: data, aad })
+            .map_err(Error::Decrypt),
     }
 }
 
@@ -156,20 +166,22 @@ pub fn stream_encrypt_symmetric(
     aad: &[u8],
 ) -> Result<EncryptedNote, Error> {
     let parts = StreamParts::derive(password, cipher, aad)?;
-    let mut ciphertext = Vec::new();
-    let mut offset = 0usize;
-    let mut position = 0u32;
-    while offset < plaintext.len() {
-        let end = (offset + STREAM_CHUNK).min(plaintext.len());
-        let kind = if end == plaintext.len() {
-            ChunkKind::Last
-        } else {
-            ChunkKind::NonLast
-        };
-        ciphertext.extend(parts.encrypt_chunk(position, kind, &plaintext[offset..end])?);
-        offset = end;
-        position += 1;
-    }
+    let ciphertext = (0..plaintext.len())
+        .step_by(STREAM_CHUNK)
+        .enumerate()
+        .map(|(position, offset)| {
+            let end = (offset + STREAM_CHUNK).min(plaintext.len());
+            let kind = if end == plaintext.len() {
+                ChunkKind::Last
+            } else {
+                ChunkKind::NonLast
+            };
+            parts.encrypt_chunk(chunk_position(position)?, kind, &plaintext[offset..end])
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect();
     Ok(EncryptedNote {
         cipher,
         nonce: parts.nonce().to_vec(),
@@ -181,21 +193,20 @@ pub fn stream_encrypt_symmetric(
 
 pub fn stream_decrypt_symmetric(data: &EncryptedNote, password: &str, aad: &[u8]) -> Result<Vec<u8>, Error> {
     let parts = StreamParts::recover(password, data.cipher, &data.salt, &data.nonce, aad)?;
-    let mut plaintext = Vec::new();
-    let mut offset = 0usize;
-    let mut position = 0u32;
-    while offset < data.ciphertext.len() {
-        let take = (data.ciphertext.len() - offset).min(STREAM_CHUNK + STREAM_TAG);
-        let kind = if offset + take == data.ciphertext.len() {
-            ChunkKind::Last
-        } else {
-            ChunkKind::NonLast
-        };
-        plaintext.extend(parts.decrypt_chunk(position, kind, &data.ciphertext[offset..offset + take])?);
-        offset += take;
-        position += 1;
-    }
-    Ok(plaintext)
+    (0..data.ciphertext.len())
+        .step_by(STREAM_CHUNK + STREAM_TAG)
+        .enumerate()
+        .map(|(position, offset)| {
+            let end = (offset + STREAM_CHUNK + STREAM_TAG).min(data.ciphertext.len());
+            let kind = if end == data.ciphertext.len() {
+                ChunkKind::Last
+            } else {
+                ChunkKind::NonLast
+            };
+            parts.decrypt_chunk(chunk_position(position)?, kind, &data.ciphertext[offset..end])
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map(|chunks| chunks.into_iter().flatten().collect())
 }
 
 fn env_cost(name: &str, default: u32) -> u32 {

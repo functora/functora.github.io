@@ -7,20 +7,12 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use tap::prelude::*;
 
-//
-// Crude
-//
-
 #[derive(Debug)]
 pub enum FCrude {}
 
 impl<T> Refine<T> for FCrude {
     type RefineError = Infallible;
 }
-
-//
-// Positive
-//
 
 #[derive(Debug)]
 pub enum FPositive {}
@@ -55,10 +47,6 @@ where
     }
 }
 
-//
-// Non-Negative
-//
-
 #[derive(Debug)]
 pub enum FNonNeg {}
 
@@ -91,10 +79,6 @@ where
         }
     }
 }
-
-//
-// Zero (exclusive) to One (exclusive)
-//
 
 #[derive(Debug)]
 pub enum FZeroExclToOneExcl {}
@@ -129,10 +113,6 @@ where
     }
 }
 
-//
-// Zero (inclusive) to One (exclusive)
-//
-
 #[derive(Debug)]
 pub enum FZeroInclToOneExcl {}
 
@@ -165,10 +145,6 @@ where
         }
     }
 }
-
-//
-// Zero (exclusive) to One (inclusive)
-//
 
 #[derive(Debug)]
 pub enum FZeroExclToOneIncl {}
@@ -203,10 +179,6 @@ where
     }
 }
 
-//
-// Zero (inclusive) to One (inclusive)
-//
-
 #[derive(Debug)]
 pub enum FZeroInclToOneIncl {}
 
@@ -239,10 +211,6 @@ where
         }
     }
 }
-
-//
-// Non-Empty
-//
 
 pub type NonEmpty<T> = Tagged<T, FNonEmpty, FNonEmpty>;
 
@@ -279,10 +247,6 @@ where
     }
 }
 
-//
-// HasLength
-//
-
 pub trait HasLength {
     fn length(&self) -> usize;
     fn zero_length(&self) -> bool {
@@ -290,23 +254,17 @@ pub trait HasLength {
     }
 }
 
-// Tagged
-
 impl<T: HasLength, D, F> HasLength for Tagged<T, D, F> {
     fn length(&self) -> usize {
         (**self).length()
     }
 }
 
-// ViaString
-
 impl<T: HasLength, D, F> HasLength for ViaString<T, D, F> {
     fn length(&self) -> usize {
         (**self).length()
     }
 }
-
-// Blanket
 
 impl<T: HasLength + ?Sized> HasLength for &T {
     fn length(&self) -> usize {
@@ -320,8 +278,6 @@ impl<T: HasLength + ?Sized> HasLength for &mut T {
     }
 }
 
-// Slices
-
 impl<T> HasLength for [T] {
     fn length(&self) -> usize {
         self.len()
@@ -333,8 +289,6 @@ impl<T, const N: usize> HasLength for [T; N] {
         N
     }
 }
-
-// Strings
 
 impl HasLength for str {
     fn length(&self) -> usize {
@@ -384,8 +338,6 @@ impl HasLength for std::ffi::CString {
     }
 }
 
-// Smart Pointers
-
 impl<T> HasLength for Box<T>
 where
     T: HasLength + ?Sized,
@@ -421,8 +373,6 @@ where
         (**self).length()
     }
 }
-
-// Collections
 
 impl<T> HasLength for Vec<T> {
     fn length(&self) -> usize {

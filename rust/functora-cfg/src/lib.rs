@@ -73,7 +73,7 @@ fn term_to_config<T: Serialize>(
     value: &T,
 ) -> Result<Config, ConfigError> {
     let toml = toml::Value::try_from(value)
-        .map_err(|e| ConfigError::Message(e.to_string()))?;
+        .map_err(|e| ConfigError::Foreign(Box::new(e)))?;
 
     if let TomlValue::Table(kv) = toml {
         kv.into_iter()

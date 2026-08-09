@@ -26,11 +26,10 @@ where
     S: Copy + Send + Sync + 'static,
 {
     for (name, data) in entries {
-        zip.start_file(name, opts())
-            .map_err(|e| Error::Archive(e.to_string()))?;
+        zip.start_file(name, opts())?;
         let display = name.strip_prefix("attachments/").unwrap_or(name);
         for chunk in data.chunks(ZIP_CHUNK) {
-            zip.write_all(chunk).map_err(|e| Error::Archive(e.to_string()))?;
+            zip.write_all(chunk)?;
             *done += chunk.len() as u64;
             report(Job {
                 stage,
@@ -60,7 +59,7 @@ where
         {
             let mut zip = zip::ZipWriter::new(Cursor::new(&mut buf));
             zip_entries(&mut zip, &entries, stage, &mut report, &mut done, total).await?;
-            _ = zip.finish().map_err(|e| Error::Archive(e.to_string()))?;
+            let _ = zip.finish()?;
         }
         Ok(buf)
     })
@@ -75,19 +74,21 @@ pub async fn unzip_report<S>(
 where
     S: Copy + Send + Sync + 'static,
 {
-    let mut archive = zip::ZipArchive::new(Cursor::new(inner)).map_err(|e| Error::Archive(e.to_string()))?;
+    let mut archive = zip::ZipArchive::new(Cursor::new(inner))?;
     let total = (0..archive.len())
-        .map(|i| archive.by_index(i).map_or(0, |f| f.size()))
+        .map(|i| archive.by_index(i).map(|f| f.size()))
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
         .sum::<u64>();
     let mut entries = Vec::new();
     let mut done = 0u64;
     for i in 0..archive.len() {
         let (name, size, data) = {
-            let mut file = archive.by_index(i).map_err(|e| Error::Archive(e.to_string()))?;
+            let mut file = archive.by_index(i)?;
             let name = file.name().to_string();
             let size = file.size();
             let mut data = Vec::with_capacity(usize::try_from(size).unwrap_or_default());
-            _ = file.read_to_end(&mut data).map_err(|e| Error::Archive(e.to_string()))?;
+            let _ = file.read_to_end(&mut data)?;
             (name, size, data)
         };
         done += size;

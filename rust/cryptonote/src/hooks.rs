@@ -37,11 +37,11 @@ pub fn edit_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> 
     }
 }
 
-// IMPORTANT! Do not remove the per-field resets below: keep them in sync with
-// new TemporaryState fields. tst.set(TemporaryState::default()) is kept as a safety
-// net, but dioxus-stores 0.7.2 fails to notify field subscribers on whole-store
-// writes (paths_under bug, fixed in 0.7.4 via https://github.com/DioxusLabs/dioxus/pull/5069),
-// so the per-field writes mark every field dirty.
+/// IMPORTANT! Do not remove the per-field resets below: keep them in sync with
+/// new `TemporaryState` fields. `tst.set(TemporaryState::default())` is kept as a safety
+/// net, but dioxus-stores 0.7.2 fails to notify field subscribers on whole-store
+/// writes (`paths_under` bug, fixed in 0.7.4 via <https://github.com/DioxusLabs/dioxus/pull/5069>),
+/// so the per-field writes mark every field dirty.
 pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.set(TemporaryState::default());
     tst.note().set(String::new());
@@ -70,11 +70,13 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
             .map_err(AppError::FunctoraDioxus)
         {
             Ok(files) => {
-                let mut current = tst.attachments()();
-                for (name, data) in files {
-                    add_attachment(&mut current, Attachment { name, data });
-                }
-                tst.attachments().set(current);
+                let next = files
+                    .into_iter()
+                    .fold(tst.attachments()(), |mut current, (name, data)| {
+                        add_attachment(&mut current, Attachment { name, data });
+                        current
+                    });
+                tst.attachments().set(next);
                 clear_progress(tst.progress());
             }
             Err(e) => {
@@ -158,9 +160,12 @@ async fn build_note(
             url: u,
             qr,
         })),
-        Err(_) => crate::archive::create_archive_package(note, &[], password, cipher, report)
-            .await
-            .map(|p| External::Archive(ExternalArchive::new(p).infallible())),
+        Err(e) => {
+            tracing::warn!("QR code generation failed: {e}");
+            crate::archive::create_archive_package(note, &[], password, cipher, report)
+                .await
+                .map(|p| External::Archive(ExternalArchive::new(p).infallible()))
+        }
     }
 }
 
@@ -312,7 +317,7 @@ async fn download_android(
         let _ = env.exception_clear();
         let _ = tx.send(res);
     });
-    rx.recv().map_err(MediaStoreError::Channel)??;
+    rx.recv()??;
     let mut done = 0u64;
     for chunk in data.chunks(WRITE_CHUNK) {
         let (tx, rx) = channel();
@@ -334,7 +339,7 @@ async fn download_android(
             let _ = env.exception_clear();
             let _ = tx.send(res);
         });
-        rx.recv().map_err(MediaStoreError::Channel)??;
+        rx.recv()??;
         done += size;
         report(Job {
             stage: Stage::Download,
@@ -359,9 +364,8 @@ async fn download_android(
         let _ = env.exception_clear();
         let _ = tx.send(res);
     });
-    rx.recv()
-        .map_err(MediaStoreError::Channel)?
-        .map(|_| filename.to_string())
+    rx.recv()??;
+    Ok(filename.to_string())
 }
 
 #[cfg(target_os = "android")]

@@ -87,7 +87,10 @@ where
             let mut file = archive.by_index(i)?;
             let name = file.name().to_string();
             let size = file.size();
-            let mut data = Vec::with_capacity(usize::try_from(size).unwrap_or_default());
+            let mut data = Vec::with_capacity(usize::try_from(size).map_err(|e| Error::Convert {
+                context: "zip entry size exceeds usize range",
+                source: e,
+            })?);
             let _ = file.read_to_end(&mut data)?;
             (name, size, data)
         };

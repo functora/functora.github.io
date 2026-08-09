@@ -210,7 +210,7 @@ mod diesel_impl {
         ) -> diesel::deserialize::Result<Self> {
             let s = String::from_sql(bytes)?;
             let rep = T::from_str(&s)?;
-            Ok(ViaString::new(rep).map_err(Box::new)?)
+            Ok(ViaString::new(rep)?)
         }
     }
 
@@ -230,8 +230,8 @@ mod diesel_impl {
         ) -> diesel::deserialize::Result<Self> {
             let s: String =
                 Queryable::<ST, DB>::build(row)?;
-            let rep = T::from_str(&s).map_err(Box::new)?;
-            Ok(ViaString::new(rep).map_err(Box::new)?)
+            let rep = T::from_str(&s)?;
+            Ok(ViaString::new(rep)?)
         }
     }
 }

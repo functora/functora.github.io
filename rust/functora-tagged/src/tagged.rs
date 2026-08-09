@@ -201,7 +201,7 @@ mod diesel_impl {
             bytes: DB::RawValue<'_>,
         ) -> diesel::deserialize::Result<Self> {
             let rep = T::from_sql(bytes)?;
-            Ok(Tagged::new(rep).map_err(Box::new)?)
+            Ok(Tagged::new(rep)?)
         }
     }
 
@@ -217,7 +217,7 @@ mod diesel_impl {
             row: Self::Row,
         ) -> diesel::deserialize::Result<Self> {
             let rep = Queryable::build(row)?;
-            Ok(Tagged::new(rep).map_err(Box::new)?)
+            Ok(Tagged::new(rep)?)
         }
     }
 }

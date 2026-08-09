@@ -24,9 +24,7 @@ pub fn Layout() -> Element {
                     message_out.set(Some(Msg::Error(e.into())));
                 }
             });
-            return;
-        }
-        if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
+        } else if let Some(route) = crate::deep_link::take_url().and_then(|url| crate::deep_link::url_to_route(&url)) {
             dl_nav.push_route(&route);
         }
     });

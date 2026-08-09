@@ -6,6 +6,7 @@ use aes_gcm::{
 use argon2::{Algorithm::Argon2id as Argon2Algo, Argon2, Params, Version::V0x13 as Argon2V};
 use chacha20poly1305::ChaCha20Poly1305;
 use serde::{Deserialize, Serialize};
+use tap::prelude::*;
 use zeroize::Zeroizing;
 
 const NONCE_SIZE: usize = 12;
@@ -140,20 +141,16 @@ fn crypto_fn(
     data: &[u8],
 ) -> Result<Vec<u8>, Error> {
     match (cipher, kind) {
-        (CipherType::ChaCha20Poly1305, CipherKind::Encrypt) => ChaCha20Poly1305::new_from_slice(key)
-            .map_err(Error::Cipher)?
+        (CipherType::ChaCha20Poly1305, CipherKind::Encrypt) => ChaCha20Poly1305::new_from_slice(key)?
             .encrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg: data, aad })
             .map_err(Error::Encrypt),
-        (CipherType::ChaCha20Poly1305, CipherKind::Decrypt) => ChaCha20Poly1305::new_from_slice(key)
-            .map_err(Error::Cipher)?
+        (CipherType::ChaCha20Poly1305, CipherKind::Decrypt) => ChaCha20Poly1305::new_from_slice(key)?
             .decrypt(chacha20poly1305::Nonce::from_slice(nonce), Payload { msg: data, aad })
             .map_err(Error::Decrypt),
-        (CipherType::Aes256Gcm, CipherKind::Encrypt) => Aes256Gcm::new_from_slice(key)
-            .map_err(Error::Cipher)?
+        (CipherType::Aes256Gcm, CipherKind::Encrypt) => Aes256Gcm::new_from_slice(key)?
             .encrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg: data, aad })
             .map_err(Error::Encrypt),
-        (CipherType::Aes256Gcm, CipherKind::Decrypt) => Aes256Gcm::new_from_slice(key)
-            .map_err(Error::Cipher)?
+        (CipherType::Aes256Gcm, CipherKind::Decrypt) => Aes256Gcm::new_from_slice(key)?
             .decrypt(aes_gcm::Nonce::from_slice(nonce), Payload { msg: data, aad })
             .map_err(Error::Decrypt),
     }
@@ -219,8 +216,8 @@ fn kdf_params() -> Result<Params, Error> {
         env_cost("FUNCTORA_KDF_T_COST", ARGON2_T_COST),
         ARGON2_P_COST,
         Some(KEY_SIZE),
-    )
-    .map_err(Error::KeyDerive)
+    )?
+    .pipe(Ok)
 }
 
 pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, Error> {
@@ -228,9 +225,7 @@ pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, Erro
     match kdf {
         Kdf::Argon2id => {
             let params = kdf_params()?;
-            Argon2::new(Argon2Algo, Argon2V, params)
-                .hash_password_into(password.as_bytes(), salt, &mut key)
-                .map_err(Error::KeyDerive)?;
+            Argon2::new(Argon2Algo, Argon2V, params).hash_password_into(password.as_bytes(), salt, &mut key)?;
         }
     }
     Ok(key)
@@ -238,7 +233,7 @@ pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, Erro
 
 fn random_vec(n: usize) -> Result<Vec<u8>, Error> {
     let mut v = vec![0u8; n];
-    getrandom::getrandom(&mut v).map_err(Error::Getrandom)?;
+    getrandom::getrandom(&mut v)?;
     Ok(v)
 }
 
@@ -254,7 +249,7 @@ pub fn encrypt_symmetric(
 
     let ciphertext = match cipher {
         CipherType::ChaCha20Poly1305 => {
-            let c = ChaCha20Poly1305::new_from_slice(&key).map_err(Error::Cipher)?;
+            let c = ChaCha20Poly1305::new_from_slice(&key)?;
             c.encrypt(
                 chacha20poly1305::Nonce::from_slice(&nonce),
                 Payload { msg: plaintext, aad },
@@ -262,7 +257,7 @@ pub fn encrypt_symmetric(
             .map_err(Error::Encrypt)?
         }
         CipherType::Aes256Gcm => {
-            let c = Aes256Gcm::new_from_slice(&key).map_err(Error::Cipher)?;
+            let c = Aes256Gcm::new_from_slice(&key)?;
             c.encrypt(aes_gcm::Nonce::from_slice(&nonce), Payload { msg: plaintext, aad })
                 .map_err(Error::Encrypt)?
         }
@@ -289,7 +284,7 @@ pub fn decrypt_symmetric(data: &EncryptedNote, password: &str, aad: &[u8]) -> Re
 
     match data.cipher {
         CipherType::ChaCha20Poly1305 => {
-            let c = ChaCha20Poly1305::new_from_slice(&key).map_err(Error::Cipher)?;
+            let c = ChaCha20Poly1305::new_from_slice(&key)?;
             c.decrypt(
                 chacha20poly1305::Nonce::from_slice(&data.nonce),
                 Payload {
@@ -300,7 +295,7 @@ pub fn decrypt_symmetric(data: &EncryptedNote, password: &str, aad: &[u8]) -> Re
             .map_err(Error::Decrypt)
         }
         CipherType::Aes256Gcm => {
-            let c = Aes256Gcm::new_from_slice(&key).map_err(Error::Cipher)?;
+            let c = Aes256Gcm::new_from_slice(&key)?;
             c.decrypt(
                 aes_gcm::Nonce::from_slice(&data.nonce),
                 Payload {

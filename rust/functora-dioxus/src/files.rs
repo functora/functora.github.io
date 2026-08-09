@@ -18,15 +18,13 @@ pub struct Attachment {
 pub fn format_size(size: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;
-    let (unit, label) = if size >= MB {
-        (MB, "MB")
-    } else if size >= KB {
-        (KB, "KB")
+    if size < KB {
+        format!("{size} B")
     } else {
-        return format!("{size} B");
-    };
-    let tenths = (u128::from(size) * 10 + u128::from(unit) / 2) / u128::from(unit);
-    format!("{}.{} {}", tenths / 10, tenths % 10, label)
+        let (unit, label) = if size >= MB { (MB, "MB") } else { (KB, "KB") };
+        let tenths = (u128::from(size) * 10 + u128::from(unit) / 2) / u128::from(unit);
+        format!("{}.{} {}", tenths / 10, tenths % 10, label)
+    }
 }
 
 #[must_use]
@@ -93,33 +91,27 @@ pub enum Preview {
 
 #[must_use]
 pub fn preview(name: &str, data: &[u8]) -> Preview {
-    let Some(mime) = mime_for(name) else {
-        return Preview::Download;
+    let url = |mime: &str| {
+        format!(
+            "data:{mime};base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(data)
+        )
     };
-    let url = format!(
-        "data:{mime};base64,{}",
-        base64::engine::general_purpose::STANDARD.encode(data)
-    );
-    if mime.starts_with("image/") {
-        return Preview::Image(url);
-    }
-    if mime.starts_with("video/") {
-        return Preview::Video(url);
-    }
-    if mime.starts_with("audio/") {
-        return Preview::Audio(url);
-    }
-    if mime == "application/pdf" {
-        return Preview::Pdf(url);
-    }
-    if is_text(mime) {
-        return match String::from_utf8(data.to_vec()) {
+    match mime_for(name) {
+        Some(mime) if mime.starts_with("image/") => Preview::Image(url(mime)),
+        Some(mime) if mime.starts_with("video/") => Preview::Video(url(mime)),
+        Some(mime) if mime.starts_with("audio/") => Preview::Audio(url(mime)),
+        Some("application/pdf") => Preview::Pdf(url("application/pdf")),
+        Some(mime) if is_text(mime) => match String::from_utf8(data.to_vec()) {
             Ok(text) if mime == "text/markdown" => Preview::Markdown(text),
             Ok(text) => Preview::Text(text),
-            Err(_) => Preview::Download,
-        };
+            Err(e) => {
+                tracing::warn!("Preview text decode failed: {e}");
+                Preview::Download
+            }
+        },
+        _ => Preview::Download,
     }
-    Preview::Download
 }
 
 #[must_use]

@@ -1,7 +1,10 @@
 #![doc = include_str!("../README.md")]
 use clap::{Args, FromArgMatches, Subcommand};
 pub use config::ConfigError;
-use config::{Config, Environment, File, Value, ValueKind};
+use config::{
+    Config, ConfigBuilder, Environment, File, Value,
+    ValueKind, builder::DefaultState,
+};
 use functora::Void;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::hash::Hash;
@@ -32,41 +35,41 @@ where
     Src: Serialize,
     Dst: Serialize + DeserializeOwned,
 {
-    let mut builder = Config::builder();
-
-    builder =
-        builder.add_source(term_to_config(cfg.default)?);
-
     let getter = cfg.file_path;
-    if let Some(file_path) = getter(cfg.command_line)
-        .or_else(|| getter(cfg.default))
-    {
-        let path = Path::new(&file_path);
-        if path.exists() && path.is_file() {
-            builder = builder.add_source(File::from(path));
-        } else {
-            return Err(ConfigError::Message(
-                "Config file path does not exist!".into(),
-            ));
-        }
-    }
-
-    builder = builder.add_source(
-        Environment::with_prefix(
-            &cfg.env_prefix.to_uppercase(),
+    let file = getter(cfg.command_line)
+        .or_else(|| getter(cfg.default));
+    Config::builder()
+        .add_source(term_to_config(cfg.default)?)
+        .pipe(|b| match file {
+            Some(path) => add_file(b, path),
+            None => Ok(b),
+        })?
+        .add_source(
+            Environment::with_prefix(
+                &cfg.env_prefix.to_uppercase(),
+            )
+            .prefix_separator("__")
+            .separator("__"),
         )
-        .prefix_separator("__")
-        .separator("__"),
-    );
-
-    builder = builder
-        .add_source(term_to_config(cfg.command_line)?);
-
-    builder
+        .add_source(term_to_config(cfg.command_line)?)
         .build()?
         .try_deserialize::<Value>()?
         .pipe(cfg.transform_ast)
         .try_deserialize()
+}
+
+fn add_file(
+    builder: ConfigBuilder<DefaultState>,
+    file_path: &str,
+) -> Result<ConfigBuilder<DefaultState>, ConfigError> {
+    let path = Path::new(file_path);
+    if path.exists() && path.is_file() {
+        Ok(builder.add_source(File::from(path)))
+    } else {
+        Err(ConfigError::Message(
+            "Config file path does not exist!".into(),
+        ))
+    }
 }
 
 fn term_to_config<T: Serialize>(
@@ -135,11 +138,13 @@ where
     U: Subcommand,
 {
     pub fn vec(self, rec: fn(U) -> ReClap<T, U>) -> Vec<T> {
-        let mut prev = vec![self.prev];
-        if let Some(next) = self.next {
-            prev.extend(rec(*next).vec(rec))
-        }
-        prev
+        std::iter::once(self.prev)
+            .chain(
+                self.next
+                    .into_iter()
+                    .flat_map(|next| rec(*next).vec(rec)),
+            )
+            .collect()
     }
 
     pub fn hash_map<K, E>(
@@ -282,29 +287,22 @@ fn substitute_defaults_rec(
         for (k, v) in def {
             kv.entry(k.clone())
                 .or_insert_with(|| v.clone())
-                .void()
+                .void();
         }
     }
     let next = extract_default(ast);
-    match ast.kind {
-        ValueKind::Nil
-        | ValueKind::Boolean(_)
-        | ValueKind::I64(_)
-        | ValueKind::I128(_)
-        | ValueKind::U64(_)
-        | ValueKind::U128(_)
-        | ValueKind::Float(_)
-        | ValueKind::String(_) => (),
-        ValueKind::Table(ref mut xs) => {
-            for (_, x) in xs.iter_mut() {
-                substitute_defaults_rec(x, &next)
+    match &mut ast.kind {
+        ValueKind::Table(xs) => {
+            for x in xs.values_mut() {
+                substitute_defaults_rec(x, &next);
             }
         }
-        ValueKind::Array(ref mut xs) => {
+        ValueKind::Array(xs) => {
             for x in xs.iter_mut() {
-                substitute_defaults_rec(x, &next)
+                substitute_defaults_rec(x, &next);
             }
         }
+        _ => (),
     }
 }
 

@@ -97,12 +97,12 @@ pub fn load_state<T: DeserializeOwned>(key: &str) -> Option<T> {
 pub fn persist_value<T: Serialize>(key: &str, value: &T) {
     #[cfg(target_arch = "wasm32")]
     {
-        if let Some(window) = web_sys::window() {
-            if let Ok(Some(storage)) = window.local_storage() {
-                if let Ok(json) = serde_json::to_string(value) {
-                    let _ = storage.set_item(key, &json);
-                }
-            }
+        if let Some(window) = web_sys::window()
+            && let Ok(Some(storage)) = window.local_storage()
+            && let Ok(json) = serde_json::to_string(value)
+            && let Err(e) = storage.set_item(key, &json)
+        {
+            tracing::warn!("Storage persist error: {e}");
         }
     }
     #[cfg(not(target_arch = "wasm32"))]

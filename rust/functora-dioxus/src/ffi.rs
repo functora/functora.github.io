@@ -4,19 +4,12 @@ use dioxus::prelude::*;
 use either::Either;
 use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, derive_more::Display)]
 pub enum Theme {
+    #[display("Light")]
     Light,
+    #[display("Dark")]
     Dark,
-}
-
-impl std::fmt::Display for Theme {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Theme::Light => "Light",
-            Theme::Dark => "Dark",
-        })
-    }
 }
 
 impl Theme {

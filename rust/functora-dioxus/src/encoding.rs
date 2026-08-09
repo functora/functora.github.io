@@ -4,7 +4,6 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::borrow::Cow;
-use std::fmt::Write;
 use tap::prelude::*;
 
 pub fn encode_payload<T: Serialize>(value: &T) -> Result<String, Error> {
@@ -30,11 +29,10 @@ pub fn extract_query_param(url: &str, name: &str) -> Option<String> {
         .nth(1)?
         .split('&')
         .find_map(|param| {
-            let mut parts = param.splitn(2, '=');
-            match (parts.next(), parts.next()) {
-                (Some(actual), Some(value)) if actual == name => Some(value),
-                _ => None,
-            }
+            param
+                .split_once('=')
+                .filter(|(actual, _)| *actual == name)
+                .map(|(_, value)| value)
         })
         .map(|value| urlencoding::decode(value).map_or_else(|_| value.to_string(), Cow::into_owned))
 }
@@ -59,20 +57,16 @@ pub fn generate_qr_code(url: &str) -> Result<String, Error> {
 fn bitmatrix_to_svg(matrix: &rxing::common::BitMatrix) -> String {
     let w = matrix.getWidth();
     let h = matrix.getHeight();
-    let mut svg = String::with_capacity(256 + (w * h * 2) as usize);
-    _ = write!(
-        svg,
-        r##"<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {w} {h}" shape-rendering="crispEdges"><rect width="{w}" height="{h}" fill="#ffffff"/><path d=""##,
-    );
-    for y in 0..h {
-        for x in 0..w {
-            if matrix.get(x, y) {
-                _ = write!(svg, "M{x} {y} h1 v1 h-1 z ");
-            }
-        }
-    }
-    _ = write!(svg, r##"" fill="#000000"/></svg>"##);
-    svg
+    let paths = (0..h)
+        .flat_map(|y| {
+            (0..w)
+                .filter(move |&x| matrix.get(x, y))
+                .map(move |x| format!("M{x} {y} h1 v1 h-1 z "))
+        })
+        .collect::<String>();
+    format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {w} {h}" shape-rendering="crispEdges"><rect width="{w}" height="{h}" fill="#ffffff"/><path d="{paths}" fill="#000000"/></svg>"##,
+    )
 }
 
 #[must_use]

@@ -1,5 +1,4 @@
 use crate::i18n::I18N;
-use cipher::InvalidLength;
 use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error)]
@@ -95,11 +94,11 @@ pub enum Error {
     #[error("JS error: {0}")]
     JS(String),
     #[error("Cipher initialization error: {0}")]
-    Cipher(InvalidLength),
+    Cipher(#[from] cipher::InvalidLength),
     #[error("Key derivation error: {0}")]
-    KeyDerive(argon2::Error),
+    KeyDerive(#[from] argon2::Error),
     #[error("Random number generation error: {0}")]
-    Getrandom(getrandom::Error),
+    Getrandom(#[from] getrandom::Error),
     #[error("Encryption failed: {0}")]
     Encrypt(aead::Error),
     #[error("Decryption failed: {0}")]
@@ -147,7 +146,12 @@ impl From<base64::DecodeError> for Error {
 
 impl From<dioxus::document::EvalError> for Error {
     fn from(e: dioxus::document::EvalError) -> Self {
-        Error::JS(e.to_string())
+        match e {
+            dioxus::document::EvalError::InvalidJs(js) => Error::JS(js),
+            dioxus::document::EvalError::Communication(msg) => Error::JS(msg),
+            dioxus::document::EvalError::Serialization(err) => Error::Json(JsonError::from(err)),
+            other => Error::JS(other.to_string()),
+        }
     }
 }
 

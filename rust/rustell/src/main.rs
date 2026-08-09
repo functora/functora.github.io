@@ -15,7 +15,7 @@ fn main() {
         }
         Err(errs) => {
             for e in errs {
-                println!("{e:?}")
+                println!("{e:?}");
             }
         }
     }

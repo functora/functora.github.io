@@ -77,9 +77,15 @@
 - Never swallow, suppress, ignore, or silently discard errors.
 - If an error cannot be meaningfully recovered from at the current layer, propagate it explicitly using `Result::Err` and `?`.
 - Handle errors at the layer that has enough context to recover meaningfully; otherwise propagate them upward.
-- Use `?` instead of `.map_err(..)` wherever possible.
-- Do not use `map_err` merely to repackage an error that can be propagated directly with `?`.
-- Use `map_err` when meaningful typed context must be added and cannot be expressed cleanly otherwise.
+- **Always use plain `?` to propagate errors whenever a `From`/`Into` impl exists between the underlying error and the target error type. This covers every `map_err` form that merely repackages the error, e.g. `.map_err(Error::from)`, `.map_err(AppError::LibError)`, `.map_err(Error::Variant)` - as long as a `From`/`Into` impl exists, `?` is the default and mandatory propagation form, and such repackaging must not be used.**
+  - Example: `let x = parse()?;` not `let x = parse().map_err(AppError::LibError)?;`
+- **Provide the matching `From`/`Into` impl for every wrapping error variant, so that `?` remains possible everywhere; do not leave wrapping variants that would force `map_err`.**
+  - Example: for a variant `LibError(LibError)`, implement `From<LibError>` for the error type.
+- Use `map_err` only when it adds meaningful typed context (e.g. a variant wrapping the source error together with additional context fields), or when converting across a public/generic boundary with a fixed target error type where `From` cannot apply.
+- Never fabricate a generic placeholder error when the real underlying error is available; wrap the actual error in a precise variant instead.
+  - Example: `Err(Error::Foreign(e))` rather than `Err(_) => Err(Error::Generic)`.
+- Preserve the original error of narrowing conversions (e.g. `TryFromIntError`) in a typed variant with context rather than discarding it.
+  - Example: `u32::try_from(n).map_err(|e| Error::Conversion { context, source: e })?`.
 - Use explicit, domain-specific error enums.
 - Error enum variants must precisely describe what happened or which operation failed.
 - Avoid vague variants such as `Error`, `Failure`, `Custom`, `Other`, or `Unknown` when a precise variant is possible.
@@ -153,6 +159,18 @@
 - **Strongly avoid implementing custom macros unless absolutely necessary.** Prefer conventional Rust, plain traits, generics, and derives, which are idiomatic, readable, and debuggable.
 - Treat macros as a last resort, used only when language expressiveness is genuinely insufficient.
 - Prefer libraries that deliver the same expressiveness without macros (e.g., `functora-tagged`'s macro-free newtypes and derived traits) over reaching for a macro.
+
+### Trait Implementations
+
+- Whenever a trait can be derived - by Rust's built-in derives (`Debug`, `Clone`, `Copy`, `PartialEq`, `Eq`, `Hash`, `Default`, ...) or by derive machinery from a package already used in the project (`thiserror::Error`, ...) - always derive it. Derived implementations are always preferred over hand-written ones, especially for standard traits and extended derive machinery such as `thiserror`.
+  - Example: `#[derive(Clone, Debug, PartialEq, Eq)]` instead of hand-written `PartialEq`/`Clone`/`Debug` impls.
+- Never hand-write an implementation of a derivable trait, e.g. to work around a field type lacking the trait, or to bend semantics so that a type compiles.
+- Hand-write an implementation only when the trait genuinely cannot be derived, or the derive cannot express the required non-standard semantics.
+- When a field or enum variant wraps internals (from the standard library or a third-party crate) that lack an implementation our design needs, the orphan rule prevents impl'ing the trait on the internals directly. Always solve this with a thin newtype over the internals, implementing the missing traits on the newtype.
+  - Example: `struct Wrapper(SomeForeignType);` + `impl PartialEq for Wrapper { ... }`.
+- Keep conversion between the internals and the newtype smooth and cheap: `From<inner>` (and `From<newtype>` for the inner where possible), `Deref` to the inner where appropriate, and transparent `Display`/`Error` (`#[error(transparent)]`), so error reporting and `?` propagation stay unchanged.
+- For missing equality in particular, implement judgment equality comparing the semantically meaningful parts of the inner value, never its string representation or raw bytes.
+  - Example: compare `std::io::Error` by `io::ErrorKind` rather than by message text.
 
 ### Type System and Invariants
 
@@ -244,11 +262,12 @@ semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 ### Validation
 
 - To check Rust code, use:
-  `cargo clippy --all-features`
+  `cargo clippy --all-features --all-targets`
 - The code should compile successfully and have no warnings or errors.
 - Do not suppress or disable warnings to make the code pass.
 - To test Rust code, use:
-  `cargo test --all-features`
+  `cargo test --all-features --all-targets`
+- Run clippy and tests with `--all-targets` so that the `./tests` directory, examples, and benches are compiled and linted as well.
 - To get the Rust test coverage report, use:
   `cargo tarpaulin --all-features --engine llvm -o Lcov`
 - The coverage report is written to `lcov.info`.

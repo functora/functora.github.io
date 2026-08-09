@@ -57,6 +57,7 @@
               <menuitem><a href="#tables">Tables</a></menuitem>
               <menuitem><a href="#tags">Tags</a></menuitem>
               <menuitem><a href="#tooltips">Tooltips</a></menuitem>
+              <menuitem><a href="#progress">Progress</a></menuitem>
               <menuitem><a href="#cards">Cards</a></menuitem>
               <menuitem><a href="#utility">Utility</a></menuitem>
               <menuitem><a href="#footer">Footer</a></menuitem>
@@ -583,8 +584,7 @@ fn main() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Size</th>
-              <th></th>
+              <th colspan="2">Size</th>
             </tr>
           </thead>
           <tbody>
@@ -657,8 +657,7 @@ fn main() {
   &lt;thead&gt;
     &lt;tr&gt;
       &lt;th&gt;Name&lt;/th&gt;
-      &lt;th&gt;Size&lt;/th&gt;
-      &lt;th&gt;&lt;/th&gt;
+      &lt;th colspan="2"&gt;Size&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
@@ -719,6 +718,47 @@ fn main() {
           >
         </p>
         <pre><code>&lt;a att href="https://functora.github.io/functora-css.html"&gt;Anchor tooltip&lt;/a&gt;</code></pre>
+      </section>
+
+      <section id="progress">
+        <h2>Progress</h2>
+
+        <p>
+          Style a bare <code>&lt;progress&gt;</code> element with the
+          <code>value</code> attribute set.
+        </p>
+        <progress max="100" value="64">64%</progress>
+        <pre><code>&lt;progress max="100" value="64"&gt;64%&lt;/progress&gt;</code></pre>
+
+        <p>
+          Wrap an operation <code>&lt;label&gt;</code>, a file
+          <code>&lt;small&gt;</code>, the <code>&lt;progress&gt;</code> and an
+          <code>&lt;output&gt;</code> in a <code>&lt;fieldset&gt;</code> to get
+          a blocking overlay with a centered card. The overlay covers the whole
+          viewport, so nothing else can be clicked while a job runs.
+        </p>
+        <label btn for="functora-progress">Show progress overlay</label>
+        <input type="checkbox" id="functora-progress" />
+        <fieldset aria-live="polite" role="status">
+          <label for="functora-progress" aria-label="Dismiss"></label>
+          <card>
+            <label>Zipping files</label>
+            <small>vacation.mp4</small>
+            <progress max="100" value="64"></progress>
+            <output>64%</output>
+          </card>
+        </fieldset>
+        <pre><code>&lt;label btn for="functora-progress"&gt;Show progress overlay&lt;/label&gt;
+&lt;input type="checkbox" id="functora-progress" /&gt;
+&lt;fieldset aria-live="polite" role="status"&gt;
+  &lt;label for="functora-progress" aria-label="Dismiss"&gt;&lt;/label&gt;
+  &lt;card&gt;
+    &lt;label&gt;Zipping files&lt;/label&gt;
+    &lt;small&gt;vacation.mp4&lt;/small&gt;
+    &lt;progress max="100" value="64"&gt;&lt;/progress&gt;
+    &lt;output&gt;64%&lt;/output&gt;
+  &lt;/card&gt;
+&lt;/fieldset&gt;</code></pre>
       </section>
 
       <section id="cards">

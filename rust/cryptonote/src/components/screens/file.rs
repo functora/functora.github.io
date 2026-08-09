@@ -37,10 +37,15 @@ pub fn File() -> Element {
                         img { src: "{url}", alt: "{name}" }
                     },
                     Preview::Video(url) => rsx! {
-                        video { controls: true, src: "{url}" }
+                        video {
+                            controls: true,
+                            autoplay: true,
+                            playsinline: true,
+                            src: "{url}",
+                        }
                     },
                     Preview::Audio(url) => rsx! {
-                        audio { controls: true, src: "{url}" }
+                        audio { controls: true, autoplay: true, src: "{url}" }
                     },
                     Preview::Pdf(url) => rsx! {
                         iframe { src: "{url}", style: "width: 100%; height: 80vh; border: none;" }

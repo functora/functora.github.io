@@ -1,6 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::components::screens::*;
 use crate::*;
+use functora_dioxus::{DefaultDonate, DefaultLicense, DefaultPrivacy};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum Screen {
@@ -148,6 +149,7 @@ impl Default for Route {
 
 #[component]
 fn Root(screen: Screen, note: Option<String>) -> Element {
+    let nav = use_context::<Signal<Nav<Route>>>();
     match screen {
         Screen::Home => rsx! {
             Home {}
@@ -165,13 +167,13 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
             About { note }
         },
         Screen::Donate => rsx! {
-            Donate {}
+            DefaultDonate { home_route: Screen::Home.to_route(None), nav }
         },
         Screen::License => rsx! {
-            License {}
+            DefaultLicense { home_route: Screen::Home.to_route(None), nav }
         },
         Screen::Privacy => rsx! {
-            Privacy {}
+            DefaultPrivacy { home_route: Screen::Home.to_route(None), nav }
         },
         Screen::File => rsx! {
             File {}

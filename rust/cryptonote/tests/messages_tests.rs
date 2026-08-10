@@ -10,6 +10,7 @@ fn unit_variants_are_equal_by_value() {
 
 #[test]
 fn language_variants_distinguish_flag_and_name() {
+    use functora_dioxus::Msg;
     assert_eq!(Msg::LanguageFlag(Language::Eng), Msg::LanguageFlag(Language::Eng));
     assert_eq!(Msg::LanguageName(Language::Eng), Msg::LanguageName(Language::Eng));
     assert_ne!(Msg::LanguageFlag(Language::Eng), Msg::LanguageName(Language::Eng));

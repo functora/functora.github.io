@@ -116,6 +116,57 @@ fn about_content_follows_language_change() {
 }
 
 #[test]
+fn layout_shows_brand_footer_and_version() {
+    let edits = mount("/?screen=home", "", vec![], None, None);
+    assert!(edits.contains("Cryptonote"), "brand not rendered: {edits}");
+    assert!(edits.contains("Functora"), "copyright owner not rendered: {edits}");
+    assert!(edits.contains("All rights reserved."), "footer not rendered: {edits}");
+    assert!(
+        edits.contains(&format!(" {}.", cryptonote::APP_VERSION)),
+        "version not rendered: {edits}"
+    );
+}
+
+#[test]
+fn layout_nav_shows_about_with_icon() {
+    let edits = mount("/?screen=home", "", vec![], None, None);
+    assert!(edits.contains("Application"), "about nav item not rendered: {edits}");
+    assert!(
+        edits.contains(r#"name: "viewBox", ns: None, value: Text("0 0 576 512")"#),
+        "about nav icon not rendered: {edits}"
+    );
+}
+
+#[test]
+fn donate_shows_greeting_and_crypto_blocks() {
+    let edits = mount("/?screen=donate", "", vec![], None, None);
+    assert!(edits.contains("Hello, User!"), "greeting not rendered: {edits}");
+    assert!(edits.contains("BTC - Bitcoin"), "btc block not rendered: {edits}");
+    assert!(edits.contains("XMR - Monero"), "xmr block not rendered: {edits}");
+    assert!(
+        edits.contains("bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q"),
+        "btc address not rendered: {edits}"
+    );
+}
+
+#[test]
+fn license_shows_terms_of_service() {
+    let edits = mount("/?screen=license", "", vec![], None, None);
+    assert!(edits.contains("Terms of Service"), "license page not rendered: {edits}");
+    assert!(edits.contains("Copyright"), "license text not rendered: {edits}");
+}
+
+#[test]
+fn privacy_shows_privacy_policy() {
+    let edits = mount("/?screen=privacy", "", vec![], None, None);
+    assert!(edits.contains("Privacy Policy"), "privacy page not rendered: {edits}");
+    assert!(
+        edits.contains("functora@proton.me"),
+        "privacy text not rendered: {edits}"
+    );
+}
+
+#[test]
 fn view_shows_attachments_after_decrypt_state() {
     let edits = mount("/?screen=view", "decrypted", vec![attachment("report.pdf")], None, None);
     assert!(edits.contains("report.pdf"), "attachment name not rendered: {edits}");

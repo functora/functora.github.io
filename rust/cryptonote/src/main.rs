@@ -6,7 +6,7 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    functora_dioxus::app::App::<TemporaryState, PersistentState, Route>(
+    functora_dioxus::App::<TemporaryState, PersistentState, Route>(
         AppId::new(APP_ID).infallible(),
         AppName::new(APP_NAME).infallible(),
         AppAssets {

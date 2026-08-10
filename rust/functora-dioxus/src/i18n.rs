@@ -1,5 +1,7 @@
 pub use isolang::Language;
 
+pub const SUPPORTED_LANGUAGES: &[Language] = &[Language::Eng, Language::Spa, Language::Rus];
+
 pub fn language_from_code(code: &str) -> Language {
     code.split('-')
         .next()

@@ -29,11 +29,7 @@ pub fn File() -> Element {
     rsx! {
         Breadcrumb { title: Msg::File }
         section {
-            h3 {
-                overflow_wrap: "anywhere",
-                word_break: "break-word",
-                "{name}"
-            }
+            h3 { overflow_wrap: "anywhere", word_break: "break-word", "{name}" }
             small { "{size}" }
             match &preview() {
                 Preview::Image(url) => rsx! {

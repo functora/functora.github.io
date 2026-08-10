@@ -13,16 +13,19 @@ fn supported_languages_contains_known() {
 #[test]
 fn supported_languages_have_flags_and_names() {
     SUPPORTED_LANGUAGES.iter().copied().for_each(|lang| {
-        assert_ne!(Msg::LanguageFlag(lang).render(Language::Eng), "🌐");
-        assert!(!Msg::LanguageName(lang).render(Language::Eng).is_empty());
+        assert_ne!(BaseMsg::LanguageFlag(lang).render(Language::Eng), "🌐");
+        assert!(!BaseMsg::LanguageName(lang).render(Language::Eng).is_empty());
     });
 }
 
 #[test]
 fn unknown_language_falls_back() {
-    assert_eq!(Msg::LanguageFlag(Language::default()).render(Language::Eng), "🌐");
-    assert_eq!(Msg::LanguageFlag(Language::Fra).render(Language::Eng), "🌐");
-    assert_eq!(Msg::LanguageName(Language::default()).render(Language::Eng), "Unknown");
+    assert_eq!(BaseMsg::LanguageFlag(Language::default()).render(Language::Eng), "🌐");
+    assert_eq!(BaseMsg::LanguageFlag(Language::Fra).render(Language::Eng), "🌐");
+    assert_eq!(
+        BaseMsg::LanguageName(Language::default()).render(Language::Eng),
+        "Unknown"
+    );
 }
 
 #[test]
@@ -30,7 +33,7 @@ fn i18n_english_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Eng), "Note");
     assert_eq!(Msg::Share.render(Language::Eng), "Share");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Eng), "Back");
-    assert_eq!(Msg::Theme.render(Language::Eng), "Theme");
+    assert_eq!(BaseMsg::Theme.render(Language::Eng), "Theme");
 }
 
 #[test]
@@ -38,7 +41,7 @@ fn i18n_spanish_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Spa), "Nota");
     assert_eq!(Msg::Share.render(Language::Spa), "Compartir");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Spa), "Atrás");
-    assert_eq!(Msg::Theme.render(Language::Spa), "Tema");
+    assert_eq!(BaseMsg::Theme.render(Language::Spa), "Tema");
 }
 
 #[test]
@@ -46,7 +49,7 @@ fn i18n_russian_basic_messages() {
     assert_eq!(Msg::Note.render(Language::Rus), "Заметка");
     assert_eq!(Msg::Share.render(Language::Rus), "Поделиться");
     assert_eq!(Msg::Base(BaseMsg::Back).render(Language::Rus), "Назад");
-    assert_eq!(Msg::Theme.render(Language::Rus), "Тема");
+    assert_eq!(BaseMsg::Theme.render(Language::Rus), "Тема");
 }
 
 #[test]
@@ -58,9 +61,9 @@ fn i18n_unsupported_falls_back_to_english() {
 
 #[test]
 fn i18n_all_messages_have_translations() {
-    assert!(Msg::LicenseText.render(Language::Eng).contains("Copyright"));
-    assert!(Msg::LicenseText.render(Language::Spa).contains("Copyright"));
-    assert!(Msg::LicenseText.render(Language::Rus).contains("Copyright"));
+    assert!(BaseMsg::LicenseText.render(Language::Eng).contains("Copyright"));
+    assert!(BaseMsg::LicenseText.render(Language::Spa).contains("Copyright"));
+    assert!(BaseMsg::LicenseText.render(Language::Rus).contains("Copyright"));
 }
 
 #[test]
@@ -160,12 +163,45 @@ fn msg_i18n_share_variants() {
 
 #[test]
 fn msg_i18n_footer_share_variants() {
-    assert_eq!(Msg::FooterShareWord.render(Language::Eng), "Share");
-    assert_eq!(Msg::FooterShareWord.render(Language::Spa), "Compartir");
-    assert_eq!(Msg::FooterShareWord.render(Language::Rus), "Поделитесь");
-    assert_eq!(Msg::FooterAppWord.render(Language::Eng), "app");
-    assert_eq!(Msg::FooterAppWord.render(Language::Spa), "la app");
-    assert_eq!(Msg::FooterAppWord.render(Language::Rus), "приложением");
+    assert_eq!(BaseMsg::FooterShareWord.render(Language::Eng), "Share");
+    assert_eq!(BaseMsg::FooterShareWord.render(Language::Spa), "Compartir");
+    assert_eq!(BaseMsg::FooterShareWord.render(Language::Rus), "Поделитесь");
+    assert_eq!(BaseMsg::FooterAppWord.render(Language::Eng), "app");
+    assert_eq!(BaseMsg::FooterAppWord.render(Language::Spa), "la app");
+    assert_eq!(BaseMsg::FooterAppWord.render(Language::Rus), "приложением");
+}
+
+#[test]
+fn white_label_messages_render_all_languages() {
+    let variants: Vec<BaseMsg> = vec![
+        BaseMsg::Copyright,
+        BaseMsg::AllRightsReserved,
+        BaseMsg::ByContinuing,
+        BaseMsg::YouAgree,
+        BaseMsg::TermsOfService,
+        BaseMsg::TermsOfServiceTitle,
+        BaseMsg::PrivacyPolicyAnd,
+        BaseMsg::PrivacyPolicyTitle,
+        BaseMsg::Home,
+        BaseMsg::VersionLabel,
+        BaseMsg::Application,
+        BaseMsg::Theme,
+        BaseMsg::Donate,
+        BaseMsg::DonateLink,
+        BaseMsg::And,
+        BaseMsg::FooterShareWord,
+        BaseMsg::FooterAppWord,
+        BaseMsg::LicenseText,
+        BaseMsg::PrivacyText,
+    ];
+    for variant in &variants {
+        let eng = variant.render(Language::Eng);
+        assert!(!eng.is_empty(), "English empty for variant");
+        let spa = variant.render(Language::Spa);
+        assert!(!spa.is_empty(), "Spanish empty for variant");
+        let rus = variant.render(Language::Rus);
+        assert!(!rus.is_empty(), "Russian empty for variant");
+    }
 }
 
 #[test]
@@ -185,35 +221,18 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::CreateNewNote,
         Msg::EditNote,
         Msg::ViewButton,
-        Msg::Copyright,
-        Msg::AllRightsReserved,
-        Msg::ByContinuing,
-        Msg::YouAgree,
-        Msg::TermsOfService,
-        Msg::TermsOfServiceTitle,
-        Msg::PrivacyPolicyAnd,
-        Msg::PrivacyPolicyTitle,
-        Msg::VersionLabel,
-        Msg::Application,
         Msg::JoinTestingButton,
         Msg::GooglePlayButton,
         Msg::DownloadApkButton,
         Msg::SourceCodeButton,
         Msg::AuthorButton,
-        Msg::Donate,
         Msg::OpenUrlLabel,
         Msg::OpenUrlPlaceholder,
         Msg::OpenButton,
-        Msg::DonateGreeting,
-        Msg::DonateLink,
-        Msg::And,
-        Msg::FooterShareWord,
-        Msg::FooterAppWord,
         Msg::ActionLabel,
         Msg::ActionCreate,
         Msg::ActionOpen,
         Msg::ActionScan,
-        Msg::Theme,
         Msg::Print,
         Msg::Clear,
         Msg::AttachFiles,
@@ -273,20 +292,20 @@ fn supported_languages_length() {
 
 #[test]
 fn language_flag_eng() {
-    assert_eq!(Msg::LanguageFlag(Language::Eng).render(Language::Eng), "🇬🇧");
-    assert_eq!(Msg::LanguageName(Language::Eng).render(Language::Eng), "English");
+    assert_eq!(BaseMsg::LanguageFlag(Language::Eng).render(Language::Eng), "🇬🇧");
+    assert_eq!(BaseMsg::LanguageName(Language::Eng).render(Language::Eng), "English");
 }
 
 #[test]
 fn language_flag_spa() {
-    assert_eq!(Msg::LanguageFlag(Language::Spa).render(Language::Spa), "🇪🇸");
-    assert_eq!(Msg::LanguageName(Language::Spa).render(Language::Spa), "Español");
+    assert_eq!(BaseMsg::LanguageFlag(Language::Spa).render(Language::Spa), "🇪🇸");
+    assert_eq!(BaseMsg::LanguageName(Language::Spa).render(Language::Spa), "Español");
 }
 
 #[test]
 fn language_flag_rus() {
-    assert_eq!(Msg::LanguageFlag(Language::Rus).render(Language::Rus), "🇷🇺");
-    assert_eq!(Msg::LanguageName(Language::Rus).render(Language::Rus), "Русский");
+    assert_eq!(BaseMsg::LanguageFlag(Language::Rus).render(Language::Rus), "🇷🇺");
+    assert_eq!(BaseMsg::LanguageName(Language::Rus).render(Language::Rus), "Русский");
 }
 
 #[test]
@@ -377,15 +396,16 @@ fn msg_i18n_about_android_beta_all_languages() {
 
 #[test]
 fn msg_i18n_privacy_text_all_languages() {
-    use cryptonote::messages::Msg;
-    assert!(Msg::PrivacyText.render(Language::Eng).contains("Privacy Policy"));
-    assert!(Msg::PrivacyText
+    assert!(BaseMsg::PrivacyText.render(Language::Eng).contains("Privacy Policy"));
+    assert!(BaseMsg::PrivacyText
         .render(Language::Spa)
         .contains("Política de Privacidad"));
-    assert!(Msg::PrivacyText
+    assert!(BaseMsg::PrivacyText
         .render(Language::Rus)
         .contains("Политика конфиденциальности"));
-    assert!(Msg::PrivacyText.render(Language::Eng).contains("functora@proton.me"));
+    assert!(BaseMsg::PrivacyText
+        .render(Language::Eng)
+        .contains("functora@proton.me"));
 }
 
 #[test]
@@ -395,14 +415,6 @@ fn msg_i18n_about_text_all_languages() {
     assert!(Msg::AboutText.render(Language::Eng).contains("offline"));
     assert!(Msg::AboutText.render(Language::Spa).contains("Cryptonote"));
     assert!(Msg::AboutText.render(Language::Rus).contains("Cryptonote"));
-}
-
-#[test]
-fn msg_i18n_donate_intro_all_languages() {
-    use cryptonote::messages::Msg;
-    assert!(Msg::DonateIntro.render(Language::Eng).contains("Functora"));
-    assert!(Msg::DonateIntro.render(Language::Spa).contains("Functora"));
-    assert!(Msg::DonateIntro.render(Language::Rus).contains("Functora"));
 }
 
 #[test]

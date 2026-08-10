@@ -16,7 +16,7 @@ pub fn About(note: Option<String>) -> Element {
         }
     });
     rsx! {
-        Breadcrumb { title: Msg::Application }
+        Breadcrumb { title: BaseMsg::Application }
         section {
             p { dangerous_inner_html: "{rendered()}" }
             Pre { id: SHARE_APP_ID,
@@ -92,7 +92,7 @@ pub fn About(note: Option<String>) -> Element {
                     href: Screen::Donate.to_route(None).to_string(),
                     button: true,
                     Icon { icon: FaHeart }
-                    "{Msg::Donate.render(lang)}"
+                    "{BaseMsg::Donate.render(lang)}"
                 }
             }
         }

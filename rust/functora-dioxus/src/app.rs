@@ -1,3 +1,4 @@
+#![allow(clippy::shadow_reuse)]
 use crate::storage::use_storage;
 use dioxus::prelude::*;
 pub use functora_tagged::InfallibleInto;
@@ -11,6 +12,7 @@ pub type AppId = Tagged<&'static str, DAppId, FCrude>;
 pub enum DAppName {}
 pub type AppName = Tagged<&'static str, DAppName, FCrude>;
 
+#[derive(Clone, PartialEq)]
 pub struct AppAssets {
     pub icon_ico: Asset,
     pub icon_16_png: Asset,
@@ -45,17 +47,8 @@ fn manifest(name: &str, icon_192_png: &Asset, icon_512_png: &Asset) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn App<T, P, R>(id: AppId, name: AppName, assets: AppAssets) -> Element
-where
-    T: Default + 'static,
-    P: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + Default + 'static,
-    R: Routable + Default + PartialEq + 'static,
-{
-    let tst = use_store(T::default);
-    let pst = use_storage(*id, P::default);
-    let _ = use_context_provider(|| tst);
-    let _ = use_context_provider(|| pst);
-
+#[component]
+fn AppMeta(name: AppName, assets: AppAssets) -> Element {
     let AppAssets {
         icon_ico,
         icon_16_png,
@@ -93,6 +86,23 @@ where
         for url in &css {
             document::Link { rel: "stylesheet", href: *url }
         }
+    }
+}
+
+#[allow(non_snake_case)]
+pub fn App<T, P, R>(id: AppId, name: AppName, assets: AppAssets) -> Element
+where
+    T: Default + 'static,
+    P: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + Default + 'static,
+    R: Routable + Default + PartialEq + 'static,
+{
+    let tst = use_store(T::default);
+    let pst = use_storage(*id, P::default);
+    let _ = use_context_provider(|| tst);
+    let _ = use_context_provider(|| pst);
+
+    rsx! {
+        AppMeta { name, assets }
         Router::<R> {}
     }
 }

@@ -76,6 +76,7 @@ where
             p { dangerous_inner_html: "{rendered()}" }
             p { "{Msg::VersionLabel.render(lang)} {attrs.vsn}" }
             Pre {
+                id: anchor_id,
                 code {
                     "{Msg::AboutAndroidBeta1.render(lang)} "
                     ExtLink { href: derived_beta_url.clone(), "{Msg::AboutAndroidBetaLink1.render(lang)}" }
@@ -87,7 +88,7 @@ where
                 }
             }
             if let Some(qr_image) = qr() {
-                div { id: anchor_id, dangerous_inner_html: "{qr_image}" }
+                div { dangerous_inner_html: "{qr_image}" }
             }
             Dock {
                 nav: nav.clone(),

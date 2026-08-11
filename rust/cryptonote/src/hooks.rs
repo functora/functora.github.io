@@ -152,7 +152,10 @@ async fn build_note(
         Some(cty) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cty)?),
         None => NoteData::PlainText(note.to_string()),
     };
+    #[cfg(target_arch = "wasm32")]
     let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
+    #[cfg(not(target_arch = "wasm32"))]
+    let origin = app_origin();
     let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
     match generate_qr_code(&u) {
         Ok(qr) => Ok(External::Note(ExternalNote {
@@ -209,22 +212,21 @@ pub async fn generate_share_async(tst: Store<TemporaryState>) -> Result<(), AppE
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
 fn app_origin() -> Option<String> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        web_sys::window().and_then(|w| {
-            let loc = w.location();
-            let protocol = loc.protocol().ok()?;
-            let host = loc.host().ok()?;
-            let pathname = loc.pathname().ok()?;
-            let path = pathname.trim_end_matches('/');
-            Some(format!("{}//{}{}", protocol, host, path))
-        })
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        (!WEB_APP_URL.is_empty()).then_some(WEB_APP_URL.to_string())
-    }
+    web_sys::window().and_then(|w| {
+        let loc = w.location();
+        let protocol = loc.protocol().ok()?;
+        let host = loc.host().ok()?;
+        let pathname = loc.pathname().ok()?;
+        let path = pathname.trim_end_matches('/');
+        Some(format!("{}//{}{}", protocol, host, path))
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn app_origin() -> String {
+    APP_ATTRS.app_url()
 }
 
 #[cfg(not(target_os = "android"))]

@@ -56,12 +56,94 @@ impl<M> Default for WhiteLabelContent<M> {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AppAttrs {
+    pub app: &'static str,
+    pub vsn: &'static str,
+    pub org: &'static str,
+    pub src: Option<&'static str>,
+    pub dst: &'static str,
+}
+
+impl AppAttrs {
+    #[must_use]
+    pub fn app_name(self) -> String {
+        let end = self.app.chars().next().map_or(0, char::len_utf8);
+        format!("{}{}", self.app[..end].to_uppercase(), &self.app[end..])
+    }
+
+    #[must_use]
+    pub fn pages_url(self) -> String {
+        format!("https://{}.github.io", self.org)
+    }
+
+    #[must_use]
+    pub fn author_url(self) -> String {
+        format!("{}/", self.pages_url())
+    }
+
+    #[must_use]
+    pub fn app_url(self) -> String {
+        format!("https://{}.github.io/{}/{}", self.org, self.dst, self.app)
+    }
+
+    #[must_use]
+    pub fn source_url(self) -> String {
+        self.src.map_or_else(
+            || format!("https://github.com/{}/{}.github.io", self.org, self.org),
+            |src| {
+                format!(
+                    "https://github.com/{}/{}.github.io/tree/master/{src}/{}",
+                    self.org, self.org, self.app
+                )
+            },
+        )
+    }
+
+    #[must_use]
+    pub fn apk_url(self) -> String {
+        format!(
+            "https://github.com/{}/{}.github.io/releases/tag/{}-v{}",
+            self.org, self.org, self.app, self.vsn
+        )
+    }
+
+    #[must_use]
+    pub fn google_play_url(self) -> String {
+        format!(
+            "https://play.google.com/store/apps/details?id=com.{}.{}",
+            self.org, self.app
+        )
+    }
+
+    #[must_use]
+    pub fn beta_url(self) -> String {
+        format!("https://groups.google.com/g/{}", self.org)
+    }
+
+    #[must_use]
+    pub fn share_anchor_id(self) -> String {
+        let hash = self
+            .app
+            .bytes()
+            .fold(0u32, |acc, byte| acc.wrapping_mul(31).wrapping_add(u32::from(byte)));
+        format!("sh-{hash:08x}")
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct AppContent<R, M = Msg> {
+    pub attrs: AppAttrs,
+    pub donate: R,
+    pub about_text: M,
+    pub share_desc: M,
+}
+
 #[derive(Clone, PartialEq)]
 pub struct WhiteLabelConfig<R, I = FaAndroid> {
     pub brand: String,
     pub copyright_owner: String,
     pub copyright_owner_href: Option<String>,
-    pub year: u32,
     pub version: Option<String>,
     pub home: R,
     pub about: Option<R>,
@@ -106,7 +188,6 @@ pub fn WhiteLabelLayout<
         brand,
         copyright_owner,
         copyright_owner_href,
-        year,
         version,
         home,
         about,
@@ -276,7 +357,7 @@ pub fn WhiteLabelLayout<
         footer {
             p {
                 {Msg::Copyright.render(lang)}
-                " {year} "
+                " {crate::FUNCTORA_DIOXUS_YEAR} "
                 {owner}
                 ". "
                 {Msg::AllRightsReserved.render(lang)}

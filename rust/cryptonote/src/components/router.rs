@@ -1,7 +1,8 @@
 #![allow(clippy::shadow_reuse)]
 use crate::components::screens::*;
+use crate::messages::Msg;
 use crate::*;
-use functora_dioxus::{DefaultDonate, DefaultLicense, DefaultPrivacy};
+use functora_dioxus::{AppContent, DefaultAbout, DefaultDonate, DefaultLicense, DefaultPrivacy};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum Screen {
@@ -164,7 +165,17 @@ fn Root(screen: Screen, note: Option<String>) -> Element {
             Share {}
         },
         Screen::About => rsx! {
-            About { note }
+            DefaultAbout {
+                home_route: Screen::Home.to_route(None),
+                nav,
+                note,
+                content: AppContent {
+                    attrs: APP_ATTRS,
+                    donate: Screen::Donate.to_route(None),
+                    about_text: Msg::AboutText,
+                    share_desc: Msg::ShareAppDesc,
+                },
+            }
         },
         Screen::Donate => rsx! {
             DefaultDonate { home_route: Screen::Home.to_route(None), nav }

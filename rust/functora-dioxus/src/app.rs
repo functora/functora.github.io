@@ -1,16 +1,10 @@
 #![allow(clippy::shadow_reuse)]
+use crate::AppAttrs;
 use crate::storage::use_storage;
 use dioxus::prelude::*;
 pub use functora_tagged::InfallibleInto;
-use functora_tagged::{FCrude, Tagged};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-
-pub enum DAppId {}
-pub type AppId = Tagged<&'static str, DAppId, FCrude>;
-
-pub enum DAppName {}
-pub type AppName = Tagged<&'static str, DAppName, FCrude>;
 
 #[derive(Clone, PartialEq)]
 pub struct AppAssets {
@@ -48,7 +42,7 @@ fn manifest(name: &str, icon_192_png: &Asset, icon_512_png: &Asset) -> String {
 
 #[allow(non_snake_case)]
 #[component]
-fn AppMeta(name: AppName, assets: AppAssets) -> Element {
+fn AppMeta(name: String, assets: AppAssets) -> Element {
     let AppAssets {
         icon_ico,
         icon_16_png,
@@ -80,7 +74,7 @@ fn AppMeta(name: AppName, assets: AppAssets) -> Element {
         }
         document::Link {
             rel: "manifest",
-            href: "data:application/manifest+json,{manifest(*name, &icon_192_png, &icon_512_png)}",
+            href: "data:application/manifest+json,{manifest(name.as_str(), &icon_192_png, &icon_512_png)}",
         }
         document::Title { "{name}" }
         for url in &css {
@@ -90,16 +84,17 @@ fn AppMeta(name: AppName, assets: AppAssets) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn App<T, P, R>(id: AppId, name: AppName, assets: AppAssets) -> Element
+pub fn App<T, P, R>(attrs: AppAttrs, assets: AppAssets) -> Element
 where
     T: Default + 'static,
     P: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + Default + 'static,
     R: Routable + Default + PartialEq + 'static,
 {
     let tst = use_store(T::default);
-    let pst = use_storage(*id, P::default);
+    let pst = use_storage(attrs.app, P::default);
     let _ = use_context_provider(|| tst);
     let _ = use_context_provider(|| pst);
+    let name = attrs.app_name();
 
     rsx! {
         AppMeta { name, assets }

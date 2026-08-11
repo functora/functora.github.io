@@ -116,14 +116,65 @@ fn about_content_follows_language_change() {
 }
 
 #[test]
+fn about_shows_derived_dock_buttons() {
+    let edits = mount("/?screen=about", "", vec![], None, None);
+    for expected in [
+        "Copy link",
+        "Share app",
+        "Join testing",
+        "Google Play",
+        "Download APK",
+        "Source code",
+        "Author",
+        "Donate",
+        "Version",
+    ] {
+        assert!(edits.contains(expected), "{expected} not rendered on about: {edits}");
+    }
+}
+
+#[test]
+fn about_shows_qr_version_and_derived_links() {
+    let attrs = cryptonote::APP_ATTRS;
+    let edits = mount("/?screen=about", "", vec![], None, None);
+    assert!(edits.contains("<svg"), "qr not rendered: {edits}");
+    assert!(
+        edits.contains(&format!("Version {}", attrs.vsn)),
+        "version not rendered on about: {edits}"
+    );
+    assert!(edits.contains(&attrs.beta_url()), "beta link not rendered: {edits}");
+    assert!(
+        edits.contains(&attrs.google_play_url()),
+        "google play link not rendered: {edits}"
+    );
+    assert!(edits.contains(&attrs.apk_url()), "apk link not rendered: {edits}");
+    assert!(
+        edits.contains("https://github.com/functora/functora.github.io/tree/master/rust/"),
+        "source code link not rendered: {edits}"
+    );
+}
+
+#[test]
+fn about_renders_generated_share_anchor() {
+    let id = cryptonote::APP_ATTRS.share_anchor_id();
+    let about = mount("/?screen=about", "", vec![], None, None);
+    assert!(
+        about.contains(&format!("value: Text(\"{id}\")")),
+        "qr anchor id not rendered: {about}"
+    );
+    let home = mount("/?screen=home", "", vec![], None, None);
+    assert!(home.contains("Share"), "footer share link not rendered: {home}");
+}
+
+#[test]
 fn layout_shows_brand_footer_and_version() {
     let edits = mount("/?screen=home", "", vec![], None, None);
     assert!(edits.contains("Cryptonote"), "brand not rendered: {edits}");
     assert!(edits.contains("Functora"), "copyright owner not rendered: {edits}");
     assert!(edits.contains("All rights reserved."), "footer not rendered: {edits}");
     assert!(
-        edits.contains(&format!(" {}.", cryptonote::APP_VERSION)),
-        "version not rendered: {edits}"
+        edits.contains(functora_dioxus::FUNCTORA_DIOXUS_YEAR),
+        "year not rendered: {edits}"
     );
 }
 

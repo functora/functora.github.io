@@ -1,3 +1,5 @@
+use crate::FUNCTORA_DIOXUS_DATE;
+use crate::FUNCTORA_DIOXUS_YEAR;
 use crate::i18n::{I18N, Language};
 use std::env::VarError;
 use std::sync::mpsc::RecvError;
@@ -47,6 +49,21 @@ pub enum Msg {
     LanguageName(Language),
     LicenseText,
     PrivacyText,
+    CopyAppLink,
+    ShareAppLink,
+    Sent,
+    SourceCodeButton,
+    AuthorButton,
+    JoinTestingButton,
+    GooglePlayButton,
+    DownloadApkButton,
+    AboutAndroidBeta1,
+    AboutAndroidBetaLink1,
+    AboutAndroidBeta2,
+    AboutAndroidBetaLink2,
+    AboutAndroidBeta3,
+    AboutAndroidBetaLink3,
+    AboutAndroidBeta4,
 }
 
 impl I18N for Msg {
@@ -104,14 +121,14 @@ impl I18N for Msg {
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => r#"Copyright (c) 2025 Functora
+            Self::LicenseText => format!(r#"Copyright (c) {FUNCTORA_DIOXUS_YEAR} Functora
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."#.into(),
-            Self::PrivacyText => r#"Privacy Policy
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."#),
+            Self::PrivacyText => format!(r#"Privacy Policy
 
 This privacy policy applies to the app (hereby referred to as "Application") for mobile devices that was created by Functora (hereby referred to as "Service Provider") as a Free service. This service is intended for use "AS IS".
 
@@ -145,7 +162,7 @@ Changes
 
 This Privacy Policy may be updated from time to time for any reason. The Service Provider will notify you of any changes to their Privacy Policy by updating this page with the new Privacy Policy. You are advised to consult this Privacy Policy regularly for any changes, as continued use is deemed approval of all changes.
 
-This privacy policy is effective as of 2025-12-06
+This privacy policy is effective as of {FUNCTORA_DIOXUS_DATE}
 
 Your Consent
 
@@ -153,7 +170,22 @@ By using the Application, you are consenting to the processing of your informati
 
 Contact Us
 
-If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at functora@proton.me."#.into(),
+If you have any questions regarding privacy while using the Application, or have questions about the practices, please contact the Service Provider via email at functora@proton.me."#),
+            Self::CopyAppLink => "Copy link".into(),
+            Self::ShareAppLink => "Share app".into(),
+            Self::Sent => "Sent!".into(),
+            Self::SourceCodeButton => "Source code".into(),
+            Self::AuthorButton => "Author".into(),
+            Self::JoinTestingButton => "Join testing".into(),
+            Self::GooglePlayButton => "Google Play".into(),
+            Self::DownloadApkButton => "Download APK".into(),
+            Self::AboutAndroidBeta1 => "The Android app is in closed beta. To install it, join the".into(),
+            Self::AboutAndroidBetaLink1 => "closed beta".into(),
+            Self::AboutAndroidBeta2 => "group and then install the app from".into(),
+            Self::AboutAndroidBetaLink2 => "Google Play".into(),
+            Self::AboutAndroidBeta3 => ", or download the".into(),
+            Self::AboutAndroidBetaLink3 => "APK file".into(),
+            Self::AboutAndroidBeta4 => "directly.".into(),
         }
     }
 
@@ -212,14 +244,14 @@ If you have any questions regarding privacy while using the Application, or have
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => r#"Copyright (c) 2025 Functora
+            Self::LicenseText => format!(r#"Copyright (c) {FUNCTORA_DIOXUS_YEAR} Functora
 
 Por la presente se concede permiso, libre de cargos, a cualquier persona que haya obtenido una copia de este software y archivos de documentación asociados (el "Software"), para utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y a permitir a las personas a las que se les proporcione el Software que hagan lo mismo, sujeto a las siguientes condiciones:
 
 El aviso de copyright anterior y este aviso de permiso deberán incluirse en todas las copias o partes sustanciales del Software.
 
-EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O DE OTRO TIPO, QUE SURJA DE, O EN RELACIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE."#.into(),
-            Self::PrivacyText => r#"Política de Privacidad
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O DE OTRO TIPO, QUE SURJA DE, O EN RELACIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE."#),
+            Self::PrivacyText => format!(r#"Política de Privacidad
 
 Esta política de privacidad se aplica a la aplicación (en adelante, "Aplicación") para dispositivos móviles creada por Functora (en adelante, "Proveedor de Servicios") como un servicio gratuito. Este servicio está destinado a su uso "TAL CUAL".
 
@@ -253,7 +285,7 @@ Cambios
 
 Esta Política de Privacidad puede actualizarse de vez en cuando por cualquier motivo. El Proveedor de Servicios te notificará de cualquier cambio en su Política de Privacidad actualizando esta página con la nueva Política de Privacidad. Se te aconseja consultar esta Política de Privacidad regularmente para ver si hay cambios, ya que el uso continuado se considera aprobación de todos los cambios.
 
-Esta política de privacidad es efectiva a partir de 2025-12-06
+Esta política de privacidad es efectiva a partir de {FUNCTORA_DIOXUS_DATE}
 
 Tu Consentimiento
 
@@ -261,7 +293,22 @@ Al usar la Aplicación, das tu consentimiento al procesamiento de tu informació
 
 Contáctanos
 
-Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preguntas sobre las prácticas, comunícate con el Proveedor de Servicios por correo electrónico a functora@proton.me."#.into(),
+Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preguntas sobre las prácticas, comunícate con el Proveedor de Servicios por correo electrónico a functora@proton.me."#),
+            Self::CopyAppLink => "Copiar enlace".into(),
+            Self::ShareAppLink => "Compartir la app".into(),
+            Self::Sent => "¡Enviado!".into(),
+            Self::SourceCodeButton => "Código fuente".into(),
+            Self::AuthorButton => "Autor".into(),
+            Self::JoinTestingButton => "Unirse a prueba".into(),
+            Self::GooglePlayButton => "Google Play".into(),
+            Self::DownloadApkButton => "Descargar APK".into(),
+            Self::AboutAndroidBeta1 => "La aplicación de Android está en beta cerrada. Para instalarla, únase al grupo de".into(),
+            Self::AboutAndroidBetaLink1 => "beta cerrada".into(),
+            Self::AboutAndroidBeta2 => "y luego instale la aplicación desde".into(),
+            Self::AboutAndroidBetaLink2 => "Google Play".into(),
+            Self::AboutAndroidBeta3 => ", o descargue el".into(),
+            Self::AboutAndroidBetaLink3 => "archivo APK".into(),
+            Self::AboutAndroidBeta4 => "directamente.".into(),
         }
     }
 
@@ -322,14 +369,14 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => r"Copyright (c) 2025 Functora
+            Self::LicenseText => format!(r"Copyright (c) {FUNCTORA_DIOXUS_YEAR} Functora
 
 Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее - «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
 
 Указанное выше уведомление об авторских правах и данное уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
 
-ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ.".into(),
-            Self::PrivacyText => r"Политика конфиденциальности
+ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ ГАРАНТИЯМИ ТОВАРНОГО СОСТОЯНИЯ, ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ И ОТСУТСТВИЯ НАРУШЕНИЙ АВТОРСКИХ ПРАВ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО ЛЮБЫМ ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ДРУГИЕ ТРЕБОВАНИЯ, ВЫТЕКАЮЩИЕ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ИНЫХ ОБСТОЯТЕЛЬСТВ, СВЯЗАННЫЕ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ДРУГИМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ."),
+            Self::PrivacyText => format!(r"Политика конфиденциальности
 
 Эта политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному Functora (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».
 
@@ -363,7 +410,7 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
 
 Эта Политика конфиденциальности может время от времени обновляться по любой причине. Поставщик услуг уведомит вас о любых изменениях в своей Политике конфиденциальности, обновив эту страницу новой Политикой конфиденциальности. Вам рекомендуется регулярно просматривать эту Политику конфиденциальности на предмет изменений, так как продолжение использования считается одобрением всех изменений.
 
-Эта политика конфиденциальности вступает в силу с 2025-12-06
+Эта политика конфиденциальности вступает в силу с {FUNCTORA_DIOXUS_DATE}
 
 Ваше согласие
 
@@ -371,7 +418,22 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
 
 Свяжитесь с нами
 
-Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@proton.me.".into(),
+Если у вас есть какие-либо вопросы относительно конфиденциальности при использовании Приложения или вопросы о практике, свяжитесь с Поставщиком услуг по электронной почте functora@proton.me."),
+            Self::CopyAppLink => "Скопировать ссылку".into(),
+            Self::ShareAppLink => "Поделиться приложением".into(),
+            Self::Sent => "Отправлено!".into(),
+            Self::SourceCodeButton => "Исходный код".into(),
+            Self::AuthorButton => "Автор".into(),
+            Self::JoinTestingButton => "Вступить в бета-тест".into(),
+            Self::GooglePlayButton => "Google Play".into(),
+            Self::DownloadApkButton => "Скачать APK".into(),
+            Self::AboutAndroidBeta1 => "Приложение Android в закрытом бета-тестировании. Чтобы установить его, вступите в группу".into(),
+            Self::AboutAndroidBetaLink1 => "бета-тестирования".into(),
+            Self::AboutAndroidBeta2 => ", затем установите приложение из".into(),
+            Self::AboutAndroidBetaLink2 => "Google Play".into(),
+            Self::AboutAndroidBeta3 => " или скачайте".into(),
+            Self::AboutAndroidBetaLink3 => "APK-файл".into(),
+            Self::AboutAndroidBeta4 => "напрямую.".into(),
         }
     }
 }

@@ -1,9 +1,9 @@
 pub use derive_more::Display;
 pub use dioxus::prelude::*;
-pub use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
+pub use dioxus_free_icons::icons::fa_brands_icons::FaAndroid;
 pub use dioxus_free_icons::icons::fa_solid_icons::{
-    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaHeart, FaLock, FaLockOpen, FaPaperclip, FaPaste,
-    FaPenToSquare, FaPrint, FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaUser, FaXmark,
+    FaArrowLeft, FaCopy, FaDownload, FaEye, FaFolderOpen, FaLock, FaLockOpen, FaPaperclip, FaPaste, FaPenToSquare,
+    FaPrint, FaQrcode, FaShareNodes, FaSquarePlus, FaTrash, FaXmark,
 };
 pub use dioxus_free_icons::{Icon, IconShape};
 pub use functora::*;
@@ -18,32 +18,12 @@ pub use functora_dioxus::storage::PersistentSignal;
 pub use functora_dioxus::widgets::JobProgressBar;
 pub use functora_dioxus::Msg as BaseMsg;
 pub use functora_dioxus::{use_nav, Nav};
-pub use functora_dioxus::{AppAssets, AppId, AppName, InfallibleInto};
+pub use functora_dioxus::{AppAssets, AppAttrs, InfallibleInto};
 
-pub const APP_NAME: &str = "Cryptonote";
-pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const APP_ID: &str = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION"));
-pub const BETA_TEST_URL: &str = "https://groups.google.com/g/functora";
-pub const GOOGLE_PLAY_URL: &str = concat!(
-    "https://play.google.com/store/apps/details?id=com.functora.",
-    env!("CARGO_PKG_NAME")
-);
-pub const APK_URL: &str = concat!(
-    "https://github.com/functora/functora.github.io/releases/tag/",
-    env!("CARGO_PKG_NAME"),
-    "-v",
-    env!("CARGO_PKG_VERSION")
-);
-pub const WEB_APP_URL: &str = concat!(
-    "https://functora.github.io/apps/",
-    env!("CARGO_PKG_NAME"),
-    "/",
-    env!("CARGO_PKG_VERSION")
-);
-pub const SHARE_APP_URL: &str = concat!("https://functora.github.io/apps/", env!("CARGO_PKG_NAME"));
-pub const SHARE_APP_ID: &str = "app";
-pub const FUNCTORA_URL: &str = "https://functora.github.io/";
-pub const SOURCE_CODE_URL: &str = concat!(
-    "https://github.com/functora/functora.github.io/tree/master/rust/",
-    env!("CARGO_PKG_NAME")
-);
+pub const APP_ATTRS: AppAttrs = AppAttrs {
+    app: env!("CARGO_PKG_NAME"),
+    vsn: env!("CARGO_PKG_VERSION"),
+    org: "functora",
+    src: Some("rust"),
+    dst: "apps",
+};

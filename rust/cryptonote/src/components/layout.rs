@@ -5,21 +5,21 @@ use functora_dioxus::{WhiteLabelConfig, WhiteLabelLayout};
 #[component]
 pub fn Layout() -> Element {
     let tst = use_context::<Store<TemporaryState>>();
+    let attrs = APP_ATTRS;
     rsx! {
         WhiteLabelLayout {
             config: WhiteLabelConfig {
                 brand: "🔐 Cryptonote".to_string(),
                 copyright_owner: "Functora".to_string(),
-                copyright_owner_href: Some(FUNCTORA_URL.to_string()),
-                year: 2025,
-                version: Some(APP_VERSION.to_string()),
+                copyright_owner_href: Some(attrs.author_url()),
+                version: Some(attrs.vsn.to_string()),
                 home: Screen::Home.to_route(None),
                 about: Some(Screen::About.to_route(None)),
                 about_icon: Some(FaAndroid),
                 donate: Some(Screen::Donate.to_route(None)),
                 license: Some(Screen::License.to_route(None)),
                 privacy: Some(Screen::Privacy.to_route(None)),
-                share: Some(Screen::About.to_route(Some(SHARE_APP_ID.into()))),
+                share: Some(Screen::About.to_route(Some(attrs.share_anchor_id()))),
                 on_brand_click: Some(EventHandler::new(move |_| reset_temporary_state(tst))),
                 bottom_extra: rsx! {
                     ProgressBar {}

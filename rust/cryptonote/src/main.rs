@@ -7,8 +7,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     functora_dioxus::App::<TemporaryState, PersistentState, Route>(
-        AppId::new(APP_ID).infallible(),
-        AppName::new(APP_NAME).infallible(),
+        APP_ATTRS,
         AppAssets {
             icon_ico: asset!("/assets/favicon/favicon.ico"),
             icon_16_png: asset!("/assets/favicon/favicon-16x16.png"),

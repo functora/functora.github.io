@@ -193,6 +193,21 @@ fn white_label_messages_render_all_languages() {
         BaseMsg::FooterAppWord,
         BaseMsg::LicenseText,
         BaseMsg::PrivacyText,
+        BaseMsg::CopyAppLink,
+        BaseMsg::ShareAppLink,
+        BaseMsg::Sent,
+        BaseMsg::SourceCodeButton,
+        BaseMsg::AuthorButton,
+        BaseMsg::JoinTestingButton,
+        BaseMsg::GooglePlayButton,
+        BaseMsg::DownloadApkButton,
+        BaseMsg::AboutAndroidBeta1,
+        BaseMsg::AboutAndroidBetaLink1,
+        BaseMsg::AboutAndroidBeta2,
+        BaseMsg::AboutAndroidBetaLink2,
+        BaseMsg::AboutAndroidBeta3,
+        BaseMsg::AboutAndroidBetaLink3,
+        BaseMsg::AboutAndroidBeta4,
     ];
     for variant in &variants {
         let eng = variant.render(Language::Eng);
@@ -221,11 +236,6 @@ fn msg_i18n_all_basic_variants_render_non_empty() {
         Msg::CreateNewNote,
         Msg::EditNote,
         Msg::ViewButton,
-        Msg::JoinTestingButton,
-        Msg::GooglePlayButton,
-        Msg::DownloadApkButton,
-        Msg::SourceCodeButton,
-        Msg::AuthorButton,
         Msg::OpenUrlLabel,
         Msg::OpenUrlPlaceholder,
         Msg::OpenButton,
@@ -270,19 +280,6 @@ fn msg_i18n_error_delegates_to_app_error() {
 fn app_error_i18n_qr_contains_detail() {
     let err = cryptonote::encoding::generate_qr_code("").unwrap_err();
     assert!(err.render_eng().contains("QR") || err.render_eng().contains("code"));
-}
-
-#[test]
-fn constants_are_defined() {
-    assert!(!cryptonote::APP_NAME.is_empty());
-    assert!(!cryptonote::APP_VERSION.is_empty());
-    assert!(!cryptonote::APP_ID.is_empty());
-    assert!(cryptonote::BETA_TEST_URL.starts_with("https://"));
-    assert!(cryptonote::GOOGLE_PLAY_URL.starts_with("https://play.google.com"));
-    assert!(cryptonote::APK_URL.starts_with("https://github.com"));
-    assert!(cryptonote::WEB_APP_URL.starts_with("https://functora.github.io"));
-    assert!(cryptonote::FUNCTORA_URL.starts_with("https://"));
-    assert!(cryptonote::SOURCE_CODE_URL.starts_with("https://github.com"));
 }
 
 #[test]
@@ -378,20 +375,33 @@ fn app_error_i18n_render_rus_all_variants() {
 
 #[test]
 fn msg_i18n_about_android_beta_all_languages() {
-    use cryptonote::messages::Msg;
-    assert!(Msg::AboutAndroidBeta1.render(Language::Eng).contains("closed beta"));
-    assert!(Msg::AboutAndroidBeta1.render(Language::Spa).contains("beta cerrada"));
-    assert!(Msg::AboutAndroidBeta1.render(Language::Rus).contains("бета-тестирован"));
-    assert!(Msg::AboutAndroidBetaLink1.render(Language::Eng).contains("closed beta"));
-    assert!(Msg::AboutAndroidBetaLink2.render(Language::Eng).contains("Google Play"));
-    assert!(Msg::AboutAndroidBetaLink2.render(Language::Spa).contains("Google Play"));
-    assert!(Msg::AboutAndroidBetaLink2.render(Language::Rus).contains("Google Play"));
-    assert!(Msg::AboutAndroidBetaLink3.render(Language::Eng).contains("APK"));
-    assert!(Msg::AboutAndroidBetaLink3.render(Language::Spa).contains("APK"));
-    assert!(Msg::AboutAndroidBetaLink3.render(Language::Rus).contains("APK"));
-    assert!(Msg::AboutAndroidBeta4.render(Language::Eng).contains("directly"));
-    assert!(Msg::AboutAndroidBeta4.render(Language::Spa).contains("directamente"));
-    assert!(Msg::AboutAndroidBeta4.render(Language::Rus).contains("напрямую"));
+    assert!(BaseMsg::AboutAndroidBeta1.render(Language::Eng).contains("closed beta"));
+    assert!(BaseMsg::AboutAndroidBeta1
+        .render(Language::Spa)
+        .contains("beta cerrada"));
+    assert!(BaseMsg::AboutAndroidBeta1
+        .render(Language::Rus)
+        .contains("бета-тестирован"));
+    assert!(BaseMsg::AboutAndroidBetaLink1
+        .render(Language::Eng)
+        .contains("closed beta"));
+    assert!(BaseMsg::AboutAndroidBetaLink2
+        .render(Language::Eng)
+        .contains("Google Play"));
+    assert!(BaseMsg::AboutAndroidBetaLink2
+        .render(Language::Spa)
+        .contains("Google Play"));
+    assert!(BaseMsg::AboutAndroidBetaLink2
+        .render(Language::Rus)
+        .contains("Google Play"));
+    assert!(BaseMsg::AboutAndroidBetaLink3.render(Language::Eng).contains("APK"));
+    assert!(BaseMsg::AboutAndroidBetaLink3.render(Language::Spa).contains("APK"));
+    assert!(BaseMsg::AboutAndroidBetaLink3.render(Language::Rus).contains("APK"));
+    assert!(BaseMsg::AboutAndroidBeta4.render(Language::Eng).contains("directly"));
+    assert!(BaseMsg::AboutAndroidBeta4
+        .render(Language::Spa)
+        .contains("directamente"));
+    assert!(BaseMsg::AboutAndroidBeta4.render(Language::Rus).contains("напрямую"));
 }
 
 #[test]

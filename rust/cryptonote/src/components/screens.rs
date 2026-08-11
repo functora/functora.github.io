@@ -1,11 +1,9 @@
-mod about;
 mod file;
 mod home;
 mod open;
 mod share;
 mod view;
 
-pub use about::*;
 pub use file::*;
 pub use home::*;
 pub use open::*;

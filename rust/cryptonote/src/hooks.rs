@@ -314,7 +314,7 @@ async fn download_android(
         let res = (|| -> Result<(), MediaStoreError> {
             let os = open_stream(env, activity, &name)?;
             let os = env.new_global_ref(os)?;
-            let mut slot = open.lock().map_err(MediaStoreError::PoisonedLock)?;
+            let mut slot = open.lock().map_err(|_| MediaStoreError::PoisonedLock)?;
             *slot = Some(os);
             Ok(())
         })();
@@ -334,10 +334,10 @@ async fn download_android(
         let chunk = chunk.to_vec();
         dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
             let res = (|| -> Result<(), MediaStoreError> {
-                let guard = stream.lock().map_err(MediaStoreError::PoisonedLock)?;
+                let guard = stream.lock().map_err(|_| MediaStoreError::PoisonedLock)?;
                 let os = guard.as_ref().cloned().ok_or(MediaStoreError::StreamNotOpen)?;
                 let ba = env.byte_array_from_slice(&chunk)?;
-                env.call_method(os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
+                let _ = env.call_method(os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
                 Ok(())
             })();
             if let Err(ref error) = res {
@@ -360,8 +360,8 @@ async fn download_android(
     let stream = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
         let res = (|| -> Result<(), MediaStoreError> {
-            if let Some(os) = stream.lock().map_err(MediaStoreError::PoisonedLock)?.take() {
-                env.call_method(os.as_obj(), "close", "()V", &[])?;
+            if let Some(os) = stream.lock().map_err(|_| MediaStoreError::PoisonedLock)?.take() {
+                let _ = env.call_method(os.as_obj(), "close", "()V", &[])?;
             }
             Ok(())
         })();
@@ -393,7 +393,7 @@ fn open_stream<'local>(
     let cv = env.new_object("android/content/ContentValues", "()V", &[])?;
     let nk = env.new_string("_display_name")?;
     let jn = env.new_string(name)?;
-    env.call_method(
+    let _ = env.call_method(
         &cv,
         "put",
         "(Ljava/lang/String;Ljava/lang/String;)V",
@@ -401,7 +401,7 @@ fn open_stream<'local>(
     )?;
     let mk = env.new_string("mime_type")?;
     let mv = mime_for(env, name)?;
-    env.call_method(
+    let _ = env.call_method(
         &cv,
         "put",
         "(Ljava/lang/String;Ljava/lang/String;)V",

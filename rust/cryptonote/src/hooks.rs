@@ -248,15 +248,12 @@ pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> 
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
-    let filename = filename.to_string();
-    let name = filename.clone();
+    let name = filename.to_string();
     crate::worker::run(
-        (data, name, filename),
+        (data, name.clone(), name),
         progress,
-        |(data, name, filename), mut report| async move {
-            download_android(&data, name, filename, &mut report)
-                .await
-                .map_err(functora_dioxus::Error::from)
+        |(bytes, display_name, file_name), mut report| async move {
+            download_android(&bytes, display_name, file_name, &mut report).map_err(functora_dioxus::Error::from)
         },
     )
     .await
@@ -277,8 +274,8 @@ enum MediaStoreError {
 
 #[cfg(target_os = "android")]
 impl From<MediaStoreError> for functora_dioxus::Error {
-    fn from(e: MediaStoreError) -> Self {
-        match e {
+    fn from(err: MediaStoreError) -> Self {
+        match err {
             MediaStoreError::Jni(e) => Self::JNI(e.into()),
             MediaStoreError::Channel(e) => Self::Channel(e),
             MediaStoreError::PoisonedLock | MediaStoreError::StreamNotOpen => {
@@ -289,7 +286,7 @@ impl From<MediaStoreError> for functora_dioxus::Error {
 }
 
 #[cfg(target_os = "android")]
-async fn download_android(
+fn download_android(
     data: &[u8],
     name: String,
     filename: String,
@@ -312,42 +309,42 @@ async fn download_android(
     let open = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _| {
         let res = (|| -> Result<(), MediaStoreError> {
-            let os = open_stream(env, activity, &name)?;
-            let os = env.new_global_ref(os)?;
+            let obj = open_stream(env, activity, &name)?;
+            let global = env.new_global_ref(obj)?;
             let mut slot = open.lock().map_err(|_| MediaStoreError::PoisonedLock)?;
-            *slot = Some(os);
+            *slot = Some(global);
             Ok(())
         })();
         if let Err(ref error) = res {
             tracing::error!("MediaStore JNI open error: {error}");
-            let _ = env.exception_describe();
+            _ = env.exception_describe();
         }
-        let _ = env.exception_clear();
-        let _ = tx.send(res);
+        _ = env.exception_clear();
+        _ = tx.send(res);
     });
     rx.recv()??;
     let mut done = 0u64;
     for chunk in data.chunks(WRITE_CHUNK) {
-        let (tx, rx) = channel();
-        let stream = stream.clone();
+        let (tx_chunk, rx_chunk) = channel();
+        let stream_chunk = stream.clone();
         let size = chunk.len() as u64;
-        let chunk = chunk.to_vec();
+        let chunk_owned = chunk.to_vec();
         dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
             let res = (|| -> Result<(), MediaStoreError> {
-                let guard = stream.lock().map_err(|_| MediaStoreError::PoisonedLock)?;
+                let guard = stream_chunk.lock().map_err(|_| MediaStoreError::PoisonedLock)?;
                 let os = guard.as_ref().cloned().ok_or(MediaStoreError::StreamNotOpen)?;
-                let ba = env.byte_array_from_slice(&chunk)?;
+                let ba = env.byte_array_from_slice(&chunk_owned)?;
                 let _ = env.call_method(os.as_obj(), "write", "([B)V", &[(&ba).into()])?;
                 Ok(())
             })();
             if let Err(ref error) = res {
                 tracing::error!("MediaStore JNI write error: {error}");
-                let _ = env.exception_describe();
+                _ = env.exception_describe();
             }
-            let _ = env.exception_clear();
-            let _ = tx.send(res);
+            _ = env.exception_clear();
+            _ = tx_chunk.send(res);
         });
-        rx.recv()??;
+        rx_chunk.recv()??;
         done += size;
         report(Job {
             stage: Stage::Download,
@@ -356,24 +353,24 @@ async fn download_android(
             name: None,
         });
     }
-    let (tx, rx) = channel();
-    let stream = stream.clone();
+    let (tx_close, rx_close) = channel();
+    let stream_close = stream.clone();
     dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, _, _| {
         let res = (|| -> Result<(), MediaStoreError> {
-            if let Some(os) = stream.lock().map_err(|_| MediaStoreError::PoisonedLock)?.take() {
+            if let Some(os) = stream_close.lock().map_err(|_| MediaStoreError::PoisonedLock)?.take() {
                 let _ = env.call_method(os.as_obj(), "close", "()V", &[])?;
             }
             Ok(())
         })();
         if let Err(ref error) = res {
             tracing::error!("MediaStore JNI close error: {error}");
-            let _ = env.exception_describe();
+            _ = env.exception_describe();
         }
-        let _ = env.exception_clear();
-        let _ = tx.send(res);
+        _ = env.exception_clear();
+        _ = tx_close.send(res);
     });
-    rx.recv()??;
-    Ok(filename.to_string())
+    rx_close.recv()??;
+    Ok(filename)
 }
 
 #[cfg(target_os = "android")]

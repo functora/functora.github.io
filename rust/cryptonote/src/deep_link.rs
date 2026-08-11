@@ -23,8 +23,7 @@ pub extern "system" fn Java_dev_dioxus_main_MainActivity_handleDeepLinkFile<'loc
     _class: jni::objects::JClass<'local>,
     path: jni::objects::JString<'local>,
 ) {
-    if let Ok(path) = env.get_string(&path) {
-        let path: String = path.into();
-        store_archive(ArchiveSource::Path(path.into()));
+    if let Ok(raw) = env.get_string(&path) {
+        store_archive(ArchiveSource::Path(String::from(raw).into()));
     }
 }

@@ -145,9 +145,9 @@
 
 ### Plain ASCII Only
 
-- Code, documentation, and content must use only simple ASCII characters. For example, use `-` instead of `—` or `–`, use `"` and `'` instead of curly quotes, use `...` instead of `…`, and use `->` instead of `→`.
-- Use plain ASCII letters: no accented or non-Latin characters; write `1st`, `2nd`, `3rd` instead of superscripts, and `e.g.`, `i.e.`, `etc.` with periods.
-- The only exception is when the user clearly asks to use fancy unicode or emoji.
+- Code, documentation, and content should default to simple ASCII characters. For example, prefer `-` over `—` or `–`, `"` and `'` over curly quotes, `...` over `…`, and `->` over `→`.
+- Prefer plain ASCII letters: no accented or non-Latin characters; write `1st`, `2nd`, `3rd` instead of superscripts, and `e.g.`, `i.e.`, `etc.` with periods.
+- Unicode, icons, and emojis are acceptable in code, documentation, and content when the user explicitly asks for them or when they are already present in the code. Preserve existing unicode, icons, and emojis exactly as they are; never strip, transliterate, or replace them during refactors (e.g. localized UI strings, emoji/icon brand glyphs, flag emojis in language menus, and non-Latin legal or user-facing texts).
 
 ### Conversions
 

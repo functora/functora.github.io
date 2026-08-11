@@ -378,30 +378,35 @@
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
-                  ${cargo}/bin/cargo fmt "$@" && dx fmt "$@" \
-                    && ${cargo}/bin/cargo clippy --all-features "$@" -- -D warnings \
-                    && ${cargo}/bin/cargo test --all-features "$@" \
-                    && echo "==> All good!"
-                '';
-              })
-              (pkgs.writeShellApplication {
-                name = "rust-verify";
-                text = ''
-                  for P in */; do
-                    P="''${P%/}"
-                    (
-                      cd "$P"
-                      ${cargo}/bin/cargo fmt "$@" \
-                        && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
-                        && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
-                        && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                        && echo "==> $P: All good!"
-                    ) || {
-                      echo "==> $P: FAILED"
+                  if [ -f Cargo.toml ]; then
+                    ${cargo}/bin/cargo fmt "$@" && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
+                      && ${cargo}/bin/cargo clippy --all-features "$@" -- -D warnings \
+                      && ${cargo}/bin/cargo test --all-features "$@" \
+                      && echo "==> All good!"
+                  else
+                    FOUND=0
+                    for P in */; do
+                      P="''${P%/}"
+                      [ -f "$P/Cargo.toml" ] || continue
+                      FOUND=1
+                      (
+                        cd "$P"
+                        ${cargo}/bin/cargo fmt "$@" \
+                          && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
+                          && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
+                          && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
+                          && echo "==> $P: All good!"
+                      ) || {
+                        echo "==> $P: FAILED"
+                        exit 1
+                      }
+                    done
+                    if [ "$FOUND" -eq 0 ]; then
+                      echo "==> No Rust crate found in this directory!"
                       exit 1
-                    }
-                  done
-                  echo "==> All Rust projects verified!"
+                    fi
+                    echo "==> All Rust projects verified!"
+                  fi
                 '';
               })
               (pkgs.writeShellApplication {

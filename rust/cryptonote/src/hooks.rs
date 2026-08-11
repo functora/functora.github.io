@@ -1,6 +1,7 @@
 use crate::error::AppError;
 use crate::messages::Msg;
 use crate::*;
+use zeroize::Zeroizing;
 
 pub use functora_dioxus::files::format_size;
 pub use functora_dioxus::hooks::{use_lang, use_message_markdown};
@@ -183,7 +184,12 @@ where
     P: Writable<Target = Option<Job>> + 'static,
 {
     crate::worker::run(
-        (note.to_string(), password.to_string(), cipher, atts.to_vec()),
+        (
+            note.to_string(),
+            Zeroizing::new(password.to_string()),
+            cipher,
+            atts.to_vec(),
+        ),
         progress,
         |(note_owned, password_owned, cipher_owned, atts_owned), mut report| async move {
             if atts_owned.is_empty() {

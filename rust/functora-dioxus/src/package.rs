@@ -7,6 +7,7 @@ use dioxus::prelude::Writable;
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
+use zeroize::Zeroizing;
 use zip::CompressionMethod;
 
 pub const METADATA_ENTRY: &str = "metadata.json";
@@ -194,12 +195,20 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    let password_owned = password.to_string();
+    let password_owned = Zeroizing::new(password.to_string());
     run(
         (entries, password_owned, cipher),
         progress,
         move |(entries_owned, password_clone, cipher_sel), mut report| async move {
-            package_report(entries_owned, &password_clone, cipher_sel, prefix, stages, &mut report).await
+            package_report(
+                entries_owned,
+                password_clone.as_str(),
+                cipher_sel,
+                prefix,
+                stages,
+                &mut report,
+            )
+            .await
         },
     )
     .await
@@ -285,11 +294,22 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    let password_owned = password.to_string();
+    let password_owned = Zeroizing::new(password.to_string());
     run(source, progress, move |source_owned, mut report| async move {
         let (meta, payload) = read_package(&source_owned)?;
         match meta.cipher {
-            Some(cipher) => unseal_report(&meta, payload, &password_owned, cipher, prefix, stages, &mut report).await,
+            Some(cipher) => {
+                unseal_report(
+                    &meta,
+                    payload,
+                    password_owned.as_str(),
+                    cipher,
+                    prefix,
+                    stages,
+                    &mut report,
+                )
+                .await
+            }
             None => Ok(payload),
         }
     })

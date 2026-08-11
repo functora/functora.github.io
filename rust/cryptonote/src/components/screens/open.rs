@@ -1,6 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::messages::*;
 use crate::*;
+use zeroize::Zeroizing;
 
 #[component]
 pub fn Open(note: Option<String>) -> Element {
@@ -48,8 +49,9 @@ pub fn Open(note: Option<String>) -> Element {
 
     let mut decrypt_note = move || {
         message.set(None);
-        let pwd = tst.password()();
-        if pwd.is_empty() {
+        let pwd = Zeroizing::new(tst.password()());
+        let pwd_required = pwd.is_empty();
+        if pwd_required {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
             return;
         }
@@ -79,7 +81,7 @@ pub fn Open(note: Option<String>) -> Element {
                                 Ok(text) => {
                                     tst.progress().set(None);
                                     tst.note().set(text);
-                                    tst.password().set(pwd);
+                                    tst.password().set(pwd.to_string());
                                     tst.cipher().set(Some(cipher));
                                     tst.external().set(External::Nothing);
                                     nav_out.write().push(Screen::View.to_route(None));

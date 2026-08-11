@@ -206,8 +206,14 @@ pub fn stream_decrypt_symmetric(data: &EncryptedNote, password: &str, aad: &[u8]
         .map(|chunks| chunks.into_iter().flatten().collect())
 }
 
+#[cfg(debug_assertions)]
 fn env_cost(name: &str, default: u32) -> u32 {
     std::env::var(name).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+}
+
+#[cfg(not(debug_assertions))]
+fn env_cost(_name: &str, default: u32) -> u32 {
+    default
 }
 
 fn kdf_params() -> Result<Params, Error> {

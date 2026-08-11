@@ -134,14 +134,10 @@ fn about_shows_derived_dock_buttons() {
 }
 
 #[test]
-fn about_shows_qr_version_and_derived_links() {
+fn about_shows_qr_and_derived_links() {
     let attrs = cryptonote::APP_ATTRS;
     let edits = mount("/?screen=about", "", vec![], None, None);
     assert!(edits.contains("<svg"), "qr not rendered: {edits}");
-    assert!(
-        edits.contains(&format!("Version {}", attrs.vsn)),
-        "version not rendered on about: {edits}"
-    );
     assert!(edits.contains(&attrs.beta_url()), "beta link not rendered: {edits}");
     assert!(
         edits.contains(&attrs.google_play_url()),
@@ -168,6 +164,7 @@ fn about_renders_generated_share_anchor() {
 
 #[test]
 fn layout_shows_brand_footer_and_version() {
+    let attrs = cryptonote::APP_ATTRS;
     let edits = mount("/?screen=home", "", vec![], None, None);
     assert!(edits.contains("Cryptonote"), "brand not rendered: {edits}");
     assert!(edits.contains("Functora"), "copyright owner not rendered: {edits}");
@@ -175,6 +172,11 @@ fn layout_shows_brand_footer_and_version() {
     assert!(
         edits.contains(functora_dioxus::FUNCTORA_DIOXUS_YEAR),
         "year not rendered: {edits}"
+    );
+    assert!(edits.contains("Version"), "version label not rendered: {edits}");
+    assert!(
+        edits.contains(&format!(" {}.", attrs.vsn)),
+        "version number not rendered: {edits}"
     );
 }
 

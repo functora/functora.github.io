@@ -74,7 +74,6 @@ where
         }
         section {
             p { dangerous_inner_html: "{rendered()}" }
-            p { "{Msg::VersionLabel.render(lang)} {attrs.vsn}" }
             Pre {
                 id: anchor_id,
                 code {

@@ -43,6 +43,11 @@ pub fn NoteDisplay() -> Element {
         });
     };
 
+    let mut open_file = move |i: usize| {
+        tst.attachment().set(Some(i));
+        nav.write().push(Screen::File.to_route(None));
+    };
+
     let share_note = move |_| {
         message.set(None);
         if let Some(msg) = share_error(tst.cipher()(), &tst.password()()) {
@@ -89,11 +94,7 @@ pub fn NoteDisplay() -> Element {
                         for (i, (f, p)) in atts.iter().zip(previews().iter()).enumerate() {
                             tr { key: "{f.name}",
                                 td {
-                                    a {
-                                        onclick: move |_| {
-                                            tst.attachment().set(Some(i));
-                                            nav.write().push(Screen::File.to_route(None));
-                                        },
+                                    a { onclick: move |_| open_file(i),
                                         "{f.name} ({format_size(f.data.len() as u64)})"
                                     }
                                 }
@@ -101,6 +102,7 @@ pub fn NoteDisplay() -> Element {
                                     AttachmentPreview {
                                         name: f.name.clone(),
                                         preview: p.clone(),
+                                        onclick: move |_| open_file(i),
                                     }
                                 }
                                 td { "txt": "r",

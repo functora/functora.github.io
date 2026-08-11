@@ -89,77 +89,77 @@ where
             if let Some(qr_image) = qr() {
                 div { id: anchor_id, dangerous_inner_html: "{qr_image}" }
             }
-        }
-        Dock {
-            nav: nav.clone(),
-            message: Some(message),
-            lang,
-            Button {
-                icon: Some(FaCopy),
-                primary: true,
-                onclick: move |_| {
-                    write_clipboard(copy_text.clone(), message, Msg::Copied, |e| {
-                        Msg::ClipboardWriteError(e.to_string())
-                    });
-                },
-                i18n: Some(Msg::CopyAppLink),
-                lang,
-            }
-            Button {
-                icon: Some(FaShareNodes),
-                primary: true,
-                onclick: move |_| {
-                    let mut msg = message;
-                    let title = derived_app_name.clone();
-                    let text = share_text_owned.clone();
-                    let url = share_url_owned.clone();
-                    let _ = spawn(async move {
-                        let data = ShareData { title, text, url };
-                        match web_share(data).await {
-                            Ok(()) => msg.set(Some(Msg::Sent)),
-                            Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
-                        }
-                    });
-                },
-                i18n: Some(Msg::ShareAppLink),
-                lang,
-            }
-            ExtLink {
-                href: derived_beta_url,
-                button: true,
-                Icon { icon: FaGoogle }
-                "{Msg::JoinTestingButton.render(lang)}"
-            }
-            ExtLink {
-                href: derived_google_play_url,
-                button: true,
-                Icon { icon: FaGooglePlay }
-                "{Msg::GooglePlayButton.render(lang)}"
-            }
-            ExtLink {
-                href: derived_apk_url,
-                button: true,
-                Icon { icon: FaAndroid }
-                "{Msg::DownloadApkButton.render(lang)}"
-            }
-            ExtLink {
-                href: source_url,
-                button: true,
-                Icon { icon: FaGithub }
-                "{Msg::SourceCodeButton.render(lang)}"
-            }
-            ExtLink {
-                href: author_url,
-                button: true,
-                Icon { icon: FaUser }
-                "{Msg::AuthorButton.render(lang)}"
-            }
-            NavLink {
+            Dock {
                 nav: nav.clone(),
-                href: donate.to_string(),
-                button: true,
-                Icon { icon: FaHeart }
-                "{Msg::Donate.render(lang)}"
+                message: Some(message),
+                lang,
+                Button {
+                    icon: Some(FaCopy),
+                    primary: true,
+                    onclick: move |_| {
+                        write_clipboard(copy_text.clone(), message, Msg::Copied, |e| {
+                            Msg::ClipboardWriteError(e.to_string())
+                        });
+                    },
+                    i18n: Some(Msg::CopyAppLink),
+                    lang,
+                }
+                Button {
+                    icon: Some(FaShareNodes),
+                    primary: true,
+                    onclick: move |_| {
+                        let mut msg = message;
+                        let title = derived_app_name.clone();
+                        let text = share_text_owned.clone();
+                        let url = share_url_owned.clone();
+                        let _ = spawn(async move {
+                            let data = ShareData { title, text, url };
+                            match web_share(data).await {
+                                Ok(()) => msg.set(Some(Msg::Sent)),
+                                Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
+                            }
+                        });
+                    },
+                    i18n: Some(Msg::ShareAppLink),
+                    lang,
+                }
+                ExtLink {
+                    href: derived_beta_url,
+                    button: true,
+                    Icon { icon: FaGoogle }
+                    "{Msg::JoinTestingButton.render(lang)}"
+                }
+                ExtLink {
+                    href: derived_google_play_url,
+                    button: true,
+                    Icon { icon: FaGooglePlay }
+                    "{Msg::GooglePlayButton.render(lang)}"
+                }
+                ExtLink {
+                    href: derived_apk_url,
+                    button: true,
+                    Icon { icon: FaAndroid }
+                    "{Msg::DownloadApkButton.render(lang)}"
+                }
+                ExtLink {
+                    href: source_url,
+                    button: true,
+                    Icon { icon: FaGithub }
+                    "{Msg::SourceCodeButton.render(lang)}"
+                }
+                ExtLink {
+                    href: author_url,
+                    button: true,
+                    Icon { icon: FaUser }
+                    "{Msg::AuthorButton.render(lang)}"
+                }
+                NavLink {
+                    nav: nav.clone(),
+                    href: donate.to_string(),
+                    button: true,
+                    Icon { icon: FaHeart }
+                    "{Msg::Donate.render(lang)}"
+                }
             }
         }
     }

@@ -28,7 +28,11 @@ pub fn AttachmentUploader(
                             }
                         }
                         td {
-                            AttachmentPreview { name: att.name.clone(), preview: prev.clone() }
+                            AttachmentPreview {
+                                name: att.name.clone(),
+                                preview: prev.clone(),
+                                onclick: move |_| on_open.call(i),
+                            }
                         }
                         td { "txt": "r",
                             button {

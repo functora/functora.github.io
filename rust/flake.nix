@@ -378,11 +378,22 @@
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
+                  verify_crate() {
+                    local crate="$1"
+                    shift
+                    ${cargo}/bin/cargo fmt "$@" \
+                      && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
+                      && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
+                      && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
+                      && if [ "$crate" = "cryptonote" ]; then
+                           for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
+                             ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
+                               && echo "==> $crate [$T]: mobile clippy: All good!"
+                           done
+                         fi
+                  }
                   if [ -f Cargo.toml ]; then
-                    ${cargo}/bin/cargo fmt "$@" && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
-                      && ${cargo}/bin/cargo clippy --all-features "$@" -- -D warnings \
-                      && ${cargo}/bin/cargo test --all-features "$@" \
-                      && echo "==> All good!"
+                    verify_crate "$(basename "$PWD")" "$@" && echo "==> All good!"
                   else
                     FOUND=0
                     for P in */; do
@@ -391,11 +402,7 @@
                       FOUND=1
                       (
                         cd "$P"
-                        ${cargo}/bin/cargo fmt "$@" \
-                          && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
-                          && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
-                          && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                          && echo "==> $P: All good!"
+                        verify_crate "$P" "$@" && echo "==> $P: All good!"
                       ) || {
                         echo "==> $P: FAILED"
                         exit 1

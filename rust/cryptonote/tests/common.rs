@@ -18,15 +18,22 @@ pub fn with_runtime<R>(body: impl FnOnce() -> R) -> R {
     dom.in_runtime(body)
 }
 
+#[must_use]
 pub fn progress() -> Signal<Option<Job>> {
     fast_kdf();
     Signal::new_in_scope(None, ScopeId(0))
 }
 
+/// Runs the future to completion on a current-thread tokio runtime.
+///
+/// # Panics
+///
+/// Panics if the tokio runtime cannot be built.
+#[must_use]
 pub fn block_on<R>(fut: impl std::future::Future<Output = R>) -> R {
     fast_kdf();
-    tokio::runtime::Builder::new_current_thread()
-        .build()
-        .expect("tokio runtime")
-        .block_on(fut)
+    match tokio::runtime::Builder::new_current_thread().build() {
+        Ok(runtime) => runtime.block_on(fut),
+        Err(e) => panic!("tokio runtime build failed: {e}"),
+    }
 }

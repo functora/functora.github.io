@@ -1,7 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::messages::Msg;
 use crate::*;
-use functora_dioxus::files::preview;
+use functora_dioxus::files::preview_cached;
 
 #[component]
 pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element {
@@ -9,7 +9,7 @@ pub fn AttachmentUploader(tst: Store<TemporaryState>, lang: Language) -> Element
     let previews = use_memo(move || {
         tst.attachments()()
             .iter()
-            .map(|a| preview(&a.name, &a.data))
+            .map(|a| preview_cached(&a.name, &a.data))
             .collect::<Vec<_>>()
     });
     rsx! {

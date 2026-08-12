@@ -7,6 +7,12 @@ use dioxus::prelude::Writable;
 use serde::Deserialize;
 #[cfg(not(target_os = "android"))]
 use serde::Serialize;
+use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::sync::{LazyLock, Mutex};
+
+static PREVIEW_MEMO: LazyLock<Mutex<HashMap<(String, u64), Preview>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Attachment {
@@ -112,6 +118,25 @@ pub fn preview(name: &str, data: &[u8]) -> Preview {
         },
         _ => Preview::Download,
     }
+}
+
+#[must_use]
+pub fn preview_cached(name: &str, data: &[u8]) -> Preview {
+    let key = (name.to_string(), preview_key(data));
+    if let Some(preview) = PREVIEW_MEMO.lock().ok().and_then(|guard| guard.get(&key).cloned()) {
+        return preview;
+    }
+    let preview = preview(name, data);
+    if let Ok(mut guard) = PREVIEW_MEMO.lock() {
+        _ = guard.insert(key, preview.clone());
+    }
+    preview
+}
+
+fn preview_key(data: &[u8]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    data.hash(&mut hasher);
+    hasher.finish()
 }
 
 #[must_use]
@@ -288,6 +313,16 @@ enum ThumbnailReply {
 
 #[cfg(not(target_os = "android"))]
 pub async fn video_thumbnail(url: &str) -> Option<String> {
+    let src = match crate::thumbnail::cached_thumbnail(url) {
+        Some(src) => src,
+        None => video_thumbnail_eval(url).await,
+    };
+    crate::thumbnail::cache_thumbnail(url, src.clone());
+    src
+}
+
+#[cfg(not(target_os = "android"))]
+async fn video_thumbnail_eval(url: &str) -> Option<String> {
     use base64::engine::general_purpose::STANDARD as BASE64;
     const SEND_CHUNK: usize = 2 * 1024 * 1024;
     let (prefix, payload) = url.split_once(',').unwrap_or(("", ""));
@@ -341,6 +376,16 @@ pub async fn video_thumbnail(url: &str) -> Option<String> {
 
 #[cfg(target_os = "android")]
 pub async fn video_thumbnail(url: &str) -> Option<String> {
+    let src = match crate::thumbnail::cached_thumbnail(url) {
+        Some(src) => src,
+        None => video_thumbnail_android(url).await,
+    };
+    crate::thumbnail::cache_thumbnail(url, src.clone());
+    src
+}
+
+#[cfg(target_os = "android")]
+async fn video_thumbnail_android(url: &str) -> Option<String> {
     use base64::engine::general_purpose::STANDARD as BASE64;
     let (prefix, payload) = url.split_once(',').unwrap_or(("", ""));
     if !prefix.starts_with("data:") {
@@ -354,13 +399,11 @@ pub async fn video_thumbnail(url: &str) -> Option<String> {
             return None;
         }
     };
-    match crate::thumbnail::video_thumbnail(&bytes) {
-        Some(jpeg) => Some(crate::thumbnail::jpeg_data_url(jpeg)),
-        None => {
-            tracing::warn!("Video preview extraction produced no frame");
-            None
-        }
+    let src = crate::thumbnail::video_thumbnail(&bytes).map(crate::thumbnail::jpeg_data_url);
+    if src.is_none() {
+        tracing::warn!("Video preview extraction produced no frame");
     }
+    src
 }
 
 #[cfg(not(target_os = "android"))]

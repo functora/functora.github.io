@@ -14,7 +14,7 @@ pub fn NoteDisplay() -> Element {
     let previews = use_memo(move || {
         tst.attachments()()
             .iter()
-            .map(|a| functora_dioxus::files::preview(&a.name, &a.data))
+            .map(|a| functora_dioxus::files::preview_cached(&a.name, &a.data))
             .collect::<Vec<_>>()
     });
 

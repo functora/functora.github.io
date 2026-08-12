@@ -1,5 +1,5 @@
 use functora_dioxus::files::{
-    Attachment, Preview, format_size, is_text, mime_for, pick_script, preview, video_thumbnail_script,
+    Attachment, Preview, format_size, is_text, mime_for, pick_script, preview, preview_cached, video_thumbnail_script,
 };
 
 #[test]
@@ -95,4 +95,26 @@ fn preview_unknown_and_binary() {
 #[test]
 fn preview_data_uri_is_base64() {
     assert!(matches!(preview("a.png", b"png"), Preview::Image(url) if url.starts_with("data:image/png;base64,")));
+}
+
+#[test]
+fn preview_cached_matches_preview() {
+    let data = b"video-content";
+    assert_eq!(preview("a.mp4", data), preview_cached("a.mp4", data));
+}
+
+#[test]
+fn preview_cached_memoizes_same_attachment() {
+    let data = b"video-content";
+    assert_eq!(preview_cached("a.mp4", data), preview_cached("a.mp4", data));
+    assert_eq!(preview_cached("a.mp4", data), preview_cached("a.mp4", b"video-content"));
+}
+
+#[test]
+fn preview_cached_distinguishes_attachments() {
+    let first = preview_cached("a.mp4", b"first-video");
+    let second = preview_cached("a.mp4", b"second-video");
+    assert_ne!(first, second);
+    assert_eq!(preview_cached("b.mp4", b"first-video"), first);
+    assert_ne!(preview_cached("a.png", b"first-video"), first);
 }

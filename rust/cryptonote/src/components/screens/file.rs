@@ -11,7 +11,7 @@ pub fn File() -> Element {
         tst.attachment()()
             .and_then(|i| tst.attachments()().get(i).cloned())
             .map_or(functora_dioxus::files::Preview::Missing, |att| {
-                functora_dioxus::files::preview(&att.name, &att.data)
+                functora_dioxus::files::preview_cached(&att.name, &att.data)
             })
     });
     let atts = tst.attachments()();

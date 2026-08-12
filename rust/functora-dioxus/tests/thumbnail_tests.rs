@@ -1,3 +1,5 @@
+use functora_dioxus::thumbnail::cache_thumbnail;
+use functora_dioxus::thumbnail::cached_thumbnail;
 use functora_dioxus::thumbnail::jpeg_data_url;
 #[cfg(not(target_arch = "wasm32"))]
 use functora_dioxus::thumbnail::video_thumbnail;
@@ -46,4 +48,33 @@ fn video_thumbnail_is_deterministic() {
 fn jpeg_data_url_has_image_mime() {
     let url = jpeg_data_url(vec![0xFF, 0xD8, 0xFF]);
     assert!(url.starts_with("data:image/jpeg;base64,"));
+}
+
+#[test]
+fn thumbnail_cache_memoizes_results() {
+    let url = "data:video/mp4;base64,QUFBQQ";
+    assert_eq!(cached_thumbnail(url), None);
+    let src = "data:image/jpeg;base64,QkJC";
+    cache_thumbnail(url, Some(src.to_string()));
+    assert_eq!(cached_thumbnail(url), Some(Some(src.to_string())));
+}
+
+#[test]
+fn thumbnail_cache_remembers_failures() {
+    let url = "data:video/mp4;base64,Q0ND";
+    assert_eq!(cached_thumbnail(url), None);
+    cache_thumbnail(url, None);
+    assert_eq!(cached_thumbnail(url), Some(None));
+}
+
+#[test]
+fn thumbnail_cache_distinguishes_urls() {
+    let first = "data:video/mp4;base64,QUFB";
+    let second = "data:video/mp4;base64,QkJC";
+    cache_thumbnail(first, Some("data:image/jpeg;base64,WA==".to_string()));
+    assert_eq!(cached_thumbnail(second), None);
+    assert_eq!(
+        cached_thumbnail(first),
+        Some(Some("data:image/jpeg;base64,WA==".to_string()))
+    );
 }

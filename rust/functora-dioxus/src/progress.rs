@@ -83,7 +83,7 @@ pub async fn yield_to_paint() {
     #[cfg(target_arch = "wasm32")]
     {
         let mut eval = dioxus::document::eval("await new Promise(r => setTimeout(r, 1)); dioxus.send('tick')");
-        let _ = eval.recv::<String>().await;
+        _ = eval.recv::<String>().await;
     }
     #[cfg(not(target_arch = "wasm32"))]
     {

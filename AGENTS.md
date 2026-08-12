@@ -1,3 +1,7 @@
+## Git
+
+- **NEVER commit, amend, push, or create pull requests.** The user reviews all changes and commits them manually. Leave the working tree dirty for review.
+
 ## Coding Guidelines
 
 ### Project Understanding

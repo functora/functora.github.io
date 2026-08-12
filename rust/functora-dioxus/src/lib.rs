@@ -20,6 +20,8 @@ pub mod screens;
 pub mod state;
 pub mod storage;
 pub mod thumbnail;
+#[cfg(not(target_os = "android"))]
+pub mod web;
 pub mod white_label;
 pub mod widgets;
 pub mod worker;

@@ -1,14 +1,16 @@
 mod clipboard;
 mod deep_link;
+mod dir;
 mod dispatch;
-mod files_dir;
 mod media_store;
 mod print;
 mod share;
+mod video;
 
 pub use clipboard::clipboard_write;
 pub use clipboard::read_clipboard;
-pub use files_dir::get_files_dir;
+pub use dir::get_files_dir as files_dir;
 pub use media_store::save_to_downloads;
 pub use print::print_page;
-pub use share::web_share;
+pub use share::social_share;
+pub(crate) use video::extract;

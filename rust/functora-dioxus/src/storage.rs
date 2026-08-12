@@ -1,10 +1,94 @@
-pub mod mobile;
-
+use crate::error::Error;
 use dioxus::core::Subscribers;
 use dioxus::prelude::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde_json::Value;
+use serde_json::from_str;
+use serde_json::from_value;
+use serde_json::to_string_pretty;
+use serde_json::to_value;
+use std::fs::{OpenOptions, read_to_string, write};
 use std::ops::Deref;
+use std::path::Path;
+
+#[cfg(target_os = "android")]
+pub use crate::android::files_dir;
+
+#[cfg(not(target_os = "android"))]
+pub fn files_dir() -> Result<std::path::PathBuf, Error> {
+    Ok(std::env::current_dir()?)
+}
+
+fn ensure_file(p: &Path) -> Result<(), Error> {
+    let empty = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(p)?
+        .metadata()?
+        .len()
+        == 0;
+    if empty { Ok(write(p, b"{}")?) } else { Ok(()) }
+}
+
+pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
+    let p = path.as_ref();
+    ensure_file(p)?;
+    let content = read_to_string(p)?;
+    let mut json: Value = from_str(&content)?;
+    let Some(obj) = json.as_object_mut() else {
+        return Err(Error::NotJsonObject(json));
+    };
+    _ = obj.insert(key.to_string(), to_value(val)?);
+    let s = to_string_pretty(&json)?;
+    Ok(write(p, s)?)
+}
+
+pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize, F: FnOnce() -> T>(
+    path: P,
+    key: &str,
+    init: F,
+) -> Result<T, Error> {
+    let p = path.as_ref();
+    let content = read_to_string(p)?;
+    let json: Value = from_str(&content)?;
+    if let Some(val) = json.get(key) {
+        Ok(from_value(val.clone())?)
+    } else {
+        let val = init();
+        update_key(p, key, &val)?;
+        Ok(val)
+    }
+}
+
+pub fn read_json_object<P: AsRef<Path>>(path: P) -> Result<Value, Error> {
+    Ok(from_str(&read_to_string(path)?)?)
+}
+
+pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Error> {
+    let s = to_string_pretty(&json)?;
+    Ok(write(path, s)?)
+}
+
+pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
+    let json = read_json_object(path)?;
+    match json.as_object() {
+        Some(obj) => Ok(obj.get(key).cloned()),
+        None => Err(Error::NotJsonObject(json)),
+    }
+}
+
+pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
+    let mut json = read_json_object(&path)?;
+    let value = to_value(val)?;
+    let Some(obj) = json.as_object_mut() else {
+        return Err(Error::NotJsonObject(json));
+    };
+    _ = obj.insert(key.to_string(), value);
+    write_json_object(path, &json)
+}
 
 pub struct PersistentSignal<T: 'static> {
     store: Store<T>,
@@ -86,8 +170,8 @@ pub fn load_state<T: DeserializeOwned>(key: &str) -> Option<T> {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        mobile::files_dir().ok().and_then(|p| {
-            let json = mobile::read_json_object(p.join("storage.json")).ok()?;
+        files_dir().ok().and_then(|p| {
+            let json = read_json_object(p.join("storage.json")).ok()?;
             let value = json.get(key)?;
             serde_json::from_value(value.clone()).ok()
         })
@@ -107,8 +191,8 @@ pub fn persist_value<T: Serialize>(key: &str, value: &T) {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if let Ok(path) = mobile::files_dir().map(|p| p.join("storage.json"))
-            && let Err(e) = mobile::update_key(&path, key, value)
+        if let Ok(path) = files_dir().map(|p| p.join("storage.json"))
+            && let Err(e) = update_key(&path, key, value)
         {
             tracing::error!("Storage persist error: {}", e);
         }

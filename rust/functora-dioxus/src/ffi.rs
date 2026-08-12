@@ -44,32 +44,11 @@ pub async fn set_theme(theme: &Theme) -> Result<(), Error> {
     )
     .await
 }
-
-#[cfg(not(target_os = "android"))]
-pub async fn read_clipboard() -> Result<String, Error> {
-    eval(
-        (),
-        r"function(arg){
-        return await window.navigator.clipboard.readText();
-        }",
-    )
-    .await
-}
-
-#[cfg(not(target_os = "android"))]
-pub async fn clipboard_write(msg: String) -> Result<(), Error> {
-    eval(
-        msg,
-        r"function(arg){
-        await window.navigator.clipboard.writeText(arg);
-        return null;
-        }",
-    )
-    .await
-}
-
 #[cfg(target_os = "android")]
-pub use crate::android::{clipboard_write, print_page, read_clipboard, web_share};
+pub use crate::android::{clipboard_write, print_page, read_clipboard, social_share};
+
+#[cfg(not(target_os = "android"))]
+pub use crate::web::{clipboard_write, print_page, read_clipboard, social_share};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrameData {
@@ -159,33 +138,6 @@ pub struct ShareData {
     pub url: String,
 }
 
-#[cfg(not(target_os = "android"))]
-pub async fn web_share(data: ShareData) -> Result<(), Error> {
-    eval(
-        data,
-        r"function(arg){
-        return navigator.share({
-            title: arg.title,
-            text: arg.text,
-            url: arg.url
-        });
-        }",
-    )
-    .await
-}
-
-#[cfg(not(target_os = "android"))]
-pub async fn print_page() -> Result<(), Error> {
-    eval(
-        (),
-        r"function(arg){
-        window.print();
-        return null;
-        }",
-    )
-    .await
-}
-
 pub async fn sleep(millis: u64) -> Result<(), Error> {
     eval(
         millis,
@@ -210,7 +162,7 @@ pub fn write_clipboard<S: I18N + 'static>(
     });
 }
 
-async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
+pub(crate) async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned + 'static>(
     arg: A,
     fun: &'static str,
 ) -> Result<B, Error> {

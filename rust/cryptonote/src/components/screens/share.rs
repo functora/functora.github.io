@@ -63,7 +63,7 @@ pub fn Share() -> Element {
                                         text,
                                         url: u,
                                     };
-                                    match web_share(data).await {
+                                    match social_share(data).await {
                                         Ok(()) => msg.set(Some(Msg::Sent)),
                                         Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
                                     }

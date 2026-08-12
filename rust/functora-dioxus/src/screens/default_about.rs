@@ -1,6 +1,6 @@
 #![allow(clippy::shadow_reuse)]
 use crate::encoding::generate_qr_code;
-use crate::ffi::{ShareData, web_share};
+use crate::ffi::{ShareData, social_share};
 use crate::hooks::{use_lang, use_message, use_message_markdown};
 use crate::i18n::I18N;
 use crate::messages::Msg;
@@ -114,7 +114,7 @@ where
                         let url = share_url_owned.clone();
                         let _ = spawn(async move {
                             let data = ShareData { title, text, url };
-                            match web_share(data).await {
+                            match social_share(data).await {
                                 Ok(()) => msg.set(Some(Msg::Sent)),
                                 Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
                             }

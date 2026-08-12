@@ -2,7 +2,7 @@ use crate::android::dispatch::jni_dispatch;
 use crate::error::Error;
 use crate::ffi::ShareData;
 
-pub async fn web_share(data: ShareData) -> Result<(), Error> {
+pub async fn social_share(data: ShareData) -> Result<(), Error> {
     jni_dispatch(move |env, activity| {
         let intent_class = env.find_class("android/content/Intent")?;
         let action_send = env

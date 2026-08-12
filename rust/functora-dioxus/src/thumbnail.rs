@@ -128,28 +128,11 @@ static MEMO: LazyLock<Mutex<HashMap<u64, Option<String>>>> = LazyLock::new(|| Mu
 #[must_use]
 pub fn cached_thumbnail(url: &str) -> Option<Option<String>> {
     let key = thumbnail_key(url);
-    if let Some(src) = MEMO.lock().ok().and_then(|guard| guard.get(&key).cloned()) {
-        return Some(src);
-    }
-    #[cfg(target_os = "android")]
-    {
-        if let Some(src) = disk_thumbnail(key) {
-            remember(key, Some(src.clone()));
-            return Some(Some(src));
-        }
-    }
-    None
+    MEMO.lock().ok().and_then(|guard| guard.get(&key).cloned())
 }
 
 pub fn cache_thumbnail(url: &str, src: Option<String>) {
-    let key = thumbnail_key(url);
-    #[cfg(target_os = "android")]
-    if let Some(jpeg) = src.as_deref().and_then(jpeg_bytes) {
-        if let Err(e) = store_disk_thumbnail(key, &jpeg) {
-            tracing::warn!("Thumbnail disk cache write failed: {e}");
-        }
-    }
-    remember(key, src);
+    remember(thumbnail_key(url), src);
 }
 
 fn thumbnail_key(url: &str) -> u64 {
@@ -162,42 +145,6 @@ fn remember(key: u64, src: Option<String>) {
     if let Ok(mut guard) = MEMO.lock() {
         _ = guard.insert(key, src);
     }
-}
-
-#[cfg(target_os = "android")]
-fn disk_thumbnail(key: u64) -> Option<String> {
-    use std::fs::read;
-    let jpeg = read(thumbnail_path(key)?).ok()?;
-    Some(jpeg_data_url(jpeg))
-}
-
-#[cfg(target_os = "android")]
-fn thumbnail_path(key: u64) -> Option<std::path::PathBuf> {
-    crate::android::get_files_dir()
-        .ok()
-        .map(|dir| dir.join("thumbnails").join(format!("{key:016x}.jpg")))
-}
-
-#[cfg(target_os = "android")]
-fn store_disk_thumbnail(key: u64, jpeg: &[u8]) -> std::io::Result<()> {
-    use std::fs::{create_dir_all, write};
-    let dir = crate::android::get_files_dir()
-        .ok()
-        .map(|d| d.join("thumbnails"))
-        .ok_or_else(|| std::io::Error::other("thumbnail cache directory unavailable"))?;
-    create_dir_all(&dir)?;
-    write(dir.join(format!("{key:016x}.jpg")), jpeg)
-}
-
-#[cfg(target_os = "android")]
-fn jpeg_bytes(src: &str) -> Option<Vec<u8>> {
-    use base64::Engine;
-    use base64::engine::general_purpose::STANDARD as BASE64;
-    let (prefix, payload) = src.split_once(',').unwrap_or(("", ""));
-    if prefix != "data:image/jpeg;base64" {
-        return None;
-    }
-    BASE64.decode(payload).ok()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

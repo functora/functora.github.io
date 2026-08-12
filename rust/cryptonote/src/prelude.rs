@@ -13,7 +13,7 @@ pub use std::str::FromStr;
 pub use std::sync::Arc;
 pub use thiserror::Error;
 
-pub use functora_dioxus::ffi::{print_page, web_share, ShareData, Theme};
+pub use functora_dioxus::ffi::{print_page, social_share, ShareData, Theme};
 pub use functora_dioxus::storage::PersistentSignal;
 pub use functora_dioxus::widgets::JobProgressBar;
 pub use functora_dioxus::Msg as BaseMsg;

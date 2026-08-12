@@ -1,6 +1,6 @@
 use functora_dioxus::Error;
-use functora_dioxus::storage::mobile::{
-    find_or_init_key, get_json_value, read_json_object, set_json_value, update_key,
+use functora_dioxus::storage::{
+    files_dir, find_or_init_key, get_json_value, read_json_object, set_json_value, update_key,
 };
 use std::fmt::Debug;
 use std::fs::{read_to_string, write};
@@ -189,10 +189,10 @@ fn set_json_value_preserves_other_keys() {
 }
 
 #[test]
-fn test_files_dir_not_fails_on_non_android_ios() {
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn test_files_dir_not_fails_on_non_android() {
+    #[cfg(not(target_os = "android"))]
     {
-        let result = functora_dioxus::storage::mobile::files_dir();
+        let result = files_dir();
         assert!(result.is_ok());
         let path = ok(result);
         assert!(path.exists());

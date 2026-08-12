@@ -1,4 +1,6 @@
-use functora_dioxus::files::{Attachment, Preview, format_size, is_text, mime_for, pick_script, preview};
+use functora_dioxus::files::{
+    Attachment, Preview, format_size, is_text, mime_for, pick_script, preview, video_thumbnail_script,
+};
 
 #[test]
 fn attachment_defaults() {
@@ -57,6 +59,16 @@ fn pick_script_single_and_multiple() {
     assert!(multiple.contains("input.multiple = true"));
     assert!(multiple.contains("2 * 1024 * 1024"));
     assert!(multiple.contains("dioxus.send"));
+}
+
+#[test]
+fn video_thumbnail_script_extracts_first_frame() {
+    let script = video_thumbnail_script();
+    assert!(script.contains("dioxus.recv"));
+    assert!(script.contains("dioxus.send"));
+    assert!(script.contains("URL.createObjectURL"));
+    assert!(script.contains("canvas.getContext('2d').drawImage"));
+    assert!(script.contains("canvas.toDataURL('image/jpeg', 0.7)"));
 }
 
 #[test]

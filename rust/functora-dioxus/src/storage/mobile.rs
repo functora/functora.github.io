@@ -1,6 +1,4 @@
 use crate::error::Error;
-#[cfg(target_os = "android")]
-use crate::ffi::jni_dispatch;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, from_str, from_value, to_string_pretty, to_value};
@@ -9,16 +7,7 @@ use std::path::Path;
 
 #[cfg(target_os = "android")]
 pub fn files_dir() -> Result<std::path::PathBuf, Error> {
-    use jni::objects::JString;
-    jni_dispatch(|env, activity| {
-        env.call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
-            .and_then(|v| v.l())
-            .and_then(|f| env.call_method(f, "getAbsolutePath", "()Ljava/lang/String;", &[]))
-            .and_then(|v| v.l())
-            .map(JString::from)
-            .and_then(|s| env.get_string(&s).map(String::from))
-            .map(std::path::PathBuf::from)
-    })
+    crate::android::get_files_dir()
 }
 
 #[cfg(target_os = "ios")]

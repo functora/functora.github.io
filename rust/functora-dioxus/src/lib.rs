@@ -1,3 +1,5 @@
+#[cfg(target_os = "android")]
+pub mod android;
 pub mod app;
 pub mod crypto;
 pub mod deep_link;
@@ -17,6 +19,7 @@ pub mod qr;
 pub mod screens;
 pub mod state;
 pub mod storage;
+pub mod thumbnail;
 pub mod white_label;
 pub mod widgets;
 pub mod worker;

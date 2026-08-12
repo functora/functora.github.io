@@ -30,15 +30,3 @@ pub fn take_url() -> Option<String> {
 pub fn url_to_route(url: &str) -> Option<String> {
     url.split('?').nth(1).map(|query| format!("/?{query}"))
 }
-
-#[cfg(target_os = "android")]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_dioxus_main_MainActivity_handleDeepLink<'local>(
-    mut env: jni::JNIEnv<'local>,
-    _class: jni::objects::JClass<'local>,
-    url: jni::objects::JString<'local>,
-) {
-    if let Ok(s) = env.get_string(&url) {
-        store_url(s.into());
-    }
-}

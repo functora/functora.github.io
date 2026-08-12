@@ -56,56 +56,6 @@ pub async fn read_clipboard() -> Result<String, Error> {
     .await
 }
 
-#[cfg(target_os = "android")]
-pub(crate) fn jni_dispatch<T: Send + 'static>(
-    f: impl FnOnce(&mut jni::JNIEnv, &jni::objects::JObject) -> Result<T, jni::errors::Error> + Send + 'static,
-) -> Result<T, Error> {
-    use std::sync::mpsc::channel;
-    let (tx, rx) = channel();
-    dioxus::mobile::wry::prelude::dispatch(move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, _| {
-        _ = tx.send(f(env, activity).map_err(Error::from));
-    });
-    rx.recv()?
-}
-
-#[cfg(target_os = "android")]
-pub async fn read_clipboard() -> Result<String, Error> {
-    jni_dispatch(|env, activity| {
-        use jni::objects::JString;
-        let svc_name: JString = env.new_string("clipboard")?;
-        let clipboard_svc = env
-            .call_method(
-                activity,
-                "getSystemService",
-                "(Ljava/lang/String;)Ljava/lang/Object;",
-                &[(&svc_name).into()],
-            )?
-            .l()?;
-        let clipboard = env.new_global_ref(clipboard_svc)?;
-        let clip = env
-            .call_method(
-                clipboard.as_obj(),
-                "getPrimaryClip",
-                "()Landroid/content/ClipData;",
-                &[],
-            )?
-            .l()?;
-        let item = env
-            .call_method(
-                &clip,
-                "getItemAt",
-                "(I)Landroid/content/ClipData$Item;",
-                &[jni::objects::JValue::Int(0)],
-            )?
-            .l()?;
-        let text_obj = env
-            .call_method(&item, "getText", "()Ljava/lang/CharSequence;", &[])?
-            .l()?;
-        let s = JString::from(text_obj);
-        Ok(env.get_string(&s).map(String::from)?)
-    })
-}
-
 #[cfg(not(target_os = "android"))]
 pub async fn clipboard_write(msg: String) -> Result<(), Error> {
     eval(
@@ -119,38 +69,7 @@ pub async fn clipboard_write(msg: String) -> Result<(), Error> {
 }
 
 #[cfg(target_os = "android")]
-pub async fn clipboard_write(msg: String) -> Result<(), Error> {
-    jni_dispatch(move |env, activity| {
-        use jni::objects::JString;
-        let label: JString = env.new_string("Cryptonote")?;
-        let text: JString = env.new_string(&msg)?;
-        let svc_name: JString = env.new_string("clipboard")?;
-        let clipboard_svc = env
-            .call_method(
-                activity,
-                "getSystemService",
-                "(Ljava/lang/String;)Ljava/lang/Object;",
-                &[(&svc_name).into()],
-            )?
-            .l()?;
-        let clipboard = env.new_global_ref(clipboard_svc)?;
-        let clip_data = env
-            .call_static_method(
-                "android/content/ClipData",
-                "newPlainText",
-                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Landroid/content/ClipData;",
-                &[(&label).into(), (&text).into()],
-            )?
-            .l()?;
-        let _ = env.call_method(
-            clipboard.as_obj(),
-            "setPrimaryClip",
-            "(Landroid/content/ClipData;)V",
-            &[(&clip_data).into()],
-        )?;
-        Ok(())
-    })
-}
+pub use crate::android::{clipboard_write, print_page, read_clipboard, web_share};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrameData {
@@ -255,69 +174,6 @@ pub async fn web_share(data: ShareData) -> Result<(), Error> {
     .await
 }
 
-#[cfg(target_os = "android")]
-pub async fn web_share(data: ShareData) -> Result<(), Error> {
-    jni_dispatch(move |env, activity| {
-        let intent_class = env.find_class("android/content/Intent")?;
-        let action_send = env
-            .get_static_field(&intent_class, "ACTION_SEND", "Ljava/lang/String;")?
-            .l()?;
-        let intent = env.new_object(&intent_class, "(Ljava/lang/String;)V", &[(&action_send).into()])?;
-        let intent = env.new_global_ref(intent)?;
-        let text_type = env.new_string("text/plain")?;
-        let _ = env.call_method(
-            intent.as_obj(),
-            "setType",
-            "(Ljava/lang/String;)Landroid/content/Intent;",
-            &[(&text_type).into()],
-        )?;
-        let extra_text = env
-            .get_static_field(&intent_class, "EXTRA_TEXT", "Ljava/lang/String;")?
-            .l()?;
-        let share_text = env.new_string(format!("{}\n{}", data.text, data.url))?;
-        let _ = env.call_method(
-            intent.as_obj(),
-            "putExtra",
-            "(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;",
-            &[(&extra_text).into(), (&share_text).into()],
-        )?;
-        let extra_subject = env
-            .get_static_field(&intent_class, "EXTRA_SUBJECT", "Ljava/lang/String;")?
-            .l()?;
-        let title = env.new_string(&data.title)?;
-        let _ = env.call_method(
-            intent.as_obj(),
-            "putExtra",
-            "(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;",
-            &[(&extra_subject).into(), (&title).into()],
-        )?;
-        let chooser_title = env.new_string("Share via")?;
-        let chooser = env.call_static_method(
-            "android/content/Intent",
-            "createChooser",
-            "(Landroid/content/Intent;Ljava/lang/CharSequence;)Landroid/content/Intent;",
-            &[(&intent.as_obj()).into(), (&chooser_title).into()],
-        )?;
-        let chooser = chooser.l()?;
-        let flags = env
-            .get_static_field(&intent_class, "FLAG_ACTIVITY_NEW_TASK", "I")?
-            .i()?;
-        let _ = env.call_method(
-            intent.as_obj(),
-            "setFlags",
-            "(I)Landroid/content/Intent;",
-            &[jni::objects::JValue::Int(flags)],
-        )?;
-        let _ = env.call_method(
-            activity,
-            "startActivity",
-            "(Landroid/content/Intent;)V",
-            &[(&chooser).into()],
-        )?;
-        Ok(())
-    })
-}
-
 #[cfg(not(target_os = "android"))]
 pub async fn print_page() -> Result<(), Error> {
     eval(
@@ -328,63 +184,6 @@ pub async fn print_page() -> Result<(), Error> {
         }",
     )
     .await
-}
-
-#[cfg(target_os = "android")]
-pub async fn print_page() -> Result<(), Error> {
-    use std::sync::mpsc::channel;
-    let (tx, rx) = channel();
-    dioxus::mobile::wry::prelude::dispatch(
-        move |env: &mut jni::JNIEnv, activity: &jni::objects::JObject, webview: &jni::objects::JObject| {
-            let res = (|| -> Result<(), jni::errors::Error> {
-                if webview.as_raw().is_null() {
-                    return Err(jni::errors::Error::NullPtr("webview is null"));
-                }
-                let svc_name = env.new_string("print")?;
-                let print_manager = env
-                    .call_method(
-                        activity,
-                        "getSystemService",
-                        "(Ljava/lang/String;)Ljava/lang/Object;",
-                        &[(&svc_name).into()],
-                    )?
-                    .l()?;
-                if print_manager.as_raw().is_null() {
-                    return Err(jni::errors::Error::NullPtr("PrintManager not available"));
-                }
-                let job_name = env.new_string("Cryptonote")?;
-                let print_adapter = env
-                    .call_method(
-                        webview,
-                        "createPrintDocumentAdapter",
-                        "(Ljava/lang/String;)Landroid/print/PrintDocumentAdapter;",
-                        &[(&job_name).into()],
-                    )?
-                    .l()?;
-                if print_adapter.as_raw().is_null() {
-                    return Err(jni::errors::Error::NullPtr("PrintDocumentAdapter not available"));
-                }
-                let builder_class = env.find_class("android/print/PrintAttributes$Builder")?;
-                let builder = env.new_object(builder_class, "()V", &[])?;
-                let print_attributes = env
-                    .call_method(builder, "build", "()Landroid/print/PrintAttributes;", &[])?
-                    .l()?;
-                let _ = env.call_method(
-                    &print_manager,
-                    "print",
-                    "(Ljava/lang/String;Landroid/print/PrintDocumentAdapter;Landroid/print/PrintAttributes;)Landroid/print/PrintJob;",
-                    &[(&job_name).into(), (&print_adapter).into(), (&print_attributes).into()],
-                )?;
-                Ok(())
-            })();
-            if let Err(ref _msg) = res {
-                _ = env.exception_describe();
-            }
-            _ = env.exception_clear();
-            _ = tx.send(res.map_err(Error::from));
-        },
-    );
-    rx.recv()?
 }
 
 pub async fn sleep(millis: u64) -> Result<(), Error> {

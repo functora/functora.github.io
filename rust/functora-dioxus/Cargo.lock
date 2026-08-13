@@ -1054,6 +1054,7 @@ dependencies = [
  "either",
  "functora",
  "functora-tagged",
+ "generational-box",
  "getrandom 0.2.17",
  "image",
  "isolang",

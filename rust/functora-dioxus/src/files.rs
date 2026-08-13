@@ -1,4 +1,5 @@
 use crate::Error;
+use crate::abort::EvalAbort;
 use crate::progress::{Job, Stage, report_progress, report_progress_named};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -227,6 +228,7 @@ pub fn blob_url_script() -> String {
         for (;;) {
             const m = await dioxus.recv();
             if (m && m.t === 'done') break;
+            if (m && m.t === 'abort') return;
             if (m.t === 'mime') {
                 mime = m.data;
             } else if (m.t === 'chunk') {
@@ -282,6 +284,7 @@ where
     P: Writable<Target = Option<Job<Stage>>> + Copy + 'static,
 {
     let mut eval = dioxus::document::eval(&blob_url_script());
+    let abort = EvalAbort::new(eval, serde_json::json!({ "t": "abort" }));
     let total = data.len() as u64;
     eval.send(BlobMsg {
         t: "mime",
@@ -312,7 +315,9 @@ where
     .inspect_err(|e| {
         tracing::warn!("Blob URL done send failed: {e}");
     })?;
-    match eval.recv::<BlobResult>().await {
+    let result = eval.recv::<BlobResult>().await;
+    abort.disarm();
+    match result {
         Ok(r) if r.ok => r.url.ok_or_else(|| Error::JS("Blob URL result missing url".into())),
         Ok(r) => Err(Error::JS(format!(
             "Blob URL creation failed: {}",
@@ -437,6 +442,35 @@ where
     P: Writable<Target = Option<Job<S>>> + Copy + 'static,
     S: Copy + 'static,
 {
+    pick_files_with(progress, stage, || dioxus::document::eval(&pick_script(multiple))).await
+}
+
+pub async fn pick_files_with<P, S, F>(progress: P, stage: S, mut make_eval: F) -> Result<Vec<(String, Vec<u8>)>, Error>
+where
+    P: Writable<Target = Option<Job<S>>> + Copy + 'static,
+    S: Copy + 'static,
+    F: FnMut() -> dioxus::document::Eval,
+{
+    let mut first = make_eval();
+    match drive_pick(&mut first, progress, stage).await {
+        Err(Error::EvalFinished) => {
+            tracing::warn!("Pick eval died mid-stream; retrying once with a fresh eval");
+            let mut retry = make_eval();
+            drive_pick(&mut retry, progress, stage).await
+        }
+        res => res,
+    }
+}
+
+async fn drive_pick<P, S>(
+    eval: &mut dioxus::document::Eval,
+    progress: P,
+    stage: S,
+) -> Result<Vec<(String, Vec<u8>)>, Error>
+where
+    P: Writable<Target = Option<Job<S>>> + Copy + 'static,
+    S: Copy + 'static,
+{
     use base64::engine::general_purpose::STANDARD as BASE64;
 
     #[derive(Deserialize)]
@@ -447,7 +481,6 @@ where
         Done,
     }
 
-    let mut eval = dioxus::document::eval(&pick_script(multiple));
     let mut files: Vec<(String, Vec<u8>)> = Vec::new();
     let mut done = 0u64;
     let mut total = 0u64;

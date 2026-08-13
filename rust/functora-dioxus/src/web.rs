@@ -8,5 +8,6 @@ pub use clipboard::{clipboard_write, read_clipboard};
 pub use download::download_package;
 pub use print::print_page;
 pub use share::social_share;
+pub use video::data_url_mime;
 pub(crate) use video::extract;
 pub use video::video_thumbnail_script;

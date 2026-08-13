@@ -1,6 +1,18 @@
+use crate::abort::EvalAbort;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use serde::{Deserialize, Serialize};
+
+/// Extracts the MIME type from a `data:` URL prefix, dropping the `;base64`
+/// parameter (and any other parameters) so the payload can be used as a `Blob`
+/// type, which rejects parameters it does not know.
+#[must_use]
+pub fn data_url_mime(prefix: &str) -> Option<&str> {
+    prefix
+        .strip_prefix("data:")
+        .and_then(|rest| rest.split(';').next())
+        .filter(|mime| !mime.is_empty())
+}
 
 #[derive(Serialize)]
 struct ThumbnailMsg {
@@ -18,10 +30,7 @@ enum ThumbnailReply {
 pub async fn extract(url: &str) -> Option<String> {
     const SEND_CHUNK: usize = 2 * 1024 * 1024;
     let (prefix, payload) = url.split_once(',').unwrap_or(("", ""));
-    let mime = prefix.strip_prefix("data:").or_else(|| {
-        tracing::warn!("Video preview URL has no data MIME prefix");
-        None
-    })?;
+    let mime = data_url_mime(prefix)?;
     let bytes = BASE64
         .decode(payload)
         .inspect_err(|e| {
@@ -29,6 +38,7 @@ pub async fn extract(url: &str) -> Option<String> {
         })
         .ok()?;
     let mut eval = dioxus::document::eval(&video_thumbnail_script());
+    let abort = EvalAbort::new(eval, serde_json::json!({ "t": "abort" }));
     let send = |msg: ThumbnailMsg| {
         eval.send(msg)
             .inspect_err(|e| {
@@ -50,7 +60,9 @@ pub async fn extract(url: &str) -> Option<String> {
         t: "done",
         data: String::new(),
     })?;
-    match eval.recv::<ThumbnailReply>().await {
+    let reply = eval.recv::<ThumbnailReply>().await;
+    abort.disarm();
+    match reply {
         Ok(ThumbnailReply::Ok { data }) => Some(data),
         Ok(ThumbnailReply::Fail) => {
             tracing::warn!("Video preview extraction failed");
@@ -68,6 +80,7 @@ pub fn video_thumbnail_script() -> String {
     r"
     const MAX_W = 360;
     const MAX_H = 240;
+    let url = null;
     try {
         const begin = await dioxus.recv();
         const parts = [];
@@ -76,6 +89,9 @@ pub fn video_thumbnail_script() -> String {
             if (m && m.t === 'done') {
                 break;
             }
+            if (m && m.t === 'abort') {
+                return;
+            }
             const bin = atob(m.data);
             const bytes = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) {
@@ -83,7 +99,7 @@ pub fn video_thumbnail_script() -> String {
             }
             parts.push(bytes);
         }
-        const url = URL.createObjectURL(new Blob(parts, {type: begin.data}));
+        url = URL.createObjectURL(new Blob(parts, {type: begin.data}));
         const video = document.createElement('video');
         video.preload = 'metadata';
         video.muted = true;
@@ -113,6 +129,7 @@ pub fn video_thumbnail_script() -> String {
         URL.revokeObjectURL(url);
         dioxus.send({t: 'ok', data: data});
     } catch (e) {
+        if (url) URL.revokeObjectURL(url);
         dioxus.send({t: 'fail'});
     }
     "

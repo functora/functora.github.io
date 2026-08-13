@@ -93,6 +93,8 @@ pub enum Error {
     Channel(#[from] std::sync::mpsc::RecvError),
     #[error("JS error: {0}")]
     JS(String),
+    #[error("Eval channel died before completion (dioxus internal GC/drop race)")]
+    EvalFinished,
     #[error("Cipher initialization error: {0}")]
     Cipher(cipher::InvalidLength),
     #[error("Key derivation error: {0}")]
@@ -153,6 +155,7 @@ impl From<cipher::InvalidLength> for Error {
 impl From<dioxus::document::EvalError> for Error {
     fn from(e: dioxus::document::EvalError) -> Self {
         match e {
+            dioxus::document::EvalError::Finished => Error::EvalFinished,
             dioxus::document::EvalError::InvalidJs(js) => Error::JS(js),
             dioxus::document::EvalError::Communication(msg) => Error::JS(msg),
             dioxus::document::EvalError::Serialization(err) => Error::Json(JsonError::from(err)),
@@ -191,6 +194,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Environment variable error: {e}"),
             Self::Channel(e) => format!("Channel receive error: {e}"),
             Self::JS(e) => format!("JavaScript evaluation error: {e}"),
+            Self::EvalFinished => "The connection to the browser was lost; please try again".into(),
             Self::Cipher(e) => format!("Cipher initialization error: {e}"),
             Self::KeyDerive(e) => format!("Key derivation error: {e}"),
             Self::Getrandom(e) => format!("Random number generation error: {e}"),
@@ -218,6 +222,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Error de variable de entorno: {e}"),
             Self::Channel(e) => format!("Error de recepción en canal: {e}"),
             Self::JS(e) => format!("Error de evaluación JavaScript: {e}"),
+            Self::EvalFinished => "Se perdió la conexión con el navegador; inténtalo de nuevo".into(),
             Self::Cipher(e) => format!("Error de inicialización de cifrado: {e}"),
             Self::KeyDerive(e) => format!("Error de derivación de clave: {e}"),
             Self::Getrandom(e) => format!("Error de generación de números aleatorios: {e}"),
@@ -245,6 +250,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Ошибка переменной окружения: {e}"),
             Self::Channel(e) => format!("Ошибка получения из канала: {e}"),
             Self::JS(e) => format!("Ошибка выполнения JavaScript: {e}"),
+            Self::EvalFinished => "Соединение с браузером потеряно; попробуйте ещё раз".into(),
             Self::Cipher(e) => format!("Ошибка инициализации шифра: {e}"),
             Self::KeyDerive(e) => format!("Ошибка вывода ключа: {e}"),
             Self::Getrandom(e) => format!("Ошибка генерации случайных чисел: {e}"),

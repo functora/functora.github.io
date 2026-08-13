@@ -83,6 +83,12 @@ fn download_script_escapes_special_characters() {
     assert!(script.contains("a.download="));
 }
 
+#[test]
+fn download_script_aborts_on_abort_message() {
+    let script = functora_dioxus::encoding::download_script("file.bin");
+    assert!(script.contains("m.t==='abort'"));
+}
+
 #[cfg(feature = "qr")]
 #[test]
 fn generate_qr_code_produces_svg() {

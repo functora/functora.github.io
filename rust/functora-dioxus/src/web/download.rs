@@ -1,4 +1,5 @@
 use crate::Error;
+use crate::abort::EvalAbort;
 use crate::encoding::download_script;
 use crate::progress::{Job, report_progress};
 use base64::Engine;
@@ -20,6 +21,7 @@ where
 {
     const SEND_CHUNK: usize = 3 * 1024 * 1024;
     let eval = dioxus::document::eval(&download_script(filename));
+    let abort = EvalAbort::new(eval, serde_json::json!({ "t": "abort" }));
     let bytes = data.as_ref();
     let total = bytes.len() as u64;
     let mut done = 0u64;
@@ -35,5 +37,6 @@ where
         t: "done",
         data: String::new(),
     })?;
+    abort.disarm();
     Ok(filename.to_string())
 }

@@ -14,6 +14,9 @@ use crate::android::extract;
 #[cfg(not(target_os = "android"))]
 use crate::web::extract;
 
+#[cfg(target_os = "android")]
+pub use crate::android::download_package;
+#[cfg(not(target_os = "android"))]
 #[cfg(not(target_os = "android"))]
 pub use crate::web::{download_package, video_thumbnail_script};
 

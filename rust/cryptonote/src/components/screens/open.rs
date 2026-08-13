@@ -62,8 +62,7 @@ pub fn Open(note: Option<String>) -> Element {
             External::Note(p) => {
                 if let NoteData::CipherText(enc) = p.data {
                     let cipher = enc.cipher;
-                    let _ = spawn(async move {
-                        let _claim = guard;
+                    let _ = spawn_guarded(guard, async move {
                         let mut nav_out = nav;
                         let mut message_out = message;
                         match crate::worker::run(
@@ -104,8 +103,7 @@ pub fn Open(note: Option<String>) -> Element {
                 }
             }
             External::Archive(src_archive) => {
-                let _ = spawn(async move {
-                    let _claim = guard;
+                let _ = spawn_guarded(guard, async move {
                     let mut nav_out = nav;
                     let mut message_out = message;
                     let archive_bytes = src_archive.untag();

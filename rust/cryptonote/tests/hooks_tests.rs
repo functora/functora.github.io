@@ -2,43 +2,10 @@
 use cryptonote::archive::{ArchiveSource, Attachment};
 use cryptonote::components::*;
 use cryptonote::{
-    add_attachment, build_external, claim_job, extract_archive_package_async, format_size, share_error, CipherType,
-    NoteData, Stage,
+    add_attachment, build_external, extract_archive_package_async, format_size, share_error, CipherType, NoteData,
 };
 
 mod common;
-
-#[test]
-fn claim_job_first_claim_holds_slot() {
-    common::with_runtime(|| {
-        let progress = common::progress();
-        let _claim = claim_job(progress, Stage::Decrypt).unwrap();
-        assert!(progress().is_some());
-    });
-}
-
-#[test]
-fn claim_job_rejects_second_claim_while_first_held() {
-    common::with_runtime(|| {
-        let progress = common::progress();
-        let _claim = claim_job(progress, Stage::Decrypt).unwrap();
-        assert!(claim_job(progress, Stage::Encrypt).is_none());
-        assert!(progress().is_some());
-    });
-}
-
-#[test]
-fn claim_job_releases_slot_on_drop() {
-    common::with_runtime(|| {
-        let progress = common::progress();
-        {
-            let _claim = claim_job(progress, Stage::Decrypt).unwrap();
-        }
-        assert!(progress().is_none());
-        let _claim = claim_job(progress, Stage::Zip).unwrap();
-        assert!(progress().is_some());
-    });
-}
 
 #[test]
 fn share_error_requires_password_when_cipher_selected() {

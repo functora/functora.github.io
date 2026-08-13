@@ -33,8 +33,7 @@ pub fn Home() -> Element {
             let Some(guard) = claim_job(tst.progress(), Stage::Encrypt) else {
                 return;
             };
-            let _ = spawn(async move {
-                let _claim = guard;
+            let _ = spawn_guarded(guard, async move {
                 let mut nav_out = nav;
                 let mut message_out = message;
                 match generate_share_async(tst).await {

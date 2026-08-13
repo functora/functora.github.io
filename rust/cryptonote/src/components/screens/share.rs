@@ -15,8 +15,8 @@ pub fn Share() -> Element {
         _ => Default::default(),
     };
 
-    let mut sharing = use_signal(|| false);
-    let mut printing = use_signal(|| false);
+    let mut sharing = use_in_flight();
+    let mut printing = use_in_flight();
 
     rsx! {
         Breadcrumb { title: Msg::Share }
@@ -58,25 +58,22 @@ pub fn Share() -> Element {
                             primary: true,
                             onclick: move |_| {
                                 let u = tst.external()().note_url();
-                                if sharing() {
-                                    return;
-                                }
-                                sharing.set(true);
-                                let mut in_flight = sharing;
                                 let mut msg = message;
                                 let text = Msg::SharedNoteText.render(lang);
-                                let _ = spawn(async move {
-                                    let data = ShareData {
-                                        title: "Cryptonote".into(),
-                                        text,
-                                        url: u,
-                                    };
-                                    match social_share(data).await {
-                                        Ok(()) => msg.set(Some(Msg::Sent)),
-                                        Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
-                                    }
-                                    in_flight.set(false);
-                                });
+                                let _ = sharing
+                                    .run(async move {
+                                        let data = ShareData {
+                                            title: "Cryptonote".into(),
+                                            text,
+                                            url: u,
+                                        };
+                                        match social_share(data).await {
+                                            Ok(()) => msg.set(Some(Msg::Sent)),
+                                            Err(e) => {
+                                                msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())))
+                                            }
+                                        }
+                                    });
                             },
                             i18n: Some(Msg::Share),
                             lang,
@@ -85,18 +82,13 @@ pub fn Share() -> Element {
                             icon: Some(FaPrint),
                             primary: true,
                             onclick: move |_| {
-                                if printing() {
-                                    return;
-                                }
-                                printing.set(true);
-                                let mut in_flight = printing;
                                 let mut msg = message;
-                                let _ = spawn(async move {
-                                    if let Err(e) = print_page().await {
-                                        msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
-                                    }
-                                    in_flight.set(false);
-                                });
+                                let _ = printing
+                                    .run(async move {
+                                        if let Err(e) = print_page().await {
+                                            msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
+                                        }
+                                    });
                             },
                             i18n: Some(Msg::Print),
                             lang,
@@ -113,22 +105,31 @@ pub fn Share() -> Element {
                                     let Some(guard) = claim_job(progress, Stage::Download) else {
                                         return;
                                     };
-                                    let _ = spawn(async move {
-                                        let _claim = guard;
-                                        let mut progress_out = progress;
-                                        let mut message_out = message;
-                                        match download_package(bytes, "archive.cryptonote", progress_out).await {
-                                            Ok(loc) => {
-                                                progress_out.set(None);
-                                                message_out.set(Some(Msg::Downloaded(loc)));
+                                    let _ = spawn_guarded(
+                                        guard,
+                                        async move {
+                                            let mut progress_out = progress;
+                                            let mut message_out = message;
+                                            match download_package(
+                                                    bytes,
+                                                    "archive.cryptonote",
+                                                    progress_out,
+                                                    Stage::Download,
+                                                )
+                                                .await
+                                            {
+                                                Ok(loc) => {
+                                                    progress_out.set(None);
+                                                    message_out.set(Some(Msg::Downloaded(loc)));
+                                                }
+                                                Err(e) => {
+                                                    progress_out.set(None);
+                                                    message_out
+                                                        .set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
+                                                }
                                             }
-                                            Err(e) => {
-                                                progress_out.set(None);
-                                                message_out
-                                                    .set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
-                                            }
-                                        }
-                                    });
+                                        },
+                                    );
                                 }
                             },
                             i18n: Some(Msg::Download),

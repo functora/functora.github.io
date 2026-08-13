@@ -4,42 +4,11 @@ use crate::*;
 use zeroize::Zeroizing;
 
 pub use functora_dioxus::files::format_size;
-pub use functora_dioxus::hooks::{use_lang, use_message_markdown};
+pub use functora_dioxus::hooks::{spawn_guarded, use_in_flight, use_lang, use_message_markdown};
 
 #[must_use]
 pub fn use_message() -> Signal<Option<Msg>> {
     functora_dioxus::hooks::use_message()
-}
-
-/// RAII ownership of the single-job progress slot. While a guard is held no other
-/// job can start: `claim_job` rejects every concurrent attempt, and the slot is
-/// released when the guard drops, so a task dropped by unmounting the screen never
-/// leaves the app stuck with a permanently claimed job.
-pub struct JobGuard<P: Writable<Target = Option<Job>>> {
-    progress: P,
-}
-
-impl<P: Writable<Target = Option<Job>>> Drop for JobGuard<P> {
-    fn drop(&mut self) {
-        self.progress.set(None);
-    }
-}
-
-#[must_use]
-pub fn claim_job<P>(mut progress: P, stage: Stage) -> Option<JobGuard<P>>
-where
-    P: Writable<Target = Option<Job>>,
-{
-    if progress.peek().is_some() {
-        return None;
-    }
-    progress.set(Some(Job {
-        stage,
-        done: 0,
-        total: 1,
-        name: None,
-    }));
-    Some(JobGuard { progress })
 }
 
 pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Signal<Option<Msg>>) {
@@ -99,8 +68,7 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
     let Some(guard) = claim_job(tst.progress(), Stage::Attach) else {
         return;
     };
-    let _ = spawn(async move {
-        let _claim = guard;
+    let _ = spawn_guarded(guard, async move {
         match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach).await {
             Ok(files) => {
                 let next = files
@@ -130,8 +98,7 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
     let Some(guard) = claim_job(tst.progress(), Stage::Attach) else {
         return;
     };
-    let _ = spawn(async move {
-        let _claim = guard;
+    let _ = spawn_guarded(guard, async move {
         let mut message_out = message;
         let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach).await {
             Ok(f) => f,
@@ -197,11 +164,7 @@ async fn build_note(
         Some(cty) => NoteData::CipherText(encrypt_symmetric(note.as_bytes(), password, cty)?),
         None => NoteData::PlainText(note.to_string()),
     };
-    #[cfg(target_arch = "wasm32")]
-    let origin = app_origin().ok_or(AppError::NoNoteInUrl)?;
-    #[cfg(not(target_arch = "wasm32"))]
-    let origin = app_origin();
-    let u = build_url(&format!("{}/?screen={}", origin, Screen::Open), &note_data)?;
+    let u = build_url(&format!("{}/?screen={}", APP_ATTRS.origin(), Screen::Open), &note_data)?;
     match generate_qr_code(&u) {
         Ok(qr) => Ok(External::Note(ExternalNote {
             data: note_data,
@@ -262,52 +225,7 @@ pub async fn generate_share_async(tst: Store<TemporaryState>) -> Result<(), AppE
     Ok(())
 }
 
-#[cfg(target_arch = "wasm32")]
-fn app_origin() -> Option<String> {
-    web_sys::window().and_then(|w| {
-        let loc = w.location();
-        let protocol = loc.protocol().ok()?;
-        let host = loc.host().ok()?;
-        let pathname = loc.pathname().ok()?;
-        let path = pathname.trim_end_matches('/');
-        Some(format!("{}//{}{}", protocol, host, path))
-    })
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn app_origin() -> String {
-    APP_ATTRS.app_url()
-}
-
-#[cfg(not(target_os = "android"))]
-pub async fn download_package<P, D>(data: D, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
-where
-    P: Writable<Target = Option<Job>> + Copy + 'static,
-    D: AsRef<[u8]>,
-{
-    functora_dioxus::files::download_package(data, filename, progress, Stage::Download).await
-}
-
-#[cfg(target_os = "android")]
-pub async fn download_package<P, D>(data: D, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
-where
-    P: Writable<Target = Option<Job>> + Copy + 'static,
-    D: AsRef<[u8]> + Send + 'static,
-{
-    let name = filename.to_string();
-    crate::worker::run((data, name), progress, |(bytes, file_name), mut report| async move {
-        functora_dioxus::android::save_to_downloads(bytes.as_ref(), file_name.clone(), move |done, total| {
-            report(Job {
-                stage: Stage::Download,
-                done,
-                total,
-                name: None,
-            });
-        })?;
-        Ok(file_name)
-    })
-    .await
-}
+pub use functora_dioxus::files::download_package;
 
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {
     current.retain(|f| f.name != att.name);
@@ -327,10 +245,9 @@ where
     let Some(guard) = claim_job(progress, Stage::Download) else {
         return;
     };
-    let _ = spawn(async move {
-        let _claim = guard;
+    let _ = spawn_guarded(guard, async move {
         let mut progress_out = progress;
-        match download_package(att.data, &att.name, progress_out).await {
+        match download_package(att.data, &att.name, progress_out, Stage::Download).await {
             Ok(loc) => {
                 progress_out.set(None);
                 message.set(Some(Msg::Downloaded(loc)));

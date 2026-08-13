@@ -1,7 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::encoding::generate_qr_code;
 use crate::ffi::{ShareData, social_share};
-use crate::hooks::{use_lang, use_message, use_message_markdown};
+use crate::hooks::{use_in_flight, use_lang, use_message, use_message_markdown};
 use crate::i18n::I18N;
 use crate::messages::Msg;
 use crate::nav::Nav;
@@ -27,7 +27,7 @@ where
 {
     let lang = use_lang();
     let message = use_message::<Msg>();
-    let mut sharing = use_signal(|| false);
+    let mut sharing = use_in_flight();
     let AppContent {
         attrs,
         donate,
@@ -109,22 +109,16 @@ where
                     icon: Some(FaShareNodes),
                     primary: true,
                     onclick: move |_| {
-                        if sharing() {
-                            return;
-                        }
-                        sharing.set(true);
-                        let mut in_flight = sharing;
                         let mut msg = message;
                         let title = derived_app_name.clone();
                         let text = share_text_owned.clone();
                         let url = share_url_owned.clone();
-                        let _ = spawn(async move {
+                        let _ = sharing.run(async move {
                             let data = ShareData { title, text, url };
                             match social_share(data).await {
                                 Ok(()) => msg.set(Some(Msg::Sent)),
                                 Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
                             }
-                            in_flight.set(false);
                         });
                     },
                     i18n: Some(Msg::ShareAppLink),

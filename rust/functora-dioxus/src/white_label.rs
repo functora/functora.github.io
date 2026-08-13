@@ -88,6 +88,27 @@ impl AppAttrs {
     }
 
     #[must_use]
+    pub fn origin(self) -> String {
+        #[cfg(target_arch = "wasm32")]
+        {
+            web_sys::window()
+                .and_then(|w| {
+                    let loc = w.location();
+                    let protocol = loc.protocol().ok()?;
+                    let host = loc.host().ok()?;
+                    let pathname = loc.pathname().ok()?;
+                    let path = pathname.trim_end_matches('/');
+                    Some(format!("{}//{}{}", protocol, host, path))
+                })
+                .unwrap_or_else(|| self.app_url())
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.app_url()
+        }
+    }
+
+    #[must_use]
     pub fn source_url(self) -> String {
         self.src.map_or_else(
             || format!("https://github.com/{}/{}.github.io", self.org, self.org),

@@ -55,7 +55,7 @@ mp4 = "0.14"
 rust_h264 = "0.4"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features = ["Window", "Navigator", "Storage"] }
+web-sys = { version = "0.3", features = ["Window", "Navigator", "Storage", "Location"] }
 
 [features]
 default = ["qr"]

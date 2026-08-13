@@ -3,6 +3,7 @@ use crate::error::*;
 use crate::progress::{Job, Stage};
 use crate::worker::Reporter;
 use dioxus::prelude::Writable;
+use tap::prelude::*;
 
 pub use functora_dioxus::files::Attachment;
 pub use functora_dioxus::package::{ArchiveMetadata, ArchiveSource, PackageStages};
@@ -28,8 +29,8 @@ where
     P: Writable<Target = Option<Job>> + 'static,
 {
     functora_dioxus::zip::create_zip_async(files, progress, Stage::Zip)
-        .await
-        .map_err(AppError::from)
+        .await?
+        .pipe(Ok)
 }
 
 pub(crate) async fn create_archive_package(
@@ -47,8 +48,8 @@ pub(crate) async fn create_archive_package(
         stages(),
         report,
     )
-    .await
-    .map_err(AppError::from)
+    .await?
+    .pipe(Ok)
 }
 
 pub async fn create_archive_package_async<P>(
@@ -69,12 +70,12 @@ where
         stages(),
         progress,
     )
-    .await
-    .map_err(AppError::from)
+    .await?
+    .pipe(Ok)
 }
 
 pub fn read_archive_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, AppError> {
-    functora_dioxus::package::read_metadata(source).map_err(AppError::from)
+    functora_dioxus::package::read_metadata(source)?.pipe(Ok)
 }
 
 pub async fn extract_archive_package_async<P>(
@@ -85,17 +86,13 @@ pub async fn extract_archive_package_async<P>(
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
-    let inner = functora_dioxus::package::extract_package_async(source, password, AAD_PREFIX, stages(), progress)
-        .await
-        .map_err(AppError::from)?;
+    let inner =
+        functora_dioxus::package::extract_package_async(source, password, AAD_PREFIX, stages(), progress).await?;
     let mut note = String::new();
     let mut files = Vec::new();
-    for (name, data) in functora_dioxus::zip::unzip_async(inner, progress, Stage::Unzip)
-        .await
-        .map_err(AppError::from)?
-    {
+    for (name, data) in functora_dioxus::zip::unzip_async(inner, progress, Stage::Unzip).await? {
         if name == "note.txt" {
-            note = String::from_utf8(data).map_err(AppError::Utf8)?;
+            note = String::from_utf8(data)?;
         } else {
             files.push(Attachment {
                 name: name.strip_prefix("attachments/").unwrap_or(&name).to_string(),

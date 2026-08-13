@@ -2,8 +2,22 @@ use std::fmt::Write;
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-fn main() -> Result<(), std::fmt::Error> {
-    emit_build_date();
+#[derive(Debug, thiserror::Error)]
+enum BuildError {
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Fmt(#[from] std::fmt::Error),
+    #[error(transparent)]
+    Var(#[from] std::env::VarError),
+    #[error(transparent)]
+    Clock(#[from] std::time::SystemTimeError),
+    #[error(transparent)]
+    Convert(#[from] std::num::TryFromIntError),
+}
+
+fn main() -> Result<(), BuildError> {
+    emit_build_date()?;
     let methods = isolang::languages()
         .map(|lang| {
             let code = lang.to_639_3();
@@ -13,7 +27,7 @@ fn main() -> Result<(), std::fmt::Error> {
         })
         .collect::<Vec<_>>();
 
-    let out_dir = std::env::var("OUT_DIR").unwrap_or_else(|_| "/tmp".into());
+    let out_dir = std::env::var("OUT_DIR")?;
     let path = format!("{out_dir}/i18n_trait.rs");
 
     let defaulted = methods
@@ -41,19 +55,17 @@ fn main() -> Result<(), std::fmt::Error> {
          }}\n"
     );
 
-    fs::write(&path, &code).unwrap_or_else(|e| panic!("Failed to write {path}: {e}"));
+    fs::write(&path, &code)?;
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
 }
 
-fn emit_build_date() {
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).map_or_else(
-        |e| panic!("system clock is before the Unix epoch: {e}"),
-        |d| d.as_secs(),
-    );
-    let (y, m, d) = civil_from_days(i64::try_from(secs / 86_400).unwrap_or(0));
+fn emit_build_date() -> Result<(), BuildError> {
+    let secs = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+    let (y, m, d) = civil_from_days(i64::try_from(secs / 86_400)?);
     println!("cargo:rustc-env=FUNCTORA_DIOXUS_YEAR={y:04}");
     println!("cargo:rustc-env=FUNCTORA_DIOXUS_DATE={y:04}-{m:02}-{d:02}");
+    Ok(())
 }
 
 fn civil_from_days(z0: i64) -> (i64, i64, i64) {

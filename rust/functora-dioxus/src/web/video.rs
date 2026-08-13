@@ -18,41 +18,38 @@ enum ThumbnailReply {
 pub async fn extract(url: &str) -> Option<String> {
     const SEND_CHUNK: usize = 2 * 1024 * 1024;
     let (prefix, payload) = url.split_once(',').unwrap_or(("", ""));
-    let Some(mime) = prefix.strip_prefix("data:") else {
+    let mime = prefix.strip_prefix("data:").or_else(|| {
         tracing::warn!("Video preview URL has no data MIME prefix");
-        return None;
-    };
-    let bytes = match BASE64.decode(payload) {
-        Ok(bytes) => bytes,
-        Err(e) => {
+        None
+    })?;
+    let bytes = BASE64
+        .decode(payload)
+        .inspect_err(|e| {
             tracing::warn!("Video preview base64 decode failed: {e}");
-            return None;
-        }
-    };
+        })
+        .ok()?;
     let mut eval = dioxus::document::eval(&video_thumbnail_script());
-    if let Err(e) = eval.send(ThumbnailMsg {
+    let send = |msg: ThumbnailMsg| {
+        eval.send(msg)
+            .inspect_err(|e| {
+                tracing::warn!("Video preview send failed: {e}");
+            })
+            .ok()
+    };
+    send(ThumbnailMsg {
         t: "begin",
         data: mime.to_string(),
-    }) {
-        tracing::warn!("Video preview send failed: {e}");
-        return None;
-    }
-    for chunk in bytes.chunks(SEND_CHUNK) {
-        if let Err(e) = eval.send(ThumbnailMsg {
+    })?;
+    bytes.chunks(SEND_CHUNK).try_for_each(|chunk| {
+        send(ThumbnailMsg {
             t: "chunk",
             data: BASE64.encode(chunk),
-        }) {
-            tracing::warn!("Video preview chunk send failed: {e}");
-            return None;
-        }
-    }
-    if let Err(e) = eval.send(ThumbnailMsg {
+        })
+    })?;
+    send(ThumbnailMsg {
         t: "done",
         data: String::new(),
-    }) {
-        tracing::warn!("Video preview done send failed: {e}");
-        return None;
-    }
+    })?;
     match eval.recv::<ThumbnailReply>().await {
         Ok(ThumbnailReply::Ok { data }) => Some(data),
         Ok(ThumbnailReply::Fail) => {

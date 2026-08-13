@@ -17,9 +17,7 @@ pub fn decode_hints() -> DecodeHints {
 #[cfg(feature = "qr")]
 #[must_use]
 pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
-    if w == 0 || h == 0 {
-        return None;
-    }
+    (w != 0 && h != 0).then_some(())?;
     let luma: Vec<u8> = rgba
         .chunks_exact(4)
         .map(|px| {
@@ -37,9 +35,7 @@ pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
 #[cfg(feature = "qr")]
 #[must_use]
 pub fn decode_qr_luma(luma: &[u8], w: u32, h: u32) -> Option<String> {
-    if w == 0 || h == 0 {
-        return None;
-    }
+    (w != 0 && h != 0).then_some(())?;
     QRCodeReader::new()
         .immutable_decode_with_hints(
             &mut BinaryBitmap::new(HybridBinarizer::new(Luma8LuminanceSource::new(luma.to_vec(), w, h))),

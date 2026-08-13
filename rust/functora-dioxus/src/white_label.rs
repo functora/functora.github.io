@@ -192,10 +192,10 @@ pub fn WhiteLabelLayout<
         home,
         about,
         about_icon,
-        donate,
-        license,
-        privacy,
-        share,
+        donate: donate_route,
+        license: license_route,
+        privacy: privacy_route,
+        share: share_route,
         on_brand_click,
         bottom_extra,
     } = config;
@@ -210,7 +210,7 @@ pub fn WhiteLabelLayout<
         }
     };
 
-    let legal = match (&license, &privacy) {
+    let legal = match (&license_route, &privacy_route) {
         (Some(license), Some(privacy)) => rsx! {
             NavLink {
                 nav: nav_signal,
@@ -243,7 +243,7 @@ pub fn WhiteLabelLayout<
         (None, None) => rsx! {},
     };
 
-    let donate_share = match (&donate, &share) {
+    let donate_share = match (&donate_route, &share_route) {
         (Some(donate), Some(share)) => rsx! {
             NavLink {
                 nav: nav_signal,

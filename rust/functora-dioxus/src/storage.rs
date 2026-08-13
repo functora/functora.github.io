@@ -38,12 +38,13 @@ pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> R
     ensure_file(p)?;
     let content = read_to_string(p)?;
     let mut json: Value = from_str(&content)?;
-    let Some(obj) = json.as_object_mut() else {
-        return Err(Error::NotJsonObject(json));
-    };
-    _ = obj.insert(key.to_string(), to_value(val)?);
-    let s = to_string_pretty(&json)?;
-    Ok(write(p, s)?)
+    if let Some(obj) = json.as_object_mut() {
+        _ = obj.insert(key.to_string(), to_value(val)?);
+        let s = to_string_pretty(&json)?;
+        Ok(write(p, s)?)
+    } else {
+        Err(Error::NotJsonObject(json))
+    }
 }
 
 pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize, F: FnOnce() -> T>(
@@ -83,11 +84,12 @@ pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value
 pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let mut json = read_json_object(&path)?;
     let value = to_value(val)?;
-    let Some(obj) = json.as_object_mut() else {
-        return Err(Error::NotJsonObject(json));
-    };
-    _ = obj.insert(key.to_string(), value);
-    write_json_object(path, &json)
+    if let Some(obj) = json.as_object_mut() {
+        _ = obj.insert(key.to_string(), value);
+        write_json_object(path, &json)
+    } else {
+        Err(Error::NotJsonObject(json))
+    }
 }
 
 pub struct PersistentSignal<T: 'static> {

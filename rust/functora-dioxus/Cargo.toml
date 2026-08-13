@@ -81,6 +81,7 @@ dioxus-signals = "=0.7.2"
 isolang = { version = "2.3", default-features = false, features = [
   "list_languages",
 ] }
+thiserror = { version = "2.0.18", features = ["std"] }
 
 [lints.rust]
 unused_results = "warn"

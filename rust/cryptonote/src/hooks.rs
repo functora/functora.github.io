@@ -66,10 +66,7 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
 
 pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
     let _ = spawn(async move {
-        match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach)
-            .await
-            .map_err(AppError::FunctoraDioxus)
-        {
+        match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach).await {
             Ok(files) => {
                 let next = files
                     .into_iter()
@@ -87,7 +84,7 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
                 clear_progress(tst.progress());
             }
             Err(e) => {
-                message.set(Some(Msg::Error(e.into())));
+                message.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                 clear_progress(tst.progress());
             }
         }
@@ -97,14 +94,11 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
 pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
     let _ = spawn(async move {
         let mut message_out = message;
-        let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach)
-            .await
-            .map_err(AppError::FunctoraDioxus)
-        {
+        let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach).await {
             Ok(f) => f,
             Err(e) => {
                 tst.progress().set(None);
-                message_out.set(Some(Msg::Error(e.into())));
+                message_out.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                 return;
             }
         };

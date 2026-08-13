@@ -89,9 +89,9 @@ fn app_error_i18n_render_eng_non_empty() {
         AppError::PasswordRequired,
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
-        AppError::Archive("zip error".into()),
+        AppError::Archive("zip error".to_string()),
         AppError::InvalidFormat("nonce".into()),
-        AppError::Json("j".into()),
+        AppError::Json(serde_json::from_str::<serde_json::Value>("j").unwrap_err().into()),
         AppError::Utf8(String::from_utf8(vec![0xff]).unwrap_err()),
     ];
     for case in &cases {
@@ -117,7 +117,7 @@ fn app_error_i18n_render_rus_different_from_eng() {
 
 #[test]
 fn app_error_i18n_archive_contains_detail() {
-    let err = AppError::Archive("corrupt".into());
+    let err = AppError::Archive("corrupt".to_string());
     assert!(err.render_eng().contains("corrupt"));
     assert!(err.render_spa().contains("corrupt"));
     assert!(err.render_rus().contains("corrupt"));
@@ -133,10 +133,11 @@ fn app_error_i18n_invalid_format_contains_detail() {
 
 #[test]
 fn app_error_i18n_json_contains_detail() {
-    let err = AppError::Json("j".into());
-    assert!(err.render_eng().contains('j'));
-    assert!(err.render_spa().contains('j'));
-    assert!(err.render_rus().contains('j'));
+    let err = AppError::Json(serde_json::from_str::<serde_json::Value>("j").unwrap_err().into());
+    let detail = serde_json::from_str::<serde_json::Value>("j").unwrap_err().to_string();
+    assert!(err.render_eng().contains(&detail));
+    assert!(err.render_spa().contains(&detail));
+    assert!(err.render_rus().contains(&detail));
 }
 
 #[test]
@@ -337,7 +338,7 @@ fn app_error_i18n_render_spa_all_variants() {
         cryptonote::AppError::FunctoraDioxus(cryptonote::encoding::generate_qr_code("").unwrap_err()),
         AppError::PasswordRequired,
         AppError::InvalidFormat("f".into()),
-        AppError::Archive("a".into()),
+        AppError::Archive("a".to_string()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
         AppError::FunctoraDioxus(functora_dioxus::Error::IO(
@@ -359,7 +360,7 @@ fn app_error_i18n_render_rus_all_variants() {
         cryptonote::AppError::FunctoraDioxus(cryptonote::encoding::generate_qr_code("").unwrap_err()),
         AppError::PasswordRequired,
         AppError::InvalidFormat("f".into()),
-        AppError::Archive("a".into()),
+        AppError::Archive("a".to_string()),
         AppError::NoNoteInUrl,
         AppError::NoNoteParam,
         AppError::FunctoraDioxus(functora_dioxus::Error::IO(

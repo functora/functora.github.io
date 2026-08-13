@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use functora_dioxus::i18n::I18N;
+use functora_dioxus::JsonError;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
 
@@ -22,7 +23,7 @@ impl std::ops::Deref for MsgError {
 
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum AppError {
-    Json(String),
+    Json(#[from] JsonError),
     Utf8(#[from] FromUtf8Error),
     PasswordRequired,
     InvalidFormat(String),
@@ -73,14 +74,8 @@ impl I18N for AppError {
     }
 }
 
-impl From<String> for AppError {
-    fn from(e: String) -> Self {
-        AppError::Archive(e)
-    }
-}
-
 impl From<serde_json::Error> for AppError {
     fn from(e: serde_json::Error) -> Self {
-        AppError::Json(e.to_string())
+        AppError::Json(e.into())
     }
 }

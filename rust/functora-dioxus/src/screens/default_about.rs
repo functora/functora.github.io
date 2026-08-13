@@ -51,12 +51,12 @@ where
     #[cfg(not(feature = "qr"))]
     let qr = use_memo(|| None);
     let _ = use_effect({
-        let anchor_id = anchor_id.clone();
-        let note = note.clone();
+        let scroll_anchor = anchor_id.clone();
+        let scroll_note = note.clone();
         move || {
-            if note.as_deref() == Some(anchor_id.as_str()) {
+            if scroll_note.as_deref() == Some(scroll_anchor.as_str()) {
                 let _ = document::eval(&format!(
-                    "document.getElementById('{anchor_id}')?.scrollIntoView({{behavior: 'smooth'}})"
+                    "document.getElementById('{scroll_anchor}')?.scrollIntoView({{behavior: 'smooth'}})"
                 ));
             }
         }

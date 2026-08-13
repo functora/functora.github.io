@@ -157,14 +157,17 @@ pub fn preview(name: &str, data: &[u8]) -> Preview {
 #[must_use]
 pub fn preview_cached(name: &str, data: &[u8]) -> Preview {
     let key = (name.to_string(), preview_key(data));
-    if let Some(preview) = PREVIEW_MEMO.lock().ok().and_then(|guard| guard.get(&key).cloned()) {
-        return preview;
-    }
-    let preview = preview(name, data);
-    if let Ok(mut guard) = PREVIEW_MEMO.lock() {
-        _ = guard.insert(key, preview.clone());
-    }
-    preview
+    PREVIEW_MEMO
+        .lock()
+        .ok()
+        .and_then(|guard| guard.get(&key).cloned())
+        .unwrap_or_else(|| {
+            let preview = preview(name, data);
+            if let Ok(mut guard) = PREVIEW_MEMO.lock() {
+                _ = guard.insert(key, preview.clone());
+            }
+            preview
+        })
 }
 
 fn preview_key(data: &[u8]) -> u64 {
@@ -278,36 +281,35 @@ where
 {
     let mut eval = dioxus::document::eval(&blob_url_script());
     let total = data.len() as u64;
-    if let Err(e) = eval.send(BlobMsg {
+    eval.send(BlobMsg {
         t: "mime",
         data: mime.to_string(),
-    }) {
+    })
+    .inspect_err(|e| {
         tracing::warn!("Blob URL mime send failed: {e}");
-        return Err(Error::from(e));
-    }
+    })?;
     let mut done = 0u64;
     for chunk in data.chunks(BLOB_CHUNK) {
-        if let Err(e) = eval.send(BlobMsg {
+        eval.send(BlobMsg {
             t: "chunk",
             data: BASE64.encode(chunk),
-        }) {
+        })
+        .inspect_err(|e| {
             tracing::warn!("Blob URL chunk send failed: {e}");
-            return Err(Error::from(e));
-        }
+        })?;
         done += chunk.len() as u64;
         report_progress(progress, Stage::Preview, done, total).await;
-        if let Err(e) = eval.recv::<BlobAck>().await {
+        let _ = eval.recv::<BlobAck>().await.inspect_err(|e| {
             tracing::warn!("Blob URL chunk ack failed: {e}");
-            return Err(Error::from(e));
-        }
+        })?;
     }
-    if let Err(e) = eval.send(BlobMsg {
+    eval.send(BlobMsg {
         t: "done",
         data: String::new(),
-    }) {
+    })
+    .inspect_err(|e| {
         tracing::warn!("Blob URL done send failed: {e}");
-        return Err(Error::from(e));
-    }
+    })?;
     match eval.recv::<BlobResult>().await {
         Ok(r) if r.ok => r.url.ok_or_else(|| Error::JS("Blob URL result missing url".into())),
         Ok(r) => Err(Error::JS(format!(
@@ -328,10 +330,9 @@ pub fn revoke_blob_url(url: &str) -> Result<(), Error> {
         _ = guard.forget(url);
     }
     let eval = dioxus::document::eval("const u = await dioxus.recv(); URL.revokeObjectURL(u);");
-    if let Err(e) = eval.send(url) {
+    eval.send(url).inspect_err(|e| {
         tracing::warn!("Blob URL revoke send failed: {e}");
-        return Err(Error::from(e));
-    }
+    })?;
     Ok(())
 }
 
@@ -343,45 +344,44 @@ pub async fn preview_blob<P>(name: &str, data: &[u8], progress: P) -> Preview
 where
     P: Writable<Target = Option<Job<Stage>>> + Copy + 'static,
 {
-    let Some(mime) = mime_for(name) else {
-        return Preview::Download;
-    };
-    let is_blob = mime.starts_with("image/")
-        || mime.starts_with("video/")
-        || mime.starts_with("audio/")
-        || mime == "application/pdf";
-    if !is_blob {
-        return preview(name, data);
-    }
-    let data_key = preview_key(data);
-    if let Some(url) = BLOB_URL_MEMO
-        .lock()
-        .ok()
-        .and_then(|guard| guard.get(name, data_key).map(str::to_string))
-    {
-        return match mime {
-            m if m.starts_with("image/") => Preview::Image(url),
-            m if m.starts_with("video/") => Preview::Video(url),
-            m if m.starts_with("audio/") => Preview::Audio(url),
-            _ => Preview::Pdf(url),
-        };
-    }
-    match create_blob_url(mime, data, progress).await {
-        Ok(url) => {
-            if let Ok(mut guard) = BLOB_URL_MEMO.lock() {
-                guard.insert(name, data_key, url.clone());
-            }
-            match mime {
-                m if m.starts_with("image/") => Preview::Image(url),
-                m if m.starts_with("video/") => Preview::Video(url),
-                m if m.starts_with("audio/") => Preview::Audio(url),
-                _ => Preview::Pdf(url),
+    let mime_opt = mime_for(name);
+    if let Some(mime) = mime_opt.filter(|m| is_blob_mime(m)) {
+        let data_key = preview_key(data);
+        let cached = BLOB_URL_MEMO
+            .lock()
+            .ok()
+            .and_then(|guard| guard.get(name, data_key).map(str::to_string));
+        if let Some(url) = cached {
+            preview_from_url(mime, url)
+        } else {
+            match create_blob_url(mime, data, progress).await {
+                Ok(url) => {
+                    if let Ok(mut guard) = BLOB_URL_MEMO.lock() {
+                        guard.insert(name, data_key, url.clone());
+                    }
+                    preview_from_url(mime, url)
+                }
+                Err(e) => {
+                    tracing::warn!("Blob preview failed, falling back to download: {e}");
+                    Preview::Download
+                }
             }
         }
-        Err(e) => {
-            tracing::warn!("Blob preview failed, falling back to download: {e}");
-            Preview::Download
-        }
+    } else {
+        mime_opt.map_or(Preview::Download, |_| preview(name, data))
+    }
+}
+
+fn is_blob_mime(mime: &str) -> bool {
+    mime.starts_with("image/") || mime.starts_with("video/") || mime.starts_with("audio/") || mime == "application/pdf"
+}
+
+fn preview_from_url(mime: &str, url: String) -> Preview {
+    match mime {
+        m if m.starts_with("image/") => Preview::Image(url),
+        m if m.starts_with("video/") => Preview::Video(url),
+        m if m.starts_with("audio/") => Preview::Audio(url),
+        _ => Preview::Pdf(url),
     }
 }
 

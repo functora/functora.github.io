@@ -11,6 +11,37 @@ pub fn use_message() -> Signal<Option<Msg>> {
     functora_dioxus::hooks::use_message()
 }
 
+/// RAII ownership of the single-job progress slot. While a guard is held no other
+/// job can start: `claim_job` rejects every concurrent attempt, and the slot is
+/// released when the guard drops, so a task dropped by unmounting the screen never
+/// leaves the app stuck with a permanently claimed job.
+pub struct JobGuard<P: Writable<Target = Option<Job>>> {
+    progress: P,
+}
+
+impl<P: Writable<Target = Option<Job>>> Drop for JobGuard<P> {
+    fn drop(&mut self) {
+        self.progress.set(None);
+    }
+}
+
+#[must_use]
+pub fn claim_job<P>(mut progress: P, stage: Stage) -> Option<JobGuard<P>>
+where
+    P: Writable<Target = Option<Job>>,
+{
+    if progress.peek().is_some() {
+        return None;
+    }
+    progress.set(Some(Job {
+        stage,
+        done: 0,
+        total: 1,
+        name: None,
+    }));
+    Some(JobGuard { progress })
+}
+
 pub fn read_clipboard(on_paste: impl FnOnce(String) + 'static, mut message: Signal<Option<Msg>>) {
     let _ = spawn(async move {
         match functora_dioxus::ffi::read_clipboard().await {
@@ -65,7 +96,11 @@ pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) ->
 }
 
 pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>) {
+    let Some(guard) = claim_job(tst.progress(), Stage::Attach) else {
+        return;
+    };
     let _ = spawn(async move {
+        let _claim = guard;
         match functora_dioxus::files::pick_files(true, tst.progress(), Stage::Attach).await {
             Ok(files) => {
                 let next = files
@@ -92,7 +127,11 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
 }
 
 pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>>, nav: Signal<Nav<Route>>) {
+    let Some(guard) = claim_job(tst.progress(), Stage::Attach) else {
+        return;
+    };
     let _ = spawn(async move {
+        let _claim = guard;
         let mut message_out = message;
         let files = match functora_dioxus::files::pick_files(false, tst.progress(), Stage::Attach).await {
             Ok(f) => f,
@@ -106,6 +145,7 @@ pub fn open_archive_file(tst: Store<TemporaryState>, message: Signal<Option<Msg>
             tst.progress().set(None);
             return;
         };
+        tst.progress().set(None);
         if let Err(e) = open_archive_async(ArchiveSource::Bytes(bytes), tst, nav).await {
             message_out.set(Some(Msg::Error(e.into())));
         }
@@ -126,8 +166,12 @@ pub async fn open_archive_async(
         clear_progress(tst.progress());
         Screen::Open
     } else {
+        let Some(guard) = claim_job(tst.progress(), Stage::Decrypt) else {
+            return Ok(());
+        };
         let (text, files) = extract_archive_package_async(source, "", tst.progress()).await?;
         clear_progress(tst.progress());
+        drop(guard);
         tst.note().set(text);
         tst.attachments().set(files);
         tst.external().set(External::Nothing);
@@ -280,7 +324,11 @@ pub fn download_attachment<P>(att: Attachment, progress: P, mut message: Signal<
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
 {
+    let Some(guard) = claim_job(progress, Stage::Download) else {
+        return;
+    };
     let _ = spawn(async move {
+        let _claim = guard;
         let mut progress_out = progress;
         match download_package(att.data, &att.name, progress_out).await {
             Ok(loc) => {

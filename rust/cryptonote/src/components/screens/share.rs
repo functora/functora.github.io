@@ -15,6 +15,9 @@ pub fn Share() -> Element {
         _ => Default::default(),
     };
 
+    let mut sharing = use_signal(|| false);
+    let mut printing = use_signal(|| false);
+
     rsx! {
         Breadcrumb { title: Msg::Share }
         section {
@@ -55,6 +58,11 @@ pub fn Share() -> Element {
                             primary: true,
                             onclick: move |_| {
                                 let u = tst.external()().note_url();
+                                if sharing() {
+                                    return;
+                                }
+                                sharing.set(true);
+                                let mut in_flight = sharing;
                                 let mut msg = message;
                                 let text = Msg::SharedNoteText.render(lang);
                                 let _ = spawn(async move {
@@ -67,6 +75,7 @@ pub fn Share() -> Element {
                                         Ok(()) => msg.set(Some(Msg::Sent)),
                                         Err(e) => msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into()))),
                                     }
+                                    in_flight.set(false);
                                 });
                             },
                             i18n: Some(Msg::Share),
@@ -76,11 +85,17 @@ pub fn Share() -> Element {
                             icon: Some(FaPrint),
                             primary: true,
                             onclick: move |_| {
+                                if printing() {
+                                    return;
+                                }
+                                printing.set(true);
+                                let mut in_flight = printing;
                                 let mut msg = message;
                                 let _ = spawn(async move {
                                     if let Err(e) = print_page().await {
                                         msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
                                     }
+                                    in_flight.set(false);
                                 });
                             },
                             i18n: Some(Msg::Print),
@@ -95,7 +110,11 @@ pub fn Share() -> Element {
                                 let bytes = tst.external()().archive_bytes();
                                 if !bytes.is_empty() {
                                     let progress = tst.progress();
+                                    let Some(guard) = claim_job(progress, Stage::Download) else {
+                                        return;
+                                    };
                                     let _ = spawn(async move {
+                                        let _claim = guard;
                                         let mut progress_out = progress;
                                         let mut message_out = message;
                                         match download_package(bytes, "archive.cryptonote", progress_out).await {

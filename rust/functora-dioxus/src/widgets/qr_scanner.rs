@@ -4,8 +4,14 @@ use crate::ffi::{capture_frame, check_camera, sleep, start_camera, stop_camera};
 use crate::i18n::Language;
 use crate::qr::decode_qr_rgba;
 use dioxus::prelude::*;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const FPS_DELAY: u64 = 33;
+
+/// Monotonic camera ownership epoch. Each scanner instance bumps it on mount; a
+/// task only starts or stops the camera while its own epoch is still current, so a
+/// dying instance can never tear down the camera of the instance that replaced it.
+static CAMERA_EPOCH: AtomicU64 = AtomicU64::new(0);
 
 fn camera_error(e: &Error) -> Error {
     match e {
@@ -34,11 +40,15 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
     let mut scanning = use_signal(|| true);
     let mut found = use_signal(|| false);
     let mut error = use_signal(|| Option::<Error>::None);
+    let epoch = use_hook(|| CAMERA_EPOCH.fetch_add(1, Ordering::SeqCst).saturating_add(1));
 
     _ = use_effect(move || {
         let _ = spawn(async move {
             if let Err(e) = check_camera().await {
                 report_camera_error(&e, &mut error, on_error.as_ref());
+                return;
+            }
+            if CAMERA_EPOCH.load(Ordering::SeqCst) != epoch {
                 return;
             }
             if let Err(e) = start_camera().await {
@@ -56,14 +66,18 @@ pub fn QrScanner(on_scan: EventHandler<String>, on_error: Option<EventHandler<Er
                 }
                 _ = sleep(FPS_DELAY).await;
             }
-            _ = stop_camera().await;
+            if CAMERA_EPOCH.load(Ordering::SeqCst) == epoch {
+                _ = stop_camera().await;
+            }
         });
     });
 
     use_drop(move || {
         scanning.set(false);
         let _ = spawn(async move {
-            _ = stop_camera().await;
+            if CAMERA_EPOCH.load(Ordering::SeqCst) == epoch {
+                _ = stop_camera().await;
+            }
         });
     });
 

@@ -19,9 +19,13 @@ pub fn NoteDisplay() -> Element {
     });
 
     let download_all = move || {
+        let Some(guard) = claim_job(tst.progress(), Stage::Zip) else {
+            return;
+        };
         let files = tst.attachments()();
         let progress = tst.progress();
         let _ = spawn(async move {
+            let _claim = guard;
             let mut progress_out = progress;
             let mut message_out = message;
             match create_zip_async(&files, progress_out).await {
@@ -54,29 +58,40 @@ pub fn NoteDisplay() -> Element {
             message.set(Some(msg));
             return;
         }
+        if !matches!(tst.external()(), External::Nothing) {
+            nav.write().push(Screen::Share.to_route(None));
+            return;
+        }
+        let Some(guard) = claim_job(tst.progress(), Stage::Encrypt) else {
+            return;
+        };
         let _ = spawn(async move {
+            let _claim = guard;
             let mut nav_out = nav;
             let mut message_out = message;
-            if matches!(tst.external()(), External::Nothing) {
-                match generate_share_async(tst).await {
-                    Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
-                    Err(e) => {
-                        tst.progress().set(None);
-                        message_out.set(Some(Msg::Error(e.into())));
-                    }
+            match generate_share_async(tst).await {
+                Ok(()) => nav_out.write().push(Screen::Share.to_route(None)),
+                Err(e) => {
+                    tst.progress().set(None);
+                    message_out.set(Some(Msg::Error(e.into())));
                 }
-            } else {
-                nav_out.write().push(Screen::Share.to_route(None));
             }
         });
     };
 
+    let mut printing = use_signal(|| false);
     let print_note = move |_| {
+        if printing() {
+            return;
+        }
+        printing.set(true);
+        let mut in_flight = printing;
         let mut msg = message;
         let _ = spawn(async move {
             if let Err(e) = print_page().await {
                 msg.set(Some(Msg::Error(AppError::FunctoraDioxus(e).into())));
             }
+            in_flight.set(false);
         });
     };
 

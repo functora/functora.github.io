@@ -27,6 +27,7 @@ where
 {
     let lang = use_lang();
     let message = use_message::<Msg>();
+    let mut sharing = use_signal(|| false);
     let AppContent {
         attrs,
         donate,
@@ -108,6 +109,11 @@ where
                     icon: Some(FaShareNodes),
                     primary: true,
                     onclick: move |_| {
+                        if sharing() {
+                            return;
+                        }
+                        sharing.set(true);
+                        let mut in_flight = sharing;
                         let mut msg = message;
                         let title = derived_app_name.clone();
                         let text = share_text_owned.clone();
@@ -118,6 +124,7 @@ where
                                 Ok(()) => msg.set(Some(Msg::Sent)),
                                 Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
                             }
+                            in_flight.set(false);
                         });
                     },
                     i18n: Some(Msg::ShareAppLink),

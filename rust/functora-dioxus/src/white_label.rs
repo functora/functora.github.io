@@ -175,10 +175,15 @@ pub fn WhiteLabelLayout<
         let _ = document::eval("window.scrollTo(0, 0)");
     });
 
+    let mut theme_gen = use_signal(|| 0u64);
     let _ = use_effect(move || {
+        let generation = *theme_gen.peek() + 1;
+        theme_gen.set(generation);
         let theme = pst.theme()();
         let _ = spawn(async move {
-            if let Err(e) = crate::ffi::set_theme(&theme).await {
+            if theme_gen() == generation
+                && let Err(e) = crate::ffi::set_theme(&theme).await
+            {
                 tracing::error!("Set theme error: {:#?}", e);
             }
         });

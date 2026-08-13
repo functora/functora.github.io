@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, WorkerStopped};
 use dioxus::core::Subscribers;
 use dioxus::prelude::*;
 use serde::Serialize;
@@ -11,6 +11,11 @@ use serde_json::to_value;
 use std::fs::{OpenOptions, read_to_string, write};
 use std::ops::Deref;
 use std::path::Path;
+use std::sync::Mutex;
+
+/// Serializes read-modify-write cycles on the storage file so concurrent persist
+/// tasks cannot lose each other's key updates or read a torn half-written file.
+static STORAGE_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(target_os = "android")]
 pub use crate::android::files_dir;
@@ -34,6 +39,7 @@ fn ensure_file(p: &Path) -> Result<(), Error> {
 }
 
 pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
+    let _guard = STORAGE_LOCK.lock().map_err(|_| Error::Worker(WorkerStopped))?;
     let p = path.as_ref();
     ensure_file(p)?;
     let content = read_to_string(p)?;

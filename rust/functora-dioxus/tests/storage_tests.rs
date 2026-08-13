@@ -198,3 +198,25 @@ fn test_files_dir_not_fails_on_non_android() {
         assert!(path.exists());
     }
 }
+
+#[test]
+fn concurrent_update_key_preserves_all_keys() {
+    let (_dir, path) = ok(temp_file("{}"));
+    let mut threads = Vec::new();
+    for i in 0..8 {
+        let thread_path = path.clone();
+        threads.push(std::thread::spawn(move || {
+            for _ in 0..25 {
+                ok(update_key(&thread_path, &format!("key{i}"), i));
+            }
+        }));
+    }
+    for thread in threads {
+        ok(thread.join());
+    }
+    let json = ok(read_json_object(&path));
+    for i in 0..8 {
+        let value = some(json[format!("key{i}")].as_i64());
+        assert_eq!(value, i64::from(i));
+    }
+}

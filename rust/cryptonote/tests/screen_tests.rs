@@ -313,14 +313,14 @@ fn file_shows_image_viewer() {
 #[test]
 fn file_shows_video_viewer() {
     let edits = mount("/?screen=file", "", vec![file("clip.mp4", &[1, 2, 3])], None, Some(0));
-    assert!(
-        edits.contains("Preparing preview..."),
-        "video preview should show a loading state while the blob URL is prepared: {edits}"
-    );
     assert!(edits.contains("clip.mp4"), "attachment name not rendered: {edits}");
     assert!(
         !edits.contains("data:video/mp4;base64,AQID"),
         "video preview should use a blob URL, not a data: URI: {edits}"
+    );
+    assert!(
+        !edits.contains("Preparing preview..."),
+        "video loading state should show a thumbnail, not the duplicated banner: {edits}"
     );
 }
 

@@ -1,6 +1,9 @@
 use crate::messages::*;
 use crate::*;
-use functora_dioxus::files::{preview_blob, preview_blob_url, preview_initial, revoke_blob_url, Preview};
+use functora_dioxus::files::{
+    preview_blob, preview_blob_url, preview_cached, preview_initial, revoke_blob_url, Preview,
+};
+use functora_dioxus::widgets::AttachmentPreview;
 
 #[component]
 pub fn File() -> Element {
@@ -16,6 +19,10 @@ pub fn File() -> Element {
         .map(|a| format_size(a.data.len() as u64))
         .unwrap_or_default();
     let initial = att.as_ref().and_then(|a| preview_initial(&a.name, &a.data));
+    let loading_thumb = att.as_ref().and_then(|a| match preview_cached(&a.name, &a.data) {
+        Preview::Video(url) => Some(url.clone()),
+        _ => None,
+    });
     let blob_preview: Signal<Option<Preview>> = use_signal(|| initial);
     let current_blob: Signal<Option<String>> = use_signal(|| None);
     let mut preview_gen: Signal<u64> = use_signal(|| 0);
@@ -97,10 +104,20 @@ pub fn File() -> Element {
         }
     } else {
         match blob_preview() {
-            None => rsx! {
-                Pre {
-                    code { "{Msg::Base(BaseMsg::Stage(Stage::Preview)).render(lang)}" }
-                }
+            None => match loading_thumb {
+                Some(url) => rsx! {
+                    AttachmentPreview {
+                        name: name.clone(),
+                        preview: Preview::Video(url),
+                        onclick: None,
+                        style: "display: block; width: 100%; height: auto;".to_string(),
+                    }
+                },
+                None => rsx! {
+                    Pre {
+                        code { "{Msg::Base(BaseMsg::Stage(Stage::Preview)).render(lang)}" }
+                    }
+                },
             },
             Some(preview) => match preview {
                 Preview::Image(url) => rsx! {

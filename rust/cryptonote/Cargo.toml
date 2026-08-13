@@ -6,7 +6,13 @@ authors = ["Functora <functora@proton.me>"]
 edition = "2021"
 
 [dependencies]
-dioxus = { version = "=0.7.2", features = ["html", "router"] }
+dioxus = { version = "=0.7.2", default-features = false, features = [
+  "html",
+  "router",
+  "launch",
+  "logger",
+  "lib",
+] }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -18,17 +24,45 @@ tracing = "0.1.43"
 functora = { path = "../functora" }
 functora-dioxus = { path = "../functora-dioxus", features = ["qr"] }
 functora-tagged = { path = "../functora-tagged" }
-dioxus-free-icons = { version = "0.10.0", features = [
+dioxus-free-icons = { version = "=0.10.0", features = [
   "font-awesome-brands",
   "font-awesome-solid",
 ] }
-dioxus-sdk = { version = "0.7.0", features = ["storage"] }
+dioxus-sdk = { version = "=0.7.0", features = ["storage"] }
+dioxus-asset-resolver = { version = "=0.7.2", default-features = false }
+dioxus-cli-config = { version = "=0.7.2", default-features = false }
+dioxus-config-macro = { version = "=0.7.2", default-features = false }
+dioxus-config-macros = { version = "=0.7.2", default-features = false }
+dioxus-core = "=0.7.2"
+dioxus-core-macro = { version = "=0.7.2", default-features = false }
+dioxus-core-types = { version = "=0.7.2", default-features = false }
+dioxus-document = { version = "=0.7.2", default-features = false }
+dioxus-history = { version = "=0.7.2", default-features = false }
+dioxus-hooks = { version = "=0.7.2", default-features = false }
+dioxus-html = { version = "=0.7.2", default-features = false }
+dioxus-html-internal-macro = { version = "=0.7.2", default-features = false }
+dioxus-interpreter-js = { version = "=0.7.2", default-features = false }
+dioxus-logger = { version = "=0.7.2", default-features = false }
+dioxus-router = { version = "=0.7.2", default-features = false }
+dioxus-router-macro = { version = "=0.7.2", default-features = false }
+dioxus-rsx = { version = "=0.7.2", default-features = false }
+dioxus-sdk-storage = "=0.7.0"
+dioxus-signals = "=0.7.2"
+dioxus-stores = { version = "=0.7.2", default-features = false }
+dioxus-stores-macro = { version = "=0.7.2", default-features = false }
+dioxus-web = { version = "=0.7.2", default-features = false }
 tap = "1.0.1"
 zeroize = "1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
-dioxus = { version = "=0.7.2", features = ["html", "router"] }
+dioxus = { version = "=0.7.2", default-features = false, features = [
+  "html",
+  "router",
+  "launch",
+  "logger",
+  "lib",
+] }
 dioxus-core = "=0.7.2"
 dioxus-signals = "=0.7.2"
 zip = { version = "2", default-features = false, features = ["deflate"] }
@@ -42,6 +76,9 @@ rxing = { version = "0.9.0", default-features = false, features = [
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dioxus-desktop = { version = "=0.7.2", default-features = false }
 
 [features]
 default = ["web"]

@@ -34,7 +34,7 @@ impl Default for AppAssets {
     }
 }
 
-fn manifest(name: &str, icon_192_png: &Asset, icon_512_png: &Asset) -> String {
+fn manifest(name: &str, icon_192_png: Asset, icon_512_png: Asset) -> String {
     format!(
         r#"{{"name":"{name}","short_name":"{name}","icons":[{{"src":"{icon_192_png}","sizes":"192x192","type":"image/png"}},{{"src":"{icon_512_png}","sizes":"512x512","type":"image/png"}}],"display":"standalone"}}"#
     )
@@ -74,7 +74,7 @@ fn AppMeta(name: String, assets: AppAssets) -> Element {
         }
         document::Link {
             rel: "manifest",
-            href: "data:application/manifest+json,{manifest(name.as_str(), &icon_192_png, &icon_512_png)}",
+            href: "data:application/manifest+json,{manifest(name.as_str(), icon_192_png, icon_512_png)}",
         }
         document::Title { "{name}" }
         for url in &css {

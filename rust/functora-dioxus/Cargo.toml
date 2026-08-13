@@ -10,7 +10,13 @@ documentation = "https://docs.rs/functora-dioxus"
 description = "Reusable Dioxus components, JS interop, storage, and utilities."
 
 [dependencies]
-dioxus = { version = "=0.7.2", features = ["html", "router"] }
+dioxus = { version = "=0.7.2", default-features = false, features = [
+  "html",
+  "router",
+  "launch",
+  "logger",
+  "lib",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.22"
@@ -21,10 +27,30 @@ tracing = "0.1.43"
 functora = { path = "../functora" }
 functora-tagged = { path = "../functora-tagged" }
 tap = "1.0.1"
-dioxus-free-icons = { version = "0.10.0", features = [
+dioxus-free-icons = { version = "=0.10.0", features = [
   "font-awesome-brands",
   "font-awesome-solid",
 ] }
+dioxus-asset-resolver = { version = "=0.7.2", default-features = false }
+dioxus-cli-config = { version = "=0.7.2", default-features = false }
+dioxus-config-macro = { version = "=0.7.2", default-features = false }
+dioxus-config-macros = { version = "=0.7.2", default-features = false }
+dioxus-core-macro = { version = "=0.7.2", default-features = false }
+dioxus-core-types = { version = "=0.7.2", default-features = false }
+dioxus-document = { version = "=0.7.2", default-features = false }
+dioxus-history = { version = "=0.7.2", default-features = false }
+dioxus-hooks = { version = "=0.7.2", default-features = false }
+dioxus-html = { version = "=0.7.2", default-features = false }
+dioxus-html-internal-macro = { version = "=0.7.2", default-features = false }
+dioxus-interpreter-js = { version = "=0.7.2", default-features = false }
+dioxus-logger = { version = "=0.7.2", default-features = false }
+dioxus-router = { version = "=0.7.2", default-features = false }
+dioxus-router-macro = { version = "=0.7.2", default-features = false }
+dioxus-rsx = { version = "=0.7.2", default-features = false }
+dioxus-signals = "=0.7.2"
+dioxus-stores = { version = "=0.7.2", default-features = false }
+dioxus-stores-macro = { version = "=0.7.2", default-features = false }
+dioxus-web = { version = "=0.7.2", default-features = false }
 rxing = { version = "0.9.0", default-features = false, features = [
   "wasm_support",
   "encoding_rs",
@@ -35,7 +61,7 @@ rxing = { version = "0.9.0", default-features = false, features = [
 thiserror = { version = "2.0.18", features = ["std"] }
 isolang = { version = "2.3", default-features = false, features = ["serde"] }
 sys-locale = "0.3.2"
-ammonia = "4.1.2"
+ammonia = "4.1.4"
 pulldown-cmark = "0.13.3"
 chacha20poly1305 = "0.10"
 aes-gcm = "0.10"

@@ -77,6 +77,9 @@ pub fn video_thumbnail(data: &[u8]) -> Option<Vec<u8>> {
         frames.extend(decoder.flush());
     }
     let frame = frames.into_iter().next()?;
+    if frame.width == 0 || frame.height == 0 {
+        return None;
+    }
     let rgb = RgbImage::from_raw(frame.width, frame.height, yuv_to_rgb(&frame))?;
     let (thumb_w, thumb_h) = fit(frame.width, frame.height, MAX_W, MAX_H);
     let thumb = thumbnail(&rgb, thumb_w, thumb_h);

@@ -38,7 +38,9 @@ pub fn decode_qr_luma(luma: &[u8], w: u32, h: u32) -> Option<String> {
     (w != 0 && h != 0).then_some(())?;
     QRCodeReader::new()
         .immutable_decode_with_hints(
-            &mut BinaryBitmap::new(HybridBinarizer::new(Luma8LuminanceSource::new(luma.to_vec(), w, h))),
+            &mut BinaryBitmap::new(HybridBinarizer::new(
+                Luma8LuminanceSource::new(luma.to_vec(), w, h).ok()?,
+            )),
             &decode_hints(),
         )
         .ok()

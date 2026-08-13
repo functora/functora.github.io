@@ -1,5 +1,6 @@
 use functora_dioxus::files::{
-    Attachment, Preview, format_size, is_text, mime_for, pick_script, preview, preview_cached, video_thumbnail_script,
+    Attachment, BlobMemo, Preview, blob_url_script, format_size, is_text, mime_for, pick_script, preview,
+    preview_blob_url, preview_cached, preview_initial, video_thumbnail_script,
 };
 
 #[test]
@@ -117,4 +118,52 @@ fn preview_cached_distinguishes_attachments() {
     assert_ne!(first, second);
     assert_eq!(preview_cached("b.mp4", b"first-video"), first);
     assert_ne!(preview_cached("a.png", b"first-video"), first);
+}
+
+#[test]
+fn preview_initial_sync_for_text_and_none_for_streaming() {
+    assert!(preview_initial("a.txt", b"hello").is_some());
+    assert!(preview_initial("a.md", b"# hi").is_some());
+    assert!(preview_initial("a.bin", b"\x00\x01").is_some());
+    assert!(preview_initial("a.png", b"png").is_none());
+    assert!(preview_initial("a.mp4", b"mp4").is_none());
+    assert!(preview_initial("a.mp3", b"mp3").is_none());
+    assert!(preview_initial("a.pdf", b"pdf").is_none());
+}
+
+#[test]
+fn preview_blob_url_identifies_blob_uris_only() {
+    assert!(preview_blob_url(&Preview::Image("data:image/png;base64,AQID".into())).is_none());
+    assert!(preview_blob_url(&Preview::Video("data:video/mp4;base64,AQID".into())).is_none());
+    assert_eq!(
+        preview_blob_url(&Preview::Image("blob:https://functora/abc".into())),
+        Some("blob:https://functora/abc")
+    );
+    assert_eq!(
+        preview_blob_url(&Preview::Pdf("blob:https://functora/def".into())),
+        Some("blob:https://functora/def")
+    );
+    assert!(preview_blob_url(&Preview::Text("hello".into())).is_none());
+}
+
+#[test]
+fn blob_url_script_assembles_blob_and_returns_object_url() {
+    let script = blob_url_script();
+    assert!(script.contains("dioxus.recv"));
+    assert!(script.contains("new Blob"));
+    assert!(script.contains("URL.createObjectURL"));
+    assert!(script.contains("dioxus.send({ t: 'ack' })"));
+    assert!(script.contains("dioxus.send({ ok: true, url })"));
+    assert!(script.contains("dioxus.send({ ok: false, error: msg })"));
+}
+
+#[test]
+fn blob_memo_forgets_revoked_urls() {
+    let mut memo = BlobMemo::default();
+    memo.insert("clip.mp4", 1, "blob:https://functora/a".into());
+    memo.insert("pic.png", 2, "blob:https://functora/b".into());
+    assert_eq!(memo.forget("blob:https://functora/a"), 1);
+    assert!(memo.get("clip.mp4", 1).is_none());
+    assert_eq!(memo.get("pic.png", 2), Some("blob:https://functora/b"));
+    assert_eq!(memo.forget("blob:https://functora/missing"), 0);
 }

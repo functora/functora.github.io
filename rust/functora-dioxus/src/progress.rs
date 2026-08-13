@@ -12,6 +12,7 @@ pub enum Stage {
     Decrypt,
     Unzip,
     Download,
+    Preview,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

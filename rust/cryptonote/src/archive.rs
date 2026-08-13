@@ -18,7 +18,7 @@ fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, Vec<u8>)> 
     entries.extend(
         attachments
             .iter()
-            .map(|a| (format!("attachments/{}", a.name), a.data.clone())),
+            .map(|a| (format!("attachments/{}", a.name), a.data.to_vec())),
     );
     entries
 }
@@ -99,7 +99,7 @@ where
         } else {
             files.push(Attachment {
                 name: name.strip_prefix("attachments/").unwrap_or(&name).to_string(),
-                data,
+                data: data.into(),
             });
         }
     }

@@ -50,7 +50,7 @@ where
 {
     let file_entries = files
         .iter()
-        .map(|f| (f.name.clone(), f.data.clone()))
+        .map(|f| (f.name.clone(), f.data.to_vec()))
         .collect::<Vec<_>>();
     run(file_entries, progress, move |entries, mut report| async move {
         let mut buf = Vec::new();

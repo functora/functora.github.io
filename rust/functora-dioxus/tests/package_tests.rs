@@ -52,11 +52,11 @@ fn zip_roundtrip_preserves_entries() {
             let files = vec![
                 Attachment {
                     name: "a.txt".into(),
-                    data: b"hello".to_vec(),
+                    data: b"hello".to_vec().into(),
                 },
                 Attachment {
                     name: "dir/b.bin".into(),
-                    data: vec![1, 2, 3],
+                    data: vec![1, 2, 3].into(),
                 },
             ];
             let zip = create_zip_async(&files, progress(), Stage::Zip)
@@ -82,7 +82,7 @@ fn zip_roundtrip_large_payload() {
             let zip = create_zip_async(
                 &[Attachment {
                     name: "big.bin".into(),
-                    data: big.clone(),
+                    data: big.clone().into(),
                 }],
                 progress(),
                 Stage::Zip,
@@ -103,7 +103,7 @@ fn zip_progress_reaches_total() {
         block_on(async {
             let files = vec![Attachment {
                 name: "big.bin".into(),
-                data: vec![0u8; 5 * 1024 * 1024],
+                data: vec![0u8; 5 * 1024 * 1024].into(),
             }];
             let progress = progress();
             let zip = create_zip_async(&files, progress, Stage::Zip)

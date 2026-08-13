@@ -67,7 +67,7 @@ fn build_external_archive_builds_pkg() {
                 Some(CipherType::Aes256Gcm),
                 &[Attachment {
                     name: "a.bin".into(),
-                    data: vec![1, 2, 3],
+                    data: vec![1, 2, 3].into(),
                 }],
                 common::progress(),
             )
@@ -85,11 +85,11 @@ fn build_external_with_attachments_builds_archive_with_files() {
             let atts = vec![
                 Attachment {
                     name: "photo.jpg".into(),
-                    data: vec![1, 2, 3],
+                    data: vec![1, 2, 3].into(),
                 },
                 Attachment {
                     name: "data.bin".into(),
-                    data: vec![9, 9, 9],
+                    data: vec![9, 9, 9].into(),
                 },
             ];
             let external = build_external(
@@ -139,14 +139,14 @@ fn add_attachment_unique_name() {
         &mut atts,
         Attachment {
             name: "a.txt".into(),
-            data: b"one".to_vec(),
+            data: b"one".to_vec().into(),
         },
     );
     add_attachment(
         &mut atts,
         Attachment {
             name: "b.txt".into(),
-            data: b"two".to_vec(),
+            data: b"two".to_vec().into(),
         },
     );
     assert_eq!(atts.len(), 2);
@@ -158,18 +158,18 @@ fn add_attachment_unique_name() {
 fn add_attachment_duplicate_name_replaces() {
     let mut atts = vec![Attachment {
         name: "a.txt".into(),
-        data: b"old".to_vec(),
+        data: b"old".to_vec().into(),
     }];
     add_attachment(
         &mut atts,
         Attachment {
             name: "a.txt".into(),
-            data: b"new".to_vec(),
+            data: b"new".to_vec().into(),
         },
     );
     assert_eq!(atts.len(), 1);
     assert_eq!(atts[0].name, "a.txt");
-    assert_eq!(atts[0].data, b"new");
+    assert_eq!(atts[0].data.as_ref(), b"new");
 }
 
 #[test]
@@ -177,32 +177,32 @@ fn add_attachment_duplicate_name_mixed_order() {
     let mut atts = vec![
         Attachment {
             name: "a.txt".into(),
-            data: b"one".to_vec(),
+            data: b"one".to_vec().into(),
         },
         Attachment {
             name: "b.txt".into(),
-            data: b"two".to_vec(),
+            data: b"two".to_vec().into(),
         },
     ];
     add_attachment(
         &mut atts,
         Attachment {
             name: "a.txt".into(),
-            data: b"one-replaced".to_vec(),
+            data: b"one-replaced".to_vec().into(),
         },
     );
     add_attachment(
         &mut atts,
         Attachment {
             name: "b.txt".into(),
-            data: b"two-replaced".to_vec(),
+            data: b"two-replaced".to_vec().into(),
         },
     );
     assert_eq!(atts.len(), 2);
     assert_eq!(atts[0].name, "a.txt");
-    assert_eq!(atts[0].data, b"one-replaced");
+    assert_eq!(atts[0].data.as_ref(), b"one-replaced");
     assert_eq!(atts[1].name, "b.txt");
-    assert_eq!(atts[1].data, b"two-replaced");
+    assert_eq!(atts[1].data.as_ref(), b"two-replaced");
 }
 
 #[test]

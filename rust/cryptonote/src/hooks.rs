@@ -74,7 +74,13 @@ pub fn attach_files(tst: Store<TemporaryState>, mut message: Signal<Option<Msg>>
                 let next = files
                     .into_iter()
                     .fold(tst.attachments()(), |mut current, (name, data)| {
-                        add_attachment(&mut current, Attachment { name, data });
+                        add_attachment(
+                            &mut current,
+                            Attachment {
+                                name,
+                                data: data.into(),
+                            },
+                        );
                         current
                     });
                 tst.attachments().set(next);
@@ -236,21 +242,23 @@ fn app_origin() -> String {
 }
 
 #[cfg(not(target_os = "android"))]
-pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
+pub async fn download_package<P, D>(data: D, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
+    D: AsRef<[u8]>,
 {
     functora_dioxus::files::download_package(data, filename, progress, Stage::Download).await
 }
 
 #[cfg(target_os = "android")]
-pub async fn download_package<P>(data: Vec<u8>, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
+pub async fn download_package<P, D>(data: D, filename: &str, progress: P) -> Result<String, functora_dioxus::Error>
 where
     P: Writable<Target = Option<Job>> + Copy + 'static,
+    D: AsRef<[u8]> + Send + 'static,
 {
     let name = filename.to_string();
     crate::worker::run((data, name), progress, |(bytes, file_name), mut report| async move {
-        functora_dioxus::android::save_to_downloads(&bytes, file_name.clone(), move |done, total| {
+        functora_dioxus::android::save_to_downloads(bytes.as_ref(), file_name.clone(), move |done, total| {
             report(Job {
                 stage: Stage::Download,
                 done,

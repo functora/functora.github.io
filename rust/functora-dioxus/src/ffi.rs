@@ -148,6 +148,34 @@ pub async fn sleep(millis: u64) -> Result<(), Error> {
     .await
 }
 
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+pub enum PwaInstallOutcome {
+    Accepted,
+    Rejected,
+    NotAvailable,
+}
+
+const PWA_INSTALL_TRIGGER_JS: &str = r#"function(arg) {
+    if (!window.__functoraPwaDeferred) {
+        return "NotAvailable";
+    }
+    const d = window.__functoraPwaDeferred;
+    d.prompt();
+    const result = await d.userChoice;
+    window.__functoraPwaDeferred = null;
+    return result.outcome === 'accepted' ? 'Accepted' : 'Rejected';
+}
+"#;
+
+pub async fn trigger_pwa_install() -> Result<PwaInstallOutcome, Error> {
+    let result: String = eval((), PWA_INSTALL_TRIGGER_JS).await?;
+    Ok(match result.as_str() {
+        "Accepted" => PwaInstallOutcome::Accepted,
+        "Rejected" => PwaInstallOutcome::Rejected,
+        _ => PwaInstallOutcome::NotAvailable,
+    })
+}
+
 pub fn write_clipboard<S: I18N + 'static>(
     val: String,
     mut message: impl Writable<Target = Option<S>> + 'static,

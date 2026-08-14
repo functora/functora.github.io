@@ -1,5 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::encoding::generate_qr_code;
+#[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+use crate::ffi::{PwaInstallOutcome, trigger_pwa_install};
 use crate::ffi::{ShareData, social_share};
 use crate::hooks::{use_in_flight, use_lang, use_message, use_message_markdown};
 use crate::i18n::I18N;
@@ -11,6 +13,8 @@ use crate::write_clipboard;
 use dioxus::prelude::*;
 use dioxus_free_icons::Icon;
 use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
+#[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+use dioxus_free_icons::icons::fa_solid_icons::FaDownload;
 use dioxus_free_icons::icons::fa_solid_icons::{FaCopy, FaHeart, FaShareNodes, FaUser};
 
 #[component]
@@ -65,6 +69,34 @@ where
     let copy_text = format!("{}\n{}", share_text.clone(), derived_app_url.clone());
     let share_text_owned = share_text;
     let share_url_owned = derived_app_url;
+    #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+    let pwa_install_button = rsx! {
+        Button {
+            icon: Some(FaDownload),
+            primary: true,
+            onclick: move |_| {
+                let mut msg = message;
+                let _ = spawn(async move {
+                    match trigger_pwa_install().await {
+                        Ok(PwaInstallOutcome::Accepted) => {
+                            msg.set(Some(Msg::PwaInstallSuccess));
+                        }
+                        Ok(PwaInstallOutcome::Rejected) => {
+                            msg.set(Some(Msg::PwaInstallRejected));
+                        }
+                        Ok(PwaInstallOutcome::NotAvailable) => {
+                            msg.set(Some(Msg::PwaInstallUnavailable));
+                        }
+                        Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
+                    }
+                });
+            },
+            i18n: Some(Msg::PwaInstallPrompt),
+            lang,
+        }
+    };
+    #[cfg(not(all(target_arch = "wasm32", not(target_os = "android"))))]
+    let pwa_install_button = rsx! {};
     rsx! {
         Breadcrumb {
             title: Msg::Application,
@@ -124,6 +156,7 @@ where
                     i18n: Some(Msg::ShareAppLink),
                     lang,
                 }
+                {pwa_install_button}
                 ExtLink {
                     href: derived_beta_url,
                     button: true,

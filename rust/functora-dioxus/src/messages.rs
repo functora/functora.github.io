@@ -64,6 +64,10 @@ pub enum Msg {
     AboutAndroidBeta3,
     AboutAndroidBetaLink3,
     AboutAndroidBeta4,
+    PwaInstallPrompt,
+    PwaInstallSuccess,
+    PwaInstallRejected,
+    PwaInstallUnavailable,
 }
 
 impl I18N for Msg {
@@ -187,6 +191,10 @@ If you have any questions regarding privacy while using the Application, or have
             Self::AboutAndroidBeta3 => ", or download the".into(),
             Self::AboutAndroidBetaLink3 => "APK file".into(),
             Self::AboutAndroidBeta4 => "directly.".into(),
+            Self::PwaInstallPrompt => "Install as PWA".into(),
+            Self::PwaInstallSuccess => "Installed as PWA!".into(),
+            Self::PwaInstallRejected => "Installation cancelled".into(),
+            Self::PwaInstallUnavailable => "PWA installation not available in this browser".into(),
         }
     }
 
@@ -311,6 +319,10 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::AboutAndroidBeta3 => ", o descargue el".into(),
             Self::AboutAndroidBetaLink3 => "archivo APK".into(),
             Self::AboutAndroidBeta4 => "directamente.".into(),
+            Self::PwaInstallPrompt => "Instalar como PWA".into(),
+            Self::PwaInstallSuccess => "¡Instalado como PWA!".into(),
+            Self::PwaInstallRejected => "Instalación cancelada".into(),
+            Self::PwaInstallUnavailable => "La instalación PWA no está disponible en este navegador".into(),
         }
     }
 
@@ -437,6 +449,10 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::AboutAndroidBeta3 => " или скачайте".into(),
             Self::AboutAndroidBetaLink3 => "APK-файл".into(),
             Self::AboutAndroidBeta4 => "напрямую.".into(),
+            Self::PwaInstallPrompt => "Установить как PWA".into(),
+            Self::PwaInstallSuccess => "Установлено как PWA!".into(),
+            Self::PwaInstallRejected => "Установка отменена".into(),
+            Self::PwaInstallUnavailable => "Установка PWA недоступна в этом браузере".into(),
         }
     }
 }

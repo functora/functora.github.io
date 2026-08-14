@@ -63,13 +63,63 @@ pub struct AppAttrs {
     pub org: &'static str,
     pub src: Option<&'static str>,
     pub dst: &'static str,
+    pub description: &'static str,
+}
+
+pub(crate) fn capitalize_first(s: &str) -> String {
+    let end = s.chars().next().map_or(0, char::len_utf8);
+    format!("{}{}", s[..end].to_uppercase(), &s[end..])
 }
 
 impl AppAttrs {
     #[must_use]
     pub fn app_name(self) -> String {
-        let end = self.app.chars().next().map_or(0, char::len_utf8);
-        format!("{}{}", self.app[..end].to_uppercase(), &self.app[end..])
+        capitalize_first(self.app)
+    }
+
+    #[must_use]
+    pub fn cache_name(self) -> String {
+        format!("{}-v{}", self.app, self.vsn)
+    }
+
+    #[must_use]
+    pub fn manifest_uri(self, icon_192: &str, icon_512: &str) -> Option<String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let loc = web_sys::window()?.location();
+            let protocol = loc.protocol().ok()?;
+            let host = loc.host().ok()?;
+            let pathname = loc.pathname().ok()?;
+            let origin_base = format!("{protocol}//{host}");
+            let app_root = format!("{origin_base}{pathname}");
+            let json = crate::manifest_json(
+                self.app,
+                self.vsn,
+                self.description,
+                &app_root,
+                &app_root,
+                &[
+                    crate::ManifestIcon {
+                        src: format!("{origin_base}{icon_192}"),
+                        sizes: "192x192",
+                        r#type: "image/png",
+                        purpose: "any",
+                    },
+                    crate::ManifestIcon {
+                        src: format!("{origin_base}{icon_512}"),
+                        sizes: "512x512",
+                        r#type: "image/png",
+                        purpose: "any",
+                    },
+                ],
+            );
+            Some(format!("data:application/manifest+json,{}", urlencoding::encode(&json)))
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = (icon_192, icon_512);
+            None
+        }
     }
 
     #[must_use]

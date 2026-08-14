@@ -36,14 +36,14 @@
             ]
             ++ mobile-targets;
         };
-        wasm-bindgen-cli-0_2_106 = with pkgs;
+        wasm-bindgen-cli-0_2_127 = with pkgs;
           rustPlatform.buildRustPackage rec {
             pname = "wasm-bindgen-cli";
-            version = "0.2.106";
+            version = "0.2.127";
             src = pkgs.fetchCrate {
               pname = "wasm-bindgen-cli";
-              version = "0.2.106";
-              sha256 = "sha256-M6WuGl7EruNopHZbqBpucu4RWz44/MSdv6f0zkYw+44=";
+              version = "0.2.127";
+              sha256 = "sha256-di+qBAdd7pENLiIB9CoZoab+W5xeDoByMREcCGTSzWo=";
             };
             cargoLock.lockFile = "${src}/Cargo.lock";
             nativeBuildInputs = [pkg-config];
@@ -330,7 +330,7 @@
               strace
               # web
               binaryen
-              wasm-bindgen-cli-0_2_106
+              wasm-bindgen-cli-0_2_127
               lessc
               clean-css-cli
               # linux

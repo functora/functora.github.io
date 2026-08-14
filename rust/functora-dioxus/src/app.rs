@@ -84,7 +84,7 @@ fn json_str(s: &str) -> String {
 #[must_use]
 pub fn pwa_init_js(sw_url: &str, cache_name: &str) -> String {
     format!(
-        "if('serviceWorker' in navigator){{navigator.serviceWorker.register('{sw_url}?cache={cache_name}').catch(e=>console.error('SW registration failed:',e));}}window.__functoraPwaDeferred=null;window.addEventListener('beforeinstallprompt',(e)=>{{e.preventDefault();window.__functoraPwaDeferred=e;}});window.addEventListener('appinstalled',()=>{{window.__functoraPwaDeferred=null;}});"
+        "if('serviceWorker' in navigator){{navigator.serviceWorker.register('{sw_url}?cache={cache_name}').catch(e=>console.error('SW registration failed:',e));}}window.__functoraPwaDeferred=null;window.addEventListener('beforeinstallprompt',(e)=>{{window.__functoraPwaDeferred=e;}});window.addEventListener('appinstalled',()=>{{window.__functoraPwaDeferred=null;}});"
     )
 }
 

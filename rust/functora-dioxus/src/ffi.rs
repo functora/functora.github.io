@@ -176,6 +176,40 @@ pub async fn trigger_pwa_install() -> Result<PwaInstallOutcome, Error> {
     })
 }
 
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+pub enum InstallHint {
+    Ios,
+    Mac,
+    Unavailable,
+}
+
+pub async fn install_hint() -> Result<InstallHint, Error> {
+    let result: String = eval(
+        (),
+        r"function(arg){
+        const ua = navigator.userAgent;
+        if (/iPad|iPhone|iPod/.test(ua) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        return 'ios';
+        }
+        if (/Macintosh/.test(ua) && /Safari\//.test(ua) &&
+            !/Chrome|CriOS|Edg\/|OPR\/|FxiOS/.test(ua)) {
+        const v = parseInt(ua.split('Version/')[1] || '', 10);
+        if (v >= 17) {
+        return 'mac';
+        }
+        }
+        return '';
+        }",
+    )
+    .await?;
+    Ok(match result.as_str() {
+        "ios" => InstallHint::Ios,
+        "mac" => InstallHint::Mac,
+        _ => InstallHint::Unavailable,
+    })
+}
+
 pub fn write_clipboard<S: I18N + 'static>(
     val: String,
     mut message: impl Writable<Target = Option<S>> + 'static,

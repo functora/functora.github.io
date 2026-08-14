@@ -1,7 +1,7 @@
 #![allow(clippy::shadow_reuse)]
 use crate::encoding::generate_qr_code;
 #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
-use crate::ffi::{PwaInstallOutcome, trigger_pwa_install};
+use crate::ffi::{InstallHint, PwaInstallOutcome, install_hint, trigger_pwa_install};
 use crate::ffi::{ShareData, social_share};
 use crate::hooks::{use_in_flight, use_lang, use_message, use_message_markdown};
 use crate::i18n::I18N;
@@ -85,7 +85,11 @@ where
                             msg.set(Some(Msg::PwaInstallRejected));
                         }
                         Ok(PwaInstallOutcome::NotAvailable) => {
-                            msg.set(Some(Msg::PwaInstallUnavailable));
+                            msg.set(Some(match install_hint().await.unwrap_or(InstallHint::Unavailable) {
+                                InstallHint::Ios => Msg::PwaInstallIos,
+                                InstallHint::Mac => Msg::PwaInstallMac,
+                                InstallHint::Unavailable => Msg::PwaInstallUnavailable,
+                            }));
                         }
                         Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
                     }

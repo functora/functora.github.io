@@ -158,6 +158,7 @@
                   mkdir -p "$REL"
                 fi
                 dx bundle --release --web --debug-symbols=false
+                cp ../functora-dioxus/assets/sw.js ./target/dx/cryptonote/release/web/public/sw.js
                 cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
@@ -173,6 +174,7 @@
                     cd "${app}"
                     VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                     dx bundle --release --web --debug-symbols=false
+                    cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
                     python3 <<PYEOF
               import http.server, socketserver, os
               PORT = 8000

@@ -144,27 +144,45 @@ fn manifest_json_icon_types_are_png() {
 
 #[test]
 fn pwa_init_js_contains_service_worker_registration() {
-    let code = pwa_init_js("/sw.js", "cryptonote-v0.1.10");
+    let code = pwa_init_js("sw.js", "cryptonote-v0.1.10");
     assert!(code.contains("serviceWorker"));
     assert!(code.contains("navigator.serviceWorker.register"));
 }
 
 #[test]
 fn pwa_init_js_is_guarded_by_feature_detection() {
-    let code = pwa_init_js("/sw.js", "cryptonote-v0.1.10");
+    let code = pwa_init_js("sw.js", "cryptonote-v0.1.10");
     assert!(code.contains("'serviceWorker' in navigator"));
 }
 
 #[test]
 fn pwa_init_js_registers_sw_with_derived_cache() {
-    let code = pwa_init_js("/sw.js", "cryptonote-v0.1.10");
-    assert!(code.contains("/sw.js?cache=cryptonote-v0.1.10"));
+    let code = pwa_init_js("sw.js", "cryptonote-v0.1.10");
+    assert!(code.contains("sw.js?cache=cryptonote-v0.1.10"));
 }
 
 #[test]
 fn pwa_init_js_contains_install_prompt_setup() {
-    let code = pwa_init_js("/sw.js", "cryptonote-v0.1.10");
+    let code = pwa_init_js("sw.js", "cryptonote-v0.1.10");
     assert!(code.contains("beforeinstallprompt"));
     assert!(code.contains("__functoraPwaDeferred"));
     assert!(code.contains("appinstalled"));
+}
+
+const SW_JS: &str = include_str!("../assets/sw.js");
+
+#[test]
+fn service_worker_precaches_app_shell_at_install() {
+    assert!(SW_JS.contains("self.registration.scope"));
+    assert!(SW_JS.contains("cache.add(self.registration.scope)"));
+}
+
+#[test]
+fn service_worker_falls_back_to_app_shell_for_navigation() {
+    assert!(SW_JS.contains("cache.match(self.registration.scope)"));
+}
+
+#[test]
+fn service_worker_derives_cache_name_from_its_url() {
+    assert!(SW_JS.contains("searchParams.get('cache')"));
 }

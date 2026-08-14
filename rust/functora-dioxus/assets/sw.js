@@ -1,5 +1,8 @@
 const CACHE = new URL(self.location.href).searchParams.get('cache');
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (e) => {
+    self.skipWaiting();
+    e.waitUntil(caches.open(CACHE).then((cache) => cache.add(self.registration.scope)));
+});
 self.addEventListener('activate', () => self.clients.claim());
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
@@ -12,7 +15,7 @@ self.addEventListener('fetch', (e) => {
                 return fetch(e.request).then((resp) => {
                     if (resp.ok) cache.put(e.request, resp.clone());
                     return resp;
-                }).catch(() => isNav ? cache.match('/') : undefined);
+                }).catch(() => isNav ? cache.match(self.registration.scope) : undefined);
             })
         )
     );

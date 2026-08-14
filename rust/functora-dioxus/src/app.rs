@@ -14,7 +14,6 @@ pub struct AppAssets {
     pub apple_touch_icon_png: Asset,
     pub icon_192_png: Asset,
     pub icon_512_png: Asset,
-    pub sw_js: Asset,
     pub css: Vec<Asset>,
 }
 
@@ -27,7 +26,6 @@ impl Default for AppAssets {
             apple_touch_icon_png: asset!("/assets/apple-touch-icon.png"),
             icon_192_png: asset!("/assets/android-chrome-192x192.png"),
             icon_512_png: asset!("/assets/android-chrome-512x512.png"),
-            sw_js: asset!("/assets/sw.js"),
             css: vec![asset!(
                 "/assets/functora.min.css",
                 AssetOptions::css().with_minify(false).into_asset_options()
@@ -97,15 +95,13 @@ fn AppMeta(attrs: AppAttrs, assets: AppAssets) -> Element {
         icon_32_png,
         apple_touch_icon_png,
         css,
-        #[cfg(target_arch = "wasm32")]
-        sw_js,
         ..
     } = assets;
 
     #[cfg(target_arch = "wasm32")]
     let pwa_script = rsx! {
         document::Script {
-            "{pwa_init_js(&sw_js.to_string(), &attrs.cache_name())}"
+            "{pwa_init_js(\"sw.js\", &attrs.cache_name())}"
         }
     };
     #[cfg(not(target_arch = "wasm32"))]

@@ -36,9 +36,9 @@ fn cache_name_is_derived_from_app_and_version() {
 
 #[test]
 fn service_worker_registration_uses_derived_cache() {
-    let js = functora_dioxus::pwa_init_js("/sw.js", &cryptonote::APP_ATTRS.cache_name());
+    let js = functora_dioxus::pwa_init_js("sw.js", &cryptonote::APP_ATTRS.cache_name());
     assert!(js.contains("serviceWorker"));
-    assert!(js.contains(&format!("/sw.js?cache={}", cryptonote::APP_ATTRS.cache_name())));
+    assert!(js.contains(&format!("sw.js?cache={}", cryptonote::APP_ATTRS.cache_name())));
 }
 
 #[test]

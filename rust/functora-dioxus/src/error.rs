@@ -116,6 +116,8 @@ pub enum Error {
     CameraNotAvailable(String),
     #[error("Camera permission denied: {0}")]
     CameraPermissionDenied(String),
+    #[error("Camera feed stalled: no frames received")]
+    CameraStalled,
     #[error("Not a JSON object: {0}")]
     NotJsonObject(serde_json::Value),
     #[error("Archive error: {0}")]
@@ -204,6 +206,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Numeric conversion failed ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
+            Self::CameraStalled => "The camera feed stopped responding; try again".into(),
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::Worker(e) => format!("Background task error: {e}"),
@@ -232,6 +235,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Error de conversión numérica ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
+            Self::CameraStalled => "La cámara dejó de responder; inténtalo de nuevo".into(),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
             Self::Archive(e) => format!("Error de archivo: {e}"),
             Self::Worker(e) => format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})"),
@@ -260,6 +264,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Ошибка численного преобразования ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
+            Self::CameraStalled => "Поток с камеры остановился; попробуйте ещё раз".into(),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),

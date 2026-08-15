@@ -158,8 +158,8 @@
                   mkdir -p "$REL"
                 fi
                 dx bundle --release --web --debug-symbols=false
-                cp ../functora-dioxus/assets/sw.js ./target/dx/cryptonote/release/web/public/sw.js
-                cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
+                cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
+                cp -R ./target/dx/${app}/release/web/public/* "$REL"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
               )

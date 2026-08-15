@@ -38,23 +38,14 @@ pub fn edit_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> 
     }
 }
 
-/// IMPORTANT! Do not remove the per-field resets below: keep them in sync with
-/// new `TemporaryState` fields. `tst.set(TemporaryState::default())` is kept as a safety
-/// net, but dioxus-stores 0.7.2 fails to notify field subscribers on whole-store
-/// writes (`paths_under` bug, fixed in 0.7.4 via <https://github.com/DioxusLabs/dioxus/pull/5069>),
-/// so the per-field writes mark every field dirty.
+/// Replaces the whole temporary editing state with its default value.
+///
+/// dioxus-stores notifies every field subscriber on a whole-store `set` (the
+/// `paths_under` regression was fixed in 0.7.4), so a single `Store::set` is
+/// sufficient and automatically covers any new `TemporaryState` field, whereas
+/// per-field writes would need manual syncing with the struct definition.
 pub fn reset_temporary_state(mut tst: Store<TemporaryState>) {
     tst.set(TemporaryState::default());
-    tst.note().set(String::new());
-    tst.password().set(String::new());
-    tst.cipher().set(Some(CipherType::Aes256Gcm));
-    tst.attachments().set(Vec::new());
-    tst.screen().set(Screen::default());
-    tst.action().set(ActionMode::Create);
-    tst.url_input().set(String::new());
-    tst.external().set(External::Nothing);
-    tst.progress().set(None);
-    tst.attachment().set(None);
 }
 
 pub fn reset_handler(tst: Store<TemporaryState>, mut nav: Signal<Nav<Route>>) -> impl FnMut(MouseEvent) + 'static {

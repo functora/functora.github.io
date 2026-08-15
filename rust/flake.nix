@@ -62,6 +62,54 @@
         };
         android-sdk =
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
+        dioxusCli08 = pkgs.rustPlatform.buildRustPackage (finalAttrs: {
+          pname = "dioxus-cli";
+          version = "0.8.0-alpha.1";
+          src = pkgs.fetchCrate {
+            pname = "dioxus-cli";
+            version = "0.8.0-alpha.1";
+            hash = "sha256-4x9xTc9FW03ohEhDOe+wJ0EJ4yR8HWFmiEA+hvlLF7Q=";
+          };
+          cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
+          buildFeatures = [
+            "no-downloads"
+            "disable-telemetry"
+          ];
+          env = {
+            OPENSSL_NO_VENDOR = 1;
+          };
+          nativeBuildInputs = [
+            pkgs.pkg-config
+            pkgs.cacert
+            pkgs.installShellFiles
+            pkgs.makeWrapper
+          ];
+          buildInputs = [
+            pkgs.openssl
+          ];
+          nativeCheckInputs = [
+            pkgs.rustfmt
+          ];
+          checkFlags = [
+            "--skip=serve::proxy::test"
+            "--skip=test_harnesses::run_harness"
+          ];
+          postInstall = ''
+            installShellCompletion --cmd dx \
+              --bash <($out/bin/dx completions bash) \
+              --fish <($out/bin/dx completions fish) \
+              --zsh <($out/bin/dx completions zsh)
+          '';
+          postFixup = ''
+            wrapProgram $out/bin/dx \
+              --suffix PATH : ${
+              pkgs.lib.makeBinPath [
+                pkgs.esbuild
+                pkgs.wasm-bindgen-cli_0_2_118
+              ]
+            }
+          '';
+        });
         mkAab = app: let
           mkCmd = target: ''
             android-icons
@@ -100,6 +148,7 @@
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
             MANIFEST="./target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
             sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/${app}/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
+            sed -i 's| android:launchMode="[^"]*"||g' "$MANIFEST"
             sed -i 's|android:name="dev.dioxus.main.MainActivity"|android:name="dev.dioxus.main.MainActivity" android:launchMode="singleInstance"|' "$MANIFEST"
             sed -i 's|</activity>|</activity>\n    <activity android:name="dev.dioxus.main.ProxyActivity" android:exported="true" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="application/octet-stream" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="*/*" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.SEND" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:mimeType="application/octet-stream" />\n      </intent-filter>\n    </activity>|' "$MANIFEST"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
@@ -326,7 +375,7 @@
               clippy
               wasmtime
               license-generator
-              dioxus-cli
+              dioxusCli08
               tailwindcss_4
               simple-http-server
               strace
@@ -527,6 +576,7 @@
           rustell-wasm-nvim = mkRustellNvim "${
             pkgs.wasmtime
           }/bin/wasmtime ${rustell-wasm}/lib/rustell.wasm";
+          dioxus-cli-08 = dioxusCli08;
           default = self.packages.${system}.rustell;
         };
       }

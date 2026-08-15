@@ -11,13 +11,15 @@ pub fn Dock(
     let nav = use_context::<Signal<Nav<Route>>>();
     let lang = use_lang();
 
-    functora_dioxus::widgets::GenDock(functora_dioxus::widgets::GenDockProps {
-        children,
-        message,
-        nav,
-        lang,
-        back_button_i18n: Some(Msg::Base(BaseMsg::Back)),
-        back_button_icon: Some(FaArrowLeft),
-        back_button_hide,
-    })
+    rsx! {
+        functora_dioxus::widgets::GenDock::<Route,Msg,Msg,FaArrowLeft,Signal<Nav<Route>>,Signal<Option<Msg>>> {
+            children,
+            nav,
+            message,
+            lang,
+            back_button_i18n: Some(Msg::Base(BaseMsg::Back)),
+            back_button_icon: Some(FaArrowLeft),
+            back_button_hide,
+        }
+    }
 }

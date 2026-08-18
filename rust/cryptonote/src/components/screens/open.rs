@@ -55,11 +55,14 @@ pub fn Open(note: Option<String>) -> Element {
             message.set(Some(Msg::Base(BaseMsg::PasswordRequired)));
             return;
         }
+        let Some(guard) = claim_job(tst.progress(), Stage::Decrypt) else {
+            return;
+        };
         match tst.external()() {
             External::Note(p) => {
                 if let NoteData::CipherText(enc) = p.data {
                     let cipher = enc.cipher;
-                    let _ = spawn(async move {
+                    let _ = spawn_guarded(guard, async move {
                         let mut nav_out = nav;
                         let mut message_out = message;
                         match crate::worker::run(
@@ -100,7 +103,7 @@ pub fn Open(note: Option<String>) -> Element {
                 }
             }
             External::Archive(src_archive) => {
-                let _ = spawn(async move {
+                let _ = spawn_guarded(guard, async move {
                     let mut nav_out = nav;
                     let mut message_out = message;
                     let archive_bytes = src_archive.untag();

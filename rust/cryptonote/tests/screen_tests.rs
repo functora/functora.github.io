@@ -76,7 +76,7 @@ fn mount(
 fn attachment(name: &str) -> Attachment {
     Attachment {
         name: name.into(),
-        data: vec![1, 2, 3],
+        data: vec![1, 2, 3].into(),
     }
 }
 
@@ -264,7 +264,7 @@ fn open_shows_decrypt_form_for_encrypted_archive() {
 fn file(name: &str, data: &[u8]) -> Attachment {
     Attachment {
         name: name.into(),
-        data: data.to_vec(),
+        data: data.to_vec().into(),
     }
 }
 
@@ -300,17 +300,27 @@ fn name_is_clickable(edits: &str, name: &str) -> bool {
 fn file_shows_image_viewer() {
     let edits = mount("/?screen=file", "", vec![file("photo.png", &[1, 2, 3])], None, Some(0));
     assert!(
-        edits.contains("data:image/png;base64,AQID"),
-        "image viewer not rendered: {edits}"
+        edits.contains("Preparing preview..."),
+        "image preview should show a loading state while the blob URL is prepared: {edits}"
+    );
+    assert!(edits.contains("photo.png"), "attachment name not rendered: {edits}");
+    assert!(
+        !edits.contains("data:image/png;base64,AQID"),
+        "image preview should use a blob URL, not a data: URI: {edits}"
     );
 }
 
 #[test]
 fn file_shows_video_viewer() {
     let edits = mount("/?screen=file", "", vec![file("clip.mp4", &[1, 2, 3])], None, Some(0));
+    assert!(edits.contains("clip.mp4"), "attachment name not rendered: {edits}");
     assert!(
-        edits.contains("data:video/mp4;base64,AQID"),
-        "video viewer not rendered: {edits}"
+        !edits.contains("data:video/mp4;base64,AQID"),
+        "video preview should use a blob URL, not a data: URI: {edits}"
+    );
+    assert!(
+        !edits.contains("Preparing preview..."),
+        "video loading state should show a thumbnail, not the duplicated banner: {edits}"
     );
 }
 
@@ -318,8 +328,13 @@ fn file_shows_video_viewer() {
 fn file_shows_audio_viewer() {
     let edits = mount("/?screen=file", "", vec![file("song.mp3", &[1, 2, 3])], None, Some(0));
     assert!(
-        edits.contains("data:audio/mpeg;base64,AQID"),
-        "audio viewer not rendered: {edits}"
+        edits.contains("Preparing preview..."),
+        "audio preview should show a loading state while the blob URL is prepared: {edits}"
+    );
+    assert!(edits.contains("song.mp3"), "attachment name not rendered: {edits}");
+    assert!(
+        !edits.contains("data:audio/mpeg;base64,AQID"),
+        "audio preview should use a blob URL, not a data: URI: {edits}"
     );
 }
 
@@ -327,8 +342,13 @@ fn file_shows_audio_viewer() {
 fn file_shows_pdf_viewer() {
     let edits = mount("/?screen=file", "", vec![file("book.pdf", &[1, 2, 3])], None, Some(0));
     assert!(
-        edits.contains("data:application/pdf;base64,AQID"),
-        "pdf viewer not rendered: {edits}"
+        edits.contains("Preparing preview..."),
+        "pdf preview should show a loading state while the blob URL is prepared: {edits}"
+    );
+    assert!(edits.contains("book.pdf"), "attachment name not rendered: {edits}");
+    assert!(
+        !edits.contains("data:application/pdf;base64,AQID"),
+        "pdf preview should use a blob URL, not a data: URI: {edits}"
     );
 }
 

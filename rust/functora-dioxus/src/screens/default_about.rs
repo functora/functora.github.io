@@ -1,7 +1,9 @@
 #![allow(clippy::shadow_reuse)]
 use crate::encoding::generate_qr_code;
+#[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+use crate::ffi::{InstallHint, PwaInstallOutcome, install_hint, trigger_pwa_install};
 use crate::ffi::{ShareData, social_share};
-use crate::hooks::{use_lang, use_message, use_message_markdown};
+use crate::hooks::{use_in_flight, use_lang, use_message, use_message_markdown};
 use crate::i18n::I18N;
 use crate::messages::Msg;
 use crate::nav::Nav;
@@ -11,6 +13,8 @@ use crate::write_clipboard;
 use dioxus::prelude::*;
 use dioxus_free_icons::Icon;
 use dioxus_free_icons::icons::fa_brands_icons::{FaAndroid, FaGithub, FaGoogle, FaGooglePlay};
+#[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+use dioxus_free_icons::icons::fa_solid_icons::FaDownload;
 use dioxus_free_icons::icons::fa_solid_icons::{FaCopy, FaHeart, FaShareNodes, FaUser};
 
 #[component]
@@ -27,6 +31,7 @@ where
 {
     let lang = use_lang();
     let message = use_message::<Msg>();
+    let mut sharing = use_in_flight();
     let AppContent {
         attrs,
         donate,
@@ -51,12 +56,12 @@ where
     #[cfg(not(feature = "qr"))]
     let qr = use_memo(|| None);
     let _ = use_effect({
-        let anchor_id = anchor_id.clone();
-        let note = note.clone();
+        let scroll_anchor = anchor_id.clone();
+        let scroll_note = note.clone();
         move || {
-            if note.as_deref() == Some(anchor_id.as_str()) {
+            if scroll_note.as_deref() == Some(scroll_anchor.as_str()) {
                 let _ = document::eval(&format!(
-                    "document.getElementById('{anchor_id}')?.scrollIntoView({{behavior: 'smooth'}})"
+                    "document.getElementById('{scroll_anchor}')?.scrollIntoView({{behavior: 'smooth'}})"
                 ));
             }
         }
@@ -64,6 +69,38 @@ where
     let copy_text = format!("{}\n{}", share_text.clone(), derived_app_url.clone());
     let share_text_owned = share_text;
     let share_url_owned = derived_app_url;
+    #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
+    let pwa_install_button = rsx! {
+        Button {
+            icon: Some(FaDownload),
+            primary: true,
+            onclick: move |_| {
+                let mut msg = message;
+                let _ = spawn(async move {
+                    match trigger_pwa_install().await {
+                        Ok(PwaInstallOutcome::Accepted) => {
+                            msg.set(Some(Msg::PwaInstallSuccess));
+                        }
+                        Ok(PwaInstallOutcome::Rejected) => {
+                            msg.set(Some(Msg::PwaInstallRejected));
+                        }
+                        Ok(PwaInstallOutcome::NotAvailable) => {
+                            msg.set(Some(match install_hint().await.unwrap_or(InstallHint::Unavailable) {
+                                InstallHint::Ios => Msg::PwaInstallIos,
+                                InstallHint::Mac => Msg::PwaInstallMac,
+                                InstallHint::Unavailable => Msg::PwaInstallUnavailable,
+                            }));
+                        }
+                        Err(e) => msg.set(Some(Msg::ErrorTitle(e.to_string()))),
+                    }
+                });
+            },
+            i18n: Some(Msg::PwaInstallPrompt),
+            lang,
+        }
+    };
+    #[cfg(not(all(target_arch = "wasm32", not(target_os = "android"))))]
+    let pwa_install_button = rsx! {};
     rsx! {
         Breadcrumb {
             title: Msg::Application,
@@ -112,7 +149,7 @@ where
                         let title = derived_app_name.clone();
                         let text = share_text_owned.clone();
                         let url = share_url_owned.clone();
-                        let _ = spawn(async move {
+                        let _ = sharing.run(async move {
                             let data = ShareData { title, text, url };
                             match social_share(data).await {
                                 Ok(()) => msg.set(Some(Msg::Sent)),
@@ -123,6 +160,7 @@ where
                     i18n: Some(Msg::ShareAppLink),
                     lang,
                 }
+                {pwa_install_button}
                 ExtLink {
                     href: derived_beta_url,
                     button: true,

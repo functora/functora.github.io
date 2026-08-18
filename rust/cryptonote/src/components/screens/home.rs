@@ -30,7 +30,10 @@ pub fn Home() -> Element {
         if let Some(msg) = share_error(tst.cipher()(), &tst.password()()) {
             message.set(Some(msg));
         } else {
-            let _ = spawn(async move {
+            let Some(guard) = claim_job(tst.progress(), Stage::Encrypt) else {
+                return;
+            };
+            let _ = spawn_guarded(guard, async move {
                 let mut nav_out = nav;
                 let mut message_out = message;
                 match generate_share_async(tst).await {

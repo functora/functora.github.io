@@ -155,3 +155,18 @@ fn worker_stopped_unit_error() {
         "Background task error: Background task stopped unexpectedly"
     );
 }
+
+#[test]
+fn eval_error_finished_maps_to_eval_finished_variant() {
+    use dioxus_document::EvalError;
+    let err: Error = EvalError::Finished.into();
+    assert!(matches!(err, Error::EvalFinished));
+    assert_ne!(err.to_string(), "");
+}
+
+#[test]
+fn eval_error_communication_maps_to_js_string() {
+    use dioxus_document::EvalError;
+    let err: Error = EvalError::Communication("closed".into()).into();
+    assert!(matches!(err, Error::JS(s) if s == "closed"));
+}

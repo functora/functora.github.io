@@ -36,14 +36,14 @@
             ]
             ++ mobile-targets;
         };
-        wasm-bindgen-cli-0_2_106 = with pkgs;
+        wasm-bindgen-cli-0_2_127 = with pkgs;
           rustPlatform.buildRustPackage rec {
             pname = "wasm-bindgen-cli";
-            version = "0.2.106";
+            version = "0.2.127";
             src = pkgs.fetchCrate {
               pname = "wasm-bindgen-cli";
-              version = "0.2.106";
-              sha256 = "sha256-M6WuGl7EruNopHZbqBpucu4RWz44/MSdv6f0zkYw+44=";
+              version = "0.2.127";
+              sha256 = "sha256-di+qBAdd7pENLiIB9CoZoab+W5xeDoByMREcCGTSzWo=";
             };
             cargoLock.lockFile = "${src}/Cargo.lock";
             nativeBuildInputs = [pkg-config];
@@ -158,7 +158,8 @@
                   mkdir -p "$REL"
                 fi
                 dx bundle --release --web --debug-symbols=false
-                cp -R ./target/dx/cryptonote/release/web/public/* "$REL"
+                cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
+                cp -R ./target/dx/${app}/release/web/public/* "$REL"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
               )
@@ -173,6 +174,7 @@
                     cd "${app}"
                     VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                     dx bundle --release --web --debug-symbols=false
+                    cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
                     python3 <<PYEOF
               import http.server, socketserver, os
               PORT = 8000
@@ -330,7 +332,7 @@
               strace
               # web
               binaryen
-              wasm-bindgen-cli-0_2_106
+              wasm-bindgen-cli-0_2_127
               lessc
               clean-css-cli
               # linux

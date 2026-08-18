@@ -77,6 +77,9 @@ pub fn video_thumbnail(data: &[u8]) -> Option<Vec<u8>> {
         frames.extend(decoder.flush());
     }
     let frame = frames.into_iter().next()?;
+    if frame.width == 0 || frame.height == 0 {
+        return None;
+    }
     let rgb = RgbImage::from_raw(frame.width, frame.height, yuv_to_rgb(&frame))?;
     let (thumb_w, thumb_h) = fit(frame.width, frame.height, MAX_W, MAX_H);
     let thumb = thumbnail(&rgb, thumb_w, thumb_h);
@@ -150,9 +153,8 @@ fn remember(key: u64, src: Option<String>) {
 #[cfg(not(target_arch = "wasm32"))]
 fn fit(width: u32, height: u32, max_w: u32, max_h: u32) -> (u32, u32) {
     if width <= max_w && height <= max_h {
-        return (width, height);
-    }
-    if u64::from(max_w) * u64::from(height) <= u64::from(max_h) * u64::from(width) {
+        (width, height)
+    } else if u64::from(max_w) * u64::from(height) <= u64::from(max_h) * u64::from(width) {
         let scaled_h = (u64::from(height) * u64::from(max_w) + u64::from(width) / 2) / u64::from(width);
         (max_w, u32::try_from(scaled_h.clamp(1, u64::from(max_h))).unwrap_or(1))
     } else {

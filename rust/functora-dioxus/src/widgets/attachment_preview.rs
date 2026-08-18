@@ -2,8 +2,19 @@
 use crate::files::{Preview, video_thumbnail};
 use dioxus::prelude::*;
 
+const DEFAULT_ATTACHMENT_STYLE: &str = "max-height: 6rem; width: auto; cursor: pointer;";
+
+fn attachment_style(style: Option<&str>) -> &str {
+    style.unwrap_or(DEFAULT_ATTACHMENT_STYLE)
+}
+
 #[component]
-pub fn AttachmentPreview(name: String, preview: Preview, onclick: Option<EventHandler<MouseEvent>>) -> Element {
+pub fn AttachmentPreview(
+    name: String,
+    preview: Preview,
+    onclick: Option<EventHandler<MouseEvent>>,
+    style: Option<String>,
+) -> Element {
     let handle_onclick = onclick;
     let handle = move |evt: MouseEvent| {
         if let Some(f) = &handle_onclick {
@@ -15,19 +26,19 @@ pub fn AttachmentPreview(name: String, preview: Preview, onclick: Option<EventHa
             img {
                 src: "{url}",
                 alt: "{name}",
-                style: "max-height: 6rem; width: auto; cursor: pointer;",
+                style: attachment_style(style.as_deref()),
                 onclick: handle,
             }
         },
         Preview::Video(url) => rsx! {
-            VideoThumb { url, name, onclick }
+            VideoThumb { url, name, onclick, style }
         },
         _ => rsx! {},
     }
 }
 
 #[component]
-fn VideoThumb(url: String, name: String, onclick: Option<EventHandler<MouseEvent>>) -> Element {
+fn VideoThumb(url: String, name: String, onclick: Option<EventHandler<MouseEvent>>, style: Option<String>) -> Element {
     let thumb = use_signal(|| Option::<String>::None);
     _ = use_effect(move || {
         let url_out = url.clone();
@@ -41,7 +52,7 @@ fn VideoThumb(url: String, name: String, onclick: Option<EventHandler<MouseEvent
             img {
                 src: "{src}",
                 alt: "{name}",
-                style: "max-height: 6rem; width: auto; cursor: pointer;",
+                style: attachment_style(style.as_deref()),
                 onclick: move |evt: MouseEvent| {
                     if let Some(f) = &onclick {
                         f.call(evt);

@@ -34,24 +34,89 @@ impl Default for AppAssets {
     }
 }
 
-fn manifest(name: &str, icon_192_png: &Asset, icon_512_png: &Asset) -> String {
+pub struct ManifestIcon {
+    pub src: String,
+    pub sizes: &'static str,
+    pub r#type: &'static str,
+    pub purpose: &'static str,
+}
+
+#[must_use]
+pub fn manifest_json(
+    app: &str,
+    vsn: &str,
+    description: &str,
+    start_url: &str,
+    scope: &str,
+    icons: &[ManifestIcon],
+) -> String {
+    let name = crate::white_label::capitalize_first(app);
+    let icons_json = icons
+        .iter()
+        .map(|icon| {
+            format!(
+                "{{\"src\":{},\"sizes\":\"{}\",\"type\":\"{}\",\"purpose\":\"{}\"}}",
+                json_str(&icon.src),
+                icon.sizes,
+                icon.r#type,
+                icon.purpose
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
     format!(
-        r#"{{"name":"{name}","short_name":"{name}","icons":[{{"src":"{icon_192_png}","sizes":"192x192","type":"image/png"}},{{"src":"{icon_512_png}","sizes":"512x512","type":"image/png"}}],"display":"standalone"}}"#
+        "{{\"name\":{},\"short_name\":{},\"description\":{},\"start_url\":{},\"scope\":{},\"display\":\"standalone\",\"theme_color\":\"#679\",\"background_color\":\"#ffffff\",\"cache_name\":{},\"icons\":[{icons_json}]}}",
+        json_str(&name),
+        json_str(&name),
+        json_str(description),
+        json_str(start_url),
+        json_str(scope),
+        json_str(&format!("{app}-v{vsn}")),
+    )
+}
+
+fn json_str(s: &str) -> String {
+    serde_json::to_string(s).unwrap_or_default()
+}
+
+#[must_use]
+pub fn pwa_init_js(sw_url: &str, cache_name: &str) -> String {
+    format!(
+        "if('serviceWorker' in navigator){{navigator.serviceWorker.register('{sw_url}?cache={cache_name}').catch(e=>console.error('SW registration failed:',e));}}window.__functoraPwaDeferred=null;window.addEventListener('beforeinstallprompt',(e)=>{{window.__functoraPwaDeferred=e;}});window.addEventListener('appinstalled',()=>{{window.__functoraPwaDeferred=null;}});"
     )
 }
 
 #[allow(non_snake_case)]
 #[component]
-fn AppMeta(name: String, assets: AppAssets) -> Element {
+fn AppMeta(attrs: AppAttrs, assets: AppAssets) -> Element {
     let AppAssets {
         icon_ico,
         icon_16_png,
         icon_32_png,
         apple_touch_icon_png,
-        icon_192_png,
-        icon_512_png,
         css,
+        ..
     } = assets;
+
+    #[cfg(target_arch = "wasm32")]
+    let pwa_script = rsx! {
+        document::Script {
+            "{pwa_init_js(\"sw.js\", &attrs.cache_name())}"
+        }
+    };
+    #[cfg(not(target_arch = "wasm32"))]
+    let pwa_script = rsx! {};
+
+    #[cfg(target_arch = "wasm32")]
+    let manifest_link = attrs
+        .manifest_uri(&assets.icon_192_png.to_string(), &assets.icon_512_png.to_string())
+        .map(|href| {
+            rsx! {
+                document::Link { rel: "manifest", href: href }
+            }
+        });
+    #[cfg(not(target_arch = "wasm32"))]
+    let manifest_link = rsx! {};
 
     rsx! {
         document::Link { rel: "icon", r#type: "image/x-icon", href: icon_ico }
@@ -72,14 +137,12 @@ fn AppMeta(name: String, assets: AppAssets) -> Element {
             sizes: "180x180",
             href: apple_touch_icon_png,
         }
-        document::Link {
-            rel: "manifest",
-            href: "data:application/manifest+json,{manifest(name.as_str(), &icon_192_png, &icon_512_png)}",
-        }
-        document::Title { "{name}" }
+        {manifest_link}
+        document::Title { "{attrs.app_name()}" }
         for url in &css {
             document::Link { rel: "stylesheet", href: *url }
         }
+        {pwa_script}
     }
 }
 
@@ -94,10 +157,9 @@ where
     let pst = use_storage(attrs.app, P::default);
     let _ = use_context_provider(|| tst);
     let _ = use_context_provider(|| pst);
-    let name = attrs.app_name();
 
     rsx! {
-        AppMeta { name, assets }
+        AppMeta { attrs, assets }
         Router::<R> {}
     }
 }

@@ -93,6 +93,8 @@ pub enum Error {
     Channel(#[from] std::sync::mpsc::RecvError),
     #[error("JS error: {0}")]
     JS(String),
+    #[error("Eval channel died before completion (dioxus internal GC/drop race)")]
+    EvalFinished,
     #[error("Cipher initialization error: {0}")]
     Cipher(cipher::InvalidLength),
     #[error("Key derivation error: {0}")]
@@ -114,6 +116,8 @@ pub enum Error {
     CameraNotAvailable(String),
     #[error("Camera permission denied: {0}")]
     CameraPermissionDenied(String),
+    #[error("Camera feed stalled: no frames received")]
+    CameraStalled,
     #[error("Not a JSON object: {0}")]
     NotJsonObject(serde_json::Value),
     #[error("Archive error: {0}")]
@@ -153,6 +157,7 @@ impl From<cipher::InvalidLength> for Error {
 impl From<dioxus::document::EvalError> for Error {
     fn from(e: dioxus::document::EvalError) -> Self {
         match e {
+            dioxus::document::EvalError::Finished => Error::EvalFinished,
             dioxus::document::EvalError::InvalidJs(js) => Error::JS(js),
             dioxus::document::EvalError::Communication(msg) => Error::JS(msg),
             dioxus::document::EvalError::Serialization(err) => Error::Json(JsonError::from(err)),
@@ -191,6 +196,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Environment variable error: {e}"),
             Self::Channel(e) => format!("Channel receive error: {e}"),
             Self::JS(e) => format!("JavaScript evaluation error: {e}"),
+            Self::EvalFinished => "The connection to the browser was lost; please try again".into(),
             Self::Cipher(e) => format!("Cipher initialization error: {e}"),
             Self::KeyDerive(e) => format!("Key derivation error: {e}"),
             Self::Getrandom(e) => format!("Random number generation error: {e}"),
@@ -200,6 +206,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Numeric conversion failed ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Camera is not available: {e}"),
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
+            Self::CameraStalled => "The camera feed stopped responding; try again".into(),
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::Worker(e) => format!("Background task error: {e}"),
@@ -218,6 +225,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Error de variable de entorno: {e}"),
             Self::Channel(e) => format!("Error de recepción en canal: {e}"),
             Self::JS(e) => format!("Error de evaluación JavaScript: {e}"),
+            Self::EvalFinished => "Se perdió la conexión con el navegador; inténtalo de nuevo".into(),
             Self::Cipher(e) => format!("Error de inicialización de cifrado: {e}"),
             Self::KeyDerive(e) => format!("Error de derivación de clave: {e}"),
             Self::Getrandom(e) => format!("Error de generación de números aleatorios: {e}"),
@@ -227,6 +235,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Error de conversión numérica ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
+            Self::CameraStalled => "La cámara dejó de responder; inténtalo de nuevo".into(),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
             Self::Archive(e) => format!("Error de archivo: {e}"),
             Self::Worker(e) => format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})"),
@@ -245,6 +254,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Ошибка переменной окружения: {e}"),
             Self::Channel(e) => format!("Ошибка получения из канала: {e}"),
             Self::JS(e) => format!("Ошибка выполнения JavaScript: {e}"),
+            Self::EvalFinished => "Соединение с браузером потеряно; попробуйте ещё раз".into(),
             Self::Cipher(e) => format!("Ошибка инициализации шифра: {e}"),
             Self::KeyDerive(e) => format!("Ошибка вывода ключа: {e}"),
             Self::Getrandom(e) => format!("Ошибка генерации случайных чисел: {e}"),
@@ -254,6 +264,7 @@ impl I18N for Error {
             Self::Convert { context, source } => format!("Ошибка численного преобразования ({context}): {source}"),
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
+            Self::CameraStalled => "Поток с камеры остановился; попробуйте ещё раз".into(),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),

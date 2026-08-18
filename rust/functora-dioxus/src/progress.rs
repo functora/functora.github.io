@@ -12,6 +12,7 @@ pub enum Stage {
     Decrypt,
     Unzip,
     Download,
+    Preview,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -77,6 +78,43 @@ where
     S: 'static,
 {
     progress.set(None);
+}
+
+/// RAII ownership of the single-job progress slot. While a guard is held no other
+/// job can start: `claim_job` rejects every concurrent attempt, and the slot is
+/// released when the guard drops, so a task dropped by unmounting the screen never
+/// leaves the app stuck with a permanently claimed job.
+pub struct JobGuard<P, S>(P)
+where
+    P: Writable<Target = Option<Job<S>>>,
+    S: 'static;
+
+impl<P, S> Drop for JobGuard<P, S>
+where
+    P: Writable<Target = Option<Job<S>>>,
+    S: 'static,
+{
+    fn drop(&mut self) {
+        self.0.set(None);
+    }
+}
+
+#[must_use]
+pub fn claim_job<P, S>(mut progress: P, stage: S) -> Option<JobGuard<P, S>>
+where
+    P: Writable<Target = Option<Job<S>>>,
+    S: 'static,
+{
+    if progress.peek().is_some() {
+        return None;
+    }
+    progress.set(Some(Job {
+        stage,
+        done: 0,
+        total: 1,
+        name: None,
+    }));
+    Some(JobGuard(progress))
 }
 
 pub async fn yield_to_paint() {

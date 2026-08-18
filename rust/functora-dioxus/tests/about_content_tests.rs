@@ -7,6 +7,7 @@ const ATTRS: AppAttrs = AppAttrs {
     org: "functora",
     src: Some("rust"),
     dst: "apps",
+    description: "Encrypted offline notes with file attachments.",
 };
 
 #[test]

@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, WorkerStopped};
 use dioxus::core::Subscribers;
 use dioxus::prelude::*;
 use serde::Serialize;
@@ -11,6 +11,11 @@ use serde_json::to_value;
 use std::fs::{OpenOptions, read_to_string, write};
 use std::ops::Deref;
 use std::path::Path;
+use std::sync::Mutex;
+
+/// Serializes read-modify-write cycles on the storage file so concurrent persist
+/// tasks cannot lose each other's key updates or read a torn half-written file.
+static STORAGE_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(target_os = "android")]
 pub use crate::android::files_dir;
@@ -34,16 +39,18 @@ fn ensure_file(p: &Path) -> Result<(), Error> {
 }
 
 pub fn update_key<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
+    let _guard = STORAGE_LOCK.lock().map_err(|_| Error::Worker(WorkerStopped))?;
     let p = path.as_ref();
     ensure_file(p)?;
     let content = read_to_string(p)?;
     let mut json: Value = from_str(&content)?;
-    let Some(obj) = json.as_object_mut() else {
-        return Err(Error::NotJsonObject(json));
-    };
-    _ = obj.insert(key.to_string(), to_value(val)?);
-    let s = to_string_pretty(&json)?;
-    Ok(write(p, s)?)
+    if let Some(obj) = json.as_object_mut() {
+        _ = obj.insert(key.to_string(), to_value(val)?);
+        let s = to_string_pretty(&json)?;
+        Ok(write(p, s)?)
+    } else {
+        Err(Error::NotJsonObject(json))
+    }
 }
 
 pub fn find_or_init_key<P: AsRef<Path>, T: DeserializeOwned + Clone + Serialize, F: FnOnce() -> T>(
@@ -83,11 +90,12 @@ pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value
 pub fn set_json_value<P: AsRef<Path>, T: Serialize>(path: P, key: &str, val: T) -> Result<(), Error> {
     let mut json = read_json_object(&path)?;
     let value = to_value(val)?;
-    let Some(obj) = json.as_object_mut() else {
-        return Err(Error::NotJsonObject(json));
-    };
-    _ = obj.insert(key.to_string(), value);
-    write_json_object(path, &json)
+    if let Some(obj) = json.as_object_mut() {
+        _ = obj.insert(key.to_string(), value);
+        write_json_object(path, &json)
+    } else {
+        Err(Error::NotJsonObject(json))
+    }
 }
 
 pub struct PersistentSignal<T: 'static> {

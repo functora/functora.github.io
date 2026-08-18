@@ -64,6 +64,12 @@ pub enum Msg {
     AboutAndroidBeta3,
     AboutAndroidBetaLink3,
     AboutAndroidBeta4,
+    PwaInstallPrompt,
+    PwaInstallSuccess,
+    PwaInstallRejected,
+    PwaInstallUnavailable,
+    PwaInstallIos,
+    PwaInstallMac,
 }
 
 impl I18N for Msg {
@@ -100,6 +106,7 @@ impl I18N for Msg {
                 crate::progress::Stage::Decrypt => "Decrypting...".into(),
                 crate::progress::Stage::Unzip => "Unzipping...".into(),
                 crate::progress::Stage::Download => "Downloading...".into(),
+                crate::progress::Stage::Preview => "Preparing preview...".into(),
             },
             Self::Copyright => "©".into(),
             Self::AllRightsReserved => "All rights reserved.".into(),
@@ -186,6 +193,12 @@ If you have any questions regarding privacy while using the Application, or have
             Self::AboutAndroidBeta3 => ", or download the".into(),
             Self::AboutAndroidBetaLink3 => "APK file".into(),
             Self::AboutAndroidBeta4 => "directly.".into(),
+            Self::PwaInstallPrompt => "Install PWA".into(),
+            Self::PwaInstallSuccess => "Installed as PWA!".into(),
+            Self::PwaInstallRejected => "Installation cancelled".into(),
+            Self::PwaInstallUnavailable => "PWA installation not available in this browser".into(),
+            Self::PwaInstallIos => "To install: tap Share, then 'Add to Home Screen'.".into(),
+            Self::PwaInstallMac => "To install: tap Share, then 'Add to Dock'.".into(),
         }
     }
 
@@ -222,6 +235,7 @@ If you have any questions regarding privacy while using the Application, or have
                 crate::progress::Stage::Decrypt => "Descifrando...".into(),
                 crate::progress::Stage::Unzip => "Descomprimiendo...".into(),
                 crate::progress::Stage::Download => "Descargando...".into(),
+                crate::progress::Stage::Preview => "Preparando vista previa...".into(),
             },
             Self::Copyright => "©".into(),
             Self::AllRightsReserved => "Todos los derechos reservados.".into(),
@@ -309,6 +323,12 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::AboutAndroidBeta3 => ", o descargue el".into(),
             Self::AboutAndroidBetaLink3 => "archivo APK".into(),
             Self::AboutAndroidBeta4 => "directamente.".into(),
+            Self::PwaInstallPrompt => "Instalar PWA".into(),
+            Self::PwaInstallSuccess => "¡Instalado como PWA!".into(),
+            Self::PwaInstallRejected => "Instalación cancelada".into(),
+            Self::PwaInstallUnavailable => "La instalación PWA no está disponible en este navegador".into(),
+            Self::PwaInstallIos => "Para instalar: toca Compartir y luego «Añadir a pantalla de inicio».".into(),
+            Self::PwaInstallMac => "Para instalar: toca Compartir y luego «Añadir al Dock».".into(),
         }
     }
 
@@ -345,6 +365,7 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
                 crate::progress::Stage::Decrypt => "Расшифровка...".into(),
                 crate::progress::Stage::Unzip => "Распаковка...".into(),
                 crate::progress::Stage::Download => "Скачивание...".into(),
+                crate::progress::Stage::Preview => "Подготовка предпросмотра...".into(),
             },
             Self::Copyright => "©".into(),
             Self::AllRightsReserved => "Все права защищены.".into(),
@@ -434,6 +455,12 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::AboutAndroidBeta3 => " или скачайте".into(),
             Self::AboutAndroidBetaLink3 => "APK-файл".into(),
             Self::AboutAndroidBeta4 => "напрямую.".into(),
+            Self::PwaInstallPrompt => "Установить PWA".into(),
+            Self::PwaInstallSuccess => "Установлено как PWA!".into(),
+            Self::PwaInstallRejected => "Установка отменена".into(),
+            Self::PwaInstallUnavailable => "Установка PWA недоступна в этом браузере".into(),
+            Self::PwaInstallIos => "Чтобы установить: нажмите «Поделиться», затем «На экран \"Домой\"».".into(),
+            Self::PwaInstallMac => "Чтобы установить: нажмите «Поделиться», затем «Добавить в Dock».".into(),
         }
     }
 }

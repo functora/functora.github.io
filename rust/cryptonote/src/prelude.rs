@@ -26,4 +26,5 @@ pub const APP_ATTRS: AppAttrs = AppAttrs {
     org: "functora",
     src: Some("rust"),
     dst: "apps",
+    description: "Cryptonote is a cross-platform, serverless app for encrypted offline notes.",
 };

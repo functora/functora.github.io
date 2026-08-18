@@ -1,4 +1,5 @@
 use crate::Error;
+use crate::abort::EvalAbort;
 use crate::encoding::download_script;
 use crate::progress::{Job, report_progress};
 use base64::Engine;
@@ -12,16 +13,19 @@ struct DownloadMsg {
     data: String,
 }
 
-pub async fn download_package<P, S>(data: Vec<u8>, filename: &str, progress: P, stage: S) -> Result<String, Error>
+pub async fn download_package<P, S, D>(data: D, filename: &str, progress: P, stage: S) -> Result<String, Error>
 where
     P: Writable<Target = Option<Job<S>>> + Copy + 'static,
     S: Copy + 'static,
+    D: AsRef<[u8]>,
 {
     const SEND_CHUNK: usize = 3 * 1024 * 1024;
     let eval = dioxus::document::eval(&download_script(filename));
-    let total = data.len() as u64;
+    let abort = EvalAbort::new(eval, serde_json::json!({ "t": "abort" }));
+    let bytes = data.as_ref();
+    let total = bytes.len() as u64;
     let mut done = 0u64;
-    for chunk in data.chunks(SEND_CHUNK) {
+    for chunk in bytes.chunks(SEND_CHUNK) {
         eval.send(DownloadMsg {
             t: "chunk",
             data: BASE64.encode(chunk),
@@ -33,5 +37,6 @@ where
         t: "done",
         data: String::new(),
     })?;
+    abort.disarm();
     Ok(filename.to_string())
 }

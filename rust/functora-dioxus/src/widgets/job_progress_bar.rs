@@ -11,19 +11,19 @@ where
     S: Copy + PartialEq + 'static,
     U: I18N + Clone + 'static,
 {
-    let Some(job) = job else {
-        return rsx! {};
-    };
-    rsx! {
-        fieldset { "aria-live": "polite", role: "status",
-            card {
-                label { "{stage_label.call(job.stage).render(lang)}" }
-                if let Some(name) = &job.name {
-                    small { "{name}" }
+    match job {
+        Some(job) => rsx! {
+            fieldset { "aria-live": "polite", role: "status",
+                card {
+                    label { "{stage_label.call(job.stage).render(lang)}" }
+                    if let Some(name) = &job.name {
+                        small { "{name}" }
+                    }
+                    progress { max: "100", value: "{job.percent()}" }
+                    output { "{job.percent()}%" }
                 }
-                progress { max: "100", value: "{job.percent()}" }
-                output { "{job.percent()}%" }
             }
-        }
+        },
+        None => rsx! {},
     }
 }

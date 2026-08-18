@@ -63,13 +63,63 @@ pub struct AppAttrs {
     pub org: &'static str,
     pub src: Option<&'static str>,
     pub dst: &'static str,
+    pub description: &'static str,
+}
+
+pub(crate) fn capitalize_first(s: &str) -> String {
+    let end = s.chars().next().map_or(0, char::len_utf8);
+    format!("{}{}", s[..end].to_uppercase(), &s[end..])
 }
 
 impl AppAttrs {
     #[must_use]
     pub fn app_name(self) -> String {
-        let end = self.app.chars().next().map_or(0, char::len_utf8);
-        format!("{}{}", self.app[..end].to_uppercase(), &self.app[end..])
+        capitalize_first(self.app)
+    }
+
+    #[must_use]
+    pub fn cache_name(self) -> String {
+        format!("{}-v{}", self.app, self.vsn)
+    }
+
+    #[must_use]
+    pub fn manifest_uri(self, icon_192: &str, icon_512: &str) -> Option<String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let loc = web_sys::window()?.location();
+            let protocol = loc.protocol().ok()?;
+            let host = loc.host().ok()?;
+            let pathname = loc.pathname().ok()?;
+            let origin_base = format!("{protocol}//{host}");
+            let app_root = format!("{origin_base}{pathname}");
+            let json = crate::manifest_json(
+                self.app,
+                self.vsn,
+                self.description,
+                &app_root,
+                &app_root,
+                &[
+                    crate::ManifestIcon {
+                        src: format!("{origin_base}{icon_192}"),
+                        sizes: "192x192",
+                        r#type: "image/png",
+                        purpose: "any",
+                    },
+                    crate::ManifestIcon {
+                        src: format!("{origin_base}{icon_512}"),
+                        sizes: "512x512",
+                        r#type: "image/png",
+                        purpose: "any",
+                    },
+                ],
+            );
+            Some(format!("data:application/manifest+json,{}", urlencoding::encode(&json)))
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = (icon_192, icon_512);
+            None
+        }
     }
 
     #[must_use]
@@ -85,6 +135,27 @@ impl AppAttrs {
     #[must_use]
     pub fn app_url(self) -> String {
         format!("https://{}.github.io/{}/{}", self.org, self.dst, self.app)
+    }
+
+    #[must_use]
+    pub fn origin(self) -> String {
+        #[cfg(target_arch = "wasm32")]
+        {
+            web_sys::window()
+                .and_then(|w| {
+                    let loc = w.location();
+                    let protocol = loc.protocol().ok()?;
+                    let host = loc.host().ok()?;
+                    let pathname = loc.pathname().ok()?;
+                    let path = pathname.trim_end_matches('/');
+                    Some(format!("{}//{}{}", protocol, host, path))
+                })
+                .unwrap_or_else(|| self.app_url())
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.app_url()
+        }
     }
 
     #[must_use]
@@ -175,10 +246,15 @@ pub fn WhiteLabelLayout<
         let _ = document::eval("window.scrollTo(0, 0)");
     });
 
+    let mut theme_gen = use_signal(|| 0u64);
     let _ = use_effect(move || {
+        let generation = *theme_gen.peek() + 1;
+        theme_gen.set(generation);
         let theme = pst.theme()();
         let _ = spawn(async move {
-            if let Err(e) = crate::ffi::set_theme(&theme).await {
+            if theme_gen() == generation
+                && let Err(e) = crate::ffi::set_theme(&theme).await
+            {
                 tracing::error!("Set theme error: {:#?}", e);
             }
         });
@@ -192,10 +268,10 @@ pub fn WhiteLabelLayout<
         home,
         about,
         about_icon,
-        donate,
-        license,
-        privacy,
-        share,
+        donate: donate_route,
+        license: license_route,
+        privacy: privacy_route,
+        share: share_route,
         on_brand_click,
         bottom_extra,
     } = config;
@@ -210,7 +286,7 @@ pub fn WhiteLabelLayout<
         }
     };
 
-    let legal = match (&license, &privacy) {
+    let legal = match (&license_route, &privacy_route) {
         (Some(license), Some(privacy)) => rsx! {
             NavLink {
                 nav: nav_signal,
@@ -243,7 +319,7 @@ pub fn WhiteLabelLayout<
         (None, None) => rsx! {},
     };
 
-    let donate_share = match (&donate, &share) {
+    let donate_share = match (&donate_route, &share_route) {
         (Some(donate), Some(share)) => rsx! {
             NavLink {
                 nav: nav_signal,

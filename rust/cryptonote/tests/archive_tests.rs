@@ -29,11 +29,11 @@ fn test_archive_roundtrip_chacha20() {
             let attachments = vec![
                 Attachment {
                     name: "hello.txt".into(),
-                    data: b"Hello, World!".to_vec(),
+                    data: b"Hello, World!".to_vec().into(),
                 },
                 Attachment {
                     name: "data.bin".into(),
-                    data: vec![1, 2, 3, 4, 5],
+                    data: vec![1, 2, 3, 4, 5].into(),
                 },
             ];
             let (text, files) = roundtrip(note, &attachments, "password", Some(CipherType::ChaCha20Poly1305))
@@ -42,9 +42,9 @@ fn test_archive_roundtrip_chacha20() {
             assert_eq!(text, note);
             assert_eq!(files.len(), 2);
             assert_eq!(files[0].name, "hello.txt");
-            assert_eq!(files[0].data, b"Hello, World!");
+            assert_eq!(files[0].data.as_ref(), b"Hello, World!");
             assert_eq!(files[1].name, "data.bin");
-            assert_eq!(files[1].data, vec![1, 2, 3, 4, 5]);
+            assert_eq!(files[1].data.as_ref(), vec![1, 2, 3, 4, 5]);
         })
     });
 }
@@ -55,14 +55,14 @@ fn test_archive_roundtrip_aes() {
         common::block_on(async {
             let attachments = vec![Attachment {
                 name: "file.txt".into(),
-                data: b"content".to_vec(),
+                data: b"content".to_vec().into(),
             }];
             let (text, files) = roundtrip("AES note", &attachments, "strong_pw", Some(CipherType::Aes256Gcm))
                 .await
                 .unwrap();
             assert_eq!(text, "AES note");
             assert_eq!(files[0].name, "file.txt");
-            assert_eq!(files[0].data, b"content");
+            assert_eq!(files[0].data.as_ref(), b"content");
         })
     });
 }
@@ -105,7 +105,7 @@ fn test_archive_many_attachments() {
             let attachments: Vec<_> = (0..100)
                 .map(|i| Attachment {
                     name: format!("file_{i}.bin"),
-                    data: vec![u8::try_from(i).unwrap(); 100],
+                    data: vec![u8::try_from(i).unwrap(); 100].into(),
                 })
                 .collect();
             let (text, files) = roundtrip(note, &attachments, "pw", Some(CipherType::ChaCha20Poly1305))
@@ -199,11 +199,11 @@ fn test_plaintext_archive_roundtrip() {
             let attachments = vec![
                 Attachment {
                     name: "photo.png".into(),
-                    data: vec![9, 9, 9],
+                    data: vec![9, 9, 9].into(),
                 },
                 Attachment {
                     name: "doc.txt".into(),
-                    data: b"plain".to_vec(),
+                    data: b"plain".to_vec().into(),
                 },
             ];
             let (text, files) = roundtrip("Plain note with attachments", &attachments, "", None)
@@ -211,8 +211,8 @@ fn test_plaintext_archive_roundtrip() {
                 .unwrap();
             assert_eq!(text, "Plain note with attachments");
             assert_eq!(files.len(), 2);
-            assert_eq!(files[0].data, vec![9, 9, 9]);
-            assert_eq!(files[1].data, b"plain");
+            assert_eq!(files[0].data.as_ref(), vec![9, 9, 9]);
+            assert_eq!(files[1].data.as_ref(), b"plain");
         })
     });
 }
@@ -298,12 +298,15 @@ async fn v2_roundtrip(cipher: Option<CipherType>) {
     let note = "async archive note";
     let attachments = vec![Attachment {
         name: "big.bin".into(),
-        data: (0..200_000).map(|i| u8::try_from(i % 251).unwrap()).collect(),
+        data: (0..200_000)
+            .map(|i| u8::try_from(i % 251).unwrap())
+            .collect::<Vec<u8>>()
+            .into(),
     }];
     let (text, files) = roundtrip(note, &attachments, "pw", cipher).await.unwrap();
     assert_eq!(text, note);
     assert_eq!(files.len(), 1);
-    assert_eq!(files[0].data, attachments[0].data);
+    assert_eq!(files[0].data.as_ref(), attachments[0].data.as_ref());
 }
 
 #[test]
@@ -328,7 +331,10 @@ fn v2_encryption_reports_completed_progress() {
             let progress = common::progress();
             let attachments = vec![Attachment {
                 name: "spread.bin".into(),
-                data: (0..300_000).map(|i| u8::try_from(i % 256).unwrap()).collect(),
+                data: (0..300_000)
+                    .map(|i| u8::try_from(i % 256).unwrap())
+                    .collect::<Vec<u8>>()
+                    .into(),
             }];
             let pkg =
                 create_archive_package_async("n", &attachments, "pw", Some(CipherType::ChaCha20Poly1305), progress)
@@ -352,7 +358,7 @@ fn test_v2_archive_wrong_password_fails() {
                 "n",
                 &[Attachment {
                     name: "a.bin".into(),
-                    data: vec![9; 4096],
+                    data: vec![9; 4096].into(),
                 }],
                 "pw",
                 Some(CipherType::Aes256Gcm),
@@ -387,7 +393,7 @@ async fn roundtrip_large(cipher: Option<CipherType>) {
     assert_eq!(text, "large note");
     assert_eq!(files.len(), 1);
     assert_eq!(files[0].name, "big.bin");
-    assert_eq!(files[0].data, big.data);
+    assert_eq!(files[0].data.as_ref(), big.data.as_ref());
     assert_eq!(files[0].data.len(), size);
 }
 
@@ -453,7 +459,7 @@ fn archive_path_source_extracts_encrypted() {
                 "path note",
                 &[Attachment {
                     name: "a.txt".into(),
-                    data: b"path data".to_vec(),
+                    data: b"path data".to_vec().into(),
                 }],
                 "pw",
                 Some(CipherType::Aes256Gcm),
@@ -470,7 +476,7 @@ fn archive_path_source_extracts_encrypted() {
                     .expect("extract");
             assert_eq!(text, "path note");
             assert_eq!(files[0].name, "a.txt");
-            assert_eq!(files[0].data, b"path data");
+            assert_eq!(files[0].data.as_ref(), b"path data");
             assert_eq!(ArchiveSource::Path(path.clone()).into_bytes().unwrap(), pkg);
             drop(std::fs::remove_file(path));
         })

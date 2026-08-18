@@ -14,9 +14,9 @@ pub fn AttachmentUploader(
     on_remove: EventHandler<usize>,
 ) -> Element {
     if attachments.is_empty() {
-        return rsx! {};
-    }
-    rsx! {
+        rsx! {}
+    } else {
+        rsx! {
         table {
             tbody {
                 for (i, (att, prev)) in attachments.iter().zip(previews.iter()).enumerate() {
@@ -44,6 +44,7 @@ pub fn AttachmentUploader(
                     }
                 }
             }
+        }
         }
     }
 }

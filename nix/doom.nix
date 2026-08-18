@@ -179,53 +179,13 @@
         music = ../bak/doom/BD64-VoH_D64D2_Ost.pk3;
       }
       // mkDoom {
-        tag = "annie1";
+        tag = "annie";
         mod = ../bak/doom/Annie-E1-v1.1.zip;
         relite = ../bak/doom/relite_0.6.7a.pk3;
       }
       // mkDoom {
-        tag = "scorched-heritage";
-        mod = ../bak/doom/ScorchedHeritage.wad;
-      }
-      // mkDoom {
-        tag = "dpwh";
-        mod = ../bak/doom/dpwh.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "slum-alley";
-        mod = ../bak/doom/SlumAlley.wad;
-      }
-      // mkDoom {
-        tag = "i-hate-storm";
-        mod = ../bak/doom/IHateStorm.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "lilliput-lane";
-        mod = ../bak/doom/LilliputLane.wad;
-      }
-      // mkDoom {
-        tag = "rmg-adcd";
-        mod = ../bak/doom/RMG_ADCD.wad;
-      }
-      // mkDoom {
-        tag = "rmg-urban";
-        mod = ../bak/doom/RMG-UrbnCrsd_24-04-23.wad;
-      }
-      // mkDoom {
-        tag = "rmg-city";
-        mod = ../bak/doom/RMG_City.wad;
-        relite = "";
-      }
-      // mkDoom {
-        tag = "viaje";
-        mod = ../bak/doom/VIAJE.wad;
-      }
-      // mkDoom64 {
-        tag = "hellfire";
-        mod = ../bak/doom/HellFireCollectionV1-6.pk3;
-        music = ../bak/doom/FerretJukeBoxV1-0.pk3;
+        tag = "phlegethon";
+        mod = ../bak/doom/Phlegethon.wad;
       }
       // mkDoom {
         tag = "dbp37-augzen";

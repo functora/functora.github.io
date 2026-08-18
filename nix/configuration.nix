@@ -22,7 +22,7 @@
           "err.ee"
           "delfi.ee"
           "postimees.ee"
-          "server4.beyondallreason.info"
+          # "server4.beyondallreason.info"
         ]
         else []
       ));
@@ -1115,7 +1115,7 @@ in {
     #
     # Night
     #
-    services.night-sleep.enable = true;
+    services.night-sleep.enable = false;
     services.night-sleep.sleepAt = "23:00";
     services.night-sleep.wakeAt = "08:00";
   };

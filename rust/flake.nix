@@ -422,9 +422,12 @@
               (srWeb "cryptonote")
               (mkApk "cryptonote")
               # tools
+              gemini-cli
               pkgs.chromium
               pkgs.qutebrowser
               pkgs.cloudflared
+              playwright
+              playwright-test
               (opencode-nix.packages.${system}.default)
               (pkgs.writeShellApplication {
                 name = "verify";

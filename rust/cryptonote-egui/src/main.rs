@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -15,23 +15,5 @@ fn main() -> eframe::Result {
     )
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", target_os = "android"))]
 fn main() {}
-
-#[cfg(target_os = "android")]
-#[export_name = "android_main"]
-pub fn android_main(app: winit::platform::android::activity::AndroidApp) {
-    let options = eframe::NativeOptions {
-        android_app: Some(app),
-        viewport: egui::ViewportBuilder::default(),
-        ..Default::default()
-    };
-    let result = eframe::run_native(
-        "Cryptonote",
-        options,
-        Box::new(|cc| Ok(Box::new(cryptonote_egui::CryptonoteApp::new(cc)))),
-    );
-    if let Err(error) = result {
-        eprintln!("eframe error: {error}");
-    }
-}

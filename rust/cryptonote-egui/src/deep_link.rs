@@ -8,7 +8,13 @@ pub fn initial_url() -> Option<String> {
     web_sys::window()?.location().href().ok()
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(target_os = "android")]
+#[must_use]
+pub fn initial_url() -> Option<String> {
+    take_url()
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 #[must_use]
 pub const fn initial_url() -> Option<String> {
     None

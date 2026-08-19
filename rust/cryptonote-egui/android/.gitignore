@@ -1,0 +1,12 @@
+.gradle/
+build/
+app/build/
+app/src/main/jniLibs/
+app/src/main/res/mipmap-*/ic_launcher.png
+local.properties
+gradle-app.setting
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/

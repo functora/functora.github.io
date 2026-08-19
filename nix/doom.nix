@@ -197,6 +197,7 @@
         tag = "whatlies";
         mod = ../bak/doom/whatlies.wad;
         total = bd;
+        relite = "";
       }
       // mkDoom {
         tag = "dbp37-augzen";

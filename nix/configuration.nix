@@ -13,6 +13,7 @@
   vibe = import ./vibe.nix {inherit pkgs;};
   qute = import ./qute.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
+  mkBubble = import ./bubble.nix;
   blocked-hosts =
     builtins.concatStringsSep "\n"
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
@@ -768,7 +769,13 @@ in {
         (import ./prusa.nix {inherit pkgs;})
         (import ./freecad.nix {inherit pkgs;})
         (import ./wf-recorder.nix {})
-        (import ./bubble.nix {
+        (mkBubble {
+          inherit pkgs;
+          name = "stunt-rally";
+          home = "stunt-rally";
+          text = ''${pkgs.stuntrally}/bin/stuntrally3 "$@"'';
+        })
+        (mkBubble {
           inherit pkgs;
           name = "gomplate";
           text = ''${pkgs.gomplate}/bin/gomplate "$@"'';

@@ -667,6 +667,8 @@ impl CryptonoteApp {
 
 impl eframe::App for CryptonoteApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        #[cfg(target_os = "android")]
+        crate::android::poll_ime(ui.ctx());
         self.ctx = ui.ctx().clone();
         self.drain_events();
         if !self.is_mobile() {

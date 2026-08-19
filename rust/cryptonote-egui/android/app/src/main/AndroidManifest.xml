@@ -10,7 +10,8 @@
             android:name="com.functora.cryptonote_egui.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|screenLayout|uiMode|smallestScreenSize|density|fontScale|navigation|locale"
             android:exported="true"
-            android:launchMode="singleInstance">
+            android:launchMode="singleInstance"
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="cryptonote_egui" />

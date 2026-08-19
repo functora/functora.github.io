@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, eval_error};
 use crate::i18n::I18N;
 use base64::Engine;
 use dioxus::document::Eval;
@@ -242,7 +242,7 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
 fn frame_from_result(
     result: Result<Either<String, WireFrame>, dioxus::document::EvalError>,
 ) -> Result<WireFrame, Error> {
-    match result? {
+    match result.map_err(eval_error)? {
         Either::Right(frame) => Ok(frame),
         Either::Left(msg) => Err(Error::JS(msg)),
     }
@@ -408,9 +408,9 @@ pub(crate) async fn eval<A: Serialize + 'static, B: serde::de::DeserializeOwned 
 
     let mut eval = dioxus::document::eval(code);
 
-    eval.send(arg)?;
-    match eval.recv::<Either<String, B>>().await? {
+    eval.send(arg).map_err(eval_error)?;
+    match eval.recv::<Either<String, B>>().await.map_err(eval_error)? {
         Either::Right(rhs) => Ok(rhs),
-        Either::Left(lhs) => Err(Error::from(dioxus::document::EvalError::InvalidJs(lhs))),
+        Either::Left(lhs) => Err(eval_error(dioxus::document::EvalError::InvalidJs(lhs))),
     }
 }

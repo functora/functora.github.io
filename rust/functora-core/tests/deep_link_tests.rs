@@ -1,10 +1,12 @@
-use functora_dioxus::deep_link::{set_schedule_update, store_url, take_url, url_to_route};
+use functora_core::deep_link::{set_schedule_update, store_url, take_url, url_to_route};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 static STATE_LOCK: Mutex<()> = Mutex::new(());
 
 fn lock_state() -> MutexGuard<'static, ()> {
-    STATE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    STATE_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 #[test]

@@ -10,6 +10,7 @@ documentation = "https://docs.rs/functora-dioxus"
 description = "Reusable Dioxus components, JS interop, storage, and utilities."
 
 [dependencies]
+functora-core = { path = "../functora-core" }
 dioxus = { version = "=0.8.0-alpha.1", default-features = false, features = [
   "html",
   "router",
@@ -20,13 +21,13 @@ dioxus = { version = "=0.8.0-alpha.1", default-features = false, features = [
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.22"
-urlencoding = "2.1.3"
 derive_more = { version = "2.1.0", features = ["display"] }
 either = { version = "1.15.0", features = ["serde"] }
 tracing = "0.1.43"
 functora = { path = "../functora" }
 functora-tagged = { path = "../functora-tagged" }
 tap = "1.0.1"
+zeroize = "1"
 dioxus-free-icons = { path = "../dioxus-free-icons", features = [
   "font-awesome-brands",
   "font-awesome-solid",
@@ -51,34 +52,9 @@ dioxus-signals = "=0.8.0-alpha.1"
 dioxus-stores = { version = "=0.8.0-alpha.1", default-features = false }
 dioxus-stores-macro = { version = "=0.8.0-alpha.1", default-features = false }
 dioxus-web = { version = "=0.8.0-alpha.1", default-features = false }
-rxing = { version = "0.9.0", default-features = false, features = [
-  "wasm_support",
-  "encoding_rs",
-  "decoders",
-  "encoders",
-  "qrcode",
-], optional = true }
-thiserror = { version = "2.0.18", features = ["std"] }
-isolang = { version = "2.3", default-features = false, features = ["serde"] }
-sys-locale = "0.3.2"
-ammonia = "4.1.4"
-pulldown-cmark = "0.13.3"
-chacha20poly1305 = "0.10"
-aes-gcm = "0.10"
-aead = "0.5"
-cipher = "0.4"
-argon2 = { version = "0.5", features = ["std"] }
-zeroize = "1"
-getrandom = { version = "0.2", features = ["js", "std"] }
-zip = { version = "2", default-features = false, features = ["deflate"] }
-image = { version = "0.25", default-features = false, features = ["jpeg"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-mp4 = "0.14"
-rust_h264 = "0.4"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3", features = ["Window", "Navigator", "Storage", "Location"] }
@@ -86,18 +62,12 @@ gloo-timers = { version = "0.3", features = ["futures"] }
 
 [features]
 default = ["qr"]
-qr = ["dep:rxing"]
+qr = ["functora-core/qr"]
 
 [dev-dependencies]
 dioxus-free-icons = { path = "../dioxus-free-icons", features = [
   "font-awesome-brands",
   "font-awesome-solid",
-] }
-rxing = { version = "0.9.0", default-features = false, features = [
-  "wasm_support",
-  "encoding_rs",
-  "decoders",
-  "qrcode",
 ] }
 tempfile = "3.19.0"
 tokio = { version = "1", features = ["rt", "macros"] }
@@ -105,12 +75,6 @@ dioxus-core = "=0.8.0-alpha.1"
 dioxus-signals = "=0.8.0-alpha.1"
 dioxus-document = "=0.8.0-alpha.1"
 generational-box = "=0.8.0-alpha.1"
-
-[build-dependencies]
-isolang = { version = "2.3", default-features = false, features = [
-  "list_languages",
-] }
-thiserror = { version = "2.0.18", features = ["std"] }
 
 [lints.rust]
 unused_results = "warn"

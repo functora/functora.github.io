@@ -1,5 +1,5 @@
-use functora_dioxus::i18n::{I18N, Language};
-use functora_dioxus::{Msg, WhiteLabelContent, donate_blocks};
+use functora_core::i18n::{I18N, Language};
+use functora_core::{Msg, WhiteLabelContent, donate_blocks};
 
 #[test]
 fn default_content_uses_functora_defaults() {
@@ -47,7 +47,11 @@ fn merged_messages_render_in_all_languages() {
         assert!(Msg::LicenseText.render(lang).contains("Copyright"));
         assert!(!Msg::PrivacyText.render(lang).is_empty());
     }
-    assert!(Msg::PrivacyText.render(Language::Eng).contains("Privacy Policy"));
+    assert!(
+        Msg::PrivacyText
+            .render(Language::Eng)
+            .contains("Privacy Policy")
+    );
 }
 
 #[test]
@@ -57,5 +61,8 @@ fn language_flags_and_names_render() {
         assert!(!Msg::LanguageName(lang).render(Language::Eng).is_empty());
     }
     assert_eq!(Msg::LanguageFlag(Language::Fra).render(Language::Eng), "🌐");
-    assert_eq!(Msg::LanguageName(Language::Fra).render(Language::Eng), "Unknown");
+    assert_eq!(
+        Msg::LanguageName(Language::Fra).render(Language::Eng),
+        "Unknown"
+    );
 }

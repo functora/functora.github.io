@@ -1,4 +1,4 @@
-use functora_dioxus::markdown::render_markdown;
+use functora_core::markdown::render_markdown;
 
 #[test]
 fn markdown_keeps_external_images() {

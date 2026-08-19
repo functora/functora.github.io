@@ -1,8 +1,8 @@
-use functora_dioxus::thumbnail::cache_thumbnail;
-use functora_dioxus::thumbnail::cached_thumbnail;
-use functora_dioxus::thumbnail::jpeg_data_url;
+use functora_core::thumbnail::cache_thumbnail;
+use functora_core::thumbnail::cached_thumbnail;
+use functora_core::thumbnail::jpeg_data_url;
 #[cfg(not(target_arch = "wasm32"))]
-use functora_dioxus::thumbnail::video_thumbnail;
+use functora_core::thumbnail::video_thumbnail;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn thumb_of(video: &[u8]) -> image::DynamicImage {
@@ -15,7 +15,10 @@ fn thumb_of(video: &[u8]) -> image::DynamicImage {
 #[test]
 fn video_thumbnail_extracts_first_frame_as_small_jpeg() {
     let video = include_bytes!("fixtures/tiny-h264.mp4");
-    assert_eq!((thumb_of(video).width(), thumb_of(video).height()), (160, 120));
+    assert_eq!(
+        (thumb_of(video).width(), thumb_of(video).height()),
+        (160, 120)
+    );
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -40,7 +43,8 @@ fn video_thumbnail_rejects_garbage() {
 fn video_thumbnail_is_deterministic() {
     let video = include_bytes!("fixtures/tiny-h264.mp4");
     let first = video_thumbnail(video).unwrap_or_else(|| panic!("fixture must yield a thumbnail"));
-    let second = video_thumbnail(video).unwrap_or_else(|| panic!("fixture must yield a thumbnail again"));
+    let second =
+        video_thumbnail(video).unwrap_or_else(|| panic!("fixture must yield a thumbnail again"));
     assert_eq!(first, second);
 }
 

@@ -1015,7 +1015,7 @@ name = "functora"
 version = "0.1.10"
 
 [[package]]
-name = "functora-dioxus"
+name = "functora-core"
 version = "0.1.0"
 dependencies = [
  "aead",
@@ -1025,6 +1025,33 @@ dependencies = [
  "base64",
  "chacha20poly1305",
  "cipher",
+ "derive_more",
+ "getrandom 0.2.17",
+ "gloo-timers",
+ "image",
+ "isolang",
+ "jni",
+ "mp4",
+ "pulldown-cmark",
+ "rust_h264",
+ "rxing",
+ "serde",
+ "serde_json",
+ "sys-locale",
+ "tap",
+ "thiserror 2.0.20",
+ "tracing",
+ "urlencoding",
+ "web-sys",
+ "zeroize",
+ "zip",
+]
+
+[[package]]
+name = "functora-dioxus"
+version = "0.1.0"
+dependencies = [
+ "base64",
  "derive_more",
  "dioxus",
  "dioxus-asset-resolver",
@@ -1051,29 +1078,19 @@ dependencies = [
  "dioxus-web",
  "either",
  "functora",
+ "functora-core",
  "functora-tagged",
  "generational-box",
- "getrandom 0.2.17",
  "gloo-timers",
- "image",
- "isolang",
  "jni",
- "mp4",
- "pulldown-cmark",
- "rust_h264",
- "rxing",
  "serde",
  "serde_json",
- "sys-locale",
  "tap",
  "tempfile",
- "thiserror 2.0.20",
  "tokio",
  "tracing",
- "urlencoding",
  "web-sys",
  "zeroize",
- "zip",
 ]
 
 [[package]]

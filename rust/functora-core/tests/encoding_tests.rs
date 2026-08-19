@@ -1,4 +1,6 @@
-use functora_dioxus::encoding::{append_query_param, decode_payload, encode_payload, extract_query_param};
+use functora_core::encoding::{
+    append_query_param, decode_payload, encode_payload, extract_query_param,
+};
 
 #[derive(serde::Serialize, serde::Deserialize, PartialEq, Debug)]
 struct Payload {
@@ -52,7 +54,10 @@ fn extract_query_param_returns_value() {
 
 #[test]
 fn extract_query_param_missing_returns_none() {
-    assert_eq!(extract_query_param("https://example.com/?screen=view", "note"), None);
+    assert_eq!(
+        extract_query_param("https://example.com/?screen=view", "note"),
+        None
+    );
     assert_eq!(extract_query_param("https://example.com/", "note"), None);
 }
 
@@ -78,22 +83,22 @@ fn extract_query_param_empty_value() {
 
 #[test]
 fn download_script_escapes_special_characters() {
-    let script = functora_dioxus::encoding::download_script("a\"</script>");
+    let script = functora_core::encoding::download_script("a\"</script>");
     assert!(!script.contains("</script>"));
     assert!(script.contains("a.download="));
 }
 
 #[test]
 fn download_script_aborts_on_abort_message() {
-    let script = functora_dioxus::encoding::download_script("file.bin");
+    let script = functora_core::encoding::download_script("file.bin");
     assert!(script.contains("m.t==='abort'"));
 }
 
 #[cfg(feature = "qr")]
 #[test]
 fn generate_qr_code_produces_svg() {
-    let svg =
-        functora_dioxus::encoding::generate_qr_code("https://example.com").unwrap_or_else(|e| panic!("qr: {e:?}"));
+    let svg = functora_core::encoding::generate_qr_code("https://example.com")
+        .unwrap_or_else(|e| panic!("qr: {e:?}"));
     assert!(svg.starts_with("<svg"));
     assert!(svg.contains("viewBox"));
 }
@@ -101,5 +106,5 @@ fn generate_qr_code_produces_svg() {
 #[cfg(feature = "qr")]
 #[test]
 fn generate_qr_code_fails_on_empty_url() {
-    assert!(functora_dioxus::encoding::generate_qr_code("").is_err());
+    assert!(functora_core::encoding::generate_qr_code("").is_err());
 }

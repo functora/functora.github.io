@@ -1,5 +1,5 @@
-use functora_dioxus::i18n::{I18N, Language};
-use functora_dioxus::{AppAttrs, FUNCTORA_DIOXUS_DATE, FUNCTORA_DIOXUS_YEAR, Msg};
+use functora_core::i18n::{I18N, Language};
+use functora_core::{AppAttrs, FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR, Msg};
 
 const ATTRS: AppAttrs = AppAttrs {
     app: "cryptonote",
@@ -33,7 +33,10 @@ fn pages_url_derives_org_site_root() {
 
 #[test]
 fn app_url_derives_pages_app_subpath() {
-    assert_eq!(ATTRS.app_url(), "https://functora.github.io/apps/cryptonote");
+    assert_eq!(
+        ATTRS.app_url(),
+        "https://functora.github.io/apps/cryptonote"
+    );
 }
 
 #[test]
@@ -115,20 +118,32 @@ fn about_messages_render_all_languages() {
         assert!(!Msg::AboutAndroidBetaLink3.render(lang).is_empty());
         assert!(!Msg::AboutAndroidBeta4.render(lang).is_empty());
     }
-    assert!(Msg::AboutAndroidBeta1.render(Language::Eng).contains("closed beta"));
-    assert!(Msg::AboutAndroidBeta1.render(Language::Spa).contains("beta cerrada"));
-    assert!(Msg::AboutAndroidBeta1.render(Language::Rus).contains("бета"));
+    assert!(
+        Msg::AboutAndroidBeta1
+            .render(Language::Eng)
+            .contains("closed beta")
+    );
+    assert!(
+        Msg::AboutAndroidBeta1
+            .render(Language::Spa)
+            .contains("beta cerrada")
+    );
+    assert!(
+        Msg::AboutAndroidBeta1
+            .render(Language::Rus)
+            .contains("бета")
+    );
 }
 
 #[test]
 fn build_year_is_four_digits() {
-    assert!(FUNCTORA_DIOXUS_YEAR.len() == 4);
-    assert!(FUNCTORA_DIOXUS_YEAR.bytes().all(|b| b.is_ascii_digit()));
+    assert!(FUNCTORA_CORE_YEAR.len() == 4);
+    assert!(FUNCTORA_CORE_YEAR.bytes().all(|b| b.is_ascii_digit()));
 }
 
 #[test]
 fn build_date_is_iso_8601() {
-    let b = FUNCTORA_DIOXUS_DATE.as_bytes();
+    let b = FUNCTORA_CORE_DATE.as_bytes();
     assert!(b.len() == 10);
     assert!(b[4] == b'-');
     assert!(b[7] == b'-');
@@ -140,7 +155,7 @@ fn build_date_is_iso_8601() {
 #[test]
 fn license_and_privacy_render_build_metadata() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
-        assert!(Msg::LicenseText.render(lang).contains(FUNCTORA_DIOXUS_YEAR));
-        assert!(Msg::PrivacyText.render(lang).contains(FUNCTORA_DIOXUS_DATE));
+        assert!(Msg::LicenseText.render(lang).contains(FUNCTORA_CORE_YEAR));
+        assert!(Msg::PrivacyText.render(lang).contains(FUNCTORA_CORE_DATE));
     }
 }

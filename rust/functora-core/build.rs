@@ -34,11 +34,17 @@ fn main() -> Result<(), BuildError> {
         .iter()
         .filter(|(_, method)| method != "render_eng")
         .try_fold(String::new(), |mut acc, (_, method)| {
-            writeln!(acc, "    fn {method}(&self) -> String {{ self.render_eng() }}").map(|()| acc)
+            writeln!(
+                acc,
+                "    fn {method}(&self) -> String {{ self.render_eng() }}"
+            )
+            .map(|()| acc)
         })?;
-    let dispatch = methods.iter().try_fold(String::new(), |mut acc, (variant, method)| {
-        writeln!(acc, "            Language::{variant} => self.{method}(),").map(|()| acc)
-    })?;
+    let dispatch = methods
+        .iter()
+        .try_fold(String::new(), |mut acc, (variant, method)| {
+            writeln!(acc, "            Language::{variant} => self.{method}(),").map(|()| acc)
+        })?;
 
     let code = format!(
         "pub trait I18N {{\n\
@@ -63,8 +69,8 @@ fn main() -> Result<(), BuildError> {
 fn emit_build_date() -> Result<(), BuildError> {
     let secs = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let (y, m, d) = civil_from_days(i64::try_from(secs / 86_400)?);
-    println!("cargo:rustc-env=FUNCTORA_DIOXUS_YEAR={y:04}");
-    println!("cargo:rustc-env=FUNCTORA_DIOXUS_DATE={y:04}-{m:02}-{d:02}");
+    println!("cargo:rustc-env=FUNCTORA_CORE_YEAR={y:04}");
+    println!("cargo:rustc-env=FUNCTORA_CORE_DATE={y:04}-{m:02}-{d:02}");
     Ok(())
 }
 

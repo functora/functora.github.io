@@ -601,7 +601,6 @@ in {
     #
     # Services
     #
-    programs.adb.enable = true;
     programs.ydotool.enable = true;
     services.tor.enable = true;
     hardware.sane.enable = true;
@@ -709,6 +708,7 @@ in {
         p7zip
         unrar-free
         pciutils
+        android-tools
         docker-client
         docker-compose
         btop-rocm
@@ -1077,7 +1077,6 @@ in {
     # Sway
     #
     services.displayManager.gdm.enable = true;
-    services.displayManager.gdm.wayland = true;
     services.displayManager.defaultSession = "sway";
     services.displayManager.sessionPackages = [pkgs.sway];
     #

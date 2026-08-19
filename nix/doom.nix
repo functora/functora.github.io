@@ -17,6 +17,7 @@
     url = "https://github.com/pa1nki113r/Project_Brutality/archive/3f0b2f51d66ba6dc9f2d316570fa78c04a84101a.tar.gz";
     sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
   };
+  bd = ../bak/doom/brutal22test6.pk3;
   qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
   qcde30 = "${../bak/doom/qcde30/QCDEv3.0.pk3} ${../bak/doom/qcde30/QCDEmus3.0.pk3} ${../bak/doom/qcde30/QCDEmaps3.0.pk3}";
   qcde31 = "${../bak/doom/qcde31/QCDEv3.1_beta_2.pk3} ${../bak/doom/qcde31/QCDEmus3.0.pk3} ${../bak/doom/qcde31/QCDEmaps3.0.pk3} ${../bak/doom/qcde31/QCDE_UT_Movement_v3.1_beta_2.pk3}";
@@ -186,6 +187,16 @@
       // mkDoom {
         tag = "phlegethon";
         mod = ../bak/doom/Phlegethon.wad;
+      }
+      // mkDoom {
+        tag = "op13";
+        mod = ../bak/doom/OP13.wad;
+        total = bd;
+      }
+      // mkDoom {
+        tag = "whatlies";
+        mod = ../bak/doom/whatlies.wad;
+        total = bd;
       }
       // mkDoom {
         tag = "dbp37-augzen";

@@ -6,7 +6,7 @@ use crate::state::ActionMode;
 impl CryptonoteApp {
     pub(crate) fn render_view(&mut self, ui: &mut egui::Ui) {
         self.render_note_display(ui);
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::EditNote)).clicked() {
                 self.action = ActionMode::Create;
                 self.navigate(Screen::Home);

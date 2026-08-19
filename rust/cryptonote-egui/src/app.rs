@@ -26,6 +26,8 @@ pub const APP_ATTRS: AppAttrs = AppAttrs {
     description: "Cryptonote is a cross-platform, serverless app for encrypted offline notes.",
 };
 
+const MOBILE_BREAKPOINT: f32 = 800.0;
+
 #[must_use]
 pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
     (cipher.is_some() && password.is_empty()).then_some(Msg::Base(BaseMsg::PasswordRequired))
@@ -53,6 +55,7 @@ pub struct CryptonoteApp {
     pub(crate) tx: Sender<Event>,
     pub(crate) rx: Receiver<Event>,
     pub(crate) ctx: egui::Context,
+    pub(crate) nav_open: bool,
 }
 
 impl CryptonoteApp {
@@ -90,6 +93,7 @@ impl CryptonoteApp {
             tx,
             rx,
             ctx: cc.egui_ctx.clone(),
+            nav_open: false,
         }
     }
 
@@ -542,46 +546,107 @@ impl CryptonoteApp {
     }
 
     fn render_nav(&mut self, ui: &mut egui::Ui) {
-        let _nav = ui.horizontal(|nav| {
-            if !self.history.is_empty() {
-                if nav.button("←").clicked() {
-                    self.back();
+        if self.is_mobile() {
+            let _bar = ui.horizontal(|bar| {
+                if !self.history.is_empty() {
+                    if bar.button("←").clicked() {
+                        self.back();
+                    }
+                    _ = bar.separator();
                 }
-                _ = nav.separator();
-            }
-            for screen in [
-                Screen::Home,
-                Screen::Open,
-                Screen::View,
-                Screen::Share,
-                Screen::File,
-                Screen::About,
-            ] {
-                if nav
-                    .selectable_label(self.screen == screen, self.screen_title(screen))
-                    .clicked()
-                {
-                    self.navigate(screen);
-                }
-            }
-            _ = nav.separator();
-            if nav.button("🌗").clicked() {
-                self.theme = self.theme.toggle();
-                self.theme.apply(nav.ctx());
-            }
-            let _combo = egui::ComboBox::from_id_salt("language")
-                .selected_text(self.language.to_string())
-                .show_ui(nav, |combo| {
-                    for language in SUPPORTED_LANGUAGES {
-                        if combo
-                            .selectable_label(self.language == *language, language.to_string())
-                            .clicked()
-                        {
-                            self.language = *language;
-                        }
+                _ = bar.label(egui::RichText::new(self.screen_title(self.screen)).strong());
+                _ = bar.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
+                    if right
+                        .button(if self.nav_open { "✕" } else { "☰" })
+                        .clicked()
+                    {
+                        self.nav_open = !self.nav_open;
                     }
                 });
-        });
+            });
+        } else {
+            let _nav = ui.horizontal(|nav| {
+                if !self.history.is_empty() {
+                    if nav.button("←").clicked() {
+                        self.back();
+                    }
+                    _ = nav.separator();
+                }
+                for screen in [
+                    Screen::Home,
+                    Screen::Open,
+                    Screen::View,
+                    Screen::Share,
+                    Screen::File,
+                    Screen::About,
+                ] {
+                    if nav
+                        .selectable_label(self.screen == screen, self.screen_title(screen))
+                        .clicked()
+                    {
+                        self.navigate(screen);
+                    }
+                }
+                _ = nav.separator();
+                if nav.button("🌗").clicked() {
+                    self.theme = self.theme.toggle();
+                    self.theme.apply(nav.ctx());
+                }
+                let _combo = egui::ComboBox::from_id_salt("language")
+                    .selected_text(self.language.to_string())
+                    .show_ui(nav, |combo| {
+                        for language in SUPPORTED_LANGUAGES {
+                            if combo
+                                .selectable_label(self.language == *language, language.to_string())
+                                .clicked()
+                            {
+                                self.language = *language;
+                            }
+                        }
+                    });
+            });
+        }
+    }
+
+    fn render_drawer(&mut self, ui: &mut egui::Ui) {
+        ui.add_space(8.0);
+        for screen in [
+            Screen::Home,
+            Screen::Open,
+            Screen::View,
+            Screen::Share,
+            Screen::File,
+            Screen::About,
+        ] {
+            if ui
+                .selectable_label(self.screen == screen, self.screen_title(screen))
+                .clicked()
+            {
+                self.nav_open = false;
+                self.navigate(screen);
+            }
+        }
+        _ = ui.separator();
+        if ui.button("🌗").clicked() {
+            self.theme = self.theme.toggle();
+            self.theme.apply(ui.ctx());
+        }
+        let _combo = egui::ComboBox::from_id_salt("language")
+            .selected_text(self.language.to_string())
+            .show_ui(ui, |combo| {
+                for language in SUPPORTED_LANGUAGES {
+                    if combo
+                        .selectable_label(self.language == *language, language.to_string())
+                        .clicked()
+                    {
+                        self.language = *language;
+                    }
+                }
+            });
+    }
+
+    pub(crate) fn is_mobile(&self) -> bool {
+        self.ctx.content_rect().width() < MOBILE_BREAKPOINT
     }
 
     fn screen_title(&self, screen: Screen) -> String {
@@ -604,11 +669,29 @@ impl eframe::App for CryptonoteApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.ctx = ui.ctx().clone();
         self.drain_events();
+        if !self.is_mobile() {
+            self.nav_open = false;
+        }
         let _nav = egui::Panel::top("nav").show(ui, |nav| self.render_nav(nav));
+        if self.is_mobile() {
+            let mut nav_open = self.nav_open;
+            let width = (self.ctx.content_rect().width() * 0.7).clamp(220.0, 300.0);
+            _ = egui::Panel::left("nav_drawer")
+                .resizable(false)
+                .exact_size(width)
+                .show_collapsible(ui, &mut nav_open, |drawer| {
+                    self.render_drawer(drawer);
+                });
+            self.nav_open = nav_open;
+        }
         let _central = egui::CentralPanel::default().show(ui, |central| {
-            central.add_space(8.0);
-            self.render_screen(central);
-            self.render_status(central);
+            let _scroll = egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .show(central, |scroll| {
+                    scroll.add_space(8.0);
+                    self.render_screen(scroll);
+                    self.render_status(scroll);
+                });
         });
     }
 }

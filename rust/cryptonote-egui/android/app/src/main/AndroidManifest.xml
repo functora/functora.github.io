@@ -5,7 +5,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Cryptonote"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+        android:theme="@style/Theme.GameActivity">
         <activity
             android:name="com.functora.cryptonote_egui.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|screenLayout|uiMode|smallestScreenSize|density|fontScale|navigation|locale"

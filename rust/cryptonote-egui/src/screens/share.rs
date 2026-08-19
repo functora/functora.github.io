@@ -39,7 +39,7 @@ impl CryptonoteApp {
 
     fn render_note_buttons(&mut self, ui: &mut egui::Ui, with_share: bool) {
         let url = self.external.note_url();
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if !url.is_empty()
                 && buttons
                     .button(self.text(&Msg::Base(BaseMsg::Copy)))
@@ -70,7 +70,7 @@ impl CryptonoteApp {
     }
 
     fn render_archive_buttons(&mut self, ui: &mut egui::Ui) {
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::Download)).clicked() {
                 if let Some(bytes) = self.external.archive_bytes() {
                     self.download("archive.cryptonote".to_string(), bytes);

@@ -27,7 +27,7 @@ impl CryptonoteApp {
                 .password(true)
                 .hint_text(hint),
         );
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::DecryptButton)).clicked() {
                 self.decrypt_note();
             }

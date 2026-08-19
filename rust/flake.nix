@@ -217,15 +217,16 @@
         srWeb = app:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [python3];
+            runtimeInputs = with pkgs; [coreutils psmisc python3];
             text = ''
-                  (
-                    cd "${app}"
-                    VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                    dx bundle --release --web --debug-symbols=false
+                  cd "${app}"
+                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                  dx bundle --release --web --debug-symbols=false
                     cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
-                    python3 <<PYEOF
-              import http.server, socketserver, os
+                    fuser -k -TERM 8000/tcp 2>/dev/null || true
+                    sleep 0.5
+                    exec python3 <<PYEOF
+              import http.server, os
               PORT = 8000
               BASE = "/apps/${app}/$VSN"
               ROOT = os.path.abspath("./target/dx/${app}/release/web/public")
@@ -241,9 +242,8 @@
                           return
                       super().do_GET()
 
-              socketserver.TCPServer(("", PORT), Handler).serve_forever()
+              http.server.HTTPServer(("", PORT), Handler).serve_forever()
               PYEOF
-                  )
             '';
           };
         mkEguiWeb = app:
@@ -287,12 +287,11 @@
         srEguiWeb = app:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [coreutils gnused gnugrep python3];
+            runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
             text = ''
-              (
-                cd "${app}"
-                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                LIBNAME="$(echo "${app}" | tr - _)"
+              cd "${app}"
+              VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+              LIBNAME="$(echo "${app}" | tr - _)"
                 ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
                 ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
                   --target web \
@@ -306,8 +305,10 @@
                 cp ../cryptonote/assets/favicon/android-chrome-192x192.png /tmp/${app}-web/
                 cp ../cryptonote/assets/favicon/android-chrome-512x512.png /tmp/${app}-web/
                 cp ../cryptonote/assets/favicon/favicon.ico /tmp/${app}-web/
-                python3 <<PYEOF
-          import http.server, socketserver
+                fuser -k -TERM 8000/tcp 2>/dev/null || true
+                sleep 0.5
+                exec python3 <<PYEOF
+          import http.server
           PORT = 8000
           ROOT = "/tmp/${app}-web"
 
@@ -315,9 +316,8 @@
               def __init__(self, *a, **k):
                   super().__init__(*a, directory=ROOT, **k)
 
-          socketserver.TCPServer(("", PORT), Handler).serve_forever()
+          http.server.HTTPServer(("", PORT), Handler).serve_forever()
           PYEOF
-              )
             '';
           };
         mkEguiAab = app: let
@@ -349,7 +349,7 @@
             (cd android && ./gradlew bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
-            echo "Aab ${app} release success for ${target}!"
+            echo "READY: ${app}/$OUT/cryptonote-v$VSN-${target}.aab"
           '';
         in
           (
@@ -446,12 +446,11 @@
             echo "Wrote $DIR/.well-known/assetlinks.json"
           '';
         };
-        mkApk = app:
+        mkApk = app: aabDir:
           pkgs.writeShellApplication {
             name = "release-apk-${app}";
             text = ''
-              DEF="./${app}/target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
-              DIR="''${1:-$DEF}"
+              DIR="''${1:-${aabDir}}"
 
               IFS= read -r -s -p "Keystore password: " KS_PASS
               echo
@@ -572,10 +571,10 @@
               # apps
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
-              (mkApk "cryptonote")
+              (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
               (mkEguiWeb "cryptonote-egui")
               (srEguiWeb "cryptonote-egui")
-              (mkApk "cryptonote-egui")
+              (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
               # tools
               gemini-cli
               pkgs.chromium

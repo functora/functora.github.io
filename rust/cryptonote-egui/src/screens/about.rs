@@ -12,7 +12,7 @@ impl CryptonoteApp {
             _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
         });
         _ = ui.separator();
-        let _links = ui.horizontal(|row| {
+        let _links = ui.horizontal_wrapped(|row| {
             if row.button(self.text(&Msg::Base(BaseMsg::Donate))).clicked() {
                 self.navigate(Screen::Donate);
             }

@@ -9,7 +9,7 @@ use functora_core::messages::Msg as BaseMsg;
 impl CryptonoteApp {
     pub(crate) fn render_home(&mut self, ui: &mut egui::Ui) {
         _ = ui.heading(self.text(&Msg::ActionLabel));
-        let _modes = ui.horizontal(|row| {
+        let _modes = ui.horizontal_wrapped(|row| {
             for (mode, label) in [
                 (ActionMode::Create, self.text(&Msg::ActionCreate)),
                 (ActionMode::Open, self.text(&Msg::ActionOpen)),
@@ -68,7 +68,7 @@ impl CryptonoteApp {
             _ = ui.separator();
             let mut remove: Option<usize> = None;
             for (i, att) in self.attachments.iter().enumerate() {
-                let _row = ui.horizontal(|row| {
+                let _row = ui.horizontal_wrapped(|row| {
                     _ = row.label(&att.name);
                     _ = row.label(format_size(att.data.len() as u64));
                     if row.button(self.text(&Msg::RemoveFile)).clicked() {
@@ -81,7 +81,7 @@ impl CryptonoteApp {
             }
         }
         _ = ui.separator();
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::Share)).clicked() {
                 self.generate_share();
             }
@@ -112,7 +112,7 @@ impl CryptonoteApp {
                 .desired_width(f32::INFINITY)
                 .desired_rows(6),
         );
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::OpenButton)).clicked() {
                 self.open_url();
             }
@@ -136,7 +136,7 @@ impl CryptonoteApp {
 
     fn render_home_scan(&mut self, ui: &mut egui::Ui) {
         _ = ui.label(self.text(&Msg::ActionScan));
-        let _buttons = ui.horizontal(|buttons| {
+        let _buttons = ui.horizontal_wrapped(|buttons| {
             if buttons.button(self.text(&Msg::ActionScan)).clicked() {
                 self.scan_image();
             }

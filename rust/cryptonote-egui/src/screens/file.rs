@@ -16,7 +16,7 @@ impl CryptonoteApp {
             .collect::<Vec<_>>();
         let _scroll = egui::ScrollArea::vertical().show(ui, |scroll| {
             for (name, size, bytes) in names {
-                let _row = scroll.horizontal(|row| {
+                let _row = scroll.horizontal_wrapped(|row| {
                     _ = row.label(&name);
                     _ = row.label(format_size(size as u64));
                     if row.button(self.text(&Msg::Download)).clicked() {

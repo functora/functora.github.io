@@ -1,0 +1,67 @@
+[package]
+name = "dioxus-free-icons"
+license = "MIT"
+version = "0.10.0"
+edition = "2021"
+keywords = ["dioxus", "icons", "svg"]
+categories = ["web-programming"]
+repository = "https://github.com/dioxus-community/dioxus-free-icons"
+description = "Use free svg icons in your Dioxus projects easily with dioxus-free-icons. Vendored locally for dioxus 0.8."
+
+[lib]
+name = "dioxus_free_icons"
+path = "src/lib.rs"
+
+[dependencies]
+dioxus = { version = "=0.8.0-alpha.1", default-features = false, features = ["macro", "html"] }
+dioxus-signals = "=0.8.0-alpha.1"
+
+[features]
+font-awesome-brands = []
+font-awesome-regular = []
+font-awesome-solid = []
+bootstrap = []
+codicons = []
+feather = []
+hero-icons-outline = []
+hero-icons-solid = []
+ionicons = []
+lucide = []
+material-design-icons-action = []
+material-design-icons-alert = []
+material-design-icons-av = []
+material-design-icons-communication = []
+material-design-icons-content = []
+material-design-icons-device = []
+material-design-icons-editor = []
+material-design-icons-file = []
+material-design-icons-hardware = []
+material-design-icons-home = []
+material-design-icons-image = []
+material-design-icons-maps = []
+material-design-icons-navigation = []
+material-design-icons-notification = []
+material-design-icons-places = []
+material-design-icons-social = []
+material-design-icons-toggle = []
+octicons = []
+
+[lints.rust]
+unused_results = "warn"
+[lints.clippy]
+pedantic = "warn"
+or_fun_call = "warn"
+must_use_unit = "warn"
+ignored_unit_patterns = "warn"
+let_underscore_must_use = "warn"
+map_unwrap_or = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+shadow_same = "warn"
+shadow_reuse = "warn"
+shadow_unrelated = "warn"
+similar_names = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+semicolon_if_nothing_returned = { level = "allow", priority = 1 }

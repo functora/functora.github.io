@@ -47,6 +47,24 @@ pub enum ActionMode {
     Scan,
 }
 
+impl ActionMode {
+    pub const ALL: [Self; 3] = [Self::Create, Self::Open, Self::Scan];
+
+    #[must_use]
+    pub const fn index(self) -> usize {
+        match self {
+            Self::Create => 0,
+            Self::Open => 1,
+            Self::Scan => 2,
+        }
+    }
+
+    #[must_use]
+    pub fn from_index(index: usize) -> Self {
+        Self::ALL.get(index).copied().unwrap_or_default()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PasteTarget {
     Note,

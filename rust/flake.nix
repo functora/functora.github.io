@@ -321,33 +321,40 @@
             '';
           };
         mkEguiAab = app: let
-          mkCmd = target: ''
-            ${rustToolchain}/bin/cargo build --release --target "${target}"
+          abis = {
+            "aarch64-linux-android" = "arm64-v8a";
+            "armv7-linux-androideabi" = "armeabi-v7a";
+            "i686-linux-android" = "x86";
+            "x86_64-linux-android" = "x86_64";
+          };
+          buildCmd = target: "${rustToolchain}/bin/cargo build --release --target \"${target}\"";
+          prepCmd = ''
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
             GRADLE="./android/app/build.gradle"
             sed -i "s/versionCode = [0-9]*/versionCode = $VC/; s/versionName = \"[^\"]*\"/versionName = \"$VSN\"/" "$GRADLE"
-            mkdir -p android/app/src/main/jniLibs/arm64-v8a \
-              android/app/src/main/jniLibs/armeabi-v7a \
-              android/app/src/main/jniLibs/x86 \
-              android/app/src/main/jniLibs/x86_64
-            cp target/aarch64-linux-android/release/libcryptonote_egui.so \
-              android/app/src/main/jniLibs/arm64-v8a/libcryptonote_egui.so
-            cp target/thumbv7neon-linux-androideabi/release/libcryptonote_egui.so \
-              android/app/src/main/jniLibs/armeabi-v7a/libcryptonote_egui.so
-            cp target/i686-linux-android/release/libcryptonote_egui.so \
-              android/app/src/main/jniLibs/x86/libcryptonote_egui.so
-            cp target/x86_64-linux-android/release/libcryptonote_egui.so \
-              android/app/src/main/jniLibs/x86_64/libcryptonote_egui.so
             for D in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
               mkdir -p "android/app/src/main/res/mipmap-$D"
               cp "../cryptonote/assets/favicon/mipmap-$D.png" \
                 "android/app/src/main/res/mipmap-$D/ic_launcher.png"
             done
+          '';
+          bundleCmd = ''
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
-            (cd android && ./gradlew bundleRelease)
+            (cd android && ./gradlew clean bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
+            cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
+            echo "READY: ${app}/$OUT/cryptonote-v$VSN.aab"
+          '';
+          mkCmd = target: ''
+            ${buildCmd target}
+            rm -rf android/app/src/main/jniLibs
+            mkdir -p android/app/src/main/jniLibs/${abis.${target}}
+            cp target/${target}/release/libcryptonote_egui.so \
+              android/app/src/main/jniLibs/${abis.${target}}/libcryptonote_egui.so
+            ${prepCmd}
+            ${bundleCmd}
             cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
             echo "READY: ${app}/$OUT/cryptonote-v$VSN-${target}.aab"
           '';
@@ -366,7 +373,7 @@
                   '';
                 }
             )
-            mobile-targets
+            (builtins.attrNames abis)
           )
           ++ [
             (
@@ -376,7 +383,17 @@
                 text = ''
                   (
                     cd "${app}"
-                    ${builtins.concatStringsSep "\n" (map mkCmd mobile-targets)}
+                    ${builtins.concatStringsSep "\n" (map buildCmd (builtins.attrNames abis))}
+                    rm -rf android/app/src/main/jniLibs
+                    ${builtins.concatStringsSep "\n" (map (target: ''
+                    mkdir -p android/app/src/main/jniLibs/${abis.${target}}
+                    cp target/${target}/release/libcryptonote_egui.so \
+                      android/app/src/main/jniLibs/${abis.${target}}/libcryptonote_egui.so
+                  '') (builtins.attrNames abis))}
+                    ${prepCmd}
+                    ${bundleCmd}
+                    rm -f "$OUT/cryptonote-v$VSN-*.aab"
+                    echo "READY (universal, all ABIs): ${app}/$OUT/cryptonote-v$VSN.aab"
                   )
                 '';
               }
@@ -451,6 +468,7 @@
             name = "release-apk-${app}";
             text = ''
               DIR="''${1:-${aabDir}}"
+              VSN="$(cd "${app}" && grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
 
               IFS= read -r -s -p "Keystore password: " KS_PASS
               echo
@@ -459,11 +477,13 @@
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
               export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
 
-              for AAB in "$DIR"/*.aab; do
+              FOUND=0
+              for AAB in "$DIR"/*v"$VSN"*.aab; do
                 [ -f "$AAB" ] || continue
 
                 NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
                 [[ "$NAME" != *-signed ]] || continue
+                FOUND=1
                 SIG="$DIR/$NAME-signed.aab"
                 APK="$DIR/$NAME.apk"
                 TMP="$DIR/$NAME.apks"
@@ -489,6 +509,10 @@
 
                 echo "READY: $APK"
               done
+              [ "$FOUND" -eq 1 ] || {
+                echo "No v$VSN aab found in $DIR (current Cargo.toml version). Run release-aab-${app}-all first."
+                exit 1
+              }
             '';
           };
         shell = rec {

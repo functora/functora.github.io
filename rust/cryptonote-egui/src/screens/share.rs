@@ -2,6 +2,9 @@ use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::{ActionMode, External};
+use egui::Vec2;
+use elegance::glyphs;
+use elegance::{Accent, Button, Card, Spinner};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {
@@ -13,78 +16,117 @@ impl CryptonoteApp {
         if !url.is_empty() {
             self.render_share_note(ui, &url, &qr);
         } else if matches!(self.external, External::Archive(_)) {
-            _ = ui.label(self.text(&Msg::ArchiveReady));
-            self.render_archive_buttons(ui);
+            self.render_share_archive(ui);
         } else if self.message.is_some() {
             self.render_note_buttons(ui, false);
         } else {
-            _ = ui.label(self.text(&Msg::Base(BaseMsg::Loading)));
+            let loading = self.text(&Msg::Base(BaseMsg::Loading));
+            let _ = Card::new().heading(loading).show(ui, |card| {
+                let _centered = card.horizontal(|row| {
+                    _ = row.with_layout(
+                        egui::Layout::centered_and_justified(egui::Direction::TopDown),
+                        |center| {
+                            _ = center.add(Spinner::new().size(40.0));
+                        },
+                    );
+                });
+            });
         }
     }
 
     fn render_share_note(&mut self, ui: &mut egui::Ui, url: &str, qr: &str) {
-        if !qr.is_empty() {
-            let texture = self.qr_texture(url);
-            if let Some(tex) = &texture {
-                _ = ui.add(egui::Image::new((tex.id(), tex.size_vec2())));
+        let heading = self.text(&Msg::Share);
+        let qr_image = if qr.is_empty() {
+            None
+        } else {
+            self.qr_texture(url).map(|tex| (tex.id(), tex.size_vec2()))
+        };
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            if let Some((id, size)) = qr_image {
+                let _centered = card.horizontal(|row| {
+                    _ = row.with_layout(
+                        egui::Layout::centered_and_justified(egui::Direction::TopDown),
+                        |center| {
+                            let side = center.available_width().min(size.x);
+                            _ = center.add(egui::Image::new((id, Vec2::splat(side))));
+                        },
+                    );
+                });
             }
-        }
-        _ = ui.add(
-            egui::Label::new(egui::RichText::new(url).monospace())
-                .wrap()
-                .selectable(true),
-        );
+            _ = card.add(
+                egui::Label::new(egui::RichText::new(url).monospace())
+                    .wrap()
+                    .selectable(true),
+            );
+        });
         self.render_note_buttons(ui, true);
     }
 
-    fn render_note_buttons(&mut self, ui: &mut egui::Ui, with_share: bool) {
-        let url = self.external.note_url();
-        let _buttons = ui.horizontal_wrapped(|buttons| {
-            if !url.is_empty()
-                && buttons
-                    .button(self.text(&Msg::Base(BaseMsg::Copy)))
-                    .clicked()
+    fn render_share_archive(&mut self, ui: &mut egui::Ui) {
+        let heading = self.text(&Msg::ArchiveReady);
+        let _ = Card::new().heading(heading).show(ui, |_card| {});
+        let download_label = format!("{} {}", glyphs::DOWNLOAD, self.text(&Msg::Download));
+        let view_label = format!("{} {}", glyphs::EYE, self.text(&Msg::ViewButton));
+        let edit_label = format!("{} {}", glyphs::PENCIL, self.text(&Msg::EditNote));
+        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        ui.add_space(8.0);
+        self.render_dock(ui, |row, app| {
+            if row
+                .add(Button::new(&download_label).accent(Accent::Blue))
+                .clicked()
             {
-                self.copy_text(url.clone());
-            }
-            if with_share {
-                if buttons.button(self.text(&Msg::Share)).clicked() {
-                    let text = self.text(&Msg::SharedNoteText);
-                    self.social_share(text, url.clone());
-                }
-                if buttons.button(self.text(&Msg::Print)).clicked() {
-                    self.print();
+                if let Some(bytes) = app.external.archive_bytes() {
+                    app.download("archive.cryptonote".to_string(), bytes);
                 }
             }
-            if buttons.button(self.text(&Msg::ViewButton)).clicked() {
-                self.navigate(Screen::View);
+            if row.add(Button::new(&view_label).outline()).clicked() {
+                app.navigate(Screen::View);
             }
-            if buttons.button(self.text(&Msg::EditNote)).clicked() {
-                self.action = ActionMode::Create;
-                self.navigate(Screen::Home);
+            if row.add(Button::new(&edit_label).outline()).clicked() {
+                app.action = ActionMode::Create;
+                app.navigate(Screen::Home);
             }
-            if buttons.button(self.text(&Msg::CreateNewNote)).clicked() {
-                self.reset();
+            if row.add(Button::new(&reset_label).outline()).clicked() {
+                app.reset();
             }
         });
     }
 
-    fn render_archive_buttons(&mut self, ui: &mut egui::Ui) {
-        let _buttons = ui.horizontal_wrapped(|buttons| {
-            if buttons.button(self.text(&Msg::Download)).clicked() {
-                if let Some(bytes) = self.external.archive_bytes() {
-                    self.download("archive.cryptonote".to_string(), bytes);
+    fn render_note_buttons(&mut self, ui: &mut egui::Ui, with_share: bool) {
+        let url = self.external.note_url();
+        let copy_label = format!("{} {}", glyphs::COPY, self.text(&Msg::Base(BaseMsg::Copy)));
+        let share_label = format!("{} {}", glyphs::NETWORK, self.text(&Msg::Share));
+        let print_label = self.text(&Msg::Print);
+        let view_label = format!("{} {}", glyphs::EYE, self.text(&Msg::ViewButton));
+        let edit_label = format!("{} {}", glyphs::PENCIL, self.text(&Msg::EditNote));
+        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        ui.add_space(8.0);
+        self.render_dock(ui, |row, app| {
+            if !url.is_empty()
+                && row
+                    .add(Button::new(&copy_label).accent(Accent::Blue))
+                    .clicked()
+            {
+                app.copy_text(url.clone());
+            }
+            if with_share {
+                if row.add(Button::new(&share_label).outline()).clicked() {
+                    let text = app.text(&Msg::SharedNoteText);
+                    app.social_share(text, url.clone());
+                }
+                if row.add(Button::new(&print_label).outline()).clicked() {
+                    app.print();
                 }
             }
-            if buttons.button(self.text(&Msg::ViewButton)).clicked() {
-                self.navigate(Screen::View);
+            if row.add(Button::new(&view_label).outline()).clicked() {
+                app.navigate(Screen::View);
             }
-            if buttons.button(self.text(&Msg::EditNote)).clicked() {
-                self.action = ActionMode::Create;
-                self.navigate(Screen::Home);
+            if row.add(Button::new(&edit_label).outline()).clicked() {
+                app.action = ActionMode::Create;
+                app.navigate(Screen::Home);
             }
-            if buttons.button(self.text(&Msg::CreateNewNote)).clicked() {
-                self.reset();
+            if row.add(Button::new(&reset_label).outline()).clicked() {
+                app.reset();
             }
         });
     }

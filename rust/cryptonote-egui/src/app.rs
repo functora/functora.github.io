@@ -9,6 +9,11 @@ use crate::screens::Screen;
 use crate::state::{ActionMode, External, ExternalNote, PasteTarget, PickKind};
 use crate::task::{build_external, decrypt_external, extract_archive, Event};
 use crate::theme::Theme;
+use elegance::glyphs;
+use elegance::{
+    Accent, BadgeTone, Button, ButtonSize, Drawer, DrawerSide, Menu, MenuItem, ProgressBar, TabBar,
+    Toast, Toasts,
+};
 use functora_core::encoding::extract_query_param;
 use functora_core::files::Attachment;
 use functora_core::messages::Msg as BaseMsg;
@@ -27,6 +32,15 @@ pub const APP_ATTRS: AppAttrs = AppAttrs {
 };
 
 const MOBILE_BREAKPOINT: f32 = 800.0;
+const CONTENT_MAX_WIDTH: f32 = 960.0;
+const MAIN_SCREENS: [Screen; 6] = [
+    Screen::Home,
+    Screen::Open,
+    Screen::View,
+    Screen::Share,
+    Screen::File,
+    Screen::About,
+];
 
 #[must_use]
 pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
@@ -56,6 +70,8 @@ pub struct CryptonoteApp {
     pub(crate) rx: Receiver<Event>,
     pub(crate) ctx: egui::Context,
     pub(crate) nav_open: bool,
+    pub(crate) nav_tab: usize,
+    pub(crate) toasted: bool,
 }
 
 impl CryptonoteApp {
@@ -94,6 +110,8 @@ impl CryptonoteApp {
             rx,
             ctx: cc.egui_ctx.clone(),
             nav_open: false,
+            nav_tab: 0,
+            toasted: false,
         }
     }
 
@@ -167,6 +185,8 @@ impl CryptonoteApp {
         self.qr_texture = None;
         self.history.clear();
         self.screen = Screen::default();
+        self.nav_tab = 0;
+        self.toasted = false;
     }
 
     pub(crate) fn generate_share(&mut self) {
@@ -547,102 +567,179 @@ impl CryptonoteApp {
 
     fn render_nav(&mut self, ui: &mut egui::Ui) {
         if self.is_mobile() {
-            let _bar = ui.horizontal(|bar| {
-                if !self.history.is_empty() {
-                    if bar.button("←").clicked() {
-                        self.back();
-                    }
-                    _ = bar.separator();
-                }
-                _ = bar.label(egui::RichText::new(self.screen_title(self.screen)).strong());
-                _ = bar.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
-                    if right
-                        .button(if self.nav_open { "✕" } else { "☰" })
-                        .clicked()
-                    {
-                        self.nav_open = !self.nav_open;
-                    }
-                });
-            });
+            self.render_nav_mobile(ui);
         } else {
-            let _nav = ui.horizontal(|nav| {
-                if !self.history.is_empty() {
-                    if nav.button("←").clicked() {
-                        self.back();
-                    }
-                    _ = nav.separator();
-                }
-                for screen in [
-                    Screen::Home,
-                    Screen::Open,
-                    Screen::View,
-                    Screen::Share,
-                    Screen::File,
-                    Screen::About,
-                ] {
-                    if nav
-                        .selectable_label(self.screen == screen, self.screen_title(screen))
-                        .clicked()
-                    {
-                        self.navigate(screen);
-                    }
-                }
-                _ = nav.separator();
-                if nav.button("🌗").clicked() {
-                    self.theme = self.theme.toggle();
-                    self.theme.apply(nav.ctx());
-                }
-                let _combo = egui::ComboBox::from_id_salt("language")
-                    .selected_text(self.language.to_string())
-                    .show_ui(nav, |combo| {
-                        for language in SUPPORTED_LANGUAGES {
-                            if combo
-                                .selectable_label(self.language == *language, language.to_string())
-                                .clicked()
-                            {
-                                self.language = *language;
-                            }
-                        }
-                    });
-            });
+            self.render_nav_desktop(ui);
         }
     }
 
-    fn render_drawer(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(8.0);
-        for screen in [
-            Screen::Home,
-            Screen::Open,
-            Screen::View,
-            Screen::Share,
-            Screen::File,
-            Screen::About,
-        ] {
-            if ui
-                .selectable_label(self.screen == screen, self.screen_title(screen))
-                .clicked()
-            {
-                self.nav_open = false;
-                self.navigate(screen);
-            }
+    fn render_brand(&mut self, ui: &mut egui::Ui) {
+        let brand = ui.add(
+            egui::Label::new(egui::RichText::new(APP_ATTRS.app_name()).strong())
+                .sense(egui::Sense::click()),
+        );
+        if brand
+            .on_hover_text(self.text(&Msg::Base(BaseMsg::Home)))
+            .clicked()
+        {
+            self.reset();
         }
-        _ = ui.separator();
-        if ui.button("🌗").clicked() {
+    }
+
+    fn render_nav_desktop(&mut self, ui: &mut egui::Ui) {
+        let _row = ui.horizontal(|row| {
+            if !self.history.is_empty() {
+                if row
+                    .add(
+                        Button::new(egui::RichText::new(glyphs::ARROW_LEFT))
+                            .outline()
+                            .size(ButtonSize::Small),
+                    )
+                    .on_hover_text(self.text(&Msg::Base(BaseMsg::Back)))
+                    .clicked()
+                {
+                    self.back();
+                }
+                _ = row.separator();
+            }
+            self.render_brand(row);
+            row.add_space(16.0);
+            let tabs: Vec<String> = MAIN_SCREENS
+                .iter()
+                .map(|screen| self.screen_title(*screen))
+                .collect();
+            if let Some(index) = self.tab_index() {
+                self.nav_tab = index;
+            }
+            if row.add(TabBar::new(&mut self.nav_tab, tabs)).changed() {
+                self.navigate(MAIN_SCREENS[self.nav_tab]);
+            }
+            _ = row.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
+                self.render_nav_right(right);
+            });
+        });
+    }
+
+    fn render_nav_mobile(&mut self, ui: &mut egui::Ui) {
+        let _row = ui.horizontal(|row| {
+            if !self.history.is_empty()
+                && row
+                    .add(
+                        Button::new(egui::RichText::new(glyphs::ARROW_LEFT))
+                            .outline()
+                            .size(ButtonSize::Small),
+                    )
+                    .on_hover_text(self.text(&Msg::Base(BaseMsg::Back)))
+                    .clicked()
+            {
+                self.back();
+            }
+            self.render_brand(row);
+            _ = row.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
+                if right
+                    .add(
+                        Button::new(egui::RichText::new(glyphs::MENU))
+                            .outline()
+                            .size(ButtonSize::Small),
+                    )
+                    .clicked()
+                {
+                    self.nav_open = true;
+                }
+            });
+        });
+    }
+
+    fn render_nav_right(&mut self, ui: &mut egui::Ui) {
+        let theme_label = if self.theme == Theme::Dark {
+            "🌙"
+        } else {
+            "☀️"
+        };
+        if ui
+            .add(Button::new(theme_label).outline().size(ButtonSize::Small))
+            .on_hover_text(self.text(&Msg::Base(BaseMsg::Theme)))
+            .clicked()
+        {
             self.theme = self.theme.toggle();
             self.theme.apply(ui.ctx());
         }
-        let _combo = egui::ComboBox::from_id_salt("language")
-            .selected_text(self.language.to_string())
-            .show_ui(ui, |combo| {
-                for language in SUPPORTED_LANGUAGES {
-                    if combo
-                        .selectable_label(self.language == *language, language.to_string())
-                        .clicked()
-                    {
-                        self.language = *language;
-                    }
+        let trigger = ui.add(
+            Button::new(self.language_label(self.language))
+                .outline()
+                .size(ButtonSize::Small),
+        );
+        let _ = Menu::new("language_menu").show_below(&trigger, |menu| {
+            for language in SUPPORTED_LANGUAGES.iter().copied() {
+                if menu
+                    .add(
+                        MenuItem::new(self.language_label(language))
+                            .radio(language == self.language),
+                    )
+                    .clicked()
+                {
+                    self.language = language;
                 }
-            });
+            }
+        });
+    }
+
+    fn render_drawer(&mut self, ui: &mut egui::Ui) -> bool {
+        ui.add_space(8.0);
+        for screen in MAIN_SCREENS {
+            if ui
+                .add(
+                    Button::new(self.screen_title(screen))
+                        .outline()
+                        .full_width(),
+                )
+                .clicked()
+            {
+                self.navigate(screen);
+                return true;
+            }
+        }
+        _ = ui.separator();
+        for language in SUPPORTED_LANGUAGES.iter().copied() {
+            let label = self.language_label(language);
+            let text = if language == self.language {
+                format!("{} {}", glyphs::CHECK, label)
+            } else {
+                label
+            };
+            if ui.add(Button::new(text).outline().full_width()).clicked() {
+                self.language = language;
+                return true;
+            }
+        }
+        let theme_label = if self.theme == Theme::Dark {
+            format!("{} {}", "🌙", self.text(&Msg::Base(BaseMsg::Theme)))
+        } else {
+            format!("{} {}", "☀️", self.text(&Msg::Base(BaseMsg::Theme)))
+        };
+        if ui
+            .add(Button::new(theme_label).outline().full_width())
+            .clicked()
+        {
+            self.theme = self.theme.toggle();
+            self.theme.apply(ui.ctx());
+            return true;
+        }
+        false
+    }
+
+    fn language_label(&self, language: Language) -> String {
+        format!(
+            "{} {}",
+            self.text(&Msg::Base(BaseMsg::LanguageFlag(language))),
+            self.text(&Msg::Base(BaseMsg::LanguageName(language)))
+        )
+    }
+
+    fn tab_index(&self) -> Option<usize> {
+        MAIN_SCREENS
+            .iter()
+            .position(|screen| *screen == self.screen)
     }
 
     pub(crate) fn is_mobile(&self) -> bool {
@@ -676,41 +773,78 @@ impl eframe::App for CryptonoteApp {
         }
         let _nav = egui::Panel::top("nav").show(ui, |nav| self.render_nav(nav));
         if self.is_mobile() {
-            let mut nav_open = self.nav_open;
             let width = (self.ctx.content_rect().width() * 0.7).clamp(220.0, 300.0);
-            _ = egui::Panel::left("nav_drawer")
-                .resizable(false)
-                .exact_size(width)
-                .show_collapsible(ui, &mut nav_open, |drawer| {
-                    self.render_drawer(drawer);
-                });
-            self.nav_open = nav_open;
+            let mut nav_open = self.nav_open;
+            let close = Drawer::new("nav_drawer", &mut nav_open)
+                .side(DrawerSide::Right)
+                .width(width)
+                .title(APP_ATTRS.app_name())
+                .show(ui.ctx(), |drawer| self.render_drawer(drawer))
+                .unwrap_or(false);
+            if close {
+                self.nav_open = false;
+            } else {
+                self.nav_open = nav_open;
+            }
         }
         let _central = egui::CentralPanel::default().show(ui, |central| {
-            let _scroll = egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
-                .show(central, |scroll| {
-                    scroll.add_space(8.0);
-                    self.render_screen(scroll);
-                    self.render_status(scroll);
+            let available = central.available_width();
+            let width = available.min(CONTENT_MAX_WIDTH);
+            let margin = (available - width) * 0.5;
+            let _ = central.with_layout(egui::Layout::left_to_right(egui::Align::Min), |row| {
+                row.add_space(margin);
+                let _ = row.vertical(|col| {
+                    col.set_max_width(width);
+                    let _scroll = egui::ScrollArea::vertical()
+                        .auto_shrink([false, false])
+                        .show(col, |scroll| {
+                            scroll.add_space(8.0);
+                            self.render_screen(scroll);
+                            self.render_status(scroll);
+                        });
                 });
+            });
         });
+        self.render_toasts(ui.ctx());
     }
 }
 
 impl CryptonoteApp {
+    pub(crate) fn render_dock(
+        &mut self,
+        ui: &mut egui::Ui,
+        mut add: impl FnMut(&mut egui::Ui, &mut Self),
+    ) {
+        let _ = ui.horizontal_wrapped(|row| add(row, self));
+    }
+
     fn render_status(&mut self, ui: &mut egui::Ui) {
         if let Some(job) = &self.job {
             let label = self.text(&Msg::Base(BaseMsg::Stage(job.stage)));
+            ui.add_space(8.0);
             _ = ui.add(
-                egui::ProgressBar::new(f32::from(job.percent()) / 100.0)
-                    .text(format!("{label} {}%", job.percent())),
+                ProgressBar::new(f32::from(job.percent()) / 100.0)
+                    .text(format!("{label} {}%", job.percent()))
+                    .accent(Accent::Blue),
             );
         }
-        if let Some(msg) = &self.message {
-            let text = self.text(msg);
-            _ = ui.separator();
-            _ = ui.colored_label(egui::Color32::from_rgb(0xE0, 0x7A, 0x5A), text);
+    }
+
+    fn render_toasts(&mut self, ctx: &egui::Context) {
+        match &self.message {
+            Some(msg) if !self.toasted => {
+                let tone = if matches!(msg, Msg::Error(_)) {
+                    BadgeTone::Danger
+                } else {
+                    BadgeTone::Ok
+                };
+                let text = self.text(msg);
+                Toast::new(text).tone(tone).show(ctx);
+                self.toasted = true;
+            }
+            None => self.toasted = false,
+            Some(_) => {}
         }
+        Toasts::new().render(ctx);
     }
 }

@@ -778,12 +778,13 @@ dependencies = [
 
 [[package]]
 name = "cryptonote-egui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "android-activity",
  "arboard",
  "eframe",
  "egui",
+ "egui-elegance",
  "functora-core",
  "functora-tagged",
  "futures-executor",
@@ -1031,6 +1032,16 @@ dependencies = [
  "smallvec",
  "unicode-segmentation",
  "web-sys",
+]
+
+[[package]]
+name = "egui-elegance"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "582c0660e958c3e5eb134d4dabdf76e3f588fdacd1ff472a0ab6294f4e8982c7"
+dependencies = [
+ "egui",
+ "js-sys",
 ]
 
 [[package]]
@@ -2869,15 +2880,15 @@ dependencies = [
 
 [[package]]
 name = "portable-atomic"
-version = "1.15.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
+checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "portable-atomic-util"
-version = "0.2.7"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2a106d1259c23fac8e543272398ae0e3c0b8d33c88ed73d0cc71b0f1d902618"
+checksum = "091397be61a01d4be58e7841595bd4bfedb15f1cd54977d79b8271e94ed799a3"
 dependencies = [
  "portable-atomic",
 ]

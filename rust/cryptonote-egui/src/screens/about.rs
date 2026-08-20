@@ -1,65 +1,87 @@
 use crate::app::{CryptonoteApp, APP_ATTRS};
 use crate::messages::Msg;
 use crate::screens::Screen;
+use elegance::{Accent, Button, ButtonSize, Card};
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::donate_blocks;
 
 impl CryptonoteApp {
     pub(crate) fn render_about(&mut self, ui: &mut egui::Ui) {
-        _ = ui.heading(format!("{} v{}", APP_ATTRS.app_name(), APP_ATTRS.vsn));
+        let heading = format!("{} v{}", APP_ATTRS.app_name(), APP_ATTRS.vsn);
         let text = self.text(&Msg::AboutText);
-        let _scroll = egui::ScrollArea::vertical().show(ui, |scroll| {
-            _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            let _scroll = egui::ScrollArea::vertical().show(card, |scroll| {
+                _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+            });
         });
-        _ = ui.separator();
-        let _links = ui.horizontal_wrapped(|row| {
-            if row.button(self.text(&Msg::Base(BaseMsg::Donate))).clicked() {
-                self.navigate(Screen::Donate);
-            }
+        let donate_label = self.text(&Msg::Base(BaseMsg::Donate));
+        let terms_label = self.text(&Msg::Base(BaseMsg::TermsOfServiceTitle));
+        let privacy_label = self.text(&Msg::Base(BaseMsg::PrivacyPolicyTitle));
+        ui.add_space(8.0);
+        self.render_dock(ui, |row, app| {
             if row
-                .button(self.text(&Msg::Base(BaseMsg::TermsOfServiceTitle)))
+                .add(Button::new(&donate_label).accent(Accent::Amber))
                 .clicked()
             {
-                self.navigate(Screen::License);
+                app.navigate(Screen::Donate);
             }
-            if row
-                .button(self.text(&Msg::Base(BaseMsg::PrivacyPolicyTitle)))
-                .clicked()
-            {
-                self.navigate(Screen::Privacy);
+            if row.add(Button::new(&terms_label).outline()).clicked() {
+                app.navigate(Screen::License);
+            }
+            if row.add(Button::new(&privacy_label).outline()).clicked() {
+                app.navigate(Screen::Privacy);
             }
         });
     }
 
     pub(crate) fn render_donate(&mut self, ui: &mut egui::Ui) {
-        _ = ui.heading(self.text(&Msg::Base(BaseMsg::Donate)));
-        _ = ui.label(self.text(&Msg::Base(BaseMsg::DonateGreeting)));
-        _ = ui.label(self.text(&Msg::Base(BaseMsg::DonateIntro)));
-        for block in donate_blocks() {
-            _ = ui.separator();
-            _ = ui.label(block.label);
-            let address = block.address;
-            _ = ui
-                .add(egui::Label::new(egui::RichText::new(&address).monospace()).selectable(true));
-            if ui.button(self.text(&Msg::Base(BaseMsg::Copy))).clicked() {
-                self.copy_text(address);
+        let heading = self.text(&Msg::Base(BaseMsg::Donate));
+        let greeting = self.text(&Msg::Base(BaseMsg::DonateGreeting));
+        let intro = self.text(&Msg::Base(BaseMsg::DonateIntro));
+        let copy_label = self.text(&Msg::Base(BaseMsg::Copy));
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            _ = card.label(greeting);
+            _ = card.label(intro);
+            for (i, block) in donate_blocks().into_iter().enumerate() {
+                if i > 0 {
+                    _ = card.separator();
+                }
+                let _row = card.horizontal_wrapped(|row| {
+                    _ = row.label(egui::RichText::new(block.label).strong());
+                    if row
+                        .add(Button::new(&copy_label).outline().size(ButtonSize::Small))
+                        .on_hover_text(&copy_label)
+                        .clicked()
+                    {
+                        self.copy_text(block.address.clone());
+                    }
+                });
+                _ = card.add(
+                    egui::Label::new(egui::RichText::new(&block.address).monospace())
+                        .wrap()
+                        .selectable(true),
+                );
             }
-        }
+        });
     }
 
     pub(crate) fn render_license(&mut self, ui: &mut egui::Ui) {
-        _ = ui.heading(self.text(&Msg::Base(BaseMsg::TermsOfServiceTitle)));
+        let heading = self.text(&Msg::Base(BaseMsg::TermsOfServiceTitle));
         let text = self.text(&Msg::Base(BaseMsg::LicenseText));
-        let _scroll = egui::ScrollArea::vertical().show(ui, |scroll| {
-            _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            let _scroll = egui::ScrollArea::vertical().show(card, |scroll| {
+                _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+            });
         });
     }
 
     pub(crate) fn render_privacy(&mut self, ui: &mut egui::Ui) {
-        _ = ui.heading(self.text(&Msg::Base(BaseMsg::PrivacyPolicyTitle)));
+        let heading = self.text(&Msg::Base(BaseMsg::PrivacyPolicyTitle));
         let text = self.text(&Msg::Base(BaseMsg::PrivacyText));
-        let _scroll = egui::ScrollArea::vertical().show(ui, |scroll| {
-            _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            let _scroll = egui::ScrollArea::vertical().show(card, |scroll| {
+                _ = scroll.add(egui::Label::new(text).wrap().selectable(true));
+            });
         });
     }
 }

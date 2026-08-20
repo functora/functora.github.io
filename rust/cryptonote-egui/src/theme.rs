@@ -15,9 +15,11 @@ impl Theme {
     }
 
     pub fn apply(self, ctx: &egui::Context) {
-        ctx.set_visuals(match self {
-            Self::Light => egui::Visuals::light(),
-            Self::Dark => egui::Visuals::dark(),
-        });
+        let (elegance_theme, preference) = match self {
+            Self::Light => (elegance::Theme::frost(), egui::ThemePreference::Light),
+            Self::Dark => (elegance::Theme::slate(), egui::ThemePreference::Dark),
+        };
+        ctx.set_theme(preference);
+        elegance_theme.install(ctx);
     }
 }

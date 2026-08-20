@@ -2,6 +2,8 @@ use crate::app::CryptonoteApp;
 use crate::encoding::NoteData;
 use crate::messages::Msg;
 use crate::state::{External, PasteTarget};
+use elegance::glyphs;
+use elegance::{Accent, Button, Card, TextInput};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {
@@ -19,29 +21,40 @@ impl CryptonoteApp {
     }
 
     fn render_encrypted_open(&mut self, ui: &mut egui::Ui) {
-        _ = ui.heading(self.text(&Msg::EncryptedNote));
-        _ = ui.label(self.text(&Msg::EncryptedNoteDesc));
+        let heading = self.text(&Msg::EncryptedNote);
+        let desc = self.text(&Msg::EncryptedNoteDesc);
         let hint = self.text(&Msg::Base(BaseMsg::PasswordPlaceholder));
-        let _password_edit = ui.add(
-            egui::TextEdit::singleline(&mut self.password)
-                .password(true)
-                .hint_text(hint),
-        );
-        let _buttons = ui.horizontal_wrapped(|buttons| {
-            if buttons.button(self.text(&Msg::DecryptButton)).clicked() {
-                self.decrypt_note();
-            }
-            if buttons
-                .button(self.text(&Msg::Base(BaseMsg::Paste)))
+        let _ = Card::new().heading(heading).show(ui, |card| {
+            _ = card.label(desc);
+            let password_label = self.text(&Msg::Base(BaseMsg::Password));
+            _ = card.add(
+                TextInput::new(&mut self.password)
+                    .label(password_label)
+                    .hint(&hint)
+                    .revealable(true)
+                    .id_salt("open-password"),
+            );
+        });
+        let decrypt_label = format!("{} {}", glyphs::KEY, self.text(&Msg::DecryptButton));
+        let paste_label = format!("{} {}", glyphs::COPY, self.text(&Msg::Base(BaseMsg::Paste)));
+        let clear_label = format!("{} {}", glyphs::X, self.text(&Msg::Clear));
+        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        ui.add_space(8.0);
+        self.render_dock(ui, |row, app| {
+            if row
+                .add(Button::new(&decrypt_label).accent(Accent::Blue))
                 .clicked()
             {
-                self.paste(PasteTarget::Password);
+                app.decrypt_note();
             }
-            if buttons.button(self.text(&Msg::Clear)).clicked() {
-                self.password.clear();
+            if row.add(Button::new(&paste_label).outline()).clicked() {
+                app.paste(PasteTarget::Password);
             }
-            if buttons.button(self.text(&Msg::CreateNewNote)).clicked() {
-                self.reset();
+            if row.add(Button::new(&clear_label).outline()).clicked() {
+                app.password.clear();
+            }
+            if row.add(Button::new(&reset_label).outline()).clicked() {
+                app.reset();
             }
         });
     }

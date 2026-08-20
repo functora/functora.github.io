@@ -1155,8 +1155,22 @@ impl State {
 
         if let Some(ime) = ime {
             // On Android, `set_ime_allowed` directly shows/hides the soft
-            // keyboard, so the disable+re-enable cycle below would make it
-            // flicker on every interaction with a focused text field.
+            // keyboard. Re-assert it on a fresh press of a focused text field,
+            // so the keyboard reappears even when the user dismissed it with a
+            // gesture, and without the show/hide cycle that would make it
+            // flicker. Only re-assert on the press that starts the interaction,
+            // not on every frame of a drag, to avoid reinitializing the input
+            // connection while selecting text.
+            #[cfg(target_os = "android")]
+            if !is_toggling_ime
+                && ime.should_interrupt_composition
+                && self.egui_ctx.input(|i| i.pointer.any_pressed())
+            {
+                window.set_ime_allowed(true);
+            }
+
+            // On other platforms, interrupt the IME composition by disabling
+            // and re-enabling the IME.
             #[cfg(not(target_os = "android"))]
             if !is_toggling_ime && ime.should_interrupt_composition {
                 // TODO(umajho): use a more proper way to interrupt composition

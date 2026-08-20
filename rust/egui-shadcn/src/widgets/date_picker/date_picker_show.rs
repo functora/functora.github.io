@@ -31,7 +31,8 @@ impl super::date_picker::DatePicker {
         let icon_size: f32 = 14.0;
         let gap: f32 = 6.0;
         let h_padding: f32 = 8.0;
-        let height: f32 = 32.0;
+        let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let galley =
             ui.painter()
                 .layout_no_wrap(display_text, egui::FontId::proportional(14.0), text_color);

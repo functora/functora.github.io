@@ -24,4 +24,20 @@ impl ComponentSize {
             Self::Lg => (36.0, 10.0, 14.0),
         }
     }
+
+    /// Returns (height, horizontal_padding, font_size) scaled to the given
+    /// responsive spacing: mobile viewports use touch-friendly heights while
+    /// font sizes stay identical so text looks uniform across devices.
+    pub fn metrics_for(self, spacing: &crate::responsive::Spacing) -> (f32, f32, f32) {
+        let (height, h_padding, font_size) = self.metrics();
+        if spacing.is_mobile() {
+            (
+                height + spacing.touch_height - Self::Default.metrics().0,
+                h_padding + spacing.touch_padding - 10.0,
+                font_size,
+            )
+        } else {
+            (height, h_padding, font_size)
+        }
+    }
 }

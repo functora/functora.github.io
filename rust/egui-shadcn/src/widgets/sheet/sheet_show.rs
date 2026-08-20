@@ -75,11 +75,16 @@ impl super::sheet::Sheet {
                     );
 
                     if is_horizontal {
-                        ui.set_min_size(egui::vec2(self.width, screen.height() - 48.0));
-                        ui.set_max_width(self.width);
+                        // Frame = content + 2*24 inner margin + 2*1 stroke;
+                        // keep the whole frame inside the screen with 24px margins.
+                        let width = self.width.min((screen.width() - 98.0).max(0.0));
+                        let height = (screen.height() - 98.0).max(0.0);
+                        ui.set_min_size(egui::vec2(width, height));
+                        ui.set_max_width(width);
+                        ui.set_max_height(height);
                     } else {
-                        ui.set_min_width(screen.width() - 48.0);
-                        ui.set_max_height(self.width);
+                        ui.set_min_width((screen.width() - 98.0).max(0.0));
+                        ui.set_max_height(self.width.min((screen.height() - 98.0).max(0.0)));
                     }
 
                     // Close button

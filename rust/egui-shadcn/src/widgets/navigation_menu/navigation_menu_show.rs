@@ -13,7 +13,9 @@ impl super::navigation_menu::NavigationMenu {
                 let is_active = idx == *active;
                 let font_size: f32 = 14.0;
                 let h_pad: f32 = 12.0;
-                let height: f32 = 36.0;
+                let height =
+                    crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+                        .touch_height;
 
                 let fg = if is_active {
                     theme.foreground

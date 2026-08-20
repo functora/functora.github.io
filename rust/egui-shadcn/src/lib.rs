@@ -3,9 +3,14 @@
 pub mod icons;
 pub mod layout;
 pub mod paint;
+pub mod responsive;
 pub mod theme;
 pub mod tokens;
 pub mod widgets;
+
+pub use responsive::breakpoint::Breakpoint;
+pub use responsive::responsive_ext::ResponsiveExt;
+pub use responsive::spacing::Spacing;
 
 pub use egui_flex::FlexAlign;
 pub use egui_flex::FlexItem;

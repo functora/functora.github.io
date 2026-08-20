@@ -11,7 +11,9 @@ impl egui::Widget for super::label::Label {
 
         let (font_size, fixed_height) = match self.size {
             Some(size) => {
-                let (height, _padding, fs) = size.metrics();
+                let (height, _padding, fs) = size.metrics_for(
+                    &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
+                );
                 (fs, Some(height))
             }
             None => (14.0, None),

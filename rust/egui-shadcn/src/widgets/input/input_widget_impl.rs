@@ -4,8 +4,10 @@ impl egui::Widget for super::input::Input<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
-        let height: f32 = 32.0; // h-8
-        let h_padding: f32 = 10.0; // px-2.5
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let height = spacing.touch_height; // h-8
+        let h_padding: f32 = spacing.touch_padding; // px-2.5
         let v_padding: f32 = 4.0; // py-1
         let width = self.desired_width.unwrap_or(ui.available_width());
         let reveal_size: f32 = 24.0;

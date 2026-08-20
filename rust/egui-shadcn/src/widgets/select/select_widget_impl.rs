@@ -6,9 +6,10 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::select_style::resolve_select_style(&theme);
-
-        let height: f32 = 32.0;
-        let h_padding: f32 = 10.0;
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let height = spacing.touch_height;
+        let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
         let width = self.width.unwrap_or(ui.available_width().min(200.0));
         let desired = egui::vec2(width, height);
@@ -195,9 +196,10 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::select_style::resolve_select_style(&theme);
-
-        let height: f32 = 32.0;
-        let h_padding: f32 = 10.0;
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let height = spacing.touch_height;
+        let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
         let width = self.width.unwrap_or(ui.available_width().min(200.0));
         let desired = egui::vec2(width, height);

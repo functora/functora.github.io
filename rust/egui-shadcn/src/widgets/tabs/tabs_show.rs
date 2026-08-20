@@ -53,7 +53,8 @@ impl super::tabs::Tabs {
     ) -> egui::Response {
         let font_size: f32 = 13.0;
         let h_pad: f32 = 12.0;
-        let height: f32 = 28.0;
+        let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
 
         let galley = ui.painter().layout_no_wrap(
             label.to_owned(),
@@ -177,7 +178,8 @@ impl super::tabs::IconTabs {
         is_active: bool,
         cr: u8,
     ) -> egui::Response {
-        let size: f32 = 28.0;
+        let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let icon_size: f32 = 14.0;
 
         let desired = egui::vec2(size, size);

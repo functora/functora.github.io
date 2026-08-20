@@ -49,7 +49,7 @@ impl<'ui, 'inst> FlexInst<'ui, 'inst> {
         content: impl FnOnce(&mut FlexInst) -> R,
     ) -> egui::InnerResponse<R> {
         self.0
-            .add_flex(egui_flex::FlexItem::new(), flex.0, |inner| {
+            .add_flex(egui_flex::FlexItem::new(), flex.flex, |inner| {
                 let mut inst = FlexInst(inner);
                 content(&mut inst)
             })
@@ -62,11 +62,14 @@ impl<'ui, 'inst> FlexInst<'ui, 'inst> {
         flex: super::flex::Flex,
         content: impl FnOnce(&mut FlexInst) -> R,
     ) -> egui::InnerResponse<R> {
-        self.0
-            .add_flex(egui_flex::FlexItem::new().grow(factor), flex.0, |inner| {
+        self.0.add_flex(
+            egui_flex::FlexItem::new().grow(factor),
+            flex.flex,
+            |inner| {
                 let mut inst = FlexInst(inner);
                 content(&mut inst)
-            })
+            },
+        )
     }
 
     /// Add a widget with full [`egui_flex::FlexItem`] control.

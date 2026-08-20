@@ -89,7 +89,8 @@ impl super::pagination::Pagination {
         icon: &crate::icons::lucide_icon::LucideIcon,
         enabled: bool,
     ) -> egui::Response {
-        let size: f32 = 32.0;
+        let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let icon_size: f32 = 14.0;
 
         let (rect, response) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::click());
@@ -141,7 +142,8 @@ impl super::pagination::Pagination {
         ui: &mut egui::Ui,
         theme: &crate::theme::shadcn_theme::ShadcnTheme,
     ) {
-        let size: f32 = 32.0;
+        let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let icon_size: f32 = 14.0;
         let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
         if ui.is_rect_visible(rect) {
@@ -164,7 +166,8 @@ impl super::pagination::Pagination {
         is_active: bool,
         enabled: bool,
     ) -> egui::Response {
-        let size: f32 = 32.0;
+        let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let font_size: f32 = 14.0;
 
         let fg = if !enabled {

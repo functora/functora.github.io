@@ -26,6 +26,7 @@ impl egui::Widget for super::button::Button<'_> {
 
         let mut style = super::button_variant_style::resolve_button_style(
             &theme,
+            &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
             self.variant,
             self.size,
             false,
@@ -114,6 +115,7 @@ impl egui::Widget for super::button::Button<'_> {
         // Re-resolve with actual interaction state
         let mut style = super::button_variant_style::resolve_button_style(
             &theme,
+            &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
             self.variant,
             self.size,
             response.hovered(),

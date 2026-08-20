@@ -3,13 +3,14 @@
 /// Resolves concrete button style from variant, size, and interaction state.
 pub fn resolve_button_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
+    spacing: &crate::responsive::Spacing,
     variant: crate::tokens::button_variant::ButtonVariant,
     size: crate::tokens::component_size::ComponentSize,
     hovered: bool,
     active: bool,
     disabled: bool,
 ) -> super::resolved_button_style::ResolvedButtonStyle {
-    let (height, h_padding, font_size) = size.metrics();
+    let (height, h_padding, font_size) = size.metrics_for(spacing);
     let corner_radius = theme.radius; // rounded-lg (full radius, not radius - 2)
 
     let (mut bg, mut fg, border, underline) = match variant {

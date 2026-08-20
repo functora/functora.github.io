@@ -3,7 +3,9 @@
 impl egui::Widget for super::toggle::Toggle<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let (height, h_padding, font_size) = self.size.metrics();
+        let (height, h_padding, font_size) = self.size.metrics_for(
+            &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
+        );
 
         let text_galley = ui.painter().layout_no_wrap(
             self.text.text().to_owned(),

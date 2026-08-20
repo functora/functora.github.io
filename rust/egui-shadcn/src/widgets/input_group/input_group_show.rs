@@ -11,7 +11,8 @@ impl super::input_group::InputGroup {
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = egui::CornerRadius::same(theme.radius.round() as u8);
-        let height: f32 = 32.0;
+        let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
 
         let width = ui.available_width().min(300.0);
         let desired = egui::vec2(width, height);

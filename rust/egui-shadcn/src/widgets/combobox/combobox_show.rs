@@ -25,7 +25,8 @@ impl super::combobox::Combobox {
         // Trigger button: framed text + chevron icon
         let icon_size: f32 = 12.0;
         let h_padding: f32 = 10.0;
-        let height: f32 = 36.0;
+        let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
         let width = self.width.unwrap_or(220.0).min(ui.available_width());
         let galley =
             ui.painter()

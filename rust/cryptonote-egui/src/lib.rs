@@ -94,6 +94,9 @@ pub(crate) mod android {
         if tracker.last_focused != focused {
             tracker.last_focused = focused;
             app.set_text_input_state(TextInputState::default());
+            if focused.is_some() {
+                app.show_soft_input(false);
+            }
             tracker.last = None;
             ctx.input_mut(|input| input.events.push(preedit(&[])));
             ctx.request_repaint();

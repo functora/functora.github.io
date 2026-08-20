@@ -66,6 +66,9 @@ winit = { version = "0.30.13", default-features = false, features = [
 [dev-dependencies]
 functora-core = { path = "../functora-core", features = ["qr"] }
 
+[patch.crates-io]
+egui-winit = { path = "../egui-winit" }
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

@@ -327,78 +327,72 @@
             "i686-linux-android" = "x86";
             "x86_64-linux-android" = "x86_64";
           };
+          targets = builtins.attrNames abis;
+          libName = builtins.replaceStrings ["-"] ["_"] app;
+          ndk-bin = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin";
+          rustEnv = ''
+            export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
+            export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="${ndk-bin}/aarch64-linux-android28-clang"
+            export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER="${ndk-bin}/armv7a-linux-androideabi28-clang"
+            export CARGO_TARGET_I686_LINUX_ANDROID_LINKER="${ndk-bin}/i686-linux-android28-clang"
+            export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="${ndk-bin}/x86_64-linux-android28-clang"
+            export AR_aarch64_linux_android="${ndk-bin}/llvm-ar"
+            export AR_armv7_linux_androideabi="${ndk-bin}/llvm-ar"
+            export AR_i686_linux_android="${ndk-bin}/llvm-ar"
+            export AR_x86_64_linux_android="${ndk-bin}/llvm-ar"
+          '';
           buildCmd = target: "${rustToolchain}/bin/cargo build --release --target \"${target}\"";
+          copyCmd = target: ''
+            DST="android/app/src/main/jniLibs/${abis.${target}}"
+            SRC="target/${target}/release/lib${libName}.so"
+            mkdir -p "$DST"
+            if [ ! -f "$DST/lib${libName}.so" ] || ! cmp -s "$SRC" "$DST/lib${libName}.so"; then
+              cp "$SRC" "$DST/lib${libName}.so"
+            fi
+          '';
+          pruneCmd = "find android/app/src/main/jniLibs -mindepth 1 -maxdepth 1 -type d ${builtins.concatStringsSep " " (map (t: "! -name \"${abis.${t}}\"") targets)} -exec rm -rf {} + 2>/dev/null || true";
           prepCmd = ''
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
             GRADLE="./android/app/build.gradle"
-            sed -i "s/versionCode = [0-9]*/versionCode = $VC/; s/versionName = \"[^\"]*\"/versionName = \"$VSN\"/" "$GRADLE"
+            if ! grep -q "versionCode = $VC" "$GRADLE" || ! grep -q "versionName = \"$VSN\"" "$GRADLE"; then
+              sed -i "s/versionCode = [0-9]*/versionCode = $VC/; s/versionName = \"[^\"]*\"/versionName = \"$VSN\"/" "$GRADLE"
+            fi
             for D in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
               mkdir -p "android/app/src/main/res/mipmap-$D"
-              cp "../cryptonote/assets/favicon/mipmap-$D.png" \
-                "android/app/src/main/res/mipmap-$D/ic_launcher.png"
+              SRC="../cryptonote/assets/favicon/mipmap-$D.png"
+              DST="android/app/src/main/res/mipmap-$D/ic_launcher.png"
+              if [ ! -f "$DST" ] || ! cmp -s "$SRC" "$DST"; then
+                cp "$SRC" "$DST"
+              fi
             done
           '';
           bundleCmd = ''
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
-            (cd android && ./gradlew clean bundleRelease)
+            (cd android && ./gradlew bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
             echo "READY: ${app}/$OUT/cryptonote-v$VSN.aab"
           '';
-          mkCmd = target: ''
-            ${buildCmd target}
-            rm -rf android/app/src/main/jniLibs
-            mkdir -p android/app/src/main/jniLibs/${abis.${target}}
-            cp target/${target}/release/libcryptonote_egui.so \
-              android/app/src/main/jniLibs/${abis.${target}}/libcryptonote_egui.so
-            ${prepCmd}
-            ${bundleCmd}
-            cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
-            echo "READY: ${app}/$OUT/cryptonote-v$VSN-${target}.aab"
-          '';
         in
-          (
-            map (
-              target:
-                pkgs.writeShellApplication {
-                  name = "release-aab-${app}-${target}";
-                  runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk];
-                  text = ''
-                    (
-                      cd "${app}"
-                      ${mkCmd target}
-                    )
-                  '';
-                }
-            )
-            (builtins.attrNames abis)
-          )
-          ++ [
-            (
-              pkgs.writeShellApplication {
-                name = "release-aab-${app}-all";
-                runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk];
-                text = ''
-                  (
-                    cd "${app}"
-                    ${builtins.concatStringsSep "\n" (map buildCmd (builtins.attrNames abis))}
-                    rm -rf android/app/src/main/jniLibs
-                    ${builtins.concatStringsSep "\n" (map (target: ''
-                    mkdir -p android/app/src/main/jniLibs/${abis.${target}}
-                    cp target/${target}/release/libcryptonote_egui.so \
-                      android/app/src/main/jniLibs/${abis.${target}}/libcryptonote_egui.so
-                  '') (builtins.attrNames abis))}
-                    ${prepCmd}
-                    ${bundleCmd}
-                    rm -f "$OUT/cryptonote-v$VSN-*.aab"
-                    echo "READY (universal, all ABIs): ${app}/$OUT/cryptonote-v$VSN.aab"
-                  )
-                '';
-              }
-            )
-          ];
+          pkgs.writeShellApplication {
+            name = "release-aab-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk findutils];
+            text = ''
+              (
+                cd "${app}"
+                ${rustEnv}
+                ${builtins.concatStringsSep "\n" (map buildCmd targets)}
+                ${pruneCmd}
+                ${builtins.concatStringsSep "\n" (map copyCmd targets)}
+                ${prepCmd}
+                ${bundleCmd}
+                rm -f "$OUT/cryptonote-v$VSN-"*.aab
+                echo "READY (universal, all ABIs): ${app}/$OUT/cryptonote-v$VSN.aab"
+              )
+            '';
+          };
         android-keygen = pkgs.writeShellApplication {
           name = "android-keygen";
           text = ''
@@ -466,35 +460,42 @@
         mkApk = app: aabDir:
           pkgs.writeShellApplication {
             name = "release-apk-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused findutils jdk unzip bundletool];
             text = ''
               DIR="''${1:-${aabDir}}"
               VSN="$(cd "${app}" && grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
 
-              IFS= read -r -s -p "Keystore password: " KS_PASS
-              echo
-
-              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2";
+              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
               export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
+
+              IFS= read -r -s -p "Keystore password: " KS_PASS
+              echo
 
               FOUND=0
               for AAB in "$DIR"/*v"$VSN"*.aab; do
                 [ -f "$AAB" ] || continue
-
-                NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
+                NAME="$(basename "$AAB" .aab)"
                 [[ "$NAME" != *-signed ]] || continue
+
+                STALE="$(cd "${app}" && find src Cargo.toml Cargo.lock -type f -newer "$AAB" 2>/dev/null | head -1 || true)"
+                if [ -n "$STALE" ]; then
+                  echo "AAB $AAB is older than $STALE (Rust sources changed). Run release-aab-${app} first."
+                  exit 1
+                fi
+
                 FOUND=1
                 SIG="$DIR/$NAME-signed.aab"
                 APK="$DIR/$NAME.apk"
                 TMP="$DIR/$NAME.apks"
 
                 cp "$AAB" "$SIG"
-                "${pkgs.jdk}/bin/jarsigner" -verbose \
+                jarsigner \
                   -keystore "$HOME/keys/app-key.jks" \
                   -storepass "$KS_PASS" \
                   "$SIG" app-key
 
-                "${pkgs.bundletool}/bin/bundletool" build-apks \
+                bundletool build-apks \
                   --bundle="$AAB" \
                   --output="$TMP" \
                   --mode=universal \
@@ -504,13 +505,12 @@
                   --ks-key-alias=app-key \
                   --overwrite
 
-                "${pkgs.unzip}/bin/unzip" -p "$TMP" universal.apk > "$APK"
+                unzip -p "$TMP" universal.apk > "$APK"
                 rm -f "$TMP"
-
                 echo "READY: $APK"
               done
               [ "$FOUND" -eq 1 ] || {
-                echo "No v$VSN aab found in $DIR (current Cargo.toml version). Run release-aab-${app}-all first."
+                echo "No v$VSN aab found in $DIR (current Cargo.toml version). Run release-aab-${app} first."
                 exit 1
               }
             '';
@@ -663,7 +663,7 @@
               })
             ]
             ++ (mkAab "cryptonote")
-            ++ (mkEguiAab "cryptonote-egui");
+            ++ [(mkEguiAab "cryptonote-egui")];
         };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {

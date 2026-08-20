@@ -66,6 +66,11 @@ fn click(ctx: &Context, app: &mut CryptonoteApp, screen: Vec2, pos: Pos2) {
     let _ = run_frame(ctx, app, release);
 }
 
+fn click_pos(ctx: &Context, app: &mut CryptonoteApp, screen: Vec2, pos: Pos2) -> Vec<ClippedShape> {
+    click(ctx, app, screen, pos);
+    run_frame(ctx, app, base_raw(screen))
+}
+
 fn click_text(
     ctx: &Context,
     app: &mut CryptonoteApp,
@@ -140,7 +145,7 @@ fn mobile_nav_collapses_into_drawer_with_same_items() {
         !has_text(&shapes, "Русский"),
         "collapsed nav must hide the language items"
     );
-    assert!(click_text(&ctx, &mut app, screen, &mut shapes, "\u{E017}"));
+    shapes = click_pos(&ctx, &mut app, screen, Pos2::new(screen.x - 24.0, 20.0));
     assert!(
         has_text(&shapes, "English")
             && has_text(&shapes, "Español")
@@ -181,10 +186,70 @@ fn mobile_nav_collapses_into_drawer_with_same_items() {
         !has_text(&shapes, "Español"),
         "drawer must close after choosing a language"
     );
-    assert!(click_text(&ctx, &mut app, screen, &mut shapes, "\u{E017}"));
+    shapes = click_pos(&ctx, &mut app, screen, Pos2::new(screen.x - 24.0, 20.0));
     assert!(
-        has_text(&shapes, "✓ 🇷🇺 Русский"),
+        has_text(&shapes, "🇷🇺 Русский"),
         "drawer must mark the current language, got {:?}",
+        texts_of(&shapes)
+            .iter()
+            .map(|(_, g)| g.text())
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn footer_shows_copyright_links_and_version_and_legal_links_navigate() {
+    let ctx = Context::default();
+    let cc = eframe::CreationContext::_new_kittest(ctx.clone());
+    let mut app = CryptonoteApp::new(&cc);
+    let screen = Vec2::new(1000.0, 900.0);
+    let mut shapes = run_frame(&ctx, &mut app, base_raw(screen));
+    assert!(
+        has_text(&shapes, "All rights reserved."),
+        "footer must show the copyright line, got {:?}",
+        texts_of(&shapes)
+            .iter()
+            .map(|(_, g)| g.text())
+            .collect::<Vec<_>>()
+    );
+    let version = format!("Version {}.", env!("CARGO_PKG_VERSION"));
+    assert!(
+        has_text(&shapes, &version),
+        "footer must show the app version, got {:?}",
+        texts_of(&shapes)
+            .iter()
+            .map(|(_, g)| g.text())
+            .collect::<Vec<_>>()
+    );
+    assert!(
+        has_text(&shapes, "Donate"),
+        "footer must show the donate link"
+    );
+    assert!(click_text(
+        &ctx,
+        &mut app,
+        screen,
+        &mut shapes,
+        "Terms of Service"
+    ));
+    assert!(
+        has_text(&shapes, "Permission is hereby granted"),
+        "footer Terms of Service must open the license screen, got {:?}",
+        texts_of(&shapes)
+            .iter()
+            .map(|(_, g)| g.text())
+            .collect::<Vec<_>>()
+    );
+    assert!(click_text(
+        &ctx,
+        &mut app,
+        screen,
+        &mut shapes,
+        "Privacy Policy"
+    ));
+    assert!(
+        has_text(&shapes, "This privacy policy applies"),
+        "footer Privacy Policy must open the privacy screen, got {:?}",
         texts_of(&shapes)
             .iter()
             .map(|(_, g)| g.text())

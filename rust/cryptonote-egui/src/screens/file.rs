@@ -1,7 +1,6 @@
 use crate::app::CryptonoteApp;
 use crate::messages::Msg;
-use elegance::glyphs;
-use elegance::{Button, ButtonSize, Card};
+use egui_shadcn::{Button, ButtonVariant, Card, ComponentSize, LucideIcon};
 use functora_core::files::format_size;
 
 impl CryptonoteApp {
@@ -26,9 +25,9 @@ impl CryptonoteApp {
                         _ = row.label(format_size(size as u64));
                         if row
                             .add(
-                                Button::new(egui::RichText::new(glyphs::DOWNLOAD))
-                                    .outline()
-                                    .size(ButtonSize::Small),
+                                Button::icon_only(LucideIcon::Download)
+                                    .variant(ButtonVariant::Outline)
+                                    .size(ComponentSize::Sm),
                             )
                             .on_hover_text(self.text(&Msg::Download))
                             .clicked()

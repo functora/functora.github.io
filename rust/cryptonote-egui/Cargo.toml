@@ -17,7 +17,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-egui-elegance = "0.16"
+egui-shadcn = { path = "../egui-shadcn" }
 functora-core = { path = "../functora-core", features = ["qr"] }
 functora-tagged = { path = "../functora-tagged" }
 log = "0.4"

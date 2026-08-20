@@ -9,15 +9,15 @@ use crate::screens::Screen;
 use crate::state::{ActionMode, External, ExternalNote, PasteTarget, PickKind};
 use crate::task::{build_external, decrypt_external, extract_archive, Event};
 use crate::theme::Theme;
-use elegance::glyphs;
-use elegance::{
-    Accent, BadgeTone, Button, ButtonSize, Drawer, DrawerSide, Menu, MenuItem, ProgressBar, TabBar,
-    Toast, Toasts,
+use egui_shadcn::{
+    Button, ButtonVariant, ComponentSize, DropdownMenu, Label, LucideIcon, MenuItem, Progress,
+    Separator, Sheet, SheetSide, ToastState, ToastVariant, ToggleGroup,
 };
 use functora_core::encoding::extract_query_param;
 use functora_core::files::Attachment;
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::AppAttrs;
+use functora_core::FUNCTORA_CORE_YEAR;
 use functora_tagged::InfallibleInto;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;
@@ -71,6 +71,7 @@ pub struct CryptonoteApp {
     pub(crate) ctx: egui::Context,
     pub(crate) nav_open: bool,
     pub(crate) nav_tab: usize,
+    pub(crate) toast: ToastState,
     pub(crate) toasted: bool,
 }
 
@@ -84,6 +85,7 @@ impl CryptonoteApp {
             Language::Eng
         };
         let theme = Theme::Dark;
+        egui_shadcn::setup_fonts(&cc.egui_ctx);
         theme.apply(&cc.egui_ctx);
         let (tx, rx) = channel();
         let (screen, note, external) = Self::initial_route();
@@ -111,6 +113,7 @@ impl CryptonoteApp {
             ctx: cc.egui_ctx.clone(),
             nav_open: false,
             nav_tab: 0,
+            toast: ToastState::new(),
             toasted: false,
         }
     }
@@ -591,9 +594,9 @@ impl CryptonoteApp {
             if !self.history.is_empty() {
                 if row
                     .add(
-                        Button::new(egui::RichText::new(glyphs::ARROW_LEFT))
-                            .outline()
-                            .size(ButtonSize::Small),
+                        Button::icon_only(LucideIcon::ArrowLeft)
+                            .variant(ButtonVariant::Outline)
+                            .size(ComponentSize::Sm),
                     )
                     .on_hover_text(self.text(&Msg::Base(BaseMsg::Back)))
                     .clicked()
@@ -611,7 +614,9 @@ impl CryptonoteApp {
             if let Some(index) = self.tab_index() {
                 self.nav_tab = index;
             }
-            if row.add(TabBar::new(&mut self.nav_tab, tabs)).changed() {
+            let prev_tab = self.nav_tab;
+            _ = ToggleGroup::new(tabs).show(row, &mut self.nav_tab);
+            if self.nav_tab != prev_tab {
                 self.navigate(MAIN_SCREENS[self.nav_tab]);
             }
             _ = row.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
@@ -625,9 +630,9 @@ impl CryptonoteApp {
             if !self.history.is_empty()
                 && row
                     .add(
-                        Button::new(egui::RichText::new(glyphs::ARROW_LEFT))
-                            .outline()
-                            .size(ButtonSize::Small),
+                        Button::icon_only(LucideIcon::ArrowLeft)
+                            .variant(ButtonVariant::Outline)
+                            .size(ComponentSize::Sm),
                     )
                     .on_hover_text(self.text(&Msg::Base(BaseMsg::Back)))
                     .clicked()
@@ -638,9 +643,9 @@ impl CryptonoteApp {
             _ = row.with_layout(egui::Layout::right_to_left(egui::Align::Center), |right| {
                 if right
                     .add(
-                        Button::new(egui::RichText::new(glyphs::MENU))
-                            .outline()
-                            .size(ButtonSize::Small),
+                        Button::icon_only(LucideIcon::Menu)
+                            .variant(ButtonVariant::Outline)
+                            .size(ComponentSize::Sm),
                     )
                     .clicked()
                 {
@@ -651,13 +656,17 @@ impl CryptonoteApp {
     }
 
     fn render_nav_right(&mut self, ui: &mut egui::Ui) {
-        let theme_label = if self.theme == Theme::Dark {
-            "🌙"
+        let theme_icon = if self.theme == Theme::Dark {
+            LucideIcon::Moon
         } else {
-            "☀️"
+            LucideIcon::Sun
         };
         if ui
-            .add(Button::new(theme_label).outline().size(ButtonSize::Small))
+            .add(
+                Button::icon_only(theme_icon)
+                    .variant(ButtonVariant::Outline)
+                    .size(ComponentSize::Sm),
+            )
             .on_hover_text(self.text(&Msg::Base(BaseMsg::Theme)))
             .clicked()
         {
@@ -666,21 +675,18 @@ impl CryptonoteApp {
         }
         let trigger = ui.add(
             Button::new(self.language_label(self.language))
-                .outline()
-                .size(ButtonSize::Small),
+                .variant(ButtonVariant::Outline)
+                .size(ComponentSize::Sm),
         );
-        let _ = Menu::new("language_menu").show_below(&trigger, |menu| {
-            for language in SUPPORTED_LANGUAGES.iter().copied() {
-                if menu
-                    .add(
-                        MenuItem::new(self.language_label(language))
-                            .radio(language == self.language),
-                    )
-                    .clicked()
-                {
-                    self.language = language;
-                }
-            }
+        let items: Vec<MenuItem> = SUPPORTED_LANGUAGES
+            .iter()
+            .copied()
+            .map(|language| {
+                MenuItem::label(self.language_label(language)).selected(language == self.language)
+            })
+            .collect();
+        DropdownMenu::show_rich(ui, &trigger, &items, |index| {
+            self.language = SUPPORTED_LANGUAGES[index];
         });
     }
 
@@ -690,7 +696,7 @@ impl CryptonoteApp {
             if ui
                 .add(
                     Button::new(self.screen_title(screen))
-                        .outline()
+                        .variant(ButtonVariant::Outline)
                         .full_width(),
                 )
                 .clicked()
@@ -702,23 +708,33 @@ impl CryptonoteApp {
         _ = ui.separator();
         for language in SUPPORTED_LANGUAGES.iter().copied() {
             let label = self.language_label(language);
-            let text = if language == self.language {
-                format!("{} {}", glyphs::CHECK, label)
-            } else {
-                label
-            };
-            if ui.add(Button::new(text).outline().full_width()).clicked() {
+            if ui
+                .add(
+                    Button::new(label)
+                        .icon(LucideIcon::Check)
+                        .selected(language == self.language)
+                        .variant(ButtonVariant::Outline)
+                        .full_width(),
+                )
+                .clicked()
+            {
                 self.language = language;
                 return true;
             }
         }
-        let theme_label = if self.theme == Theme::Dark {
-            format!("{} {}", "🌙", self.text(&Msg::Base(BaseMsg::Theme)))
+        let theme_icon = if self.theme == Theme::Dark {
+            LucideIcon::Moon
         } else {
-            format!("{} {}", "☀️", self.text(&Msg::Base(BaseMsg::Theme)))
+            LucideIcon::Sun
         };
+        let theme_label = self.text(&Msg::Base(BaseMsg::Theme));
         if ui
-            .add(Button::new(theme_label).outline().full_width())
+            .add(
+                Button::new(theme_label)
+                    .icon(theme_icon)
+                    .variant(ButtonVariant::Outline)
+                    .full_width(),
+            )
             .clicked()
         {
             self.theme = self.theme.toggle();
@@ -775,17 +791,18 @@ impl eframe::App for CryptonoteApp {
         if self.is_mobile() {
             let width = (self.ctx.content_rect().width() * 0.7).clamp(220.0, 300.0);
             let mut nav_open = self.nav_open;
-            let close = Drawer::new("nav_drawer", &mut nav_open)
-                .side(DrawerSide::Right)
+            let mut close_drawer = false;
+            Sheet::new()
+                .side(SheetSide::Right)
                 .width(width)
                 .title(APP_ATTRS.app_name())
-                .show(ui.ctx(), |drawer| self.render_drawer(drawer))
-                .unwrap_or(false);
-            if close {
-                self.nav_open = false;
-            } else {
-                self.nav_open = nav_open;
+                .show(ui.ctx(), &mut nav_open, |drawer| {
+                    close_drawer = self.render_drawer(drawer);
+                });
+            if close_drawer {
+                nav_open = false;
             }
+            self.nav_open = nav_open;
         }
         let _central = egui::CentralPanel::default().show(ui, |central| {
             let available = central.available_width();
@@ -801,6 +818,7 @@ impl eframe::App for CryptonoteApp {
                             scroll.add_space(8.0);
                             self.render_screen(scroll);
                             self.render_status(scroll);
+                            self.render_footer(scroll);
                         });
                 });
             });
@@ -822,29 +840,101 @@ impl CryptonoteApp {
         if let Some(job) = &self.job {
             let label = self.text(&Msg::Base(BaseMsg::Stage(job.stage)));
             ui.add_space(8.0);
-            _ = ui.add(
-                ProgressBar::new(f32::from(job.percent()) / 100.0)
-                    .text(format!("{label} {}%", job.percent()))
-                    .accent(Accent::Blue),
+            _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
+            _ = ui.label(format!("{label} {}%", job.percent()));
+        }
+    }
+
+    fn render_footer(&mut self, ui: &mut egui::Ui) {
+        ui.add_space(24.0);
+        _ = ui.add(Separator::horizontal());
+        ui.add_space(8.0);
+        let muted_color = egui_shadcn::ShadcnThemeExt::shadcn_theme(ui.ctx()).muted_foreground;
+        _ = ui.add(
+            egui::Label::new(
+                egui::RichText::new(format!(
+                    "{} {FUNCTORA_CORE_YEAR} {}. {} {}",
+                    self.text(&Msg::Base(BaseMsg::Copyright)),
+                    "Functora",
+                    self.text(&Msg::Base(BaseMsg::AllRightsReserved)),
+                    self.text(&Msg::Base(BaseMsg::ByContinuing)),
+                ))
+                .color(muted_color)
+                .size(12.0),
+            )
+            .wrap(),
+        );
+        let _ = ui.horizontal_wrapped(|row| {
+            row.spacing_mut().item_spacing.x = 4.0;
+            let add_muted = |item: &mut egui::Ui, text: String| {
+                _ = item.add(Label::new(text).muted());
+            };
+            self.footer_link(
+                row,
+                self.text(&Msg::Base(BaseMsg::TermsOfService)),
+                Screen::License,
             );
+            add_muted(row, self.text(&Msg::Base(BaseMsg::YouAgree)));
+            self.footer_link(
+                row,
+                self.text(&Msg::Base(BaseMsg::PrivacyPolicyAnd)),
+                Screen::Privacy,
+            );
+            add_muted(row, ".".into());
+            self.footer_link(
+                row,
+                self.text(&Msg::Base(BaseMsg::DonateLink)),
+                Screen::Donate,
+            );
+            add_muted(row, self.text(&Msg::Base(BaseMsg::And)));
+            self.footer_link(
+                row,
+                self.text(&Msg::Base(BaseMsg::FooterShareWord)),
+                Screen::About,
+            );
+            add_muted(
+                row,
+                format!("{}.", self.text(&Msg::Base(BaseMsg::FooterAppWord))),
+            );
+            add_muted(
+                row,
+                format!(
+                    "{} {}.",
+                    self.text(&Msg::Base(BaseMsg::VersionLabel)),
+                    APP_ATTRS.vsn
+                ),
+            );
+        });
+    }
+
+    fn footer_link(&mut self, row: &mut egui::Ui, text: String, screen: Screen) {
+        if row
+            .add(
+                Button::new(text)
+                    .variant(ButtonVariant::Link)
+                    .size(ComponentSize::Sm),
+            )
+            .clicked()
+        {
+            self.navigate(screen);
         }
     }
 
     fn render_toasts(&mut self, ctx: &egui::Context) {
         match &self.message {
             Some(msg) if !self.toasted => {
-                let tone = if matches!(msg, Msg::Error(_)) {
-                    BadgeTone::Danger
+                let variant = if matches!(msg, Msg::Error(_)) {
+                    ToastVariant::Error
                 } else {
-                    BadgeTone::Ok
+                    ToastVariant::Success
                 };
-                let text = self.text(msg);
-                Toast::new(text).tone(tone).show(ctx);
+                self.toast
+                    .add(self.text(msg), variant, ctx.input(|i| i.time));
                 self.toasted = true;
             }
             None => self.toasted = false,
             Some(_) => {}
         }
-        Toasts::new().render(ctx);
+        self.toast.show(ctx);
     }
 }

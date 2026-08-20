@@ -1,12 +1,15 @@
 use egui::{CentralPanel, Context, Panel, Pos2, RawInput, Rect, Vec2};
-use elegance::{Button, ButtonSize, Card, ProgressBar, Select, TabBar, TextArea, TextInput, Theme};
+use egui_shadcn::{
+    theme::shadcn_theme_dark, Button, ButtonVariant, Card, ComponentSize, Input, LucideIcon,
+    Progress, SelectValue, ShadcnThemeExt, Textarea, ToggleGroup,
+};
 
 const CONTENT_MAX_WIDTH: f32 = 960.0;
 
 #[test]
 fn content_column_spans_full_height() {
     let ctx = Context::default();
-    Theme::slate().install(&ctx);
+    ctx.set_shadcn_theme(shadcn_theme_dark::dark());
     let mut nav_rect = Rect::NOTHING;
     let mut central_rect = Rect::NOTHING;
     let mut scroll_inner = Rect::NOTHING;
@@ -22,16 +25,17 @@ fn content_column_spans_full_height() {
                     row.add_space(16.0);
                     let tabs = vec!["Home".to_string(), "Open".to_string()];
                     let mut index = 0;
-                    _ = row.add(TabBar::new(&mut index, tabs));
+                    _ = ToggleGroup::new(tabs).show(row, &mut index);
                     let _ = row.with_layout(
                         egui::Layout::right_to_left(egui::Align::Center),
                         |right| {
-                            _ = right.add(Button::new("🌙").outline().size(ButtonSize::Small));
-                            let mut lang = String::from("eng");
                             _ = right.add(
-                                Select::new("language", &mut lang)
-                                    .options(vec![("eng".to_string(), "English".to_string())]),
+                                Button::icon_only(LucideIcon::Moon)
+                                    .variant(ButtonVariant::Outline)
+                                    .size(ComponentSize::Sm),
                             );
+                            let mut lang = String::from("eng");
+                            _ = right.add(SelectValue::new(&mut lang, &["English".to_string()]));
                         },
                     );
                 });
@@ -50,23 +54,20 @@ fn content_column_spans_full_height() {
                             .show(col, |scroll| {
                                 let _ = Card::new().heading("Create a note").show(scroll, |card| {
                                     _ = card.add(
-                                        TextArea::new(&mut String::new()).label("Note").rows(12),
+                                        Textarea::new(&mut String::new())
+                                            .placeholder("Note")
+                                            .min_height(240.0),
                                     );
                                 });
                                 let mut cipher = String::from("none");
-                                _ = scroll.add(Select::new("mode", &mut cipher).options(vec![
-                                    ("none".to_string(), "No encryption".to_string()),
-                                    ("aes".to_string(), "AES-256-GCM".to_string()),
-                                ]));
+                                _ = scroll.add(SelectValue::new(
+                                    &mut cipher,
+                                    &["No encryption".to_string(), "AES-256-GCM".to_string()],
+                                ));
                                 let mut pwd = String::new();
-                                _ = scroll.add(
-                                    TextInput::new(&mut pwd).label("Password").revealable(true),
-                                );
-                                _ = scroll.add(
-                                    ProgressBar::new(0.5)
-                                        .text("Encrypt 50%".to_string())
-                                        .accent(elegance::Accent::Blue),
-                                );
+                                _ = scroll
+                                    .add(Input::new(&mut pwd).password().placeholder("Password"));
+                                _ = scroll.add(Progress::new(0.5));
                             });
                         scroll_inner = inner.inner_rect;
                     });

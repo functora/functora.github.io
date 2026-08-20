@@ -2,8 +2,7 @@ use crate::app::CryptonoteApp;
 use crate::encoding::NoteData;
 use crate::messages::Msg;
 use crate::state::{External, PasteTarget};
-use elegance::glyphs;
-use elegance::{Accent, Button, Card, TextInput};
+use egui_shadcn::{Button, ButtonVariant, Card, Input, Label, LucideIcon};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {
@@ -27,33 +26,49 @@ impl CryptonoteApp {
         let _ = Card::new().heading(heading).show(ui, |card| {
             _ = card.label(desc);
             let password_label = self.text(&Msg::Base(BaseMsg::Password));
-            _ = card.add(
-                TextInput::new(&mut self.password)
-                    .label(password_label)
-                    .hint(&hint)
-                    .revealable(true)
-                    .id_salt("open-password"),
-            );
+            _ = Label::new(password_label).show(card);
+            _ = card.add(Input::new(&mut self.password).password().placeholder(hint));
         });
-        let decrypt_label = format!("{} {}", glyphs::KEY, self.text(&Msg::DecryptButton));
-        let paste_label = format!("{} {}", glyphs::COPY, self.text(&Msg::Base(BaseMsg::Paste)));
-        let clear_label = format!("{} {}", glyphs::X, self.text(&Msg::Clear));
-        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        let decrypt_label = self.text(&Msg::DecryptButton);
+        let paste_label = self.text(&Msg::Base(BaseMsg::Paste));
+        let clear_label = self.text(&Msg::Clear);
+        let reset_label = self.text(&Msg::CreateNewNote);
         ui.add_space(8.0);
         self.render_dock(ui, |row, app| {
             if row
-                .add(Button::new(&decrypt_label).accent(Accent::Blue))
+                .add(Button::new(&decrypt_label).icon(LucideIcon::KeyRound))
                 .clicked()
             {
                 app.decrypt_note();
             }
-            if row.add(Button::new(&paste_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&paste_label)
+                        .icon(LucideIcon::Copy)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.paste(PasteTarget::Password);
             }
-            if row.add(Button::new(&clear_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&clear_label)
+                        .icon(LucideIcon::X)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.password.clear();
             }
-            if row.add(Button::new(&reset_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&reset_label)
+                        .icon(LucideIcon::Trash2)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.reset();
             }
         });

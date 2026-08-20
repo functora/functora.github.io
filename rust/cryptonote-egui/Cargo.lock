@@ -784,7 +784,7 @@ dependencies = [
  "arboard",
  "eframe",
  "egui",
- "egui-elegance",
+ "egui-shadcn",
  "functora-core",
  "functora-tagged",
  "futures-executor",
@@ -1035,13 +1035,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-elegance"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "582c0660e958c3e5eb134d4dabdf76e3f588fdacd1ff472a0ab6294f4e8982c7"
+name = "egui-shadcn"
+version = "0.1.0"
 dependencies = [
  "egui",
- "js-sys",
+ "egui_flex",
+ "log",
 ]
 
 [[package]]
@@ -1081,6 +1080,15 @@ dependencies = [
  "web-time",
  "webbrowser",
  "winit",
+]
+
+[[package]]
+name = "egui_flex"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0be0f33b6959fc44dc8b7775b0f949afcb52d509f9657a4427a2112c99d1b84"
+dependencies = [
+ "egui",
 ]
 
 [[package]]

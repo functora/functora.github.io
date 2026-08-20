@@ -1,0 +1,26 @@
+[package]
+name = "egui-shadcn"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 50+ more components with light/dark theming"
+license = "MIT"
+repository = "https://github.com/pjankiewicz/egui-shadcn"
+homepage = "https://github.com/pjankiewicz/egui-shadcn"
+keywords = ["egui", "ui", "widgets", "shadcn", "gui"]
+categories = ["gui", "rendering"]
+readme = "README.md"
+
+[lib]
+name = "egui_shadcn"
+path = "src/lib.rs"
+
+[dependencies]
+egui = "0.36.1"
+egui_flex = "0.8"
+log = "0.4"
+
+[lints.clippy]
+module_inception = { level = "allow", priority = 1 }
+new_without_default = { level = "allow", priority = 1 }
+too_many_arguments = { level = "allow", priority = 1 }

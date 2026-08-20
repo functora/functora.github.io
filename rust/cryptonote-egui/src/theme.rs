@@ -1,3 +1,6 @@
+use egui_shadcn::theme::{shadcn_theme_dark, shadcn_theme_light};
+use egui_shadcn::ShadcnThemeExt;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Theme {
     Light,
@@ -15,11 +18,11 @@ impl Theme {
     }
 
     pub fn apply(self, ctx: &egui::Context) {
-        let (elegance_theme, preference) = match self {
-            Self::Light => (elegance::Theme::frost(), egui::ThemePreference::Light),
-            Self::Dark => (elegance::Theme::slate(), egui::ThemePreference::Dark),
+        let (shadcn_theme, preference) = match self {
+            Self::Light => (shadcn_theme_light::light(), egui::ThemePreference::Light),
+            Self::Dark => (shadcn_theme_dark::dark(), egui::ThemePreference::Dark),
         };
         ctx.set_theme(preference);
-        elegance_theme.install(ctx);
+        ctx.set_shadcn_theme(shadcn_theme);
     }
 }

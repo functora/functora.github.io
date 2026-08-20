@@ -1,5 +1,8 @@
 use egui::{CentralPanel, Context, Panel, Pos2, RawInput, Rect, Shape, Vec2};
-use elegance::{Button, ButtonSize, Card, Drawer, DrawerSide, Select, TextArea, TextInput, Theme};
+use egui_shadcn::{
+    theme::shadcn_theme_dark, Button, ButtonVariant, Card, ComponentSize, Input, LucideIcon,
+    SelectValue, ShadcnThemeExt, Sheet, SheetSide, Textarea,
+};
 
 const CONTENT_MAX_WIDTH: f32 = 960.0;
 
@@ -44,18 +47,18 @@ fn run_frames(ctx: &Context, screen: Vec2, nav_open: &mut bool) -> (Layout, Vec<
             let _nav = Panel::top("nav").show(ui, |nav| {
                 let _ = nav.horizontal(|row| {
                     let _ = row.add(
-                        Button::new(egui::RichText::new("←"))
-                            .outline()
-                            .size(ButtonSize::Small),
+                        Button::icon_only(LucideIcon::ArrowLeft)
+                            .variant(ButtonVariant::Outline)
+                            .size(ComponentSize::Sm),
                     );
                     _ = row.label(egui::RichText::new("Cryptonote").strong());
                     let _ = row.with_layout(
                         egui::Layout::right_to_left(egui::Align::Center),
                         |right| {
                             _ = right.add(
-                                Button::new(egui::RichText::new("☰"))
-                                    .outline()
-                                    .size(ButtonSize::Small),
+                                Button::icon_only(LucideIcon::Menu)
+                                    .variant(ButtonVariant::Outline)
+                                    .size(ComponentSize::Sm),
                             );
                         },
                     );
@@ -63,12 +66,16 @@ fn run_frames(ctx: &Context, screen: Vec2, nav_open: &mut bool) -> (Layout, Vec<
                 layout.nav_rect = nav.max_rect();
             });
             let width = (ui.ctx().content_rect().width() * 0.7).clamp(220.0, 300.0);
-            let _ = Drawer::new("nav_drawer", nav_open)
-                .side(DrawerSide::Right)
+            Sheet::new()
+                .side(SheetSide::Right)
                 .width(width)
                 .title("Cryptonote")
-                .show(ui.ctx(), |drawer| {
-                    _ = drawer.add(Button::new("Home").outline().full_width());
+                .show(ui.ctx(), nav_open, |drawer| {
+                    _ = drawer.add(
+                        Button::new("Home")
+                            .variant(ButtonVariant::Outline)
+                            .full_width(),
+                    );
                 });
             let central = CentralPanel::default().show(ui, |central| {
                 let available = central.available_width();
@@ -84,23 +91,20 @@ fn run_frames(ctx: &Context, screen: Vec2, nav_open: &mut bool) -> (Layout, Vec<
                                 scroll.add_space(8.0);
                                 let _ = Card::new().heading("Create a note").show(scroll, |card| {
                                     let _ = card.add(
-                                        TextArea::new(&mut String::new()).label("Note").rows(12),
+                                        Textarea::new(&mut String::new())
+                                            .placeholder("Note")
+                                            .min_height(400.0),
                                     );
                                 });
                                 let mut cipher = String::from("none");
-                                _ = scroll.add(Select::new("mode", &mut cipher).options(vec![
-                                    ("none".to_string(), "No encryption".to_string()),
-                                    ("aes".to_string(), "AES-256-GCM".to_string()),
-                                ]));
+                                _ = scroll.add(SelectValue::new(
+                                    &mut cipher,
+                                    &["No encryption".to_string(), "AES-256-GCM".to_string()],
+                                ));
                                 let mut pwd = String::new();
-                                _ = scroll.add(
-                                    TextInput::new(&mut pwd).label("Password").revealable(true),
-                                );
-                                _ = scroll.add(
-                                    Button::new("Share")
-                                        .accent(elegance::Accent::Blue)
-                                        .full_width(),
-                                );
+                                _ = scroll
+                                    .add(Input::new(&mut pwd).password().placeholder("Password"));
+                                _ = scroll.add(Button::new("Share").full_width());
                             });
                         layout.scroll_inner = inner.inner_rect;
                         layout.scroll_content = inner.content_size;
@@ -118,7 +122,7 @@ fn run_frames(ctx: &Context, screen: Vec2, nav_open: &mut bool) -> (Layout, Vec<
 #[test]
 fn mobile_layout_fits_and_scrolls() {
     let ctx = Context::default();
-    Theme::slate().install(&ctx);
+    ctx.set_shadcn_theme(shadcn_theme_dark::dark());
     let mut nav_open = false;
     let screen = Vec2::new(375.0, 667.0);
     let (layout, rects) = run_frames(&ctx, screen, &mut nav_open);
@@ -155,7 +159,7 @@ fn mobile_layout_fits_and_scrolls() {
 #[test]
 fn mobile_layout_scrolls_when_content_does_not_fit() {
     let ctx = Context::default();
-    Theme::slate().install(&ctx);
+    ctx.set_shadcn_theme(shadcn_theme_dark::dark());
     let mut nav_open = false;
     let screen = Vec2::new(375.0, 480.0);
     let (layout, _) = run_frames(&ctx, screen, &mut nav_open);
@@ -170,7 +174,7 @@ fn mobile_layout_scrolls_when_content_does_not_fit() {
 #[test]
 fn mobile_drawer_opening_keeps_content_clickable() {
     let ctx = Context::default();
-    Theme::slate().install(&ctx);
+    ctx.set_shadcn_theme(shadcn_theme_dark::dark());
     let mut nav_open = false;
     let screen = Vec2::new(375.0, 667.0);
     let _ = run_frames(&ctx, screen, &mut nav_open);

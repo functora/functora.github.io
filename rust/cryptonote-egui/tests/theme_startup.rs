@@ -1,6 +1,9 @@
 use cryptonote_egui::theme::Theme;
 use egui::{CentralPanel, Color32, Context, Panel, Pos2, RawInput, Rect, Shape, Vec2};
-use elegance::{self, Card, TextArea};
+use egui_shadcn::{
+    theme::{shadcn_theme_dark, shadcn_theme_light},
+    Card, ShadcnThemeExt, Textarea,
+};
 
 #[test]
 fn startup_dark_theme_survives_light_system_theme() {
@@ -9,13 +12,17 @@ fn startup_dark_theme_survives_light_system_theme() {
     let bg = largest_rect_fill(&out.shapes);
     assert!(
         ctx.global_style().visuals.dark_mode,
-        "global style must be dark after slate install even when the system theme is light"
+        "global style must be dark after install even when the system theme is light"
     );
-    assert_eq!(elegance::Theme::current(&ctx), elegance::Theme::slate());
+    assert_eq!(
+        ctx.shadcn_theme().background,
+        shadcn_theme_dark::dark().background,
+        "shadcn theme must be dark"
+    );
     assert_eq!(
         bg,
-        Some(Color32::from_rgb(0x0f, 0x17, 0x2a)),
-        "background must be slate dark, got {bg:?}"
+        Some(Color32::from_rgb(0x0a, 0x0a, 0x0a)),
+        "background must be shadcn dark, got {bg:?}"
     );
 }
 
@@ -26,13 +33,17 @@ fn startup_light_theme_survives_dark_system_theme() {
     let bg = largest_rect_fill(&out.shapes);
     assert!(
         !ctx.global_style().visuals.dark_mode,
-        "global style must be light after frost install even when the system theme is dark"
+        "global style must be light after install even when the system theme is dark"
     );
-    assert_eq!(elegance::Theme::current(&ctx), elegance::Theme::frost());
+    assert_eq!(
+        ctx.shadcn_theme().background,
+        shadcn_theme_light::light().background,
+        "shadcn theme must be light"
+    );
     assert_eq!(
         bg,
-        Some(Color32::from_rgb(0xe2, 0xe8, 0xf0)),
-        "background must be frost light, got {bg:?}"
+        Some(Color32::from_rgb(0xff, 0xff, 0xff)),
+        "background must be shadcn light, got {bg:?}"
     );
 }
 
@@ -46,18 +57,24 @@ fn toggle_keeps_style_and_widgets_consistent() {
     apply(&ctx, Theme::Light);
     let light_out = run_app_frames(&ctx, |_| {}, egui::Theme::Light);
     assert!(!ctx.global_style().visuals.dark_mode);
-    assert_eq!(elegance::Theme::current(&ctx), elegance::Theme::frost());
+    assert_eq!(
+        ctx.shadcn_theme().background,
+        shadcn_theme_light::light().background
+    );
     assert_eq!(
         largest_rect_fill(&light_out.shapes),
-        Some(Color32::from_rgb(0xe2, 0xe8, 0xf0))
+        Some(Color32::from_rgb(0xff, 0xff, 0xff))
     );
     apply(&ctx, Theme::Dark);
     let dark_out = run_app_frames(&ctx, |_| {}, egui::Theme::Light);
     assert!(ctx.global_style().visuals.dark_mode);
-    assert_eq!(elegance::Theme::current(&ctx), elegance::Theme::slate());
+    assert_eq!(
+        ctx.shadcn_theme().background,
+        shadcn_theme_dark::dark().background
+    );
     assert_eq!(
         largest_rect_fill(&dark_out.shapes),
-        Some(Color32::from_rgb(0x0f, 0x17, 0x2a))
+        Some(Color32::from_rgb(0x0a, 0x0a, 0x0a))
     );
 }
 
@@ -93,7 +110,9 @@ fn run_app_frames(
                             .show(col, |scroll| {
                                 let _ = Card::new().heading("Create a note").show(scroll, |card| {
                                     _ = card.add(
-                                        TextArea::new(&mut String::new()).label("Note").rows(12),
+                                        Textarea::new(&mut String::new())
+                                            .placeholder("Note")
+                                            .min_height(240.0),
                                     );
                                 });
                             });

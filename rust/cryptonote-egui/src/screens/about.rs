@@ -1,7 +1,7 @@
 use crate::app::{CryptonoteApp, APP_ATTRS};
 use crate::messages::Msg;
 use crate::screens::Screen;
-use elegance::{Accent, Button, ButtonSize, Card};
+use egui_shadcn::{Button, ButtonVariant, Card, ComponentSize};
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::donate_blocks;
 
@@ -19,16 +19,19 @@ impl CryptonoteApp {
         let privacy_label = self.text(&Msg::Base(BaseMsg::PrivacyPolicyTitle));
         ui.add_space(8.0);
         self.render_dock(ui, |row, app| {
-            if row
-                .add(Button::new(&donate_label).accent(Accent::Amber))
-                .clicked()
-            {
+            if row.add(Button::new(&donate_label)).clicked() {
                 app.navigate(Screen::Donate);
             }
-            if row.add(Button::new(&terms_label).outline()).clicked() {
+            if row
+                .add(Button::new(&terms_label).variant(ButtonVariant::Outline))
+                .clicked()
+            {
                 app.navigate(Screen::License);
             }
-            if row.add(Button::new(&privacy_label).outline()).clicked() {
+            if row
+                .add(Button::new(&privacy_label).variant(ButtonVariant::Outline))
+                .clicked()
+            {
                 app.navigate(Screen::Privacy);
             }
         });
@@ -49,7 +52,11 @@ impl CryptonoteApp {
                 let _row = card.horizontal_wrapped(|row| {
                     _ = row.label(egui::RichText::new(block.label).strong());
                     if row
-                        .add(Button::new(&copy_label).outline().size(ButtonSize::Small))
+                        .add(
+                            Button::new(&copy_label)
+                                .variant(ButtonVariant::Outline)
+                                .size(ComponentSize::Sm),
+                        )
                         .on_hover_text(&copy_label)
                         .clicked()
                     {

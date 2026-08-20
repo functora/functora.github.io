@@ -3,8 +3,7 @@ use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::{ActionMode, External};
 use egui::Vec2;
-use elegance::glyphs;
-use elegance::{Accent, Button, Card, Spinner};
+use egui_shadcn::{Button, ButtonVariant, Card, LucideIcon, Spinner};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {
@@ -65,28 +64,49 @@ impl CryptonoteApp {
     fn render_share_archive(&mut self, ui: &mut egui::Ui) {
         let heading = self.text(&Msg::ArchiveReady);
         let _ = Card::new().heading(heading).show(ui, |_card| {});
-        let download_label = format!("{} {}", glyphs::DOWNLOAD, self.text(&Msg::Download));
-        let view_label = format!("{} {}", glyphs::EYE, self.text(&Msg::ViewButton));
-        let edit_label = format!("{} {}", glyphs::PENCIL, self.text(&Msg::EditNote));
-        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        let download_label = self.text(&Msg::Download);
+        let view_label = self.text(&Msg::ViewButton);
+        let edit_label = self.text(&Msg::EditNote);
+        let reset_label = self.text(&Msg::CreateNewNote);
         ui.add_space(8.0);
         self.render_dock(ui, |row, app| {
             if row
-                .add(Button::new(&download_label).accent(Accent::Blue))
+                .add(Button::new(&download_label).icon(LucideIcon::Download))
                 .clicked()
             {
                 if let Some(bytes) = app.external.archive_bytes() {
                     app.download("archive.cryptonote".to_string(), bytes);
                 }
             }
-            if row.add(Button::new(&view_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&view_label)
+                        .icon(LucideIcon::Eye)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.navigate(Screen::View);
             }
-            if row.add(Button::new(&edit_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&edit_label)
+                        .icon(LucideIcon::Pencil)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.action = ActionMode::Create;
                 app.navigate(Screen::Home);
             }
-            if row.add(Button::new(&reset_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&reset_label)
+                        .icon(LucideIcon::Trash2)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.reset();
             }
         });
@@ -94,38 +114,69 @@ impl CryptonoteApp {
 
     fn render_note_buttons(&mut self, ui: &mut egui::Ui, with_share: bool) {
         let url = self.external.note_url();
-        let copy_label = format!("{} {}", glyphs::COPY, self.text(&Msg::Base(BaseMsg::Copy)));
-        let share_label = format!("{} {}", glyphs::NETWORK, self.text(&Msg::Share));
+        let copy_label = self.text(&Msg::Base(BaseMsg::Copy));
+        let share_label = self.text(&Msg::Share);
         let print_label = self.text(&Msg::Print);
-        let view_label = format!("{} {}", glyphs::EYE, self.text(&Msg::ViewButton));
-        let edit_label = format!("{} {}", glyphs::PENCIL, self.text(&Msg::EditNote));
-        let reset_label = format!("{} {}", glyphs::TRASH, self.text(&Msg::CreateNewNote));
+        let view_label = self.text(&Msg::ViewButton);
+        let edit_label = self.text(&Msg::EditNote);
+        let reset_label = self.text(&Msg::CreateNewNote);
         ui.add_space(8.0);
         self.render_dock(ui, |row, app| {
             if !url.is_empty()
                 && row
-                    .add(Button::new(&copy_label).accent(Accent::Blue))
+                    .add(Button::new(&copy_label).icon(LucideIcon::Copy))
                     .clicked()
             {
                 app.copy_text(url.clone());
             }
             if with_share {
-                if row.add(Button::new(&share_label).outline()).clicked() {
+                if row
+                    .add(
+                        Button::new(&share_label)
+                            .icon(LucideIcon::Share2)
+                            .variant(ButtonVariant::Outline),
+                    )
+                    .clicked()
+                {
                     let text = app.text(&Msg::SharedNoteText);
                     app.social_share(text, url.clone());
                 }
-                if row.add(Button::new(&print_label).outline()).clicked() {
+                if row
+                    .add(Button::new(&print_label).variant(ButtonVariant::Outline))
+                    .clicked()
+                {
                     app.print();
                 }
             }
-            if row.add(Button::new(&view_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&view_label)
+                        .icon(LucideIcon::Eye)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.navigate(Screen::View);
             }
-            if row.add(Button::new(&edit_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&edit_label)
+                        .icon(LucideIcon::Pencil)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.action = ActionMode::Create;
                 app.navigate(Screen::Home);
             }
-            if row.add(Button::new(&reset_label).outline()).clicked() {
+            if row
+                .add(
+                    Button::new(&reset_label)
+                        .icon(LucideIcon::Trash2)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
                 app.reset();
             }
         });

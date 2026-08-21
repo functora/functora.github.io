@@ -22,13 +22,52 @@ impl super::sidebar::Sidebar {
     }
 
     /// Toggle button for opening/closing a responsive sidebar: a hamburger
-    /// menu on mobile, a panel toggle on desktop. Place it in a top bar next
-    /// to the sidebar.
+    /// menu. Place it in a top bar next to the sidebar. On desktop the
+    /// sidebar header uses a distinct expand-collapse icon so the two
+    /// toggles do not duplicate; this button always shows the hamburger and
+    /// is sized to match the sidebar header toggle.
     pub fn toggle_button(ui: &mut egui::Ui, collapsed: &mut bool) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let spacing =
             crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let icon = crate::icons::lucide_icon::LucideIcon::Menu;
+
+        let size = spacing.touch_height;
+        let icon_size = size * 0.5;
+        let (rect, response) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::click());
+
+        if ui.is_rect_visible(rect) {
+            let painter = ui.painter();
+            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            if response.hovered() || response.is_pointer_button_down_on() {
+                painter.rect_filled(rect, cr, theme.muted);
+            }
+            let icon_rect =
+                egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
+            crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, theme.foreground);
+        }
+
+        if response.clicked() {
+            *collapsed = !*collapsed;
+            ui.ctx().request_repaint();
+        }
+
+        if response.hovered() {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+        }
+
+        response
+    }
+
+    fn collapse_button(ui: &mut egui::Ui, collapsed: &mut bool) -> egui::Response {
+        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let icon = if *collapsed {
+            crate::icons::lucide_icon::LucideIcon::PanelRightOpen
+        } else {
+            crate::icons::lucide_icon::LucideIcon::PanelRightClose
+        };
 
         let size = spacing.touch_height;
         let icon_size = size * 0.5;
@@ -64,7 +103,8 @@ impl super::sidebar::Sidebar {
         content: impl FnOnce(&mut egui::Ui),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let is_rail = self.collapsible && *collapsed;
 
         let effective_width = if is_rail {
@@ -94,7 +134,11 @@ impl super::sidebar::Sidebar {
 
             ui.vertical(|ui| {
                 if self.collapsible {
-                    _ = Self::toggle_button(ui, collapsed);
+                    ui.horizontal(|ui| {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            _ = Self::collapse_button(ui, collapsed);
+                        });
+                    });
                     if !is_rail {
                         ui.add_space(8.0);
                     }

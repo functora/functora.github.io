@@ -272,6 +272,7 @@ pub struct FormState {
 /// All state for the showcase demos, one field per interactive demo.
 pub struct ShowcaseApp {
     pub nav: NavState,
+    pub sidebar_init_done: bool,
     pub selected: usize,
     pub dialogs: DialogState,
     pub command_search: String,
@@ -335,12 +336,52 @@ impl ShowcaseApp {
         egui_shadcn::setup_fonts(&cc.egui_ctx);
         let theme = dark();
         ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
+        let startup_width: f32 = {
+            #[cfg(target_arch = "wasm32")]
+            {
+                #[allow(clippy::cast_possible_truncation)]
+                {
+                    web_sys::window()
+                        .and_then(|win| win.inner_width().ok())
+                        .and_then(|value| value.as_f64())
+                        .map_or_else(
+                            || cc.egui_ctx.input(|input| input.viewport_rect().width()),
+                            |value| value as f32,
+                        )
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+                {
+                    cc.winit_window().map_or_else(
+                        || cc.egui_ctx.input(|input| input.viewport_rect().width()),
+                        |win| {
+                            let scale = win.scale_factor() as f32;
+                            let width = win.inner_size().width as f32;
+                            if scale > 0.0 {
+                                width / scale
+                            } else {
+                                width
+                            }
+                        },
+                    )
+                }
+            }
+        };
+        let initial_collapsed = if startup_width == 0.0 {
+            true
+        } else {
+            startup_width < egui_shadcn::Breakpoint::MOBILE_MAX_WIDTH
+        };
+        let sidebar_init_done = startup_width != 0.0;
         Self {
             nav: NavState {
                 dark: true,
-                sidebar_collapsed: true,
+                sidebar_collapsed: initial_collapsed,
                 sidebar_demo_collapsed: false,
             },
+            sidebar_init_done,
             selected: initial_selected(),
             dialogs: DialogState {
                 command_open: false,
@@ -799,6 +840,13 @@ impl ShowcaseApp {
 impl eframe::App for ShowcaseApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        if !self.sidebar_init_done {
+            let width = ctx.input(|i| i.viewport_rect().width());
+            if width != 0.0 {
+                self.nav.sidebar_collapsed = ctx.on_mobile();
+                self.sidebar_init_done = true;
+            }
+        }
         self.apply_theme(&ctx);
         self.handle_shortcuts(&ctx);
         #[cfg(target_os = "android")]

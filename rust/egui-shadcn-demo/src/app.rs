@@ -442,13 +442,14 @@ impl ShowcaseApp {
     }
 
     fn render_top_bar(&mut self, ui: &mut egui::Ui) {
-        let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let spacing = ui.responsive_spacing();
-        let pad: i8 = if spacing.is_mobile() { 4 } else { 8 };
+        let pad_x: i8 = 8;
         let _panel = egui::Frame::NONE
-            .fill(theme.card)
-            .inner_margin(egui::Margin::same(pad))
-            .stroke(egui::Stroke::new(1.0, theme.border))
+            .inner_margin(egui::Margin {
+                left: pad_x,
+                right: pad_x,
+                top: 6,
+                bottom: 6,
+            })
             .show(ui, |ui2| {
                 _ = Flex::row()
                     .gap(4.0)
@@ -787,32 +788,35 @@ impl eframe::App for ShowcaseApp {
         crate::android::poll_ime(&ctx);
 
         let theme = ShadcnThemeExt::shadcn_theme(&ctx);
-        _ = egui::Panel::top("top_bar")
-            .frame(
-                egui::Frame::NONE
-                    .fill(theme.card)
-                    .inner_margin(egui::Margin::same(8))
-                    .stroke(egui::Stroke::new(1.0, theme.border)),
-            )
+        let top = egui::Panel::top("top_bar")
+            .frame(egui::Frame::NONE.fill(theme.card))
             .show_separator_line(false)
             .show(ui, |ui7| {
                 self.render_top_bar(ui7);
             });
+        _ = ui.painter().hline(
+            top.response.rect.x_range(),
+            top.response.rect.max.y - 0.5,
+            egui::Stroke::new(1.0, theme.border),
+        );
 
         if !ctx.on_mobile() {
+            let is_rail = self.nav.sidebar_collapsed;
+            let panel_outer = if is_rail { 48.0 } else { 272.0 };
+            let panel_fill = if is_rail {
+                theme.background
+            } else {
+                theme.card
+            };
             _ = egui::Panel::left("sidebar_panel")
-                .default_size(244.0)
-                .frame(
-                    egui::Frame::NONE
-                        .fill(theme.card)
-                        .inner_margin(egui::Margin::same(8))
-                        .stroke(egui::Stroke::new(1.0, theme.border)),
-                )
+                .exact_size(panel_outer)
+                .frame(egui::Frame::NONE.fill(panel_fill))
+                .resizable(false)
                 .show_separator_line(false)
                 .show(ui, |ui8| {
                     let close = std::cell::Cell::new(false);
                     let mut collapsed = self.nav.sidebar_collapsed;
-                    _ = Sidebar::new().width(228.0).collapsible().show(
+                    _ = Sidebar::new().width(256.0).collapsible().show(
                         ui8,
                         &mut collapsed,
                         |ui9| {

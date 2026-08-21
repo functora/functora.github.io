@@ -16,11 +16,11 @@ impl ShadcnThemeExt for egui::Context {
     }
 
     fn set_shadcn_theme(&self, theme: super::shadcn_theme::ShadcnTheme) {
-        // Also set egui visuals so built-in popups (e.g. context_menu) match
         self.all_styles_mut(|style| {
             style.visuals.panel_fill = theme.background;
             style.visuals.window_fill = theme.popover;
             style.visuals.window_stroke = egui::Stroke::new(1.0, theme.border);
+            style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(1.0, theme.border);
             style.visuals.window_shadow = egui::Shadow {
                 offset: [0, 4],
                 blur: 12,

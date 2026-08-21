@@ -71,66 +71,52 @@ impl super::sidebar::Sidebar {
         content: impl FnOnce(&mut egui::Ui),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let is_rail = self.collapsible && *collapsed;
 
-        let effective_width = if self.collapsible && *collapsed {
-            48.0
+        let effective_width = if is_rail { 32.0 } else { self.width };
+
+        let fill = if is_rail {
+            theme.background
         } else {
-            self.width
+            theme.card
+        };
+        let margin = egui::Margin {
+            left: 8,
+            right: 8,
+            top: 6,
+            bottom: 6,
         };
 
-        let frame = egui::Frame::NONE
-            .fill(theme.card)
-            .inner_margin(egui::Margin {
-                left: 12,
-                right: 12,
-                top: 12,
-                bottom: 12,
-            })
-            .stroke(egui::Stroke::new(1.0, theme.border));
+        let frame = egui::Frame::NONE.fill(fill).inner_margin(margin);
 
-        frame
-            .show(ui, |ui| {
-                ui.set_min_width(effective_width);
-                ui.set_max_width(effective_width);
-                ui.set_min_height(ui.available_height());
+        let inner = frame.show(ui, |ui| {
+            ui.set_min_width(effective_width);
+            ui.set_max_width(effective_width);
+            ui.set_min_height(ui.available_height());
 
-                ui.vertical(|ui| {
-                    if self.collapsible {
-                        let toggle_icon = if *collapsed {
-                            crate::icons::lucide_icon::LucideIcon::PanelLeftOpen
-                        } else {
-                            crate::icons::lucide_icon::LucideIcon::PanelLeftClose
-                        };
-                        let icon_size: f32 = 16.0;
-                        let (icon_rect, toggle_resp) = ui.allocate_exact_size(
-                            egui::vec2(icon_size, icon_size),
-                            egui::Sense::click(),
-                        );
-                        if ui.is_rect_visible(icon_rect) {
-                            crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
-                                icon_rect,
-                                &toggle_icon,
-                                theme.muted_foreground,
-                            );
-                        }
-                        if toggle_resp.clicked() {
-                            *collapsed = !*collapsed;
-                            ui.ctx().request_repaint();
-                        }
+            ui.vertical(|ui| {
+                if self.collapsible {
+                    _ = Self::toggle_button(ui, collapsed);
+                    if !is_rail {
                         ui.add_space(8.0);
                     }
+                }
 
-                    if !*collapsed || !self.collapsible {
-                        egui::ScrollArea::vertical()
-                            .auto_shrink([false; 2])
-                            .show(ui, |ui| {
-                                content(ui);
-                            });
-                    }
-                });
-            })
-            .response
+                if !*collapsed || !self.collapsible {
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false; 2])
+                        .show(ui, |ui| {
+                            content(ui);
+                        });
+                }
+            });
+        });
+        _ = ui.painter().vline(
+            inner.response.rect.max.x - 0.5,
+            inner.response.rect.y_range(),
+            egui::Stroke::new(1.0, theme.border),
+        );
+        inner.response
     }
 
     fn show_mobile_overlay(
@@ -142,10 +128,10 @@ impl super::sidebar::Sidebar {
         let ctx = ui.ctx();
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
         let screen = ctx.input(|i| i.viewport_rect());
-        // Frame = content + 2*12 inner margin + 2*1 stroke; keep it inside the
-        // screen, full height on mobile.
-        let panel_width = self.width.min((screen.width() - 26.0).max(0.0));
-        let panel_height = (screen.height() - 26.0).max(0.0);
+        let panel_width = self
+            .width
+            .min((screen.width() - 16.0).max(0.0).min(screen.width() * 0.84));
+        let panel_height = (screen.height() - 16.0).max(0.0);
 
         let anim_id = egui::Id::new("sidebar_overlay_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, !*collapsed, 0.2);
@@ -189,14 +175,19 @@ impl super::sidebar::Sidebar {
                 let frame = egui::Frame::NONE
                     .fill(theme.card)
                     .inner_margin(egui::Margin {
-                        left: 12,
-                        right: 12,
-                        top: 12,
-                        bottom: 12,
+                        left: 8,
+                        right: 8,
+                        top: 8,
+                        bottom: 8,
                     })
-                    .stroke(egui::Stroke::new(1.0, theme.border));
+                    .shadow(egui::Shadow {
+                        offset: [4, 0],
+                        blur: 12,
+                        spread: 0,
+                        color: egui::Color32::from_black_alpha(16),
+                    });
 
-                frame.show(ui, |ui| {
+                let inner = frame.show(ui, |ui| {
                     ui.set_min_size(egui::vec2(panel_width, panel_height));
                     ui.set_max_width(panel_width);
 
@@ -228,6 +219,11 @@ impl super::sidebar::Sidebar {
                             });
                     });
                 });
+                _ = ui.painter().vline(
+                    inner.response.rect.max.x - 0.5,
+                    inner.response.rect.y_range(),
+                    egui::Stroke::new(1.0, theme.border),
+                );
             });
 
         ctx.request_repaint();

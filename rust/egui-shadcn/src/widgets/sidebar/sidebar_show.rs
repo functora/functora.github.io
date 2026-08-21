@@ -219,8 +219,8 @@ impl super::sidebar::Sidebar {
                     .inner_margin(egui::Margin {
                         left: 8,
                         right: 8,
-                        top: 8,
-                        bottom: 8,
+                        top: 6,
+                        bottom: 6,
                     })
                     .shadow(egui::Shadow {
                         offset: [-4, 0],
@@ -234,24 +234,46 @@ impl super::sidebar::Sidebar {
                     ui.set_max_width(panel_width);
 
                     ui.vertical(|ui| {
-                        // Close toggle
-                        let icon_size: f32 = 16.0;
-                        let (icon_rect, toggle_resp) = ui.allocate_exact_size(
-                            egui::vec2(icon_size, icon_size),
-                            egui::Sense::click(),
-                        );
-                        if ui.is_rect_visible(icon_rect) {
-                            crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
-                                icon_rect,
-                                &crate::icons::lucide_icon::LucideIcon::X,
-                                theme.muted_foreground,
+                        ui.horizontal(|ui| {
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    let size = spacing.touch_height;
+                                    let icon_size = size * 0.5;
+                                    let (rect, response) = ui.allocate_exact_size(
+                                        egui::vec2(size, size),
+                                        egui::Sense::click(),
+                                    );
+                                    if ui.is_rect_visible(rect) {
+                                        let painter = ui.painter();
+                                        let cr =
+                                            egui::CornerRadius::same(theme.radius.round() as u8);
+                                        if response.hovered()
+                                            || response.is_pointer_button_down_on()
+                                        {
+                                            painter.rect_filled(rect, cr, theme.muted);
+                                        }
+                                        let icon_rect = egui::Rect::from_center_size(
+                                            rect.center(),
+                                            egui::vec2(icon_size, icon_size),
+                                        );
+                                        crate::icons::paint_icon::paint_icon(
+                                            painter,
+                                            icon_rect,
+                                            &crate::icons::lucide_icon::LucideIcon::X,
+                                            theme.foreground,
+                                        );
+                                    }
+                                    if response.clicked() {
+                                        *collapsed = true;
+                                        ctx.request_repaint();
+                                    }
+                                    if response.hovered() {
+                                        ctx.set_cursor_icon(egui::CursorIcon::PointingHand);
+                                    }
+                                },
                             );
-                        }
-                        if toggle_resp.clicked() {
-                            *collapsed = true;
-                            ctx.request_repaint();
-                        }
+                        });
                         ui.add_space(8.0);
 
                         egui::ScrollArea::vertical()

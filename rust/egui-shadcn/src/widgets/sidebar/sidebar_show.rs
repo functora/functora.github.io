@@ -149,6 +149,7 @@ impl super::sidebar::Sidebar {
                 );
                 egui::ScrollArea::vertical()
                     .auto_shrink([false; 2])
+                    .max_height(available.height())
                     .show(ui, |ui| {
                         content(ui);
                     });
@@ -210,7 +211,7 @@ impl super::sidebar::Sidebar {
         let screen = ctx.input(|i| i.viewport_rect());
         let max_allowed_width = (screen.width() - spacing.page_padding * 2.0).max(0.0);
         let panel_width = self.width.min(max_allowed_width);
-        let panel_height = (screen.height() - spacing.page_padding * 2.0).max(0.0);
+        let panel_height = screen.height();
 
         let anim_id = egui::Id::new("sidebar_overlay_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, !*collapsed, 0.2);
@@ -267,7 +268,7 @@ impl super::sidebar::Sidebar {
                     });
 
                 let inner = frame.show(ui, |ui| {
-                    ui.set_min_size(egui::vec2(panel_width, panel_height));
+                    ui.set_min_size(egui::vec2(panel_width, (panel_height - 12.0).max(0.0)));
                     ui.set_max_width(panel_width);
 
                     let available = ui.available_rect_before_wrap();
@@ -278,6 +279,7 @@ impl super::sidebar::Sidebar {
                     );
                     egui::ScrollArea::vertical()
                         .auto_shrink([false; 2])
+                        .max_height(available.height())
                         .show(ui, |ui| {
                             content(ui);
                         });

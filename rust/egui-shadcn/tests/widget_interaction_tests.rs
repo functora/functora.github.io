@@ -298,7 +298,7 @@ fn sidebar_item_click_registers() {
         _ = egui::Panel::top("top_bar").show(ui, |ui| {
             ui.label("top");
         });
-        _ = egui::Panel::left("sidebar_panel")
+        _ = egui::Panel::right("sidebar_panel")
             .default_size(244.0)
             .show(ui, |ui| {
                 Sidebar::new()

@@ -1,6 +1,6 @@
 //! Sidebar builder struct -- app sidebar navigation.
 
-/// A sidebar: `w-64 border-r bg-sidebar h-full`.
+/// A sidebar: `w-64 border-l bg-sidebar h-full`.
 #[must_use]
 pub struct Sidebar {
     pub(crate) width: f32,

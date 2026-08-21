@@ -277,15 +277,15 @@ fn responsive_sidebar_draws_overlay_when_open_on_mobile() {
     assert!(content_called);
     let rects = collect_filled_rects(&out.shapes);
     let panel = find_rect(&rects, |r| {
-        r.min.x > -1.0
-            && r.min.x < 1.0
+        r.max.x > MOBILE.x - 1.0
+            && r.max.x < MOBILE.x + 1.0
             && r.width() > 250.0
             && r.width() < MOBILE.x - 0.5
             && r.height() > 600.0
     })
-    .expect("left overlay panel must be drawn");
+    .expect("right overlay panel must be drawn");
     assert!(
-        panel.max.x <= MOBILE.x && panel.max.y <= MOBILE.y,
+        panel.min.x >= -0.5 && panel.max.y <= MOBILE.y,
         "overlay panel must stay inside the screen, got {panel:?}"
     );
 }

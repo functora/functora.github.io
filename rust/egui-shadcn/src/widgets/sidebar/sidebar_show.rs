@@ -28,14 +28,7 @@ impl super::sidebar::Sidebar {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let spacing =
             crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
-        let on_mobile = spacing.is_mobile();
-        let icon = if on_mobile {
-            crate::icons::lucide_icon::LucideIcon::Menu
-        } else if *collapsed {
-            crate::icons::lucide_icon::LucideIcon::PanelLeftOpen
-        } else {
-            crate::icons::lucide_icon::LucideIcon::PanelLeftClose
-        };
+        let icon = crate::icons::lucide_icon::LucideIcon::Menu;
 
         let size = spacing.touch_height;
         let icon_size = size * 0.5;
@@ -71,9 +64,14 @@ impl super::sidebar::Sidebar {
         content: impl FnOnce(&mut egui::Ui),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let is_rail = self.collapsible && *collapsed;
 
-        let effective_width = if is_rail { 32.0 } else { self.width };
+        let effective_width = if is_rail {
+            spacing.touch_height
+        } else {
+            self.width
+        };
 
         let fill = if is_rail {
             theme.background
@@ -112,7 +110,7 @@ impl super::sidebar::Sidebar {
             });
         });
         _ = ui.painter().vline(
-            inner.response.rect.max.x - 0.5,
+            inner.response.rect.min.x + 0.5,
             inner.response.rect.y_range(),
             egui::Stroke::new(1.0, theme.border),
         );
@@ -127,11 +125,11 @@ impl super::sidebar::Sidebar {
     ) -> egui::Response {
         let ctx = ui.ctx();
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
+        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
         let screen = ctx.input(|i| i.viewport_rect());
-        let panel_width = self
-            .width
-            .min((screen.width() - 16.0).max(0.0).min(screen.width() * 0.84));
-        let panel_height = (screen.height() - 16.0).max(0.0);
+        let max_allowed_width = (screen.width() - spacing.page_padding * 2.0).max(0.0);
+        let panel_width = self.width.min(max_allowed_width);
+        let panel_height = (screen.height() - spacing.page_padding * 2.0).max(0.0);
 
         let anim_id = egui::Id::new("sidebar_overlay_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, !*collapsed, 0.2);
@@ -166,11 +164,11 @@ impl super::sidebar::Sidebar {
             ctx.request_repaint();
         }
 
-        let slide_offset_x = -(1.0 - ease_t) * panel_width;
+        let slide_offset_x = (1.0 - ease_t) * panel_width;
 
         egui::Area::new(egui::Id::new("sidebar_panel"))
             .order(egui::Order::Foreground)
-            .anchor(egui::Align2::LEFT_TOP, egui::vec2(slide_offset_x, 0.0))
+            .anchor(egui::Align2::RIGHT_TOP, egui::vec2(slide_offset_x, 0.0))
             .show(ctx, |ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.card)
@@ -181,7 +179,7 @@ impl super::sidebar::Sidebar {
                         bottom: 8,
                     })
                     .shadow(egui::Shadow {
-                        offset: [4, 0],
+                        offset: [-4, 0],
                         blur: 12,
                         spread: 0,
                         color: egui::Color32::from_black_alpha(16),
@@ -220,7 +218,7 @@ impl super::sidebar::Sidebar {
                     });
                 });
                 _ = ui.painter().vline(
-                    inner.response.rect.max.x - 0.5,
+                    inner.response.rect.min.x + 0.5,
                     inner.response.rect.y_range(),
                     egui::Stroke::new(1.0, theme.border),
                 );

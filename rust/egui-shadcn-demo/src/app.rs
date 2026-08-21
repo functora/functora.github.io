@@ -441,6 +441,25 @@ impl ShowcaseApp {
         }
     }
 
+    fn sidebar_effective_width(ctx: &egui::Context) -> f32 {
+        let spacing = ctx.responsive_spacing();
+        let max_text = CATEGORIES
+            .iter()
+            .flat_map(|(_, _, items)| items.iter())
+            .map(|def| {
+                let font_id = egui::FontId::proportional(14.0);
+                ctx.fonts_mut(|fonts| {
+                    fonts
+                        .layout_no_wrap(def.name.to_owned(), font_id, egui::Color32::WHITE)
+                        .rect
+                        .width()
+                })
+            })
+            .fold(0.0, f32::max);
+        let icon = spacing.touch_height * 0.5;
+        max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
+    }
+
     fn render_top_bar(&mut self, ui: &mut egui::Ui) {
         let pad_x: i8 = 8;
         let _panel = egui::Frame::NONE
@@ -459,23 +478,16 @@ impl ShowcaseApp {
                     .show(ui2, |f| {
                         _ = f.ui(|ui_left| {
                             _ = ui_left.horizontal(|ui_inner| {
-                                _ = Sidebar::toggle_button(
-                                    ui_inner,
-                                    &mut self.nav.sidebar_collapsed,
-                                );
-                                ui_inner.add_space(4.0);
-                                if !ui_inner.on_mobile() {
-                                    _ = Typography::h4("egui-shadcn").show(ui_inner);
-                                    ui_inner.add_space(4.0);
-                                    _ = Badge::new("showcase")
-                                        .variant(BadgeVariant::Secondary)
-                                        .show(ui_inner);
-                                }
+                                _ = Typography::h4("egui-shadcn").show(ui_inner);
                             });
                         });
                         _ = f.ui(|ui_right| {
                             _ = ui_right.horizontal(|ui_inner| {
                                 if !ui_inner.on_mobile() {
+                                    _ = Badge::new("showcase")
+                                        .variant(BadgeVariant::Secondary)
+                                        .show(ui_inner);
+                                    ui_inner.add_space(4.0);
                                     let bp = ui_inner.breakpoint();
                                     _ = Badge::new(if bp.is_mobile() {
                                         "mobile"
@@ -522,6 +534,11 @@ impl ShowcaseApp {
                                     self.dialogs.command_open = true;
                                     self.command_search.clear();
                                 }
+                                ui_inner.add_space(4.0);
+                                _ = Sidebar::toggle_button(
+                                    ui_inner,
+                                    &mut self.nav.sidebar_collapsed,
+                                );
                             });
                         });
                     });
@@ -802,13 +819,21 @@ impl eframe::App for ShowcaseApp {
 
         if !ctx.on_mobile() {
             let is_rail = self.nav.sidebar_collapsed;
-            let panel_outer = if is_rail { 48.0 } else { 272.0 };
+            let spacing = ctx.responsive_spacing();
+            let screen_width = ctx.input(|i| i.viewport_rect().width());
+            let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
+            let effective = if is_rail {
+                spacing.touch_height
+            } else {
+                Self::sidebar_effective_width(&ctx).min((max_allowed_outer - 16.0).max(0.0))
+            };
+            let panel_outer = effective + 16.0;
             let panel_fill = if is_rail {
                 theme.background
             } else {
                 theme.card
             };
-            _ = egui::Panel::left("sidebar_panel")
+            _ = egui::Panel::right("sidebar_panel")
                 .exact_size(panel_outer)
                 .frame(egui::Frame::NONE.fill(panel_fill))
                 .resizable(false)
@@ -816,7 +841,7 @@ impl eframe::App for ShowcaseApp {
                 .show(ui, |ui8| {
                     let close = std::cell::Cell::new(false);
                     let mut collapsed = self.nav.sidebar_collapsed;
-                    _ = Sidebar::new().width(256.0).collapsible().show(
+                    _ = Sidebar::new().width(effective).collapsible().show(
                         ui8,
                         &mut collapsed,
                         |ui9| {
@@ -834,14 +859,20 @@ impl eframe::App for ShowcaseApp {
             .frame(egui::Frame::NONE.fill(theme.background))
             .show(ui, |ui10| {
                 if ui10.on_mobile() {
+                    let spacing = ui10.responsive_spacing();
+                    let screen_width = ui10.ctx().input(|i| i.viewport_rect().width());
+                    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
+                    let effective = Self::sidebar_effective_width(ui10.ctx())
+                        .min((max_allowed_outer - 16.0).max(0.0));
                     let close = std::cell::Cell::new(false);
                     let mut collapsed = self.nav.sidebar_collapsed;
-                    _ = Sidebar::new()
-                        .width((ui10.available_width() * 0.82).max(200.0))
-                        .collapsible()
-                        .show(ui10, &mut collapsed, |ui11| {
+                    _ = Sidebar::new().width(effective).collapsible().show(
+                        ui10,
+                        &mut collapsed,
+                        |ui11| {
                             close.set(self.render_sidebar(ui11));
-                        });
+                        },
+                    );
                     if close.get() {
                         collapsed = true;
                     }

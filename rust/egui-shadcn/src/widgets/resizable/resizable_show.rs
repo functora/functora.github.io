@@ -1,5 +1,7 @@
 //! Show method for Resizable -- renders a draggable split panel.
 
+use crate::responsive::responsive_ext::ResponsiveExt;
+
 impl super::resizable::Resizable {
     /// Shows a horizontal split with draggable divider.
     /// `fraction` persists the split position. Pass `&mut your_f32_state`.
@@ -12,7 +14,9 @@ impl super::resizable::Resizable {
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let available_width = ui.available_width();
-        let handle_width: f32 = 8.0;
+        let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
+        let handle_width: f32 = if ui.on_mobile() { touch.max(24.0) } else { 8.0 };
         let panel_height = self.height;
 
         let left_width = ((available_width - handle_width) * (*fraction)).max(0.0);

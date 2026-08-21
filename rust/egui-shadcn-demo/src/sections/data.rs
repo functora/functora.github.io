@@ -3,7 +3,7 @@
 
 use egui_shadcn::{
     AreaChart, AreaSeries, Avatar, Badge, Breadcrumb, Button, ButtonVariant, Calendar, Carousel,
-    Flex, LucideIcon, Pagination, Separator, Sidebar, Table, Typography,
+    Flex, LucideIcon, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
 };
 
 impl crate::app::ShowcaseApp {
@@ -110,8 +110,9 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_pagination(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Page navigation with visible range window.").show(ui);
         ui.add_space(12.0);
+        let max_vis = if ui.on_mobile() { 5 } else { 7 };
         _ = Pagination::new(20)
-            .max_visible(7)
+            .max_visible(max_vis)
             .show(ui, &mut self.pagination_page);
         ui.add_space(4.0);
         _ = Typography::small(format!("Page {} of 20", self.pagination_page + 1)).show(ui);

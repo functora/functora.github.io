@@ -1,5 +1,7 @@
 //! Show method for Calendar — renders a month grid with selectable days.
 
+use crate::responsive::responsive_ext::ResponsiveExt;
+
 impl super::calendar::Calendar {
     /// Shows the calendar with mutable year/month/day. Navigation arrows directly
     /// mutate `year` and `month`. Returns the newly selected day if clicked.
@@ -17,22 +19,31 @@ impl super::calendar::Calendar {
         let days_in_month = Self::days_in_month(*year, *month);
         let first_weekday = Self::day_of_week(*year, *month, 1);
 
-        let cell_size: f32 = 36.0;
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let cell_size: f32 = if ui.on_mobile() {
+            ((ui.available_width() - 12.0) / 7.0).clamp(36.0, 48.0)
+        } else {
+            36.0
+        };
         let font_size: f32 = 13.0;
         let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+        let _ = spacing;
 
         ui.vertical(|ui| {
-            // Month/year header with navigation arrows
             let nav_icon_size: f32 = 14.0;
+            let nav_touch = spacing.touch_height.min(32.0);
             ui.horizontal(|ui| {
-                let (prev_rect, prev_resp) = ui.allocate_exact_size(
-                    egui::vec2(nav_icon_size, nav_icon_size),
-                    egui::Sense::click(),
-                );
+                let (prev_rect, prev_resp) =
+                    ui.allocate_exact_size(egui::vec2(nav_touch, nav_touch), egui::Sense::click());
                 if ui.is_rect_visible(prev_rect) {
+                    let icon_rect = egui::Rect::from_center_size(
+                        prev_rect.center(),
+                        egui::vec2(nav_icon_size, nav_icon_size),
+                    );
                     crate::icons::paint_icon::paint_icon(
                         ui.painter(),
-                        prev_rect,
+                        icon_rect,
                         &crate::icons::lucide_icon::LucideIcon::ChevronLeft,
                         theme.muted_foreground,
                     );
@@ -54,14 +65,16 @@ impl super::calendar::Calendar {
                         .strong(),
                 );
 
-                let (next_rect, next_resp) = ui.allocate_exact_size(
-                    egui::vec2(nav_icon_size, nav_icon_size),
-                    egui::Sense::click(),
-                );
+                let (next_rect, next_resp) =
+                    ui.allocate_exact_size(egui::vec2(nav_touch, nav_touch), egui::Sense::click());
                 if ui.is_rect_visible(next_rect) {
+                    let icon_rect = egui::Rect::from_center_size(
+                        next_rect.center(),
+                        egui::vec2(nav_icon_size, nav_icon_size),
+                    );
                     crate::icons::paint_icon::paint_icon(
                         ui.painter(),
-                        next_rect,
+                        icon_rect,
                         &crate::icons::lucide_icon::LucideIcon::ChevronRight,
                         theme.muted_foreground,
                     );

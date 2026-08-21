@@ -46,10 +46,20 @@ impl super::command::Command {
         }
 
         let cr = (theme.radius + 2.0).round() as u8;
+        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
+        let is_mobile = spacing.is_mobile();
+        let screen_w = screen.width();
+        let screen_h = screen.height();
+
+        let (anchor, offset) = if is_mobile {
+            (egui::Align2::CENTER_TOP, egui::vec2(0.0, 24.0))
+        } else {
+            (egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
+        };
 
         egui::Area::new(egui::Id::new("command_palette"))
             .order(egui::Order::Foreground)
-            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
+            .anchor(anchor, offset)
             .show(ctx, |ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.popover)
@@ -64,7 +74,50 @@ impl super::command::Command {
                     });
 
                 frame.show(ui, |ui| {
-                    let palette_width = (ui.available_width() - 32.0).clamp(200.0, 480.0);
+                    let mut content_w: f32 = 0.0;
+                    for (group, label) in &self.items {
+                        let gw = ui
+                            .painter()
+                            .layout_no_wrap(
+                                group.clone(),
+                                egui::FontId::proportional(12.0),
+                                egui::Color32::PLACEHOLDER,
+                            )
+                            .size()
+                            .x;
+                        let lw = ui
+                            .painter()
+                            .layout_no_wrap(
+                                label.clone(),
+                                egui::FontId::proportional(14.0),
+                                egui::Color32::PLACEHOLDER,
+                            )
+                            .size()
+                            .x;
+                        content_w = content_w.max(gw).max(lw);
+                    }
+                    let placeholder_w = ui
+                        .painter()
+                        .layout_no_wrap(
+                            self.placeholder.clone(),
+                            egui::FontId::proportional(14.0),
+                            egui::Color32::PLACEHOLDER,
+                        )
+                        .size()
+                        .x;
+                    content_w = content_w.max(placeholder_w);
+                    content_w += 48.0;
+
+                    let screen_avail_w = if is_mobile {
+                        (screen_w - 2.0 * spacing.page_padding - 16.0).max(280.0)
+                    } else {
+                        (screen_w * 0.5).clamp(320.0, 640.0)
+                    };
+                    let palette_width = if is_mobile {
+                        screen_avail_w
+                    } else {
+                        content_w.max(320.0).min(screen_avail_w)
+                    };
                     ui.set_min_width(palette_width);
                     ui.set_max_width(palette_width);
 
@@ -97,9 +150,14 @@ impl super::command::Command {
                     let query = search.to_lowercase();
                     let results_frame = egui::Frame::NONE.inner_margin(egui::Margin::same(8));
 
+                    let max_h = if is_mobile {
+                        (screen_h * 0.55).clamp(200.0, 380.0)
+                    } else {
+                        320.0_f32.min(screen_h * 0.6)
+                    };
                     results_frame.show(ui, |ui| {
                         egui::ScrollArea::vertical()
-                            .max_height(320.0)
+                            .max_height(max_h)
                             .auto_shrink([false; 2])
                             .show(ui, |ui| {
                                 let mut current_group = String::new();

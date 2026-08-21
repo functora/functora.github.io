@@ -7,10 +7,13 @@ impl egui::Widget for super::slider::Slider<'_> {
 
         let track_height: f32 = 4.0;
         let handle_radius = 6.0;
-        let total_height = handle_radius * 2.0 + 4.0;
-        let slider_width = self.width.unwrap_or(ui.available_width().min(200.0));
-
-        // Layout prefix/suffix labels
+        let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
+        let total_height = touch.max(handle_radius * 2.0 + 4.0);
+        let base_slider_width = self
+            .width
+            .map(|w| w.min(ui.available_width()))
+            .unwrap_or(ui.available_width());
         let prefix_galley = self.prefix.as_ref().map(|p| {
             ui.painter().layout_no_wrap(
                 p.clone(),
@@ -34,7 +37,7 @@ impl egui::Widget for super::slider::Slider<'_> {
             .as_ref()
             .map(|g| g.size().x + 6.0)
             .unwrap_or(0.0);
-        let total_width = prefix_w + slider_width + suffix_w;
+        let total_width = (prefix_w + base_slider_width + suffix_w).min(ui.available_width());
 
         let desired = egui::vec2(total_width, total_height);
         let (full_rect, response) = ui.allocate_exact_size(desired, egui::Sense::click_and_drag());

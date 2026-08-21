@@ -1,5 +1,7 @@
 //! Show method for Combobox — renders a searchable dropdown.
 
+use crate::responsive::responsive_ext::ResponsiveExt;
+
 impl super::combobox::Combobox {
     /// Shows the combobox. `selected` is the index of the selected item (or None).
     /// `search_text` holds the filter text state.
@@ -25,9 +27,16 @@ impl super::combobox::Combobox {
         // Trigger button: framed text + chevron icon
         let icon_size: f32 = 12.0;
         let h_padding: f32 = 10.0;
-        let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
-            .touch_height;
-        let width = self.width.unwrap_or(220.0).min(ui.available_width());
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let height = spacing.touch_height;
+        let width = self.width.unwrap_or_else(|| {
+            if ui.on_mobile() {
+                ui.available_width()
+            } else {
+                220.0_f32.min(ui.available_width())
+            }
+        });
         let galley =
             ui.painter()
                 .layout_no_wrap(display, egui::FontId::proportional(14.0), text_color);
@@ -107,8 +116,33 @@ impl super::combobox::Combobox {
 
         let mut close = false;
 
+        let popup_width = {
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+            let mut content_w: f32 = 200.0;
+            for label in &self.items {
+                let w = ui
+                    .painter()
+                    .layout_no_wrap(
+                        label.clone(),
+                        egui::FontId::proportional(14.0),
+                        egui::Color32::PLACEHOLDER,
+                    )
+                    .size()
+                    .x
+                    + 32.0;
+                content_w = content_w.max(w);
+            }
+            let base = trigger_rect.width().max(content_w);
+            if spacing.is_mobile() {
+                base.min(screen_w - 2.0 * spacing.page_padding - 16.0)
+                    .max(trigger_rect.width())
+            } else {
+                base.min(screen_w * 0.6).max(200.0)
+            }
+        };
         popup.show(|ui: &mut egui::Ui| {
-            let popup_width = trigger_rect.width().max(200.0);
             ui.set_min_width(popup_width);
             ui.set_max_width(popup_width);
 

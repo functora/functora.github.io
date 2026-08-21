@@ -156,7 +156,7 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("Maintains a fixed width-to-height ratio.").show(ui);
         ui.add_space(12.0);
         let theme = egui_shadcn::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        ui.set_max_width(320.0);
+        ui.set_max_width(ui.available_width());
         _ = AspectRatio::new(16.0 / 9.0).show(ui, |ui50| {
             let rect = ui50.available_rect_before_wrap();
             _ = ui50.painter().rect_filled(

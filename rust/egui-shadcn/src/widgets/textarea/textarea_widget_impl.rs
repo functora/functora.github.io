@@ -1,14 +1,20 @@
 //! Widget trait implementation for Textarea.
 
+use crate::responsive::responsive_ext::ResponsiveExt;
+
 impl egui::Widget for super::textarea::Textarea<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let h_padding: f32 = 10.0; // px-2.5
         let v_padding: f32 = 8.0; // py-2
-        let width = self
-            .desired_width
-            .unwrap_or(ui.available_width().min(240.0));
+        let width = self.desired_width.unwrap_or_else(|| {
+            if ui.on_mobile() {
+                ui.available_width()
+            } else {
+                ui.available_width().min(240.0)
+            }
+        });
         let corner_radius = theme.radius;
         let cr = egui::CornerRadius::same(corner_radius.round() as u8);
 

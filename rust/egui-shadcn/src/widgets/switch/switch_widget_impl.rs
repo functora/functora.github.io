@@ -19,7 +19,12 @@ impl egui::Widget for super::switch::Switch<'_> {
         });
 
         let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
-        let desired = egui::vec2(track_w + label_width, track_h.max(20.0));
+        let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
+        let desired = egui::vec2(
+            (track_w + label_width).min(ui.available_width()),
+            touch.max(track_h).max(20.0),
+        );
 
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 

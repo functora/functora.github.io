@@ -35,7 +35,16 @@ impl super::popover::Popover {
             .frame(themed_frame);
 
         popup.show(|ui: &mut egui::Ui| {
-            ui.set_min_width(200.0);
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+            let w = if spacing.is_mobile() {
+                (screen_w - 2.0 * spacing.page_padding - 16.0).max(200.0)
+            } else {
+                200.0
+            };
+            ui.set_min_width(w);
+            ui.set_max_width((screen_w - 2.0 * spacing.page_padding).max(w));
             content(ui);
         });
     }

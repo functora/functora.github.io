@@ -91,7 +91,15 @@ impl super::dropdown_menu::DropdownMenu {
             } else {
                 0.0
             };
-            let menu_width = (max_label_w + shortcut_space + 24.0).max(120.0);
+            let mut menu_width = (max_label_w + shortcut_space + 24.0).max(120.0);
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+            let trigger_w = trigger_response.rect.width();
+            menu_width = menu_width.max(trigger_w);
+            menu_width = menu_width
+                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
+                .max(120.0);
             ui.set_min_width(menu_width);
             ui.set_max_width(menu_width);
 

@@ -76,13 +76,29 @@ impl super::table::Table {
         is_header: bool,
     ) {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let height: f32 = if is_header { 40.0 } else { 44.0 };
+        let base_height: f32 = if is_header { 40.0 } else { 44.0 };
         let font_size: f32 = if is_header { 13.0 } else { 14.0 };
+
+        let galleys: Vec<_> = cells
+            .iter()
+            .enumerate()
+            .map(|(idx, cell)| {
+                let col_w = col_widths.get(idx).copied().unwrap_or(100.0);
+                let wrap_w = (col_w - 24.0).max(40.0);
+                ui.painter().layout(
+                    cell.clone(),
+                    egui::FontId::proportional(font_size),
+                    fg,
+                    wrap_w,
+                )
+            })
+            .collect();
+        let content_h = galleys.iter().map(|g| g.size().y).fold(0.0_f32, f32::max);
+        let height = base_height.max(content_h + 16.0);
 
         let (row_rect, response) =
             ui.allocate_exact_size(egui::vec2(total_width, height), egui::Sense::hover());
 
-        // Row hover highlight (data rows only)
         let actual_bg = if !is_header && response.hovered() {
             theme.accent
         } else {
@@ -95,22 +111,11 @@ impl super::table::Table {
         }
 
         let mut x_offset = 0.0;
-        for (col_idx, cell) in cells.iter().enumerate() {
+        for (col_idx, galley) in galleys.into_iter().enumerate() {
             let col_w = col_widths.get(col_idx).copied().unwrap_or(100.0);
-            let cell_rect = egui::Rect::from_min_size(
-                egui::pos2(row_rect.min.x + x_offset, row_rect.min.y),
-                egui::vec2(col_w, height),
-            );
-
-            let galley = ui.painter().layout_no_wrap(
-                cell.clone(),
-                egui::FontId::proportional(font_size),
-                fg,
-            );
-
             let text_pos = egui::pos2(
-                cell_rect.min.x + 12.0,
-                cell_rect.center().y - galley.size().y / 2.0,
+                row_rect.min.x + x_offset + 12.0,
+                row_rect.center().y - galley.size().y / 2.0,
             );
             ui.painter().galley(text_pos, galley, fg);
 

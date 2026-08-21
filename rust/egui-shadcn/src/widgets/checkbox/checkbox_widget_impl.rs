@@ -21,8 +21,13 @@ impl egui::Widget for super::checkbox::Checkbox<'_> {
         });
 
         let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
-        let row_height = ui.spacing().interact_size.y.max(box_size);
-        let desired = egui::vec2(box_size + label_width, row_height);
+        let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
+            .touch_height;
+        let row_height = touch.max(box_size);
+        let desired = egui::vec2(
+            (box_size + label_width).min(ui.available_width()),
+            row_height,
+        );
 
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
 

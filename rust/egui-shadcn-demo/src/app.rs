@@ -443,63 +443,87 @@ impl ShowcaseApp {
 
     fn render_top_bar(&mut self, ui: &mut egui::Ui) {
         let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let spacing = ui.responsive_spacing();
+        let pad: i8 = if spacing.is_mobile() { 4 } else { 8 };
         let _panel = egui::Frame::NONE
             .fill(theme.card)
-            .inner_margin(egui::Margin::same(8))
+            .inner_margin(egui::Margin::same(pad))
             .stroke(egui::Stroke::new(1.0, theme.border))
             .show(ui, |ui2| {
-                _ = ui2.horizontal(|ui3| {
-                    _ = Sidebar::toggle_button(ui3, &mut self.nav.sidebar_collapsed);
-                    ui3.add_space(4.0);
-                    if !ui3.on_mobile() {
-                        _ = Typography::h4("egui-shadcn").show(ui3);
-                        ui3.add_space(4.0);
-                        _ = Badge::new("showcase")
-                            .variant(BadgeVariant::Secondary)
-                            .show(ui3);
-                    }
-                    _ = ui3.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui4| {
-                        if !ui4.on_mobile() {
-                            let bp = ui4.breakpoint();
-                            _ = Badge::new(if bp.is_mobile() { "mobile" } else { "desktop" })
-                                .variant(BadgeVariant::Outline)
-                                .show(ui4);
-                            ui4.add_space(4.0);
-                        }
-                        let theme_icon = if self.nav.dark {
-                            LucideIcon::Moon
-                        } else {
-                            LucideIcon::Sun
-                        };
-                        if ui4
-                            .add(
-                                Button::icon_only(theme_icon)
-                                    .variant(ButtonVariant::Outline)
-                                    .size(egui_shadcn::ComponentSize::Sm),
-                            )
-                            .on_hover_text(if self.nav.dark {
-                                "Light theme"
-                            } else {
-                                "Dark theme"
-                            })
-                            .clicked()
-                        {
-                            self.toggle_theme(ui4.ctx());
-                        }
-                        ui4.add_space(4.0);
-                        let mut search = Button::new("Search")
-                            .icon(LucideIcon::Search)
-                            .variant(ButtonVariant::Outline)
-                            .size(egui_shadcn::ComponentSize::Sm);
-                        if !ui4.on_mobile() {
-                            search = search.shortcut_text("Ctrl K");
-                        }
-                        if ui4.add(search).clicked() {
-                            self.dialogs.command_open = true;
-                            self.command_search.clear();
-                        }
+                _ = Flex::row()
+                    .gap(4.0)
+                    .justify_between()
+                    .align_center()
+                    .w_full()
+                    .show(ui2, |f| {
+                        _ = f.ui(|ui_left| {
+                            _ = ui_left.horizontal(|ui_inner| {
+                                _ = Sidebar::toggle_button(
+                                    ui_inner,
+                                    &mut self.nav.sidebar_collapsed,
+                                );
+                                ui_inner.add_space(4.0);
+                                if !ui_inner.on_mobile() {
+                                    _ = Typography::h4("egui-shadcn").show(ui_inner);
+                                    ui_inner.add_space(4.0);
+                                    _ = Badge::new("showcase")
+                                        .variant(BadgeVariant::Secondary)
+                                        .show(ui_inner);
+                                }
+                            });
+                        });
+                        _ = f.ui(|ui_right| {
+                            _ = ui_right.horizontal(|ui_inner| {
+                                if !ui_inner.on_mobile() {
+                                    let bp = ui_inner.breakpoint();
+                                    _ = Badge::new(if bp.is_mobile() {
+                                        "mobile"
+                                    } else {
+                                        "desktop"
+                                    })
+                                    .variant(BadgeVariant::Outline)
+                                    .show(ui_inner);
+                                    ui_inner.add_space(4.0);
+                                }
+                                let theme_icon = if self.nav.dark {
+                                    LucideIcon::Moon
+                                } else {
+                                    LucideIcon::Sun
+                                };
+                                if ui_inner
+                                    .add(
+                                        Button::icon_only(theme_icon)
+                                            .variant(ButtonVariant::Outline)
+                                            .size(egui_shadcn::ComponentSize::Sm),
+                                    )
+                                    .on_hover_text(if self.nav.dark {
+                                        "Light theme"
+                                    } else {
+                                        "Dark theme"
+                                    })
+                                    .clicked()
+                                {
+                                    self.toggle_theme(ui_inner.ctx());
+                                }
+                                ui_inner.add_space(4.0);
+                                let search = if ui_inner.on_mobile() {
+                                    Button::icon_only(LucideIcon::Search)
+                                        .variant(ButtonVariant::Outline)
+                                        .size(egui_shadcn::ComponentSize::Sm)
+                                } else {
+                                    Button::new("Search")
+                                        .icon(LucideIcon::Search)
+                                        .variant(ButtonVariant::Outline)
+                                        .size(egui_shadcn::ComponentSize::Sm)
+                                        .shortcut_text("Ctrl K")
+                                };
+                                if ui_inner.add(search).clicked() {
+                                    self.dialogs.command_open = true;
+                                    self.command_search.clear();
+                                }
+                            });
+                        });
                     });
-                });
             });
     }
 

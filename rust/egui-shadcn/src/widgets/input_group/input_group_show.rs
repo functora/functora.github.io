@@ -14,7 +14,7 @@ impl super::input_group::InputGroup {
         let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
 
-        let width = ui.available_width().min(300.0);
+        let width = ui.available_width();
         let desired = egui::vec2(width, height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
         let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);

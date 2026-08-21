@@ -23,7 +23,18 @@ impl super::context_menu::ContextMenu {
                 })
                 .fold(0.0_f32, f32::max);
 
-            let menu_width = (max_text_width + 24.0).max(120.0);
+            let mut menu_width = (max_text_width + 24.0).max(120.0);
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+            menu_width = menu_width
+                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
+                .max(120.0);
+            if spacing.is_mobile() {
+                menu_width = menu_width
+                    .max(200.0)
+                    .min(screen_w - 2.0 * spacing.page_padding);
+            }
             ui.set_min_width(menu_width);
             ui.set_max_width(menu_width);
 

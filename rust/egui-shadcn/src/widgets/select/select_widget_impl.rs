@@ -1,5 +1,7 @@
 //! Widget trait implementation for Select and SelectValue.
 
+use crate::responsive::responsive_ext::ResponsiveExt;
+
 impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     for super::select::Select<'_, T>
 {
@@ -11,7 +13,13 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = self.width.unwrap_or(ui.available_width().min(200.0));
+        let width = self.width.unwrap_or_else(|| {
+            if ui.on_mobile() {
+                ui.available_width()
+            } else {
+                ui.available_width().min(200.0)
+            }
+        });
         let desired = egui::vec2(width, height);
 
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
@@ -103,6 +111,32 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         };
 
         let popup_cr = style.corner_radius.round() as u8;
+        let content_w = {
+            let mut max_w: f32 = 144.0;
+            for option in self.options {
+                let w = ui
+                    .painter()
+                    .layout_no_wrap(
+                        option.to_string(),
+                        egui::FontId::proportional(14.0),
+                        egui::Color32::PLACEHOLDER,
+                    )
+                    .size()
+                    .x
+                    + 32.0;
+                max_w = max_w.max(w);
+            }
+            max_w
+        };
+        let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+        let popup_width = if spacing.is_mobile() {
+            width
+                .max(content_w)
+                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
+                .max(200.0)
+        } else {
+            content_w.max(width).min(screen_w * 0.6).max(144.0)
+        };
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)
             .frame(
@@ -120,7 +154,6 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             );
 
         popup.show(|ui: &mut egui::Ui| {
-            let popup_width = width.max(144.0);
             ui.set_min_width(popup_width);
             ui.set_max_width(popup_width);
             let check_icon_size: f32 = 12.0;
@@ -201,7 +234,13 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = self.width.unwrap_or(ui.available_width().min(200.0));
+        let width = self.width.unwrap_or_else(|| {
+            if ui.on_mobile() {
+                ui.available_width()
+            } else {
+                ui.available_width().min(200.0)
+            }
+        });
         let desired = egui::vec2(width, height);
 
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
@@ -286,6 +325,32 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         };
 
         let popup_cr = style.corner_radius.round() as u8;
+        let content_w = {
+            let mut max_w: f32 = 144.0;
+            for option in self.options {
+                let w = ui
+                    .painter()
+                    .layout_no_wrap(
+                        option.to_string(),
+                        egui::FontId::proportional(14.0),
+                        egui::Color32::PLACEHOLDER,
+                    )
+                    .size()
+                    .x
+                    + 32.0;
+                max_w = max_w.max(w);
+            }
+            max_w
+        };
+        let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+        let popup_width = if spacing.is_mobile() {
+            width
+                .max(content_w)
+                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
+                .max(200.0)
+        } else {
+            content_w.max(width).min(screen_w * 0.6).max(144.0)
+        };
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)
             .frame(
@@ -303,7 +368,6 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             );
 
         popup.show(|ui: &mut egui::Ui| {
-            let popup_width = width.max(144.0);
             ui.set_min_width(popup_width);
             ui.set_max_width(popup_width);
             let check_icon_size: f32 = 12.0;

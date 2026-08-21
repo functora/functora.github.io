@@ -256,7 +256,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Input::new(&mut self.input_text)
             .placeholder("Type something...")
-            .desired_width(300.0)
+            .desired_width(ui.available_width())
             .show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!("Value: \"{}\"", self.input_text)).show(ui);
@@ -267,7 +267,7 @@ impl crate::app::ShowcaseApp {
         _ = Input::new(&mut self.input_text)
             .password()
             .placeholder("secret")
-            .desired_width(300.0)
+            .desired_width(ui.available_width())
             .show(ui);
     }
 

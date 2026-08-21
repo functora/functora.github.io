@@ -132,26 +132,63 @@ impl super::sidebar::Sidebar {
             ui.set_max_width(effective_width);
             ui.set_min_height(ui.available_height());
 
-            ui.vertical(|ui| {
-                if self.collapsible {
+            if self.collapsible && is_rail {
+                ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             _ = Self::collapse_button(ui, collapsed);
                         });
                     });
-                    if !is_rail {
-                        ui.add_space(8.0);
+                });
+            } else if self.collapsible {
+                let available = ui.available_rect_before_wrap();
+                let button_size = spacing.touch_height;
+                let button_rect = egui::Rect::from_min_size(
+                    egui::pos2(available.max.x - button_size, available.min.y),
+                    egui::vec2(button_size, button_size),
+                );
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .show(ui, |ui| {
+                        content(ui);
+                    });
+                let response = ui.allocate_rect(button_rect, egui::Sense::click());
+                if ui.is_rect_visible(button_rect) {
+                    let painter = ui.painter();
+                    let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+                    if response.hovered() || response.is_pointer_button_down_on() {
+                        painter.rect_filled(button_rect, cr, theme.muted);
                     }
+                    let icon = if *collapsed {
+                        crate::icons::lucide_icon::LucideIcon::PanelRightOpen
+                    } else {
+                        crate::icons::lucide_icon::LucideIcon::PanelRightClose
+                    };
+                    let icon_rect = egui::Rect::from_center_size(
+                        button_rect.center(),
+                        egui::vec2(button_size * 0.5, button_size * 0.5),
+                    );
+                    crate::icons::paint_icon::paint_icon(
+                        painter,
+                        icon_rect,
+                        &icon,
+                        theme.foreground,
+                    );
                 }
-
-                if !*collapsed || !self.collapsible {
-                    egui::ScrollArea::vertical()
-                        .auto_shrink([false; 2])
-                        .show(ui, |ui| {
-                            content(ui);
-                        });
+                if response.clicked() {
+                    *collapsed = !*collapsed;
+                    ui.ctx().request_repaint();
                 }
-            });
+                if response.hovered() {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+            } else {
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .show(ui, |ui| {
+                        content(ui);
+                    });
+            }
         });
         _ = ui.painter().vline(
             inner.response.rect.min.x + 0.5,
@@ -233,55 +270,43 @@ impl super::sidebar::Sidebar {
                     ui.set_min_size(egui::vec2(panel_width, panel_height));
                     ui.set_max_width(panel_width);
 
-                    ui.vertical(|ui| {
-                        ui.horizontal(|ui| {
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    let size = spacing.touch_height;
-                                    let icon_size = size * 0.5;
-                                    let (rect, response) = ui.allocate_exact_size(
-                                        egui::vec2(size, size),
-                                        egui::Sense::click(),
-                                    );
-                                    if ui.is_rect_visible(rect) {
-                                        let painter = ui.painter();
-                                        let cr =
-                                            egui::CornerRadius::same(theme.radius.round() as u8);
-                                        if response.hovered()
-                                            || response.is_pointer_button_down_on()
-                                        {
-                                            painter.rect_filled(rect, cr, theme.muted);
-                                        }
-                                        let icon_rect = egui::Rect::from_center_size(
-                                            rect.center(),
-                                            egui::vec2(icon_size, icon_size),
-                                        );
-                                        crate::icons::paint_icon::paint_icon(
-                                            painter,
-                                            icon_rect,
-                                            &crate::icons::lucide_icon::LucideIcon::X,
-                                            theme.foreground,
-                                        );
-                                    }
-                                    if response.clicked() {
-                                        *collapsed = true;
-                                        ctx.request_repaint();
-                                    }
-                                    if response.hovered() {
-                                        ctx.set_cursor_icon(egui::CursorIcon::PointingHand);
-                                    }
-                                },
-                            );
+                    let available = ui.available_rect_before_wrap();
+                    let button_size = spacing.touch_height;
+                    let button_rect = egui::Rect::from_min_size(
+                        egui::pos2(available.max.x - button_size, available.min.y),
+                        egui::vec2(button_size, button_size),
+                    );
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false; 2])
+                        .show(ui, |ui| {
+                            content(ui);
                         });
-                        ui.add_space(8.0);
-
-                        egui::ScrollArea::vertical()
-                            .auto_shrink([false; 2])
-                            .show(ui, |ui| {
-                                content(ui);
-                            });
-                    });
+                    let response = ui.allocate_rect(button_rect, egui::Sense::click());
+                    if ui.is_rect_visible(button_rect) {
+                        let painter = ui.painter();
+                        let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+                        if response.hovered() || response.is_pointer_button_down_on() {
+                            painter.rect_filled(button_rect, cr, theme.muted);
+                        }
+                        let icon_size = button_size * 0.5;
+                        let icon_rect = egui::Rect::from_center_size(
+                            button_rect.center(),
+                            egui::vec2(icon_size, icon_size),
+                        );
+                        crate::icons::paint_icon::paint_icon(
+                            painter,
+                            icon_rect,
+                            &crate::icons::lucide_icon::LucideIcon::X,
+                            theme.foreground,
+                        );
+                    }
+                    if response.clicked() {
+                        *collapsed = true;
+                        ctx.request_repaint();
+                    }
+                    if response.hovered() {
+                        ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                    }
                 });
                 _ = ui.painter().vline(
                     inner.response.rect.min.x + 0.5,

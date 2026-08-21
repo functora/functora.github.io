@@ -4,9 +4,9 @@
 use egui_shadcn::theme::shadcn_theme_dark::dark;
 use egui_shadcn::theme::shadcn_theme_light::light;
 use egui_shadcn::{
-    AlertDialog, AlertDialogResult, Badge, BadgeVariant, Button, ButtonVariant, Command, Dialog,
-    Drawer, FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet,
-    Sidebar, ToastState, ToastVariant, Typography, TypographyVariant,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, Dialog, Drawer,
+    FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet, Sidebar,
+    ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
 /// A single showcase entry: one component or feature with a nav icon.
@@ -524,21 +524,22 @@ impl ShowcaseApp {
                         });
                         _ = f.ui(|ui_right| {
                             _ = ui_right.horizontal(|ui_inner| {
-                                if !ui_inner.on_mobile() {
-                                    _ = Badge::new("showcase")
-                                        .variant(BadgeVariant::Secondary)
-                                        .show(ui_inner);
-                                    ui_inner.add_space(4.0);
-                                    let bp = ui_inner.breakpoint();
-                                    _ = Badge::new(if bp.is_mobile() {
-                                        "mobile"
-                                    } else {
-                                        "desktop"
-                                    })
-                                    .variant(BadgeVariant::Outline)
-                                    .show(ui_inner);
-                                    ui_inner.add_space(4.0);
+                                let search = if ui_inner.on_mobile() {
+                                    Button::icon_only(LucideIcon::Search)
+                                        .variant(ButtonVariant::Outline)
+                                        .size(egui_shadcn::ComponentSize::Sm)
+                                } else {
+                                    Button::new("Search")
+                                        .icon(LucideIcon::Search)
+                                        .variant(ButtonVariant::Outline)
+                                        .size(egui_shadcn::ComponentSize::Sm)
+                                        .shortcut_text("Ctrl K")
+                                };
+                                if ui_inner.add(search).clicked() {
+                                    self.dialogs.command_open = true;
+                                    self.command_search.clear();
                                 }
+                                ui_inner.add_space(4.0);
                                 let theme_icon = if self.nav.dark {
                                     LucideIcon::Moon
                                 } else {
@@ -558,22 +559,6 @@ impl ShowcaseApp {
                                     .clicked()
                                 {
                                     self.toggle_theme(ui_inner.ctx());
-                                }
-                                ui_inner.add_space(4.0);
-                                let search = if ui_inner.on_mobile() {
-                                    Button::icon_only(LucideIcon::Search)
-                                        .variant(ButtonVariant::Outline)
-                                        .size(egui_shadcn::ComponentSize::Sm)
-                                } else {
-                                    Button::new("Search")
-                                        .icon(LucideIcon::Search)
-                                        .variant(ButtonVariant::Outline)
-                                        .size(egui_shadcn::ComponentSize::Sm)
-                                        .shortcut_text("Ctrl K")
-                                };
-                                if ui_inner.add(search).clicked() {
-                                    self.dialogs.command_open = true;
-                                    self.command_search.clear();
                                 }
                                 ui_inner.add_space(4.0);
                                 _ = Sidebar::toggle_button(

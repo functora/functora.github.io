@@ -64,8 +64,9 @@ impl super::command::Command {
                     });
 
                 frame.show(ui, |ui| {
-                    ui.set_min_width(480.0);
-                    ui.set_max_width(480.0);
+                    let palette_width = (ui.available_width() - 32.0).clamp(200.0, 480.0);
+                    ui.set_min_width(palette_width);
+                    ui.set_max_width(palette_width);
 
                     // Search input
                     let input_frame = egui::Frame::NONE.inner_margin(egui::Margin {

@@ -287,3 +287,69 @@ fn scroll_area_wheel_scrolls_content() {
         "content did not move after wheel events: before={marker_before:?} after={marker_after:?}"
     );
 }
+
+#[test]
+fn sidebar_item_click_registers() {
+    use egui_shadcn::{Button, ButtonVariant, Sidebar};
+
+    let mut collapsed = false;
+    let mut clicked = false;
+    let mut body = |ui: &mut egui::Ui| {
+        _ = egui::Panel::top("top_bar").show(ui, |ui| {
+            ui.label("top");
+        });
+        _ = egui::Panel::left("sidebar_panel")
+            .default_size(244.0)
+            .show(ui, |ui| {
+                Sidebar::new()
+                    .width(228.0)
+                    .collapsible()
+                    .show(ui, &mut collapsed, |ui| {
+                        if ui
+                            .add(
+                                Button::new("Checkbox")
+                                    .variant(ButtonVariant::Default)
+                                    .full_width(),
+                            )
+                            .clicked()
+                        {
+                            clicked = true;
+                        }
+                    });
+            });
+        _ = egui::CentralPanel::default().show(ui, |ui| {
+            ui.label("central");
+        });
+    };
+
+    let mut app = App::new();
+    app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let button = App::rects(&out)
+        .into_iter()
+        .find(|r| r.width() > 40.0 && r.width() < 200.0 && r.height() < 30.0 && r.top() > 40.0)
+        .expect("nav button rect not found");
+
+    let center = button.center();
+    app.step(vec![Event::PointerMoved(center)], &mut body);
+    app.step(
+        vec![Event::PointerButton {
+            pos: center,
+            button: egui::PointerButton::Primary,
+            pressed: true,
+            modifiers: Default::default(),
+        }],
+        &mut body,
+    );
+    app.step(
+        vec![Event::PointerButton {
+            pos: center,
+            button: egui::PointerButton::Primary,
+            pressed: false,
+            modifiers: Default::default(),
+        }],
+        &mut body,
+    );
+
+    assert!(clicked, "click on sidebar nav item did not register");
+}

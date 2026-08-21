@@ -503,7 +503,8 @@ impl ShowcaseApp {
             });
     }
 
-    fn render_sidebar(&mut self, ui: &mut egui::Ui) {
+    fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
+        let mut close = false;
         for (cat_idx, (cat_name, _cat_icon, items)) in CATEGORIES.iter().enumerate() {
             ui.add_space(6.0);
             _ = Typography::small(*cat_name)
@@ -529,13 +530,12 @@ impl ShowcaseApp {
                     .clicked()
                 {
                     self.selected = flat;
-                    if ui.on_mobile() {
-                        self.nav.sidebar_collapsed = true;
-                    }
+                    close |= ui.on_mobile();
                     ui.ctx().request_repaint();
                 }
             }
         }
+        close
     }
 
     fn render_overlays(&mut self, ctx: &egui::Context) {
@@ -786,14 +786,18 @@ impl eframe::App for ShowcaseApp {
                 )
                 .show_separator_line(false)
                 .show(ui, |ui8| {
+                    let close = std::cell::Cell::new(false);
                     let mut collapsed = self.nav.sidebar_collapsed;
                     _ = Sidebar::new().width(228.0).collapsible().show(
                         ui8,
                         &mut collapsed,
                         |ui9| {
-                            self.render_sidebar(ui9);
+                            close.set(self.render_sidebar(ui9));
                         },
                     );
+                    if close.get() {
+                        collapsed = true;
+                    }
                     self.nav.sidebar_collapsed = collapsed;
                 });
         }
@@ -802,13 +806,17 @@ impl eframe::App for ShowcaseApp {
             .frame(egui::Frame::NONE.fill(theme.background))
             .show(ui, |ui10| {
                 if ui10.on_mobile() {
+                    let close = std::cell::Cell::new(false);
                     let mut collapsed = self.nav.sidebar_collapsed;
                     _ = Sidebar::new()
                         .width((ui10.available_width() * 0.82).max(200.0))
                         .collapsible()
                         .show(ui10, &mut collapsed, |ui11| {
-                            self.render_sidebar(ui11);
+                            close.set(self.render_sidebar(ui11));
                         });
+                    if close.get() {
+                        collapsed = true;
+                    }
                     self.nav.sidebar_collapsed = collapsed;
                 }
                 let spacing = ui10.responsive_spacing();

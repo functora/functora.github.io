@@ -771,12 +771,6 @@ in {
         (import ./wf-recorder.nix {})
         (mkBubble {
           inherit pkgs;
-          name = "stunt-rally";
-          home = "stunt-rally";
-          text = ''${pkgs.stuntrally}/bin/stuntrally3 "$@"'';
-        })
-        (mkBubble {
-          inherit pkgs;
           name = "gomplate";
           text = ''${pkgs.gomplate}/bin/gomplate "$@"'';
         })

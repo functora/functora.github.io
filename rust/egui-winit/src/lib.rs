@@ -2100,10 +2100,6 @@ pub fn create_winit_window_attributes(
     // and trying to do it anyway leads to weird bugs on Wayland, see:
     // https://github.com/emilk/egui/issues/7095#issuecomment-2920545377
     // https://github.com/rust-windowing/winit/issues/4266
-    #[expect(
-        clippy::disallowed_types,
-        reason = "zoom factor is manually accounted for"
-    )]
     #[cfg(not(target_os = "ios"))]
     {
         use winit::dpi::{LogicalPosition, LogicalSize};

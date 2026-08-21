@@ -122,7 +122,11 @@ impl super::sidebar::Sidebar {
                     }
 
                     if !*collapsed || !self.collapsible {
-                        content(ui);
+                        egui::ScrollArea::vertical()
+                            .auto_shrink([false; 2])
+                            .show(ui, |ui| {
+                                content(ui);
+                            });
                     }
                 });
             })
@@ -217,7 +221,11 @@ impl super::sidebar::Sidebar {
                         }
                         ui.add_space(8.0);
 
-                        content(ui);
+                        egui::ScrollArea::vertical()
+                            .auto_shrink([false; 2])
+                            .show(ui, |ui| {
+                                content(ui);
+                            });
                     });
                 });
             });

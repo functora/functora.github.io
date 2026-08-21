@@ -246,7 +246,7 @@
               PYEOF
             '';
           };
-        mkEguiWeb = app:
+        mkEguiWeb = app: icons:
           pkgs.writeShellApplication rec {
             name = "release-web-${app}";
             runtimeInputs = with pkgs; [coreutils gnugrep gnused];
@@ -276,51 +276,51 @@
                 cp assets/manifest.webmanifest "$REL/manifest.webmanifest"
                 sed -i "s/__VSN__/$VSN/g" "$REL/index.html"
                 cp ../functora-dioxus/assets/sw.js "$REL/sw.js"
-                cp ../cryptonote/assets/favicon/android-chrome-192x192.png "$REL/"
-                cp ../cryptonote/assets/favicon/android-chrome-512x512.png "$REL/"
-                cp ../cryptonote/assets/favicon/favicon.ico "$REL/"
+                cp "${icons}/android-chrome-192x192.png" "$REL/"
+                cp "${icons}/android-chrome-512x512.png" "$REL/"
+                cp "${icons}/favicon.ico" "$REL/"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
               )
             '';
           };
-        srEguiWeb = app:
+        srEguiWeb = app: icons:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
             runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
             text = ''
-              cd "${app}"
-              VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-              LIBNAME="$(echo "${app}" | tr - _)"
-                ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
-                ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
-                  --target web \
-                  --no-typescript \
-                  --out-dir /tmp/${app}-web/pkg \
-                  "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
-                cp assets/index.html /tmp/${app}-web/index.html
-                cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
-                sed -i "s/__VSN__/$VSN/g" /tmp/${app}-web/index.html
-                cp ../functora-dioxus/assets/sw.js /tmp/${app}-web/sw.js
-                cp ../cryptonote/assets/favicon/android-chrome-192x192.png /tmp/${app}-web/
-                cp ../cryptonote/assets/favicon/android-chrome-512x512.png /tmp/${app}-web/
-                cp ../cryptonote/assets/favicon/favicon.ico /tmp/${app}-web/
-                fuser -k -TERM 8000/tcp 2>/dev/null || true
-                sleep 0.5
-                exec python3 <<PYEOF
-          import http.server
-          PORT = 8000
-          ROOT = "/tmp/${app}-web"
+                  cd "${app}"
+                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                  LIBNAME="$(echo "${app}" | tr - _)"
+                    ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
+                    ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
+                      --target web \
+                      --no-typescript \
+                      --out-dir /tmp/${app}-web/pkg \
+                      "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                    cp assets/index.html /tmp/${app}-web/index.html
+                    cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
+                    sed -i "s/__VSN__/$VSN/g" /tmp/${app}-web/index.html
+                    cp ../functora-dioxus/assets/sw.js /tmp/${app}-web/sw.js
+                    cp "${icons}/android-chrome-192x192.png" /tmp/${app}-web/
+                    cp "${icons}/android-chrome-512x512.png" /tmp/${app}-web/
+                    cp "${icons}/favicon.ico" /tmp/${app}-web/
+                    fuser -k -TERM 8000/tcp 2>/dev/null || true
+                    sleep 0.5
+                    exec python3 <<PYEOF
+              import http.server
+              PORT = 8000
+              ROOT = "/tmp/${app}-web"
 
-          class Handler(http.server.SimpleHTTPRequestHandler):
-              def __init__(self, *a, **k):
-                  super().__init__(*a, directory=ROOT, **k)
+              class Handler(http.server.SimpleHTTPRequestHandler):
+                  def __init__(self, *a, **k):
+                      super().__init__(*a, directory=ROOT, **k)
 
-          http.server.HTTPServer(("", PORT), Handler).serve_forever()
-          PYEOF
+              http.server.HTTPServer(("", PORT), Handler).serve_forever()
+              PYEOF
             '';
           };
-        mkEguiAab = app: let
+        mkEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
             "armv7-linux-androideabi" = "armeabi-v7a";
@@ -360,7 +360,7 @@
             fi
             for D in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
               mkdir -p "android/app/src/main/res/mipmap-$D"
-              SRC="../cryptonote/assets/favicon/mipmap-$D.png"
+              SRC="${icons}/mipmap-$D.png"
               DST="android/app/src/main/res/mipmap-$D/ic_launcher.png"
               if [ ! -f "$DST" ] || ! cmp -s "$SRC" "$DST"; then
                 cp "$SRC" "$DST"
@@ -372,8 +372,8 @@
             export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
             (cd android && ./gradlew bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
-            cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
-            echo "READY: ${app}/$OUT/cryptonote-v$VSN.aab"
+            cp "$OUT/app-release.aab" "$OUT/${app}-v$VSN.aab"
+            echo "READY: ${app}/$OUT/${app}-v$VSN.aab"
           '';
         in
           pkgs.writeShellApplication {
@@ -388,8 +388,8 @@
                 ${builtins.concatStringsSep "\n" (map copyCmd targets)}
                 ${prepCmd}
                 ${bundleCmd}
-                rm -f "$OUT/cryptonote-v$VSN-"*.aab
-                echo "READY (universal, all ABIs): ${app}/$OUT/cryptonote-v$VSN.aab"
+                rm -f "$OUT/${app}-v$VSN-"*.aab
+                echo "READY (universal, all ABIs): ${app}/$OUT/${app}-v$VSN.aab"
               )
             '';
           };
@@ -516,6 +516,7 @@
             '';
           };
         shell = rec {
+          PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
           ANDROID_SDK_ROOT = ANDROID_HOME;
           NDK_HOME = "${ANDROID_HOME}/ndk-bundle";
@@ -561,6 +562,7 @@
               clean-css-cli
               # linux
               pkg-config
+              xvfb-run
               webkitgtk_4_1
               openssl
               xdotool
@@ -596,9 +598,12 @@
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
               (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
-              (mkEguiWeb "cryptonote-egui")
-              (srEguiWeb "cryptonote-egui")
+              (mkEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (srEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
+              (mkEguiWeb "egui-shadcn-demo" "assets/favicon")
+              (srEguiWeb "egui-shadcn-demo" "assets/favicon")
+              (mkApk "egui-shadcn-demo" "./egui-shadcn-demo/android/app/build/outputs/bundle/release")
               # tools
               gemini-cli
               pkgs.chromium
@@ -617,7 +622,7 @@
                       && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      && if [ "$crate" = "cryptonote" ] || [ "$crate" = "cryptonote-egui" ]; then
+                      && if [ "$crate" = "cryptonote" ] || [ "$crate" = "cryptonote-egui" ] || [ "$crate" = "egui-shadcn-demo" ]; then
                            for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
                              ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
                                && echo "==> $crate [$T]: mobile clippy: All good!"
@@ -663,7 +668,8 @@
               })
             ]
             ++ (mkAab "cryptonote")
-            ++ [(mkEguiAab "cryptonote-egui")];
+            ++ [(mkEguiAab "cryptonote-egui" "../cryptonote/assets/favicon")]
+            ++ [(mkEguiAab "egui-shadcn-demo" "assets/favicon")];
         };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {

@@ -101,6 +101,14 @@ cargo run --example shadcn_demo
 cargo run --example component_dashboard
 ```
 
+The `egui-shadcn-demo` crate in this repository is a full interactive
+showcase of every layout, component, widget, and feature, with light/dark
+theming and responsive mobile behavior:
+
+```sh
+cargo run -p egui-shadcn-demo
+```
+
 Or try the [live web demo](https://pjankiewicz.github.io/egui-shadcn/).
 
 ## License

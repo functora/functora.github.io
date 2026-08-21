@@ -97,75 +97,82 @@ impl super::command::Command {
                     let results_frame = egui::Frame::NONE.inner_margin(egui::Margin::same(8));
 
                     results_frame.show(ui, |ui| {
-                        let mut current_group = String::new();
-                        let mut any_shown = false;
+                        egui::ScrollArea::vertical()
+                            .max_height(320.0)
+                            .auto_shrink([false; 2])
+                            .show(ui, |ui| {
+                                let mut current_group = String::new();
+                                let mut any_shown = false;
 
-                        for (idx, (group, label)) in self.items.iter().enumerate() {
-                            if !query.is_empty()
-                                && !label.to_lowercase().contains(&query)
-                                && !group.to_lowercase().contains(&query)
-                            {
-                                continue;
-                            }
+                                for (idx, (group, label)) in self.items.iter().enumerate() {
+                                    if !query.is_empty()
+                                        && !label.to_lowercase().contains(&query)
+                                        && !group.to_lowercase().contains(&query)
+                                    {
+                                        continue;
+                                    }
 
-                            any_shown = true;
+                                    any_shown = true;
 
-                            if *group != current_group {
-                                if !current_group.is_empty() {
-                                    ui.add_space(4.0);
+                                    if *group != current_group {
+                                        if !current_group.is_empty() {
+                                            ui.add_space(4.0);
+                                        }
+                                        ui.label(
+                                            egui::RichText::new(group)
+                                                .color(theme.muted_foreground)
+                                                .size(12.0)
+                                                .strong(),
+                                        );
+                                        ui.add_space(2.0);
+                                        current_group = group.clone();
+                                    }
+
+                                    let galley = ui.painter().layout_no_wrap(
+                                        label.clone(),
+                                        egui::FontId::proportional(14.0),
+                                        theme.popover_foreground,
+                                    );
+                                    let desired =
+                                        egui::vec2(ui.available_width(), galley.size().y + 8.0);
+                                    let (rect, r) =
+                                        ui.allocate_exact_size(desired, egui::Sense::click());
+
+                                    if r.hovered() {
+                                        ui.painter().rect_filled(
+                                            rect,
+                                            egui::CornerRadius::same(4),
+                                            theme.accent,
+                                        );
+                                    }
+
+                                    if ui.is_rect_visible(rect) {
+                                        ui.painter().galley(
+                                            egui::pos2(
+                                                rect.min.x + 8.0,
+                                                rect.center().y - galley.size().y / 2.0,
+                                            ),
+                                            galley,
+                                            theme.popover_foreground,
+                                        );
+                                    }
+
+                                    if r.clicked() {
+                                        selected = Some(idx);
+                                        *open = false;
+                                        search.clear();
+                                        ctx.request_repaint();
+                                    }
                                 }
-                                ui.label(
-                                    egui::RichText::new(group)
-                                        .color(theme.muted_foreground)
-                                        .size(12.0)
-                                        .strong(),
-                                );
-                                ui.add_space(2.0);
-                                current_group = group.clone();
-                            }
 
-                            let galley = ui.painter().layout_no_wrap(
-                                label.clone(),
-                                egui::FontId::proportional(14.0),
-                                theme.popover_foreground,
-                            );
-                            let desired = egui::vec2(ui.available_width(), galley.size().y + 8.0);
-                            let (rect, r) = ui.allocate_exact_size(desired, egui::Sense::click());
-
-                            if r.hovered() {
-                                ui.painter().rect_filled(
-                                    rect,
-                                    egui::CornerRadius::same(4),
-                                    theme.accent,
-                                );
-                            }
-
-                            if ui.is_rect_visible(rect) {
-                                ui.painter().galley(
-                                    egui::pos2(
-                                        rect.min.x + 8.0,
-                                        rect.center().y - galley.size().y / 2.0,
-                                    ),
-                                    galley,
-                                    theme.popover_foreground,
-                                );
-                            }
-
-                            if r.clicked() {
-                                selected = Some(idx);
-                                *open = false;
-                                search.clear();
-                                ctx.request_repaint();
-                            }
-                        }
-
-                        if !any_shown {
-                            ui.label(
-                                egui::RichText::new("No results found.")
-                                    .color(theme.muted_foreground)
-                                    .size(14.0),
-                            );
-                        }
+                                if !any_shown {
+                                    ui.label(
+                                        egui::RichText::new("No results found.")
+                                            .color(theme.muted_foreground)
+                                            .size(14.0),
+                                    );
+                                }
+                            });
                     });
                 });
             });

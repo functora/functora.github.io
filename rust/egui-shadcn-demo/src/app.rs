@@ -451,11 +451,13 @@ impl ShowcaseApp {
                 _ = ui2.horizontal(|ui3| {
                     _ = Sidebar::toggle_button(ui3, &mut self.nav.sidebar_collapsed);
                     ui3.add_space(4.0);
-                    _ = Typography::h4("egui-shadcn").show(ui3);
-                    ui3.add_space(4.0);
-                    _ = Badge::new("showcase")
-                        .variant(BadgeVariant::Secondary)
-                        .show(ui3);
+                    if !ui3.on_mobile() {
+                        _ = Typography::h4("egui-shadcn").show(ui3);
+                        ui3.add_space(4.0);
+                        _ = Badge::new("showcase")
+                            .variant(BadgeVariant::Secondary)
+                            .show(ui3);
+                    }
                     _ = ui3.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui4| {
                         if !ui4.on_mobile() {
                             let bp = ui4.breakpoint();
@@ -485,16 +487,14 @@ impl ShowcaseApp {
                             self.toggle_theme(ui4.ctx());
                         }
                         ui4.add_space(4.0);
-                        if ui4
-                            .add(
-                                Button::new("Search")
-                                    .icon(LucideIcon::Search)
-                                    .variant(ButtonVariant::Outline)
-                                    .size(egui_shadcn::ComponentSize::Sm)
-                                    .shortcut_text("Ctrl K"),
-                            )
-                            .clicked()
-                        {
+                        let mut search = Button::new("Search")
+                            .icon(LucideIcon::Search)
+                            .variant(ButtonVariant::Outline)
+                            .size(egui_shadcn::ComponentSize::Sm);
+                        if !ui4.on_mobile() {
+                            search = search.shortcut_text("Ctrl K");
+                        }
+                        if ui4.add(search).clicked() {
                             self.dialogs.command_open = true;
                             self.command_search.clear();
                         }

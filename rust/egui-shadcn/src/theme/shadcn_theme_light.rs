@@ -14,14 +14,14 @@ pub fn light() -> super::shadcn_theme::ShadcnTheme {
         secondary: egui::Color32::from_rgb(245, 245, 245),  // oklch(0.97)
         secondary_foreground: egui::Color32::from_rgb(23, 23, 23), // oklch(0.205)
         muted: egui::Color32::from_rgb(245, 245, 245),      // oklch(0.97)
-        muted_foreground: egui::Color32::from_rgb(115, 115, 115), // oklch(0.556)
-        accent: egui::Color32::from_rgb(245, 245, 245),     // oklch(0.97)
+        muted_foreground: egui::Color32::from_rgb(105, 105, 105), // oklch(~0.51) tuned for >=4.5 contrast on muted
+        accent: egui::Color32::from_rgb(232, 232, 232), // oklch(0.93) slightly darker than muted for active contrast
         accent_foreground: egui::Color32::from_rgb(23, 23, 23), // oklch(0.205)
-        destructive: egui::Color32::from_rgb(229, 72, 77),  // oklch(0.577 0.245 27.325)
+        destructive: egui::Color32::from_rgb(229, 72, 77), // oklch(0.577 0.245 27.325)
         destructive_foreground: egui::Color32::from_rgb(255, 255, 255), // white on red
-        border: egui::Color32::from_rgb(229, 229, 229),     // oklch(0.922)
-        input: egui::Color32::from_rgb(229, 229, 229),      // oklch(0.922)
-        ring: egui::Color32::from_rgb(161, 161, 161),       // oklch(0.708)
+        border: egui::Color32::from_rgb(229, 229, 229), // oklch(0.922)
+        input: egui::Color32::from_rgb(229, 229, 229),  // oklch(0.922)
+        ring: egui::Color32::from_rgb(161, 161, 161),   // oklch(0.708)
         radius: 10.0,
     }
 }

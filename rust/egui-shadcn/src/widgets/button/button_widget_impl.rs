@@ -132,10 +132,17 @@ impl egui::Widget for super::button::Button<'_> {
             style.h_padding = ui.spacing().button_padding.x;
         }
 
-        // Selected override: use accent background
         if self.selected {
-            style.bg = theme.accent;
             style.fg = theme.accent_foreground;
+            style.bg = if response.is_pointer_button_down_on() && ui.is_enabled() {
+                crate::paint::interpolate_color::interpolate_color(
+                    theme.accent,
+                    theme.primary,
+                    0.12,
+                )
+            } else {
+                theme.accent
+            };
         }
 
         if ui.is_rect_visible(rect) {
@@ -158,7 +165,6 @@ impl egui::Widget for super::button::Button<'_> {
             }
 
             if is_icon_only {
-                // Icon centered
                 if let Some(ref icon) = self.icon {
                     let icon_rect = egui::Rect::from_center_size(
                         rect.center(),
@@ -167,7 +173,6 @@ impl egui::Widget for super::button::Button<'_> {
                     crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, style.fg);
                 }
             } else if has_icon && has_text {
-                // Icon + text (left-aligned when shortcut present)
                 if has_shortcut {
                     let x = rect.min.x + style.h_padding;
                     if let Some(ref icon) = self.icon {
@@ -181,7 +186,11 @@ impl egui::Widget for super::button::Button<'_> {
                         x + icon_size + icon_gap,
                         rect.center().y - text_galley.size().y / 2.0,
                     );
-                    painter.galley(text_pos, text_galley, style.fg);
+                    painter.galley_with_override_text_color(
+                        text_pos,
+                        text_galley.clone(),
+                        style.fg,
+                    );
                 } else {
                     let total_w = icon_size + icon_gap + text_galley.size().x;
                     let start_x = rect.center().x - total_w / 2.0;
@@ -196,32 +205,49 @@ impl egui::Widget for super::button::Button<'_> {
                         start_x + icon_size + icon_gap,
                         rect.center().y - text_galley.size().y / 2.0,
                     );
-                    painter.galley(text_pos, text_galley, style.fg);
+                    painter.galley_with_override_text_color(
+                        text_pos,
+                        text_galley.clone(),
+                        style.fg,
+                    );
                 }
+            } else if has_shortcut || self.full_width {
+                let text_pos = egui::pos2(
+                    rect.min.x + style.h_padding,
+                    rect.center().y - text_galley.size().y / 2.0,
+                );
+                painter.galley_with_override_text_color(text_pos, text_galley.clone(), style.fg);
             } else {
-                // Text only (left-aligned when shortcut present or full_width)
-                if has_shortcut || self.full_width {
-                    let text_pos = egui::pos2(
-                        rect.min.x + style.h_padding,
-                        rect.center().y - text_galley.size().y / 2.0,
-                    );
-                    painter.galley(text_pos, text_galley, style.fg);
-                } else {
-                    let text_pos = egui::pos2(
-                        rect.center().x - text_galley.size().x / 2.0,
-                        rect.center().y - text_galley.size().y / 2.0,
-                    );
-                    painter.galley(text_pos, text_galley, style.fg);
-                }
+                let text_pos = egui::pos2(
+                    rect.center().x - text_galley.size().x / 2.0,
+                    rect.center().y - text_galley.size().y / 2.0,
+                );
+                painter.galley_with_override_text_color(text_pos, text_galley.clone(), style.fg);
             }
 
-            // Shortcut text (right-aligned, muted)
             if let Some(shortcut_galley) = shortcut_galley {
                 let shortcut_pos = egui::pos2(
                     rect.max.x - style.h_padding - shortcut_galley.size().x,
                     rect.center().y - shortcut_galley.size().y / 2.0,
                 );
-                painter.galley(shortcut_pos, shortcut_galley, theme.muted_foreground);
+                let shortcut_fg = if self.selected
+                    || style.bg == theme.accent
+                    || response.is_pointer_button_down_on()
+                {
+                    theme.accent_foreground
+                } else {
+                    theme.muted_foreground
+                };
+                let shortcut_color = if !ui.is_enabled() {
+                    theme.muted_foreground
+                } else {
+                    shortcut_fg
+                };
+                painter.galley_with_override_text_color(
+                    shortcut_pos,
+                    shortcut_galley,
+                    shortcut_color,
+                );
             }
 
             // Underline for Link variant

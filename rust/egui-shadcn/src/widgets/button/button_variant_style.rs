@@ -52,7 +52,19 @@ pub fn resolve_button_style(
         }
         fg = theme.muted_foreground;
     } else if active {
-        bg = with_alpha(bg, 204); // 80%
+        match variant {
+            crate::tokens::button_variant::ButtonVariant::Ghost
+            | crate::tokens::button_variant::ButtonVariant::Outline => {
+                // A translucent tint of a transparent/background color would
+                // collapse to near-black (or be invisible against the surface),
+                // leaving label text unreadable; use the opaque accent pair.
+                bg = theme.accent;
+                fg = theme.accent_foreground;
+            }
+            _ => {
+                bg = with_alpha(bg, 204); // 80% = /80
+            }
+        }
     } else if hovered {
         match variant {
             crate::tokens::button_variant::ButtonVariant::Ghost

@@ -15,7 +15,7 @@ pub fn dark() -> super::shadcn_theme::ShadcnTheme {
         secondary_foreground: egui::Color32::from_rgb(250, 250, 250), // oklch(0.985)
         muted: egui::Color32::from_rgb(38, 38, 38),      // oklch(0.269)
         muted_foreground: egui::Color32::from_rgb(161, 161, 161), // oklch(0.708)
-        accent: egui::Color32::from_rgb(64, 64, 64),     // oklch(0.371)
+        accent: egui::Color32::from_rgb(72, 72, 72), // oklch(0.40) slightly lighter than muted for active distinction
         accent_foreground: egui::Color32::from_rgb(250, 250, 250), // oklch(0.985)
         destructive: egui::Color32::from_rgb(255, 99, 105), // oklch(0.704 0.191 22.216)
         destructive_foreground: egui::Color32::from_rgb(255, 255, 255),

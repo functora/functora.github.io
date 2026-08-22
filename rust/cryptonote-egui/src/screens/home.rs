@@ -2,7 +2,7 @@ use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::{ActionMode, PasteTarget, PickKind};
-use egui_shadcn::{
+use functora_egui::{
     Button, ButtonVariant, Card, Input, Label, LucideIcon, SelectValue, Textarea, ToggleGroup,
 };
 use functora_core::crypto::CipherType;
@@ -131,7 +131,7 @@ impl CryptonoteApp {
                             .add(
                                 Button::icon_only(LucideIcon::Trash2)
                                     .variant(ButtonVariant::Outline)
-                                    .size(egui_shadcn::ComponentSize::Sm),
+                                    .size(functora_egui::ComponentSize::Sm),
                             )
                             .on_hover_text(self.text(&Msg::RemoveFile))
                             .clicked()

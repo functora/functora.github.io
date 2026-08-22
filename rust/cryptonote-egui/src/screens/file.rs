@@ -1,6 +1,6 @@
 use crate::app::CryptonoteApp;
 use crate::messages::Msg;
-use egui_shadcn::{Button, ButtonVariant, Card, ComponentSize, LucideIcon};
+use functora_egui::{Button, ButtonVariant, Card, ComponentSize, LucideIcon};
 use functora_core::files::format_size;
 
 impl CryptonoteApp {

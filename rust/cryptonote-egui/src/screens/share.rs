@@ -3,7 +3,7 @@ use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::{ActionMode, External};
 use egui::Vec2;
-use egui_shadcn::{Button, ButtonVariant, Card, LucideIcon, Spinner};
+use functora_egui::{Button, ButtonVariant, Card, LucideIcon, Spinner};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {

@@ -1,5 +1,5 @@
 use egui::{CentralPanel, Context, Panel, Pos2, RawInput, Rect, Vec2};
-use egui_shadcn::{
+use functora_egui::{
     theme::shadcn_theme_dark, Button, ButtonVariant, Card, ComponentSize, Input, LucideIcon,
     Progress, SelectValue, ShadcnThemeExt, Textarea, ToggleGroup,
 };

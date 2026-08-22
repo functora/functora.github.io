@@ -2,7 +2,7 @@ use crate::app::CryptonoteApp;
 use crate::encoding::NoteData;
 use crate::messages::Msg;
 use crate::state::{External, PasteTarget};
-use egui_shadcn::{Button, ButtonVariant, Card, Input, Label, LucideIcon};
+use functora_egui::{Button, ButtonVariant, Card, Input, Label, LucideIcon};
 use functora_core::messages::Msg as BaseMsg;
 
 impl CryptonoteApp {

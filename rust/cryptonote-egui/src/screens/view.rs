@@ -2,7 +2,7 @@ use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::ActionMode;
-use egui_shadcn::{Button, ButtonVariant, Card, LucideIcon};
+use functora_egui::{Button, ButtonVariant, Card, LucideIcon};
 
 impl CryptonoteApp {
     pub(crate) fn render_view(&mut self, ui: &mut egui::Ui) {

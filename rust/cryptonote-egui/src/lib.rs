@@ -39,13 +39,13 @@ pub(crate) mod android {
 
     #[export_name = "android_main"]
     pub fn android_main(app: AndroidApp) {
-        if let Some(url) = egui_shadcn::android::get_data_string(&app) {
+        if let Some(url) = functora_egui::android::get_data_string(&app) {
             store_url(url);
         }
-        egui_shadcn::android::run(app, "Cryptonote", |cc| {
+        functora_egui::android::run(app, "Cryptonote", |cc| {
             Ok(Box::new(CryptonoteApp::new(cc)) as Box<dyn eframe::App>)
         });
     }
 
-    pub use egui_shadcn::android::poll_ime;
+    pub use functora_egui::android::poll_ime;
 }

@@ -9,7 +9,7 @@ use crate::screens::Screen;
 use crate::state::{ActionMode, External, ExternalNote, PasteTarget, PickKind};
 use crate::task::{build_external, decrypt_external, extract_archive, Event};
 use crate::theme::Theme;
-use egui_shadcn::{
+use functora_egui::{
     Button, ButtonVariant, ComponentSize, DropdownMenu, Label, LucideIcon, MenuItem, Progress,
     Separator, Sheet, SheetSide, ToastState, ToastVariant, ToggleGroup,
 };
@@ -85,7 +85,7 @@ impl CryptonoteApp {
             Language::Eng
         };
         let theme = Theme::Dark;
-        egui_shadcn::setup_fonts(&cc.egui_ctx);
+        functora_egui::setup_fonts(&cc.egui_ctx);
         theme.apply(&cc.egui_ctx);
         let (tx, rx) = channel();
         let (screen, note, external) = Self::initial_route();
@@ -849,7 +849,7 @@ impl CryptonoteApp {
         ui.add_space(24.0);
         _ = ui.add(Separator::horizontal());
         ui.add_space(8.0);
-        let muted_color = egui_shadcn::ShadcnThemeExt::shadcn_theme(ui.ctx()).muted_foreground;
+        let muted_color = functora_egui::ShadcnThemeExt::shadcn_theme(ui.ctx()).muted_foreground;
         _ = ui.add(
             egui::Label::new(
                 egui::RichText::new(format!(

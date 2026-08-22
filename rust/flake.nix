@@ -246,7 +246,7 @@
               PYEOF
             '';
           };
-        mkEguiWeb = app: icons:
+        mkFunctoraEguiWeb = app: icons:
           pkgs.writeShellApplication rec {
             name = "release-web-${app}";
             runtimeInputs = with pkgs; [coreutils gnugrep gnused];
@@ -284,7 +284,7 @@
               )
             '';
           };
-        srEguiWeb = app: icons:
+        srFunctoraEguiWeb = app: icons:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
             runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
@@ -319,7 +319,7 @@
               PYEOF
             '';
           };
-        mkEguiAab = app: icons: let
+        mkFunctoraEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
             "armv7-linux-androideabi" = "armeabi-v7a";
@@ -593,12 +593,12 @@
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
               (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
-              (mkEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
-              (srEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
-              (mkEguiWeb "egui-shadcn-demo" "assets/favicon")
-              (srEguiWeb "egui-shadcn-demo" "assets/favicon")
-              (mkApk "egui-shadcn-demo" "./egui-shadcn-demo/android/app/build/outputs/bundle/release")
+              (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
+              (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
+              (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
               # tools
               gemini-cli
               pkgs.chromium
@@ -617,7 +617,7 @@
                       && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      && if [ "$crate" = "cryptonote" ] || [ "$crate" = "cryptonote-egui" ] || [ "$crate" = "egui-shadcn-demo" ]; then
+                      && if [ "$crate" = "cryptonote" ] || [ "$crate" = "cryptonote-egui" ] || [ "$crate" = "functora-egui-demo" ]; then
                            for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
                              ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
                                && echo "==> $crate [$T]: mobile clippy: All good!"
@@ -663,8 +663,8 @@
               })
             ]
             ++ (mkAab "cryptonote")
-            ++ [(mkEguiAab "cryptonote-egui" "../cryptonote/assets/favicon")]
-            ++ [(mkEguiAab "egui-shadcn-demo" "assets/favicon")];
+            ++ [(mkFunctoraEguiAab "cryptonote-egui" "../cryptonote/assets/favicon")]
+            ++ [(mkFunctoraEguiAab "functora-egui-demo" "assets/favicon")];
         };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {

@@ -838,8 +838,8 @@ dependencies = [
  "askama",
  "eframe",
  "egui",
- "egui-shadcn",
  "functora-core",
+ "functora-egui",
  "functora-tagged",
  "futures-executor",
  "image",
@@ -1087,24 +1087,6 @@ dependencies = [
  "smallvec",
  "unicode-segmentation",
  "web-sys",
-]
-
-[[package]]
-name = "egui-shadcn"
-version = "0.1.0"
-dependencies = [
- "android-activity",
- "askama",
- "eframe",
- "egui",
- "egui_flex",
- "jni 0.21.1",
- "log",
- "toml",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "winit",
 ]
 
 [[package]]
@@ -1427,6 +1409,24 @@ dependencies = [
  "web-sys",
  "zeroize",
  "zip",
+]
+
+[[package]]
+name = "functora-egui"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "askama",
+ "eframe",
+ "egui",
+ "egui_flex",
+ "jni 0.21.1",
+ "log",
+ "toml",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "winit",
 ]
 
 [[package]]

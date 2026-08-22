@@ -41,10 +41,10 @@
         "homepage": null,
         "owner": "nixpak",
         "repo": "nixpak",
-        "rev": "4276954ad4f877d79801fd8952af38a3370bcb65",
-        "sha256": "1y9mv2hyr4vqlq6wcf348p1iayq8dmdmsxid8rb1w0yh62gwz80r",
+        "rev": "333bd8c7ca0c014e61be1933b3c131c9dfa20218",
+        "sha256": "07kilg6ips040zd5nsnv615b59d86l9akksprfmpbdq63sqa47ks",
         "type": "tarball",
-        "url": "https://github.com/nixpak/nixpak/archive/4276954ad4f877d79801fd8952af38a3370bcb65.tar.gz",
+        "url": "https://github.com/nixpak/nixpak/archive/333bd8c7ca0c014e61be1933b3c131c9dfa20218.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {

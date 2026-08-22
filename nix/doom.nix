@@ -189,17 +189,6 @@
         mod = ../bak/doom/Phlegethon.wad;
       }
       // mkDoom {
-        tag = "op13";
-        mod = ../bak/doom/OP13.wad;
-        total = bd;
-      }
-      // mkDoom {
-        tag = "whatlies";
-        mod = ../bak/doom/whatlies.wad;
-        total = bd;
-        relite = "";
-      }
-      // mkDoom {
         tag = "dbp37-augzen";
         mod = ../bak/doom/DBP37_AUGZEN.wad;
         relite = "";
@@ -221,6 +210,7 @@
       // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
+        total = bd;
         relite = "";
       }
       // mkDoom {

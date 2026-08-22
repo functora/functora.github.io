@@ -20,20 +20,12 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-egui-shadcn = { path = "../egui-shadcn" }
+egui-shadcn = { path = "../egui-shadcn", features = ["web"] }
 log = "0.4"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.127"
-wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = [
-    "Document",
-    "Element",
-    "HtmlCanvasElement",
-    "Location",
-    "VisualViewport",
-    "Window",
-] }
+web-sys = { version = "0.3", features = ["Location", "Window"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-activity = { version = "0.6.1", features = ["game-activity"] }
@@ -41,6 +33,14 @@ jni = "0.21.1"
 winit = { version = "0.30.13", default-features = false, features = [
     "android-game-activity",
 ] }
+
+[package.metadata.egui-web]
+title = "egui-shadcn Showcase"
+short_name = "egui-shadcn"
+theme_color = "#0a0a0a"
+
+[build-dependencies]
+toml = "0.8"
 
 [patch.crates-io]
 egui-winit = { path = "../egui-winit" }

@@ -6,6 +6,8 @@ pub mod paint;
 pub mod responsive;
 pub mod theme;
 pub mod tokens;
+#[cfg(feature = "web")]
+pub mod web;
 pub mod widgets;
 
 pub use responsive::breakpoint::Breakpoint;

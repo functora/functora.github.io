@@ -1,10 +1,10 @@
 {
-  "name": "egui-shadcn Showcase",
-  "short_name": "egui-shadcn",
+  "name": "{{ title }}",
+  "short_name": "{{ short_name }}",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "{{ theme_color }}",
+  "theme_color": "{{ theme_color }}",
   "icons": [
     {
       "src": "android-chrome-192x192.png",

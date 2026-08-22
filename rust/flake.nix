@@ -274,7 +274,7 @@
                 mv "$REL/pkg/''${LIBNAME}_bg.opt.wasm" "$REL/pkg/''${LIBNAME}_bg.wasm"
                 cp assets/index.html "$REL/index.html"
                 cp assets/manifest.webmanifest "$REL/manifest.webmanifest"
-                sed -i "s/__VSN__/$VSN/g" "$REL/index.html"
+                cp assets/egui.js "$REL/egui.js"
                 cp ../functora-dioxus/assets/sw.js "$REL/sw.js"
                 cp "${icons}/android-chrome-192x192.png" "$REL/"
                 cp "${icons}/android-chrome-512x512.png" "$REL/"
@@ -290,7 +290,6 @@
             runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
             text = ''
                   cd "${app}"
-                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                   LIBNAME="$(echo "${app}" | tr - _)"
                     ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
                     ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
@@ -300,7 +299,7 @@
                       "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
                     cp assets/index.html /tmp/${app}-web/index.html
                     cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
-                    sed -i "s/__VSN__/$VSN/g" /tmp/${app}-web/index.html
+                    cp assets/egui.js /tmp/${app}-web/egui.js
                     cp ../functora-dioxus/assets/sw.js /tmp/${app}-web/sw.js
                     cp "${icons}/android-chrome-192x192.png" /tmp/${app}-web/
                     cp "${icons}/android-chrome-512x512.png" /tmp/${app}-web/

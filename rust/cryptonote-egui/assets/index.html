@@ -2,23 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#17161d" />
     <title>Cryptonote</title>
     <link rel="icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
+      html {
+        touch-action: manipulation;
+      }
       html, body {
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
         height: 100%;
+        width: 100%;
         background: #17161d;
         overflow: hidden;
+        overscroll-behavior: none;
       }
       #the_canvas_id {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         display: block;
+        outline: none;
         touch-action: none;
       }
     </style>
@@ -26,11 +38,11 @@
   <body>
     <canvas id="the_canvas_id"></canvas>
     <script type="module">
+      import { focusCanvas, registerServiceWorker } from './egui.js';
       import init from './pkg/cryptonote_egui.js';
       await init();
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?cache=__VSN__');
-      }
+      focusCanvas();
+      registerServiceWorker('__VSN__');
     </script>
   </body>
 </html>

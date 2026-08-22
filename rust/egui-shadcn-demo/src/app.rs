@@ -336,40 +336,14 @@ impl ShowcaseApp {
         egui_shadcn::setup_fonts(&cc.egui_ctx);
         let theme = dark();
         ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
-        let startup_width: f32 = {
+        let startup_width = {
             #[cfg(target_arch = "wasm32")]
             {
-                #[allow(clippy::cast_possible_truncation)]
-                {
-                    web_sys::window()
-                        .and_then(|win| {
-                            win.visual_viewport()
-                                .map(|vp| vp.width())
-                                .or_else(|| win.inner_width().ok().and_then(|v| v.as_f64()))
-                        })
-                        .map_or_else(
-                            || cc.egui_ctx.input(|input| input.viewport_rect().width()),
-                            |value| value as f32,
-                        )
-                }
+                egui_shadcn::web::startup::startup_width(cc)
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
-                {
-                    cc.winit_window().map_or_else(
-                        || cc.egui_ctx.input(|input| input.viewport_rect().width()),
-                        |win| {
-                            let scale = win.scale_factor() as f32;
-                            let width = win.inner_size().width as f32;
-                            if scale > 0.0 {
-                                width / scale
-                            } else {
-                                width
-                            }
-                        },
-                    )
-                }
+                egui_shadcn::web::startup::startup_width(&cc.egui_ctx)
             }
         };
         let initial_collapsed = if startup_width == 0.0 {

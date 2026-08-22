@@ -17,7 +17,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-egui-shadcn = { path = "../egui-shadcn" }
+egui-shadcn = { path = "../egui-shadcn", features = ["web"] }
 functora-core = { path = "../functora-core", features = ["qr"] }
 functora-tagged = { path = "../functora-tagged" }
 log = "0.4"
@@ -53,6 +53,7 @@ web-sys = { version = "0.3", features = [
     "Navigator",
     "ShareData",
     "Url",
+    "VisualViewport",
     "Window",
 ] }
 
@@ -62,6 +63,14 @@ jni = "0.21.1"
 winit = { version = "0.30.13", default-features = false, features = [
     "android-game-activity",
 ] }
+
+[package.metadata.egui-web]
+title = "Cryptonote"
+short_name = "Cryptonote"
+theme_color = "#17161d"
+
+[build-dependencies]
+toml = "0.8"
 
 [dev-dependencies]
 functora-core = { path = "../functora-core", features = ["qr"] }

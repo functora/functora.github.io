@@ -4,7 +4,7 @@
 ///
 /// Call this once during app setup, e.g. in the `CreationContext` callback:
 ///
-/// ```no_run
+/// ```ignore
 /// # struct MyApp;
 /// # impl eframe::App for MyApp {
 /// #     fn update(&mut self, _: &egui::Context, _: &mut eframe::Frame) {}

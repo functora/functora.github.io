@@ -1,12 +1,14 @@
 //! egui-shadcn: shadcn/ui-inspired widgets for egui.
 
+#[cfg(any(feature = "android", feature = "build"))]
+pub mod android;
 pub mod icons;
 pub mod layout;
 pub mod paint;
 pub mod responsive;
 pub mod theme;
 pub mod tokens;
-#[cfg(feature = "web")]
+#[cfg(any(feature = "web", feature = "build"))]
 pub mod web;
 pub mod widgets;
 

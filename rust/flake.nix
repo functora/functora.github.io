@@ -352,11 +352,6 @@
           pruneCmd = "find android/app/src/main/jniLibs -mindepth 1 -maxdepth 1 -type d ${builtins.concatStringsSep " " (map (t: "! -name \"${abis.${t}}\"") targets)} -exec rm -rf {} + 2>/dev/null || true";
           prepCmd = ''
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-            VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
-            GRADLE="./android/app/build.gradle"
-            if ! grep -q "versionCode = $VC" "$GRADLE" || ! grep -q "versionName = \"$VSN\"" "$GRADLE"; then
-              sed -i "s/versionCode = [0-9]*/versionCode = $VC/; s/versionName = \"[^\"]*\"/versionName = \"$VSN\"/" "$GRADLE"
-            fi
             for D in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
               mkdir -p "android/app/src/main/res/mipmap-$D"
               SRC="${icons}/mipmap-$D.png"
@@ -369,7 +364,7 @@
           bundleCmd = ''
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
-            (cd android && ./gradlew bundleRelease)
+            (cd android && gradle bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/${app}-v$VSN.aab"
             echo "READY: ${app}/$OUT/${app}-v$VSN.aab"
@@ -377,7 +372,7 @@
         in
           pkgs.writeShellApplication {
             name = "release-aab-${app}";
-            runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk findutils];
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk findutils gradle];
             text = ''
               (
                 cd "${app}"
@@ -584,6 +579,7 @@
               android-sdk
               glibc
               jdk
+              gradle
               android-icons
               android-keygen
               release-assetlinks-json

@@ -78,7 +78,7 @@ pub fn derive_title(manifest_path: &str) -> String {
                         .get("package")
                         .and_then(|pkg| pkg.get("name"))
                         .and_then(|name| name.as_str())
-                        .map(|name| capitalize_words(name))
+                        .map(capitalize_words)
                 })
                 .unwrap_or_else(|| "App".to_owned())
         })
@@ -104,7 +104,9 @@ pub fn derive_theme_color(manifest_path: &str) -> String {
 #[must_use]
 pub fn load_config(manifest_path: &str) -> WebConfig {
     let content = std::fs::read_to_string(manifest_path).unwrap_or_default();
-    let value: toml::Value = content.parse().unwrap_or(toml::Value::Table(toml::map::Map::new()));
+    let value: toml::Value = content
+        .parse()
+        .unwrap_or(toml::Value::Table(toml::map::Map::new()));
     let package = value.get("package");
     let vsn = package
         .and_then(|pkg| pkg.get("version"))

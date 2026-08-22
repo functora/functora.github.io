@@ -4,17 +4,17 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="egui-shadcn Showcase"
+        android:label="{{ label }}"
         android:theme="@style/Theme.GameActivity">
         <activity
-            android:name="com.functora.egui_shadcn_demo.MainActivity"
+            android:name="{{ activity_fqn }}"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|screenLayout|uiMode|smallestScreenSize|density|fontScale|navigation|locale"
             android:exported="true"
             android:launchMode="singleInstance"
             android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.app.lib_name"
-                android:value="egui_shadcn_demo" />
+                android:value="{{ lib_name }}" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -23,9 +23,9 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/egui-shadcn-demo/" />
+                <data android:scheme="https" android:host="{{ host }}" android:pathPrefix="{{ path_prefix }}" />
             </intent-filter>
-        </activity>
+{{ extra_intent_filters }}        </activity>
     </application>
 
 </manifest>

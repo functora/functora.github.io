@@ -17,7 +17,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-egui-shadcn = { path = "../egui-shadcn", features = ["web"] }
+egui-shadcn = { path = "../egui-shadcn", features = ["web", "android"] }
 functora-core = { path = "../functora-core", features = ["qr"] }
 functora-tagged = { path = "../functora-tagged" }
 log = "0.4"
@@ -69,7 +69,21 @@ title = "Cryptonote"
 short_name = "Cryptonote"
 theme_color = "#17161d"
 
+[package.metadata.egui-android]
+host = "functora.github.io"
+path_prefix = "/apps/cryptonote-egui/"
+extra_intent_filters = """<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <data android:scheme="content" />
+    <data android:scheme="file" />
+    <data android:mimeType="*/*" />
+    <data android:pathPattern=".*\\.cryptonote" />
+</intent-filter>"""
+
 [build-dependencies]
+askama = "0.12"
+egui-shadcn = { path = "../egui-shadcn", features = ["build"] }
 toml = "0.8"
 
 [dev-dependencies]

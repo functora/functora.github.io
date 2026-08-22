@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace = "com.functora.cryptonote_egui"
+    namespace = "{{ namespace }}"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.functora.cryptonote_egui"
+        applicationId = "{{ application_id }}"
         minSdk = 24
         targetSdk = 35
-        versionCode = 101
-        versionName = "0.1.1"
+        versionCode = {{ version_code }}
+        versionName = "{{ version_name }}"
     }
 
     buildTypes {

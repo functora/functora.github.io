@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "egui-shadcn-demo-android"
+rootProject.name = "{{ app_name }}-android"
 include(":app")

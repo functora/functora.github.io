@@ -55,10 +55,12 @@ impl super::alert_dialog::AlertDialog {
 
         // Frame = content + 2*24 inner margin + 2*1 stroke, so the content
         // width must leave room for the frame to stay inside the screen.
+        // Clamp on desktop as well so narrow viewports never overflow.
+        let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
         let panel_width = if on_mobile {
-            (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0)
+            max_panel_width
         } else {
-            420.0
+            420.0_f32.clamp(0.0, max_panel_width)
         };
 
         // Dialog panel

@@ -14,6 +14,7 @@ pub fn start() -> Result<(), JsValue> {
         .ok_or_else(|| JsValue::from_str("canvas not found"))?;
     let web_options = eframe::WebOptions::default();
     wasm_bindgen_futures::spawn_local(async move {
+        let canvas_clone = canvas.clone();
         let result = eframe::WebRunner::new()
             .start(
                 canvas,
@@ -23,6 +24,8 @@ pub fn start() -> Result<(), JsValue> {
             .await;
         if let Err(error) = result {
             web_sys::console::error_1(&error);
+        } else {
+            let _ = canvas_clone.focus();
         }
     });
     Ok(())

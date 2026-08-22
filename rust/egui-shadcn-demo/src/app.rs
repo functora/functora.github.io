@@ -342,8 +342,11 @@ impl ShowcaseApp {
                 #[allow(clippy::cast_possible_truncation)]
                 {
                     web_sys::window()
-                        .and_then(|win| win.inner_width().ok())
-                        .and_then(|value| value.as_f64())
+                        .and_then(|win| {
+                            win.visual_viewport()
+                                .map(|vp| vp.width())
+                                .or_else(|| win.inner_width().ok().and_then(|v| v.as_f64()))
+                        })
                         .map_or_else(
                             || cc.egui_ctx.input(|input| input.viewport_rect().width()),
                             |value| value as f32,

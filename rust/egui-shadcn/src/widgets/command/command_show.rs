@@ -109,7 +109,7 @@ impl super::command::Command {
                     content_w += 48.0;
 
                     let screen_avail_w = if is_mobile {
-                        (screen_w - 2.0 * spacing.page_padding - 16.0).max(280.0)
+                        (screen_w - 2.0 * spacing.page_padding - 16.0).clamp(200.0, 640.0)
                     } else {
                         (screen_w * 0.5).clamp(320.0, 640.0)
                     };

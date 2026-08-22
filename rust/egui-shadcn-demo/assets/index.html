@@ -2,23 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#0a0a0a" />
     <title>egui-shadcn Showcase</title>
     <link rel="icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
+      html {
+        touch-action: manipulation;
+      }
       html, body {
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
         height: 100%;
+        width: 100%;
         background: #0a0a0a;
         overflow: hidden;
+        overscroll-behavior: none;
       }
       #the_canvas_id {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         display: block;
+        outline: none;
         touch-action: none;
       }
     </style>
@@ -27,7 +39,47 @@
     <canvas id="the_canvas_id"></canvas>
     <script type="module">
       import init from './pkg/egui_shadcn_demo.js';
+      (() => {
+        const OriginalResizeObserver = window.ResizeObserver;
+        if (OriginalResizeObserver) {
+          const first = (v) => (Array.isArray(v) ? v[0] : v);
+          window.ResizeObserver = class extends OriginalResizeObserver {
+            constructor(callback) {
+              super((entries, observer) => {
+                for (const entry of entries) {
+                  if (entry.devicePixelContentBoxSize && entry.contentBoxSize) {
+                    const dpr = window.devicePixelRatio || 1;
+                    const content = first(entry.contentBoxSize);
+                    const actual = first(entry.devicePixelContentBoxSize);
+                    if (content && actual && 'inlineSize' in content) {
+                      const expectedW = content.inlineSize * dpr;
+                      const expectedH = content.blockSize * dpr;
+                      if (
+                        Math.abs(actual.inlineSize - expectedW) > 1 ||
+                        Math.abs(actual.blockSize - expectedH) > 1
+                      ) {
+                        try {
+                          Object.defineProperty(actual, 'inlineSize', {
+                            value: expectedW,
+                            configurable: true,
+                          });
+                          Object.defineProperty(actual, 'blockSize', {
+                            value: expectedH,
+                            configurable: true,
+                          });
+                        } catch {}
+                      }
+                    }
+                  }
+                }
+                callback(entries, observer);
+              });
+            }
+          };
+        }
+      })();
       await init();
+      document.getElementById('the_canvas_id').focus();
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js?cache=__VSN__');
       }

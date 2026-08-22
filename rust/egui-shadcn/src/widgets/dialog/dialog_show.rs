@@ -58,10 +58,13 @@ impl super::dialog::Dialog {
 
         // Frame = content + 2*24 inner margin + 2*1 stroke, so the content
         // width must leave room for the frame to stay inside the screen.
+        // Clamp on desktop as well so narrow viewports (e.g. mobile
+        // emulation reporting desktop due to DPI) never overflow.
+        let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
         let panel_width = if on_mobile {
-            (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0)
+            max_panel_width
         } else {
-            self.width
+            self.width.clamp(0.0, max_panel_width)
         };
 
         egui::Area::new(egui::Id::new("dialog_panel"))

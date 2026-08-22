@@ -191,7 +191,11 @@ impl Flex {
         ui: &mut egui::Ui,
         f: impl FnOnce(&mut super::flex_instance::FlexInst) -> R,
     ) -> egui::InnerResponse<R> {
-        let flex = if self.wrap_on_mobile && ui.on_mobile() {
+        let wrap = self.wrap_on_mobile
+            && (ui.on_mobile()
+                || ui.available_width()
+                    < crate::responsive::breakpoint::Breakpoint::MOBILE_MAX_WIDTH);
+        let flex = if wrap {
             self.flex.wrap(true)
         } else {
             self.flex

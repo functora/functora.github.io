@@ -61,7 +61,9 @@ impl super::drawer::Drawer {
                     .stroke(egui::Stroke::new(1.0, theme.border));
 
                 frame.show(ui, |ui| {
-                    ui.set_min_width(screen.width().min(500.0));
+                    let clamped = (screen.width() - 48.0).clamp(0.0, 500.0);
+                    ui.set_min_width(clamped);
+                    ui.set_max_width(clamped);
 
                     // Handle bar
                     let handle_width: f32 = 48.0;

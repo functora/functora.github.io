@@ -14,7 +14,7 @@ pub(crate) mod android {
 
     use crate::app::ShowcaseApp;
 
-    #[export_name = "android_main"]
+    #[unsafe(export_name = "android_main")]
     pub fn android_main(app: AndroidApp) {
         functora_egui::android::run(app, "functora-egui Showcase", |cc| {
             Ok(Box::new(ShowcaseApp::new(cc)) as Box<dyn eframe::App>)

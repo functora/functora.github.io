@@ -2,12 +2,12 @@ use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::screens::Screen;
 use crate::state::{ActionMode, PasteTarget, PickKind};
-use functora_egui::{
-    Button, ButtonVariant, Card, Input, Label, LucideIcon, SelectValue, Textarea, ToggleGroup,
-};
 use functora_core::crypto::CipherType;
 use functora_core::files::format_size;
 use functora_core::messages::Msg as BaseMsg;
+use functora_egui::{
+    Button, ButtonVariant, Card, Input, Label, LucideIcon, SelectValue, Textarea, ToggleGroup,
+};
 use std::fmt;
 
 #[derive(Clone, PartialEq)]

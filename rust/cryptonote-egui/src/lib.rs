@@ -37,7 +37,7 @@ pub(crate) mod android {
     use crate::app::CryptonoteApp;
     use crate::deep_link::store_url;
 
-    #[export_name = "android_main"]
+    #[unsafe(export_name = "android_main")]
     pub fn android_main(app: AndroidApp) {
         if let Some(url) = functora_egui::android::get_data_string(&app) {
             store_url(url);

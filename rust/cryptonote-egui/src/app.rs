@@ -9,15 +9,15 @@ use crate::screens::Screen;
 use crate::state::{ActionMode, External, ExternalNote, PasteTarget, PickKind};
 use crate::task::{build_external, decrypt_external, extract_archive, Event};
 use crate::theme::Theme;
-use functora_egui::{
-    Button, ButtonVariant, ComponentSize, DropdownMenu, Label, LucideIcon, MenuItem, Progress,
-    Separator, Sheet, SheetSide, ToastState, ToastVariant, ToggleGroup,
-};
 use functora_core::encoding::extract_query_param;
 use functora_core::files::Attachment;
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::AppAttrs;
 use functora_core::FUNCTORA_CORE_YEAR;
+use functora_egui::{
+    Button, ButtonVariant, ComponentSize, DropdownMenu, Label, LucideIcon, MenuItem, Progress,
+    Separator, Sheet, SheetSide, ToastState, ToastVariant, ToggleGroup,
+};
 use functora_tagged::InfallibleInto;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;

@@ -1,9 +1,9 @@
 use crate::app::{CryptonoteApp, APP_ATTRS};
 use crate::messages::Msg;
 use crate::screens::Screen;
-use functora_egui::{Button, ButtonVariant, Card, ComponentSize};
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::donate_blocks;
+use functora_egui::{Button, ButtonVariant, Card, ComponentSize};
 
 impl CryptonoteApp {
     pub(crate) fn render_about(&mut self, ui: &mut egui::Ui) {

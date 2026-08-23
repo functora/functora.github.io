@@ -8,6 +8,8 @@ pub mod startup;
 pub mod templates;
 
 #[cfg(any(feature = "web", feature = "build"))]
-pub use config::{WebConfig, derive_pkg_js, derive_theme_color, derive_title, load_config};
+pub use crate::config::shared::derive_pkg_js;
+#[cfg(any(feature = "web", feature = "build"))]
+pub use config::{WebConfig, derive_theme_color, derive_title, load_config};
 #[cfg(feature = "web")]
 pub use startup::startup_width;

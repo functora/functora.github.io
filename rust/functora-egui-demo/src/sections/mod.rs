@@ -8,4 +8,5 @@ mod inputs;
 mod layout;
 mod overlay;
 mod overview;
+mod platform;
 mod responsive;

@@ -25,8 +25,8 @@ where
             .await;
         if let Err(error) = result {
             web_sys::console::error_1(&error);
-        } else {
-            let _ = canvas_clone.focus();
+        } else if let Err(e) = canvas_clone.focus() {
+            tracing::warn!("canvas focus failed: {e:?}");
         }
     });
     Ok(())

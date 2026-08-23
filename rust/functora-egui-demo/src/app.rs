@@ -9,6 +9,127 @@ use functora_egui::{
     ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
+pub type PickResult = Result<Vec<(String, Vec<u8>)>, String>;
+pub type PickReceiver = std::sync::Arc<std::sync::Mutex<Option<PickResult>>>;
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum DemoRoute {
+    #[default]
+    Home,
+    Profile,
+    Settings,
+    About,
+}
+
+impl std::fmt::Display for DemoRoute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Home => write!(f, "Home"),
+            Self::Profile => write!(f, "Profile"),
+            Self::Settings => write!(f, "Settings"),
+            Self::About => write!(f, "About"),
+        }
+    }
+}
+
+impl std::str::FromStr for DemoRoute {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "/" | "/home" | "home" => Ok(Self::Home),
+            "/profile" => Ok(Self::Profile),
+            "/settings" => Ok(Self::Settings),
+            "/about" => Ok(Self::About),
+            _ => Err("unknown route".into()),
+        }
+    }
+}
+
+pub struct PlatformState {
+    pub storage_key: String,
+    pub storage_value: String,
+    pub storage_status: String,
+    pub storage_persistent_text: String,
+    pub clipboard_write: String,
+    pub clipboard_read: String,
+    pub clipboard_status: String,
+    pub clipboard_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
+    pub clipboard_write_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
+    pub share_title: String,
+    pub share_text: String,
+    pub share_url: String,
+    pub share_status: String,
+    pub share_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
+    pub deep_link_input: String,
+    pub deep_link_output: String,
+    pub deep_link_current: String,
+    pub picked: Vec<(String, Vec<u8>)>,
+    pub pick_status: String,
+    pub pick_rx: Option<PickReceiver>,
+    pub download_name: String,
+    pub download_text: String,
+    pub download_status: String,
+    pub download_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
+    pub print_status: String,
+    pub print_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
+    pub nav: functora_egui::nav::NavStack<DemoRoute>,
+    pub nav_input: String,
+    pub progress_job: Option<functora_egui::progress::Job<functora_egui::progress::Stage>>,
+    pub progress_running: bool,
+    pub pwa_status: String,
+    pub pwa_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
+    pub encode_input: String,
+    pub encode_output: String,
+    pub in_flight: functora_egui::in_flight::InFlight,
+    pub in_flight_status: String,
+}
+
+impl Default for PlatformState {
+    fn default() -> Self {
+        Self {
+            storage_key: "demo_key".to_owned(),
+            storage_value: "hello".to_owned(),
+            storage_status: String::new(),
+            storage_persistent_text: functora_egui::storage::load_state::<String>(
+                "demo_persistent",
+            )
+            .unwrap_or_else(|| "persistent hello".to_owned()),
+            clipboard_write: "Hello from functora-egui!".to_owned(),
+            clipboard_read: String::new(),
+            clipboard_status: String::new(),
+            clipboard_rx: None,
+            clipboard_write_rx: None,
+            share_title: "functora-egui".to_owned(),
+            share_text: "Check out functora-egui".to_owned(),
+            share_url: "https://functora.github.io".to_owned(),
+            share_status: String::new(),
+            share_rx: None,
+            deep_link_input: "https://functora.github.io/apps/demo/?page=about&lang=en".to_owned(),
+            deep_link_output: String::new(),
+            deep_link_current: String::new(),
+            picked: Vec::new(),
+            pick_status: String::new(),
+            pick_rx: None,
+            download_name: "hello.txt".to_owned(),
+            download_text: "Hello from functora-egui download!".to_owned(),
+            download_status: String::new(),
+            download_rx: None,
+            print_status: String::new(),
+            print_rx: None,
+            nav: functora_egui::nav::NavStack::new(),
+            nav_input: "/about".to_owned(),
+            progress_job: None,
+            progress_running: false,
+            pwa_status: String::new(),
+            pwa_rx: None,
+            encode_input: "hello world".to_owned(),
+            encode_output: String::new(),
+            in_flight: functora_egui::in_flight::InFlight::new(),
+            in_flight_status: String::new(),
+        }
+    }
+}
+
 /// A single showcase entry: one component or feature with a nav icon.
 pub struct ComponentDef {
     pub name: &'static str,
@@ -148,6 +269,24 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("TouchTarget", LucideIcon::Hand),
             ComponentDef::new("MobileDialog", LucideIcon::Smartphone),
             ComponentDef::new("MobileSidebar", LucideIcon::PanelLeftOpen),
+        ],
+    ),
+    (
+        "Platform",
+        LucideIcon::Smartphone,
+        &[
+            ComponentDef::new("Storage", LucideIcon::Database),
+            ComponentDef::new("Clipboard", LucideIcon::Clipboard),
+            ComponentDef::new("Share", LucideIcon::Share2),
+            ComponentDef::new("DeepLink", LucideIcon::Link),
+            ComponentDef::new("Files", LucideIcon::Files),
+            ComponentDef::new("Download", LucideIcon::Download),
+            ComponentDef::new("Print", LucideIcon::Printer),
+            ComponentDef::new("Nav", LucideIcon::Navigation),
+            ComponentDef::new("ProgressWorker", LucideIcon::LoaderCircle),
+            ComponentDef::new("PWA", LucideIcon::Globe),
+            ComponentDef::new("Encoding", LucideIcon::Code),
+            ComponentDef::new("InFlight", LucideIcon::ShieldCheck),
         ],
     ),
 ];
@@ -328,6 +467,7 @@ pub struct ShowcaseApp {
     pub prop_rotation: f64,
     pub prop_opacity: f64,
     pub form: FormState,
+    pub platform: PlatformState,
 }
 
 impl ShowcaseApp {
@@ -438,6 +578,7 @@ impl ShowcaseApp {
                 form_comments: String::new(),
                 form_billing: true,
             },
+            platform: PlatformState::default(),
         }
     }
 
@@ -792,6 +933,18 @@ impl ShowcaseApp {
             "TouchTarget" => self.demo_touch_target(ui),
             "MobileDialog" => self.demo_mobile_dialog(ui),
             "MobileSidebar" => self.demo_mobile_sidebar(ui),
+            "Storage" => self.demo_storage(ui),
+            "Clipboard" => self.demo_clipboard(ui),
+            "Share" => self.demo_share(ui),
+            "DeepLink" => self.demo_deep_link(ui),
+            "Files" => self.demo_files(ui),
+            "Download" => self.demo_download(ui),
+            "Print" => self.demo_print(ui),
+            "Nav" => self.demo_nav(ui),
+            "ProgressWorker" => self.demo_progress_worker(ui),
+            "PWA" => self.demo_pwa(ui),
+            "Encoding" => self.demo_encoding(ui),
+            "InFlight" => self.demo_in_flight(ui),
             _ => {
                 _ = Typography::muted("No demo available.").show(ui);
             }
@@ -811,6 +964,7 @@ impl eframe::App for ShowcaseApp {
         }
         self.apply_theme(&ctx);
         self.handle_shortcuts(&ctx);
+        self.poll_platform_promises(&ctx);
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
 

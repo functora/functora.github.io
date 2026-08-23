@@ -2,16 +2,63 @@
 
 #[cfg(any(feature = "android", feature = "build"))]
 pub mod android;
+pub mod camera;
+pub mod clipboard;
+#[cfg(any(feature = "web", feature = "android", feature = "build"))]
+pub mod config;
+pub mod deep_link;
+pub mod download;
+pub mod error;
+pub mod files;
 pub mod icons;
 pub mod layout;
+pub mod nav;
 pub mod paint;
+pub mod platform;
+pub mod print;
+pub mod progress;
+pub mod pwa;
 pub mod responsive;
+pub mod share;
+pub mod storage;
 pub mod theme;
+pub mod theme_extra;
 pub mod tokens;
 pub mod utils;
 #[cfg(any(feature = "web", feature = "build"))]
 pub mod web;
 pub mod widgets;
+pub mod worker;
+
+pub mod crypto {
+    pub use functora_core::crypto::*;
+}
+pub mod encoding {
+    pub use functora_core::encoding::*;
+}
+pub mod i18n {
+    pub use functora_core::i18n::*;
+}
+pub mod markdown {
+    pub use functora_core::markdown::*;
+}
+pub mod messages {
+    pub use functora_core::messages::*;
+}
+pub mod thumbnail {
+    pub use functora_core::thumbnail::*;
+}
+pub mod white_label {
+    pub use functora_core::white_label::*;
+}
+pub mod package;
+pub mod zip;
+#[cfg(feature = "qr")]
+pub mod qr {
+    pub use functora_core::qr::*;
+}
+pub mod in_flight;
+pub mod state;
 
 pub use responsive::breakpoint::Breakpoint;
 pub use responsive::responsive_ext::ResponsiveExt;
@@ -111,3 +158,6 @@ pub use widgets::toggle_group::widget::ToggleGroup;
 pub use widgets::toolbar::widget::Toolbar;
 pub use widgets::tooltip::widget::Tooltip;
 pub use widgets::typography::widget::Typography;
+
+pub use functora_core::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};
+pub use theme_extra::{Theme, current_theme, set_theme};

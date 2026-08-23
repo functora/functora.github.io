@@ -1,3 +1,4 @@
+use crate::config::shared::{capitalize_words, derive_pkg_js, metadata_str, parse_toml};
 use crate::theme::shadcn_theme_dark::dark;
 
 #[derive(Debug, Clone)]
@@ -9,97 +10,24 @@ pub struct WebConfig {
     pub vsn: String,
 }
 
-fn capitalize_words(input: &str) -> String {
-    input
-        .split('-')
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
 fn default_theme_color() -> String {
     let bg = dark().background;
     format!("#{:02x}{:02x}{:02x}", bg.r(), bg.g(), bg.b())
 }
 
 #[must_use]
-pub fn derive_pkg_js(manifest_path: &str) -> String {
-    std::fs::read_to_string(manifest_path)
-        .ok()
-        .and_then(|content| content.parse::<toml::Value>().ok())
-        .map_or_else(
-            || "app.js".to_owned(),
-            |value| {
-                value
-                    .get("lib")
-                    .and_then(|lib| lib.get("name"))
-                    .and_then(|name| name.as_str())
-                    .map_or_else(
-                        || {
-                            value
-                                .get("package")
-                                .and_then(|pkg| pkg.get("name"))
-                                .and_then(|name| name.as_str())
-                                .map_or_else(
-                                    || "app.js".to_owned(),
-                                    |name| format!("{}.js", name.replace('-', "_")),
-                                )
-                        },
-                        |name| format!("{name}.js"),
-                    )
-            },
-        )
-}
-
-#[must_use]
 pub fn derive_title(manifest_path: &str) -> String {
-    std::fs::read_to_string(manifest_path)
-        .ok()
-        .and_then(|content| content.parse::<toml::Value>().ok())
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-web"))
-                .and_then(|web| web.get("title"))
-                .and_then(|t| t.as_str())
-                .map(ToOwned::to_owned)
-        })
-        .unwrap_or_else(|| {
-            std::fs::read_to_string(manifest_path)
-                .ok()
-                .and_then(|content| content.parse::<toml::Value>().ok())
-                .and_then(|value| {
-                    value
-                        .get("package")
-                        .and_then(|pkg| pkg.get("name"))
-                        .and_then(|name| name.as_str())
-                        .map(capitalize_words)
-                })
-                .unwrap_or_else(|| "App".to_owned())
-        })
+    metadata_str(manifest_path, "functora-egui-web", "title").unwrap_or_else(|| {
+        parse_toml(manifest_path)
+            .as_ref()
+            .and_then(crate::config::shared::pkg_name)
+            .map_or_else(|| "App".to_owned(), |name| capitalize_words(&name))
+    })
 }
 
 #[must_use]
 pub fn derive_theme_color(manifest_path: &str) -> String {
-    std::fs::read_to_string(manifest_path)
-        .ok()
-        .and_then(|content| content.parse::<toml::Value>().ok())
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-web"))
-                .and_then(|web| web.get("theme_color"))
-                .and_then(|c| c.as_str())
-                .map(ToOwned::to_owned)
-        })
+    metadata_str(manifest_path, "functora-egui-web", "theme_color")
         .unwrap_or_else(default_theme_color)
 }
 

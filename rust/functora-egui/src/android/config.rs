@@ -1,3 +1,7 @@
+use crate::config::shared::{
+    capitalize_words, derive_lib_name as shared_derive_lib_name, metadata_str, parse_toml, pkg_name,
+};
+
 #[derive(Debug, Clone)]
 pub struct AndroidConfig {
     pub namespace: String,
@@ -13,86 +17,21 @@ pub struct AndroidConfig {
     pub app_name: String,
 }
 
-fn capitalize_words(input: &str) -> String {
-    input
-        .split('-')
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn parse_toml(path: &str) -> Option<toml::Value> {
-    std::fs::read_to_string(path)
-        .ok()
-        .and_then(|content| content.parse::<toml::Value>().ok())
-}
-
-fn pkg_name(value: &toml::Value) -> Option<String> {
-    value
-        .get("package")
-        .and_then(|pkg| pkg.get("name"))
-        .and_then(|n| n.as_str())
-        .map(ToOwned::to_owned)
-}
-
-fn lib_name_from(value: &toml::Value) -> Option<String> {
-    value
-        .get("lib")
-        .and_then(|lib| lib.get("name"))
-        .and_then(|n| n.as_str())
-        .map(ToOwned::to_owned)
-}
-
 fn derive_namespace(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-android"))
-                .and_then(|a| a.get("namespace"))
-                .and_then(|n| n.as_str())
-                .map(ToOwned::to_owned)
-        })
-        .unwrap_or_else(|| {
-            parse_toml(manifest_path)
-                .as_ref()
-                .and_then(pkg_name)
-                .map_or_else(
-                    || "com.functora.app".to_owned(),
-                    |name| format!("com.functora.{}", name.replace('-', "_")),
-                )
-        })
+    metadata_str(manifest_path, "functora-egui-android", "namespace").unwrap_or_else(|| {
+        parse_toml(manifest_path)
+            .as_ref()
+            .and_then(pkg_name)
+            .map_or_else(
+                || "com.functora.app".to_owned(),
+                |name| format!("com.functora.{}", name.replace('-', "_")),
+            )
+    })
 }
 
 fn derive_label(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-android"))
-                .and_then(|a| a.get("label"))
-                .and_then(|t| t.as_str())
-                .map(ToOwned::to_owned)
-                .or_else(|| {
-                    value
-                        .get("package")
-                        .and_then(|pkg| pkg.get("metadata"))
-                        .and_then(|meta| meta.get("functora-egui-web"))
-                        .and_then(|w| w.get("title"))
-                        .and_then(|t| t.as_str())
-                        .map(ToOwned::to_owned)
-                })
-        })
+    metadata_str(manifest_path, "functora-egui-android", "label")
+        .or_else(|| metadata_str(manifest_path, "functora-egui-web", "title"))
         .unwrap_or_else(|| {
             parse_toml(manifest_path)
                 .as_ref()
@@ -102,67 +41,32 @@ fn derive_label(manifest_path: &str) -> String {
 }
 
 fn derive_lib_name(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(lib_name_from)
-        .unwrap_or_else(|| {
-            parse_toml(manifest_path)
-                .as_ref()
-                .and_then(pkg_name)
-                .map_or_else(|| "app".to_owned(), |name| name.replace('-', "_"))
-        })
+    shared_derive_lib_name(manifest_path)
 }
 
 fn derive_host(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-android"))
-                .and_then(|a| a.get("host"))
-                .and_then(|h| h.as_str())
-                .map(ToOwned::to_owned)
-        })
+    metadata_str(manifest_path, "functora-egui-android", "host")
         .unwrap_or_else(|| "functora.github.io".to_owned())
 }
 
 fn derive_path_prefix(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-android"))
-                .and_then(|a| a.get("path_prefix"))
-                .and_then(|p| p.as_str())
-                .map(ToOwned::to_owned)
-        })
-        .unwrap_or_else(|| {
-            parse_toml(manifest_path)
-                .as_ref()
-                .and_then(pkg_name)
-                .map_or_else(|| "/apps/app/".to_owned(), |name| format!("/apps/{name}/"))
-        })
+    metadata_str(manifest_path, "functora-egui-android", "path_prefix").unwrap_or_else(|| {
+        parse_toml(manifest_path)
+            .as_ref()
+            .and_then(pkg_name)
+            .map_or_else(|| "/apps/app/".to_owned(), |name| format!("/apps/{name}/"))
+    })
 }
 
 fn derive_extra_intent_filters(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get("functora-egui-android"))
-                .and_then(|a| a.get("extra_intent_filters"))
-                .and_then(|f| f.as_str())
-                .map(ToOwned::to_owned)
-        })
-        .unwrap_or_default()
-        .trim()
-        .to_owned()
+    metadata_str(
+        manifest_path,
+        "functora-egui-android",
+        "extra_intent_filters",
+    )
+    .unwrap_or_default()
+    .trim()
+    .to_owned()
 }
 
 fn derive_version(manifest_path: &str) -> String {

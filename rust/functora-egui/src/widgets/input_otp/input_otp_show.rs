@@ -1,15 +1,16 @@
-//! Show method for InputOtp — renders individual digit input boxes.
+//! Show method for `InputOtp` — renders individual digit input boxes.
 
-impl super::input_otp::InputOtp {
+impl super::widget::InputOtp {
     /// Shows the OTP input. `value` is a mutable string holding the entered digits.
     pub fn show(self, ui: &mut egui::Ui, value: &mut String) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cell_size: f32 = 40.0;
         let gap: f32 = 8.0;
         let font_size: f32 = 20.0;
-        let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
 
-        let total_width = cell_size * self.length as f32 + gap * (self.length - 1) as f32;
+        let total_width = cell_size * crate::utils::usize_to_f32(self.length)
+            + gap * crate::utils::usize_to_f32(self.length - 1);
         let (full_rect, response) =
             ui.allocate_exact_size(egui::vec2(total_width, cell_size), egui::Sense::click());
 
@@ -33,7 +34,7 @@ impl super::input_otp::InputOtp {
                         pressed: true,
                         ..
                     } => {
-                        value.pop();
+                        let _ = value.pop();
                         ui.ctx().request_repaint();
                     }
                     _ => {}
@@ -46,7 +47,7 @@ impl super::input_otp::InputOtp {
             let updated_digits: Vec<char> = value.chars().collect();
 
             for i in 0..self.length {
-                let x = full_rect.min.x + (cell_size + gap) * i as f32;
+                let x = full_rect.min.x + (cell_size + gap) * crate::utils::usize_to_f32(i);
                 let cell_rect = egui::Rect::from_min_size(
                     egui::pos2(x, full_rect.min.y),
                     egui::vec2(cell_size, cell_size),
@@ -55,8 +56,8 @@ impl super::input_otp::InputOtp {
                 let is_active = i == updated_digits.len() && response.has_focus();
                 let border_color = if is_active { theme.ring } else { theme.input };
 
-                painter.rect_filled(cell_rect, cr, theme.background);
-                painter.rect_stroke(
+                let _ = painter.rect_filled(cell_rect, cr, theme.background);
+                let _ = painter.rect_stroke(
                     cell_rect,
                     cr,
                     egui::Stroke::new(if is_active { 2.0 } else { 1.0 }, border_color),

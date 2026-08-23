@@ -1,4 +1,4 @@
-//! FieldDescription — `text-muted-foreground text-sm` helper text.
+//! `FieldDescription` — `text-muted-foreground text-sm` helper text.
 
 /// A field description in muted text.
 pub struct FieldDescription;

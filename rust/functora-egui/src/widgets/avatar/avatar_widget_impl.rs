@@ -1,6 +1,6 @@
 //! Widget trait implementation for Avatar.
 
-impl egui::Widget for super::avatar::Avatar {
+impl egui::Widget for super::widget::Avatar {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -13,7 +13,7 @@ impl egui::Widget for super::avatar::Avatar {
             let radius = self.size / 2.0;
 
             // Background circle
-            painter.circle_filled(center, radius, theme.muted);
+            let _ = painter.circle_filled(center, radius, theme.muted);
 
             // Initials text
             let font_size = self.size * 0.4;

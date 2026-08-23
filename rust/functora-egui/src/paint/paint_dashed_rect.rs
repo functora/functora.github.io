@@ -36,7 +36,7 @@ pub fn paint_dashed_rect(
             if drawing {
                 let p0 = start + unit * cursor;
                 let p1 = start + unit * seg_end;
-                painter.line_segment([p0, p1], stroke);
+                let _ = painter.line_segment([p0, p1], stroke);
             }
 
             cursor = seg_end;

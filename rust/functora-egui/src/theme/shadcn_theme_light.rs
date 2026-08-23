@@ -1,6 +1,7 @@
 //! Light theme constructor with sRGB values derived from shadcn OKLCH tokens (Nova).
 
 /// Creates the light theme with colors matching shadcn/ui's Nova light mode.
+#[must_use]
 pub fn light() -> super::shadcn_theme::ShadcnTheme {
     super::shadcn_theme::ShadcnTheme {
         background: egui::Color32::from_rgb(255, 255, 255), // oklch(1.0)

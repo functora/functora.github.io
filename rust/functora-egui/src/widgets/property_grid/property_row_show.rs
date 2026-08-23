@@ -1,4 +1,4 @@
-//! Show method for PropertyRow.
+//! Show method for `PropertyRow`.
 
 impl super::property_row::PropertyRow {
     /// Renders a property label and a control area.
@@ -13,19 +13,19 @@ impl super::property_row::PropertyRow {
             .or_else(|| context.map(|ctx| ctx.label_width))
             .unwrap_or(112.0);
 
-        ui.horizontal(|ui| {
-            let label_rect = ui
+        ui.horizontal(|inner_ui| {
+            let label_rect = inner_ui
                 .allocate_exact_size(
-                    egui::vec2(label_width, ui.spacing().interact_size.y),
+                    egui::vec2(label_width, inner_ui.spacing().interact_size.y),
                     egui::Sense::hover(),
                 )
                 .0;
-            let galley = ui.painter().layout_no_wrap(
+            let galley = inner_ui.painter().layout_no_wrap(
                 self.label,
                 egui::FontId::proportional(12.0),
                 theme.muted_foreground,
             );
-            ui.painter().galley(
+            inner_ui.painter().galley(
                 egui::pos2(
                     label_rect.min.x,
                     label_rect.center().y - galley.size().y / 2.0,
@@ -33,7 +33,7 @@ impl super::property_row::PropertyRow {
                 galley,
                 theme.muted_foreground,
             );
-            content(ui);
+            content(inner_ui);
         })
         .response
     }

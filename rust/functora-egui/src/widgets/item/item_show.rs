@@ -1,10 +1,10 @@
 //! Show method for Item — renders a bordered list item.
 
-impl super::item::Item {
+impl super::widget::Item {
     /// Renders the item container with content.
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = theme.radius.round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
 
         let border_color = match self.variant {
             crate::tokens::item_variant::ItemVariant::Outline => theme.border,

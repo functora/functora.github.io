@@ -1,6 +1,6 @@
-//! Show method for PropertyGrid.
+//! Show method for `PropertyGrid`.
 
-impl super::property_grid::PropertyGrid {
+impl super::widget::PropertyGrid {
     /// Renders a bordered property grid and calls `content` inside it.
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
@@ -8,7 +8,7 @@ impl super::property_grid::PropertyGrid {
 
         let previous = ui.ctx().data_mut(|data| {
             let previous = data.get_temp::<super::property_grid_context::PropertyGridContext>(key);
-            data.insert_temp(
+            let _ = data.insert_temp(
                 key,
                 super::property_grid_context::PropertyGridContext {
                     label_width: self.label_width,
@@ -25,19 +25,21 @@ impl super::property_grid::PropertyGrid {
                 top: 10,
                 bottom: 10,
             })
-            .corner_radius(egui::CornerRadius::same(theme.radius.round() as u8))
+            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
+                theme.radius,
+            )))
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         let response = frame
-            .show(ui, |ui| {
-                ui.spacing_mut().item_spacing.y = self.row_gap;
-                ui.vertical(content);
+            .show(ui, |inner_ui| {
+                inner_ui.spacing_mut().item_spacing.y = self.row_gap;
+                let _ = inner_ui.vertical(content);
             })
             .response;
 
         ui.ctx().data_mut(|data| {
-            if let Some(previous) = previous {
-                data.insert_temp(key, previous);
+            if let Some(previous_val) = previous {
+                let _ = data.insert_temp(key, previous_val);
             } else {
                 data.remove::<super::property_grid_context::PropertyGridContext>(key);
             }

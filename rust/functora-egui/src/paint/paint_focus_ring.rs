@@ -15,8 +15,8 @@ pub fn paint_focus_ring(
         ring_color.b(),
         ring_alpha,
     );
-    let cr = (corner_radius + 2.0).round() as u8;
-    painter.rect_stroke(
+    let cr = crate::utils::f32_to_u8_clamped(corner_radius + 2.0);
+    let _ = painter.rect_stroke(
         ring_rect,
         egui::CornerRadius::same(cr),
         egui::Stroke::new(3.0, ring_c),

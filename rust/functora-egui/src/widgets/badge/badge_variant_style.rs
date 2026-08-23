@@ -1,6 +1,7 @@
 //! Maps badge variant to concrete style values.
 
 /// Resolves badge colors from variant.
+#[must_use]
 pub fn resolve_badge_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     variant: crate::tokens::badge_variant::BadgeVariant,

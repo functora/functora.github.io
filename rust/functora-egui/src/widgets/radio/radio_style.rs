@@ -1,6 +1,7 @@
 //! Maps radio state to concrete style values.
 
 /// Resolves radio button colors based on selection state and interaction.
+#[must_use]
 pub fn resolve_radio_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     selected: bool,

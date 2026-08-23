@@ -1,6 +1,6 @@
 //! Widget trait implementation for Progress.
 
-impl egui::Widget for super::progress::Progress {
+impl egui::Widget for super::widget::Progress {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -19,13 +19,13 @@ impl egui::Widget for super::progress::Progress {
                 theme.primary.b(),
                 51, // ~20%
             );
-            painter.rect_filled(rect, cr, track_color);
+            let _ = painter.rect_filled(rect, cr, track_color);
 
             // Fill bar
             if self.value > 0.0 {
                 let fill_width = rect.width() * self.value;
                 let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, height));
-                painter.rect_filled(fill_rect, cr, theme.primary);
+                let _ = painter.rect_filled(fill_rect, cr, theme.primary);
             }
         }
 

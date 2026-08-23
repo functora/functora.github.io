@@ -6,7 +6,7 @@
 /// common cases while still exposing full control via `item()` / `item_ui()`.
 pub struct FlexInst<'ui, 'inst>(pub(crate) &'inst mut egui_flex::FlexInstance<'ui>);
 
-impl<'ui, 'inst> FlexInst<'ui, 'inst> {
+impl FlexInst<'_, '_> {
     /// Add a widget at its natural size.
     pub fn add(&mut self, widget: impl egui::Widget) -> egui::InnerResponse<egui::Response> {
         self.0.add_widget(egui_flex::FlexItem::new(), widget)

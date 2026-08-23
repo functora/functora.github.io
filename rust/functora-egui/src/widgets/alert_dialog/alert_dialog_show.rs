@@ -1,4 +1,4 @@
-//! Show method for AlertDialog — renders a confirmation modal.
+//! Show method for `AlertDialog` — renders a confirmation modal.
 
 /// Result of an alert dialog interaction.
 pub enum AlertDialogResult {
@@ -10,7 +10,7 @@ pub enum AlertDialogResult {
     Confirmed,
 }
 
-impl super::alert_dialog::AlertDialog {
+impl super::widget::AlertDialog {
     /// Shows the alert dialog when `open` is true.
     /// Returns the result of the interaction.
     pub fn show(self, ctx: &egui::Context, open: &mut bool) -> AlertDialogResult {
@@ -27,7 +27,7 @@ impl super::alert_dialog::AlertDialog {
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("alert_dialog_backdrop"));
         let painter = ctx.layer_painter(backdrop_layer);
-        painter.rect_filled(
+        let _ = painter.rect_filled(
             screen,
             egui::CornerRadius::ZERO,
             egui::Color32::from_black_alpha(60),
@@ -40,8 +40,8 @@ impl super::alert_dialog::AlertDialog {
             (
                 egui::Align2::CENTER_BOTTOM,
                 egui::CornerRadius {
-                    nw: (theme.radius + 2.0).round() as u8,
-                    ne: (theme.radius + 2.0).round() as u8,
+                    nw: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
+                    ne: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
                     sw: 0,
                     se: 0,
                 },
@@ -49,7 +49,7 @@ impl super::alert_dialog::AlertDialog {
         } else {
             (
                 egui::Align2::CENTER_CENTER,
-                egui::CornerRadius::same((theme.radius + 2.0).round() as u8),
+                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0)),
             )
         };
 
@@ -64,10 +64,10 @@ impl super::alert_dialog::AlertDialog {
         };
 
         // Dialog panel
-        egui::Area::new(egui::Id::new("alert_dialog_panel"))
+        let _ = egui::Area::new(egui::Id::new("alert_dialog_panel"))
             .order(egui::Order::Foreground)
             .anchor(anchor, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
+            .show(ctx, |inner_ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.background)
                     .inner_margin(egui::Margin::same(24))
@@ -80,86 +80,92 @@ impl super::alert_dialog::AlertDialog {
                         color: egui::Color32::from_black_alpha(12),
                     });
 
-                frame.show(ui, |ui| {
-                    ui.set_max_width(panel_width);
+                let _ = frame.show(inner_ui, |content_ui| {
+                    content_ui.set_max_width(panel_width);
                     if on_mobile {
-                        ui.set_max_height(
+                        content_ui.set_max_height(
                             (screen.height() - 2.0 * spacing.page_padding - 50.0).max(0.0),
                         );
                     }
 
                     // Close button
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-                        let close_size = 16.0;
-                        let (close_rect, close_resp) = ui.allocate_exact_size(
-                            egui::vec2(close_size, close_size),
-                            egui::Sense::click(),
-                        );
-                        if ui.is_rect_visible(close_rect) {
-                            crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
-                                close_rect,
-                                &crate::icons::lucide_icon::LucideIcon::X,
-                                theme.muted_foreground,
+                    let _ = content_ui.with_layout(
+                        egui::Layout::right_to_left(egui::Align::TOP),
+                        |inner_ui3| {
+                            let close_size = 16.0;
+                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
+                                egui::vec2(close_size, close_size),
+                                egui::Sense::click(),
                             );
-                        }
-                        if close_resp.clicked() {
-                            *open = false;
-                            result = AlertDialogResult::Cancelled;
-                            ctx.request_repaint();
-                        }
-                    });
+                            if inner_ui3.is_rect_visible(close_rect) {
+                                crate::icons::paint_icon::paint_icon(
+                                    inner_ui3.painter(),
+                                    close_rect,
+                                    &crate::icons::lucide_icon::LucideIcon::X,
+                                    theme.muted_foreground,
+                                );
+                            }
+                            if close_resp.clicked() {
+                                *open = false;
+                                result = AlertDialogResult::Cancelled;
+                                ctx.request_repaint();
+                            }
+                        },
+                    );
 
-                    ui.label(
+                    let _ = content_ui.label(
                         egui::RichText::new(&self.title)
                             .color(theme.foreground)
                             .size(18.0)
                             .strong(),
                     );
 
-                    ui.add_space(4.0);
-                    ui.label(
+                    content_ui.add_space(4.0);
+                    let _ = content_ui.label(
                         egui::RichText::new(&self.description)
                             .color(theme.muted_foreground)
                             .size(14.0),
                     );
 
-                    ui.add_space(20.0);
+                    content_ui.add_space(20.0);
 
                     // Button row aligned to right
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        // Action button (shows first from right)
-                        let action_variant = if self.destructive {
-                            crate::tokens::button_variant::ButtonVariant::Destructive
-                        } else {
-                            crate::tokens::button_variant::ButtonVariant::Default
-                        };
+                    let _ = content_ui.with_layout(
+                        egui::Layout::right_to_left(egui::Align::Center),
+                        |inner_ui3| {
+                            // Action button (shows first from right)
+                            let action_variant = if self.destructive {
+                                crate::tokens::button_variant::ButtonVariant::Destructive
+                            } else {
+                                crate::tokens::button_variant::ButtonVariant::Default
+                            };
 
-                        let action_btn =
-                            crate::widgets::button::button::Button::new(&self.action_text)
-                                .variant(action_variant)
-                                .show(ui);
+                            let action_btn =
+                                crate::widgets::button::widget::Button::new(&self.action_text)
+                                    .variant(action_variant)
+                                    .show(inner_ui3);
 
-                        if action_btn.clicked() {
-                            *open = false;
-                            result = AlertDialogResult::Confirmed;
-                            ui.ctx().request_repaint();
-                        }
+                            if action_btn.clicked() {
+                                *open = false;
+                                result = AlertDialogResult::Confirmed;
+                                inner_ui3.ctx().request_repaint();
+                            }
 
-                        ui.add_space(8.0);
+                            inner_ui3.add_space(8.0);
 
-                        // Cancel button
-                        let cancel_btn =
-                            crate::widgets::button::button::Button::new(&self.cancel_text)
-                                .variant(crate::tokens::button_variant::ButtonVariant::Outline)
-                                .show(ui);
+                            // Cancel button
+                            let cancel_btn =
+                                crate::widgets::button::widget::Button::new(&self.cancel_text)
+                                    .variant(crate::tokens::button_variant::ButtonVariant::Outline)
+                                    .show(inner_ui3);
 
-                        if cancel_btn.clicked() {
-                            *open = false;
-                            result = AlertDialogResult::Cancelled;
-                            ui.ctx().request_repaint();
-                        }
-                    });
+                            if cancel_btn.clicked() {
+                                *open = false;
+                                result = AlertDialogResult::Cancelled;
+                                inner_ui3.ctx().request_repaint();
+                            }
+                        },
+                    );
                 });
             });
 

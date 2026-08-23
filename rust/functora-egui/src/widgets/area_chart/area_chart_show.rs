@@ -1,6 +1,6 @@
-//! Show method for AreaChart — renders smooth stacked area curves.
+//! Show method for `AreaChart` — renders smooth stacked area curves.
 
-impl super::area_chart::AreaChart {
+impl super::widget::AreaChart {
     /// Renders the area chart. Returns the response for the allocated rect.
     pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
@@ -27,16 +27,15 @@ impl super::area_chart::AreaChart {
             return response;
         }
 
-        let step_x = plot_rect.width() / (n as f32 - 1.0).max(1.0);
+        let step_x = plot_rect.width() / (crate::utils::usize_to_f32(n) - 1.0).max(1.0);
 
         // Compute Y-axis max
         let y_max = self.compute_y_max(n);
 
-        // Horizontal grid lines
         for i in 0..5 {
-            let t = i as f32 / 4.0;
+            let t = crate::utils::i32_to_f32(i) / 4.0;
             let y = plot_rect.max.y - t * plot_rect.height();
-            painter.hline(plot_rect.x_range(), y, egui::Stroke::new(0.5, theme.border));
+            let _ = painter.hline(plot_rect.x_range(), y, egui::Stroke::new(0.5, theme.border));
         }
 
         // Compute screen-space Y values per series
@@ -71,7 +70,7 @@ impl super::area_chart::AreaChart {
 
             // Line on top
             if smooth.len() >= 2 {
-                painter.add(egui::Shape::line(
+                let _ = painter.add(egui::Shape::line(
                     smooth.clone(),
                     egui::Stroke::new(1.5, line_color),
                 ));
@@ -84,8 +83,8 @@ impl super::area_chart::AreaChart {
         let label_count = 8.min(n);
         let label_step = (n - 1).max(1) / label_count.max(1);
         for i in (0..n).step_by(label_step.max(1)) {
-            let x = plot_rect.min.x + i as f32 * step_x;
-            painter.text(
+            let x = plot_rect.min.x + crate::utils::usize_to_f32(i) * step_x;
+            let _ = painter.text(
                 egui::pos2(x, chart_rect.max.y - 4.0),
                 egui::Align2::CENTER_BOTTOM,
                 &self.labels[i],
@@ -136,7 +135,7 @@ impl super::area_chart::AreaChart {
                     } else {
                         val
                     };
-                    let x = plot_rect.min.x + i as f32 * step_x;
+                    let x = plot_rect.min.x + crate::utils::usize_to_f32(i) * step_x;
                     let y = plot_rect.max.y - (stacked_val / y_max) * plot_rect.height();
                     egui::pos2(x, y)
                 })
@@ -186,7 +185,7 @@ fn fill_between_curves(
         });
     }
 
-    let n = top.len() as u32;
+    let n = crate::utils::usize_to_u32(top.len());
     // Build triangle strip: for each column i, create two triangles
     // forming a quad between top[i], top[i+1], bottom[i], bottom[i+1]
     for i in 0..(n - 1) {
@@ -199,7 +198,7 @@ fn fill_between_curves(
         mesh.indices.extend_from_slice(&[t1, b0, b1]);
     }
 
-    painter.add(egui::Shape::mesh(mesh));
+    let _ = painter.add(egui::Shape::mesh(mesh));
 }
 
 /// Converts raw data points into a smooth curve using Catmull-Rom → cubic Bezier conversion.
@@ -234,9 +233,9 @@ fn catmull_rom_to_smooth(points: &[egui::Pos2]) -> Vec<egui::Pos2> {
             p_next.y - (p_next2.y - p_curr.y) / 6.0,
         );
 
-        // Tessellate the cubic Bezier
         for seg in 1..=segments_per_curve {
-            let t = seg as f32 / segments_per_curve as f32;
+            let t =
+                crate::utils::usize_to_f32(seg) / crate::utils::usize_to_f32(segments_per_curve);
             let pt = cubic_bezier(p_curr, cp1, cp2, p_next, t);
             smooth.push(pt);
         }

@@ -21,5 +21,5 @@ pub fn paint_check_icon(
         egui::pos2(cx + s, cy - s * 0.5),
     ];
 
-    painter.add(egui::Shape::line(points, egui::Stroke::new(2.0, color)));
+    let _ = painter.add(egui::Shape::line(points, egui::Stroke::new(2.0, color)));
 }

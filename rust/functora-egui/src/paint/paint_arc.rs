@@ -14,7 +14,7 @@ pub fn paint_arc(
 
     let points: Vec<egui::Pos2> = (0..=segments)
         .map(|i| {
-            let t = i as f32 / segments as f32;
+            let t = crate::utils::i32_to_f32(i) / crate::utils::i32_to_f32(segments);
             let angle = angle_offset + t * arc_angle;
             egui::pos2(
                 center.x + radius * angle.cos(),
@@ -23,5 +23,5 @@ pub fn paint_arc(
         })
         .collect();
 
-    painter.add(egui::Shape::line(points, stroke));
+    let _ = painter.add(egui::Shape::line(points, stroke));
 }

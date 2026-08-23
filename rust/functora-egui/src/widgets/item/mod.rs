@@ -1,4 +1,4 @@
 //! List item widget with variants.
 
-pub mod item;
 pub mod item_show;
+pub mod widget;

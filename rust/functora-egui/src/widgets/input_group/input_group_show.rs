@@ -1,6 +1,6 @@
-//! Show method for InputGroup — renders input with prefix/suffix addons.
+//! Show method for `InputGroup` — renders input with prefix/suffix addons.
 
-impl super::input_group::InputGroup {
+impl super::widget::InputGroup {
     /// Renders an input field with optional prefix text and suffix content.
     pub fn show(
         ui: &mut egui::Ui,
@@ -10,7 +10,7 @@ impl super::input_group::InputGroup {
         suffix: Option<impl FnOnce(&mut egui::Ui)>,
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
         let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
 
@@ -25,8 +25,8 @@ impl super::input_group::InputGroup {
         } else {
             theme.background
         };
-        ui.painter().rect_filled(outer_rect, cr, bg);
-        ui.painter().rect_stroke(
+        let _ = ui.painter().rect_filled(outer_rect, cr, bg);
+        let _ = ui.painter().rect_stroke(
             outer_rect,
             cr,
             egui::Stroke::new(
@@ -60,7 +60,7 @@ impl super::input_group::InputGroup {
 
             // Divider line
             cursor_x += prefix_w + h_padding;
-            ui.painter().vline(
+            let _ = ui.painter().vline(
                 cursor_x,
                 outer_rect.y_range(),
                 egui::Stroke::new(1.0, theme.border),
@@ -97,7 +97,7 @@ impl super::input_group::InputGroup {
                 egui::pos2(outer_rect.max.x - 4.0, outer_rect.max.y - 2.0),
             );
             // Divider
-            ui.painter().vline(
+            let _ = ui.painter().vline(
                 input_right,
                 outer_rect.y_range(),
                 egui::Stroke::new(1.0, theme.border),
@@ -110,7 +110,7 @@ impl super::input_group::InputGroup {
 
         // Focus ring
         if response.has_focus() {
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,
                 egui::Stroke::new(1.0, theme.ring),

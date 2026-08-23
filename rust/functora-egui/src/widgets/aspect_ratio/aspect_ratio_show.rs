@@ -1,6 +1,6 @@
-//! Show method for AspectRatio — renders content inside a ratio-constrained container.
+//! Show method for `AspectRatio` — renders content inside a ratio-constrained container.
 
-impl super::aspect_ratio::AspectRatio {
+impl super::widget::AspectRatio {
     /// Renders content inside a container with the enforced aspect ratio.
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let available_width = ui.available_width();

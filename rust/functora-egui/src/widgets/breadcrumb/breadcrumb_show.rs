@@ -1,14 +1,14 @@
 //! Show method for Breadcrumb — renders a navigation path.
 
-impl super::breadcrumb::Breadcrumb {
+impl super::widget::Breadcrumb {
     /// Shows the breadcrumb. Returns the index of the clicked item, if any.
     pub fn show(self, ui: &mut egui::Ui) -> Option<usize> {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let mut clicked_idx = None;
         let last_idx = self.items.len().saturating_sub(1);
 
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 2.0;
+        let _ = ui.horizontal(|inner_ui| {
+            inner_ui.spacing_mut().item_spacing.x = 2.0;
 
             for (idx, item) in self.items.iter().enumerate() {
                 let is_last = idx == last_idx;
@@ -18,12 +18,13 @@ impl super::breadcrumb::Breadcrumb {
                 } else {
                     theme.muted_foreground
                 };
-                let galley = ui
-                    .painter()
-                    .layout_no_wrap(item.clone(), font_id.clone(), base_color);
+                let galley =
+                    inner_ui
+                        .painter()
+                        .layout_no_wrap(item.clone(), font_id.clone(), base_color);
                 let padding = egui::vec2(6.0, 3.0);
                 let desired = galley.size() + padding * 2.0;
-                let (rect, response) = ui.allocate_exact_size(
+                let (rect, response) = inner_ui.allocate_exact_size(
                     desired,
                     if is_last {
                         egui::Sense::hover()
@@ -34,7 +35,9 @@ impl super::breadcrumb::Breadcrumb {
 
                 if !is_last {
                     if response.hovered() {
-                        ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        inner_ui
+                            .ctx()
+                            .set_cursor_icon(egui::CursorIcon::PointingHand);
                     }
 
                     if response.clicked() {
@@ -42,7 +45,7 @@ impl super::breadcrumb::Breadcrumb {
                     }
                 }
 
-                if ui.is_rect_visible(rect) {
+                if inner_ui.is_rect_visible(rect) {
                     let hovered = response.hovered() && !is_last;
                     let pressed = response.is_pointer_button_down_on() && !is_last;
                     let color = if pressed {
@@ -63,9 +66,11 @@ impl super::breadcrumb::Breadcrumb {
                         } else {
                             theme.accent
                         };
-                        ui.painter().rect_filled(
+                        let _ = inner_ui.painter().rect_filled(
                             rect,
-                            egui::CornerRadius::same((theme.radius * 0.75).round() as u8),
+                            egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
+                                theme.radius * 0.75,
+                            )),
                             bg,
                         );
                     }
@@ -75,11 +80,11 @@ impl super::breadcrumb::Breadcrumb {
                         rect.min.x + padding.x,
                         rect.center().y - galley_size.y / 2.0,
                     );
-                    ui.painter().galley(text_pos, galley, color);
+                    inner_ui.painter().galley(text_pos, galley, color);
 
                     if hovered {
                         let underline_y = text_pos.y + galley_size.y;
-                        ui.painter().hline(
+                        let _ = inner_ui.painter().hline(
                             text_pos.x..=text_pos.x + rect.width() - padding.x * 2.0,
                             underline_y,
                             egui::Stroke::new(1.0, color),
@@ -88,7 +93,7 @@ impl super::breadcrumb::Breadcrumb {
                 }
 
                 if !is_last {
-                    ui.label(
+                    let _ = inner_ui.label(
                         egui::RichText::new(&self.separator)
                             .color(theme.muted_foreground)
                             .size(14.0),

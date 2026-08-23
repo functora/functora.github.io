@@ -1,18 +1,19 @@
 //! Minimal SVG inner-XML parser for Lucide icon data.
 
 /// Parse inner SVG XML (the content inside `<svg>...</svg>`) into icon elements.
+#[must_use]
 pub fn parse_svg(svg_inner: &str) -> Vec<super::icon_element::IconElement> {
     let mut elements = Vec::new();
 
     // Split on '<' to find each tag
     for chunk in svg_inner.split('<') {
-        let chunk = chunk.trim();
-        if chunk.is_empty() {
+        let trimmed = chunk.trim();
+        if trimmed.is_empty() {
             continue;
         }
 
         // Take everything up to '>' or '/>'
-        let tag_content = chunk.split('>').next().unwrap_or("");
+        let tag_content = trimmed.split('>').next().unwrap_or("");
 
         if let Some(elem) = parse_tag(tag_content) {
             elements.push(elem);
@@ -23,17 +24,17 @@ pub fn parse_svg(svg_inner: &str) -> Vec<super::icon_element::IconElement> {
 }
 
 fn parse_tag(tag: &str) -> Option<super::icon_element::IconElement> {
-    let tag = tag.trim().trim_end_matches('/');
-    let tag_name = tag.split_ascii_whitespace().next()?;
+    let trimmed_tag = tag.trim().trim_end_matches('/');
+    let tag_name = trimmed_tag.split_ascii_whitespace().next()?;
 
     match tag_name {
-        "path" => parse_path_tag(tag),
-        "circle" => parse_circle_tag(tag),
-        "rect" => parse_rect_tag(tag),
-        "line" => parse_line_tag(tag),
-        "polyline" => parse_polyline_tag(tag),
-        "polygon" => parse_polygon_tag(tag),
-        "ellipse" => parse_ellipse_tag(tag),
+        "path" => parse_path_tag(trimmed_tag),
+        "circle" => Some(parse_circle_tag(trimmed_tag)),
+        "rect" => Some(parse_rect_tag(trimmed_tag)),
+        "line" => Some(parse_line_tag(trimmed_tag)),
+        "polyline" => parse_polyline_tag(trimmed_tag),
+        "polygon" => parse_polygon_tag(trimmed_tag),
+        "ellipse" => Some(parse_ellipse_tag(trimmed_tag)),
         _ => None,
     }
 }
@@ -44,7 +45,7 @@ fn parse_path_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     Some(super::icon_element::IconElement::Path(commands))
 }
 
-fn parse_circle_tag(tag: &str) -> Option<super::icon_element::IconElement> {
+fn parse_circle_tag(tag: &str) -> super::icon_element::IconElement {
     let cx = extract_attr(tag, "cx")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
@@ -54,10 +55,10 @@ fn parse_circle_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     let r = extract_attr(tag, "r")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
-    Some(super::icon_element::IconElement::Circle { cx, cy, r })
+    super::icon_element::IconElement::Circle { cx, cy, r }
 }
 
-fn parse_rect_tag(tag: &str) -> Option<super::icon_element::IconElement> {
+fn parse_rect_tag(tag: &str) -> super::icon_element::IconElement {
     let x = extract_attr(tag, "x")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
@@ -73,16 +74,16 @@ fn parse_rect_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     let rx = extract_attr(tag, "rx")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
-    Some(super::icon_element::IconElement::Rect {
+    super::icon_element::IconElement::Rect {
         x,
         y,
         width,
         height,
         rx,
-    })
+    }
 }
 
-fn parse_line_tag(tag: &str) -> Option<super::icon_element::IconElement> {
+fn parse_line_tag(tag: &str) -> super::icon_element::IconElement {
     let x1 = extract_attr(tag, "x1")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
@@ -95,7 +96,7 @@ fn parse_line_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     let y2 = extract_attr(tag, "y2")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
-    Some(super::icon_element::IconElement::Line { x1, y1, x2, y2 })
+    super::icon_element::IconElement::Line { x1, y1, x2, y2 }
 }
 
 fn parse_polyline_tag(tag: &str) -> Option<super::icon_element::IconElement> {
@@ -112,7 +113,7 @@ fn parse_polygon_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     )))
 }
 
-fn parse_ellipse_tag(tag: &str) -> Option<super::icon_element::IconElement> {
+fn parse_ellipse_tag(tag: &str) -> super::icon_element::IconElement {
     let cx = extract_attr(tag, "cx")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
@@ -125,7 +126,7 @@ fn parse_ellipse_tag(tag: &str) -> Option<super::icon_element::IconElement> {
     let ry = extract_attr(tag, "ry")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.0);
-    Some(super::icon_element::IconElement::Ellipse { cx, cy, rx, ry })
+    super::icon_element::IconElement::Ellipse { cx, cy, rx, ry }
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -147,8 +148,8 @@ fn extract_attr(tag: &str, attr_name: &str) -> Option<String> {
 fn parse_points(s: &str) -> Vec<(f32, f32)> {
     let nums: Vec<f32> = s
         .split(|c: char| c == ',' || c.is_ascii_whitespace())
-        .filter(|s| !s.is_empty())
-        .filter_map(|s| s.parse().ok())
+        .filter(|item| !item.is_empty())
+        .filter_map(|item| item.parse().ok())
         .collect();
 
     nums.chunks(2)
@@ -181,9 +182,9 @@ mod tests {
         let elems = parse_svg(r#"<circle cx="12" cy="13" r="8" />"#);
         assert_eq!(elems.len(), 1);
         if let super::super::icon_element::IconElement::Circle { cx, cy, r } = &elems[0] {
-            assert_eq!(*cx, 12.0);
-            assert_eq!(*cy, 13.0);
-            assert_eq!(*r, 8.0);
+            assert!((*cx - 12.0).abs() < f32::EPSILON);
+            assert!((*cy - 13.0).abs() < f32::EPSILON);
+            assert!((*r - 8.0).abs() < f32::EPSILON);
         } else {
             panic!("Expected Circle");
         }

@@ -1,6 +1,6 @@
 //! Widget trait implementation for Input.
 
-impl egui::Widget for super::input::Input<'_> {
+impl egui::Widget for super::widget::Input<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -9,7 +9,7 @@ impl egui::Widget for super::input::Input<'_> {
         let height = spacing.touch_height; // h-8
         let h_padding: f32 = spacing.touch_padding; // px-2.5
         let v_padding: f32 = 4.0; // py-1
-        let width = self.desired_width.unwrap_or(ui.available_width());
+        let width = self.desired_width.unwrap_or_else(|| ui.available_width());
         let reveal_size: f32 = 24.0;
         let reveal_id = ui.id().with("password_reveal");
         let revealed = if self.password {
@@ -19,7 +19,7 @@ impl egui::Widget for super::input::Input<'_> {
         };
 
         let style = super::input_style::resolve_input_style(&theme, false);
-        let cr = egui::CornerRadius::same(style.corner_radius.round() as u8);
+        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(style.corner_radius));
 
         let desired = egui::vec2(width, height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
@@ -36,8 +36,8 @@ impl egui::Widget for super::input::Input<'_> {
         };
 
         // Paint background and border
-        ui.painter().rect_filled(outer_rect, cr, bg);
-        ui.painter().rect_stroke(
+        let _ = ui.painter().rect_filled(outer_rect, cr, bg);
+        let _ = ui.painter().rect_stroke(
             outer_rect,
             cr,
             egui::Stroke::new(1.0, border_color),
@@ -105,14 +105,14 @@ impl egui::Widget for super::input::Input<'_> {
                 );
             }
             if toggle_resp.clicked() {
-                ui.data_mut(|d| d.insert_temp(reveal_id, !revealed));
+                let _ = ui.data_mut(|d| d.insert_temp(reveal_id, !revealed));
             }
         }
 
         // Repaint border if focused
         if response.has_focus() {
             let focused_style = super::input_style::resolve_input_style(&theme, true);
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,
                 egui::Stroke::new(1.0, focused_style.border_color),

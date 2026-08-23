@@ -1,6 +1,7 @@
 //! Maps slider state to concrete style values.
 
 /// Resolves slider colors based on theme.
+#[must_use]
 pub fn resolve_slider_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
 ) -> super::resolved_slider_style::ResolvedSliderStyle {

@@ -1,6 +1,7 @@
 //! SVG path `d`-attribute parser.
 
 /// Parse an SVG path `d` attribute string into a list of path commands.
+#[must_use]
 pub fn parse_path_data(d: &str) -> Vec<super::path_command::PathCommand> {
     let tokens = tokenize(d);
     commands_from_tokens(&tokens)

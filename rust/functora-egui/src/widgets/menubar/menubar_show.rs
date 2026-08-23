@@ -1,6 +1,6 @@
 //! Show method for Menubar — renders a horizontal menu bar.
 
-impl super::menubar::Menubar {
+impl super::widget::Menubar {
     /// Shows the menu bar. Content closure should add menu items.
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
@@ -24,11 +24,11 @@ impl super::menubar::Menubar {
             ));
 
         frame
-            .show(ui, |ui| {
-                ui.set_min_height(36.0);
-                ui.horizontal_centered(|ui| {
-                    ui.spacing_mut().item_spacing.x = 4.0;
-                    content(ui);
+            .show(ui, |inner_ui| {
+                inner_ui.set_min_height(36.0);
+                let _ = inner_ui.horizontal_centered(|content_ui| {
+                    content_ui.spacing_mut().item_spacing.x = 4.0;
+                    content(content_ui);
                 });
             })
             .response
@@ -51,7 +51,7 @@ impl super::menubar::Menubar {
         if ui.is_rect_visible(rect) {
             let cr = egui::CornerRadius::same(4);
             if response.is_pointer_button_down_on() {
-                ui.painter().rect_filled(
+                let _ = ui.painter().rect_filled(
                     rect,
                     cr,
                     crate::paint::interpolate_color::interpolate_color(
@@ -61,7 +61,7 @@ impl super::menubar::Menubar {
                     ),
                 );
             } else if response.hovered() {
-                ui.painter().rect_filled(rect, cr, theme.accent);
+                let _ = ui.painter().rect_filled(rect, cr, theme.accent);
             }
 
             let text_pos = egui::pos2(
@@ -83,8 +83,6 @@ impl super::menubar::Menubar {
     /// `on_select` is called with the index of the clicked item.
     pub fn menu(ui: &mut egui::Ui, label: &str, items: &[&str], on_select: impl FnOnce(usize)) {
         let trigger = Self::item(ui, label);
-        crate::widgets::dropdown_menu::dropdown_menu::DropdownMenu::show(
-            ui, &trigger, items, on_select,
-        );
+        crate::widgets::dropdown_menu::widget::DropdownMenu::show(ui, &trigger, items, on_select);
     }
 }

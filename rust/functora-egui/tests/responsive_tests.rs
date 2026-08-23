@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 use functora_egui::{
     Breakpoint, Button, ComponentSize, Dialog, Flex, Input, ResponsiveExt, SelectValue, Sheet,
@@ -29,20 +30,22 @@ fn collect_filled_rects(shapes: &[egui::epaint::ClippedShape]) -> Vec<Rect> {
 fn run_frames(
     ctx: &Context,
     screen: Vec2,
-    frames: usize,
+    frames: u32,
     mut frame: impl FnMut(&mut egui::Ui),
 ) -> egui::FullOutput {
-    let mut out = egui::FullOutput::default();
-    for i in 0..frames {
-        let raw = RawInput {
-            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
-            time: Some(i as f64 / 60.0),
-            ..Default::default()
-        };
-        out = ctx.run_ui(raw, |ui| frame(ui));
-        out.textures_delta.clear();
-    }
-    out
+    (0..frames)
+        .map(|idx| {
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
+                time: Some(f64::from(idx) / 60.0),
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(raw, |ui| frame(ui));
+            out.textures_delta.clear();
+            out
+        })
+        .last()
+        .unwrap_or_default()
 }
 
 fn find_rect(rects: &[Rect], predicate: impl Fn(Rect) -> bool) -> Option<Rect> {
@@ -67,12 +70,12 @@ fn breakpoint_classifies_viewport_widths() {
 #[test]
 fn breakpoint_follows_viewport_width() {
     let ctx = Context::default();
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         assert!(ui.ctx().breakpoint().is_mobile());
         assert!(ui.on_mobile());
         assert!(!ui.on_desktop());
     });
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         assert!(ui.ctx().breakpoint().is_desktop());
         assert!(ui.on_desktop());
         assert!(!ui.on_mobile());
@@ -81,12 +84,12 @@ fn breakpoint_follows_viewport_width() {
 
 #[test]
 fn spacing_scale_matches_functora_css_conventions() {
-    assert_eq!(Spacing::desktop().content_max_width, 1440.0); // @width: 90rem
-    assert_eq!(Spacing::mobile().content_max_width, 1440.0);
-    assert_eq!(Spacing::mobile().page_padding, 16.0);
-    assert_eq!(Spacing::desktop().page_padding, 32.0); // 2rem section padding
-    assert_eq!(Spacing::mobile().touch_height, 44.0);
-    assert_eq!(Spacing::desktop().touch_height, 32.0);
+    assert!((Spacing::desktop().content_max_width - 1440.0).abs() < 1e-6);
+    assert!((Spacing::mobile().content_max_width - 1440.0).abs() < 1e-6);
+    assert!((Spacing::mobile().page_padding - 16.0).abs() < 1e-6);
+    assert!((Spacing::desktop().page_padding - 32.0).abs() < 1e-6);
+    assert!((Spacing::mobile().touch_height - 44.0).abs() < 1e-6);
+    assert!((Spacing::desktop().touch_height - 32.0).abs() < 1e-6);
 }
 
 #[test]
@@ -113,20 +116,20 @@ fn component_sizes_scale_for_touch_on_mobile() {
 fn buttons_reach_touch_height_on_mobile() {
     let ctx = Context::default();
     let mut mobile_height = 0.0;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let resp = ui.add(Button::new("Click me"));
         mobile_height = resp.rect.height();
         let small = ui.add(Button::new("Small").size(ComponentSize::Sm));
-        assert_eq!(small.rect.height(), 40.0);
+        assert!((small.rect.height() - 40.0).abs() < 1e-6);
     });
-    assert_eq!(mobile_height, 44.0);
+    assert!((mobile_height - 44.0).abs() < 1e-6);
 
     let mut desktop_height = 0.0;
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         let resp = ui.add(Button::new("Click me"));
         desktop_height = resp.rect.height();
     });
-    assert_eq!(desktop_height, 32.0);
+    assert!((desktop_height - 32.0).abs() < 1e-6);
 }
 
 #[test]
@@ -135,12 +138,12 @@ fn form_controls_use_touch_height_on_mobile() {
     let mut select_height = 0.0;
     let out = run_frames(&ctx, MOBILE, 1, |ui| {
         let mut text = String::new();
-        ui.add(Input::new(&mut text).placeholder("Type"));
+        let _ = ui.add(Input::new(&mut text).placeholder("Type"));
         let mut selected = String::new();
         let select = ui.add(SelectValue::new(&mut selected, &["a".to_owned()]));
         select_height = select.rect.height();
     });
-    assert_eq!(select_height, 44.0);
+    assert!((select_height - 44.0).abs() < 1e-6);
     let rects = collect_filled_rects(&out.shapes);
     let input = find_rect(&rects, |r| {
         (r.height() - 44.0).abs() < 0.5 && r.width() > 300.0
@@ -157,7 +160,7 @@ fn input_height_follows_spacing_on_desktop() {
     let ctx = Context::default();
     let out = run_frames(&ctx, DESKTOP, 1, |ui| {
         let mut text = String::new();
-        ui.add(Input::new(&mut text).placeholder("Type"));
+        let _ = ui.add(Input::new(&mut text).placeholder("Type"));
     });
     let rects = collect_filled_rects(&out.shapes);
     let input = find_rect(&rects, |r| {
@@ -176,7 +179,7 @@ fn dialog_becomes_bottom_sheet_on_mobile() {
     let mut open = true;
     let out = run_frames(&ctx, MOBILE, 3, |ui| {
         Dialog::new().title("Test").show(ui.ctx(), &mut open, |d| {
-            d.label("body");
+            let _ = d.label("body");
         });
     });
     let rects = collect_filled_rects(&out.shapes);
@@ -203,7 +206,7 @@ fn dialog_stays_centered_on_desktop() {
     let mut open = true;
     let out = run_frames(&ctx, DESKTOP, 3, |ui| {
         Dialog::new().title("Test").show(ui.ctx(), &mut open, |d| {
-            d.label("body");
+            let _ = d.label("body");
         });
     });
     let rects = collect_filled_rects(&out.shapes);
@@ -227,7 +230,7 @@ fn sheet_clamps_width_to_viewport_on_mobile() {
             .width(400.0)
             .title("Sheet")
             .show(ui.ctx(), &mut open, |sheet| {
-                sheet.label("body");
+                let _ = sheet.label("body");
             });
     });
     let rects = collect_filled_rects(&out.shapes);
@@ -251,7 +254,7 @@ fn responsive_sidebar_hides_when_collapsed_on_mobile() {
     let mut collapsed = true;
     let mut content_called = false;
     let mut sidebar_rect = Rect::NOTHING;
-    run_frames(&ctx, MOBILE, 3, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 3, |ui| {
         let resp = Sidebar::new().collapsible().show(ui, &mut collapsed, |_| {
             content_called = true;
         });
@@ -270,7 +273,7 @@ fn responsive_sidebar_draws_overlay_when_open_on_mobile() {
     let mut collapsed = false;
     let mut content_called = false;
     let out = run_frames(&ctx, MOBILE, 20, |ui| {
-        Sidebar::new().collapsible().show(ui, &mut collapsed, |_| {
+        let _ = Sidebar::new().collapsible().show(ui, &mut collapsed, |_| {
             content_called = true;
         });
     });
@@ -294,7 +297,7 @@ fn responsive_sidebar_draws_overlay_when_open_on_mobile() {
 fn responsive_sidebar_collapses_to_rail_on_desktop() {
     let ctx = Context::default();
     let mut collapsed = true;
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         let resp = Sidebar::new()
             .collapsible()
             .show(ui, &mut collapsed, |_| {});
@@ -306,7 +309,7 @@ fn responsive_sidebar_collapses_to_rail_on_desktop() {
     });
 
     let mut expanded = false;
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         let resp = Sidebar::new().collapsible().show(ui, &mut expanded, |_| {});
         assert!(
             resp.rect.width() > 250.0,
@@ -321,7 +324,7 @@ fn static_sidebar_stays_inline_on_mobile() {
     let ctx = Context::default();
     let mut collapsed = false;
     let mut content_called = false;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let resp = Sidebar::new().static_().show(ui, &mut collapsed, |_| {
             content_called = true;
         });
@@ -334,10 +337,13 @@ fn static_sidebar_stays_inline_on_mobile() {
     assert!(content_called, "inline panel must always show its content");
 
     let mut after_x = 0.0;
-    run_frames(&ctx, MOBILE, 1, |ui| {
-        ui.horizontal(|ui| {
-            Sidebar::new().static_().show(ui, &mut collapsed, |_| {});
-            let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
+        let _ = ui.horizontal(|inner_ui| {
+            let _ = Sidebar::new()
+                .static_()
+                .show(inner_ui, &mut collapsed, |_| {});
+            let (rect, _) =
+                inner_ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
             after_x = rect.min.x;
         });
     });
@@ -351,14 +357,14 @@ fn static_sidebar_stays_inline_on_mobile() {
 fn sidebar_toggle_button_uses_touch_height() {
     let ctx = Context::default();
     let mut collapsed = true;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let resp = Sidebar::toggle_button(ui, &mut collapsed);
-        assert_eq!(resp.rect.width(), 44.0);
-        assert_eq!(resp.rect.height(), 44.0);
+        assert!((resp.rect.width() - 44.0).abs() < 1e-6);
+        assert!((resp.rect.height() - 44.0).abs() < 1e-6);
     });
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         let resp = Sidebar::toggle_button(ui, &mut collapsed);
-        assert_eq!(resp.rect.width(), 32.0);
+        assert!((resp.rect.width() - 32.0).abs() < 1e-6);
     });
 }
 
@@ -366,10 +372,10 @@ fn sidebar_toggle_button_uses_touch_height() {
 fn flex_wraps_on_mobile_but_not_desktop() {
     let ctx = Context::default();
     let mut mobile_height = 0.0;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let inner = Flex::row().gap(8.0).show(ui, |f| {
             for label in ["One", "Two", "Three", "Four", "Five"] {
-                f.add(Button::new(label).shortcut_text("Ctrl+K"));
+                let _ = f.add(Button::new(label).shortcut_text("Ctrl+K"));
             }
         });
         mobile_height = inner.response.rect.height();
@@ -380,10 +386,10 @@ fn flex_wraps_on_mobile_but_not_desktop() {
     );
 
     let mut desktop_height = 0.0;
-    run_frames(&ctx, DESKTOP, 1, |ui| {
+    let _ = run_frames(&ctx, DESKTOP, 1, |ui| {
         let inner = Flex::row().gap(8.0).show(ui, |f| {
             for label in ["One", "Two", "Three", "Four", "Five"] {
-                f.add(Button::new(label).shortcut_text("Ctrl+K"));
+                let _ = f.add(Button::new(label).shortcut_text("Ctrl+K"));
             }
         });
         desktop_height = inner.response.rect.height();
@@ -398,10 +404,10 @@ fn flex_wraps_on_mobile_but_not_desktop() {
 fn flex_no_wrap_on_mobile_keeps_single_line() {
     let ctx = Context::default();
     let mut mobile_height = 0.0;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let inner = Flex::row().gap(8.0).no_wrap_on_mobile().show(ui, |f| {
             for label in ["One", "Two", "Three", "Four", "Five"] {
-                f.add(Button::new(label).shortcut_text("Ctrl+K"));
+                let _ = f.add(Button::new(label).shortcut_text("Ctrl+K"));
             }
         });
         mobile_height = inner.response.rect.height();
@@ -416,10 +422,10 @@ fn flex_no_wrap_on_mobile_keeps_single_line() {
 fn flex_column_does_not_wrap_on_mobile() {
     let ctx = Context::default();
     let mut column_width = 0.0;
-    run_frames(&ctx, MOBILE, 1, |ui| {
+    let _ = run_frames(&ctx, MOBILE, 1, |ui| {
         let inner = Flex::column().gap(8.0).show(ui, |f| {
             for label in ["One", "Two", "Three", "Four", "Five"] {
-                f.add(egui::Button::new(label).min_size(egui::vec2(120.0, 32.0)));
+                let _ = f.add(egui::Button::new(label).min_size(egui::vec2(120.0, 32.0)));
             }
         });
         column_width = inner.response.rect.width();

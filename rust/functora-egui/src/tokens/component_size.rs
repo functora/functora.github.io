@@ -15,7 +15,8 @@ pub enum ComponentSize {
 }
 
 impl ComponentSize {
-    /// Returns (height, horizontal_padding, font_size) in logical pixels.
+    /// Returns (height, `horizontal_padding`, `font_size`) in logical pixels.
+    #[must_use]
     pub fn metrics(self) -> (f32, f32, f32) {
         match self {
             Self::Xs => (24.0, 8.0, 12.0),
@@ -25,9 +26,10 @@ impl ComponentSize {
         }
     }
 
-    /// Returns (height, horizontal_padding, font_size) scaled to the given
+    /// Returns (height, `horizontal_padding`, `font_size`) scaled to the given
     /// responsive spacing: mobile viewports use touch-friendly heights while
     /// font sizes stay identical so text looks uniform across devices.
+    #[must_use]
     pub fn metrics_for(self, spacing: &crate::responsive::Spacing) -> (f32, f32, f32) {
         let (height, h_padding, font_size) = self.metrics();
         if spacing.is_mobile() {

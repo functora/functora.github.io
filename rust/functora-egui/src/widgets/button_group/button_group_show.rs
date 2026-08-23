@@ -1,10 +1,11 @@
-//! Show method for ButtonGroup — renders buttons in a connected strip.
+//! Show method for `ButtonGroup` — renders buttons in a connected strip.
 //!
 //! Buttons are placed directly in the parent layout (no nested horizontal)
 //! to preserve baseline alignment with sibling widgets.
 
-impl super::button_group::ButtonGroup {
+impl super::widget::ButtonGroup {
     /// The egui temp data key for the active button group context.
+    #[must_use]
     pub fn context_key() -> egui::Id {
         egui::Id::new("functora_egui_btn_group")
     }
@@ -30,7 +31,7 @@ impl super::button_group::ButtonGroup {
 
         // Activate group context
         ui.ctx().data_mut(|d| {
-            d.insert_temp(
+            let _ = d.insert_temp(
                 key,
                 super::button_group_context::ButtonGroupContext {
                     active: true,
@@ -54,7 +55,7 @@ impl super::button_group::ButtonGroup {
         // Read boundaries, group rect, final count, and deactivate
         let (boundaries, group_rect, final_count) = ui.ctx().data_mut(|d| {
             let ctx = d.get_temp::<super::button_group_context::ButtonGroupContext>(key);
-            d.insert_temp(
+            let _ = d.insert_temp(
                 key,
                 super::button_group_context::ButtonGroupContext {
                     active: false,
@@ -66,7 +67,7 @@ impl super::button_group::ButtonGroup {
         });
 
         // Cache this group's count for next frame
-        ui.ctx().data_mut(|d| d.insert_temp(count_key, final_count));
+        let _ = ui.ctx().data_mut(|d| d.insert_temp(count_key, final_count));
 
         // Draw outer ring and dividers using the union rect from buttons
         let rect = group_rect.unwrap_or(egui::Rect::NOTHING);
@@ -85,9 +86,9 @@ impl super::button_group::ButtonGroup {
             );
 
             // Outer rounded border
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 rect,
-                egui::CornerRadius::same(cr.round() as u8),
+                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(cr)),
                 egui::Stroke::new(1.0, ring_color),
                 egui::epaint::StrokeKind::Inside,
             );
@@ -95,7 +96,7 @@ impl super::button_group::ButtonGroup {
             // Vertical dividers between buttons (skip after the last one)
             if boundaries.len() > 1 {
                 for &x in boundaries.iter().take(boundaries.len() - 1) {
-                    ui.painter().vline(
+                    let _ = ui.painter().vline(
                         x,
                         rect.min.y..=rect.max.y,
                         egui::Stroke::new(1.0, ring_color),

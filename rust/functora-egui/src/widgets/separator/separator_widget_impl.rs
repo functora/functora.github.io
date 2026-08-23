@@ -1,6 +1,6 @@
 //! Widget trait implementation for Separator.
 
-impl egui::Widget for super::separator::Separator {
+impl egui::Widget for super::widget::Separator {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -26,7 +26,7 @@ impl egui::Widget for super::separator::Separator {
 
                     // Left line
                     if text_x - gap > rect.min.x {
-                        painter.hline(
+                        let _ = painter.hline(
                             rect.min.x..=(text_x - gap),
                             cy,
                             egui::Stroke::new(1.0, theme.border),
@@ -34,7 +34,7 @@ impl egui::Widget for super::separator::Separator {
                     }
                     // Right line
                     if text_x + text_w + gap < rect.max.x {
-                        painter.hline(
+                        let _ = painter.hline(
                             (text_x + text_w + gap)..=rect.max.x,
                             cy,
                             egui::Stroke::new(1.0, theme.border),
@@ -54,7 +54,7 @@ impl egui::Widget for super::separator::Separator {
                 let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
 
                 if ui.is_rect_visible(rect) {
-                    ui.painter().hline(
+                    let _ = ui.painter().hline(
                         rect.x_range(),
                         rect.center().y,
                         egui::Stroke::new(1.0, theme.border),
@@ -72,7 +72,7 @@ impl egui::Widget for super::separator::Separator {
             let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
 
             if ui.is_rect_visible(rect) {
-                ui.painter().vline(
+                let _ = ui.painter().vline(
                     rect.center().x,
                     rect.y_range(),
                     egui::Stroke::new(1.0, theme.border),

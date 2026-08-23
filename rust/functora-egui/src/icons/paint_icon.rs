@@ -47,7 +47,7 @@ fn paint_element(
         }
         super::icon_element::IconElement::Circle { cx, cy, r } => {
             let center = egui::pos2(cx * scale + offset.x, cy * scale + offset.y);
-            painter.circle_stroke(center, r * scale, stroke);
+            let _ = painter.circle_stroke(center, r * scale, stroke);
         }
         super::icon_element::IconElement::Rect {
             x,
@@ -60,13 +60,13 @@ fn paint_element(
                 egui::pos2(x * scale + offset.x, y * scale + offset.y),
                 egui::vec2(width * scale, height * scale),
             );
-            let cr = egui::CornerRadius::same((rx * scale) as u8);
-            painter.rect_stroke(r, cr, stroke, egui::epaint::StrokeKind::Outside);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(rx * scale));
+            let _ = painter.rect_stroke(r, cr, stroke, egui::epaint::StrokeKind::Outside);
         }
         super::icon_element::IconElement::Line { x1, y1, x2, y2 } => {
             let p1 = egui::pos2(x1 * scale + offset.x, y1 * scale + offset.y);
             let p2 = egui::pos2(x2 * scale + offset.x, y2 * scale + offset.y);
-            painter.line_segment([p1, p2], stroke);
+            let _ = painter.line_segment([p1, p2], stroke);
         }
         super::icon_element::IconElement::Polyline(points) => {
             let pts: Vec<egui::Pos2> = points
@@ -74,7 +74,7 @@ fn paint_element(
                 .map(|(x, y)| egui::pos2(x * scale + offset.x, y * scale + offset.y))
                 .collect();
             if pts.len() >= 2 {
-                painter.add(egui::Shape::line(pts, stroke));
+                let _ = painter.add(egui::Shape::line(pts, stroke));
             }
         }
         super::icon_element::IconElement::Polygon(points) => {
@@ -83,11 +83,22 @@ fn paint_element(
                 .map(|(x, y)| egui::pos2(x * scale + offset.x, y * scale + offset.y))
                 .collect();
             if pts.len() >= 2 {
-                painter.add(egui::Shape::closed_line(pts, stroke));
+                let _ = painter.add(egui::Shape::closed_line(pts, stroke));
             }
         }
         super::icon_element::IconElement::Ellipse { cx, cy, rx, ry } => {
-            paint_ellipse(painter, *cx, *cy, *rx, *ry, scale, offset, stroke);
+            paint_ellipse(
+                painter,
+                Ellipse {
+                    cx: *cx,
+                    cy: *cy,
+                    rx: *rx,
+                    ry: *ry,
+                },
+                scale,
+                offset,
+                stroke,
+            );
         }
     }
 }
@@ -106,7 +117,6 @@ fn paint_path(
     let mut cy: f32 = 0.0;
     let mut subpath_start_x: f32 = 0.0;
     let mut subpath_start_y: f32 = 0.0;
-    // For smooth cubic/quad continuations
     let mut last_ctrl_x: f32 = 0.0;
     let mut last_ctrl_y: f32 = 0.0;
     let mut last_was_cubic = false;
@@ -175,14 +185,16 @@ fn paint_path(
             super::path_command::PathCommand::CubicAbs(x1, y1, x2, y2, x, y) => {
                 tessellate_cubic(
                     &mut points,
-                    cx,
-                    cy,
-                    *x1,
-                    *y1,
-                    *x2,
-                    *y2,
-                    *x,
-                    *y,
+                    TessellateCubic {
+                        x0: cx,
+                        y0: cy,
+                        x1: *x1,
+                        y1: *y1,
+                        x2: *x2,
+                        y2: *y2,
+                        x3: *x,
+                        y3: *y,
+                    },
                     scale,
                     offset,
                 );
@@ -197,7 +209,21 @@ fn paint_path(
                 let (x1, y1) = (cx + dx1, cy + dy1);
                 let (x2, y2) = (cx + dx2, cy + dy2);
                 let (ex, ey) = (cx + dx, cy + dy);
-                tessellate_cubic(&mut points, cx, cy, x1, y1, x2, y2, ex, ey, scale, offset);
+                tessellate_cubic(
+                    &mut points,
+                    TessellateCubic {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        x3: ex,
+                        y3: ey,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = x2;
                 last_ctrl_y = y2;
                 cx = ex;
@@ -211,7 +237,21 @@ fn paint_path(
                 } else {
                     (cx, cy)
                 };
-                tessellate_cubic(&mut points, cx, cy, x1, y1, *x2, *y2, *x, *y, scale, offset);
+                tessellate_cubic(
+                    &mut points,
+                    TessellateCubic {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2: *x2,
+                        y2: *y2,
+                        x3: *x,
+                        y3: *y,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = *x2;
                 last_ctrl_y = *y2;
                 cx = *x;
@@ -227,7 +267,21 @@ fn paint_path(
                 };
                 let (x2, y2) = (cx + dx2, cy + dy2);
                 let (ex, ey) = (cx + dx, cy + dy);
-                tessellate_cubic(&mut points, cx, cy, x1, y1, x2, y2, ex, ey, scale, offset);
+                tessellate_cubic(
+                    &mut points,
+                    TessellateCubic {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        x3: ex,
+                        y3: ey,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = x2;
                 last_ctrl_y = y2;
                 cx = ex;
@@ -236,7 +290,19 @@ fn paint_path(
                 last_was_quad = false;
             }
             super::path_command::PathCommand::QuadAbs(x1, y1, x, y) => {
-                tessellate_quad(&mut points, cx, cy, *x1, *y1, *x, *y, scale, offset);
+                tessellate_quad(
+                    &mut points,
+                    TessellateQuad {
+                        x0: cx,
+                        y0: cy,
+                        x1: *x1,
+                        y1: *y1,
+                        x2: *x,
+                        y2: *y,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = *x1;
                 last_ctrl_y = *y1;
                 cx = *x;
@@ -247,7 +313,19 @@ fn paint_path(
             super::path_command::PathCommand::QuadRel(dx1, dy1, dx, dy) => {
                 let (x1, y1) = (cx + dx1, cy + dy1);
                 let (ex, ey) = (cx + dx, cy + dy);
-                tessellate_quad(&mut points, cx, cy, x1, y1, ex, ey, scale, offset);
+                tessellate_quad(
+                    &mut points,
+                    TessellateQuad {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2: ex,
+                        y2: ey,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = x1;
                 last_ctrl_y = y1;
                 cx = ex;
@@ -261,7 +339,19 @@ fn paint_path(
                 } else {
                     (cx, cy)
                 };
-                tessellate_quad(&mut points, cx, cy, x1, y1, *x, *y, scale, offset);
+                tessellate_quad(
+                    &mut points,
+                    TessellateQuad {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2: *x,
+                        y2: *y,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = x1;
                 last_ctrl_y = y1;
                 cx = *x;
@@ -276,7 +366,19 @@ fn paint_path(
                     (cx, cy)
                 };
                 let (ex, ey) = (cx + dx, cy + dy);
-                tessellate_quad(&mut points, cx, cy, x1, y1, ex, ey, scale, offset);
+                tessellate_quad(
+                    &mut points,
+                    TessellateQuad {
+                        x0: cx,
+                        y0: cy,
+                        x1,
+                        y1,
+                        x2: ex,
+                        y2: ey,
+                    },
+                    scale,
+                    offset,
+                );
                 last_ctrl_x = x1;
                 last_ctrl_y = y1;
                 cx = ex;
@@ -295,15 +397,17 @@ fn paint_path(
             } => {
                 tessellate_arc(
                     &mut points,
-                    cx,
-                    cy,
-                    *rx,
-                    *ry,
-                    *angle,
-                    *large_arc,
-                    *sweep,
-                    *x,
-                    *y,
+                    TessellateArc {
+                        x1: cx,
+                        y1: cy,
+                        rx: *rx,
+                        ry: *ry,
+                        x_rotation_deg: *angle,
+                        large_arc: *large_arc,
+                        sweep: *sweep,
+                        x2: *x,
+                        y2: *y,
+                    },
                     scale,
                     offset,
                 );
@@ -324,15 +428,17 @@ fn paint_path(
                 let (ex, ey) = (cx + x, cy + y);
                 tessellate_arc(
                     &mut points,
-                    cx,
-                    cy,
-                    *rx,
-                    *ry,
-                    *angle,
-                    *large_arc,
-                    *sweep,
-                    ex,
-                    ey,
+                    TessellateArc {
+                        x1: cx,
+                        y1: cy,
+                        rx: *rx,
+                        ry: *ry,
+                        x_rotation_deg: *angle,
+                        large_arc: *large_arc,
+                        sweep: *sweep,
+                        x2: ex,
+                        y2: ey,
+                    },
                     scale,
                     offset,
                 );
@@ -365,9 +471,9 @@ fn flush_subpath(
     if points.len() >= 2 {
         let pts = std::mem::take(points);
         if closed {
-            painter.add(egui::Shape::closed_line(pts, stroke));
+            let _ = painter.add(egui::Shape::closed_line(pts, stroke));
         } else {
-            painter.add(egui::Shape::line(pts, stroke));
+            let _ = painter.add(egui::Shape::line(pts, stroke));
         }
     } else {
         points.clear();
@@ -379,8 +485,8 @@ fn flush_subpath(
 const CUBIC_SEGMENTS: usize = 8;
 const QUAD_SEGMENTS: usize = 6;
 
-fn tessellate_cubic(
-    points: &mut Vec<egui::Pos2>,
+#[derive(Clone, Copy)]
+struct TessellateCubic {
     x0: f32,
     y0: f32,
     x1: f32,
@@ -389,34 +495,50 @@ fn tessellate_cubic(
     y2: f32,
     x3: f32,
     y3: f32,
+}
+
+fn tessellate_cubic(
+    points: &mut Vec<egui::Pos2>,
+    cubic: TessellateCubic,
     scale: f32,
     offset: egui::Pos2,
 ) {
     for i in 1..=CUBIC_SEGMENTS {
-        let t = i as f32 / CUBIC_SEGMENTS as f32;
+        let t = crate::utils::usize_to_f32(i) / crate::utils::usize_to_f32(CUBIC_SEGMENTS);
         let u = 1.0 - t;
-        let x = u * u * u * x0 + 3.0 * u * u * t * x1 + 3.0 * u * t * t * x2 + t * t * t * x3;
-        let y = u * u * u * y0 + 3.0 * u * u * t * y1 + 3.0 * u * t * t * y2 + t * t * t * y3;
+        let x = u * u * u * cubic.x0
+            + 3.0 * u * u * t * cubic.x1
+            + 3.0 * u * t * t * cubic.x2
+            + t * t * t * cubic.x3;
+        let y = u * u * u * cubic.y0
+            + 3.0 * u * u * t * cubic.y1
+            + 3.0 * u * t * t * cubic.y2
+            + t * t * t * cubic.y3;
         points.push(map_point(x, y, scale, offset));
     }
 }
 
-fn tessellate_quad(
-    points: &mut Vec<egui::Pos2>,
+#[derive(Clone, Copy)]
+struct TessellateQuad {
     x0: f32,
     y0: f32,
     x1: f32,
     y1: f32,
     x2: f32,
     y2: f32,
+}
+
+fn tessellate_quad(
+    points: &mut Vec<egui::Pos2>,
+    quad: TessellateQuad,
     scale: f32,
     offset: egui::Pos2,
 ) {
     for i in 1..=QUAD_SEGMENTS {
-        let t = i as f32 / QUAD_SEGMENTS as f32;
+        let t = crate::utils::usize_to_f32(i) / crate::utils::usize_to_f32(QUAD_SEGMENTS);
         let u = 1.0 - t;
-        let x = u * u * x0 + 2.0 * u * t * x1 + t * t * x2;
-        let y = u * u * y0 + 2.0 * u * t * y1 + t * t * y2;
+        let x = u * u * quad.x0 + 2.0 * u * t * quad.x1 + t * t * quad.x2;
+        let y = u * u * quad.y0 + 2.0 * u * t * quad.y1 + t * t * quad.y2;
         points.push(map_point(x, y, scale, offset));
     }
 }
@@ -426,21 +548,36 @@ fn tessellate_quad(
 /// Convert an SVG arc to one or more cubic Bézier segments.
 ///
 /// Follows the SVG spec endpoint-to-center parameterisation.
-fn tessellate_arc(
-    points: &mut Vec<egui::Pos2>,
+#[derive(Clone, Copy)]
+struct TessellateArc {
     x1: f32,
     y1: f32,
-    mut rx: f32,
-    mut ry: f32,
+    rx: f32,
+    ry: f32,
     x_rotation_deg: f32,
     large_arc: bool,
     sweep: bool,
     x2: f32,
     y2: f32,
+}
+
+fn tessellate_arc(
+    points: &mut Vec<egui::Pos2>,
+    arc: TessellateArc,
     scale: f32,
     offset: egui::Pos2,
 ) {
-    // Degenerate: zero radius → line
+    let TessellateArc {
+        x1,
+        y1,
+        mut rx,
+        mut ry,
+        x_rotation_deg,
+        large_arc,
+        sweep,
+        x2,
+        y2,
+    } = arc;
     if rx.abs() < 1e-6 || ry.abs() < 1e-6 {
         points.push(map_point(x2, y2, scale, offset));
         return;
@@ -451,13 +588,11 @@ fn tessellate_arc(
     let phi = x_rotation_deg.to_radians();
     let (sin_phi, cos_phi) = phi.sin_cos();
 
-    // Step 1: compute (x1', y1') in rotated coordinate system
     let dx2 = (x1 - x2) / 2.0;
     let dy2 = (y1 - y2) / 2.0;
     let x1p = cos_phi * dx2 + sin_phi * dy2;
     let y1p = -sin_phi * dx2 + cos_phi * dy2;
 
-    // Step 2: correct radii if too small
     let x1p2 = x1p * x1p;
     let y1p2 = y1p * y1p;
     let rx2 = rx * rx;
@@ -468,22 +603,19 @@ fn tessellate_arc(
         rx *= sqrt_lambda;
         ry *= sqrt_lambda;
     }
-    let rx2 = rx * rx;
-    let ry2 = ry * ry;
+    let scaled_rx2 = rx * rx;
+    let scaled_ry2 = ry * ry;
 
-    // Step 3: compute center point (cx', cy')
-    let num = (rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2).max(0.0);
-    let den = rx2 * y1p2 + ry2 * x1p2;
+    let num = (scaled_rx2 * scaled_ry2 - scaled_rx2 * y1p2 - scaled_ry2 * x1p2).max(0.0);
+    let den = scaled_rx2 * y1p2 + scaled_ry2 * x1p2;
     let sq = if den > 0.0 { (num / den).sqrt() } else { 0.0 };
     let sign = if large_arc == sweep { -1.0 } else { 1.0 };
     let cxp = sign * sq * (rx * y1p / ry);
     let cyp = sign * sq * (-(ry * x1p / rx));
 
-    // Step 4: compute center (cx, cy) in original coordinates
-    let cx = cos_phi * cxp - sin_phi * cyp + (x1 + x2) / 2.0;
-    let cy = sin_phi * cxp + cos_phi * cyp + (y1 + y2) / 2.0;
+    let cx = cos_phi * cxp - sin_phi * cyp + f32::midpoint(x1, x2);
+    let cy = sin_phi * cxp + cos_phi * cyp + f32::midpoint(y1, y2);
 
-    // Step 5: compute start angle and sweep angle
     let theta1 = angle_between(1.0, 0.0, (x1p - cxp) / rx, (y1p - cyp) / ry);
     let mut dtheta = angle_between(
         (x1p - cxp) / rx,
@@ -498,21 +630,34 @@ fn tessellate_arc(
         dtheta += std::f32::consts::TAU;
     }
 
-    // Step 6: approximate arc with cubic Bézier segments
-    let n_segs = ((dtheta.abs() / (std::f32::consts::FRAC_PI_4)).ceil() as usize).max(1);
-    let seg_angle = dtheta / n_segs as f32;
+    let n_segs =
+        crate::utils::f32_to_usize_clamped((dtheta.abs() / std::f32::consts::FRAC_PI_4).ceil())
+            .max(1);
+    let seg_angle = dtheta / crate::utils::usize_to_f32(n_segs);
 
     for i in 0..n_segs {
-        let a1 = theta1 + seg_angle * i as f32;
+        let a1 = theta1 + seg_angle * crate::utils::usize_to_f32(i);
         let a2 = a1 + seg_angle;
         arc_segment_to_cubic(
-            points, cx, cy, rx, ry, sin_phi, cos_phi, a1, a2, scale, offset,
+            points,
+            ArcSegment {
+                cx,
+                cy,
+                rx,
+                ry,
+                sin_phi,
+                cos_phi,
+                a1,
+                a2,
+            },
+            scale,
+            offset,
         );
     }
 }
 
-fn arc_segment_to_cubic(
-    points: &mut Vec<egui::Pos2>,
+#[derive(Clone, Copy)]
+struct ArcSegment {
     cx: f32,
     cy: f32,
     rx: f32,
@@ -521,41 +666,54 @@ fn arc_segment_to_cubic(
     cos_phi: f32,
     a1: f32,
     a2: f32,
+}
+
+fn arc_segment_to_cubic(
+    points: &mut Vec<egui::Pos2>,
+    seg: ArcSegment,
     scale: f32,
     offset: egui::Pos2,
 ) {
-    let half = (a2 - a1) / 2.0;
+    let half = (seg.a2 - seg.a1) / 2.0;
     let alpha = half.sin() * ((4.0 + 3.0 * (2.0 * half).tan().powi(2)).sqrt() - 1.0) / 3.0;
 
-    let (sin1, cos1) = a1.sin_cos();
-    let (sin2, cos2) = a2.sin_cos();
+    let (sin1, cos1) = seg.a1.sin_cos();
+    let (sin2, cos2) = seg.a2.sin_cos();
 
-    let ex1 = rx * cos1;
-    let ey1 = ry * sin1;
-    let ex2 = rx * cos2;
-    let ey2 = ry * sin2;
+    let ex1 = seg.rx * cos1;
+    let ey1 = seg.ry * sin1;
+    let ex2 = seg.rx * cos2;
+    let ey2 = seg.ry * sin2;
 
-    // Control point 1
-    let dx1 = -rx * sin1;
-    let dy1 = ry * cos1;
-    let cp1x = cx + cos_phi * (ex1 + alpha * dx1) - sin_phi * (ey1 + alpha * dy1);
-    let cp1y = cy + sin_phi * (ex1 + alpha * dx1) + cos_phi * (ey1 + alpha * dy1);
+    let dx1 = -seg.rx * sin1;
+    let dy1 = seg.ry * cos1;
+    let cp1x = seg.cx + seg.cos_phi * (ex1 + alpha * dx1) - seg.sin_phi * (ey1 + alpha * dy1);
+    let cp1y = seg.cy + seg.sin_phi * (ex1 + alpha * dx1) + seg.cos_phi * (ey1 + alpha * dy1);
 
-    // Control point 2
-    let dx2 = -rx * sin2;
-    let dy2 = ry * cos2;
-    let cp2x = cx + cos_phi * (ex2 - alpha * dx2) - sin_phi * (ey2 - alpha * dy2);
-    let cp2y = cy + sin_phi * (ex2 - alpha * dx2) + cos_phi * (ey2 - alpha * dy2);
+    let dx2 = -seg.rx * sin2;
+    let dy2 = seg.ry * cos2;
+    let cp2x = seg.cx + seg.cos_phi * (ex2 - alpha * dx2) - seg.sin_phi * (ey2 - alpha * dy2);
+    let cp2y = seg.cy + seg.sin_phi * (ex2 - alpha * dx2) + seg.cos_phi * (ey2 - alpha * dy2);
 
-    // End point
-    let px = cx + cos_phi * ex2 - sin_phi * ey2;
-    let py = cy + sin_phi * ex2 + cos_phi * ey2;
+    let px = seg.cx + seg.cos_phi * ex2 - seg.sin_phi * ey2;
+    let py = seg.cy + seg.sin_phi * ex2 + seg.cos_phi * ey2;
 
-    // Tessellate this cubic segment
-    let prev_x = cx + cos_phi * ex1 - sin_phi * ey1;
-    let prev_y = cy + sin_phi * ex1 + cos_phi * ey1;
+    let prev_x = seg.cx + seg.cos_phi * ex1 - seg.sin_phi * ey1;
+    let prev_y = seg.cy + seg.sin_phi * ex1 + seg.cos_phi * ey1;
     tessellate_cubic(
-        points, prev_x, prev_y, cp1x, cp1y, cp2x, cp2y, px, py, scale, offset,
+        points,
+        TessellateCubic {
+            x0: prev_x,
+            y0: prev_y,
+            x1: cp1x,
+            y1: cp1y,
+            x2: cp2x,
+            y2: cp2y,
+            x3: px,
+            y3: py,
+        },
+        scale,
+        offset,
     );
 }
 
@@ -573,12 +731,17 @@ fn angle_between(ux: f32, uy: f32, vx: f32, vy: f32) -> f32 {
 
 // ── Ellipse approximation ───────────────────────────────────────
 
-fn paint_ellipse(
-    painter: &egui::Painter,
+#[derive(Clone, Copy)]
+struct Ellipse {
     cx: f32,
     cy: f32,
     rx: f32,
     ry: f32,
+}
+
+fn paint_ellipse(
+    painter: &egui::Painter,
+    ellipse: Ellipse,
     scale: f32,
     offset: egui::Pos2,
     stroke: egui::Stroke,
@@ -586,12 +749,13 @@ fn paint_ellipse(
     const N: usize = 32;
     let pts: Vec<egui::Pos2> = (0..N)
         .map(|i| {
-            let angle = std::f32::consts::TAU * i as f32 / N as f32;
-            let x = cx + rx * angle.cos();
-            let y = cy + ry * angle.sin();
+            let angle = std::f32::consts::TAU * crate::utils::usize_to_f32(i)
+                / crate::utils::usize_to_f32(N);
+            let x = ellipse.cx + ellipse.rx * angle.cos();
+            let y = ellipse.cy + ellipse.ry * angle.sin();
             map_point(x, y, scale, offset)
         })
         .collect();
 
-    painter.add(egui::Shape::closed_line(pts, stroke));
+    let _ = painter.add(egui::Shape::closed_line(pts, stroke));
 }

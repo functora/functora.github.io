@@ -1,6 +1,6 @@
 //! Widget trait implementation for Radio.
 
-impl egui::Widget for super::radio::Radio<'_> {
+impl egui::Widget for super::widget::Radio<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -46,7 +46,7 @@ impl egui::Widget for super::radio::Radio<'_> {
             let center = egui::pos2(rect.min.x + outer_radius, rect.center().y);
 
             // Outer circle
-            painter.circle_stroke(
+            let _ = painter.circle_stroke(
                 center,
                 outer_radius,
                 egui::Stroke::new(1.0, style.circle_border),
@@ -54,7 +54,7 @@ impl egui::Widget for super::radio::Radio<'_> {
 
             // Inner dot (animated)
             if anim_t > 0.01 {
-                painter.circle_filled(center, inner_radius * anim_t, style.dot_color);
+                let _ = painter.circle_filled(center, inner_radius * anim_t, style.dot_color);
             }
 
             // Label

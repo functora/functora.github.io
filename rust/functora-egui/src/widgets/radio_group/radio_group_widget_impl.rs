@@ -1,17 +1,15 @@
-//! Widget trait implementation for RadioGroup.
+//! Widget trait implementation for `RadioGroup`.
 
-impl<T: Clone + PartialEq + std::fmt::Display> egui::Widget
-    for super::radio_group::RadioGroup<'_, T>
-{
+impl<T: Clone + PartialEq + std::fmt::Display> egui::Widget for super::widget::RadioGroup<'_, T> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let mut any_clicked = false;
 
-        let response = ui.vertical(|ui| {
+        let response = ui.vertical(|inner_ui| {
             for option in self.options {
                 let is_selected = option == self.selected;
                 let mut sel = is_selected;
-                let r = ui.add(
-                    crate::widgets::radio::radio::Radio::new(&mut sel).label(option.to_string()),
+                let r = inner_ui.add(
+                    crate::widgets::radio::widget::Radio::new(&mut sel).label(option.to_string()),
                 );
                 if r.clicked() && !is_selected {
                     *self.selected = option.clone();

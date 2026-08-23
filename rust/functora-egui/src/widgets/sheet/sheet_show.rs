@@ -1,6 +1,6 @@
 //! Show method for Sheet — renders a slide-in panel overlay with animation.
 
-impl super::sheet::Sheet {
+impl super::widget::Sheet {
     pub fn show(self, ctx: &egui::Context, open: &mut bool, content: impl FnOnce(&mut egui::Ui)) {
         let anim_id = egui::Id::new("sheet_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, *open, 0.2);
@@ -10,14 +10,14 @@ impl super::sheet::Sheet {
         }
 
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
-        let screen = ctx.input(|i| i.viewport_rect());
+        let screen = ctx.input(egui::InputState::viewport_rect);
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
-        let backdrop_alpha = (60.0 * ease_t) as u8;
+        let backdrop_alpha = crate::utils::f32_to_u8_clamped(60.0 * ease_t);
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("sheet_backdrop"));
-        ctx.layer_painter(backdrop_layer).rect_filled(
+        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
             screen,
             egui::CornerRadius::ZERO,
             egui::Color32::from_black_alpha(backdrop_alpha),
@@ -27,8 +27,9 @@ impl super::sheet::Sheet {
         let backdrop_response = egui::Area::new(egui::Id::new("sheet_backdrop_sense"))
             .order(egui::Order::Middle)
             .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                let (_, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click());
+            .show(ctx, |inner_ui| {
+                let (_, response) =
+                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
                 response
             });
 
@@ -58,16 +59,16 @@ impl super::sheet::Sheet {
             ),
         };
 
-        egui::Area::new(egui::Id::new("sheet_panel"))
+        let _ = egui::Area::new(egui::Id::new("sheet_panel"))
             .order(egui::Order::Foreground)
             .anchor(anchor, offset)
-            .show(ctx, |ui| {
+            .show(ctx, |inner_ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.background)
                     .inner_margin(egui::Margin::same(24))
                     .stroke(egui::Stroke::new(1.0, theme.border));
 
-                frame.show(ui, |ui| {
+                let _ = frame.show(inner_ui, |content_ui| {
                     let is_horizontal = matches!(
                         self.side,
                         crate::tokens::sheet_side::SheetSide::Left
@@ -79,38 +80,42 @@ impl super::sheet::Sheet {
                         // keep the whole frame inside the screen with 24px margins.
                         let width = self.width.min((screen.width() - 98.0).max(0.0));
                         let height = (screen.height() - 98.0).max(0.0);
-                        ui.set_min_size(egui::vec2(width, height));
-                        ui.set_max_width(width);
-                        ui.set_max_height(height);
+                        content_ui.set_min_size(egui::vec2(width, height));
+                        content_ui.set_max_width(width);
+                        content_ui.set_max_height(height);
                     } else {
-                        ui.set_min_width((screen.width() - 98.0).max(0.0));
-                        ui.set_max_height(self.width.min((screen.height() - 98.0).max(0.0)));
+                        content_ui.set_min_width((screen.width() - 98.0).max(0.0));
+                        content_ui
+                            .set_max_height(self.width.min((screen.height() - 98.0).max(0.0)));
                     }
 
                     // Close button
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-                        let close_size = 16.0;
-                        let (close_rect, close_resp) = ui.allocate_exact_size(
-                            egui::vec2(close_size, close_size),
-                            egui::Sense::click(),
-                        );
-                        if ui.is_rect_visible(close_rect) {
-                            crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
-                                close_rect,
-                                &crate::icons::lucide_icon::LucideIcon::X,
-                                theme.muted_foreground,
+                    let _ = content_ui.with_layout(
+                        egui::Layout::right_to_left(egui::Align::TOP),
+                        |inner_ui3| {
+                            let close_size = 16.0;
+                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
+                                egui::vec2(close_size, close_size),
+                                egui::Sense::click(),
                             );
-                        }
-                        if close_resp.clicked() {
-                            *open = false;
-                            ctx.request_repaint();
-                        }
-                    });
+                            if inner_ui3.is_rect_visible(close_rect) {
+                                crate::icons::paint_icon::paint_icon(
+                                    inner_ui3.painter(),
+                                    close_rect,
+                                    &crate::icons::lucide_icon::LucideIcon::X,
+                                    theme.muted_foreground,
+                                );
+                            }
+                            if close_resp.clicked() {
+                                *open = false;
+                                ctx.request_repaint();
+                            }
+                        },
+                    );
 
                     // Title & description
                     if let Some(title) = self.title {
-                        ui.label(
+                        let _ = content_ui.label(
                             egui::RichText::new(title)
                                 .color(theme.foreground)
                                 .size(18.0)
@@ -119,16 +124,16 @@ impl super::sheet::Sheet {
                     }
 
                     if let Some(desc) = self.description {
-                        ui.add_space(4.0);
-                        ui.label(
+                        content_ui.add_space(4.0);
+                        let _ = content_ui.label(
                             egui::RichText::new(desc)
                                 .color(theme.muted_foreground)
                                 .size(14.0),
                         );
                     }
 
-                    ui.add_space(16.0);
-                    content(ui);
+                    content_ui.add_space(16.0);
+                    content(content_ui);
                 });
             });
 

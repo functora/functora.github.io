@@ -6,12 +6,12 @@ pub fn startup_width(cc: &eframe::CreationContext<'_>) -> f32 {
     web_sys::window()
         .and_then(|win| {
             win.visual_viewport()
-                .map(|vp| vp.width() as f32)
+                .map(|vp| crate::utils::f64_to_f32(vp.width()))
                 .or_else(|| {
                     win.inner_width()
                         .ok()
                         .and_then(|v| v.as_f64())
-                        .map(|v| v as f32)
+                        .map(crate::utils::f64_to_f32)
                 })
         })
         .unwrap_or_else(|| cc.egui_ctx.input(|input| input.viewport_rect().width()))

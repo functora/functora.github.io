@@ -2,7 +2,7 @@
 
 use crate::responsive::responsive_ext::ResponsiveExt;
 
-impl super::resizable::Resizable {
+impl super::widget::Resizable {
     /// Shows a horizontal split with draggable divider.
     /// `fraction` persists the split position. Pass `&mut your_f32_state`.
     pub fn show(
@@ -40,12 +40,12 @@ impl super::resizable::Resizable {
 
         if ui.is_rect_visible(whole_rect) {
             let painter = ui.painter();
-            painter.rect_filled(handle_rect, egui::CornerRadius::ZERO, theme.border);
+            let _ = painter.rect_filled(handle_rect, egui::CornerRadius::ZERO, theme.border);
 
             let center = handle_rect.center();
             let dot_color = theme.muted_foreground;
             for dy in [-8.0_f32, 0.0, 8.0] {
-                painter.circle_filled(egui::pos2(center.x, center.y + dy), 1.5, dot_color);
+                let _ = painter.circle_filled(egui::pos2(center.x, center.y + dy), 1.5, dot_color);
             }
         }
 

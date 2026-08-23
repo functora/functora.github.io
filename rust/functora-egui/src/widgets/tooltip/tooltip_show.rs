@@ -1,6 +1,6 @@
 //! Show method for Tooltip — wraps a response with a styled tooltip on hover.
 
-impl super::tooltip::Tooltip {
+impl super::widget::Tooltip {
     /// Attaches a tooltip to the given response. Call after the trigger widget.
     pub fn show(self, response: &egui::Response) {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(&response.ctx);
@@ -18,8 +18,8 @@ impl super::tooltip::Tooltip {
         let mut tooltip = egui::Tooltip::for_enabled(response);
         tooltip.popup = tooltip.popup.frame(themed_frame);
 
-        tooltip.show(|ui| {
-            ui.label(
+        let _ = tooltip.show(|popup_ui| {
+            let _ = popup_ui.label(
                 egui::RichText::new(&self.text)
                     .color(theme.primary_foreground)
                     .size(12.0),

@@ -1422,6 +1422,7 @@ dependencies = [
  "egui_flex",
  "jni 0.21.1",
  "log",
+ "num-traits",
  "toml",
  "wasm-bindgen",
  "wasm-bindgen-futures",

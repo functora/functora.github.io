@@ -11,19 +11,19 @@ impl super::toast_state::ToastState {
             return;
         }
 
-        let cr = egui::CornerRadius::same((theme.radius + 2.0).round() as u8);
+        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0));
         let toast_width: f32 = 356.0;
         let spacing: f32 = 8.0;
 
         let mut dismissed: Vec<usize> = Vec::new();
 
         for (idx, toast) in self.toasts.iter().enumerate() {
-            let offset_y = -(idx as f32 * (72.0 + spacing)) - 16.0;
+            let offset_y = -(crate::utils::usize_to_f32(idx) * (72.0 + spacing)) - 16.0;
 
-            egui::Area::new(egui::Id::new("toast").with(idx))
+            let _ = egui::Area::new(egui::Id::new("toast").with(idx))
                 .order(egui::Order::Foreground)
                 .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, offset_y))
-                .show(ctx, |ui| {
+                .show(ctx, |inner_ui| {
                     let (border_color, accent) = match toast.variant {
                         crate::tokens::toast_variant::ToastVariant::Default => {
                             (theme.border, theme.foreground)
@@ -51,35 +51,35 @@ impl super::toast_state::ToastState {
                         .corner_radius(cr)
                         .stroke(egui::Stroke::new(1.0, border_color));
 
-                    frame.show(ui, |ui| {
-                        ui.set_min_width(toast_width);
-                        ui.set_max_width(toast_width);
+                    let _ = frame.show(inner_ui, |content_ui| {
+                        content_ui.set_min_width(toast_width);
+                        content_ui.set_max_width(toast_width);
 
                         // Title row: title on left, close X on right
-                        ui.horizontal(|ui| {
-                            ui.label(
+                        let _ = content_ui.horizontal(|inner_ui3| {
+                            let _ = inner_ui3.label(
                                 egui::RichText::new(&toast.title)
                                     .color(accent)
                                     .size(14.0)
                                     .strong(),
                             );
 
-                            ui.with_layout(
+                            let _ = inner_ui3.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
+                                |inner_ui4| {
                                     let close_size = 14.0;
-                                    let (close_rect, close_resp) = ui.allocate_exact_size(
+                                    let (close_rect, close_resp) = inner_ui4.allocate_exact_size(
                                         egui::vec2(close_size, close_size),
                                         egui::Sense::click(),
                                     );
-                                    if ui.is_rect_visible(close_rect) {
+                                    if inner_ui4.is_rect_visible(close_rect) {
                                         let color = if close_resp.hovered() {
                                             theme.foreground
                                         } else {
                                             theme.muted_foreground
                                         };
                                         crate::icons::paint_icon::paint_icon(
-                                            ui.painter(),
+                                            inner_ui4.painter(),
                                             close_rect,
                                             &crate::icons::lucide_icon::LucideIcon::X,
                                             color,
@@ -93,8 +93,8 @@ impl super::toast_state::ToastState {
                         });
 
                         if let Some(desc) = &toast.description {
-                            ui.add_space(2.0);
-                            ui.label(
+                            content_ui.add_space(2.0);
+                            let _ = content_ui.label(
                                 egui::RichText::new(desc)
                                     .color(theme.muted_foreground)
                                     .size(13.0),
@@ -106,7 +106,7 @@ impl super::toast_state::ToastState {
 
         // Remove dismissed toasts (reverse order to keep indices valid)
         for idx in dismissed.into_iter().rev() {
-            self.toasts.remove(idx);
+            let _ = self.toasts.remove(idx);
         }
 
         ctx.request_repaint();

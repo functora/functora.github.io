@@ -1,4 +1,4 @@
-//! PropertyRow builder struct.
+//! `PropertyRow` builder struct.
 
 /// A single label/control row for an inspector or settings panel.
 #[must_use]

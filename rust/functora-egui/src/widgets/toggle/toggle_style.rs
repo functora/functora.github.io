@@ -1,6 +1,7 @@
 //! Maps toggle state to concrete style values.
 
 /// Resolves toggle colors based on pressed state, variant, and interaction.
+#[must_use]
 pub fn resolve_toggle_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     variant: crate::tokens::toggle_variant::ToggleVariant,

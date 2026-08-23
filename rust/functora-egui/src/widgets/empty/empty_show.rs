@@ -1,18 +1,18 @@
 //! Show method for Empty — renders dashed-border container.
 
-impl super::empty::Empty {
+impl super::widget::Empty {
     /// Renders a dashed-border container with content inside.
     pub fn show(ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::InnerResponse<()> {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = (theme.radius + 2.0).round() as u8; // rounded-xl
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0); // rounded-xl
 
         let frame = egui::Frame::NONE
             .inner_margin(egui::Margin::same(24)) // p-6
             .corner_radius(egui::CornerRadius::same(cr));
 
-        let result = frame.show(ui, |ui| {
-            ui.vertical_centered(|ui| {
-                content(ui);
+        let result = frame.show(ui, |inner_ui| {
+            let _ = inner_ui.vertical_centered(|content_ui| {
+                content(content_ui);
             });
         });
 

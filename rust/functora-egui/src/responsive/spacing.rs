@@ -25,6 +25,7 @@ pub struct Spacing {
 
 impl Spacing {
     /// Compact scale for mouse-driven desktop use.
+    #[must_use]
     pub fn desktop() -> Self {
         Self {
             breakpoint: Breakpoint::Desktop,
@@ -37,6 +38,7 @@ impl Spacing {
     }
 
     /// Touch-friendly scale for narrow viewports.
+    #[must_use]
     pub fn mobile() -> Self {
         Self {
             breakpoint: Breakpoint::Mobile,
@@ -49,6 +51,7 @@ impl Spacing {
     }
 
     /// The scale matching the given breakpoint.
+    #[must_use]
     pub fn for_breakpoint(breakpoint: Breakpoint) -> Self {
         match breakpoint {
             Breakpoint::Mobile => Self::mobile(),
@@ -57,6 +60,7 @@ impl Spacing {
     }
 
     /// True when this scale is the touch-friendly mobile one.
+    #[must_use]
     pub fn is_mobile(self) -> bool {
         self.breakpoint.is_mobile()
     }

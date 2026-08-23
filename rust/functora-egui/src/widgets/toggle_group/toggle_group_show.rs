@@ -1,11 +1,11 @@
-//! Show method for ToggleGroup — renders a set of exclusive toggles.
+//! Show method for `ToggleGroup` — renders a set of exclusive toggles.
 
-impl super::toggle_group::ToggleGroup {
+impl super::widget::ToggleGroup {
     /// Shows the toggle group. `selected` is the index of the active item.
     /// Returns the new selected index if changed.
     pub fn show(self, ui: &mut egui::Ui, selected: &mut usize) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = theme.radius.round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
 
         let outer_frame = egui::Frame::NONE
             .fill(theme.muted)
@@ -13,16 +13,17 @@ impl super::toggle_group::ToggleGroup {
             .corner_radius(egui::CornerRadius::same(cr));
 
         outer_frame
-            .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 2.0;
+            .show(ui, |inner_ui| {
+                let _ = inner_ui.horizontal(|content_ui| {
+                    content_ui.spacing_mut().item_spacing.x = 2.0;
                     for (idx, label) in self.items.iter().enumerate() {
                         let is_selected = idx == *selected;
                         let icon = self.icons.get(idx).copied().flatten();
-                        let response = self.render_item(ui, &theme, label, icon, is_selected, cr);
+                        let response =
+                            Self::render_item(content_ui, &theme, label, icon, is_selected, cr);
                         if response.clicked() {
                             *selected = idx;
-                            ui.ctx().request_repaint();
+                            content_ui.ctx().request_repaint();
                         }
                     }
                 });
@@ -31,7 +32,6 @@ impl super::toggle_group::ToggleGroup {
     }
 
     fn render_item(
-        &self,
         ui: &mut egui::Ui,
         theme: &crate::theme::shadcn_theme::ShadcnTheme,
         label: &str,
@@ -79,10 +79,10 @@ impl super::toggle_group::ToggleGroup {
                 (egui::Color32::TRANSPARENT, theme.muted_foreground)
             };
 
-            painter.rect_filled(rect, corner, bg);
+            let _ = painter.rect_filled(rect, corner, bg);
 
             if is_selected {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     corner,
                     egui::Stroke::new(
@@ -98,13 +98,13 @@ impl super::toggle_group::ToggleGroup {
                 );
             }
 
-            let content_x = rect.center().x - (icon_w + galley.size().x) / 2.0;
-            if let Some(icon) = icon {
+            let content_x = rect.center().x - f32::midpoint(icon_w, galley.size().x);
+            if let Some(icon_val) = icon {
                 let icon_rect = egui::Rect::from_min_size(
                     egui::pos2(content_x, rect.center().y - icon_size / 2.0),
                     egui::vec2(icon_size, icon_size),
                 );
-                crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, fg);
+                crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon_val, fg);
             }
             let text_pos = egui::pos2(content_x + icon_w, rect.center().y - galley.size().y / 2.0);
             painter.galley(text_pos, galley, fg);

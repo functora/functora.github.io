@@ -1,6 +1,6 @@
 //! Show method for Collapsible — renders a toggleable panel.
 
-impl super::collapsible::Collapsible {
+impl super::widget::Collapsible {
     /// Shows the collapsible. `open` controls whether content is visible.
     pub fn show(
         self,
@@ -10,9 +10,9 @@ impl super::collapsible::Collapsible {
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
-        ui.vertical(|ui| {
+        ui.vertical(|inner_ui| {
             // Trigger row
-            let response = ui.horizontal(|ui| {
+            let response = inner_ui.horizontal(|content_ui| {
                 let chevron_icon = if *open {
                     crate::icons::lucide_icon::LucideIcon::ChevronDown
                 } else {
@@ -21,7 +21,7 @@ impl super::collapsible::Collapsible {
 
                 let icon_size: f32 = 14.0;
                 let gap: f32 = 4.0;
-                let galley = ui.painter().layout_no_wrap(
+                let galley = content_ui.painter().layout_no_wrap(
                     self.title.clone(),
                     egui::FontId::proportional(14.0),
                     theme.foreground,
@@ -30,15 +30,15 @@ impl super::collapsible::Collapsible {
                     icon_size + gap + galley.size().x,
                     galley.size().y.max(icon_size),
                 );
-                let (rect, trigger) = ui.allocate_exact_size(desired, egui::Sense::click());
+                let (rect, trigger) = content_ui.allocate_exact_size(desired, egui::Sense::click());
 
-                if ui.is_rect_visible(rect) {
+                if content_ui.is_rect_visible(rect) {
                     let icon_rect = egui::Rect::from_min_size(
                         egui::pos2(rect.min.x, rect.center().y - icon_size / 2.0),
                         egui::vec2(icon_size, icon_size),
                     );
                     crate::icons::paint_icon::paint_icon(
-                        ui.painter(),
+                        content_ui.painter(),
                         icon_rect,
                         &chevron_icon,
                         theme.foreground,
@@ -48,16 +48,20 @@ impl super::collapsible::Collapsible {
                         rect.min.x + icon_size + gap,
                         rect.center().y - galley.size().y / 2.0,
                     );
-                    ui.painter().galley(text_pos, galley, theme.foreground);
+                    content_ui
+                        .painter()
+                        .galley(text_pos, galley, theme.foreground);
                 }
 
                 if trigger.clicked() {
                     *open = !*open;
-                    ui.ctx().request_repaint();
+                    content_ui.ctx().request_repaint();
                 }
 
                 if trigger.hovered() {
-                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                    content_ui
+                        .ctx()
+                        .set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
 
                 trigger
@@ -65,7 +69,7 @@ impl super::collapsible::Collapsible {
 
             // Content area
             if *open {
-                ui.add_space(4.0);
+                inner_ui.add_space(4.0);
                 let frame = egui::Frame::NONE
                     .fill(egui::Color32::TRANSPARENT)
                     .inner_margin(egui::Margin {
@@ -75,7 +79,7 @@ impl super::collapsible::Collapsible {
                         bottom: 0,
                     });
 
-                frame.show(ui, content);
+                let _ = frame.show(inner_ui, content);
             }
 
             response.inner

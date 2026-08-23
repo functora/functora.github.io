@@ -1,6 +1,6 @@
-//! Show method for DatePicker — renders date input with calendar popup.
+//! Show method for `DatePicker` — renders date input with calendar popup.
 
-impl super::date_picker::DatePicker {
+impl super::widget::DatePicker {
     /// Shows the date picker. `state` holds the selected date.
     pub fn show(
         self,
@@ -50,9 +50,9 @@ impl super::date_picker::DatePicker {
                 } else {
                     theme.accent
                 };
-                ui.painter().rect_filled(
+                let _ = ui.painter().rect_filled(
                     trigger_rect,
-                    egui::CornerRadius::same(theme.radius.round() as u8),
+                    egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius)),
                     bg,
                 );
             }
@@ -90,7 +90,7 @@ impl super::date_picker::DatePicker {
             None
         };
 
-        let cr = (theme.radius + 2.0).round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
         let themed_frame = egui::Frame::NONE
             .fill(theme.popover)
             .inner_margin(egui::Margin::same(12))
@@ -109,9 +109,11 @@ impl super::date_picker::DatePicker {
 
         let mut close_popup = false;
 
-        popup.show(|ui: &mut egui::Ui| {
-            let cal = crate::widgets::calendar::calendar::Calendar::new();
-            if let Some(_day) = cal.show(ui, &mut state.year, &mut state.month, &mut state.day) {
+        let _ = popup.show(|popup_ui: &mut egui::Ui| {
+            let cal = crate::widgets::calendar::widget::Calendar::new();
+            if let Some(_day) =
+                cal.show(popup_ui, &mut state.year, &mut state.month, &mut state.day)
+            {
                 close_popup = true;
             }
         });

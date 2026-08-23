@@ -1,7 +1,6 @@
 //! SVG path `d`-attribute commands.
 
 /// A single command from an SVG path `d` attribute.
-#[allow(clippy::upper_case_acronyms)]
 pub enum PathCommand {
     // ── Move ────────────────────────────────────────────────────
     MoveToAbs(f32, f32),

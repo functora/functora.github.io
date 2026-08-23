@@ -1,6 +1,6 @@
 //! Widget trait implementation for Switch.
 
-impl egui::Widget for super::switch::Switch<'_> {
+impl egui::Widget for super::widget::Switch<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -44,7 +44,7 @@ impl egui::Widget for super::switch::Switch<'_> {
                 egui::pos2(rect.min.x, rect.center().y - track_h / 2.0),
                 egui::vec2(track_w, track_h),
             );
-            let track_cr = (track_h / 2.0).round().min(255.0) as u8;
+            let track_cr = crate::utils::f32_to_u8_clamped(track_h / 2.0);
             let track_color = if response.is_pointer_button_down_on() {
                 crate::paint::interpolate_color::interpolate_color(
                     style.track_color,
@@ -60,14 +60,15 @@ impl egui::Widget for super::switch::Switch<'_> {
             } else {
                 style.track_color
             };
-            painter.rect_filled(track_rect, egui::CornerRadius::same(track_cr), track_color);
+            let _ =
+                painter.rect_filled(track_rect, egui::CornerRadius::same(track_cr), track_color);
             let track_border = if response.hovered() || response.is_pointer_button_down_on() {
                 Some(theme.ring)
             } else {
                 style.track_border
             };
             if let Some(border_color) = track_border {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     track_rect,
                     egui::CornerRadius::same(track_cr),
                     egui::Stroke::new(1.0, border_color),
@@ -80,7 +81,7 @@ impl egui::Widget for super::switch::Switch<'_> {
             let thumb_max_x = track_rect.max.x - thumb_margin - thumb_size;
             let thumb_x = thumb_min_x + (thumb_max_x - thumb_min_x) * anim_t;
             let thumb_center = egui::pos2(thumb_x + thumb_size / 2.0, track_rect.center().y);
-            painter.circle_filled(thumb_center, thumb_size / 2.0, style.thumb_color);
+            let _ = painter.circle_filled(thumb_center, thumb_size / 2.0, style.thumb_color);
 
             // Label
             if let Some(galley) = label_galley {

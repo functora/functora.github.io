@@ -1,6 +1,7 @@
 //! Maps input state to concrete style values.
 
 /// Resolves input colors based on focus state.
+#[must_use]
 pub fn resolve_input_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     focused: bool,

@@ -7,6 +7,7 @@ pub struct ToastState {
 }
 
 impl ToastState {
+    #[must_use]
     pub fn new() -> Self {
         Self { toasts: Vec::new() }
     }

@@ -40,17 +40,19 @@ pub fn derive_pkg_js(manifest_path: &str) -> String {
                     .get("lib")
                     .and_then(|lib| lib.get("name"))
                     .and_then(|name| name.as_str())
-                    .map(|name| format!("{name}.js"))
-                    .unwrap_or_else(|| {
-                        value
-                            .get("package")
-                            .and_then(|pkg| pkg.get("name"))
-                            .and_then(|name| name.as_str())
-                            .map_or_else(
-                                || "app.js".to_owned(),
-                                |name| format!("{}.js", name.replace('-', "_")),
-                            )
-                    })
+                    .map_or_else(
+                        || {
+                            value
+                                .get("package")
+                                .and_then(|pkg| pkg.get("name"))
+                                .and_then(|name| name.as_str())
+                                .map_or_else(
+                                    || "app.js".to_owned(),
+                                    |name| format!("{}.js", name.replace('-', "_")),
+                                )
+                        },
+                        |name| format!("{name}.js"),
+                    )
             },
         )
 }
@@ -106,7 +108,7 @@ pub fn load_config(manifest_path: &str) -> WebConfig {
     let content = std::fs::read_to_string(manifest_path).unwrap_or_default();
     let value: toml::Value = content
         .parse()
-        .unwrap_or(toml::Value::Table(toml::map::Map::new()));
+        .unwrap_or_else(|_| toml::Value::Table(toml::map::Map::new()));
     let package = value.get("package");
     let vsn = package
         .and_then(|pkg| pkg.get("version"))

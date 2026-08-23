@@ -1,6 +1,7 @@
-//! Maps AlertVariant to concrete style values.
+//! Maps `AlertVariant` to concrete style values.
 
 /// Resolves alert colors from variant.
+#[must_use]
 pub fn resolve_alert_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     variant: crate::tokens::alert_variant::AlertVariant,

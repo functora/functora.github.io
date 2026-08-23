@@ -2,7 +2,7 @@
 
 use crate::responsive::responsive_ext::ResponsiveExt;
 
-impl egui::Widget for super::textarea::Textarea<'_> {
+impl egui::Widget for super::widget::Textarea<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -16,7 +16,7 @@ impl egui::Widget for super::textarea::Textarea<'_> {
             }
         });
         let corner_radius = theme.radius;
-        let cr = egui::CornerRadius::same(corner_radius.round() as u8);
+        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(corner_radius));
 
         let desired = egui::vec2(width, self.min_height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
@@ -28,8 +28,8 @@ impl egui::Widget for super::textarea::Textarea<'_> {
         if outer_hovered {
             bg = crate::paint::interpolate_color::interpolate_color(bg, theme.accent, 0.35);
         }
-        ui.painter().rect_filled(outer_rect, cr, bg);
-        ui.painter().rect_stroke(
+        let _ = ui.painter().rect_filled(outer_rect, cr, bg);
+        let _ = ui.painter().rect_stroke(
             outer_rect,
             cr,
             egui::Stroke::new(
@@ -53,7 +53,7 @@ impl egui::Widget for super::textarea::Textarea<'_> {
 
         let scroll_resp = egui::ScrollArea::vertical()
             .max_height(inner_rect.height())
-            .show(&mut child_ui, |ui| {
+            .show(&mut child_ui, |inner_ui| {
                 let text_edit = egui::TextEdit::multiline(self.text)
                     .frame(egui::Frame::NONE)
                     .hint_text(&self.placeholder)
@@ -61,14 +61,14 @@ impl egui::Widget for super::textarea::Textarea<'_> {
                     .desired_width(inner_rect.width())
                     .desired_rows(3);
 
-                ui.add(text_edit)
+                inner_ui.add(text_edit)
             });
 
         let response = scroll_resp.inner;
 
         // Focus ring
         if response.has_focus() {
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,
                 egui::Stroke::new(1.0, theme.ring),

@@ -1,11 +1,11 @@
 //! Widget trait implementation for Button.
 
-impl egui::Widget for super::button::Button<'_> {
+impl egui::Widget for super::widget::Button<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         // Check if inside a ButtonGroup and claim an index
-        let group_key = crate::widgets::button_group::button_group::ButtonGroup::context_key();
+        let group_key = crate::widgets::button_group::widget::ButtonGroup::context_key();
         let group_info = ui.ctx().data_mut(|d| {
             d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(
                 group_key,
@@ -18,7 +18,7 @@ impl egui::Widget for super::button::Button<'_> {
                 let cached_count = ctx.cached_count;
                 let cr = ctx.corner_radius;
                 ctx.current_index += 1;
-                d.insert_temp(group_key, ctx);
+                let _ = d.insert_temp(group_key, ctx);
                 Some((index, cached_count, cr))
             })
         });
@@ -70,8 +70,7 @@ impl egui::Widget for super::button::Button<'_> {
 
         let shortcut_width = shortcut_galley
             .as_ref()
-            .map(|g| shortcut_gap + g.size().x)
-            .unwrap_or(0.0);
+            .map_or(0.0, |g| shortcut_gap + g.size().x);
 
         let content_width = if is_icon_only {
             style.height
@@ -106,13 +105,13 @@ impl egui::Widget for super::button::Button<'_> {
                             Some(r) => r.union(rect),
                             None => rect,
                         });
-                        d.insert_temp(group_key, ctx);
+                        let _ = d.insert_temp(group_key, ctx);
                     }
             });
         }
 
         // Re-resolve with actual interaction state
-        let mut style = super::button_variant_style::resolve_button_style(
+        let mut active_style = super::button_variant_style::resolve_button_style(
             &theme,
             &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
             self.variant,
@@ -124,16 +123,16 @@ impl egui::Widget for super::button::Button<'_> {
 
         // Apply full_width overrides again (height/font/padding from UI context)
         if self.full_width {
-            style.height = ui.spacing().interact_size.y;
+            active_style.height = ui.spacing().interact_size.y;
             if let Some(font_id) = ui.style().text_styles.get(&egui::TextStyle::Button) {
-                style.font_size = font_id.size;
+                active_style.font_size = font_id.size;
             }
-            style.h_padding = ui.spacing().button_padding.x;
+            active_style.h_padding = ui.spacing().button_padding.x;
         }
 
         if self.selected {
-            style.fg = theme.accent_foreground;
-            style.bg = if response.is_pointer_button_down_on() && ui.is_enabled() {
+            active_style.fg = theme.accent_foreground;
+            active_style.bg = if response.is_pointer_button_down_on() && ui.is_enabled() {
                 crate::paint::interpolate_color::interpolate_color(
                     theme.accent,
                     theme.primary,
@@ -146,14 +145,14 @@ impl egui::Widget for super::button::Button<'_> {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = group_corner_radius(&group_info, style.corner_radius);
+            let cr = group_corner_radius(group_info.as_ref(), active_style.corner_radius);
 
             // Background
-            painter.rect_filled(rect, cr, style.bg);
+            let _ = painter.rect_filled(rect, cr, active_style.bg);
 
             // Border (skip when inside a button group — the group draws borders)
-            if !in_group && let Some(border_color) = style.border {
-                painter.rect_stroke(
+            if !in_group && let Some(border_color) = active_style.border {
+                let _ = painter.rect_stroke(
                     rect,
                     cr,
                     egui::Stroke::new(1.0, border_color),
@@ -167,17 +166,22 @@ impl egui::Widget for super::button::Button<'_> {
                         rect.center(),
                         egui::vec2(icon_size, icon_size),
                     );
-                    crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, style.fg);
+                    crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, active_style.fg);
                 }
             } else if has_icon && has_text {
                 if has_shortcut {
-                    let x = rect.min.x + style.h_padding;
+                    let x = rect.min.x + active_style.h_padding;
                     if let Some(ref icon) = self.icon {
                         let icon_rect = egui::Rect::from_min_size(
                             egui::pos2(x, rect.center().y - icon_size / 2.0),
                             egui::vec2(icon_size, icon_size),
                         );
-                        crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, style.fg);
+                        crate::icons::paint_icon::paint_icon(
+                            painter,
+                            icon_rect,
+                            icon,
+                            active_style.fg,
+                        );
                     }
                     let text_pos = egui::pos2(
                         x + icon_size + icon_gap,
@@ -186,7 +190,7 @@ impl egui::Widget for super::button::Button<'_> {
                     painter.galley_with_override_text_color(
                         text_pos,
                         text_galley.clone(),
-                        style.fg,
+                        active_style.fg,
                     );
                 } else {
                     let total_w = icon_size + icon_gap + text_galley.size().x;
@@ -196,7 +200,12 @@ impl egui::Widget for super::button::Button<'_> {
                             egui::pos2(start_x, rect.center().y - icon_size / 2.0),
                             egui::vec2(icon_size, icon_size),
                         );
-                        crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, style.fg);
+                        crate::icons::paint_icon::paint_icon(
+                            painter,
+                            icon_rect,
+                            icon,
+                            active_style.fg,
+                        );
                     }
                     let text_pos = egui::pos2(
                         start_x + icon_size + icon_gap,
@@ -205,64 +214,72 @@ impl egui::Widget for super::button::Button<'_> {
                     painter.galley_with_override_text_color(
                         text_pos,
                         text_galley.clone(),
-                        style.fg,
+                        active_style.fg,
                     );
                 }
             } else if has_shortcut || self.full_width {
                 let text_pos = egui::pos2(
-                    rect.min.x + style.h_padding,
+                    rect.min.x + active_style.h_padding,
                     rect.center().y - text_galley.size().y / 2.0,
                 );
-                painter.galley_with_override_text_color(text_pos, text_galley.clone(), style.fg);
+                painter.galley_with_override_text_color(
+                    text_pos,
+                    text_galley.clone(),
+                    active_style.fg,
+                );
             } else {
                 let text_pos = egui::pos2(
                     rect.center().x - text_galley.size().x / 2.0,
                     rect.center().y - text_galley.size().y / 2.0,
                 );
-                painter.galley_with_override_text_color(text_pos, text_galley.clone(), style.fg);
+                painter.galley_with_override_text_color(
+                    text_pos,
+                    text_galley.clone(),
+                    active_style.fg,
+                );
             }
 
-            if let Some(shortcut_galley) = shortcut_galley {
+            if let Some(shortcut_galley_val) = shortcut_galley {
                 let shortcut_pos = egui::pos2(
-                    rect.max.x - style.h_padding - shortcut_galley.size().x,
-                    rect.center().y - shortcut_galley.size().y / 2.0,
+                    rect.max.x - active_style.h_padding - shortcut_galley_val.size().x,
+                    rect.center().y - shortcut_galley_val.size().y / 2.0,
                 );
                 let shortcut_fg = if self.selected
-                    || style.bg == theme.accent
+                    || active_style.bg == theme.accent
                     || response.is_pointer_button_down_on()
                 {
                     theme.accent_foreground
                 } else {
                     theme.muted_foreground
                 };
-                let shortcut_color = if !ui.is_enabled() {
-                    theme.muted_foreground
-                } else {
+                let shortcut_color = if ui.is_enabled() {
                     shortcut_fg
+                } else {
+                    theme.muted_foreground
                 };
                 painter.galley_with_override_text_color(
                     shortcut_pos,
-                    shortcut_galley,
+                    shortcut_galley_val,
                     shortcut_color,
                 );
             }
 
             // Underline for Link variant
-            if style.underline && response.hovered() {
+            if active_style.underline && response.hovered() {
                 let galley2 = painter.layout_no_wrap(
                     text_string,
-                    egui::FontId::proportional(style.font_size),
-                    style.fg,
+                    egui::FontId::proportional(active_style.font_size),
+                    active_style.fg,
                 );
                 let text_pos = egui::pos2(
                     rect.center().x - galley2.size().x / 2.0,
                     rect.center().y - galley2.size().y / 2.0,
                 );
                 let underline_y = text_pos.y + galley2.size().y;
-                painter.hline(
+                let _ = painter.hline(
                     text_pos.x..=text_pos.x + galley2.size().x,
                     underline_y,
-                    egui::Stroke::new(1.0, style.fg),
+                    egui::Stroke::new(1.0, active_style.fg),
                 );
             }
 
@@ -271,7 +288,7 @@ impl egui::Widget for super::button::Button<'_> {
                 crate::paint::paint_focus_ring::paint_focus_ring(
                     painter,
                     rect,
-                    style.corner_radius,
+                    active_style.corner_radius,
                     theme.ring,
                 );
             }
@@ -281,15 +298,13 @@ impl egui::Widget for super::button::Button<'_> {
     }
 }
 
-/// Computes per-corner radius for a button based on its group position.
-/// First button gets left rounding, last gets right rounding, middle gets none.
 fn group_corner_radius(
-    group_info: &Option<(usize, usize, f32)>,
+    group_info: Option<&(usize, usize, f32)>,
     default_cr: f32,
 ) -> egui::CornerRadius {
     match group_info {
         Some((index, cached_count, group_cr)) => {
-            let r = group_cr.round() as u8;
+            let r = crate::utils::f32_to_u8_clamped(*group_cr);
             let is_first = *index == 0;
             let is_last = *cached_count > 0 && *index == *cached_count - 1;
             egui::CornerRadius {
@@ -299,6 +314,6 @@ fn group_corner_radius(
                 se: if is_last { r } else { 0 },
             }
         }
-        None => egui::CornerRadius::same(default_cr.round() as u8),
+        None => egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(default_cr)),
     }
 }

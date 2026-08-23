@@ -1,10 +1,10 @@
 //! Show method for Table — renders a styled data table.
 
-impl super::table::Table {
+impl super::widget::Table {
     /// Shows the table. Returns the response for the outer frame.
     pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = theme.radius.round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
 
         let frame = egui::Frame::NONE
             .fill(theme.card)
@@ -12,21 +12,22 @@ impl super::table::Table {
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         frame
-            .show(ui, |ui| {
+            .show(ui, |inner_ui| {
                 // Remove default spacing so rows pack tightly against dividers
-                ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
+                inner_ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
 
                 let col_count = self.headers.len();
                 if col_count == 0 {
                     return;
                 }
 
-                let available = ui.available_width();
-                let col_widths = compute_col_widths(available, col_count, &self.col_weights);
+                let available = inner_ui.available_width();
+                let col_widths =
+                    compute_col_widths(available, col_count, self.col_weights.as_ref());
 
                 // Header row
                 Self::render_row(
-                    ui,
+                    inner_ui,
                     &self.headers,
                     &col_widths,
                     available,
@@ -36,7 +37,7 @@ impl super::table::Table {
                 );
 
                 // Divider after header
-                Self::draw_hline(ui, available, &theme);
+                Self::draw_hline(inner_ui, available, &theme);
 
                 // Data rows
                 for (row_idx, row) in self.rows.iter().enumerate() {
@@ -46,11 +47,19 @@ impl super::table::Table {
                         egui::Color32::TRANSPARENT
                     };
 
-                    Self::render_row(ui, row, &col_widths, available, bg, theme.foreground, false);
+                    Self::render_row(
+                        inner_ui,
+                        row,
+                        &col_widths,
+                        available,
+                        bg,
+                        theme.foreground,
+                        false,
+                    );
 
                     // Row divider (not after last)
                     if row_idx < self.rows.len() - 1 {
-                        Self::draw_hline(ui, available, &theme);
+                        Self::draw_hline(inner_ui, available, &theme);
                     }
                 }
             })
@@ -59,7 +68,7 @@ impl super::table::Table {
 
     fn draw_hline(ui: &mut egui::Ui, width: f32, theme: &crate::theme::shadcn_theme::ShadcnTheme) {
         let (line_rect, _) = ui.allocate_exact_size(egui::vec2(width, 1.0), egui::Sense::hover());
-        ui.painter().hline(
+        let _ = ui.painter().hline(
             line_rect.x_range(),
             line_rect.center().y,
             egui::Stroke::new(1.0, theme.border),
@@ -106,7 +115,8 @@ impl super::table::Table {
         };
 
         if actual_bg != egui::Color32::TRANSPARENT {
-            ui.painter()
+            let _ = ui
+                .painter()
                 .rect_filled(row_rect, egui::CornerRadius::ZERO, actual_bg);
         }
 
@@ -124,17 +134,16 @@ impl super::table::Table {
     }
 }
 
-/// Computes column widths from optional weights, distributing total width proportionally.
-fn compute_col_widths(total: f32, col_count: usize, weights: &Option<Vec<f32>>) -> Vec<f32> {
+fn compute_col_widths(total: f32, col_count: usize, weights: Option<&Vec<f32>>) -> Vec<f32> {
     match weights {
         Some(w) if w.len() == col_count => {
             let sum: f32 = w.iter().sum();
             if sum > 0.0 {
                 w.iter().map(|&wt| total * wt / sum).collect()
             } else {
-                vec![total / col_count as f32; col_count]
+                vec![total / crate::utils::usize_to_f32(col_count); col_count]
             }
         }
-        _ => vec![total / col_count as f32; col_count],
+        _ => vec![total / crate::utils::usize_to_f32(col_count); col_count],
     }
 }

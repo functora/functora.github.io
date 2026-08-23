@@ -1,4 +1,4 @@
-//! FieldSet — group of fields with legend and description.
+//! `FieldSet` — group of fields with legend and description.
 
 /// A group of fields with an optional legend heading.
 pub struct FieldSet;
@@ -10,10 +10,10 @@ impl FieldSet {
         legend: &str,
         content: impl FnOnce(&mut egui::Ui),
     ) -> egui::InnerResponse<()> {
-        ui.vertical(|ui| {
-            ui.spacing_mut().item_spacing.y = 8.0;
-            super::field_legend::FieldLegend::show(ui, legend);
-            content(ui);
+        ui.vertical(|inner_ui| {
+            inner_ui.spacing_mut().item_spacing.y = 8.0;
+            super::field_legend::FieldLegend::show(inner_ui, legend);
+            content(inner_ui);
         })
     }
 }

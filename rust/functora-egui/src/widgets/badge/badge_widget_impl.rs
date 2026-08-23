@@ -1,6 +1,6 @@
 //! Widget trait implementation for Badge.
 
-impl egui::Widget for super::badge::Badge {
+impl egui::Widget for super::widget::Badge {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::badge_variant_style::resolve_badge_style(&theme, self.variant);
@@ -20,10 +20,10 @@ impl egui::Widget for super::badge::Badge {
             let painter = ui.painter();
             let cr = egui::CornerRadius::same(255); // rounded-full
 
-            painter.rect_filled(rect, cr, style.bg);
+            let _ = painter.rect_filled(rect, cr, style.bg);
 
             if let Some(border_color) = style.border {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     cr,
                     egui::Stroke::new(1.0, border_color),

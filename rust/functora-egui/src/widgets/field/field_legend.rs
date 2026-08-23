@@ -1,4 +1,4 @@
-//! FieldLegend — `font-medium text-base` heading for a field set.
+//! `FieldLegend` — `font-medium text-base` heading for a field set.
 
 /// A field legend heading.
 pub struct FieldLegend;

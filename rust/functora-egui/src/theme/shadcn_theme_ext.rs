@@ -1,4 +1,4 @@
-//! Extension trait for accessing the ShadcnTheme from egui::Context.
+//! Extension trait for accessing the `ShadcnTheme` from `egui::Context`.
 
 /// Extension trait that adds shadcn theme access to `egui::Context`.
 pub trait ShadcnThemeExt {
@@ -29,7 +29,7 @@ impl ShadcnThemeExt for egui::Context {
             };
         });
         self.data_mut(|d| {
-            d.insert_temp::<super::shadcn_theme::ShadcnTheme>(egui::Id::NULL, theme);
+            let _ = d.insert_temp::<super::shadcn_theme::ShadcnTheme>(egui::Id::NULL, theme);
         });
     }
 }

@@ -1,6 +1,6 @@
 //! Widget trait implementation for Slider.
 
-impl egui::Widget for super::slider::Slider<'_> {
+impl egui::Widget for super::widget::Slider<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::slider_style::resolve_slider_style(&theme);
@@ -12,8 +12,7 @@ impl egui::Widget for super::slider::Slider<'_> {
         let total_height = touch.max(handle_radius * 2.0 + 4.0);
         let base_slider_width = self
             .width
-            .map(|w| w.min(ui.available_width()))
-            .unwrap_or(ui.available_width());
+            .map_or_else(|| ui.available_width(), |w| w.min(ui.available_width()));
         let prefix_galley = self.prefix.as_ref().map(|p| {
             ui.painter().layout_no_wrap(
                 p.clone(),
@@ -29,23 +28,16 @@ impl egui::Widget for super::slider::Slider<'_> {
             )
         });
 
-        let prefix_w = prefix_galley
-            .as_ref()
-            .map(|g| g.size().x + 6.0)
-            .unwrap_or(0.0);
-        let suffix_w = suffix_galley
-            .as_ref()
-            .map(|g| g.size().x + 6.0)
-            .unwrap_or(0.0);
+        let prefix_w = prefix_galley.as_ref().map_or(0.0, |g| g.size().x + 6.0);
+        let suffix_w = suffix_galley.as_ref().map_or(0.0, |g| g.size().x + 6.0);
         let total_width = (prefix_w + base_slider_width + suffix_w).min(ui.available_width());
 
         let desired = egui::vec2(total_width, total_height);
         let (full_rect, response) = ui.allocate_exact_size(desired, egui::Sense::click_and_drag());
 
-        // Get current value as f64
         let current_val = match &self.value {
-            super::slider::SliderValue::F64(v) => **v,
-            super::slider::SliderValue::F32(v) => **v as f64,
+            super::widget::SliderValue::F64(v) => **v,
+            super::widget::SliderValue::F32(v) => f64::from(**v),
         };
 
         let range_start = *self.range.start();
@@ -66,7 +58,7 @@ impl egui::Widget for super::slider::Slider<'_> {
             let usable_min = track_rect.min.x + handle_radius;
             let usable_max = track_rect.max.x - handle_radius;
             let t = ((pos.x - usable_min) / (usable_max - usable_min)).clamp(0.0, 1.0);
-            new_val = range_start + t as f64 * range_span;
+            new_val = range_start + f64::from(t) * range_span;
 
             if let Some(step) = self.step {
                 new_val = (new_val / step).round() * step;
@@ -75,10 +67,9 @@ impl egui::Widget for super::slider::Slider<'_> {
             new_val = new_val.clamp(range_start, range_end);
         }
 
-        // Write back
         match self.value {
-            super::slider::SliderValue::F64(v) => *v = new_val,
-            super::slider::SliderValue::F32(v) => *v = new_val as f32,
+            super::widget::SliderValue::F64(v) => *v = new_val,
+            super::widget::SliderValue::F32(v) => *v = crate::utils::f64_to_f32(new_val),
         }
 
         if ui.is_rect_visible(full_rect) {
@@ -113,20 +104,20 @@ impl egui::Widget for super::slider::Slider<'_> {
             let usable_max = track_rect.max.x - handle_radius;
 
             let t = if range_span > 0.0 {
-                ((new_val - range_start) / range_span) as f32
+                crate::utils::f64_to_f32((new_val - range_start) / range_span)
             } else {
                 0.0
             };
             let handle_x = usable_min + (usable_max - usable_min) * t;
 
-            let track_cr = (track_height / 2.0).round().min(255.0) as u8;
+            let track_cr = crate::utils::f32_to_u8_clamped(track_height / 2.0);
 
             // Track background
             let track_bg_rect = egui::Rect::from_min_max(
                 egui::pos2(usable_min, track_y - track_height / 2.0),
                 egui::pos2(usable_max, track_y + track_height / 2.0),
             );
-            painter.rect_filled(
+            let _ = painter.rect_filled(
                 track_bg_rect,
                 egui::CornerRadius::same(track_cr),
                 style.track_color,
@@ -137,7 +128,7 @@ impl egui::Widget for super::slider::Slider<'_> {
                 egui::pos2(usable_min, track_y - track_height / 2.0),
                 egui::pos2(handle_x, track_y + track_height / 2.0),
             );
-            painter.rect_filled(
+            let _ = painter.rect_filled(
                 fill_rect,
                 egui::CornerRadius::same(track_cr),
                 style.fill_color,
@@ -145,8 +136,8 @@ impl egui::Widget for super::slider::Slider<'_> {
 
             // Handle
             let handle_center = egui::pos2(handle_x, track_y);
-            painter.circle_filled(handle_center, handle_radius, style.handle_fill);
-            painter.circle_stroke(
+            let _ = painter.circle_filled(handle_center, handle_radius, style.handle_fill);
+            let _ = painter.circle_stroke(
                 handle_center,
                 handle_radius,
                 egui::Stroke::new(2.0, style.handle_border),

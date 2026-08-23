@@ -1,19 +1,18 @@
-//! Widget trait implementation for NumberInput.
+//! Widget trait implementation for `NumberInput`.
 
-impl egui::Widget for super::number_input::NumberInput<'_> {
+impl egui::Widget for super::widget::NumberInput<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let height: f32 = ui.spacing().interact_size.y.max(20.0);
         let h_padding: f32 = 6.0;
-        let cr_val = theme.radius.round().min(255.0) as u8;
+        let cr_val = crate::utils::f32_to_u8_clamped(theme.radius);
         let cr = egui::CornerRadius::same(cr_val);
 
-        // Convert to f64 proxy for DragValue
         let mut proxy: f64 = match &self.value {
-            super::number_input::ValueRef::F64(v) => **v,
-            super::number_input::ValueRef::F32(v) => **v as f64,
-            super::number_input::ValueRef::I32(v) => **v as f64,
+            super::widget::ValueRef::F64(v) => **v,
+            super::widget::ValueRef::F32(v) => f64::from(**v),
+            super::widget::ValueRef::I32(v) => f64::from(**v),
         };
 
         let width = self.width.unwrap_or(60.0);
@@ -31,7 +30,7 @@ impl egui::Widget for super::number_input::NumberInput<'_> {
         } else {
             theme.muted
         };
-        ui.painter().rect_filled(outer_rect, cr, bg);
+        let _ = ui.painter().rect_filled(outer_rect, cr, bg);
 
         // Inner region with padding
         let inner_rect = egui::Rect::from_min_max(
@@ -112,11 +111,10 @@ impl egui::Widget for super::number_input::NumberInput<'_> {
 
         let response = child_ui.add_sized(value_rect.size(), dv);
 
-        // Write back
         match self.value {
-            super::number_input::ValueRef::F64(v) => *v = proxy,
-            super::number_input::ValueRef::F32(v) => *v = proxy as f32,
-            super::number_input::ValueRef::I32(v) => *v = proxy.round() as i32,
+            super::widget::ValueRef::F64(v) => *v = proxy,
+            super::widget::ValueRef::F32(v) => *v = crate::utils::f64_to_f32(proxy),
+            super::widget::ValueRef::I32(v) => *v = crate::utils::f64_to_i32(proxy.round()),
         }
 
         // Single border: focus ring when focused, regular border otherwise.
@@ -129,14 +127,14 @@ impl egui::Widget for super::number_input::NumberInput<'_> {
         }
 
         if response.has_focus() || response.dragged() || outer_hovered {
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,
                 egui::Stroke::new(1.0, theme.ring),
                 egui::epaint::StrokeKind::Inside,
             );
         } else {
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,
                 egui::Stroke::new(1.0, theme.input),

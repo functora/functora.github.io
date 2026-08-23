@@ -1,6 +1,6 @@
 //! Widget trait implementation for Toggle.
 
-impl egui::Widget for super::toggle::Toggle<'_> {
+impl egui::Widget for super::widget::Toggle<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let (height, h_padding, font_size) = self.size.metrics_for(
@@ -38,12 +38,12 @@ impl egui::Widget for super::toggle::Toggle<'_> {
                 style.fg = theme.accent_foreground;
             }
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(style.corner_radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(style.corner_radius));
 
-            painter.rect_filled(rect, cr, style.bg);
+            let _ = painter.rect_filled(rect, cr, style.bg);
 
             if let Some(border_color) = style.border {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     cr,
                     egui::Stroke::new(1.0, border_color),

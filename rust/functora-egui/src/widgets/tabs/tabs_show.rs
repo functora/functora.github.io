@@ -1,6 +1,6 @@
 //! Show method for Tabs — renders tab bar and content.
 
-impl super::tabs::Tabs {
+impl super::widget::Tabs {
     /// Shows the tab bar and content. `selected` is the currently active tab index.
     /// Calls `content(ui, selected_index)` for the active tab's body.
     pub fn show(
@@ -10,33 +10,33 @@ impl super::tabs::Tabs {
         content: impl FnOnce(&mut egui::Ui, usize),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = theme.radius.round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
 
-        ui.vertical(|ui| {
+        ui.vertical(|inner_ui| {
             // Tab bar
             let tab_frame = egui::Frame::NONE
                 .fill(theme.muted)
                 .inner_margin(egui::Margin::same(2))
                 .corner_radius(egui::CornerRadius::same(cr));
 
-            tab_frame.show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 2.0;
+            let _ = tab_frame.show(inner_ui, |content_ui| {
+                let _ = content_ui.horizontal(|inner_ui3| {
+                    inner_ui3.spacing_mut().item_spacing.x = 2.0;
                     for (idx, label) in self.labels.iter().enumerate() {
                         let is_active = idx == *selected;
-                        let response = Self::render_tab(ui, &theme, label, is_active, cr);
+                        let response = Self::render_tab(inner_ui3, &theme, label, is_active, cr);
                         if response.clicked() {
                             *selected = idx;
-                            ui.ctx().request_repaint();
+                            inner_ui3.ctx().request_repaint();
                         }
                     }
                 });
             });
 
-            ui.add_space(8.0);
+            inner_ui.add_space(8.0);
 
             // Content area
-            content(ui, *selected);
+            content(inner_ui, *selected);
         })
         .response
     }
@@ -91,10 +91,10 @@ impl super::tabs::Tabs {
                 (egui::Color32::TRANSPARENT, theme.muted_foreground)
             };
 
-            painter.rect_filled(rect, inner_cr, bg);
+            let _ = painter.rect_filled(rect, inner_cr, bg);
 
             if is_active {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     inner_cr,
                     egui::Stroke::new(
@@ -129,7 +129,7 @@ impl super::tabs::Tabs {
 // IconTabs — icon+tooltip variant
 // ---------------------------------------------------------------------------
 
-impl super::tabs::IconTabs {
+impl super::widget::IconTabs {
     pub fn show(
         self,
         ui: &mut egui::Ui,
@@ -137,30 +137,31 @@ impl super::tabs::IconTabs {
         content: impl FnOnce(&mut egui::Ui, usize),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = theme.radius.round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
 
-        ui.vertical(|ui| {
+        ui.vertical(|inner_ui| {
             let tab_frame = egui::Frame::NONE
                 .fill(theme.muted)
                 .inner_margin(egui::Margin::same(2))
                 .corner_radius(egui::CornerRadius::same(cr));
 
-            tab_frame.show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 2.0;
+            let _ = tab_frame.show(inner_ui, |content_ui| {
+                let _ = content_ui.horizontal(|inner_ui3| {
+                    inner_ui3.spacing_mut().item_spacing.x = 2.0;
                     for (idx, entry) in self.entries.iter().enumerate() {
                         let is_active = idx == *selected;
-                        let response = Self::render_icon_tab(ui, &theme, entry, is_active, cr);
+                        let response =
+                            Self::render_icon_tab(inner_ui3, &theme, entry, is_active, cr);
                         if response.clicked() {
                             *selected = idx;
-                            ui.ctx().request_repaint();
+                            inner_ui3.ctx().request_repaint();
                         }
                     }
                 });
             });
 
-            ui.add_space(8.0);
-            content(ui, *selected);
+            inner_ui.add_space(8.0);
+            content(inner_ui, *selected);
         })
         .response
     }
@@ -168,7 +169,7 @@ impl super::tabs::IconTabs {
     fn render_icon_tab(
         ui: &mut egui::Ui,
         theme: &crate::theme::shadcn_theme::ShadcnTheme,
-        entry: &super::tabs::TabEntry,
+        entry: &super::widget::TabEntry,
         is_active: bool,
         cr: u8,
     ) -> egui::Response {
@@ -208,10 +209,10 @@ impl super::tabs::IconTabs {
                 (egui::Color32::TRANSPARENT, theme.muted_foreground)
             };
 
-            painter.rect_filled(rect, inner_cr, bg);
+            let _ = painter.rect_filled(rect, inner_cr, bg);
 
             if is_active {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     inner_cr,
                     egui::Stroke::new(
@@ -228,7 +229,7 @@ impl super::tabs::IconTabs {
             }
 
             match entry {
-                super::tabs::TabEntry::Text(label) => {
+                super::widget::TabEntry::Text(label) => {
                     let galley =
                         painter.layout_no_wrap(label.clone(), egui::FontId::proportional(12.0), fg);
                     let text_pos = egui::pos2(
@@ -237,7 +238,7 @@ impl super::tabs::IconTabs {
                     );
                     painter.galley(text_pos, galley, fg);
                 }
-                super::tabs::TabEntry::Icon { icon, .. } => {
+                super::widget::TabEntry::Icon { icon, .. } => {
                     let icon_rect = egui::Rect::from_center_size(
                         rect.center(),
                         egui::vec2(icon_size, icon_size),
@@ -252,8 +253,8 @@ impl super::tabs::IconTabs {
         }
 
         // Show tooltip for icon entries
-        if let super::tabs::TabEntry::Icon { tooltip, .. } = entry {
-            response.clone().on_hover_text(tooltip);
+        if let super::widget::TabEntry::Icon { tooltip, .. } = entry {
+            let _ = response.clone().on_hover_text(tooltip);
         }
 
         response

@@ -1,6 +1,6 @@
-//! Show methods for DropdownMenu — renders a popup menu.
+//! Show methods for `DropdownMenu` — renders a popup menu.
 
-impl super::dropdown_menu::DropdownMenu {
+impl super::widget::DropdownMenu {
     /// Shows a dropdown menu with simple string items (backward-compatible API).
     pub fn show(
         ui: &mut egui::Ui,
@@ -8,9 +8,9 @@ impl super::dropdown_menu::DropdownMenu {
         items: &[&str],
         on_select: impl FnOnce(usize),
     ) {
-        let menu_items: Vec<super::dropdown_menu::MenuItem> = items
+        let menu_items: Vec<super::widget::MenuItem> = items
             .iter()
-            .map(|label| super::dropdown_menu::MenuItem::label(*label))
+            .map(|label| super::widget::MenuItem::label(*label))
             .collect();
         Self::show_rich(ui, trigger_response, &menu_items, on_select);
     }
@@ -19,7 +19,7 @@ impl super::dropdown_menu::DropdownMenu {
     pub fn show_rich(
         ui: &mut egui::Ui,
         trigger_response: &egui::Response,
-        items: &[super::dropdown_menu::MenuItem],
+        items: &[super::widget::MenuItem],
         on_select: impl FnOnce(usize),
     ) {
         let popup_id = trigger_response.id.with("dropdown");
@@ -31,7 +31,7 @@ impl super::dropdown_menu::DropdownMenu {
             None
         };
 
-        let cr = (theme.radius + 2.0).round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
         let themed_frame = egui::Frame::NONE
             .fill(theme.popover)
             .inner_margin(egui::Margin::same(4))
@@ -50,17 +50,17 @@ impl super::dropdown_menu::DropdownMenu {
 
         let mut selected_idx = None;
 
-        popup.show(|ui: &mut egui::Ui| {
+        let _ = popup.show(|popup_ui: &mut egui::Ui| {
             // Compute max text width
             let mut max_label_w: f32 = 0.0;
             let mut max_shortcut_w: f32 = 0.0;
 
             for item in items {
-                if let super::dropdown_menu::MenuItem::Item {
+                if let super::widget::MenuItem::Item {
                     label, shortcut, ..
                 } = item
                 {
-                    let lw = ui
+                    let lw = popup_ui
                         .painter()
                         .layout_no_wrap(
                             label.clone(),
@@ -72,7 +72,7 @@ impl super::dropdown_menu::DropdownMenu {
                     max_label_w = max_label_w.max(lw);
 
                     if let Some(sc) = shortcut {
-                        let sw = ui
+                        let sw = popup_ui
                             .painter()
                             .layout_no_wrap(
                                 sc.clone(),
@@ -92,21 +92,22 @@ impl super::dropdown_menu::DropdownMenu {
                 0.0
             };
             let mut menu_width = (max_label_w + shortcut_space + 24.0).max(120.0);
-            let spacing =
-                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
-            let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+            let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(
+                popup_ui.ctx(),
+            );
+            let screen_w = popup_ui.ctx().input(|i| i.viewport_rect().width());
             let trigger_w = trigger_response.rect.width();
             menu_width = menu_width.max(trigger_w);
             menu_width = menu_width
                 .min(screen_w - 2.0 * spacing.page_padding - 16.0)
                 .max(120.0);
-            ui.set_min_width(menu_width);
-            ui.set_max_width(menu_width);
+            popup_ui.set_min_width(menu_width);
+            popup_ui.set_max_width(menu_width);
 
             let mut item_idx = 0;
             for item in items {
                 match item {
-                    super::dropdown_menu::MenuItem::Item {
+                    super::widget::MenuItem::Item {
                         label,
                         shortcut,
                         selected,
@@ -122,23 +123,23 @@ impl super::dropdown_menu::DropdownMenu {
                         };
 
                         let check_space: f32 = if *selected { 20.0 } else { 0.0 };
-                        let galley = ui.painter().layout_no_wrap(
+                        let galley = popup_ui.painter().layout_no_wrap(
                             label.clone(),
                             egui::FontId::proportional(14.0),
                             fg,
                         );
                         let desired = egui::vec2(menu_width, galley.size().y + 8.0);
-                        let (rect, r) = ui.allocate_exact_size(desired, egui::Sense::click());
+                        let (rect, r) = popup_ui.allocate_exact_size(desired, egui::Sense::click());
 
                         if *enabled && r.hovered() {
-                            ui.painter().rect_filled(
+                            let _ = popup_ui.painter().rect_filled(
                                 rect,
                                 egui::CornerRadius::same(4),
                                 theme.accent,
                             );
                         }
 
-                        if ui.is_rect_visible(rect) {
+                        if popup_ui.is_rect_visible(rect) {
                             let text_x = rect.min.x + 8.0 + check_space;
                             if *selected {
                                 let check_rect = egui::Rect::from_center_size(
@@ -146,25 +147,25 @@ impl super::dropdown_menu::DropdownMenu {
                                     egui::vec2(14.0, 14.0),
                                 );
                                 crate::icons::paint_icon::paint_icon(
-                                    ui.painter(),
+                                    popup_ui.painter(),
                                     check_rect,
                                     &crate::icons::lucide_icon::LucideIcon::Check,
                                     theme.foreground,
                                 );
                             }
-                            ui.painter().galley(
+                            popup_ui.painter().galley(
                                 egui::pos2(text_x, rect.center().y - galley.size().y / 2.0),
                                 galley,
                                 fg,
                             );
 
                             if let Some(sc) = shortcut {
-                                let sc_galley = ui.painter().layout_no_wrap(
+                                let sc_galley = popup_ui.painter().layout_no_wrap(
                                     sc.clone(),
                                     egui::FontId::proportional(12.0),
                                     theme.muted_foreground,
                                 );
-                                ui.painter().galley(
+                                popup_ui.painter().galley(
                                     egui::pos2(
                                         rect.max.x - 8.0 - sc_galley.size().x,
                                         rect.center().y - sc_galley.size().y / 2.0,
@@ -177,17 +178,20 @@ impl super::dropdown_menu::DropdownMenu {
 
                         if *enabled && r.clicked() {
                             selected_idx = Some(current_idx);
-                            egui::Popup::close_id(ui.ctx(), popup_id);
-                            ui.ctx().request_repaint();
+                            egui::Popup::close_id(popup_ui.ctx(), popup_id);
+                            popup_ui.ctx().request_repaint();
                         }
                     }
-                    super::dropdown_menu::MenuItem::Separator => {
-                        ui.add_space(2.0);
-                        let (sep_rect, _) = ui
+                    super::widget::MenuItem::Separator => {
+                        popup_ui.add_space(2.0);
+                        let (sep_rect, _) = popup_ui
                             .allocate_exact_size(egui::vec2(menu_width, 1.0), egui::Sense::hover());
-                        ui.painter()
-                            .rect_filled(sep_rect, egui::CornerRadius::ZERO, theme.border);
-                        ui.add_space(2.0);
+                        let _ = popup_ui.painter().rect_filled(
+                            sep_rect,
+                            egui::CornerRadius::ZERO,
+                            theme.border,
+                        );
+                        popup_ui.add_space(2.0);
                     }
                 }
             }

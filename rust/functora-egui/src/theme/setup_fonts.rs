@@ -17,14 +17,14 @@
 pub fn setup_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
-    fonts.font_data.insert(
+    let _ = fonts.font_data.insert(
         "Geist-Regular".to_owned(),
         std::sync::Arc::new(egui::FontData::from_static(include_bytes!(
             "../../assets/fonts/Geist-Regular.ttf"
         ))),
     );
 
-    fonts.font_data.insert(
+    let _ = fonts.font_data.insert(
         "Geist-Bold".to_owned(),
         std::sync::Arc::new(egui::FontData::from_static(include_bytes!(
             "../../assets/fonts/Geist-Bold.ttf"

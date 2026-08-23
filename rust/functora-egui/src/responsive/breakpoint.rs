@@ -17,6 +17,7 @@ impl Breakpoint {
     pub const MOBILE_MAX_WIDTH: f32 = 800.0;
 
     /// Classifies a viewport width into a breakpoint.
+    #[must_use]
     pub fn from_width(width: f32) -> Self {
         if width < Self::MOBILE_MAX_WIDTH {
             Self::Mobile
@@ -26,11 +27,13 @@ impl Breakpoint {
     }
 
     /// True on narrow viewports where touch-friendly sizing is used.
+    #[must_use]
     pub fn is_mobile(self) -> bool {
         self == Self::Mobile
     }
 
     /// True on wide viewports where mouse-friendly compact sizing is used.
+    #[must_use]
     pub fn is_desktop(self) -> bool {
         self == Self::Desktop
     }

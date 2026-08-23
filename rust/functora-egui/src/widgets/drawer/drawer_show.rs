@@ -1,6 +1,6 @@
 //! Show method for Drawer — renders a bottom slide-up panel with animation.
 
-impl super::drawer::Drawer {
+impl super::widget::Drawer {
     pub fn show(self, ctx: &egui::Context, open: &mut bool, content: impl FnOnce(&mut egui::Ui)) {
         let anim_id = egui::Id::new("drawer_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, *open, 0.2);
@@ -10,14 +10,14 @@ impl super::drawer::Drawer {
         }
 
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
-        let screen = ctx.input(|i| i.viewport_rect());
+        let screen = ctx.input(egui::InputState::viewport_rect);
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
-        let backdrop_alpha = (60.0 * ease_t) as u8;
+        let backdrop_alpha = crate::utils::f32_to_u8_clamped(60.0 * ease_t);
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("drawer_backdrop"));
-        ctx.layer_painter(backdrop_layer).rect_filled(
+        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
             screen,
             egui::CornerRadius::ZERO,
             egui::Color32::from_black_alpha(backdrop_alpha),
@@ -27,8 +27,9 @@ impl super::drawer::Drawer {
         let backdrop_resp = egui::Area::new(egui::Id::new("drawer_backdrop_sense"))
             .order(egui::Order::Middle)
             .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                let (_, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click());
+            .show(ctx, |inner_ui| {
+                let (_, response) =
+                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
                 response
             });
 
@@ -37,13 +38,13 @@ impl super::drawer::Drawer {
             ctx.request_repaint();
         }
 
-        let cr_top = theme.radius.round() as u8 + 2;
+        let cr_top = crate::utils::f32_to_u8_clamped(theme.radius) + 2;
         let slide_offset_y = (1.0 - ease_t) * 400.0;
 
-        egui::Area::new(egui::Id::new("drawer_panel"))
+        let _ = egui::Area::new(egui::Id::new("drawer_panel"))
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::CENTER_BOTTOM, egui::vec2(0.0, slide_offset_y))
-            .show(ctx, |ui| {
+            .show(ctx, |inner_ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.background)
                     .inner_margin(egui::Margin {
@@ -60,23 +61,23 @@ impl super::drawer::Drawer {
                     })
                     .stroke(egui::Stroke::new(1.0, theme.border));
 
-                frame.show(ui, |ui| {
+                let _ = frame.show(inner_ui, |content_ui| {
                     let clamped = (screen.width() - 48.0).clamp(0.0, 500.0);
-                    ui.set_min_width(clamped);
-                    ui.set_max_width(clamped);
+                    content_ui.set_min_width(clamped);
+                    content_ui.set_max_width(clamped);
 
                     // Handle bar
                     let handle_width: f32 = 48.0;
                     let handle_height: f32 = 4.0;
-                    let (handle_rect, handle_resp) = ui.allocate_exact_size(
-                        egui::vec2(ui.available_width(), handle_height + 8.0),
+                    let (handle_rect, handle_resp) = content_ui.allocate_exact_size(
+                        egui::vec2(content_ui.available_width(), handle_height + 8.0),
                         egui::Sense::drag(),
                     );
                     let bar_rect = egui::Rect::from_center_size(
                         handle_rect.center(),
                         egui::vec2(handle_width, handle_height),
                     );
-                    ui.painter().rect_filled(
+                    let _ = content_ui.painter().rect_filled(
                         bar_rect,
                         egui::CornerRadius::same(255),
                         theme.muted_foreground,
@@ -87,40 +88,43 @@ impl super::drawer::Drawer {
                     let mut cumulative: f32 = ctx.data(|d| d.get_temp(drag_id).unwrap_or(0.0_f32));
                     if handle_resp.dragged() {
                         cumulative += handle_resp.drag_delta().y;
-                        ctx.data_mut(|d| d.insert_temp(drag_id, cumulative));
+                        let _ = ctx.data_mut(|d| d.insert_temp(drag_id, cumulative));
                     }
                     if handle_resp.drag_stopped() {
                         if cumulative > 80.0 {
                             *open = false;
                             ctx.request_repaint();
                         }
-                        ctx.data_mut(|d| d.insert_temp(drag_id, 0.0_f32));
+                        let _ = ctx.data_mut(|d| d.insert_temp(drag_id, 0.0_f32));
                     }
 
                     // Close button
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-                        let close_size = 16.0;
-                        let (close_rect, close_resp) = ui.allocate_exact_size(
-                            egui::vec2(close_size, close_size),
-                            egui::Sense::click(),
-                        );
-                        if ui.is_rect_visible(close_rect) {
-                            crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
-                                close_rect,
-                                &crate::icons::lucide_icon::LucideIcon::X,
-                                theme.muted_foreground,
+                    let _ = content_ui.with_layout(
+                        egui::Layout::right_to_left(egui::Align::TOP),
+                        |inner_ui3| {
+                            let close_size = 16.0;
+                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
+                                egui::vec2(close_size, close_size),
+                                egui::Sense::click(),
                             );
-                        }
-                        if close_resp.clicked() {
-                            *open = false;
-                            ctx.request_repaint();
-                        }
-                    });
+                            if inner_ui3.is_rect_visible(close_rect) {
+                                crate::icons::paint_icon::paint_icon(
+                                    inner_ui3.painter(),
+                                    close_rect,
+                                    &crate::icons::lucide_icon::LucideIcon::X,
+                                    theme.muted_foreground,
+                                );
+                            }
+                            if close_resp.clicked() {
+                                *open = false;
+                                ctx.request_repaint();
+                            }
+                        },
+                    );
 
                     // Title and description
                     if let Some(title) = self.title {
-                        ui.label(
+                        let _ = content_ui.label(
                             egui::RichText::new(title)
                                 .color(theme.foreground)
                                 .size(18.0)
@@ -129,16 +133,16 @@ impl super::drawer::Drawer {
                     }
 
                     if let Some(desc) = self.description {
-                        ui.add_space(4.0);
-                        ui.label(
+                        content_ui.add_space(4.0);
+                        let _ = content_ui.label(
                             egui::RichText::new(desc)
                                 .color(theme.muted_foreground)
                                 .size(14.0),
                         );
                     }
 
-                    ui.add_space(16.0);
-                    content(ui);
+                    content_ui.add_space(16.0);
+                    content(content_ui);
                 });
             });
 

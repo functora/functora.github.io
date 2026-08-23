@@ -1,6 +1,6 @@
 //! Widget trait implementation for Checkbox.
 
-impl egui::Widget for super::checkbox::Checkbox<'_> {
+impl egui::Widget for super::widget::Checkbox<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -59,9 +59,9 @@ impl egui::Widget for super::checkbox::Checkbox<'_> {
                 egui::vec2(box_size, box_size),
             );
 
-            let cr = egui::CornerRadius::same(corner_radius as u8);
-            painter.rect_filled(box_rect, cr, style.box_bg);
-            painter.rect_stroke(
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(corner_radius));
+            let _ = painter.rect_filled(box_rect, cr, style.box_bg);
+            let _ = painter.rect_stroke(
                 box_rect,
                 cr,
                 egui::Stroke::new(1.0, style.box_border),

@@ -1,6 +1,7 @@
 //! Maps button variant + size + interaction state to concrete style values.
 
 /// Resolves concrete button style from variant, size, and interaction state.
+#[must_use]
 pub fn resolve_button_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     spacing: &crate::responsive::Spacing,

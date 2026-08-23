@@ -1,6 +1,6 @@
 //! Widget trait implementation for Kbd.
 
-impl egui::Widget for super::kbd::Kbd {
+impl egui::Widget for super::widget::Kbd {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let fg = theme.foreground;
@@ -24,8 +24,8 @@ impl egui::Widget for super::kbd::Kbd {
             let painter = ui.painter();
             let cr = egui::CornerRadius::same(6);
 
-            painter.rect_filled(rect, cr, fill);
-            painter.rect_stroke(
+            let _ = painter.rect_filled(rect, cr, fill);
+            let _ = painter.rect_stroke(
                 rect,
                 cr,
                 egui::Stroke::new(1.0, theme.input),

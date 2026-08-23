@@ -1,6 +1,7 @@
 //! Dark theme constructor with sRGB values derived from shadcn OKLCH tokens (Nova).
 
 /// Creates the dark theme with colors matching shadcn/ui's Nova dark mode.
+#[must_use]
 pub fn dark() -> super::shadcn_theme::ShadcnTheme {
     super::shadcn_theme::ShadcnTheme {
         background: egui::Color32::from_rgb(10, 10, 10), // oklch(0.145)

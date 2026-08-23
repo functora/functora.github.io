@@ -1,6 +1,6 @@
 //! Show method for Sidebar -- renders a fixed sidebar panel.
 
-impl super::sidebar::Sidebar {
+impl super::widget::Sidebar {
     /// Shows the sidebar. `collapsed` controls collapsed state if collapsible.
     /// By default, on mobile it renders as a slide-in overlay drawer that is
     /// hidden while collapsed and covers the screen when open; use
@@ -38,9 +38,9 @@ impl super::sidebar::Sidebar {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
             if response.hovered() || response.is_pointer_button_down_on() {
-                painter.rect_filled(rect, cr, theme.muted);
+                let _ = painter.rect_filled(rect, cr, theme.muted);
             }
             let icon_rect =
                 egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
@@ -75,9 +75,9 @@ impl super::sidebar::Sidebar {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
             if response.hovered() || response.is_pointer_button_down_on() {
-                painter.rect_filled(rect, cr, theme.muted);
+                let _ = painter.rect_filled(rect, cr, theme.muted);
             }
             let icon_rect =
                 egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
@@ -127,38 +127,42 @@ impl super::sidebar::Sidebar {
 
         let frame = egui::Frame::NONE.fill(fill).inner_margin(margin);
 
-        let inner = frame.show(ui, |ui| {
-            ui.set_min_width(effective_width);
-            ui.set_max_width(effective_width);
-            ui.set_min_height(ui.available_height());
+        let inner = frame.show(ui, |inner_ui| {
+            inner_ui.set_min_width(effective_width);
+            inner_ui.set_max_width(effective_width);
+            inner_ui.set_min_height(inner_ui.available_height());
 
             if self.collapsible && is_rail {
-                ui.vertical(|ui| {
-                    ui.horizontal(|ui| {
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            _ = Self::collapse_button(ui, collapsed);
-                        });
+                let _ = inner_ui.vertical(|content_ui| {
+                    let _ = content_ui.horizontal(|inner_ui3| {
+                        let _ = inner_ui3.with_layout(
+                            egui::Layout::right_to_left(egui::Align::Center),
+                            |inner_ui4| {
+                                _ = Self::collapse_button(inner_ui4, collapsed);
+                            },
+                        );
                     });
                 });
             } else if self.collapsible {
-                let available = ui.available_rect_before_wrap();
+                let available = inner_ui.available_rect_before_wrap();
                 let button_size = spacing.touch_height;
                 let button_rect = egui::Rect::from_min_size(
                     egui::pos2(available.max.x - button_size, available.min.y),
                     egui::vec2(button_size, button_size),
                 );
-                egui::ScrollArea::vertical()
+                let _ = egui::ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .max_height(available.height())
-                    .show(ui, |ui| {
-                        content(ui);
+                    .show(inner_ui, |content_ui| {
+                        content(content_ui);
                     });
-                let response = ui.allocate_rect(button_rect, egui::Sense::click());
-                if ui.is_rect_visible(button_rect) {
-                    let painter = ui.painter();
-                    let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+                let response = inner_ui.allocate_rect(button_rect, egui::Sense::click());
+                if inner_ui.is_rect_visible(button_rect) {
+                    let painter = inner_ui.painter();
+                    let cr =
+                        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
                     if response.hovered() || response.is_pointer_button_down_on() {
-                        painter.rect_filled(button_rect, cr, theme.muted);
+                        let _ = painter.rect_filled(button_rect, cr, theme.muted);
                     }
                     let icon = if *collapsed {
                         crate::icons::lucide_icon::LucideIcon::PanelRightOpen
@@ -178,17 +182,20 @@ impl super::sidebar::Sidebar {
                 }
                 if response.clicked() {
                     *collapsed = !*collapsed;
-                    ui.ctx().request_repaint();
+                    inner_ui.ctx().request_repaint();
                 }
                 if response.hovered() {
-                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                    inner_ui
+                        .ctx()
+                        .set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
             } else {
-                egui::ScrollArea::vertical()
-                    .auto_shrink([false; 2])
-                    .show(ui, |ui| {
-                        content(ui);
-                    });
+                let _ = egui::ScrollArea::vertical().auto_shrink([false; 2]).show(
+                    inner_ui,
+                    |content_ui| {
+                        content(content_ui);
+                    },
+                );
             }
         });
         _ = ui.painter().vline(
@@ -208,7 +215,7 @@ impl super::sidebar::Sidebar {
         let ctx = ui.ctx();
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
         let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
-        let screen = ctx.input(|i| i.viewport_rect());
+        let screen = ctx.input(egui::InputState::viewport_rect);
         let max_allowed_width = (screen.width() - spacing.page_padding * 2.0).max(0.0);
         let panel_width = self.width.min(max_allowed_width);
         let panel_height = screen.height();
@@ -223,10 +230,10 @@ impl super::sidebar::Sidebar {
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
-        let backdrop_alpha = (60.0 * ease_t) as u8;
+        let backdrop_alpha = crate::utils::f32_to_u8_clamped(60.0 * ease_t);
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("sidebar_backdrop"));
-        ctx.layer_painter(backdrop_layer).rect_filled(
+        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
             screen,
             egui::CornerRadius::ZERO,
             egui::Color32::from_black_alpha(backdrop_alpha),
@@ -236,8 +243,9 @@ impl super::sidebar::Sidebar {
         let backdrop_response = egui::Area::new(egui::Id::new("sidebar_backdrop_sense"))
             .order(egui::Order::Middle)
             .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                let (_, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click());
+            .show(ctx, |inner_ui| {
+                let (_, response) =
+                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
                 response
             });
 
@@ -248,10 +256,10 @@ impl super::sidebar::Sidebar {
 
         let slide_offset_x = (1.0 - ease_t) * panel_width;
 
-        egui::Area::new(egui::Id::new("sidebar_panel"))
+        let _ = egui::Area::new(egui::Id::new("sidebar_panel"))
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::RIGHT_TOP, egui::vec2(slide_offset_x, 0.0))
-            .show(ctx, |ui| {
+            .show(ctx, |inner_ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.card)
                     .inner_margin(egui::Margin {
@@ -267,28 +275,30 @@ impl super::sidebar::Sidebar {
                         color: egui::Color32::from_black_alpha(16),
                     });
 
-                let inner = frame.show(ui, |ui| {
-                    ui.set_min_size(egui::vec2(panel_width, (panel_height - 12.0).max(0.0)));
-                    ui.set_max_width(panel_width);
+                let inner = frame.show(inner_ui, |content_ui| {
+                    content_ui
+                        .set_min_size(egui::vec2(panel_width, (panel_height - 12.0).max(0.0)));
+                    content_ui.set_max_width(panel_width);
 
-                    let available = ui.available_rect_before_wrap();
+                    let available = content_ui.available_rect_before_wrap();
                     let button_size = spacing.touch_height;
                     let button_rect = egui::Rect::from_min_size(
                         egui::pos2(available.max.x - button_size, available.min.y),
                         egui::vec2(button_size, button_size),
                     );
-                    egui::ScrollArea::vertical()
+                    let _ = egui::ScrollArea::vertical()
                         .auto_shrink([false; 2])
                         .max_height(available.height())
-                        .show(ui, |ui| {
-                            content(ui);
+                        .show(content_ui, |inner_ui3| {
+                            content(inner_ui3);
                         });
-                    let response = ui.allocate_rect(button_rect, egui::Sense::click());
-                    if ui.is_rect_visible(button_rect) {
-                        let painter = ui.painter();
-                        let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+                    let response = content_ui.allocate_rect(button_rect, egui::Sense::click());
+                    if content_ui.is_rect_visible(button_rect) {
+                        let painter = content_ui.painter();
+                        let cr =
+                            egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
                         if response.hovered() || response.is_pointer_button_down_on() {
-                            painter.rect_filled(button_rect, cr, theme.muted);
+                            let _ = painter.rect_filled(button_rect, cr, theme.muted);
                         }
                         let icon_size = button_size * 0.5;
                         let icon_rect = egui::Rect::from_center_size(
@@ -307,10 +317,12 @@ impl super::sidebar::Sidebar {
                         ctx.request_repaint();
                     }
                     if response.hovered() {
-                        ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        content_ui
+                            .ctx()
+                            .set_cursor_icon(egui::CursorIcon::PointingHand);
                     }
                 });
-                _ = ui.painter().vline(
+                _ = inner_ui.painter().vline(
                     inner.response.rect.min.x + 0.5,
                     inner.response.rect.y_range(),
                     egui::Stroke::new(1.0, theme.border),

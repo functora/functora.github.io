@@ -1,4 +1,5 @@
-//! Interaction tests: pointer drag on Resizable, wheel scroll on ScrollArea.
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+//! Interaction tests: pointer drag on Resizable, wheel scroll on `ScrollArea`.
 
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
 
@@ -6,7 +7,7 @@ const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
 
 struct App {
     ctx: Context,
-    frame: usize,
+    frame: u32,
 }
 
 impl App {
@@ -25,12 +26,12 @@ impl App {
         self.frame += 1;
         let raw = RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
-            time: Some(self.frame as f64 / 60.0),
+            time: Some(f64::from(self.frame) / 60.0),
             events,
             ..Default::default()
         };
         let mut out = self.ctx.run_ui(raw, |ui| {
-            egui::CentralPanel::default().show(ui, |ui| body(ui));
+            let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
         });
         out.textures_delta.clear();
         out
@@ -53,27 +54,27 @@ impl App {
 }
 
 fn drag(app: &mut App, from: Pos2, to: Pos2, body: &mut dyn FnMut(&mut egui::Ui)) {
-    app.step(
+    let _ = app.step(
         vec![Event::PointerButton {
             pos: from,
             button: egui::PointerButton::Primary,
             pressed: true,
-            modifiers: Default::default(),
+            modifiers: egui::Modifiers::default(),
         }],
         body,
     );
-    let steps = 8;
-    for i in 1..=steps {
-        let t = i as f32 / steps as f32;
+    let steps: u8 = 8;
+    for idx in 1..=steps {
+        let t = f32::from(idx) / f32::from(steps);
         let pos = Pos2::new(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t);
-        app.step(vec![Event::PointerMoved(pos)], body);
+        let _ = app.step(vec![Event::PointerMoved(pos)], body);
     }
-    app.step(
+    let _ = app.step(
         vec![Event::PointerButton {
             pos: to,
             button: egui::PointerButton::Primary,
             pressed: false,
-            modifiers: Default::default(),
+            modifiers: egui::Modifiers::default(),
         }],
         body,
     );
@@ -83,14 +84,14 @@ fn drag(app: &mut App, from: Pos2, to: Pos2, body: &mut dyn FnMut(&mut egui::Ui)
 fn resizable_handle_drag_changes_fraction() {
     let mut fraction = 0.5_f32;
     let mut body = |ui: &mut egui::Ui| {
-        functora_egui::Resizable::new().height(240.0).show(
+        let _ = functora_egui::Resizable::new().height(240.0).show(
             ui,
             &mut fraction,
-            |ui| {
-                ui.label("L");
+            |left_ui| {
+                let _ = left_ui.label("L");
             },
-            |ui| {
-                ui.label("R");
+            |right_ui| {
+                let _ = right_ui.label("R");
             },
         );
     };
@@ -126,30 +127,31 @@ fn resizable_inside_demo_shell_has_full_width() {
         let content_width = available.min(spacing.content_max_width);
         let margin = ((available - content_width) * 0.5).max(0.0);
         let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
-        egui::ScrollArea::vertical()
+        let _ = egui::ScrollArea::vertical()
             .auto_shrink([false; 2])
-            .show(ui, |ui| {
-                ui.add_space(spacing.page_padding);
-                ui.horizontal(|ui| {
-                    ui.add_space(margin);
-                    ui.add_space(spacing.page_padding);
-                    ui.vertical(|ui| {
-                        ui.set_max_width(inner_width);
-                        functora_egui::Typography::muted("Draggable split pane.").show(ui);
-                        ui.add_space(12.0);
-                        functora_egui::Resizable::new().height(160.0).show(
-                            ui,
+            .show(ui, |scroll_ui| {
+                scroll_ui.add_space(spacing.page_padding);
+                let _ = scroll_ui.horizontal(|row_ui| {
+                    row_ui.add_space(margin);
+                    row_ui.add_space(spacing.page_padding);
+                    let _ = row_ui.vertical(|col_ui| {
+                        col_ui.set_max_width(inner_width);
+                        let _ =
+                            functora_egui::Typography::muted("Draggable split pane.").show(col_ui);
+                        col_ui.add_space(12.0);
+                        let _ = functora_egui::Resizable::new().height(160.0).show(
+                            col_ui,
                             &mut fraction,
-                            |ui| {
-                                ui.label("L");
+                            |left_ui| {
+                                let _ = left_ui.label("L");
                             },
-                            |ui| {
-                                ui.label("R");
+                            |right_ui| {
+                                let _ = right_ui.label("R");
                             },
                         );
                         reported = format!(
                             "ui_max={:?} avail_before_desc={} inner={inner_width} margin={margin}",
-                            ui.max_rect(),
+                            col_ui.max_rect(),
                             available,
                         );
                     });
@@ -179,7 +181,7 @@ fn command_palette_list_scrolls_when_overflowing() {
     let mut open = true;
     let mut search = String::new();
     let mut body = |ui: &mut egui::Ui| {
-        functora_egui::Command::new(items.clone()).show(ui.ctx(), &mut open, &mut search);
+        let _ = functora_egui::Command::new(items.clone()).show(ui.ctx(), &mut open, &mut search);
     };
 
     let visible_texts = |output: &egui::FullOutput| -> std::collections::HashSet<String> {
@@ -202,7 +204,7 @@ fn command_palette_list_scrolls_when_overflowing() {
     };
 
     let mut app = App::new();
-    app.step(vec![], &mut body);
+    let _ = app.step(vec![], &mut body);
     let before = app.step(vec![], &mut body);
     assert!(
         list_overflowing(&before),
@@ -214,16 +216,16 @@ fn command_palette_list_scrolls_when_overflowing() {
         "last item should be out of view before scrolling"
     );
 
-    app.step(
+    let _ = app.step(
         vec![Event::PointerMoved(egui::pos2(640.0, 400.0))],
         &mut body,
     );
     for _ in 0..20 {
-        app.step(
+        let _ = app.step(
             vec![Event::MouseWheel {
                 unit: egui::MouseWheelUnit::Point,
                 delta: Vec2::new(0.0, -100.0),
-                modifiers: Default::default(),
+                modifiers: egui::Modifiers::default(),
                 phase: egui::TouchPhase::Move,
             }],
             &mut body,
@@ -243,13 +245,17 @@ fn command_palette_list_scrolls_when_overflowing() {
 #[test]
 fn scroll_area_wheel_scrolls_content() {
     let mut body = |ui: &mut egui::Ui| {
-        functora_egui::ScrollArea::new(200.0).show(ui, |ui| {
-            let (rect, _) = ui
-                .allocate_exact_size(egui::vec2(ui.available_width(), 20.0), egui::Sense::hover());
-            ui.painter()
-                .rect_filled(rect, egui::CornerRadius::ZERO, egui::Color32::RED);
-            for i in 0..40 {
-                ui.label(format!("row {i}"));
+        let _ = functora_egui::ScrollArea::new(200.0).show(ui, |scroll_ui| {
+            let (rect, _) = scroll_ui.allocate_exact_size(
+                egui::vec2(scroll_ui.available_width(), 20.0),
+                egui::Sense::hover(),
+            );
+            let _ =
+                scroll_ui
+                    .painter()
+                    .rect_filled(rect, egui::CornerRadius::ZERO, egui::Color32::RED);
+            for idx in 0..40 {
+                let _ = scroll_ui.label(format!("row {idx}"));
             }
         });
     };
@@ -262,14 +268,14 @@ fn scroll_area_wheel_scrolls_content() {
         .expect("marker rect not found");
 
     let hover = marker_before.center();
-    app.step(vec![Event::PointerMoved(hover)], &mut body);
+    let _ = app.step(vec![Event::PointerMoved(hover)], &mut body);
 
     for _ in 0..5 {
-        app.step(
+        let _ = app.step(
             vec![Event::MouseWheel {
                 unit: egui::MouseWheelUnit::Point,
                 delta: Vec2::new(0.0, -50.0),
-                modifiers: Default::default(),
+                modifiers: egui::Modifiers::default(),
                 phase: egui::TouchPhase::Move,
             }],
             &mut body,
@@ -295,17 +301,17 @@ fn sidebar_item_click_registers() {
     let mut collapsed = false;
     let mut clicked = false;
     let mut body = |ui: &mut egui::Ui| {
-        _ = egui::Panel::top("top_bar").show(ui, |ui| {
-            ui.label("top");
+        _ = egui::Panel::top("top_bar").show(ui, |top_ui| {
+            let _ = top_ui.label("top");
         });
         _ = egui::Panel::right("sidebar_panel")
             .default_size(244.0)
-            .show(ui, |ui| {
-                Sidebar::new()
-                    .width(228.0)
-                    .collapsible()
-                    .show(ui, &mut collapsed, |ui| {
-                        if ui
+            .show(ui, |sidebar_ui| {
+                let _ = Sidebar::new().width(228.0).collapsible().show(
+                    sidebar_ui,
+                    &mut collapsed,
+                    |content_ui| {
+                        if content_ui
                             .add(
                                 Button::new("Checkbox")
                                     .variant(ButtonVariant::Default)
@@ -315,15 +321,16 @@ fn sidebar_item_click_registers() {
                         {
                             clicked = true;
                         }
-                    });
+                    },
+                );
             });
-        _ = egui::CentralPanel::default().show(ui, |ui| {
-            ui.label("central");
+        _ = egui::CentralPanel::default().show(ui, |central_ui| {
+            let _ = central_ui.label("central");
         });
     };
 
     let mut app = App::new();
-    app.step(vec![], &mut body);
+    let _ = app.step(vec![], &mut body);
     let out = app.step(vec![], &mut body);
     let button = App::rects(&out)
         .into_iter()
@@ -331,22 +338,22 @@ fn sidebar_item_click_registers() {
         .expect("nav button rect not found");
 
     let center = button.center();
-    app.step(vec![Event::PointerMoved(center)], &mut body);
-    app.step(
+    let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
+    let _ = app.step(
         vec![Event::PointerButton {
             pos: center,
             button: egui::PointerButton::Primary,
             pressed: true,
-            modifiers: Default::default(),
+            modifiers: egui::Modifiers::default(),
         }],
         &mut body,
     );
-    app.step(
+    let _ = app.step(
         vec![Event::PointerButton {
             pos: center,
             button: egui::PointerButton::Primary,
             pressed: false,
-            modifiers: Default::default(),
+            modifiers: egui::Modifiers::default(),
         }],
         &mut body,
     );

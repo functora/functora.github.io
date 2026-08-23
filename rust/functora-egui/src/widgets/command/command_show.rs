@@ -1,6 +1,6 @@
 //! Show method for Command — renders a command palette overlay.
 
-impl super::command::Command {
+impl super::widget::Command {
     /// Shows the command palette when `open` is true.
     /// `search` holds the filter text. Returns the index of selected command if any.
     pub fn show(self, ctx: &egui::Context, open: &mut bool, search: &mut String) -> Option<usize> {
@@ -12,10 +12,10 @@ impl super::command::Command {
         let mut selected = None;
 
         // Backdrop
-        let screen = ctx.input(|i| i.viewport_rect());
+        let screen = ctx.input(egui::InputState::viewport_rect);
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("command_backdrop"));
-        ctx.layer_painter(backdrop_layer).rect_filled(
+        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
             screen,
             egui::CornerRadius::ZERO,
             egui::Color32::from_black_alpha(60),
@@ -25,8 +25,9 @@ impl super::command::Command {
         let backdrop_resp = egui::Area::new(egui::Id::new("command_backdrop_sense"))
             .order(egui::Order::Middle)
             .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                let (_, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click());
+            .show(ctx, |inner_ui| {
+                let (_, response) =
+                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
                 response
             });
 
@@ -45,7 +46,7 @@ impl super::command::Command {
             return None;
         }
 
-        let cr = (theme.radius + 2.0).round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
         let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
         let is_mobile = spacing.is_mobile();
         let screen_w = screen.width();
@@ -57,10 +58,10 @@ impl super::command::Command {
             (egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
         };
 
-        egui::Area::new(egui::Id::new("command_palette"))
+        let _ = egui::Area::new(egui::Id::new("command_palette"))
             .order(egui::Order::Foreground)
             .anchor(anchor, offset)
-            .show(ctx, |ui| {
+            .show(ctx, |inner_ui| {
                 let frame = egui::Frame::NONE
                     .fill(theme.popover)
                     .inner_margin(egui::Margin::same(0))
@@ -73,10 +74,10 @@ impl super::command::Command {
                         color: egui::Color32::from_black_alpha(12),
                     });
 
-                frame.show(ui, |ui| {
+                let _ = frame.show(inner_ui, |content_ui| {
                     let mut content_w: f32 = 0.0;
                     for (group, label) in &self.items {
-                        let gw = ui
+                        let gw = content_ui
                             .painter()
                             .layout_no_wrap(
                                 group.clone(),
@@ -85,7 +86,7 @@ impl super::command::Command {
                             )
                             .size()
                             .x;
-                        let lw = ui
+                        let lw = content_ui
                             .painter()
                             .layout_no_wrap(
                                 label.clone(),
@@ -96,7 +97,7 @@ impl super::command::Command {
                             .x;
                         content_w = content_w.max(gw).max(lw);
                     }
-                    let placeholder_w = ui
+                    let placeholder_w = content_ui
                         .painter()
                         .layout_no_wrap(
                             self.placeholder.clone(),
@@ -118,8 +119,8 @@ impl super::command::Command {
                     } else {
                         content_w.max(320.0).min(screen_avail_w)
                     };
-                    ui.set_min_width(palette_width);
-                    ui.set_max_width(palette_width);
+                    content_ui.set_min_width(palette_width);
+                    content_ui.set_max_width(palette_width);
 
                     // Search input
                     let input_frame = egui::Frame::NONE.inner_margin(egui::Margin {
@@ -129,22 +130,22 @@ impl super::command::Command {
                         bottom: 12,
                     });
 
-                    input_frame.show(ui, |ui| {
-                        let input_resp = crate::widgets::input::input::Input::new(search)
+                    let _ = input_frame.show(content_ui, |inner_ui3| {
+                        let input_resp = crate::widgets::input::widget::Input::new(search)
                             .placeholder(&self.placeholder)
-                            .desired_width(ui.available_width())
-                            .show(ui);
+                            .desired_width(inner_ui3.available_width())
+                            .show(inner_ui3);
                         input_resp.request_focus();
                     });
 
                     // Divider
-                    let avail = ui.available_rect_before_wrap();
-                    ui.painter().hline(
+                    let avail = content_ui.available_rect_before_wrap();
+                    let _ = content_ui.painter().hline(
                         avail.min.x..=avail.max.x,
                         avail.min.y,
                         egui::Stroke::new(1.0, theme.border),
                     );
-                    ui.add_space(1.0);
+                    content_ui.add_space(1.0);
 
                     // Command list
                     let query = search.to_lowercase();
@@ -155,11 +156,11 @@ impl super::command::Command {
                     } else {
                         320.0_f32.min(screen_h * 0.6)
                     };
-                    results_frame.show(ui, |ui| {
-                        egui::ScrollArea::vertical()
+                    let _ = results_frame.show(content_ui, |inner_ui3| {
+                        let _ = egui::ScrollArea::vertical()
                             .max_height(max_h)
                             .auto_shrink([false; 2])
-                            .show(ui, |ui| {
+                            .show(inner_ui3, |inner_ui4| {
                                 let mut current_group = String::new();
                                 let mut any_shown = false;
 
@@ -175,38 +176,40 @@ impl super::command::Command {
 
                                     if *group != current_group {
                                         if !current_group.is_empty() {
-                                            ui.add_space(4.0);
+                                            inner_ui4.add_space(4.0);
                                         }
-                                        ui.label(
+                                        let _ = inner_ui4.label(
                                             egui::RichText::new(group)
                                                 .color(theme.muted_foreground)
                                                 .size(12.0)
                                                 .strong(),
                                         );
-                                        ui.add_space(2.0);
-                                        current_group = group.clone();
+                                        inner_ui4.add_space(2.0);
+                                        current_group.clone_from(group);
                                     }
 
-                                    let galley = ui.painter().layout_no_wrap(
+                                    let galley = inner_ui4.painter().layout_no_wrap(
                                         label.clone(),
                                         egui::FontId::proportional(14.0),
                                         theme.popover_foreground,
                                     );
-                                    let desired =
-                                        egui::vec2(ui.available_width(), galley.size().y + 8.0);
-                                    let (rect, r) =
-                                        ui.allocate_exact_size(desired, egui::Sense::click());
+                                    let desired = egui::vec2(
+                                        inner_ui4.available_width(),
+                                        galley.size().y + 8.0,
+                                    );
+                                    let (rect, r) = inner_ui4
+                                        .allocate_exact_size(desired, egui::Sense::click());
 
                                     if r.hovered() {
-                                        ui.painter().rect_filled(
+                                        let _ = inner_ui4.painter().rect_filled(
                                             rect,
                                             egui::CornerRadius::same(4),
                                             theme.accent,
                                         );
                                     }
 
-                                    if ui.is_rect_visible(rect) {
-                                        ui.painter().galley(
+                                    if inner_ui4.is_rect_visible(rect) {
+                                        inner_ui4.painter().galley(
                                             egui::pos2(
                                                 rect.min.x + 8.0,
                                                 rect.center().y - galley.size().y / 2.0,
@@ -225,7 +228,7 @@ impl super::command::Command {
                                 }
 
                                 if !any_shown {
-                                    ui.label(
+                                    let _ = inner_ui4.label(
                                         egui::RichText::new("No results found.")
                                             .color(theme.muted_foreground)
                                             .size(14.0),

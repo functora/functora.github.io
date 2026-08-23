@@ -2,7 +2,7 @@
 
 use crate::responsive::responsive_ext::ResponsiveExt;
 
-impl super::combobox::Combobox {
+impl super::widget::Combobox {
     /// Shows the combobox. `selected` is the index of the selected item (or None).
     /// `search_text` holds the filter text state.
     pub fn show(
@@ -44,7 +44,7 @@ impl super::combobox::Combobox {
         let (trigger_rect, trigger) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(trigger_rect) {
-            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
             let bg = if trigger.is_pointer_button_down_on() {
                 crate::paint::interpolate_color::interpolate_color(
                     theme.background,
@@ -56,8 +56,8 @@ impl super::combobox::Combobox {
             } else {
                 theme.background
             };
-            ui.painter().rect_filled(trigger_rect, cr, bg);
-            ui.painter().rect_stroke(
+            let _ = ui.painter().rect_filled(trigger_rect, cr, bg);
+            let _ = ui.painter().rect_stroke(
                 trigger_rect,
                 cr,
                 egui::Stroke::new(1.0, theme.input),
@@ -97,7 +97,7 @@ impl super::combobox::Combobox {
             None
         };
 
-        let cr = (theme.radius + 2.0).round() as u8;
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
         let themed_frame = egui::Frame::NONE
             .fill(theme.popover)
             .inner_margin(egui::Margin::same(8))
@@ -117,7 +117,7 @@ impl super::combobox::Combobox {
         let mut close = false;
 
         let popup_width = {
-            let spacing =
+            let popup_spacing =
                 crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
             let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
             let mut content_w: f32 = 200.0;
@@ -135,27 +135,27 @@ impl super::combobox::Combobox {
                 content_w = content_w.max(w);
             }
             let base = trigger_rect.width().max(content_w);
-            if spacing.is_mobile() {
-                base.min(screen_w - 2.0 * spacing.page_padding - 16.0)
+            if popup_spacing.is_mobile() {
+                base.min(screen_w - 2.0 * popup_spacing.page_padding - 16.0)
                     .max(trigger_rect.width())
             } else {
                 base.min(screen_w * 0.6).max(200.0)
             }
         };
-        popup.show(|ui: &mut egui::Ui| {
-            ui.set_min_width(popup_width);
-            ui.set_max_width(popup_width);
+        let _ = popup.show(|popup_ui: &mut egui::Ui| {
+            popup_ui.set_min_width(popup_width);
+            popup_ui.set_max_width(popup_width);
 
             // Themed search input
-            let input_resp = crate::widgets::input::input::Input::new(search_text)
+            let input_resp = crate::widgets::input::widget::Input::new(search_text)
                 .placeholder("Search...")
-                .desired_width(ui.available_width())
-                .show(ui);
+                .desired_width(popup_ui.available_width())
+                .show(popup_ui);
             if trigger.clicked() {
                 input_resp.request_focus();
             }
 
-            ui.add_space(4.0);
+            popup_ui.add_space(4.0);
 
             // Filtered items
             let query = search_text.to_lowercase();
@@ -167,7 +167,7 @@ impl super::combobox::Combobox {
                 .collect();
 
             if filtered.is_empty() {
-                ui.label(
+                let _ = popup_ui.label(
                     egui::RichText::new("No results found")
                         .color(theme.muted_foreground)
                         .size(13.0),
@@ -178,28 +178,35 @@ impl super::combobox::Combobox {
 
                 for (idx, label) in filtered {
                     let is_selected = *selected == Some(idx);
-                    let galley = ui.painter().layout_no_wrap(
+                    let item_galley = popup_ui.painter().layout_no_wrap(
                         label.clone(),
                         egui::FontId::proportional(14.0),
                         theme.popover_foreground,
                     );
-                    let desired = egui::vec2(
-                        ui.available_width()
-                            .max(galley.size().x + item_left_pad + 8.0),
-                        galley.size().y + 8.0,
+                    let item_desired = egui::vec2(
+                        popup_ui
+                            .available_width()
+                            .max(item_galley.size().x + item_left_pad + 8.0),
+                        item_galley.size().y + 8.0,
                     );
-                    let (rect, r) = ui.allocate_exact_size(desired, egui::Sense::click());
+                    let (rect, r) =
+                        popup_ui.allocate_exact_size(item_desired, egui::Sense::click());
 
                     if r.hovered() || is_selected {
-                        ui.painter()
-                            .rect_filled(rect, egui::CornerRadius::same(4), theme.accent);
+                        let _ = popup_ui.painter().rect_filled(
+                            rect,
+                            egui::CornerRadius::same(4),
+                            theme.accent,
+                        );
                     }
 
                     if r.hovered() {
-                        ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        popup_ui
+                            .ctx()
+                            .set_cursor_icon(egui::CursorIcon::PointingHand);
                     }
 
-                    if ui.is_rect_visible(rect) {
+                    if popup_ui.is_rect_visible(rect) {
                         // Check icon for selected item
                         if is_selected {
                             let check_rect = egui::Rect::from_min_size(
@@ -210,19 +217,19 @@ impl super::combobox::Combobox {
                                 egui::vec2(check_icon_size, check_icon_size),
                             );
                             crate::icons::paint_icon::paint_icon(
-                                ui.painter(),
+                                popup_ui.painter(),
                                 check_rect,
                                 &crate::icons::lucide_icon::LucideIcon::Check,
                                 theme.popover_foreground,
                             );
                         }
 
-                        ui.painter().galley(
+                        popup_ui.painter().galley(
                             egui::pos2(
                                 rect.min.x + item_left_pad,
-                                rect.center().y - galley.size().y / 2.0,
+                                rect.center().y - item_galley.size().y / 2.0,
                             ),
-                            galley,
+                            item_galley,
                             theme.popover_foreground,
                         );
                     }

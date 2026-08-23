@@ -1,6 +1,7 @@
 //! Maps select state to concrete style values.
 
 /// Resolves select colors based on theme.
+#[must_use]
 pub fn resolve_select_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
 ) -> super::resolved_select_style::ResolvedSelectStyle {

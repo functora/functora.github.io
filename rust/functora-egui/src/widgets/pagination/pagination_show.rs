@@ -1,25 +1,25 @@
 //! Show method for Pagination — renders page navigation controls.
 
-impl super::pagination::Pagination {
+impl super::widget::Pagination {
     /// Shows the pagination. `current` is the active page (0-indexed).
     pub fn show(self, ui: &mut egui::Ui, current: &mut usize) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let last_page = self.total_pages.saturating_sub(1);
 
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 4.0;
+        ui.horizontal(|inner_ui| {
+            inner_ui.spacing_mut().item_spacing.x = 4.0;
 
             // Previous button
             let prev_enabled = *current > 0;
-            let prev = self.icon_button(
-                ui,
+            let prev = Self::icon_button(
+                inner_ui,
                 &theme,
-                &crate::icons::lucide_icon::LucideIcon::ChevronLeft,
+                crate::icons::lucide_icon::LucideIcon::ChevronLeft,
                 prev_enabled,
             );
             if prev.clicked() && prev_enabled {
                 *current = current.saturating_sub(1);
-                ui.ctx().request_repaint();
+                inner_ui.ctx().request_repaint();
             }
 
             // Page numbers
@@ -34,59 +34,58 @@ impl super::pagination::Pagination {
             let end = (start + self.max_visible).min(self.total_pages);
 
             if start > 0 {
-                let btn = self.page_button(ui, &theme, "1", false, true);
+                let btn = Self::page_button(inner_ui, &theme, "1", false, true);
                 if btn.clicked() {
                     *current = 0;
-                    ui.ctx().request_repaint();
+                    inner_ui.ctx().request_repaint();
                 }
                 if start > 1 {
-                    self.ellipsis_indicator(ui, &theme);
+                    Self::ellipsis_indicator(inner_ui, &theme);
                 }
             }
 
             for page in start..end {
                 let label = format!("{}", page + 1);
                 let is_current = page == *current;
-                let btn = self.page_button(ui, &theme, &label, is_current, true);
+                let btn = Self::page_button(inner_ui, &theme, &label, is_current, true);
                 if btn.clicked() && !is_current {
                     *current = page;
-                    ui.ctx().request_repaint();
+                    inner_ui.ctx().request_repaint();
                 }
             }
 
             if end < self.total_pages {
                 if end < self.total_pages - 1 {
-                    self.ellipsis_indicator(ui, &theme);
+                    Self::ellipsis_indicator(inner_ui, &theme);
                 }
                 let label = format!("{}", self.total_pages);
-                let btn = self.page_button(ui, &theme, &label, false, true);
+                let btn = Self::page_button(inner_ui, &theme, &label, false, true);
                 if btn.clicked() {
                     *current = last_page;
-                    ui.ctx().request_repaint();
+                    inner_ui.ctx().request_repaint();
                 }
             }
 
             // Next button
             let next_enabled = *current < last_page;
-            let next = self.icon_button(
-                ui,
+            let next = Self::icon_button(
+                inner_ui,
                 &theme,
-                &crate::icons::lucide_icon::LucideIcon::ChevronRight,
+                crate::icons::lucide_icon::LucideIcon::ChevronRight,
                 next_enabled,
             );
             if next.clicked() && next_enabled {
                 *current = (*current + 1).min(last_page);
-                ui.ctx().request_repaint();
+                inner_ui.ctx().request_repaint();
             }
         })
         .response
     }
 
     fn icon_button(
-        &self,
         ui: &mut egui::Ui,
         theme: &crate::theme::shadcn_theme::ShadcnTheme,
-        icon: &crate::icons::lucide_icon::LucideIcon,
+        icon: crate::icons::lucide_icon::LucideIcon,
         enabled: bool,
     ) -> egui::Response {
         let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
@@ -97,7 +96,7 @@ impl super::pagination::Pagination {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
 
             let bg = if response.is_pointer_button_down_on() && enabled {
                 crate::paint::interpolate_color::interpolate_color(
@@ -111,8 +110,8 @@ impl super::pagination::Pagination {
                 egui::Color32::TRANSPARENT
             };
 
-            painter.rect_filled(rect, cr, bg);
-            painter.rect_stroke(
+            let _ = painter.rect_filled(rect, cr, bg);
+            let _ = painter.rect_stroke(
                 rect,
                 cr,
                 egui::Stroke::new(1.0, theme.border),
@@ -127,7 +126,7 @@ impl super::pagination::Pagination {
 
             let icon_rect =
                 egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
-            crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, fg);
+            crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, fg);
         }
 
         if response.hovered() && enabled {
@@ -137,11 +136,7 @@ impl super::pagination::Pagination {
         response
     }
 
-    fn ellipsis_indicator(
-        &self,
-        ui: &mut egui::Ui,
-        theme: &crate::theme::shadcn_theme::ShadcnTheme,
-    ) {
+    fn ellipsis_indicator(ui: &mut egui::Ui, theme: &crate::theme::shadcn_theme::ShadcnTheme) {
         let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let icon_size: f32 = 14.0;
@@ -159,7 +154,6 @@ impl super::pagination::Pagination {
     }
 
     fn page_button(
-        &self,
         ui: &mut egui::Ui,
         theme: &crate::theme::shadcn_theme::ShadcnTheme,
         label: &str,
@@ -188,7 +182,7 @@ impl super::pagination::Pagination {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(theme.radius.round() as u8);
+            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
 
             let bg = if is_active {
                 theme.primary
@@ -204,10 +198,10 @@ impl super::pagination::Pagination {
                 egui::Color32::TRANSPARENT
             };
 
-            painter.rect_filled(rect, cr, bg);
+            let _ = painter.rect_filled(rect, cr, bg);
 
             if !is_active {
-                painter.rect_stroke(
+                let _ = painter.rect_stroke(
                     rect,
                     cr,
                     egui::Stroke::new(1.0, theme.border),

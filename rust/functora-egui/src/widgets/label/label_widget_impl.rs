@@ -1,6 +1,6 @@
 //! Widget trait implementation for Label.
 
-impl egui::Widget for super::label::Label {
+impl egui::Widget for super::widget::Label {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let color = if self.muted {

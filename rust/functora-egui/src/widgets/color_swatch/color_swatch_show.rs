@@ -1,12 +1,12 @@
-//! Show method for ColorSwatch.
+//! Show method for `ColorSwatch`.
 
-impl super::color_swatch::ColorSwatch {
+impl super::widget::ColorSwatch {
     pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
         ui.add(self)
     }
 }
 
-impl egui::Widget for super::color_swatch::ColorSwatch {
+impl egui::Widget for super::widget::ColorSwatch {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
@@ -38,16 +38,15 @@ impl egui::Widget for super::color_swatch::ColorSwatch {
         };
         let text_width = label_galley
             .as_ref()
-            .map(|g| g.size().x)
-            .unwrap_or(0.0)
-            .max(hex_galley.as_ref().map(|g| g.size().x).unwrap_or(0.0));
-        let text_height = label_galley.as_ref().map(|g| g.size().y).unwrap_or(0.0)
+            .map_or(0.0, |g| g.size().x)
+            .max(hex_galley.as_ref().map_or(0.0, |g| g.size().x));
+        let text_height = label_galley.as_ref().map_or(0.0, |g| g.size().y)
             + if label_galley.is_some() && hex_galley.is_some() {
                 2.0
             } else {
                 0.0
             }
-            + hex_galley.as_ref().map(|g| g.size().y).unwrap_or(0.0);
+            + hex_galley.as_ref().map_or(0.0, |g| g.size().y);
 
         let desired = egui::vec2(self.size + gap + text_width, self.size.max(text_height));
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
@@ -55,42 +54,43 @@ impl egui::Widget for super::color_swatch::ColorSwatch {
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
             let swatch_rect = egui::Rect::from_min_size(rect.min, egui::vec2(self.size, self.size));
-            let radius = egui::CornerRadius::same((theme.radius * 0.75).round() as u8);
+            let radius =
+                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius * 0.75));
 
             if self.color.a() < 255 {
                 super::paint_checkerboard::paint_checkerboard(painter, swatch_rect, 5.0);
             }
 
-            let swatch_rect = if response.is_pointer_button_down_on() {
+            let render_rect = if response.is_pointer_button_down_on() {
                 swatch_rect.shrink(1.0)
             } else {
                 swatch_rect
             };
-            painter.rect_filled(swatch_rect, radius, self.color);
+            let _ = painter.rect_filled(render_rect, radius, self.color);
 
             let border = if response.hovered() || self.selected {
                 theme.ring
             } else {
                 theme.border
             };
-            painter.rect_stroke(
-                swatch_rect,
+            let _ = painter.rect_stroke(
+                render_rect,
                 radius,
                 egui::Stroke::new(1.0, border),
                 egui::epaint::StrokeKind::Inside,
             );
 
             if self.selected {
-                painter.rect_stroke(
-                    swatch_rect.expand(3.0),
-                    egui::CornerRadius::same((theme.radius + 2.0).round() as u8),
+                let _ = painter.rect_stroke(
+                    render_rect.expand(3.0),
+                    egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0)),
                     egui::Stroke::new(1.5, theme.primary),
                     egui::epaint::StrokeKind::Outside,
                 );
             }
 
             let mut text_y = rect.center().y - text_height / 2.0;
-            let text_x = swatch_rect.max.x + gap;
+            let text_x = render_rect.max.x + gap;
             if let Some(galley) = label_galley {
                 painter.galley(egui::pos2(text_x, text_y), galley.clone(), theme.foreground);
                 text_y += galley.size().y + 2.0;

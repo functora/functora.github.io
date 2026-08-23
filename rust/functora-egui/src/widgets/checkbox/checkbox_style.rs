@@ -1,6 +1,7 @@
 //! Maps checkbox state to concrete style values.
 
 /// Resolves checkbox colors based on checked state and interaction.
+#[must_use]
 pub fn resolve_checkbox_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     checked: bool,

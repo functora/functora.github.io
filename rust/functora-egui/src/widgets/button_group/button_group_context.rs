@@ -1,6 +1,6 @@
-//! Temporary context stored in egui data during ButtonGroup rendering.
+//! Temporary context stored in egui data during `ButtonGroup` rendering.
 
-/// Context stored in egui temp data while a ButtonGroup is being rendered.
+/// Context stored in egui temp data while a `ButtonGroup` is being rendered.
 /// Buttons check the `active` flag to adjust their corner radii and borders.
 #[derive(Clone, Default)]
 pub struct ButtonGroupContext {

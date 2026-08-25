@@ -1,28 +1,39 @@
-//! Light theme constructor with sRGB values derived from shadcn OKLCH tokens (Nova).
+//! Light theme migrated from functora-css — hsl(200,10%) cool slate.
 
-/// Creates the light theme with colors matching shadcn/ui's Nova light mode.
+/// Creates the light theme with colors derived from functora-css variables.
 #[must_use]
 pub fn light() -> super::shadcn_theme::ShadcnTheme {
     super::shadcn_theme::ShadcnTheme {
-        background: egui::Color32::from_rgb(255, 255, 255), // oklch(1.0)
-        foreground: egui::Color32::from_rgb(10, 10, 10),    // oklch(0.145)
-        card: egui::Color32::from_rgb(255, 255, 255),       // oklch(1.0)
-        card_foreground: egui::Color32::from_rgb(10, 10, 10), // oklch(0.145)
-        popover: egui::Color32::from_rgb(255, 255, 255),    // oklch(1.0)
-        popover_foreground: egui::Color32::from_rgb(10, 10, 10), // oklch(0.145)
-        primary: egui::Color32::from_rgb(23, 23, 23),       // oklch(0.205)
-        primary_foreground: egui::Color32::from_rgb(250, 250, 250), // oklch(0.985)
-        secondary: egui::Color32::from_rgb(245, 245, 245),  // oklch(0.97)
-        secondary_foreground: egui::Color32::from_rgb(23, 23, 23), // oklch(0.205)
-        muted: egui::Color32::from_rgb(245, 245, 245),      // oklch(0.97)
-        muted_foreground: egui::Color32::from_rgb(105, 105, 105), // oklch(~0.51) tuned for >=4.5 contrast on muted
-        accent: egui::Color32::from_rgb(232, 232, 232), // oklch(0.93) slightly darker than muted for active contrast
-        accent_foreground: egui::Color32::from_rgb(23, 23, 23), // oklch(0.205)
-        destructive: egui::Color32::from_rgb(229, 72, 77), // oklch(0.577 0.245 27.325)
-        destructive_foreground: egui::Color32::from_rgb(255, 255, 255), // white on red
-        border: egui::Color32::from_rgb(229, 229, 229), // oklch(0.922)
-        input: egui::Color32::from_rgb(229, 229, 229),  // oklch(0.922)
-        ring: egui::Color32::from_rgb(161, 161, 161),   // oklch(0.708)
+        background: egui::Color32::from_rgb(255, 255, 255), // --bg-color #fff
+        foreground: egui::Color32::from_rgb(46, 53, 56),    // --black hsl(200,10%,20%) #2e3538
+        card: egui::Color32::from_rgb(255, 255, 255),       // --surface #fff
+        card_foreground: egui::Color32::from_rgb(46, 53, 56), // --black
+        popover: egui::Color32::from_rgb(255, 255, 255),
+        popover_foreground: egui::Color32::from_rgb(46, 53, 56),
+        primary: egui::Color32::from_rgb(102, 119, 153), // --primary #679 #667799
+        primary_foreground: egui::Color32::from_rgb(255, 255, 255), // --primary-contrast #fff
+        secondary: egui::Color32::from_rgb(233, 235, 237), // muted slate hsl(200,10%,92%) #e9ebed
+        secondary_foreground: egui::Color32::from_rgb(46, 53, 56), // --black hsl(200,10%,20%) #2e3538
+        muted: egui::Color32::from_rgb(244, 245, 246), // --grey-ultralight hsl(200,10%,96%)
+        muted_foreground: egui::Color32::from_rgb(69, 79, 84), // --grey-ultradark hsl(200,10%,30%) #454f54
+        accent: egui::Color32::from_rgb(199, 206, 209), // --grey-light hsl(200,10%,80%) #c7ced1
+        accent_foreground: egui::Color32::from_rgb(46, 53, 56),
+        destructive: egui::Color32::from_rgb(229, 72, 77), // shadcn oklch(0.577 0.245 27.325) spirit
+        destructive_foreground: egui::Color32::from_rgb(255, 255, 255),
+        success: egui::Color32::from_rgb(39, 174, 96), // extended: muted green #27ae60
+        success_foreground: egui::Color32::from_rgb(46, 53, 56),
+        warning: egui::Color32::from_rgb(234, 179, 8), // extended: amber #eab308
+        warning_foreground: egui::Color32::from_rgb(46, 53, 56),
+        info: egui::Color32::from_rgb(59, 130, 246), // extended: blue #3b82f6
+        info_foreground: egui::Color32::from_rgb(255, 255, 255),
+        chart_1: egui::Color32::from_rgb(102, 119, 153), // primary
+        chart_2: egui::Color32::from_rgb(39, 174, 96),   // success
+        chart_3: egui::Color32::from_rgb(234, 179, 8),   // warning
+        chart_4: egui::Color32::from_rgb(59, 130, 246),  // info
+        chart_5: egui::Color32::from_rgb(139, 92, 246),  // violet #8b5cf6
+        border: egui::Color32::from_rgb(199, 206, 209),  // --grey-light hsl(200,10%,80%)
+        input: egui::Color32::from_rgb(171, 181, 186),   // --grey-mid hsl(200,10%,70%) #abb5ba
+        ring: egui::Color32::from_rgb(102, 119, 153),    // --primary focus
         radius: 10.0,
     }
 }

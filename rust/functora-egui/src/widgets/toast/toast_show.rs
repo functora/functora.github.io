@@ -29,19 +29,16 @@ impl super::toast_state::ToastState {
                             (theme.border, theme.foreground)
                         }
                         crate::tokens::toast_variant::ToastVariant::Success => {
-                            let c = egui::Color32::from_rgb(34, 197, 94);
-                            (c, c)
+                            (theme.success, theme.success)
                         }
                         crate::tokens::toast_variant::ToastVariant::Error => {
                             (theme.destructive, theme.destructive)
                         }
                         crate::tokens::toast_variant::ToastVariant::Warning => {
-                            let c = egui::Color32::from_rgb(234, 179, 8);
-                            (c, c)
+                            (theme.warning, theme.warning)
                         }
                         crate::tokens::toast_variant::ToastVariant::Info => {
-                            let c = egui::Color32::from_rgb(59, 130, 246);
-                            (c, c)
+                            (theme.info, theme.info)
                         }
                     };
 

@@ -34,6 +34,45 @@ pub fn resolve_badge_style(
                 border: None,
             }
         }
+        crate::tokens::badge_variant::BadgeVariant::Success => {
+            let tint = egui::Color32::from_rgba_unmultiplied(
+                theme.success.r(),
+                theme.success.g(),
+                theme.success.b(),
+                26,
+            );
+            super::resolved_badge_style::ResolvedBadgeStyle {
+                bg: tint,
+                fg: theme.success,
+                border: None,
+            }
+        }
+        crate::tokens::badge_variant::BadgeVariant::Warning => {
+            let tint = egui::Color32::from_rgba_unmultiplied(
+                theme.warning.r(),
+                theme.warning.g(),
+                theme.warning.b(),
+                26,
+            );
+            super::resolved_badge_style::ResolvedBadgeStyle {
+                bg: tint,
+                fg: theme.warning,
+                border: None,
+            }
+        }
+        crate::tokens::badge_variant::BadgeVariant::Info => {
+            let tint = egui::Color32::from_rgba_unmultiplied(
+                theme.info.r(),
+                theme.info.g(),
+                theme.info.b(),
+                26,
+            );
+            super::resolved_badge_style::ResolvedBadgeStyle {
+                bg: tint,
+                fg: theme.info,
+                border: None,
+            }
+        }
         crate::tokens::badge_variant::BadgeVariant::Outline => {
             super::resolved_badge_style::ResolvedBadgeStyle {
                 bg: egui::Color32::TRANSPARENT,

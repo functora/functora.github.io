@@ -4,7 +4,9 @@ pub use functora_core::files::{
 };
 
 use crate::error::Error;
-use crate::progress::{Job, Stage, yield_to_paint};
+#[cfg(not(target_os = "android"))]
+use crate::progress::yield_to_paint;
+use crate::progress::{Job, Stage};
 #[cfg(target_arch = "wasm32")]
 use base64::Engine as _;
 use std::collections::HashMap;
@@ -14,6 +16,7 @@ use std::sync::{
 };
 use std::sync::{LazyLock, Mutex};
 
+#[cfg(not(target_os = "android"))]
 const PICK_CHUNK: usize = 4 * 1024 * 1024;
 
 pub type PickResult = Result<Vec<(String, Vec<u8>)>, String>;

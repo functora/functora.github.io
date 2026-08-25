@@ -21,7 +21,7 @@ fn startup_dark_theme_survives_light_system_theme() {
     );
     assert_eq!(
         bg,
-        Some(Color32::from_rgb(0x0a, 0x0a, 0x0a)),
+        Some(Color32::from_rgb(0x22, 0x22, 0x22)),
         "background must be shadcn dark, got {bg:?}"
     );
 }
@@ -74,7 +74,7 @@ fn toggle_keeps_style_and_widgets_consistent() {
     );
     assert_eq!(
         largest_rect_fill(&dark_out.shapes),
-        Some(Color32::from_rgb(0x0a, 0x0a, 0x0a))
+        Some(Color32::from_rgb(0x22, 0x22, 0x22))
     );
 }
 

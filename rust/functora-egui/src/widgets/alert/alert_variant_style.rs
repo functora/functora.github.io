@@ -21,5 +21,26 @@ pub fn resolve_alert_style(
                 border: theme.destructive,
             }
         }
+        crate::tokens::alert_variant::AlertVariant::Success => {
+            super::resolved_alert_style::ResolvedAlertStyle {
+                bg: theme.background,
+                fg: theme.success,
+                border: theme.success,
+            }
+        }
+        crate::tokens::alert_variant::AlertVariant::Warning => {
+            super::resolved_alert_style::ResolvedAlertStyle {
+                bg: theme.background,
+                fg: theme.warning,
+                border: theme.warning,
+            }
+        }
+        crate::tokens::alert_variant::AlertVariant::Info => {
+            super::resolved_alert_style::ResolvedAlertStyle {
+                bg: theme.background,
+                fg: theme.info,
+                border: theme.info,
+            }
+        }
     }
 }
